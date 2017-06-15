@@ -1,0 +1,22 @@
+language: python
+services: mongodb
+python:
+  - "3.5"
+install:
+  - pip install -r requirements.txt
+  - pip install coverage
+  - pip install python-coveralls
+before_script:
+  - python setup.py develop
+script:
+  - nosetests --nocapture --with-coverage
+after_success:
+  - coveralls
+notifications:
+  email:
+    recipients:
+      - dwinston@lbl.gov
+      - shyamd@lbl.gov
+      - montoyjh@lbl.gov
+    on_success: change
+    on_failure: always
