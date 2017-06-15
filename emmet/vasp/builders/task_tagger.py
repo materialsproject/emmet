@@ -1,5 +1,7 @@
 from maggma.builder import Builder
 
+__author__ = "Shyam Dwaraknath"
+__email__ = "shyamd@lbl.gov"
 
 class TaskTagger(Builder):
     def __init__(self, tasks, tag_defs, tags, **kwargs):
@@ -27,21 +29,21 @@ class TaskTagger(Builder):
             generator or list of items to process
         """
 
-        all_task_ids = self.tasks.distinct("task_id", {"state": "successful"})
+        all_task_ids = self.tasks.collection.distinct("task_id", {"state": "successful"})
 
         # If there is a new task type definition, re-process the whole collection
         if self.tag_defs.last_updated() > self.tags.last_updated():
             to_process = set(all_task_ids)
         else:
-            previous_task_ids = self.tags.distinct("task_id", {"task_type": {"$exists": 0}})
+            previous_task_ids = self.tags.collection.distinct("task_id", {"task_type": {"$exists": 0}})
             to_process = set(all_task_ids) - set(previous_task_ids)
 
-        tag_defs = list(self.tag_defs.find())
+        tag_defs = list(self.tag_defs.collection.find())
 
         for t_id in to_process:
             print("Processing task_id: {}".format(t_id))
             try:
-                yield {"task_doc": self.tasks.find_one({"task_id": t_id}),
+                yield {"task_doc": self.tasks.collection.find_one({"task_id": t_id}),
                        "tag_defs": tag_defs}
             except:
                 import traceback
@@ -58,7 +60,7 @@ class TaskTagger(Builder):
             if self.task_matches_def(task_doc, tag_def):
                 return {"task_id": task_doc["task_id"],
                         "task_type": tag_def["task_type"]}
-            else
+            else:
                 pass
         pass
 
