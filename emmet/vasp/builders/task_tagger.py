@@ -75,7 +75,7 @@ class TaskTagger(Builder):
                 return False
 
         for k, v in tag_def['GREATER'].items():
-            if task_doc['input_orig']['INCAR'].get(k, 0) < v:
+            if task_doc['input_orig']['INCAR'].get(k, 1E10) < v:
                 return False
 
         for k, v in tag_def['LESS'].items():
