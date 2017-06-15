@@ -1,0 +1,6 @@
+FireWorks==1.4.3
+pymatgen==4.7.7
+custodian==1.1.0
+monty==0.9.8
+unittest2==1.1.0
+coverage==4.4.1
