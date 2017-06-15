@@ -9,7 +9,7 @@ install:
 before_script:
   - python setup.py develop
 script:
-  - nosetests --nocapture --with-coverage
+  - nosetests --nocapture --with-coverage --cover-package=emmet
 after_success:
   - coveralls
 notifications:
