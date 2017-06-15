@@ -4,3 +4,4 @@ custodian==1.1.0
 monty==0.9.8
 unittest2==1.1.0
 coverage==4.4.1
+-e git://github.com/materialsproject/maggma#egg=maggma
