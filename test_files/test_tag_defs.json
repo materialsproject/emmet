@@ -1,0 +1,30 @@
+[{
+  "task_type": "Optimization",
+  "EXACT": {
+    "IBRION": 2,
+    "ISIF": 3
+  },
+  "GREATER": {
+    "ENCUT": 519
+  },
+  "LESS": {
+    "EDIFF": 1e-3
+  }
+},
+
+
+  {
+  "task_type": "Static",
+  "EXACT": {
+    "IBRION": -1,
+    "ISIF": 3
+  },
+  "GREATER": {
+    "ENCUT": 519
+  },
+  "LESS": {
+    "EDIFF": 1e-3
+  }
+}
+
+]
