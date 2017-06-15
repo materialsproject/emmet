@@ -48,7 +48,9 @@ class TaskTagger(Builder):
                 print("Problem processing task_id: {}".format(t_id))
 
     def process_item(self, item):
-
+        """
+        Process each item which is a dictionary of a single task_document and all tag definitions 
+        """
         task_doc = item["task_doc"]
         tag_defs = item["tag_defs"]
 
@@ -61,15 +63,25 @@ class TaskTagger(Builder):
         pass
 
     def update_targets(self, items):
-
+        """
+        Inserts the new task_types into the tags collection
+        """
         for doc in items:
             self.tags.collection.update({'task_id': doc['task_id']}, doc, upsert=True)
 
     def finalize(self):
         pass
 
-    # TODO: Add in more sophisticated matching criteria
+    # TODO: Add in more sophisticated and generic matching criteria for any calculation code
     def task_matches_def(self, task_doc, tag_def):
+        """
+        Determines if a task matches the tag definition
+        
+        Args:
+            task_doc (dict): task_document with original input
+            tag_def (dict): dictionary with EXACT, GREATER THAN and LESS THAN criteria for matching a task_type
+            
+        """
         for k, v in tag_def['EXACT'].items():
             if task_doc['input_orig']['INCAR'].get(k) is not v:
                 return False
