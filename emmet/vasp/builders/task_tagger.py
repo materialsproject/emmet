@@ -52,6 +52,9 @@ class TaskTagger(Builder):
     def process_item(self, item):
         """
         Find the task_type for the item 
+        
+        Args:
+            item ((dict,[dict])): a task doc and a list of possible tag definitions
         """
         task_doc = item["task_doc"]
         tag_defs = item["tag_defs"]
@@ -68,6 +71,9 @@ class TaskTagger(Builder):
     def update_targets(self, items):
         """
         Inserts the new task_types into the tags collection
+        
+        Args:
+            items ([dict]): task_type dicts to insert into tags collection
         """
         for doc in items:
             self.tags.collection.update({'task_id': doc['task_id']}, doc, upsert=True)
