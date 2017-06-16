@@ -4,21 +4,20 @@ __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
 
 class TaskTagger(Builder):
-    def __init__(self, tasks, tag_defs, tags, **kwargs):
+    def __init__(self, tasks, task_types, **kwargs):
         """
         Creates task_types from tasks and type definitions
 
         Args:
             tasks (Store): Store of task documents
-            tag_defs (Store): Store of tag_definitions
-            tags (Store): Store of tags for tasks
+            task_defs (Store): Store of task_definitions. These define 
+            task_types (Store): Store of task_types for tasks
         """
         self.tasks = tasks
-        self.tags = tags
-        self.tag_defs = tag_defs
+        self.task_types = task_types
 
-        super().__init__(sources=[tasks, tag_defs],
-                         targets=[tags],
+        super().__init__(sources=[tasks],
+                         targets=[task_types],
                          **kwargs)
 
     def get_items(self):
@@ -29,22 +28,19 @@ class TaskTagger(Builder):
             generator or list of task docs and tag definitions
         """
 
+        # Get all tasks ids from the tasks collection
         all_task_ids = self.tasks.collection.distinct("task_id", {"state": "successful"})
 
-        # If there is a new task type definition, re-process the whole collection
-        if self.tag_defs.last_updated() > self.tags.last_updated():
-            to_process = set(all_task_ids)
-        else:
-            previous_task_ids = self.tags.collection.distinct("task_id", {"task_type": {"$exists": 0}})
-            to_process = set(all_task_ids) - set(previous_task_ids)
+        
+        # Figure out which task_ids are not in the materials collection and only process those
+        previous_task_ids = self.task_types.collection.distinct("task_id", {"task_type": {"$exists": 0}})
+        to_process = set(all_task_ids) - set(previous_task_ids)
 
-        tag_defs = list(self.tag_defs.collection.find())
-
+        # Process each task_id
         for t_id in to_process:
             print("Processing task_id: {}".format(t_id))
             try:
-                yield {"task_doc": self.tasks.collection.find_one({"task_id": t_id}),
-                       "tag_defs": tag_defs}
+                yield self.tasks.collection.find_one({"task_id": t_id})
             except:
                 import traceback
                 print("Problem processing task_id: {}".format(t_id))
@@ -56,58 +52,54 @@ class TaskTagger(Builder):
         Args:
             item ((dict,[dict])): a task doc and a list of possible tag definitions
         """
-        task_doc = item["task_doc"]
-        tag_defs = item["tag_defs"]
 
-        scores = [self.task_matches_def(task_doc,tag_def)
-                  for tag_def in tag_defs]
-
-        if max(scores) > 0:
-            tag_def = tag_defs[scores.index(max(scores))]
-            return {"task_id": task_doc["task_id"],
-                        "task_type": tag_def["task_type"]}
-        pass
+        return {"task_id": item["task_id"],
+                "task_type": self.task_type(item)}
 
     def update_targets(self, items):
         """
-        Inserts the new task_types into the tags collection
+        Inserts the new task_types into the task_types collection
         
         Args:
-            items ([dict]): task_type dicts to insert into tags collection
+            items ([dict]): task_type dicts to insert into task_types collection
         """
         for doc in items:
-            self.tags.collection.update({'task_id': doc['task_id']}, doc, upsert=True)
+            self.task_types.collection.update({'task_id': doc['task_id']}, doc, upsert=True)
 
     def finalize(self):
         pass
 
-    # TODO: Add in more sophisticated and generic matching criteria for any calculation code
-    def task_matches_def(self, task_doc, tag_def):
+    def task_type(self, task_doc):
         """
-        Determines a match score to a tag type definition
-        
+        Determines the task_type
+
         Args:
             task_doc (dict): task_document with original input
-            tag_def (dict): dictionary with EXACT, GREATER THAN and LESS THAN criteria for matching a task_type
-            
         """
-        total_score = 0
-        for k, v in tag_def.get("EXACT",{}).items():
-            if task_doc['input_orig']['INCAR'].get(k) is not v[0]:
-                pass
-            else:
-                total_score += v[1]
+        incar = task_doc["input_orig"]["INCAR"]
 
-        for k, v in tag_def.get("GREATER",{}).items():
-            if task_doc['input_orig']['INCAR'].get(k, 1E10) < v[0]:
-                pass
+        if incar.get("LHFCALC",False):
+            if incar.get("NSW") == 0:
+                return "hse bs"
             else:
-                total_score += v[1]
+                return "hse"
 
-        for k, v in tag_def.get("LESS",{}).items():
-            if task_doc['input_orig']['INCAR'].get(k, 0) > v[0]:
-                pass
+        if incar.get("ICHARG",0) > 10:
+            if incar.get("NEDOS",0) > 600:
+                return "nscf uniform"
             else:
-                total_score += v[1]
+                return "nscf line"
 
-        return total_score
+
+        if incar.get("LEPSILON",False):
+            return "static dielectric"
+
+
+        if incar.get("IBRION",0) < 0:
+            return "static"
+
+
+        if incar.get("ISIF",2) == 3 and incar.get("IBRION",0) > 0:
+            return "structure optimization"
+
+        return ""
