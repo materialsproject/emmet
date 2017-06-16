@@ -6,7 +6,7 @@ __email__ = "shyamd@lbl.gov"
 class TaskTagger(Builder):
     def __init__(self, tasks, tag_defs, tags, **kwargs):
         """
-        Initialize the builder the framework.
+        Creates task_types from tasks and type definitions
 
         Args:
             tasks (Store): Store of task documents
@@ -23,10 +23,10 @@ class TaskTagger(Builder):
 
     def get_items(self):
         """
-        Returns all the items to process.
+        Returns all task docs and tag definitions to process
 
         Returns:
-            generator or list of items to process
+            generator or list of task docs and tag definitions
         """
 
         all_task_ids = self.tasks.collection.distinct("task_id", {"state": "successful"})
@@ -51,7 +51,7 @@ class TaskTagger(Builder):
 
     def process_item(self, item):
         """
-        Process each item which is a dictionary of a single task_document and all tag definitions 
+        Find the task_type for the item 
         """
         task_doc = item["task_doc"]
         tag_defs = item["tag_defs"]
