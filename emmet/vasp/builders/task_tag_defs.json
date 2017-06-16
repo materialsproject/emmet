@@ -1,0 +1,117 @@
+[
+  {
+    "task_type": "structure optimization",
+    "EXACT": {
+      "IBRION": [
+        1,
+        100
+      ],
+      "ISIF": [
+        3,
+        100
+      ]
+    }
+  },
+  {
+    "task_type": "structure optimization",
+    "EXACT": {
+      "IBRION": [
+        2,
+        100
+      ],
+      "ISIF": [
+        3,
+        100
+      ]
+    }
+  },
+  {
+    "task_type": "structure optimization",
+    "EXACT": {
+      "IBRION": [
+        3,
+        100
+      ],
+      "ISIF": [
+        3,
+        100
+      ]
+    }
+  },
+  {
+    "task_type": "hse",
+    "EXACT": {
+      "LHFCALC": [
+        true,
+        1000
+      ]
+    }
+  },
+  {
+    "task_type": "hse bs",
+    "EXACT": {
+      "LHFCALC": [
+        true,
+        1000
+      ],
+      "NSW": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "task_type": "static",
+    "EXACT": {
+      "IBRION": [
+        -1,
+        100
+      ],
+      "NSW": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "task_type": "static dielectric",
+    "EXACT": {
+      "IBRION": [
+        -1,
+        100
+      ],
+      "LEPSILON": [
+        true,
+        1000
+      ]
+    }
+  },
+  {
+    "task_type": "nscf line",
+    "GREATER": {
+      "ICHARG": [
+        10,
+        1000
+      ]
+    },
+    "LESS": {
+      "NEDOS": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "task_type": "nscf uniform",
+    "GREATER": {
+      "ICHARG": [
+        10,
+        1000
+      ],
+      "NEDOS": [
+        0,
+        100
+      ]
+    }
+  }
+]

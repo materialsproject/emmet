@@ -56,12 +56,13 @@ class TaskTagger(Builder):
         task_doc = item["task_doc"]
         tag_defs = item["tag_defs"]
 
-        for tag_def in tag_defs:
-            if self.task_matches_def(task_doc, tag_def):
-                return {"task_id": task_doc["task_id"],
+        scores = [self.task_matches_def(task_doc,tag_def)
+                  for tag_def in tag_defs]
+
+        if max(scores) > 0:
+            tag_def = tag_defs[scores.index(max(scores))]
+            return {"task_id": task_doc["task_id"],
                         "task_type": tag_def["task_type"]}
-            else:
-                pass
         pass
 
     def update_targets(self, items):
@@ -77,23 +78,30 @@ class TaskTagger(Builder):
     # TODO: Add in more sophisticated and generic matching criteria for any calculation code
     def task_matches_def(self, task_doc, tag_def):
         """
-        Determines if a task matches the tag definition
+        Determines a match score to a tag type definition
         
         Args:
             task_doc (dict): task_document with original input
             tag_def (dict): dictionary with EXACT, GREATER THAN and LESS THAN criteria for matching a task_type
             
         """
-        for k, v in tag_def['EXACT'].items():
-            if task_doc['input_orig']['INCAR'].get(k) is not v:
-                return False
+        total_score = 0
+        for k, v in tag_def.get("EXACT",{}).items():
+            if task_doc['input_orig']['INCAR'].get(k) is not v[0]:
+                pass
+            else:
+                total_score += v[1]
 
-        for k, v in tag_def['GREATER'].items():
-            if task_doc['input_orig']['INCAR'].get(k, 1E10) < v:
-                return False
+        for k, v in tag_def.get("GREATER",{}).items():
+            if task_doc['input_orig']['INCAR'].get(k, 1E10) < v[0]:
+                pass
+            else:
+                total_score += v[1]
 
-        for k, v in tag_def['LESS'].items():
-            if task_doc['input_orig']['INCAR'].get(k, 0) > v:
-                return False
+        for k, v in tag_def.get("LESS",{}).items():
+            if task_doc['input_orig']['INCAR'].get(k, 0) > v[0]:
+                pass
+            else:
+                total_score += v[1]
 
-        return True
+        return total_score

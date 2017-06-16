@@ -1,0 +1,210 @@
+[
+  {
+    "task_id": 1,
+    "state": "successful",
+    "true_task_type": "structure optimization",
+    "input_orig": {
+      "INCAR": {
+        "ALGO": "Fast",
+        "EDIFF": 0.0001,
+        "ENCUT": 520,
+        "IBRION": 2,
+        "ICHARG": 1,
+        "ISIF": 3,
+        "ISMEAR": -5,
+        "ISPIN": 2,
+        "LORBIT": 11,
+        "LREAL": "Auto",
+        "LWAVE": false,
+        "MAGMOM": [
+          0.6,
+          0.6
+        ],
+        "NELM": 100,
+        "NSW": 99,
+        "PREC": "Accurate",
+        "SIGMA": 0.05
+      }
+    }
+  },
+  {
+    "task_id": 2,
+    "state": "successful",
+    "true_task_type": "static",
+    "input_orig": {
+      "INCAR": {
+        "ALGO": "Normal",
+        "EDIFF": 0.0001,
+        "ENCUT": 520,
+        "IBRION": -1,
+        "ICHARG": 0,
+        "ISIF": 3,
+        "ISMEAR": -5,
+        "ISPIN": 2,
+        "LAECHG": true,
+        "LCHARG": true,
+        "LORBIT": 11,
+        "LREAL": "Auto",
+        "LVHAR": true,
+        "LWAVE": false,
+        "MAGMOM": [
+          0.6,
+          0.6
+        ],
+        "NELM": 100,
+        "NSW": 0,
+        "PREC": "Accurate",
+        "SIGMA": 0.05
+      }
+    }
+  },
+  {
+    "task_id": 3,
+    "state": "successful",
+    "true_task_type": "hse",
+    "input_orig": {
+      "INCAR": {
+        "ALGO": "All",
+        "EDIFF": 0.0001,
+        "ENCUT": 520,
+        "HFSCREEN": 0.2,
+        "IBRION": 2,
+        "ICHARG": 1,
+        "ISIF": 3,
+        "ISMEAR": 0,
+        "ISPIN": 2,
+        "LHFCALC": true,
+        "LORBIT": 11,
+        "LREAL": "Auto",
+        "LWAVE": false,
+        "MAGMOM": [
+          0.6,
+          0.6
+        ],
+        "NELM": 100,
+        "NSW": 99,
+        "PREC": "Accurate",
+        "PRECFOCK": "Fast",
+        "SIGMA": 0.05
+      }
+    }
+  },
+  {
+    "task_id": 4,
+    "state": "successful",
+    "true_task_type": "hse bs",
+    "input_orig": {
+      "INCAR": {
+        "ALGO": "All",
+        "EDIFF": 0.0001,
+        "ENCUT": 520,
+        "HFSCREEN": 0.2,
+        "IBRION": 2,
+        "ICHARG": 1,
+        "ISIF": 3,
+        "ISMEAR": 0,
+        "ISPIN": 2,
+        "ISYM": 3,
+        "LCHARG": false,
+        "LHFCALC": true,
+        "LORBIT": 11,
+        "LREAL": "Auto",
+        "LWAVE": false,
+        "MAGMOM": [
+          0.6,
+          0.6
+        ],
+        "NELM": 100,
+        "NELMIN": 5,
+        "NSW": 0,
+        "PREC": "Accurate",
+        "PRECFOCK": "Fast",
+        "SIGMA": 0.05
+      }
+    }
+  },
+  {
+    "task_id": 5,
+    "state": "sucessful",
+    "true_task_type": "static dielectric",
+    "input_orig": {
+      "INCAR": {
+        "ALGO": "Normal",
+        "EDIFF": 0.0001,
+        "ENCUT": 520,
+        "IBRION": 8,
+        "ICHARG": 0,
+        "ISIF": 3,
+        "ISMEAR": -5,
+        "ISPIN": 2,
+        "LAECHG": true,
+        "LCHARG": true,
+        "LEPSILON": true,
+        "LORBIT": 11,
+        "LREAL": "Auto",
+        "LVHAR": true,
+        "LWAVE": false,
+        "MAGMOM": [
+          0.6,
+          0.6
+        ],
+        "NELM": 100,
+        "PREC": "Accurate",
+        "SIGMA": 0.05
+      }
+    }
+  },
+  {
+    "task_id": 6,
+    "state": "successful",
+    "true_task_type": "nscf line",
+    "input_orig": {
+      "INCAR": {
+        "ALGO": "Fast",
+        "EDIFF": 0.0001,
+        "ENCUT": 520,
+        "IBRION": -1,
+        "ICHARG": 11,
+        "ISIF": 3,
+        "ISMEAR": 0,
+        "ISPIN": 2,
+        "ISYM": 0,
+        "LCHARG": false,
+        "LORBIT": 11,
+        "LREAL": "Auto",
+        "LWAVE": false,
+        "NELM": 100,
+        "NSW": 0,
+        "PREC": "Accurate",
+        "SIGMA": 0.001
+      }
+    }
+  },
+  {
+    "task_id": 7,
+    "state": "successful",
+    "true_task_type": "nscf uniform",
+    "input_orig": {
+      "INCAR": {
+        "ALGO": "Fast",
+        "EDIFF": 0.0001,
+        "ENCUT": 520,
+        "IBRION": -1,
+        "ICHARG": 11,
+        "ISIF": 3,
+        "ISMEAR": 0,
+        "ISPIN": 2,
+        "ISYM": 0,
+        "LCHARG": false,
+        "LORBIT": 11,
+        "LREAL": "Auto",
+        "LWAVE": false,
+        "NEDOS": 601,
+        "NELM": 100,
+        "NSW": 0,
+        "PREC": "Accurate",
+        "SIGMA": 0.001
+      }
+    }
+  }
+]
