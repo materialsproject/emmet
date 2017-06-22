@@ -1,0 +1,10 @@
+[
+  {
+    "tasks_key": "band_gap",
+    "materials_key": "",
+    "quality_scores": {
+      "structure optimization": 0,
+      "static": 1
+    }
+  }
+]
