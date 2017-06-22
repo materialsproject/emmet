@@ -69,7 +69,7 @@ class TaskTagger(Builder):
     def finalize(self):
         pass
 
-    @clsmethod
+    @classmethod
     def task_type(cls, task_doc):
         """
         Determines the task_type
