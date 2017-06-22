@@ -39,3 +39,23 @@ def make_mongolike(d, get_key, put_key):
         remainder = put_key.split(".", 1)[1]
         return {lead_key : make_mongolike(d,get_key,remainder)}
     return {lead_key: get_mongolike(d,get_key)}
+
+
+def recursive_update(d,u):
+    """
+    Recursive updates d with values from u
+    :param d: dict to update
+    :param u: updates to propogate
+    :return: 
+    """
+
+    for k,v in u.items():
+        if k in d:
+            if isinstance(v,dict) and isinstance(d[k],dict):
+                recursive_update(d[k],v)
+            elif isinstance(v,list) and isinstance(d[k],list):
+                d[k].extend(v)
+            else:
+                d[k] = v
+        else:
+            d[k] = v
