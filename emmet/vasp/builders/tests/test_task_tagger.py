@@ -11,11 +11,13 @@ __email__ = "shyamd@lbl.gov"
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 test_tasks = os.path.join(module_dir, "..","..","..", "..", "test_files", "test_tasktagger_tasks.json")
 
-class TaslTaggerTest(unittest.TestCase):
+class TaskTaggerTest(unittest.TestCase):
     def setUp(self):
         # Set up test db, set up mpsft, etc.
         self.test_tasks = JSONStore(test_tasks)
         self.task_types = MemoryStore("task_types")
+        self.test_tasks.connect()
+        self.task_types.connect()
 
     def test_mp_defs(self):
         task_tagger = TaskTagger(tasks=self.test_tasks,
