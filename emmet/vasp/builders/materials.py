@@ -1,18 +1,17 @@
-import os
 from datetime import datetime
-from pymongo import ReturnDocument
 
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from emmet.vasp.builders.task_tagger import TaskTagger
-from emmet.utils import get_mongolike
+from emmet.utils import make_mongolike, recursive_update
 from maggma.builders import Builder
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class MaterialsBuilder(Builder):
-    def __init__(self, tasks, materials_settings, materials, snls=None, query={}, only_snls=False, ltol=0.2, stol=0.3, angle_tol=5):
+    def __init__(self, tasks, materials_settings, materials, snls=None, query={}, only_snls=False, ltol=0.2, stol=0.3,
+                 angle_tol=5):
         """
         Creates a materials collection from tasks and tags
         
@@ -110,29 +109,51 @@ class MaterialsBuilder(Builder):
         t_id = t['task_id']
 
         # Convert the task doc into a serious of properties in the materials doc with the right structure
-        props = [make_mongo_like(t, prop['tasks_key'], prop['materials_key']) for prop in self.__settings if
+        props = [make_mongolike(t, prop['tasks_key'], prop['materials_key']) for prop in self.__settings if
                  task_type in prop['quality_scores'].keys()]
 
         # Add in the provenance for the properties
-        origin = {prop['materials_key']: {"task_type": t_type,
-                                          "task_id": t_id,
-                                          "updated_at": datetime.utcnow()} for
-                  prop in self.__settings if t_type in prop['quality_score'].keys()}
+        origins = {prop['materials_key']: {"task_type": t_type,
+                                           "task_id": t_id,
+                                           "updated_at": datetime.utcnow()} for
+                   prop in self.__settings if t_type in prop['quality_score'].keys()}
 
         d = {"created_at": datetime.utcnow(),
-             "updated_at": datetime.utcnow(),
-             "task_ids": t_id.
+             "updated_at": datetime.utcnow(),  # TODO: Should this be done by the store?
+             "task_ids": [t_id].
              "material_id": t_id,
-             "origins": origin
+             "origins": origins
              }
 
         for prop in props:
-            d.update(prop)
+            recursive_update(d, prop)
 
         return d
 
     def update_mat(self, t, m):
-        pass
+        t_type = TaskTagger.task_type(t)
+        t_id = t['task_id']
+
+        props = []
+        origins = {}
+        for prop in self.__settings:
+            if t_type in prop['quality_scores'].keys():
+                t_score = prop['quality_scores'][t_type]
+                m_type = m['origins'].get(prop['materials_key'], {}).get('task_type', None)
+                m_score = prop['quality_scores'].get(m_type, 0)
+                if t_score >= m_score:
+                    props.append(make_mongolike(t, prop['tasks_key'], prop['materials_key']))
+                    origins[prop['materials_key']] = {"task_type": t_type,
+                                           "task_id": t_id,
+                                           "updated_at": datetime.utcnow()}
+        if len(props) > 0:
+            for prop in props:
+                recursive_update(m, prop)
+            recursive_update(m['origins'], origins)
+
+        m["updated_at"] = datetime.utcnow()  # TODO: Should be done by store?
+        m["task_ids"].append(t_id)
+
 
     def update_targets(self, items):
         """
