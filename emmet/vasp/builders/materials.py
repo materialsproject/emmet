@@ -36,6 +36,9 @@ class MaterialsBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
 
+
+        self.__init_time = datetime.utcnow()
+
         # TODO: Add in LU Filter into query
 
     def get_items(self):
@@ -160,8 +163,17 @@ class MaterialsBuilder(Builder):
         Inserts the new task_types into the task_types collection
 
         Args:
-            items ([dict]): task_type dicts to insert into task_types collection
+            items ([[dict]]): task_type dicts to insert into task_types collection
+                                We know this will be double list [[]] of dicts from the process items
+
         """
+
+        for m_list in items:
+            for m in m_list:
+                if m["update_at"] > self.__init_time:
+                    self.materials.collection.update({"material_id": m['material_id']},{"$set": m})
+
+        # TODO: Do we add in some sort of last update stuff here?
 
     def finalize(self):
         pass
