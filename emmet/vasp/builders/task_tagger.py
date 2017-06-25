@@ -77,7 +77,7 @@ class TaskTagger(Builder):
         Args:
             task_doc (dict): task_document with original input
         """
-        incar = task_doc["input_orig"]["INCAR"]
+        incar = task_doc["input"]["incar"]
 
         if incar.get("LHFCALC",False):
             if incar.get("NSW") == 0:

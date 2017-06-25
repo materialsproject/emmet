@@ -3,8 +3,8 @@
     "task_id": 1,
     "state": "successful",
     "true_task_type": "structure optimization",
-    "input_orig": {
-      "INCAR": {
+    "input": {
+      "incar": {
         "ALGO": "Fast",
         "EDIFF": 0.0001,
         "ENCUT": 520,
@@ -31,8 +31,8 @@
     "task_id": 2,
     "state": "successful",
     "true_task_type": "static",
-    "input_orig": {
-      "INCAR": {
+    "input": {
+      "incar": {
         "ALGO": "Normal",
         "EDIFF": 0.0001,
         "ENCUT": 520,
@@ -62,8 +62,8 @@
     "task_id": 3,
     "state": "successful",
     "true_task_type": "hse",
-    "input_orig": {
-      "INCAR": {
+    "input": {
+      "incar": {
         "ALGO": "All",
         "EDIFF": 0.0001,
         "ENCUT": 520,
@@ -93,8 +93,8 @@
     "task_id": 4,
     "state": "successful",
     "true_task_type": "hse bs",
-    "input_orig": {
-      "INCAR": {
+    "input": {
+      "incar": {
         "ALGO": "All",
         "EDIFF": 0.0001,
         "ENCUT": 520,
@@ -127,8 +127,8 @@
     "task_id": 5,
     "state": "sucessful",
     "true_task_type": "static dielectric",
-    "input_orig": {
-      "INCAR": {
+    "input": {
+      "incar": {
         "ALGO": "Normal",
         "EDIFF": 0.0001,
         "ENCUT": 520,
@@ -158,8 +158,8 @@
     "task_id": 6,
     "state": "successful",
     "true_task_type": "nscf line",
-    "input_orig": {
-      "INCAR": {
+    "input": {
+      "incar": {
         "ALGO": "Fast",
         "EDIFF": 0.0001,
         "ENCUT": 520,
@@ -184,8 +184,8 @@
     "task_id": 7,
     "state": "successful",
     "true_task_type": "nscf uniform",
-    "input_orig": {
-      "INCAR": {
+    "input": {
+      "incar": {
         "ALGO": "Fast",
         "EDIFF": 0.0001,
         "ENCUT": 520,
