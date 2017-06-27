@@ -32,6 +32,7 @@ class MaterialsBuilder(Builder):
         self.materials = materials
         self.query = query
         self.snls = snls
+        self.only_snls = only_snls
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol
