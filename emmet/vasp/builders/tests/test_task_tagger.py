@@ -1,7 +1,6 @@
 import unittest
 import os
 
-from monty.serialization import loadfn
 from emmet.vasp.builders.task_tagger import TaskTagger
 from maggma.stores import JSONStore, MemoryStore
 
@@ -26,8 +25,8 @@ class TaskTaggerTest(unittest.TestCase):
         for t in task_tagger.get_items():
             processed = task_tagger.process_item(t)
             if processed:
-                self.assertEqual(processed['task_type'],
-                                 t['true_task_type'])
+                self.assertEqual(processed["task_type"],
+                                 t["true_task_type"])
 
 
 if __name__ == "__main__":
