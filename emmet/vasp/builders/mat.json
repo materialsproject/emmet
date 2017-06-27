@@ -1,10 +1,279 @@
 [
   {
-    "tasks_key": "band_gap",
-    "materials_key": "",
-    "quality_scores": {
-      "structure optimization": 0,
-      "static": 1
+    "tasks_key": "formula_anonymous",
+    "materials_key": "anonymous_formula",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "output.bandgap",
+    "materials_key": "band_gap",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2,
+      "static dielectric": 3,
+      "nscf line": 5,
+      "nscf uniform": 4,
+      "hse": 6,
+      "hse bs": 7
+    }
+  },
+  {
+    "tasks_key": "output.is_gap_direct",
+    "materials_key": "band_gap.is_direct",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2,
+      "static dielectric": 3,
+      "nscf line": 5,
+      "nscf uniform": 4,
+      "hse": 6,
+      "hse bs": 7
+    }
+  },
+  {
+    "tasks_key": "chemsys",
+    "materials_key": "chemsys",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+
+
+
+  {
+    "tasks_key": "analysis.delta_volume",
+    "materials_key": "delta_volume",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "output.density",
+    "materials_key": "density",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+
+
+  {
+    "tasks_key": "calcs_reversed.0.output.efermi",
+    "materials_key": "efermi",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2,
+      "static dielectric": 3,
+      "nscf line": 5,
+      "nscf uniform": 4,
+      "hse": 6,
+      "hse bs": 7
+    }
+  },
+  {
+    "tasks_key": "elements",
+    "materials_key": "elements",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+
+  {
+    "tasks_key": "output.energy",
+    "materials_key": "final_energy",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2,
+      "static dielectric": 3,
+      "hse": 4
+    }
+  },
+  {
+    "tasks_key": "output.energy_per_atom",
+    "materials_key": "final_energy_per_atom",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2,
+      "static dielectric": 3,
+      "hse": 4
+    }
+  },
+  {
+    "tasks_key": "input.hubbards",
+    "materials_key": "hubbards",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "input.structure",
+    "materials_key": "initial_structure",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "calcs_reversed.0.input.incar",
+    "materials_key": "input.incar",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+
+  {
+    "tasks_key": "calcs_reversed.0.input.kpoints",
+    "materials_key": "input.kpoints",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "calcs_reversed.0.input.lattice_rec",
+    "materials_key": "input.lattice_rec",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "calcs_reversed.0.input.parameters",
+    "materials_key": "input.parameters",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "calcs_reversed.0.input.potcar",
+    "materials_key": "input.potcar",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "calcs_reversed.0.output.ionic_steps",
+    "materials_key": "ionic_steps",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "input.is_hubbard",
+    "materials_key": "is_hubbard",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+
+  {
+    "tasks_key": "nelements",
+    "materials_key": "nelements",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+
+  {
+    "tasks_key": "nsites",
+    "materials_key": "nsites",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2,
+      "static dielectric": 3,
+      "nscf line": 4,
+      "nscf uniform": 5,
+      "hse": 6,
+      "hse bs": 7
+    }
+  },
+  {
+    "tasks_key": "formula_pretty",
+    "materials_key": "pretty_formula",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2,
+      "static dielectric": 3,
+      "nscf line": 4,
+      "nscf uniform": 5,
+      "hse": 6,
+      "hse bs": 7
+    }
+  },
+  {
+    "tasks_key": "input.pseudo_potential",
+    "materials_key": "pseudo_potential",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "formula_reduced_abc",
+    "materials_key": "reduced_cell_formula",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "run_stats.overall",
+    "materials_key": "run_stats.overall",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "run_stats.relax1",
+    "materials_key": "run_stats.relax1",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "run_stats.relax2",
+    "materials_key": "run_stats.relax2",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "output.spacegroup",
+    "materials_key": "spacegroup",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+
+  {
+    "tasks_key": "output.structure",
+    "materials_key": "structure",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+
+
+  {
+    "tasks_key": "calcs_reversed.0.output.outcar.total_magnetization",
+    "materials_key": "total_magnetization",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2,
+      "static dielectric": 3,
+      "hse": 6,
+      "hse bs": 7
+    }
+  },
+
+  {
+    "tasks_key": "output.structure.lattice.volume",
+    "materials_key": "volume",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "analysis.warnings",
+    "materials_key": "warnings",
+    "quality_score": {
+      "structure optimization": 1
     }
   }
 ]
