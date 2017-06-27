@@ -11,7 +11,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 class MaterialsBuilder(Builder):
     def __init__(self, tasks, materials_settings, materials, snls=None, query={}, only_snls=False, ltol=0.2, stol=0.3,
-                 angle_tol=5):
+                 angle_tol=5, **kwargs):
         """
         Creates a materials collection from tasks and tags
         
@@ -40,6 +40,10 @@ class MaterialsBuilder(Builder):
         self.__init_time = datetime.utcnow()
 
         # TODO: Add in LU Filter into query
+
+        super().__init__(sources=[tasks, materials_settings, snls] if snls else [tasks, materials_settings],
+                         targets=[materials],
+                         **kwargs)
 
     def get_items(self):
         """
@@ -190,9 +194,8 @@ class MaterialsBuilder(Builder):
         for m_list in items:
             for m in m_list:
                 if m["update_at"] > self.__init_time:
-                    self.materials.collection.update({"material_id": m['material_id']}, {"$set": m})
+                    self.materials.collection.update_one({"material_id": m['material_id']}, {"$set": m})
 
-                    # TODO: Add in material id tagging
                     # TODO: Do we add in some sort of last update stuff here?
                     # TODO: Add in SNL checking here
 
