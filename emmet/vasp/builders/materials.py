@@ -4,7 +4,7 @@ from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from emmet.vasp.builders.task_tagger import TaskTagger
 from emmet.utils import make_mongolike, recursive_update
-from maggma.builders import Builder
+from maggma.builder import Builder
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -28,14 +28,13 @@ class MaterialsBuilder(Builder):
         """
 
         self.tasks = tasks
-        self.__settings = list(materials_settings.find())
+        self.__settings = list(materials_settings().find())
         self.materials = materials
         self.query = query
         self.snls = snls
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol
-
 
         self.__init_time = datetime.utcnow()
 
@@ -49,50 +48,55 @@ class MaterialsBuilder(Builder):
             generator or list relevant tasks and materials to process into materials documents
         """
 
-        # Get all successfull task_ids since the last update and group them by reduced_formula
+        # Get only successfull tasks
         q = dict(self.query)
         q["state"] = "successful"
-        formulas_reduced = self.tasks.aggregate([{"$match": q},
-                                                 {"$project": {"task_id": 1, "pretty_formula": 1}},
-                                                 {"$group": {"_id": {"pretty_formula": "$pretty_formula"},
-                                                             "task_ids": {"$addToSet": "$task_id"}}}
-                                                 ])
 
-        for formula, task_ids in formulas_reduced.items():
-            # Find the materials with reduced formula
-            # return all tasks and materials
+        # MongoDB aggregation to find and group all successfull tasks by formula_pretty
+        formulas_reduced = self.tasks().aggregate([{"$match": q},
+                                                   {"$project": {"task_id": 1, "formula_pretty": 1}},
+                                                   {"$group": {"_id": {"formula_pretty": "$formula_pretty"},
+                                                               "task_ids": {"$addToSet": "$task_id"}}}
+                                                   ])
+
+        for doc in formulas_reduced:
+            formula = doc["_id"]['formula_pretty']
+            task_ids = doc['task_ids']
+
             tasks_q = dict(q)
             tasks_q["task_id"] = {"$in": task_ids}
-            tasks = list[self.tasks.find(tasks_q)]
+            tasks = list(self.tasks().find(tasks_q))
 
             mats_q = dict(q)
-            mats_q["pretty_formula"] = formula
-            mats = list[self.materials.find(mats_q)]
+            mats_q["formula_pretty"] = formula
+            mats = list(self.materials().find(mats_q))
 
+            # return all matching materials and tasks for this formula
             yield tasks, mats
 
     def process_item(self, item):
         """
-        Process the tasks and materials 
+        Process the tasks and materials into just a list of materials
 
         Args:
             item ((dict,[dict])): a task doc and a list of possible tag definitions
         """
 
         tasks = item[0]
-        mats = item[1]
+        materials = item[1]
 
         for t in tasks:
-            mpid = cls.match(t, mats)
-            if mpid:
-                m = filter(lambda x: x["material_id"] == mpid, mats)
+            m = self.match(t, materials)
+
+            if m:
                 self.update_mat(t, m)
             else:
-                mats.append(self.new_mat(t))
+                materials.append(self.new_mat(t))
 
-        return mats
+        return materials
 
     def match(self, task, mats):
+        """ Finds a material doc that matches with the given task """
         sm = StructureMatcher(ltol=self.ltol, stol=self.stol, angle_tol=self.angle_tol,
                               primitive_cell=True, scale=True,
                               attempt_supercell=False, allow_subset=False,
@@ -103,35 +107,44 @@ class MaterialsBuilder(Builder):
             m_struct = Structure.from_dict(m["structure"])
             if task["output"]["spacegroup"]["number"] == m["spacegroup"]["number"] and \
                     sm.fit(m_struct, t_struct):
-                return True
+                return m
 
-        return False
+        return None
 
     def new_mat(self, t):
         t_type = TaskTagger.task_type(t)
         t_id = t['task_id']
 
-        # Convert the task doc into a serious of properties in the materials doc with the right structure
+        # Convert the task doc into a serious of properties in the materials doc with the right document structure
         props = [make_mongolike(t, prop['tasks_key'], prop['materials_key']) for prop in self.__settings if
-                 task_type in prop['quality_scores'].keys()]
+                 t_type in prop['quality_score'].keys()]
 
         # Add in the provenance for the properties
-        origins = {prop['materials_key']: {"task_type": t_type,
-                                           "task_id": t_id,
-                                           "updated_at": datetime.utcnow()} for
-                   prop in self.__settings if t_type in prop['quality_score'].keys()}
+        origins = [{"materials_key": prop["materials_key"],
+                    "task_type": t_type,
+                    "task_id": t_id,
+                    "updated_at": datetime.utcnow()} for prop in self.__settings if
+                   t_type in prop['quality_score'].keys()]
 
+        # Temp document with basic information
         d = {"created_at": datetime.utcnow(),
              "updated_at": datetime.utcnow(),  # TODO: Should this be done by the store?
-             "task_ids": [t_id].
+             "task_ids": [t_id],
              "material_id": t_id,
              "origins": origins
              }
 
+        # Insert the properties into the temp document
         for prop in props:
             recursive_update(d, prop)
 
         return d
+
+    def get_origin(self, origins, prop):
+        for doc in origins:
+            if doc['materials_key'] is prop['materials_key']:
+                return doc
+        return {}
 
     def update_mat(self, t, m):
         t_type = TaskTagger.task_type(t)
@@ -140,15 +153,21 @@ class MaterialsBuilder(Builder):
         props = []
         origins = {}
         for prop in self.__settings:
-            if t_type in prop['quality_scores'].keys():
-                t_score = prop['quality_scores'][t_type]
-                m_type = m['origins'].get(prop['materials_key'], {}).get('task_type', None)
-                m_score = prop['quality_scores'].get(m_type, 0)
-                if t_score >= m_score:
+            # If this task type is considered for this property
+            if t_type in prop['quality_score'].keys():
+                t_score = prop['quality_score'][t_type]
+                prop_doc = self.get_origin(origins, prop)
+                m_type = prop_doc.get('task_type', "")
+                m_score = prop_doc.get('quality_score', {}).get(m_type, 0)
+                # if the task property is of a higher quality than the material property
+                if t_score > m_score:
+                    # Build the property into a document with the right structure and save it
                     props.append(make_mongolike(t, prop['tasks_key'], prop['materials_key']))
-                    origins[prop['materials_key']] = {"task_type": t_type,
-                                           "task_id": t_id,
-                                           "updated_at": datetime.utcnow()}
+                    prop_doc.update({"task_type": t_type,
+                                     "task_id": t_id,
+                                     "updated_at": datetime.utcnow()})
+
+        # If there are properties to update
         if len(props) > 0:
             for prop in props:
                 recursive_update(m, prop)
@@ -156,7 +175,6 @@ class MaterialsBuilder(Builder):
 
         m["updated_at"] = datetime.utcnow()  # TODO: Should be done by store?
         m["task_ids"].append(t_id)
-
 
     def update_targets(self, items):
         """
@@ -171,9 +189,11 @@ class MaterialsBuilder(Builder):
         for m_list in items:
             for m in m_list:
                 if m["update_at"] > self.__init_time:
-                    self.materials.collection.update({"material_id": m['material_id']},{"$set": m})
+                    self.materials.collection.update({"material_id": m['material_id']}, {"$set": m})
 
-        # TODO: Do we add in some sort of last update stuff here?
+                    # TODO: Add in material id tagging
+                    # TODO: Do we add in some sort of last update stuff here?
+                    # TODO: Add in SNL checking here
 
     def finalize(self):
         pass
