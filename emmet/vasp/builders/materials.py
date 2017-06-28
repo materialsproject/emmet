@@ -129,7 +129,7 @@ class MaterialsBuilder(Builder):
                     "task_type": t_type,
                     "task_id": t_id,
                     "updated_at": datetime.utcnow()} for prop in self.__settings if
-                   t_type in prop['quality_score'].keys()]
+                   t_type in prop['quality_score'].keys() and len(prop['quality_score'].keys()) > 1]
 
         # Temp document with basic information
         d = {"created_at": datetime.utcnow(),
@@ -168,9 +168,10 @@ class MaterialsBuilder(Builder):
                 if t_score > m_score:
                     # Build the property into a document with the right structure and save it
                     props.append(make_mongolike(t, prop['tasks_key'], prop['materials_key']))
-                    prop_doc.update({"task_type": t_type,
-                                     "task_id": t_id,
-                                     "updated_at": datetime.utcnow()})
+                    if len(prop['quality_scores'].keys()) > 1:
+                        prop_doc.update({"task_type": t_type,
+                                         "task_id": t_id,
+                                         "updated_at": datetime.utcnow()})
 
         # If there are properties to update
         if len(props) > 0:
