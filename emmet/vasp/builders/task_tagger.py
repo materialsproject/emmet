@@ -69,14 +69,15 @@ class TaskTagger(Builder):
     def finalize(self):
         pass
 
-    def task_type(self, task_doc):
+    @classmethod
+    def task_type(cls, task_doc):
         """
         Determines the task_type
 
         Args:
             task_doc (dict): task_document with original input
         """
-        incar = task_doc["input_orig"]["INCAR"]
+        incar = task_doc["input"]["incar"]
 
         if incar.get("LHFCALC",False):
             if incar.get("NSW") == 0:
