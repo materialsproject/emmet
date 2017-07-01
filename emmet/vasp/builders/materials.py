@@ -37,8 +37,6 @@ class MaterialsBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
 
-        self.__init_time = datetime.utcnow()
-
         # TODO: Add in LU Filter into query
 
         super().__init__(sources=[tasks, materials_settings, snls] if snls else [tasks, materials_settings],
@@ -98,7 +96,9 @@ class MaterialsBuilder(Builder):
             else:
                 materials.append(self.new_mat(t))
 
-        return materials
+        t_ids = [t['task_id'] for t in tasks]
+
+        return materials, t_ids
 
     def match(self, task, mats):
         """ Finds a material doc that matches with the given task """
@@ -145,30 +145,38 @@ class MaterialsBuilder(Builder):
 
         return d
 
-    def get_origin(self, origins, prop):
-        for doc in origins:
-            if doc['materials_key'] is prop['materials_key']:
-                return doc
-        return {}
-
     def update_mat(self, t, m):
+
+        def get_origin(origins, prop):
+            for doc in origins:
+                if doc['materials_key'] is prop['materials_key']:
+                    return doc
+            return {}
+
         t_type = TaskTagger.task_type(t)
         t_id = t['task_id']
 
         props = []
-        origins = {}
+
         for prop in self.__settings:
             # If this task type is considered for this property
             if t_type in prop['quality_score'].keys():
+
+                # Get the property score
                 t_score = prop['quality_score'][t_type]
-                prop_doc = self.get_origin(origins, prop)
+
+                # Get the origin data for the property in the materials doc
+                prop_doc = get_origin(m['origins'], prop)
                 m_type = prop_doc.get('task_type', "")
                 m_score = prop_doc.get('quality_score', {}).get(m_type, 0)
+
                 # if the task property is of a higher quality than the material property
-                if t_score > m_score:
+                # greater than or equal is used to allow for multiple calculations of the same type
+                # assuming successive calculations are 'better'
+                if t_score >= m_score:
                     # Build the property into a document with the right structure and save it
                     props.append(make_mongolike(t, prop['tasks_key'], prop['materials_key']))
-                    if len(prop['quality_scores'].keys()) > 1:
+                    if len(prop['quality_score'].keys()) > 1:
                         prop_doc.update({"task_type": t_type,
                                          "task_id": t_id,
                                          "updated_at": datetime.utcnow()})
@@ -177,9 +185,7 @@ class MaterialsBuilder(Builder):
         if len(props) > 0:
             for prop in props:
                 recursive_update(m, prop)
-            recursive_update(m['origins'], origins)
 
-        m["updated_at"] = datetime.utcnow()  # TODO: Should be done by store?
         m["task_ids"].append(t_id)
 
     def update_targets(self, items):
@@ -191,10 +197,13 @@ class MaterialsBuilder(Builder):
                                 We know this will be double list [[]] of dicts from the process items
 
         """
-
-        for m_list in items:
+        mats = items[0]
+        t_ids = set(items[1])
+        for m_list in mats:
             for m in m_list:
-                if m["update_at"] > self.__init_time:
+                if len(set(m["task_ids"]).intersection(t_ids)) > 0:
+                    m['updated_at'] = datetime.utcnow()
+
                     self.materials.collection.update_one({"material_id": m['material_id']}, {"$set": m})
 
                     # TODO: Do we add in some sort of last update stuff here?
