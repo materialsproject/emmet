@@ -5,6 +5,8 @@ from maggma.builder import Builder
 from itertools import chain, combinations
 from pymatgen.entries.computed_entries import ComputedEntry
 from pymatgen import Structure, Composition
+from pymatgen.phasediagram.maker import PhaseDiagram
+from pymatgen.phasediagram.analyzer import PDAnalyzer
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -39,11 +41,11 @@ class ThermoBuilder(Builder):
         """
         q = dict(self.query)
 
-        # Find all chem systems that need to be update
-        # 1.) Any system with a new material
+        # Find materials that need an update
+        # 1.) All new materials
         to_update = set(self.materials().find(q).distinct("material_id")) - set(
             self.thermo().find().distinct("material_id"))
-        # 2.) Any system with an updated material
+        # 2.) All materials that have been updated since thermo props were last calculated
         mat_updated_dates = {m['material_id']: m['updated_at'] for m in
                              self.materials().find(q, {"material_id": 1, "updated_at": 1})}
         thermo_updated_dates = {m['material_id']: m['updated_at'] for m in
@@ -61,7 +63,7 @@ class ThermoBuilder(Builder):
         for chemsys in comps:
             yield self.get_entries(chemsys)
 
-    def get_entries(self, chemsys):
+    def get_entries(self, entries):
         """
          Get all entries in a chemsys from materials
         """
@@ -94,6 +96,29 @@ class ThermoBuilder(Builder):
         Args:
             item ([entry]): a list of entries to process into a phase diagram
         """
+        entries = self.__compat.process_entries(item)
+        pd = PhaseDiagram(entries)
+        analyzer = PDAnalyzer(pd)
+
+        docs = []
+
+        for e in entries:
+            (decomp, ehull) = \
+                analyzer.get_decomp_and_e_above_hull(e)
+
+            d = {"material_id": e.entry_id}
+            d["thermo"] = {}
+            d["thermo"]["formation_energy_per_atom"] = pd.get_form_energy_per_atom(e)
+            d["thermo"]["e_above_hull"] = ehull
+            d["thermo"]["is_stable"] = e in stable_entries
+            d["thermo"]["eq_reaction_e"] = analyzer.get_equilibrium_reaction_energy(e)
+            d["thermo"]["decomposes_to"] = [{"material_id": de.entry_id,
+                                             "formula": de.composition.formula,
+                                             "amount": amt}
+                                            for de, amt in decomp.items()]
+            docs.append(d)
+
+        return docs
 
     def update_targets(self, items):
         """
