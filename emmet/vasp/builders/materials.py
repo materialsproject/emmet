@@ -29,6 +29,7 @@ class MaterialsBuilder(Builder):
 
         self.tasks = tasks
         self.__settings = list(materials_settings().find())
+        self.materials_settings = materials_settings
         self.materials = materials
         self.query = query
         self.snls = snls
