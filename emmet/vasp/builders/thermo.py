@@ -5,7 +5,7 @@ from maggma.builder import Builder
 from itertools import chain, combinations
 from pymatgen.entries.computed_entries import ComputedEntry
 from pymatgen import Structure, Composition
-from pymatgen.phasediagram.maker import PhaseDiagram
+from pymatgen.phasediagram.maker import PhaseDiagram, PhaseDiagramError
 from pymatgen.phasediagram.analyzer import PDAnalyzer
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
@@ -107,26 +107,29 @@ class ThermoBuilder(Builder):
             [dict]: a list of thermo dictionaries to update thermo with
         """
         entries = self.__compat.process_entries(item)
-        pd = PhaseDiagram(entries)
-        analyzer = PDAnalyzer(pd)
+        try:
+            pd = PhaseDiagram(entries)
+            analyzer = PDAnalyzer(pd)
 
-        docs = []
+            docs = []
 
-        for e in entries:
-            (decomp, ehull) = \
-                analyzer.get_decomp_and_e_above_hull(e)
+            for e in entries:
+                (decomp, ehull) = \
+                    analyzer.get_decomp_and_e_above_hull(e)
 
-            d = {"material_id": e.entry_id}
-            d["thermo"] = {}
-            d["thermo"]["formation_energy_per_atom"] = pd.get_form_energy_per_atom(e)
-            d["thermo"]["e_above_hull"] = ehull
-            d["thermo"]["is_stable"] = e in stable_entries
-            d["thermo"]["eq_reaction_e"] = analyzer.get_equilibrium_reaction_energy(e)
-            d["thermo"]["decomposes_to"] = [{"material_id": de.entry_id,
-                                             "formula": de.composition.formula,
-                                             "amount": amt}
-                                            for de, amt in decomp.items()]
-            docs.append(d)
+                d = {"material_id": e.entry_id}
+                d["thermo"] = {}
+                d["thermo"]["formation_energy_per_atom"] = pd.get_form_energy_per_atom(e)
+                d["thermo"]["e_above_hull"] = ehull
+                d["thermo"]["is_stable"] = e in stable_entries
+                d["thermo"]["eq_reaction_e"] = analyzer.get_equilibrium_reaction_energy(e)
+                d["thermo"]["decomposes_to"] = [{"material_id": de.entry_id,
+                                                 "formula": de.composition.formula,
+                                                 "amount": amt}
+                                                for de, amt in decomp.items()]
+                docs.append(d)
+        except PhaseDiagramError as p:
+            return []
 
         return docs
 
