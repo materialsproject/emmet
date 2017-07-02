@@ -39,30 +39,27 @@ class ThermoBuilder(Builder):
         Returns:
             generator of relevant entries from one chemical system
         """
+
+        # All relevant materials that have been updated since thermo props were last calculated
         q = dict(self.query)
+        q.update(self.materials.lu_filter(self.thermo))
+        comps = [m['elements'] for m in self.materials().find(q, {"elements": 1})]
 
-        # Find materials that need an update
-        # 1.) All new materials
-        to_update = set(self.materials().find(q).distinct("material_id")) - set(
-            self.thermo().find().distinct("material_id"))
-        # 2.) All materials that have been updated since thermo props were last calculated
-        m_lu = self.materials.lu_field
-        t_lu = self.thermo.lu_field
-        mat_updated_dates = {m['material_id']: m[m_lu] for m in
-                             self.materials().find(q, {"material_id": 1, m_lu: 1})}
-        thermo_updated_dates = {t['material_id']: t[t_lu] for t in
-                                self.thermo().find({}, {"material_id": 1, t_lu: 1})}
-        to_update |= {m for m, d in mat_updated_dates.items() if d > thermo_updated_dates.get(m, datetime.min)}
+        # Only yields maximal super sets: e.g. if ["A","B"] and ["A"] are both in the list, will only yield ["A","B"]
+        # as this will calculate thermo props for all ["A"] compounds
+        processed = set()
+        # Start with the largest set to ensure we don't miss superset/subset relations
+        for chemsys in sorted(comps, key=lambda x: len(x), reverse=True):
+            if "-".join(sorted(chemsys)) not in processed:
+                processed |= self.chemsys_permutations(chemsys)
+                yield self.get_entries(chemsys)
 
-        # TODO: Make this more efficient
-        # TODO: Reduce down to supersets, no need to calcuate A-B if we're going to calc A-B-Cs
-        comps = []
-        for m in to_update:
-            q['material_id'] = m
-            comps.append(self.materials().find_one(q, {"elements": 1}).get('elements', {}))
 
-        for chemsys in comps:
-            yield self.get_entries(chemsys)
+    def chemsys_permutations(self, chemsys):
+        # Fancy way of getting every unique permutation of elements for all possible number of elements:
+        return {"-".join(sorted(c)) for c in
+         chain(*[combinations(chemsys, i) for i in range(1, len(chemsys) + 1)])}
+
 
     def get_entries(self, chemsys):
         """
@@ -74,15 +71,13 @@ class ThermoBuilder(Builder):
         Returns:
             set(ComputedEntry): a set of entries for this system
         """
-        all_entries = []
-        # Fancy way of getting every unique permutation of elements for all possible number of elements:
-        chemsys_list = ["-".join(sorted(c)) for c in
-                        chain(*[combinations(chemsys, i) for i in range(1, len(chemsys) + 1)])]
+
         new_q = dict(self.query)
-        new_q["chemsys"] = {"$in": chemsys_list}
+        new_q["chemsys"] = {"$in": list(self.chemsys_permutations(chemsys))}
         fields = {f: 1 for f in ["material_id", "thermo.energy", "unit_cell_formula", "calc_settings"]}
         data = list(self.materials().find(new_q, fields))
 
+        all_entries = []
         for d in data:
             parameters = {"is_hubbard": d['calc_settings']["is_hubbard"],
                           "hubbards": d['calc_settings']["hubbards"],
@@ -106,7 +101,7 @@ class ThermoBuilder(Builder):
         Returns:
             [dict]: a list of thermo dictionaries to update thermo with
         """
-        entries = self.__compat.process_entries(item)
+        entries = self.__compat.process_entries(item))
         try:
             pd = PhaseDiagram(entries)
             analyzer = PDAnalyzer(pd)
