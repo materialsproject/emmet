@@ -62,12 +62,16 @@ class MaterialsBuilder(Builder):
                                                                "task_ids": {"$addToSet": "$task_id"}}}
                                                    ])
 
+        # Find all processed task_ids
+        processed_tasks = set(self.materials().distinct("task_ids"))
+
         for doc in formulas_reduced:
             formula = doc["_id"]['formula_pretty']
-            task_ids = doc['task_ids']
+            task_ids = set(doc['task_ids'])
+            task_ids -= processed_tasks
 
             tasks_q = dict(q)
-            tasks_q["task_id"] = {"$in": task_ids}
+            tasks_q["task_id"] = {"$in": list(task_ids)}
             tasks = list(self.tasks().find(tasks_q))
 
             mats_q = dict(q)
@@ -89,10 +93,10 @@ class MaterialsBuilder(Builder):
         materials = item[1]
 
         for t in tasks:
-            m = self.match(t, materials)
+            mat = self.match(t, materials)
 
-            if m:
-                self.update_mat(t, m)
+            if mat:
+                self.update_mat(t, mat)
             else:
                 materials.append(self.new_mat(t))
 
@@ -133,7 +137,6 @@ class MaterialsBuilder(Builder):
 
         # Temp document with basic information
         d = {"created_at": datetime.utcnow(),
-             "updated_at": datetime.utcnow(),  # TODO: Should this be done by the store?
              "task_ids": [t_id],
              "material_id": t_id,
              "origins": origins
@@ -197,16 +200,13 @@ class MaterialsBuilder(Builder):
                                 We know this will be double list [[]] of dicts from the process items
 
         """
-        mats = items[0]
-        t_ids = set(items[1])
-        for m_list in mats:
+
+        for m_list, t_ids in items:
             for m in m_list:
                 if len(set(m["task_ids"]).intersection(t_ids)) > 0:
-                    m['updated_at'] = datetime.utcnow()
+                    m[self.materials.lu_field] = datetime.utcnow()
+                    self.materials().replace_one({"material_id": m['material_id']}, m, upsert=True)
 
-                    self.materials.collection.update_one({"material_id": m['material_id']}, {"$set": m})
-
-                    # TODO: Do we add in some sort of last update stuff here?
                     # TODO: Add in SNL checking here
 
     def finalize(self):
