@@ -63,7 +63,7 @@ class ThermoBuilder(Builder):
         for chemsys in comps:
             yield self.get_entries(chemsys)
 
-    def get_entries(self, entries):
+    def get_entries(self, chemsys):
         """
          Get all entries in a chemsys from materials
         """
