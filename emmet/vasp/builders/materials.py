@@ -55,6 +55,9 @@ class MaterialsBuilder(Builder):
         q = dict(self.query)
         q["state"] = "successful"
 
+        # only consider tasks that have been updated since materials was last updated
+        q.update(self.tasks.lu_filter(self.materials))
+
         # MongoDB aggregation to find and group all successfull tasks by formula_pretty
         formulas_reduced = self.tasks().aggregate([{"$match": q},
                                                    {"$project": {"task_id": 1, "formula_pretty": 1}},
@@ -62,13 +65,9 @@ class MaterialsBuilder(Builder):
                                                                "task_ids": {"$addToSet": "$task_id"}}}
                                                    ])
 
-        # Find all processed task_ids
-        processed_tasks = set(self.materials().distinct("task_ids"))
-
         for doc in formulas_reduced:
             formula = doc["_id"]['formula_pretty']
             task_ids = set(doc['task_ids'])
-            task_ids -= processed_tasks
 
             tasks_q = dict(q)
             tasks_q["task_id"] = {"$in": list(task_ids)}
@@ -232,6 +231,7 @@ class MaterialsBuilder(Builder):
         for m_list, t_ids in items:
             for m in m_list:
                 if len(set(m["task_ids"]).intersection(t_ids)) > 0:
+                    # Update the last updated field
                     m[self.materials.lu_field] = datetime.utcnow()
                     self.materials().replace_one({"material_id": m['material_id']}, m, upsert=True)
 
