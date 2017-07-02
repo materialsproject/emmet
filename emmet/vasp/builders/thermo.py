@@ -34,10 +34,10 @@ class ThermoBuilder(Builder):
 
     def get_items(self):
         """
-        Gets all items to process into materials documents
+        Gets sets of entries from chemical systems that need to be processed 
 
         Returns:
-            generator or list relevant tasks and materials to process into materials documents
+            generator of relevant entries from one chemical system
         """
         q = dict(self.query)
 
@@ -46,26 +46,33 @@ class ThermoBuilder(Builder):
         to_update = set(self.materials().find(q).distinct("material_id")) - set(
             self.thermo().find().distinct("material_id"))
         # 2.) All materials that have been updated since thermo props were last calculated
-        mat_updated_dates = {m['material_id']: m['updated_at'] for m in
-                             self.materials().find(q, {"material_id": 1, "updated_at": 1})}
-        thermo_updated_dates = {m['material_id']: m['updated_at'] for m in
-                                self.thermo().find({}, {"material_id": 1, "updated_at": 1})}
+        m_lu = self.materials.lu_field
+        t_lu = self.thermo.lu_field
+        mat_updated_dates = {m['material_id']: m[m_lu] for m in
+                             self.materials().find(q, {"material_id": 1, m_lu: 1})}
+        thermo_updated_dates = {t['material_id']: t[t_lu] for t in
+                                self.thermo().find({}, {"material_id": 1, t_lu: 1})}
         to_update |= {m for m, d in mat_updated_dates.items() if d > thermo_updated_dates.get(m, datetime.min)}
 
         # TODO: Make this more efficient
+        # TODO: Reduce down to supersets, no need to calcuate A-B if we're going to calc A-B-Cs
         comps = []
         for m in to_update:
             q['material_id'] = m
             comps.append(self.materials().find_one(q, {"elements": 1}).get('elements', {}))
-
-        # TODO: Reduce down to supersets, no need to calcuate A-B if we're going to calc A-B-C
 
         for chemsys in comps:
             yield self.get_entries(chemsys)
 
     def get_entries(self, chemsys):
         """
-         Get all entries in a chemsys from materials
+        Get all entries in a chemsys from materials
+        
+        Args:
+            chemsys([str]): a chemical system represented by an array of elements
+            
+        Returns:
+            set(ComputedEntry): a set of entries for this system
         """
         all_entries = []
         # Fancy way of getting every unique permutation of elements for all possible number of elements:
@@ -94,7 +101,10 @@ class ThermoBuilder(Builder):
         Process the list of entries into a phase diagram
 
         Args:
-            item ([entry]): a list of entries to process into a phase diagram
+            item (set(entry)): a list of entries to process into a phase diagram
+            
+        Returns:
+            [dict]: a list of thermo dictionaries to update thermo with
         """
         entries = self.__compat.process_entries(item)
         pd = PhaseDiagram(entries)
@@ -125,12 +135,12 @@ class ThermoBuilder(Builder):
         Inserts the new task_types into the task_types collection
 
         Args:
-            items ([[dict]]): task_type dicts to insert into task_types collection
-                                We know this will be double list [[]] of dicts from the process items
-
+            items ([[dict]]): a list of list of thermo dictionaries to update
         """
 
-        pass
+        for doc in chain(*items):
+            doc[self.thermo.lu_field] = datetime.utcnow()
+            self.thermo().replace_one({"material_id": doc['material_id']}, doc, upsert=True)
 
     def finalize(self):
         pass
