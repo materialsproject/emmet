@@ -87,6 +87,9 @@ class MaterialsBuilder(Builder):
 
         Args:
             item ((dict,[dict])): a task doc and a list of possible tag definitions
+            
+        Returns:
+            ([dict],list) : a list of new materials docs and a list of task_ids that were processsed  
         """
 
         tasks = item[0]
@@ -105,7 +108,16 @@ class MaterialsBuilder(Builder):
         return materials, t_ids
 
     def match(self, task, mats):
-        """ Finds a material doc that matches with the given task """
+        """ 
+        Finds a material doc that matches with the given task
+        
+        Args:
+            task (dict): the task doc
+            mats ([dict]): the materials docs to match against
+        
+        Returns:
+            dict: a materials doc if one is found otherwise returns None
+        """
         sm = StructureMatcher(ltol=self.ltol, stol=self.stol, angle_tol=self.angle_tol,
                               primitive_cell=True, scale=True,
                               attempt_supercell=False, allow_subset=False,
@@ -120,12 +132,22 @@ class MaterialsBuilder(Builder):
 
         return None
 
-    def new_mat(self, t):
-        t_type = TaskTagger.task_type(t)
-        t_id = t['task_id']
+    def new_mat(self, task):
+        """ 
+        Generates a new material doc from the task
+        
+        Args:
+            task (dict): the task doc
+            
+        Returns:
+            dict: a materials doc
+        
+        """
+        t_type = TaskTagger.task_type(task)
+        t_id = task['task_id']
 
         # Convert the task doc into a serious of properties in the materials doc with the right document structure
-        props = [make_mongolike(t, prop['tasks_key'], prop['materials_key']) for prop in self.__settings if
+        props = [make_mongolike(task, prop['tasks_key'], prop['materials_key']) for prop in self.__settings if
                  t_type in prop['quality_score'].keys()]
 
         # Add in the provenance for the properties
@@ -148,7 +170,15 @@ class MaterialsBuilder(Builder):
 
         return d
 
-    def update_mat(self, t, m):
+    def update_mat(self, task, mat):
+        """ 
+        Updates the materials doc with data from the given task doc
+        
+        Args:
+            task(dict): the task doc
+            mat(dict): the materials doc
+            
+        """
 
         def get_origin(origins, prop):
             for doc in origins:
@@ -156,8 +186,8 @@ class MaterialsBuilder(Builder):
                     return doc
             return {}
 
-        t_type = TaskTagger.task_type(t)
-        t_id = t['task_id']
+        t_type = TaskTagger.task_type(task)
+        t_id = task['task_id']
 
         props = []
 
@@ -169,7 +199,7 @@ class MaterialsBuilder(Builder):
                 t_score = prop['quality_score'][t_type]
 
                 # Get the origin data for the property in the materials doc
-                prop_doc = get_origin(m['origins'], prop)
+                prop_doc = get_origin(mat['origins'], prop)
                 m_type = prop_doc.get('task_type', "")
                 m_score = prop_doc.get('quality_score', {}).get(m_type, 0)
 
@@ -178,7 +208,7 @@ class MaterialsBuilder(Builder):
                 # assuming successive calculations are 'better'
                 if t_score >= m_score:
                     # Build the property into a document with the right structure and save it
-                    props.append(make_mongolike(t, prop['tasks_key'], prop['materials_key']))
+                    props.append(make_mongolike(task, prop['tasks_key'], prop['materials_key']))
                     if len(prop['quality_score'].keys()) > 1:
                         prop_doc.update({"task_type": t_type,
                                          "task_id": t_id,
@@ -187,18 +217,16 @@ class MaterialsBuilder(Builder):
         # If there are properties to update
         if len(props) > 0:
             for prop in props:
-                recursive_update(m, prop)
+                recursive_update(mat, prop)
 
-        m["task_ids"].append(t_id)
+        mat["task_ids"].append(t_id)
 
     def update_targets(self, items):
         """
         Inserts the new task_types into the task_types collection
 
         Args:
-            items ([[dict]]): task_type dicts to insert into task_types collection
-                                We know this will be double list [[]] of dicts from the process items
-
+            items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
 
         for m_list, t_ids in items:
