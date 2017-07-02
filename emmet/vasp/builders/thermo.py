@@ -130,7 +130,7 @@ class ThermoBuilder(Builder):
 
     def update_targets(self, items):
         """
-        Inserts the new task_types into the task_types collection
+        Inserts the thermo docs into the thermo collection
 
         Args:
             items ([[dict]]): a list of list of thermo dictionaries to update
