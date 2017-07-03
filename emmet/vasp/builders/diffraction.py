@@ -15,7 +15,7 @@ class DiffractionBuilder(Builder):
             materials (Store): Store of materials documents
             diffraction (Store): Store of diffraction data such as formation energy and decomposition pathway
             xrd_settings (Store): Store of xrd settings
-            query (dict): dictionary to limit tasks to be analyzed
+            query (dict): dictionary to limit materials to be analyzed
         """
 
         self.materials = materials

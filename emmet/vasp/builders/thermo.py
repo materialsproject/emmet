@@ -19,7 +19,7 @@ class ThermoBuilder(Builder):
         Args:
             materials (Store): Store of materials documents
             thermo (Store): Store of thermodynamic data such as formation energy and decomposition pathway
-            query (dict): dictionary to limit tasks to be analyzed
+            query (dict): dictionary to limit materials to be analyzed
             compatibility (PymatgenCompatability): Compatability module to ensure energies are compatible
         """
 
