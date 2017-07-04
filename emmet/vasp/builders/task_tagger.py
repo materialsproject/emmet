@@ -3,6 +3,7 @@ from maggma.builder import Builder
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
 
+
 class TaskTagger(Builder):
     def __init__(self, tasks, task_types, **kwargs):
         """
@@ -31,7 +32,6 @@ class TaskTagger(Builder):
         # Get all tasks ids from the tasks collection
         all_task_ids = self.tasks.collection.distinct("task_id", {"state": "successful"})
 
-        
         # Figure out which task_ids are not in the materials collection and only process those
         previous_task_ids = self.task_types.collection.distinct("task_id", {"task_type": {"$exists": 0}})
         to_process = set(all_task_ids) - set(previous_task_ids)
@@ -79,28 +79,28 @@ class TaskTagger(Builder):
         """
         incar = task_doc["input"]["incar"]
 
-        if incar.get("LHFCALC",False):
+        if incar.get("LHFCALC", False):
             if incar.get("NSW") == 0:
                 return "hse bs"
             else:
                 return "hse"
 
-        if incar.get("ICHARG",0) > 10:
-            if incar.get("NEDOS",0) > 600:
+        if incar.get("ICHARG", 0) > 10:
+            if incar.get("NEDOS", 0) > 600:
                 return "nscf uniform"
             else:
                 return "nscf line"
 
-
-        if incar.get("LEPSILON",False):
+        if incar.get("LEPSILON", False):
             return "static dielectric"
 
-
-        if incar.get("IBRION",0) < 0:
+        if incar.get("IBRION", 0) < 0:
             return "static"
 
-
-        if incar.get("ISIF",2) == 3 and incar.get("IBRION",0) > 0:
+        if incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
             return "structure optimization"
+
+        if incar.get("ISIF",3) < 2 and incar.get("IBRION",0) > 0:
+            return "deformation"
 
         return ""
