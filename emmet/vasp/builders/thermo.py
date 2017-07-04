@@ -1,12 +1,14 @@
+import logging
 from datetime import datetime
-
-from pymatgen.entries.compatibility import MaterialsProjectCompatibility
-from maggma.builder import Builder
 from itertools import chain, combinations
-from pymatgen.entries.computed_entries import ComputedEntry
+
 from pymatgen import Structure, Composition
+from pymatgen.entries.compatibility import MaterialsProjectCompatibility
+from pymatgen.entries.computed_entries import ComputedEntry
 from pymatgen.phasediagram.maker import PhaseDiagram, PhaseDiagramError
 from pymatgen.phasediagram.analyzer import PDAnalyzer
+
+from maggma.builder import Builder
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -28,6 +30,8 @@ class ThermoBuilder(Builder):
         self.query = query
         self.__compat = compatibility
 
+        self.logger = logging.getLogger(__name__).addHandler(logging.NullHandler())
+
         super().__init__(sources=[materials],
                          targets=[thermo],
                          **kwargs)
@@ -40,10 +44,14 @@ class ThermoBuilder(Builder):
             generator of relevant entries from one chemical system
         """
 
+        self.logger.info("Thermo Builder Started")
+
         # All relevant materials that have been updated since thermo props were last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.thermo))
         comps = [m['elements'] for m in self.materials().find(q, {"elements": 1})]
+
+        self.logger.info("Found {} compositions with new/updated materials".format(len(comps)))
 
         # Only yields maximal super sets: e.g. if ["A","B"] and ["A"] are both in the list, will only yield ["A","B"]
         # as this will calculate thermo props for all ["A"] compounds
@@ -54,12 +62,10 @@ class ThermoBuilder(Builder):
                 processed |= self.chemsys_permutations(chemsys)
                 yield self.get_entries(chemsys)
 
-
     def chemsys_permutations(self, chemsys):
         # Fancy way of getting every unique permutation of elements for all possible number of elements:
         return {"-".join(sorted(c)) for c in
-         chain(*[combinations(chemsys, i) for i in range(1, len(chemsys) + 1)])}
-
+                chain(*[combinations(chemsys, i) for i in range(1, len(chemsys) + 1)])}
 
     def get_entries(self, chemsys):
         """
@@ -101,7 +107,7 @@ class ThermoBuilder(Builder):
         Returns:
             [dict]: a list of thermo dictionaries to update thermo with
         """
-        entries = self.__compat.process_entries(item))
+        entries = self.__compat.process_entries(item)
         try:
             pd = PhaseDiagram(entries)
             analyzer = PDAnalyzer(pd)
@@ -124,6 +130,7 @@ class ThermoBuilder(Builder):
                                                 for de, amt in decomp.items()]
                 docs.append(d)
         except PhaseDiagramError as p:
+            logger.warn("Phase diagram error: {}".format(p))
             return []
 
         return docs
@@ -135,8 +142,11 @@ class ThermoBuilder(Builder):
         Args:
             items ([[dict]]): a list of list of thermo dictionaries to update
         """
+        items = list(chain(*items))
 
-        for doc in chain(*items):
+        self.logger.info("Updating {} thermo documents".format(len(items)))
+
+        for doc in items:
             doc[self.thermo.lu_field] = datetime.utcnow()
             self.thermo().replace_one({"material_id": doc['material_id']}, doc, upsert=True)
 

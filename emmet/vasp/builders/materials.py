@@ -1,10 +1,12 @@
+import logging
 from datetime import datetime
 
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
-from emmet.vasp.builders.task_tagger import TaskTagger
-from emmet.utils import make_mongolike, recursive_update
+
 from maggma.builder import Builder
+from emmet.vasp.builders.task_tagger import TaskTagger
+from emmet.utils import make_mongolike, recursive_update, get_logger
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -38,7 +40,7 @@ class MaterialsBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
 
-        # TODO: Add in LU Filter into query
+        self.logger = logging.getLogger(__name__).addHandler(logging.NullHandler())
 
         super().__init__(sources=[tasks, materials_settings, snls] if snls else [tasks, materials_settings],
                          targets=[materials],
@@ -51,6 +53,8 @@ class MaterialsBuilder(Builder):
         Returns:
             generator or list relevant tasks and materials to process into materials documents
         """
+
+        self.logger.info("Materials Builder Started")
 
         # Get only successfull tasks
         q = dict(self.query)
@@ -66,9 +70,12 @@ class MaterialsBuilder(Builder):
                                                                "task_ids": {"$addToSet": "$task_id"}}}
                                                    ])
 
+        self.logger.info("Found {} unique formulas that need updating".format(formulas_reduced.count()))
+
         for doc in formulas_reduced:
             formula = doc["_id"]['formula_pretty']
             task_ids = set(doc['task_ids'])
+            logger.debug("Processing {} : {}".format(formula, task_ids))
 
             tasks_q = dict(q)
             tasks_q["task_id"] = {"$in": list(task_ids)}
@@ -95,7 +102,7 @@ class MaterialsBuilder(Builder):
         tasks = item[0]
         materials = item[1]
 
-        for t in tasks:
+        for t in sorted(tasks, key=lambda x: x['task_id']):
             mat = self.match(t, materials)
 
             if mat:
@@ -228,6 +235,8 @@ class MaterialsBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
+
+        self.logger.info("Updating {} materials documents".format(len(items[0])))
 
         for m_list, t_ids in items:
             for m in m_list:

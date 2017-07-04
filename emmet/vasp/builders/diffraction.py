@@ -1,7 +1,10 @@
+import logging
 from datetime import datetime
-from maggma.builder import Builder
+
 from pymatgen.core.structure import Structure
 from pymatgen.analysis.diffraction.xrd import XRDCalculator, WAVELENGTHS
+
+from maggma.builder import Builder
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -24,6 +27,8 @@ class DiffractionBuilder(Builder):
         self.__xrd_settings = list(xrd_settings().find())
         self.query = query
 
+        self.logger = logging.getLogger(__name__).addHandler(logging.NullHandler())
+
         super().__init__(sources=[materials],
                          targets=[diffraction],
                          **kwargs)
@@ -36,11 +41,15 @@ class DiffractionBuilder(Builder):
             generator of materials to calculate xrd
         """
 
+        self.logger.info("Diffraction Builder Started")
+
         # All relevant materials that have been updated since diffraction props were last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.diffraction))
-        return self.materials().find(q, {"material_id": 1,
+        mats = self.materials().find(q, {"material_id": 1,
                                          "structure": 1})
+        self.logger.info("Found {} new materials for diffraction data".format(mats.count()))
+        return mats
 
     def process_item(self, item):
         """
@@ -84,6 +93,8 @@ class DiffractionBuilder(Builder):
         Args:
             items ([[dict]]): a list of list of thermo dictionaries to update
         """
+
+        self.logger("Updating {} diffraction documents".format(len(items)))
 
         for doc in items:
             doc[self.diffraction.lu_field] = datetime.utcnow()
