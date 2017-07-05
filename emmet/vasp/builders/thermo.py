@@ -30,7 +30,9 @@ class ThermoBuilder(Builder):
         self.query = query
         self.__compat = compatibility
 
-        self.logger = logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+        self.__logger = logging.getLogger(__name__)
+        self.__logger.addHandler(logging.NullHandler())
 
         super().__init__(sources=[materials],
                          targets=[thermo],
@@ -44,14 +46,14 @@ class ThermoBuilder(Builder):
             generator of relevant entries from one chemical system
         """
 
-        self.logger.info("Thermo Builder Started")
+        self.__logger.info("Thermo Builder Started")
 
         # All relevant materials that have been updated since thermo props were last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.thermo))
         comps = [m['elements'] for m in self.materials().find(q, {"elements": 1})]
 
-        self.logger.info("Found {} compositions with new/updated materials".format(len(comps)))
+        self.__logger.info("Found {} compositions with new/updated materials".format(len(comps)))
 
         # Only yields maximal super sets: e.g. if ["A","B"] and ["A"] are both in the list, will only yield ["A","B"]
         # as this will calculate thermo props for all ["A"] compounds
@@ -130,7 +132,7 @@ class ThermoBuilder(Builder):
                                                 for de, amt in decomp.items()]
                 docs.append(d)
         except PhaseDiagramError as p:
-            logger.warn("Phase diagram error: {}".format(p))
+            self.__logger.warning("Phase diagram error: {}".format(p))
             return []
 
         return docs
@@ -144,7 +146,7 @@ class ThermoBuilder(Builder):
         """
         items = list(chain(*items))
 
-        self.logger.info("Updating {} thermo documents".format(len(items)))
+        self.__logger.info("Updating {} thermo documents".format(len(items)))
 
         for doc in items:
             doc[self.thermo.lu_field] = datetime.utcnow()

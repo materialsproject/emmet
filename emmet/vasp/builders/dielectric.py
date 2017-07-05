@@ -33,7 +33,8 @@ class DielectricBuilder(Builder):
         self.query = query
         self.snls = snls
 
-        self.logger = logging.getLogger(__name__).addHandler(logging.NullHandler())
+        self.__logger = logging.getLogger(__name__)
+        self.__logger.addHandler(logging.NullHandler())
 
         super().__init__(sources=[tasks, materials],
                          targets=[dielectric],
@@ -47,13 +48,13 @@ class DielectricBuilder(Builder):
             generator or list relevant tasks and materials to process into materials documents
         """
 
-        self.logger.info("Dielectric Builder Started")
+        self.__logger.info("Dielectric Builder Started")
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.dielectric))
         q["band_gap"] = {"$gt": 0.1}  # TODO: Consider smaller band gap?
         mats = self.materials.find(q, {"material_id": 1, "structure": 1, "task_ids": 1})
 
-        self.logger.info("Found {} new materials for dielectric data".format(mats.count()))
+        self.__logger.info("Found {} new materials for dielectric data".format(mats.count()))
         for mat in mats:
             tasks = list(self.tasks.find({"task_id": {"$in": mat["task_ids"]}}))
 
@@ -126,7 +127,7 @@ class DielectricBuilder(Builder):
 
         items = [item in items if item is not None]
 
-        self.logger.info("Updating {} dielectrics".format(len(items)))
+        self.__logger.info("Updating {} dielectrics".format(len(items)))
 
         for doc in items:
             doc[self.dielectric.lu_field] = datetime.utcnow()
