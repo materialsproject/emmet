@@ -473,5 +473,19 @@
     "_comment": "Built by XRD builder",
     "quality_score": {
     }
+  },
+  {
+    "tasks_key": "input.structure",
+    "materials_key": "initial_structure",
+    "quality_score": {
+      "deformation": 1
+    }
+  },
+  {
+    "tasks_key": "'output.ionic_steps.-1.stress",
+    "materials_key": "stress",
+    "quality_score": {
+      "deformation": 1
+    }
   }
 ]
