@@ -95,7 +95,7 @@ class DiffractionBuilder(Builder):
             items ([[dict]]): a list of list of thermo dictionaries to update
         """
 
-        self.__logger("Updating {} diffraction documents".format(len(items)))
+        self.__logger.info("Updating {} diffraction documents".format(len(items)))
 
         for doc in items:
             doc[self.diffraction.lu_field] = datetime.utcnow()
