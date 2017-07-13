@@ -27,8 +27,7 @@ Emmet is on PyPI, so `pip install emmet` should work. However, it is currently i
 
 ## VASP Builders
 
-
-### Overview
+The VASP builders all operate on a `tasks` Store which is parsed from *any* VASP calculation folder by [Atomate's VaspDrone](https://pythonhosted.org/atomate/atomate.vasp.html#atomate.vasp.drones.VaspDrone). Once the `tasks` Store has been created, Emmet's builders take over.
 
 ![Overview Flowchart: Vasp Output Directory leads to Tasks Store (via VaspDrone, atomate.vasp.drones), Tasks Store with Materials Setting Store and StructureNLs Store leads to Materials Store (via MaterialsBuilder, emmet.vasp.builders.materials), Materials Store leads to Thermo Store (via ThermoBuilder, emmet.vasp.builders.thermo), Materials Store leads to Elastic Store (via ElasticBuidler, emmet.vasp.builders.elastic), Materials Store leads to Diffraction Store (via DiffractionBuilder, emmet.vasp.builders.diffraction), Materials Store leads to Dielectric Store (via DielectricStore, emmet.vasp.builders.dielectric)](docs/images/EmmetBuilders.png)
 
@@ -136,7 +135,7 @@ Here is a sample script for running the MaterialsBuilder. Replace `"..."` as app
 
 from maggma.runner import Runner
 from maggma.stores import MongoStore, JSONStore
-from emmet.vasp.builders.materials import MaterialsBuilder
+from emmet.vasp.builders.materials import MaterialsBuilder, ThermoBuilder
 
 tasks_store = MongoStore(database="...",
                          collection="materials",
@@ -147,19 +146,42 @@ tasks_store = MongoStore(database="...",
 materials_settings_store = JSONStore("mat.json")
 materials_store = MongoStore(database="...",
                              collection="tasks",
+                             host="...",
                              port=27017,
                              username="...",
                              password="...")
+                             
+tasks_store.connect()
+materials_settings_store.connect()
+materials_store.connect()
 
-builder = MaterialsBuilder(tasks_store,
-                           materials_settings_store,
-                           materials_store)
+materials_builder = MaterialsBuilder(tasks_store,
+                                     materials_settings_store,
+                                     materials_store)
 
-runner = Runner([builder])
+runner = Runner([materials_builder])
 
 runner.run()
 
 ```
+
+Then, to run more than one builder, add:
+
+```python
+thermo_store = MongoStore(database="...",
+                          collection="thermo",
+                          port=27017,
+                          username="...",
+                          password="...")
+thermo_store.connect()
+                          
+thermo_builder = ThermoBuilder(materials_store,
+                               thermo_store)
+```
+
+and change `runner = Runner([materials_builder])` to `runner = Runner([materials_builder, thermo_builder])`.
+
+The list of builders can be provided in any order: their dependencies will be resolved intelligently and the `Runner` will run the builders in the correct order and in parallel if supported by the system.
 
 ## Writing a New Builder
 
