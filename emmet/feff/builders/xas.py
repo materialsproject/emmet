@@ -153,7 +153,7 @@ def species_spectra(xas_docs):
 
     xas_docs = sorted(xas_docs, key=absorbing_atom_element)
     spectrum = {}
-    for element, group in groupby(xas_docs, aa_element):
+    for element, group in groupby(xas_docs, absorbing_atom_element):
         spectrum[element] = site_weighted_spectrum(list(group))
     return spectrum
 
