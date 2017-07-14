@@ -88,7 +88,7 @@ class DielectricBuilder(Builder):
             if "dielectric" in TaskTagger.task_type(t):
                 output = t["calcs_reversed"][0]["output"]
                 total = np.sum(output["epsilon_ionic"], output["epsilon_static"])
-                d = {"material_id": item['material_id']
+                d = {"material_id": item['material_id'],
                      "dielectric": {
                          "ionic": output["epsilon_ionic"],
                          "electronic": output["epsilon_static"],
@@ -96,8 +96,7 @@ class DielectricBuilder(Builder):
                          "e_total": poly(total),
                          "e_ionic": poly(output["epsilon_ionic"]),
                          "e_electronic": poly(output["epsilon_static"]),
-                     }
-                     }
+                     }}
 
                 # Update piezo if non_centrosymmetric
                 if not is_centro(item["structure"]):
@@ -125,7 +124,7 @@ class DielectricBuilder(Builder):
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
 
-        items = [item in items if item is not None]
+        items = [item for item in items if item is not None]
 
         self.__logger.info("Updating {} dielectrics".format(len(items)))
 
