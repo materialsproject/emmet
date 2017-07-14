@@ -1,17 +1,19 @@
+import json
+import logging
+import os
+import unicodedata
+import warnings
+from multiprocessing import Manager, Pool
+
+from pymongo import MongoClient
+
+from atomate.utils.utils import get_meta_from_structure
+from monty.io import zopen
+from monty.json import MontyDecoder, MontyEncoder
 from pymatgen.apps.borg.hive import AbstractDrone
 from pymatgen.apps.borg.queen import BorgQueen
-from pymongo import MongoClient
 from pymatgen.io.cif import CifParser
-import os
-import json
-import unicodedata
 from pymatgen.matproj.snl import StructureNL
-from monty.io import zopen
-from monty.json import MontyEncoder, MontyDecoder
-from multiprocessing import Manager, Pool
-import logging
-import warnings
-from atomate.utils import utils
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='icsd_to_mongo.log',level=logging.DEBUG)
@@ -94,7 +96,7 @@ class icsdDrone(AbstractDrone):
                 snl = StructureNL(struc,authors=authors,references=references, history=history)
                 data['snl'] = snl.as_dict()
 
-                meta = utils.get_meta_from_structure(struc)
+                meta = get_meta_from_structure(struc)
                 data['nsites'] = meta['nsites']
                 data['elements'] = meta['elements']
                 data['nelements'] = meta['nelements']
