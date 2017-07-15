@@ -63,7 +63,7 @@ class XASAverager(Builder):
                 upsert=True)
 
     def finalize(self):
-        for store in (sources + targets):
+        for store in (self.sources + self.targets):
             try:
                 store.collection.database.client.close()
             except AttributeError:
