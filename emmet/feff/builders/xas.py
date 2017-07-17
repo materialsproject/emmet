@@ -62,13 +62,6 @@ class XASAverager(Builder):
                 mark_invalid(py_.pick(doc, 'mp_id')), {'$set': doc},
                 upsert=True)
 
-    def finalize(self):
-        for store in (self.sources + self.targets):
-            try:
-                store.collection.database.client.close()
-            except AttributeError:
-                continue
-
 
 def unprocessed_mpids(sources, targets):
     xas = sources[0]
