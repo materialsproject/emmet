@@ -184,9 +184,9 @@ def site_weighted_spectrum(xas_docs, num_samples=200):
         maxes.append(doc['spectrum'][-1][0])
         mins.append(doc['spectrum'][0][0])
         d0 = np.array(doc['spectrum'])
-        # use 3rd-order spline interpolation for chi (idx 5) vs energy (idx 0).
+        # use 3rd-order spline interpolation for mu (idx 3) vs energy (idx 0).
         f = interp1d(
-            d0[:, 0], d0[:, 5], kind='cubic', bounds_error=False, fill_value=0)
+            d0[:, 0], d0[:, 3], kind='cubic', bounds_error=False, fill_value=0)
         fs.append(f)
 
     x_axis = np.linspace(max(mins), min(maxes), num=num_samples)
