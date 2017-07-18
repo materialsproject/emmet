@@ -54,12 +54,38 @@ The VASP builders all operate on a `tasks` Store which is parsed from *any* VASP
 
 ##### Sample MaterialsBuilder output:
 
-Property | Key Path | Example | Validation | Comment
--------- | -------- | ------- | ---------- | -------
-anonymous formula | `anonymous_formula` | | str, required | 
-band gap / eV | `bandstructure.band_gap` | | float, > 0, required | Always from GGA calculation
-conduction band minimum / eV  | `bandstructure.cbm` | | float, optional |
-etc. (to add) |
+Property | Key Path | Example | Type/Validation | Comment
+-------- | -------- | ------- | --------------- | -------
+Task IDs | `task_ids` | `[]` | list, required |
+Material ID | `material_id` | `mp-1234` | str, required | serves as a primary key
+Origins of respective properties | `origins` | list | `materials_key`, `task_type`, `task_id`, `updated_at` | Provenence 
+Anonymous formula | `anonymous_formula` | | str, required | 
+bandstructure | | | | `band_gap`, `cbm`, `vbm`, `is_gap_direct`, `is_metal`, `efermi`
+band gap / eV | `band_gap`, `bandstructure.band_gap` | | float, > 0, required | Always from GGA calculation
+chemsys | `chemsys` | `Mn-O` | str, required | Dash delimited string of elements present in alphabetical order
+Change in volume | `analysis.delta_volume` | | float | units of ...
+Warnings | `analysis.warnings` |
+density | `density`
+elements | `elements`
+energy / eV | `thermo.energy` 
+energy per atom / eV/atom | `thermo.energy_per_atom`, `energy_per_atom`
+calc_settings | `calc_settings`
+initial_structure | `initial_structure` | | required, MSONable to `pymatgen.core.Structure`
+inputs | 
+Number of elements | `nelements` | 2 | int, required |
+Number of sites | `nsites` | 2 | int, required | 
+'Pretty' formula | 
+Reduced cell formula |
+Space group symbol | `spacegroup.symbol` | `Fm-3m` | str, required
+Space group international number | `spacegroup.number` | `225` | int, required
+Point group | `spacegroup.point_group` | `m-3m` | str, required |
+Space group source | `spacegroup.source` | `spglib` | str, required | How symmetry information is calculated, usually `spglib`
+Crystal system | `spacegroup.crystal_system` | `cubic` | str, required | One of `triclinic`, `monoclinic`, `orthorhombic`, `tetragonal`, `trigonal`, `hexagonal`, `cubic`
+Space group (Hall notation) | `spacegroup.hall` | `-F 4 2 3` | str, required |
+structure |
+Magnetic properties |
+Unit cell formula | `unit_cell_formula` 
+Unit cell volume | `volume`
 
 ### ThermoBuilder
 
@@ -135,7 +161,8 @@ Here is a sample script for running the MaterialsBuilder. Replace `"..."` as app
 
 from maggma.runner import Runner
 from maggma.stores import MongoStore, JSONStore
-from emmet.vasp.builders.materials import MaterialsBuilder, ThermoBuilder
+from emmet.vasp.builders.materials import MaterialsBuilder
+from emmet.vasp.builders.thermo import ThermoBuilder
 
 tasks_store = MongoStore(database="...",
                          collection="materials",
@@ -185,4 +212,11 @@ The list of builders can be provided in any order: their dependencies will be re
 
 ## Writing a New Builder
 
-Sub-class the [`Builder`](https://github.com/materialsproject/maggma/blob/master/maggma/builder.py) base class and implement its methods. The [`DiffractionBuilder`](https://github.com/materialsproject/emmet/blob/master/emmet/vasp/builders/diffraction.py) is a nice simple builder to copy from to get started.
+Sub-class the [`Builder`](https://github.com/materialsproject/maggma/blob/master/maggma/builder.py) base class and implement the following methods:
+
+* `get_items()` – get your items to process, e.g. as a result of a running a query on your source(s)
+* `process_item()` – for each of your items, do something, e.g. calculate a diffraction pattern
+* `update_targets()` – update your target(s) with your processed data
+* `finalize()` – optional, perform any final clean up (close database connections etc., the base class can handle this)
+
+The [`DiffractionBuilder`](https://github.com/materialsproject/emmet/blob/master/emmet/vasp/builders/diffraction.py) is a nice simple builder to copy from to get started.
