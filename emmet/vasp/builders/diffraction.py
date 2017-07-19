@@ -62,7 +62,8 @@ class DiffractionBuilder(Builder):
         Returns:
             dict: a diffraction dict
         """
-
+        self.__logger.debug("Calculating diffraction for {}".format(item['material_id']))
+        
         struct = Structure.from_dict(item['structure'])
 
         xrd_doc = self.get_xrd_from_struct(struct)
@@ -100,6 +101,3 @@ class DiffractionBuilder(Builder):
         for doc in items:
             doc[self.diffraction.lu_field] = datetime.utcnow()
             self.diffraction().replace_one({"material_id": doc['material_id']}, doc, upsert=True)
-
-    def finalize(self):
-        pass
