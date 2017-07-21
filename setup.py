@@ -11,7 +11,7 @@ if __name__ == "__main__":
         name='emmet',
         version='0.1',
         description='Emmet is a builder framework for the Materials Project',
-        long_description=open(os.path.join(module_dir, 'README.md')).read(),
+        long_description=open(os.path.join(module_dir, 'README.md'),encoding='utf-8').read(),
         url='https://github.com/materialsproject/emmet',
         author='MP team',
         author_email='matproj-develop@googlegroups.com',
