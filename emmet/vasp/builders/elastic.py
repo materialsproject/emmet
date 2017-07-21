@@ -1,40 +1,40 @@
-import logging
 import numpy as np
+from datetime import datetime
+from itertools import chain
+
+from monty.json import jsanitize
 
 from pymatgen import Structure
 from pymatgen.analysis.elasticity.elastic import ElasticTensor
-from pymatgen.analysis.elasticity.strain import IndependentStrain, Strain
+from pymatgen.analysis.elasticity.strain import Strain, Deformation
 from pymatgen.analysis.elasticity.stress import Stress
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 
 from maggma.builder import Builder
 
+from emmet.vasp.builders.task_tagger import TaskTagger
+
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class ElasticBuilder(Builder):
-    def __init__(self, materials, elastic, query={}, **kwargs):
+    def __init__(self, tasks, elasticity, query={}, **kwargs):
         """
         Creates a dielectric collection for materials
 
         Args:
             tasks (Store): Store of task documents
-            materials (Store): Store of materials documents to match to
-            dielectric (Store): Store of dielectric properties
+            elastic (Store): Store of dielectric properties
             query (dict): dictionary to limit materials to be analyzed
         """
 
         self.tasks = tasks
-        self.materials = materials
-        self.elastic = elastic
+        self.elasticity = elasticity
         self.query = query
+        self.kwargs = kwargs
 
-
-        self.__logger = logging.getLogger(__name__)
-        self.__logger.addHandler(logging.NullHandler())
-
-        super().__init__(sources=[materials],
-                         targets=[elastic],
+        super().__init__(sources=[tasks],
+                         targets=[elasticity],
                          **kwargs)
 
     def get_items(self):
@@ -45,28 +45,27 @@ class ElasticBuilder(Builder):
             generator or list relevant tasks and materials to process into materials documents
         """
 
-        self.__logger.info("Elastic Builder Started")
+        self.logger.info("Elastic Builder Started")
+
+        # Get only successfull tasks
         q = dict(self.query)
-        q.update(self.materials.lu_filter(self.elastic))
+        q["state"] = "successful"
 
-        # Find all materials that have changed since last run
-        mats = self.materials.find(q, {"material_id": 1}).count()
+        # only consider tasks that have been updated since materials was last updated
+        q.update(self.tasks.lu_filter(self.elasticity))
 
-        self.__logger.info("Found {} new materials for elastic calculations".format(mats))
+        tasks_to_update = self.tasks().find(q, {"formula_pretty": 1}).count()
+        self.logger.info("Found {} new/updated tasks to process".format(tasks_to_update))
 
-        # Fancy MongoDB Aggregation
-        # 1.) Finds all mats that have changed within our query specs
-        # 2.) lookups all other materials that have the same reduced_cell_formula
-        # 3.) Project the material ids for these
-        mat_sets = self.materials().aggregate([{"$match": q},
-                                               {"$project": {"reduced_cell_formula": 1}},
-                                               {"$lookup": {"from": self.materials().name,
-                                                            "localField": "reduced_cell_formula",
-                                                            "foreignField": "reduced_cell_formula",
-                                                            "as": "mats"}}
-                                               ])
+        formulas_reduced = self.tasks().find(q).distinct("formula_pretty")
 
-        return mat_sets
+        for formula in formulas_reduced:
+            tasks_q = dict(q)
+            tasks_q["formula_pretty"] = formula
+            tasks = list(self.tasks().find(tasks_q))
+
+            self.logger.debug("Processing {} : {}".format(formula, len(tasks)))
+            yield tasks
 
     def process_item(self, item):
         """
@@ -76,31 +75,35 @@ class ElasticBuilder(Builder):
             item dict: a dict of material_id, structure, and tasks
 
         Returns:
-            dict: a dieletrics dictionary  
+            dict: a dieletrics dictionary
         """
-        root_mats = [mat for mat in item["mats"] if mat.get("inputs", {}).get("structure optimization", None)]
-        deform_mats = [mat for mat in item["mats"] if mat not in root_mats]
+        root_tasks = [task for task in item if "optimization" in TaskTagger.task_type(task)]
+        deform_tasks = [task for task in item if "deformation" in TaskTagger.task_type(task)]
         docs = []
 
         # TODO: What structure matcher parameters to use?
         # TODO: Should SM parameters be configurable?
-        sm = StructureMatcher(primitive_cell=True, scale=True,
+        sm = StructureMatcher(ltol=0.001, stol=0.001, angle_tol=0.1,
+                              primitive_cell=False, scale=False,
                               attempt_supercell=False, allow_subset=False,
                               comparator=ElementComparator())
 
-        for r_mat in root_mats:
+        self.logger.debug("Found {} root tasks and {} deformation tasks".format(len(root_tasks), len(deform_tasks)))
+        for r_task in root_tasks:
 
             # Enumerate over all deformations
-            r_struc = Structure.from_dict(r_mat['initial_structure'])
+            r_struc = Structure.from_dict(r_task['output']['structure'])
 
-            defos = []
+            deformations = []
             stresses = []
             strains = []
-            m_ids = []
+            task_ids = []
 
-            for d_mat in deform_mats:
+            for d_task in deform_tasks:
+                if d_task["calcs_reversed"][0]['input']['kpoints'] != r_task["calcs_reversed"][0]['input']['kpoints']:
+                    pass
                 # Find deformation matrix
-                d_struc = Structure.from_dict(d_mat["initial_structure"])
+                d_struc = Structure.from_dict(d_task['input']["structure"])
                 transform_matrix = np.transpose(np.linalg.solve(r_struc.lattice.matrix,
                                                                 d_struc.lattice.matrix))
                 # apply deformation matrix to root_mat and check if the two structures match
@@ -110,31 +113,35 @@ class ElasticBuilder(Builder):
                 # if match store stress and strain matrix
                 if sm.fit(dfm_struc, d_struc):
                     # This is a deformtion of the root struc
-                    defos.append(dfm)
-                    stresses.append(d_mat['stress'])
+                    deformations.append(dfm)
+                    stresses.append(-0.1 * Stress(d_task["calcs_reversed"][0] \
+                                                      ["output"]["ionic_steps"][-1]["stress"]))
                     strains.append(dfm.green_lagrange_strain)
-                    m_ids.append(d_mat['material_id'])
+                    task_ids.append(d_task['task_id'])
 
-            stress_dict = {IndependentStrain(defo): Stress(stress) for defo, stress in zip(defos, stresses)}
-
-            self.__logger.info("Analyzing stress/strain data")
-
+            self.logger.info("Analyzing stress/strain data for {} tasks".format(len(task_ids)))
             # Determine if we have 6 unique deformations
-            if np.linalg.matrix_rank(strains) == 6:
+            if np.linalg.matrix_rank(np.array([s.voigt for s in strains])) == 6:
                 # Perform Elastic tensor fitting and analysis
-                result = ElasticTensor.from_stress_dict(stress_dict)
+                pk_stresses = [stress.piola_kirchoff_2(deformation)
+                               for stress, deformation in zip(stresses, deformations)]
+                result = ElasticTensor.from_pseudoinverse(strains, pk_stresses)
 
-                d = {"material_id": r_mat["material_id"],
+                d = {"material_id": r_task["task_id"],
                      "elasticity": {
                          "elastic_tensor": result.voigt.tolist(),
-                         "material_ids": m_ids}
+                         "task_ids": task_ids}
                      }
+                d['elasticity'].update({'fitting_data': {'strains': strains, 'pk_stresses': pk_stresses,
+                                                         'deformations': deformations}})
 
                 d["elasticity"].update(result.property_dict)
 
                 docs.append(d)
             else:
-                self.__logger.warn("Fewer than 6 unique deformations for {}".format(r_mat["material_id"]))
+                self.logger.warning("Only found {} unique deformations, 6 needed for {}".format(
+                    np.linalg.matrix_rank(np.array([s.voigt for s in strains])),
+                    r_task["task_id"]))
 
         return docs
 
@@ -145,12 +152,9 @@ class ElasticBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
+        self.logger.info("Updating {} elastic documents".format(len(items)))
 
-        self.__logger("Updating {} diffraction documents".format(len(items)))
-
-        for doc in items:
+        for doc in chain(*items):
             doc[self.elasticity.lu_field] = datetime.utcnow()
+            doc = jsanitize(doc)
             self.elasticity().replace_one({"material_id": doc['material_id']}, doc, upsert=True)
-
-    def finalize(self):
-        pass
