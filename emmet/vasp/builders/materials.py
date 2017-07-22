@@ -240,9 +240,11 @@ class MaterialsBuilder(Builder):
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
         self.__logger.info("Updating {} materials documents".format(sum([len(item[0]) for item in items])))
+        bulk = self.materials().initialize_ordered_bulk_op()
         for m_list, t_ids in items:
             for m in m_list:
                 if len(set(m["task_ids"]).intersection(t_ids)) > 0:
                     # Update the last updated field
                     m[self.materials.lu_field] = datetime.utcnow()
-                    self.materials().replace_one({"material_id": m["material_id"]}, m, upsert=True)
+                    bulk.find({"material_id": m["material_id"]}).upsert().replace_one(m)
+        bulk.execute()
