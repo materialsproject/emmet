@@ -29,7 +29,6 @@ class MaterialsBuilder(Builder):
         """
 
         self.tasks = tasks
-        self.__settings = list(materials_settings().find())
         self.materials_settings = materials_settings
         self.materials = materials
         self.query = query
@@ -54,6 +53,8 @@ class MaterialsBuilder(Builder):
 
         self.__logger.info("Materials Builder Started")
 
+        self.__settings = list(materials_settings().find())
+        
         # Get only successfull tasks
         q = dict(self.query)
         q["state"] = "successful"
