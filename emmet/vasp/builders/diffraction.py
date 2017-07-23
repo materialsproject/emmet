@@ -29,7 +29,7 @@ class DiffractionBuilder(Builder):
         self.__logger = logging.getLogger(__name__)
         self.__logger.addHandler(logging.NullHandler())
 
-        super().__init__(sources=[materials],
+        super().__init__(sources=[materials,xrd_settings],
                          targets=[diffraction],
                          **kwargs)
 
@@ -43,7 +43,7 @@ class DiffractionBuilder(Builder):
 
         self.__logger.info("Diffraction Builder Started")
 
-        self.__xrd_settings = list(xrd_settings().find())
+        self.__xrd_settings = list(self.xrd_settings().find())
 
         # All relevant materials that have been updated since diffraction props were last calculated
         q = dict(self.query)
