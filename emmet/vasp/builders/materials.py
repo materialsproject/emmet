@@ -36,8 +36,8 @@ class MaterialsBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
 
-        self.__logger = logging.getLogger(__name__)
-        self.__logger.addHandler(logging.NullHandler())
+        self.logger = logging.getLogger(__name__)
+        self.logger.addHandler(logging.NullHandler())
 
         super().__init__(sources=[tasks, materials_settings],
                          targets=[materials],
@@ -51,7 +51,7 @@ class MaterialsBuilder(Builder):
             generator or list relevant tasks and materials to process into materials documents
         """
 
-        self.__logger.info("Materials Builder Started")
+        self.logger.info("Materials Builder Started")
 
         self.__settings = list(self.materials_settings().find())
 
@@ -63,7 +63,7 @@ class MaterialsBuilder(Builder):
         q.update(self.tasks.lu_filter(self.materials))
 
         tasks_to_update = self.tasks().find(q, {"formula_pretty": 1}).count()
-        self.__logger.info("Found {} new/updated tasks to proces".format(tasks_to_update))
+        self.logger.info("Found {} new/updated tasks to proces".format(tasks_to_update))
 
         # MongoDB aggregation to find and group all successfull tasks by formula_pretty
         formulas_reduced = self.tasks().aggregate([{"$match": q},
@@ -75,7 +75,7 @@ class MaterialsBuilder(Builder):
         for doc in formulas_reduced:
             formula = doc["_id"]["formula_pretty"]
             task_ids = set(doc["task_ids"])
-            self.__logger.debug("Processing {} : {}".format(formula, task_ids))
+            self.logger.debug("Processing {} : {}".format(formula, task_ids))
 
             tasks_q = dict(q)
             tasks_q["task_id"] = {"$in": list(task_ids)}
@@ -240,7 +240,7 @@ class MaterialsBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
-        self.__logger.info("Updating {} materials documents".format(sum([len(item[0]) for item in items])))
+        self.logger.info("Updating {} materials documents".format(sum([len(item[0]) for item in items])))
         bulk = self.materials().initialize_ordered_bulk_op()
         for m_list, t_ids in items:
             for m in m_list:
