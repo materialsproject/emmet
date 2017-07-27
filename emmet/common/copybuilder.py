@@ -20,8 +20,10 @@ class CopyBuilder(Builder):
 
     def get_items(self):
         source = self.sources[0]
-        cursor = source.collection.find(
-            source.lu_filter(self.targets), sort=[(source.lu_field, 1)])
+        lu_filter = source.lu_filter(self.targets)
+        self.logger.debug("lu_filter: {}".format(lu_filter))
+        cursor = source.collection.find(lu_filter, sort=[(source.lu_field, 1)])
+        self.logger.info("Will copy {} items".format(cursor.count()))
         return tqdm(cursor, total=cursor.count())
 
     def process_item(self, item):
@@ -36,4 +38,5 @@ class CopyBuilder(Builder):
             item[target.lu_field] = source.lu_key[0](item[source.lu_field])
             del item[source.lu_field]
             bulk.find(self.key(item)).upsert().replace_one(item)
-        bulk.execute()
+        if items:
+            bulk.execute()

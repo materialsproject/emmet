@@ -13,11 +13,11 @@ from tqdm import tqdm
 
 class XASAverager(Builder):
     def get_items(self):
-        print("Getting unprocessed mpids...")
+        self.logger.info("Getting unprocessed mpids...")
         mpids = unprocessed_mpids(self.sources, self.targets)
         xas = self.sources[0].collection
         self.dt_fetch = datetime.utcnow()
-        print("Yielding XAS data for processing...")
+        self.logger.info("Yielding XAS data for processing...")
         for mp_id in tqdm(mpids):
             yield list(
                 xas.find({
@@ -53,7 +53,8 @@ class XASAverager(Builder):
                     "$in": py_.pluck(valids, 'mp_id')
                 }
             }))
-
+        # TODO Make all the below a bulk operation to lessen chance of
+        # incomplete data on builder interruption.
         for doc in valids:
             xas_averaged.update_one(
                 py_.pick(doc, 'mp_id', 'element'), {'$set': doc}, upsert=True)
@@ -65,26 +66,19 @@ class XASAverager(Builder):
 
 def unprocessed_mpids(sources, targets):
     xas = sources[0]
+    materials = sources[1]
     xas_averaged = targets[0]
     mpids_marked_invalid = set(invalid_pks(xas_averaged, 'mp_id'))
     mpids_source_updated = set(
         updated_pks(xas, targets, 'mp_id', dt_map=lambda dt: dt.isoformat()))
-    mpids_build_incomplete = set()
-    for mp_id in tqdm(xas.collection.distinct('mp_id')):
-        doc = xas.collection.find_one({'mp_id': mp_id}, ['structure'])
-        structure = Structure.from_dict(doc['structure'])
-        elements = set(
-            py_.map(
-                py_.flatten(site.species_and_occu.elements
-                            for site in structure.sites), str))
-        n_processed = xas_averaged.collection.find({
-            'mp_id': mp_id,
-            'element': {
-                '$in': list(elements)
-            }
-        }).count()
-        if n_processed != len(elements):
-            mpids_build_incomplete.add(mp_id)
+    mpids_xas = xas().distinct('mp_id')
+    should = list(materials().find({'task_id': {'$in': mpids_xas}},
+                                 {'_id': 0, 'task_id': 1, 'nelements': 1}))
+    should = {(s['task_id'], s['nelements']) for s in should}
+    actual = (xas_averaged()
+              .aggregate([{'$group': {'_id': '$mp_id', 'n': {'$sum': 1}}}]))
+    actual = {(a['_id'], a['n']) for a in actual}
+    mpids_build_incomplete = {s[0] for s in should - actual}
     return mpids_source_updated | (
         mpids_build_incomplete - mpids_marked_invalid)
 
@@ -219,7 +213,7 @@ def updated_pks(source, targets, pk, dt_map=None):
     """Fetch primary key values that have new source data."""
     lu_targets = max([t.last_updated for t in targets])
     lu_targets = dt_map(lu_targets) if dt_map else lu_targets
-    lu_filter = {source.lu_field: {'$gte': lu_targets}}
+    lu_filter = {source.lu_field: {'$gt': lu_targets}}
     return source.collection.find(lu_filter).distinct(pk)
 
 
