@@ -39,7 +39,10 @@ class MaterialsBuilder(Builder):
         self.logger = logging.getLogger(__name__)
         self.logger.addHandler(logging.NullHandler())
 
-        super().__init__(sources=[tasks, materials_settings],
+        self.materials_settings.connect()
+        self.__settings = list(self.materials_settings().find())
+
+        super().__init__(sources=[tasks],
                          targets=[materials],
                          **kwargs)
 
@@ -52,8 +55,6 @@ class MaterialsBuilder(Builder):
         """
 
         self.logger.info("Materials Builder Started")
-
-        self.__settings = list(self.materials_settings().find())
 
         # Get only successfull tasks
         q = dict(self.query)
@@ -75,7 +76,6 @@ class MaterialsBuilder(Builder):
         for doc in formulas_reduced:
             formula = doc["_id"]["formula_pretty"]
             task_ids = set(doc["task_ids"])
-            self.logger.debug("Processing {} : {}".format(formula, task_ids))
 
             tasks_q = dict(q)
             tasks_q["task_id"] = {"$in": list(task_ids)}
@@ -102,6 +102,10 @@ class MaterialsBuilder(Builder):
         tasks = item[0]
         materials = item[1]
 
+        formula = tasks[0]['formula_pretty']
+        t_ids = [t["task_id"] for t in tasks]
+        self.logger.debug("Processing {} : {}".format(formula, t_ids))
+
         for t in sorted(tasks, key=lambda x: x["task_id"]):
             mat = self.match(t, materials)
 
@@ -112,7 +116,9 @@ class MaterialsBuilder(Builder):
                 if new_mat:
                     materials.append(new_mat)
 
-        t_ids = [t["task_id"] for t in tasks]
+
+
+        self.logger.debug("Produced {} materials for {}".format(len(materials),tasks[0]['formula_pretty']))
 
         return materials, t_ids
 
