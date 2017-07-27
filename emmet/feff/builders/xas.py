@@ -13,11 +13,11 @@ from tqdm import tqdm
 
 class XASAverager(Builder):
     def get_items(self):
-        print("Getting unprocessed mpids...")
+        self.logger.info("Getting unprocessed mpids...")
         mpids = unprocessed_mpids(self.sources, self.targets)
         xas = self.sources[0].collection
         self.dt_fetch = datetime.utcnow()
-        print("Yielding XAS data for processing...")
+        self.logger.info("Yielding XAS data for processing...")
         for mp_id in tqdm(mpids):
             yield list(
                 xas.find({
