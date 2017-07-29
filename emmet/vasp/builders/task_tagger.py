@@ -48,7 +48,7 @@ class TaskTagger(Builder):
     def process_item(self, item):
         """
         Find the task_type for the item 
-        
+
         Args:
             item ((dict,[dict])): a task doc and a list of possible tag definitions
         """
@@ -59,15 +59,12 @@ class TaskTagger(Builder):
     def update_targets(self, items):
         """
         Inserts the new task_types into the task_types collection
-        
+
         Args:
             items ([dict]): task_type dicts to insert into task_types collection
         """
         for doc in items:
             self.task_types.collection.update({'task_id': doc['task_id']}, doc, upsert=True)
-
-    def finalize(self):
-        pass
 
     @classmethod
     def task_type(cls, task_doc):
@@ -100,7 +97,7 @@ class TaskTagger(Builder):
         if incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
             return "structure optimization"
 
-        if incar.get("ISIF",3) < 2 and incar.get("IBRION",0) > 0:
+        if incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
             return "deformation"
 
         return ""

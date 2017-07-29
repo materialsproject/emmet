@@ -238,6 +238,14 @@
     }
   },
   {
+    "tasks_key": "calcs_reversed.0.run_type",
+    "materials_key": "calc_settings.run_type",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2
+    }
+  },
+  {
     "tasks_key": "output.energy_per_atom",
     "materials_key": "thermo.energy_per_atom",
     "quality_score": {

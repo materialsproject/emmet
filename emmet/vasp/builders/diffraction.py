@@ -24,13 +24,12 @@ class DiffractionBuilder(Builder):
         self.materials = materials
         self.diffraction = diffraction
         self.xrd_settings = xrd_settings
-        self.__xrd_settings = list(xrd_settings().find())
         self.query = query
 
         self.__logger = logging.getLogger(__name__)
         self.__logger.addHandler(logging.NullHandler())
 
-        super().__init__(sources=[materials],
+        super().__init__(sources=[materials,xrd_settings],
                          targets=[diffraction],
                          **kwargs)
 
@@ -43,6 +42,8 @@ class DiffractionBuilder(Builder):
         """
 
         self.__logger.info("Diffraction Builder Started")
+
+        self.__xrd_settings = list(self.xrd_settings().find())
 
         # All relevant materials that have been updated since diffraction props were last calculated
         q = dict(self.query)
@@ -62,10 +63,11 @@ class DiffractionBuilder(Builder):
         Returns:
             dict: a diffraction dict
         """
-
+        self.__logger.debug("Calculating diffraction for {}".format(item['material_id']))
+        
         struct = Structure.from_dict(item['structure'])
 
-        xrd_doc = self.get_xrd_from_struct(struct)
+        xrd_doc = {"xrd": self.get_xrd_from_struct(struct)}
         xrd_doc['material_id'] = item['material_id']
 
         return xrd_doc
@@ -100,6 +102,3 @@ class DiffractionBuilder(Builder):
         for doc in items:
             doc[self.diffraction.lu_field] = datetime.utcnow()
             self.diffraction().replace_one({"material_id": doc['material_id']}, doc, upsert=True)
-
-    def finalize(self):
-        pass
