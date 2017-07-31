@@ -63,32 +63,17 @@ class MaterialsBuilder(Builder):
         # only consider tasks that have been updated since materials was last updated
         q.update(self.tasks.lu_filter(self.materials))
 
-        tasks_to_update = self.tasks().find(q, {"formula_pretty": 1}).count()
-        self.logger.info("Found {} new/updated tasks to proces".format(tasks_to_update))
+        forms_to_update = {t["formula_pretty"] for t in self.tasks().find(q, {"formula_pretty": 1})}
+        self.logger.info("Found {} new/updated systems to proces".format(len(forms_to_update)))
 
-        # MongoDB aggregation to find and group all successfull tasks by formula_pretty
-        formulas_reduced = self.tasks().aggregate([{"$match": q},
-                                                   {"$project": {"task_id": 1, "formula_pretty": 1}},
-                                                   {"$group": {"_id": {"formula_pretty": "$formula_pretty"},
-                                                               "task_ids": {"$addToSet": "$task_id"}}}
-                                                   ])
-
-        for doc in formulas_reduced:
-            formula = doc["_id"]["formula_pretty"]
-            task_ids = set(doc["task_ids"])
-
+        for formula in forms_to_update:
             tasks_q = dict(q)
-            tasks_q["task_id"] = {"$in": list(task_ids)}
-            tasks = list(self.tasks().find(tasks_q))
+            tasks_q["formula_pretty"] = formula
+            tasks = list(sorted(self.tasks().find(tasks_q), key=lambda x: x["task_id"]))
 
-            mats_q = dict(q)
-            mats_q["formula_pretty"] = formula
-            mats = list(self.materials().find(mats_q))
+            yield tasks
 
-            # return all matching materials and tasks for this formula
-            yield tasks, mats
-
-    def process_item(self, item):
+    def process_item(self, tasks):
         """
         Process the tasks and materials into just a list of materials
 
@@ -98,11 +83,9 @@ class MaterialsBuilder(Builder):
         Returns:
             ([dict],list) : a list of new materials docs and a list of task_ids that were processsed
         """
+        materials = []
 
-        tasks = item[0]
-        materials = item[1]
-
-        formula = tasks[0]['formula_pretty']
+        formula = tasks[0]["formula_pretty"]
         t_ids = [t["task_id"] for t in tasks]
         self.logger.debug("Processing {} : {}".format(formula, t_ids))
 
@@ -116,9 +99,7 @@ class MaterialsBuilder(Builder):
                 if new_mat:
                     materials.append(new_mat)
 
-
-
-        self.logger.debug("Produced {} materials for {}".format(len(materials),tasks[0]['formula_pretty']))
+        self.logger.debug("Produced {} materials for {}".format(len(materials),tasks[0]["formula_pretty"]))
 
         return materials, t_ids
 
@@ -161,6 +142,7 @@ class MaterialsBuilder(Builder):
         t_type = TaskTagger.task_type(task)
         t_id = task["task_id"]
 
+        # Only start new materials with a structure optimization
         if t_type != "structure optimization":
             return None
 
@@ -172,7 +154,7 @@ class MaterialsBuilder(Builder):
         origins = [{"materials_key": prop["materials_key"],
                     "task_type": t_type,
                     "task_id": t_id,
-                    "updated_at": datetime.utcnow()} for prop in self.__settings if
+                    "last_updated": task["last_updated"]} for prop in self.__settings if
                    t_type in prop["quality_score"].keys() and len(prop["quality_score"].keys()) > 1]
 
         # Temp document with basic information
@@ -230,7 +212,7 @@ class MaterialsBuilder(Builder):
                     if len(prop["quality_score"].keys()) > 1:
                         prop_doc.update({"task_type": t_type,
                                          "task_id": t_id,
-                                         "updated_at": datetime.utcnow()})
+                                         "last_updated": task["last_updated"]})
 
         # If there are properties to update
         if len(props) > 0:
