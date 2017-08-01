@@ -36,9 +36,6 @@ class MaterialsBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
 
-        self.logger = logging.getLogger(__name__)
-        self.logger.addHandler(logging.NullHandler())
-
         self.materials_settings.connect()
         self.__settings = list(self.materials_settings().find())
 
