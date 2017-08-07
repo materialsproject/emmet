@@ -85,42 +85,48 @@
     "materials_key": "bandstructure.bs",
     "quality_score": {
       "nscf line": 5
-    }
+    },
+    "optional": true
   },
   {
     "tasks_key": "calcs_reversed.0.bandstructure_fs_id",
     "materials_key": "bandstructure.bs_oid",
     "quality_score": {
       "nscf line": 5
-    }
+    },
+    "optional": true
   },
   {
     "tasks_key": "calcs_reversed.0.bandstructure_compression",
     "materials_key": "bandstructure.bs_compression",
     "quality_score": {
       "nscf line": 5
-    }
+    },
+    "optional": true
   },
   {
     "tasks_key": "calcs_reversed.0.dos",
     "materials_key": "bandstructure.dos",
     "quality_score": {
       "nscf uniform": 5
-    }
+    },
+    "optional": true
   },
   {
     "tasks_key": "calcs_reversed.0.dos_fs_id",
     "materials_key": "bandstructure.dos_oid",
     "quality_score": {
       "nscf uniform": 4
-    }
+    },
+    "optional": true
   },
   {
     "tasks_key": "calcs_reversed.0.dos_compression",
     "materials_key": "bandstructure.dos_compression",
     "quality_score": {
       "nscf uniform": 5
-    }
+    },
+    "optional": true
   },
   {
     "tasks_key": "",

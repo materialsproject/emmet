@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 from itertools import chain
 
@@ -7,7 +6,7 @@ from pymatgen.analysis.structure_matcher import StructureMatcher, ElementCompara
 
 from maggma.builder import Builder
 from emmet.vasp.builders.task_tagger import TaskTagger
-from maggma.utils import make_mongolike, recursive_update
+from maggma.utils import get_mongolike, put_mongolike, recursive_update
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -96,9 +95,9 @@ class MaterialsBuilder(Builder):
                 if new_mat:
                     materials.append(new_mat)
 
-        self.logger.debug("Produced {} materials for {}".format(len(materials),tasks[0]["formula_pretty"]))
+        self.logger.debug("Produced {} materials for {}".format(len(materials), tasks[0]["formula_pretty"]))
 
-        return materials, t_ids
+        return materials
 
     def match(self, task, mats):
         """
@@ -144,7 +143,8 @@ class MaterialsBuilder(Builder):
             return None
 
         # Convert the task doc into a serious of properties in the materials doc with the right document structure
-        props = [make_mongolike(task, prop["tasks_key"], prop["materials_key"]) for prop in self.__settings if
+        props = [put_mongolike(prop["materials_key"], get_mongolike(task, prop["tasks_key"])) for prop in
+                 self.__settings if
                  t_type in prop["quality_score"].keys()]
 
         # Add in the provenance for the properties
@@ -205,11 +205,16 @@ class MaterialsBuilder(Builder):
                 # assuming successive calculations are "better"
                 if t_score >= m_score:
                     # Build the property into a document with the right structure and save it
-                    props.append(make_mongolike(task, prop["tasks_key"], prop["materials_key"]))
-                    if len(prop["quality_score"].keys()) > 1:
-                        prop_doc.update({"task_type": t_type,
-                                         "task_id": t_id,
-                                         "last_updated": task["last_updated"]})
+                    try:
+                        value = get_mongolike(task, prop["tasks_key"])
+                        props.append(put_mongolike(prop["materials_key"], value))
+                        if len(prop["quality_score"].keys()) > 1:
+                            prop_doc.update({"task_type": t_type,
+                                             "task_id": t_id,
+                                             "last_updated": task["last_updated"]})
+                    except Exception as e:
+                        if not prop.get("optional", False):
+                            self.logger.error("Failed getting {}".format(e))
 
         # If there are properties to update
         if len(props) > 0:
@@ -225,12 +230,16 @@ class MaterialsBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
-        self.logger.info("Updating {} materials documents".format(sum([len(item[0]) for item in items])))
+        to_update = sum([len(item) for item in items])
+        if to_update == 0:
+            self.logger.info("No items to update")
+            return
+
+        self.logger.info("Updating {} materials documents".format(to_update))
+
         bulk = self.materials().initialize_ordered_bulk_op()
-        for m_list, t_ids in items:
-            for m in m_list:
-                if len(set(m["task_ids"]).intersection(t_ids)) > 0:
-                    # Update the last updated field
-                    m[self.materials.lu_field] = datetime.utcnow()
-                    bulk.find({"material_id": m["material_id"]}).upsert().replace_one(m)
+        for m in filter(None, chain(*items)):
+            m[self.materials.lu_field] = datetime.utcnow()
+            bulk.find({"material_id": m["material_id"]}).upsert().replace_one(m)
+            self.materials().replace_one({"material_id": m["material_id"]}, m, upsert=True)
         bulk.execute()
