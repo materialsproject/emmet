@@ -25,10 +25,6 @@ class DiffractionBuilder(Builder):
         self.diffraction = diffraction
         self.xrd_settings = xrd_settings
         self.query = query
-
-        self.__logger = logging.getLogger(__name__)
-        self.__logger.addHandler(logging.NullHandler())
-
         self.xrd_settings.connect()
         self.__xrd_settings = list(self.xrd_settings().find())
 
@@ -44,14 +40,14 @@ class DiffractionBuilder(Builder):
             generator of materials to calculate xrd
         """
 
-        self.__logger.info("Diffraction Builder Started")
+        self.logger.info("Diffraction Builder Started")
 
         # All relevant materials that have been updated since diffraction props were last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.diffraction))
         mats = self.materials().find(q, {"material_id": 1,
                                          "structure": 1})
-        self.__logger.info("Found {} new materials for diffraction data".format(mats.count()))
+        self.logger.info("Found {} new materials for diffraction data".format(mats.count()))
         return mats
 
     def process_item(self, item):
@@ -64,7 +60,7 @@ class DiffractionBuilder(Builder):
         Returns:
             dict: a diffraction dict
         """
-        self.__logger.debug("Calculating diffraction for {}".format(item['material_id']))
+        self.logger.debug("Calculating diffraction for {}".format(item['material_id']))
         
         struct = Structure.from_dict(item['structure'])
 
@@ -98,7 +94,7 @@ class DiffractionBuilder(Builder):
             items ([[dict]]): a list of list of thermo dictionaries to update
         """
 
-        self.__logger.info("Updating {} diffraction documents".format(len(items)))
+        self.logger.info("Updating {} diffraction documents".format(len(items)))
 
         for doc in items:
             doc[self.diffraction.lu_field] = datetime.utcnow()
