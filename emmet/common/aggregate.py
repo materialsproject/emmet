@@ -12,11 +12,12 @@ class AggregateBuilder(Builder):
 
     """
 
-    def __init__(self, sources, target, key_field, **kwargs):
+    def __init__(self, sources, target, key_field, query = {},**kwargs):
         self.key_field = key_field
         self.sources = sources
         self.target = target
         self.kwargs = kwargs
+        self.query = query
 
         super(AggregateBuilder, self).__init__(sources=sources, targets=[target], **kwargs)
 
@@ -25,21 +26,26 @@ class AggregateBuilder(Builder):
         keys_to_update = set()
 
         for source in self.sources:
-            keys_to_update |= set(source().distinct(self.key_field,source.lu_filter(self.targets)))
+            new_q = dict(self.query)
+            new_q.update(source.lu_filter(self.targets))
+            keys_to_update |= set(source().distinct(self.key_field,new_q))
 
         for key in keys_to_update:
             d = {}
             for source in self.sources:
-                recursive_update(d,source().find_one({self.key_field: key}))
-                d.pop(source.lu_field)
+                doc = source().find_one({self.key_field: key})
+                if doc:
+                    recursive_update(d,doc)
+                    d.pop(source.lu_field)
             yield d
 
     def update_targets(self, items):
 
         bulk = self.target().initialize_ordered_bulk_op()
         for item in items:
-            item.pop("_id",None)  # Don't alter immutable field in target.
+            # Don't alter immutable field _id in target.
+            item.pop("_id",None)
+            # set a new updated field
             item[self.target.lu_field] = datetime.utcnow()
-            # Use source last-updated value, ensuring `datetime` type.
             bulk.find({self.key_field:item[self.key_field]}).upsert().replace_one(item)
         bulk.execute()
