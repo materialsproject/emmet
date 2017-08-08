@@ -230,16 +230,20 @@ class MaterialsBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
-        to_update = sum([len(item) for item in items])
-        if to_update == 0:
+        items = list(filter(None, chain(*items)))
+
+        if len(items) > 0:
+            self.logger.info("Updating {} materials".format(len(items)))
+            bulk = self.materials().initialize_ordered_bulk_op()
+
+            for m in items:
+                m[self.materials.lu_field] = datetime.utcnow()
+                bulk.find({"material_id": m["material_id"]}).upsert().replace_one(m)
+            bulk.execute()
+        else:
             self.logger.info("No items to update")
-            return
 
-        self.logger.info("Updating {} materials documents".format(to_update))
-
-        bulk = self.materials().initialize_ordered_bulk_op()
-        for m in filter(None, chain(*items)):
-            m[self.materials.lu_field] = datetime.utcnow()
-            bulk.find({"material_id": m["material_id"]}).upsert().replace_one(m)
-            self.materials().replace_one({"material_id": m["material_id"]}, m, upsert=True)
-        bulk.execute()
+    def validate(self):
+        """
+        Applies a series of validation rules to ensure the database is compliant
+        """

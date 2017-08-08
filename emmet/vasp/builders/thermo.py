@@ -15,7 +15,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class ThermoBuilder(Builder):
-    def __init__(self, materials, thermo, query={}, compatibility=MaterialsProjectCompatibility('Advanced'), **kwargs):
+    def __init__(self, materials, thermo, query={}, compatibility=MaterialsProjectCompatibility("Advanced"), **kwargs):
         """
         Calculates thermodynamic quantities for materials from phase diagram constructions
 
@@ -51,14 +51,14 @@ class ThermoBuilder(Builder):
         # All relevant materials that have been updated since thermo props were last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.thermo))
-        comps = [m['elements'] for m in self.materials().find(q, {"elements": 1})]
+        comps = [m["elements"] for m in self.materials().find(q, {"elements": 1})]
 
         self.__logger.info("Found {} compositions with new/updated materials".format(len(comps)))
 
         # Only yields maximal super sets: e.g. if ["A","B"] and ["A"] are both in the list, will only yield ["A","B"]
         # as this will calculate thermo props for all ["A"] compounds
         processed = set()
-        # Start with the largest set to ensure we don't miss superset/subset relations
+        # Start with the largest set to ensure we don"t miss superset/subset relations
         for chemsys in sorted(comps, key=lambda x: len(x), reverse=True):
             if "-".join(sorted(chemsys)) not in processed:
                 processed |= self.chemsys_permutations(chemsys)
@@ -82,23 +82,22 @@ class ThermoBuilder(Builder):
 
         new_q = dict(self.query)
         new_q["chemsys"] = {"$in": list(self.chemsys_permutations(chemsys))}
-        fields = {f: 1 for f in ["structure", "material_id", "thermo.energy", "unit_cell_formula", "calc_settings",
-                                 "thermo.run_type"]}
+        fields = {f: 1 for f in ["structure", "material_id", "thermo.energy", "unit_cell_formula", "calc_settings"]}
         data = list(self.materials().find(new_q, fields))
 
         all_entries = []
 
         for d in data:
-            parameters = {"is_hubbard": d['calc_settings']["is_hubbard"],
-                          "hubbards": d['calc_settings']["hubbards"],
-                          "potcar_spec": d['calc_settings']["potcar_spec"],
-                          "run_type": d['thermo']["run_type"]
+            parameters = {"is_hubbard": d["calc_settings"]["is_hubbard"],
+                          "hubbards": d["calc_settings"]["hubbards"],
+                          "potcar_spec": d["calc_settings"]["potcar_spec"],
+                          "run_type": d["calc_settings"]["run_type"]
                           }
 
             entry = ComputedEntry(Composition(d["unit_cell_formula"]),
                                   d["thermo"]["energy"], 0.0, parameters=parameters,
                                   entry_id=d["material_id"],
-                                  data={"oxide_type": oxide_type(Structure.from_dict(d['structure']))})
+                                  data={"oxide_type": oxide_type(Structure.from_dict(d["structure"]))})
 
             all_entries.append(entry)
 
@@ -151,12 +150,16 @@ class ThermoBuilder(Builder):
         Args:
             items ([[dict]]): a list of list of thermo dictionaries to update
         """
-        items = list(chain(*items))
+        items = list(filter(None, chain(*items)))
+        items = list(filter(None, items))
 
-        self.__logger.info("Updating {} thermo documents".format(len(items)))
+        if len(items) > 0:
+            self.logger.info("Updating {} thermo documents".format(len(items)))
+            bulk = self.thermo().initialize_ordered_bulk_op()
 
-        bulk = self.thermo().initialize_ordered_bulk_op()
-        for doc in items:
-            doc[self.thermo.lu_field] = datetime.utcnow()
-            bulk.find({"material_id": doc["material_id"]}).upsert().replace_one(doc)
-        bulk.execute()
+            for m in items:
+                m[self.thermo.lu_field] = datetime.utcnow()
+                bulk.find({"material_id": m["material_id"]}).upsert().replace_one(m)
+            bulk.execute()
+        else:
+            self.logger.info("No items to update")

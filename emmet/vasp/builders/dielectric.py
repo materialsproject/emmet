@@ -124,13 +124,15 @@ class DielectricBuilder(Builder):
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
 
-        items = [item for item in items if item is not None]
+        items = list(filter(None, items))
 
-        self.__logger.info("Updating {} dielectrics".format(len(items)))
+        if len(items) > 0:
+            self.logger.info("Updating {} dielectrics".format(len(items)))
+            bulk = self.dielectric().initialize_ordered_bulk_op()
 
-        for doc in items:
-            doc[self.dielectric.lu_field] = datetime.utcnow()
-            self.dielectric.replace_one({"material_id": doc["material_id"]}, doc, upsert=True)
-
-    def finalize(self):
-        pass
+            for m in filter(None,items):
+                m[self.dielectric.lu_field] = datetime.utcnow()
+                bulk.find({"material_id": m["material_id"]}).upsert().replace_one(m)
+            bulk.execute()
+        else:
+            self.logger.info("No items to update")

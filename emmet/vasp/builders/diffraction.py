@@ -93,9 +93,15 @@ class DiffractionBuilder(Builder):
         Args:
             items ([[dict]]): a list of list of thermo dictionaries to update
         """
+        items = list(filter(None, items))
 
-        self.logger.info("Updating {} diffraction documents".format(len(items)))
+        if len(items) > 0:
+            self.logger.info("Updating {} diffraction docs".format(len(items)))
+            bulk = self.diffraction().initialize_ordered_bulk_op()
 
-        for doc in items:
-            doc[self.diffraction.lu_field] = datetime.utcnow()
-            self.diffraction().replace_one({"material_id": doc['material_id']}, doc, upsert=True)
+            for m in items:
+                m[self.diffraction.lu_field] = datetime.utcnow()
+                bulk.find({"material_id": m["material_id"]}).upsert().replace_one(m)
+            bulk.execute()
+        else:
+            self.logger.info("No items to update")
