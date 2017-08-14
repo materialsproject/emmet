@@ -59,7 +59,7 @@ class MaterialsBuilder(Builder):
         # only consider tasks that have been updated since materials was last updated
         q.update(self.tasks.lu_filter(self.materials))
 
-        forms_to_update = {t["formula_pretty"] for t in self.tasks().find(q, {"formula_pretty": 1})}
+        forms_to_update = self.tasks().find(q).distinct("formula_pretty")
         self.logger.info("Found {} new/updated systems to proces".format(len(forms_to_update)))
 
         for formula in forms_to_update:
