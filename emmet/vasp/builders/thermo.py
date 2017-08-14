@@ -29,7 +29,7 @@ class ThermoBuilder(Builder):
         self.materials = materials
         self.thermo = thermo
         self.query = query
-        self.__compat = compatibility
+        self.compatibility = compatibility
 
         self.__logger = logging.getLogger(__name__)
         self.__logger.addHandler(logging.NullHandler())
@@ -113,7 +113,7 @@ class ThermoBuilder(Builder):
         Returns:
             [dict]: a list of thermo dictionaries to update thermo with
         """
-        entries = self.__compat.process_entries(item)
+        entries = self.compat.process_entries(item)
         try:
             pd = PhaseDiagram(entries)
             analyzer = PDAnalyzer(pd)
