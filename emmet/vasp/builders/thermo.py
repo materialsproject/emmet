@@ -136,6 +136,7 @@ class ThermoBuilder(Builder):
                                                  "amount": amt}
                                                 for de, amt in decomp.items()]
                 d["thermo"]["entry"] = e.as_dict()
+                d["thermo"]["explanation"] = self.compat.get_explanation_dict(e)
                 docs.append(d)
         except PhaseDiagramError as p:
             self.__logger.warning("Phase diagram error: {}".format(p))
