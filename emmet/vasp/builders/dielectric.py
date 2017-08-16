@@ -11,12 +11,11 @@ from pymatgen.core.operations import SymmOp
 from maggma.builder import Builder
 from emmet.vasp.builders.task_tagger import TaskTagger
 
-
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class DielectricBuilder(Builder):
-    def __init__(self, tasks, materials, dielectric, query={}, **kwargs):
+    def __init__(self, tasks, materials, dielectric, min_band_gap=0.1, query={}, **kwargs):
         """
         Creates a dielectric collection for materials
 
@@ -24,12 +23,14 @@ class DielectricBuilder(Builder):
             tasks (Store): Store of task documents
             materials (Store): Store of materials documents to match to
             dielectric (Store): Store of dielectric properties
+            min_band_gap (float): minimum band gap for a material to look for a dielectric calculation to build
             query (dict): dictionary to limit materials to be analyzed
         """
 
         self.tasks = tasks
         self.materials = materials
         self.dielectric = dielectric
+        self.min_band_gap = min_band_gap
         self.query = query
         self.snls = snls
 
@@ -51,7 +52,7 @@ class DielectricBuilder(Builder):
         self.__logger.info("Dielectric Builder Started")
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.dielectric))
-        q["band_gap"] = {"$gt": 0.1}  # TODO: Consider smaller band gap?
+        q["band_gap"] = {"$gt": self.min_band_gap}
         mats = self.materials.find(q, {"material_id": 1, "structure": 1, "task_ids": 1})
 
         self.__logger.info("Found {} new materials for dielectric data".format(mats.count()))
@@ -130,7 +131,7 @@ class DielectricBuilder(Builder):
             self.logger.info("Updating {} dielectrics".format(len(items)))
             bulk = self.dielectric().initialize_ordered_bulk_op()
 
-            for m in filter(None,items):
+            for m in filter(None, items):
                 m[self.dielectric.lu_field] = datetime.utcnow()
                 bulk.find({"material_id": m["material_id"]}).upsert().replace_one(m)
             bulk.execute()
