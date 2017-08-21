@@ -113,7 +113,7 @@ class ThermoBuilder(Builder):
         Returns:
             [dict]: a list of thermo dictionaries to update thermo with
         """
-        entries = self.compat.process_entries(item)
+        entries = self.compatibility.process_entries(item)
         try:
             pd = PhaseDiagram(entries)
             analyzer = PDAnalyzer(pd)
@@ -136,7 +136,7 @@ class ThermoBuilder(Builder):
                                                  "amount": amt}
                                                 for de, amt in decomp.items()]
                 d["thermo"]["entry"] = e.as_dict()
-                d["thermo"]["explanation"] = self.compat.get_explanation_dict(e)
+                d["thermo"]["explanation"] = self.compatibility.get_explanation_dict(e)
                 docs.append(d)
         except PhaseDiagramError as p:
             self.__logger.warning("Phase diagram error: {}".format(p))
