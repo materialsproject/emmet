@@ -42,13 +42,17 @@ class DiffractionBuilder(Builder):
 
         self.logger.info("Diffraction Builder Started")
 
+        self.logger.info("Setting indexes")
+        self.ensure_indexes()
+
         # All relevant materials that have been updated since diffraction props were last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.diffraction))
         mats = self.materials().find(q, {"material_id": 1,
                                          "structure": 1})
         self.logger.info("Found {} new materials for diffraction data".format(mats.count()))
-        return mats
+        for m in mats:
+            yield m
 
     def process_item(self, item):
         """
@@ -105,3 +109,15 @@ class DiffractionBuilder(Builder):
             bulk.execute()
         else:
             self.logger.info("No items to update")
+
+
+    def ensure_indexes(self):
+        """
+        Ensures indexes on the tasks and materials collections
+        :return:
+        """
+        # Search index for materials
+        self.materials().create_index("material_id",unique=True,background=True)
+
+        # Search index for materials
+        self.diffraction().create_index("material_id", unique=True, background=True)

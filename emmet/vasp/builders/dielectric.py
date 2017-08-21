@@ -3,6 +3,8 @@ import numpy as np
 from datetime import datetime
 from itertools import combinations
 
+from pymongo import ASCENDING, DESCENDING
+
 from pymatgen import Structure
 from pymatgen.analysis.piezo import PiezoTensor
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
@@ -50,6 +52,10 @@ class DielectricBuilder(Builder):
         """
 
         self.__logger.info("Dielectric Builder Started")
+
+        self.logger.info("Setting indexes")
+        self.ensure_indexes()
+
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.dielectric))
         q["band_gap"] = {"$gt": self.min_band_gap}
@@ -137,3 +143,12 @@ class DielectricBuilder(Builder):
             bulk.execute()
         else:
             self.logger.info("No items to update")
+
+    def ensure_indexes(self):
+        """
+        Ensures indexes on the tasks and materials collections
+        :return:
+        """
+        # Search index for materials including band_gap
+        self.materials().create_index([("material_id", ASCENDING),
+                                       ("band_gap", ASCENDING)], background=True)

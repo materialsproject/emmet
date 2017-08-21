@@ -1,6 +1,8 @@
 from datetime import datetime
 from itertools import chain
 
+from pymongo import ASCENDING, DESCENDING
+
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 
@@ -52,6 +54,9 @@ class MaterialsBuilder(Builder):
 
         self.logger.info("Materials Builder Started")
 
+        self.logger.info("Setting indexes")
+        self.ensure_indexes()
+
         # Get only successfull tasks
         q = dict(self.query)
         q["state"] = "successful"
@@ -65,7 +70,7 @@ class MaterialsBuilder(Builder):
         for formula in forms_to_update:
             tasks_q = dict(q)
             tasks_q["formula_pretty"] = formula
-            tasks = list(sorted(self.tasks().find(tasks_q), key=lambda x: x["task_id"]))
+            tasks = list(self.tasks().find(tasks_q))
 
             yield tasks
 
@@ -243,7 +248,18 @@ class MaterialsBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
+    def ensure_indexes(self):
+        """
+        Ensures indexes on the tasks and materials collections
+        :return:
+        """
+        # Basic search index for tasks
+        self.tasks().create_index([("formula_pretty", DESCENDING),
+                                   ("state", ASCENDING),
+                                   (self.tasks.lu_field, DESCENDING)], background=True)
+
+        # Search index for materials
+        self.materials().create_index("material_id", unique=True, background=True)
+
     def validate(self):
-        """
-        Applies a series of validation rules to ensure the database is compliant
-        """
+        pass
