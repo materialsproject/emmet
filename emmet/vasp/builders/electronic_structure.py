@@ -57,7 +57,11 @@ class ElectronicStructureBuilder(Builder):
         bfs = gridfs.GridFS(self.materials().database, self.bandstructure_fs)
         dfs = gridfs.GridFS(self.materials().database, self.dos_fs)
 
-        for mat in self.materials().find(q, {"material_id": 1, "structure": 1, "bandstructure": 1}):
+        mats = list(self.materials().find(q, {"material_id": 1}))
+
+        for m in mats:
+
+            mat = self.materials().find_one(m, {"material_id": 1, "structure": 1, "bandstructure": 1})
 
             # If a bandstructure oid exists
             if "bs_oid" in mat.get("bandstructure", {}):

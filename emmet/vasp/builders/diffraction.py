@@ -48,11 +48,10 @@ class DiffractionBuilder(Builder):
         # All relevant materials that have been updated since diffraction props were last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.diffraction))
-        mats = self.materials().find(q, {"material_id": 1,
-                                         "structure": 1})
-        self.logger.info("Found {} new materials for diffraction data".format(mats.count()))
+        mats = list(self.materials().find(q, {"material_id": 1}))
+        self.logger.info("Found {} new materials for diffraction data".format(len(mats)))
         for m in mats:
-            yield m
+            yield self.materials().find_one(m,{"material_id":1 , "structure": 1})
 
     def process_item(self, item):
         """
