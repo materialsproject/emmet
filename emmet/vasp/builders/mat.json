@@ -571,5 +571,19 @@
     "quality_score": {
       "static dielectric": 3
     }
+  },
+  {
+    "tasks_key": "output.piezo_tensor",
+    "materials_key": "piezo.static",
+    "quality_score": {
+      "static dielectric": 3
+    }
+  },
+  {
+    "tasks_key": "output.piezo_ionic_tensor",
+    "materials_key": "piezo.ionic",
+    "quality_score": {
+      "static dielectric": 3
+    }
   }
 ]
