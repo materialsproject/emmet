@@ -543,5 +543,19 @@
     "quality_score": {
       "deformation": 1
     }
+  },
+  {
+    "tasks_key": "output.epsilon_static",
+    "materials_key": "dielectric.static",
+    "quality_score": {
+      "static dielectric": 3
+    }
+  },
+  {
+    "tasks_key": "output.epsilon_ionic",
+    "materials_key": "dielectric.ionic",
+    "quality_score": {
+      "static dielectric": 3
+    }
   }
 ]
