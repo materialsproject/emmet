@@ -361,38 +361,52 @@
     }
   },
   {
-    "tasks_key": "calcs_reversed.0.input",
+    "tasks_key": "orig_inputs",
     "materials_key": "inputs.structure_optimization",
     "quality_score": {
       "structure optimization": 1
     }
   },
   {
-    "tasks_key": "calcs_reversed.0.input",
+    "tasks_key": "orig_inputs",
     "materials_key": "inputs.static",
     "quality_score": {
       "static": 1
     }
   },
   {
-    "tasks_key": "calcs_reversed.0.input",
+    "tasks_key": "orig_inputs",
     "materials_key": "inputs.dielectric",
     "quality_score": {
       "static dielectric": 1
     }
   },
   {
-    "tasks_key": "calcs_reversed.0.input",
+    "tasks_key": "orig_inputs",
     "materials_key": "inputs.nscf_line",
     "quality_score": {
       "nscf line": 1
     }
   },
   {
-    "tasks_key": "calcs_reversed.0.input",
+    "tasks_key": "orig_inputs",
     "materials_key": "inputs.nscf_uniform",
     "quality_score": {
       "nscf uniform": 1
+    }
+  },
+  {
+    "tasks_key": "orig_inputs",
+    "materials_key": "inputs.hse",
+    "quality_score": {
+      "hse": 1
+    }
+  },
+  {
+    "tasks_key": "orig_inputs",
+    "materials_key": "inputs.hse_bs",
+    "quality_score": {
+      "hse bs": 1
     }
   },
   {
