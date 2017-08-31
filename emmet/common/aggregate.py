@@ -12,9 +12,10 @@ class AggregateBuilder(Builder):
 
     """
 
-    def __init__(self, sources, target, key_field, query = {},**kwargs):
+    def __init__(self, sources, target, key_field, aggregate_mode="Update", query = {},**kwargs):
         self.key_field = key_field
         self.sources = sources
+        self.aggregate_mode = aggregate_mode
         self.target = target
         self.kwargs = kwargs
         self.query = query
@@ -35,7 +36,11 @@ class AggregateBuilder(Builder):
             for source in self.sources:
                 doc = source().find_one({self.key_field: key})
                 if doc:
-                    recursive_update(d,doc)
+                    if self.aggregate_mode is "Overwrite":
+                        for k,v in doc.items():
+                            d[k] = v
+                    else:
+                        recursive_update(d, doc)
                     d.pop(source.lu_field)
             yield d
 
