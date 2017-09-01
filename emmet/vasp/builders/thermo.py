@@ -116,25 +116,27 @@ class ThermoBuilder(Builder):
         entries = self.compatibility.process_entries(item)
         try:
             pd = PhaseDiagram(entries)
-            analyzer = PDAnalyzer(pd)
 
             docs = []
 
             for e in entries:
                 (decomp, ehull) = \
-                    analyzer.get_decomp_and_e_above_hull(e)
+                    pd.get_decomp_and_e_above_hull(e)
 
-                d = {"material_id": e.entry_id}
-                d["thermo"] = {}
-                d["thermo"]["formation_energy_per_atom"] = pd.get_form_energy_per_atom(e)
-                d["thermo"]["e_above_hull"] = ehull
-                d["thermo"]["is_stable"] = e in pd.stable_entries
+                d = {"material_id": e.entry_id,
+                     "thermo": {
+                         "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
+                         "e_above_hull": ehull,
+                         "is_stable": e in pd.stable_entries
+                     }
+                     }
                 if d["thermo"]["is_stable"]:
-                    d["thermo"]["eq_reaction_e"] = analyzer.get_equilibrium_reaction_energy(e)
-                d["thermo"]["decomposes_to"] = [{"material_id": de.entry_id,
-                                                 "formula": de.composition.formula,
-                                                 "amount": amt}
-                                                for de, amt in decomp.items()]
+                    d["thermo"]["eq_reaction_e"] = pd.get_equilibrium_reaction_energy(e)
+                else:
+                    d["thermo"]["decomposes_to"] = [{"material_id": de.entry_id,
+                                                     "formula": de.composition.formula,
+                                                     "amount": amt}
+                                                    for de, amt in decomp.items()]
                 d["thermo"]["entry"] = e.as_dict()
                 d["thermo"]["explanation"] = self.compatibility.get_explanation_dict(e)
                 docs.append(d)
