@@ -11,7 +11,6 @@ import zlib
 import io
 from datetime import datetime
 
-
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 

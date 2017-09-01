@@ -3,16 +3,13 @@ import numpy as np
 from datetime import datetime
 from itertools import combinations
 
-from pymongo import ASCENDING, DESCENDING
+from pymongo import ASCENDING
 
 from pymatgen import Structure
 from pymatgen.analysis.elasticity.tensors import Tensor
 from pymatgen.analysis.piezo import PiezoTensor
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pymatgen.core.operations import SymmOp
 
 from maggma.builder import Builder
-from emmet.vasp.builders.task_tagger import TaskTagger
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -33,7 +30,6 @@ class DielectricBuilder(Builder):
         self.dielectric = dielectric
         self.min_band_gap = min_band_gap
         self.query = query
-        self.snls = snls
 
         self.__logger = logging.getLogger(__name__)
         self.__logger.addHandler(logging.NullHandler())
@@ -150,4 +146,3 @@ class DielectricBuilder(Builder):
         """
         # Search index for materials including band_gap
         self.materials().create_index([("material_id", ASCENDING)], background=True)
-
