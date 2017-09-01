@@ -31,9 +31,6 @@ class DielectricBuilder(Builder):
         self.min_band_gap = min_band_gap
         self.query = query
 
-        self.__logger = logging.getLogger(__name__)
-        self.__logger.addHandler(logging.NullHandler())
-
         super().__init__(sources=[materials],
                          targets=[dielectric],
                          **kwargs)
@@ -46,7 +43,7 @@ class DielectricBuilder(Builder):
             generator or list relevant tasks and materials to process into materials documents
         """
 
-        self.__logger.info("Dielectric Builder Started")
+        self.logger.info("Dielectric Builder Started")
 
         self.logger.info("Setting indexes")
         self.ensure_indexes()
@@ -56,7 +53,7 @@ class DielectricBuilder(Builder):
         q["dielectric"] = {"$exists": 1}
         mats = list(self.materials.find(q, {"material_id": 1}))
 
-        self.__logger.info("Found {} new materials for dielectric data".format(len(mats)))
+        self.logger.info("Found {} new materials for dielectric data".format(len(mats)))
 
         for m in mats:
             mat = self.materials().find_one(m, {"material_id": 1, "dielectric": 1, "piezo": 1, "structure": 1})
@@ -144,5 +141,5 @@ class DielectricBuilder(Builder):
         Ensures indexes on the tasks and materials collections
         :return:
         """
-        # Search index for materials including band_gap
-        self.materials().create_index([("material_id", ASCENDING)], background=True)
+        # Search index for materials
+        self.materials().create_index("material_id", unique=True, background=True)

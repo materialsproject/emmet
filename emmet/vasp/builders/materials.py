@@ -155,7 +155,7 @@ class MaterialsBuilder(Builder):
                     props.append(put_mongolike(prop["materials_key"], get_mongolike(task, prop["tasks_key"])))
             except Exception as e:
                 if not prop.get("optional", False):
-                    self.logger.error("Failed getting {}".format(e))
+                    self.logger.error("Failed getting {} for task: {}".format(e,t_id))
 
         # Add in the provenance for the properties
         origins = [{"materials_key": prop["materials_key"],
@@ -224,7 +224,7 @@ class MaterialsBuilder(Builder):
                                              "last_updated": task["last_updated"]})
                     except Exception as e:
                         if not prop.get("optional", False):
-                            self.logger.error("Failed getting {}".format(e))
+                            self.logger.error("Failed getting {}task: {}".format(e,t_id))
 
         # If there are properties to update
         if len(props) > 0:
@@ -265,6 +265,3 @@ class MaterialsBuilder(Builder):
 
         # Search index for materials
         self.materials().create_index("material_id", unique=True, background=True)
-
-    def validate(self):
-        pass
