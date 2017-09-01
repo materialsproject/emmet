@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime
 
+from monty.json import jsanitize
+
 from pymatgen.core.structure import Structure
 from pymatgen.analysis.diffraction.xrd import XRDCalculator, WAVELENGTHS
 
@@ -79,11 +81,10 @@ class DiffractionBuilder(Builder):
             xrdcalc = XRDCalculator(wavelength="".join([xs['target'], xs['edge']]),
                                     symprec=xs.get('symprec', 0))
 
-            pattern = xrdcalc.get_xrd_pattern(structure, two_theta_range=xs['two_theta'])
+            pattern = jsanitize(xrdcalc.get_xrd_pattern(structure, two_theta_range=xs['two_theta']).as_dict())
             # TODO: Make sure this is what the website actually needs
             d = {'wavelength': {'element': xs['target'],
                                 'in_angstroms': WAVELENGTHS["".join([xs['target'], xs['edge']])]},
-                 'meta': ['amplitude', 'hkl', 'two_theta', 'd_spacing'],
                  'pattern': pattern}
             doc[xs['target']] = d
         return doc
