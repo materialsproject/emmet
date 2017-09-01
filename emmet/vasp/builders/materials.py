@@ -148,9 +148,14 @@ class MaterialsBuilder(Builder):
             return None
 
         # Convert the task doc into a serious of properties in the materials doc with the right document structure
-        props = [put_mongolike(prop["materials_key"], get_mongolike(task, prop["tasks_key"])) for prop in
-                 self.__settings if
-                 t_type in prop["quality_score"].keys()]
+        props = []
+        for prop in self.__settings:
+            try:
+                if t_type in prop["quality_score"].keys():
+                    props.append(put_mongolike(prop["materials_key"], get_mongolike(task, prop["tasks_key"])))
+            except Exception as e:
+                if not prop.get("optional", False):
+                    self.logger.error("Failed getting {}".format(e))
 
         # Add in the provenance for the properties
         origins = [{"materials_key": prop["materials_key"],
