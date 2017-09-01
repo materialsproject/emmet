@@ -51,7 +51,7 @@ class DiffractionBuilder(Builder):
         mats = list(self.materials().find(q, {"material_id": 1}))
         self.logger.info("Found {} new materials for diffraction data".format(len(mats)))
         for m in mats:
-            yield self.materials().find_one(m,{"material_id":1 , "structure": 1})
+            yield self.materials().find_one(m, {"material_id": 1, "structure": 1})
 
     def process_item(self, item):
         """
@@ -64,7 +64,7 @@ class DiffractionBuilder(Builder):
             dict: a diffraction dict
         """
         self.logger.debug("Calculating diffraction for {}".format(item['material_id']))
-        
+
         struct = Structure.from_dict(item['structure'])
 
         xrd_doc = {"xrd": self.get_xrd_from_struct(struct)}
@@ -79,8 +79,7 @@ class DiffractionBuilder(Builder):
             xrdcalc = XRDCalculator(wavelength="".join([xs['target'], xs['edge']]),
                                     symprec=xs.get('symprec', 0))
 
-            pattern = [[float(p[1]), [int(x) for x in list(p[2])[0]], p[0], float(p[3])] for p in
-                       xrdcalc.get_xrd_data(structure, two_theta_range=xs['two_theta'])]
+            pattern = xrdcalc.get_xrd_pattern(structure, two_theta_range=xs['two_theta'])
             # TODO: Make sure this is what the website actually needs
             d = {'wavelength': {'element': xs['target'],
                                 'in_angstroms': WAVELENGTHS["".join([xs['target'], xs['edge']])]},
@@ -109,14 +108,13 @@ class DiffractionBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
-
     def ensure_indexes(self):
         """
         Ensures indexes on the tasks and materials collections
         :return:
         """
         # Search index for materials
-        self.materials().create_index("material_id",unique=True,background=True)
+        self.materials().create_index("material_id", unique=True, background=True)
 
         # Search index for materials
         self.diffraction().create_index("material_id", unique=True, background=True)
