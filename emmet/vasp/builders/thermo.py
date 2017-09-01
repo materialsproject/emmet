@@ -6,7 +6,6 @@ from pymatgen import Structure, Composition
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility
 from pymatgen.entries.computed_entries import ComputedEntry
 from pymatgen.phasediagram.maker import PhaseDiagram, PhaseDiagramError
-from pymatgen.phasediagram.analyzer import PDAnalyzer
 from pymatgen.analysis.structure_analyzer import oxide_type, sulfide_type
 
 from maggma.builder import Builder
