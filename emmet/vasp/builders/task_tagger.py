@@ -41,9 +41,9 @@ class TaskTagger(Builder):
             print("Processing task_id: {}".format(t_id))
             try:
                 yield self.tasks.collection.find_one({"task_id": t_id})
-            except:
-                import traceback
+            except Exception as e:
                 print("Problem processing task_id: {}".format(t_id))
+                print(e)
 
     def process_item(self, item):
         """
