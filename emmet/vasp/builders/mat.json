@@ -81,6 +81,54 @@
     }
   },
   {
+    "tasks_key": "calcs_reversed.0.bandstructure",
+    "materials_key": "bandstructure.bs",
+    "quality_score": {
+      "nscf line": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "calcs_reversed.0.bandstructure_fs_id",
+    "materials_key": "bandstructure.bs_oid",
+    "quality_score": {
+      "nscf line": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "calcs_reversed.0.bandstructure_compression",
+    "materials_key": "bandstructure.bs_compression",
+    "quality_score": {
+      "nscf line": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "calcs_reversed.0.dos",
+    "materials_key": "bandstructure.dos",
+    "quality_score": {
+      "nscf uniform": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "calcs_reversed.0.dos_fs_id",
+    "materials_key": "bandstructure.dos_oid",
+    "quality_score": {
+      "nscf uniform": 4
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "calcs_reversed.0.dos_compression",
+    "materials_key": "bandstructure.dos_compression",
+    "quality_score": {
+      "nscf uniform": 5
+    },
+    "optional": true
+  },
+  {
     "tasks_key": "",
     "materials_key": "band_structure",
     "_comment": "From ES Builder",
@@ -313,38 +361,52 @@
     }
   },
   {
-    "tasks_key": "calcs_reversed.0.input",
+    "tasks_key": "orig_inputs",
     "materials_key": "inputs.structure_optimization",
     "quality_score": {
       "structure optimization": 1
     }
   },
   {
-    "tasks_key": "calcs_reversed.0.input",
+    "tasks_key": "orig_inputs",
     "materials_key": "inputs.static",
     "quality_score": {
       "static": 1
     }
   },
   {
-    "tasks_key": "calcs_reversed.0.input",
+    "tasks_key": "orig_inputs",
     "materials_key": "inputs.dielectric",
     "quality_score": {
       "static dielectric": 1
     }
   },
   {
-    "tasks_key": "calcs_reversed.0.input",
+    "tasks_key": "orig_inputs",
     "materials_key": "inputs.nscf_line",
     "quality_score": {
       "nscf line": 1
     }
   },
   {
-    "tasks_key": "calcs_reversed.0.input",
+    "tasks_key": "orig_inputs",
     "materials_key": "inputs.nscf_uniform",
     "quality_score": {
       "nscf uniform": 1
+    }
+  },
+  {
+    "tasks_key": "orig_inputs",
+    "materials_key": "inputs.hse",
+    "quality_score": {
+      "hse": 1
+    }
+  },
+  {
+    "tasks_key": "orig_inputs",
+    "materials_key": "inputs.hse_bs",
+    "quality_score": {
+      "hse bs": 1
     }
   },
   {
@@ -494,6 +556,34 @@
     "materials_key": "stress",
     "quality_score": {
       "deformation": 1
+    }
+  },
+  {
+    "tasks_key": "output.epsilon_static",
+    "materials_key": "dielectric.static",
+    "quality_score": {
+      "static dielectric": 3
+    }
+  },
+  {
+    "tasks_key": "output.epsilon_ionic",
+    "materials_key": "dielectric.ionic",
+    "quality_score": {
+      "static dielectric": 3
+    }
+  },
+  {
+    "tasks_key": "output.piezo_tensor",
+    "materials_key": "piezo.static",
+    "quality_score": {
+      "static dielectric": 3
+    }
+  },
+  {
+    "tasks_key": "output.piezo_ionic_tensor",
+    "materials_key": "piezo.ionic",
+    "quality_score": {
+      "static dielectric": 3
     }
   }
 ]

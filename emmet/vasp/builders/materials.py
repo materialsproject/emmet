@@ -1,13 +1,14 @@
-import logging
 from datetime import datetime
 from itertools import chain
+
+from pymongo import ASCENDING, DESCENDING
 
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 
 from maggma.builder import Builder
 from emmet.vasp.builders.task_tagger import TaskTagger
-from maggma.utils import make_mongolike, recursive_update
+from maggma.utils import get_mongolike, put_mongolike, recursive_update
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -36,10 +37,10 @@ class MaterialsBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
 
-        self.__logger = logging.getLogger(__name__)
-        self.__logger.addHandler(logging.NullHandler())
+        self.materials_settings.connect()
+        self.__settings = list(self.materials_settings().find())
 
-        super().__init__(sources=[tasks, materials_settings],
+        super().__init__(sources=[tasks],
                          targets=[materials],
                          **kwargs)
 
@@ -51,9 +52,10 @@ class MaterialsBuilder(Builder):
             generator or list relevant tasks and materials to process into materials documents
         """
 
-        self.__logger.info("Materials Builder Started")
+        self.logger.info("Materials Builder Started")
 
-        self.__settings = list(self.materials_settings().find())
+        self.logger.info("Setting indexes")
+        self.ensure_indexes()
 
         # Get only successfull tasks
         q = dict(self.query)
@@ -62,33 +64,17 @@ class MaterialsBuilder(Builder):
         # only consider tasks that have been updated since materials was last updated
         q.update(self.tasks.lu_filter(self.materials))
 
-        tasks_to_update = self.tasks().find(q, {"formula_pretty": 1}).count()
-        self.__logger.info("Found {} new/updated tasks to proces".format(tasks_to_update))
+        forms_to_update = self.tasks().find(q).distinct("formula_pretty")
+        self.logger.info("Found {} new/updated systems to proces".format(len(forms_to_update)))
 
-        # MongoDB aggregation to find and group all successfull tasks by formula_pretty
-        formulas_reduced = self.tasks().aggregate([{"$match": q},
-                                                   {"$project": {"task_id": 1, "formula_pretty": 1}},
-                                                   {"$group": {"_id": {"formula_pretty": "$formula_pretty"},
-                                                               "task_ids": {"$addToSet": "$task_id"}}}
-                                                   ])
-
-        for doc in formulas_reduced:
-            formula = doc["_id"]["formula_pretty"]
-            task_ids = set(doc["task_ids"])
-            self.__logger.debug("Processing {} : {}".format(formula, task_ids))
-
+        for formula in forms_to_update:
             tasks_q = dict(q)
-            tasks_q["task_id"] = {"$in": list(task_ids)}
+            tasks_q["formula_pretty"] = formula
             tasks = list(self.tasks().find(tasks_q))
 
-            mats_q = dict(q)
-            mats_q["formula_pretty"] = formula
-            mats = list(self.materials().find(mats_q))
+            yield tasks
 
-            # return all matching materials and tasks for this formula
-            yield tasks, mats
-
-    def process_item(self, item):
+    def process_item(self, tasks):
         """
         Process the tasks and materials into just a list of materials
 
@@ -98,9 +84,11 @@ class MaterialsBuilder(Builder):
         Returns:
             ([dict],list) : a list of new materials docs and a list of task_ids that were processsed
         """
+        materials = []
 
-        tasks = item[0]
-        materials = item[1]
+        formula = tasks[0]["formula_pretty"]
+        t_ids = [t["task_id"] for t in tasks]
+        self.logger.debug("Processing {} : {}".format(formula, t_ids))
 
         for t in sorted(tasks, key=lambda x: x["task_id"]):
             mat = self.match(t, materials)
@@ -112,9 +100,9 @@ class MaterialsBuilder(Builder):
                 if new_mat:
                     materials.append(new_mat)
 
-        t_ids = [t["task_id"] for t in tasks]
+        self.logger.debug("Produced {} materials for {}".format(len(materials), tasks[0]["formula_pretty"]))
 
-        return materials, t_ids
+        return materials
 
     def match(self, task, mats):
         """
@@ -155,18 +143,25 @@ class MaterialsBuilder(Builder):
         t_type = TaskTagger.task_type(task)
         t_id = task["task_id"]
 
+        # Only start new materials with a structure optimization
         if t_type != "structure optimization":
             return None
 
         # Convert the task doc into a serious of properties in the materials doc with the right document structure
-        props = [make_mongolike(task, prop["tasks_key"], prop["materials_key"]) for prop in self.__settings if
-                 t_type in prop["quality_score"].keys()]
+        props = []
+        for prop in self.__settings:
+            try:
+                if t_type in prop["quality_score"].keys():
+                    props.append(put_mongolike(prop["materials_key"], get_mongolike(task, prop["tasks_key"])))
+            except Exception as e:
+                if not prop.get("optional", False):
+                    self.logger.error("Failed getting {} for task: {}".format(e,t_id))
 
         # Add in the provenance for the properties
         origins = [{"materials_key": prop["materials_key"],
                     "task_type": t_type,
                     "task_id": t_id,
-                    "updated_at": datetime.utcnow()} for prop in self.__settings if
+                    "last_updated": task["last_updated"]} for prop in self.__settings if
                    t_type in prop["quality_score"].keys() and len(prop["quality_score"].keys()) > 1]
 
         # Temp document with basic information
@@ -220,11 +215,16 @@ class MaterialsBuilder(Builder):
                 # assuming successive calculations are "better"
                 if t_score >= m_score:
                     # Build the property into a document with the right structure and save it
-                    props.append(make_mongolike(task, prop["tasks_key"], prop["materials_key"]))
-                    if len(prop["quality_score"].keys()) > 1:
-                        prop_doc.update({"task_type": t_type,
-                                         "task_id": t_id,
-                                         "updated_at": datetime.utcnow()})
+                    try:
+                        value = get_mongolike(task, prop["tasks_key"])
+                        props.append(put_mongolike(prop["materials_key"], value))
+                        if len(prop["quality_score"].keys()) > 1:
+                            prop_doc.update({"task_type": t_type,
+                                             "task_id": t_id,
+                                             "last_updated": task["last_updated"]})
+                    except Exception as e:
+                        if not prop.get("optional", False):
+                            self.logger.error("Failed getting {}task: {}".format(e,t_id))
 
         # If there are properties to update
         if len(props) > 0:
@@ -240,12 +240,28 @@ class MaterialsBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
-        self.__logger.info("Updating {} materials documents".format(sum([len(item[0]) for item in items])))
-        bulk = self.materials().initialize_ordered_bulk_op()
-        for m_list, t_ids in items:
-            for m in m_list:
-                if len(set(m["task_ids"]).intersection(t_ids)) > 0:
-                    # Update the last updated field
-                    m[self.materials.lu_field] = datetime.utcnow()
-                    bulk.find({"material_id": m["material_id"]}).upsert().replace_one(m)
-        bulk.execute()
+        items = list(filter(None, chain(*items)))
+
+        if len(items) > 0:
+            self.logger.info("Updating {} materials".format(len(items)))
+            bulk = self.materials().initialize_ordered_bulk_op()
+
+            for m in items:
+                m[self.materials.lu_field] = datetime.utcnow()
+                bulk.find({"material_id": m["material_id"]}).upsert().replace_one(m)
+            bulk.execute()
+        else:
+            self.logger.info("No items to update")
+
+    def ensure_indexes(self):
+        """
+        Ensures indexes on the tasks and materials collections
+        :return:
+        """
+        # Basic search index for tasks
+        self.tasks().create_index([("formula_pretty", DESCENDING),
+                                   ("state", ASCENDING),
+                                   (self.tasks.lu_field, DESCENDING)], background=True)
+
+        # Search index for materials
+        self.materials().create_index("material_id", unique=True, background=True)
