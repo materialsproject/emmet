@@ -152,9 +152,39 @@ material id | `material_id` | | | matches `material_id` from `materials`
 to add |
 
 
+### Topology Builder
+
+**Source(s)** `tasks`, `materials`
+
+**Target(s)** `toplogy`
+
+##### What DiffractionBuilder does:
+
+1. For each structure in materials, finds the task corresponding to the final
+static calculation and the original folder.
+ 
+2. If `AECCAR0`, `AECCAR2`, `CHGCAR` are present, performs two Bader analyses -- one using `bader` and one using `critic2`. The results are then stored (a simple dict for `bader` and a `Critic2Result` for `critic2`).
+
+3. StructureGraphs are constructed and stored using several algorithms: the `critic2` graph, if it exists, a simple 'minimum distance + 15%' bond model. Additional algorithms are planned, including O'Keeffe, etc.
+
+4. Motifs are extracted from the StructureGraphs and stored separately
+
+##### Sample DiffractionBuilder output:
+Property | Key Path | Example | Validation | Comment
+-------- | -------- | ------- | ---------- | -------
+material id | `material_id` | | | matches `material_id` from `materials`
+task id | `task_id` | | |
+analysis |
+Structure | `structure`
+StructureGraph | | | dict, key `min_dist` always present | from 
+StructureGraphSimilarities
+Motifs
+
+
+
 ## Running a Builder
 
-Here is a sample script for running the MaterialsBuilder. Replace `"..."` as appropriate.
+Here is a sample script for running the MaterialsBuilder. Replace database information as appropriate (this assumes a `test` database running on localhost with a pre-populated `tasks` collection, with `mat.json` in the working directory).
 
 ```python
 #!/usr/bin/env python
@@ -164,27 +194,21 @@ from maggma.stores import MongoStore, JSONStore
 from emmet.vasp.builders.materials import MaterialsBuilder
 from emmet.vasp.builders.thermo import ThermoBuilder
 
-tasks_store = MongoStore(database="...",
-                         collection="materials",
-                         host="...",
+tasks_store = MongoStore(database="test",
+                         collection_name="materials",
+                         host="localhost",
                          port=27017,
-                         username="...",
-                         password="...")
+                         lu_field="last_updated")
 materials_settings_store = JSONStore("mat.json")
-materials_store = MongoStore(database="...",
-                             collection="tasks",
-                             host="...",
-                             port=27017,
-                             username="...",
-                             password="...")
-                             
-tasks_store.connect()
-materials_settings_store.connect()
-materials_store.connect()
+materials_store = MongoStore(database="test",
+                             collection_name="tasks",
+                             host="localhost",
+                             port=27017)
 
 materials_builder = MaterialsBuilder(tasks_store,
                                      materials_settings_store,
-                                     materials_store)
+                                     materials_store,
+                                     lu_field="last_updated")
 
 runner = Runner([materials_builder])
 
@@ -192,15 +216,15 @@ runner.run()
 
 ```
 
-Then, to run more than one builder, add:
+Take care to set the `lu_field` correctly: this is the key that the builder looks for to see when the document was last updated, and thus which new documents to build from. This field does not exist by default in MongoDB.
+
+To run more than one builder, add:
 
 ```python
-thermo_store = MongoStore(database="...",
+thermo_store = MongoStore(database="test",
                           collection="thermo",
-                          port=27017,
-                          username="...",
-                          password="...")
-thermo_store.connect()
+                          host="localhost",
+                          port=27017)
                           
 thermo_builder = ThermoBuilder(materials_store,
                                thermo_store)
