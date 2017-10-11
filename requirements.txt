@@ -2,7 +2,7 @@ FireWorks==1.4.3
 atomate==0.5.2
 pymatgen==4.7.7
 custodian==1.1.0
-monty==0.9.8
+monty==1.0.1
 pydash==4.1.0
 unittest2==1.1.0
 coverage==4.4.1

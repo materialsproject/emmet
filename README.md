@@ -16,14 +16,83 @@ Emmet is currently primarily an internal Materials Project tool so if you're rea
 
 ## Table of Contents
 
-1. [Installation](#installation)
-2. [VASP Builders](#vasp-builders) 
-3. [Running a Builder](#running-a-builder)
-4. [Writing a New Builder](#writing-a-new-builder)
+* [Installation](#installation)
+* [Running a Builder](#running-a-builder)
+* [Writing a New Builder](#writing-a-new-builder)
+* [VASP Builders](#vasp-builders)
+  * [MaterialsBuilder](#materialsbuilder)
+  * [ThermoBuilder](#thermobuilder)
+  * [ElasticBuilder](#elasticbuilder)
+  * [Diffraction Builder](#diffraction-builder)
+  * [Topology Builder](#topology-builder)
+
 
 ## Installation
 
 Emmet is on PyPI, so `pip install emmet` should work. However, it is currently in very active development, so cloning the git repo and `python setup.py develop` is recommended for now.
+
+## Running a Builder
+
+Here is a sample script for running the MaterialsBuilder. Replace database information as appropriate (this assumes a `test` database running on localhost with a pre-populated `tasks` collection, with `mat.json` in the working directory).
+
+```python
+#!/usr/bin/env python
+
+from maggma.runner import Runner
+from maggma.stores import MongoStore, JSONStore
+from emmet.vasp.builders.materials import MaterialsBuilder
+from emmet.vasp.builders.thermo import ThermoBuilder
+
+tasks_store = MongoStore(database="test",
+                         collection_name="materials",
+                         host="localhost",
+                         port=27017,
+                         lu_field="last_updated")
+materials_settings_store = JSONStore("mat.json")
+materials_store = MongoStore(database="test",
+                             collection_name="tasks",
+                             host="localhost",
+                             port=27017)
+
+materials_builder = MaterialsBuilder(tasks_store,
+                                     materials_settings_store,
+                                     materials_store,
+                                     lu_field="last_updated")
+
+runner = Runner([materials_builder])
+
+runner.run()
+
+```
+
+Take care to set the `lu_field` correctly: this is the key that the builder looks for to see when the document was last updated, and thus which new documents to build from. This field does not exist by default in MongoDB.
+
+To run more than one builder, add:
+
+```python
+thermo_store = MongoStore(database="test",
+                          collection="thermo",
+                          host="localhost",
+                          port=27017)
+                          
+thermo_builder = ThermoBuilder(materials_store,
+                               thermo_store)
+```
+
+and change `runner = Runner([materials_builder])` to `runner = Runner([materials_builder, thermo_builder])`.
+
+The list of builders can be provided in any order: their dependencies will be resolved intelligently and the `Runner` will run the builders in the correct order and in parallel if supported by the system.
+
+## Writing a New Builder
+
+Sub-class the [`Builder`](https://github.com/materialsproject/maggma/blob/master/maggma/builder.py) base class and implement the following methods:
+
+* `get_items()` – get your items to process, e.g. as a result of a running a query on your source(s)
+* `process_item()` – for each of your items, do something, e.g. calculate a diffraction pattern
+* `update_targets()` – update your target(s) with your processed data
+* `finalize()` – optional, perform any final clean up (close database connections etc., the base class can handle this)
+
+The [`DiffractionBuilder`](https://github.com/materialsproject/emmet/blob/master/emmet/vasp/builders/diffraction.py) is a nice simple builder to copy from to get started.
 
 ## VASP Builders
 
@@ -156,91 +225,26 @@ to add |
 
 **Source(s)** `tasks`, `materials`
 
-**Target(s)** `toplogy`
+**Target(s)** `toplogy`, `bader`
 
-##### What DiffractionBuilder does:
+##### What TopologyBuilder does:
 
-1. For each structure in materials, finds the task corresponding to the final
-static calculation and the original folder.
+1. For each structure in materials, calculates bonding from the material's crystal structure using a variety of methods (pymatgen's local_env and critic2's sum of atomic charge densities).
+
+2. It then finds the task corresponding to a static calculation.
  
-2. If `AECCAR0`, `AECCAR2`, `CHGCAR` are present, performs two Bader analyses -- one using `bader` and one using `critic2`. The results are then stored (a simple dict for `bader` and a `Critic2Result` for `critic2`).
+3. If `AECCAR0`, `AECCAR2`, `CHGCAR` are present, performs attempts to find bonding information using critic2 and also performs a bader analysis that is stored separately.
 
-3. StructureGraphs are constructed and stored using several algorithms: the `critic2` graph, if it exists, a simple 'minimum distance + 15%' bond model. Additional algorithms are planned, including O'Keeffe, etc.
 
-4. Motifs are extracted from the StructureGraphs and stored separately
+##### Sample TopologyBuilder output:
 
-##### Sample DiffractionBuilder output:
+In `topology` store:
+
 Property | Key Path | Example | Validation | Comment
 -------- | -------- | ------- | ---------- | -------
 material id | `material_id` | | | matches `material_id` from `materials`
-task id | `task_id` | | |
-analysis |
-Structure | `structure`
-StructureGraph | | | dict, key `min_dist` always present | from 
-StructureGraphSimilarities
-Motifs
+method | `method`
+StructureGraph | `graph`
 
+The `bader` store stores the summary of a bader analysis ...
 
-
-## Running a Builder
-
-Here is a sample script for running the MaterialsBuilder. Replace database information as appropriate (this assumes a `test` database running on localhost with a pre-populated `tasks` collection, with `mat.json` in the working directory).
-
-```python
-#!/usr/bin/env python
-
-from maggma.runner import Runner
-from maggma.stores import MongoStore, JSONStore
-from emmet.vasp.builders.materials import MaterialsBuilder
-from emmet.vasp.builders.thermo import ThermoBuilder
-
-tasks_store = MongoStore(database="test",
-                         collection_name="materials",
-                         host="localhost",
-                         port=27017,
-                         lu_field="last_updated")
-materials_settings_store = JSONStore("mat.json")
-materials_store = MongoStore(database="test",
-                             collection_name="tasks",
-                             host="localhost",
-                             port=27017)
-
-materials_builder = MaterialsBuilder(tasks_store,
-                                     materials_settings_store,
-                                     materials_store,
-                                     lu_field="last_updated")
-
-runner = Runner([materials_builder])
-
-runner.run()
-
-```
-
-Take care to set the `lu_field` correctly: this is the key that the builder looks for to see when the document was last updated, and thus which new documents to build from. This field does not exist by default in MongoDB.
-
-To run more than one builder, add:
-
-```python
-thermo_store = MongoStore(database="test",
-                          collection="thermo",
-                          host="localhost",
-                          port=27017)
-                          
-thermo_builder = ThermoBuilder(materials_store,
-                               thermo_store)
-```
-
-and change `runner = Runner([materials_builder])` to `runner = Runner([materials_builder, thermo_builder])`.
-
-The list of builders can be provided in any order: their dependencies will be resolved intelligently and the `Runner` will run the builders in the correct order and in parallel if supported by the system.
-
-## Writing a New Builder
-
-Sub-class the [`Builder`](https://github.com/materialsproject/maggma/blob/master/maggma/builder.py) base class and implement the following methods:
-
-* `get_items()` – get your items to process, e.g. as a result of a running a query on your source(s)
-* `process_item()` – for each of your items, do something, e.g. calculate a diffraction pattern
-* `update_targets()` – update your target(s) with your processed data
-* `finalize()` – optional, perform any final clean up (close database connections etc., the base class can handle this)
-
-The [`DiffractionBuilder`](https://github.com/materialsproject/emmet/blob/master/emmet/vasp/builders/diffraction.py) is a nice simple builder to copy from to get started.
