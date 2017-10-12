@@ -7,7 +7,7 @@ from pymatgen.core.structure import Structure
 from pymatgen.analysis.local_env import *
 from pymatgen.analysis.graphs import StructureGraph
 from pymatgen.command_line.critic2_caller import Critic2Caller
-from pymatgen.command_line.bader_caller import BaderAnalysis
+from pymatgen.command_line.bader_caller import bader_analysis_from_path
 from monty.os.path import which
 from maggma.builder import Builder
 
@@ -15,7 +15,9 @@ __author__ = "Matthew Horton <mkhorton@lbl.gov>"
 
 class TopologyBuilder(Builder):
     def __init__(self, tasks, materials, topology, bader,
-                 query={}, use_chgcars=True, **kwargs):
+                 query={}, use_chgcars=True,
+                 critic2_settings=None,
+                 **kwargs):
         """
         Builder to perform topological analysis of materials, either using
         the Bader method or through local environment nearest-neighbor
@@ -43,6 +45,7 @@ class TopologyBuilder(Builder):
             bader (Store): Store of bader data
             query (dict): dictionary to limit materials to be analyzed
             use_chgcars (bool): if True, will look for charge densities
+            critic2_settings (dict): user_input_settings for critic2
             in task directories and run bader and critic2 if found
         """
 
@@ -56,6 +59,7 @@ class TopologyBuilder(Builder):
         self.query = query
 
         self.use_chgcars = use_chgcars
+        self.critic2_settings = critic2_settings
 
         self.bader_available = which('bader')
         self.critic2_available = which('critic2')
@@ -93,14 +97,7 @@ class TopologyBuilder(Builder):
 
     def process_item(self, item):
         """
-        Calculates diffraction patterns for the structures
-
-        Args:
-            item (dict): a dict with a material_id and a structure
-
-        Returns:
-            StructureGraph: a dict of StructureGraphs serialized as dicts,
-        with keys as the method
+        Calculates StructureGraphs (bonding information) for a material
         """
 
         topology_docs = []
@@ -193,12 +190,14 @@ class TopologyBuilder(Builder):
                 if chgcar and aeccar0 and aeccar2:
 
                     try:
-                        c2 = Critic2Caller(structure)
+                        c2 = Critic2Caller(structure,
+                                           user_input_settings=self.critic2_settings)
 
                         topology_docs.append({
                             'material_id': mid,
                             'method': 'critic2_chgcar',
                             'graph': c2.output.structure_graph().as_dict(),
+                            'critic2_settings': self.critic2_settings,
                             'critic2_stdout': c2._stdout
                         })
 
@@ -210,8 +209,8 @@ class TopologyBuilder(Builder):
                     if self.bader_available:
 
                         try:
-                            ba = BaderAnalysis.from_path(root_dir)
-                            bader_doc = ba.summary
+                            bader_doc = bader_analysis_from_path(root_dir)
+                            bader_doc['material_id'] = mid
                         except Exception as e:
                             self.__logger.warning(e)
                             self.__logger.warning("Failed to perform bader analysis "
