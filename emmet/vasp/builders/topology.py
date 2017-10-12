@@ -17,7 +17,7 @@ __author__ = "Matthew Horton <mkhorton@lbl.gov>"
 
 class TopologyBuilder(Builder):
     def __init__(self, tasks, topology, bader,
-                 query={}, use_chgcars=True,
+                 query=None, use_chgcars=True,
                  critic2_settings=None,
                  **kwargs):
         """
@@ -56,7 +56,7 @@ class TopologyBuilder(Builder):
         self.tasks = tasks
         self.topology = topology
         self.bader = bader
-        self.query = query
+        self.query = query if query else {}
 
         self.use_chgcars = use_chgcars
         self.critic2_settings = critic2_settings

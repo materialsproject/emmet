@@ -11,7 +11,7 @@ __author__ = "Matthew Horton <mkhorton@lbl.gov>"
 class TopologySummaryBuilder(Builder):
     def __init__(self, materials, topology, topology_summary,
                  preferred_methods=('critic2_chgcar', 'MinimumOKeeffeNN'),
-                 query={}, **kwargs):
+                 query=None, **kwargs):
         """
         Summarizes topology information (this is the 'materials' to
         topology's 'tasks').
@@ -31,7 +31,7 @@ class TopologySummaryBuilder(Builder):
         self.topology = topology
         self.topology_summary = topology_summary
         self.methods = preferred_methods
-        self.query = query
+        self.query = query if query else {}
 
         super().__init__(sources=[topology],
                          targets=[topology_summary],
@@ -58,10 +58,13 @@ class TopologySummaryBuilder(Builder):
                 if origin['task_type'] == 'static':
                     task_id = origin['task_id']
 
-            yield {
-                'material_id': m['material_id'],
-                'topology_docs': list(self.topology().find(q, {'task_id': task_id}))
-            }
+            topology_docs = list(self.topology().find(q, {'task_id': task_id}))
+
+            if topology_docs:
+                yield {
+                    'material_id': m['material_id'],
+                    'topology_docs': topology_docs
+                }
 
     def process_item(self, item):
         """
