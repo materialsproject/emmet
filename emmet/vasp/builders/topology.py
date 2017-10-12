@@ -162,10 +162,10 @@ class TopologyBuilder(Builder):
 
             else:
 
-                if 'output_file_paths' in task['calcs_reversed'][0]:
+                if 'output_file_paths' in item['calcs_reversed'][0]:
                     # we know what output files we have
 
-                    paths = task['calcs_reversed'][0]['output_file_paths']
+                    paths = item['calcs_reversed'][0]['output_file_paths']
                     chgcar = paths.get('chgcar', None)
                     aeccar0 = paths.get('aeccar0', None)
                     aeccar2 = paths.get('aeccar2', None)
