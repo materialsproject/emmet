@@ -8,8 +8,8 @@ from maggma.builder import Builder
 
 __author__ = "Matthew Horton <mkhorton@lbl.gov>"
 
-class TopologyBuilder(Builder):
-    def __init__(self, topology, topology_summary,
+class TopologySummaryBuilder(Builder):
+    def __init__(self, materials, topology, topology_summary,
                  preferred_methods=('critic2_chgcar', 'MinimumOKeeffeNN'),
                  query={}, **kwargs):
         """
@@ -17,6 +17,7 @@ class TopologyBuilder(Builder):
         topology's 'tasks').
 
         Args:
+            materials (Store): Store of materials documents
             topology (Store): Store of topology documents
             topology_summary (Store): Store of topology summary documents
             preferred_methods (Tuple): List of which topology methods to favor
@@ -26,8 +27,9 @@ class TopologyBuilder(Builder):
         self.__logger = logging.getLogger(__name__)
         self.__logger.addHandler(logging.NullHandler())
 
+        self.materials = materials
         self.topology = topology
-        self.topology_summary = topology
+        self.topology_summary = topology_summary
         self.methods = preferred_methods
         self.query = query
 
@@ -45,10 +47,21 @@ class TopologyBuilder(Builder):
         # All relevant materials that have been updated since topology
         # was last calculated
         q = dict(self.query)
-        q.update(self.topology.lu_filter(self.topology_summary))
-        mats = self.topology().find(q).distinct("material_id")
-        self.__logger.info("Found {} new materials for topological analysis".format(mats.count()))
-        return mats
+        q.update(self.materials.lu_filter(self.topology))
+        mats = list(self.materials().find(q, {"material_id": 1, "origins": 1}))
+        self.logger.info("Found {} new materials for topology summary data".format(len(mats)))
+        for m in mats:
+
+            # task_id detection may be improved
+            task_id = None
+            for origin in m['origins']:
+                if origin['task_type'] == 'static':
+                    task_id = origin['task_id']
+
+            yield {
+                'material_id': m['material_id'],
+                'topology_docs': list(self.topology().find(q, {'task_id': task_id}))
+            }
 
     def process_item(self, item):
         """
@@ -56,12 +69,13 @@ class TopologyBuilder(Builder):
         between them, picks one to be preferred output)
         """
 
-        topology_summary = {}
+        material_id = item['material_id']
+        topology_docs = item['topology_docs']
 
-        mid = item[0]['material_id']
+        topology_summary = {'material_id': material_id}
 
-        names = [doc['method'] for doc in item]
-        sg = [StructureGraph.from_dict(doc['graph']) for doc in item]
+        names = [doc['method'] for doc in topology_docs]
+        sg = [StructureGraph.from_dict(doc['graph']) for doc in topology_docs]
 
         distances = np.empty((len(names), len(names)))
         distances[:] = np.NaN
@@ -86,9 +100,9 @@ class TopologyBuilder(Builder):
 
         if preferred_method:
             topology_summary['graph'] = sg[names.index(preferred_method)]
-            topology_summary['method'] = method
+            topology_summary['method'] = preferred_method
 
-        self.__logger.debug("Summarizing bonding for {}".format(mid))
+        self.__logger.debug("Summarizing bonding for {}".format(material_id))
 
         return topology_summary
 
