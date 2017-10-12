@@ -72,7 +72,8 @@ class TopologySummaryBuilder(Builder):
         material_id = item['material_id']
         topology_docs = item['topology_docs']
 
-        topology_summary = {'material_id': material_id}
+        topology_summary = {'material_id': material_id,
+                            'task_id': topology_docs['task_id']}
 
         names = [doc['method'] for doc in topology_docs]
         sg = [StructureGraph.from_dict(doc['graph']) for doc in topology_docs]
@@ -89,6 +90,7 @@ class TopologySummaryBuilder(Builder):
                 distances[i][j] = dist
                 distances[j][i] = dist
 
+        topology_summary['names'] = names
         topology_summary['distances'] = distances
 
         # we want to store one canonical set of bonds for a material
