@@ -46,7 +46,7 @@ class FileChecker(Builder):
     def process_item(self, item):
         self.__logger.debug("Calculating hashes for {}".format(item['task_id']))
 
-        root_dir = item['calcs_reversed'][0]['dir_name']
+        root_dir = item['dir_name']
 
         current_hash_doc = self.filechecker().find({'task_id': item['task_id']})
         hash_doc = {'status': None}
