@@ -128,9 +128,18 @@ class TopologyBuilder(Builder):
                     'task_id': task_id,
                     'method': strategy.__name__,
                     'graph': StructureGraph.with_local_env_strategy(structure,
-                                                                    strategy()).as_dict()
+                                                                    strategy()).as_dict(),
+                    'status': 'successful'
                 })
             except Exception as e:
+
+                topology_docs.append({
+                    'task_id': task_id,
+                    'method': strategy.__name__,
+                    'status': 'failed',
+                    'error_message': e
+                })
+
                 self.__logger.warning(e)
                 self.__logger.warning("Failed to calculate bonding for {} using "
                                       "{} local_env strategy.".format(task_id,
@@ -146,9 +155,18 @@ class TopologyBuilder(Builder):
                     'task_id': task_id,
                     'method': 'critic2_promol',
                     'graph': c2.output.structure_graph().as_dict()
+                    'status': 'successful'
                 })
 
             except Exception as e:
+
+                topology_docs.append({
+                    'task_id': task_id,
+                    'method': 'critic2_promol',
+                    'status': 'failed',
+                    'error_message': e
+                })
+
                 self.__logger.warning(e)
                 self.__logger.warning("Failed to calculate bonding for {} using "
                                       "critic2 and sum of atomic charge densities.".format(task_id))
@@ -200,10 +218,19 @@ class TopologyBuilder(Builder):
                             'method': 'critic2_chgcar',
                             'graph': c2.output.structure_graph().as_dict(),
                             'critic2_settings': self.critic2_settings,
-                            'critic2_stdout': c2._stdout
+                            'critic2_stdout': c2._stdout,
+                            'status': 'successful'
                         })
 
                     except Exception as e:
+
+                        topology_docs.append({
+                            'task_id': task_id,
+                            'method': 'critic2_chgcar',
+                            'status': 'failed',
+                            'error_message': e
+                        })
+
                         self.__logger.warning(e)
                         self.__logger.warning("Failed to calculate bonding for {} "
                                               "using critic2 from CHGCAR.".format(task_id))
@@ -213,7 +240,15 @@ class TopologyBuilder(Builder):
                         try:
                             bader_doc = bader_analysis_from_path(root_dir)
                             bader_doc['task_id'] = task_id
+                            bader_doc['status'] = 'successful'
                         except Exception as e:
+
+                            bader_doc = {
+                                'task_id': task_id,
+                                'status': 'failed',
+                                'error_message': e
+                            }
+
                             self.__logger.warning(e)
                             self.__logger.warning("Failed to perform bader analysis "
                                                   "for {}".format(task_id))
