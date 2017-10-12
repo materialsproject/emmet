@@ -70,9 +70,14 @@ class TopologyBuilder(Builder):
         if use_chgcars and not self.bader_available:
             self.__logger.error("bader binary not found! "
                                 "TopologyBuilder will not be able to perform a full analysis.")
+            self.__logger.error("If running for Materials Project, try adding "
+                                "/project/projectdirs/matgen/emmet_bin/cori to your path.")
+
         if not self.critic2_available:
             self.__logger.error("critic2 binary not found! "
                                 "TopologyBuilder will not be able to perform a full analysis.")
+            self.__logger.error("If running for Materials Project, try adding "
+                                "/project/projectdirs/matgen/emmet_bin/cori to your path.")
 
         super().__init__(sources=[tasks],
                          targets=[topology, bader],
@@ -93,16 +98,17 @@ class TopologyBuilder(Builder):
                                       "input.incar": 1,
                                       "output.structure": 1,
                                       "calcs_reversed": 1})
-        self.__logger.info("Found {} new materials for topological analysis".format(tasks.count()))
-        return tasks
+
+        self.__logger.info("Found {} new tasks for topological analysis".format(tasks.count()))
+
+        for task in tasks:
+            if TaskTagger.task_type(task) == "static":
+                yield task
 
     def process_item(self, item):
         """
         Calculates StructureGraphs (bonding information) for a material
         """
-
-        if TaskTagger.task_type(item) != "static":
-            return
 
         topology_docs = []
         bader_doc = None
@@ -236,10 +242,10 @@ class TopologyBuilder(Builder):
 
             for topology_doc in item['topology_docs']:
                 topology_doc[self.topology.lu_field] = datetime.utcnow()
-                self.topology().replace_one({'material_id': topology_doc['material_id'],
+                self.topology().replace_one({'task_id': topology_doc['task_id'],
                                              'method': topology_doc['method']},
                                             topology_doc, upsert=True)
 
             item['bader_doc'][self.bader.lu_field] = datetime.utcnow()
-            self.bader().replace_one({"material_id": item['bader_doc']['material_id']},
+            self.bader().replace_one({'task_id': item['bader_doc']['task_id']},
                                      item['bader_doc'], upsert=True)
