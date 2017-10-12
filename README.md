@@ -234,7 +234,20 @@ to add |
 2. It then finds the task corresponding to a static calculation.
  
 3. If `AECCAR0`, `AECCAR2`, `CHGCAR` are present, performs attempts to find bonding information using critic2 and also performs a bader analysis that is stored separately.
+=======
+Take care to set the `lu_field` correctly: this is the key that the builder looks for to see when the document was last updated, and thus which new documents to build from. This field does not exist by default in MongoDB.
 
+To run more than one builder, add:
+
+```python
+thermo_store = MongoStore(database="test",
+                          collection="thermo",
+                          host="localhost",
+                          port=27017)
+                          
+thermo_builder = ThermoBuilder(materials_store,
+                               thermo_store)
+```
 
 ##### Sample TopologyBuilder output:
 
