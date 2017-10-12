@@ -166,7 +166,7 @@ class MaterialsBuilder(Builder):
 
         # Temp document with basic information
         d = {"created_at": datetime.utcnow(),
-             "task_ids": [t_id],
+             "task_ids": {t_id: TaskTagger.task_type(task)},
              "material_id": t_id,
              "origins": origins
              }
