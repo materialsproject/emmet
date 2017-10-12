@@ -75,29 +75,29 @@ class TopologySummaryBuilder(Builder):
         topology_summary = {'material_id': material_id,
                             'task_id': topology_docs['task_id']}
 
-        names = [doc['method'] for doc in topology_docs]
+        methods = [doc['method'] for doc in topology_docs]
         sg = [StructureGraph.from_dict(doc['graph']) for doc in topology_docs]
 
-        distances = np.empty((len(names), len(names)))
+        distances = np.empty((len(methods), len(methods)))
         distances[:] = np.NaN
 
         # calculate distances between graphs
         # gives a measure of how 'different' one method
         # of determining bonding is from another method
-        for i in range(len(names)):
+        for i in range(len(methods)):
             for j in range(len(i)):
                 dist = sg[i].diff(sg[j])
                 distances[i][j] = dist
                 distances[j][i] = dist
 
-        topology_summary['names'] = names
+        topology_summary['methods'] = methods
         topology_summary['distances'] = distances
 
         # we want to store one canonical set of bonds for a material
         # we see if our preferred method is here
         preferred_method = None
         for method in reversed(self.methods):
-            if method in names:
+            if method in methods:
                 preferred_method = method
 
         if preferred_method:
