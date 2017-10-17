@@ -129,6 +129,38 @@
     "optional": true
   },
   {
+    "tasks_key": "calcs_reversed.0.bandstructure",
+    "materials_key": "bandstructure.uniform_bs",
+    "quality_score": {
+      "nscf uniform": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "calcs_reversed.0.bandstructure_fs_id",
+    "materials_key": "bandstructure.uniform_bs_oid",
+    "quality_score": {
+      "nscf uniform": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "calcs_reversed.0.bandstructure_compression",
+    "materials_key": "bandstructure.uniform_bs_compression",
+    "quality_score": {
+      "nscf uniform": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "input.parameters.NELECT",
+    "materials_key": "calc_settings.nelect",
+    "quality_score": {
+      "nscf uniform": 5
+    },
+    "optional": true
+  },
+  {
     "tasks_key": "",
     "materials_key": "band_structure",
     "_comment": "From ES Builder",
