@@ -1,10 +1,8 @@
 # Emmet
 
-> Be a master builder of databases of material properties. Avoid the Kragle.
-
 The purpose of Emmet is to 'build' collections of materials properties from the output of computational materials calculations. Currently, the effective purpose of Emmet is to take the output of [VASP](http://vasp.at) electronic structure calculations to build MongoDB collections that back the [Materials Project](https://materialsproject.org) website and its apps.
 
-Emmet uses [Maggma](https://github.com/materialsproject/maggma), our more general aggregation framework which abstracts away the behind-the-scenes machinery: Maggma provides our `Builder` class and a general interface to Stores, which can be MongoDB collections or plain JSON files.
+Emmet uses [Maggma](https://github.com/materialsproject/maggma), our more general aggregation framework which abstracts away the behind-the-scenes machinery: Maggma provides our `Builder` class and a general interface to `Stores`, which can be MongoDB collections or plain JSON files.
 
 The `Builder` takes `source` Store(s), processes items in that store, and then builds results to `target` Store(s). 
 
@@ -120,42 +118,6 @@ The VASP builders all operate on a `tasks` Store which is parsed from *any* VASP
 	
 4. *(Optional)* The [Structure Notation Language](http://pymatgen.org/pymatgen.matproj.snl.html#pymatgen.matproj.snl.StructureNL) (or 'SNLs') provide a way to bundle a structure and its metadata (such as bibtex references for where the structure came from) within the Materials Project. This will lookup if there are existing SNL(s) for the structure, and assign an SNL accordingly.
 
-
-##### Sample MaterialsBuilder output:
-
-Property | Key Path | Example | Type/Validation | Comment
--------- | -------- | ------- | --------------- | -------
-Task IDs | `task_ids` | `[]` | list, required |
-Material ID | `material_id` | `mp-1234` | str, required | serves as a primary key
-Origins of respective properties | `origins` | list | `materials_key`, `task_type`, `task_id`, `updated_at` | Provenence 
-Anonymous formula | `anonymous_formula` | | str, required | 
-bandstructure | | | | `band_gap`, `cbm`, `vbm`, `is_gap_direct`, `is_metal`, `efermi`
-band gap / eV | `band_gap`, `bandstructure.band_gap` | | float, > 0, required | Always from GGA calculation
-chemsys | `chemsys` | `Mn-O` | str, required | Dash delimited string of elements present in alphabetical order
-Change in volume | `analysis.delta_volume` | | float | units of ...
-Warnings | `analysis.warnings` |
-density | `density`
-elements | `elements`
-energy / eV | `thermo.energy` 
-energy per atom / eV/atom | `thermo.energy_per_atom`, `energy_per_atom`
-calc_settings | `calc_settings`
-initial_structure | `initial_structure` | | required, MSONable to `pymatgen.core.Structure`
-inputs | 
-Number of elements | `nelements` | 2 | int, required |
-Number of sites | `nsites` | 2 | int, required | 
-'Pretty' formula | 
-Reduced cell formula |
-Space group symbol | `spacegroup.symbol` | `Fm-3m` | str, required
-Space group international number | `spacegroup.number` | `225` | int, required
-Point group | `spacegroup.point_group` | `m-3m` | str, required |
-Space group source | `spacegroup.source` | `spglib` | str, required | How symmetry information is calculated, usually `spglib`
-Crystal system | `spacegroup.crystal_system` | `cubic` | str, required | One of `triclinic`, `monoclinic`, `orthorhombic`, `tetragonal`, `trigonal`, `hexagonal`, `cubic`
-Space group (Hall notation) | `spacegroup.hall` | `-F 4 2 3` | str, required |
-structure |
-Magnetic properties |
-Unit cell formula | `unit_cell_formula` 
-Unit cell volume | `volume`
-
 ### ThermoBuilder
 
 **Source(s)** `materials`
@@ -171,18 +133,6 @@ Unit cell volume | `volume`
 	By default, this is done by using [`MaterialsProjectCompatibility('Advanced')`](http://pymatgen.org/pymatgen.entries.compatibility.html#pymatgen.entries.compatibility.MaterialsProjectCompatibility) in pymatgen, which intelligently mixes GGA and GGA+U calculations depending on the elements present, and performs corrections to the total energy as appropriate.
 	
 3. Uses pymatgen's [`phasediagram`](http://pymatgen.org/pymatgen.phasediagram.html) package to calculate the [energy above hull](https://materialsproject.org/wiki/index.php/Glossary_of_Terms#Energetics) for each material and, if the material is unstable, its decomposition pathway. 
- 
-##### Sample ThermoBuilder output:
-
-Property | Key Path | Example | Validation | Comment
--------- | -------- | ------- | ---------- | -------
-material id | `material_id` | | | matches `material_id` from `materials`
-formation energy per atom / eV | `formation_energy_per_atom`
-energy above hull / eV | `thermo.e_above_hull` | 
-is stable | `thermo.is_stable` | true | bool, required
-equilibrium reaction energy | `thermo.eq_reaction_e`
-decomposition pathway | `thermo.decomposes_to` | | list, can be empty | each element of list is dictionary with `material_id`, `formula`, `amount` where `amount` is float in interval [0,1] 
-
 
 ### ElasticBuilder
 
@@ -196,14 +146,6 @@ decomposition pathway | `thermo.decomposes_to` | | list, can be empty | each ele
 2. Finds deformed instances of this initial structure from materials, and calculates the deformation matrix
 3. If 6 independent deformations are found, calculates the elastic tensor using pymatgen's [`ElasticTensor`](http://pymatgen.org/pymatgen.analysis.elasticity.elastic.html#pymatgen.analysis.elasticity.elastic.ElasticTensor)
 
-##### Sample ElasticBuilder output:
-
-Property | Key Path | Example | Validation | Comment
--------- | -------- | ------- | ---------- | -------
-material id | `material_id` | | | material id for initial structure, matches `material_id` from `materials`
-elastic tensor | `elasticity.elastic_tensor` | | list | in Voigt notation
-material ids for deformed structures | `elasticity.material_ids` | | list | material ids for deformed structures
-
 ### Diffraction Builder
 
 **Source(s)** `materials`, `xrd_settings` (typically [`xrd.json`](vasp/builders/xrd.json))
@@ -213,12 +155,6 @@ material ids for deformed structures | `elasticity.material_ids` | | list | mate
 ##### What DiffractionBuilder does:
 
 1. For each structure, calculates its ideal X-ray diffraction pattern for a variety of X-ray targets (specified in [`xrd.json`](vasp/builders/xrd.json))
-
-##### Sample DiffractionBuilder output:
-Property | Key Path | Example | Validation | Comment
--------- | -------- | ------- | ---------- | -------
-material id | `material_id` | | | matches `material_id` from `materials`
-to add |
 
 
 ### Topology Builder
@@ -234,30 +170,3 @@ to add |
 2. It then finds the task corresponding to a static calculation.
  
 3. If `AECCAR0`, `AECCAR2`, `CHGCAR` are present, performs attempts to find bonding information using critic2 and also performs a bader analysis that is stored separately.
-=======
-Take care to set the `lu_field` correctly: this is the key that the builder looks for to see when the document was last updated, and thus which new documents to build from. This field does not exist by default in MongoDB.
-
-To run more than one builder, add:
-
-```python
-thermo_store = MongoStore(database="test",
-                          collection="thermo",
-                          host="localhost",
-                          port=27017)
-                          
-thermo_builder = ThermoBuilder(materials_store,
-                               thermo_store)
-```
-
-##### Sample TopologyBuilder output:
-
-In `topology` store:
-
-Property | Key Path | Example | Validation | Comment
--------- | -------- | ------- | ---------- | -------
-material id | `material_id` | | | matches `material_id` from `materials`
-method | `method`
-StructureGraph | `graph`
-
-The `bader` store stores the summary of a bader analysis ...
-
