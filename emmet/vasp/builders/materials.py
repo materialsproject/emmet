@@ -61,15 +61,28 @@ class MaterialsBuilder(Builder):
         self.logger.info("Setting indexes")
         self.ensure_indexes()
 
-        # Get only successfull tasks
+        # Get all processed tasks:
         q = dict(self.query)
         q["state"] = "successful"
+        
+        all_tasks = self.tasks().find(q).distinct("task_id")
+        processed_tasks = self.materials().distinct("task_ids").sort()
+        to_process_tasks = set(all_tasks) - set(processed_tasks)
+        to_process_forms = self.tasks().find({"task_id": {"$in": list(to_process_tasks)}}).distinct("formula_pretty")
+        self.logger.info("Found {} unprocessed tasks".format(len(to_process_tasks)))
 
-        # only consider tasks that have been updated since materials was last updated
-        q.update(self.tasks.lu_filter(self.materials))
 
-        forms_to_update = self.tasks().find(q).distinct("formula_pretty")
-        self.logger.info("Found {} new/updated systems to proces".format(len(forms_to_update)))
+        # Tasks that have been updated since we last viewed them
+        q = dict(self.query)
+        q["state"] = "successful"
+        update_q = dict(q)
+        update_q .update(self.tasks.lu_filter(self.materials))
+        updated_forms = self.tasks().find(update_q ).distinct("formula_pretty")
+        self.logger.info("Found {} updated systems to proces".format(len(forms_to_update)))
+
+
+        forms_to_update = set(updated_forms) + set(to_process_forms)
+        self.logger.info("Processing {} total systems".format(len(forms_to_update)))         
 
         for formula in forms_to_update:
             tasks_q = dict(q)
