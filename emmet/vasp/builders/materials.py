@@ -7,22 +7,26 @@ from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 
 from maggma.builder import Builder
-from emmet.vasp.builders.task_tagger import TaskTagger
+from emmet.vasp.builders.task_tagger import task_type
 from maggma.utils import get_mongolike, put_mongolike, recursive_update
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
+module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+mat_settings = os.path.join(module_dir, "materials_settings.yaml")
+
+
 class MaterialsBuilder(Builder):
-    def __init__(self, tasks, materials_settings, materials, query={}, ltol=0.2, stol=0.3,
+    def __init__(self, tasks, materials, materials_settings = mat_settings,query={}, ltol=0.2, stol=0.3,
                  angle_tol=5, **kwargs):
         """
         Creates a materials collection from tasks and tags
 
         Args:
             tasks (Store): Store of task documents
-            materials_settings (Store): settings for building the material document
             materials (Store): Store of materials documents to generate
+            materials_settings (Path): Path to settings files
             query (dict): dictionary to limit tasks to be analyzed
             ltol (float): StructureMatcher tuning parameter for matching tasks to materials
             stol (float): StructureMatcher tuning parameter for matching tasks to materials
@@ -38,7 +42,7 @@ class MaterialsBuilder(Builder):
         self.angle_tol = angle_tol
 
         self.materials_settings.connect()
-        self.__settings = list(self.materials_settings().find())
+        self.__settings =loadfn(self.materials_settings)
 
         super().__init__(sources=[tasks],
                          targets=[materials],
