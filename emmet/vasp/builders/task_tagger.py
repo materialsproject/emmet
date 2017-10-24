@@ -66,38 +66,38 @@ class TaskTagger(Builder):
         for doc in items:
             self.task_types.collection.update({'task_id': doc['task_id']}, doc, upsert=True)
 
-    @classmethod
-    def task_type(cls, task_doc):
-        """
-        Determines the task_type
 
-        Args:
-            task_doc (dict): task_document with original input
-        """
-        incar = task_doc["input"]["incar"]
+def task_type(task_doc):
+    """
+    Determines the task_type
 
-        if incar.get("LHFCALC", False):
-            if incar.get("NSW") == 0:
-                return "hse bs"
-            else:
-                return "hse"
+    Args:
+        task_doc (dict): task_document with original input
+    """
+    incar = task_doc["input"]["incar"]
 
-        if incar.get("ICHARG", 0) > 10:
-            if incar.get("NEDOS", 0) > 600:
-                return "nscf uniform"
-            else:
-                return "nscf line"
+    if incar.get("LHFCALC", False):
+        if incar.get("NSW") == 0:
+            return "hse bs"
+        else:
+            return "hse"
 
-        if incar.get("LEPSILON", False):
-            return "static dielectric"
+    if incar.get("ICHARG", 0) > 10:
+        if incar.get("NEDOS", 0) > 600:
+            return "nscf uniform"
+        else:
+            return "nscf line"
 
-        if incar.get("IBRION", 0) < 0:
-            return "static"
+    if incar.get("LEPSILON", False):
+        return "static dielectric"
 
-        if incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
-            return "structure optimization"
+    if incar.get("IBRION", 0) < 0:
+        return "static"
 
-        if incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
-            return "deformation"
+    if incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
+        return "structure optimization"
 
-        return ""
+    if incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
+        return "deformation"
+
+    return ""
