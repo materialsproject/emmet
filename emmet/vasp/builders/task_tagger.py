@@ -67,42 +67,45 @@ class TaskTagger(Builder):
             self.task_types.collection.update({'task_id': doc['task_id']}, doc, upsert=True)
 
 
-def task_type(incar):
+def task_type(incar,include_calc_type=True):
     """
     Determines the task_type
 
     Args:
         incar (dict): incar to determine task_type from
+        include_calc_type (bool): whether to include calculation type
+            in task_type such as HSE, GGA, SCAN, etc.
     """
 
     calc_type = ""
 
-    if incar.get("LHFCALC", False):
-        calc_type += "HSE "
-    elif incar.get("METAGGA", "") == "SCAN": 
-        calc_type += "SCAN "
-    elif incar.get("LDAU",False):
-        calc_type += "GGA+U "
-    else:
-        calc_type += "GGA "
+    if include_calc_type:
+        if incar.get("LHFCALC", False):
+            calc_type += "HSE "
+        elif incar.get("METAGGA", "") == "SCAN": 
+            calc_type += "SCAN "
+        elif incar.get("LDAU",False):
+            calc_type += "GGA+U "
+        else:
+            calc_type += "GGA "
 
 
     if incar.get("ICHARG", 0) > 10:
-        if incar.get("NEDOS", 0) > 600:
-            return "nscf uniform"
+        if incar.get("NEDOS", 0) > 301:
+            return calc_type + "nscf uniform"
         else:
-            return "nscf line"
+            return calc_type + "nscf line"
 
     if incar.get("LEPSILON", False):
-        return "static dielectric"
+        return calc_type + "static dielectric"
 
     if incar.get("IBRION", 0) < 0:
-        return "static"
+        return calc_type + "static"
 
     if incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
-        return "structure optimization"
+        return calc_type + "structure optimization"
 
     if incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
-        return "deformation"
+        return calc_type + "deformation"
 
     return ""
