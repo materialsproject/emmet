@@ -67,12 +67,12 @@ class TaskTagger(Builder):
             self.task_types.collection.update({'task_id': doc['task_id']}, doc, upsert=True)
 
 
-def task_type(task_doc):
+def task_type(incar):
     """
     Determines the task_type
 
     Args:
-        task_doc (dict): task_document with original input
+        incar (dict): incar to determine task_type from
     """
     incar = task_doc["input"]["incar"]
 
