@@ -74,13 +74,18 @@ def task_type(incar):
     Args:
         incar (dict): incar to determine task_type from
     """
-    incar = task_doc["input"]["incar"]
+
+    calc_type = ""
 
     if incar.get("LHFCALC", False):
-        if incar.get("NSW") == 0:
-            return "hse bs"
-        else:
-            return "hse"
+        calc_type += "HSE "
+    elif incar.get("METAGGA", "") == "SCAN": 
+        calc_type += "SCAN "
+    elif incar.get("LDAU",False):
+        calc_type += "GGA+U "
+    else:
+        calc_type += "GGA "
+
 
     if incar.get("ICHARG", 0) > 10:
         if incar.get("NEDOS", 0) > 600:
