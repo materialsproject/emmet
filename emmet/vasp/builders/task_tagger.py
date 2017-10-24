@@ -92,20 +92,20 @@ def task_type(incar,include_calc_type=True):
 
     if incar.get("ICHARG", 0) > 10:
         if incar.get("NEDOS", 0) > 301:
-            return calc_type + "nscf uniform"
+            return calc_type + "NSCF Uniform"
         else:
-            return calc_type + "nscf line"
+            return calc_type + "NSCF Line"
 
     if incar.get("LEPSILON", False):
-        return calc_type + "static dielectric"
+        return calc_type + "Static Dielectric"
 
     if incar.get("IBRION", 0) < 0:
-        return calc_type + "static"
+        return calc_type + "Static"
 
     if incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
-        return calc_type + "structure optimization"
+        return calc_type + "Structure Optimization"
 
     if incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
-        return calc_type + "deformation"
+        return calc_type + "Deformation"
 
     return ""
