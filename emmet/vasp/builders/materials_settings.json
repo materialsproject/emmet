@@ -1,0 +1,621 @@
+[
+  {
+    "tasks_key": "formula_anonymous",
+    "materials_key": "anonymous_formula",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "output.bandgap",
+    "materials_key": "bandstructure.band_gap",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2,
+      "static dielectric": 3,
+      "nscf line": 5,
+      "nscf uniform": 4
+    }
+  },
+  {
+    "tasks_key": "output.bandgap",
+    "materials_key": "band_gap",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2,
+      "static dielectric": 3,
+      "nscf line": 5,
+      "nscf uniform": 4
+    }
+  },
+  {
+    "tasks_key": "output.cbm",
+    "materials_key": "bandstructure.cbm",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2,
+      "static dielectric": 3,
+      "nscf line": 5,
+      "nscf uniform": 4
+    }
+  },
+  {
+    "tasks_key": "output.vbm",
+    "materials_key": "bandstructure.vbm",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2,
+      "static dielectric": 3,
+      "nscf line": 5,
+      "nscf uniform": 4
+    }
+  },
+  {
+    "tasks_key": "output.is_gap_direct",
+    "materials_key": "bandstructure.is_gap_direct",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2,
+      "static dielectric": 3,
+      "nscf line": 5,
+      "nscf uniform": 4
+    }
+  },
+  {
+    "tasks_key": "output.is_metal",
+    "materials_key": "bandstructure.is_metal",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2,
+      "static dielectric": 3,
+      "nscf line": 5,
+      "nscf uniform": 4
+    }
+  },
+  {
+    "tasks_key": "output.bandgap",
+    "materials_key": "bandstructure_hse.band_gap",
+    "quality_score": {
+      "hse": 6,
+      "hse bs": 7
+    }
+  },
+  {
+    "tasks_key": "calcs_reversed.0.bandstructure",
+    "materials_key": "bandstructure.bs",
+    "quality_score": {
+      "nscf line": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "calcs_reversed.0.bandstructure_fs_id",
+    "materials_key": "bandstructure.bs_oid",
+    "quality_score": {
+      "nscf line": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "calcs_reversed.0.bandstructure_compression",
+    "materials_key": "bandstructure.bs_compression",
+    "quality_score": {
+      "nscf line": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "calcs_reversed.0.dos",
+    "materials_key": "bandstructure.dos",
+    "quality_score": {
+      "nscf uniform": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "calcs_reversed.0.dos_fs_id",
+    "materials_key": "bandstructure.dos_oid",
+    "quality_score": {
+      "nscf uniform": 4
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "calcs_reversed.0.dos_compression",
+    "materials_key": "bandstructure.dos_compression",
+    "quality_score": {
+      "nscf uniform": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "calcs_reversed.0.bandstructure",
+    "materials_key": "bandstructure.uniform_bs",
+    "quality_score": {
+      "nscf uniform": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "calcs_reversed.0.bandstructure_fs_id",
+    "materials_key": "bandstructure.uniform_bs_oid",
+    "quality_score": {
+      "nscf uniform": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "calcs_reversed.0.bandstructure_compression",
+    "materials_key": "bandstructure.uniform_bs_compression",
+    "quality_score": {
+      "nscf uniform": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "input.parameters.NELECT",
+    "materials_key": "calc_settings.nelect",
+    "quality_score": {
+      "nscf uniform": 5
+    },
+    "optional": true
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "band_structure",
+    "_comment": "From ES Builder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "blessed_tasks",
+    "_comment": "Convert to origins?",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "bv_structure",
+    "_comment": "from BV builder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "chemsys",
+    "materials_key": "chemsys",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "cif",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "cifs",
+    "_comment": "From CIF builder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "cpu_time",
+    "_comment": "From some sort of task analysis where we add all the cpu time spent on a material",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "created_at",
+    "_comment": "Should be SNL creation time?",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "decomposes_to",
+    "_comment": "From Thermo builder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "analysis.delta_volume",
+    "materials_key": "analysis.delta_volume",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "output.density",
+    "materials_key": "density",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "doi",
+    "_comment": "DOI Builder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "doi_bibtex",
+    "_comment": "DOI Builder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "dos",
+    "_comment": "From DOS Builder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "e_above_hull",
+    "_comment": "From Thermobuilder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "calcs_reversed.0.output.efermi",
+    "materials_key": "bandstructure.efermi",
+    "quality_score": {
+      "static": 2,
+      "nscf line": 4,
+      "nscf uniform": 5,
+      "hse bs": 7
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "elasticity",
+    "_comment": "from elasticity builder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "elements",
+    "materials_key": "elements",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "encut",
+    "_comment": "remove",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "exp",
+    "_comment": "change to tags",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "exp_lattice",
+    "_comment": "remove",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "output.energy",
+    "materials_key": "thermo.energy",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2
+    }
+  },
+  {
+    "tasks_key": "calcs_reversed.0.run_type",
+    "materials_key": "calc_settings.run_type",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2
+    }
+  },
+  {
+    "tasks_key": "output.energy_per_atom",
+    "materials_key": "thermo.energy_per_atom",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2
+    }
+  },
+  {
+    "tasks_key": "output.energy_per_atom",
+    "materials_key": "energy_per_atom",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "thermo.formation_energy_per_atom",
+    "_comment": "Thermo builder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "full_formula",
+    "_comment": "From Final Builder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "has_bandstructure",
+    "_comment": "From ES Builder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "input.hubbards",
+    "materials_key": "calc_settings.hubbards",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "icsd_ids",
+    "_comemnt": "From SNL builder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "input.structure",
+    "materials_key": "initial_structure",
+    "_comment": "Refactor into SNL",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "calcs_reversed.0.input.potcar_spec",
+    "materials_key": "calc_settings.potcar_spec",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "orig_inputs",
+    "materials_key": "inputs.structure_optimization",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "orig_inputs",
+    "materials_key": "inputs.static",
+    "quality_score": {
+      "static": 1
+    }
+  },
+  {
+    "tasks_key": "orig_inputs",
+    "materials_key": "inputs.dielectric",
+    "quality_score": {
+      "static dielectric": 1
+    }
+  },
+  {
+    "tasks_key": "orig_inputs",
+    "materials_key": "inputs.nscf_line",
+    "quality_score": {
+      "nscf line": 1
+    }
+  },
+  {
+    "tasks_key": "orig_inputs",
+    "materials_key": "inputs.nscf_uniform",
+    "quality_score": {
+      "nscf uniform": 1
+    }
+  },
+  {
+    "tasks_key": "orig_inputs",
+    "materials_key": "inputs.hse",
+    "quality_score": {
+      "hse": 1
+    }
+  },
+  {
+    "tasks_key": "orig_inputs",
+    "materials_key": "inputs.hse_bs",
+    "quality_score": {
+      "hse bs": 1
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "calc.is_compatible",
+    "_comment": "from Thermo Builder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "input.is_hubbard",
+    "materials_key": "calc_settings.is_hubbard",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "is_ordered",
+    "_comment": "From SNL",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "magnetic_type",
+    "_comment": "From magnetic builder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "nelements",
+    "materials_key": "nelements",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "nsites",
+    "materials_key": "nsites",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "oxide_type",
+    "_comment": "From structure analysis, but figure out more generic key",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "piezo",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "formula_pretty",
+    "materials_key": "pretty_formula",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "formula_reduced_abc",
+    "materials_key": "reduced_cell_formula",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "output.spacegroup",
+    "materials_key": "spacegroup",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "output.structure",
+    "materials_key": "structure",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "task_ids",
+    "_comment": "built automatically",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "calcs_reversed.0.output.outcar.total_magnetization",
+    "materials_key": "magnestism.total_magnetization",
+    "quality_score": {
+      "structure optimization": 1,
+      "static": 2,
+      "static dielectric": 3
+    }
+  },
+  {
+    "tasks_key": "composition_unit_cell",
+    "materials_key": "unit_cell_formula",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "updated_at",
+    "_comment": "built automatically",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "output.structure.lattice.volume",
+    "materials_key": "volume",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "analysis.warnings",
+    "materials_key": "analysis.warnings",
+    "quality_score": {
+      "structure optimization": 1
+    }
+  },
+  {
+    "tasks_key": "",
+    "materials_key": "xrd",
+    "_comment": "Built by XRD builder",
+    "quality_score": {
+    }
+  },
+  {
+    "tasks_key": "input.structure",
+    "materials_key": "initial_structure",
+    "quality_score": {
+      "deformation": 1
+    }
+  },
+  {
+    "tasks_key": "'output.ionic_steps.-1.stress",
+    "materials_key": "stress",
+    "quality_score": {
+      "deformation": 1
+    }
+  },
+  {
+    "tasks_key": "output.epsilon_static",
+    "materials_key": "dielectric.static",
+    "quality_score": {
+      "static dielectric": 3
+    }
+  },
+  {
+    "tasks_key": "output.epsilon_ionic",
+    "materials_key": "dielectric.ionic",
+    "quality_score": {
+      "static dielectric": 3
+    }
+  },
+  {
+    "tasks_key": "output.piezo_tensor",
+    "materials_key": "piezo.static",
+    "quality_score": {
+      "static dielectric": 3
+    }
+  },
+  {
+    "tasks_key": "output.piezo_ionic_tensor",
+    "materials_key": "piezo.ionic",
+    "quality_score": {
+      "static dielectric": 3
+    }
+  }
+]
