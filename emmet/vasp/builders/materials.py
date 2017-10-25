@@ -243,10 +243,9 @@ class MaterialsBuilder(Builder):
                         if not prop.get("optional", False):
                             self.logger.error("Failed getting {}task: {}".format(e,t_id))
 
-        # If there are properties to update
-        if len(props) > 0:
-            for prop in props:
-                recursive_update(mat, prop)
+        # Update all props
+        for prop in props:
+            recursive_update(mat, prop)
 
         mat["task_ids"].append(t_id)
 
