@@ -157,7 +157,7 @@ class MaterialsBuilder(Builder):
             dict: a materials doc
 
         """
-        t_type = TaskTagger.task_type(task)
+        t_type = task_type(task)
         t_id = task["task_id"]
 
         # Only start new materials with a structure optimization
@@ -210,7 +210,7 @@ class MaterialsBuilder(Builder):
                     return doc
             return {}
 
-        t_type = TaskTagger.task_type(task)
+        t_type = task_type(task)
         t_id = task["task_id"]
 
         props = []
