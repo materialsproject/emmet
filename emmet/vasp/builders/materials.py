@@ -41,7 +41,6 @@ class MaterialsBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
 
-        self.materials_settings.connect()
         self.__settings =loadfn(self.materials_settings)
 
         super().__init__(sources=[tasks],
