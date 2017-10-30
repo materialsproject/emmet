@@ -156,11 +156,11 @@ class MaterialsBuilder(Builder):
             dict: a materials doc
 
         """
-        t_type = task_type(task)
+        t_type = task_type(task['input']['incar'])
         t_id = task["task_id"]
 
         # Only start new materials with a structure optimization
-        if t_type != "structure optimization":
+        if "Structure Optimization" not in t_type:
             return None
 
         # Convert the task doc into a serious of properties in the materials doc with the right document structure
