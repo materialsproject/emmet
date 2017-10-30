@@ -60,6 +60,7 @@ class MaterialsBuilder(Builder):
         """
 
         self.logger.info("Materials Builder Started")
+        self.logger.info("Allowed Task Types: {}".format(self.allowed_tasks))
 
         self.logger.info("Setting indexes")
         self.ensure_indexes()
