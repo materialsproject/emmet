@@ -16,11 +16,11 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-mat_settings = os.path.join(module_dir, "materials_settings.json")
+default_mat_settings = os.path.join(module_dir, "materials_settings.json")
 
 
 class MaterialsBuilder(Builder):
-    def __init__(self, tasks, materials, materials_settings = mat_settings,query={}, ltol=0.2, stol=0.3,
+    def __init__(self, tasks, materials, materials_settings = None,query={}, ltol=0.2, stol=0.3,
                  angle_tol=5, **kwargs):
         """
         Creates a materials collection from tasks and tags
@@ -36,7 +36,7 @@ class MaterialsBuilder(Builder):
         """
 
         self.tasks = tasks
-        self.materials_settings = materials_settings
+        self.materials_settings = materials_settings if materials_settings ele default_mat_settings
         self.materials = materials
         self.query = query
         self.ltol = ltol
