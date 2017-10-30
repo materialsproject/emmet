@@ -1,8 +1,10 @@
 from datetime import datetime
 from itertools import chain
+import os
 
 from pymongo import ASCENDING, DESCENDING
 
+from monty.serialization import loadfn
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 
@@ -14,7 +16,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-mat_settings = os.path.join(module_dir, "materials_settings.yaml")
+mat_settings = os.path.join(module_dir, "materials_settings.json")
 
 
 class MaterialsBuilder(Builder):
@@ -64,23 +66,21 @@ class MaterialsBuilder(Builder):
         q = dict(self.query)
         q["state"] = "successful"
         
-        all_tasks = self.tasks().find(q).distinct("task_id")
-        processed_tasks = self.materials().distinct("task_ids").sort()
+        all_tasks = list(self.tasks().find(q).distinct("task_id"))
+        processed_tasks = list(self.materials().distinct("task_ids"))
         to_process_tasks = set(all_tasks) - set(processed_tasks)
         to_process_forms = self.tasks().find({"task_id": {"$in": list(to_process_tasks)}}).distinct("formula_pretty")
         self.logger.info("Found {} unprocessed tasks".format(len(to_process_tasks)))
 
 
         # Tasks that have been updated since we last viewed them
-        q = dict(self.query)
-        q["state"] = "successful"
         update_q = dict(q)
         update_q .update(self.tasks.lu_filter(self.materials))
         updated_forms = self.tasks().find(update_q ).distinct("formula_pretty")
-        self.logger.info("Found {} updated systems to proces".format(len(forms_to_update)))
+        self.logger.info("Found {} updated systems to proces".format(len(updated_forms)))
 
 
-        forms_to_update = set(updated_forms) + set(to_process_forms)
+        forms_to_update = set(updated_forms) | set(to_process_forms)
         self.logger.info("Processing {} total systems".format(len(forms_to_update)))         
 
         for formula in forms_to_update:
