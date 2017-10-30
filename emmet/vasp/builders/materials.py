@@ -36,7 +36,7 @@ class MaterialsBuilder(Builder):
         """
 
         self.tasks = tasks
-        self.materials_settings = materials_settings if materials_settings ele default_mat_settings
+        self.materials_settings = materials_settings if materials_settings else default_mat_settings
         self.materials = materials
         self.query = query
         self.ltol = ltol
@@ -44,6 +44,8 @@ class MaterialsBuilder(Builder):
         self.angle_tol = angle_tol
 
         self.__settings =loadfn(self.materials_settings)
+
+        self.allowed_tasks = {t_type  for d in self.__settings for t_type in d['quality_score']}
 
         super().__init__(sources=[tasks],
                          targets=[materials],
