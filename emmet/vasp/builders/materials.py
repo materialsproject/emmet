@@ -20,7 +20,7 @@ default_mat_settings = os.path.join(module_dir, "materials_settings.json")
 
 
 class MaterialsBuilder(Builder):
-    def __init__(self, tasks, materials, mat_prefix="mp", materials_settings = None,query={}, ltol=0.2, stol=0.3,
+    def __init__(self, tasks, materials, mat_prefix="mp-", materials_settings = None,query={}, ltol=0.2, stol=0.3,
                  angle_tol=5, **kwargs):
         """
         Creates a materials collection from tasks and tags
@@ -114,13 +114,13 @@ class MaterialsBuilder(Builder):
         grouped_tasks = self.filter_and_group_tasks(tasks)
 
         for group in grouped_tasks:
-            materials.append(make_mat(group))
+            materials.append(self.make_mat(group))
 
         self.logger.debug("Produced {} materials for {}".format(len(materials), tasks[0]["formula_pretty"]))
 
         return materials
 
-    def make_mat(task_group):
+    def make_mat(self,task_group):
         """
         Converts a group of tasks into one material
         """
