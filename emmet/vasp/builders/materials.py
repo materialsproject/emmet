@@ -73,16 +73,15 @@ class MaterialsBuilder(Builder):
         q = dict(self.query)
         q["state"] = "successful"
 
-        all_tasks = list(self.tasks().find(q).distinct("task_id"))
-        processed_tasks = list(self.materials().distinct("task_ids"))
-        to_process_tasks = set(all_tasks) - set(processed_tasks)
-        to_process_forms = self.tasks().find(
-            {"task_id": {"$in": list(to_process_tasks)}}).distinct("formula_pretty")
         all_tasks = set(self.tasks.distinct("task_id",q))
         processed_tasks = set(self.materials.distinct("task_ids"))
         to_process_tasks = all_tasks - processed_tasks
+        to_process_forms = self.tasks.distinct("formula_pretty",
+            {"task_id": {"$in": list(to_process_tasks)}})
         self.logger.info(
             "Found {} unprocessed tasks".format(len(to_process_tasks)))
+        self.logger.info(
+            "Found {} unprocessed formulas".format(len(to_process_forms)))
 
         # Tasks that have been updated since we last viewed them
         update_q = dict(q)
