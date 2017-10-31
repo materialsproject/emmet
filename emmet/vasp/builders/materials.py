@@ -10,7 +10,7 @@ from pymatgen.analysis.structure_matcher import StructureMatcher, ElementCompara
 
 from maggma.builder import Builder
 from emmet.vasp.builders.task_tagger import task_type
-from pydash.objects import get,set_
+from pydash.objects import get, set_
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -20,7 +20,8 @@ default_mat_settings = os.path.join(module_dir, "materials_settings.json")
 
 
 class MaterialsBuilder(Builder):
-    def __init__(self, tasks, materials, mat_prefix="mp-", materials_settings = None,query={}, ltol=0.2, stol=0.3,
+
+    def __init__(self, tasks, materials, mat_prefix="mp-", materials_settings=None, query={}, ltol=0.2, stol=0.3,
                  angle_tol=5, **kwargs):
         """
         Creates a materials collection from tasks and tags
@@ -45,9 +46,10 @@ class MaterialsBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
 
-        self.__settings =loadfn(self.materials_settings)
+        self.__settings = loadfn(self.materials_settings)
 
-        self.allowed_tasks = {t_type  for d in self.__settings for t_type in d['quality_score']}
+        self.allowed_tasks = {
+            t_type for d in self.__settings for t_type in d['quality_score']}
 
         super().__init__(sources=[tasks],
                          targets=[materials],
@@ -70,23 +72,25 @@ class MaterialsBuilder(Builder):
         # Get all processed tasks:
         q = dict(self.query)
         q["state"] = "successful"
-        
+
         all_tasks = list(self.tasks().find(q).distinct("task_id"))
         processed_tasks = list(self.materials().distinct("task_ids"))
         to_process_tasks = set(all_tasks) - set(processed_tasks)
-        to_process_forms = self.tasks().find({"task_id": {"$in": list(to_process_tasks)}}).distinct("formula_pretty")
-        self.logger.info("Found {} unprocessed tasks".format(len(to_process_tasks)))
-
+        to_process_forms = self.tasks().find(
+            {"task_id": {"$in": list(to_process_tasks)}}).distinct("formula_pretty")
+        self.logger.info(
+            "Found {} unprocessed tasks".format(len(to_process_tasks)))
 
         # Tasks that have been updated since we last viewed them
         update_q = dict(q)
         update_q .update(self.tasks.lu_filter(self.materials))
-        updated_forms = self.tasks().find(update_q ).distinct("formula_pretty")
-        self.logger.info("Found {} updated systems to proces".format(len(updated_forms)))
-
+        updated_forms = self.tasks().find(update_q).distinct("formula_pretty")
+        self.logger.info(
+            "Found {} updated systems to proces".format(len(updated_forms)))
 
         forms_to_update = set(updated_forms) | set(to_process_forms)
-        self.logger.info("Processing {} total systems".format(len(forms_to_update)))         
+        self.logger.info(
+            "Processing {} total systems".format(len(forms_to_update)))
 
         for formula in forms_to_update:
             tasks_q = dict(q)
@@ -95,7 +99,7 @@ class MaterialsBuilder(Builder):
 
             yield tasks
 
-    def process_item(self,tasks):
+    def process_item(self, tasks):
         """
         Process the tasks into a list of materials
 
@@ -116,49 +120,53 @@ class MaterialsBuilder(Builder):
         for group in grouped_tasks:
             materials.append(self.make_mat(group))
 
-        self.logger.debug("Produced {} materials for {}".format(len(materials), tasks[0]["formula_pretty"]))
+        self.logger.debug("Produced {} materials for {}".format(
+            len(materials), tasks[0]["formula_pretty"]))
 
         return materials
 
-    def make_mat(self,task_group):
+    def make_mat(self, task_group):
         """
         Converts a group of tasks into one material
         """
-        all_props = list(chain.from_iterable([self.task_to_prop_list(t) for t in task_group]))
+        all_props = list(chain.from_iterable(
+            [self.task_to_prop_list(t) for t in task_group]))
         sorted_props = sorted(all_props, key=lambda x: x['materials_key'])
-        grouped_props = groupby(all_props,lambda x:x['materials_key'])
+        grouped_props = groupby(all_props, lambda x: x['materials_key'])
         best_props = []
-        for name,prop in grouped_props:
-            sorted_props = sorted(prop, key=lambda x: x['quality_score'],reverse=True)
+        for name, prop in grouped_props:
+            sorted_props = sorted(prop, key=lambda x: x[
+                                  'quality_score'], reverse=True)
             best_prop = sorted_props[0]
-            best_props.append(best_prop)  
-        
+            best_props.append(best_prop)
+
          # Add in the provenance for the properties
-        origins = [{k:prop[k] for k in ["materials_key","task_type","task_id","last_updated"]} \
-                    for prop in self.__settings if prop["track"]]
+        origins = [{k: prop[k] for k in ["materials_key", "task_type", "task_id", "last_updated"]}
+                   for prop in self.__settings if prop["track"]]
 
-        task_ids = sorted({t["task_id"] for t in best_props},reverse=True)
-
+        task_ids = sorted({t["task_id"] for t in best_props}, reverse=True)
 
         mat = {"updated_at": datetime.utcnow(),
-            "task_ids": task_ids,
-            "material_id": self.mat_prefix + str(task_ids[0]),
-            "origins": origins
-        }
+               "task_ids": task_ids,
+               "material_id": self.mat_prefix + str(task_ids[0]),
+               "origins": origins
+               }
 
         for prop in best_props:
-            set_(mat,prop["materials_key"],prop["value"])
+            set_(mat, prop["materials_key"], prop["value"])
 
         return mat
 
-    def filter_and_group_tasks(self,tasks):
+    def filter_and_group_tasks(self, tasks):
         """
         Groups tasks by structure matching
         """
 
-        filtered_tasks = [t for t in tasks if task_type(t['input']['incar']) in self.allowed_tasks]
+        filtered_tasks = [t for t in tasks if task_type(
+            t['input']['incar']) in self.allowed_tasks]
 
-        structures = [Structure.from_dict(t["output"]['structure']) for t in filtered_tasks]
+        structures = [Structure.from_dict(
+            t["output"]['structure']) for t in filtered_tasks]
 
         sm = StructureMatcher(ltol=self.ltol, stol=self.stol, angle_tol=self.angle_tol,
                               primitive_cell=True, scale=True,
@@ -167,19 +175,20 @@ class MaterialsBuilder(Builder):
 
         grouped_structures = sm.group_structures(structures)
 
-        grouped_tasks = [[filtered_tasks[structures.index(struc)] for struc in group] for group in grouped_structures]
+        grouped_tasks = [[filtered_tasks[structures.index(
+            struc)] for struc in group] for group in grouped_structures]
 
         return grouped_tasks
 
-
-    def task_to_prop_list(self,task):
+    def task_to_prop_list(self, task):
         """
         Converts a task into an list of properties
         """
         t_type = task_type(task['input']['incar'])
         t_id = task["task_id"]
 
-        # Convert the task doc into a serious of properties in the materials doc with the right document structure
+        # Convert the task doc into a serious of properties in the materials
+        # doc with the right document structure
         props = []
         for prop in self.__settings:
             try:
@@ -188,12 +197,13 @@ class MaterialsBuilder(Builder):
                                   "task_type": t_type,
                                   "task_id": t_id,
                                   "quality_score": prop["quality_score"][t_type],
-                                  "track": prop.get("track",False),
+                                  "track": prop.get("track", False),
                                   "last_updated": task["last_updated"],
                                   "materials_key": prop["materials_key"]})
             except Exception as e:
                 if not prop.get("optional", False):
-                    self.logger.error("Failed getting {} for task: {}".format(e,t_id))
+                    self.logger.error(
+                        "Failed getting {} for task: {}".format(e, t_id))
         return props
 
     def update_targets(self, items):
@@ -211,7 +221,8 @@ class MaterialsBuilder(Builder):
 
             for m in items:
                 m[self.materials.lu_field] = datetime.utcnow()
-                bulk.find({"material_id": m["material_id"]}).upsert().replace_one(m)
+                bulk.find(
+                    {"material_id": m["material_id"]}).upsert().replace_one(m)
             bulk.execute()
         else:
             self.logger.info("No items to update")
@@ -228,14 +239,12 @@ class MaterialsBuilder(Builder):
 
         self.tasks().create_index([("task_id", DESCENDING),
                                    ("state", ASCENDING),
-                                   ("formula_pretty", DESCENDING),], background=True)
+                                   ("formula_pretty", DESCENDING), ], background=True)
 
         # Basic updated tasks index for tasks
         self.tasks().create_index([("formula_pretty", DESCENDING),
                                    ("state", ASCENDING),
                                    (self.tasks.lu_field, DESCENDING)], background=True)
-
-        
 
         # Search index for materials
         self.materials().create_index("material_id", unique=True, background=True)
