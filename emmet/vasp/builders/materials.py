@@ -170,6 +170,9 @@ class MaterialsBuilder(Builder):
         structures = [Structure.from_dict(
             t["output"]['structure']) for t in filtered_tasks]
 
+        for idx,s in enumerate(structures):
+            s.index = idx
+
         sm = StructureMatcher(ltol=self.ltol, stol=self.stol, angle_tol=self.angle_tol,
                               primitive_cell=True, scale=True,
                               attempt_supercell=False, allow_subset=False,
@@ -177,8 +180,7 @@ class MaterialsBuilder(Builder):
 
         grouped_structures = sm.group_structures(structures)
 
-        grouped_tasks = [[filtered_tasks[structures.index(
-            struc)] for struc in group] for group in grouped_structures]
+        grouped_tasks = [[filtered_tasks[struc.index] for struc in group] for group in grouped_structures]
 
         return grouped_tasks
 
