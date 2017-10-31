@@ -86,7 +86,7 @@ class MaterialsBuilder(Builder):
         # Tasks that have been updated since we last viewed them
         update_q = dict(q)
         update_q .update(self.tasks.lu_filter(self.materials))
-        updated_forms = self.tasks().find(update_q).distinct("formula_pretty")
+        updated_forms = self.tasks.distinct("formula_pretty",update_q)
         self.logger.info(
             "Found {} updated systems to proces".format(len(updated_forms)))
 
