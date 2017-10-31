@@ -1,5 +1,5 @@
 from datetime import datetime
-from itertools import chain
+from itertools import chain, groupby
 import os
 
 from pymongo import ASCENDING, DESCENDING
@@ -93,37 +93,66 @@ class MaterialsBuilder(Builder):
 
             yield tasks
 
-    def process_item(self, tasks):
+    def process_item(self,tasks):
         """
-        Process the tasks and materials into just a list of materials
+        Process the tasks into a list of materials
 
         Args:
-            item ((dict,[dict])): a task doc and a list of possible tag definitions
+            tasks [dict] : a list of task docs
 
         Returns:
             ([dict],list) : a list of new materials docs and a list of task_ids that were processsed
         """
-        materials = []
 
         formula = tasks[0]["formula_pretty"]
         t_ids = [t["task_id"] for t in tasks]
         self.logger.debug("Processing {} : {}".format(formula, t_ids))
 
-        for t in sorted(tasks, key=lambda x: x["task_id"]):
-            mat = self.match(t, materials)
+        materials = []
+        grouped_tasks = self.filter_and_group_tasks(tasks)
 
-            if mat:
-                self.update_mat(t, mat)
-            else:
-                new_mat = self.new_mat(t)
-                if new_mat:
-                    materials.append(new_mat)
+        for group in grouped_tasks:
+            materials.append(make_mat(group))
 
         self.logger.debug("Produced {} materials for {}".format(len(materials), tasks[0]["formula_pretty"]))
 
         return materials
 
+    def make_mat(task_group):
+        """
+        Converts a group of tasks into one material
+        """
+        all_props = list(chain.from_iterable([self.task_to_prop_list(t) for t in task_group]))
+        sorted_props = sorted(all_props, key=lambda x: x['materials_key'])
+        grouped_props = groupby(all_props,lambda x:x['materials_key'])
+        best_props = []
+        for name,prop in grouped_props:
+            sorted_props = sorted(prop, key=lambda x: x['quality_score'],reverse=True)
+            best_prop = sorted_props[0]
+            best_props.append(best_prop)  
+        
+         # Add in the provenance for the properties
+        origins = [{k:prop[k] for k in ["materials_key","task_type","task_id","last_updated"]} \
+                    for prop in self.__settings if prop["track"]]
+
+        task_ids = sorted({t["task_id"] for t in best_props},reverse=True)
+
+
+        mat = {"updated_at": datetime.utcnow(),
+            "task_ids": task_ids,
+            "material_id": task_ids[0],
+            "origins": origins
+        }
+
+        for prop in best_props:
+            recursive_update(mat,put_mongolike(prop["materials_key"],prop["value"]))    
+
+        return mat
+
     def filter_and_group_tasks(self,tasks):
+        """
+        Groups tasks by structure matching
+        """
 
         filtered_tasks = [t for t in tasks if task_type(t['input']['incar']) in self.allowed_tasks]
 
@@ -141,133 +170,29 @@ class MaterialsBuilder(Builder):
         return grouped_tasks
 
 
-    def match(self, task, mats):
+    def task_to_prop_list(self,task):
         """
-        Finds a material doc that matches with the given task
-
-        Args:
-            task (dict): the task doc
-            mats ([dict]): the materials docs to match against
-
-        Returns:
-            dict: a materials doc if one is found otherwise returns None
-        """
-        sm = StructureMatcher(ltol=self.ltol, stol=self.stol, angle_tol=self.angle_tol,
-                              primitive_cell=True, scale=True,
-                              attempt_supercell=False, allow_subset=False,
-                              comparator=ElementComparator())
-        t_struct = Structure.from_dict(task["output"]["structure"])
-
-        for m in mats:
-            m_struct = Structure.from_dict(m["structure"])
-            if task["output"]["spacegroup"]["number"] == m["spacegroup"]["number"] and \
-                    sm.fit(m_struct, t_struct):
-                return m
-
-        return None
-
-    def new_mat(self, task):
-        """
-        Generates a new material doc from a structure optimization task
-
-        Args:
-            task (dict): the task doc
-
-        Returns:
-            dict: a materials doc
-
+        Converts a task into an list of properties
         """
         t_type = task_type(task['input']['incar'])
         t_id = task["task_id"]
-
-        # Only start new materials with a structure optimization
-        if "Structure Optimization" not in t_type:
-            return None
 
         # Convert the task doc into a serious of properties in the materials doc with the right document structure
         props = []
         for prop in self.__settings:
             try:
                 if t_type in prop["quality_score"].keys():
-                    props.append(put_mongolike(prop["materials_key"], get_mongolike(task, prop["tasks_key"])))
+                    props.append({"value":  get_mongolike(task, prop["tasks_key"]),
+                                  "task_type": t_type,
+                                  "task_id": t_id,
+                                  "quality_score": prop["quality_score"][t_type],
+                                  "track": prop.get("track",False),
+                                  "last_updated": task["last_updated"],
+                                  "materials_key": prop["materials_key"]})
             except Exception as e:
                 if not prop.get("optional", False):
                     self.logger.error("Failed getting {} for task: {}".format(e,t_id))
-
-        # Add in the provenance for the properties
-        origins = [{"materials_key": prop["materials_key"],
-                    "task_type": t_type,
-                    "task_id": t_id,
-                    "last_updated": task["last_updated"]} for prop in self.__settings if
-                   t_type in prop["quality_score"].keys() and len(prop["quality_score"].keys()) > 1]
-
-        # Temp document with basic information
-        d = {"created_at": datetime.utcnow(),
-             "task_ids": [t_id],
-             "material_id": t_id,
-             "origins": origins
-             }
-
-        # Insert the properties into the temp document
-        for prop in props:
-            recursive_update(d, prop)
-
-        return d
-
-    def update_mat(self, task, mat):
-        """
-        Updates the materials doc with data from the given task doc
-
-        Args:
-            task(dict): the task doc
-            mat(dict): the materials doc
-
-        """
-
-        def get_origin(origins, prop):
-            for doc in origins:
-                if doc["materials_key"] is prop["materials_key"]:
-                    return doc
-            return {}
-
-        t_type = task_type(task)
-        t_id = task["task_id"]
-
-        props = []
-
-        for prop in self.__settings:
-            # If this task type is considered for this property
-            if t_type in prop["quality_score"].keys():
-
-                # Get the property score
-                t_score = prop["quality_score"][t_type]
-
-                # Get the origin data for the property in the materials doc
-                prop_doc = get_origin(mat["origins"], prop)
-                m_type = prop_doc.get("task_type", "")
-                m_score = prop_doc.get("quality_score", {}).get(m_type, 0)
-
-                # if the task property is of a higher quality than the material property
-                # greater than or equal is used to allow for multiple calculations of the same type
-                # assuming successive calculations are "better"
-                if t_score >= m_score:
-                    # Build the property into a document with the right structure and save it
-                    try:
-                        value = get_mongolike(task, prop["tasks_key"])
-                        props.append(put_mongolike(prop["materials_key"], value))
-                        if len(prop["quality_score"].keys()) > 1:
-                            prop_doc.update({"task_type": t_type,
-                                             "task_id": t_id,
-                                             "last_updated": task["last_updated"]})
-                    except Exception as e:
-                        if not prop.get("optional", False):
-                            self.logger.error("Failed getting {}task: {}".format(e,t_id))
-
-        # Update all props
-        for prop in props:
-            recursive_update(mat, prop)
-
-        mat["task_ids"].append(t_id)
+        return props
 
     def update_targets(self, items):
         """
