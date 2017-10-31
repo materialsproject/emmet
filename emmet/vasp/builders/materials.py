@@ -97,7 +97,7 @@ class MaterialsBuilder(Builder):
         for formula in forms_to_update:
             tasks_q = dict(q)
             tasks_q["formula_pretty"] = formula
-            tasks = list(self.tasks().find(tasks_q))
+            tasks = list(self.tasks.query(criteria=tasks_q))
 
             yield tasks
 
