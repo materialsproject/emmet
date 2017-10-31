@@ -10,7 +10,7 @@ from pymatgen.analysis.structure_matcher import StructureMatcher, ElementCompara
 
 from maggma.builder import Builder
 from emmet.vasp.builders.task_tagger import task_type
-from maggma.utils import get_mongolike, put_mongolike, recursive_update
+from pydash.objects import get,set_
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -147,7 +147,7 @@ class MaterialsBuilder(Builder):
         }
 
         for prop in best_props:
-            recursive_update(mat,put_mongolike(prop["materials_key"],prop["value"]))    
+            set_(mat,prop["materials_key"],prop["value"])
 
         return mat
 
@@ -184,7 +184,7 @@ class MaterialsBuilder(Builder):
         for prop in self.__settings:
             try:
                 if t_type in prop["quality_score"].keys():
-                    props.append({"value":  get_mongolike(task, prop["tasks_key"]),
+                    props.append({"value":  get(task, prop["tasks_key"]),
                                   "task_type": t_type,
                                   "task_id": t_id,
                                   "quality_score": prop["quality_score"][t_type],
