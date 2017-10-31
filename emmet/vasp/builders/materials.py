@@ -276,7 +276,7 @@ class MaterialsBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
-        items = list(filter(None, chain(*items)))
+        items = list(filter(None, chain.from_iterable(items)))
 
         if len(items) > 0:
             self.logger.info("Updating {} materials".format(len(items)))
