@@ -20,7 +20,7 @@ default_mat_settings = os.path.join(module_dir, "materials_settings.json")
 
 
 class MaterialsBuilder(Builder):
-    def __init__(self, tasks, materials, materials_settings = None,query={}, ltol=0.2, stol=0.3,
+    def __init__(self, tasks, materials, mat_prefix="mp", materials_settings = None,query={}, ltol=0.2, stol=0.3,
                  angle_tol=5, **kwargs):
         """
         Creates a materials collection from tasks and tags
@@ -28,6 +28,7 @@ class MaterialsBuilder(Builder):
         Args:
             tasks (Store): Store of task documents
             materials (Store): Store of materials documents to generate
+            mat_prefix (str): prefix for all materials ids
             materials_settings (Path): Path to settings files
             query (dict): dictionary to limit tasks to be analyzed
             ltol (float): StructureMatcher tuning parameter for matching tasks to materials
@@ -38,6 +39,7 @@ class MaterialsBuilder(Builder):
         self.tasks = tasks
         self.materials_settings = materials_settings if materials_settings else default_mat_settings
         self.materials = materials
+        self.mat_prefix = mat_prefix
         self.query = query
         self.ltol = ltol
         self.stol = stol
@@ -140,7 +142,7 @@ class MaterialsBuilder(Builder):
 
         mat = {"updated_at": datetime.utcnow(),
             "task_ids": task_ids,
-            "material_id": task_ids[0],
+            "material_id": self.mat_prefix + str(task_ids[0]),
             "origins": origins
         }
 
