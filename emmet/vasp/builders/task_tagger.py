@@ -99,7 +99,7 @@ def task_type(incar,include_calc_type=True):
     if incar.get("LEPSILON", False):
         return calc_type + "Static Dielectric"
 
-    if incar.get("IBRION", 0) < 0:
+    if incar.get("NSW", 1) == 0:
         return calc_type + "Static"
 
     if incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
