@@ -144,7 +144,7 @@ class MaterialsBuilder(Builder):
 
          # Add in the provenance for the properties
         origins = [{k: prop[k] for k in ["materials_key", "task_type", "task_id", "last_updated"]}
-                   for prop in self.__settings if prop["track"]]
+                   for prop in self.__settings if prop.get("track",False)]
 
         task_ids = sorted([t["task_id"] for t in task_group], reverse=True)
 
