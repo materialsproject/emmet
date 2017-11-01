@@ -232,18 +232,11 @@ class MaterialsBuilder(Builder):
         """
 
         # Basic search index for tasks
-        self.tasks().create_index([("task_id", DESCENDING),
-                                   ("state", ASCENDING)], background=True)
-
-        self.tasks().create_index([("task_id", DESCENDING),
-                                   ("state", ASCENDING),
-                                   ("formula_pretty", DESCENDING), ], background=True)
-
-        # Basic updated tasks index for tasks
-        self.tasks().create_index([("formula_pretty", DESCENDING),
-                                   ("state", ASCENDING),
-                                   (self.tasks.lu_field, DESCENDING)], background=True)
+        self.tasks.ensure_index("task_id",unique=True)
+        self.tasks.ensure_index("state")
+        self.tasks.ensure_index("formula_pretty")
+        self.tasks.ensure_index(self.tasks.lu_field)
 
         # Search index for materials
-        self.materials().create_index("material_id", unique=True, background=True)
-        self.materials().create_index("task_ids", background=True)
+        self.materials.ensure_index("material_id", unique=True)
+        self.materials.ensure_index("task_ids")
