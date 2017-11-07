@@ -236,11 +236,12 @@
         "tasks_key": "output.energy",
         "materials_key": "thermo.energy",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6
-        }
+            "GGA Structure Optimization": 2,
+            "GGA Static": 1,
+            "GGA+U Structure Optimization": 6,
+            "GGA+U Static": 5
+        },
+        "track": true
     },
     {
         "tasks_key": "calcs_reversed.0.run_type",
@@ -254,21 +255,23 @@
         "tasks_key": "output.energy_per_atom",
         "materials_key": "thermo.energy_per_atom",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6
-        }
+            "GGA Structure Optimization": 2,
+            "GGA Static": 1,
+            "GGA+U Structure Optimization": 6,
+            "GGA+U Static": 5
+        },
+        "track": true
     },
     {
         "tasks_key": "output.energy_per_atom",
         "materials_key": "energy_per_atom",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6
-        }
+            "GGA Structure Optimization": 2,
+            "GGA Static": 1,
+            "GGA+U Structure Optimization": 6,
+            "GGA+U Static": 5
+        },
+        "track": true
     },
     {
         "tasks_key": "",

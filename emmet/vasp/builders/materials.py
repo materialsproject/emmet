@@ -16,8 +16,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-default_mat_settings = os.path.join(module_dir, "materials_settings.json")
-
+default_mat_settings = os.path.join(module_dir,"settings", "materials_settings.json")
 
 class MaterialsBuilder(Builder):
 
