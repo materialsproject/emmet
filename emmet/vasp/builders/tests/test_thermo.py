@@ -2,7 +2,7 @@ import unittest
 import os
 import glob
 import logging
-import json
+from bson.json_util import loads
 from itertools import chain
 from monty.io import zopen
 from atomate.vasp.database import VaspCalcDb
@@ -33,7 +33,8 @@ class TestThermo(unittest.TestCase):
         tasks_dir = os.path.join(test_dir, "tasks")
         for f in glob.glob("{}/*.json.gz".format(tasks_dir)):
             with zopen(f) as f:
-                task = json.load(f)
+                data = f.read()
+                task = loads(data)
                 vaspdb.insert_task(task, parse_dos=True, parse_bs=True)
 
         cls.materials = MongoStore("emmet_test", "materials")
