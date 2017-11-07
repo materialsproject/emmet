@@ -16,7 +16,9 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-default_mat_settings = os.path.join(module_dir,"settings", "materials_settings.json")
+default_mat_settings = os.path.join(
+    module_dir, "settings", "materials_settings.json")
+
 
 class MaterialsBuilder(Builder):
 
@@ -72,11 +74,11 @@ class MaterialsBuilder(Builder):
         q = dict(self.query)
         q["state"] = "successful"
 
-        all_tasks = set(self.tasks.distinct("task_id",q))
+        all_tasks = set(self.tasks.distinct("task_id", q))
         processed_tasks = set(self.materials.distinct("task_ids"))
         to_process_tasks = all_tasks - processed_tasks
         to_process_forms = self.tasks.distinct("formula_pretty",
-            {"task_id": {"$in": list(to_process_tasks)}})
+                                               {"task_id": {"$in": list(to_process_tasks)}})
         self.logger.info(
             "Found {} unprocessed tasks".format(len(to_process_tasks)))
         self.logger.info(
@@ -85,7 +87,7 @@ class MaterialsBuilder(Builder):
         # Tasks that have been updated since we last viewed them
         update_q = dict(q)
         update_q .update(self.tasks.lu_filter(self.materials))
-        updated_forms = self.tasks.distinct("formula_pretty",update_q)
+        updated_forms = self.tasks.distinct("formula_pretty", update_q)
         self.logger.info(
             "Found {} updated systems to proces".format(len(updated_forms)))
 
@@ -137,14 +139,15 @@ class MaterialsBuilder(Builder):
         best_props = []
         for name, prop in grouped_props:
             sorted_props = sorted(prop, key=lambda x: x[
-                                  'quality_score'],reverse=True)
+                                  'quality_score'], reverse=True)
             best_props.append(sorted_props[0])
 
          # Add in the provenance for the properties
         origins = [{k: prop[k] for k in ["materials_key", "task_type", "task_id", "last_updated"]}
-                   for prop in best_props if prop.get("track",False)]
+                   for prop in best_props if prop.get("track", False)]
 
-        task_ids = sorted([t["task_id"] for t in task_group],key=lambda x: int(str(x).split("-")[-1]))
+        task_ids = sorted([t["task_id"] for t in task_group],
+                          key=lambda x: int(str(x).split("-")[-1]))
 
         mat = {"updated_at": datetime.utcnow(),
                "task_ids": task_ids,
@@ -168,7 +171,7 @@ class MaterialsBuilder(Builder):
         structures = [Structure.from_dict(
             t["output"]['structure']) for t in filtered_tasks]
 
-        for idx,s in enumerate(structures):
+        for idx, s in enumerate(structures):
             s.index = idx
 
         sm = StructureMatcher(ltol=self.ltol, stol=self.stol, angle_tol=self.angle_tol,
@@ -178,7 +181,8 @@ class MaterialsBuilder(Builder):
 
         grouped_structures = sm.group_structures(structures)
 
-        grouped_tasks = [[filtered_tasks[struc.index] for struc in group] for group in grouped_structures]
+        grouped_tasks = [[filtered_tasks[struc.index]
+                          for struc in group] for group in grouped_structures]
 
         return grouped_tasks
 
@@ -219,7 +223,7 @@ class MaterialsBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info("Updating {} materials".format(len(items)))
-            self.materials.update(key="material_id",docs=items)
+            self.materials.update(key="material_id", docs=items)
         else:
             self.logger.info("No items to update")
 
@@ -230,7 +234,7 @@ class MaterialsBuilder(Builder):
         """
 
         # Basic search index for tasks
-        self.tasks.ensure_index("task_id",unique=True)
+        self.tasks.ensure_index("task_id", unique=True)
         self.tasks.ensure_index("state")
         self.tasks.ensure_index("formula_pretty")
         self.tasks.ensure_index(self.tasks.lu_field)
