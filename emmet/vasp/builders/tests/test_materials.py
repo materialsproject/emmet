@@ -2,12 +2,11 @@ import unittest
 import os
 import glob
 import logging
-from bson.json_util import loads
 from itertools import chain
 from monty.io import zopen
 from atomate.vasp.database import VaspCalcDb
 
-from maggma.stores import MongoStore
+from maggma.stores import MongoStore, JSONStore
 from emmet.vasp.builders.materials import MaterialsBuilder
 
 __author__ = "Shyam Dwaraknath"
@@ -29,11 +28,11 @@ class TestMaterials(unittest.TestCase):
 
         vaspdb = VaspCalcDb(database="emmet_test")
         tasks_dir = os.path.join(test_dir, "tasks")
-        for f in glob.glob("{}/*.json.gz".format(tasks_dir)):
-            with zopen(f) as f:
-                data = f.read()
-                task = loads(data)
-                vaspdb.insert_task(task, parse_dos=True, parse_bs=True)
+        
+        raw_tasks = JSONStore(glob.glob(os.path.join(test_dir,"tasks","*.json.gz")))
+        raw_tasks.connect()
+        for task in raw_tasks.query():
+            vaspdb.insert_task(task, parse_dos=True, parse_bs=True)
 
         cls.materials = MongoStore("emmet_test", "materials")
 
