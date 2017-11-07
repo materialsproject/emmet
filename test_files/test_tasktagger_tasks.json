@@ -2,7 +2,7 @@
   {
     "task_id": 1,
     "state": "successful",
-    "true_task_type": "structure optimization",
+    "true_task_type": "GGA Structure Optimization",
     "input": {
       "incar": {
         "ALGO": "Fast",
@@ -30,7 +30,7 @@
   {
     "task_id": 2,
     "state": "successful",
-    "true_task_type": "static",
+    "true_task_type": "GGA Static",
     "input": {
       "incar": {
         "ALGO": "Normal",
@@ -61,7 +61,7 @@
   {
     "task_id": 3,
     "state": "successful",
-    "true_task_type": "hse",
+    "true_task_type": "HSE Structure Optimization",
     "input": {
       "incar": {
         "ALGO": "All",
@@ -92,7 +92,7 @@
   {
     "task_id": 4,
     "state": "successful",
-    "true_task_type": "hse bs",
+    "true_task_type": "HSE Static",
     "input": {
       "incar": {
         "ALGO": "All",
@@ -125,8 +125,8 @@
   },
   {
     "task_id": 5,
-    "state": "sucessful",
-    "true_task_type": "static dielectric",
+    "state": "successful",
+    "true_task_type": "GGA Static Dielectric",
     "input": {
       "incar": {
         "ALGO": "Normal",
@@ -157,7 +157,7 @@
   {
     "task_id": 6,
     "state": "successful",
-    "true_task_type": "nscf line",
+    "true_task_type": "GGA NSCF Line",
     "input": {
       "incar": {
         "ALGO": "Fast",
@@ -183,7 +183,7 @@
   {
     "task_id": 7,
     "state": "successful",
-    "true_task_type": "nscf uniform",
+    "true_task_type": "GGA NSCF Uniform",
     "input": {
       "incar": {
         "ALGO": "Fast",

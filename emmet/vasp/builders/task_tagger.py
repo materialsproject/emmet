@@ -31,7 +31,7 @@ class TaskTagger(Builder):
 
         # Get all tasks ids from the tasks collection
         all_task_ids = self.tasks.collection.distinct("task_id", {"state": "successful"})
-
+        
         # Figure out which task_ids are not in the materials collection and only process those
         previous_task_ids = self.task_types.collection.distinct("task_id", {"task_type": {"$exists": 0}})
         to_process = set(all_task_ids) - set(previous_task_ids)
@@ -54,7 +54,7 @@ class TaskTagger(Builder):
         """
 
         return {"task_id": item["task_id"],
-                "task_type": self.task_type(item)}
+                "task_type": task_type(item['input']['incar'])}
 
     def update_targets(self, items):
         """
