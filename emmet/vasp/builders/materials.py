@@ -133,17 +133,16 @@ class MaterialsBuilder(Builder):
         all_props = list(chain.from_iterable(
             [self.task_to_prop_list(t) for t in task_group]))
         sorted_props = sorted(all_props, key=lambda x: x['materials_key'])
-        grouped_props = groupby(all_props, lambda x: x['materials_key'])
+        grouped_props = groupby(sorted_props, lambda x: x['materials_key'])
         best_props = []
         for name, prop in grouped_props:
             sorted_props = sorted(prop, key=lambda x: x[
-                                  'quality_score'], reverse=True)
-            best_prop = sorted_props[0]
-            best_props.append(best_prop)
+                                  'quality_score'],reverse=True)
+            best_props.append(sorted_props[0])
 
          # Add in the provenance for the properties
         origins = [{k: prop[k] for k in ["materials_key", "task_type", "task_id", "last_updated"]}
-                   for prop in self.__settings if prop.get("track",False)]
+                   for prop in best_props if prop.get("track",False)]
 
         task_ids = sorted([t["task_id"] for t in task_group],key=lambda x: int(str(x).split("-")[-1]))
 
