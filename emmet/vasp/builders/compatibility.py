@@ -88,6 +88,7 @@ class MPWorksCompatibilityBuilder(Builder):
                 {"task_id": item['original_task_id']}, ['output.crystal'])
             parent_structure = Structure.from_dict(original_doc['output']['crystal'])
             atomate_doc['parent_structure'] = get_structure_metadata(parent_structure)
+        atomate_doc['last_updated'] = datetime.utcnow()
         return atomate_doc
 
     def update_targets(self, items):
@@ -99,7 +100,9 @@ class MPWorksCompatibilityBuilder(Builder):
         """
         self.logger.info("Updating {} atomate documents".format(len(items)))
 
-        self.atomate_tasks.update("task_id", items, update_lu=True)
+        self.atomate_tasks.collection.insert_many(items, ordered=False)
+
+        # self.atomate_tasks.update("task_id", items, update_lu=True, ordered=False)
         
 ## MPWorks key: Atomate key
 conversion_schema = {"dir_name_full": "dir_name",
