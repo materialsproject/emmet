@@ -148,6 +148,8 @@ class MaterialsBuilder(Builder):
 
         task_ids = sorted([t["task_id"] for t in task_group],
                           key=lambda x: int(str(x).split("-")[-1]))
+        task_ids = list(sorted([t["task_id"] for t in task_group],
+                          key=lambda x: int(str(x).split("-")[-1])))
 
         mat = {"updated_at": datetime.utcnow(),
                "task_ids": task_ids,
