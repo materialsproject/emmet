@@ -40,6 +40,7 @@ class MPWorksCompatibilityBuilder(Builder):
         self.query = query
         self.kwargs = kwargs
         self.incremental = incremental
+        #self.mpworks_tasks.connect()
 
         super().__init__(sources=[mpworks_tasks],
                          targets=[atomate_tasks],
@@ -63,14 +64,12 @@ class MPWorksCompatibilityBuilder(Builder):
         if self.incremental:
             q.update(self.mpworks_tasks.lu_filter(self.atomate_tasks))
             
-        # Go by original task_id, which is the structure optimization step
-        # original_task_ids = self.mpworks_tasks.distinct("original_task_id", q)
-
         tasks_to_convert = self.mpworks_tasks.query(criteria=q)
-        self.logger.info("Found {} new/updated tasks to process".format(tasks_to_convert.count()))
+        count = tasks_to_convert.count()
+        self.logger.info("Found {} new/updated tasks to process".format(count))
 
         for task in tasks_to_convert:
-            self.logger.debug("Processing MPWorks task_id: {}".format(task['task_id']))
+            self.logger.debug("Processing MPWorks task_id: {} of {}".format(task['task_id'], count))
             yield task
 
     def process_item(self, item):
@@ -98,13 +97,10 @@ class MPWorksCompatibilityBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
-        self.logger.info("Updating {} elastic documents".format(len(items)))
+        self.logger.info("Updating {} atomate documents".format(len(items)))
 
-        for doc in chain(*items):
-            doc[self.atomate_tasks.lu_field] = datetime.utcnow()
-            doc = jsanitize(doc)
-            self.atomate_tasks.replace_one({"material_id": doc['material_id']}, doc, upsert=True)
-
+        self.atomate_tasks.update("task_id", items, update_lu=True)
+        
 ## MPWorks key: Atomate key
 conversion_schema = {"dir_name_full": "dir_name",
                      "last_updated": "last_updated",
@@ -130,7 +126,8 @@ conversion_schema = {"dir_name_full": "dir_name",
                      "run_type": "_mpworks_meta.run_type",
                      "elements": "elements",
                      "snl": "_mpworks_meta.snl", # Not sure if completely compatible
-                     "task_id": "_mpworks_meta.task_id",
+                     "task_id": "task_id", # might change this in the future
+                     #"task_id": "_mpworks_meta.task_id",
                      "nelements": "nelements",
                      "is_compatible": "_mpworks_meta.is_compatible",
                      "analysis.percent_delta_volume": "analysis.delta_volume_percent",
@@ -186,8 +183,8 @@ def set_mongolike(ddict, key, value):
         if lead_key not in ddict:
             ddict[lead_key] = {}
         set_mongolike(ddict[lead_key], remainder, value)
-    ddict[key] = value
-    return True
+    else:
+        ddict[key] = value
 
 task_type_conversion = {"Calculate deformed structure static optimize": "elastic deformation",
                         "Vasp force convergence optimize structure (2x)": "structure optimization",
@@ -195,8 +192,8 @@ task_type_conversion = {"Calculate deformed structure static optimize": "elastic
 
 def convert_mpworks_to_atomate(mpworks_doc):
     """
-    Function to convert an mpworks document
-    into an atomate document
+    Function to convert an mpworks document into an atomate
+    document, uses schema above and a few custom cases
     """
     atomate_doc = {}
     for key_mpworks, key_atomate in conversion_schema.items():

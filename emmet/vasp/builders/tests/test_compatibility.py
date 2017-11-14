@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from emmet.vasp.builders.task_compatibility import MPWorksCompatibilityBuilder, \
+from emmet.vasp.builders.compatibility import MPWorksCompatibilityBuilder, \
         set_mongolike, convert_mpworks_to_atomate
 from maggma.stores import JSONStore, MemoryStore
 from monty.json import MontyEncoder, MontyDecoder
@@ -24,10 +24,9 @@ class MPWorksCompatibilityBuilderTest(unittest.TestCase):
 
     def test_builder(self):
         mpw_builder = MPWorksCompatibilityBuilder(self.test_tasks, self.elasticity, incremental=False)
-        for t in mpw_builder.get_items():
-            processed = mpw_builder.process_item(t)
-            if processed:
-                pass
+        items = mpw_builder.get_items()
+        processed = [mpw_builder.process_item(item) for item in items]
+        mpw_builder.update_targets(processed)
     
     def test_set_mongolike(self):
         test_dict = {"stuff": {"this": 1}}
