@@ -272,34 +272,10 @@
         "track": false
     },
     {
-        "tasks_key": "input.parameters.NELECT",
-        "materials_key": "calc_settings.nelect",
-        "optional": true,
-        "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
-        },
-        "track": false
-    },
-    {
         "tasks_key": "",
         "materials_key": "band_structure",
         "_comment": "From ES Builder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -309,14 +285,6 @@
         "materials_key": "blessed_tasks",
         "_comment": "Convert to origins?",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -326,14 +294,6 @@
         "materials_key": "bv_structure",
         "_comment": "from BV builder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -358,14 +318,6 @@
         "tasks_key": "",
         "materials_key": "cif",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -375,14 +327,6 @@
         "materials_key": "cifs",
         "_comment": "From CIF builder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -392,14 +336,6 @@
         "materials_key": "cpu_time",
         "_comment": "From some sort of task analysis where we add all the cpu time spent on a material",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -409,14 +345,6 @@
         "materials_key": "created_at",
         "_comment": "Should be SNL creation time?",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -426,14 +354,7 @@
         "materials_key": "decomposes_to",
         "_comment": "From Thermo builder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
+
         },
         "track": false,
         "optional": true
@@ -475,14 +396,7 @@
         "materials_key": "doi",
         "_comment": "DOI Builder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
+
         },
         "track": false,
         "optional": true
@@ -492,14 +406,7 @@
         "materials_key": "doi_bibtex",
         "_comment": "DOI Builder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
+
         },
         "track": false,
         "optional": true
@@ -509,14 +416,7 @@
         "materials_key": "dos",
         "_comment": "From DOS Builder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
+
         },
         "track": false,
         "optional": true
@@ -526,14 +426,7 @@
         "materials_key": "e_above_hull",
         "_comment": "From Thermobuilder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
+
         },
         "track": false,
         "optional": true
@@ -559,14 +452,7 @@
         "materials_key": "elasticity",
         "_comment": "from elasticity builder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
+
         },
         "track": false,
         "optional": true
@@ -588,18 +474,12 @@
         "optional": true
     },
     {
-        "tasks_key": "",
+        "tasks_key": "input.incar.ENCUT",
         "materials_key": "encut",
         "_comment": "remove",
         "quality_score": {
             "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
+            "GGA+U Structure Optimization": 5
         },
         "track": false,
         "optional": true
@@ -609,14 +489,6 @@
         "materials_key": "exp",
         "_comment": "change to tags",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -626,14 +498,6 @@
         "materials_key": "exp_lattice",
         "_comment": "remove",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -656,7 +520,7 @@
     },
     {
         "tasks_key": "calcs_reversed.0.run_type",
-        "materials_key": "calc_settings.run_type",
+        "materials_key": "run_type",
         "quality_score": {
             "GGA Structure Optimization": 1,
             "GGA Static": 2,
@@ -707,14 +571,6 @@
         "materials_key": "thermo.formation_energy_per_atom",
         "_comment": "Thermo builder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -724,14 +580,6 @@
         "materials_key": "full_formula",
         "_comment": "From Final Builder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -741,21 +589,13 @@
         "materials_key": "has_bandstructure",
         "_comment": "From ES Builder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
     },
     {
         "tasks_key": "input.hubbards",
-        "materials_key": "calc_settings.hubbards",
+        "materials_key": "hubbards",
         "quality_score": {
             "GGA Structure Optimization": 1,
             "GGA Static": 2,
@@ -774,14 +614,6 @@
         "materials_key": "icsd_ids",
         "_comemnt": "From SNL builder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -805,119 +637,7 @@
     },
     {
         "tasks_key": "calcs_reversed.0.input.potcar_spec",
-        "materials_key": "calc_settings.potcar_spec",
-        "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
-        },
-        "track": false,
-        "optional": true
-    },
-    {
-        "tasks_key": "orig_inputs",
-        "materials_key": "inputs.structure_optimization",
-        "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
-        },
-        "track": false,
-        "optional": true
-    },
-    {
-        "tasks_key": "orig_inputs",
-        "materials_key": "inputs.static",
-        "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
-        },
-        "track": false,
-        "optional": true
-    },
-    {
-        "tasks_key": "orig_inputs",
-        "materials_key": "inputs.dielectric",
-        "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
-        },
-        "track": false,
-        "optional": true
-    },
-    {
-        "tasks_key": "orig_inputs",
-        "materials_key": "inputs.nscf_line",
-        "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
-        },
-        "track": false,
-        "optional": true
-    },
-    {
-        "tasks_key": "orig_inputs",
-        "materials_key": "inputs.nscf_uniform",
-        "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
-        },
-        "track": false,
-        "optional": true
-    },
-    {
-        "tasks_key": "orig_inputs",
-        "materials_key": "inputs.hse",
-        "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
-        },
-        "track": false,
-        "optional": true
-    },
-    {
-        "tasks_key": "orig_inputs",
-        "materials_key": "inputs.hse_bs",
+        "materials_key": "input.potcar_spec",
         "quality_score": {
             "GGA Structure Optimization": 1,
             "GGA Static": 2,
@@ -936,21 +656,13 @@
         "materials_key": "calc.is_compatible",
         "_comment": "from Thermo Builder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
     },
     {
         "tasks_key": "input.is_hubbard",
-        "materials_key": "calc_settings.is_hubbard",
+        "materials_key": "is_hubbard",
         "quality_score": {
             "GGA Structure Optimization": 1,
             "GGA Static": 2,
@@ -969,14 +681,6 @@
         "materials_key": "is_ordered",
         "_comment": "From SNL",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -986,14 +690,6 @@
         "materials_key": "magnetic_type",
         "_comment": "From magnetic builder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -1035,14 +731,6 @@
         "materials_key": "oxide_type",
         "_comment": "From structure analysis, but figure out more generic key",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -1051,14 +739,6 @@
         "tasks_key": "",
         "materials_key": "piezo",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
@@ -1128,23 +808,6 @@
         "optional": true
     },
     {
-        "tasks_key": "",
-        "materials_key": "task_ids",
-        "_comment": "built automatically",
-        "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
-        },
-        "track": false,
-        "optional": true
-    },
-    {
         "tasks_key": "calcs_reversed.0.output.outcar.total_magnetization",
         "materials_key": "magnestism.total_magnetization",
         "quality_score": {
@@ -1163,23 +826,6 @@
     {
         "tasks_key": "composition_unit_cell",
         "materials_key": "unit_cell_formula",
-        "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
-        },
-        "track": false,
-        "optional": true
-    },
-    {
-        "tasks_key": "",
-        "materials_key": "updated_at",
-        "_comment": "built automatically",
         "quality_score": {
             "GGA Structure Optimization": 1,
             "GGA Static": 2,
@@ -1230,14 +876,6 @@
         "materials_key": "xrd",
         "_comment": "Built by XRD builder",
         "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
         },
         "track": false,
         "optional": true
