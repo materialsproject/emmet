@@ -18,10 +18,9 @@ from atomate.utils.utils import get_mongolike, get_structure_metadata
 
 __author__ = "Joseph Montoya <montoyjh@lbl.gov>"
 
-#TODO: At the moment this is only compatible with elasticity data
 
 class MPWorksCompatibilityBuilder(Builder):
-    def __init__(self, mpworks_tasks, atomate_tasks, query={}, preserve_mpids=False, 
+    def __init__(self, mpworks_tasks, atomate_tasks, query={}, preserve_mpids=True, 
                  incremental=True, **kwargs):
         """
         Converts a task collection from the MPWorks schema to
@@ -34,13 +33,13 @@ class MPWorksCompatibilityBuilder(Builder):
                 new ones based on the counter in a new collection
             query (dict): dictionary to limit materials to be analyzed
         """
+        #TODO: implement preserve_mpids
 
         self.mpworks_tasks = mpworks_tasks
         self.atomate_tasks = atomate_tasks 
         self.query = query
         self.kwargs = kwargs
         self.incremental = incremental
-        #self.mpworks_tasks.connect()
 
         super().__init__(sources=[mpworks_tasks],
                          targets=[atomate_tasks],
@@ -102,7 +101,9 @@ class MPWorksCompatibilityBuilder(Builder):
 
         self.atomate_tasks.collection.insert_many(items, ordered=False)
 
+        # This is just too slow at the moment, need to refactor maggma maybe?
         # self.atomate_tasks.update("task_id", items, update_lu=True, ordered=False)
+
         
 ## MPWorks key: Atomate key
 conversion_schema = {"dir_name_full": "dir_name",
@@ -154,7 +155,7 @@ conversion_schema = {"dir_name_full": "dir_name",
 "task_type": X need to convert manually to match atomate schema
 "calculations": X need to reverse these, so handle manually
 "name": - getting rid of this, it appears to just be "aflow"
-"dir_name": - more or less encompassed by dir_name_full
+"dir_name": - encompassed by dir_name_full
 "anonymous_formula": X convert manually b/c doesn't really work the same
 "deformation_matrix": X need to handle these manually as well
 """
@@ -183,12 +184,17 @@ def set_mongolike(ddict, key, value):
 
     if '.' in key:
         remainder = key.split('.', 1)[1]
+        next_key = remainder.split('.')[0]
+        # Note: Be careful here if trying to set the value of a list,
+        #  you can't set values on a nonexistent list
         if lead_key not in ddict:
             ddict[lead_key] = {}
         set_mongolike(ddict[lead_key], remainder, value)
     else:
         ddict[key] = value
 
+
+# TODO: should add the rest of these
 task_type_conversion = {"Calculate deformed structure static optimize": "elastic deformation",
                         "Vasp force convergence optimize structure (2x)": "structure optimization",
                         "Optimize deformed structure": "elastic deformation"}
@@ -202,21 +208,39 @@ def convert_mpworks_to_atomate(mpworks_doc):
     for key_mpworks, key_atomate in conversion_schema.items():
         val = get_mongolike(mpworks_doc, key_mpworks)
         set_mongolike(atomate_doc, key_atomate, val)
+
     # Task type
     atomate_doc["task_label"] = task_type_conversion[mpworks_doc["task_type"]]
+
     # calculations
     atomate_doc["calcs_reversed"] = mpworks_doc["calculations"][::-1]
+
     # anonymous formula
     comp = Composition(atomate_doc['composition_reduced'])
     atomate_doc["formula_anonymous"] = comp.anonymized_formula
+
     # deformation matrix and original_task_id
     if "deformation_matrix" in mpworks_doc:
         # Transpose this b/c of old bug, should verify in doc processing
         defo = mpworks_doc["deformation_matrix"]
+        if isinstance(defo, str):
+            defo = convert_string_deformation_to_list(defo)
         defo = np.transpose(defo).tolist()
-        set_mongolike(atomate_doc, "transmuter.transformations.0", 
-                      "DeformStructureTransformation")
-        set_mongolike(atomate_doc, "transmuter.transformation_params.0", defo)
+        set_mongolike(atomate_doc, "transmuter.transformations", 
+                      ["DeformStructureTransformation"])
+        set_mongolike(atomate_doc, "transmuter.transformation_params", 
+                      [{"deformation": defo}])
+
+    # original task id
     if "original_task_id" in mpworks_doc:
         atomate_doc["_mpworks_meta"]["original_task_id"] = mpworks_doc["original_task_id"]
     return atomate_doc 
+
+def convert_string_deformation_to_list(string_defo):
+    """
+    Some of the older documents in the mpworks schema have a string version
+    of the deformation matrix, this function fixes those
+    """
+    string_defo = string_defo.replace("[", "").replace("]", "").split()
+    defo = np.array(string_defo, dtype=float).reshape(3, 3)
+    return defo.tolist()
