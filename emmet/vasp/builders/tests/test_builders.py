@@ -42,7 +42,8 @@ class BuilderTest(unittest.TestCase):
         raw_tasks = glob.glob(os.path.join(test_dir, "tasks", "*.json.gz"))
         for task_path in raw_tasks:
             with zopen(task_path) as f:
-                task = json.load(f)
+                data = f.read().decode()
+                task = json.loads(data)
             vaspdb.insert_task(task, parse_dos=True, parse_bs=True)
 
     @classmethod
