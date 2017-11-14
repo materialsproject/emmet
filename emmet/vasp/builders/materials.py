@@ -146,14 +146,12 @@ class MaterialsBuilder(Builder):
         origins = [{k: prop[k] for k in ["materials_key", "task_type", "task_id", "last_updated"]}
                    for prop in best_props if prop.get("track", False)]
 
-        task_ids = sorted([t["task_id"] for t in task_group],
-                          key=lambda x: int(str(x).split("-")[-1]))
         task_ids = list(sorted([t["task_id"] for t in task_group],
                           key=lambda x: int(str(x).split("-")[-1])))
 
         mat = {"updated_at": datetime.utcnow(),
                "task_ids": task_ids,
-               "material_id": self.mat_prefix + str(task_ids[0]),
+               self.materials.key: task_ids[0],
                "origins": origins
                }
 
@@ -225,7 +223,7 @@ class MaterialsBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info("Updating {} materials".format(len(items)))
-            self.materials.update(key="material_id", docs=items)
+            self.materials.update(docs=items)
         else:
             self.logger.info("No items to update")
 
@@ -242,5 +240,5 @@ class MaterialsBuilder(Builder):
         self.tasks.ensure_index(self.tasks.lu_field)
 
         # Search index for materials
-        self.materials.ensure_index("material_id", unique=True)
+        self.materials.ensure_index(self.materials.key, unique=True)
         self.materials.ensure_index("task_ids")
