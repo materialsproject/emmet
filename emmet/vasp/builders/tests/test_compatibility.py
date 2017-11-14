@@ -16,8 +16,6 @@ class MPWorksCompatibilityBuilderTest(unittest.TestCase):
     def setUp(self):
         # Set up test db, set up mpsft, etc.
         self.test_tasks = JSONStore([test_tasks])
-                                #,
-                                    #lu_key=(me.encode, md.decode))
         self.elasticity = MemoryStore("atomate_tasks")
         self.test_tasks.connect()
         self.elasticity.connect()
