@@ -147,7 +147,7 @@ class MaterialsBuilder(Builder):
                    for prop in best_props if prop.get("track", False)]
 
         task_ids = list(sorted([t["task_id"] for t in task_group],
-                          key=lambda x: int(str(x).split("-")[-1])))
+                               key=lambda x: int(str(x).split("-")[-1])))
 
         mat = {"updated_at": datetime.utcnow(),
                "task_ids": task_ids,

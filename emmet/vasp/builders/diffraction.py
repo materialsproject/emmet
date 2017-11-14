@@ -16,7 +16,9 @@ module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 default_xrd_settings = os.path.join(
     module_dir, "settings", "xrd.json")
 
+
 class DiffractionBuilder(Builder):
+
     def __init__(self, materials, diffraction, xrd_settings=None, query={}, **kwargs):
         """
         Calculates diffraction patterns for materials
@@ -51,13 +53,15 @@ class DiffractionBuilder(Builder):
         self.logger.info("Setting indexes")
         self.ensure_indexes()
 
-        # All relevant materials that have been updated since diffraction props were last calculated
+        # All relevant materials that have been updated since diffraction props
+        # were last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.diffraction))
-        mats = list(self.materials.distinct(self.materials.key,q))
-        self.logger.info("Found {} new materials for diffraction data".format(len(mats)))
+        mats = list(self.materials.distinct(self.materials.key, q))
+        self.logger.info(
+            "Found {} new materials for diffraction data".format(len(mats)))
         for m in mats:
-            yield self.materials.query(properties=[self.materials.key,"structure"],criteria={self.materials.key: m}).limit(1)[0]
+            yield self.materials.query(properties=[self.materials.key, "structure"], criteria={self.materials.key: m}).limit(1)[0]
 
     def process_item(self, item):
         """
@@ -69,7 +73,8 @@ class DiffractionBuilder(Builder):
         Returns:
             dict: a diffraction dict
         """
-        self.logger.debug("Calculating diffraction for {}".format(item[self.materials.key]))
+        self.logger.debug("Calculating diffraction for {}".format(
+            item[self.materials.key]))
 
         struct = Structure.from_dict(item['structure'])
 
@@ -85,7 +90,8 @@ class DiffractionBuilder(Builder):
             xrdcalc = XRDCalculator(wavelength="".join([xs['target'], xs['edge']]),
                                     symprec=xs.get('symprec', 0))
 
-            pattern = jsanitize(xrdcalc.get_xrd_pattern(structure, two_theta_range=xs['two_theta']).as_dict())
+            pattern = jsanitize(xrdcalc.get_xrd_pattern(
+                structure, two_theta_range=xs['two_theta']).as_dict())
             # TODO: Make sure this is what the website actually needs
             d = {'wavelength': {'element': xs['target'],
                                 'in_angstroms': WAVELENGTHS["".join([xs['target'], xs['edge']])]},
