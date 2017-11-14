@@ -105,16 +105,17 @@ class ElectronicStructureBuilder(Builder):
 
         if "bs" in mat["bandstructure"]:
             try:
-                # Have to rebuild the high symm k-path since it"s not stored in regular band structure objects
-                # TODO: HighSymmKpath only seems to work for some spacegroups
                 struc = Structure.from_dict(mat["structure"])
-                kpath = HighSymmKpath(struc)._kpath["kpoints"]
-                mat["bandstructure"]["bs"]["labels_dict"] = kpath
+                if "structure" not in mat["bandstructure"]["bs"]:
+                    mat["bandstructure"]["bs"]["structure"] = struc
+                if "labels_dict" not in mat["bandstructure"]["bs"]:
+                    kpath = HighSymmKpath(struc)._kpath["kpoints"]
+                    mat["bandstructure"]["bs"]["labels_dict"] = kpath
 
                 # Somethign is wrong with the as_dict / from_dict encoding in the two band structure objects so have to use this hodge podge serialization
                 # TODO: Fix bandstructure objects in pymatgen
                 bs = BandStructureSymmLine.from_dict(
-                    mat["bandstructure"]["bs"])
+                    BandStructure.from_dict(mat["bandstructure"]["bs"]).as_dict())
 
             except Exception as e:
                 self.logger.warning(
@@ -124,6 +125,7 @@ class ElectronicStructureBuilder(Builder):
             dos = CompleteDos.from_dict(mat["bandstructure"]["dos"])
 
         try:
+            plot = None
             if bs and dos:
                 plotter = BSDOSPlotter()
                 plot = plotter.get_plot(bs, dos)
