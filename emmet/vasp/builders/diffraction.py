@@ -1,7 +1,9 @@
 import logging
+import os
 from datetime import datetime
 
 from monty.json import jsanitize
+from monty.serialization import loadfn
 
 from pymatgen.core.structure import Structure
 from pymatgen.analysis.diffraction.xrd import XRDCalculator, WAVELENGTHS
@@ -10,9 +12,12 @@ from maggma.builder import Builder
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
+module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+default_xrd_settings = os.path.join(
+    module_dir, "settings", "xrd.json")
 
 class DiffractionBuilder(Builder):
-    def __init__(self, materials, diffraction, xrd_settings, query={}, **kwargs):
+    def __init__(self, materials, diffraction, xrd_settings=None, query={}, **kwargs):
         """
         Calculates diffraction patterns for materials
 
@@ -25,10 +30,9 @@ class DiffractionBuilder(Builder):
 
         self.materials = materials
         self.diffraction = diffraction
-        self.xrd_settings = xrd_settings
+        self.xrd_settings = xrd_settings if xrd_settings else default_xrd_settings
         self.query = query
-        self.xrd_settings.connect()
-        self.__xrd_settings = list(self.xrd_settings().find())
+        self.__settings = loadfn(self.xrd_settings)
 
         super().__init__(sources=[materials],
                          targets=[diffraction],
@@ -50,10 +54,10 @@ class DiffractionBuilder(Builder):
         # All relevant materials that have been updated since diffraction props were last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.diffraction))
-        mats = list(self.materials().find(q, {"material_id": 1}))
+        mats = list(self.materials.distinct(self.materials.key,q))
         self.logger.info("Found {} new materials for diffraction data".format(len(mats)))
         for m in mats:
-            yield self.materials().find_one(m, {"material_id": 1, "structure": 1})
+            yield self.materials.query(properties=[self.materials.key,"structure"],criteria={self.materials.key: m}).limit(1)[0]
 
     def process_item(self, item):
         """
@@ -65,19 +69,19 @@ class DiffractionBuilder(Builder):
         Returns:
             dict: a diffraction dict
         """
-        self.logger.debug("Calculating diffraction for {}".format(item['material_id']))
+        self.logger.debug("Calculating diffraction for {}".format(item[self.materials.key]))
 
         struct = Structure.from_dict(item['structure'])
 
         xrd_doc = {"xrd": self.get_xrd_from_struct(struct)}
-        xrd_doc['material_id'] = item['material_id']
+        xrd_doc[self.diffraction.key] = item[self.materials.key]
 
         return xrd_doc
 
     def get_xrd_from_struct(self, structure):
         doc = {}
 
-        for xs in self.__xrd_settings:
+        for xs in self.__settings:
             xrdcalc = XRDCalculator(wavelength="".join([xs['target'], xs['edge']]),
                                     symprec=xs.get('symprec', 0))
 
@@ -100,12 +104,7 @@ class DiffractionBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info("Updating {} diffraction docs".format(len(items)))
-            bulk = self.diffraction().initialize_ordered_bulk_op()
-
-            for m in items:
-                m[self.diffraction.lu_field] = datetime.utcnow()
-                bulk.find({"material_id": m["material_id"]}).upsert().replace_one(m)
-            bulk.execute()
+            self.diffraction.update(docs=items)
         else:
             self.logger.info("No items to update")
 
@@ -115,7 +114,7 @@ class DiffractionBuilder(Builder):
         :return:
         """
         # Search index for materials
-        self.materials().create_index("material_id", unique=True, background=True)
+        self.materials.ensure_index(self.materials.key, unique=True)
 
         # Search index for materials
-        self.diffraction().create_index("material_id", unique=True, background=True)
+        self.diffraction.ensure_index(self.diffraction.key, unique=True)
