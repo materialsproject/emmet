@@ -3,6 +3,9 @@
 
 from maggma.runner import Runner
 from atomate.utils.utils import load_class
+from monty.serialization import loadfn
+import argparse
+import logging
 
 def get_store_from_file(filename):
     """
@@ -14,7 +17,7 @@ def get_store_from_file(filename):
     """
     store_dict = loadfn(filename)
     modulepath = store_dict.pop("modulepath", "maggma.stores")
-    classname = store_dict.pop("classname")
+    classname = store_dict.pop("classname", "MongoStore")
     store_class = load_class(modulepath, classname)
     return store_class(**store_dict)
 
@@ -24,13 +27,20 @@ if __name__ == "__main__":
         description="emmetbuild is a script used to run builders from "
                     "db or JsonStore configuration files")
     parser.add_argument("-b", "--builder", help="Builder name")
-    parser.add_argument("-m", "--module", help="Builder module", default="emmet.vasp.builders")
+    parser.add_argument("-m", "--module", help="Builder module")
     parser.add_argument("-s", "--source", help="source store config file")
     parser.add_argument("-t", "--target", help="target store config file")
-    parser.add_argument("-k", "--kwargs", help="kwargs for selected builder",
+    parser.add_argument("-k", "--kwargs", 
                         default={}, help="builder kwargs, e. g. "
                                          "'{\"query\": {\"tags\": \"project_1\"}}'")
+    parser.add_argument("--log", default="WARNING", help="logger level")
+
     args = parser.parse_args()
+
+    # Set log level
+    numeric_level = getattr(logging, args.log.upper())
+    logging.basicConfig(level=numeric_level)
+
     # Get stores
     source_store = get_store_from_file(args.source)
     target_store = get_store_from_file(args.target)
