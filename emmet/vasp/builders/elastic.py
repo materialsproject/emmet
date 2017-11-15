@@ -20,11 +20,11 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 class ElasticBuilder(Builder):
     def __init__(self, tasks, elasticity, query={}, **kwargs):
         """
-        Creates a dielectric collection for materials
+        Creates a elastic collection for materials
 
         Args:
             tasks (Store): Store of task documents
-            elastic (Store): Store of dielectric properties
+            elastic (Store): Store of elastic properties
             query (dict): dictionary to limit materials to be analyzed
         """
 
