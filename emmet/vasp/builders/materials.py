@@ -10,7 +10,7 @@ from pymatgen.analysis.structure_matcher import StructureMatcher, ElementCompara
 
 from maggma.builder import Builder
 from emmet.vasp.builders.task_tagger import task_type
-from pydash.objects import get, set_
+from pydash.objects import get, set_, has
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -23,7 +23,7 @@ default_mat_settings = os.path.join(
 class MaterialsBuilder(Builder):
 
     def __init__(self, tasks, materials, mat_prefix="mp-", materials_settings=None, query={}, ltol=0.2, stol=0.3,
-                 angle_tol=5, **kwargs):
+                 angle_tol=5, separate_mag_orderings=True, **kwargs):
         """
         Creates a materials collection from tasks and tags
 
@@ -36,6 +36,7 @@ class MaterialsBuilder(Builder):
             ltol (float): StructureMatcher tuning parameter for matching tasks to materials
             stol (float): StructureMatcher tuning parameter for matching tasks to materials
             angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
+            separate_mag_orderings (bool): Separate magnetic orderings into different materials
         """
 
         self.tasks = tasks
@@ -46,6 +47,7 @@ class MaterialsBuilder(Builder):
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol
+        self.separate_mag_orderings = separate_mag_orderings
 
         self.__settings = loadfn(self.materials_settings)
 
@@ -170,6 +172,12 @@ class MaterialsBuilder(Builder):
 
         structures = [Structure.from_dict(
             t["output"]['structure']) for t in filtered_tasks]
+
+        if self.separate_mag_orderings:
+            for structure in structures:
+                if has(structure.site_properties,"magmom"):
+                    structure.add_spin_by_site(structure.site_properties['magmom'])
+                    structure.remove_site_property('magmom')
 
         for idx, s in enumerate(structures):
             s.index = idx
