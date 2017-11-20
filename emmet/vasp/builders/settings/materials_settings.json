@@ -274,21 +274,6 @@
         "track": true
     },
     {
-        "tasks_key": "",
-        "materials_key": "full_formula",
-        "_comment": "From Final Builder",
-        "quality_score": {
-            "GGA Structure Optimization": 1,
-            "GGA Static": 2,
-            "GGA NSCF Line": 3,
-            "GGA NSCF Uniform": 4,
-            "GGA+U Structure Optimization": 5,
-            "GGA+U Static": 6,
-            "GGA+U NSCF Line": 7,
-            "GGA+U NSCF Uniform": 8
-        }
-    },
-    {
         "tasks_key": "input.hubbards",
         "materials_key": "calc_settings.hubbards",
         "quality_score": {
