@@ -62,31 +62,41 @@ class MPWorksCompatibilityBuilder(Builder):
         # only consider tasks that have been updated since tasks was last updated
         if self.incremental:
             q.update(self.mpworks_tasks.lu_filter(self.atomate_tasks))
-            
+
         tasks_to_convert = self.mpworks_tasks.query(criteria=q)
         count = tasks_to_convert.count()
         self.logger.info("Found {} new/updated tasks to process".format(count))
 
+        # Get all parent structures
+        all_parent_structures = {}
+        for otask_id in self.mpworks_tasks.distinct("original_task_id", q):
+            otask_crit = {"task_id": otask_id}
+            otask_crit.update(q)
+            otask = self.mpworks_tasks.query(properties=['output.crystal'], 
+                                             criteria=otask_crit)[0]
+            # blargh
+            all_parent_structures[otask_id] = Structure.from_dict(otask['output']['crystal'])
+
         for task in tasks_to_convert:
             self.logger.debug("Processing MPWorks task_id: {} of {}".format(task['task_id'], count))
-            yield task
+            if 'original_task_id' in task:
+                parent_structure = all_parent_structures[task['original_task_id']]
+            else:
+                parent_structure = None
+            yield task, parent_structure
 
     def process_item(self, item):
         """
         Process the MPWorks tasks and materials into an Atomate tasks collection
 
         Args:
-            item dict: a dict of material_id, structure, and tasks
+            item dict: an mpworks document
 
         Returns:
             dict: an Atomate task document dictionary 
         """
-        atomate_doc = convert_mpworks_to_atomate(item)
-        if "original_task_id" in item:
-            original_doc = self.mpworks_tasks.collection.find_one(
-                {"task_id": item['original_task_id']}, ['output.crystal'])
-            parent_structure = Structure.from_dict(original_doc['output']['crystal'])
-            atomate_doc['parent_structure'] = get_structure_metadata(parent_structure)
+        mpw_doc, parent_structure = item
+        atomate_doc = convert_mpworks_to_atomate(mpw_doc, parent_structure=parent_structure)
         atomate_doc['last_updated'] = datetime.utcnow()
         return atomate_doc
 
@@ -146,7 +156,8 @@ conversion_schema = {"dir_name_full": "dir_name",
                      "output.crystal": "output.structure",
                      "output.final_energy": "output.energy",
                      "output.final_energy_per_atom": "output.energy_per_atom",
-                     "fw_id": "_mpworks_meta.fw_id"
+                     "fw_id": "_mpworks_meta.fw_id",
+                     "state": "state"
                      }
 
 ####### Orphan MPWorks keys
@@ -179,35 +190,43 @@ def set_mongolike(ddict, key, value):
     lead_key = key.split('.', 1)[0]
     try:
         lead_key = int(lead_key) # for searching array data
+        lead_key_is_int = True
     except:
-        pass
+        lead_key_is_int = False
 
     if '.' in key:
         remainder = key.split('.', 1)[1]
         next_key = remainder.split('.')[0]
-        # Note: Be careful here if trying to set the value of a list,
-        #  you can't set values on a nonexistent list
         if lead_key not in ddict:
+            if lead_key_is_int:
+                raise ValueError("Error for key {}, One or more keys is an integer,"
+                                 "but no list exists at that key, integer keys may "
+                                 "only be specified when a list exists at that key.")
             ddict[lead_key] = {}
         set_mongolike(ddict[lead_key], remainder, value)
     else:
         ddict[key] = value
 
 
-# TODO: should add the rest of these
+# TODO: should add the rest of these, e. g. Static, NSCF Bandstructure
 task_type_conversion = {"Calculate deformed structure static optimize": "elastic deformation",
                         "Vasp force convergence optimize structure (2x)": "structure optimization",
                         "Optimize deformed structure": "elastic deformation"}
 
-def convert_mpworks_to_atomate(mpworks_doc):
+def convert_mpworks_to_atomate(mpworks_doc, parent_structure=None):
     """
     Function to convert an mpworks document into an atomate
     document, uses schema above and a few custom cases
     """
+    # TODO: ensure energy compatibility (e. g. TOTEN vs. F or whatever)
     atomate_doc = {}
     for key_mpworks, key_atomate in conversion_schema.items():
         val = get_mongolike(mpworks_doc, key_mpworks)
         set_mongolike(atomate_doc, key_atomate, val)
+
+    # Get parent structure
+    if parent_structure:
+        atomate_doc['parent_structure'] = get_structure_metadata(parent_structure)
 
     # Task type
     atomate_doc["task_label"] = task_type_conversion[mpworks_doc["task_type"]]
@@ -234,7 +253,8 @@ def convert_mpworks_to_atomate(mpworks_doc):
     # original task id
     if "original_task_id" in mpworks_doc:
         atomate_doc["_mpworks_meta"]["original_task_id"] = mpworks_doc["original_task_id"]
-    return atomate_doc 
+    return atomate_doc
+
 
 def convert_string_deformation_to_list(string_defo):
     """
