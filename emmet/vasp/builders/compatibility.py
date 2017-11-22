@@ -21,7 +21,7 @@ __author__ = "Joseph Montoya <montoyjh@lbl.gov>"
 
 class MPWorksCompatibilityBuilder(Builder):
     def __init__(self, mpworks_tasks, atomate_tasks, query={}, preserve_mpids=True, 
-                 incremental=True, **kwargs):
+                 incremental=True, redo_task_ids=True, **kwargs):
         """
         Converts a task collection from the MPWorks schema to
         Atomate tasks.
@@ -40,10 +40,15 @@ class MPWorksCompatibilityBuilder(Builder):
         self.query = query
         self.kwargs = kwargs
         self.incremental = incremental
+        self.redo_task_ids = redo_task_ids
 
         super().__init__(sources=[mpworks_tasks],
                          targets=[atomate_tasks],
                          **kwargs)
+
+    def connect(self):
+        self.mpworks_tasks.connect()
+        self.atomate_tasks.connect()
 
     def get_items(self):
         """
@@ -76,14 +81,22 @@ class MPWorksCompatibilityBuilder(Builder):
                                              criteria=otask_crit)[0]
             # blargh
             all_parent_structures[otask_id] = Structure.from_dict(otask['output']['crystal'])
+        # Redo all task ids at the beginning
+        if self.redo_task_ids:
+            # Get counter for atomate tasks db
+            counter = self.atomate_tasks.collection.database.counter
+            if not counter.find_one({"_id": "taskid"}):
+                counter.insert({"_id": "taskid", "c": 1})
+            counter.find_one_and_update({"_id": "taskid"}, {"$inc": {"c": count}})
 
-        for task in tasks_to_convert:
+        for n, task in enumerate(tasks_to_convert):
             self.logger.debug("Processing MPWorks task_id: {} of {}".format(task['task_id'], count))
             if 'original_task_id' in task:
                 parent_structure = all_parent_structures[task['original_task_id']]
             else:
                 parent_structure = None
-            yield task, parent_structure
+            new_task_id = "mp-{}".format(n)
+            yield task, parent_structure, new_task_id
 
     def process_item(self, item):
         """
@@ -95,9 +108,12 @@ class MPWorksCompatibilityBuilder(Builder):
         Returns:
             dict: an Atomate task document dictionary 
         """
-        mpw_doc, parent_structure = item
+        mpw_doc, parent_structure, new_task_id = item
         atomate_doc = convert_mpworks_to_atomate(mpw_doc, parent_structure=parent_structure)
         atomate_doc['last_updated'] = datetime.utcnow()
+        if self.redo_task_ids:
+            atomate_doc['_mpworks_meta']['task_id'] = atomate_doc.pop("task_id")
+            atomate_doc['task_id'] = new_task_id
         return atomate_doc
 
     def update_targets(self, items):
@@ -113,6 +129,11 @@ class MPWorksCompatibilityBuilder(Builder):
 
         # This is just too slow at the moment, need to refactor maggma maybe?
         # self.atomate_tasks.update("task_id", items, update_lu=True, ordered=False)
+
+    def finalize(self, cursor):
+        self.atomate_tasks.close()
+        self.mpworks_tasks.close()
+
 
         
 ## MPWorks key: Atomate key
@@ -141,7 +162,6 @@ conversion_schema = {"dir_name_full": "dir_name",
                      "elements": "elements",
                      "snl": "_mpworks_meta.snl", # Not sure if completely compatible
                      "task_id": "task_id", # might change this in the future
-                     #"task_id": "_mpworks_meta.task_id",
                      "nelements": "nelements",
                      "is_compatible": "_mpworks_meta.is_compatible",
                      "analysis.percent_delta_volume": "analysis.delta_volume_percent",
@@ -172,7 +192,7 @@ conversion_schema = {"dir_name_full": "dir_name",
 """
 ###### Orphan Atomate keys
 """
-"input.parameters" - Don't really know what to do with this
+"input.parameters" - Not clear what to do with this
 """
 
 def set_mongolike(ddict, key, value):
