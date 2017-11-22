@@ -34,9 +34,10 @@ class MPWorksCompatibilityBuilderTest(unittest.TestCase):
         assert test_dict["new"]["value"] == 5
 
     def test_convert_mpworks_to_atomate(self):
-        doc = self.test_tasks.collection.find_one({})
+        doc = self.test_tasks.collection.find_one({"task_type": {"$regex": "deformed"}})
         new_doc = convert_mpworks_to_atomate(doc)
-        
+        doc = self.test_tasks.collection.find_one({"task_type": {"$regex": "(2x)"}})
+        new_doc = convert_mpworks_to_atomate(doc)
 
 if __name__ == "__main__":
     unittest.main()
