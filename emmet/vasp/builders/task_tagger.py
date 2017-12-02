@@ -31,7 +31,7 @@ class TaskTagger(Builder):
 
         # Get all tasks ids from the tasks collection
         all_task_ids = self.tasks.collection.distinct("task_id", {"state": "successful"})
-
+        
         # Figure out which task_ids are not in the materials collection and only process those
         previous_task_ids = self.task_types.collection.distinct("task_id", {"task_type": {"$exists": 0}})
         to_process = set(all_task_ids) - set(previous_task_ids)
@@ -41,9 +41,9 @@ class TaskTagger(Builder):
             print("Processing task_id: {}".format(t_id))
             try:
                 yield self.tasks.collection.find_one({"task_id": t_id})
-            except:
-                import traceback
+            except Exception as e:
                 print("Problem processing task_id: {}".format(t_id))
+                print(e)
 
     def process_item(self, item):
         """
@@ -54,7 +54,7 @@ class TaskTagger(Builder):
         """
 
         return {"task_id": item["task_id"],
-                "task_type": self.task_type(item)}
+                "task_type": task_type(item['input']['incar'])}
 
     def update_targets(self, items):
         """
@@ -66,38 +66,46 @@ class TaskTagger(Builder):
         for doc in items:
             self.task_types.collection.update({'task_id': doc['task_id']}, doc, upsert=True)
 
-    @classmethod
-    def task_type(cls, task_doc):
-        """
-        Determines the task_type
 
-        Args:
-            task_doc (dict): task_document with original input
-        """
-        incar = task_doc["input"]["incar"]
+def task_type(incar,include_calc_type=True):
+    """
+    Determines the task_type
 
+    Args:
+        incar (dict): incar to determine task_type from
+        include_calc_type (bool): whether to include calculation type
+            in task_type such as HSE, GGA, SCAN, etc.
+    """
+
+    calc_type = ""
+
+    if include_calc_type:
         if incar.get("LHFCALC", False):
-            if incar.get("NSW") == 0:
-                return "hse bs"
-            else:
-                return "hse"
+            calc_type += "HSE "
+        elif incar.get("METAGGA", "") == "SCAN": 
+            calc_type += "SCAN "
+        elif incar.get("LDAU",False):
+            calc_type += "GGA+U "
+        else:
+            calc_type += "GGA "
 
-        if incar.get("ICHARG", 0) > 10:
-            if incar.get("NEDOS", 0) > 600:
-                return "nscf uniform"
-            else:
-                return "nscf line"
 
-        if incar.get("LEPSILON", False):
-            return "static dielectric"
+    if incar.get("ICHARG", 0) > 10:
+        if incar.get("NEDOS", 0) > 301:
+            return calc_type + "NSCF Uniform"
+        else:
+            return calc_type + "NSCF Line"
 
-        if incar.get("IBRION", 0) < 0:
-            return "static"
+    if incar.get("LEPSILON", False):
+        return calc_type + "Static Dielectric"
 
-        if incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
-            return "structure optimization"
+    if incar.get("NSW", 1) == 0:
+        return calc_type + "Static"
 
-        if incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
-            return "deformation"
+    if incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
+        return calc_type + "Structure Optimization"
 
-        return ""
+    if incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
+        return calc_type + "Deformation"
+
+    return ""

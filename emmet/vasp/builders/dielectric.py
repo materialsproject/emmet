@@ -3,40 +3,35 @@ import numpy as np
 from datetime import datetime
 from itertools import combinations
 
+from pymongo import ASCENDING
+
 from pymatgen import Structure
+from pymatgen.analysis.elasticity.tensors import Tensor
 from pymatgen.analysis.piezo import PiezoTensor
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pymatgen.core.operations import SymmOp
 
 from maggma.builder import Builder
-from emmet.vasp.builders.task_tagger import TaskTagger
-
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class DielectricBuilder(Builder):
-    def __init__(self, tasks, materials, dielectric, query={}, **kwargs):
+    def __init__(self, materials, dielectric, min_band_gap=0.1, query={}, **kwargs):
         """
         Creates a dielectric collection for materials
 
         Args:
-            tasks (Store): Store of task documents
             materials (Store): Store of materials documents to match to
             dielectric (Store): Store of dielectric properties
+            min_band_gap (float): minimum band gap for a material to look for a dielectric calculation to build
             query (dict): dictionary to limit materials to be analyzed
         """
 
-        self.tasks = tasks
         self.materials = materials
         self.dielectric = dielectric
+        self.min_band_gap = min_band_gap
         self.query = query
-        self.snls = snls
 
-        self.__logger = logging.getLogger(__name__)
-        self.__logger.addHandler(logging.NullHandler())
-
-        super().__init__(sources=[tasks, materials],
+        super().__init__(sources=[materials],
                          targets=[dielectric],
                          **kwargs)
 
@@ -48,19 +43,21 @@ class DielectricBuilder(Builder):
             generator or list relevant tasks and materials to process into materials documents
         """
 
-        self.__logger.info("Dielectric Builder Started")
+        self.logger.info("Dielectric Builder Started")
+
+        self.logger.info("Setting indexes")
+        self.ensure_indexes()
+
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.dielectric))
-        q["band_gap"] = {"$gt": 0.1}  # TODO: Consider smaller band gap?
-        mats = self.materials.find(q, {"material_id": 1, "structure": 1, "task_ids": 1})
+        q["dielectric"] = {"$exists": 1}
+        mats = list(self.materials.find(q, {"material_id": 1}))
 
-        self.__logger.info("Found {} new materials for dielectric data".format(mats.count()))
-        for mat in mats:
-            tasks = list(self.tasks.find({"task_id": {"$in": mat["task_ids"]}}))
+        self.logger.info("Found {} new materials for dielectric data".format(len(mats)))
 
-            yield {"material_id": mat["material_id"],
-                   "structure": mat["structure"],
-                   "tasks": tasks}
+        for m in mats:
+            mat = self.materials().find_one(m, {"material_id": 1, "dielectric": 1, "piezo": 1, "structure": 1})
+            yield mat
 
     def process_item(self, item):
         """
@@ -73,46 +70,48 @@ class DielectricBuilder(Builder):
             dict: a dieletrics dictionary  
         """
 
-        def is_centro(structure):
-            sga = SpacegroupAnalyzer(structure)
-            return SymmOp.inversion() in sga.get_symmetry_operations()
-
         def poly(matrix):
             diags = np.diagonal(matrix)
             return np.prod(diags) / np.sum(np.prod(comb) for comb in combinations(diags, 2))
 
+        d = {
+            "material_id": item["material_id"]
+        }
+
         structure = Structure.from_dict(item["structure"])
 
-        # Start with higher task ids first?
-        for t in sorted(item["tasks"], lambda x: x[self.tasks.lu_field], reverse=True):
-            if "dielectric" in TaskTagger.task_type(t):
-                output = t["calcs_reversed"][0]["output"]
-                total = np.sum(output["epsilon_ionic"], output["epsilon_static"])
-                d = {"material_id": item['material_id'],
-                     "dielectric": {
-                         "ionic": output["epsilon_ionic"],
-                         "electronic": output["epsilon_static"],
-                         "total": total,
-                         "e_total": poly(total),
-                         "e_ionic": poly(output["epsilon_ionic"]),
-                         "e_electronic": poly(output["epsilon_static"]),
-                     }}
+        if item.get("dielectric") is not None:
+            ionic = Tensor(d["dielectric"]["ionic"])
+            static = Tensor(d["dielectric"]["static"])
+            total = ionic + static
 
-                # Update piezo if non_centrosymmetric
-                if not is_centro(item["structure"]):
-                    pt_e = PiezoTensor.from_voigt(np.array(output["outcar"]["piezo_tensor"]))
-                    pt_i = PiezoTensor.from_voigt(np.array(output["outcar"]["piezo_ionic_tensor"]))
-                    pt_total = pt_e + pt_i
-                    pt_total = pt_total.symmetrized.fit_to_structure(structure)
+            d["dielectric"] = {
+                "total": total.symmetrized.fit_to_structure(structure).convert_to_ieee(structure),
+                "ionic": ionic.symmetrized.fit_to_structure(structure).convert_to_ieee(structure),
+                "static": static.symmetrized.fit_to_structure(structure).convert_to_ieee(structure),
+                "e_total": poly(total),
+                "e_ionic": poly(ionic),
+                "e_static": poly(static)
+            }
 
-                    d["piezo"] = {
-                        "piezoelectric_tensor": pt_total.voigt,
-                        "eij_max": np.max(pt_total.voigt),
-                    }
-                    # TODO Add in more analysis: v_max ?
-                    # TODO: Add in unstable phonon mode analysis of piezoelectric for potentially ferroelectric
+        # Update piezo if non_centrosymmetric
+        if item.get("piezo") is not None:
+            static = PiezoTensor.from_voigt(np.array(item['piezo']["piezo_tensor"]))
+            ionic = PiezoTensor.from_voigt(np.array(item['piezo']["piezo_ionic_tensor"]))
+            total = ionic + static
 
-                return d
+            d["piezo"] = {
+                "total": total.symmetrized.fit_to_structure(structure).convert_to_ieee(structure).voigt,
+                "ionic": ionic.symmetrized.fit_to_structure(structure).convert_to_ieee(structure).voigt,
+                "static": static.symmetrized.fit_to_structure(structure).convert_to_ieee(structure).voigt,
+                "e_ij_max": np.max(total.voigt)
+            }
+
+            # TODO Add in more analysis: v_max ?
+            # TODO: Add in unstable phonon mode analysis of piezoelectric for potentially ferroelectric
+
+        if len(d) > 1:
+            return d
 
         return None
 
@@ -124,13 +123,23 @@ class DielectricBuilder(Builder):
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
 
-        items = [item for item in items if item is not None]
+        items = list(filter(None, items))
 
-        self.__logger.info("Updating {} dielectrics".format(len(items)))
+        if len(items) > 0:
+            self.logger.info("Updating {} dielectrics".format(len(items)))
+            bulk = self.dielectric().initialize_ordered_bulk_op()
 
-        for doc in items:
-            doc[self.dielectric.lu_field] = datetime.utcnow()
-            self.dielectric.replace_one({"material_id": doc["material_id"]}, doc, upsert=True)
+            for m in filter(None, items):
+                m[self.dielectric.lu_field] = datetime.utcnow()
+                bulk.find({"material_id": m["material_id"]}).upsert().replace_one(m)
+            bulk.execute()
+        else:
+            self.logger.info("No items to update")
 
-    def finalize(self):
-        pass
+    def ensure_indexes(self):
+        """
+        Ensures indexes on the tasks and materials collections
+        :return:
+        """
+        # Search index for materials
+        self.materials().create_index("material_id", unique=True, background=True)
