@@ -8,6 +8,7 @@ from emmet.vasp.builders.compatibility import MPWorksCompatibilityBuilder, \
 from maggma.stores import JSONStore, MemoryStore, MongoStore
 from maggma.runner import Runner
 from monty.json import MontyEncoder, MontyDecoder
+from monty.serialization import dumpfn, loadfn
 
 __author__ = "Joseph Montoya"
 __email__ = "montoyjh@lbl.gov"
@@ -39,6 +40,14 @@ if __name__ == "__main__":
     builder = MPWorksCompatibilityBuilder(test_coll, target_coll)
     runner = Runner([builder])
     runner.run()
+
+    # build test json for mpworks conversion
+    """
+    otask_ids = test_coll.distinct("original_task_id")[:2]
+    tasks = list(test_coll.query(criteria={"original_task_id": {"$in": otask_ids}}))
+    tasks.extend(list(test_coll.query(criteria={"task_id": {"$in": otask_ids}})))
+    dumpfn(tasks, "mpworks_tasks.json")
+    """
 
     # snippet to fix issue with compatibility
     """
