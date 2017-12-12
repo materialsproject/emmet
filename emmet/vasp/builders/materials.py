@@ -227,13 +227,20 @@ class MaterialsBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
-        items = list(filter(None, chain.from_iterable(items)))
-
+        items = [i for i in filter(None, chain.from_iterable(items)) if self.valid(i)]
+        
         if len(items) > 0:
             self.logger.info("Updating {} materials".format(len(items)))
             self.materials.update(docs=items)
         else:
             self.logger.info("No items to update")
+
+    def valid(self,doc):
+        """
+        Determines if the resulting material document is valid
+        """
+        return "structure" in doc
+
 
     def ensure_indexes(self):
         """
