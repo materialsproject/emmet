@@ -235,6 +235,13 @@ class MaterialsBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
+    def valid(self,doc):
+        """
+        Determines if the resulting material document is valid
+        """
+        return "structure" in doc
+
+
     def ensure_indexes(self):
         """
         Ensures indexes on the tasks and materials collections
