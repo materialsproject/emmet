@@ -243,8 +243,8 @@ class ElectronicStructureBuilder(Builder):
 
         return cdos
 
-def image_from_plotter(plotter):
-    plot = plotter.get_plot()
+def image_from_plotter(plotter,ylim=None):
+    plot = plotter.get_plot(ylim=ylim)
     imgdata = io.BytesIO()
     plot.savefig(imgdata, format="png", dpi=100)
     plot_img = imgdata.getvalue()
