@@ -101,24 +101,23 @@ class ElectronicStructureBuilder(Builder):
 
         # Process the bandstructure for information
         if "bs" in mat["bandstructure"]:
-            try:
-                if "structure" not in mat["bandstructure"]["bs"]:
-                    mat["bandstructure"]["bs"]["structure"] = mat["structure"]
-                if len(mat["bandstructure"]["bs"].get("labels_dict",{})) == 0:
-                    struc = Structure.from_dict(mat["structure"])
-                    kpath = HighSymmKpath(struc)._kpath["kpoints"]
-                    mat["bandstructure"]["bs"]["labels_dict"] = kpath
-                # Somethign is wrong with the as_dict / from_dict encoding in the two band structure objects so have to use this hodge podge serialization
-                # TODO: Fix bandstructure objects in pymatgen
-                bs = BandStructureSymmLine.from_dict(
-                    BandStructure.from_dict(mat["bandstructure"]["bs"]).as_dict())
-                d["bandstructure"]["band_gap"] = {"band_gap": bs.get_band_gap()["energy"],
-                                                  "direct_gap": bs.get_direct_band_gap(),
-                                                  "is_direct": bs.get_band_gap()["direct"],
-                                                  "transition": bs.get_band_gap()["transition"]}
+            if "structure" not in mat["bandstructure"]["bs"]:
+                mat["bandstructure"]["bs"]["structure"] = mat["structure"]
+            if len(mat["bandstructure"]["bs"].get("labels_dict",{})) == 0:
+                struc = Structure.from_dict(mat["structure"])
+                kpath = HighSymmKpath(struc)._kpath["kpoints"]
+                mat["bandstructure"]["bs"]["labels_dict"] = kpath
+            # Somethign is wrong with the as_dict / from_dict encoding in the two band structure objects so have to use this hodge podge serialization
+            # TODO: Fix bandstructure objects in pymatgen
+            bs = BandStructureSymmLine.from_dict(
+                BandStructure.from_dict(mat["bandstructure"]["bs"]).as_dict())
+            d["bandstructure"]["band_gap"] = {"band_gap": bs.get_band_gap()["energy"],
+                                              "direct_gap": bs.get_direct_band_gap(),
+                                              "is_direct": bs.get_band_gap()["direct"],
+                                              "transition": bs.get_band_gap()["transition"]}
 
-                if self.small_plot:
-                    d["bandstructure"]["plot_small"] = get_small_plot(bs)
+            if self.small_plot:
+                d["bandstructure"]["plot_small"] = get_small_plot(bs)
 
             except Exception:
                 self.logger.warning(
