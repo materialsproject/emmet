@@ -127,7 +127,10 @@ class ElectronicStructureBuilder(Builder):
             dos = CompleteDos.from_dict(mat["bandstructure"]["dos"])
 
         if self.interpolate_dos and "uniform_bs" in mat["bandstructure"]:
-            interpolated_dos = self.get_interpolated_dos(mat)
+            try:
+                interpolated_dos = self.get_interpolated_dos(mat)
+            except Exception:
+                self.logger.warning("Boltztrap interpolation failed for {}. Continuing with regular DOS".format(mat[self.materials.key]))
 
         # Generate static images
         if self.static_images:
