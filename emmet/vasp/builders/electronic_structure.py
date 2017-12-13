@@ -133,8 +133,13 @@ class ElectronicStructureBuilder(Builder):
         # Generate static images
         if self.static_images:
             try:
+                ylim = None
                 if bs:
                     plotter = BSPlotter(bs)
+                    fig = plotter.get_plot()
+                    ylim = fig.ylim() # Used by DOS plot
+                    fig.close()
+
                     d["bandstructure"]["bs_plot"] = image_from_plotter(plotter)
 
                 if dos or interpolated_dos:
