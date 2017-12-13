@@ -138,16 +138,17 @@ class ElectronicStructureBuilder(Builder):
                     d["bandstructure"]["bs_plot"] = image_from_plotter(plotter)
 
                 if dos or interpolated_dos:
+                    plotter = DosPlotter()
                     if interpolated_dos:
-                        plotter = DosPlotter(interpolated_dos)
+                        plotter.add_dos("Total DOS",interpolated_dos)
                     else:
-                        plotter = DosPlotter(dos)
+                        plotter.add_dos("Total DOS",dos)
                     d["bandstructure"][
                         "dos_plot"] = image_from_plotter(plotter)
 
-            except Exception as e:
+            except Exception:
                 self.logger.warning(
-                    "Caught error in electronic structure plotting for {}: {}".format(mat[self.materials.key],e))
+                    "Caught error in electronic structure plotting for {}: {}".format(mat[self.materials.key],traceback.format_exc()))
                 return None
 
         return d
