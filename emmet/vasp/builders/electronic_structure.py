@@ -145,11 +145,11 @@ class ElectronicStructureBuilder(Builder):
                 if dos or interpolated_dos:
                     plotter = DosPlotter()
                     if interpolated_dos:
-                        plotter.add_dos_dict("Total DOS",interpolated_dos.get_element_dos())
+                        plotter.add_dos_dict(interpolated_dos.get_element_dos())
                     else:
-                        plotter.add_dos_dict("Total DOS",dos.get_element_dos())
+                        plotter.add_dos_dict(dos.get_element_dos())
                     d["bandstructure"][
-                        "dos_plot"] = image_from_plotter(plotter)
+                        "dos_plot"] = image_from_plotter(plotter,ylim=ylim)
 
             except Exception:
                 self.logger.warning(
