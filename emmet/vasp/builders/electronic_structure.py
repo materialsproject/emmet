@@ -119,9 +119,6 @@ class ElectronicStructureBuilder(Builder):
             if self.small_plot:
                 d["bandstructure"]["plot_small"] = get_small_plot(bs)
 
-            except Exception:
-                self.logger.warning(
-                    "Caught error in building bandstructure for {}: {}".format(mat[self.materials.key],traceback.format_exc()))
 
         if "dos" in mat["bandstructure"]:
             dos = CompleteDos.from_dict(mat["bandstructure"]["dos"])
