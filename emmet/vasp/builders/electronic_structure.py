@@ -36,7 +36,7 @@ class ElectronicStructureBuilder(Builder):
         self.query = query
         self.bandstructure_fs = bandstructure_fs
         self.dos_fs = dos_fs
-        self.interpolate_dos = bool(interpolate_dos and which("x_trans"))
+        self.interpolate_dos = interpolate_dos and bool(which("x_trans"))
         self.small_plot = small_plot
         self.static_images = static_images
 
