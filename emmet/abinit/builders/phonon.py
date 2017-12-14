@@ -4,8 +4,11 @@ from bson.binary import Binary
 from maggma.builder import Builder
 from pydash import py_
 
+import matplotlib
 from monty.json import MontyDecoder
 from pymatgen.phonon.plotter import PhononBSPlotter
+
+matplotlib.use('agg')
 
 
 class PhononDispersion(Builder):
@@ -21,6 +24,8 @@ class PhononDispersion(Builder):
             images (Store): target for png images of phonon dispersion plots.
             add_filter (dict): MongoDB filter to add to default last-updated
                 filter.
+            ignore_lu (bool): Ignore pmg_docs.lu_filter when getting items.
+                Useful for forcing rebuilds given `add_filter`.
         """
         self.pmg_docs = pmg_docs
         self.web_docs = web_docs
@@ -87,4 +92,3 @@ class PhononDispersion(Builder):
         for doc in images:
             assert "plot" in doc and doc["plot"] is not None
         self.logger.info("Validated {} of images".format(n_images))
-
