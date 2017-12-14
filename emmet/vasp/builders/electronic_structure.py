@@ -5,17 +5,22 @@ import io
 import os
 import traceback
 from shutil import which
-
+import numpy as np
 from datetime import datetime
 from monty.tempfile import ScratchDir
 from maggma.builder import Builder
+import prettyplotlib as ppl
+from matplotlib import rc
+import scipy.interpolate as scint
+from prettyplotlib import brewer2mpl
 from pymatgen.core.structure import Structure
 from pymatgen.symmetry.bandstructure import HighSymmKpath
+from pymatgen.electronic_structure.core import Spin, Orbital
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, BandStructure
 from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.electronic_structure.plotter import BSDOSPlotter, DosPlotter, BSPlotter
 from pymatgen.electronic_structure.boltztrap import BoltztrapRunner, BoltztrapAnalyzer
-
+from pymatgen.util.plotting import pretty_plot
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
