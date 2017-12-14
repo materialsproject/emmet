@@ -138,7 +138,7 @@ class ElectronicStructureBuilder(Builder):
             try:
                 ylim = None
                 if bs:
-                    plotter = BSPlotter(bs)
+                    plotter = WebBSPlotter(bs)
                     fig = plotter.get_plot()
                     ylim = fig.ylim()  # Used by DOS plot
                     fig.close()
@@ -146,7 +146,7 @@ class ElectronicStructureBuilder(Builder):
                     d["bandstructure"]["bs_plot"] = image_from_plotter(plotter)
 
                 if dos:
-                    plotter = DosPlotter()
+                    plotter = WebDosVertPlotter()
                     plotter.add_dos_dict(dos.get_element_dos())
 
                     if interpolated_dos:
