@@ -103,7 +103,7 @@ class ElectronicStructureBuilder(Builder):
         if "bs" in mat["bandstructure"]:
             if "structure" not in mat["bandstructure"]["bs"]:
                 mat["bandstructure"]["bs"]["structure"] = mat["structure"]
-            if len(mat["bandstructure"]["bs"].get("labels_dict",{})) == 0:
+            if len(mat["bandstructure"]["bs"].get("labels_dict", {})) == 0:
                 struc = Structure.from_dict(mat["structure"])
                 kpath = HighSymmKpath(struc)._kpath["kpoints"]
                 mat["bandstructure"]["bs"]["labels_dict"] = kpath
@@ -118,7 +118,6 @@ class ElectronicStructureBuilder(Builder):
 
             if self.small_plot:
                 d["bandstructure"]["plot_small"] = get_small_plot(bs)
-
 
         if "dos" in mat["bandstructure"]:
             dos = CompleteDos.from_dict(mat["bandstructure"]["dos"])
@@ -136,7 +135,7 @@ class ElectronicStructureBuilder(Builder):
                 if bs:
                     plotter = BSPlotter(bs)
                     fig = plotter.get_plot()
-                    ylim = fig.ylim() # Used by DOS plot
+                    ylim = fig.ylim()  # Used by DOS plot
                     fig.close()
 
                     d["bandstructure"]["bs_plot"] = image_from_plotter(plotter)
@@ -227,7 +226,8 @@ class ElectronicStructureBuilder(Builder):
                                 nelec=nelect,
                                 run_type="DOS",
                                 dos_type="TETRA",
-                                spin=1).run(path_dir=os.getcwd())
+                                spin=1,
+                                timeout=60).run(path_dir=os.getcwd())
                 an_up = BoltztrapAnalyzer.from_files("boltztrap/", dos_spin=1)
 
             with ScratchDir("."):
@@ -235,7 +235,8 @@ class ElectronicStructureBuilder(Builder):
                                 nelec=nelect,
                                 run_type="DOS",
                                 dos_type="TETRA",
-                                spin=-1).run(path_dir=os.getcwd())
+                                spin=-1,
+                                timeout=60).run(path_dir=os.getcwd())
                 an_dw = BoltztrapAnalyzer.from_files("boltztrap/", dos_spin=-1)
 
             cdos = an_up.get_complete_dos(bs.structure, an_dw)
@@ -245,14 +246,16 @@ class ElectronicStructureBuilder(Builder):
                 BoltztrapRunner(bs=bs,
                                 nelec=nelect,
                                 run_type="DOS",
-                                dos_type="TETRA").run(path_dir=os.getcwd())
+                                dos_type="TETRA",
+                                timeout=60).run(path_dir=os.getcwd())
                 an = BoltztrapAnalyzer.from_files("boltztrap/")
             cdos = an.get_complete_dos(bs.structure)
 
         return cdos
 
-def image_from_plotter(plotter,ylim=None):
-    plot = plotter.get_plot(ylim=ylim)
+
+def image_from_plotter(plotter, ylim=None):
+    plot = plotter.get_plot()
     imgdata = io.BytesIO()
     plot.savefig(imgdata, format="png", dpi=100)
     plot_img = imgdata.getvalue()
