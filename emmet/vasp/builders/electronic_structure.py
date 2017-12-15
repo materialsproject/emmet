@@ -10,7 +10,7 @@ from datetime import datetime
 from monty.tempfile import ScratchDir
 from maggma.builder import Builder
 import prettyplotlib as ppl
-from matplotlib import rc
+import matplotlib
 import scipy.interpolate as scint
 from prettyplotlib import brewer2mpl
 from pymatgen.core.structure import Structure
@@ -23,6 +23,7 @@ from pymatgen.electronic_structure.boltztrap import BoltztrapRunner, BoltztrapAn
 from pymatgen.util.plotting import pretty_plot
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
+matplotlib.use('agg')
 
 class ElectronicStructureBuilder(Builder):
 
@@ -302,7 +303,7 @@ class WebBSPlotter(BSPlotter):
 
         plt = pretty_plot(6, 5.5)  # Was 12, 8
 
-        rc('text', usetex=True)
+        matplotlib.rc('text', usetex=True)
 
         width = 4
         ticksize = int(width * 2.5)
