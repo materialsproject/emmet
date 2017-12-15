@@ -1,4 +1,5 @@
 from maggma.builder import Builder
+from pydash import py_
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
@@ -11,15 +12,12 @@ class TaskTagger(Builder):
 
         Args:
             tasks (Store): Store of task documents
-            task_defs (Store): Store of task_definitions. These define 
             task_types (Store): Store of task_types for tasks
         """
         self.tasks = tasks
         self.task_types = task_types
 
-        super().__init__(sources=[tasks],
-                         targets=[task_types],
-                         **kwargs)
+        super().__init__(sources=[tasks], targets=[task_types], **kwargs)
 
     def get_items(self):
         """
@@ -29,32 +27,27 @@ class TaskTagger(Builder):
             generator or list of task docs and tag definitions
         """
 
-        # Get all tasks ids from the tasks collection
-        all_task_ids = self.tasks.collection.distinct("task_id", {"state": "successful"})
-        
-        # Figure out which task_ids are not in the materials collection and only process those
-        previous_task_ids = self.task_types.collection.distinct("task_id", {"task_type": {"$exists": 0}})
-        to_process = set(all_task_ids) - set(previous_task_ids)
+        # Determine tasks to process.
+        self.logger.info("Determining tasks to process")
+        all_task_ids = self.tasks.distinct("task_id", {"state": "successful"})
+        previous_task_ids = self.task_types.distinct("task_id")
+        to_process = list(set(all_task_ids) - set(previous_task_ids))
 
-        # Process each task_id
-        for t_id in to_process:
-            print("Processing task_id: {}".format(t_id))
-            try:
-                yield self.tasks.collection.find_one({"task_id": t_id})
-            except Exception as e:
-                print("Problem processing task_id: {}".format(t_id))
-                print(e)
+        self.logger.info("Yielding task documents")
+        for task_id in to_process:
+            yield self.tasks.query_one(
+                criteria={"task_id": task_id},
+                properties=["task_id", "input.incar"])
 
     def process_item(self, item):
         """
         Find the task_type for the item 
 
         Args:
-            item ((dict,[dict])): a task doc and a list of possible tag definitions
+            item (dict): a (projection of a) task doc
         """
-
-        return {"task_id": item["task_id"],
-                "task_type": task_type(item['input']['incar'])}
+        tt = task_type(item['input']['incar'])
+        return {"task_id": item["task_id"], "task_type": tt}
 
     def update_targets(self, items):
         """
@@ -63,11 +56,15 @@ class TaskTagger(Builder):
         Args:
             items ([dict]): task_type dicts to insert into task_types collection
         """
-        for doc in items:
-            self.task_types.collection.update({'task_id': doc['task_id']}, doc, upsert=True)
+        with_task_type, without_task_type = py_.partition(
+            items, lambda i: i["task_type"])
+        if without_task_type:
+            self.logger.error(
+                "No task type found for {}".format(without_task_type))
+        self.task_types.update(with_task_type)
 
 
-def task_type(incar,include_calc_type=True):
+def task_type(incar, include_calc_type=True):
     """
     Determines the task_type
 
@@ -88,7 +85,6 @@ def task_type(incar,include_calc_type=True):
             calc_type += "GGA+U "
         else:
             calc_type += "GGA "
-
 
     if incar.get("ICHARG", 0) > 10:
         if incar.get("NEDOS", 0) > 301:
