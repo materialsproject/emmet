@@ -5,18 +5,15 @@ from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.util.provenance import StructureNL
 from maggma.builder import Builder
+from pydash.objects import get, has
 
 
 class SNLBuilder(Builder):
     """
     Builds SNL collection for materials
-
-    Uses `lu_field` to get new/updated documents,
-    and uses a `key` field to determine which documents to merge together
-
     """
 
-    def __init__(self, materials, source_snls, snls, query={}, ltol=0.2, stol=0.3,
+    def __init__(self, materials, snls, *source_snls, query={}, ltol=0.2, stol=0.3,
                  angle_tol=5, **kwargs):
         self.materials = materials
         self.snls = snls
@@ -39,29 +36,33 @@ class SNLBuilder(Builder):
         self.logger.info("SNL Builder Started")
 
         self.logger.info("Setting indexes")
-        self.ensure_indexes()
 
-        # Find all formulas for materials that have been updated since this builder was last ran
+        # Find all formulas for materials that have been updated since this
+        # builder was last ran
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.snls))
-        forms_to_update = set(self.materials().find(q).distinct("pretty_formula"))
+        forms_to_update = set(self.materials.distinct("formula_pretty", q))
         #forms_to_update = set()
 
         # Find all new SNL formulas since the builder was last run
         for source in self.source_snls:
             new_q = source.lu_filter(self.snls)
-            forms_to_update |= set(source().find(new_q).distinct("reduced_cell_formula"))
+            forms_to_update |= set(source.distinct("formula_pretty", new_q))
 
-        self.logger.info("Found {} new/updated systems to proces".format(len(forms_to_update)))
+        self.logger.info(
+            "Found {} new/updated systems to proces".format(len(forms_to_update)))
 
         for formula in forms_to_update:
-            mats = list(self.materials().find({"pretty_formula": formula}, {"material_id": 1, "structure": 1}))
+            mats = list(self.materials.query(properties=[
+                        self.materials.key, "structure", "initial_structure", "formula_pretty"], criteria={"formula_pretty": formula}))
             snls = []
 
             for source in self.source_snls:
-                snls.extend(source().find({"reduced_cell_formula": formula}))
+                snls.extend(source.query(criteria={"formula_pretty": formula}))
+
+            snls = [s["snl"] for s in snls]
+
             if len(mats) > 0 and len(snls) > 0:
-                print("Running")
                 yield mats, snls
 
     def process_item(self, item):
@@ -77,11 +78,10 @@ class SNLBuilder(Builder):
         mats = item[0]
         source_snls = item[1]
         snls = defaultdict(list)
-
-        self.logger.debug("Tagging SNLs for {}".format(mats[0].composition))
+        self.logger.debug("Tagging SNLs for {}".format(
+            mats[0]["formula_pretty"]))
 
         for snl in source_snls:
-
             mat_id = self.match(snl, mats)
             if mat_id is not None:
                 snls[mat_id].append(snl)
@@ -103,13 +103,13 @@ class SNLBuilder(Builder):
                               primitive_cell=True, scale=True,
                               attempt_supercell=False, allow_subset=False,
                               comparator=ElementComparator())
-        snl_struc = StructureNL.from_dict(snl)
+        snl_struc = StructureNL.from_dict(snl).structure
 
         for m in mats:
             m_struct = Structure.from_dict(m["structure"])
             init_m_struct = Structure.from_dict(m["initial_structure"])
-            if sm.fit(m_struct, snl_struc) or sm.fit(init_m_struct,snl_struc):
-                return m['material_id']
+            if sm.fit(m_struct, snl_struc) or sm.fit(init_m_struct, snl_struc):
+                return m[self.materials.key]
 
         return None
 
@@ -117,30 +117,19 @@ class SNLBuilder(Builder):
         """
         Inserts the new task_types into the task_types collection
 
-        Args:
-            items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
-        mat_snls  = {}
-        for d in items:
-            mat_snls.update(d)
+        snls = []
 
-        if len(mat_snls) > 0:
-            self.logger.info("Updating {} materials".format(len(mat_snls)))
-            bulk = self.snls().initialize_ordered_bulk_op()
-            for mat,snls in mat_snls.items():
-                d = {"material_id": mat,
-                     "snls": snls,
-                     self.snls.lu_field: datetime.utcnow()
-                     }
-                bulk.find({"material_id": m["material_id"]}).upsert().replace_one(d)
-            bulk.execute()
+        for snl_dict in filter(None, items):
+            for mat_id, snl_list in snl_dict.items():
+                snl = sorted(
+                    snl_list, key=lambda x: StructureNL.from_dict(x).created_at)[0]
+                icsd_ids = [get(snl, "about._icsd.icsd_id")
+                            for snl in snl_list if has(snl, "about._icsd")]
+                snls.append(
+                    {self.snls.key: mat_id, "snl": snl, "icsd_ids": icsd_ids})
+
+        if len(snls) > 0:
+            self.snls.update(snls)
         else:
             self.logger.info("No items to update")
-
-    def ensure_indexes(self):
-        """
-        Ensures indexes on the tasks and materials collections
-        :return:
-        """
-        # Search index for materials
-        self.materials().create_index("material_id", unique=True, background=True)
