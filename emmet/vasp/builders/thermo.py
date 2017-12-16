@@ -82,7 +82,7 @@ class ThermoBuilder(Builder):
 
         new_q = dict(self.query)
         new_q["chemsys"] = {"$in": list(chemsys_permutations(chemsys))}
-        fields = ["structure", "material_id", "thermo.energy",
+        fields = ["structure",  self.materials.key, "thermo.energy",
                   "unit_cell_formula", "calc_settings.is_hubbard",
                   "calc_settings.hubbards", "calc_settings.potcar_spec",
                   "calc_settings.run_type"]
@@ -99,7 +99,7 @@ class ThermoBuilder(Builder):
 
             entry = ComputedEntry(Composition(d["unit_cell_formula"]),
                                   d["thermo"]["energy"], 0.0, parameters=parameters,
-                                  entry_id=d["material_id"],
+                                  entry_id=d[self.materials.key],
                                   data={"oxide_type": oxide_type(Structure.from_dict(d["structure"]))})
 
             all_entries.append(entry)
@@ -130,7 +130,7 @@ class ThermoBuilder(Builder):
                 (decomp, ehull) = \
                     pd.get_decomp_and_e_above_hull(e)
 
-                d = {"material_id": e.entry_id,
+                d = {self.thermo.key: e.entry_id,
                      "thermo": {
                          "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
                          "e_above_hull": ehull,
@@ -169,7 +169,7 @@ class ThermoBuilder(Builder):
     
         if len(items) > 0:
             self.logger.info("Updating {} thermo documents".format(len(items)))
-            self.thermo.update(key="material_id", docs=items)
+            self.thermo.update(docs=items)
         else:
             self.logger.info("No items to update")
 
