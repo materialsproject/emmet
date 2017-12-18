@@ -85,8 +85,12 @@ class MPWorksCompatibilityBuilder(Builder):
         if self.redo_task_ids:
             # Get counter for atomate tasks db
             counter = self.atomate_tasks.collection.database.counter
-            if not counter.find_one({"_id": "taskid"}):
+            counter_doc = counter.find_one({'_id': 'taskid'})
+            if not counter_doc:
                 counter.insert({"_id": "taskid", "c": 1})
+                starting_taskid = 1
+            else:
+                starting_taskid = counter_doc['c']
             counter.find_one_and_update({"_id": "taskid"}, {"$inc": {"c": count}})
 
         for n, task in enumerate(tasks_to_convert):
@@ -95,7 +99,7 @@ class MPWorksCompatibilityBuilder(Builder):
                 parent_structure = all_parent_structures[task['original_task_id']]
             else:
                 parent_structure = None
-            new_task_id = "mp-{}".format(n)
+            new_task_id = "mp-{}".format(n + starting_taskid)
             yield task, parent_structure, new_task_id
 
     def process_item(self, item):

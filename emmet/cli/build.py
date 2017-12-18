@@ -22,12 +22,12 @@ def get_store_from_file(filename):
     return store_class(**store_dict)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="emmetbuild is a script used to run builders from "
                     "db or JsonStore configuration files")
-    parser.add_argument("-b", "--builder", help="Full path to builder, e.g. "
-                                                "emmet.vasp.builders.thermo.ThermoBuilder")
+    parser.add_argument("-b", "--builder", help="Builder name")
+    parser.add_argument("-m", "--module", help="Builder module")
     parser.add_argument("-s", "--source", help="source store config file")
     parser.add_argument("-t", "--target", help="target store config file")
     parser.add_argument("-k", "--kwargs", 
@@ -46,10 +46,12 @@ if __name__ == "__main__":
     target_store = get_store_from_file(args.target)
 
     # Construct builder
-    module_name, class_name = args.builder.rsplit('.', 1)
-    builder_class = load_class(module_name, class_name)
+    builder_class = load_class(args.module, args.builder)
     builder = builder_class(source_store, target_store, **args.kwargs)
 
     # Run builder
     runner = Runner([builder])
     runner.run()
+
+if __name__ == "__main__":
+    main()
