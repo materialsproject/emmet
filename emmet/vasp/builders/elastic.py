@@ -59,17 +59,16 @@ class ElasticBuilder(Builder):
 
         self.logger.info("Elastic Builder Started")
         self.logger.debug("Adding indices")
-        self.tasks.ensure_index("parent_structure.spacegroup.number")
+        self.tasks.ensure_index("nsites")
         self.tasks.ensure_index("formula_pretty")
 
         # Get only successful elastic deformation tasks with parent structure
         q = dict(self.query)
         q["state"] = "successful"
         q["task_label"] = "elastic deformation"
-        q["parent_structure"] = {"$exists": True}
 
         # only consider tasks that have been updated since materials was last updated
-        # q.update(self.tasks.lu_filter(self.elasticity))
+        q.update(self.tasks.lu_filter(self.elasticity))
 
         sm = StructureMatcher(ltol=1e-10, stol=1e-10, angle_tol=1e-10,
                               primitive_cell=False, scale=False,
@@ -84,14 +83,14 @@ class ElasticBuilder(Builder):
                         'task_id', 'parent_structure']
         self.logger.debug("Getting criteria")
         criterias = self.tasks.distinct(
-            ["formula_pretty", "parent_structure.spacegroup.number"], criteria=q)
-        self.logger.debug("Found {} unique spacegroup-formula combinations".format(len(criterias)))
+            ["formula_pretty", "nsites"], criteria=q)
+        self.logger.debug("Found {} unique nsite-formula combinations".format(len(criterias)))
         import pdb; pdb.set_trace()
         for n, crit in enumerate(criterias):
             crit.update(q)
             tasks = self.tasks.query(criteria=crit, properties=return_props)
 
-            # Group by parent structure
+            # Group by parent lattice
             task_sets = group_by_structure(tasks, sm=sm)
             for task_set in task_sets:
                 if self.materials:
@@ -101,7 +100,7 @@ class ElasticBuilder(Builder):
                     mp_id = None
                 self.logger.debug("Processing {} : {} of {}".format(
                     crit['formula_pretty'], n, len(criterias)))
-                yield task_set
+                yield task_set, mp_id
 
     def process_item(self, item):
         """
@@ -197,6 +196,7 @@ class ElasticBuilder(Builder):
         # TODO: likely want to group everything by structure here?
         pass
     """
+
     def _find_mp_id(self, structure, structure_matcher=None):
         sm = structure_matcher or StructureMatcher()
         sga = SpacegroupAnalyzer(structure)
@@ -209,28 +209,31 @@ class ElasticBuilder(Builder):
             if sm.fit(c_structure, structure):
                 return candidate['material_id']
 
-def group_by_structure(docs, sm=None):
+def group_by_parent_lattice(docs, tol=1e-10):
     """
-    Groups a set of documents by structural equivalence
+    Groups a set of documents by parent lattice equivalence
 
     Args:
         docs ([{}]): list of documents e. g. dictionaries or cursor
-        sm (StructureMatcher): structure matcher to determine structural equivalence
-        key (str): key for which to find structures
+        tol (float): tolerance for equivalent lattice finding using,
+            np.allclose, default 1e-10
     """
-    sm = sm if sm else StructureMatcher()
-    unique_structures = []
+    unique_lattices = []
     for doc in docs:
-        if "parent_structure" in doc:
-            structure = Structure.from_dict(get_mongolike(doc, "parent_structure.structure"))
+        sim_lattice = get_mongolike(doc, "output.structure.lattice.matrix")
+
+        if "deformation" in doc['task_label']:
+            # Note that this assumes only one transformation, deformstructuretransformation
+            defo = doc['transmuter']['transformation_params'][0]['deformation']
+            parent_lattice = np.dot(sim_lattice, np.transpose(np.linalg.inv(defo)))
         else:
-            structure = Structure.from_dict(get_mongolike(doc, "output.structure"))
+            parent_lattice = np.array(sim_lattice)
         match = False
-        for unique_structure in unique_structures:
-            if sm.fit(unique_structure[0], structure):
-                match = True
-                unique_structure[1].append(doc)
+        for unique_lattice in unique_lattices:
+            match = np.allclose(unique_lattice, parent_lattice, atol=tol)
+            if match:
+                unique_lattice[1].append(doc)
                 break
         if not match:
-            unique_structures.append([structure, [doc]])
-    return unique_structures
+            unique_lattices.append([parent_lattice, [doc]])
+    return unique_lattices
