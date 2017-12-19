@@ -1,26 +1,17 @@
 import numpy as np
-import os
 from datetime import datetime
-from itertools import chain
 
-from monty.json import jsanitize
-
-from pymatgen import Structure, Composition
-from pymatgen.analysis.elasticity.elastic import ElasticTensor
-from pymatgen.analysis.elasticity.strain import Strain, Deformation
-from pymatgen.analysis.elasticity.stress import Stress
-from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
+from pymatgen import Composition
 
 from maggma.builder import Builder
 
-from emmet.vasp.builders.task_tagger import TaskTagger
-from atomate.utils.utils import get_mongolike, get_structure_metadata
+from atomate.utils.utils import get_mongolike
 
 __author__ = "Joseph Montoya <montoyjh@lbl.gov>"
 
 
 class MPWorksCompatibilityBuilder(Builder):
-    def __init__(self, mpworks_tasks, atomate_tasks, query={}, preserve_mpids=True, 
+    def __init__(self, mpworks_tasks, atomate_tasks, query={},
                  incremental=True, redo_task_ids=True, **kwargs):
         """
         Converts a task collection from the MPWorks schema to
@@ -29,16 +20,18 @@ class MPWorksCompatibilityBuilder(Builder):
         Args:
             mpworks_tasks (Store): Store of task documents
             atomate_tasks (Store): Store of elastic properties
-            preserve_mpids (bool): whether to keep the mpids or create
-                new ones based on the counter in a new collection
             query (dict): dictionary to limit materials to be analyzed
+            incremental (bool): whether to operate in incremental mode,
+                i.e. to filter by only tasks that have been updated
+                after the last last_updated field in the target store
+            redo_task_ids (str/bool): whether to redo_task_ids, if
+                a string is supplied, this will be used as the new prefix.
+            **kwargs (kwargs): further kwargs for maggma builders
         """
-        #TODO: implement preserve_mpids
 
         self.mpworks_tasks = mpworks_tasks
         self.atomate_tasks = atomate_tasks 
         self.query = query
-        self.kwargs = kwargs
         self.incremental = incremental
         self.redo_task_ids = redo_task_ids
 
@@ -72,15 +65,6 @@ class MPWorksCompatibilityBuilder(Builder):
         count = tasks_to_convert.count()
         self.logger.info("Found {} new/updated tasks to process".format(count))
 
-        # Get all parent structures
-        all_parent_structures = {}
-        for otask_id in self.mpworks_tasks.distinct("original_task_id", q):
-            otask_crit = {"task_id": otask_id}
-            otask_crit.update(q)
-            otask = self.mpworks_tasks.query(properties=['output.crystal'], 
-                                             criteria=otask_crit)[0]
-            # blargh
-            all_parent_structures[otask_id] = Structure.from_dict(otask['output']['crystal'])
         # Redo all task ids at the beginning
         if self.redo_task_ids:
             # Get counter for atomate tasks db
@@ -95,25 +79,21 @@ class MPWorksCompatibilityBuilder(Builder):
 
         for n, task in enumerate(tasks_to_convert):
             self.logger.debug("Processing MPWorks task_id: {} of {}".format(task['task_id'], count))
-            if 'original_task_id' in task:
-                parent_structure = all_parent_structures[task['original_task_id']]
-            else:
-                parent_structure = None
-            new_task_id = "mp-{}".format(n + starting_taskid)
-            yield task, parent_structure, new_task_id
+            new_task_id = n + starting_taskid
+            yield task, new_task_id
 
     def process_item(self, item):
         """
         Process the MPWorks tasks and materials into an Atomate tasks collection
 
         Args:
-            item dict: an mpworks document
+            item (dict): an mpworks document
 
         Returns:
-            dict: an Atomate task document dictionary 
+            an Atomate task document
         """
-        mpw_doc, parent_structure, new_task_id = item
-        atomate_doc = convert_mpworks_to_atomate(mpw_doc, parent_structure=parent_structure)
+        mpw_doc, new_task_id = item
+        atomate_doc = convert_mpworks_to_atomate(mpw_doc)
         atomate_doc['last_updated'] = datetime.utcnow()
         if self.redo_task_ids:
             atomate_doc['_mpworks_meta']['task_id'] = atomate_doc.pop("task_id")
@@ -125,21 +105,18 @@ class MPWorksCompatibilityBuilder(Builder):
         Inserts the new tasks into atomate_tasks collection 
 
         Args:
-            items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
+            items ([([dict],[int])]): A list of tuples of materials to
+                update and the corresponding processed task_ids
         """
         self.logger.info("Updating {} atomate documents".format(len(items)))
 
-        self.atomate_tasks.collection.insert_many(items, ordered=False)
-
-        # This is just too slow at the moment, need to refactor maggma maybe?
-        # self.atomate_tasks.update("task_id", items, update_lu=True, ordered=False)
+        self.atomate_tasks.update(items, key='task_id')
 
     def finalize(self, cursor):
         self.atomate_tasks.close()
         self.mpworks_tasks.close()
 
 
-        
 ## MPWorks key: Atomate key
 conversion_schema = {"dir_name_full": "dir_name",
                      "last_updated": "last_updated",
@@ -232,31 +209,42 @@ def set_mongolike(ddict, key, value):
         ddict[key] = value
 
 
-# TODO: should add the rest of these, e. g. Static, NSCF Bandstructure
+# TODO: could add the rest of these, e. g. Static, NSCF Bandstructure
 task_type_conversion = {"Calculate deformed structure static optimize": "elastic deformation",
                         "Vasp force convergence optimize structure (2x)": "structure optimization",
                         "Optimize deformed structure": "elastic deformation"}
 
-def convert_mpworks_to_atomate(mpworks_doc, parent_structure=None):
+def convert_mpworks_to_atomate(mpworks_doc):
     """
     Function to convert an mpworks document into an atomate
     document, uses schema above and a few custom cases
     """
-    # TODO: ensure energy compatibility (e. g. TOTEN vs. F or whatever)
+    # TODO: ensure energy compatibility (i.e. using e_wo_entrop)
     atomate_doc = {}
     for key_mpworks, key_atomate in conversion_schema.items():
         val = get_mongolike(mpworks_doc, key_mpworks)
         set_mongolike(atomate_doc, key_atomate, val)
-
-    # Get parent structure
-    if parent_structure:
-        atomate_doc['parent_structure'] = get_structure_metadata(parent_structure)
 
     # Task type
     atomate_doc["task_label"] = task_type_conversion[mpworks_doc["task_type"]]
 
     # calculations
     atomate_doc["calcs_reversed"] = mpworks_doc["calculations"][::-1]
+
+    # Final energy - this is being changed because of a change in pymatgen
+    #       input parsing that uses e_wo_entrop instead of e_fr_energy
+    for calc in atomate_doc['calcs_reversed']:
+        total_e = calc['output']['ionic_steps'][-1]['e_wo_entrp']
+        e_per_atom = total_e / atomate_doc['nsites']
+        calc['output']['energy'] = total_e
+        calc['output']['energy_per_atom'] = e_per_atom
+        calc['output'].pop('final_energy')
+        calc['output'].pop('final_energy_per_atom')
+        calc['output']['structure'] = calc['output'].pop('crystal')
+    atomate_doc['output']['energy'] = \
+        atomate_doc['calcs_reversed'][0]['output']['energy']
+    atomate_doc['output']['energy_per_atom'] = \
+        atomate_doc['calcs_reversed'][0]['output']['energy_per_atom']
 
     # anonymous formula
     comp = Composition(atomate_doc['composition_reduced'])
@@ -274,9 +262,6 @@ def convert_mpworks_to_atomate(mpworks_doc, parent_structure=None):
         set_mongolike(atomate_doc, "transmuter.transformation_params", 
                       [{"deformation": defo}])
 
-    # original task id
-    if "original_task_id" in mpworks_doc:
-        atomate_doc["_mpworks_meta"]["original_task_id"] = mpworks_doc["original_task_id"]
     return atomate_doc
 
 
