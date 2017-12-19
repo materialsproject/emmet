@@ -2,13 +2,18 @@ import numpy as np
 from datetime import datetime
 
 from pymatgen import Composition
+from pymatgen.entries.compatibility import MaterialsProjectCompatibility
+from pymatgen.entries.computed_entries import ComputedEntry
 
 from maggma.builder import Builder
 
 from atomate.utils.utils import get_mongolike
 
+import traceback, logging
+
 __author__ = "Joseph Montoya <montoyjh@lbl.gov>"
 
+logger = logging.getLogger(__name__)
 
 class MPWorksCompatibilityBuilder(Builder):
     def __init__(self, mpworks_tasks, atomate_tasks, query={},
@@ -127,12 +132,13 @@ conversion_schema = {"dir_name_full": "dir_name",
                      "chemsys": "chemsys",
                      "nsites": "nsites",
                      "run_tags": "tags",
+                     "input.crystal": "input.structure",
+                     "hubbards": "input.hubbards",
                      "is_hubbard": "input.is_hubbard",
                      "input.is_lasph": "input.is_lasph",
                      "input.xc_override": "input.xc_override",
                      "input.potcar_spec": "input.potcar_spec",
                      "input.crystal": "input.structure",
-                     "hubbards": "input.hubbards",
                      "pseudo_potential": "input.pseudo_potential",
                      "run_stats": "run_stats", # Not sure if completely compatible
                      "density": "output.density",
@@ -161,6 +167,7 @@ conversion_schema = {"dir_name_full": "dir_name",
                      "state": "state"
                      }
 
+
 ####### Orphan MPWorks keys
 """
 "vaspinputset_name": - Don't need
@@ -171,10 +178,59 @@ conversion_schema = {"dir_name_full": "dir_name",
 "anonymous_formula": X convert manually b/c doesn't really work the same
 "deformation_matrix": X need to handle these manually as well
 """
+
 ###### Orphan Atomate keys
 """
 "input.parameters" - Not clear what to do with this
 """
+
+# TODO: could add the rest of these, e. g. Static, NSCF Bandstructure
+task_type_conversion = {"Calculate deformed structure static optimize": "elastic deformation",
+                        "Vasp force convergence optimize structure (2x)": "structure optimization",
+                        "Optimize deformed structure": "elastic deformation"}
+
+def convert_mpworks_to_atomate(mpworks_doc, update_mpworks=True):
+    """
+    Function to convert an mpworks document into an atomate
+    document, uses schema above and a few custom cases
+    
+    Args:
+        mpworks_doc (dict): mpworks task document
+        update_mpworks (bool): flag to indicate that mpworks schema
+            should be updated
+    """
+    if update_mpworks:
+        update_mpworks_schema(mpworks_doc)
+
+    atomate_doc = {}
+    for key_mpworks, key_atomate in conversion_schema.items():
+        val = get_mongolike(mpworks_doc, key_mpworks)
+        set_mongolike(atomate_doc, key_atomate, val)
+
+    # Task type
+    atomate_doc["task_label"] = task_type_conversion[mpworks_doc["task_type"]]
+
+    # calculations
+    atomate_doc["calcs_reversed"] = mpworks_doc["calculations"][::-1]
+
+    # anonymous formula
+    comp = Composition(atomate_doc['composition_reduced'])
+    atomate_doc["formula_anonymous"] = comp.anonymized_formula
+
+    # deformation matrix and original_task_id
+    if "deformation_matrix" in mpworks_doc:
+        # Transpose this b/c of old bug, should verify in doc processing
+        defo = mpworks_doc["deformation_matrix"]
+        if isinstance(defo, str):
+            defo = convert_string_deformation_to_list(defo)
+        defo = np.transpose(defo).tolist()
+        set_mongolike(atomate_doc, "transmuter.transformations", 
+                      ["DeformStructureTransformation"])
+        set_mongolike(atomate_doc, "transmuter.transformation_params", 
+                      [{"deformation": defo}])
+
+    return atomate_doc
+
 
 def set_mongolike(ddict, key, value):
     """
@@ -209,62 +265,6 @@ def set_mongolike(ddict, key, value):
         ddict[key] = value
 
 
-# TODO: could add the rest of these, e. g. Static, NSCF Bandstructure
-task_type_conversion = {"Calculate deformed structure static optimize": "elastic deformation",
-                        "Vasp force convergence optimize structure (2x)": "structure optimization",
-                        "Optimize deformed structure": "elastic deformation"}
-
-def convert_mpworks_to_atomate(mpworks_doc):
-    """
-    Function to convert an mpworks document into an atomate
-    document, uses schema above and a few custom cases
-    """
-    # TODO: ensure energy compatibility (i.e. using e_wo_entrop)
-    atomate_doc = {}
-    for key_mpworks, key_atomate in conversion_schema.items():
-        val = get_mongolike(mpworks_doc, key_mpworks)
-        set_mongolike(atomate_doc, key_atomate, val)
-
-    # Task type
-    atomate_doc["task_label"] = task_type_conversion[mpworks_doc["task_type"]]
-
-    # calculations
-    atomate_doc["calcs_reversed"] = mpworks_doc["calculations"][::-1]
-
-    # Final energy - this is being changed because of a change in pymatgen
-    #       input parsing that uses e_wo_entrop instead of e_fr_energy
-    for calc in atomate_doc['calcs_reversed']:
-        total_e = calc['output']['ionic_steps'][-1]['e_wo_entrp']
-        e_per_atom = total_e / atomate_doc['nsites']
-        calc['output']['energy'] = total_e
-        calc['output']['energy_per_atom'] = e_per_atom
-        calc['output'].pop('final_energy')
-        calc['output'].pop('final_energy_per_atom')
-        calc['output']['structure'] = calc['output'].pop('crystal')
-    atomate_doc['output']['energy'] = \
-        atomate_doc['calcs_reversed'][0]['output']['energy']
-    atomate_doc['output']['energy_per_atom'] = \
-        atomate_doc['calcs_reversed'][0]['output']['energy_per_atom']
-
-    # anonymous formula
-    comp = Composition(atomate_doc['composition_reduced'])
-    atomate_doc["formula_anonymous"] = comp.anonymized_formula
-
-    # deformation matrix and original_task_id
-    if "deformation_matrix" in mpworks_doc:
-        # Transpose this b/c of old bug, should verify in doc processing
-        defo = mpworks_doc["deformation_matrix"]
-        if isinstance(defo, str):
-            defo = convert_string_deformation_to_list(defo)
-        defo = np.transpose(defo).tolist()
-        set_mongolike(atomate_doc, "transmuter.transformations", 
-                      ["DeformStructureTransformation"])
-        set_mongolike(atomate_doc, "transmuter.transformation_params", 
-                      [{"deformation": defo}])
-
-    return atomate_doc
-
-
 def convert_string_deformation_to_list(string_defo):
     """
     Some of the older documents in the mpworks schema have a string version
@@ -273,3 +273,55 @@ def convert_string_deformation_to_list(string_defo):
     string_defo = string_defo.replace("[", "").replace("]", "").split()
     defo = np.array(string_defo, dtype=float).reshape(3, 3)
     return defo.tolist()
+
+
+def update_mpworks_schema(mpworks_doc):
+    """
+    Ensures that mpworks document is up to date
+    
+    Args:
+        mpworks_doc: document to update schema for
+
+    Returns:
+        boolean corresponding to whether doc is compatible
+
+    """
+    # Input
+    last_calc = mpworks_doc['calculations'][-1]
+    xc = last_calc['input']['incar'].get("GGA")
+    if xc:
+        xc.upper()
+    mpworks_doc["input"].update(
+        {"is_lasph": last_calc["input"]["incar"].get("LASPH", False),
+         "potcar_spec": last_calc["input"].get("potcar_spec"),
+         "xc_override": xc,
+         "is_hubbard": last_calc["input"]["incar"].get("LDAU", False)})
+
+    # Final energy - this is being changed because of a change in pymatgen
+    #   input parsing that uses e_wo_entrop instead of e_fr_energy
+    for calc in mpworks_doc['calculations']:
+        total_e = calc['output']['ionic_steps'][-1]['electronic_steps']\
+            [-1]['e_wo_entrp']
+        e_per_atom = total_e / mpworks_doc['nsites']
+        calc['output']['final_energy'] = total_e
+        calc['output']['final_energy_per_atom'] = e_per_atom
+
+    # Compatibility
+    mpc = MaterialsProjectCompatibility("Advanced")
+    func = mpworks_doc["pseudo_potential"]["functional"]
+    labels = mpworks_doc["pseudo_potential"]["labels"]
+    symbols = ["{} {}".format(func, label) for label in labels]
+    parameters = {"run_type": mpworks_doc["run_type"],
+                  "is_hubbard": mpworks_doc["is_hubbard"],
+                  "hubbards": mpworks_doc["hubbards"],
+                  "potcar_symbols": symbols}
+    entry = ComputedEntry(Composition(mpworks_doc["unit_cell_formula"]),
+                          0.0, 0.0, parameters=parameters,
+                          entry_id=mpworks_doc["task_id"])
+    try:
+        mpworks_doc['is_compatible'] = bool(mpc.process_entry(entry))
+    except:
+        traceback.print_exc()
+        logger.warning('ERROR in getting compatibility')
+        mpworks_doc['is_compatible'] = None
+    return mpworks_doc
