@@ -128,13 +128,19 @@ class ElasticBuilder(Builder):
         final_doc = elastic_docs[-1]
         c_ijkl = ElasticTensor.from_voigt(final_doc['elastic_tensor'])
         structure = final_doc['optimized_structure']
+        formula = structure.composition.reduced_formula
+        elements = [s.symbol for s in structure.composition.elements]
+        chemsys = '-'.join(elements)
         final_doc.update(c_ijkl.property_dict)
         final_doc.update(c_ijkl.get_structure_property_dict(structure))
 
         elastic_summary = {'material_id': mp_id,
-                           'all_elastic_docs': elastic_docs}
-        elastic_summary.update(final_doc)
-        elastic_summary['pretty_formula'] = structure.composition.reduced_formula
+                           'all_elastic_fits': elastic_docs,
+                           'elasticity': final_doc,
+                           'pretty_formula': formula,
+                           'chemsys': chemsys,
+                           'elements': elements}
+        # elastic_summary.update(final_doc)
 
         return elastic_summary
 
