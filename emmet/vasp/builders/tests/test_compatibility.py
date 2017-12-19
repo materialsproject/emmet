@@ -2,7 +2,7 @@ import unittest
 import os
 
 from emmet.vasp.builders.compatibility import MPWorksCompatibilityBuilder, \
-        set_mongolike, convert_mpworks_to_atomate
+        set_mongolike, convert_mpworks_to_atomate, update_mpworks_schema
 from maggma.stores import JSONStore, MemoryStore
 from monty.json import MontyEncoder, MontyDecoder
 
@@ -43,6 +43,12 @@ class MPWorksCompatibilityBuilderTest(unittest.TestCase):
         doc = self.test_tasks.collection.find_one(
             {"task_type": {"$regex": "(2x)"}})
         new_doc = convert_mpworks_to_atomate(doc)
+
+    def test_update_mpworks_schema(self):
+        doc = self.test_tasks.query(criteria={"task_id": "mp-612"})[0]
+        doc = update_mpworks_schema(doc)
+        atomate_doc = convert_mpworks_to_atomate(doc)
+
 
 if __name__ == "__main__":
     unittest.main()
