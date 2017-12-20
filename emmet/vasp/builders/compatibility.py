@@ -83,8 +83,9 @@ class MPWorksCompatibilityBuilder(Builder):
             counter.find_one_and_update({"_id": "taskid"}, {"$inc": {"c": count}})
 
         for n, task in enumerate(tasks_to_convert):
-            self.logger.debug("Processing MPWorks task_id: {} of {}".format(task['task_id'], count))
             new_task_id = n + starting_taskid
+            self.logger.debug("Processing item: {}->{}, {} of {}".format(task['task_id'], new_task_id, 
+                                                                         n, count))
             yield task, new_task_id
 
     def process_item(self, item):
