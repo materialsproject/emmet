@@ -6,6 +6,7 @@ from atomate.utils.utils import load_class
 from monty.serialization import loadfn
 import argparse
 import logging
+import ast
 
 def get_store_from_file(filename):
     """
@@ -30,9 +31,8 @@ def main():
     parser.add_argument("-m", "--module", help="Builder module")
     parser.add_argument("-s", "--source", help="source store config file")
     parser.add_argument("-t", "--target", help="target store config file")
-    parser.add_argument("-k", "--kwargs", 
-                        default={}, help="builder kwargs, e. g. "
-                                         "'{\"query\": {\"tags\": \"project_1\"}}'")
+    parser.add_argument("-k", "--kwargs", help="builder kwargs, e. g. "
+                        "'{\"query\": {\"tags\": \"project_1\"}}'")
     parser.add_argument("--log", default="WARNING", help="logger level")
 
     args = parser.parse_args()
@@ -46,8 +46,12 @@ def main():
     target_store = get_store_from_file(args.target)
 
     # Construct builder
+    if args.kwargs:
+        kwargs = ast.literal_eval(args.kwargs)
+    else:
+        kwargs = {}
     builder_class = load_class(args.module, args.builder)
-    builder = builder_class(source_store, target_store, **args.kwargs)
+    builder = builder_class(source_store, target_store, **kwargs)
 
     # Run builder
     runner = Runner([builder])

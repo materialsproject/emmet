@@ -78,6 +78,9 @@ class ElasticBuilder(Builder):
 
         # only consider tasks that have been updated since materials was last updated
         if self.incremental:
+            self.logger.info("Ensuring indices on lu_field for sources and targets")
+            self.tasks.ensure_index(self.tasks.lu_field)
+            self.elasticity.ensure_index(self.elasticity.lu_field)
             q.update(self.tasks.lu_filter(self.elasticity))
 
         # TODO: Ensure appropriately selective DFT params - input.incar.GGA, input.incar.ENCUT
@@ -89,7 +92,7 @@ class ElasticBuilder(Builder):
                         'transmuter', 'task_id', 'task_label']
         self.logger.debug("Getting criteria")
         criterias = self.tasks.distinct(mutually_exclusive_params, criteria=q)
-        self.logger.debug("Found {} unique nsite-formula combinations".\
+        self.logger.debug("Found {} unique formulas".\
                           format(len(criterias)))
         # import nose; nose.tools.set_trace()
         for n, crit in enumerate(criterias):
@@ -98,51 +101,59 @@ class ElasticBuilder(Builder):
 
             # Group by material_id
             # TODO: refactor for task sets without structure opt
+            logger.debug("Processing formula {}, {} of {}".format(
+                crit['formula_pretty'], n, len(criterias)))
+
             grouped = group_by_material_id(self.materials, tasks)
+            yield grouped
+            """
             for material_id, task_sets in grouped.items():
                 self.logger.debug("Processing {} : {} of {}".format(
                     crit['formula_pretty'], n, len(criterias)))
                 yield material_id, task_sets
+            """
 
     def process_item(self, item):
         """
         Process the tasks and materials into a elasticity collection
 
         Args:
-            item: list of deformation tasks
+            item: a dictionary of documents keyed by materials id
 
         Returns:
             an elasticity document
         """
-        mp_id, task_sets = item
-        elastic_docs = []
-        for opt_task, defo_tasks in task_sets:
-            elastic_doc = get_elastic_analysis(opt_task, defo_tasks)
-            if elastic_doc:
-                elastic_docs.append(elastic_doc)
+        all_docs = []
+        for material_id, task_set in item.items():
+            elastic_docs = []
+            for opt_task, defo_tasks in task_sets:
+                elastic_doc = get_elastic_analysis(opt_task, defo_tasks)
+                if elastic_doc:
+                    elastic_docs.append(elastic_doc)
 
-        if not elastic_docs:
-            return None
-        # For now just do the most recent one that's not failed
-        sorted(elastic_docs, key=lambda x: (x['state'], x['completed_at']))
-        final_doc = elastic_docs[-1]
-        c_ijkl = ElasticTensor.from_voigt(final_doc['elastic_tensor'])
-        structure = final_doc['optimized_structure']
-        formula = structure.composition.reduced_formula
-        elements = [s.symbol for s in structure.composition.elements]
-        chemsys = '-'.join(elements)
-        final_doc.update(c_ijkl.property_dict)
-        final_doc.update(c_ijkl.get_structure_property_dict(structure))
+            if not elastic_docs:
+                return None
+            # For now just do the most recent one that's not failed
+            sorted(elastic_docs, key=lambda x: (x['state'], x['completed_at']))
+            final_doc = elastic_docs[-1]
+            c_ijkl = ElasticTensor.from_voigt(final_doc['elastic_tensor'])
+            structure = final_doc['optimized_structure']
+            formula = structure.composition.reduced_formula
+            elements = [s.symbol for s in structure.composition.elements]
+            chemsys = '-'.join(elements)
+            final_doc.update(c_ijkl.property_dict)
+            final_doc.update(c_ijkl.get_structure_property_dict(structure))
 
-        elastic_summary = {'material_id': mp_id,
-                           'all_elastic_fits': elastic_docs,
-                           'elasticity': final_doc,
-                           'pretty_formula': formula,
-                           'chemsys': chemsys,
-                           'elements': elements}
-        # elastic_summary.update(final_doc)
+            elastic_summary = {'material_id': mp_id,
+                               'all_elastic_fits': elastic_docs,
+                               'elasticity': final_doc,
+                               'pretty_formula': formula,
+                               'chemsys': chemsys,
+                               'elements': elements}
+            all_docs.append(elastic_summary)
+            # elastic_summary.update(final_doc)
 
-        return elastic_summary
+        return all_docs
 
 
     def update_targets(self, items):
@@ -152,11 +163,10 @@ class ElasticBuilder(Builder):
         Args:
             items ([dict]): list of elasticity docs
         """
+        items = list(chain.from_iterable(items))
         self.logger.info("Updating {} elastic documents".format(len(items)))
 
-
         # self.elasticity.collection.insert_many(items)
-        # TODO: group more loosely by material
         items = [jsanitize(doc, strict=True) for doc in items if doc]
         for item in items:
             item[self.elasticity.lu_field] = self.start_date
