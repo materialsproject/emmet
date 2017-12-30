@@ -78,6 +78,9 @@ class ElasticBuilder(Builder):
 
         # only consider tasks that have been updated since materials was last updated
         if self.incremental:
+            self.logger.info("Ensuring indices on lu_field for sources and targets")
+            self.tasks.ensure_index(self.tasks.lu_field)
+            self.elasticity.ensure_index(self.elasticity.lu_field)
             q.update(self.tasks.lu_filter(self.elasticity))
 
         # TODO: Ensure appropriately selective DFT params - input.incar.GGA, input.incar.ENCUT
@@ -89,7 +92,7 @@ class ElasticBuilder(Builder):
                         'transmuter', 'task_id', 'task_label']
         self.logger.debug("Getting criteria")
         criterias = self.tasks.distinct(mutually_exclusive_params, criteria=q)
-        self.logger.debug("Found {} unique nsite-formula combinations".\
+        self.logger.debug("Found {} unique formulas".\
                           format(len(criterias)))
         # import nose; nose.tools.set_trace()
         for n, crit in enumerate(criterias):
@@ -98,6 +101,9 @@ class ElasticBuilder(Builder):
 
             # Group by material_id
             # TODO: refactor for task sets without structure opt
+            logger.debug("Grouping tasks for formula {}, {}".format(
+                crit['formula_pretty'], n))
+                        
             grouped = group_by_material_id(self.materials, tasks)
             for material_id, task_sets in grouped.items():
                 self.logger.debug("Processing {} : {} of {}".format(

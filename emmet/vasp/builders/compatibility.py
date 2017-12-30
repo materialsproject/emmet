@@ -38,6 +38,7 @@ class MPWorksCompatibilityBuilder(Builder):
         self.atomate_tasks = atomate_tasks 
         self.query = query
         self.incremental = incremental
+        self.builder_start_time = datetime.utcnow()
         self.redo_task_ids = redo_task_ids
 
         super().__init__(sources=[mpworks_tasks],
@@ -64,9 +65,13 @@ class MPWorksCompatibilityBuilder(Builder):
         
         # only consider tasks that have been updated since tasks was last updated
         if self.incremental:
+            self.logger.info("Ensuring indices on lu_field for sources and targets")
+            self.mpworks_tasks.ensure_index(self.mpworks_tasks.lu_field)
+            self.atomate_tasks.ensure_index(self.atomate_tasks.lu_field)
             q.update(self.mpworks_tasks.lu_filter(self.atomate_tasks))
-
-        tasks_to_convert = self.mpworks_tasks.query(criteria=q)
+        
+        # No cursor timeout should probably be fixed with smaller batch sizes
+        tasks_to_convert = self.mpworks_tasks.query(criteria=q, no_cursor_timeout=True)
         count = tasks_to_convert.count()
         self.logger.info("Found {} new/updated tasks to process".format(count))
 
@@ -100,7 +105,7 @@ class MPWorksCompatibilityBuilder(Builder):
         """
         mpw_doc, new_task_id = item
         atomate_doc = convert_mpworks_to_atomate(mpw_doc)
-        atomate_doc['last_updated'] = datetime.utcnow()
+        atomate_doc['last_updated'] = self.builder_start_time
         if self.redo_task_ids:
             atomate_doc['_mpworks_meta']['task_id'] = atomate_doc.pop("task_id")
             atomate_doc['task_id'] = new_task_id
