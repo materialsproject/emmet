@@ -124,7 +124,7 @@ class ElasticBuilder(Builder):
             an elasticity document
         """
         all_docs = []
-        for material_id, task_set in item.items():
+        for mp_id, task_sets in item.items():
             elastic_docs = []
             for opt_task, defo_tasks in task_sets:
                 elastic_doc = get_elastic_analysis(opt_task, defo_tasks)
@@ -132,7 +132,8 @@ class ElasticBuilder(Builder):
                     elastic_docs.append(elastic_doc)
 
             if not elastic_docs:
-                return None
+                logger.warning("No elastic doc for mp_id {}".format(mp_id))
+                continue
             # For now just do the most recent one that's not failed
             sorted(elastic_docs, key=lambda x: (x['state'], x['completed_at']))
             final_doc = elastic_docs[-1]
@@ -163,11 +164,12 @@ class ElasticBuilder(Builder):
         Args:
             items ([dict]): list of elasticity docs
         """
-        items = list(chain.from_iterable(items))
+        # import nose; nose.tools.set_trace()
+        items = chain.from_iterable(items)
+        items = [jsanitize(doc, strict=True) for doc in items if doc]
         self.logger.info("Updating {} elastic documents".format(len(items)))
 
         # self.elasticity.collection.insert_many(items)
-        items = [jsanitize(doc, strict=True) for doc in items if doc]
         for item in items:
             item[self.elasticity.lu_field] = self.start_date
         self.elasticity.update(items, key='material_id')
