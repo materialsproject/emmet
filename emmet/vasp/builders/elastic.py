@@ -150,7 +150,8 @@ class ElasticBuilder(Builder):
                                'elasticity': final_doc,
                                'pretty_formula': formula,
                                'chemsys': chemsys,
-                               'elements': elements}
+                               'elements': elements,
+                               'last_updated': self.elasticity.lu_field}
             all_docs.append(elastic_summary)
             # elastic_summary.update(final_doc)
 
@@ -166,12 +167,10 @@ class ElasticBuilder(Builder):
         """
         # import nose; nose.tools.set_trace()
         items = chain.from_iterable(items)
-        items = [jsanitize(doc, strict=True) for doc in items if doc]
+        items = [jsanitize(doc, strict=True) for doc in items]
         self.logger.info("Updating {} elastic documents".format(len(items)))
 
         # self.elasticity.collection.insert_many(items)
-        for item in items:
-            item[self.elasticity.lu_field] = self.start_date
         self.elasticity.update(items, key='material_id')
 
     def finalize(self, items):
