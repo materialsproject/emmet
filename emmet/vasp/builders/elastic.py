@@ -248,7 +248,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
         fstresses = pk_stresses
 
     et_raw = ElasticTensor.from_pseudoinverse(fstrains, fstresses)
-    et = et_raw.convert_to_ieee(opt_struct)
+    et = et_raw.voigt_symmetrized.convert_to_ieee(opt_struct)
     defo_tasks = sorted(defo_tasks, key=lambda x: x['completed_at'])
     input = opt_task['input']
     input.pop('structure')
@@ -267,7 +267,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
                         "optimization_input": input})
 
     # Process input
-    # TODO: process advanced warnings
+    elastic_doc['warnings'] = get_warnings(et, opt_struct) or None
     # TODO: process MPWorks metadata?
     # TODO: higher order?
     # TODO: fitting method?
@@ -390,3 +390,41 @@ def calculate_deformation(undeformed_structure, deformed_structure):
     return np.transpose(np.dot(np.linalg.inv(ulatt), dlatt))
 
 
+def get_warnings(elastic_tensor, structure):
+    """
+    Generates all warnings that apply to a fitted elastic tensor
+    
+    Args:
+        elastic_tensor (ElasticTensor): elastic tensor for which
+            to determine warnings
+        structure (Structure): structure for which elastic tensor
+            is determined
+
+    Returns:
+        list of warnings
+
+    """
+    warnings = []
+    if any([s.is_rare_earth_metal for s in structure.species]):
+        warnings.append("Contains a rare earth element")
+    eigs, eigvecs = np.linalg.eig(elastic_tensor.voigt)
+    if np.any(eigs < 0.0):
+        warnings.append("Elastic tensor has a negative eigenvalue")
+    c11, c12, c13 = elastic_tensor.voigt[0, 0:3]
+    c23 = elastic_tensor.voigt[1, 2]
+
+    # TODO: these should be revisited at some point, are they complete?
+    #       I think they might only apply to cubic systems
+    if not (abs((c11 - c12) / c11) < 0.05 or c11 < c12):
+        warnings.append("c11 and c12 are within 5% or c12 is greater than c11")
+    if not (abs((c11 - c13) / c11) < 0.05 or c11 < c13):
+        warnings.append("c11 and c13 are within 5% or c13 is greater than c11")
+    if not (abs((c11 - c23) / c11) < 0.05 or c11 < c23):
+        warnings.append("c11 and c23 are within 5% or c23 is greater than c11")
+
+    moduli = ["k_voigt", "k_reuss", "k_vrh", "g_voigt", "g_reuss", "g_vrh"]
+    moduli_array = np.array([getattr(elastic_tensor, m) for m in moduli])
+    if np.any(moduli_array) < 2:
+        warnings.append("One or more K, G below 2 GPa")
+
+    return warnings
