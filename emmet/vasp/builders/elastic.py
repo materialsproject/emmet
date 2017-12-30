@@ -18,6 +18,8 @@ from maggma.builder import Builder
 
 from atomate.utils.utils import get_mongolike
 
+import tqdm
+
 
 __author__ = "Joseph Montoya, Shyam Dwaraknath"
 __maintainer__ = "Joseph Montoya"
@@ -36,7 +38,7 @@ class ElasticBuilder(Builder):
             tasks (Store): Store of task documents
             elastic (Store): Store of elastic properties
             materials (Store): Store of materials properties
-            query (dict): dictionary to limit materials to be analyzed
+            query (dict): dictionary to limit tasks to be analyzed
             incremental (bool): whether or not to use a lu_filter based
                 on the current datetime
         """
@@ -55,8 +57,7 @@ class ElasticBuilder(Builder):
     def connect(self):
         self.tasks.connect()
         self.elasticity.connect()
-        if self.materials:
-            self.materials.connect()
+        self.materials.connect()
 
     def get_items(self):
         """
@@ -94,18 +95,26 @@ class ElasticBuilder(Builder):
         criterias = self.tasks.distinct(mutually_exclusive_params, criteria=q)
         self.logger.debug("Found {} unique formulas".\
                           format(len(criterias)))
-        # import nose; nose.tools.set_trace()
+        material_dict = generate_formula_dict(self.materials)
+        # hackish sieve to ensure parity between material dict and tasks
+        criterias = [c for c in criterias if c['formula_pretty'] in material_dict]
         for n, crit in enumerate(criterias):
             crit.update(q)
-            tasks = self.tasks.query(criteria=crit, properties=return_props)
+            tasks = list(self.tasks.query(criteria=crit, properties=return_props))
 
             # Group by material_id
             # TODO: refactor for task sets without structure opt
             logger.debug("Processing formula {}, {} of {}".format(
                 crit['formula_pretty'], n, len(criterias)))
-
-            grouped = group_by_material_id(self.materials, tasks)
-            yield grouped
+            # TODO: refactor for parallelization
+            formula_mat_dict = material_dict[crit['formula_pretty']]
+            yield tasks, formula_mat_dict.copy()
+            # else:
+            #    yield [], {}
+            #    logging.warning("No material with formula {}".format(
+            #        crit['formula_pretty']))
+            # grouped = group_by_material_id(self.materials, tasks)
+            # yield grouped
             """
             for material_id, task_sets in grouped.items():
                 self.logger.debug("Processing {} : {} of {}".format(
@@ -124,7 +133,11 @@ class ElasticBuilder(Builder):
             an elasticity document
         """
         all_docs = []
-        for mp_id, task_sets in item.items():
+        tasks, material_dict = item
+        if not tasks:
+            return all_docs
+        grouped = group_by_material_id(material_dict, tasks)
+        for mp_id, task_sets in grouped.items():
             elastic_docs = []
             for opt_task, defo_tasks in task_sets:
                 elastic_doc = get_elastic_analysis(opt_task, defo_tasks)
@@ -165,7 +178,8 @@ class ElasticBuilder(Builder):
         Args:
             items ([dict]): list of elasticity docs
         """
-        # import nose; nose.tools.set_trace()
+        import nose; nose.tools.set_trace()
+
         items = chain.from_iterable(items)
         items = [jsanitize(doc, strict=True) for doc in items]
         self.logger.info("Updating {} elastic documents".format(len(items)))
@@ -289,14 +303,14 @@ def get_elastic_analysis(opt_task, defo_tasks):
 
 
 # TODO: clean up unnecessary task/doc dichotomy
-def group_by_material_id(materials, docs, tol=1e-6,
+def group_by_material_id(materials_dict, docs, tol=1e-6,
                          structure_matcher=None):
     """
     Groups a collection of documents by material id
     as found in a materials collection
     
     Args:
-        materials (Store): store of materials documents
+        materials_dict (dict): dictionary of structures keyed by material_id
         docs ([dict]): list of documents 
         tol: tolerance for lattice grouping
         structure_matcher (StructureMatcher): structure
@@ -311,16 +325,11 @@ def group_by_material_id(materials, docs, tol=1e-6,
     task_sets_by_mp_id = {}
     for opt_task, defo_tasks in tasks_by_opt:
         structure = Structure.from_dict(opt_task['output']['structure'])
-        sga = SpacegroupAnalyzer(structure)
-        candidates = materials.query(
-                ['structure', 'material_id'],
-                {"pretty_formula": structure.composition.reduced_formula,
-                 "spacegroup.number": sga.get_space_group_number()})
         match = False
-        for candidate in candidates:
-            c_structure = Structure.from_dict(candidate['structure'])
+        for c_id, candidate in materials_dict.items():
+            c_structure = Structure.from_dict(candidate)
             if sm.fit(c_structure, structure):
-                mp_id = candidate['material_id']
+                mp_id = c_id
                 match = True
                 break
         if match:
@@ -352,7 +361,7 @@ def group_deformations_by_optimization_task(docs, tol=1e-6):
         if opt_struct_tasks and deformation_tasks:
             tasks_by_opt_task.append((opt_struct_tasks[-1], deformation_tasks))
         else:
-            logger.warn("No structure opt matching tasks")
+            logger.warning("No structure opt matching tasks")
     return tasks_by_opt_task
 
 
@@ -439,3 +448,26 @@ def get_warnings(elastic_tensor, structure):
         warnings.append("One or more K, G below 2 GPa")
 
     return warnings
+
+def generate_formula_dict(materials_store, query=None):
+    """
+    
+    Args:
+        materials_store (Store): store of materials 
+
+    Returns:
+        Nested dictionary keyed by formula-mp_id with structure values.
+
+    """
+    pipeline = [{'$match': query}] if query else []
+    pipeline.extend([{'$project': {'structure':1, 'pretty_formula': 1,
+                                   'material_id': 1}},
+                     {'$group': {'_id': '$pretty_formula',
+                                 'mp_ids': {'$push': '$material_id'},
+                                 'structures': {'$push': '$structure'}}}])
+    results = list(materials_store.collection.aggregate(pipeline))
+    formula_dict = {}
+    for result in tqdm.tqdm(results):
+        formula_dict[result['_id']] = dict(zip(result['mp_ids'],
+                                               result['structures']))
+    return formula_dict

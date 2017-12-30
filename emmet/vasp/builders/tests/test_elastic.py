@@ -5,7 +5,6 @@ from emmet.vasp.builders.elastic import *
 from maggma.stores import JSONStore, MemoryStore, MongoStore
 from maggma.runner import Runner
 from monty.json import MontyEncoder, MontyDecoder
-from pymatgen.analysis.structure_matcher import StructureMatcher
 
 __author__ = "Joseph Montoya"
 __email__ = "montoyjh@lbl.gov"
@@ -55,12 +54,18 @@ class ElasticBuilderTest(unittest.TestCase):
         self.assertEqual(len(docs_grouped1), 1)
         grouped_by_opt = group_deformations_by_optimization_task(docs1)
         self.assertEqual(len(grouped_by_opt), 1)
-        grouped_by_mpid = group_by_material_id(self.local_materials, docs1)
+
+        materials_dict = generate_formula_dict(self.local_materials)
+        grouped_by_mpid = group_by_material_id(materials_dict['NaN3'], docs1)
         self.assertEqual(len(grouped_by_mpid), 1)
 
         docs2 = self.local_tasks.query(criteria={"task_label": "elastic deformation"})
         sgroup2 = group_by_parent_lattice(docs2)
         # import nose; nose.tools.set_trace()
+
+    def test_materials_aggregator(self):
+        materials_dict = generate_formula_dict(self.local_materials)
+
 
 if __name__ == "__main__":
     unittest.main()
