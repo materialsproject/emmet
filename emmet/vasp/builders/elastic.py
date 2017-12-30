@@ -88,27 +88,30 @@ class ElasticBuilder(Builder):
         #       for kpoints, designate some cutoff for number
         # TODO: mpworks discrepancy in original input, probably going to just have to
         #       let it lie as a distinguisher between atomate/mpworks
-        mutually_exclusive_params = ["formula_pretty"]
         return_props = ['calcs_reversed', 'output', 'input', 'completed_at',
-                        'transmuter', 'task_id', 'task_label']
+                        'transmuter', 'task_id', 'task_label', 'formula_pretty']
         self.logger.debug("Getting criteria")
-        criterias = self.tasks.distinct(mutually_exclusive_params, criteria=q)
-        self.logger.debug("Found {} unique formulas".\
-                          format(len(criterias)))
+        formulas = self.tasks.distinct('formula_pretty', criteria=q)
+
         material_dict = generate_formula_dict(self.materials)
-        # hackish sieve to ensure parity between material dict and tasks
-        criterias = [c for c in criterias if c['formula_pretty'] in material_dict]
-        for n, crit in enumerate(criterias):
-            crit.update(q)
-            tasks = list(self.tasks.query(criteria=crit, properties=return_props))
+        pipeline = [{"$match": q},
+                    {"$project": {k: 1 for k in return_props}},
+                    {"$group": {"_id": "$formula_pretty",
+                                "docs": {"$push": "$$ROOT"}}}]
+        # criterias = [c for c in criterias if c['formula_pretty'] in material_dict]
+        cmd_cursor = self.tasks.collection.aggregate(pipeline, allowDiskUse=True)
+        # self.logger.debug("Found {} unique formulas".\
+                          # format(cmd_cursor.count()))
+        for n, doc in enumerate(cmd_cursor):
+            # crit.update(q)
+            # tasks = list(self.tasks.query(criteria=crit, properties=return_props))
 
             # Group by material_id
             # TODO: refactor for task sets without structure opt
-            logger.debug("Processing formula {}, {} of {}".format(
-                crit['formula_pretty'], n, len(criterias)))
+            logger.debug("Processing formula {}, {}".format(
+                doc['_id'], n, len(formulas)))
             # TODO: refactor for parallelization
-            formula_mat_dict = material_dict[crit['formula_pretty']]
-            yield tasks, formula_mat_dict.copy()
+            yield doc['docs'], material_dict[doc['_id']]
             # else:
             #    yield [], {}
             #    logging.warning("No material with formula {}".format(
