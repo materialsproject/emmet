@@ -2,9 +2,11 @@ from datetime import datetime
 import os
 import string
 import traceback
+import gridfs
 from pymongo import ASCENDING, DESCENDING
 
-from monty.serialization import loadfn
+from monty.serialization import loadfn, dumpfn
+from monty.json import jsanitize
 
 from maggma.builder import Builder
 from pydash.objects import get, set_, has
@@ -15,12 +17,13 @@ from pymatgen.io.cif import CifWriter
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.core.composition import Composition
 from pymatgen import Structure
-from pymatgen.matproj.snl import StructureNL
+from pymatgen.util.provenance import StructureNL
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.analysis.structure_analyzer import RelaxationAnalyzer
 from pymatgen.analysis.diffraction.xrd import XRDPattern
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
+
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -39,7 +42,7 @@ vol_interval = [4.56 - 1.96 * 7.82, 4.56 + 1.96 * 7.82]
 
 class MPBuilder(Builder):
 
-    def __init__(self, materials,  mp_materials, thermo=None, snls=None, xrd=None, elasticity=None, piezo=None, icsd=None, bandstructure_fs="bandstructure_fs", dos_fs="dos_fs", query={},  **kwargs):
+    def __init__(self, materials,  mp_materials, thermo=None, electronic_structure=None, magnetism=None, snls=None, xrd=None, elasticity=None, piezo=None, icsd=None, query={},  **kwargs):
         """
         Creates a MP Website style materials doc.
         This builder is a bit unweildy as MP will eventually move to a new format
@@ -48,19 +51,24 @@ class MPBuilder(Builder):
         Args:
             tasks (Store): Store of task documents
             materials (Store): Store of materials documents
-            mp_web (Store): Store of the mp style website docs
+            mp_web (Store): Store of the mp style website docs, This will also make an electronic_structure collection and an es_plot gridfs
         """
         self.materials = materials
         self.mp_materials = mp_materials
+        self.electronic_structure = electronic_structure
         self.snls = snls
         self.thermo = thermo
         self.query = query
         self.icsd = icsd
         self.xrd = xrd
-        self.bandstructure_fs = bandstructure_fs
-        self.dos_fs = dos_fs
+        self.elasticity = elasticity
+        self.piezo = piezo
+        self.magnetism = magnetism
 
-        super().__init__(sources=list(filter(None, [materials, thermo, snls, elasticity, piezo, icsd, xrd])),
+        sources = list(filter(None, [
+                       materials, thermo, electronic_structure, magnetism, snls, elasticity, piezo, icsd, xrd]))
+
+        super().__init__(sources=sources,
                          targets=[mp_materials],
                          **kwargs)
 
@@ -74,11 +82,6 @@ class MPBuilder(Builder):
 
         self.logger.info("MP Website Builder Started")
 
-        # initialize the gridfs
-        bfs = gridfs.GridFS(
-            self.materials.collection.database, self.bandstructure_fs)
-        dfs = gridfs.GridFS(self.materials.collection.database, self.dos_fs)
-
         # All relevant materials that have been updated since MP Website Materials
         # were last calculated
         q = dict(self.query)
@@ -88,28 +91,41 @@ class MPBuilder(Builder):
             "Found {} new materials for the website".format(len(mats)))
 
         for m in mats:
-            doc = {"material": self.materials.query(
-                criteria={self.materials.key: m}).limit(1)[0]}
+
+            doc = {"material": self.materials.query_one(
+                criteria={self.materials.key: m})}
+
+            if self.electronic_structure:
+                doc["electronic_structure"] = self.electronic_structure.query_one(
+                    criteria={"material_id": m, "band_gap": {"$exists": 1 }})
+
+            if self.elasticity:
+                doc["elasticity"] = self.elasticity.query_one(
+                    criteria={self.elasticity.key: m})
+
+            if self.piezo:
+                doc["piezo"] = self.piezo.query_one(
+                    criteria={self.piezo.key: m})
 
             if self.thermo:
-                doc["thermo"] = self.thermo.query(
-                    criteria={self.thermo.key: m}).limit(1)[0]
+                doc["thermo"] = self.thermo.query_one(
+                    criteria={self.thermo.key: m})
 
             if self.snls:
-                doc["snl"] = self.snls.query(
-                    criteria={self.snls.key: m}).limit(1)[0]
+                doc["snl"] = self.snls.query_one(
+                    criteria={self.snls.key: m})
 
             if self.icsd:
                 doc["icsds"] = list(self.icsd.query(
                     criteria={"chemsys": doc["material"]["chemsys"]}))
 
             if self.magnetism:
-                doc["magnetism"] = self.magnetism.query(
-                    criteria={self.magnetism.key: m}).limit(1)[0]
+                doc["magnetism"] = self.magnetism.query_one(
+                    criteria={self.magnetism.key: m})
 
             if self.xrd:
-                doc["xrd"] = self.xrd.query(
-                    criteria={self.xrd.key: m}).limit(1)[0]
+                doc["xrd"] = self.xrd.query_one(
+                    criteria={self.xrd.key: m})
 
             yield doc
 
@@ -118,28 +134,35 @@ class MPBuilder(Builder):
         new_mat = item["material"]
 
         mat = old_style_mat(new_mat)
-        add_bv_structure(mat)
-        add_cifs(mat)
-        sandbox_props(mat)
-        add_blessed_tasks(mat,new_mat)
-        
-        if "xrd" in item:
+
+        if item.get("xrd", None):
             xrd = item["xrd"]
             add_xrd(mat, xrd)
 
-        if "thermo" in item:
+        if item.get("electronic_structure", None):
+            es = item["electronic_structure"]
+            add_es(mat,new_mat,es)
+
+        if item.get("piezo", None):
+            pass
+
+        if item.get("elasticity", None):
+            pass
+
+        if item.get("thermo", None):
             thermo = item["thermo"]
             add_thermo(mat, thermo)
 
-        if "snl" in item:
+        if item.get("snl", None):
             snl = item["snl"]
             add_snl(mat, snl)
 
-            if "icsds" in item:
+            if item.get("icsds", None):
                 icsds = item["icsds"]
                 if icsds:
                     add_icsd(mat, icsds)
 
+        sandbox_props(mat)
         return jsanitize(mat)
 
     def update_targets(self, items):
@@ -151,6 +174,7 @@ class MPBuilder(Builder):
         """
         items = list(filter(None, items))
 
+        dumpfn(items, "items.json")
         if len(items) > 0:
             self.logger.info(
                 "Updating {} mp materials docs".format(len(items)))
@@ -162,17 +186,20 @@ class MPBuilder(Builder):
 #
 #
 #
-# THIS SECTION DEFINES EXTRA FUNCTIONS THAT MODIFY THE DOC PER MP CRAZY SETTINGS
+# THIS SECTION DEFINES EXTRA FUNCTIONS THAT MODIFY THE MAT DOC PER MP DOC STRUCTURE
 #
 #
+
 
 def old_style_mat(new_mat):
+    """
+    Creates the base document for the old MP mapidoc style from the new document structure
+    """
 
     mat = {}
-    for mp,new_key in mp_conversion_dict.items():
-        if has(new_mat,new_key):
-            set_(mat,mp,get(new_mat,new_key))
-
+    for mp, new_key in mp_conversion_dict.items():
+        if has(new_mat, new_key):
+            set_(mat, mp, get(new_mat, new_key))
 
     mat["is_orderd"] = True
     mat["is_compatible"] = True
@@ -185,26 +212,48 @@ def old_style_mat(new_mat):
     mat["anonymous_formula"] = {string.ascii_uppercase[i]: float(vals[i])
                                 for i in range(len(vals))}
 
-    set_(mat,"original_task_id",get(new_mat,"material_id"))
-    set_(mat,"ntask_ids",len(get(new_mat,"task_ids")))
+    set_(mat,"pseudo_potential.functional", "PBE")
 
-    set_(mat,"input.incar",get(new_mat,"inputs.structure_optimization.incar"))
-    set_(mat,"input.kpoints",get(new_mat,"inputs.structure_optimization.kpoints"))
-    set_(mat,"encut",get(new_mat,"inputs.structure_optimization.incar.ENCUT"))
-    mat["pseudo_potential"] = {
-        "pot_type": "paw",
-        "labels" : get(new_mat, "input.structure_optimization.potcar.symbols"),
-        "functional": get(new_mat, "input.structure_optimization.potcar.functional")
-    }
+    set_(mat,"pseudo_potential.labels", [p["titel"].split()[1] for p in get(new_mat,"calc_settings.potcar_spec")])
+    mat["ntask_ids"] = len(get(new_mat, "task_ids"))
+    set_(mat, "pseudo_potential.pot_type", "paw")
+    add_bv_structure(mat)
+    add_blessed_tasks(mat, new_mat)
+    add_cifs(mat)
 
     return mat
 
-def add_blessed_tasks(mat,new_mat):
+
+def add_es(mat, new_mat, es):
+
+    bs_origin = None
+    dos_origin = None
+    try:
+        bs_origin = next((origin for origin in new_mat.get("origins",[]) if "Line" in origin["task_type"]),None)
+        dos_origin = next((origin for origin in new_mat.get("origins",[]) if "Uniform" in origin["task_type"]),None)
+
+        if bs_origin:
+            u_type = "GGA+U" if "+U" in bs_origin["task_type"] else "GGA"
+            band_gap = es.get("band_gap", None)
+            set_(mat,"band_structure.{}.task_id".format(u_type),bs_origin["task_id"])
+            set_(mat,"band_gap.search_gap",band_gap)
+
+        if dos_origin:
+            u_type = "GGA+U" if "+U" in dos_origin["task_type"] else "GGA"
+            set_(mat,"dos.{}.task_id".format(u_type),dos_origin["task_id"])
+            
+    except Exception as e:
+        print("Error in adding electronic structure: {}".format(e))
+
+    mat["has_bandstructure"] = bool(bs_origin) and bool(dos_origin)
+
+def add_blessed_tasks(mat, new_mat):
     blessed_tasks = {}
     for doc in new_mat["origins"]:
         blessed_tasks[doc["task_type"]] = doc["task_id"]
 
     mat["blessed_tasks"] = blessed_tasks
+
 
 def add_bv_structure(doc):
     struc = Structure.from_dict(doc["structure"])
@@ -214,6 +263,7 @@ def add_bv_structure(doc):
         doc["bv_structure"] = bv_struct.as_dict()
     except Exception as e:
         print("BVAnalyzer error: {}".format(e))
+
 
 def add_cifs(doc):
     struc = Structure.from_dict(doc["structure"])
@@ -259,18 +309,21 @@ def add_xrd(mat, xrd):
 
         mat["xrd"][el] = el_doc
 
+
 def add_thermo(mat, thermo):
-    if has(thermo,"thermo.e_above_hull"):
-        set_(mat,"e_above_hull",get(thermo,"thermo.e_above_hull"))
+    if has(thermo, "thermo.e_above_hull"):
+        set_(mat, "e_above_hull", get(thermo, "thermo.e_above_hull"))
 
-    if has(thermo,"thermo.formation_energy_per_atom"):
-        set_(mat,"formation_energy_per_atom",get(thermo,"thermo.formation_energy_per_atom"))
+    if has(thermo, "thermo.formation_energy_per_atom"):
+        set_(mat, "formation_energy_per_atom", get(
+            thermo, "thermo.formation_energy_per_atom"))
 
-    if has(thermo,"thermo.decmposes_to"):
-        set_(mat,"decmposes_to",get(thermo,"thermo.decmposes_to"))
+    if has(thermo, "thermo.decmposes_to"):
+        set_(mat, "decmposes_to", get(thermo, "thermo.decmposes_to"))
+
 
 def sandbox_props(mat):
-    mat["sbxn"] = mat["sbxn"] if mat["sbxn"] else ["core"]
+    mat["sbxn"] = mat.get("sbxn", ["core"])
     mat["sbxd"] = []
 
     for sbx in mat["sbxn"]:
@@ -278,6 +331,7 @@ def sandbox_props(mat):
                  for k, v in SANDBOXED_PROPERTIES.items() if has(mat, k)}
         sbx_d["id"] = sbx
         mat["sbxd"].append(sbx_d)
+
 
 def add_icsd(mat, icsds):
 
@@ -359,7 +413,6 @@ def add_icsd(mat, icsds):
 
 
 def add_magnetism(mat, mag=None):
-
     mag_types = {"NM": "Non-magnetic",
                  "FiM": "Ferri",
                  "AFM": "AFM",
@@ -370,19 +423,28 @@ def add_magnetism(mat, mag=None):
     mat["magnetic_type"] = mag_types[msa.ordering.value]
 
 
-def add_elasticity(mat, elasticity):
-    mat["elasticity"] = elasticity["elasticity"]
+def add_elasticity(mat, elasticity=None):
+    elasticity = elasticity if elasticity else None
+    if "elasticity" in elasticity:
+        mat["elasticity"] = elasticity.get("elasticity")
 
 
-def add_piezo(mat, piezo):
-    mat["piezo"] = piezo["piezo"]
+def add_piezo(mat, piezo=None):
+    piezo = piezo if piezo else None
+    if "piezo" in piezo:
+        mat["piezo"] = piezo.get("piezo")
 
-def add_diel(mat,diel):
-    mat["diel"] = diel["diel"]
+
+def add_diel(mat, diel=None):
+    diel = diel if diel else None
+    if "diel" in diel:
+        mat["diel"] = diel.get("diel")
+
 
 def add_snl(mat, snl=None):
+    snl = snl if snl else {}
     mat["snl"] = snl.get("snl", None)
     mat["snl_final"] = snl.get("snl", None)
-    mat["created_at"] = get(snl,"snl.about.created_at") if has(snl,"snl.about.created_at") else None
+    mat["created_at"] = get(snl, "snl.about.created_at") if has(
+        snl, "snl.about.created_at") else datetime.utcnow()
     mat["icsd_ids"] = snl.get("icsd_ids", [])
-    
