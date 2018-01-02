@@ -41,26 +41,26 @@ class SNLBuilder(Builder):
         # builder was last ran
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.snls))
-        forms_to_update = set(self.materials.distinct("formula_pretty", q))
+        forms_to_update = set(self.materials.distinct("pretty_formula", q))
         #forms_to_update = set()
 
         # Find all new SNL formulas since the builder was last run
-        for source in self.source_snls:
-            new_q = source.lu_filter(self.snls)
-            forms_to_update |= set(source.distinct("formula_pretty", new_q))
+        #for source in self.source_snls:
+        #    new_q = source.lu_filter(self.snls)
+        #    forms_to_update |= set(source.distinct("reduced_cell_formula", new_q))
 
         self.logger.info(
             "Found {} new/updated systems to proces".format(len(forms_to_update)))
 
         for formula in forms_to_update:
             mats = list(self.materials.query(properties=[
-                        self.materials.key, "structure", "initial_structure", "formula_pretty"], criteria={"formula_pretty": formula}))
+                        self.materials.key, "structure", "initial_structure", "pretty_formula"], criteria={"pretty_formula": formula}))
             snls = []
 
             for source in self.source_snls:
-                snls.extend(source.query(criteria={"formula_pretty": formula}))
+                snls.extend(source.query(criteria={"reduced_cell_formula": formula}))
 
-            snls = [s["snl"] for s in snls]
+            #snls = [s["snl"] for s in snls]
 
             if len(mats) > 0 and len(snls) > 0:
                 yield mats, snls
@@ -79,7 +79,7 @@ class SNLBuilder(Builder):
         source_snls = item[1]
         snls = defaultdict(list)
         self.logger.debug("Tagging SNLs for {}".format(
-            mats[0]["formula_pretty"]))
+            mats[0]["pretty_formula"]))
 
         for snl in source_snls:
             mat_id = self.match(snl, mats)
@@ -118,18 +118,28 @@ class SNLBuilder(Builder):
         Inserts the new task_types into the task_types collection
 
         """
-        snls = []
 
-        for snl_dict in filter(None, items):
-            for mat_id, snl_list in snl_dict.items():
-                snl = sorted(
-                    snl_list, key=lambda x: StructureNL.from_dict(x).created_at)[0]
-                icsd_ids = [get(snl, "about._icsd.icsd_id")
-                            for snl in snl_list if has(snl, "about._icsd")]
-                snls.append(
-                    {self.snls.key: mat_id, "snl": snl, "icsd_ids": icsd_ids})
+        snls = [snl for snl_dict in items for snl in self.collect_snls_mp(snl_dict)]
 
         if len(snls) > 0:
+            self.logger.info("Found {} SNLs to update".format(len(snls)))
             self.snls.update(snls)
         else:
             self.logger.info("No items to update")
+
+
+    def collect_snls_mp(self,snl_dict):
+        """
+        Converts a dict of materials and snls into docs for the snl by choosing the first by creation date and storing all applicable ICSD ids
+        """
+
+        snls = []
+
+        for mat_id, snl_list in snl_dict.items():
+            snl = sorted(
+                snl_list, key=lambda x: StructureNL.from_dict(x).created_at)[0]
+            icsd_ids = [get(snl, "about._icsd.icsd_id")
+                        for snl in snl_list if has(snl, "about._icsd")]
+            snls.append(
+                {self.snls.key: mat_id, "snl": snl, "icsd_ids": icsd_ids})
+        return snls

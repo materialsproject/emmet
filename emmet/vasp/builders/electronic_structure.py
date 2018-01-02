@@ -5,10 +5,12 @@ import io
 import os
 import traceback
 from shutil import which
+from itertools import chain
 import numpy as np
-from datetime import datetime
 from monty.tempfile import ScratchDir
+from monty.json import jsanitize
 from maggma.builder import Builder
+from pydash.objects import get
 import prettyplotlib as ppl
 import matplotlib
 import scipy.interpolate as scint
@@ -18,37 +20,47 @@ from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.electronic_structure.core import Spin, Orbital
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, BandStructure
 from pymatgen.electronic_structure.dos import CompleteDos
-from pymatgen.electronic_structure.plotter import BSDOSPlotter, DosPlotter, BSPlotter
+from pymatgen.electronic_structure.plotter import DosPlotter, BSPlotter
 from pymatgen.electronic_structure.boltztrap import BoltztrapRunner, BoltztrapAnalyzer
 from pymatgen.util.plotting import pretty_plot
+
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 matplotlib.use('agg')
 
-class ElectronicStructureBuilder(Builder):
 
-    def __init__(self, materials, electronic_structure, bandstructure_fs="bandstructure_fs", dos_fs="dos_fs", query={},
-                 interpolate_dos=True, small_plot=True, static_images=True, **kwargs):
+class ElectronicStructureBuilder(Builder):
+    def __init__(self,
+                 materials,
+                 electronic_structure,
+                 query={},
+                 interpolate_dos=True,
+                 small_plot=True,
+                 static_images=True,
+                 **kwargs):
         """
         Creates an electronic structure from a tasks collection, the associated band structures and density of states, and the materials structure
 
-        :param tasks:
-        :param materials:
-        :param electronic_structure:
+        Really only usefull for MP Website infrastructure right now. 
+
+        materials (Store) : Store of materials documents
+        electronic_structure  (Store) : Store of electronic structure documents
+        query (dict): dictionary to limit tasks to be analyzed
+        interpolate_dos (bool): interpolate DOS using BoltzTrap
+        small_plot (bool): make a small plot dictionary for Bandstructure
+        static_images (bool): generate static images of Bandstructure and DOS
         """
 
         self.materials = materials
         self.electronic_structure = electronic_structure
         self.query = query
-        self.bandstructure_fs = bandstructure_fs
-        self.dos_fs = dos_fs
-        self.interpolate_dos = interpolate_dos and bool(which("x_trans"))
+        self.interpolate_dos = interpolate_dos
+        self.__interpolate_dos = interpolate_dos and bool(which("x_trans"))
         self.small_plot = small_plot
         self.static_images = static_images
 
-        super().__init__(sources=[materials],
-                         targets=[electronic_structure],
-                         **kwargs)
+        super().__init__(
+            sources=[materials], targets=[electronic_structure], **kwargs)
 
     def get_items(self):
         """
@@ -64,26 +76,37 @@ class ElectronicStructureBuilder(Builder):
         # and there is either a dos or bandstructure
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.electronic_structure))
-        q["$or"] = [{"bandstructure.bs_oid": {"$exists": 1}},
-                    {"bandstructure.dos_oid": {"$exists": 1}}]
+        q["$or"] = [{
+            "bandstructure.bs_oid": {
+                "$exists": 1
+            }
+        }, {
+            "bandstructure.dos_oid": {
+                "$exists": 1
+            }
+        }]
 
         # initialize the gridfs
-        self.bfs = gridfs.GridFS(
-            self.materials.collection.database, self.bandstructure_fs)
-        self.dfs = gridfs.GridFS(
-            self.materials.collection.database, self.dos_fs)
+        self.bfs = gridfs.GridFS(self.materials.collection.database,
+                                 self.bandstructure_fs)
+        self.dfs = gridfs.GridFS(self.materials.collection.database,
+                                 self.dos_fs)
+        self.plot_fs = gridfs.GridFS(self.materials.collection.database,
+                                     "es_plot")
 
         mats = list(self.materials.distinct(self.materials.key, criteria=q))
 
         for m in mats:
-
-            mat = self.materials.query([self.materials.key, "structure", "bandstructure", "calc_settings"],
-                                       {self.materials.key: m}).limit(1)[0]
+            mat = self.materials.query_one([
+                self.materials.key, "structure", "bandstructure", "origins",
+                "calc_settings", "inputs"
+            ], {
+                self.materials.key: m
+            })
             self.get_bandstructure(mat)
             self.get_dos(mat)
-            if self.interpolate_dos:
+            if self.__interpolate_dos:
                 self.get_uniform_bandstructure(mat)
-
             yield mat
 
     def process_item(self, mat):
@@ -99,69 +122,41 @@ class ElectronicStructureBuilder(Builder):
 
         self.logger.info("Processing: {}".format(mat[self.materials.key]))
 
-        d = {self.electronic_structure.key: mat[
-            self.materials.key], "bandstructure": {}}
-        bs = None
-        dos = None
-        interpolated_dos = None
-
-        # Process the bandstructure for information
-        if "bs" in mat["bandstructure"]:
-            if "structure" not in mat["bandstructure"]["bs"]:
-                mat["bandstructure"]["bs"]["structure"] = mat["structure"]
-            if len(mat["bandstructure"]["bs"].get("labels_dict", {})) == 0:
-                struc = Structure.from_dict(mat["structure"])
-                kpath = HighSymmKpath(struc)._kpath["kpoints"]
-                mat["bandstructure"]["bs"]["labels_dict"] = kpath
-            # Somethign is wrong with the as_dict / from_dict encoding in the two band structure objects so have to use this hodge podge serialization
-            # TODO: Fix bandstructure objects in pymatgen
-            bs = BandStructureSymmLine.from_dict(
-                BandStructure.from_dict(mat["bandstructure"]["bs"]).as_dict())
-            d["bandstructure"]["band_gap"] = {"band_gap": bs.get_band_gap()["energy"],
-                                              "direct_gap": bs.get_direct_band_gap(),
-                                              "is_direct": bs.get_band_gap()["direct"],
-                                              "transition": bs.get_band_gap()["transition"]}
-
-            if self.small_plot:
-                d["bandstructure"]["plot_small"] = get_small_plot(bs)
-
-        if "dos" in mat["bandstructure"]:
-            dos = CompleteDos.from_dict(mat["bandstructure"]["dos"])
-
-        if self.interpolate_dos and "uniform_bs" in mat["bandstructure"]:
-            try:
-                interpolated_dos = self.get_interpolated_dos(mat)
-            except Exception:
-                self.logger.warning("Boltztrap interpolation failed for {}. Continuing with regular DOS".format(mat[self.materials.key]))
+        bs_dict = self.make_bs_doc(mat)
+        dos_dict = self.make_dos_doc(mat)
+        interpolated_dos_dict = self.make_interpolated_dos_doc(mat)
 
         # Generate static images
         if self.static_images:
+            bs_ylim = None
+            bs = BandStructureSymmLine.from_dict(bs_dict)
             try:
-                ylim = None
-                if bs:
-                    plotter = WebBSPlotter(bs)
-                    fig = plotter.get_plot()
-                    ylim = fig.ylim()  # Used by DOS plot
-                    fig.close()
-
-                    d["bandstructure"]["bs_plot"] = image_from_plotter(plotter)
-
-                if dos:
-                    plotter = WebDosVertPlotter()
-                    plotter.add_dos_dict(dos.get_element_dos())
-
-                    if interpolated_dos:
-                        plotter.add_dos("Total DOS", interpolated_dos)
-                        d["bandstructure"]["dos_plot"] = image_from_plotter(plotter, ylim=ylim)
-
-                    d["bandstructure"]["dos_plot"] = image_from_plotter(plotter, ylim=ylim)
+                plotter = WebBSPlotter(bs)
+                bs_dict["bs_plot"] = image_from_plotter(plotter)
 
             except Exception:
                 self.logger.warning(
-                    "Caught error in electronic structure plotting for {}: {}".format(mat[self.materials.key], traceback.format_exc()))
-                return None
+                    "Caught error in bandstructure plotting for {}: {}".format(
+                        mat[self.materials.key], traceback.format_exc()))
+            try:
+                plotter = WebDosVertPlotter()
+                bs_ylim = self.get_bs_ylim(bs)
+                if interpolated_dos_dict:
+                    plotter.add_dos_dict(interpolated_dos.get_element_dos())
+                    dos_dict["dos_plot"] = image_from_plotter(
+                        plotter, ylim=bs_ylim)
+                elif dos_dict:
+                    plotter.add_dos_dict(
+                        CompleteDos.from_dict(dos_dict).get_element_dos())
+                    dos_dict["dos_plot"] = image_from_plotter(
+                        plotter, ylim=bs_ylim)
 
-        return d
+            except Exception:
+                self.logger.warning(
+                    "Caught error in bandstructure plotting for {}: {}".format(
+                        mat[self.materials.key], traceback.format_exc()))
+
+        return [bs_dict, dos_dict]
 
     def update_targets(self, items):
         """
@@ -170,13 +165,41 @@ class ElectronicStructureBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
-        items = list(filter(None, items))
+        items = list(filter(None, chain.from_iterable(items)))
 
-        if len(items) > 0:
-            self.logger.info("Updating {} band structures".format(len(items)))
-            self.electronic_structure.update(items)
+        docs = []
+        plots = {}
+
+        for d in items:
+            if "bs_plot" in d:
+                plots["bs_{}.png".format(d["material_id"])] = d["bs_plot"]
+                del d["bs_plot"]
+
+            if "dos_plot" in d:
+                plots["dos_{}.png".format(d["material_id"])] = d["dos_plot"]
+                del d["dos_plot"]
+
+            docs.append(jsanitize(d))
+
+        if len(docs) > 0:
+            self.logger.info("Updating {} electronic structure docs".format(
+                len(docs)))
+            try:
+                self.electronic_structure.update(docs)
+            except Exception:
+                # Temporary fix for documents that are too large
+                traceback.print_exc()
+
+        if len(plots) > 0:
+            self.logger.info("Updating {} plots".format(len(plots)))
+            for filename, p in plots.items():
+                self.plot_fs.put(p, filename=filename)
         else:
-            self.logger.info("No items to update")
+            self.logger.info("No electronic structure docs to update")
+
+    #
+    # These are all helper methods designed to take a chunk of code and provide a description
+    #
 
     def get_bandstructure(self, mat):
 
@@ -194,10 +217,11 @@ class ElectronicStructureBuilder(Builder):
 
         # If a bandstructure oid exists
         if "uniform_bs_oid" in mat.get("bandstructure", {}):
-            bs_json = self.bfs.get(mat["bandstructure"][
-                                   "uniform_bs_oid"]).read()
+            bs_json = self.bfs.get(
+                mat["bandstructure"]["uniform_bs_oid"]).read()
 
-            if "zlib" in mat["bandstructure"].get("uniform_bs_compression", ""):
+            if "zlib" in mat["bandstructure"].get("uniform_bs_compression",
+                                                  ""):
                 bs_json = zlib.decompress(bs_json)
 
             bs_dict = json.loads(bs_json.decode())
@@ -225,40 +249,130 @@ class ElectronicStructureBuilder(Builder):
 
         if bs.is_spin_polarized:
             with ScratchDir("."):
-                BoltztrapRunner(bs=bs,
-                                nelec=nelect,
-                                run_type="DOS",
-                                dos_type="TETRA",
-                                spin=1,
-                                timeout=60).run(path_dir=os.getcwd())
+                BoltztrapRunner(
+                    bs=bs,
+                    nelec=nelect,
+                    run_type="DOS",
+                    dos_type="TETRA",
+                    spin=1,
+                    timeout=60).run(path_dir='dos_up/')
                 an_up = BoltztrapAnalyzer.from_files("boltztrap/", dos_spin=1)
 
             with ScratchDir("."):
-                BoltztrapRunner(bs=bs,
-                                nelec=nelect,
-                                run_type="DOS",
-                                dos_type="TETRA",
-                                spin=-1,
-                                timeout=60).run(path_dir=os.getcwd())
+                BoltztrapRunner(
+                    bs=bs,
+                    nelec=nelect,
+                    run_type="DOS",
+                    dos_type="TETRA",
+                    spin=-1,
+                    timeout=60).run(path_dir=os.getcwd())
                 an_dw = BoltztrapAnalyzer.from_files("boltztrap/", dos_spin=-1)
 
             cdos = an_up.get_complete_dos(bs.structure, an_dw)
 
         else:
             with ScratchDir("."):
-                BoltztrapRunner(bs=bs,
-                                nelec=nelect,
-                                run_type="DOS",
-                                dos_type="TETRA",
-                                timeout=60).run(path_dir=os.getcwd())
+                BoltztrapRunner(
+                    bs=bs,
+                    nelec=nelect,
+                    run_type="DOS",
+                    dos_type="TETRA",
+                    timeout=60).run(path_dir=os.getcwd())
                 an = BoltztrapAnalyzer.from_files("boltztrap/")
             cdos = an.get_complete_dos(bs.structure)
 
         return cdos
 
+    def make_bs_doc(self, mat):
+
+        bs_dict = None
+
+        # Process the bandstructure for information
+        if "bs" in mat["bandstructure"]:
+            bs_dict = mat["bandstructure"]["bs"]
+            # Add in structure if not already there
+            if "structure" not in bs_dict:
+                bs_dict["structure"] = mat["structure"]
+
+            # Add in High Symm K Path if not already there
+            if len(bs_dict.get("labels_dict", {})) == 0:
+                labels = get(mat, "inputs.nscf_line.kpoints.labels", None)
+                kpts = get(mat, "inputs.nscf_line.kpoints.kpoints", None)
+                if labels and kpts:
+                    labels_dict = dict(zip(labels, kpts))
+                    labels_dict.pop(None, None)
+                else:
+                    struc = Structure.from_dict(mat["structure"])
+                    labels_dict = HighSymmKpath(struc)._kpath["kpoints"]
+
+                bs_dict["labels_dict"] = labels_dict
+
+            # Somethign is wrong with the as_dict / from_dict encoding in the two band structure objects so have to use this hodge podge serialization
+            # TODO: Fix bandstructure objects in pymatgen
+            bs = BandStructureSymmLine.from_dict(
+                BandStructure.from_dict(bs_dict).as_dict())
+
+            bs_dict = bs.as_dict()
+
+            if self.small_plot:
+                bs_dict["plot_small"] = get_small_plot(bs)
+
+            # Get basic bandgap properties
+            bs_dict["band_gap"] = {
+                "band_gap": bs.get_band_gap()["energy"],
+                "direct_gap": bs.get_direct_band_gap(),
+                "is_direct": bs.get_band_gap()["direct"],
+                "transition": bs.get_band_gap()["transition"]
+            }
+
+            origin = next(
+                origin for origin in mat.get("origins", [])
+                if "Line" in origin["task_type"])
+
+            if origin:
+                bs_dict["task_id"] = origin["task_id"]
+                bs_dict["material_id"] = mat[self.materials.key]
+
+        return bs_dict
+
+    def make_dos_doc(self, mat):
+
+        dos_dict = None
+        if "dos" in mat["bandstructure"]:
+            dos_dict = mat["bandstructure"]["dos"]
+
+            origin = next(
+                origin for origin in mat.get("origins", [])
+                if "Uniform" in origin["task_type"])
+
+            if origin:
+                dos_dict["task_id"] = origin["task_id"]
+                dos_dict["material_id"] = mat[self.materials.key]
+
+        return dos_dict
+
+    def make_interpolated_dos_doc(self, mat):
+
+        interpolated_dos = None
+        if self.__interpolate_dos and "uniform_bs" in mat["bandstructure"]:
+            try:
+                interpolated_dos = self.get_interpolated_dos(mat)
+            except Exception:
+                self.logger.warning(
+                    "Boltztrap interpolation failed for {}. Continuing with regular DOS".
+                    format(mat[self.materials.key]))
+
+        return interpolated_dos
+
+    def get_bs_ylim(self, bs):
+        plotter = WebBSPlotter(bs)
+        fig = plotter.get_plot()
+        ylim = fig.ylim()
+        return ylim
+
 
 def image_from_plotter(plotter, ylim=None):
-    plot = plotter.get_plot()
+    plot = plotter.get_plot(ylim=ylim)
     imgdata = io.BytesIO()
     plot.savefig(imgdata, format="png", dpi=100)
     plot_img = imgdata.getvalue()
@@ -283,10 +397,11 @@ def get_small_plot(bs):
 
 #
 # Obtain web-friendly images by subclassing pymatgen plotters.
+# Should eventually phase out to BSDOS Plotter
 #
 
-class WebBSPlotter(BSPlotter):
 
+class WebBSPlotter(BSPlotter):
     def get_plot(self, zero_to_efermi=True, ylim=None, smooth=False):
         """
         get a matplotlib object for the bandstructure plot.
@@ -331,47 +446,65 @@ class WebBSPlotter(BSPlotter):
         if not smooth:
             for d in range(len(data['distances'])):
                 for i in range(self._nb_bands):
-                    plt.plot(data['distances'][d],
-                             [data['energy'][d][str(Spin.up)][i][j]
-                              for j in range(len(data['distances'][d]))], 'b-',
-                             linewidth=band_linewidth)
+                    plt.plot(
+                        data['distances'][d], [
+                            data['energy'][d][str(Spin.up)][i][j]
+                            for j in range(len(data['distances'][d]))
+                        ],
+                        'b-',
+                        linewidth=band_linewidth)
                     if self._bs.is_spin_polarized:
-                        plt.plot(data['distances'][d],
-                                 [data['energy'][d][str(Spin.down)][i][j]
-                                  for j in range(len(data['distances'][d]))],
-                                 'r--', linewidth=band_linewidth)
+                        plt.plot(
+                            data['distances'][d], [
+                                data['energy'][d][str(Spin.down)][i][j]
+                                for j in range(len(data['distances'][d]))
+                            ],
+                            'r--',
+                            linewidth=band_linewidth)
         else:
             for d in range(len(data['distances'])):
                 for i in range(self._nb_bands):
-                    tck = scint.splrep(
-                        data['distances'][d],
-                        [data['energy'][d][str(Spin.up)][i][j]
-                         for j in range(len(data['distances'][d]))])
-                    step = (data['distances'][d][-1]
-                            - data['distances'][d][0]) / 1000
+                    tck = scint.splrep(data['distances'][d], [
+                        data['energy'][d][str(Spin.up)][i][j]
+                        for j in range(len(data['distances'][d]))
+                    ])
+                    step = (data['distances'][d][-1] - data['distances'][d][0]
+                            ) / 1000
 
-                    plt.plot([x * step + data['distances'][d][0]
-                              for x in range(1000)],
-                             [scint.splev(x * step + data['distances'][d][0],
-                                          tck, der=0)
-                              for x in range(1000)], 'b-',
-                             linewidth=band_linewidth)
+                    plt.plot(
+                        [
+                            x * step + data['distances'][d][0]
+                            for x in range(1000)
+                        ], [
+                            scint.splev(
+                                x * step + data['distances'][d][0], tck, der=0)
+                            for x in range(1000)
+                        ],
+                        'b-',
+                        linewidth=band_linewidth)
 
                     if self._bs.is_spin_polarized:
 
-                        tck = scint.splrep(
-                            data['distances'][d],
-                            [data['energy'][d][str(Spin.down)][i][j]
-                             for j in range(len(data['distances'][d]))])
-                        step = (data['distances'][d][-1]
-                                - data['distances'][d][0]) / 1000
+                        tck = scint.splrep(data['distances'][d], [
+                            data['energy'][d][str(Spin.down)][i][j]
+                            for j in range(len(data['distances'][d]))
+                        ])
+                        step = (
+                            data['distances'][d][-1] - data['distances'][d][0]
+                        ) / 1000
 
-                        plt.plot([x * step + data['distances'][d][0]
-                                  for x in range(1000)],
-                                 [scint.splev(x * step + data['distances'][d][0],
-                                              tck, der=0)
-                                  for x in range(1000)], 'r--',
-                                 linewidth=band_linewidth)
+                        plt.plot(
+                            [
+                                x * step + data['distances'][d][0]
+                                for x in range(1000)
+                            ], [
+                                scint.splev(
+                                    x * step + data['distances'][d][0],
+                                    tck,
+                                    der=0) for x in range(1000)
+                            ],
+                            'r--',
+                            linewidth=band_linewidth)
         self._maketicks(plt)
 
         # Main X and Y Labels
@@ -413,9 +546,7 @@ class WebBSPlotter(BSPlotter):
 
 
 class WebDosVertPlotter(DosPlotter):
-
-    def get_plot(self, xlim=None, ylim=None,
-                 plt=None, handle_only=False):
+    def get_plot(self, xlim=None, ylim=None, plt=None, handle_only=False):
         """
         Get a matplotlib plot showing the DOS.
         Args:
@@ -454,8 +585,10 @@ class WebDosVertPlotter(DosPlotter):
             energies = dos['energies']
             densities = dos['densities']
             if not y:
-                y = {Spin.up: np.zeros(energies.shape),
-                     Spin.down: np.zeros(energies.shape)}
+                y = {
+                    Spin.up: np.zeros(energies.shape),
+                    Spin.down: np.zeros(energies.shape)
+                }
             newdens = {}
             for spin in [Spin.up, Spin.down]:
                 if spin in densities:
@@ -486,26 +619,31 @@ class WebDosVertPlotter(DosPlotter):
                     x.extend(densities)
             allpts.extend(list(zip(x, y)))
             if self.stack:
-                plt.fill(x, y, color=colors[i % ncolors],
-                         label=str(key))
+                plt.fill(x, y, color=colors[i % ncolors], label=str(key))
             else:
-                ppl.plot(x, y, color=colors[i % ncolors],
-                         label=str(key), linewidth=1)
+                ppl.plot(
+                    x,
+                    y,
+                    color=colors[i % ncolors],
+                    label=str(key),
+                    linewidth=1)
             if not self.zero_at_efermi:
                 xlim = plt.xlim()
-                ppl.plot(xlim, [self._doses[key]['efermi'],
-                                self._doses[key]['efermi']],
-                         color=colors[i % ncolors],
-                         linestyle='--', linewidth=1)
+                ppl.plot(
+                    xlim,
+                    [self._doses[key]['efermi'], self._doses[key]['efermi']],
+                    color=colors[i % ncolors],
+                    linestyle='--',
+                    linewidth=1)
 
         if ylim:
+            print("Setting ylim to {}".format(ylim))
             plt.ylim(ylim)
         if xlim:
             plt.xlim(xlim)
         else:
             ylim = plt.ylim()
-            relevantx = [p[0] for p in allpts
-                         if ylim[0] < p[1] < ylim[1]]
+            relevantx = [p[0] for p in allpts if ylim[0] < p[1] < ylim[1]]
             plt.xlim(min(relevantx), max(relevantx))
         if self.zero_at_efermi:
             xlim = plt.xlim()
@@ -519,8 +657,8 @@ class WebDosVertPlotter(DosPlotter):
         plt.yticks(fontsize=ticksize)
         plt.grid(which='major', axis='y')
 
-        plt.legend(fontsize='x-small',
-                   loc='upper right', bbox_to_anchor=(1.15, 1))
+        plt.legend(
+            fontsize='x-small', loc='upper right', bbox_to_anchor=(1.15, 1))
         leg = plt.gca().get_legend()
         leg.get_frame().set_alpha(0.25)
         plt.tight_layout()
