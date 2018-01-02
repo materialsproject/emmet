@@ -151,10 +151,13 @@ class MaterialsBuilder(Builder):
         task_ids = list(sorted([t["task_id"] for t in task_group],
                                key=lambda x: int(str(x).split("-")[-1])))
 
+        task_types = {t["task_id"] : t["task_type"] for t in all_props}
+
         mat = {"updated_at": datetime.utcnow(),
                "task_ids": task_ids,
                self.materials.key: task_ids[0],
-               "origins": origins
+               "origins": origins,
+               "task_types": task_types
                }
 
         for prop in best_props:

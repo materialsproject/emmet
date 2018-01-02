@@ -8,7 +8,8 @@ __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-test_tasks = os.path.join(module_dir, "..","..","..", "..", "test_files", "test_tasktagger_tasks.json")
+test_tasks = os.path.join(module_dir, "..","..","..", "..", "test_files",
+                          "test_tasktagger_tasks.json")
 
 class TaskTaggerTest(unittest.TestCase):
     def setUp(self):
@@ -24,9 +25,11 @@ class TaskTaggerTest(unittest.TestCase):
 
         for t in task_tagger.get_items():
             processed = task_tagger.process_item(t)
-            if processed:
-                self.assertEqual(processed["task_type"],
-                                 t["true_task_type"])
+            true_type = self.test_tasks.query_one(
+                criteria={"task_id": t["task_id"]},
+                properties=["true_task_type"],
+            )["true_task_type"]
+            self.assertEqual(processed["task_type"], true_type)
 
 
 if __name__ == "__main__":
