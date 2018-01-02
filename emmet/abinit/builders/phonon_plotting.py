@@ -11,7 +11,7 @@ from pymatgen.phonon.plotter import PhononBSPlotter
 matplotlib.use('agg')
 
 
-class PhononDispersion(Builder):
+class PhononDispersionPlotter(Builder):
     def __init__(self, pmg_docs, web_docs, images,
                  add_filter=None, ignore_lu=False, **kwargs):
         """
