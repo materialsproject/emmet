@@ -30,7 +30,7 @@ from maggma.builder import Builder
 class PhononBuilder(Builder):
     def __init__(self, materials, phonon, query=None, **kwargs):
         """
-        CCreates a phonon collection for materials
+        Creates a phonon collection for materials.
 
         Args:
             materials (Store): Store of materials documents
@@ -143,10 +143,12 @@ class PhononBuilder(Builder):
                       "free_energy": phdos.get_free_energy(tstart, tstop, nt).values.tolist(),
                       }
 
-            data = {"dos": complete_dos.as_dict(),
-                    "bs": symm_line_bands.as_dict(),
+            data = {"ph_dos": complete_dos.as_dict(),
+                    "ph_bs": symm_line_bands.as_dict(),
                     "thermodynamic": thermo,
-                    "becs": ananc_file.becs.values.tolist()}
+                    "becs": ananc_file.becs.values.tolist(),
+                    "e_electronic": ananc_file.emacro.cartesian_tensor.tolist(),
+                    "e_total": ananc_file.emacro_rlx.cartesian_tensor.tolist()}
 
             return jsanitize(data)
 
@@ -234,6 +236,8 @@ class PhononBuilder(Builder):
         inp['qph1l'] = qph1l.tolist()
         inp['nph1l'] = n_qpoints
 
+        # Parameters for dielectric constant
+        inp['dieflag'] = 1
 
         if lo_to_splitting:
             kpath = hs.kpath
