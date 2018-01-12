@@ -64,18 +64,22 @@ class PhononDispersionPlotter(Builder):
         y_min = ph_bs.bands.min()
         y_max = ph_bs.bands.max()
 
-        # neglect small negative frequencies (33 THz ~ 1 cm^-1)
-        if -33 < y_min < 0:
+        # neglect small negative frequencies (0.03 THz ~ 1 cm^-1)
+        if -0.03 < y_min < 0:
             y_min = 0
+
+        # increase the ymax to display all the top bands
+        y_max += 0.08
 
         ylim = (y_min, y_max)
 
-        bs_plotter = PhononBSPlotter(ph_bs)
+        bs_plotter = WebBSPlotter(ph_bs)
         ph_bs_image = image_from_plotter(bs_plotter, ylim)
 
         ph_dos = decoder.process_decoded(item['ph_dos'])
         dos_plotter = WebPhononDosVertPlotter()
         dos_plotter.add_dos("Total DOS", ph_dos)
+        dos_plotter.add_dos_dict(ph_dos.get_element_dos())
         ph_dos_image = image_from_plotter(dos_plotter, ylim)
 
         web_doc = ph_bs.as_phononwebsite()
@@ -120,7 +124,75 @@ class PhononDispersionPlotter(Builder):
         self.logger.info("Validated {} of images".format(n_images))
 
 
+class WebBSPlotter(PhononBSPlotter):
+    """
+    A plotter for the phonon BS suitable for visualization on the MP website.
+    """
+
+    def get_plot(self, ylim=None):
+        """
+        Get a matplotlib object for the bandstructure plot.
+
+        Args:
+            ylim: Specify the y-axis (frequency) limits; by default None let
+                the code choose.
+        """
+
+        plt = pretty_plot(6, 5.5)  # Was 12, 8
+
+        matplotlib.rc('text', usetex=True)
+
+        width = 4
+        ticksize = int(width * 2.5)
+        axes = plt.gca()
+        axes.set_title(axes.get_title(), size=width * 4)
+        labelsize = int(width * 3)
+        axes.set_xlabel(axes.get_xlabel(), size=labelsize)
+        axes.set_ylabel(axes.get_ylabel(), size=labelsize)
+
+        plt.xticks(fontsize=ticksize)
+        plt.yticks(fontsize=ticksize)
+
+        for axis in ['top', 'bottom', 'left', 'right']:
+            axes.spines[axis].set_linewidth(0.5)
+
+        band_linewidth = 1
+
+        data = self.bs_plot_data()
+        for d in range(len(data['distances'])):
+            for i in range(self._nb_bands):
+                plt.plot(data['distances'][d],
+                         [data['frequency'][d][i][j]
+                          for j in range(len(data['distances'][d]))], 'b-',
+                         linewidth=band_linewidth)
+
+
+        self._maketicks(plt)
+
+        # plot y=0 line
+        plt.axhline(0, linewidth=1, color='k')
+
+        # Main X and Y Labels
+        plt.xlabel(r'$\mathrm{Wave\ Vector}$')
+        plt.ylabel(r'$\mathrm{Frequency\ (THz)}$')
+
+        # X range (K)
+        # last distance point
+        x_max = data['distances'][-1][-1]
+        plt.xlim(0, x_max)
+
+        if ylim is not None:
+            plt.ylim(ylim)
+
+        plt.tight_layout()
+
+        return plt
+
+
 class WebPhononDosVertPlotter(PhononDosPlotter):
+    """
+    A plotter for the phonon DOS suitable for visualization on the MP website.
+    """
 
     def get_plot(self, xlim=None, ylim=None):
         """
@@ -215,7 +287,7 @@ class WebPhononDosVertPlotter(PhononDosPlotter):
 
 
 def image_from_plotter(plotter, ylim=None):
-    plot = plotter.get_plot()
+    plot = plotter.get_plot(ylim=ylim)
     imgdata = io.BytesIO()
     plot.savefig(imgdata, format="png", dpi=100)
     plot_img = imgdata.getvalue()
@@ -257,10 +329,8 @@ def round_to_sig_figures(x, figures):
         omags[fixmsk] -= 1.0
 
     result = xsgn * np.around(mantissas, decimals=figures - 1) * 10.0 ** omags
-    if matrixflag:
-        result = np.matrix(result, copy=False)
 
-    return np.round(a, -int(np.floor(np.log10(np.fabs(a)))) + (figures - 1))
+    return result
 
 
 def reduce_eigendisplacements(eigdispl, figures=4, frac_threshold=1e-8):
