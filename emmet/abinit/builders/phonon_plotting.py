@@ -300,7 +300,8 @@ logBase10of2 = float(decimal.Decimal(2).log10())
 def round_to_sig_figures(x, figures):
     """
     Helper function to round the value to a specific number of significant figures.
-    Based on the implementation from Sean E. Lake
+    Based on the implementation from Sean E. Lake:
+    https://github.com/odysseus9672/SELPythonLibs/blob/master/SigFigRounding.py
 
     Args:
         x: a numpy array with real values
