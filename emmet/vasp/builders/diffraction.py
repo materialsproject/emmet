@@ -19,7 +19,7 @@ default_xrd_settings = os.path.join(
 
 class DiffractionBuilder(Builder):
 
-    def __init__(self, materials, diffraction, xrd_settings=None, query={}, **kwargs):
+    def __init__(self, materials, diffraction, xrd_settings=None, query=None, **kwargs):
         """
         Calculates diffraction patterns for materials
 
@@ -33,7 +33,7 @@ class DiffractionBuilder(Builder):
         self.materials = materials
         self.diffraction = diffraction
         self.xrd_settings = xrd_settings if xrd_settings else default_xrd_settings
-        self.query = query
+        self.query = query if query else {}
         self.__settings = loadfn(self.xrd_settings)
 
         super().__init__(sources=[materials],

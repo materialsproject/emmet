@@ -18,7 +18,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class ElasticBuilder(Builder):
-    def __init__(self, tasks, elasticity, query={}, **kwargs):
+    def __init__(self, tasks, elasticity, query=None, **kwargs):
         """
         Creates a dielectric collection for materials
 
@@ -30,7 +30,7 @@ class ElasticBuilder(Builder):
 
         self.tasks = tasks
         self.elasticity = elasticity
-        self.query = query
+        self.query = query if query else {}
         self.kwargs = kwargs
 
         super().__init__(sources=[tasks],
