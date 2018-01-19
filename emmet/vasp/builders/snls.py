@@ -138,8 +138,6 @@ class SNLBuilder(Builder):
         for mat_id, snl_list in snl_dict.items():
             snl = sorted(
                 snl_list, key=lambda x: StructureNL.from_dict(x).created_at)[0]
-            icsd_ids = [get(snl, "about._icsd.icsd_id")
-                        for snl in snl_list if has(snl, "about._icsd")]
-            snls.append(
-                {self.snls.key: mat_id, "snl": snl, "icsd_ids": icsd_ids})
+            icsd_ids = list(filter(None,[get(snl, "about._icsd.icsd_id",None) for snl in snl_list]))
+            snls.append({self.snls.key: mat_id, "snl": snl, "icsd_ids": icsd_ids})
         return snls
