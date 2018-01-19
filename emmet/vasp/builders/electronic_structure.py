@@ -59,8 +59,7 @@ class ElectronicStructureBuilder(Builder):
         self.small_plot = small_plot
         self.static_images = static_images
 
-        super().__init__(
-            sources=[materials], targets=[electronic_structure], **kwargs)
+        super().__init__(sources=[materials], targets=[electronic_structure], **kwargs)
 
     def get_items(self):
         """
@@ -76,33 +75,20 @@ class ElectronicStructureBuilder(Builder):
         # and there is either a dos or bandstructure
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.electronic_structure))
-        q["$or"] = [{
-            "bandstructure.bs_oid": {
-                "$exists": 1
-            }
-        }, {
-            "bandstructure.dos_oid": {
-                "$exists": 1
-            }
-        }]
+        q["$or"] = [{"bandstructure.bs_oid": {"$exists": 1}}, {"bandstructure.dos_oid": {"$exists": 1}}]
 
         # initialize the gridfs
-        self.bfs = gridfs.GridFS(self.materials.collection.database,
-                                 self.bandstructure_fs)
-        self.dfs = gridfs.GridFS(self.materials.collection.database,
-                                 self.dos_fs)
-        self.plot_fs = gridfs.GridFS(self.materials.collection.database,
-                                     "es_plot")
+        self.bfs = gridfs.GridFS(self.materials.collection.database, "bandstructure_fs")
+        self.dfs = gridfs.GridFS(self.materials.collection.database, "dos_fs")
+        self.plot_fs = gridfs.GridFS(self.materials.collection.database, "es_plot")
 
         mats = list(self.materials.distinct(self.materials.key, criteria=q))
 
         for m in mats:
-            mat = self.materials.query_one([
-                self.materials.key, "structure", "bandstructure", "origins",
-                "calc_settings", "inputs"
-            ], {
-                self.materials.key: m
-            })
+            mat = self.materials.query_one(
+                [self.materials.key, "structure", "bandstructure", "origins", "calc_settings", "inputs"], {
+                    self.materials.key: m
+                })
             self.get_bandstructure(mat)
             self.get_dos(mat)
             if self.__interpolate_dos:
@@ -135,26 +121,21 @@ class ElectronicStructureBuilder(Builder):
                 bs_dict["bs_plot"] = image_from_plotter(plotter)
 
             except Exception:
-                self.logger.warning(
-                    "Caught error in bandstructure plotting for {}: {}".format(
-                        mat[self.materials.key], traceback.format_exc()))
+                self.logger.warning("Caught error in bandstructure plotting for {}: {}".format(
+                    mat[self.materials.key], traceback.format_exc()))
             try:
                 plotter = WebDosVertPlotter()
                 bs_ylim = self.get_bs_ylim(bs)
                 if interpolated_dos_dict:
                     plotter.add_dos_dict(interpolated_dos.get_element_dos())
-                    dos_dict["dos_plot"] = image_from_plotter(
-                        plotter, ylim=bs_ylim)
+                    dos_dict["dos_plot"] = image_from_plotter(plotter, ylim=bs_ylim)
                 elif dos_dict:
-                    plotter.add_dos_dict(
-                        CompleteDos.from_dict(dos_dict).get_element_dos())
-                    dos_dict["dos_plot"] = image_from_plotter(
-                        plotter, ylim=bs_ylim)
+                    plotter.add_dos_dict(CompleteDos.from_dict(dos_dict).get_element_dos())
+                    dos_dict["dos_plot"] = image_from_plotter(plotter, ylim=bs_ylim)
 
             except Exception:
-                self.logger.warning(
-                    "Caught error in bandstructure plotting for {}: {}".format(
-                        mat[self.materials.key], traceback.format_exc()))
+                self.logger.warning("Caught error in bandstructure plotting for {}: {}".format(
+                    mat[self.materials.key], traceback.format_exc()))
 
         return [bs_dict, dos_dict]
 
@@ -182,8 +163,7 @@ class ElectronicStructureBuilder(Builder):
             docs.append(jsanitize(d))
 
         if len(docs) > 0:
-            self.logger.info("Updating {} electronic structure docs".format(
-                len(docs)))
+            self.logger.info("Updating {} electronic structure docs".format(len(docs)))
             try:
                 self.electronic_structure.update(docs)
             except Exception:
@@ -217,11 +197,9 @@ class ElectronicStructureBuilder(Builder):
 
         # If a bandstructure oid exists
         if "uniform_bs_oid" in mat.get("bandstructure", {}):
-            bs_json = self.bfs.get(
-                mat["bandstructure"]["uniform_bs_oid"]).read()
+            bs_json = self.bfs.get(mat["bandstructure"]["uniform_bs_oid"]).read()
 
-            if "zlib" in mat["bandstructure"].get("uniform_bs_compression",
-                                                  ""):
+            if "zlib" in mat["bandstructure"].get("uniform_bs_compression", ""):
                 bs_json = zlib.decompress(bs_json)
 
             bs_dict = json.loads(bs_json.decode())
@@ -250,21 +228,12 @@ class ElectronicStructureBuilder(Builder):
         if bs.is_spin_polarized:
             with ScratchDir("."):
                 BoltztrapRunner(
-                    bs=bs,
-                    nelec=nelect,
-                    run_type="DOS",
-                    dos_type="TETRA",
-                    spin=1,
-                    timeout=60).run(path_dir='dos_up/')
+                    bs=bs, nelec=nelect, run_type="DOS", dos_type="TETRA", spin=1, timeout=60).run(path_dir='dos_up/')
                 an_up = BoltztrapAnalyzer.from_files("boltztrap/", dos_spin=1)
 
             with ScratchDir("."):
                 BoltztrapRunner(
-                    bs=bs,
-                    nelec=nelect,
-                    run_type="DOS",
-                    dos_type="TETRA",
-                    spin=-1,
+                    bs=bs, nelec=nelect, run_type="DOS", dos_type="TETRA", spin=-1,
                     timeout=60).run(path_dir=os.getcwd())
                 an_dw = BoltztrapAnalyzer.from_files("boltztrap/", dos_spin=-1)
 
@@ -273,11 +242,7 @@ class ElectronicStructureBuilder(Builder):
         else:
             with ScratchDir("."):
                 BoltztrapRunner(
-                    bs=bs,
-                    nelec=nelect,
-                    run_type="DOS",
-                    dos_type="TETRA",
-                    timeout=60).run(path_dir=os.getcwd())
+                    bs=bs, nelec=nelect, run_type="DOS", dos_type="TETRA", timeout=60).run(path_dir=os.getcwd())
                 an = BoltztrapAnalyzer.from_files("boltztrap/")
             cdos = an.get_complete_dos(bs.structure)
 
@@ -309,8 +274,7 @@ class ElectronicStructureBuilder(Builder):
 
             # Somethign is wrong with the as_dict / from_dict encoding in the two band structure objects so have to use this hodge podge serialization
             # TODO: Fix bandstructure objects in pymatgen
-            bs = BandStructureSymmLine.from_dict(
-                BandStructure.from_dict(bs_dict).as_dict())
+            bs = BandStructureSymmLine.from_dict(BandStructure.from_dict(bs_dict).as_dict())
 
             bs_dict = bs.as_dict()
 
@@ -325,9 +289,7 @@ class ElectronicStructureBuilder(Builder):
                 "transition": bs.get_band_gap()["transition"]
             }
 
-            origin = next(
-                origin for origin in mat.get("origins", [])
-                if "Line" in origin["task_type"])
+            origin = next(origin for origin in mat.get("origins", []) if "Line" in origin["task_type"])
 
             if origin:
                 bs_dict["task_id"] = origin["task_id"]
@@ -341,9 +303,7 @@ class ElectronicStructureBuilder(Builder):
         if "dos" in mat["bandstructure"]:
             dos_dict = mat["bandstructure"]["dos"]
 
-            origin = next(
-                origin for origin in mat.get("origins", [])
-                if "Uniform" in origin["task_type"])
+            origin = next(origin for origin in mat.get("origins", []) if "Uniform" in origin["task_type"])
 
             if origin:
                 dos_dict["task_id"] = origin["task_id"]
@@ -358,9 +318,8 @@ class ElectronicStructureBuilder(Builder):
             try:
                 interpolated_dos = self.get_interpolated_dos(mat)
             except Exception:
-                self.logger.warning(
-                    "Boltztrap interpolation failed for {}. Continuing with regular DOS".
-                    format(mat[self.materials.key]))
+                self.logger.warning("Boltztrap interpolation failed for {}. Continuing with regular DOS".format(
+                    mat[self.materials.key]))
 
         return interpolated_dos
 
@@ -448,62 +407,40 @@ class WebBSPlotter(BSPlotter):
             for d in range(len(data['distances'])):
                 for i in range(self._nb_bands):
                     plt.plot(
-                        data['distances'][d], [
-                            data['energy'][d][str(Spin.up)][i][j]
-                            for j in range(len(data['distances'][d]))
-                        ],
+                        data['distances'][d],
+                        [data['energy'][d][str(Spin.up)][i][j] for j in range(len(data['distances'][d]))],
                         'b-',
                         linewidth=band_linewidth)
                     if self._bs.is_spin_polarized:
                         plt.plot(
-                            data['distances'][d], [
-                                data['energy'][d][str(Spin.down)][i][j]
-                                for j in range(len(data['distances'][d]))
-                            ],
+                            data['distances'][d],
+                            [data['energy'][d][str(Spin.down)][i][j] for j in range(len(data['distances'][d]))],
                             'r--',
                             linewidth=band_linewidth)
         else:
             for d in range(len(data['distances'])):
                 for i in range(self._nb_bands):
-                    tck = scint.splrep(data['distances'][d], [
-                        data['energy'][d][str(Spin.up)][i][j]
-                        for j in range(len(data['distances'][d]))
-                    ])
-                    step = (data['distances'][d][-1] - data['distances'][d][0]
-                            ) / 1000
+                    tck = scint.splrep(
+                        data['distances'][d],
+                        [data['energy'][d][str(Spin.up)][i][j] for j in range(len(data['distances'][d]))])
+                    step = (data['distances'][d][-1] - data['distances'][d][0]) / 1000
 
                     plt.plot(
-                        [
-                            x * step + data['distances'][d][0]
-                            for x in range(1000)
-                        ], [
-                            scint.splev(
-                                x * step + data['distances'][d][0], tck, der=0)
-                            for x in range(1000)
-                        ],
+                        [x * step + data['distances'][d][0] for x in range(1000)],
+                        [scint.splev(x * step + data['distances'][d][0], tck, der=0) for x in range(1000)],
                         'b-',
                         linewidth=band_linewidth)
 
                     if self._bs.is_spin_polarized:
 
-                        tck = scint.splrep(data['distances'][d], [
-                            data['energy'][d][str(Spin.down)][i][j]
-                            for j in range(len(data['distances'][d]))
-                        ])
-                        step = (
-                            data['distances'][d][-1] - data['distances'][d][0]
-                        ) / 1000
+                        tck = scint.splrep(
+                            data['distances'][d],
+                            [data['energy'][d][str(Spin.down)][i][j] for j in range(len(data['distances'][d]))])
+                        step = (data['distances'][d][-1] - data['distances'][d][0]) / 1000
 
                         plt.plot(
-                            [
-                                x * step + data['distances'][d][0]
-                                for x in range(1000)
-                            ], [
-                                scint.splev(
-                                    x * step + data['distances'][d][0],
-                                    tck,
-                                    der=0) for x in range(1000)
-                            ],
+                            [x * step + data['distances'][d][0] for x in range(1000)],
+                            [scint.splev(x * step + data['distances'][d][0], tck, der=0) for x in range(1000)],
                             'r--',
                             linewidth=band_linewidth)
         self._maketicks(plt)
@@ -586,10 +523,7 @@ class WebDosVertPlotter(DosPlotter):
             energies = dos['energies']
             densities = dos['densities']
             if not y:
-                y = {
-                    Spin.up: np.zeros(energies.shape),
-                    Spin.down: np.zeros(energies.shape)
-                }
+                y = {Spin.up: np.zeros(energies.shape), Spin.down: np.zeros(energies.shape)}
             newdens = {}
             for spin in [Spin.up, Spin.down]:
                 if spin in densities:
@@ -622,17 +556,11 @@ class WebDosVertPlotter(DosPlotter):
             if self.stack:
                 plt.fill(x, y, color=colors[i % ncolors], label=str(key))
             else:
-                ppl.plot(
-                    x,
-                    y,
-                    color=colors[i % ncolors],
-                    label=str(key),
-                    linewidth=1)
+                ppl.plot(x, y, color=colors[i % ncolors], label=str(key), linewidth=1)
             if not self.zero_at_efermi:
                 xlim = plt.xlim()
                 ppl.plot(
-                    xlim,
-                    [self._doses[key]['efermi'], self._doses[key]['efermi']],
+                    xlim, [self._doses[key]['efermi'], self._doses[key]['efermi']],
                     color=colors[i % ncolors],
                     linestyle='--',
                     linewidth=1)
@@ -658,8 +586,7 @@ class WebDosVertPlotter(DosPlotter):
         plt.yticks(fontsize=ticksize)
         plt.grid(which='major', axis='y')
 
-        plt.legend(
-            fontsize='x-small', loc='upper right', bbox_to_anchor=(1.15, 1))
+        plt.legend(fontsize='x-small', loc='upper right', bbox_to_anchor=(1.15, 1))
         leg = plt.gca().get_legend()
         leg.get_frame().set_alpha(0.25)
         plt.tight_layout()
