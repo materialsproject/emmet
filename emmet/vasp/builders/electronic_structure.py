@@ -368,6 +368,7 @@ class ElectronicStructureBuilder(Builder):
         plotter = WebBSPlotter(bs)
         fig = plotter.get_plot()
         ylim = fig.ylim()
+        fig.close()
         return ylim
 
 
