@@ -272,6 +272,9 @@ def get_elastic_analysis(opt_task, defo_tasks):
         fstrains = strains
         fstresses = pk_stresses
 
+    if len(cauchy_stresses) == 24:
+        elastic_doc['legacy_fit'] = legacy_fit(strains, cauchy_stresses)
+
     et_raw = ElasticTensor.from_pseudoinverse(fstrains, fstresses)
     et = et_raw.voigt_symmetrized.convert_to_ieee(opt_struct)
     defo_tasks = sorted(defo_tasks, key=lambda x: x['completed_at'])
@@ -393,6 +396,22 @@ def group_by_parent_lattice(docs, tol=1e-6):
         if not match:
             docs_by_lattice.append([parent_lattice, [doc]])
     return docs_by_lattice
+
+
+def legacy_fit(strains, stresses):
+    """
+    Legacy fitting method for mpworks documents, intended to be temporary
+    
+    Args:
+        strains: strains
+        stresses: stresses
+
+    Returns:
+        elastic tensor fit using the legacy functionality
+
+    """
+    strains = [s.zeroed(0.002) for s in strains]
+    return ElasticTensor.from_independent_strains(strains, stresses)
 
 
 def calculate_deformation(undeformed_structure, deformed_structure):
