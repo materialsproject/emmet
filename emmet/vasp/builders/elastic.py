@@ -88,20 +88,26 @@ class ElasticBuilder(Builder):
         #       for kpoints, designate some cutoff for number
         # TODO: mpworks discrepancy in original input, probably going to just have to
         #       let it lie as a distinguisher between atomate/mpworks
-        return_props = ['calcs_reversed', 'output', 'input', 'completed_at',
+        return_props = ['output', 'input', 'completed_at',
                         'transmuter', 'task_id', 'task_label', 'formula_pretty']
         self.logger.debug("Getting criteria")
         formulas = self.tasks.distinct('formula_pretty', criteria=q)
 
         material_dict = generate_formula_dict(self.materials)
-        pipeline = [{"$match": q},
-                    {"$project": {k: 1 for k in return_props}},
-                    {"$group": {"_id": "$formula_pretty",
-                                "docs": {"$push": "$$ROOT"}}}]
-        # criterias = [c for c in criterias if c['formula_pretty'] in material_dict]
+
+        projections = [{"$project": {"calc": {"$arrayElemAt": ["$calcs_reversed", 0]}}},
+                       {"$project": {"ionic_steps": {"$arrayElemAt": ["$calc.output.ionic_steps", -1]},
+                                     "kpoints": "$calc.input.kpoints"}},
+                       {"$project": {"final_stress": "$ionic_steps.stress",
+                                     "kpoints": 1}}]
+        for projection in projections:
+            projection['$project'].update({k: 1 for k in return_props})
+        pipeline = [{"$match": q}]
+        pipeline += projections
+        pipeline += [{"$group": {"_id": "$formula_pretty",
+                                 "docs": {"$push": "$$ROOT"}}}]
         cmd_cursor = self.tasks.collection.aggregate(pipeline, allowDiskUse=True)
-        # self.logger.debug("Found {} unique formulas".\
-                          # format(cmd_cursor.count()))
+
         for n, doc in enumerate(cmd_cursor):
             # crit.update(q)
             # tasks = list(self.tasks.query(criteria=crit, properties=return_props))
@@ -111,7 +117,11 @@ class ElasticBuilder(Builder):
             logger.debug("Processing formula {}, {}".format(
                 doc['_id'], n, len(formulas)))
             # TODO: refactor for parallelization
-            yield doc['docs'], material_dict[doc['_id']]
+            possible_mp_ids = material_dict.get(doc['_id'])
+            if possible_mp_ids:
+                yield doc['docs'], possible_mp_ids
+            else:
+                yield None, None
             # else:
             #    yield [], {}
             #    logging.warning("No material with formula {}".format(
@@ -181,8 +191,6 @@ class ElasticBuilder(Builder):
         Args:
             items ([dict]): list of elasticity docs
         """
-        import nose; nose.tools.set_trace()
-
         items = chain.from_iterable(items)
         items = [jsanitize(doc, strict=True) for doc in items]
         self.logger.info("Updating {} elastic documents".format(len(items)))
@@ -246,8 +254,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
     # Collect all fitting data and task ids
     defos = [Deformation(d) for d in defos]
     strains = [d.green_lagrange_strain for d in defos]
-    vasp_stresses = [d['calcs_reversed'][0]['output']['ionic_steps'][-1]\
-                     ['stress'] for d in defo_tasks]
+    vasp_stresses = [d['final_stress'] for d in defo_tasks]
     cauchy_stresses = [-0.1 * Stress(s) for s in vasp_stresses]
     pk_stresses = [Stress(s.piola_kirchoff_2(d))
                    for s, d in zip(cauchy_stresses, defos)]
@@ -280,7 +287,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
     defo_tasks = sorted(defo_tasks, key=lambda x: x['completed_at'])
     input = opt_task['input']
     input.pop('structure')
-    input['kpoints'] = opt_task['calcs_reversed'][0]['input']['kpoints']
+    input['kpoints'] = opt_task['kpoints']
 
     elastic_doc.update({"deformation_task_ids": defo_task_ids,
                         "optimization_task_id": opt_task['task_id'],

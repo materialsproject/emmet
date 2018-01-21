@@ -1,5 +1,6 @@
 import unittest
 import os
+import itertools
 
 from emmet.vasp.builders.elastic import *
 from maggma.stores import JSONStore, MemoryStore, MongoStore
@@ -39,8 +40,8 @@ class ElasticBuilderTest(unittest.TestCase):
         ec_builder2 = ElasticBuilder(self.local_tasks, self.local_elasticity,
                                      self.local_materials, incremental=False)
         ec_builder2.connect()
-        items = list(ec_builder2.get_items())
-        for t in items[:5]:
+        # items = list(ec_builder2.get_items())
+        for t in itertools.islice(ec_builder2.get_items(), 5):
             processed = ec_builder2.process_item(t)
             if processed:
                 pass
