@@ -34,7 +34,7 @@ class ElectronicStructureBuilder(Builder):
                  materials,
                  electronic_structure,
                  query={},
-                 interpolate_dos=True,
+                 interpolate_dos=False,
                  small_plot=True,
                  static_images=True,
                  **kwargs):
@@ -84,6 +84,7 @@ class ElectronicStructureBuilder(Builder):
 
         mats = list(self.materials.distinct(self.materials.key, criteria=q))
 
+        self.logger.debug("Processing {} materials for electronic structure".format(len(mats)))
         for m in mats:
             mat = self.materials.query_one(
                 [self.materials.key, "structure", "bandstructure", "origins", "calc_settings", "inputs"], {
@@ -105,39 +106,69 @@ class ElectronicStructureBuilder(Builder):
         Returns:
             (dict): electronic_structure document
         """
-
+        d = {self.electronic_structure.key: mat[self.materials.key]}
         self.logger.info("Processing: {}".format(mat[self.materials.key]))
 
-        bs_dict = self.make_bs_doc(mat)
-        dos_dict = self.make_dos_doc(mat)
-        interpolated_dos_dict = self.make_interpolated_dos_doc(mat)
+        bs = self.extract_bs(mat)
+        if self.__interpolate_dos:
+            dos = self.extract_interpolated_dos(mat)
+        else:
+            dos = self.extract_dos(mat)
 
-        # Generate static images
         if self.static_images:
-            bs_ylim = None
-            bs = BandStructureSymmLine.from_dict(bs_dict)
+            # Plot Band structure
+            ylim = None
             try:
                 plotter = WebBSPlotter(bs)
-                bs_dict["bs_plot"] = image_from_plotter(plotter)
+                plot = plotter.get_plot()
+                ylim = plot.ylim()
+                d["bs_plot"] = image_from_plot(plot)
+                plot.close()
+                d["bs_task_id"] = next((origin for origin in mat.get("origins", []) if "Line" in origin["task_type"]),
+                                       {}).get("task_id", None)
 
             except Exception:
                 self.logger.warning("Caught error in bandstructure plotting for {}: {}".format(
                     mat[self.materials.key], traceback.format_exc()))
+
+        # Reduced Band structure plot
+        if self.small_plot:
+            try:
+                gap = bs.get_band_gap()["energy"]
+                plot_data = plotter.bs_plot_data()
+                d["plot_small"] = get_small_plot(plot_data, gap)
+            except Exception:
+                self.logger.warning("Caught error in generating reduced bandstructure plot for {}: {}".format(
+                    mat[self.materials.key], traceback.format_exc()))
+
+        # Plot DOS
+        if self.static_images:
             try:
                 plotter = WebDosVertPlotter()
-                bs_ylim = self.get_bs_ylim(bs)
-                if interpolated_dos_dict:
-                    plotter.add_dos_dict(interpolated_dos.get_element_dos())
-                    dos_dict["dos_plot"] = image_from_plotter(plotter, ylim=bs_ylim)
-                elif dos_dict:
-                    plotter.add_dos_dict(CompleteDos.from_dict(dos_dict).get_element_dos())
-                    dos_dict["dos_plot"] = image_from_plotter(plotter, ylim=bs_ylim)
-
+                plotter.add_dos_dict(dos.get_element_dos())
+                plot = plotter.get_plot(ylim=ylim)
+                d["dos_plot"] = image_from_plot(plot)
+                plot.close()
+                d["dos_task_id"] = next(
+                    (origin for origin in mat.get("origins", []) if "Uniform" in origin["task_type"]), {}).get(
+                        "task_id", None)
             except Exception:
-                self.logger.warning("Caught error in bandstructure plotting for {}: {}".format(
+                self.logger.warning("Caught error in dos plotting for {}: {}".format(
                     mat[self.materials.key], traceback.format_exc()))
 
-        return [bs_dict, dos_dict]
+        # Get basic bandgap properties
+        try:
+            d["band_gap"] = {
+                "band_gap": bs.get_band_gap()["energy"],
+                "direct_gap": bs.get_direct_band_gap(),
+                "is_direct": bs.get_band_gap()["direct"],
+                "transition": bs.get_band_gap()["transition"]
+            }
+        except Exception:
+            self.logger.warning("Caught error in calculating bandgap {}: {}".format(mat[self.materials.key],
+                                                                                    traceback.format_exc()))
+
+        return d
 
     def update_targets(self, items):
         """
@@ -146,34 +177,15 @@ class ElectronicStructureBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
-        items = list(filter(None, chain.from_iterable(items)))
+        items = list(filter(None, items))
 
-        docs = []
-        plots = {}
-
-        for d in items:
-            if "bs_plot" in d:
-                plots["bs_{}.png".format(d["material_id"])] = d["bs_plot"]
-                del d["bs_plot"]
-
-            if "dos_plot" in d:
-                plots["dos_{}.png".format(d["material_id"])] = d["dos_plot"]
-                del d["dos_plot"]
-
-            docs.append(jsanitize(d))
-
-        if len(docs) > 0:
-            self.logger.info("Updating {} electronic structure docs".format(len(docs)))
+        if len(items) > 0:
+            self.logger.info("Updating {} electronic structure docs".format(len(items)))
             try:
-                self.electronic_structure.update(docs)
+                self.electronic_structure.update(items)
             except Exception:
                 # Temporary fix for documents that are too large
                 traceback.print_exc()
-
-        if len(plots) > 0:
-            self.logger.info("Updating {} plots".format(len(plots)))
-            for filename, p in plots.items():
-                self.plot_fs.put(p, filename=filename)
         else:
             self.logger.info("No electronic structure docs to update")
 
@@ -217,7 +229,7 @@ class ElectronicStructureBuilder(Builder):
             dos_dict = json.loads(dos_json.decode())
             mat["bandstructure"]["dos"] = dos_dict
 
-    def get_interpolated_dos(self, mat):
+    def extract_interpolated_dos(self, mat):
 
         nelect = mat["calc_settings"]["nelect"]
 
@@ -248,9 +260,9 @@ class ElectronicStructureBuilder(Builder):
 
         return cdos
 
-    def make_bs_doc(self, mat):
+    def extract_bs(self, mat):
 
-        bs_dict = None
+        bs = None
 
         # Process the bandstructure for information
         if "bs" in mat["bandstructure"]:
@@ -272,63 +284,16 @@ class ElectronicStructureBuilder(Builder):
 
                 bs_dict["labels_dict"] = labels_dict
 
-            # Somethign is wrong with the as_dict / from_dict encoding in the two band structure objects so have to use this hodge podge serialization
-            # TODO: Fix bandstructure objects in pymatgen
             bs = BandStructureSymmLine.from_dict(BandStructure.from_dict(bs_dict).as_dict())
 
-            bs_dict = bs.as_dict()
+        return bs
 
-            if self.small_plot:
-                bs_dict["plot_small"] = get_small_plot(bs)
+    def extract_dos(self, mat):
 
-            # Get basic bandgap properties
-            bs_dict["band_gap"] = {
-                "band_gap": bs.get_band_gap()["energy"],
-                "direct_gap": bs.get_direct_band_gap(),
-                "is_direct": bs.get_band_gap()["direct"],
-                "transition": bs.get_band_gap()["transition"]
-            }
-
-            origin = next(origin for origin in mat.get("origins", []) if "Line" in origin["task_type"])
-
-            if origin:
-                bs_dict["task_id"] = origin["task_id"]
-                bs_dict["material_id"] = mat[self.materials.key]
-
-        return bs_dict
-
-    def make_dos_doc(self, mat):
-
-        dos_dict = None
+        dos = None
         if "dos" in mat["bandstructure"]:
             dos_dict = mat["bandstructure"]["dos"]
-
-            origin = next(origin for origin in mat.get("origins", []) if "Uniform" in origin["task_type"])
-
-            if origin:
-                dos_dict["task_id"] = origin["task_id"]
-                dos_dict["material_id"] = mat[self.materials.key]
-
-        return dos_dict
-
-    def make_interpolated_dos_doc(self, mat):
-
-        interpolated_dos = None
-        if self.__interpolate_dos and "uniform_bs" in mat["bandstructure"]:
-            try:
-                interpolated_dos = self.get_interpolated_dos(mat)
-            except Exception:
-                self.logger.warning("Boltztrap interpolation failed for {}. Continuing with regular DOS".format(
-                    mat[self.materials.key]))
-
-        return interpolated_dos
-
-    def get_bs_ylim(self, bs):
-        plotter = WebBSPlotter(bs)
-        fig = plotter.get_plot()
-        ylim = fig.ylim()
-        fig.close()
-        return ylim
+        return CompleteDos.from_dict(dos_dict)
 
 
 def image_from_plotter(plotter, ylim=None):
@@ -340,19 +305,22 @@ def image_from_plotter(plotter, ylim=None):
     return plot_img
 
 
-def get_small_plot(bs):
-
-    plot_small = BSPlotter(bs).bs_plot_data()
-
-    gap = bs.get_band_gap()["energy"]
-    for branch in plot_small['energy']:
+def get_small_plot(plot_data, gap):
+    for branch in plot_data['energy']:
         for spin, v in branch.items():
             new_bands = []
             for band in v:
                 if min(band) < gap + 3 and max(band) > -3:
                     new_bands.append(band)
             branch[spin] = new_bands
-    return plot_small
+    return plot_data
+
+
+def image_from_plot(plot):
+    imgdata = io.BytesIO()
+    plot.savefig(imgdata, format="png", dpi=100)
+    plot_img = imgdata.getvalue()
+    return plot_img
 
 
 #
