@@ -210,17 +210,18 @@ class MaterialsBuilder(Builder):
         for prop in self.__settings:
             try:
                 if t_type in prop["quality_score"].keys():
-                    props.append({"value":  get(task, prop["tasks_key"]),
-                                  "task_type": t_type,
-                                  "task_id": t_id,
-                                  "quality_score": prop["quality_score"][t_type],
-                                  "track": prop.get("track", False),
-                                  "last_updated": task["last_updated"],
-                                  "materials_key": prop["materials_key"]})
+                    props.append({
+                        "value": get(task, prop["tasks_key"]),
+                        "task_type": t_type,
+                        "task_id": t_id,
+                        "quality_score": prop["quality_score"][t_type],
+                        "track": prop.get("track", False),
+                        "last_updated": task["last_updated"],
+                        "materials_key": prop["materials_key"]
+                    })
             except Exception as e:
                 if not prop.get("optional", False):
-                    self.logger.error(
-                        "Failed getting {} for task: {}".format(e, t_id))
+                    self.logger.error("Failed getting {} for task: {}".format(e, t_id))
         return props
 
     def update_targets(self, items):
