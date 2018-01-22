@@ -101,7 +101,7 @@ class SubstrateBuilder(Builder):
 
             # Calculate all matches and group by substrate orientation
             matches_by_orient = groupby_itemkey(
-                sa.calculate(film, substrate, elac_tensor, lowest=True),
+                sa.calculate(film, substrate, elastic_tensor, lowest=True),
                 "sub_miller")
 
             # Find the lowest area match for each substrate orientation
@@ -116,10 +116,10 @@ class SubstrateBuilder(Builder):
                     "sub_form": substrate.composition.reduced_formula,
                     "film_orient": " ".join(map(str, match["film_miller"])),
                     "area": match["match_area"],
-                    "strain": match["strain"]
                 }
                 if "elastic_energy" in match:
                     db_entry["energy"] = match["elastic_energy"]
+                    db_entry["strain"] = match["strain"]
 
                 all_matches.append(db_entry)
 
