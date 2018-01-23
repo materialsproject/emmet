@@ -293,7 +293,8 @@ class ElectronicStructureBuilder(Builder):
         dos = None
         if "dos" in mat["bandstructure"]:
             dos_dict = mat["bandstructure"]["dos"]
-        return CompleteDos.from_dict(dos_dict)
+            dos = CompleteDos.from_dict(dos_dict)
+        return dos
 
 
 def image_from_plotter(plotter, ylim=None):
