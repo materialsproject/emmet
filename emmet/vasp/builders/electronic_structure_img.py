@@ -29,7 +29,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 matplotlib.use('agg')
 
 
-class ElectronicStructureBuilder(Builder):
+class ElectronicStructureImageBuilder(Builder):
     def __init__(self,
                  materials,
                  electronic_structure,
@@ -37,6 +37,7 @@ class ElectronicStructureBuilder(Builder):
                  interpolate_dos=False,
                  small_plot=True,
                  static_images=True,
+                 make_old_style_docs=True,
                  **kwargs):
         """
         Creates an electronic structure from a tasks collection, the associated band structures and density of states, and the materials structure
@@ -49,6 +50,7 @@ class ElectronicStructureBuilder(Builder):
         interpolate_dos (bool): interpolate DOS using BoltzTrap
         small_plot (bool): make a small plot dictionary for Bandstructure
         static_images (bool): generate static images of Bandstructure and DOS
+        make_old_style_docs(bool): make old mp_website style electronic structuer docs
         """
 
         self.materials = materials
@@ -58,6 +60,7 @@ class ElectronicStructureBuilder(Builder):
         self.__interpolate_dos = interpolate_dos and bool(which("x_trans"))
         self.small_plot = small_plot
         self.static_images = static_images
+        self.make_old_style_docs = make_old_style_docs
 
         super().__init__(sources=[materials], targets=[electronic_structure], **kwargs)
 
@@ -115,18 +118,15 @@ class ElectronicStructureBuilder(Builder):
         else:
             dos = self.extract_dos(mat)
 
-        if self.static_images:
-            # Plot Band structure
-            ylim = None
+        ylim = None
+        # Plot Band structure
+        if self.static_images and bs:
             try:
                 plotter = WebBSPlotter(bs)
                 plot = plotter.get_plot()
                 ylim = plot.ylim()
                 d["bs_plot"] = image_from_plot(plot)
                 plot.close()
-                d["bs_task_id"] = next((origin for origin in mat.get("origins", []) if "Line" in origin["task_type"]),
-                                       {}).get("task_id", None)
-
             except Exception:
                 self.logger.warning("Caught error in bandstructure plotting for {}: {}".format(
                     mat[self.materials.key], traceback.format_exc()))
@@ -136,22 +136,19 @@ class ElectronicStructureBuilder(Builder):
             try:
                 gap = bs.get_band_gap()["energy"]
                 plot_data = plotter.bs_plot_data()
-                d["plot_small"] = get_small_plot(plot_data, gap)
+                d["bs_plot_small"] = get_small_plot(plot_data, gap)
             except Exception:
                 self.logger.warning("Caught error in generating reduced bandstructure plot for {}: {}".format(
                     mat[self.materials.key], traceback.format_exc()))
 
         # Plot DOS
-        if self.static_images:
+        if self.static_images and dos:
             try:
                 plotter = WebDosVertPlotter()
                 plotter.add_dos_dict(dos.get_element_dos())
                 plot = plotter.get_plot(ylim=ylim)
                 d["dos_plot"] = image_from_plot(plot)
                 plot.close()
-                d["dos_task_id"] = next(
-                    (origin for origin in mat.get("origins", []) if "Uniform" in origin["task_type"]), {}).get(
-                        "task_id", None)
             except Exception:
                 self.logger.warning("Caught error in dos plotting for {}: {}".format(
                     mat[self.materials.key], traceback.format_exc()))
@@ -168,6 +165,36 @@ class ElectronicStructureBuilder(Builder):
             self.logger.warning("Caught error in calculating bandgap {}: {}".format(mat[self.materials.key],
                                                                                     traceback.format_exc()))
 
+        if self.make_old_style_docs:
+            # make electronic structure docs
+            old_docs = []
+            try:
+                bs_origin = next((origin for origin in mat.get("origins",[]) if "Line" in origin["task_type"]),None)
+
+                bs_dict = bs.as_dict()
+                bs_dict["task_id"] = bs_origin["task_id"]
+                bs_dict["material_id"] = mat["task_id"]
+                bs_dict["plot_small"] = d["bs_plot_small"]
+                bs_dict["plot_img"] = ("bs_{}.png".format(mat["task_id"]), d["bs_plot"])
+            
+                old_docs.append(bs_dict)
+            except Exception:
+                self.logger.warning("Caught error in making old style Bandstructure doc for {}: {}".format(mat[self.materials.key],
+                                                                                    traceback.format_exc()))
+
+            try:
+                dos_origin = next((origin for origin in mat.get("origins",[]) if "Uniform" in origin["task_type"]),None)
+                dos_dict = dos.as_dict()
+                dos_dict["task_id"] = dos_origin["task_id"]
+                dos_dict["material_id"] = mat["task_id"]
+                dos_dict["plot_img"] = ("dos_{}.png".format(mat["task_id"]), d["dos_plot"])
+
+                old_docs.append(dos_dict)
+            except Exception:
+                self.logger.warning("Caught error in making old style DOS doc for {}: {}".format(mat[self.materials.key],
+                                                                                    traceback.format_exc()))
+            return old_docs
+
         return d
 
     def update_targets(self, items):
@@ -177,10 +204,37 @@ class ElectronicStructureBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
-        items = list(filter(None, items))
+        if self.make_old_style_docs:
+            self.update_old_style_targets(items)
+        else:
+
+            items = list(filter(None, items))
+
+            if len(items) > 0:
+                self.logger.info("Updating {} electronic structure docs".format(len(items)))
+                self.electronic_structure.update(items)
+            else:
+                self.logger.info("No electronic structure docs to update")
+
+    def update_old_style_targets(self,items):
+        """
+        Inserts multiple es docs into collection and then saves plots in seperate GridFs
+        """
+
+        items = list(filter(None,chain.from_iterable(items)))
 
         if len(items) > 0:
             self.logger.info("Updating {} electronic structure docs".format(len(items)))
+
+            for d in items:
+                try:
+                    if "plot_img" in d:
+                        self.plot_fs.put(d["plot_img"][1],filename=d["plot_img"][0])
+                        del d["plot_img"]
+                except Exception:
+                    # Temporary fix for documents that are too large
+                    traceback.print_exc()
+
             try:
                 self.electronic_structure.update(items)
             except Exception:
