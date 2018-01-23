@@ -35,7 +35,7 @@ class TaskTagger(Builder):
 
         self.logger.info("Yielding task documents")
         for task_id in to_process:
-            yield self.tasks.query_one(criteria={"task_id": task_id}, properties=["task_id", "input"])
+            yield self.tasks.query_one(criteria={"task_id": task_id}, properties=["task_id", "orig_inputs"])
 
     def process_item(self, item):
         """
@@ -44,7 +44,7 @@ class TaskTagger(Builder):
         Args:
             item (dict): a (projection of a) task doc
         """
-        tt = task_type(item['input'])
+        tt = task_type(item["orig_inputs"])
         return {"task_id": item["task_id"], "task_type": tt}
 
     def update_targets(self, items):
