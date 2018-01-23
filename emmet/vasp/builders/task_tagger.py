@@ -57,7 +57,9 @@ class TaskTagger(Builder):
         with_task_type, without_task_type = py_.partition(items, lambda i: i["task_type"])
         if without_task_type:
             self.logger.error("No task type found for {}".format(without_task_type))
-        self.task_types.update(with_task_type)
+        if len(with_task_type) > 0:
+            self.task_types.update(with_task_type)
+            
 
 
 def task_type(inputs, include_calc_type=True):
