@@ -10,56 +10,81 @@ import prettyplotlib as ppl
 from prettyplotlib import brewer2mpl
 import matplotlib
 from monty.json import MontyDecoder
-from pymatgen.phonon.plotter import PhononBSPlotter, PhononDosPlotter
+from monty.json import jsanitize
+from pymatgen.phonon.plotter import PhononBSPlotter, PhononDosPlotter, freq_units, ThermoPlotter
 from pymatgen.util.plotting import pretty_plot
 
 
 matplotlib.use('agg')
 
 
-class PhononDispersionPlotter(Builder):
-    def __init__(self, pmg_docs, web_docs, images,
-                 add_filter=None, ignore_lu=False, **kwargs):
+class PhononWebBuilder(Builder):
+    def __init__(self, pmg_bs_docs, ph_calc_docs, web_docs, images, ph_processed_docs,
+                 ignore_lu=False, query=None, **kwargs):
         """
         Produce docs for interactive and static plots of phonon dispersion.
+        Processed data are also included.
 
         Args:
-            pmg_docs (Store): source of serialized
+            pmg_bs_docs (Store): source of serialized
                 `pymatgen.phonon.bandstructure.PhononBandStructure` objects.
+            ph_calc_docs (Store): source of other iformation directly extracted from
+                the calculation results (should include the serializazion of
+                `pymatgen.phonon.bandstructure.CompletePhononDos` objects).
             web_docs (Store): target for data needed by interactive plots.
-            images (Store): target for png images of phonon dispersion plots.
-            add_filter (dict): MongoDB filter to add to default last-updated
-                filter.
-            ignore_lu (bool): Ignore pmg_docs.lu_filter when getting items.
+            images (Store): target for png images of phonon related quantities.
+            ph_processed_docs (Store) target for other post-preocessed quantities.
+            ignore_lu (bool): Ignore ph_calc_docs.lu_filter when getting items.
                 Useful for forcing rebuilds given `add_filter`.
+            query (dict): dictionary to limit the entries to be analyzed
         """
-        self.pmg_docs = pmg_docs
+        self.pmg_bs_docs = pmg_bs_docs
+        self.ph_calc_docs = ph_calc_docs
         self.web_docs = web_docs
         self.images = images
-        self.add_filter = add_filter if add_filter else {}
+        self.ph_processed_docs = ph_processed_docs
         self.ignore_lu = ignore_lu
+        if query is None:
+            query = {}
+        self.query = query
         super().__init__(
-            sources=[pmg_docs], targets=[web_docs, images], **kwargs)
+            sources=[pmg_bs_docs, ph_calc_docs],
+            targets=[web_docs, images, ph_processed_docs], **kwargs)
 
     def get_items(self):
-        lu_filter = self.pmg_docs.lu_filter([self.web_docs, self.images])
-        filter_ = {} if self.ignore_lu else lu_filter.copy()
-        filter_.update(self.add_filter)
-        self.logger.info("Filtering pmg_docs by {}".format(filter_))
-        cursor = self.pmg_docs.query(criteria=filter_)
-        self.logger.info("Found {} pmg_docs to process".format(cursor.count()))
-        if cursor.count() == 0:
-            n_updated = self.pmg_docs.query(criteria=lu_filter).count()
-            self.logger.debug("{} updated pmg_docs that do not match"
-                              " `add_filter`".format(n_updated))
-        return cursor
+        """
+        Gets all materials that need phonons web data
+
+        Returns:
+            generator of materials to extract phonon properties
+        """
+
+        self.logger.info("Phonon Web Builder Started")
+
+        # All relevant materials that have been updated since diffraction props were last calculated
+        q = dict(self.query)
+        if not self.ignore_lu:
+            # q.update(self.ph_calc_docs.lu_filter(self.targets))
+            q.update(self.ph_calc_docs.lu_filter(self.targets))
+        self.logger.info("Filtering ph_calc_docs by {}".format(q))
+
+        mats = list(self.ph_calc_docs.distinct(self.ph_calc_docs.key, criteria=q))
+        self.logger.info("Found {} new materials for phonon data".format(len(mats)))
+
+        for m in mats:
+
+            item = {"ph_calc": self.ph_calc_docs.query_one(criteria={self.ph_calc_docs.key: m})}
+
+            item["pmg_ph_bs"] = self.pmg_bs_docs.query_one(criteria={self.pmg_bs_docs.key: m})
+
+            yield item
 
     def process_item(self, item):
-        mp_id = item['mp-id']
-        self.logger.debug("Processing {}".format(mp_id))
+        task_id = item['ph_calc'][self.ph_calc_docs.key]
+        self.logger.debug("Processing {}".format(task_id))
 
         decoder = MontyDecoder()
-        ph_bs = decoder.process_decoded(item['ph_bs'])
+        ph_bs = decoder.process_decoded(item['pmg_ph_bs']['ph_bs'])
 
         y_min = ph_bs.bands.min()
         y_max = ph_bs.bands.max()
@@ -71,57 +96,112 @@ class PhononDispersionPlotter(Builder):
         # increase the ymax to display all the top bands
         y_max += 0.08
 
-        ylim = (y_min, y_max)
+        units = "cm-1"
+        yfactor = freq_units(units).factor
+        ylim = (y_min*yfactor, y_max*yfactor)
 
         bs_plotter = WebBSPlotter(ph_bs)
-        ph_bs_image = image_from_plotter(bs_plotter, ylim)
+        ph_bs_image = image_from_plotter(bs_plotter, ylim, units="cm-1")
 
-        ph_dos = decoder.process_decoded(item['ph_dos'])
+        ph_dos = decoder.process_decoded(item['ph_calc']['phonon']['ph_dos'])
+        dos_dict = ph_dos.get_element_dos()
         dos_plotter = WebPhononDosVertPlotter()
-        dos_plotter.add_dos("Total DOS", ph_dos)
-        dos_plotter.add_dos_dict(ph_dos.get_element_dos())
-        ph_dos_image = image_from_plotter(dos_plotter, ylim)
+        if len(dos_dict) > 1:
+            dos_plotter.add_dos("Total DOS", ph_dos)
+        dos_plotter.add_dos_dict(dos_dict)
+        ph_dos_image = image_from_plotter(dos_plotter, ylim, units="cm-1")
 
         web_doc = ph_bs.as_phononwebsite()
         # reduce the numerical representation of the eigendisplacements to reduce the size
         web_doc['vectors'] = reduce_eigendisplacements(web_doc['vectors'], figures=4, frac_threshold=1e-8).tolist()
 
-        return dict(mp_id=mp_id, web_doc=web_doc, ph_bs_image=ph_bs_image, ph_dos_image=ph_dos_image)
+        thermo_data, thermo_image = self.get_thermodynamic_properties(ph_dos)
+
+        images = {"dos": ph_dos_image, "bs": ph_bs_image, "thermodynamic": thermo_image}
+
+        return {self.ph_calc_docs.key: item['ph_calc'][self.ph_calc_docs.key],
+                "web_doc": web_doc, "images": images, "thermodynamic": thermo_data}
+
+    def get_thermodynamic_properties(self, ph_dos):
+        """
+        Calculates the thermodynamic properties and prepare the figure with those values
+
+        Args:
+            ph_dos: A CompletePhononDos
+
+        Returns:
+            a dict containing the thermodynamic properties and a Binary object containg the figure
+        """
+
+        tstart, tstop, nt = 0, 800, 161
+        temp = np.linspace(tstart, tstop, nt)
+
+        cv = []
+        entropy = []
+        internal_energy = []
+        helmholtz_free_energy = []
+
+        for t in temp:
+            cv.append(ph_dos.cv(t, ph_dos.structure))
+            entropy.append(ph_dos.entropy(t, ph_dos.structure))
+            internal_energy.append(ph_dos.internal_energy(t, ph_dos.structure))
+            helmholtz_free_energy.append(ph_dos.helmholtz_free_energy(t, ph_dos.structure))
+
+        thermo_data = {"temperature": temp.tolist(),
+                       "cv": cv,
+                       "entropy": entropy,
+                       "internal_energy": internal_energy,
+                       "helmholtz_free_energy": helmholtz_free_energy
+                      }
+
+        tplotter = ThermoPlotter(ph_dos)
+        fig = tplotter.plot_thermodynamic_properties(tstart, tstop, nt, show=False)
+        imgdata = io.BytesIO()
+        fig.savefig(imgdata, format="png", dpi=100)
+        thermo_image = Binary(imgdata.getvalue())
+
+        return thermo_data, thermo_image
 
     def update_targets(self, items):
-        self.web_docs.ensure_index("mp-id", unique=True)
-        self.images.ensure_index("mp-id", unique=True)
+        # self.web_docs.ensure_index("mp-id", unique=True)
+        # self.images.ensure_index("mp-id", unique=True)
 
-        web_docs = [{"mp-id": item["mp_id"], "ph_bs": item["web_doc"]}
+        web_docs = [{self.web_docs.key: item[self.ph_calc_docs.key], "ph_bs": item["web_doc"]}
                     for item in items]
         self.web_docs.update(web_docs)
 
-        images = [{"mp-id": item["mp_id"], "ph_bs_plot": item["ph_bs_image"],
-                   "ph_dos_plot": item["ph_dos_image"]} for item in items]
+        images = [{self.images.key: item[self.ph_calc_docs.key],
+                   "ph_bs_plot": item["images"]["bs"], "ph_dos_plot": item["images"]["dos"],
+                   "thermodynamic_plot": item["images"]["thermodynamic"]} for item in items]
         self.images.update(images)
-        mp_ids = py_.pluck(items, "mp_id")
+
+        processed_docs = [{self.ph_processed_docs.key: item[self.ph_calc_docs.key],
+                                "thermodynamic": item["thermodynamic"]} for item in items]
+        self.ph_processed_docs.update(processed_docs)
+
+        mp_ids = py_.pluck(items, self.ph_calc_docs.key)
 
         self.logger.info("Updated targets for {}".format(mp_ids))
 
-    def validate_targets(self, n=0):
-        self.logger.info("Validating {}".format(
-            "all" if not n else "with sample size {}".format(n)))
-        ids = self.web_docs.distinct("mp-id")
-        sample_ids = py_.sample_size(ids, n) if n else ids
-        criteria = {"mp-id": {"$in": sample_ids}}
-        web_docs = self.web_docs.query(criteria=criteria)
-        n_web_docs = web_docs.count()
-        assert n_web_docs == len(sample_ids), "mp-id not unique in web_docs"
-        images =self.images.query(criteria=criteria)
-        n_images = images.count()
-        assert n_web_docs == n_images, "counts for images and web_docs differ"
-        for doc in web_docs:
-            assert "ph_bs" in doc and doc["ph_bs"] is not None
-        self.logger.info("Validated {} of web_docs".format(n_web_docs))
-        for doc in images:
-            assert "ph_bs_plot" in doc and doc["ph_bs_plot"] is not None
-            assert "ph_dos_plot" in doc and doc["ph_dos_plot"] is not None
-        self.logger.info("Validated {} of images".format(n_images))
+    # def validate_targets(self, n=0):
+    #     self.logger.info("Validating {}".format(
+    #         "all" if not n else "with sample size {}".format(n)))
+    #     ids = self.web_docs.distinct("mp-id")
+    #     sample_ids = py_.sample_size(ids, n) if n else ids
+    #     criteria = {"mp-id": {"$in": sample_ids}}
+    #     web_docs = self.web_docs.query(criteria=criteria)
+    #     n_web_docs = web_docs.count()
+    #     assert n_web_docs == len(sample_ids), "mp-id not unique in web_docs"
+    #     images =self.images.query(criteria=criteria)
+    #     n_images = images.count()
+    #     assert n_web_docs == n_images, "counts for images and web_docs differ"
+    #     for doc in web_docs:
+    #         assert "ph_bs" in doc and doc["ph_bs"] is not None
+    #     self.logger.info("Validated {} of web_docs".format(n_web_docs))
+    #     for doc in images:
+    #         assert "ph_bs_plot" in doc and doc["ph_bs_plot"] is not None
+    #         assert "ph_dos_plot" in doc and doc["ph_dos_plot"] is not None
+    #     self.logger.info("Validated {} of images".format(n_images))
 
 
 class WebBSPlotter(PhononBSPlotter):
@@ -129,18 +209,22 @@ class WebBSPlotter(PhononBSPlotter):
     A plotter for the phonon BS suitable for visualization on the MP website.
     """
 
-    def get_plot(self, ylim=None):
+    def get_plot(self, ylim=None, units="thz"):
         """
         Get a matplotlib object for the bandstructure plot.
 
         Args:
             ylim: Specify the y-axis (frequency) limits; by default None let
                 the code choose.
+            units: units for the frequencies. Accepted values thz, ev, mev, ha, cm-1, cm^-1.
         """
+
+        u = freq_units(units)
 
         plt = pretty_plot(6, 5.5)  # Was 12, 8
 
         matplotlib.rc('text', usetex=True)
+        plt.rc('font', **{'family': 'serif', 'serif': ['Times New Roman']})
 
         width = 4
         ticksize = int(width * 2.5)
@@ -162,7 +246,7 @@ class WebBSPlotter(PhononBSPlotter):
         for d in range(len(data['distances'])):
             for i in range(self._nb_bands):
                 plt.plot(data['distances'][d],
-                         [data['frequency'][d][i][j]
+                         [data['frequency'][d][i][j] * u.factor
                           for j in range(len(data['distances'][d]))], 'b-',
                          linewidth=band_linewidth)
 
@@ -174,8 +258,7 @@ class WebBSPlotter(PhononBSPlotter):
 
         # Main X and Y Labels
         plt.xlabel(r'$\mathrm{Wave\ Vector}$')
-        plt.ylabel(r'$\mathrm{Frequency\ (THz)}$')
-
+        plt.ylabel(r'$\mathrm{{Frequencies\ ({})}}$'.format(u.label))
         # X range (K)
         # last distance point
         x_max = data['distances'][-1][-1]
@@ -194,7 +277,7 @@ class WebPhononDosVertPlotter(PhononDosPlotter):
     A plotter for the phonon DOS suitable for visualization on the MP website.
     """
 
-    def get_plot(self, xlim=None, ylim=None):
+    def get_plot(self, xlim=None, ylim=None, units="thz"):
         """
         Get a matplotlib plot showing the DOS.
 
@@ -202,9 +285,15 @@ class WebPhononDosVertPlotter(PhononDosPlotter):
             xlim: Specifies the x-axis limits. Set to None for automatic
                 determination.
             ylim: Specifies the y-axis limits.
+            units: units for the frequencies. Accepted values thz, ev, mev, ha, cm-1, cm^-1.
         """
 
+        u = freq_units(units)
+
         plt = pretty_plot(2, 5.5)
+
+        matplotlib.rc('text', usetex=True)
+        plt.rc('font', **{'family': 'serif', 'serif': ['Times New Roman']})
 
         ncolors = max(3, len(self._doses))
         ncolors = min(9, ncolors)
@@ -226,7 +315,7 @@ class WebPhononDosVertPlotter(PhononDosPlotter):
         # Note that this complicated processing of frequencies is to allow for
         # stacked plots in matplotlib.
         for key, dos in self._doses.items():
-            frequencies = dos['frequencies']
+            frequencies = dos['frequencies'] * u.factor
             densities = dos['densities']
             if y is None:
                 y = np.zeros(frequencies.shape)
@@ -250,7 +339,7 @@ class WebPhononDosVertPlotter(PhononDosPlotter):
                          label=str(key))
             else:
                 ppl.plot(densities, frequencies, color=colors[i % ncolors],
-                         label=str(key), linewidth=3)
+                         label=str(key), linewidth=1)
 
         if ylim:
             plt.ylim(ylim)
@@ -266,10 +355,9 @@ class WebPhononDosVertPlotter(PhononDosPlotter):
         xlim = plt.xlim()
         plt.plot(xlim, [0, 0], 'k-', linewidth=1)
 
-        plt.ylabel('Frequencies (THz)')
-        plt.xlabel('Density of states')
+        plt.ylabel(r'$\mathrm{{Frequencies\ ({})}}$'.format(u.label))
+        plt.xlabel(r'$\mathrm{Density\ of\ states}$')
 
-        locs, _ = plt.xticks()
         plt.xticks([0], fontsize=ticksize)
         plt.yticks(fontsize=ticksize)
         plt.grid(which='major', axis='y')
@@ -282,15 +370,17 @@ class WebPhononDosVertPlotter(PhononDosPlotter):
             leg.get_frame().set_alpha(0.25)
 
         plt.tight_layout()
+        # to accomodate the larger numbers of the cm^-1
+        plt.subplots_adjust(left=0.3)
 
         return plt
 
 
-def image_from_plotter(plotter, ylim=None):
-    plot = plotter.get_plot(ylim=ylim)
+def image_from_plotter(plotter, ylim=None, units="thz"):
+    plot = plotter.get_plot(ylim=ylim, units=units)
     imgdata = io.BytesIO()
     plot.savefig(imgdata, format="png", dpi=100)
-    plot_img = imgdata.getvalue()
+    plot_img = Binary(imgdata.getvalue())
     plot.close()
     return plot_img
 
@@ -319,7 +409,7 @@ def round_to_sig_figures(x, figures):
 
     mantissas *= 10.0 ** (decimalExponents - omags)
 
-    if type(mantissas) is float or isinstance(mantissas, np.floating):
+    if isinstance(mantissas, float) or isinstance(mantissas, np.floating):
         if mantissas < 1.0:
             mantissas *= 10.0
             omags -= 1.0
@@ -336,7 +426,7 @@ def round_to_sig_figures(x, figures):
 
 def reduce_eigendisplacements(eigdispl, figures=4, frac_threshold=1e-8):
     """
-    Reduces the size of the json representation of the eigendisplacements in a phononwebsite jason by tuncating
+    Reduces the size of the json representation of the eigendisplacements in a phononwebsite json by tuncating
     the numerical representation of the eigendisplacements to a given number of significant figures and setting to
     zero eigendisplacements with value lower than a threshold.
 
