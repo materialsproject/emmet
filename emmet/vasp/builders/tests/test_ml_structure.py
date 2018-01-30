@@ -12,7 +12,7 @@ __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
 
 
-class TestMaterials(BuilderTest):
+class TestML(BuilderTest):
 
     def setUp(self):
         self.ml_strucs = MongoStore("emmet_test", "ml_strucs",key="entry_id")
