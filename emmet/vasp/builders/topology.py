@@ -11,7 +11,9 @@ from pymatgen.command_line.bader_caller import bader_analysis_from_path
 from monty.os.path import which
 from maggma.builder import Builder
 
-from emmet.vasp.builders.task_tagger import TaskTagger
+from monty.json import jsanitize
+
+from emmet.vasp.builders.task_tagger import task_type
 
 __author__ = "Matthew Horton <mkhorton@lbl.gov>"
 
@@ -94,15 +96,14 @@ class TopologyBuilder(Builder):
         # was last calculated
         q = dict(self.query)
         q.update(self.tasks.lu_filter(self.topology))
-        tasks = self.tasks().find(q, {"task_id": 1,
-                                      "input.incar": 1,
-                                      "output.structure": 1,
-                                      "calcs_reversed": 1})
+        tasks = self.tasks.query(criteria=q,
+                                 properties=["task_id", "input.incar",
+                                             "output.structure", "calcs_reversed"])
 
         self.__logger.info("Found {} new tasks for topological analysis".format(tasks.count()))
 
         for task in tasks:
-            if TaskTagger.task_type(task) == "static":
+            if "Static" in task_type(task['input']['incar']):
                 yield task
 
     def process_item(self, item):
@@ -137,7 +138,7 @@ class TopologyBuilder(Builder):
                     'task_id': task_id,
                     'method': strategy.__name__,
                     'status': 'failed',
-                    'error_message': e
+                    'error_message': str(e)
                 })
 
                 self.__logger.warning(e)
@@ -154,7 +155,7 @@ class TopologyBuilder(Builder):
                 topology_docs.append({
                     'task_id': task_id,
                     'method': 'critic2_promol',
-                    'graph': c2.output.structure_graph().as_dict()
+                    'graph': c2.output.structure_graph().as_dict(),
                     'status': 'successful'
                 })
 
@@ -164,7 +165,7 @@ class TopologyBuilder(Builder):
                     'task_id': task_id,
                     'method': 'critic2_promol',
                     'status': 'failed',
-                    'error_message': e
+                    'error_message': str(e)
                 })
 
                 self.__logger.warning(e)
@@ -228,7 +229,7 @@ class TopologyBuilder(Builder):
                             'task_id': task_id,
                             'method': 'critic2_chgcar',
                             'status': 'failed',
-                            'error_message': e
+                            'error_message': str(e)
                         })
 
                         self.__logger.warning(e)
@@ -246,7 +247,7 @@ class TopologyBuilder(Builder):
                             bader_doc = {
                                 'task_id': task_id,
                                 'status': 'failed',
-                                'error_message': e
+                                'error_message': str(e)
                             }
 
                             self.__logger.warning(e)
@@ -263,7 +264,6 @@ class TopologyBuilder(Builder):
                         self.__logger.warning("CHGCAR found for {}, but AECCAR0 "
                                               "or AECCAR2 not present.".format(task_id))
 
-
         return {
             'topology_docs': topology_docs,
             'bader_doc': bader_doc
@@ -272,15 +272,10 @@ class TopologyBuilder(Builder):
     def update_targets(self, items):
 
         self.__logger.info("Updating topology documents")
+        items = jsanitize(items)
 
         for item in items:
 
-            for topology_doc in item['topology_docs']:
-                topology_doc[self.topology.lu_field] = datetime.utcnow()
-                self.topology().replace_one({'task_id': topology_doc['task_id'],
-                                             'method': topology_doc['method']},
-                                            topology_doc, upsert=True)
-
-            item['bader_doc'][self.bader.lu_field] = datetime.utcnow()
-            self.bader().replace_one({'task_id': item['bader_doc']['task_id']},
-                                     item['bader_doc'], upsert=True)
+            self.topology.update(item['topology_docs'], key=['task_id', 'method'])
+            if item['bader_doc']:
+                self.bader.update(item['bader_doc'], key=['task_id', 'method'])
