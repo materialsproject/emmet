@@ -30,6 +30,7 @@ matplotlib.use('agg')
 
 
 class ElectronicStructureImageBuilder(Builder):
+
     def __init__(self,
                  materials,
                  electronic_structure,
@@ -169,21 +170,22 @@ class ElectronicStructureImageBuilder(Builder):
             # make electronic structure docs
             old_docs = []
             try:
-                bs_origin = next((origin for origin in mat.get("origins",[]) if "Line" in origin["task_type"]),None)
+                bs_origin = next((origin for origin in mat.get("origins", []) if "Line" in origin["task_type"]), None)
 
                 bs_dict = bs.as_dict()
                 bs_dict["task_id"] = bs_origin["task_id"]
                 bs_dict["material_id"] = mat["task_id"]
                 bs_dict["plot_small"] = d["bs_plot_small"]
                 bs_dict["plot_img"] = ("bs_{}.png".format(mat["task_id"]), d["bs_plot"])
-            
+
                 old_docs.append(bs_dict)
             except Exception:
                 self.logger.warning("Caught error in making old style Bandstructure doc for {}: {}".format(mat[self.materials.key],
-                                                                                    traceback.format_exc()))
+                                                                                                           traceback.format_exc()))
 
             try:
-                dos_origin = next((origin for origin in mat.get("origins",[]) if "Uniform" in origin["task_type"]),None)
+                dos_origin = next((origin for origin in mat.get("origins", [])
+                                   if "Uniform" in origin["task_type"]), None)
                 dos_dict = dos.as_dict()
                 dos_dict["task_id"] = dos_origin["task_id"]
                 dos_dict["material_id"] = mat["task_id"]
@@ -192,7 +194,7 @@ class ElectronicStructureImageBuilder(Builder):
                 old_docs.append(dos_dict)
             except Exception:
                 self.logger.warning("Caught error in making old style DOS doc for {}: {}".format(mat[self.materials.key],
-                                                                                    traceback.format_exc()))
+                                                                                                 traceback.format_exc()))
             return old_docs
 
         return d
@@ -216,12 +218,12 @@ class ElectronicStructureImageBuilder(Builder):
             else:
                 self.logger.info("No electronic structure docs to update")
 
-    def update_old_style_targets(self,items):
+    def update_old_style_targets(self, items):
         """
         Inserts multiple es docs into collection and then saves plots in seperate GridFs
         """
 
-        items = list(filter(None,chain.from_iterable(items)))
+        items = list(filter(None, chain.from_iterable(items)))
 
         if len(items) > 0:
             self.logger.info("Updating {} electronic structure docs".format(len(items)))
@@ -229,7 +231,7 @@ class ElectronicStructureImageBuilder(Builder):
             for d in items:
                 try:
                     if "plot_img" in d:
-                        self.plot_fs.put(d["plot_img"][1],filename=d["plot_img"][0])
+                        self.plot_fs.put(d["plot_img"][1], filename=d["plot_img"][0])
                         del d["plot_img"]
                 except Exception:
                     # Temporary fix for documents that are too large
@@ -385,6 +387,7 @@ def image_from_plot(plot):
 
 
 class WebBSPlotter(BSPlotter):
+
     def get_plot(self, zero_to_efermi=True, ylim=None, smooth=False):
         """
         get a matplotlib object for the bandstructure plot.
@@ -507,6 +510,7 @@ class WebBSPlotter(BSPlotter):
 
 
 class WebDosVertPlotter(DosPlotter):
+
     def get_plot(self, xlim=None, ylim=None, plt=None, handle_only=False):
         """
         Get a matplotlib plot showing the DOS.
