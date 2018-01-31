@@ -31,7 +31,7 @@ class ThermoBuilder(Builder):
         self.thermo = thermo
         self.query = query
         self.compatibility = compatibility
-
+        self.completed_tasks = set()
         super().__init__(sources=[materials],
                          targets=[thermo],
                          **kwargs)
@@ -165,8 +165,12 @@ class ThermoBuilder(Builder):
         Args:
             items ([[dict]]): a list of list of thermo dictionaries to update
         """
-        items = list(filter(None, chain.from_iterable(items)))
-    
+        items = list(filter(None, chain.from_iterable(items))) # flatten out lists
+        items = list({v[self.thermo.key]:v for v in items}.values()) # check for duplicates within this set
+        items = [i for i in items if i[self.thermo.key] not in self.completed_tasks] # Check if already updated this run
+        
+        self.completed_tasks |= {i[self.thermo.key] for i in items}
+
         if len(items) > 0:
             self.logger.info("Updating {} thermo documents".format(len(items)))
             self.thermo.update(docs=items)
