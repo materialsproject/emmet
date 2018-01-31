@@ -182,6 +182,22 @@ class MPBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
+    def ensure_indexes(self):
+        """
+        Ensures indexes on the tasks and materials collections
+        :return:
+        """
+
+        # Basic search index for tasks
+        self.tasks.ensure_index("task_id", unique=True)
+        self.tasks.ensure_index("state")
+        self.tasks.ensure_index("formula_pretty")
+        self.tasks.ensure_index(self.tasks.lu_field)
+
+        # Search index for materials
+        self.materials.ensure_index(self.materials.key, unique=True)
+        self.materials.ensure_index("task_ids")
+
 #
 #
 #
