@@ -54,7 +54,7 @@ class MLStructuresBuilder(Builder):
             "Found {} tasks to extract information from".format(len(to_process_tasks)))
 
         for t_id in to_process_tasks:
-            task = self.tasks.query_one(criteria={"task_id": t_id})
+            task = self.tasks.query_one(properties=["task_id","orig_inputs","calcs_reversed"],criteria={"task_id": t_id})
             yield task
 
     def process_item(self, task):
@@ -68,7 +68,7 @@ class MLStructuresBuilder(Builder):
             list of C
         """
 
-        t_type = task_type(get(task, 'input.incar'))
+        t_type = task_type(get(task, 'orig_inputs'))
         entries = []
 
         if not any([t in t_type for t in self.task_types]):
