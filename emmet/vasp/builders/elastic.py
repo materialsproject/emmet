@@ -1,5 +1,6 @@
 import numpy as np
 import logging
+import warnings
 from datetime import datetime
 from itertools import chain
 
@@ -282,27 +283,28 @@ def get_elastic_analysis(opt_task, defo_tasks):
         fstrains = strains
         fstresses = pk_stresses
 
-    if len(cauchy_stresses) == 24:
-        elastic_doc['legacy_fit'] = legacy_fit(strains, cauchy_stresses)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        if len(cauchy_stresses) == 24:
+            elastic_doc['legacy_fit'] = legacy_fit(strains, cauchy_stresses)
+        et_raw = ElasticTensor.from_pseudoinverse(fstrains, fstresses)
+        et = et_raw.voigt_symmetrized.convert_to_ieee(opt_struct)
+        defo_tasks = sorted(defo_tasks, key=lambda x: x['completed_at'])
+        input = opt_task['input']
+        input.pop('structure')
+        input['kpoints'] = opt_task['kpoints']
 
-    et_raw = ElasticTensor.from_pseudoinverse(fstrains, fstresses)
-    et = et_raw.voigt_symmetrized.convert_to_ieee(opt_struct)
-    defo_tasks = sorted(defo_tasks, key=lambda x: x['completed_at'])
-    input = opt_task['input']
-    input.pop('structure')
-    input['kpoints'] = opt_task['kpoints']
-
-    elastic_doc.update({"deformation_task_ids": defo_task_ids,
-                        "optimization_task_id": opt_task['task_id'],
-                        "pk_stresses": pk_stresses,
-                        "cauchy_stresses": cauchy_stresses,
-                        "strains": strains,
-                        "deformations": defos,
-                        "elastic_tensor": et.voigt,
-                        "elastic_tensor_raw": et_raw.voigt,
-                        "optimized_structure": opt_struct,
-                        "completed_at": defo_tasks[-1]['completed_at'],
-                        "optimization_input": input})
+        elastic_doc.update({"deformation_task_ids": defo_task_ids,
+                            "optimization_task_id": opt_task['task_id'],
+                            "pk_stresses": pk_stresses,
+                            "cauchy_stresses": cauchy_stresses,
+                            "strains": strains,
+                            "deformations": defos,
+                            "elastic_tensor": et.voigt,
+                            "elastic_tensor_raw": et_raw.voigt,
+                            "optimized_structure": opt_struct,
+                            "completed_at": defo_tasks[-1]['completed_at'],
+                            "optimization_input": input})
 
     # Process input
     elastic_doc['warnings'] = get_warnings(et, opt_struct) or None
@@ -489,14 +491,16 @@ def generate_formula_dict(materials_store, query=None):
 
     """
     pipeline = [{'$match': query}] if query else []
-    pipeline.extend([{'$project': {'structure':1, 'pretty_formula': 1,
-                                   'material_id': 1}},
+    # NOTE: task_id / material_id may need to be changed here
+    pipeline.extend([{'$project': {'structure': 1, 'pretty_formula': 1,
+                                   'task_id': 1}},
                      {'$group': {'_id': '$pretty_formula',
-                                 'mp_ids': {'$push': '$material_id'},
+                                 'mp_ids': {'$push': '$task_id'},
                                  'structures': {'$push': '$structure'}}}])
-    results = list(materials_store.collection.aggregate(pipeline))
+    count = len(materials_store.distinct("pretty_formula"))
+    results = materials_store.collection.aggregate(pipeline, allowDiskUse=True)
     formula_dict = {}
-    for result in tqdm.tqdm(results):
+    for result in tqdm.tqdm(results, total=count):
         formula_dict[result['_id']] = dict(zip(result['mp_ids'],
                                                result['structures']))
     return formula_dict
