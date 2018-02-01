@@ -65,7 +65,8 @@ class ElasticBuilder(Builder):
         Gets all items to process into materials documents
 
         Returns:
-            generator or list relevant tasks and materials to process into materials documents
+            generator of tasks aggregated by formula with relevant data
+            projection to process into elasticity documents
         """
 
         self.logger.info("Elastic Builder Started")
@@ -76,19 +77,9 @@ class ElasticBuilder(Builder):
         # Get only successful elastic deformation tasks with parent structure
         q = dict(self.query)
         q["state"] = "successful"
-        # q["task_label"] = "elastic deformation"
+        q["task_label"] = {"$in": ["elastic deformation",
+                                   "structure optimization"]}
 
-        # only consider tasks that have been updated since materials was last updated
-        if self.incremental:
-            self.logger.info("Ensuring indices on lu_field for sources and targets")
-            self.tasks.ensure_index(self.tasks.lu_field)
-            self.elasticity.ensure_index(self.elasticity.lu_field)
-            q.update(self.tasks.lu_filter(self.elasticity))
-
-        # TODO: Ensure appropriately selective DFT params - input.incar.GGA, input.incar.ENCUT
-        #       for kpoints, designate some cutoff for number
-        # TODO: mpworks discrepancy in original input, probably going to just have to
-        #       let it lie as a distinguisher between atomate/mpworks
         return_props = ['output', 'input', 'completed_at',
                         'transmuter', 'task_id', 'task_label', 'formula_pretty']
         self.logger.debug("Getting criteria")
@@ -96,45 +87,31 @@ class ElasticBuilder(Builder):
 
         material_dict = generate_formula_dict(self.materials)
 
-        projections = [{"$project": {"calc": {"$arrayElemAt": ["$calcs_reversed", 0]}}},
-                       {"$project": {"ionic_steps": {"$arrayElemAt": ["$calc.output.ionic_steps", -1]},
-                                     "kpoints": "$calc.input.kpoints"}},
-                       {"$project": {"final_stress": "$ionic_steps.stress",
-                                     "kpoints": 1}}]
-        for projection in projections:
-            projection['$project'].update({k: 1 for k in return_props})
-        pipeline = [{"$match": q}]
-        pipeline += projections
-        pipeline += [{"$group": {"_id": "$formula_pretty",
-                                 "docs": {"$push": "$$ROOT"}}}]
-        cmd_cursor = self.tasks.collection.aggregate(pipeline, allowDiskUse=True)
+        # formulas that have been updated since elasticity was last updated
+        # Note that this makes the builder a bit slower if run for a complete
+        # build in non-incremental
+        if self.incremental:
+            self.logger.info("Ensuring indices on lu_field for sources/targets")
+            self.tasks.ensure_index(self.tasks.lu_field)
+            self.elasticity.ensure_index(self.elasticity.lu_field)
+            incr_filter = q.copy()
+            incr_filter.update(self.tasks.lu_filter(self.elasticity))
+            new_formulas = self.tasks.distinct("formula_pretty", incr_filter)
+            q.update({"formula_pretty": {"$in": new_formulas}})
+
+        cmd_cursor = self.tasks.groupby("formula_pretty",
+                                        properties=return_props,
+                                        criteria=q)
 
         for n, doc in enumerate(cmd_cursor):
-            # crit.update(q)
-            # tasks = list(self.tasks.query(criteria=crit, properties=return_props))
-
-            # Group by material_id
             # TODO: refactor for task sets without structure opt
             logger.debug("Processing formula {}, {}".format(
                 doc['_id'], n, len(formulas)))
-            # TODO: refactor for parallelization
-            possible_mp_ids = material_dict.get(doc['_id'])
+            possible_mp_ids = material_dict.get(doc['_id']["formula_pretty"])
             if possible_mp_ids:
                 yield doc['docs'], possible_mp_ids
             else:
                 yield None, None
-            # else:
-            #    yield [], {}
-            #    logging.warning("No material with formula {}".format(
-            #        crit['formula_pretty']))
-            # grouped = group_by_material_id(self.materials, tasks)
-            # yield grouped
-            """
-            for material_id, task_sets in grouped.items():
-                self.logger.debug("Processing {} : {} of {}".format(
-                    crit['formula_pretty'], n, len(criterias)))
-                yield material_id, task_sets
-            """
 
     def process_item(self, item):
         """
@@ -161,6 +138,7 @@ class ElasticBuilder(Builder):
             if not elastic_docs:
                 logger.warning("No elastic doc for mp_id {}".format(mp_id))
                 continue
+
             # For now just do the most recent one that's not failed
             sorted(elastic_docs, key=lambda x: (x['state'], x['completed_at']))
             final_doc = elastic_docs[-1]
@@ -192,36 +170,16 @@ class ElasticBuilder(Builder):
         Args:
             items ([dict]): list of elasticity docs
         """
+        items = filter(lambda x: bool(x), items)
         items = chain.from_iterable(items)
         items = [jsanitize(doc, strict=True) for doc in items]
+
         self.logger.info("Updating {} elastic documents".format(len(items)))
 
-        # self.elasticity.collection.insert_many(items)
         self.elasticity.update(items, key='material_id')
 
     def finalize(self, items):
-        """
-        if self.materials:
-            # Get all docs where there's no mp_id
-            logger.info("Assigning mp ids:")
-            docs_without_id = self.elasticity.query(
-                ["parent_structure"], criteria={"material_id": None})
-            for doc in docs_without_id:
-            """
-
         pass
-
-    def _find_mp_id(self, structure, structure_matcher=None):
-        sm = structure_matcher or StructureMatcher()
-        sga = SpacegroupAnalyzer(structure)
-        candidates = self.materials.query(
-                ['structure', 'material_id'],
-                {"formula_pretty": structure.composition.formula_reduced,
-                 "spacegroup.number": sga.space_group.number})
-        for candidate in candidates:
-            c_structure = Structure.from_dict(candidate['structure'])
-            if sm.fit(c_structure, structure):
-                return candidate['material_id']
 
 def get_elastic_analysis(opt_task, defo_tasks):
     """
@@ -246,7 +204,6 @@ def get_elastic_analysis(opt_task, defo_tasks):
     # Warning if deformation is not equivalent to stored deformation
     stored_defos = [d['transmuter']['transformation_params'][0]\
                      ['deformation'] for d in defo_tasks]
-    # defos, stored_defos = np.array(defos), np.array(stored_defos)
     if not np.allclose(defos, stored_defos, atol=1e-5):
         wmsg = "Inequivalent stored and calc. deformations."
         logger.warning(wmsg)
@@ -255,7 +212,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
     # Collect all fitting data and task ids
     defos = [Deformation(d) for d in defos]
     strains = [d.green_lagrange_strain for d in defos]
-    vasp_stresses = [d['final_stress'] for d in defo_tasks]
+    vasp_stresses = [d['output']['stress'] for d in defo_tasks]
     cauchy_stresses = [-0.1 * Stress(s) for s in vasp_stresses]
     pk_stresses = [Stress(s.piola_kirchoff_2(d))
                    for s, d in zip(cauchy_stresses, defos)]
@@ -269,7 +226,8 @@ def get_elastic_analysis(opt_task, defo_tasks):
     vstrains = [s.voigt for s in strains]
     if np.linalg.matrix_rank(vstrains) < 6:
         symmops = SpacegroupAnalyzer(opt_struct).get_symmetry_operations()
-        fstrains = [[s.transform(symmop) for symmop in symmops] for s in strains]
+        fstrains = [[s.transform(symmop) for symmop in symmops]
+                    for s in strains]
         fstrains = list(chain.from_iterable(fstrains))
         vfstrains = [s.voigt for s in fstrains]
         if not np.linalg.matrix_rank(vfstrains) == 6:
@@ -277,7 +235,8 @@ def get_elastic_analysis(opt_task, defo_tasks):
             elastic_doc['warnings'].append("insufficient strains")
             return None
         else:
-            fstresses = [[s.transform(symmop) for symmop in symmops] for s in pk_stresses]
+            fstresses = [[s.transform(symmop) for symmop in symmops]
+                         for s in pk_stresses]
             fstresses = list(chain.from_iterable(fstresses))
     else:
         fstrains = strains
@@ -309,15 +268,13 @@ def get_elastic_analysis(opt_task, defo_tasks):
     # Process input
     elastic_doc['warnings'] = get_warnings(et, opt_struct) or None
     # TODO: process MPWorks metadata?
-    # TODO: higher order?
-    # TODO: fitting method?
-    # TODO: add some of the relevant DFT params
+    # TODO: higher order
+    # TODO: add some of the relevant DFT params, kpoints
     elastic_doc['state'] = "filter_failed" if elastic_doc['warnings']\
         else "successful"
     return elastic_doc
 
 
-# TODO: clean up unnecessary task/doc dichotomy
 def group_by_material_id(materials_dict, docs, tol=1e-6,
                          structure_matcher=None):
     """
@@ -363,6 +320,10 @@ def group_deformations_by_optimization_task(docs, tol=1e-6):
     step of finding the optimization and using that
     as the grouping parameter.  Also filters document
     sets that don't include an optimization and deformations.
+    
+    Args:
+        docs [{}]: list of documents
+        tol: tolerance for lattice equivalence
     """
     # TODO: this could prolly be refactored to be more generally useful
     tasks_by_lattice = group_by_parent_lattice(docs, tol)
@@ -480,8 +441,12 @@ def get_warnings(elastic_tensor, structure):
 
     return warnings
 
+
 def generate_formula_dict(materials_store, query=None):
     """
+    Function that generates a nested dictionary of structures
+    keyed first by formula and then by material_id using
+    mongo aggregation pipelines
     
     Args:
         materials_store (Store): store of materials 
@@ -490,17 +455,14 @@ def generate_formula_dict(materials_store, query=None):
         Nested dictionary keyed by formula-mp_id with structure values.
 
     """
-    pipeline = [{'$match': query}] if query else []
-    # NOTE: task_id / material_id may need to be changed here
-    pipeline.extend([{'$project': {'structure': 1, 'pretty_formula': 1,
-                                   'task_id': 1}},
-                     {'$group': {'_id': '$pretty_formula',
-                                 'mp_ids': {'$push': '$task_id'},
-                                 'structures': {'$push': '$structure'}}}])
-    count = len(materials_store.distinct("pretty_formula"))
-    results = materials_store.collection.aggregate(pipeline, allowDiskUse=True)
+    props = ["pretty_formula", "structure", "material_id"]
+    results = list(materials_store.groupby("pretty_formula", properties=props,
+                                           criteria=query))
     formula_dict = {}
-    for result in tqdm.tqdm(results, total=count):
-        formula_dict[result['_id']] = dict(zip(result['mp_ids'],
-                                               result['structures']))
+    for result in tqdm.tqdm(results):
+        formula = result['_id']['pretty_formula']
+        material_ids = [d['material_id'] for d in result['docs']]
+        structures = [d['structure'] for d in result['docs']]
+
+        formula_dict[formula] = dict(zip(material_ids, structures))
     return formula_dict

@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from emmet.vasp.builders.compatibility import MPWorksCompatibilityBuilder, \
+from emmet.vasp.builders.mpworks import MPWorksCompatibilityBuilder, \
         set_mongolike, convert_mpworks_to_atomate, update_mpworks_schema
 from maggma.stores import JSONStore, MemoryStore
 from monty.json import MontyEncoder, MontyDecoder

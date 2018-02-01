@@ -3,7 +3,7 @@ import os
 import numpy as np
 from tqdm import tqdm
 
-from emmet.vasp.builders.compatibility import MPWorksCompatibilityBuilder, \
+from emmet.vasp.builders.mpworks import MPWorksCompatibilityBuilder, \
         set_mongolike, convert_mpworks_to_atomate, convert_string_deformation_to_list
 from maggma.stores import JSONStore, MemoryStore, MongoStore
 from maggma.runner import Runner
