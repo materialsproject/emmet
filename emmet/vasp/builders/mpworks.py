@@ -170,7 +170,9 @@ conversion_schema = {"dir_name_full": "dir_name",
                      "output.final_energy": "output.energy",
                      "output.final_energy_per_atom": "output.energy_per_atom",
                      "fw_id": "_mpworks_meta.fw_id",
-                     "state": "state"
+                     "state": "state",
+                     "calculations.-1.output.ionic_steps.-1.stress": "output.stress",
+                     "calculations.-1.output.ionic_steps.-1.forces": "output.forces",
                      }
 
 
