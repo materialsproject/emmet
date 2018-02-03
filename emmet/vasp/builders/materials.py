@@ -143,7 +143,6 @@ class MaterialsBuilder(Builder):
             sorted_props = sorted(prop, key=lambda x: x['quality_score'], reverse=True)
             best_props.append(sorted_props[0])
 
-
         # Add in the provenance for the properties
         origins = [{k: prop[k]
                     for k in ["materials_key", "task_type", "task_id", "last_updated"]}
@@ -161,7 +160,6 @@ class MaterialsBuilder(Builder):
             "origins": origins,
             "task_types": task_types
         }
-
 
         for prop in best_props:
             set_(mat, prop["materials_key"], prop["value"])
@@ -215,8 +213,8 @@ class MaterialsBuilder(Builder):
         # doc with the right document structure
         props = []
         for prop in self.__settings:
-            try:
-                if t_type in prop["quality_score"].keys():
+            if t_type in prop["quality_score"].keys():
+                if has(task, prop["tasks_key"]):
                     props.append({
                         "value": get(task, prop["tasks_key"]),
                         "task_type": t_type,
@@ -226,9 +224,8 @@ class MaterialsBuilder(Builder):
                         "last_updated": task["last_updated"],
                         "materials_key": prop["materials_key"]
                     })
-            except Exception as e:
-                if not prop.get("optional", False):
-                    self.logger.error("Failed getting {} for task: {}".format(e, t_id))
+                elif not prop.get("optional", False):
+                    self.logger.error("Failed getting {} for task: {}".format(prop["tasks_key"], t_id))
         return props
 
     def update_targets(self, items):
