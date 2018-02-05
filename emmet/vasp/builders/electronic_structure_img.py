@@ -35,10 +35,6 @@ class ElectronicStructureImageBuilder(Builder):
                  materials,
                  electronic_structure,
                  query={},
-                 interpolate_dos=False,
-                 small_plot=True,
-                 static_images=True,
-                 make_old_style_docs=True,
                  **kwargs):
         """
         Creates an electronic structure from a tasks collection, the associated band structures and density of states, and the materials structure
@@ -48,21 +44,12 @@ class ElectronicStructureImageBuilder(Builder):
         materials (Store) : Store of materials documents
         electronic_structure  (Store) : Store of electronic structure documents
         query (dict): dictionary to limit tasks to be analyzed
-        interpolate_dos (bool): interpolate DOS using BoltzTrap
-        small_plot (bool): make a small plot dictionary for Bandstructure
-        static_images (bool): generate static images of Bandstructure and DOS
-        make_old_style_docs(bool): make old mp_website style electronic structuer docs
         """
 
         self.materials = materials
         self.electronic_structure = electronic_structure
         self.query = query
-        self.interpolate_dos = interpolate_dos
-        self.__interpolate_dos = interpolate_dos and bool(which("x_trans"))
-        self.small_plot = small_plot
-        self.static_images = static_images
-        self.make_old_style_docs = make_old_style_docs
-
+     
         super().__init__(sources=[materials], targets=[electronic_structure], **kwargs)
 
     def get_items(self):
@@ -96,8 +83,7 @@ class ElectronicStructureImageBuilder(Builder):
                 })
             self.get_bandstructure(mat)
             self.get_dos(mat)
-            if self.__interpolate_dos:
-                self.get_uniform_bandstructure(mat)
+
             yield mat
 
     def process_item(self, mat):
@@ -114,14 +100,10 @@ class ElectronicStructureImageBuilder(Builder):
         self.logger.info("Processing: {}".format(mat[self.materials.key]))
 
         bs = self.extract_bs(mat)
-        if self.__interpolate_dos:
-            dos = self.extract_interpolated_dos(mat)
-        else:
-            dos = self.extract_dos(mat)
 
         ylim = None
         # Plot Band structure
-        if self.static_images and bs:
+        if bs:
             try:
                 plotter = WebBSPlotter(bs)
                 plot = plotter.get_plot()
@@ -133,17 +115,16 @@ class ElectronicStructureImageBuilder(Builder):
                     mat[self.materials.key], traceback.format_exc()))
 
         # Reduced Band structure plot
-        if self.small_plot:
-            try:
-                gap = bs.get_band_gap()["energy"]
-                plot_data = plotter.bs_plot_data()
-                d["bs_plot_small"] = get_small_plot(plot_data, gap)
-            except Exception:
-                self.logger.warning("Caught error in generating reduced bandstructure plot for {}: {}".format(
-                    mat[self.materials.key], traceback.format_exc()))
+        try:
+            gap = bs.get_band_gap()["energy"]
+            plot_data = plotter.bs_plot_data()
+            d["bs_plot_small"] = get_small_plot(plot_data, gap)
+        except Exception:
+            self.logger.warning("Caught error in generating reduced bandstructure plot for {}: {}".format(
+                mat[self.materials.key], traceback.format_exc()))
 
         # Plot DOS
-        if self.static_images and dos:
+        if dos:
             try:
                 plotter = WebDosVertPlotter()
                 plotter.add_dos_dict(dos.get_element_dos())
@@ -166,38 +147,36 @@ class ElectronicStructureImageBuilder(Builder):
             self.logger.warning("Caught error in calculating bandgap {}: {}".format(mat[self.materials.key],
                                                                                     traceback.format_exc()))
 
-        if self.make_old_style_docs:
-            # make electronic structure docs
-            old_docs = []
-            try:
-                bs_origin = next((origin for origin in mat.get("origins", []) if "Line" in origin["task_type"]), None)
+        # make electronic structure docs
+        old_docs = []
+        try:
+            bs_origin = next((origin for origin in mat.get("origins", []) if "Line" in origin["task_type"]), None)
 
-                bs_dict = bs.as_dict()
-                bs_dict["task_id"] = bs_origin["task_id"]
-                bs_dict["material_id"] = mat["task_id"]
-                bs_dict["plot_small"] = d["bs_plot_small"]
-                bs_dict["plot_img"] = ("bs_{}.png".format(mat["task_id"]), d["bs_plot"])
+            bs_dict = bs.as_dict()
+            bs_dict["task_id"] = bs_origin["task_id"]
+            bs_dict["material_id"] = mat["task_id"]
+            bs_dict["plot_small"] = d["bs_plot_small"]
+            bs_dict["plot_img"] = ("bs_{}.png".format(mat["task_id"]), d["bs_plot"])
 
-                old_docs.append(bs_dict)
-            except Exception:
-                self.logger.warning("Caught error in making old style Bandstructure doc for {}: {}".format(mat[self.materials.key],
-                                                                                                           traceback.format_exc()))
+            old_docs.append(bs_dict)
+        except Exception:
+            self.logger.warning("Caught error in making old style Bandstructure doc for {}: {}".format(mat[self.materials.key],
+                                                                                                       traceback.format_exc()))
 
-            try:
-                dos_origin = next((origin for origin in mat.get("origins", [])
-                                   if "Uniform" in origin["task_type"]), None)
-                dos_dict = dos.as_dict()
-                dos_dict["task_id"] = dos_origin["task_id"]
-                dos_dict["material_id"] = mat["task_id"]
-                dos_dict["plot_img"] = ("dos_{}.png".format(mat["task_id"]), d["dos_plot"])
+        try:
+            dos_origin = next((origin for origin in mat.get("origins", [])
+                               if "Uniform" in origin["task_type"]), None)
+            dos_dict = dos.as_dict()
+            dos_dict["task_id"] = dos_origin["task_id"]
+            dos_dict["material_id"] = mat["task_id"]
+            dos_dict["plot_img"] = ("dos_{}.png".format(mat["task_id"]), d["dos_plot"])
 
-                old_docs.append(dos_dict)
-            except Exception:
-                self.logger.warning("Caught error in making old style DOS doc for {}: {}".format(mat[self.materials.key],
-                                                                                                 traceback.format_exc()))
-            return old_docs
+            old_docs.append(dos_dict)
+        except Exception:
+            self.logger.warning("Caught error in making old style DOS doc for {}: {}".format(mat[self.materials.key],
+                                                                                             traceback.format_exc()))
+        return old_docs
 
-        return d
 
     def update_targets(self, items):
         """
@@ -206,23 +185,6 @@ class ElectronicStructureImageBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
-        if self.make_old_style_docs:
-            self.update_old_style_targets(items)
-        else:
-
-            items = list(filter(None, items))
-
-            if len(items) > 0:
-                self.logger.info("Updating {} electronic structure docs".format(len(items)))
-                self.electronic_structure.update(items)
-            else:
-                self.logger.info("No electronic structure docs to update")
-
-    def update_old_style_targets(self, items):
-        """
-        Inserts multiple es docs into collection and then saves plots in seperate GridFs
-        """
-
         items = list(filter(None, chain.from_iterable(items)))
 
         if len(items) > 0:
@@ -261,18 +223,6 @@ class ElectronicStructureImageBuilder(Builder):
             bs_dict = json.loads(bs_json.decode())
             mat["bandstructure"]["bs"] = bs_dict
 
-    def get_uniform_bandstructure(self, mat):
-
-        # If a bandstructure oid exists
-        if "uniform_bs_oid" in mat.get("bandstructure", {}):
-            bs_json = self.bfs.get(mat["bandstructure"]["uniform_bs_oid"]).read()
-
-            if "zlib" in mat["bandstructure"].get("uniform_bs_compression", ""):
-                bs_json = zlib.decompress(bs_json)
-
-            bs_dict = json.loads(bs_json.decode())
-            mat["bandstructure"]["uniform_bs"] = bs_dict
-
     def get_dos(self, mat):
 
         # if a dos oid exists
@@ -284,37 +234,6 @@ class ElectronicStructureImageBuilder(Builder):
 
             dos_dict = json.loads(dos_json.decode())
             mat["bandstructure"]["dos"] = dos_dict
-
-    def extract_interpolated_dos(self, mat):
-
-        nelect = mat["calc_settings"]["nelect"]
-
-        bs_dict = mat["bandstructure"]["uniform_bs"]
-        bs_dict["structure"] = mat['structure']
-        bs = BandStructure.from_dict(bs_dict)
-
-        if bs.is_spin_polarized:
-            with ScratchDir("."):
-                BoltztrapRunner(
-                    bs=bs, nelec=nelect, run_type="DOS", dos_type="TETRA", spin=1, timeout=60).run(path_dir='dos_up/')
-                an_up = BoltztrapAnalyzer.from_files("boltztrap/", dos_spin=1)
-
-            with ScratchDir("."):
-                BoltztrapRunner(
-                    bs=bs, nelec=nelect, run_type="DOS", dos_type="TETRA", spin=-1,
-                    timeout=60).run(path_dir=os.getcwd())
-                an_dw = BoltztrapAnalyzer.from_files("boltztrap/", dos_spin=-1)
-
-            cdos = an_up.get_complete_dos(bs.structure, an_dw)
-
-        else:
-            with ScratchDir("."):
-                BoltztrapRunner(
-                    bs=bs, nelec=nelect, run_type="DOS", dos_type="TETRA", timeout=60).run(path_dir=os.getcwd())
-                an = BoltztrapAnalyzer.from_files("boltztrap/")
-            cdos = an.get_complete_dos(bs.structure)
-
-        return cdos
 
     def extract_bs(self, mat):
 
