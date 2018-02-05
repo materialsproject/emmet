@@ -100,8 +100,9 @@ class ElectronicStructureImageBuilder(Builder):
         self.logger.info("Processing: {}".format(mat[self.materials.key]))
 
         bs = self.extract_bs(mat)
-
+        dos = self.extract_dos(mat)
         ylim = None
+        
         # Plot Band structure
         if bs:
             try:
