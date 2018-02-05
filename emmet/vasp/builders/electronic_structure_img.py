@@ -272,16 +272,6 @@ class ElectronicStructureImageBuilder(Builder):
             dos = CompleteDos.from_dict(dos_dict)
         return dos
 
-
-def image_from_plotter(plotter, ylim=None):
-    plot = plotter.get_plot(ylim=ylim)
-    imgdata = io.BytesIO()
-    plot.savefig(imgdata, format="png", dpi=100)
-    plot_img = imgdata.getvalue()
-    plot.close()
-    return plot_img
-
-
 def get_small_plot(plot_data, gap):
     for branch in plot_data['energy']:
         for spin, v in branch.items():
@@ -291,7 +281,6 @@ def get_small_plot(plot_data, gap):
                     new_bands.append(band)
             branch[spin] = new_bands
     return plot_data
-
 
 def image_from_plot(plot):
     imgdata = io.BytesIO()
