@@ -151,10 +151,13 @@ class MaterialsBuilder(Builder):
         task_ids = list(sorted([t["task_id"] for t in task_group],
                                key=lambda x: int(str(x).split("-")[-1])))
 
+        task_types = {t["task_id"] : t["task_type"] for t in all_props}
+
         mat = {"updated_at": datetime.utcnow(),
                "task_ids": task_ids,
                self.materials.key: task_ids[0],
-               "origins": origins
+               "origins": origins,
+               "task_types": task_types
                }
 
         for prop in best_props:
@@ -227,13 +230,20 @@ class MaterialsBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
-        items = list(filter(None, chain.from_iterable(items)))
-
+        items = [i for i in filter(None, chain.from_iterable(items)) if self.valid(i)]
+        
         if len(items) > 0:
             self.logger.info("Updating {} materials".format(len(items)))
             self.materials.update(docs=items)
         else:
             self.logger.info("No items to update")
+
+    def valid(self,doc):
+        """
+        Determines if the resulting material document is valid
+        """
+        return "structure" in doc
+
 
     def ensure_indexes(self):
         """

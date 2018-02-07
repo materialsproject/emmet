@@ -8,21 +8,25 @@ from tqdm import tqdm
 class CopyBuilder(Builder):
     """Sync a source with a target.
 
-    Uses `lu_field` of source and target Store to get new/updated documents,
-    and uses a `key` function to filter for the target document to update.
+    Uses `lu_field` of source and target Store to get new/updated documents.
+
+    Can override `target.key` field to filter for target document to update.
 
     """
 
-    def __init__(self, *args, key=lambda d: {'_id': d['_id']}, **kwargs):
-        super(CopyBuilder, self).__init__(*args, **kwargs)
-        assert len(self.sources) == 1 and len(self.targets) == 1
-        self.key = key
+    def __init__(self, source, target, key=None, **kwargs):
+        self.source = source
+        self.target = target
+        self.key = key if key else target.key
+        super().__init__(sources=[source], targets=[target], **kwargs)
 
     def get_items(self):
-        source = self.sources[0]
-        lu_filter = source.lu_filter(self.targets)
+        source, target = self.source, self.target
+        lu_filter = source.lu_filter(target)
         self.logger.debug("lu_filter: {}".format(lu_filter))
-        cursor = source.collection.find(lu_filter, sort=[(source.lu_field, 1)])
+        self.confirm_lu_field_index()
+        cursor = source.query(criteria=lu_filter,
+                              sort=[(source.lu_field, 1)])
         self.logger.info("Will copy {} items".format(cursor.count()))
         return tqdm(cursor, total=cursor.count())
 
@@ -30,13 +34,20 @@ class CopyBuilder(Builder):
         return item
 
     def update_targets(self, items):
-        source, target = self.sources[0], self.targets[0]
-        bulk = target.collection.initialize_ordered_bulk_op()
+        source, target = self.source, self.target
         for item in items:
-            del item['_id']  # Don't alter immutable field in target.
             # Use source last-updated value, ensuring `datetime` type.
             item[target.lu_field] = source.lu_key[0](item[source.lu_field])
-            del item[source.lu_field]
-            bulk.find(self.key(item)).upsert().replace_one(item)
-        if items:
-            bulk.execute()
+            if source.lu_field != target.lu_field:
+                del item[source.lu_field]
+        target.update(items, update_lu=False, key=self.key)
+
+    def confirm_lu_field_index(self):
+        source = self.source
+        info = source.collection.index_information().values()
+        for spec in (index['key'] for index in info):
+            if spec[0][0] == source.lu_field:
+                break
+        else:
+            raise Exception("Need index on '{}' for {}".format(
+                source.lu_field, source.collection))
