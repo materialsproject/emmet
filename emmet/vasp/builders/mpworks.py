@@ -15,6 +15,9 @@ __author__ = "Joseph Montoya <montoyjh@lbl.gov>"
 
 logger = logging.getLogger(__name__)
 
+settings = loadfn(os.path.join(
+    module_dir, "settings", "mpworks_atomate_conversion.yaml"))
+
 class MPWorksCompatibilityBuilder(Builder):
     def __init__(self, mpworks_tasks, atomate_tasks, query={},
                  incremental=True, redo_task_ids=True, **kwargs):
@@ -35,7 +38,7 @@ class MPWorksCompatibilityBuilder(Builder):
         """
 
         self.mpworks_tasks = mpworks_tasks
-        self.atomate_tasks = atomate_tasks 
+        self.atomate_tasks = atomate_tasks
         self.query = query
         self.incremental = incremental
         self.builder_start_time = datetime.utcnow()
@@ -62,14 +65,14 @@ class MPWorksCompatibilityBuilder(Builder):
         # Get only successful tasks
         q = dict(self.query)
         q["state"] = "successful"
-        
+
         # only consider tasks that have been updated since tasks was last updated
         if self.incremental:
             self.logger.info("Ensuring indices on lu_field for sources and targets")
             self.mpworks_tasks.ensure_index(self.mpworks_tasks.lu_field)
             self.atomate_tasks.ensure_index(self.atomate_tasks.lu_field)
             q.update(self.mpworks_tasks.lu_filter(self.atomate_tasks))
-        
+
         # No cursor timeout should probably be fixed with smaller batch sizes
         tasks_to_convert = self.mpworks_tasks.query(criteria=q, no_cursor_timeout=True)
         count = tasks_to_convert.count()
@@ -89,7 +92,7 @@ class MPWorksCompatibilityBuilder(Builder):
 
         for n, task in enumerate(tasks_to_convert):
             new_task_id = n + starting_taskid
-            self.logger.debug("Processing item: {}->{}, {} of {}".format(task['task_id'], new_task_id, 
+            self.logger.debug("Processing item: {}->{}, {} of {}".format(task['task_id'], new_task_id,
                                                                          n, count))
             yield task, new_task_id
 
@@ -113,7 +116,7 @@ class MPWorksCompatibilityBuilder(Builder):
 
     def update_targets(self, items):
         """
-        Inserts the new tasks into atomate_tasks collection 
+        Inserts the new tasks into atomate_tasks collection
 
         Args:
             items ([([dict],[int])]): A list of tuples of materials to
@@ -128,71 +131,7 @@ class MPWorksCompatibilityBuilder(Builder):
         self.mpworks_tasks.close()
 
 
-## MPWorks key: Atomate key
-conversion_schema = {"dir_name_full": "dir_name",
-                     "last_updated": "last_updated",
-                     "unit_cell_formula": "composition_unit_cell",
-                     "reduced_cell_formula": "composition_reduced",
-                     "pretty_formula": "formula_pretty",
-                     "completed_at": "completed_at",
-                     "chemsys": "chemsys",
-                     "nsites": "nsites",
-                     "run_tags": "tags",
-                     "input.crystal": "input.structure",
-                     "hubbards": "input.hubbards",
-                     "is_hubbard": "input.is_hubbard",
-                     "input.is_lasph": "input.is_lasph",
-                     "input.xc_override": "input.xc_override",
-                     "input.potcar_spec": "input.potcar_spec",
-                     "input.crystal": "input.structure",
-                     "pseudo_potential": "input.pseudo_potential",
-                     "run_stats": "run_stats", # Not sure if completely compatible
-                     "density": "output.density",
-                     "schema_version": "_mpworks_meta.schema_version",
-                     "spacegroup": "output.spacegroup",
-                     "custodian": "custodian",
-                     "run_type": "_mpworks_meta.run_type",
-                     "elements": "elements",
-                     "snl": "_mpworks_meta.snl", # Not sure if completely compatible
-                     "task_id": "task_id", # might change this in the future
-                     "nelements": "nelements",
-                     "is_compatible": "_mpworks_meta.is_compatible",
-                     "analysis.percent_delta_volume": "analysis.delta_volume_percent",
-                     "analysis.warnings": "analysis.warnings", # Not sure if these are substantially different
-                     "analysis.delta_volume": "analysis.delta_volume",
-                     "analysis.max_force": "analysis.max_force",
-                     "analysis.errors": "analysis.errors",
-                     "analysis.errors_MP": "_mpworks_meta.errors_MP",
-                     "analysis.bandgap": "output.bandgap",
-                     "analysis.cbm": "output.cbm",
-                     "analysis.is_gap_direct": "output.is_gap_direct",
-                     "output.crystal": "output.structure",
-                     "output.final_energy": "output.energy",
-                     "output.final_energy_per_atom": "output.energy_per_atom",
-                     "fw_id": "_mpworks_meta.fw_id",
-                     "state": "state",
-                     "calculations.-1.output.ionic_steps.-1.stress": "output.stress",
-                     "calculations.-1.output.ionic_steps.-1.forces": "output.forces",
-                     }
-
-
-####### Orphan MPWorks keys
-"""
-"vaspinputset_name": - Don't need
-"task_type": X need to convert manually to match atomate schema
-"calculations": X need to reverse these, so handle manually
-"name": - getting rid of this, it appears to just be "aflow"
-"dir_name": - encompassed by dir_name_full
-"anonymous_formula": X convert manually b/c doesn't really work the same
-"deformation_matrix": X need to handle these manually as well
-"""
-
-###### Orphan Atomate keys
-"""
-"input.parameters" - Not clear what to do with this
-"""
-
-# TODO: could add the rest of these, e. g. Static, NSCF Bandstructure
+# TODO: could add the rest of the MPWorks tasks, e. g. Static, NSCFBandstructure
 task_type_conversion = {"Calculate deformed structure static optimize": "elastic deformation",
                         "Vasp force convergence optimize structure (2x)": "structure optimization",
                         "Optimize deformed structure": "elastic deformation"}
@@ -201,22 +140,23 @@ def convert_mpworks_to_atomate(mpworks_doc, update_mpworks=True):
     """
     Function to convert an mpworks document into an atomate
     document, uses schema above and a few custom cases
-    
+
     Args:
         mpworks_doc (dict): mpworks task document
         update_mpworks (bool): flag to indicate that mpworks schema
-            should be updated
+            should be updated to final MPWorks version
     """
     if update_mpworks:
         update_mpworks_schema(mpworks_doc)
 
     atomate_doc = {}
-    for key_mpworks, key_atomate in conversion_schema.items():
+    for key_mpworks, key_atomate in settings['task_conversion_keys']:
         val = get_mongolike(mpworks_doc, key_mpworks)
         set_mongolike(atomate_doc, key_atomate, val)
 
     # Task type
-    atomate_doc["task_label"] = task_type_conversion[mpworks_doc["task_type"]]
+    atomate_doc["task_label"] = settings['task_label_conversions'].get(
+        mpworks_doc["task_type"])
 
     # calculations
     atomate_doc["calcs_reversed"] = mpworks_doc["calculations"][::-1]
@@ -232,9 +172,9 @@ def convert_mpworks_to_atomate(mpworks_doc, update_mpworks=True):
         if isinstance(defo, str):
             defo = convert_string_deformation_to_list(defo)
         defo = np.transpose(defo).tolist()
-        set_mongolike(atomate_doc, "transmuter.transformations", 
+        set_mongolike(atomate_doc, "transmuter.transformations",
                       ["DeformStructureTransformation"])
-        set_mongolike(atomate_doc, "transmuter.transformation_params", 
+        set_mongolike(atomate_doc, "transmuter.transformation_params",
                       [{"deformation": defo}])
 
     return atomate_doc
@@ -277,6 +217,9 @@ def convert_string_deformation_to_list(string_defo):
     """
     Some of the older documents in the mpworks schema have a string version
     of the deformation matrix, this function fixes those
+
+    Args:
+        string_defo (str): string corresponding to the deformation
     """
     string_defo = string_defo.replace("[", "").replace("]", "").split()
     defo = np.array(string_defo, dtype=float).reshape(3, 3)
@@ -285,14 +228,19 @@ def convert_string_deformation_to_list(string_defo):
 
 def update_mpworks_schema(mpworks_doc):
     """
-    Ensures that mpworks document is up to date
-    
+    Corrects an mpworks document for outdated schema,
+    as enumerated below:
+
+    1. Formats input
+    2. Stores final energy according to e_wo_entrop
+    3. Tests compatibility, which was added to MPWorks in a later
+        iteration
+
     Args:
         mpworks_doc: document to update schema for
 
     Returns:
-        boolean corresponding to whether doc is compatible
-
+        formatted doc
     """
     # Input
     last_calc = mpworks_doc['calculations'][-1]
