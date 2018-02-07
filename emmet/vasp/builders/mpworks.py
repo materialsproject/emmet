@@ -1,5 +1,6 @@
 import numpy as np
 from datetime import datetime
+import os
 
 from pymatgen import Composition
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility
@@ -9,14 +10,17 @@ from maggma.builder import Builder
 
 from atomate.utils.utils import get_mongolike
 
+from monty.serialization import loadfn
+
 import traceback, logging
 
 __author__ = "Joseph Montoya <montoyjh@lbl.gov>"
 
 logger = logging.getLogger(__name__)
 
+module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 settings = loadfn(os.path.join(
-    module_dir, "settings", "mpworks_atomate_conversion.yaml"))
+    module_dir, "settings", "mpworks_conversion.yaml"))
 
 class MPWorksCompatibilityBuilder(Builder):
     def __init__(self, mpworks_tasks, atomate_tasks, query={},
@@ -131,7 +135,6 @@ class MPWorksCompatibilityBuilder(Builder):
         self.mpworks_tasks.close()
 
 
-# TODO: could add the rest of the MPWorks tasks, e. g. Static, NSCFBandstructure
 task_type_conversion = {"Calculate deformed structure static optimize": "elastic deformation",
                         "Vasp force convergence optimize structure (2x)": "structure optimization",
                         "Optimize deformed structure": "elastic deformation"}
@@ -150,7 +153,7 @@ def convert_mpworks_to_atomate(mpworks_doc, update_mpworks=True):
         update_mpworks_schema(mpworks_doc)
 
     atomate_doc = {}
-    for key_mpworks, key_atomate in settings['task_conversion_keys']:
+    for key_mpworks, key_atomate in settings['task_conversion_keys'].items():
         val = get_mongolike(mpworks_doc, key_mpworks)
         set_mongolike(atomate_doc, key_atomate, val)
 
