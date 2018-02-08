@@ -145,7 +145,7 @@ class TopologyBuilder(Builder):
         # or has access to the root_dir
         new_dir = original_dir.split(':')[1] if ':' in original_dir else original_dir
 
-        return original_dir
+        return new_dir
 
     def process_item(self, item):
         """
