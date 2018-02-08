@@ -52,7 +52,7 @@ class TopologySummaryBuilder(Builder):
         self.preferred_methods = preferred_methods
         self.query = query if query else {}
 
-        self.topology_summary.schema = TopologySummaryValidator()
+        self.topology_summary.validator = TopologySummaryValidator()
 
         super().__init__(sources=[topology],
                          targets=[topology_summary],
@@ -145,8 +145,8 @@ class TopologySummaryBuilder(Builder):
 
         if preferred_method:
             preferred_graph = sg[standard_methods.index(preferred_method)]
-            topology_summary['graph'] = preferred_graph.as_dict()
-            topology_summary['method'] = preferred_method
+            topology_summary['preferred_graph'] = preferred_graph.as_dict()
+            topology_summary['preferred_graph_method'] = preferred_method
             if 'ce_info' in preferred_graph.structure.site_properties:
                 # for easier querying in mongo
                 topology_summary['ce_info'] = preferred_graph.structure.site_properties['ce_info']

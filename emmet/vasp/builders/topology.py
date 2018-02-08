@@ -79,7 +79,7 @@ class TopologyBuilder(Builder):
         self.bader = bader
         self.query = query if query else {}
 
-        topology.schema = TopologyValidator()
+        topology.validator = TopologyValidator()
 
         self.use_chgcars = use_chgcars
         self.critic2_settings = critic2_settings
