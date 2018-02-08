@@ -13,7 +13,7 @@ class SNLBuilder(Builder):
     Builds SNL collection for materials
     """
 
-    def __init__(self, materials, snls, *source_snls, query={}, ltol=0.2, stol=0.3,
+    def __init__(self, materials, snls, *source_snls, query=None, ltol=0.2, stol=0.3,
                  angle_tol=5, **kwargs):
         self.materials = materials
         self.snls = snls
@@ -21,7 +21,7 @@ class SNLBuilder(Builder):
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol
-        self.query = query
+        self.query = query if query else {}
         self.kwargs = kwargs
 
         super(SNLBuilder, self).__init__(sources=[materials, *self.source_snls], targets=[snls], **kwargs)

@@ -16,7 +16,7 @@ default_substrate_settings = os.path.join(
 
 class ElectrodeBuilder(Builder):
 
-    def __init__(self, materials, electrodes, query={}, **kwargs):
+    def __init__(self, materials, electrodes, query=None, **kwargs):
         """
         Builds a convenient database of electrodes and properties
 
@@ -28,9 +28,10 @@ class ElectrodeBuilder(Builder):
 
         self.materials = materials
         self.electrodes = electrodes
-        self.query = query
+        self.query = query if query else {}
         self.working_ions = ["Li","Na","K","Rb","Cs","Mg","Cs"]
-        self.redox_els = ["Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Zr", "Nb", "Mo","Sn", "Sb", "W", "Re", "Bi"]
+        self.redox_els = ["Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Zr", "Nb",
+                          "Mo","Sn", "Sb", "W", "Re", "Bi"]
 
         super().__init__(sources=[materials],
                          targets=[electrodes],

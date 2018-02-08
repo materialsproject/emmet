@@ -1,19 +1,40 @@
-import logging
 import os
 import glob
 
-from datetime import datetime
-from pymatgen.core.structure import Structure
 from pymatgen.analysis.local_env import *
 from pymatgen.analysis.graphs import StructureGraph
 from pymatgen.command_line.critic2_caller import Critic2Caller
 from pymatgen.command_line.bader_caller import bader_analysis_from_path
 from monty.os.path import which
 from maggma.builder import Builder
+from maggma.validator import StandardValidator
 
-from emmet.vasp.builders.task_tagger import TaskTagger
+from monty.json import jsanitize
+
+from emmet.vasp.builders.task_tagger import task_type
 
 __author__ = "Matthew Horton <mkhorton@lbl.gov>"
+
+
+class TopologyValidator(StandardValidator):
+
+    @property
+    def schema(self):
+        return {
+            "type": "object",
+            "properties":
+                {
+                    "task_id": {"type": "string"},
+                    "method": {"type": "string"},
+                    "successful": {"type": "boolean"}
+                },
+            "required": ["task_id", "method", "successful"]
+        }
+
+    @property
+    def msonable_keypaths(self):
+        return {"graph": StructureGraph}
+
 
 class TopologyBuilder(Builder):
     def __init__(self, tasks, topology, bader,
@@ -38,8 +59,6 @@ class TopologyBuilder(Builder):
         not provided, the output format is different and so bader
         output is stored in a separate Store.
 
-        TODO: support custom critic2 settings
-
         Args:
             tasks (Store): Store of tasks documents
             topology (Store): Store of topology data
@@ -50,13 +69,12 @@ class TopologyBuilder(Builder):
             in task directories and run bader and critic2 if found
         """
 
-        self.__logger = logging.getLogger(__name__)
-        self.__logger.addHandler(logging.NullHandler())
-
         self.tasks = tasks
         self.topology = topology
         self.bader = bader
         self.query = query if query else {}
+
+        topology.validator = TopologyValidator()
 
         self.use_chgcars = use_chgcars
         self.critic2_settings = critic2_settings
@@ -64,46 +82,65 @@ class TopologyBuilder(Builder):
         self.bader_available = which('bader')
         self.critic2_available = which('critic2')
 
-        if not use_chgcars:
-            self.__logger.info("Not performing analysis of charge densities.")
-
-        if use_chgcars and not self.bader_available:
-            self.__logger.error("bader binary not found! "
-                                "TopologyBuilder will not be able to perform a full analysis.")
-            self.__logger.error("If running for Materials Project, try adding "
-                                "/project/projectdirs/matgen/emmet_bin/cori to your path.")
-
-        if not self.critic2_available:
-            self.__logger.error("critic2 binary not found! "
-                                "TopologyBuilder will not be able to perform a full analysis.")
-            self.__logger.error("If running for Materials Project, try adding "
-                                "/project/projectdirs/matgen/emmet_bin/cori to your path.")
-
         super().__init__(sources=[tasks],
                          targets=[topology, bader],
                          **kwargs)
+
+        if not use_chgcars:
+            self.logger.info("Not performing analysis of charge densities.")
+
+        if use_chgcars and not self.bader_available:
+            self.logger.error("bader binary not found! "
+                                "TopologyBuilder will not be able to perform a full analysis.")
+            self.logger.error("If running for Materials Project, try adding "
+                                "/project/projectdirs/matgen/emmet_bin/cori to your path.")
+
+        if not self.critic2_available:
+            self.logger.error("critic2 binary not found! "
+                                "TopologyBuilder will not be able to perform a full analysis.")
+            self.logger.error("If running for Materials Project, try adding "
+                                "/project/projectdirs/matgen/emmet_bin/cori to your path.")
 
     def get_items(self):
         """
         Gets all materials that need topology analysis
         """
 
-        self.__logger.info("Topology Builder Started")
+        self.logger.info("Topology Builder Started")
 
         # All relevant materials that have been updated since topology
         # was last calculated
         q = dict(self.query)
         q.update(self.tasks.lu_filter(self.topology))
-        tasks = self.tasks().find(q, {"task_id": 1,
-                                      "input.incar": 1,
-                                      "output.structure": 1,
-                                      "calcs_reversed": 1})
+        tasks = self.tasks.query(criteria=q,
+                                 properties=["task_id", "input.incar",
+                                             "output.structure", "calcs_reversed"])
 
-        self.__logger.info("Found {} new tasks for topological analysis".format(tasks.count()))
+        self.logger.info("Found {} new tasks for topological analysis".format(tasks.count()))
 
         for task in tasks:
-            if TaskTagger.task_type(task) == "static":
+            if "Static" in task_type(task['input']['incar']):
                 yield task
+
+    @staticmethod
+    def rewrite_dir(original_dir):
+        """
+        Stub. If locations of original folders has been moved,
+        this function will help locate them. In practice, this
+        will likely mean extracting the name of the launch dir,
+        and finding this on a new host.
+
+        Args:
+            original_dir: original directory in task doc
+
+        Returns: rewritten directory
+        """
+
+        # remove hostname if it's present, assumes builder runs on same host
+        # or has access to the root_dir
+        new_dir = original_dir.split(':')[1] if ':' in original_dir else original_dir
+
+        return new_dir
 
     def process_item(self, item):
         """
@@ -118,7 +155,7 @@ class TopologyBuilder(Builder):
 
         # bonding first
 
-        self.__logger.debug("Calculating bonding for {}".format(task_id))
+        self.logger.debug("Calculating bonding for {}".format(task_id))
 
         # try all local_env strategies
         strategies = NearNeighbors.__subclasses__()
@@ -129,19 +166,19 @@ class TopologyBuilder(Builder):
                     'method': strategy.__name__,
                     'graph': StructureGraph.with_local_env_strategy(structure,
                                                                     strategy()).as_dict(),
-                    'status': 'successful'
+                    'successful': True
                 })
             except Exception as e:
 
                 topology_docs.append({
                     'task_id': task_id,
                     'method': strategy.__name__,
-                    'status': 'failed',
-                    'error_message': e
+                    'successful': False,
+                    'error_message': str(e)
                 })
 
-                self.__logger.warning(e)
-                self.__logger.warning("Failed to calculate bonding for {} using "
+                self.logger.warning(e)
+                self.logger.warning("Failed to calculate bonding for {} using "
                                       "{} local_env strategy.".format(task_id,
                                                                       strategy.__name__))
 
@@ -149,13 +186,14 @@ class TopologyBuilder(Builder):
         if self.critic2_available:
 
             try:
-                c2 = Critic2Caller(structure)
+                c2 = Critic2Caller(structure,
+                                   user_input_settings=self.critic2_settings)
 
                 topology_docs.append({
                     'task_id': task_id,
                     'method': 'critic2_promol',
-                    'graph': c2.output.structure_graph().as_dict()
-                    'status': 'successful'
+                    'graph': c2.output.structure_graph().as_dict(),
+                    'succesful': True
                 })
 
             except Exception as e:
@@ -163,25 +201,23 @@ class TopologyBuilder(Builder):
                 topology_docs.append({
                     'task_id': task_id,
                     'method': 'critic2_promol',
-                    'status': 'failed',
-                    'error_message': e
+                    'critic2_settings': self.critic2_settings,
+                    'successful': False,
+                    'error_message': str(e)
                 })
 
-                self.__logger.warning(e)
-                self.__logger.warning("Failed to calculate bonding for {} using "
+                self.logger.warning(e)
+                self.logger.warning("Failed to calculate bonding for {} using "
                                       "critic2 and sum of atomic charge densities.".format(task_id))
 
         if self.use_chgcars:
 
             root_dir = item['calcs_reversed'][0]['dir_name']
-
-            # remove hostname if it's present, assumes builder runs on same host
-            # or has access to the root_dir
-            root_dir = root_dir.split(':')[1] if ':' in root_dir else root_dir
+            root_dir = self.rewrite_dir(root_dir)
 
             if not os.path.isdir(root_dir):
 
-                self.__logger.error("Cannot find or cannot access {} for {}."
+                self.logger.error("Cannot find or cannot access {} for {}."
                                     .format(root_dir, task_id))
 
             else:
@@ -197,7 +233,7 @@ class TopologyBuilder(Builder):
                 else:
                     # we have to search manually
 
-                    self.__logger.info("Searching {} for charge density files for {}."
+                    self.logger.info("Searching {} for charge density files for {}."
                                        .format(root_dir, task_id))
 
                     chgcar = glob.glob(root_dir+'/*CHGCAR*')
@@ -219,7 +255,7 @@ class TopologyBuilder(Builder):
                             'graph': c2.output.structure_graph().as_dict(),
                             'critic2_settings': self.critic2_settings,
                             'critic2_stdout': c2._stdout,
-                            'status': 'successful'
+                            'successful': True
                         })
 
                     except Exception as e:
@@ -227,12 +263,13 @@ class TopologyBuilder(Builder):
                         topology_docs.append({
                             'task_id': task_id,
                             'method': 'critic2_chgcar',
-                            'status': 'failed',
-                            'error_message': e
+                            'critic2_settings': self.critic2_settings,
+                            'successful': False,
+                            'error_message': str(e)
                         })
 
-                        self.__logger.warning(e)
-                        self.__logger.warning("Failed to calculate bonding for {} "
+                        self.logger.warning(e)
+                        self.logger.warning("Failed to calculate bonding for {} "
                                               "using critic2 from CHGCAR.".format(task_id))
 
                     if self.bader_available:
@@ -240,29 +277,28 @@ class TopologyBuilder(Builder):
                         try:
                             bader_doc = bader_analysis_from_path(root_dir)
                             bader_doc['task_id'] = task_id
-                            bader_doc['status'] = 'successful'
+                            bader_doc['successful'] = True
                         except Exception as e:
 
                             bader_doc = {
                                 'task_id': task_id,
-                                'status': 'failed',
-                                'error_message': e
+                                'successful': False,
+                                'error_message': str(e)
                             }
 
-                            self.__logger.warning(e)
-                            self.__logger.warning("Failed to perform bader analysis "
+                            self.logger.warning(e)
+                            self.logger.warning("Failed to perform bader analysis "
                                                   "for {}".format(task_id))
 
 
                 else:
-                    self.__logger.warning("Not all files necessary for charge analysis "
+                    self.logger.warning("Not all files necessary for charge analysis "
                                           "are present.")
                     if not chgcar:
-                        self.__logger.warning("Could not find CHGCAR for {}.".format(task_id))
+                        self.logger.warning("Could not find CHGCAR for {}.".format(task_id))
                     else:
-                        self.__logger.warning("CHGCAR found for {}, but AECCAR0 "
+                        self.logger.warning("CHGCAR found for {}, but AECCAR0 "
                                               "or AECCAR2 not present.".format(task_id))
-
 
         return {
             'topology_docs': topology_docs,
@@ -271,16 +307,11 @@ class TopologyBuilder(Builder):
 
     def update_targets(self, items):
 
-        self.__logger.info("Updating topology documents")
+        self.logger.info("Updating topology documents")
+        items = jsanitize(items)
 
         for item in items:
 
-            for topology_doc in item['topology_docs']:
-                topology_doc[self.topology.lu_field] = datetime.utcnow()
-                self.topology().replace_one({'task_id': topology_doc['task_id'],
-                                             'method': topology_doc['method']},
-                                            topology_doc, upsert=True)
-
-            item['bader_doc'][self.bader.lu_field] = datetime.utcnow()
-            self.bader().replace_one({'task_id': item['bader_doc']['task_id']},
-                                     item['bader_doc'], upsert=True)
+            self.topology.update(item['topology_docs'], key=['task_id', 'method'])
+            if item['bader_doc']:
+                self.bader.update(item['bader_doc'], key=['task_id', 'method'])
