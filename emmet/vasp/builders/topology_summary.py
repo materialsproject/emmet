@@ -19,7 +19,8 @@ class TopologySummaryValidator(StandardValidator):
                 {
                     "task_id": {"type": "string"},
                     "methods": {"type": "array", "items": {"type": "string"}},
-                    "distances": {"type": "array", "items": {"type": "list"}},
+                    "distances": {"type": "array", "items": {"type": "array",
+                                                             "items": {"type": "number"}}},
                     "preferred_graph": {"type": "object"},
                     "preferred_graph_method": {"type": "string"}
                 },

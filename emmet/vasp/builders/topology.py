@@ -62,8 +62,6 @@ class TopologyBuilder(Builder):
         not provided, the output format is different and so bader
         output is stored in a separate Store.
 
-        TODO: support custom critic2 settings
-
         Args:
             tasks (Store): Store of tasks documents
             topology (Store): Store of topology data
