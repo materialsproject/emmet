@@ -38,6 +38,7 @@ class TopologyValidator(StandardValidator):
     def msonable_keypaths(self):
         return {"graph": StructureGraph}
 
+
 class TopologyBuilder(Builder):
     def __init__(self, tasks, topology, bader,
                  query=None, use_chgcars=True,
@@ -126,6 +127,26 @@ class TopologyBuilder(Builder):
             if "Static" in task_type(task['input']['incar']):
                 yield task
 
+    @staticmethod
+    def rewrite_dir(original_dir):
+        """
+        Stub. If locations of original folders has been moved,
+        this function will help locate them. In practice, this
+        will likely mean extracting the name of the launch dir,
+        and finding this on a new host.
+
+        Args:
+            original_dir: original directory in task doc
+
+        Returns: rewritten directory
+        """
+
+        # remove hostname if it's present, assumes builder runs on same host
+        # or has access to the root_dir
+        new_dir = original_dir.split(':')[1] if ':' in original_dir else original_dir
+
+        return original_dir
+
     def process_item(self, item):
         """
         Calculates StructureGraphs (bonding information) for a material
@@ -197,10 +218,7 @@ class TopologyBuilder(Builder):
         if self.use_chgcars:
 
             root_dir = item['calcs_reversed'][0]['dir_name']
-
-            # remove hostname if it's present, assumes builder runs on same host
-            # or has access to the root_dir
-            root_dir = root_dir.split(':')[1] if ':' in root_dir else root_dir
+            root_dir = self.rewrite_dir(root_dir)
 
             if not os.path.isdir(root_dir):
 
