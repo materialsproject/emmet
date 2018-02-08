@@ -61,7 +61,8 @@ class MPWorksCompatibilityBuilder(Builder):
         Gets all items to process into materials documents
 
         Returns:
-            generator or list relevant tasks and materials to process into materials documents
+            generator or list relevant tasks and materials
+            to process into materials documents
         """
 
         self.logger.info("MPWorks Elastic Compatibility Builder Started")
@@ -72,7 +73,7 @@ class MPWorksCompatibilityBuilder(Builder):
 
         # only consider tasks that have been updated since tasks was last updated
         if self.incremental:
-            self.logger.info("Ensuring indices on lu_field for sources and targets")
+            self.logger.info("Ensuring indices on lu_field")
             self.mpworks_tasks.ensure_index(self.mpworks_tasks.lu_field)
             self.atomate_tasks.ensure_index(self.atomate_tasks.lu_field)
             q.update(self.mpworks_tasks.lu_filter(self.atomate_tasks))
@@ -96,13 +97,14 @@ class MPWorksCompatibilityBuilder(Builder):
 
         for n, task in enumerate(tasks_to_convert):
             new_task_id = n + starting_taskid
-            self.logger.debug("Processing item: {}->{}, {} of {}".format(task['task_id'], new_task_id,
-                                                                         n, count))
+            self.logger.debug("Processing item: {}->{}, {} of {}".format(
+                task['task_id'], new_task_id, n, count))
             yield task, new_task_id
 
     def process_item(self, item):
         """
-        Process the MPWorks tasks and materials into an Atomate tasks collection
+        Process the MPWorks tasks and materials
+        into an Atomate tasks collection
 
         Args:
             item (dict): an mpworks document
@@ -134,10 +136,6 @@ class MPWorksCompatibilityBuilder(Builder):
         self.atomate_tasks.close()
         self.mpworks_tasks.close()
 
-
-task_type_conversion = {"Calculate deformed structure static optimize": "elastic deformation",
-                        "Vasp force convergence optimize structure (2x)": "structure optimization",
-                        "Optimize deformed structure": "elastic deformation"}
 
 def convert_mpworks_to_atomate(mpworks_doc, update_mpworks=True):
     """
