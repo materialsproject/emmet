@@ -34,11 +34,5 @@ if __name__ == "__main__":
                      'Topic :: Other/Nonlisted Topic',
                      'Topic :: Scientific/Engineering'],
         test_suite='nose.collector',
-        tests_require=['nose'],
-        entry_points={
-          'console_scripts': [
-              'emmetbuild = emmet.cli.build:main',
-              'emmetprodsetup = emmet.cli.production_setup:main'
-          ]
-        }
+        tests_require=['nose']
     )
