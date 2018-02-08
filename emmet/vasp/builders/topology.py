@@ -1,9 +1,6 @@
-import logging
 import os
 import glob
 
-from datetime import datetime
-from pymatgen.core.structure import Structure
 from pymatgen.analysis.local_env import *
 from pymatgen.analysis.graphs import StructureGraph
 from pymatgen.command_line.critic2_caller import Critic2Caller

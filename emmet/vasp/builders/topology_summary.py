@@ -1,8 +1,5 @@
-import logging
 import numpy as np
 
-from datetime import datetime
-from pymatgen.core.structure import Structure
 from pymatgen.analysis.graphs import StructureGraph
 from maggma.builder import Builder
 from maggma.validator import StandardValidator
