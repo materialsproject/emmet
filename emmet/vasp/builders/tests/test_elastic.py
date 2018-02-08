@@ -1,43 +1,50 @@
 import unittest
 import os
-import itertools
 
 from emmet.vasp.builders.elastic import *
-from maggma.stores import JSONStore, MemoryStore, MongoStore
+from maggma.stores import MongoStore
 from maggma.runner import Runner
-from monty.json import MontyEncoder, MontyDecoder
+
+from monty.serialization import loadfn
 
 __author__ = "Joseph Montoya"
 __email__ = "montoyjh@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 test_tasks = os.path.join(module_dir, "..","..","..", "..", "test_files",
-                          "elastic_tasks.json")
+                          "vasp", "elastic_tasks.json")
 
 class ElasticBuilderTest(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         # Set up test db, set up mpsft, etc.
-        self.test_tasks = JSONStore(test_tasks, lu_field="last_updated")
-        self.test_tasks.connect()
-        self.test_elasticity = MemoryStore("elasticity")
+        cls.test_tasks = MongoStore("test_emmet", "tasks")
+        cls.test_tasks.connect()
+        docs = loadfn(test_tasks, cls=None)
+        cls.test_tasks.update(docs)
+        cls.test_elasticity = MongoStore("test_emmet", "elasticity")
 
         # Generate test materials collection
-        self.test_materials = MemoryStore("materials")
-        opt_docs = self.test_tasks.query(
-            ["structure"], {"task_label": "structure optimization"})
-        for n, opt_doc in enumerate(opt_docs):
-            self.materials.update({"material_id": "mp-{}".format(n),
-                                   "structure": opt_doc['structure']})
-
+        cls.test_materials = MongoStore("test_emmet", "materials")
+        cls.test_materials.connect()
+        opt_docs = cls.test_tasks.query(["output.structure", "formula_pretty"],
+                                        {"task_label": "structure optimization"})
+        mat_docs = [{"material_id": "mp-{}".format(n),
+                     "structure": opt_doc['output']['structure'],
+                     "pretty_formula": opt_doc['formula_pretty']}
+                    for n, opt_doc in enumerate(opt_docs)]
+        cls.test_materials.update(mat_docs, key='material_id', update_lu=False)
 
     def test_builder(self):
         ec_builder = ElasticBuilder(self.test_tasks, self.test_elasticity,
-                                     self.test_materials)
+                                    self.test_materials, incremental=False)
         ec_builder.connect()
         for t in ec_builder.get_items():
             processed = ec_builder.process_item(t)
             if processed:
                 pass
+            else:
+                import nose; nose.tools.set_trace()
         runner = Runner([ec_builder])
         runner.run()
 

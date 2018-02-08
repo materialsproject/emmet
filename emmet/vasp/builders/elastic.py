@@ -185,7 +185,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
     """
     Performs the analysis of opt_tasks and defo_tasks necessary for
     an elastic analysis
-    
+
     Args:
         opt_task: task doc corresponding to optimization
         defo_tasks: task_doc corresponding to deformations
@@ -266,9 +266,9 @@ def get_elastic_analysis(opt_task, defo_tasks):
 
     # Process input
     elastic_doc['warnings'] = get_warnings(et, opt_struct) or None
-    # TODO: process MPWorks metadata?
-    # TODO: higher order
-    # TODO: add some of the relevant DFT params, kpoints
+    #TODO: process MPWorks metadata?
+    #TODO: higher order
+    #TODO: add some of the relevant DFT params, kpoints
     elastic_doc['state'] = "filter_failed" if elastic_doc['warnings']\
         else "successful"
     return elastic_doc
@@ -279,10 +279,10 @@ def group_by_material_id(materials_dict, docs, tol=1e-6,
     """
     Groups a collection of documents by material id
     as found in a materials collection
-    
+
     Args:
         materials_dict (dict): dictionary of structures keyed by material_id
-        docs ([dict]): list of documents 
+        docs ([dict]): list of documents
         tol: tolerance for lattice grouping
         structure_matcher (StructureMatcher): structure
             matcher for finding equivalent structures
@@ -319,7 +319,7 @@ def group_deformations_by_optimization_task(docs, tol=1e-6):
     step of finding the optimization and using that
     as the grouping parameter.  Also filters document
     sets that don't include an optimization and deformations.
-    
+
     Args:
         docs [{}]: list of documents
         tol: tolerance for lattice equivalence
@@ -373,7 +373,7 @@ def group_by_parent_lattice(docs, tol=1e-6):
 def legacy_fit(strains, stresses):
     """
     Legacy fitting method for mpworks documents, intended to be temporary
-    
+
     Args:
         strains: strains
         stresses: stresses
@@ -388,7 +388,7 @@ def legacy_fit(strains, stresses):
 
 def calculate_deformation(undeformed_structure, deformed_structure):
     """
-    
+
     Args:
         undeformed_structure (Structure): undeformed structure
         deformed_structure (Structure): deformed structure
@@ -404,7 +404,7 @@ def calculate_deformation(undeformed_structure, deformed_structure):
 def get_warnings(elastic_tensor, structure):
     """
     Generates all warnings that apply to a fitted elastic tensor
-    
+
     Args:
         elastic_tensor (ElasticTensor): elastic tensor for which
             to determine warnings
@@ -446,9 +446,9 @@ def generate_formula_dict(materials_store, query=None):
     Function that generates a nested dictionary of structures
     keyed first by formula and then by material_id using
     mongo aggregation pipelines
-    
+
     Args:
-        materials_store (Store): store of materials 
+        materials_store (Store): store of materials
 
     Returns:
         Nested dictionary keyed by formula-mp_id with structure values.
