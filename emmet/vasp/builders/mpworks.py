@@ -23,7 +23,7 @@ settings = loadfn(os.path.join(
     module_dir, "settings", "mpworks_conversion.yaml"))
 
 class MPWorksCompatibilityBuilder(Builder):
-    def __init__(self, mpworks_tasks, atomate_tasks, query={},
+    def __init__(self, mpworks_tasks, atomate_tasks, query=None,
                  incremental=True, redo_task_ids=True, **kwargs):
         """
         Converts a task collection from the MPWorks schema to
@@ -43,7 +43,7 @@ class MPWorksCompatibilityBuilder(Builder):
 
         self.mpworks_tasks = mpworks_tasks
         self.atomate_tasks = atomate_tasks
-        self.query = query
+        self.query = query if query is not None else {}
         self.incremental = incremental
         self.builder_start_time = datetime.utcnow()
         self.redo_task_ids = redo_task_ids
@@ -197,12 +197,11 @@ def set_mongolike(ddict, key, value):
     try:
         lead_key = int(lead_key) # for searching array data
         lead_key_is_int = True
-    except:
+    except ValueError:
         lead_key_is_int = False
 
     if '.' in key:
         remainder = key.split('.', 1)[1]
-        next_key = remainder.split('.')[0]
         if lead_key not in ddict:
             if lead_key_is_int:
                 raise ValueError("Error for key {}, One or more keys is an integer,"

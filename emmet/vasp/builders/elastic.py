@@ -8,12 +8,10 @@ from monty.json import jsanitize
 
 from pymatgen import Structure
 from pymatgen.analysis.elasticity.elastic import ElasticTensor
-from pymatgen.analysis.elasticity.strain import Strain, Deformation
+from pymatgen.analysis.elasticity.strain import Deformation
 from pymatgen.analysis.elasticity.stress import Stress
-from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
+from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-
-from fireworks.utilities.fw_serializers import recursive_serialize
 
 from maggma.builder import Builder
 
@@ -29,9 +27,10 @@ __email__ = "montoyjh@lbl.gov"
 
 logger = logging.getLogger(__name__)
 
+
 class ElasticBuilder(Builder):
     def __init__(self, tasks, elasticity, materials,
-                 query={}, incremental=True, **kwargs):
+                 query=None, incremental=True, **kwargs):
         """
         Creates a elastic collection for materials
 
@@ -47,7 +46,7 @@ class ElasticBuilder(Builder):
         self.tasks = tasks
         self.elasticity = elasticity
         self.materials = materials
-        self.query = query
+        self.query = query if query is not None else {}
         self.incremental = incremental
         self.start_date = datetime.utcnow()
 
@@ -105,7 +104,7 @@ class ElasticBuilder(Builder):
 
         for n, doc in enumerate(cmd_cursor):
             # TODO: refactor for task sets without structure opt
-            logger.debug("Processing formula {}, {}".format(
+            logger.debug("Processing formula {}, {} of {}".format(
                 doc['_id'], n, len(formulas)))
             possible_mp_ids = material_dict.get(doc['_id']["formula_pretty"])
             if possible_mp_ids:
@@ -170,7 +169,7 @@ class ElasticBuilder(Builder):
         Args:
             items ([dict]): list of elasticity docs
         """
-        items = filter(lambda x: bool(x), items)
+        items = filter(bool, items)
         items = chain.from_iterable(items)
         items = [jsanitize(doc, strict=True) for doc in items]
 
@@ -249,8 +248,8 @@ def get_elastic_analysis(opt_task, defo_tasks):
         et_raw = ElasticTensor.from_pseudoinverse(fstrains, fstresses)
         et = et_raw.voigt_symmetrized.convert_to_ieee(opt_struct)
         defo_tasks = sorted(defo_tasks, key=lambda x: x['completed_at'])
-        input = opt_task['input']
-        input.pop('structure')
+        vasp_input = opt_task['input']
+        vasp_input.pop('structure')
 
         elastic_doc.update({"deformation_task_ids": defo_task_ids,
                             "optimization_task_id": opt_task['task_id'],
@@ -262,7 +261,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
                             "elastic_tensor_raw": et_raw.voigt,
                             "optimized_structure": opt_struct,
                             "completed_at": defo_tasks[-1]['completed_at'],
-                            "optimization_input": input})
+                            "optimization_input": vasp_input})
 
     # Process input
     elastic_doc['warnings'] = get_warnings(et, opt_struct) or None
@@ -321,15 +320,15 @@ def group_deformations_by_optimization_task(docs, tol=1e-6):
     sets that don't include an optimization and deformations.
 
     Args:
-        docs [{}]: list of documents
-        tol: tolerance for lattice equivalence
+        docs ([{}]): list of documents
+        tol (float): tolerance for lattice equivalence
     """
     # TODO: this could prolly be refactored to be more generally useful
     tasks_by_lattice = group_by_parent_lattice(docs, tol)
     tasks_by_opt_task = []
-    for lattice, task_set in tasks_by_lattice:
+    for _, task_set in tasks_by_lattice:
         opt_struct_tasks = [task for task in task_set
-                           if task['task_label']=='structure optimization']
+                            if task['task_label']=='structure optimization']
         deformation_tasks = [task for task in task_set
                              if task['task_label']=='elastic deformation']
         opt_struct_tasks.reverse()
