@@ -2,8 +2,6 @@ from datetime import datetime
 from itertools import chain, groupby
 import os
 
-from pymongo import ASCENDING, DESCENDING
-
 from monty.serialization import loadfn
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
@@ -22,8 +20,9 @@ default_mat_settings = os.path.join(
 
 class MaterialsBuilder(Builder):
 
-    def __init__(self, tasks, materials, mat_prefix="mp-", materials_settings=None, query={}, ltol=0.2, stol=0.3,
-                 angle_tol=5, separate_mag_orderings=True, **kwargs):
+    def __init__(self, tasks, materials, mat_prefix="mp-", materials_settings=None,
+                 query=None, ltol=0.2, stol=0.3, angle_tol=5,
+                 separate_mag_orderings=True, **kwargs):
         """
         Creates a materials collection from tasks and tags
 
@@ -43,7 +42,7 @@ class MaterialsBuilder(Builder):
         self.materials_settings = materials_settings if materials_settings else default_mat_settings
         self.materials = materials
         self.mat_prefix = mat_prefix
-        self.query = query
+        self.query = query if query else {}
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol

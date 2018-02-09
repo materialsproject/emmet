@@ -39,7 +39,9 @@ vol_interval = [4.56 - 1.96 * 7.82, 4.56 + 1.96 * 7.82]
 
 class MPBuilder(Builder):
 
-    def __init__(self, materials,  mp_materials, thermo=None, snls=None, xrd=None, elasticity=None, piezo=None, icsd=None, bandstructure_fs="bandstructure_fs", dos_fs="dos_fs", query={},  **kwargs):
+    def __init__(self, materials,  mp_materials, thermo=None, snls=None, xrd=None,
+                 elasticity=None, piezo=None, icsd=None, bandstructure_fs="bandstructure_fs",
+                 dos_fs="dos_fs", query=None,  **kwargs):
         """
         Creates a MP Website style materials doc.
         This builder is a bit unweildy as MP will eventually move to a new format
@@ -54,7 +56,7 @@ class MPBuilder(Builder):
         self.mp_materials = mp_materials
         self.snls = snls
         self.thermo = thermo
-        self.query = query
+        self.query = query if query else {}
         self.icsd = icsd
         self.xrd = xrd
         self.bandstructure_fs = bandstructure_fs

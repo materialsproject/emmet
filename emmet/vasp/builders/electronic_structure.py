@@ -27,8 +27,9 @@ matplotlib.use('agg')
 
 class ElectronicStructureBuilder(Builder):
 
-    def __init__(self, materials, electronic_structure, bandstructure_fs="bandstructure_fs", dos_fs="dos_fs", query={},
-                 interpolate_dos=True, small_plot=True, static_images=True, **kwargs):
+    def __init__(self, materials, electronic_structure, bandstructure_fs="bandstructure_fs",
+                 dos_fs="dos_fs", query=None, interpolate_dos=True, small_plot=True,
+                 static_images=True, **kwargs):
         """
         Creates an electronic structure from a tasks collection, the associated band structures and density of states, and the materials structure
 
@@ -39,7 +40,7 @@ class ElectronicStructureBuilder(Builder):
 
         self.materials = materials
         self.electronic_structure = electronic_structure
-        self.query = query
+        self.query = query if query else {}
         self.bandstructure_fs = bandstructure_fs
         self.dos_fs = dos_fs
         self.interpolate_dos = interpolate_dos and bool(which("x_trans"))

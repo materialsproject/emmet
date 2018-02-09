@@ -40,9 +40,11 @@ class MPWorksCompatibilityBuilderTest(unittest.TestCase):
         doc = self.test_tasks.collection.find_one(
             {"task_type": {"$regex": "deformed"}})
         new_doc = convert_mpworks_to_atomate(doc)
+        self.assertTrue('hubbards' in new_doc['input'])
         doc = self.test_tasks.collection.find_one(
             {"task_type": {"$regex": "(2x)"}})
         new_doc = convert_mpworks_to_atomate(doc)
+        self.assertTrue('hubbards' in new_doc['input'])
 
     def test_update_mpworks_schema(self):
         doc = self.test_tasks.query(criteria={"task_id": "mp-612"})[0]
