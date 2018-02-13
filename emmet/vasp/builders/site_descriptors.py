@@ -7,8 +7,7 @@ from monty.serialization import loadfn
 
 from pymatgen.core.structure import Structure
 from matminer.featurizers.site import OPSiteFingerprint ,\
-CrystalSiteFingerprint, ChemEnvSiteFingerprint
-CoordinationNumber
+CrystalSiteFingerprint, CoordinationNumber
 
 # Maybe include those, too?
 # AGNIFingerprints, EwaldSiteEnergy, \
@@ -20,6 +19,11 @@ from maggma.builder import Builder
 
 __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
 
+
+cls_to_abbrev = {
+    'OPSiteFingerprint': 'opsf', 'CrystalSiteFingerprint': 'csf', \
+    'VoronoiNN': 'vnn', 'JMolNN': 'jmnn', 'MinimumDistanceNN': 'mdnn', \
+    'MinimumOKeeffeNN': 'moknn', 'MinimumVIRENN': 'mvirenn'}
 
 class SiteDescriptorsBuilder(Builder):
 
@@ -79,34 +83,48 @@ class SiteDescriptorsBuilder(Builder):
 
         struct = Structure.from_dict(item['structure'])
 
-        site_descr_doc = {"sd": self.get_sd_from_struct(struct)}
+        site_descr_doc = {"site_descriptors": self.get_site_descriptors_from_struct(struct)}
         # TODO: Should I add lattice matrix and frac coords of all sites?
         site_descr_doc[self.site_descriptors.key] = item[self.materials.key]
 
         return site_descr_doc
 
-    def get_sd_from_struct(self, structure):
+    def get_site_descriptors_from_struct(self, structure):
         doc = {}
 
-        # Updated ChemEnvSiteFingerprint
-        sds = []
-        for nn_name in NearNeighbors.__subclasses__():
-            nn_ = getattr(pymatgen.analysis.local_env, nn_name)
-            sds.append(nn_())
-        sds.append(OPSiteFingerprint())
-        sds.append(CrystalSiteFingerprint.from_preset('ops'))
-        sds.append(ChemEnvSiteFingerprint.from_preset('multi_weights')) # make change to ChemEnvSiteFingerprint to make it faster: maximum_distance_factor=1.41)?
-        #for xs in self.__settings:
-            #xrdcalc = XRDCalculator(wavelength="".join([xs['target'], xs['edge']]),
-            #                        symprec=xs.get('symprec', 0))
+        # Set up all targeted site descriptors.
+        sds = {}
+        try:
+            for nn in NearNeighbors.__subclasses__():
+                nn_ = getattr(pymatgen.analysis.local_env, nn)
+                t = nn.__name__ if nn.__name__ \
+                    not in cls_to_abbrev.keys() \
+                    else cls_to_abbrev[nn.__name__]
+                k = 'cn_{}'.format(t)
+                sds[k] = CoordinationNumber(nn_(), use_weights=False)
+                k = 'cn_wt_{}'.format(t)
+                sds[k] = CoordinationNumber(nn_(), use_weights=True)
+        except:
+            sds = {}
+        try:
+            sds['opsf'] = OPSiteFingerprint()
+        except:
+            pass
+        try:
+            sds['csf'] = CrystalSiteFingerprint()
+        except:
+            pass
 
-            #pattern = jsanitize(xrdcalc.get_xrd_pattern(
-            #    structure, two_theta_range=xs['two_theta']).as_dict())
-            ## TODO: Make sure this is what the website actually needs
-            #d = {'wavelength': {'element': xs['target'],
-            #                    'in_angstroms': WAVELENGTHS["".join([xs['target'], xs['edge']])]},
-            #     'pattern': pattern}
-            #doc[xs['target']] = d
+        # Compute descriptors.
+        for k, sd in sds.items():
+            try:
+                d = {}
+                for i, s in enumerate(structure.sites):
+                    d[i] = sd.featurize(structure, i)
+                doc[k] = d
+            except:
+                pass
+
         return doc
 
     def update_targets(self, items):
