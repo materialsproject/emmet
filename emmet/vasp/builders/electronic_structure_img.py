@@ -175,9 +175,19 @@ class ElectronicStructureImageBuilder(Builder):
             old_docs.append(dos_dict)
         except Exception:
             self.logger.warning("Caught error in making old style DOS doc for {}: {}".format(mat[self.materials.key],
-                                                                                             traceback.format_exc()))
-        return old_docs
+        if bs:
+            try:
+                d["band_gap"] = {
+                    "band_gap": bs.get_band_gap()["energy"],
+                    "direct_gap": bs.get_direct_band_gap(),
+                    "is_direct": bs.get_band_gap()["direct"],
+                    "transition": bs.get_band_gap()["transition"]
+                }
+            except Exception:
+                self.logger.warning("Caught error in calculating bandgap {}: {}".format(mat[self.materials.key],
+                                                                                        traceback.format_exc()))
 
+        return d
 
     def update_targets(self, items):
         """
