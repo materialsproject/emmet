@@ -137,44 +137,6 @@ class ElectronicStructureImageBuilder(Builder):
                     mat[self.materials.key], traceback.format_exc()))
 
         # Get basic bandgap properties
-        try:
-            d["band_gap"] = {
-                "band_gap": bs.get_band_gap()["energy"],
-                "direct_gap": bs.get_direct_band_gap(),
-                "is_direct": bs.get_band_gap()["direct"],
-                "transition": bs.get_band_gap()["transition"]
-            }
-        except Exception:
-            self.logger.warning("Caught error in calculating bandgap {}: {}".format(mat[self.materials.key],
-                                                                                    traceback.format_exc()))
-
-        # make electronic structure docs
-        old_docs = []
-        try:
-            bs_origin = next((origin for origin in mat.get("origins", []) if "Line" in origin["task_type"]), None)
-
-            bs_dict = bs.as_dict()
-            bs_dict["task_id"] = bs_origin["task_id"]
-            bs_dict["material_id"] = mat["task_id"]
-            bs_dict["plot_small"] = d["bs_plot_small"]
-            bs_dict["plot_img"] = ("bs_{}.png".format(mat["task_id"]), d["bs_plot"])
-
-            old_docs.append(bs_dict)
-        except Exception:
-            self.logger.warning("Caught error in making old style Bandstructure doc for {}: {}".format(mat[self.materials.key],
-                                                                                                       traceback.format_exc()))
-
-        try:
-            dos_origin = next((origin for origin in mat.get("origins", [])
-                               if "Uniform" in origin["task_type"]), None)
-            dos_dict = dos.as_dict()
-            dos_dict["task_id"] = dos_origin["task_id"]
-            dos_dict["material_id"] = mat["task_id"]
-            dos_dict["plot_img"] = ("dos_{}.png".format(mat["task_id"]), d["dos_plot"])
-
-            old_docs.append(dos_dict)
-        except Exception:
-            self.logger.warning("Caught error in making old style DOS doc for {}: {}".format(mat[self.materials.key],
         if bs:
             try:
                 d["band_gap"] = {
@@ -267,6 +229,7 @@ class ElectronicStructureImageBuilder(Builder):
             dos_dict = mat["bandstructure"]["dos"]
             dos = CompleteDos.from_dict(dos_dict)
         return dos
+
 
 def get_small_plot(plot_data, gap):
     for branch in plot_data['energy']:
