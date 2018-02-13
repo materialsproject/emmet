@@ -190,21 +190,7 @@ class ElectronicStructureImageBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info("Updating {} electronic structure docs".format(len(items)))
-
-            for d in items:
-                try:
-                    if "plot_img" in d:
-                        self.plot_fs.put(d["plot_img"][1], filename=d["plot_img"][0])
-                        del d["plot_img"]
-                except Exception:
-                    # Temporary fix for documents that are too large
-                    traceback.print_exc()
-
-            try:
-                self.electronic_structure.update(items)
-            except Exception:
-                # Temporary fix for documents that are too large
-                traceback.print_exc()
+            self.electronic_structure.update(items)
         else:
             self.logger.info("No electronic structure docs to update")
 
