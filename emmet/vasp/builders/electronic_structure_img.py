@@ -49,7 +49,7 @@ class ElectronicStructureImageBuilder(Builder):
         self.materials = materials
         self.electronic_structure = electronic_structure
         self.query = query
-     
+
         super().__init__(sources=[materials], targets=[electronic_structure], **kwargs)
 
     def get_items(self):
@@ -71,7 +71,6 @@ class ElectronicStructureImageBuilder(Builder):
         # initialize the gridfs
         self.bfs = gridfs.GridFS(self.materials.collection.database, "bandstructure_fs")
         self.dfs = gridfs.GridFS(self.materials.collection.database, "dos_fs")
-        self.plot_fs = gridfs.GridFS(self.materials.collection.database, "es_plot")
 
         mats = list(self.materials.distinct(self.materials.key, criteria=q))
 
@@ -102,7 +101,7 @@ class ElectronicStructureImageBuilder(Builder):
         bs = self.extract_bs(mat)
         dos = self.extract_dos(mat)
         ylim = None
-        
+
         # Plot Band structure
         if bs:
             try:
@@ -240,6 +239,7 @@ def get_small_plot(plot_data, gap):
                     new_bands.append(band)
             branch[spin] = new_bands
     return plot_data
+
 
 def image_from_plot(plot):
     imgdata = io.BytesIO()
@@ -461,7 +461,6 @@ class WebDosVertPlotter(DosPlotter):
                     linewidth=1)
 
         if ylim:
-            print("Setting ylim to {}".format(ylim))
             plt.ylim(ylim)
         if xlim:
             plt.xlim(xlim)
