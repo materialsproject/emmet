@@ -79,26 +79,35 @@ class SiteDescriptorsBuilder(Builder):
 
         struct = Structure.from_dict(item['structure'])
 
-        #xrd_doc = {"xrd": self.get_xrd_from_struct(struct)}
-        #xrd_doc[self.diffraction.key] = item[self.materials.key]
+        site_descr_doc = {"sd": self.get_sd_from_struct(struct)}
+        # TODO: Should I add lattice matrix and frac coords of all sites?
+        site_descr_doc[self.site_descriptors.key] = item[self.materials.key]
 
-        return xrd_doc
+        return site_descr_doc
 
-    #def get_xrd_from_struct(self, structure):
-    #    doc = {}
+    def get_sd_from_struct(self, structure):
+        doc = {}
 
-    #    for xs in self.__settings:
-    #        xrdcalc = XRDCalculator(wavelength="".join([xs['target'], xs['edge']]),
-    #                                symprec=xs.get('symprec', 0))
+        # Updated ChemEnvSiteFingerprint
+        sds = []
+        for nn_name in NearNeighbors.__subclasses__():
+            nn_ = getattr(pymatgen.analysis.local_env, nn_name)
+            sds.append(nn_())
+        sds.append(OPSiteFingerprint())
+        sds.append(CrystalSiteFingerprint.from_preset('ops'))
+        sds.append(ChemEnvSiteFingerprint.from_preset('multi_weights')) # make change to ChemEnvSiteFingerprint to make it faster: maximum_distance_factor=1.41)?
+        #for xs in self.__settings:
+            #xrdcalc = XRDCalculator(wavelength="".join([xs['target'], xs['edge']]),
+            #                        symprec=xs.get('symprec', 0))
 
-    #        pattern = jsanitize(xrdcalc.get_xrd_pattern(
-    #            structure, two_theta_range=xs['two_theta']).as_dict())
-    #        # TODO: Make sure this is what the website actually needs
-    #        d = {'wavelength': {'element': xs['target'],
-    #                            'in_angstroms': WAVELENGTHS["".join([xs['target'], xs['edge']])]},
-    #             'pattern': pattern}
-    #        doc[xs['target']] = d
-    #    return doc
+            #pattern = jsanitize(xrdcalc.get_xrd_pattern(
+            #    structure, two_theta_range=xs['two_theta']).as_dict())
+            ## TODO: Make sure this is what the website actually needs
+            #d = {'wavelength': {'element': xs['target'],
+            #                    'in_angstroms': WAVELENGTHS["".join([xs['target'], xs['edge']])]},
+            #     'pattern': pattern}
+            #doc[xs['target']] = d
+        return doc
 
     def update_targets(self, items):
         """
