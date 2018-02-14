@@ -1,3 +1,4 @@
+matminer==0.2.3
 FireWorks==1.5.3
 atomate==0.6.5
 pymatgen==2017.9.23

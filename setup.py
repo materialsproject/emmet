@@ -22,7 +22,7 @@ if __name__ == "__main__":
         # TODO: finalize requirements
         install_requires=[
             'atomate', 'FireWorks>=1.4.0', 'pymatgen>=2017.7.4', 'pymatgen-db>=0.5.1',
-            'maggma', 'monty>=0.9.5', 'six', 'pydash',
+            'maggma', 'monty>=0.9.5', 'six', 'pydash', 'matminer>=0.2.3',
         ],
         classifiers=["Programming Language :: Python :: 3",
                      "Programming Language :: Python :: 3.6",
