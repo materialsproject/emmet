@@ -1,9 +1,4 @@
 import logging
-import os
-from datetime import datetime
-
-from monty.json import jsanitize
-from monty.serialization import loadfn
 
 from pymatgen.core.structure import Structure
 from matminer.featurizers.site import OPSiteFingerprint ,\
@@ -83,49 +78,11 @@ class SiteDescriptorsBuilder(Builder):
 
         struct = Structure.from_dict(item['structure'])
 
-        site_descr_doc = {"site_descriptors": self.get_site_descriptors_from_struct(struct)}
+        site_descr_doc = {"site_descriptors": get_site_descriptors_from_struct(struct)}
         # TODO: Should I add lattice matrix and frac coords of all sites?
         site_descr_doc[self.site_descriptors.key] = item[self.materials.key]
 
         return site_descr_doc
-
-    def get_site_descriptors_from_struct(self, structure):
-        doc = {}
-
-        # Set up all targeted site descriptors.
-        sds = {}
-        try:
-            for nn in NearNeighbors.__subclasses__():
-                nn_ = getattr(pymatgen.analysis.local_env, nn)
-                t = nn.__name__ if nn.__name__ \
-                    not in cls_to_abbrev.keys() \
-                    else cls_to_abbrev[nn.__name__]
-                k = 'cn_{}'.format(t)
-                sds[k] = CoordinationNumber(nn_(), use_weights=False)
-                k = 'cn_wt_{}'.format(t)
-                sds[k] = CoordinationNumber(nn_(), use_weights=True)
-        except:
-            sds = {}
-        try:
-            sds['opsf'] = OPSiteFingerprint()
-        except:
-            pass
-        try:
-            sds['csf'] = CrystalSiteFingerprint()
-        except:
-            pass
-
-        # Compute descriptors.
-        for k, sd in sds.items():
-            try:
-                d = {}
-                for i, s in enumerate(structure.sites):
-                    d[i] = sd.featurize(structure, i)
-                doc[k] = d
-            except:
-                pass
-
-        return doc
 
     def update_targets(self, items):
         """
@@ -151,3 +108,46 @@ class SiteDescriptorsBuilder(Builder):
 
         # Search index for materials
         self.site_descriptors.ensure_index(self.site_descriptors.key, unique=True)
+
+def get_site_descriptors_from_struct(structure):
+    doc = {}
+
+    # Set up all targeted site descriptors.
+    sds = {}
+    try:
+        for nn in NearNeighbors.__subclasses__():
+            nn_ = getattr(pymatgen.analysis.local_env, nn)
+            t = nn.__name__ if nn.__name__ \
+                not in cls_to_abbrev.keys() \
+                else cls_to_abbrev[nn.__name__]
+            k = 'cn_{}'.format(t)
+            sds[k] = CoordinationNumber(nn_(), use_weights=False)
+            k = 'cn_wt_{}'.format(t)
+            sds[k] = CoordinationNumber(nn_(), use_weights=True)
+    except Exception as e:
+        self.logger.error("Failed setting up CoordinationNumber "
+                          "instances: {}".format(e))
+    try:
+        sds['opsf'] = OPSiteFingerprint()
+    except Exception as e:
+        self.logger.error("Failed setting up OPSiteFingerprint "
+                          "instance: {}".format(e))
+    try:
+        sds['csf'] = CrystalSiteFingerprint()
+    except Exception as e:
+        self.logger.error("Failed setting up CrystalSiteFingerprint "
+                          "instance: {}".format(e))
+
+    # Compute descriptors.
+    for k, sd in sds.items():
+        try:
+            d = {}
+            for i, s in enumerate(structure.sites):
+                d[i] = sd.featurize(structure, i)
+            doc[k] = d
+        except Exception as e:
+            self.logger.error("Failed calculating {} site-descriptors: "
+                              "{}".format(k, e))
+
+    return doc
+
