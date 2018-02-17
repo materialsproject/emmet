@@ -97,7 +97,7 @@ class MPBuilder(Builder):
 
             if self.electronic_structure:
                 doc["electronic_structure"] = self.electronic_structure.query_one(
-                    criteria={"material_id": m, "band_gap": {"$exists": 1 }})
+                    criteria={self.electronic_structure.key: m, "band_gap": {"$exists": 1 }})
 
             if self.elasticity:
                 doc["elasticity"] = self.elasticity.query_one(
