@@ -92,8 +92,9 @@ class SiteDescriptorsBuilder(Builder):
 
         struct = Structure.from_dict(item['structure'])
 
-        site_descr_doc = {"site_descriptors": get_site_descriptors_from_struct(struct)}
-        # TODO: Should I add lattice matrix and frac coords of all sites?
+        site_descr_doc['structure'] = struct.copy()
+        site_descr_doc = {"site_descriptors": self.get_site_descriptors_from_struct(
+                site_descr_doc['structure'])}
         site_descr_doc[self.site_descriptors.key] = item[self.materials.key]
 
         return site_descr_doc
