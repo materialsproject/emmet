@@ -36,6 +36,20 @@ class SiteDescriptorsBuilder(Builder):
         self.site_descriptors = site_descriptors
         self.query = query if query else {}
 
+        # Set up all targeted site descriptors.
+        self.sds = {}
+        for nn in NearNeighbors.__subclasses__():
+            nn_ = getattr(pymatgen.analysis.local_env, nn)
+            t = nn.__name__ if nn.__name__ \
+                not in cls_to_abbrev.keys() \
+                else cls_to_abbrev[nn.__name__]
+            k = 'cn_{}'.format(t)
+            self.sds[k] = CoordinationNumber(nn_(), use_weights=False)
+            k = 'cn_wt_{}'.format(t)
+            self.sds[k] = CoordinationNumber(nn_(), use_weights=True)
+        self.sds['opsf'] = OPSiteFingerprint()
+        self.sds['csf'] = CrystalSiteFingerprint()
+
         super().__init__(sources=[materials],
                          targets=[site_descriptors],
                          **kwargs)
@@ -109,33 +123,19 @@ class SiteDescriptorsBuilder(Builder):
         # Search index for materials
         self.site_descriptors.ensure_index(self.site_descriptors.key, unique=True)
 
-def get_site_descriptors_from_struct(structure):
-    doc = {}
-
-    # Set up all targeted site descriptors.
-    sds = {}
-    for nn in NearNeighbors.__subclasses__():
-        nn_ = getattr(pymatgen.analysis.local_env, nn)
-        t = nn.__name__ if nn.__name__ \
-            not in cls_to_abbrev.keys() \
-            else cls_to_abbrev[nn.__name__]
-        k = 'cn_{}'.format(t)
-        sds[k] = CoordinationNumber(nn_(), use_weights=False)
-        k = 'cn_wt_{}'.format(t)
-        sds[k] = CoordinationNumber(nn_(), use_weights=True)
-    sds['opsf'] = OPSiteFingerprint()
-    sds['csf'] = CrystalSiteFingerprint()
-
-    # Compute descriptors.
-    for k, sd in sds.items():
-        try:
-            d = {}
-            for i, s in enumerate(structure.sites):
-                d[i] = sd.featurize(structure, i)
-            doc[k] = d
-        except Exception as e:
-            self.logger.error("Failed calculating {} site-descriptors: "
-                              "{}".format(k, e))
-
-    return doc
+    def get_site_descriptors_from_struct(structure):
+        doc = {}
+    
+        # Compute descriptors.
+        for k, sd in self.sds.items():
+            try:
+                d = {}
+                for i, s in enumerate(structure.sites):
+                    d[i] = sd.featurize(structure, i)
+                doc[k] = d
+            except Exception as e:
+                self.logger.error("Failed calculating {} site-descriptors: "
+                                  "{}".format(k, e))
+    
+        return doc
 
