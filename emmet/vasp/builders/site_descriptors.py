@@ -92,9 +92,10 @@ class SiteDescriptorsBuilder(Builder):
 
         struct = Structure.from_dict(item['structure'])
 
-        site_descr_doc['structure'] = struct.copy()
-        site_descr_doc = {"site_descriptors": self.get_site_descriptors_from_struct(
-                site_descr_doc['structure'])}
+        site_descr_doc = {'structure': struct.copy()}
+        site_descr_doc['site_descriptors'] = \
+                self.get_site_descriptors_from_struct(
+                site_descr_doc['structure'])
         site_descr_doc[self.site_descriptors.key] = item[self.materials.key]
 
         return site_descr_doc
@@ -126,7 +127,7 @@ class SiteDescriptorsBuilder(Builder):
 
     def get_site_descriptors_from_struct(structure):
         doc = {}
-    
+
         # Compute descriptors.
         for k, sd in self.sds.items():
             try:
