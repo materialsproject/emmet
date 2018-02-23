@@ -114,29 +114,17 @@ def get_site_descriptors_from_struct(structure):
 
     # Set up all targeted site descriptors.
     sds = {}
-    try:
-        for nn in NearNeighbors.__subclasses__():
-            nn_ = getattr(pymatgen.analysis.local_env, nn)
-            t = nn.__name__ if nn.__name__ \
-                not in cls_to_abbrev.keys() \
-                else cls_to_abbrev[nn.__name__]
-            k = 'cn_{}'.format(t)
-            sds[k] = CoordinationNumber(nn_(), use_weights=False)
-            k = 'cn_wt_{}'.format(t)
-            sds[k] = CoordinationNumber(nn_(), use_weights=True)
-    except Exception as e:
-        self.logger.error("Failed setting up CoordinationNumber "
-                          "instances: {}".format(e))
-    try:
-        sds['opsf'] = OPSiteFingerprint()
-    except Exception as e:
-        self.logger.error("Failed setting up OPSiteFingerprint "
-                          "instance: {}".format(e))
-    try:
-        sds['csf'] = CrystalSiteFingerprint()
-    except Exception as e:
-        self.logger.error("Failed setting up CrystalSiteFingerprint "
-                          "instance: {}".format(e))
+    for nn in NearNeighbors.__subclasses__():
+        nn_ = getattr(pymatgen.analysis.local_env, nn)
+        t = nn.__name__ if nn.__name__ \
+            not in cls_to_abbrev.keys() \
+            else cls_to_abbrev[nn.__name__]
+        k = 'cn_{}'.format(t)
+        sds[k] = CoordinationNumber(nn_(), use_weights=False)
+        k = 'cn_wt_{}'.format(t)
+        sds[k] = CoordinationNumber(nn_(), use_weights=True)
+    sds['opsf'] = OPSiteFingerprint()
+    sds['csf'] = CrystalSiteFingerprint()
 
     # Compute descriptors.
     for k, sd in sds.items():
