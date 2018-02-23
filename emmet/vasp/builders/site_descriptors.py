@@ -125,7 +125,7 @@ class SiteDescriptorsBuilder(Builder):
         # Search index for materials
         self.site_descriptors.ensure_index(self.site_descriptors.key, unique=True)
 
-    def get_site_descriptors_from_struct(structure):
+    def get_site_descriptors_from_struct(self, structure):
         doc = {}
 
         # Compute descriptors.
@@ -138,6 +138,6 @@ class SiteDescriptorsBuilder(Builder):
             except Exception as e:
                 self.logger.error("Failed calculating {} site-descriptors: "
                                   "{}".format(k, e))
-    
+
         return doc
 
