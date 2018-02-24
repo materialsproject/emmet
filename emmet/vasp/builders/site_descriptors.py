@@ -1,6 +1,8 @@
 import logging
 
 from pymatgen.core.structure import Structure
+import pymatgen.analysis
+from pymatgen.analysis.local_env import *
 from matminer.featurizers.site import OPSiteFingerprint ,\
 CrystalSiteFingerprint, CoordinationNumber
 
@@ -39,7 +41,7 @@ class SiteDescriptorsBuilder(Builder):
         # Set up all targeted site descriptors.
         self.sds = {}
         for nn in NearNeighbors.__subclasses__():
-            nn_ = getattr(pymatgen.analysis.local_env, nn)
+            nn_ = getattr(pymatgen.analysis.local_env, nn.__name__)
             t = nn.__name__ if nn.__name__ \
                 not in cls_to_abbrev.keys() \
                 else cls_to_abbrev[nn.__name__]
@@ -48,7 +50,7 @@ class SiteDescriptorsBuilder(Builder):
             k = 'cn_wt_{}'.format(t)
             self.sds[k] = CoordinationNumber(nn_(), use_weights=True)
         self.sds['opsf'] = OPSiteFingerprint()
-        self.sds['csf'] = CrystalSiteFingerprint()
+        self.sds['csf'] = CrystalSiteFingerprint.from_preset('ops')
 
         super().__init__(sources=[materials],
                          targets=[site_descriptors],
@@ -65,7 +67,6 @@ class SiteDescriptorsBuilder(Builder):
         self.logger.info("Site-Descriptors Builder Started")
 
         self.logger.info("Setting indexes")
-        self.ensure_indexes()
 
         # All relevant materials that have been updated since site-descriptors
         # were last calculated
@@ -114,16 +115,6 @@ class SiteDescriptorsBuilder(Builder):
             self.site_descriptors.update(docs=items)
         else:
             self.logger.info("No items to update")
-
-    def ensure_indexes(self):
-        """
-        Ensures indexes on the tasks and materials collections.
-        """
-        # Search index for materials
-        self.materials.ensure_index(self.materials.key, unique=True)
-
-        # Search index for materials
-        self.site_descriptors.ensure_index(self.site_descriptors.key, unique=True)
 
     def get_site_descriptors_from_struct(self, structure):
         doc = {}
