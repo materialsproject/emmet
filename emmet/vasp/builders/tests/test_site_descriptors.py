@@ -29,7 +29,7 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
                                             self.test_site_descriptors)
         sd_builder.connect()
         for t in sd_builder.get_items():
-            processed = t_builder.process_item(t)
+            processed = sd_builder.process_item(t)
             if processed:
                 pass
             else:
@@ -37,23 +37,9 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         runner = Runner([sd_builder])
         runner.run()
 
-#    def test_grouping_functions(self):
-#        docs1 = list(self.test_tasks.query(criteria={"formula_pretty": "NaN3"}))
-#        docs_grouped1 = group_by_parent_lattice(docs1)
-#        self.assertEqual(len(docs_grouped1), 1)
-#        grouped_by_opt = group_deformations_by_optimization_task(docs1)
-#        self.assertEqual(len(grouped_by_opt), 1)
-#
-#        materials_dict = generate_formula_dict(self.test_materials)
-#        grouped_by_mpid = group_by_material_id(materials_dict['NaN3'], docs1)
-#        self.assertEqual(len(grouped_by_mpid), 1)
-#
-#        docs2 = self.test_tasks.query(criteria={"task_label": "elastic deformation"})
-#        sgroup2 = group_by_parent_lattice(docs2)
-#
-#    def test_materials_aggregator(self):
-#        materials_dict = generate_formula_dict(self.test_materials)
-
+    #TODO
+    def get_site_descriptors_from_struct(self):
+        pass
 
 if __name__ == "__main__":
     unittest.main()
