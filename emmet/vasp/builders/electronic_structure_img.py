@@ -148,6 +148,15 @@ class ElectronicStructureImageBuilder(Builder):
                 self.logger.warning("Caught error in calculating bandgap {}: {}".format(mat[self.materials.key],
                                                                                         traceback.format_exc()))
 
+
+        # Store OID for GridFS access from website
+        if "bs_oid" in mat.get("bandstructure", {}):
+            d["bs_oid"] = mat["bandstructure"]["bs_oid"]
+            d["bs_compression"] = mat["bandstructure"].get("bs_compression", "")
+
+        if "dos_oid" in mat.get("bandstructure",{}):
+            d["dos_oid"] = mat["bandstructure"]["dos_oid"]
+            d["dos_compression"] = mat["bandstructure"].get("dos_compression", "")
         return d
 
     def update_targets(self, items):
