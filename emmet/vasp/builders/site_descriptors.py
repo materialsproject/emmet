@@ -6,7 +6,7 @@ from pymatgen.analysis.local_env import *
 from matminer.featurizers.site import OPSiteFingerprint ,\
 CrystalSiteFingerprint, CoordinationNumber
 
-# Maybe include those, too?
+# TODO:
 # AGNIFingerprints, EwaldSiteEnergy, \
 # VoronoiFingerprint, ChemEnvSiteFingerprint, \
 # ChemicalSRO
@@ -20,7 +20,8 @@ __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
 cls_to_abbrev = {
     'OPSiteFingerprint': 'opsf', 'CrystalSiteFingerprint': 'csf', \
     'VoronoiNN': 'vnn', 'JMolNN': 'jmnn', 'MinimumDistanceNN': 'mdnn', \
-    'MinimumOKeeffeNN': 'moknn', 'MinimumVIRENN': 'mvirenn'}
+    'MinimumOKeeffeNN': 'moknn', 'MinimumVIRENN': 'mvirenn', \
+    'BrunnerNN': 'bnn'}
 
 class SiteDescriptorsBuilder(Builder):
 
