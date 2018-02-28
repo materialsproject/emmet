@@ -3,7 +3,6 @@ import os
 
 from emmet.vasp.builders.site_descriptors import *
 from maggma.stores import MongoStore
-from maggma.runner import Runner
 
 from monty.serialization import loadfn
 
