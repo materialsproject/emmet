@@ -127,6 +127,7 @@ class MPBuilder(Builder):
                 doc["xrd"] = self.xrd.query_one(
                     criteria={self.xrd.key: m})
 
+            self.logger.debug("Working on {}".format(m))
             yield doc
 
     def process_item(self, item):
@@ -174,7 +175,6 @@ class MPBuilder(Builder):
         """
         items = list(filter(None, items))
 
-        dumpfn(items, "items.json")
         if len(items) > 0:
             self.logger.info(
                 "Updating {} mp materials docs".format(len(items)))
