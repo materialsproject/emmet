@@ -96,6 +96,9 @@ class SiteDescriptorsBuilder(Builder):
         site_descr_doc['site_descriptors'] = \
                 self.get_site_descriptors_from_struct(
                 site_descr_doc['structure'])
+        site_descr_doc['structure_descriptors'] = \
+                self.get_structure_descriptors(
+                site_descr_doc['site_descriptors'])
         site_descr_doc[self.site_descriptors.key] = item[self.materials.key]
 
         return site_descr_doc
@@ -131,3 +134,27 @@ class SiteDescriptorsBuilder(Builder):
 
         return doc
 
+    def get_opsf_statistics(self, site_descr):
+        doc = {}
+
+        # Compute site-descriptor statistics.
+        try:
+            n_site = len(list(d['opsf'].keys()))
+            # Transpose matrix to make the type of site-descriptor 1st dimension
+            # and site index 2nd.
+            site_descr_transposed = list(map(
+                    list, zip(*[site_descr[i] for i in range(n_site)])))
+            d = {}
+            for idescr, site_list in enumerate(site_descr_transposed):
+                d[idescr] = {}
+                d['min'] = min(site_list)
+                d['max'] = max(site_list)
+                d['mean'] = np.mean(site_list)
+                d['std'] = np.std(site_list)
+            doc['opsf_statistics'] = d
+
+        except Exception as e:
+            self.logger.error("Failed calculating statistics of site "
+                              "descriptors: {}".format(e))
+
+        return doc
