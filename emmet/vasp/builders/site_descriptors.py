@@ -1,3 +1,5 @@
+import numpy as np
+
 from pymatgen.core.structure import Structure
 import pymatgen.analysis
 from pymatgen.analysis.local_env import *
