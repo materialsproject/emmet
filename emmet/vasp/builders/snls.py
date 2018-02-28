@@ -52,6 +52,7 @@ class SNLBuilder(Builder):
         self.logger.info(
             "Found {} new/updated systems to proces".format(len(forms_to_update)))
 
+        
         for formula in forms_to_update:
             mats = list(self.materials.query(properties=[
                         self.materials.key, "structure", "initial_structure", "pretty_formula"], criteria={"pretty_formula": formula}))
@@ -61,7 +62,7 @@ class SNLBuilder(Builder):
                 snls.extend(source.query(criteria={"reduced_cell_formula": formula}))
 
             #snls = [s["snl"] for s in snls]
-
+            self.logger.debug("Found {} snls and {} mats".format(len(snls),len(mats)))
             if len(mats) > 0 and len(snls) > 0:
                 yield mats, snls
 
