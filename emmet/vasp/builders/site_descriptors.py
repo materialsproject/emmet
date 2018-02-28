@@ -133,6 +133,7 @@ class SiteDescriptorsBuilder(Builder):
                     for j, desc in enumerate(sd.featurize(structure, i)):
                         d[i][l[j]] = desc
                 doc[k] = d
+
             except Exception as e:
                 self.logger.error("Failed calculating {} site-descriptors: "
                                   "{}".format(k, e))
@@ -143,25 +144,25 @@ class SiteDescriptorsBuilder(Builder):
         doc = {}
 
         # Compute site-descriptor statistics.
-        #try:
-        n_site = len(list(site_descr['opsf'].keys()))
-        tmp = {}
-        for isite in range(n_site):
-            for l, v in site_descr['opsf'][isite].items():
-                if l not in list(tmp.keys()):
-                    tmp[l] = []
-                tmp[l].append(v)
-        d = {}
-        for k, l in tmp.items():
-            d[k] = {}
-            d[k]['min'] = min(tmp[k])
-            d[k]['max'] = max(tmp[k])
-            d[k]['mean'] = np.mean(tmp[k])
-            d[k]['std'] = np.std(tmp[k])
-        doc = d
+        try:
+            n_site = len(list(site_descr['opsf'].keys()))
+            tmp = {}
+            for isite in range(n_site):
+                for l, v in site_descr['opsf'][isite].items():
+                    if l not in list(tmp.keys()):
+                        tmp[l] = []
+                    tmp[l].append(v)
+            d = {}
+            for k, l in tmp.items():
+                d[k] = {}
+                d[k]['min'] = min(tmp[k])
+                d[k]['max'] = max(tmp[k])
+                d[k]['mean'] = np.mean(tmp[k])
+                d[k]['std'] = np.std(tmp[k])
+            doc = d
 
-        #except Exception as e:
-        #    self.logger.error("Failed calculating statistics of site "
-        #                      "descriptors: {}".format(e))
+        except Exception as e:
+            self.logger.error("Failed calculating statistics of site "
+                              "descriptors: {}".format(e))
 
         return doc
