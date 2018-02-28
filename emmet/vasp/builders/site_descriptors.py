@@ -125,8 +125,11 @@ class SiteDescriptorsBuilder(Builder):
         for k, sd in self.sds.items():
             try:
                 d = {}
+                l = sd.feature_labels()
                 for i, s in enumerate(structure.sites):
-                    d[i] = sd.featurize(structure, i)
+                    d[i] = {}
+                    for j, desc in enumerate(sd.featurize(structure, i)):
+                        d[i][l[j]] = desc
                 doc[k] = d
             except Exception as e:
                 self.logger.error("Failed calculating {} site-descriptors: "
@@ -138,23 +141,25 @@ class SiteDescriptorsBuilder(Builder):
         doc = {}
 
         # Compute site-descriptor statistics.
-        try:
-            n_site = len(list(site_descr['opsf'].keys()))
-            # Transpose matrix to make the type of site-descriptor 1st dimension
-            # and site index 2nd.
-            site_descr_transposed = list(map(list, zip(*[site_descr['opsf'][i] \
-                    for i in range(n_site)])))
-            d = {}
-            for idescr, site_list in enumerate(site_descr_transposed):
-                d[idescr] = {}
-                d[idescr]['min'] = min(site_list)
-                d[idescr]['max'] = max(site_list)
-                d[idescr]['mean'] = np.mean(site_list)
-                d[idescr]['std'] = np.std(site_list)
-            doc = d
+        #try:
+        n_site = len(list(site_descr['opsf'].keys()))
+        tmp = {}
+        for isite in range(n_site):
+            for l, v in site_descr['opsf'][isite].items():
+                if l not in list(tmp.keys()):
+                    tmp[l] = []
+                tmp[l].append(v)
+        d = {}
+        for k, l in tmp.items():
+            d[k] = {}
+            d[k]['min'] = min(tmp[k])
+            d[k]['max'] = max(tmp[k])
+            d[k]['mean'] = np.mean(tmp[k])
+            d[k]['std'] = np.std(tmp[k])
+        doc = d
 
-        except Exception as e:
-            self.logger.error("Failed calculating statistics of site "
-                              "descriptors: {}".format(e))
+        #except Exception as e:
+        #    self.logger.error("Failed calculating statistics of site "
+        #                      "descriptors: {}".format(e))
 
         return doc
