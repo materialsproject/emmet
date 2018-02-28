@@ -36,7 +36,7 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
             else:
                 import nose; nose.tools.set_trace()
 
-    def test_get_site_descriptors_from_struct(self):
+    def test_get_all_site_descriptors(self):
         sd_builder = SiteDescriptorsBuilder(self.test_materials,
             self.test_site_descriptors)
         opsf = OPSiteFingerprint()
@@ -67,18 +67,36 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         self.assertAlmostEqual(d['cn_wt_bnn'][0][0], 4)
         self.assertAlmostEqual(d['opsf'][0][itet], 0.9995)
         self.assertAlmostEqual(d['csf'][0][itet_csf], 0.9886777)
+        ds = sd_builder.get_opsf_statistics(d)
+        for di in ds.values():
+            self.assertEqual(len(list(di.keys())), 4)
+        self.assertAlmostEqual(ds[itet]['max'], 0.9995)
+        self.assertAlmostEqual(ds[itet]['min'], 0.9995)
+        self.assertAlmostEqual(ds[itet]['mean'], 0.9995)
+        self.assertAlmostEqual(ds[itet]['std'], 0)
+        self.assertAlmostEqual(ds[ioct]['mean'], 0.0005)
 
         # NaCl.
         d = sd_builder.get_site_descriptors_from_struct(Structure.from_dict(
             self.struct_docs[1]["structure"]))
         self.assertAlmostEqual(d['opsf'][0][ioct], 0.9995)
         self.assertAlmostEqual(d['csf'][0][ioct_csf], 1)
+        ds = sd_builder.get_opsf_statistics(d)
+        self.assertAlmostEqual(ds[ioct]['max'], 0.9995)
+        self.assertAlmostEqual(ds[ioct]['min'], 0.9995)
+        self.assertAlmostEqual(ds[ioct]['mean'], 0.9995)
+        self.assertAlmostEqual(ds[ioct]['std'], 0)
 
         # Iron.
         d = sd_builder.get_site_descriptors_from_struct(Structure.from_dict(
             self.struct_docs[2]["structure"]))
         self.assertAlmostEqual(d['opsf'][0][ibcc], 0.9995)
         self.assertAlmostEqual(d['csf'][0][ibcc_csf], 0.755096)
+        ds = sd_builder.get_opsf_statistics(d)
+        self.assertAlmostEqual(ds[ibcc]['max'], 0.9995)
+        self.assertAlmostEqual(ds[ibcc]['min'], 0.9995)
+        self.assertAlmostEqual(ds[ibcc]['mean'], 0.9995)
+        self.assertAlmostEqual(ds[ibcc]['std'], 0)
 
 if __name__ == "__main__":
     unittest.main()
