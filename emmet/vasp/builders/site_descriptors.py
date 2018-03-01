@@ -125,18 +125,18 @@ class SiteDescriptorsBuilder(Builder):
 
         # Compute descriptors.
         for k, sd in self.sds.items():
-            try:
-                d = {}
-                l = sd.feature_labels()
-                for i, s in enumerate(structure.sites):
-                    d[i] = {}
-                    for j, desc in enumerate(sd.featurize(structure, i)):
-                        d[i][l[j]] = desc
-                doc[k] = d
+            #try:
+            d = {}
+            l = sd.feature_labels()
+            for i, s in enumerate(structure.sites):
+                d[i] = {}
+                for j, desc in enumerate(sd.featurize(structure, i)):
+                    d[i][l[j]] = desc
+            doc[k] = d
 
-            except Exception as e:
-                self.logger.error("Failed calculating {} site-descriptors: "
-                                  "{}".format(k, e))
+            #except Exception as e:
+            #    self.logger.error("Failed calculating {} site-descriptors: "
+            #                      "{}".format(k, e))
 
         return doc
 
