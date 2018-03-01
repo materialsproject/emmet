@@ -1,4 +1,5 @@
 import numpy as np
+from math import sqrt
 
 from maggma.builder import Builder
 
@@ -73,8 +74,7 @@ class StructureSimilarityBuilder(Builder):
 
         sim_doc = {}
         sim_doc = self.get_similarities(
-            item[0]["opsf_statistics"],
-            item[1]["opsf_statistics"])
+            item[0], item[1])
         sim_doc[self.structure_similarity.key] = tuple(
             sorted([item[0][self.site_descriptors.key],
             item[1][self.site_descriptors.key]]))
@@ -102,7 +102,8 @@ class StructureSimilarityBuilder(Builder):
             dout = {}
             l = {}
             v = {}
-            for i, d in enumerate([d1, d2]):
+            for i, d in enumerate([d1['opsf_statistics'],
+                                  d2['opsf_statistics']]):
                 v[i] = []
                 l[i] = []
                 for optype, stats in d.items():
@@ -118,9 +119,9 @@ class StructureSimilarityBuilder(Builder):
                     raise RuntimeError('Label "{}" not found in second site-'
                                        'fingerprint statistics '
                                        'dictionary'.format(k))
-            v1 = np.array([v[0][k] for k in l[0]])
-            v2 = np.array([v[1][k] for k in l[0]])
-            dout['cos'] = np.dot(v1, v2) / sqrt(
+            v1 = np.array([v[0][k] for k in range(len(l[0]))])
+            v2 = np.array([v[1][l[1].index(k)] for k in l[0]])
+            dout['cos'] = np.dot(v1, v2) / (
                     np.linalg.norm(v1) * np.linalg.norm(v2))
             dout['dist'] = np.linalg.norm(v1 - v2)
             doc = dout
