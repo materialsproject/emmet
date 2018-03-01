@@ -64,7 +64,6 @@ class TestML(unittest.TestCase):
         ml_strucs = self.builder.process_item(dummy_task)
 
         self.assertEqual(len(ml_strucs),2)
-        self.assertEqual()
 
 
 if __name__ == "__main__":
