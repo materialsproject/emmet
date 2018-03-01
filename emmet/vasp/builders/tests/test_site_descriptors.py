@@ -21,7 +21,7 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         # Set up test db, etc.
         self.test_materials = MongoStore("test_emmet", 
                                          "mat_site_fingerprint",
-                                         key="material_id")
+                                         key="task_id")
         self.test_materials.connect()
         self.struct_docs = loadfn(test_structs, cls=None)
         self.test_materials.update(self.struct_docs)

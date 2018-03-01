@@ -84,7 +84,7 @@ class SiteDescriptorsBuilder(Builder):
         Calculates site descriptors for the structures
 
         Args:
-            item (dict): a dict with a material_id and a structure
+            item (dict): a dict with a task_id and a structure
 
         Returns:
             dict: a site-descriptors dict
