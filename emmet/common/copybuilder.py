@@ -43,6 +43,17 @@ class CopyBuilder(Builder):
         target.update(items, update_lu=False, key=self.key)
 
     def confirm_lu_field_index(self):
+        """Confirm index on `lu_field`.
+
+        One can't simply ensure an index exists via
+        `self.source.collection.create_index` because a Builder must assume
+        read-only access to source Stores. The MongoDB `read` built-in role
+        does not include the `createIndex` action.
+
+        Raises:
+            Exception: If there is no index on `lu_field`.
+
+        """
         source = self.source
         info = source.collection.index_information().values()
         for spec in (index['key'] for index in info):
