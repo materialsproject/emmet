@@ -2,8 +2,6 @@ from datetime import datetime
 from itertools import chain, groupby
 import os
 
-from pymongo import DESCENDING
-
 from monty.serialization import loadfn
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator

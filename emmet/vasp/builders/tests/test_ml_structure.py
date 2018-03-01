@@ -4,7 +4,6 @@ from pymatgen.core.lattice import Lattice
 
 
 from maggma.stores import MongoStore
-from emmet.vasp.builders.task_tagger import task_type
 from emmet.vasp.builders.ml_structures import MLStructuresBuilder
 
 __author__ = "Shyam Dwaraknath"

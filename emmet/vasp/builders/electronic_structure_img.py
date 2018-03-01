@@ -194,7 +194,7 @@ class ElectronicStructureImageBuilder(Builder):
             dos_dict = json.loads(dos_json.decode())
             mat["bandstructure"]["dos"] = dos_dict
 
-def extract_bs(self, mat):
+def extract_bs(mat):
 
     bs = None
 
@@ -222,7 +222,7 @@ def extract_bs(self, mat):
 
     return bs
 
-def extract_dos(self, mat):
+def extract_dos(mat):
 
     dos = None
     if "dos" in mat["bandstructure"]:

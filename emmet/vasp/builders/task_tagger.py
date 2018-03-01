@@ -40,7 +40,7 @@ class TaskTagger(Builder):
 
     def process_item(self, item):
         """
-        Find the task_type for the item 
+        Find the task_type for the item
 
         Args:
             item (dict): a (projection of a) task doc
