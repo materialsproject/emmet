@@ -51,7 +51,7 @@ class SiteDescriptorsBuilder(Builder):
             k = 'cn_wt_{}'.format(t)
             self.sds[k] = CoordinationNumber(nn_(), use_weights=True)
         self.sds['opsf'] = OPSiteFingerprint()
-        self.sds['csf'] = CrystalSiteFingerprint.from_preset('ops')
+        #self.sds['csf'] = CrystalSiteFingerprint.from_preset('ops')
 
         super().__init__(sources=[materials],
                          targets=[site_descriptors],

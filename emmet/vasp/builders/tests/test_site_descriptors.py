@@ -61,7 +61,7 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         self.assertEqual(d['cn_bnn'][0]['CN_BrunnerNN'], 4)
         self.assertAlmostEqual(d['cn_wt_bnn'][0]['CN_BrunnerNN'], 4)
         self.assertAlmostEqual(d['opsf'][0]['tetrahedral CN_4'], 0.9995)
-        self.assertAlmostEqual(d['csf'][0]['tetrahedral CN_4'], 0.9886777)
+        #self.assertAlmostEqual(d['csf'][0]['tetrahedral CN_4'], 0.9886777)
         ds = sd_builder.get_opsf_statistics(d)
         for di in ds.values():
             self.assertEqual(len(list(di.keys())), 4)
@@ -75,7 +75,7 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         d = sd_builder.get_site_descriptors_from_struct(Structure.from_dict(
             self.struct_docs[1]["structure"]))
         self.assertAlmostEqual(d['opsf'][0]['octahedral CN_6'], 0.9995)
-        self.assertAlmostEqual(d['csf'][0]['octahedral CN_6'], 1)
+        #self.assertAlmostEqual(d['csf'][0]['octahedral CN_6'], 1)
         ds = sd_builder.get_opsf_statistics(d)
         self.assertAlmostEqual(ds['octahedral CN_6']['max'], 0.9995)
         self.assertAlmostEqual(ds['octahedral CN_6']['min'], 0.9995)
@@ -86,7 +86,7 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         d = sd_builder.get_site_descriptors_from_struct(Structure.from_dict(
             self.struct_docs[2]["structure"]))
         self.assertAlmostEqual(d['opsf'][0]['body-centered cubic CN_8'], 0.9995)
-        self.assertAlmostEqual(d['csf'][0]['body-centered cubic CN_8'], 0.755096)
+        #self.assertAlmostEqual(d['csf'][0]['body-centered cubic CN_8'], 0.755096)
         ds = sd_builder.get_opsf_statistics(d)
         self.assertAlmostEqual(ds['body-centered cubic CN_8']['max'], 0.9995)
         self.assertAlmostEqual(ds['body-centered cubic CN_8']['min'], 0.9995)
