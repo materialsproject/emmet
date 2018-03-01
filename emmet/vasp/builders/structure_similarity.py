@@ -40,56 +40,59 @@ class StructureSimilarityBuilder(Builder):
 
         self.logger.info("Setting indexes")
 
-        #TODO: re-introduce last-updated filter possibility.
-        task_ids = sorted(list(self.site_descriptors.distinct(self.site_descriptors.key)))
+        #TODO: re-introduce last-updated filtering.
+        task_ids = list(self.site_descriptors.distinct(self.site_descriptors.key))
         n_task_ids = len(task_ids)
         for i in range(n_task_ids-1):
-            for j in range(i+1, n_task_ids):
-                yield self.site_descriptors.query(
+            d1 = self.site_descriptors.query(
                     properties=[self.site_descriptors.key, "opsf_statistics"],
-                    criteria={self.site_descriptors.key: d}).limit(1)[0]
+                    criteria={self.site_descriptors.key: task_ids[i]}).limit(1)[0]
+            for j in range(i+1, n_task_ids):
+                d2 = self.site_descriptors.query(
+                        properties=[
+                        self.site_descriptors.key, "opsf_statistics"],
+                        criteria={self.site_descriptors.key: task_ids[j]}).limit(1)[0]
+                yield list([d1, d2])
 
     def process_item(self, item):
         """
         Calculates site descriptors for the structures
 
         Args:
-            item (dict): a dict with a material_id and a structure
+            item (list): a list (length 2) with each one document that
+                         carries a task ID in "task_id" and a statistics
+                         vector from OP site-fingerprints in
+                         "opsf_statistics".
 
         Returns:
-            dict: a site-descriptors dict
+            dict: similarity measures.
         """
-        pass
-        #self.logger.debug("Calculating site descriptors for {}".format(
-        #    item[self.materials.key]))
+        self.logger.debug("Similarities for {} and {}".format(
+            item[0][self.site_descriptors.key],
+            item[1][self.site_descriptors.key]))
 
-        #struct = Structure.from_dict(item['structure'])
+        sim_doc = {}
+        sim_doc = self.get_similarities(
+            item[0]["opsf_statistics"],
+            item[1]["opsf_statistics"])
+        sim_doc[self.structure_similarity.key] = tuple(
+            sorted([item[0][self.site_descriptors.key],
+            item[1][self.site_descriptors.key]]))
 
-        #site_descr_doc = {'structure': struct.copy()}
-        #site_descr_doc['site_descriptors'] = \
-        #        self.get_site_descriptors_from_struct(
-        #        site_descr_doc['structure'])
-        #site_descr_doc['opsf_statistics'] = \
-        #        self.get_opsf_statistics(
-        #        site_descr_doc['site_descriptors'])
-        #site_descr_doc[self.site_descriptors.key] = item[self.materials.key]
+        return sim_doc
 
-        #return site_descr_doc
+    def update_targets(self, items):
+        """
+        Inserts the new task_types into the task_types collection.
 
-    #def update_targets(self, items):
-    #    """
-    #    Inserts the new task_types into the task_types collection.
-
-    #    Args:
-    #        items ([[dict]]): a list of list of site-descriptors dictionaries to update.
-    #    """
-    #    items = list(filter(None, items))
-
-    #    if len(items) > 0:
-    #        self.logger.info("Updating {} site-descriptors docs".format(len(items)))
-    #        self.site_descriptors.update(docs=items)
-    #    else:
-    #        self.logger.info("No items to update")
+        Args:
+            items ([[dict]]): a list of list of site-descriptors dictionaries to update.
+        """
+        if len(items) > 0:
+            self.logger.info("Updating {} structure-similarity docs".format(len(items)))
+            self.structure_similarity.update(docs=items)
+        else:
+            self.logger.info("No items to update")
 
     def get_similarities(self, d1, d2):
         doc = {}
