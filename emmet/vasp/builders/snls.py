@@ -5,7 +5,7 @@ from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.util.provenance import StructureNL
 from maggma.builder import Builder
-from pydash.objects import get, has
+from pydash.objects import get
 
 
 class SNLBuilder(Builder):
@@ -45,14 +45,13 @@ class SNLBuilder(Builder):
         #forms_to_update = set()
 
         # Find all new SNL formulas since the builder was last run
-        #for source in self.source_snls:
+        # for source in self.source_snls:
         #    new_q = source.lu_filter(self.snls)
         #    forms_to_update |= set(source.distinct("reduced_cell_formula", new_q))
 
         self.logger.info(
             "Found {} new/updated systems to proces".format(len(forms_to_update)))
 
-        
         for formula in forms_to_update:
             mats = list(self.materials.query(properties=[
                         self.materials.key, "structure", "initial_structure", "pretty_formula"], criteria={"pretty_formula": formula}))
@@ -62,7 +61,7 @@ class SNLBuilder(Builder):
                 snls.extend(source.query(criteria={"reduced_cell_formula": formula}))
 
             #snls = [s["snl"] for s in snls]
-            self.logger.debug("Found {} snls and {} mats".format(len(snls),len(mats)))
+            self.logger.debug("Found {} snls and {} mats".format(len(snls), len(mats)))
             if len(mats) > 0 and len(snls) > 0:
                 yield mats, snls
 
@@ -128,8 +127,7 @@ class SNLBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
-
-    def collect_snls_mp(self,snl_dict):
+    def collect_snls_mp(self, snl_dict):
         """
         Converts a dict of materials and snls into docs for the snl by choosing the first by creation date and storing all applicable ICSD ids
         """
@@ -139,6 +137,6 @@ class SNLBuilder(Builder):
         for mat_id, snl_list in snl_dict.items():
             snl = sorted(
                 snl_list, key=lambda x: StructureNL.from_dict(x).created_at)[0]
-            icsd_ids = list(filter(None,[get(snl, "about._icsd.icsd_id",None) for snl in snl_list]))
+            icsd_ids = list(filter(None, [get(snl, "about._icsd.icsd_id", None) for snl in snl_list]))
             snls.append({self.snls.key: mat_id, "snl": snl, "icsd_ids": icsd_ids})
         return snls

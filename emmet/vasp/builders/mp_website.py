@@ -2,10 +2,10 @@ from datetime import datetime
 import os
 import string
 import traceback
-import gridfs
+from ast import literal_eval
 from pymongo import ASCENDING, DESCENDING
 
-from monty.serialization import loadfn, dumpfn
+from monty.serialization import loadfn
 from monty.json import jsanitize
 
 from maggma.builder import Builder
@@ -17,7 +17,6 @@ from pymatgen.io.cif import CifWriter
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.core.composition import Composition
 from pymatgen import Structure
-from pymatgen.util.provenance import StructureNL
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.analysis.structure_analyzer import RelaxationAnalyzer
@@ -42,7 +41,7 @@ vol_interval = [4.56 - 1.96 * 7.82, 4.56 + 1.96 * 7.82]
 
 class MPBuilder(Builder):
 
-    def __init__(self, materials,  mp_materials, thermo=None, electronic_structure=None, magnetism=None, snls=None, xrd=None, elasticity=None, piezo=None, icsd=None, query={},  **kwargs):
+    def __init__(self, materials,  mp_materials, thermo=None, electronic_structure=None, magnetism=None, snls=None, xrd=None, elasticity=None, piezo=None, icsd=None, query=None,  **kwargs):
         """
         Creates a MP Website style materials doc.
         This builder is a bit unweildy as MP will eventually move to a new format
@@ -58,7 +57,7 @@ class MPBuilder(Builder):
         self.electronic_structure = electronic_structure
         self.snls = snls
         self.thermo = thermo
-        self.query = query
+        self.query = query if query else None
         self.icsd = icsd
         self.xrd = xrd
         self.elasticity = elasticity
@@ -97,7 +96,7 @@ class MPBuilder(Builder):
 
             if self.electronic_structure:
                 doc["electronic_structure"] = self.electronic_structure.query_one(
-                    criteria={self.electronic_structure.key: m, "band_gap": {"$exists": 1 }})
+                    criteria={self.electronic_structure.key: m, "band_gap": {"$exists": 1}})
 
             if self.elasticity:
                 doc["elasticity"] = self.elasticity.query_one(
@@ -142,7 +141,7 @@ class MPBuilder(Builder):
 
         if item.get("electronic_structure", None):
             es = item["electronic_structure"]
-            add_es(mat,new_mat,es)
+            add_es(mat, new_mat, es)
 
         if item.get("piezo", None):
             pass
@@ -228,9 +227,9 @@ def old_style_mat(new_mat):
     mat["anonymous_formula"] = {string.ascii_uppercase[i]: float(vals[i])
                                 for i in range(len(vals))}
 
-    set_(mat,"pseudo_potential.functional", "PBE")
+    set_(mat, "pseudo_potential.functional", "PBE")
 
-    set_(mat,"pseudo_potential.labels", [p["titel"].split()[1] for p in get(new_mat,"calc_settings.potcar_spec")])
+    set_(mat, "pseudo_potential.labels", [p["titel"].split()[1] for p in get(new_mat, "calc_settings.potcar_spec")])
     mat["ntask_ids"] = len(get(new_mat, "task_ids"))
     set_(mat, "pseudo_potential.pot_type", "paw")
     add_bv_structure(mat)
@@ -245,23 +244,24 @@ def add_es(mat, new_mat, es):
     bs_origin = None
     dos_origin = None
     try:
-        bs_origin = next((origin for origin in new_mat.get("origins",[]) if "Line" in origin["task_type"]),None)
-        dos_origin = next((origin for origin in new_mat.get("origins",[]) if "Uniform" in origin["task_type"]),None)
+        bs_origin = next((origin for origin in new_mat.get("origins", []) if "Line" in origin["task_type"]), None)
+        dos_origin = next((origin for origin in new_mat.get("origins", []) if "Uniform" in origin["task_type"]), None)
 
         if bs_origin:
             u_type = "GGA+U" if "+U" in bs_origin["task_type"] else "GGA"
             band_gap = es.get("band_gap", None)
-            set_(mat,"band_structure.{}.task_id".format(u_type),bs_origin["task_id"])
-            set_(mat,"band_gap.search_gap",band_gap)
+            set_(mat, "band_structure.{}.task_id".format(u_type), bs_origin["task_id"])
+            set_(mat, "band_gap.search_gap", band_gap)
 
         if dos_origin:
             u_type = "GGA+U" if "+U" in dos_origin["task_type"] else "GGA"
-            set_(mat,"dos.{}.task_id".format(u_type),dos_origin["task_id"])
-            
+            set_(mat, "dos.{}.task_id".format(u_type), dos_origin["task_id"])
+
     except Exception as e:
         print("Error in adding electronic structure: {}".format(e))
 
     mat["has_bandstructure"] = bool(bs_origin) and bool(dos_origin)
+
 
 def add_blessed_tasks(mat, new_mat):
     blessed_tasks = {}
@@ -316,7 +316,7 @@ def add_xrd(mat, xrd):
 
         xrd_pattern = XRDPattern.from_dict(doc["pattern"])
         el_doc["pattern"] = [[float(intensity),
-                              [int(x) for x in eval(list(hkls.keys())[0])],
+                              [int(x) for x in literal_eval(list(hkls.keys())[0])],
                               two_theta,
                               float(d_hkl)] for two_theta, intensity, hkls, d_hkl in zip(xrd_pattern.x,
                                                                                          xrd_pattern.y,

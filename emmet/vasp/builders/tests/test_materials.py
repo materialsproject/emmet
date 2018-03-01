@@ -1,14 +1,8 @@
 import unittest
-from itertools import chain
 from maggma.stores import MongoStore
-from maggma.runner import Runner
-
 from pymatgen.core.structure import Structure
 from pymatgen.core.lattice import Lattice
-
-from emmet.vasp.builders.tests.test_builders import BuilderTest
 from emmet.vasp.builders.materials import MaterialsBuilder
-from emmet.vasp.builders.thermo import ThermoBuilder
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"

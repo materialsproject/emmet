@@ -1,23 +1,18 @@
 import unittest
-from itertools import chain
-from pydash.objects import get
 from pymatgen.core.structure import Structure
 from pymatgen.core.lattice import Lattice
 
 
 from maggma.stores import MongoStore
-from maggma.runner import Runner
 from emmet.vasp.builders.task_tagger import task_type
-from emmet.vasp.builders.tests.test_builders import BuilderTest
 from emmet.vasp.builders.ml_structures import MLStructuresBuilder
-import logging
-import sys
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
 
 
 class TestML(unittest.TestCase):
+
     def setUp(self):
         tasks = MongoStore("emmet_test", "tasks")
         ml_strucs = MongoStore("emmet_test", "ml_strucs")
@@ -52,10 +47,10 @@ class TestML(unittest.TestCase):
         coords[1][0] = 0.0
         structure2 = Structure(lattice, ["Si", "Si"], coords)
 
-        dummy_task["calcs_reversed"][0]["input"] =  { "incar": {
-                    "IBRION": 2,
-                    "ISIF": 3,
-                    "NSW": 99}}
+        dummy_task["calcs_reversed"][0]["input"] = {"incar": {
+            "IBRION": 2,
+            "ISIF": 3,
+            "NSW": 99}}
 
         ionic_steps = dummy_task["calcs_reversed"][0]["output"]["ionic_steps"]
         ionic_steps.append({"structure": structure1.as_dict()})
@@ -63,7 +58,7 @@ class TestML(unittest.TestCase):
 
         ml_strucs = self.builder.process_item(dummy_task)
 
-        self.assertEqual(len(ml_strucs),2)
+        self.assertEqual(len(ml_strucs), 2)
 
 
 if __name__ == "__main__":

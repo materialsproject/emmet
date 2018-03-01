@@ -1,17 +1,8 @@
 import unittest
-from itertools import chain
 from unittest.mock import patch, MagicMock
-
-
 from maggma.stores import MongoStore
-from maggma.runner import Runner
-
 from pymatgen.core.structure import Structure
 from pymatgen.core.lattice import Lattice
-
-from emmet.vasp.builders.tests.test_builders import BuilderTest
-from emmet.vasp.builders.materials import MaterialsBuilder
-from emmet.vasp.builders.thermo import ThermoBuilder
 from emmet.vasp.builders.electronic_structure_img import ElectronicStructureImageBuilder
 
 __author__ = "Shyam Dwaraknath"
@@ -19,6 +10,7 @@ __email__ = "shyamd@lbl.gov"
 
 
 class TestElectronicStructureImageBuilder(unittest.TestCase):
+
     def setUp(self):
 
         coords = list()
@@ -37,8 +29,7 @@ class TestElectronicStructureImageBuilder(unittest.TestCase):
 
         self.builder.bfs = MagicMock()
         mat = {"bandstructure": {"bs_oid": "234234",
-                                "bs_compression" : "zlib"}}
-
+                                 "bs_compression": "zlib"}}
 
         with patch("emmet.vasp.builders.electronic_structure_img.json") as json_patch:
             with patch("emmet.vasp.builders.electronic_structure_img.zlib") as zlib_patch:
@@ -48,13 +39,11 @@ class TestElectronicStructureImageBuilder(unittest.TestCase):
         json_patch.loads.assert_called()
         zlib_patch.decompress.assert_called()
 
-
     def test_get_dos(self):
 
         self.builder.dfs = MagicMock()
         mat = {"bandstructure": {"dos_oid": "234234",
-                                "dos_compression" : "zlib"}}
-
+                                 "dos_compression": "zlib"}}
 
         with patch("emmet.vasp.builders.electronic_structure_img.json") as json_patch:
             with patch("emmet.vasp.builders.electronic_structure_img.zlib") as zlib_patch:
@@ -63,7 +52,6 @@ class TestElectronicStructureImageBuilder(unittest.TestCase):
         self.builder.dfs.get.assert_called()
         json_patch.loads.assert_called()
         zlib_patch.decompress.assert_called()
-
 
 
 if __name__ == "__main__":

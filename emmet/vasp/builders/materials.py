@@ -2,7 +2,7 @@ from datetime import datetime
 from itertools import chain, groupby
 import os
 
-from pymongo import ASCENDING, DESCENDING
+from pymongo import DESCENDING
 
 from monty.serialization import loadfn
 from pymatgen import Structure
@@ -24,7 +24,7 @@ class MaterialsBuilder(Builder):
                  materials,
                  mat_prefix="mp-",
                  materials_settings=None,
-                 query={},
+                 query=None,
                  ltol=0.2,
                  stol=0.3,
                  angle_tol=5,
@@ -49,7 +49,7 @@ class MaterialsBuilder(Builder):
         self.materials_settings = materials_settings if materials_settings else default_mat_settings
         self.materials = materials
         self.mat_prefix = mat_prefix
-        self.query = query
+        self.query = query if query else {}
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol

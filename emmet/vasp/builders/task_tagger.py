@@ -6,6 +6,7 @@ __email__ = "shyamd@lbl.gov"
 
 
 class TaskTagger(Builder):
+
     def __init__(self, tasks, task_types, **kwargs):
         """
         Creates task_types from tasks and type definitions
@@ -59,7 +60,6 @@ class TaskTagger(Builder):
             self.logger.error("No task type found for {}".format(without_task_type))
         if len(with_task_type) > 0:
             self.task_types.update(with_task_type)
-            
 
 
 def task_type(inputs, include_calc_type=True):

@@ -11,7 +11,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 class MLStructuresBuilder(Builder):
 
-    def __init__(self, tasks, ml_strucs, task_types= ("Structure Optimization"),query={}, **kwargs):
+    def __init__(self, tasks, ml_strucs, task_types= ("Structure Optimization",),query=None, **kwargs):
         """
         Creates a collection of structures, energies, forces, and stresses for machine learning efforts
 
@@ -24,7 +24,7 @@ class MLStructuresBuilder(Builder):
         self.tasks = tasks
         self.ml_strucs = ml_strucs
         self.task_types = task_types
-        self.query = query
+        self.query = query if query else None
         super().__init__(sources=[tasks],
                          targets=[ml_strucs],
                          **kwargs)
