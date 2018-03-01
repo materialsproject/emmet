@@ -70,6 +70,8 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         self.assertAlmostEqual(ds['tetrahedral CN_4']['mean'], 0.9995)
         self.assertAlmostEqual(ds['tetrahedral CN_4']['std'], 0)
         self.assertAlmostEqual(ds['octahedral CN_6']['mean'], 0.0005)
+        outl = []
+        outl.append({"task_id": self.struct_docs[0]["task_id"], "opsf_statistics": dict(ds)})
 
         # NaCl.
         d = sd_builder.get_site_descriptors_from_struct(Structure.from_dict(
@@ -81,6 +83,7 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         self.assertAlmostEqual(ds['octahedral CN_6']['min'], 0.9995)
         self.assertAlmostEqual(ds['octahedral CN_6']['mean'], 0.9995)
         self.assertAlmostEqual(ds['octahedral CN_6']['std'], 0)
+        outl.append({"task_id": self.struct_docs[1]["task_id"], "opsf_statistics": dict(ds)})
 
         # Iron.
         d = sd_builder.get_site_descriptors_from_struct(Structure.from_dict(
@@ -92,6 +95,11 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         self.assertAlmostEqual(ds['body-centered cubic CN_8']['min'], 0.9995)
         self.assertAlmostEqual(ds['body-centered cubic CN_8']['mean'], 0.9995)
         self.assertAlmostEqual(ds['body-centered cubic CN_8']['std'], 0)
+        outl.append({"task_id": self.struct_docs[2]["task_id"], "opsf_statistics": dict(ds)})
+        f = open('out.json', 'w')
+        import json
+        json.dump(outl, f)
+        f.close()
 
 if __name__ == "__main__":
     unittest.main()

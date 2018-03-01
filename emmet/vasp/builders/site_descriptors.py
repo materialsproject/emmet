@@ -75,7 +75,7 @@ class SiteDescriptorsBuilder(Builder):
         q.update(self.materials.lu_filter(self.site_descriptors))
         task_ids = list(self.materials.distinct(self.materials.key, q))
         self.logger.info(
-            "Found {} new materials for site-descriptors data".format(len(mats)))
+            "Found {} new materials for site-descriptors data".format(len(task_ids)))
         for task_id in task_ids:
             yield self.materials.query(
                     properties=[self.materials.key, "structure"],
