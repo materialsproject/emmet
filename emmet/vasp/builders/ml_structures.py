@@ -11,7 +11,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 class MLStructuresBuilder(Builder):
 
-    def __init__(self, tasks, ml_strucs, task_types = ("Structure Optimization","Static"),query={}, **kwargs):
+    def __init__(self, tasks, ml_strucs, task_types= ("Structure Optimization"),query={}, **kwargs):
         """
         Creates a collection of structures, energies, forces, and stresses for machine learning efforts
 
@@ -105,7 +105,7 @@ class MLStructuresBuilder(Builder):
                 d = c.as_dict()
                 d["chemsys"] = '-'.join(
                     sorted(set([e.symbol for e in struc.composition.elements])))
-                d["task_type"] = task_type(get(calc, 'input.incar'))
+                d["task_type"] = task_type(get(calc, 'input'))
                 d["calc_name"] = get(calc, "task.name")
                 d["task_id"] = task[self.tasks.key]
 
