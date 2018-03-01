@@ -73,11 +73,13 @@ class SiteDescriptorsBuilder(Builder):
         # were last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.site_descriptors))
-        mats = list(self.materials.distinct(self.materials.key, q))
+        task_ids = list(self.materials.distinct(self.materials.key, q))
         self.logger.info(
             "Found {} new materials for site-descriptors data".format(len(mats)))
-        for m in mats:
-            yield self.materials.query(properties=[self.materials.key, "structure"], criteria={self.materials.key: m}).limit(1)[0]
+        for task_id in task_ids:
+            yield self.materials.query(
+                    properties=[self.materials.key, "structure"],
+                    criteria={self.materials.key: task_id}).limit(1)[0]
 
     def process_item(self, item):
         """
