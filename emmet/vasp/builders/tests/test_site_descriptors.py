@@ -19,11 +19,14 @@ test_structs = os.path.join(module_dir, "..","..","..", "..", "test_files",
 class SiteDescriptorsBuilderTest(unittest.TestCase):
     def setUp(self):
         # Set up test db, etc.
-        self.test_materials = MongoStore("test_emmet", "materials", key="material_id")
+        self.test_materials = MongoStore("test_emmet", 
+                                         "mat_site_fingerprint",
+                                         key="material_id")
         self.test_materials.connect()
         self.struct_docs = loadfn(test_structs, cls=None)
         self.test_materials.update(self.struct_docs)
-        self.test_site_descriptors = MongoStore("test_emmet", "site_descriptors")
+        self.test_site_descriptors = MongoStore("test_emmet",
+                                                "site_descriptors")
 
     def test_builder(self):
         sd_builder = SiteDescriptorsBuilder(self.test_materials,
@@ -39,8 +42,6 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
     def test_get_all_site_descriptors(self):
         sd_builder = SiteDescriptorsBuilder(self.test_materials,
             self.test_site_descriptors)
-        #opsf = OPSiteFingerprint()
-        #csf = CrystalSiteFingerprint.from_preset('ops')
 
         # Diamond.
         d = sd_builder.get_site_descriptors_from_struct(
