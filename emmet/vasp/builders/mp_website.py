@@ -249,7 +249,7 @@ def add_es(mat, new_mat, es):
 
         if bs_origin:
             u_type = "GGA+U" if "+U" in bs_origin["task_type"] else "GGA"
-            band_gap = es.get("band_gap", None)
+            band_gap = es.get("band_gap", 0)
             set_(mat, "band_structure.{}.task_id".format(u_type), bs_origin["task_id"])
             set_(mat, "band_gap.search_gap", band_gap)
 
