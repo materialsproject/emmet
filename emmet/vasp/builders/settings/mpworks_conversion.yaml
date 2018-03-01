@@ -1,0 +1,65 @@
+# For direct conversion of mpworks_key to atomate_key
+task_conversion_keys:
+   analysis.bandgap: output.bandgap
+   analysis.cbm: output.cbm
+   analysis.delta_volume: analysis.delta_volume
+   analysis.errors: analysis.errors
+   analysis.errors_MP: _mpworks_meta.errors_MP
+   analysis.is_gap_direct: output.is_gap_direct
+   analysis.max_force: analysis.max_force
+   analysis.percent_delta_volume: analysis.delta_volume_percent
+   analysis.warnings: analysis.warnings
+   calculations.-1.output.ionic_steps.-1.forces: output.forces
+   calculations.-1.output.ionic_steps.-1.stress: output.stress
+   chemsys: chemsys
+   completed_at: completed_at
+   custodian: custodian
+   density: output.density
+   dir_name_full: dir_name
+   elements: elements
+   fw_id: _mpworks_meta.fw_id
+   hubbards: input.hubbards
+   input.crystal: input.structure
+   input.is_lasph: input.is_lasph
+   input.potcar_spec: input.potcar_spec
+   input.xc_override: input.xc_override
+   is_compatible: _mpworks_meta.is_compatible
+   is_hubbard: input.is_hubbard
+   last_updated: last_updated
+   nelements: nelements
+   nsites: nsites
+   output.crystal: output.structure
+   output.final_energy: output.energy
+   output.final_energy_per_atom: output.energy_per_atom
+   pretty_formula: formula_pretty
+   pseudo_potential: input.pseudo_potential
+   reduced_cell_formula: composition_reduced
+   run_stats: run_stats
+   run_tags: tags
+   run_type: _mpworks_meta.run_type
+   schema_version: _mpworks_meta.schema_version
+   snl: _mpworks_meta.snl
+   spacegroup: output.spacegroup
+   state: state
+   task_id: task_id
+   unit_cell_formula: composition_unit_cell
+
+# For conversion of task labels
+task_label_conversions:
+   Calculate deformed structure static optimize: elastic deformation
+   Vasp force convergence optimize structure (2x): structure optimization
+   Optimize deformed structure: elastic deformation
+
+# Unconverted keys in mpworks, just for documentation
+orphan_mpworks_keys:
+  - vaspinputset_name # Don't need
+  - task_type # need to convert manually to match atomate schema
+  - calculations # need to reverse these, so handle manually
+  - name # getting rid of this, it appears to just be "aflow"
+  - dir_name # encompassed by dir_name_full
+  - anonymous_formula # convert manually b/c doesn't really work the same
+  - deformation_matrix # need to handle these manually as well
+
+# Unconverted keys in atomate, just for documentation
+orphan_atomate_keys:
+  - input.parameters # Not clear what to do with this

@@ -20,3 +20,10 @@ notifications:
       - montoyjh@lbl.gov
     on_success: change
     on_failure: always
+deploy:
+  provider: pypi
+  username: dwinston
+  password:
+    secure: NzAv0Icu+7M1V+sTqOygCVu9jdk+KNr7s0wo/2nwEpwONTlpVLBYR2lZzNDaQUhfZ37j5I11lN4V1k+O42uSE4m8iu4BevZ8JVqB7WJQXSl/KeFZOfwJYopbgXtPk6Y6NGcqnnFOzS2XNs7XLvY9jmM1DEFXQJlJcgFM05BjdCYU2rhLO8KEsh8g8KJHpgxLBlAT6rtPI1UgERcYCme45cP7qsQFV8Sl8TPCa61Vaw1yLJM83exRCYzMRF/dVNzegrzdC1OLgGIJ8CgcK12SDNSoM09NrgqlzUYWRCimUWun/L/JFHlDrKBazMoa1bFQO0nbn5hADn3sYKfMwspcegQIUgURnwzOBgvrJa7nQiJxYJvcVRxXZWB2LfL4QvoJop2Qo3AMXJi8a80Q5IlSSJk6Ik1KntqHnsKIESox5qirLmwXSGntMFIOwcaR+heJxn9p+K+I653sye5Hb0YfXSmTsFTZuW9FiNxYxmTBCFokJl4JaohdkF/SOEYJK65afGyG3H5LLaYjLPzsfkLiuNAJMS0MllvJM7ZXk9OlMsoOrMY7Dii5Fx+btkSb/rxRHNTfNy7nPJpa7cG0WOBwolAWIExwC/OxF2ebbI/OG+08llZgJGcZotn2yBmZI5kElExiSWU4acd1ZmM7uoXNgjf2Hinx4uZeSImgWMfGfho=
+  on:
+    tags: true

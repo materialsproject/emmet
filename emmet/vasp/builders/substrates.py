@@ -18,7 +18,8 @@ default_substrate_settings = os.path.join(
 
 class SubstrateBuilder(Builder):
 
-    def __init__(self, materials, substrates, elasticity=None, substrate_settings=None, query={}, **kwargs):
+    def __init__(self, materials, substrates, elasticity=None, substrate_settings=None,
+                 query=None, **kwargs):
         """
         Calculates matching substrates for 
 
@@ -34,7 +35,7 @@ class SubstrateBuilder(Builder):
         self.substrates = substrates
         self.elasticity = elasticity
         self.substrate_settings = substrate_settings
-        self.query = query
+        self.query = query if query else {}
         self.__settings = load_settings(
             self.substrate_settings, default_substrate_settings)
 

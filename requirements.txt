@@ -1,8 +1,10 @@
-FireWorks==1.5.3
-atomate==0.6.5
-pymatgen==2017.12.15
-monty==1.0.1
+matminer==0.2.3
+FireWorks>=1.5.3
+atomate>=0.6.5
+pymatgen>=2017.9.23
+monty>=1.0.1
 pydash==4.1.0
 unittest2==1.1.0
 coverage==4.4.1
+tqdm>=4.19.5
 -e git://github.com/materialsproject/maggma#egg=maggma

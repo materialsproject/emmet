@@ -16,7 +16,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 class ThermoBuilder(Builder):
 
-    def __init__(self, materials, thermo, query={}, compatibility=MaterialsProjectCompatibility("Advanced"), **kwargs):
+    def __init__(self, materials, thermo, query=None, compatibility=MaterialsProjectCompatibility("Advanced"), **kwargs):
         """
         Calculates thermodynamic quantities for materials from phase diagram constructions
 
@@ -29,7 +29,7 @@ class ThermoBuilder(Builder):
 
         self.materials = materials
         self.thermo = thermo
-        self.query = query
+        self.query = query if query else {}
         self.compatibility = compatibility
         self.completed_tasks = set()
         super().__init__(sources=[materials],
