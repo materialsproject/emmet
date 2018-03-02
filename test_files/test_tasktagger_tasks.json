@@ -3,7 +3,7 @@
     "task_id": 1,
     "state": "successful",
     "true_task_type": "GGA Structure Optimization",
-    "input": {
+    "orig_inputs": {
       "incar": {
         "ALGO": "Fast",
         "EDIFF": 0.0001,
@@ -31,7 +31,7 @@
     "task_id": 2,
     "state": "successful",
     "true_task_type": "GGA Static",
-    "input": {
+    "orig_inputs": {
       "incar": {
         "ALGO": "Normal",
         "EDIFF": 0.0001,
@@ -62,7 +62,7 @@
     "task_id": 3,
     "state": "successful",
     "true_task_type": "HSE Structure Optimization",
-    "input": {
+    "orig_inputs": {
       "incar": {
         "ALGO": "All",
         "EDIFF": 0.0001,
@@ -93,7 +93,7 @@
     "task_id": 4,
     "state": "successful",
     "true_task_type": "HSE Static",
-    "input": {
+    "orig_inputs": {
       "incar": {
         "ALGO": "All",
         "EDIFF": 0.0001,
@@ -127,7 +127,7 @@
     "task_id": 5,
     "state": "successful",
     "true_task_type": "GGA Static Dielectric",
-    "input": {
+    "orig_inputs": {
       "incar": {
         "ALGO": "Normal",
         "EDIFF": 0.0001,
@@ -158,7 +158,7 @@
     "task_id": 6,
     "state": "successful",
     "true_task_type": "GGA NSCF Line",
-    "input": {
+    "orig_inputs": {
       "incar": {
         "ALGO": "Fast",
         "EDIFF": 0.0001,
@@ -187,7 +187,7 @@
     "task_id": 7,
     "state": "successful",
     "true_task_type": "GGA NSCF Uniform",
-    "input": {
+    "orig_inputs": {
       "incar": {
         "ALGO": "Fast",
         "EDIFF": 0.0001,
