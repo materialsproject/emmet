@@ -1,3 +1,5 @@
+import numpy as np
+
 from pymatgen.core.structure import Structure
 import pymatgen.analysis
 from pymatgen.analysis.local_env import *
@@ -49,7 +51,7 @@ class SiteDescriptorsBuilder(Builder):
             k = 'cn_wt_{}'.format(t)
             self.sds[k] = CoordinationNumber(nn_(), use_weights=True)
         self.sds['opsf'] = OPSiteFingerprint()
-        self.sds['csf'] = CrystalSiteFingerprint.from_preset('ops')
+        #self.sds['csf'] = CrystalSiteFingerprint.from_preset('ops')
 
         super().__init__(sources=[materials],
                          targets=[site_descriptors],
@@ -71,18 +73,20 @@ class SiteDescriptorsBuilder(Builder):
         # were last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.site_descriptors))
-        mats = list(self.materials.distinct(self.materials.key, q))
+        task_ids = list(self.materials.distinct(self.materials.key, q))
         self.logger.info(
-            "Found {} new materials for site-descriptors data".format(len(mats)))
-        for m in mats:
-            yield self.materials.query(properties=[self.materials.key, "structure"], criteria={self.materials.key: m}).limit(1)[0]
+            "Found {} new materials for site-descriptors data".format(len(task_ids)))
+        for task_id in task_ids:
+            yield self.materials.query(
+                    properties=[self.materials.key, "structure"],
+                    criteria={self.materials.key: task_id}).limit(1)[0]
 
     def process_item(self, item):
         """
         Calculates site descriptors for the structures
 
         Args:
-            item (dict): a dict with a material_id and a structure
+            item (dict): a dict with a task_id and a structure
 
         Returns:
             dict: a site-descriptors dict
@@ -125,9 +129,13 @@ class SiteDescriptorsBuilder(Builder):
         for k, sd in self.sds.items():
             try:
                 d = {}
+                l = sd.feature_labels()
                 for i, s in enumerate(structure.sites):
-                    d[i] = sd.featurize(structure, i)
+                    d[i] = {}
+                    for j, desc in enumerate(sd.featurize(structure, i)):
+                        d[i][l[j]] = desc
                 doc[k] = d
+
             except Exception as e:
                 self.logger.error("Failed calculating {} site-descriptors: "
                                   "{}".format(k, e))
@@ -140,17 +148,19 @@ class SiteDescriptorsBuilder(Builder):
         # Compute site-descriptor statistics.
         try:
             n_site = len(list(site_descr['opsf'].keys()))
-            # Transpose matrix to make the type of site-descriptor 1st dimension
-            # and site index 2nd.
-            site_descr_transposed = list(map(list, zip(*[site_descr['opsf'][i] \
-                    for i in range(n_site)])))
+            tmp = {}
+            for isite in range(n_site):
+                for l, v in site_descr['opsf'][isite].items():
+                    if l not in list(tmp.keys()):
+                        tmp[l] = []
+                    tmp[l].append(v)
             d = {}
-            for idescr, site_list in enumerate(site_descr_transposed):
-                d[idescr] = {}
-                d[idescr]['min'] = min(site_list)
-                d[idescr]['max'] = max(site_list)
-                d[idescr]['mean'] = np.mean(site_list)
-                d[idescr]['std'] = np.std(site_list)
+            for k, l in tmp.items():
+                d[k] = {}
+                d[k]['min'] = min(tmp[k])
+                d[k]['max'] = max(tmp[k])
+                d[k]['mean'] = np.mean(tmp[k])
+                d[k]['std'] = np.std(tmp[k])
             doc = d
 
         except Exception as e:
