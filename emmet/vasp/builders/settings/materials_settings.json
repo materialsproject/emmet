@@ -105,7 +105,9 @@
         "quality_score": {
             "GGA NSCF Line": 3,
             "GGA+U NSCF Line": 7
-        }
+        },
+        "track": true,
+        "optional": true
     },
     {
         "tasks_key": "calcs_reversed.0.bandstructure_fs_id",
@@ -114,6 +116,7 @@
             "GGA NSCF Line": 3,
             "GGA+U NSCF Line": 7
         },
+        "track": true,
         "optional": true
     },
     {
@@ -132,6 +135,7 @@
             "GGA NSCF Uniform": 4,
             "GGA+U NSCF Uniform": 8
         },
+        "track": true,
         "optional": true
     },
     {
@@ -141,6 +145,7 @@
             "GGA NSCF Uniform": 4,
             "GGA+U NSCF Uniform": 8
         },
+        "track": true,
         "optional": true
     },
     {
@@ -159,6 +164,7 @@
             "GGA NSCF Uniform": 4,
             "GGA+U NSCF Uniform": 8
         },
+        "track": true,
         "optional": true
     },
     {
@@ -168,6 +174,7 @@
             "GGA NSCF Uniform": 4,
             "GGA+U NSCF Uniform": 8
         },
+        "track": true,
         "optional": true
     },
     {

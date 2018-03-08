@@ -1,57 +1,64 @@
 import unittest
-from itertools import chain
-from pydash.objects import get
-from maggma.stores import MongoStore
-from maggma.runner import Runner
-from emmet.vasp.builders.task_tagger import task_type
-from emmet.vasp.builders.tests.test_builders import BuilderTest
-from emmet.vasp.builders.ml_structures import MLStructuresBuilder
+from pymatgen.core.structure import Structure
+from pymatgen.core.lattice import Lattice
 
+
+from maggma.stores import MongoStore
+from emmet.vasp.builders.ml_structures import MLStructuresBuilder
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
 
 
-class TestMaterials(BuilderTest):
+class TestML(unittest.TestCase):
 
     def setUp(self):
-        self.ml_strucs = MongoStore("emmet_test", "ml_strucs",key="entry_id")
-        self.ml_strucs.connect()
+        tasks = MongoStore("emmet_test", "tasks")
+        ml_strucs = MongoStore("emmet_test", "ml_strucs")
 
-        self.ml_strucs.collection.drop()
-        self.mlbuilder = MLStructuresBuilder(self.tasks, self.ml_strucs, task_types = ("Structure Optimization","Static"))
-
-
-    def test_get_items(self):
-        to_process = list(self.mlbuilder.get_items())
-        to_process_forms = {task["formula_pretty"] for task in to_process}
-
-        self.assertEqual(len(to_process), 197)
-        self.assertEqual(len(to_process_forms), 12)
-        self.assertTrue("Sr" in to_process_forms)
-        self.assertTrue("Hf" in to_process_forms)
-        self.assertTrue("O2" in to_process_forms)
-        self.assertFalse("H" in to_process_forms)
+        self.builder = MLStructuresBuilder(tasks, ml_strucs)
 
     def test_process_item(self):
-        for task in self.tasks.query():
-            ml_strucs = self.mlbuilder.process_item(task)
-            t_type = task_type(get(task, 'input.incar'))
-            if not any([t in t_type for t in self.mlbuilder.task_types]):
-                self.assertEqual(len(ml_strucs),0)
-            else:
-                self.assertEqual(len(ml_strucs), sum([len(t["output"]["ionic_steps"]) for t in task["calcs_reversed"]]))
 
+        dummy_task = {
+            "task_id": 1,
+            "state": "successful",
+            "orig_inputs": {
+                "incar": {
+                    "IBRION": 2,
+                    "ISIF": 3,
+                    "NSW": 99
+                }
+            },
+            "calcs_reversed": [{
+                "output": {
+                    "ionic_steps": []
+                }
+            }]
+        }
 
-    def test_update_targets(self):
-        for task in self.tasks.query():
-            ml_strucs = self.mlbuilder.process_item(task)
-            self.mlbuilder.update_targets([ml_strucs])
-        self.assertEqual(len(self.ml_strucs.distinct("task_id")), 102)
-        self.assertEqual(len(list(self.ml_strucs.query())), 1012)
+        coords = list()
+        coords.append([0, 0, 0])
+        coords.append([0.75, 0.5, 0.75])
+        lattice = Lattice([[3.8401979337, 0.00, 0.00], [1.9200989668, 3.3257101909, 0.00],
+                           [0.00, -2.2171384943, 3.1355090603]])
+        structure1 = Structure(lattice, ["Si", "Si"], coords)
+        coords[1][0] = 0.0
+        structure2 = Structure(lattice, ["Si", "Si"], coords)
 
-    def tearDown(self):
-        self.ml_strucs.collection.drop()
+        dummy_task["calcs_reversed"][0]["input"] = {"incar": {
+            "IBRION": 2,
+            "ISIF": 3,
+            "NSW": 99}}
+
+        ionic_steps = dummy_task["calcs_reversed"][0]["output"]["ionic_steps"]
+        ionic_steps.append({"structure": structure1.as_dict()})
+        ionic_steps.append({"structure": structure1.as_dict()})
+
+        ml_strucs = self.builder.process_item(dummy_task)
+
+        self.assertEqual(len(ml_strucs), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

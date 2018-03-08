@@ -6,6 +6,7 @@ __email__ = "shyamd@lbl.gov"
 
 
 class TaskTagger(Builder):
+
     def __init__(self, tasks, task_types, **kwargs):
         """
         Creates task_types from tasks and type definitions
@@ -35,18 +36,16 @@ class TaskTagger(Builder):
 
         self.logger.info("Yielding task documents")
         for task_id in to_process:
-            yield self.tasks.query_one(
-                criteria={"task_id": task_id},
-                properties=["task_id", "input.incar"])
+            yield self.tasks.query_one(criteria={"task_id": task_id}, properties=["task_id", "orig_inputs"])
 
     def process_item(self, item):
         """
-        Find the task_type for the item 
+        Find the task_type for the item
 
         Args:
             item (dict): a (projection of a) task doc
         """
-        tt = task_type(item['input']['incar'])
+        tt = task_type(item["orig_inputs"])
         return {"task_id": item["task_id"], "task_type": tt}
 
     def update_targets(self, items):
@@ -56,41 +55,42 @@ class TaskTagger(Builder):
         Args:
             items ([dict]): task_type dicts to insert into task_types collection
         """
-        with_task_type, without_task_type = py_.partition(
-            items, lambda i: i["task_type"])
+        with_task_type, without_task_type = py_.partition(items, lambda i: i["task_type"])
         if without_task_type:
-            self.logger.error(
-                "No task type found for {}".format(without_task_type))
-        self.task_types.update(with_task_type)
+            self.logger.error("No task type found for {}".format(without_task_type))
+        if len(with_task_type) > 0:
+            self.task_types.update(with_task_type)
 
 
-def task_type(incar, include_calc_type=True):
+def task_type(inputs, include_calc_type=True):
     """
     Determines the task_type
 
     Args:
-        incar (dict): incar to determine task_type from
+        inputs (dict): inputs dict with an incar, kpoints, potcar, and poscar dictionaries
         include_calc_type (bool): whether to include calculation type
             in task_type such as HSE, GGA, SCAN, etc.
     """
 
     calc_type = ""
 
+    incar = inputs.get("incar", {})
+
     if include_calc_type:
         if incar.get("LHFCALC", False):
             calc_type += "HSE "
-        elif incar.get("METAGGA", "") == "SCAN": 
+        elif incar.get("METAGGA", "") == "SCAN":
             calc_type += "SCAN "
-        elif incar.get("LDAU",False):
+        elif incar.get("LDAU", False):
             calc_type += "GGA+U "
         else:
             calc_type += "GGA "
 
     if incar.get("ICHARG", 0) > 10:
-        if incar.get("NEDOS", 0) > 301:
-            return calc_type + "NSCF Uniform"
-        else:
+        if len(list(filter(None, inputs.get("kpoints", {}).get("labels", [])))) > 0:
             return calc_type + "NSCF Line"
+        else:
+            return calc_type + "NSCF Uniform"
 
     if incar.get("LEPSILON", False):
         return calc_type + "Static Dielectric"

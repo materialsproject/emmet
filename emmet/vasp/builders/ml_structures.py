@@ -11,9 +11,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 class MLStructuresBuilder(Builder):
 
-    def __init__(self, tasks, ml_strucs,
-                 task_types=("Structure Optimization","Static"),
-                 query=None, **kwargs):
+    def __init__(self, tasks, ml_strucs, task_types= ("Structure Optimization",),query=None, **kwargs):
         """
         Creates a collection of structures, energies, forces, and stresses for machine learning efforts
 
@@ -26,7 +24,7 @@ class MLStructuresBuilder(Builder):
         self.tasks = tasks
         self.ml_strucs = ml_strucs
         self.task_types = task_types
-        self.query = query if query else {}
+        self.query = query if query else None
         super().__init__(sources=[tasks],
                          targets=[ml_strucs],
                          **kwargs)
@@ -56,7 +54,7 @@ class MLStructuresBuilder(Builder):
             "Found {} tasks to extract information from".format(len(to_process_tasks)))
 
         for t_id in to_process_tasks:
-            task = self.tasks.query_one(criteria={"task_id": t_id})
+            task = self.tasks.query_one(properties=["task_id","orig_inputs","calcs_reversed"],criteria={"task_id": t_id})
             yield task
 
     def process_item(self, task):
@@ -70,7 +68,7 @@ class MLStructuresBuilder(Builder):
             list of C
         """
 
-        t_type = task_type(get(task, 'input.incar'))
+        t_type = task_type(get(task, 'orig_inputs'))
         entries = []
 
         if not any([t in t_type for t in self.task_types]):
@@ -107,7 +105,7 @@ class MLStructuresBuilder(Builder):
                 d = c.as_dict()
                 d["chemsys"] = '-'.join(
                     sorted(set([e.symbol for e in struc.composition.elements])))
-                d["task_type"] = task_type(get(calc, 'input.incar'))
+                d["task_type"] = task_type(get(calc, 'input'))
                 d["calc_name"] = get(calc, "task.name")
                 d["task_id"] = task[self.tasks.key]
 
