@@ -9,8 +9,7 @@ __author__ = "Joseph Montoya"
 __email__ = "montoyjh@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-test_tasks = os.path.join(module_dir, "..", "..", "..", "..",
-                          "test_files", "mpworks_tasks.json")
+test_tasks = os.path.join(module_dir, "..", "..", "..", "..", "test_files", "mpworks_tasks.json")
 
 
 class MPWorksCompatibilityBuilderTest(unittest.TestCase):
@@ -22,9 +21,7 @@ class MPWorksCompatibilityBuilderTest(unittest.TestCase):
         self.elasticity.connect()
 
     def test_builder(self):
-        mpw_builder = MPWorksCompatibilityBuilder(self.test_tasks,
-                                                  self.elasticity,
-                                                  incremental=False)
+        mpw_builder = MPWorksCompatibilityBuilder(self.test_tasks, self.elasticity, incremental=False)
         items = mpw_builder.get_items()
         processed = [mpw_builder.process_item(item) for item in items]
         mpw_builder.update_targets(processed)
@@ -37,12 +34,10 @@ class MPWorksCompatibilityBuilderTest(unittest.TestCase):
         self.assertEqual(test_dict["new"]["value"], 5)
 
     def test_convert_mpworks_to_atomate(self):
-        doc = self.test_tasks.collection.find_one(
-            {"task_type": {"$regex": "deformed"}})
+        doc = self.test_tasks.collection.find_one({"task_type": {"$regex": "deformed"}})
         new_doc = convert_mpworks_to_atomate(doc)
         self.assertTrue('hubbards' in new_doc['input'])
-        doc = self.test_tasks.collection.find_one(
-            {"task_type": {"$regex": "(2x)"}})
+        doc = self.test_tasks.collection.find_one({"task_type": {"$regex": "(2x)"}})
         new_doc = convert_mpworks_to_atomate(doc)
         self.assertTrue('hubbards' in new_doc['input'])
 

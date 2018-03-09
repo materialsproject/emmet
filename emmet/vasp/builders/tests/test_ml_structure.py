@@ -2,7 +2,6 @@ import unittest
 from pymatgen.core.structure import Structure
 from pymatgen.core.lattice import Lattice
 
-
 from maggma.stores import MongoStore
 from emmet.vasp.builders.ml_structures import MLStructuresBuilder
 
@@ -11,7 +10,6 @@ __email__ = "shyamd@lbl.gov"
 
 
 class TestML(unittest.TestCase):
-
     def setUp(self):
         tasks = MongoStore("emmet_test", "tasks")
         ml_strucs = MongoStore("emmet_test", "ml_strucs")
@@ -46,10 +44,7 @@ class TestML(unittest.TestCase):
         coords[1][0] = 0.0
         structure2 = Structure(lattice, ["Si", "Si"], coords)
 
-        dummy_task["calcs_reversed"][0]["input"] = {"incar": {
-            "IBRION": 2,
-            "ISIF": 3,
-            "NSW": 99}}
+        dummy_task["calcs_reversed"][0]["input"] = {"incar": {"IBRION": 2, "ISIF": 3, "NSW": 99}}
 
         ionic_steps = dummy_task["calcs_reversed"][0]["output"]["ionic_steps"]
         ionic_steps.append({"structure": structure1.as_dict()})

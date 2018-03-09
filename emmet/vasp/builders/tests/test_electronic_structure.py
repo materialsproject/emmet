@@ -10,7 +10,6 @@ __email__ = "shyamd@lbl.gov"
 
 
 class TestElectronicStructureImageBuilder(unittest.TestCase):
-
     def setUp(self):
 
         coords = list()
@@ -28,8 +27,7 @@ class TestElectronicStructureImageBuilder(unittest.TestCase):
     def test_get_bandstructure(self):
 
         self.builder.bfs = MagicMock()
-        mat = {"bandstructure": {"bs_oid": "234234",
-                                 "bs_compression": "zlib"}}
+        mat = {"bandstructure": {"bs_oid": "234234", "bs_compression": "zlib"}}
 
         with patch("emmet.vasp.builders.electronic_structure_img.json") as json_patch:
             with patch("emmet.vasp.builders.electronic_structure_img.zlib") as zlib_patch:
@@ -42,8 +40,7 @@ class TestElectronicStructureImageBuilder(unittest.TestCase):
     def test_get_dos(self):
 
         self.builder.dfs = MagicMock()
-        mat = {"bandstructure": {"dos_oid": "234234",
-                                 "dos_compression": "zlib"}}
+        mat = {"bandstructure": {"dos_oid": "234234", "dos_compression": "zlib"}}
 
         with patch("emmet.vasp.builders.electronic_structure_img.json") as json_patch:
             with patch("emmet.vasp.builders.electronic_structure_img.zlib") as zlib_patch:

@@ -11,8 +11,8 @@ __author__ = "Joseph Montoya"
 __email__ = "montoyjh@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-test_tasks = os.path.join(module_dir, "..","..","..", "..", "test_files",
-                          "vasp", "elastic_tasks.json")
+test_tasks = os.path.join(module_dir, "..", "..", "..", "..", "test_files", "vasp", "elastic_tasks.json")
+
 
 class ElasticBuilderTest(unittest.TestCase):
     @classmethod
@@ -27,24 +27,26 @@ class ElasticBuilderTest(unittest.TestCase):
         # Generate test materials collection
         cls.test_materials = MongoStore("test_emmet", "materials")
         cls.test_materials.connect()
-        opt_docs = cls.test_tasks.query(["output.structure", "formula_pretty"],
-                                        {"task_label": "structure optimization"})
-        mat_docs = [{"material_id": "mp-{}".format(n),
-                     "structure": opt_doc['output']['structure'],
-                     "pretty_formula": opt_doc['formula_pretty']}
-                    for n, opt_doc in enumerate(opt_docs)]
+        opt_docs = cls.test_tasks.query(["output.structure", "formula_pretty"], {
+            "task_label": "structure optimization"
+        })
+        mat_docs = [{
+            "material_id": "mp-{}".format(n),
+            "structure": opt_doc['output']['structure'],
+            "pretty_formula": opt_doc['formula_pretty']
+        } for n, opt_doc in enumerate(opt_docs)]
         cls.test_materials.update(mat_docs, key='material_id', update_lu=False)
 
     def test_builder(self):
-        ec_builder = ElasticBuilder(self.test_tasks, self.test_elasticity,
-                                    self.test_materials, incremental=False)
+        ec_builder = ElasticBuilder(self.test_tasks, self.test_elasticity, self.test_materials, incremental=False)
         ec_builder.connect()
         for t in ec_builder.get_items():
             processed = ec_builder.process_item(t)
             if processed:
                 pass
             else:
-                import nose; nose.tools.set_trace()
+                import nose
+                nose.tools.set_trace()
         runner = Runner([ec_builder])
         runner.run()
 
