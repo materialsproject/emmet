@@ -1,72 +1,84 @@
+import os
 import unittest
-from itertools import chain
-from maggma.stores import MongoStore
+from maggma.stores import JSONStore, MemoryStore
 from maggma.runner import Runner
-from emmet.vasp.builders.tests.test_builders import BuilderTest
 from emmet.vasp.builders.materials import MaterialsBuilder
-from emmet.vasp.builders.thermo import ThermoBuilder
+from emmet.vasp.builders.thermo import ThermoBuilder, chemsys_permutations
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
 
-class TestThermo(BuilderTest):
+module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+test_mats = os.path.join(module_dir, "..", "..", "..", "..", "test_files", "thermo_test.json")
 
+
+class TestThermo(unittest.TestCase):
     def setUp(self):
-
-        self.materials = MongoStore("emmet_test", "materials")
-        self.thermo = MongoStore("emmet_test", "thermo")
-
+        self.materials = JSONStore(test_mats)
         self.materials.connect()
+        self.thermo = MemoryStore("thermo")
         self.thermo.connect()
 
-        self.mbuilder = MaterialsBuilder(
-            self.tasks, self.materials, mat_prefix="", chunk_size=1)
-        self.tbuilder = ThermoBuilder(
-            self.materials, self.thermo, chunk_size=1)
-        runner = Runner([self.mbuilder])
-        runner.run()
-
     def test_get_entries(self):
-        self.assertEqual(len(self.tbuilder.get_entries("Sr")), 7)
-        self.assertEqual(len(self.tbuilder.get_entries("Hf")), 4)
-        self.assertEqual(len(self.tbuilder.get_entries("O")), 6)
-        self.assertEqual(len(self.tbuilder.get_entries("Hf-O-Sr")), 44)
-        self.assertEqual(len(self.tbuilder.get_entries("Sr-Hf")), 11)
 
-    def test_get_items(self):
-        self.thermo.collection.drop()
-        comp_systems = list(self.tbuilder.get_items())
-        self.assertEqual(len(comp_systems), 1)
-        self.assertEqual(len(comp_systems[0]), 44)
+        tbuilder = ThermoBuilder(self.materials, self.thermo)
+        self.assertEqual(len(tbuilder.get_entries("Sr")), 7)
+        self.assertEqual(len(tbuilder.get_entries("Hf")), 4)
+        self.assertEqual(len(tbuilder.get_entries("O")), 6)
+        self.assertEqual(len(tbuilder.get_entries("Hf-O-Sr")), 44)
+        self.assertEqual(len(tbuilder.get_entries("Sr-Hf")), 11)
 
-    def test_process_item(self):
+    def test_chemsys_permutations(self):
+        self.assertEqual(len(chemsys_permutations("Sr")), 1)
+        self.assertEqual(len(chemsys_permutations("Sr-Hf")), 3)
+        self.assertEqual(len(chemsys_permutations("Sr-Hf-O")), 7)
 
-        tbuilder = ThermoBuilder(self.materials, self.thermo, query={
-                                 "elements": ["Sr"]}, chunk_size=1)
-        entries = list(tbuilder.get_items())[0]
-        self.assertEqual(len(entries), 7)
+    def test_process_items(self):
+        tbuilder = ThermoBuilder(self.materials, self.thermo)
 
-        t_docs = self.tbuilder.process_item(entries)
+        # Ensure only one doc gets a 0 e_above_hull
+        entries = tbuilder.get_entries("Sr")
+        t_docs = tbuilder.process_item(entries)
         e_above_hulls = [t['thermo']['e_above_hull'] for t in t_docs]
-        sorted_t_docs = list(
-            sorted(t_docs, key=lambda x: x['thermo']['e_above_hull']))
-        self.assertEqual(sorted_t_docs[0]["task_id"], "mp-76")
+        self.assertEqual(len([e for e in e_above_hulls if e == 0.0]), 1)
+
+        entries = tbuilder.get_entries("Hf")
+        t_docs = tbuilder.process_item(entries)
+        e_above_hulls = [t['thermo']['e_above_hull'] for t in t_docs]
+        self.assertEqual(len([e for e in e_above_hulls if e == 0.0]), 1)
+
+        entries = tbuilder.get_entries("O")
+        t_docs = tbuilder.process_item(entries)
+        e_above_hulls = [t['thermo']['e_above_hull'] for t in t_docs]
+        self.assertEqual(len([e for e in e_above_hulls if e == 0.0]), 1)
+
+        # Ensure 4 docs iwth 0 e_above hull for convex hull for Sr-O
+        entries = tbuilder.get_entries("Sr-O")
+        t_docs = tbuilder.process_item(entries)
+        e_above_hulls = [t['thermo']['e_above_hull'] for t in t_docs]
+        self.assertEqual(len([e for e in e_above_hulls if e == 0.0]), 4)
+
+        # Ensure 4 docs iwth 0 e_above hull for convex hull Hf-O
+        entries = tbuilder.get_entries("Hf-O")
+        t_docs = tbuilder.process_item(entries)
+        e_above_hulls = [t['thermo']['e_above_hull'] for t in t_docs]
+        self.assertEqual(len([e for e in e_above_hulls if e == 0.0]), 3)
+
+        # Ensure 4 docs iwth 0 e_above hull for convex hull
+        entries = tbuilder.get_entries("Sr-Hf-O")
+        t_docs = tbuilder.process_item(entries)
+        e_above_hulls = [t['thermo']['e_above_hull'] for t in t_docs]
+        self.assertEqual(len(e_above_hulls), 44)
+        self.assertEqual(len([e for e in e_above_hulls if e == 0.0]), 7)
 
     def test_update_targets(self):
-        self.thermo.collection.drop()
+        items = [[{"task_id": 1}] * 3, [{"task_id": 2}] * 4, [{"task_id": 3}] * 4]
+        tbuilder = ThermoBuilder(self.materials, self.thermo)
+        tbuilder.update_targets(items)
 
-        tbuilder = ThermoBuilder(self.materials, self.thermo, query={
-                                 "elements": ["Sr"]}, chunk_size=1)
-        entries = list(tbuilder.get_items())[0]
-        self.assertEqual(len(entries), 7)
+        self.assertEqual(len(self.thermo.distinct("task_id")), 3)
+        self.assertEqual(tbuilder.completed_tasks, {1, 2, 3})
 
-        t_docs = self.tbuilder.process_item(entries)
-        self.tbuilder.update_targets([t_docs])
-        self.assertEqual(len(list(self.thermo.query())), len(t_docs))
-
-    def tearDown(self):
-        self.materials.collection.drop()
-        self.thermo.collection.drop()
 
 if __name__ == "__main__":
     unittest.main()
