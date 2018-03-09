@@ -21,8 +21,8 @@ if __name__ == "__main__":
         zip_safe=False,
         # TODO: finalize requirements
         install_requires=[
-            'atomate', 'FireWorks>=1.4.0', 'pymatgen>=2017.7.4', 'pymatgen-db>=0.5.1',
-            'maggma', 'monty>=0.9.5', 'six', 'pydash', 'tqdm>=4.19.5', 'matminer>=0.2.3',
+            'atomate', 'pymatgen>=2018.3.2','maggma','monty>=0.9.5',
+            'six', 'pydash', 'tqdm>=4.19.5', 'matminer>=0.2.6',
             'prettyplotlib=0.1.7'
         ],
         classifiers=["Programming Language :: Python :: 3",

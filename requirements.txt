@@ -1,11 +1,10 @@
-matminer==0.2.3
-FireWorks>=1.5.3
+matminer>=0.2.6
 atomate>=0.6.5
-pymatgen>=2017.9.23
+pymatgen>=2018.3.2
 monty>=1.0.1
 pydash==4.1.0
 unittest2==1.1.0
 coverage==4.4.1
 tqdm>=4.19.5
-prettyplotlib=0.1.7
+prettyplotlib==0.1.7
 -e git://github.com/materialsproject/maggma#egg=maggma
