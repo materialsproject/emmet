@@ -23,7 +23,7 @@ if __name__ == "__main__":
         install_requires=[
             'atomate', 'pymatgen>=2018.3.2','maggma','monty>=0.9.5',
             'six', 'pydash', 'tqdm>=4.19.5', 'matminer>=0.2.6',
-            'prettyplotlib=0.1.7'
+            'prettyplotlib==0.1.7'
         ],
         classifiers=["Programming Language :: Python :: 3",
                      "Programming Language :: Python :: 3.6",
