@@ -9,7 +9,7 @@ module_dir = os.path.dirname(os.path.abspath(__file__))
 if __name__ == "__main__":
     setup(
         name='emmet',
-        version='0.1',
+        version='2018.3.9',
         description='Emmet is a builder framework for the Materials Project',
         long_description=open(os.path.join(module_dir, 'README.md'),encoding='utf-8').read(),
         url='https://github.com/materialsproject/emmet',
@@ -19,11 +19,10 @@ if __name__ == "__main__":
         packages=find_packages(),
         package_data={},
         zip_safe=False,
-        # TODO: finalize requirements
         install_requires=[
-            'atomate', 'pymatgen>=2018.3.2','maggma','monty>=0.9.5',
-            'six', 'pydash', 'tqdm>=4.19.5', 'matminer>=0.2.6',
-            'prettyplotlib=0.1.7'
+            'atomate', 'pymatgen>=2018.3.2','maggma','monty',
+            'six', 'pydash', 'tqdm', 'matminer',
+            'prettyplotlib', "pybtex"
         ],
         classifiers=["Programming Language :: Python :: 3",
                      "Programming Language :: Python :: 3.6",

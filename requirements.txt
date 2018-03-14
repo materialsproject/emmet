@@ -1,4 +1,3 @@
-matminer>=0.2.6
 atomate>=0.6.5
 pymatgen>=2018.3.2
 monty>=1.0.1
@@ -7,4 +6,6 @@ unittest2==1.1.0
 coverage==4.4.1
 tqdm>=4.19.5
 prettyplotlib==0.1.7
+pybtex==0.21
+-e https://github.com/hackingmaterials/matminer#egg=matminer
 -e git://github.com/materialsproject/maggma#egg=maggma
