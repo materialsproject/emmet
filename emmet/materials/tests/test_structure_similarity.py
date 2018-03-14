@@ -28,16 +28,22 @@ class StructureSimilarityBuilderTest(unittest.TestCase):
         sim_builder = StructureSimilarityBuilder(self.test_site_descriptors, test_structure_similarity)
 
         items = list(sim_builder.get_items())
-        self.assertEqual(len(items),3)
+        self.assertEqual(len(items), 3)
         for i in items:
             d1 = i[0]
             d2 = i[1]
-            self.assertIn("opsf_statistics",d1)
-            self.assertIn("opsf_statistics",d2)
+            self.assertIn("opsf_statistics", d1)
+            self.assertIn("opsf_statistics", d2)
 
-            self.assertIn("task_id",d1)
-            self.assertIn("task_id",d2)
+            self.assertIn("task_id", d1)
+            self.assertIn("task_id", d2)
 
+            processed = sim_builder.process_item(i)
+            if processed:
+                pass
+            else:
+                import nose
+                nose.tools.set_trace()
 
     def test_get_all_site_descriptors(self):
         sim_builder = StructureSimilarityBuilder(self.test_site_descriptors, None)
@@ -46,9 +52,9 @@ class StructureSimilarityBuilderTest(unittest.TestCase):
             self.assertAlmostEqual(d['cos'], 1)
             self.assertAlmostEqual(d['dist'], 0)
 
-        C = self.test_site_descriptors.query_one(criteria={"task_id":"mp-66"})
-        NaCl = self.test_site_descriptors.query_one(criteria={"task_id":"mp-22862"})
-        Fe = self.test_site_descriptors.query_one(criteria={"task_id":"mp-13"})
+        C = self.test_site_descriptors.query_one(criteria={"task_id": "mp-66"})
+        NaCl = self.test_site_descriptors.query_one(criteria={"task_id": "mp-22862"})
+        Fe = self.test_site_descriptors.query_one(criteria={"task_id": "mp-13"})
 
         d = sim_builder.get_similarities(C, NaCl)
         self.assertAlmostEqual(d['cos'], 0.0013649)
@@ -59,7 +65,6 @@ class StructureSimilarityBuilderTest(unittest.TestCase):
         d = sim_builder.get_similarities(NaCl, Fe)
         self.assertAlmostEqual(d['cos'], 0.0012729)
         self.assertAlmostEqual(d['dist'], 2.7235044)
-        
 
 
 if __name__ == "__main__":
