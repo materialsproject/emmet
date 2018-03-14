@@ -3,7 +3,7 @@ from pymatgen.core.structure import Structure
 from pymatgen.core.lattice import Lattice
 
 from maggma.stores import MongoStore
-from emmet.vasp.builders.ml_structures import MLStructuresBuilder
+from emmet.vasp.ml_structures import MLStructuresBuilder
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"

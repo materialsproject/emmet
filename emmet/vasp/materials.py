@@ -7,7 +7,7 @@ from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 
 from maggma.builder import Builder
-from emmet.vasp.builders.task_tagger import task_type
+from emmet.vasp.task_tagger import task_type
 from pydash.objects import get, set_, has
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"

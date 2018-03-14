@@ -2,14 +2,13 @@ import os
 import unittest
 from maggma.stores import JSONStore, MemoryStore
 from maggma.runner import Runner
-from emmet.vasp.builders.materials import MaterialsBuilder
-from emmet.vasp.builders.thermo import ThermoBuilder, chemsys_permutations
+from emmet.materials.thermo import ThermoBuilder, chemsys_permutations
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-test_mats = os.path.join(module_dir, "..", "..", "..", "..", "test_files", "thermo_test.json")
+test_mats = os.path.join(module_dir, "..", "..", "..", "test_files", "thermo_test.json")
 
 
 class TestThermo(unittest.TestCase):

@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from emmet.vasp.builders.mpworks import MPWorksCompatibilityBuilder, \
+from emmet.vasp.mpworks import MPWorksCompatibilityBuilder, \
         set_mongolike, convert_mpworks_to_atomate, update_mpworks_schema
 from maggma.stores import JSONStore, MemoryStore
 
@@ -9,7 +9,7 @@ __author__ = "Joseph Montoya"
 __email__ = "montoyjh@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-test_tasks = os.path.join(module_dir, "..", "..", "..", "..", "test_files", "mpworks_tasks.json")
+test_tasks = os.path.join(module_dir, "..", "..", "..", "test_files", "mpworks_tasks.json")
 
 
 class MPWorksCompatibilityBuilderTest(unittest.TestCase):
