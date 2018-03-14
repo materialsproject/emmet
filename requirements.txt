@@ -7,5 +7,5 @@ coverage==4.4.1
 tqdm>=4.19.5
 prettyplotlib==0.1.7
 pybtex==0.21
--e https://github.com/hackingmaterials/matminer#egg=matminer
+-e git://github.com/hackingmaterials/matminer#egg=matminer
 -e git://github.com/materialsproject/maggma#egg=maggma
