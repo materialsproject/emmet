@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from emmet.vasp.builders.structure_similarity import *
+from emmet.materials.structure_similarity import *
 from maggma.stores import MemoryStore, JSONStore
 
 from monty.serialization import loadfn
@@ -10,7 +10,7 @@ __author__ = "Nils E. R. Zimmermann"
 __email__ = "nerz@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-test_site_fp_stats = os.path.join(module_dir, "..", "..", "..", "..", "test_files", "site_fingerprint_stats.json")
+test_site_fp_stats = os.path.join(module_dir, "..", "..", "..", "test_files", "site_fingerprint_stats.json")
 
 
 class StructureSimilarityBuilderTest(unittest.TestCase):

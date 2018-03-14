@@ -11,7 +11,7 @@ from maggma.validator import StandardValidator
 
 from monty.json import jsanitize
 
-from emmet.vasp.builders.task_tagger import task_type
+from emmet.vasp.task_tagger import task_type
 
 __author__ = "Matthew Horton <mkhorton@lbl.gov>"
 

@@ -2,7 +2,7 @@ import unittest
 from maggma.stores import MongoStore
 from pymatgen.core.structure import Structure
 from pymatgen.core.lattice import Lattice
-from emmet.vasp.builders.materials import MaterialsBuilder
+from emmet.vasp.materials import MaterialsBuilder
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"

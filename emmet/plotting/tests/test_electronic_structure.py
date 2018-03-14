@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 from maggma.stores import MongoStore
 from pymatgen.core.structure import Structure
 from pymatgen.core.lattice import Lattice
-from emmet.vasp.builders.electronic_structure_img import ElectronicStructureImageBuilder
+from emmet.plotting.electronic_structure import ElectronicStructureImageBuilder
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
@@ -29,8 +29,8 @@ class TestElectronicStructureImageBuilder(unittest.TestCase):
         self.builder.bfs = MagicMock()
         mat = {"bandstructure": {"bs_oid": "234234", "bs_compression": "zlib"}}
 
-        with patch("emmet.vasp.builders.electronic_structure_img.json") as json_patch:
-            with patch("emmet.vasp.builders.electronic_structure_img.zlib") as zlib_patch:
+        with patch("emmet.plotting.electronic_structure.json") as json_patch:
+            with patch("emmet.plotting.electronic_structure.zlib") as zlib_patch:
                 self.builder.get_bandstructure(mat)
 
         self.builder.bfs.get.assert_called()
@@ -42,8 +42,8 @@ class TestElectronicStructureImageBuilder(unittest.TestCase):
         self.builder.dfs = MagicMock()
         mat = {"bandstructure": {"dos_oid": "234234", "dos_compression": "zlib"}}
 
-        with patch("emmet.vasp.builders.electronic_structure_img.json") as json_patch:
-            with patch("emmet.vasp.builders.electronic_structure_img.zlib") as zlib_patch:
+        with patch("emmet.plotting.electronic_structure.json") as json_patch:
+            with patch("emmet.plotting.electronic_structure.zlib") as zlib_patch:
                 self.builder.get_dos(mat)
 
         self.builder.dfs.get.assert_called()

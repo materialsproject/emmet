@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from emmet.vasp.builders.site_descriptors import *
+from emmet.materials.site_descriptors import *
 from maggma.stores import MongoStore
 
 from monty.serialization import loadfn
@@ -13,7 +13,7 @@ __author__ = "Nils E. R. Zimmermann"
 __email__ = "nerz@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-test_structs = os.path.join(module_dir, "..","..","..", "..", "test_files",
+test_structs = os.path.join(module_dir, "..","..", "..", "test_files",
                             "simple_structs.json")
 
 class SiteDescriptorsBuilderTest(unittest.TestCase):
