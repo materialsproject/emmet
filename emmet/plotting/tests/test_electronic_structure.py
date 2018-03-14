@@ -33,9 +33,9 @@ class TestElectronicStructureImageBuilder(unittest.TestCase):
             with patch("emmet.plotting.electronic_structure.zlib") as zlib_patch:
                 self.builder.get_bandstructure(mat)
 
-        self.builder.bfs.get.assert_called()
-        json_patch.loads.assert_called()
-        zlib_patch.decompress.assert_called()
+        self.assertEqual(self.builder.bfs.get.call_count,1)
+        self.assertEqual(json_patch.loads.call_count,1)
+        self.assertEqual(zlib_patch.decompress.call_count,1)
 
     def test_get_dos(self):
 
@@ -46,9 +46,9 @@ class TestElectronicStructureImageBuilder(unittest.TestCase):
             with patch("emmet.plotting.electronic_structure.zlib") as zlib_patch:
                 self.builder.get_dos(mat)
 
-        self.builder.dfs.get.assert_called()
-        json_patch.loads.assert_called()
-        zlib_patch.decompress.assert_called()
+        self.assertEqual(self.builder.dfs.get.call_count,1)
+        self.assertEqual(json_patch.loads.call_count,1)
+        self.assertEqual(zlib_patch.decompress.call_count,1)
 
 
 if __name__ == "__main__":
