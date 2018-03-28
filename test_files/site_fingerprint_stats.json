@@ -1,683 +1,679 @@
 [
   {
-    "opsf_statistics": {
-      "L-shaped CN_2": {
+    "opsf_statistics": [ {
+        "name": "L-shaped CN_2",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "T-shaped CN_3": {
+      }, {
+        "name": "T-shaped CN_3",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "bent 120 degrees CN_2": {
+      }, {
+        "name": "bent 120 degrees CN_2",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "bent 150 degrees CN_2": {
+      }, {
+        "name": "bent 150 degrees CN_2",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "body-centered cubic CN_8": {
+      }, {
+        "name": "body-centered cubic CN_8",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "cuboctahedral CN_12": {
+      }, {
+        "name": "cuboctahedral CN_12",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "hexagonal bipyramidal CN_8": {
+      }, {
+        "name": "hexagonal bipyramidal CN_8",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "hexagonal planar CN_6": {
+      }, {
+        "name": "hexagonal planar CN_6",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "hexagonal pyramidal CN_7": {
+      }, {
+        "name": "hexagonal pyramidal CN_7",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "linear CN_2": {
+      }, {
+        "name": "linear CN_2",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "octahedral CN_6": {
+      }, {
+        "name": "octahedral CN_6",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "pentagonal bipyramidal CN_7": {
+      }, {
+        "name": "pentagonal bipyramidal CN_7",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "pentagonal planar CN_5": {
+      }, {
+        "name": "pentagonal planar CN_5",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "pentagonal pyramidal CN_6": {
+      }, {
+        "name": "pentagonal pyramidal CN_6",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q2 CN_10": {
+      }, {
+        "name": "q2 CN_10",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q2 CN_11": {
+      }, {
+        "name": "q2 CN_11",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q2 CN_12": {
+      }, {
+        "name": "q2 CN_12",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q2 CN_9": {
+      }, {
+        "name": "q2 CN_9",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q4 CN_10": {
+      }, {
+        "name": "q4 CN_10",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q4 CN_11": {
+      }, {
+        "name": "q4 CN_11",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q4 CN_12": {
+      }, {
+        "name": "q4 CN_12",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q4 CN_9": {
+      }, {
+        "name": "q4 CN_9",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q6 CN_10": {
+      }, {
+        "name": "q6 CN_10",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q6 CN_11": {
+      }, {
+        "name": "q6 CN_11",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q6 CN_12": {
+      }, {
+        "name": "q6 CN_12",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q6 CN_9": {
+      }, {
+        "name": "q6 CN_9",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "rectangular see-saw-like CN_4": {
+      }, {
+        "name": "rectangular see-saw-like CN_4",
         "max": 0.0075,
         "mean": 0.0075,
         "min": 0.0075,
         "std": 0.0
-      },
-      "see-saw-like CN_4": {
+      }, {
+        "name": "see-saw-like CN_4",
         "max": 0.23450000000000001,
         "mean": 0.23450000000000001,
         "min": 0.23450000000000001,
         "std": 0.0
-      },
-      "sgl_bd CN_1": {
+      }, {
+        "name": "sgl_bd CN_1",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "square co-planar CN_4": {
+      }, {
+        "name": "square co-planar CN_4",
         "max": 0.0795,
         "mean": 0.0795,
         "min": 0.0795,
         "std": 0.0
-      },
-      "square pyramidal CN_5": {
+      }, {
+        "name": "square pyramidal CN_5",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "tetrahedral CN_4": {
+      }, {
+        "name": "tetrahedral CN_4",
         "max": 0.9995,
         "mean": 0.9995,
         "min": 0.9995,
         "std": 0.0
-      },
-      "trigonal bipyramidal CN_5": {
+      }, {
+        "name": "trigonal bipyramidal CN_5",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "trigonal non-coplanar CN_3": {
+      }, {
+        "name": "trigonal non-coplanar CN_3",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "trigonal planar CN_3": {
+      }, {
+        "name": "trigonal planar CN_3",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "trigonal pyramidal CN_4": {
+      }, {
+        "name": "trigonal pyramidal CN_4",
         "max": 0.2455,
         "mean": 0.2455,
         "min": 0.2455,
         "std": 0.0
-      },
-      "water-like CN_2": {
+      }, {
+        "name": "water-like CN_2",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      }
-    },
+      } ],
     "task_id": "mp-66"
   },
   {
-    "opsf_statistics": {
-      "L-shaped CN_2": {
+    "opsf_statistics": [ {
+       "name": "L-shaped CN_2",
+       "max": 0.0005,
+       "mean": 0.0005,
+       "min": 0.0005,
+       "std": 0.0
+      }, {
+       "name": "T-shaped CN_3",
+       "max": 0.0005,
+       "mean": 0.0005,
+       "min": 0.0005,
+       "std": 0.0
+      }, {
+       "name": "bent 120 degrees CN_2",
+       "max": 0.0005,
+       "mean": 0.0005,
+       "min": 0.0005,
+       "std": 0.0
+      }, {
+       "name": "bent 150 degrees CN_2",
+       "max": 0.0005,
+       "mean": 0.0005,
+       "min": 0.0005,
+       "std": 0.0
+      }, {
+        "name": "body-centered cubic CN_8",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "T-shaped CN_3": {
+      }, {
+        "name": "cuboctahedral CN_12",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "bent 120 degrees CN_2": {
+      }, {
+        "name": "hexagonal bipyramidal CN_8",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "bent 150 degrees CN_2": {
-        "max": 0.0005,
-        "mean": 0.0005,
-        "min": 0.0005,
-        "std": 0.0
-      },
-      "body-centered cubic CN_8": {
-        "max": 0.0005,
-        "mean": 0.0005,
-        "min": 0.0005,
-        "std": 0.0
-      },
-      "cuboctahedral CN_12": {
-        "max": 0.0005,
-        "mean": 0.0005,
-        "min": 0.0005,
-        "std": 0.0
-      },
-      "hexagonal bipyramidal CN_8": {
-        "max": 0.0005,
-        "mean": 0.0005,
-        "min": 0.0005,
-        "std": 0.0
-      },
-      "hexagonal planar CN_6": {
+      }, {
+        "name": "hexagonal planar CN_6",
         "max": 0.2005,
         "mean": 0.2005,
         "min": 0.2005,
         "std": 0.0
-      },
-      "hexagonal pyramidal CN_7": {
+      }, {
+        "name": "hexagonal pyramidal CN_7",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "linear CN_2": {
+      }, {
+        "name": "linear CN_2",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "octahedral CN_6": {
+      }, {
+        "name": "octahedral CN_6",
         "max": 0.9995,
         "mean": 0.9995,
         "min": 0.9995,
         "std": 0.0
-      },
-      "pentagonal bipyramidal CN_7": {
+      }, {
+        "name": "pentagonal bipyramidal CN_7",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "pentagonal planar CN_5": {
+      }, {
+        "name": "pentagonal planar CN_5",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "pentagonal pyramidal CN_6": {
+      }, {
+        "name": "pentagonal pyramidal CN_6",
         "max": 0.4995,
         "mean": 0.4995,
         "min": 0.4995,
         "std": 0.0
-      },
-      "q2 CN_10": {
+      }, {
+        "name": "q2 CN_10",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q2 CN_11": {
+      }, {
+        "name": "q2 CN_11",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q2 CN_12": {
+      }, {
+        "name": "q2 CN_12",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q2 CN_9": {
+      }, {
+        "name": "q2 CN_9",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q4 CN_10": {
+      }, {
+        "name": "q4 CN_10",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q4 CN_11": {
+      }, {
+        "name": "q4 CN_11",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q4 CN_12": {
+      }, {
+        "name": "q4 CN_12",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q4 CN_9": {
+      }, {
+        "name": "q4 CN_9",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q6 CN_10": {
+      }, {
+        "name": "q6 CN_10",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q6 CN_11": {
+      }, {
+        "name": "q6 CN_11",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q6 CN_12": {
+      }, {
+        "name": "q6 CN_12",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q6 CN_9": {
+      }, {
+        "name": "q6 CN_9",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "rectangular see-saw-like CN_4": {
+      }, {
+        "name": "rectangular see-saw-like CN_4",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "see-saw-like CN_4": {
+      }, {
+        "name": "see-saw-like CN_4",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "sgl_bd CN_1": {
+      }, {
+        "name": "sgl_bd CN_1",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "square co-planar CN_4": {
+      }, {
+        "name": "square co-planar CN_4",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "square pyramidal CN_5": {
+      }, {
+        "name": "square pyramidal CN_5",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "tetrahedral CN_4": {
+      }, {
+        "name": "tetrahedral CN_4",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "trigonal bipyramidal CN_5": {
+      }, {
+        "name": "trigonal bipyramidal CN_5",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "trigonal non-coplanar CN_3": {
+      }, {
+        "name": "trigonal non-coplanar CN_3",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "trigonal planar CN_3": {
+      }, {
+        "name": "trigonal planar CN_3",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "trigonal pyramidal CN_4": {
+      }, {
+        "name": "trigonal pyramidal CN_4",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "water-like CN_2": {
+      }, {
+        "name": "water-like CN_2",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      }
-    },
+      } ],
     "task_id": "mp-22862"
   },
   {
-    "opsf_statistics": {
-      "L-shaped CN_2": {
+    "opsf_statistics": [ {
+        "name": "L-shaped CN_2",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "T-shaped CN_3": {
+      }, {
+        "name": "T-shaped CN_3",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "bent 120 degrees CN_2": {
+      }, {
+        "name": "bent 120 degrees CN_2",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "bent 150 degrees CN_2": {
+      }, {
+        "name": "bent 150 degrees CN_2",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "body-centered cubic CN_8": {
+      }, {
+        "name": "body-centered cubic CN_8",
         "max": 0.9995,
         "mean": 0.9995,
         "min": 0.9995,
         "std": 0.0
-      },
-      "cuboctahedral CN_12": {
+      }, {
+        "name": "cuboctahedral CN_12",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "hexagonal bipyramidal CN_8": {
+      }, {
+        "name": "hexagonal bipyramidal CN_8",
         "max": 0.4335,
         "mean": 0.4335,
         "min": 0.4335,
         "std": 0.0
-      },
-      "hexagonal planar CN_6": {
+      }, {
+        "name": "hexagonal planar CN_6",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "hexagonal pyramidal CN_7": {
+      }, {
+        "name": "hexagonal pyramidal CN_7",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "linear CN_2": {
+      }, {
+        "name": "linear CN_2",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "octahedral CN_6": {
+      }, {
+        "name": "octahedral CN_6",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "pentagonal bipyramidal CN_7": {
+      }, {
+        "name": "pentagonal bipyramidal CN_7",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "pentagonal planar CN_5": {
+      }, {
+        "name": "pentagonal planar CN_5",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "pentagonal pyramidal CN_6": {
+      }, {
+        "name": "pentagonal pyramidal CN_6",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q2 CN_10": {
+      }, {
+        "name": "q2 CN_10",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q2 CN_11": {
+      }, {
+        "name": "q2 CN_11",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q2 CN_12": {
+      }, {
+        "name": "q2 CN_12",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q2 CN_9": {
+      }, {
+        "name": "q2 CN_9",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q4 CN_10": {
+      }, {
+        "name": "q4 CN_10",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q4 CN_11": {
+      }, {
+        "name": "q4 CN_11",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q4 CN_12": {
+      }, {
+        "name": "q4 CN_12",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q4 CN_9": {
+      }, {
+        "name": "q4 CN_9",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q6 CN_10": {
+      }, {
+        "name": "q6 CN_10",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q6 CN_11": {
+      }, {
+        "name": "q6 CN_11",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q6 CN_12": {
+      }, {
+        "name": "q6 CN_12",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "q6 CN_9": {
+      }, {
+        "name": "q6 CN_9",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "rectangular see-saw-like CN_4": {
+      }, {
+        "name": "rectangular see-saw-like CN_4",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "see-saw-like CN_4": {
+      }, {
+        "name": "see-saw-like CN_4",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "sgl_bd CN_1": {
+      }, {
+        "name": "sgl_bd CN_1",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "square co-planar CN_4": {
+      }, {
+        "name": "square co-planar CN_4",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "square pyramidal CN_5": {
+      }, {
+        "name": "square pyramidal CN_5",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "tetrahedral CN_4": {
+      }, {
+        "name": "tetrahedral CN_4",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "trigonal bipyramidal CN_5": {
+      }, {
+        "name": "trigonal bipyramidal CN_5",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "trigonal non-coplanar CN_3": {
+      }, {
+        "name": "trigonal non-coplanar CN_3",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "trigonal planar CN_3": {
+      }, {
+        "name": "trigonal planar CN_3",
         "max": 0.0005,
         "mean": 0.0005,
         "min": 0.0005,
         "std": 0.0
-      },
-      "trigonal pyramidal CN_4": {
-        "max": 0.0005,
-        "mean": 0.0005,
-        "min": 0.0005,
-        "std": 0.0
-      },
-      "water-like CN_2": {
-        "max": 0.0005,
-        "mean": 0.0005,
-        "min": 0.0005,
-        "std": 0.0
-      }
-    },
+      }, {
+       "name": "trigonal pyramidal CN_4",
+       "max": 0.0005,
+       "mean": 0.0005,
+       "min": 0.0005,
+       "std": 0.0
+      }, {
+       "name": "water-like CN_2",
+       "max": 0.0005,
+       "mean": 0.0005,
+       "min": 0.0005,
+       "std": 0.0}],
     "task_id": "mp-13"
   }
 ]
