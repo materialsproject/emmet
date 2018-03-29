@@ -4,18 +4,20 @@ for material properties based on missing properties in a
 materials collection
 """
 
+import numpy as np
+import logging
+import six
+
 from maggma.builder import Builder
 from atomate.vasp.workflows.presets.core import wf_elastic_constant
 from atomate.vasp.powerups import add_tags, add_modify_incar, add_priority
-from atomate.utils.utils import get_fws_and_tasks
+from atomate.utils.utils import get_fws_and_tasks, load_class
 from pymatgen.analysis.elasticity.tensors import Tensor, SquareTensor,\
         get_tkd_value, symmetry_reduce
 from pymatgen.analysis.elasticity.strain import Strain
 from pymatgen.core.operations import SymmOp
 from pymatgen import Structure
 from fireworks import LaunchPad
-import numpy as np
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -24,54 +26,88 @@ __maintainer__ = "Joseph Montoya"
 __email__ = "montoyjh@lbl.gov"
 
 
-# TODO: kind of specific to vasp in the add_tags, improve metadata handling
+# TODO: kind of specific to vasp in the add_tags, improve metadata handling,
+#       in principle this could be abstracted to just build workflows from
+#       collections generally
 # TODO: I'm a bit wary to implement an incremental strategy here,
 #       but I think it can be done
+# TODO: This isn't completely serializable because of the workflow function,
+#       could use a string identifier like atomate does
 class PropertyWorkflowBuilder(Builder):
-    def __init__(self, materials, wf_function, filter=None, lpad=None,
-                 **kwargs):
+    def __init__(self, source, materials, wf_function,
+                 material_filter=None, lpad=None, **kwargs):
         """
-        Creates a elastic collection for materials
+        Adds workflows to a launchpad based on material inputs.
+        This is primarily to be used for derivative property
+        workflows but could in principles used to generate workflows
+        for any workflow that can be invoked from structure data
 
         Args:
+            source (Store): store of properties
             materials (Store): Store of materials properties
-
             filter (dict): dict filter for getting items to process
                 e. g. {"elasticity": None}
-            wf_function (method): method to generate a workflow
+            wf_function (string or method): method to generate a workflow
                 based on structure in document with missing property
-                can be custom method or atomate preset wf generator
+                can be a string to be loaded or a custom method.
+                Note that the builder/runner will not be serializable
+                with custom methods.
             lpad (LaunchPad): fireworks launchpad to use for adding workflows
+            **kwargs (kwargs): kwargs for builder
         """
+        self.source = source
         self.materials = materials
-        self.wf_function = wf_function
-        self.filter = filter
+        # Will this be pickled properly for multiprocessing? could just put
+        # it into the processor if that's the case
+        if isinstance(wf_function, six.string_types):
+            self.wf_function = load_class(*wf_function.rsplit('.', 1))
+            self._wf_function_string = wf_function
+        elif callable(wf_function):
+            self.wf_function = wf_function
+            self._wf_function_string = None
+        else:
+            raise ValueError("wf_function must be callable or a string "
+                             "corresponding to a loadable method")
+        self.material_filter = material_filter
         self.lpad = lpad or LaunchPad.auto_load()
 
-        super().__init__(sources=[materials], targets=[], **kwargs)
+        super().__init__(sources=[source, materials],
+                         targets=[], **kwargs)
 
     def get_items(self):
         """
-        Gets all items to create new workflows for
+        Gets all items for which new workflows are created
+
+        Returns:
+             generator for items
+        """
+        wf_inputs = self.materials.query(["structure", "material_id"],
+                                         self.material_filter)
+        # find existing tags in workflows
+        current_prop_ids = self.source.distinct("material_id")
+        current_wf_tags = self.lpad.workflows.distinct("metadata.tags")
+        ids_to_filter = list(set(current_prop_ids + current_wf_tags))
+        for wf_input in wf_inputs:
+            yield wf_input, ids_to_filter
+
+    def process_item(self, item):
+        """
+        Processes items into workflows
+
+        Args:
+            item:
 
         Returns:
 
         """
-        noprop_mats = self.materials.query(["structure", "material_id"],
-                                           self.filter)
-        # find existing tags in workflows
-        current_wf_tags = self.lpad.workflows.distinct("metadata.tags")
-        for mat in noprop_mats:
-            yield mat, current_wf_tags
-
-    def process_item(self, item):
-        mat, current_wf_tags = item
-        if mat['material_id'] in current_wf_tags:
+        wf_input, ids_to_filter = item
+        mat_id = wf_input["material_id"]
+        if mat_id in ids_to_filter:
             return None
         else:
-            structure = Structure.from_dict(mat["structure"])
+            structure = Structure.from_dict(wf_input.get('structure'))
             wf = self.wf_function(structure)
-            wf = add_tags(wf, [mat['material_id']])
+            wf = add_tags(wf, [mat_id])
             return wf
 
     def update_targets(self, items):
@@ -83,6 +119,13 @@ class PropertyWorkflowBuilder(Builder):
         """
         items = filter(bool, items)
         self.lpad.bulk_add_wfs(items)
+
+    def as_dict(self):
+        d = super().as_dict()
+        if self._wf_function_string:
+            d['wf_function'] = self._wf_function_string
+        return d
+
 
 # TODO: build priorities?
 def PriorityBuilder(Builder):

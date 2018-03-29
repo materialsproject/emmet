@@ -20,24 +20,39 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         materials.connect()
         docs = []
         for n, mat_string in enumerate(["Si", "Sn", "TiO2", "VO2"]):
-            docs.append({"material_id": "mp-{}".format(n),
+            docs.append({"material_id": n,
                          "structure": PymatgenTest.get_structure(mat_string).as_dict()})
-        docs[0].update({"elasticity": 10})
         materials.update(docs, key='material_id')
+        elasticity = MemoryStore("elasticity")
+        elasticity.connect()
+        elasticity.update(docs[0:1], key="material_id")
         cls.materials = materials
+        cls.elasticity = elasticity
 
     def setUp(self):
         lpad = LaunchPad(name="test_emmet")
         lpad.reset('', require_password=False)
         self.lpad = lpad
 
-        self.nofilter = PropertyWorkflowBuilder(self.materials, wf_elastic_constant,
-                                                filter=None, lpad=self.lpad)
+        self.nofilter = PropertyWorkflowBuilder(
+            self.elasticity, self.materials, wf_elastic_constant,
+            material_filter=None, lpad=self.lpad)
         self.nofilter.connect()
-        self.filter = PropertyWorkflowBuilder(self.materials, wf_elastic_constant,
-                                              filter={"elasticity": {"$exists": False}},
-                                              lpad=self.lpad)
+        self.filter = PropertyWorkflowBuilder(
+            self.elasticity, self.materials, wf_elastic_constant,
+            material_filter={"material_id": {"$lt": 3}}, lpad=self.lpad)
         self.filter.connect()
+
+    def test_init(self):
+        # Test invocation from string method
+        builder = PropertyWorkflowBuilder(
+            self.elasticity, self.materials,
+            "emmet.materials.property_workflows.generate_elastic_workflow",
+            lpad=self.lpad)
+        serialized = builder.as_dict()
+        new = PropertyWorkflowBuilder.from_dict(serialized)
+        self.assertEqual(new._wf_function_string,
+                         "emmet.materials.property_workflows.generate_elastic_workflow")
 
     def test_get_items(self):
         # No filter
@@ -49,23 +64,26 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
     def test_process_items(self):
         for item in self.nofilter.get_items():
             processed = self.nofilter.process_item(item)
-            self.assertTrue(isinstance(processed, Workflow))
-            self.assertTrue(item[0]['material_id'] in processed.metadata['tags'])
+            if processed:
+                self.assertTrue(isinstance(processed, Workflow))
+                self.assertTrue(item[0]['material_id'] in processed.metadata['tags'])
+            else:
+                self.assertEqual(item[0]['material_id'], 0)
 
     def test_update_targets(self):
         processed = [self.nofilter.process_item(item)
                      for item in self.nofilter.get_items()]
         self.nofilter.update_targets(processed)
-        self.assertEqual(self.lpad.workflows.count(), 4)
+        self.assertEqual(self.lpad.workflows.count(), 3)
 
     def test_runner_pipeline(self):
         runner = Runner([self.nofilter])
         runner.run()
-        self.assertEqual(self.lpad.workflows.count(), 4)
+        self.assertEqual(self.lpad.workflows.count(), 3)
 
         # Ensure no further updates
         runner.run()
-        self.assertEqual(self.lpad.workflows.count(), 4)
+        self.assertEqual(self.lpad.workflows.count(), 3)
 
 if __name__ == "__main__":
     unittest.main()
