@@ -72,6 +72,7 @@ class SiteDescriptorsBuilder(Builder):
         # None means: nothing to do.
         # be explicit with what items to updated.
         # in Mongo DB there is a mechanism to get root keys
+        # complete documentation
 
         # All relevant materials that have been updated since site-descriptors
         # were last calculated
@@ -80,9 +81,9 @@ class SiteDescriptorsBuilder(Builder):
         q.update(self.materials.lu_filter(self.site_descriptors))
         new_task_ids = list(self.materials.distinct(self.materials.key, q))
         self.logger.info(
-            "Found {} new materials for site-descriptors data".format(len(task_ids)))
+            "Found {} new materials for site-descriptors data".format(len(new_task_ids)))
         for task_id in new_task_ids:
-            yield self.materials.mat_query(
+            yield self.materials.query(
                     properties=[self.materials.key, "structure"],
                     criteria={self.materials.key: task_id}).limit(1)[0]
 
@@ -148,11 +149,11 @@ class SiteDescriptorsBuilder(Builder):
 
         return doc
 
-    def get_opsf_statistics(self, site_descr):
+    def get_statistics(self, site_descr, fps=('opsf', 'csf')):
         doc = {}
 
         # Compute site-descriptor statistics.
-        for fp in ['opsf', 'csf']:
+        for fp in fps:
             doc[fp] = {}
             try:
                 n_site = len(list(site_descr[fp].keys()))
