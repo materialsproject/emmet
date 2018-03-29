@@ -6,7 +6,6 @@ from emmet.materials.property_workflows import PropertyWorkflowBuilder,\
     get_elastic_builder
 from pymatgen.util.testing import PymatgenTest
 from atomate.vasp.workflows.presets.core import wf_elastic_constant
-from atomate.vasp.powerups import add_tags
 from fireworks import LaunchPad, Workflow
 
 __author__ = "Joseph Montoya"
