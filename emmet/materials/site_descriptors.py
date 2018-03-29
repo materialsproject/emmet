@@ -135,10 +135,10 @@ class SiteDescriptorsBuilder(Builder):
         # Compute descriptors.
         for k, sd in self.sds.items():
             try:
-                d = {}
+                d = []
                 l = sd.feature_labels()
                 for i, s in enumerate(structure.sites):
-                    d[i] = {}
+                    d.append({'site': i})
                     for j, desc in enumerate(sd.featurize(structure, i)):
                         d[i][l[j]] = desc
                 doc[k] = d
@@ -156,7 +156,7 @@ class SiteDescriptorsBuilder(Builder):
         for fp in fps:
             doc[fp] = {}
             try:
-                n_site = len(list(site_descr[fp].keys()))
+                n_site = len(site_descr[fp])
                 tmp = {}
                 for isite in range(n_site):
                     for l, v in site_descr[fp][isite].items():

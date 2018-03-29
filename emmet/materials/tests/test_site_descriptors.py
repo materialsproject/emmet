@@ -49,7 +49,7 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         # Diamond.
         d = sd_builder.get_site_descriptors_from_struct(Structure.from_dict(C["structure"]))
         for di in d.values():
-            self.assertEqual(len([k for k in di.keys()]), 2)
+            self.assertEqual(len(di), 2)
         self.assertEqual(d['cn_vnn'][0]['CN_VoronoiNN'], 18)
         self.assertAlmostEqual(d['cn_wt_vnn'][0]['CN_VoronoiNN'], 4.5381162)
         self.assertEqual(d['cn_jmnn'][0]['CN_JMolNN'], 4)
