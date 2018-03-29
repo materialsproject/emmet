@@ -53,6 +53,12 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         new = PropertyWorkflowBuilder.from_dict(serialized)
         self.assertEqual(new._wf_function_string,
                          "emmet.materials.property_workflows.generate_elastic_workflow")
+        runner = Runner([builder])
+        from monty.serialization import dumpfn, loadfn
+        from monty.json import jsanitize
+        dumpfn(jsanitize(runner, strict=True), "elastic_wf_runner.yaml")
+        new = loadfn("elastic_wf_runner.yaml")
+        import nose; nose.tools.set_trace()
 
     def test_get_items(self):
         # No filter

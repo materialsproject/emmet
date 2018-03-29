@@ -52,7 +52,9 @@ class PropertyWorkflowBuilder(Builder):
                 can be a string to be loaded or a custom method.
                 Note that the builder/runner will not be serializable
                 with custom methods.
-            lpad (LaunchPad): fireworks launchpad to use for adding workflows
+            lpad (LaunchPad or dict): fireworks launchpad to use for adding
+                workflows, can either be None (autoloaded), a LaunchPad
+                instance, or a dict from which the LaunchPad will be invoked
             **kwargs (kwargs): kwargs for builder
         """
         self.source = source
@@ -69,7 +71,12 @@ class PropertyWorkflowBuilder(Builder):
             raise ValueError("wf_function must be callable or a string "
                              "corresponding to a loadable method")
         self.material_filter = material_filter
-        self.lpad = lpad or LaunchPad.auto_load()
+        if lpad is None:
+            self.lpad = LaunchPad.auto_load()
+        elif isinstance(lpad, dict):
+            self.lpad = LaunchPad.from_dict(lpad)
+        else:
+            self.lpad = lpad
 
         super().__init__(sources=[source, materials],
                          targets=[], **kwargs)
@@ -95,10 +102,10 @@ class PropertyWorkflowBuilder(Builder):
         Processes items into workflows
 
         Args:
-            item:
+            item ((dict, list)): pair of doc and material_ids to filter
 
         Returns:
-
+            Workflow
         """
         wf_input, ids_to_filter = item
         mat_id = wf_input["material_id"]
