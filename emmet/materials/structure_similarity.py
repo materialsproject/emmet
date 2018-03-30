@@ -9,7 +9,7 @@ __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
 class StructureSimilarityBuilder(Builder):
 
     def __init__(self, site_descriptors, structure_similarity,
-                 **kwargs):
+                 fp_type='csf', **kwargs):
         """
         Calculates similarity metrics between structures on the basis
         of site descriptors.
@@ -20,10 +20,17 @@ class StructureSimilarityBuilder(Builder):
                                       or percentage of 8-fold coordination.
             structure_similarity (Store): storage of structure similarity
                                           metrics.
+            fp_type (str): target site fingerprint type to be
+                           used for similarity computation
+                           ("csf" (based on matminer's
+                           CrystalSiteFingerprint class)
+                           or "opsf" (based on matminer's
+                           OPSiteFingerprint class)).
         """
 
         self.site_descriptors = site_descriptors
         self.structure_similarity = structure_similarity
+        self.fp_type = fp_type
 
         super().__init__(sources=[site_descriptors],
                          targets=[structure_similarity],
@@ -46,12 +53,12 @@ class StructureSimilarityBuilder(Builder):
         n_task_ids = len(task_ids)
         for i in range(n_task_ids-1):
             d1 = self.site_descriptors.query(
-                    properties=[self.site_descriptors.key, "opsf_statistics"],
+                    properties=[self.site_descriptors.key, "statistics"],
                     criteria={self.site_descriptors.key: task_ids[i]}).limit(1)[0]
             for j in range(i+1, n_task_ids):
                 d2 = self.site_descriptors.query(
                         properties=[
-                        self.site_descriptors.key, "opsf_statistics"],
+                        self.site_descriptors.key, "statistics"],
                         criteria={self.site_descriptors.key: task_ids[j]}).limit(1)[0]
                 yield list([d1, d2])
 
@@ -63,7 +70,7 @@ class StructureSimilarityBuilder(Builder):
             item (list): a list (length 2) with each one document that
                          carries a task ID in "task_id" and a statistics
                          vector from OP site-fingerprints in
-                         "opsf_statistics".
+                         "statistics".
 
         Returns:
             dict: similarity measures.
@@ -102,14 +109,16 @@ class StructureSimilarityBuilder(Builder):
             dout = {}
             l = {}
             v = {}
-            for i, d in enumerate([d1['opsf_statistics'],
-                                  d2['opsf_statistics']]):
+            for i, li in enumerate([d1['statistics'][self.fp_type],
+                                  d2['statistics'][self.fp_type]]):
                 v[i] = []
                 l[i] = []
-                for optype, stats in d.items():
-                    for stattype, val in stats.items():
-                        v[i].append(val)
-                        l[i].append('{} {}'.format(optype, stattype))
+                #for optype, stats in d.items():
+                for opdict in li:
+                    for stattype, val in opdict.items():
+                        if stattype != 'name':
+                            v[i].append(val)
+                            l[i].append('{} {}'.format(opdict['name'], stattype))
             if len(l[0]) != len(l[1]):
                 raise RuntimeError('Site-fingerprint statistics dictionaries'
                                    ' have different sizes ({}, {})'.format(
