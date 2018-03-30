@@ -25,10 +25,6 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         self.test_materials.connect()
         struct_docs = loadfn(test_structs, cls=None)
         self.test_materials.update(struct_docs)
-        #for i in self.test_materials.query(
-        #        properties=[self.test_materials.key, "structure", "last_updated"],
-        #        criteria={}):
-        #    print(i['last_updated'])
 
     def test_builder(self):
         test_site_descriptors = MemoryStore("test_site_descriptors")
@@ -50,11 +46,6 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         self.assertEqual(len(items), 1)
         self.assertEqual(len(items[0]['output']['statistics']), 0)
         self.assertTrue(len(items[0]['output']['site_descriptors']) > 0)
-        #test_site_descriptors.collection.find_one_and_update(
-        #        {'task_id': 'mp-66'}, {'statistics': {'$unset': {'opsf': 1}}})
-        #items = [e for e in list(sd_builder.get_items())]
-        #print(items)
-# [{'input': {'task_id': 'mp-66', 'structure': {'@module': 'pymatgen.core.structure', '@class': 'Structure', 'charge': None, 'lattice': {'matrix': [[2.18898221, 0.0, 1.26380947], [0.72966074, 2.06379222, 1.26380947], [0.0, 0.0, 2.52761893]], 'a': 2.5276189372922024, 'b': 2.527618938703292, 'c': 2.52761893, 'alpha': 59.99999998302958, 'beta': 59.999999964562214, 'gamma': 59.999999919282544, 'volume': 11.418782537993515}, 'sites': [{'species': [{'element': 'C', 'occu': 1}], 'abc': [0.875, 0.875, 0.875], 'xyz': [2.55381258125, 1.8058181924999999, 4.42333313625], 'label': 'C', 'properties': {'coordination_no': 5, 'forces': [0.0, 0.0, 0.0]}}, {'species': [{'element': 'C', 'occu': 1}], 'abc': [0.125, 0.125, 0.125], 'xyz': [0.36483036874999997, 0.2579740275, 0.63190473375], 'label': 'C', 'properties': {'coordination_no': 5, 'forces': [0.0, 0.0, 0.0]}}]}, '_id': ObjectId('5abd7889f0b3c610d2f8f04a')}, 'output': {'site_descriptors': ['cn_vnn', 'cn_wt_vnn', 'cn_VoronoiNN_modified', 'cn_wt_VoronoiNN_modified', 'cn_jmnn', 'cn_wt_jmnn', 'cn_mdnn', 'cn_wt_mdnn', 'cn_moknn', 'cn_wt_moknn', 'cn_mvirenn', 'cn_wt_mvirenn', 'cn_bnn', 'cn_wt_bnn', 'cn_EconNN', 'cn_wt_EconNN'], 'statistics': []}}]
 
     def test_get_all_site_descriptors(self):
         test_site_descriptors = MemoryStore("test_site_descriptors")

@@ -7,10 +7,7 @@ from matminer.featurizers.site import OPSiteFingerprint ,\
 CrystalSiteFingerprint, CoordinationNumber
 
 # TODO:
-# AGNIFingerprints, EwaldSiteEnergy, \
-# VoronoiFingerprint, ChemEnvSiteFingerprint, \
-# ChemicalSRO
-
+# 1) complete documentation!!!
 
 from maggma.builder import Builder
 
@@ -70,9 +67,6 @@ class SiteDescriptorsBuilder(Builder):
         self.logger.info("Site-Descriptors Builder Started")
 
         self.logger.info("Setting indexes")
-
-        # None means: nothing to do.
-        # complete documentation
 
         # All relevant materials that have been updated since site-descriptors
         # were last calculated
