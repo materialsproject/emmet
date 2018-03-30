@@ -126,7 +126,7 @@ class ElasticBuilder(Builder):
         tasks, material_dict = item
         if not tasks:
             return all_docs
-        grouped = group_by_material_id(material_dict, tasks)
+        grouped = group_by_task_id(material_dict, tasks)
         for mp_id, task_sets in grouped.items():
             elastic_docs = []
             for opt_task, defo_tasks in task_sets:
@@ -149,7 +149,7 @@ class ElasticBuilder(Builder):
             final_doc.update(c_ijkl.property_dict)
             final_doc.update(c_ijkl.get_structure_property_dict(structure))
 
-            elastic_summary = {'material_id': mp_id,
+            elastic_summary = {'task_id': mp_id,
                                'all_elastic_fits': elastic_docs,
                                'elasticity': final_doc,
                                'pretty_formula': formula,
@@ -175,7 +175,7 @@ class ElasticBuilder(Builder):
 
         self.logger.info("Updating {} elastic documents".format(len(items)))
 
-        self.elasticity.update(items, key='material_id')
+        self.elasticity.update(items, key='task_id')
 
     def finalize(self, items):
         pass
@@ -273,21 +273,21 @@ def get_elastic_analysis(opt_task, defo_tasks):
     return elastic_doc
 
 
-def group_by_material_id(materials_dict, docs, tol=1e-6,
+def group_by_task_id(materials_dict, docs, tol=1e-6,
                          structure_matcher=None):
     """
     Groups a collection of documents by material id
     as found in a materials collection
 
     Args:
-        materials_dict (dict): dictionary of structures keyed by material_id
+        materials_dict (dict): dictionary of structures keyed by task_id
         docs ([dict]): list of documents
         tol: tolerance for lattice grouping
         structure_matcher (StructureMatcher): structure
             matcher for finding equivalent structures
 
     Returns:
-        documents grouped by material_id from the materials
+        documents grouped by task_id from the materials
         collection
     """
     sm = structure_matcher or StructureMatcher()
@@ -443,7 +443,7 @@ def get_warnings(elastic_tensor, structure):
 def generate_formula_dict(materials_store, query=None):
     """
     Function that generates a nested dictionary of structures
-    keyed first by formula and then by material_id using
+    keyed first by formula and then by task_id using
     mongo aggregation pipelines
 
     Args:
@@ -453,14 +453,14 @@ def generate_formula_dict(materials_store, query=None):
         Nested dictionary keyed by formula-mp_id with structure values.
 
     """
-    props = ["pretty_formula", "structure", "material_id"]
+    props = ["pretty_formula", "structure", "task_id"]
     results = list(materials_store.groupby("pretty_formula", properties=props,
                                            criteria=query))
     formula_dict = {}
     for result in tqdm.tqdm(results):
         formula = result['_id']['pretty_formula']
-        material_ids = [d['material_id'] for d in result['docs']]
+        task_ids = [d['task_id'] for d in result['docs']]
         structures = [d['structure'] for d in result['docs']]
 
-        formula_dict[formula] = dict(zip(material_ids, structures))
+        formula_dict[formula] = dict(zip(task_ids, structures))
     return formula_dict
