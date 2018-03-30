@@ -7,10 +7,8 @@ from matminer.featurizers.site import OPSiteFingerprint ,\
 CrystalSiteFingerprint, CoordinationNumber
 
 # TODO:
-# AGNIFingerprints, EwaldSiteEnergy, \
-# VoronoiFingerprint, ChemEnvSiteFingerprint, \
-# ChemicalSRO
-
+# 1) Add checking OPs present in current implementation of site fingerprints.
+# 2) Complete documentation!!!
 
 from maggma.builder import Builder
 
@@ -25,19 +23,26 @@ cls_to_abbrev = {
 
 class SiteDescriptorsBuilder(Builder):
 
-    def __init__(self, materials, site_descriptors, query=None, **kwargs):
+    def __init__(self, materials, site_descriptors, mat_query=None, **kwargs):
         """
-        Calculates site descriptors for materials
+        Calculates site-based descriptors (e.g., coordination numbers
+        with different near-neighbor finding approaches) for materials and
+        runs statistics analysis on selected descriptor types
+        (order parameter-based site fingerprints).  The latter is
+        useful as a definition of a structure fingerprint
+        on the basis of local coordination information.
 
         Args:
-            materials (Store): Store of materials documents
-            site_descriptors (Store): Store of site-descriptors data such as tetrahedral order parameter or percentage of 8-fold coordination
-            query (dict): dictionary to limit materials to be analyzed
+            materials (Store): Store of materials documents.
+            site_descriptors (Store): Store of site-descriptors data such
+                                      as tetrahedral order parameter or
+                                      fraction of being 8-fold coordinated.
+            mat_query (dict): dictionary to limit materials to be analyzed.
         """
 
         self.materials = materials
         self.site_descriptors = site_descriptors
-        self.query = query if query else {}
+        self.mat_query = mat_query if mat_query else {}
 
         # Set up all targeted site descriptors.
         self.sds = {}
@@ -50,8 +55,10 @@ class SiteDescriptorsBuilder(Builder):
             self.sds[k] = CoordinationNumber(nn_(), use_weights=False)
             k = 'cn_wt_{}'.format(t)
             self.sds[k] = CoordinationNumber(nn_(), use_weights=True)
+        self.all_output_pieces = {'site_descriptors': [k for k in self.sds.keys()]}
         self.sds['opsf'] = OPSiteFingerprint()
-        #self.sds['csf'] = CrystalSiteFingerprint.from_preset('ops')
+        self.sds['csf'] = CrystalSiteFingerprint.from_preset('ops')
+        self.all_output_pieces['statistics'] = ['opsf', 'csf']
 
         super().__init__(sources=[materials],
                          targets=[site_descriptors],
@@ -60,9 +67,16 @@ class SiteDescriptorsBuilder(Builder):
     def get_items(self):
         """
         Gets all materials that need new site descriptors.
+        For example, entirely new materials and materials
+        for which certain descriptor in the current Store
+        are still missing.
 
         Returns:
-            generator of materials to calculate site descriptors.
+            generator of materials to calculate site descriptors
+            and of the target quantities to be calculated
+            (e.g., CN with the minimum distance near neighbor
+            (MinimumDistanceNN) finding class from pymatgen which has label
+            "cn_mdnn").
         """
 
         self.logger.info("Site-Descriptors Builder Started")
@@ -71,19 +85,49 @@ class SiteDescriptorsBuilder(Builder):
 
         # All relevant materials that have been updated since site-descriptors
         # were last calculated
-        q = dict(self.query)
+
+        q = dict(self.mat_query)
+        all_task_ids = list(self.materials.distinct(self.materials.key, q))
         q.update(self.materials.lu_filter(self.site_descriptors))
-        task_ids = list(self.materials.distinct(self.materials.key, q))
+        new_task_ids = list(self.materials.distinct(self.materials.key, q))
         self.logger.info(
-            "Found {} new materials for site-descriptors data".format(len(task_ids)))
-        for task_id in task_ids:
-            yield self.materials.query(
-                    properties=[self.materials.key, "structure"],
-                    criteria={self.materials.key: task_id}).limit(1)[0]
+            "Found {} entirely new materials for site-descriptors data".format(
+            len(new_task_ids)))
+        for task_id in all_task_ids:
+            if task_id in new_task_ids:
+                any_piece = True
+
+            else: # Any piece of info missing?
+                data_present = self.site_descriptors.query(
+                        properties=[self.site_descriptors.key, "site_descriptors", "statistics"],
+                        criteria={self.site_descriptors.key: task_id}).limit(1)[0]
+                any_piece = False
+                for k, v in self.all_output_pieces.items():
+                    if k not in list(data_present.keys()):
+                        any_piece = True
+                        break
+                    else:
+                        any_piece = False
+                        for e in v:
+                            if e not in data_present[k]:
+                                any_piece = True
+                                break
+                if not any_piece:
+                    for fp in ['opsf', 'csf']:
+                        for l in self.sds[fp].feature_labels():
+                            for fpi in data_present['site_descriptors'][fp]:
+                                if l not in fpi.keys():
+                                    any_piece = True
+                                    break
+            if any_piece:
+                yield self.materials.query(
+                        properties=[self.materials.key, "structure"],
+                        criteria={self.materials.key: task_id}).limit(1)[0]
 
     def process_item(self, item):
         """
-        Calculates site descriptors for the structures
+        Calculates all site descriptors for the structures
+
 
         Args:
             item (dict): a dict with a task_id and a structure
@@ -100,8 +144,8 @@ class SiteDescriptorsBuilder(Builder):
         site_descr_doc['site_descriptors'] = \
                 self.get_site_descriptors_from_struct(
                 site_descr_doc['structure'])
-        site_descr_doc['opsf_statistics'] = \
-                self.get_opsf_statistics(
+        site_descr_doc['statistics'] = \
+                self.get_statistics(
                 site_descr_doc['site_descriptors'])
         site_descr_doc[self.site_descriptors.key] = item[self.materials.key]
 
@@ -128,10 +172,10 @@ class SiteDescriptorsBuilder(Builder):
         # Compute descriptors.
         for k, sd in self.sds.items():
             try:
-                d = {}
+                d = []
                 l = sd.feature_labels()
                 for i, s in enumerate(structure.sites):
-                    d[i] = {}
+                    d.append({'site': i})
                     for j, desc in enumerate(sd.featurize(structure, i)):
                         d[i][l[j]] = desc
                 doc[k] = d
@@ -142,29 +186,32 @@ class SiteDescriptorsBuilder(Builder):
 
         return doc
 
-    def get_opsf_statistics(self, site_descr):
+    def get_statistics(self, site_descr, fps=('opsf', 'csf')):
         doc = {}
 
         # Compute site-descriptor statistics.
-        try:
-            n_site = len(list(site_descr['opsf'].keys()))
-            tmp = {}
-            for isite in range(n_site):
-                for l, v in site_descr['opsf'][isite].items():
-                    if l not in list(tmp.keys()):
-                        tmp[l] = []
-                    tmp[l].append(v)
-            d = {}
-            for k, l in tmp.items():
-                d[k] = {}
-                d[k]['min'] = min(tmp[k])
-                d[k]['max'] = max(tmp[k])
-                d[k]['mean'] = np.mean(tmp[k])
-                d[k]['std'] = np.std(tmp[k])
-            doc = d
+        for fp in fps:
+            doc[fp] = {}
+            try:
+                n_site = len(site_descr[fp])
+                tmp = {}
+                for isite in range(n_site):
+                    for l, v in site_descr[fp][isite].items():
+                        if l not in list(tmp.keys()):
+                            tmp[l] = []
+                        tmp[l].append(v)
+                d = []
+                for k, l in tmp.items():
+                    dtmp = {'name': k}
+                    dtmp['min'] = min(tmp[k])
+                    dtmp['max'] = max(tmp[k])
+                    dtmp['mean'] = np.mean(tmp[k])
+                    dtmp['std'] = np.std(tmp[k])
+                    d.append(dtmp)
+                doc[fp] = d
 
-        except Exception as e:
-            self.logger.error("Failed calculating statistics of site "
-                              "descriptors: {}".format(e))
+            except Exception as e:
+                self.logger.error("Failed calculating statistics of site "
+                                  "descriptors: {}".format(e))
 
         return doc
