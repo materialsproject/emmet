@@ -88,13 +88,14 @@ class PropertyWorkflowBuilder(Builder):
         Returns:
              generator for items
         """
-        wf_inputs = self.materials.query(["structure", "material_id"],
+        wf_inputs = self.materials.query(["structure", "task_id"],
                                          self.material_filter)
         # find existing tags in workflows
         current_prop_ids = self.source.distinct("material_id")
         current_wf_tags = self.lpad.workflows.distinct("metadata.tags")
         ids_to_filter = list(set(current_prop_ids + current_wf_tags))
         for wf_input in wf_inputs:
+            logger.debug("Processing {}".format(wf_input["task_id"]))
             yield wf_input, ids_to_filter
 
     def process_item(self, item):
@@ -108,7 +109,7 @@ class PropertyWorkflowBuilder(Builder):
             Workflow
         """
         wf_input, ids_to_filter = item
-        mat_id = wf_input["material_id"]
+        mat_id = wf_input["task_id"]
         if mat_id in ids_to_filter:
             return None
         else:
@@ -142,7 +143,7 @@ def PriorityBuilder(Builder):
         pass
 
 
-# TODO: maybe this should be somewhere else?
+# TODO: maybe this should be somewhere else, atomate?
 def generate_elastic_workflow(structure, tags=[]):
     """
     Generates a standard production workflow.
@@ -189,14 +190,14 @@ def generate_elastic_workflow(structure, tags=[]):
     priority = 500 - structure.num_sites
     wf = add_priority(wf, priority)
     for fw in wf.fws:
-        if fw.spec['elastic_category'] == 'minimal':
+        if fw.spec.get('elastic_category') == 'minimal':
             fw.spec['_priority'] += 2000
-        elif fw.spec['elastic_category'] == 'minimal_full_stencil':
+        elif fw.spec.get('elastic_category') == 'minimal_full_stencil':
             fw.spec['_priority'] += 1000
     return wf
 
 
-def get_elastic_builder(materials, lpad=None, filter=None):
+def get_elastic_wf_builder(elasticity, materials, lpad=None, filter=None):
     """
     Args:
         materials (Store): materials store
@@ -205,8 +206,6 @@ def get_elastic_builder(materials, lpad=None, filter=None):
     Returns:
         PropertyWorkflowBuilder for elastic workflow
     """
-    if filter is None:
-        filter = {"elasticity": None}
-    return PropertyWorkflowBuilder(materials, filter,
-                                   generate_elastic_workflow, lpad)
-
+    wf_method = "emmet.materials.property_workflows.generate_elastic_workflow"
+    return PropertyWorkflowBuilder(elasticity, materials, wf_method,
+                                   filter, lpad)

@@ -1,5 +1,7 @@
 import os
 import unittest
+import monty
+
 from maggma.stores import MemoryStore
 from maggma.runner import Runner
 from emmet.materials.property_workflows import PropertyWorkflowBuilder,\
@@ -43,7 +45,7 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
             material_filter={"material_id": {"$lt": 3}}, lpad=self.lpad)
         self.filter.connect()
 
-    def test_init(self):
+    def test_serialization(self):
         # Test invocation from string method
         builder = PropertyWorkflowBuilder(
             self.elasticity, self.materials,
@@ -53,12 +55,11 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         new = PropertyWorkflowBuilder.from_dict(serialized)
         self.assertEqual(new._wf_function_string,
                          "emmet.materials.property_workflows.generate_elastic_workflow")
-        runner = Runner([builder])
-        from monty.serialization import dumpfn, loadfn
-        from monty.json import jsanitize
-        dumpfn(jsanitize(runner, strict=True), "elastic_wf_runner.yaml")
-        new = loadfn("elastic_wf_runner.yaml")
-        import nose; nose.tools.set_trace()
+        with monty.tempfile.ScratchDir('.') as sdir:
+            with monty.os.cd(sdir):
+                monty.serialization.dumpfn(builder, "builder.yaml")
+
+
 
     def test_get_items(self):
         # No filter
@@ -90,6 +91,18 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         # Ensure no further updates
         runner.run()
         self.assertEqual(self.lpad.workflows.count(), 3)
+
+    def test_mystuff(self):
+        from monty.serialization import dumpfn, loadfn
+        from maggma.stores import MongoStore
+
+        materials = MongoStore.from_db_file("materials.yaml")
+        elasticity = MongoStore.from_db_file("elasticity.yaml")
+        mpworks_tasks = MongoStore.from_db_file("mpworks_tasks.yaml")
+        lpad = LaunchPad.from_file("/Users/josephmontoya/fw_config/config_kpoints/my_launchpad.yaml")
+        ewf_builder = get_elastic_builder(elasticity, materials, lpad)
+        runner = Runner([ewf_builder])
+        dumpfn([ewf_builder], "elastic_wf_builder.yaml")
 
 if __name__ == "__main__":
     unittest.main()
