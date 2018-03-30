@@ -188,7 +188,7 @@ class SiteDescriptorsBuilder(Builder):
                     dtmp['std'] = np.std(tmp[k])
                     d.append(dtmp)
                 doc[fp] = d
-    
+
             except Exception as e:
                 self.logger.error("Failed calculating statistics of site "
                                   "descriptors: {}".format(e))

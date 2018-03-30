@@ -83,7 +83,7 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
             for i, di in enumerate(li):
                 if di['name'] == optype:
                     return i
-            raise RuntimeError('did not find optype'.format(optype))
+            raise RuntimeError('did not find optype {}'.format(optype))
         self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'tetrahedral CN_4')]['max'], 0.9995)
         self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'tetrahedral CN_4')]['min'], 0.9995)
         self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'tetrahedral CN_4')]['mean'], 0.9995)
