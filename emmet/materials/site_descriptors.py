@@ -7,7 +7,8 @@ from matminer.featurizers.site import OPSiteFingerprint ,\
 CrystalSiteFingerprint, CoordinationNumber
 
 # TODO:
-# 1) complete documentation!!!
+# 1) Add checking OPs present in current implementation of site fingerprints.
+# 2) Complete documentation!!!
 
 from maggma.builder import Builder
 
@@ -24,12 +25,19 @@ class SiteDescriptorsBuilder(Builder):
 
     def __init__(self, materials, site_descriptors, mat_query=None, **kwargs):
         """
-        Calculates site descriptors for materials
+        Calculates site-based descriptors (e.g., coordination numbers
+        with different near-neighbor finding approaches) for materials and
+        runs statistics analysis on selected descriptor types
+        (order parameter-based site fingerprints).  The latter is
+        useful as a definition of a structure fingerprint
+        on the basis of local coordination information.
 
         Args:
-            materials (Store): Store of materials documents
-            site_descriptors (Store): Store of site-descriptors data such as tetrahedral order parameter or percentage of 8-fold coordination
-            mat_query (dict): dictionary to limit materials to be analyzed
+            materials (Store): Store of materials documents.
+            site_descriptors (Store): Store of site-descriptors data such
+                                      as tetrahedral order parameter or
+                                      fraction of being 8-fold coordinated.
+            mat_query (dict): dictionary to limit materials to be analyzed.
         """
 
         self.materials = materials
@@ -59,9 +67,16 @@ class SiteDescriptorsBuilder(Builder):
     def get_items(self):
         """
         Gets all materials that need new site descriptors.
+        For example, entirely new materials and materials
+        for which certain descriptor in the current Store
+        are still missing.
 
         Returns:
-            generator of materials to calculate site descriptors.
+            generator of materials to calculate site descriptors
+            and of the target quantities to be calculated
+            (e.g., CN with the minimum distance near neighbor
+            (MinimumDistanceNN) finding class from pymatgen which has label
+            "cn_mdnn").
         """
 
         self.logger.info("Site-Descriptors Builder Started")
@@ -76,36 +91,42 @@ class SiteDescriptorsBuilder(Builder):
         q.update(self.materials.lu_filter(self.site_descriptors))
         new_task_ids = list(self.materials.distinct(self.materials.key, q))
         self.logger.info(
-            "Found {} entirely new materials for site-descriptors data".format(len(new_task_ids)))
+            "Found {} entirely new materials for site-descriptors data".format(
+            len(new_task_ids)))
         for task_id in all_task_ids:
             if task_id in new_task_ids:
-                output_pieces = self.all_output_pieces
                 any_piece = True
-            else:
-                output_pieces = {}
+
+            else: # Any piece of info missing?
                 data_present = self.site_descriptors.query(
                         properties=[self.site_descriptors.key, "site_descriptors", "statistics"],
                         criteria={self.site_descriptors.key: task_id}).limit(1)[0]
                 any_piece = False
                 for k, v in self.all_output_pieces.items():
                     if k not in list(data_present.keys()):
-                        output_pieces[k] = [e for e in v]
                         any_piece = True
+                        break
                     else:
-                        output_pieces[k] = []
+                        any_piece = False
                         for e in v:
                             if e not in data_present[k]:
-                                output_pieces[k].append(e)
                                 any_piece = True
+                                break
+                if not any_piece:
+                    for fp in ['opsf', 'csf']:
+                        for l in self.sds[fp].feature_labels():
+                            for fpi in data_present['site_descriptors'][fp]:
+                                if l not in fpi.keys():
+                                    any_piece = True
+                                    break
             if any_piece:
-                yield {'input': self.materials.query(
+                yield self.materials.query(
                         properties=[self.materials.key, "structure"],
-                        criteria={self.materials.key: task_id}).limit(1)[0],
-                        'output': output_pieces}
+                        criteria={self.materials.key: task_id}).limit(1)[0]
 
     def process_item(self, item):
         """
-        Calculates site descriptors for the structures
+        Calculates all site descriptors for the structures
 
 
         Args:
@@ -115,9 +136,9 @@ class SiteDescriptorsBuilder(Builder):
             dict: a site-descriptors dict
         """
         self.logger.debug("Calculating site descriptors for {}".format(
-            item['input'][self.materials.key]))
+            item[self.materials.key]))
 
-        struct = Structure.from_dict(item['input']['structure'])
+        struct = Structure.from_dict(item['structure'])
 
         site_descr_doc = {'structure': struct.copy()}
         site_descr_doc['site_descriptors'] = \
@@ -126,7 +147,7 @@ class SiteDescriptorsBuilder(Builder):
         site_descr_doc['statistics'] = \
                 self.get_statistics(
                 site_descr_doc['site_descriptors'])
-        site_descr_doc[self.site_descriptors.key] = item['input'][self.materials.key]
+        site_descr_doc[self.site_descriptors.key] = item[self.materials.key]
 
         return site_descr_doc
 

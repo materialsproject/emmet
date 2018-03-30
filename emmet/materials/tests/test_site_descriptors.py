@@ -44,8 +44,6 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
                 {'task_id': 'mp-66'}, {'$unset': {'site_descriptors': 1}})
         items = [e for e in list(sd_builder.get_items())]
         self.assertEqual(len(items), 1)
-        self.assertEqual(len(items[0]['output']['statistics']), 0)
-        self.assertTrue(len(items[0]['output']['site_descriptors']) > 0)
 
     def test_get_all_site_descriptors(self):
         test_site_descriptors = MemoryStore("test_site_descriptors")
