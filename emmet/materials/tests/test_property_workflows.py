@@ -92,17 +92,6 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         runner.run()
         self.assertEqual(self.lpad.workflows.count(), 3)
 
-    def test_mystuff(self):
-        from monty.serialization import dumpfn, loadfn
-        from maggma.stores import MongoStore
-
-        materials = MongoStore.from_db_file("materials.yaml")
-        elasticity = MongoStore.from_db_file("elasticity.yaml")
-        mpworks_tasks = MongoStore.from_db_file("mpworks_tasks.yaml")
-        lpad = LaunchPad.from_file("/Users/josephmontoya/fw_config/config_kpoints/my_launchpad.yaml")
-        ewf_builder = get_elastic_builder(elasticity, materials, lpad)
-        runner = Runner([ewf_builder])
-        dumpfn([ewf_builder], "elastic_wf_builder.yaml")
 
 if __name__ == "__main__":
     unittest.main()
