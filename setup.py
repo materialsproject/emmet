@@ -9,7 +9,7 @@ module_dir = os.path.dirname(os.path.abspath(__file__))
 if __name__ == "__main__":
     setup(
         name='emmet',
-        version='2018.3.9',
+        version='2018.4.2',
         description='Emmet is a builder framework for the Materials Project',
         long_description=open(os.path.join(module_dir, 'README.md'),encoding='utf-8').read(),
         url='https://github.com/materialsproject/emmet',
