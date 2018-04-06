@@ -4,8 +4,9 @@ import monty
 
 from maggma.stores import MemoryStore
 from maggma.runner import Runner
+from maggma.builder import Builder
 from emmet.materials.property_workflows import PropertyWorkflowBuilder,\
-    get_elastic_builder
+    get_elastic_wf_builder
 from pymatgen.util.testing import PymatgenTest
 from atomate.vasp.workflows.presets.core import wf_elastic_constant
 from fireworks import LaunchPad, Workflow
@@ -22,12 +23,12 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         materials.connect()
         docs = []
         for n, mat_string in enumerate(["Si", "Sn", "TiO2", "VO2"]):
-            docs.append({"material_id": n,
+            docs.append({"task_id": n,
                          "structure": PymatgenTest.get_structure(mat_string).as_dict()})
-        materials.update(docs, key='material_id')
+        materials.update(docs, key='task_id')
         elasticity = MemoryStore("elasticity")
         elasticity.connect()
-        elasticity.update(docs[0:1], key="material_id")
+        elasticity.update(docs[0:1], key="task_id")
         cls.materials = materials
         cls.elasticity = elasticity
 
@@ -42,7 +43,7 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         self.nofilter.connect()
         self.filter = PropertyWorkflowBuilder(
             self.elasticity, self.materials, wf_elastic_constant,
-            material_filter={"material_id": {"$lt": 3}}, lpad=self.lpad)
+            material_filter={"task_id": {"$lt": 3}}, lpad=self.lpad)
         self.filter.connect()
 
     def test_serialization(self):
@@ -58,8 +59,8 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         with monty.tempfile.ScratchDir('.') as sdir:
             with monty.os.cd(sdir):
                 monty.serialization.dumpfn(builder, "builder.yaml")
-
-
+                new = monty.serialization.loadfn("builder.yaml")
+        self.assertTrue(isinstance(new, Builder))
 
     def test_get_items(self):
         # No filter
@@ -73,9 +74,9 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
             processed = self.nofilter.process_item(item)
             if processed:
                 self.assertTrue(isinstance(processed, Workflow))
-                self.assertTrue(item[0]['material_id'] in processed.metadata['tags'])
+                self.assertTrue(item[0]['task_id'] in processed.metadata['tags'])
             else:
-                self.assertEqual(item[0]['material_id'], 0)
+                self.assertEqual(item[0]['task_id'], 0)
 
     def test_update_targets(self):
         processed = [self.nofilter.process_item(item)

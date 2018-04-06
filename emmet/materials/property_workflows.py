@@ -91,7 +91,7 @@ class PropertyWorkflowBuilder(Builder):
         wf_inputs = self.materials.query(["structure", "task_id"],
                                          self.material_filter)
         # find existing tags in workflows
-        current_prop_ids = self.source.distinct("material_id")
+        current_prop_ids = self.source.distinct("task_id")
         current_wf_tags = self.lpad.workflows.distinct("metadata.tags")
         ids_to_filter = list(set(current_prop_ids + current_wf_tags))
         for wf_input in wf_inputs:
@@ -103,7 +103,7 @@ class PropertyWorkflowBuilder(Builder):
         Processes items into workflows
 
         Args:
-            item ((dict, list)): pair of doc and material_ids to filter
+            item ((dict, list)): pair of doc and task_ids to filter
 
         Returns:
             Workflow
