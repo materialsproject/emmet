@@ -43,7 +43,7 @@ class PropertyWorkflowBuilder(Builder):
         Args:
             source (Store): store of properties
             materials (Store): Store of materials properties
-            filter (dict): dict filter for getting items to process
+            material_filter (dict): dict filter for getting items to process
                 e. g. {"elasticity": None}
             wf_function (string or method): method to generate a workflow
                 based on structure in document with missing property
@@ -151,7 +151,8 @@ def generate_elastic_workflow(structure, tags=None):
         tags = []
     # transform the structure
     ieee_rot = Tensor.get_ieee_rotation(structure)
-    assert SquareTensor(ieee_rot).is_rotation(tol=0.005)
+    if not SquareTensor(ieee_rot).is_rotation(tol=0.005):
+        raise ValueError("Rotation matrix does not satisfy rotation conditions")
     symm_op = SymmOp.from_rotation_and_translation(ieee_rot)
     ieee_structure = structure.copy()
     ieee_structure.apply_operation(symm_op)
@@ -189,10 +190,11 @@ def generate_elastic_workflow(structure, tags=None):
     return wf
 
 
-def get_elastic_wf_builder(elasticity, materials, lpad=None, filter=None):
+def get_elastic_wf_builder(elasticity, materials, lpad=None, material_filter=None):
     """
     Args:
-        materials (Store): materials store
+        elasticity (Store): Elasticity store
+        materials (Store): Materials store
         lpad (LaunchPad): LaunchPad to add workflows
 
     Returns:
@@ -200,4 +202,4 @@ def get_elastic_wf_builder(elasticity, materials, lpad=None, filter=None):
     """
     wf_method = "emmet.materials.property_workflows.generate_elastic_workflow"
     return PropertyWorkflowBuilder(elasticity, materials, wf_method,
-                                   filter, lpad)
+                                   material_filter, lpad)
