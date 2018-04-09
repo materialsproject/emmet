@@ -93,6 +93,11 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         runner.run()
         self.assertEqual(self.lpad.workflows.count(), 3)
 
+    def test_elastic_wf_builder(self):
+        el_wf_builder = get_elastic_wf_builder(self.elasticity, self.materials,
+                                               self.lpad)
+        self.assertEqual(len(list(el_wf_builder.get_items())), 4)
+
 
 if __name__ == "__main__":
     unittest.main()

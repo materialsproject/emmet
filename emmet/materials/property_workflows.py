@@ -31,8 +31,6 @@ __email__ = "montoyjh@lbl.gov"
 #       collections generally
 # TODO: I'm a bit wary to implement an incremental strategy here,
 #       but I think it can be done
-# TODO: This isn't completely serializable because of the workflow function,
-#       could use a string identifier like atomate does
 class PropertyWorkflowBuilder(Builder):
     def __init__(self, source, materials, wf_function,
                  material_filter=None, lpad=None, **kwargs):
