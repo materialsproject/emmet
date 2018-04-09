@@ -133,16 +133,8 @@ class PropertyWorkflowBuilder(Builder):
         return d
 
 
-# TODO: build priorities?
-def PriorityBuilder(Builder):
-    def __init__(self, lpad, propjockey, **kwargs):
-        self.lpad = lpad
-        self.propjockey = propjockey
-        pass
-
-
 # TODO: maybe this should be somewhere else, atomate?
-def generate_elastic_workflow(structure, tags=[]):
+def generate_elastic_workflow(structure, tags=None):
     """
     Generates a standard production workflow.
 
@@ -155,6 +147,8 @@ def generate_elastic_workflow(structure, tags=[]):
         and the "minimal_full_stencil" category to the portion that
         includes all of the strain stencil, but is symmetrically complete
     """
+    if tags == None:
+        tags = []
     # transform the structure
     ieee_rot = Tensor.get_ieee_rotation(structure)
     assert SquareTensor(ieee_rot).is_rotation(tol=0.005)
@@ -172,7 +166,7 @@ def generate_elastic_workflow(structure, tags=[]):
     # find minimal set of fireworks using symmetry reduction
     fws_by_strain = {Strain(fw.tasks[-1]['pass_dict']['strain']): n
                      for n, fw in enumerate(wf.fws) if 'deformation' in fw.name}
-    unique_tensors = symmetry_reduce(fws_by_strain.keys(), ieee_structure)
+    unique_tensors = symmetry_reduce(list(fws_by_strain.keys()), ieee_structure)
     for unique_tensor in unique_tensors:
         fw_index = get_tkd_value(fws_by_strain, unique_tensor)
         if np.isclose(unique_tensor, 0.005).any():
