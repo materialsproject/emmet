@@ -52,9 +52,9 @@ class SiteDescriptorsBuilder(Builder):
                 not in cls_to_abbrev.keys() \
                 else cls_to_abbrev[nn.__name__]
             k = 'cn_{}'.format(t)
-            self.sds[k] = CoordinationNumber(nn_(), use_weights=False)
+            self.sds[k] = CoordinationNumber(nn_(), use_weights='none')
             k = 'cn_wt_{}'.format(t)
-            self.sds[k] = CoordinationNumber(nn_(), use_weights=True)
+            self.sds[k] = CoordinationNumber(nn_(), use_weights='sum')
         self.all_output_pieces = {'site_descriptors': [k for k in self.sds.keys()]}
         self.sds['opsf'] = OPSiteFingerprint()
         self.sds['csf'] = CrystalSiteFingerprint.from_preset('ops')
