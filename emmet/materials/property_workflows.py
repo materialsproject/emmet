@@ -31,8 +31,6 @@ __email__ = "montoyjh@lbl.gov"
 #       collections generally
 # TODO: I'm a bit wary to implement an incremental strategy here,
 #       but I think it can be done
-# TODO: This isn't completely serializable because of the workflow function,
-#       could use a string identifier like atomate does
 class PropertyWorkflowBuilder(Builder):
     def __init__(self, source, materials, wf_function,
                  material_filter=None, lpad=None, **kwargs):
@@ -45,7 +43,7 @@ class PropertyWorkflowBuilder(Builder):
         Args:
             source (Store): store of properties
             materials (Store): Store of materials properties
-            filter (dict): dict filter for getting items to process
+            material_filter (dict): dict filter for getting items to process
                 e. g. {"elasticity": None}
             wf_function (string or method): method to generate a workflow
                 based on structure in document with missing property
@@ -135,16 +133,8 @@ class PropertyWorkflowBuilder(Builder):
         return d
 
 
-# TODO: build priorities?
-def PriorityBuilder(Builder):
-    def __init__(self, lpad, propjockey, **kwargs):
-        self.lpad = lpad
-        self.propjockey = propjockey
-        pass
-
-
 # TODO: maybe this should be somewhere else, atomate?
-def generate_elastic_workflow(structure, tags=[]):
+def generate_elastic_workflow(structure, tags=None):
     """
     Generates a standard production workflow.
 
@@ -157,9 +147,12 @@ def generate_elastic_workflow(structure, tags=[]):
         and the "minimal_full_stencil" category to the portion that
         includes all of the strain stencil, but is symmetrically complete
     """
+    if tags == None:
+        tags = []
     # transform the structure
     ieee_rot = Tensor.get_ieee_rotation(structure)
-    assert SquareTensor(ieee_rot).is_rotation(tol=0.005)
+    if not SquareTensor(ieee_rot).is_rotation(tol=0.005):
+        raise ValueError("Rotation matrix does not satisfy rotation conditions")
     symm_op = SymmOp.from_rotation_and_translation(ieee_rot)
     ieee_structure = structure.copy()
     ieee_structure.apply_operation(symm_op)
@@ -174,7 +167,7 @@ def generate_elastic_workflow(structure, tags=[]):
     # find minimal set of fireworks using symmetry reduction
     fws_by_strain = {Strain(fw.tasks[-1]['pass_dict']['strain']): n
                      for n, fw in enumerate(wf.fws) if 'deformation' in fw.name}
-    unique_tensors = symmetry_reduce(fws_by_strain.keys(), ieee_structure)
+    unique_tensors = symmetry_reduce(list(fws_by_strain.keys()), ieee_structure)
     for unique_tensor in unique_tensors:
         fw_index = get_tkd_value(fws_by_strain, unique_tensor)
         if np.isclose(unique_tensor, 0.005).any():
@@ -197,10 +190,11 @@ def generate_elastic_workflow(structure, tags=[]):
     return wf
 
 
-def get_elastic_wf_builder(elasticity, materials, lpad=None, filter=None):
+def get_elastic_wf_builder(elasticity, materials, lpad=None, material_filter=None):
     """
     Args:
-        materials (Store): materials store
+        elasticity (Store): Elasticity store
+        materials (Store): Materials store
         lpad (LaunchPad): LaunchPad to add workflows
 
     Returns:
@@ -208,4 +202,4 @@ def get_elastic_wf_builder(elasticity, materials, lpad=None, filter=None):
     """
     wf_method = "emmet.materials.property_workflows.generate_elastic_workflow"
     return PropertyWorkflowBuilder(elasticity, materials, wf_method,
-                                   filter, lpad)
+                                   material_filter, lpad)

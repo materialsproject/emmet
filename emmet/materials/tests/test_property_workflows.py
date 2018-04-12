@@ -1,6 +1,5 @@
 import os
 import unittest
-import monty
 
 from maggma.stores import MemoryStore
 from maggma.runner import Runner
@@ -10,6 +9,10 @@ from emmet.materials.property_workflows import PropertyWorkflowBuilder,\
 from pymatgen.util.testing import PymatgenTest
 from atomate.vasp.workflows.presets.core import wf_elastic_constant
 from fireworks import LaunchPad, Workflow
+from monty.tempfile import ScratchDir
+from monty.serialization import dumpfn, loadfn
+from monty.os import cd
+
 
 __author__ = "Joseph Montoya"
 __email__ = "montoyjh@lbl.gov"
@@ -56,10 +59,10 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         new = PropertyWorkflowBuilder.from_dict(serialized)
         self.assertEqual(new._wf_function_string,
                          "emmet.materials.property_workflows.generate_elastic_workflow")
-        with monty.tempfile.ScratchDir('.') as sdir:
-            with monty.os.cd(sdir):
-                monty.serialization.dumpfn(builder, "builder.yaml")
-                new = monty.serialization.loadfn("builder.yaml")
+        with ScratchDir('.') as sdir:
+            with cd(sdir):
+                dumpfn(builder, "builder.yaml")
+                new = loadfn("builder.yaml")
         self.assertTrue(isinstance(new, Builder))
 
     def test_get_items(self):
@@ -92,6 +95,11 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         # Ensure no further updates
         runner.run()
         self.assertEqual(self.lpad.workflows.count(), 3)
+
+    def test_elastic_wf_builder(self):
+        el_wf_builder = get_elastic_wf_builder(self.elasticity, self.materials,
+                                               self.lpad)
+        self.assertEqual(len(list(el_wf_builder.get_items())), 4)
 
 
 if __name__ == "__main__":
