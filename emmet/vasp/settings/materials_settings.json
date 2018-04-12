@@ -60,11 +60,9 @@
     "tasks_key": "output.is_metal",
     "materials_key": "bandstructure.is_metal",
     "quality_score": {
-      "GGA Structure Optimization": 1,
       "GGA Static": 2,
       "GGA NSCF Line": 4,
       "GGA NSCF Uniform": 3,
-      "GGA+U Structure Optimization": 5,
       "GGA+U Static": 6,
       "GGA+U NSCF Line": 8,
       "GGA+U NSCF Uniform": 7
