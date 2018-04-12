@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from itertools import cycle, islice
 from unittest import TestCase
 from uuid import uuid4
 

@@ -64,6 +64,5 @@ def confirm_field_index(store, fields):
         for field in fields:
             if spec[0][0] == field:
                 return
-    else:
-        raise Exception("Need index on one of '{}' for {}".format(
-            fields, store.collection))
+    raise Exception("Need index on one of '{}' for {}".format(
+        fields, store.collection))
