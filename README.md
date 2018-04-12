@@ -27,7 +27,11 @@ Emmet is currently primarily an internal Materials Project tool so if you're rea
 
 ## Installation
 
-Emmet is on PyPI, so `pip install emmet` should work. However, it is currently in very active development, so cloning the git repo and `python setup.py develop` is recommended for now.
+Emmet is on PyPI, so `pip install emmet` should work. However, it is currently in very active development, so an editable install is recommended for now:
+
+```bash
+pip install -e git+git@github.com:materialsproject/emmet.git#egg=emmet --src .
+```
 
 ## Running a Builder
 
