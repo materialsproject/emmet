@@ -23,7 +23,9 @@ class TestMaterials(unittest.TestCase):
         self.mbuilder = MaterialsBuilder(tasks, materials, mat_prefix="", chunk_size=1)
 
     def test_make_mat(self):
-
+        struc1 = self.structure.copy()
+        struc2 = self.structure.copy()
+        struc2.translate_sites(1, [0.5, 0, 0])
         tasks = [{
             "task_id": "mp-1",
             "orig_inputs": {
@@ -34,7 +36,7 @@ class TestMaterials(unittest.TestCase):
                 }
             },
             "output": {
-                "structure": "Struc1",
+                "structure": struc1.as_dict(),
                 "bandgap": 1.3
             },
             "formula_anonymous": "A",
@@ -50,7 +52,7 @@ class TestMaterials(unittest.TestCase):
                 }
             },
             "output": {
-                "structure": "Struc2",
+                "structure": struc2.as_dict(),
                 "bandgap": 2
             },
             "formula_anonymous": "A",
@@ -62,8 +64,8 @@ class TestMaterials(unittest.TestCase):
         self.assertEqual(mat["task_ids"], ["mp-1", "mp-2"])
 
         for k in [
-                "updated_at", "task_ids", "task_id", "origins", "task_types", "anonymous_formula", "band_gap",
-                "bandstructure", "inputs", "pretty_formula", "structure"
+                "updated_at", "task_ids", "task_id", "origins", "task_types", "formula_anonymous", "band_gap",
+                "bandstructure", "inputs", "formula_pretty", "structure"
         ]:
             self.assertIn(k, mat)
 
@@ -73,16 +75,20 @@ class TestMaterials(unittest.TestCase):
         si2.translate_sites(1, [0.5, 0, 0])
         si3 = si.copy()
         si3.make_supercell(2)
+        si4 = si.copy()
+        si4.make_supercell(2)
+        si4.translate_sites(1, [0.1, 0, 0])
 
         incar = {"incar": {"LDAU": True, "ISIF": 3, "IBRION": 1}}
 
         task1 = {"output": {"structure": si.as_dict()}, "task_id": "mp-1", "orig_inputs": incar}
         task2 = {"output": {"structure": si2.as_dict()}, "task_id": "mp-2", "orig_inputs": incar}
         task3 = {"output": {"structure": si3.as_dict()}, "task_id": "mp-3", "orig_inputs": incar}
+        task4 = {"output": {"structure": si4.as_dict()}, "task_id": "mp-4", "orig_inputs": incar}
 
-        grouped_tasks = self.mbuilder.filter_and_group_tasks([task1, task2, task3])
+        grouped_tasks = list(self.mbuilder.filter_and_group_tasks([task1, task2, task3, task4]))
 
-        self.assertEqual(len(grouped_tasks), 2)
+        self.assertEqual(len(grouped_tasks), 3)
 
         task_ids = [[t["task_id"] for t in tasks] for tasks in grouped_tasks]
         self.assertIn(["mp-2"], task_ids)
@@ -117,11 +123,10 @@ class TestMaterials(unittest.TestCase):
             self.assertIn("materials_key", p)
 
         prop_names = [p["materials_key"] for p in prop_list]
-        props_in = [
-            'anonymous_formula', 'bandstructure.band_gap', 'band_gap', 'inputs.structure_optimization', 'pretty_formula'
-        ]
+        props_in = ['bandstructure.band_gap', 'inputs.structure_optimization']
         props_not_in = [
-            'structure', 'bandstructure.cbm', 'bandstructure.vbm', 'chemsys', 'analysis.delta_volume', 'thermo.energy'
+            'formula_anonymous', 'formula_pretty', 'band_gap', 'structure', 'bandstructure.cbm', 'bandstructure.vbm',
+            'chemsys', 'analysis.delta_volume', 'thermo.energy'
         ]
 
         for p in props_in:
