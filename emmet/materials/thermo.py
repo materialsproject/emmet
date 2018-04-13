@@ -14,6 +14,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class ThermoBuilder(Builder):
+
     def __init__(self, materials, thermo, query=None, compatibility=MaterialsProjectCompatibility("Advanced"),
                  **kwargs):
         """
@@ -78,15 +79,16 @@ class ThermoBuilder(Builder):
 
         new_q = dict(self.query)
         new_q["chemsys"] = {"$in": list(chemsys_permutations(chemsys))}
-        fields = ["structure", self.materials.key, "thermo.energy", "unit_cell_formula", "calc_settings"]
+        fields = ["structure", self.materials.key, "thermo.energy_per_atom", "composition", "calc_settings"]
         data = list(self.materials.query(fields, new_q))
 
         all_entries = []
 
         for d in data:
+            comp = Composition(d["composition"])
             entry = ComputedEntry(
-                Composition(d["unit_cell_formula"]),
-                d["thermo"]["energy"],
+                comp,
+                d["thermo"]["energy_per_atom"] * comp.num_atoms,
                 0.0,
                 parameters=d["calc_settings"],
                 entry_id=d[self.materials.key],
@@ -130,8 +132,8 @@ class ThermoBuilder(Builder):
                     }
                 }
 
+                # Logic for if stable or decomposes
                 if d["thermo"]["is_stable"]:
-
                     d["thermo"]["eq_reaction_e"] = pd.get_equilibrium_reaction_energy(e)
                 else:
                     d["thermo"]["decomposes_to"] = [{
@@ -139,8 +141,13 @@ class ThermoBuilder(Builder):
                         "formula": de.composition.formula,
                         "amount": amt
                     } for de, amt in decomp.items()]
+
                 d["thermo"]["entry"] = e.as_dict()
                 d["thermo"]["explanation"] = self.compatibility.get_explanation_dict(e)
+
+                elsyms = sorted(set([el.symbol for el in comp.elements]))
+                d["chemsys"] = "-".join(elsyms),
+
                 docs.append(d)
         except PhaseDiagramError as p:
             print(e.as_dict())
@@ -158,7 +165,8 @@ class ThermoBuilder(Builder):
         """
         items = list(filter(None, chain.from_iterable(items)))  # flatten out lists
         items = list({v[self.thermo.key]: v for v in items}.values())  # check for duplicates within this set
-        items = [i for i in items if i[self.thermo.key] not in self.completed_tasks]  # Check if already updated this run
+        items = [i for i in items if i[self.thermo.key] not in self.completed_tasks
+                 ]  # Check if already updated this run
 
         self.completed_tasks |= {i[self.thermo.key] for i in items}
 
