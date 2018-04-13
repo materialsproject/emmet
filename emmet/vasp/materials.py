@@ -26,7 +26,7 @@ class MaterialsBuilder(Builder):
                  ltol=0.2,
                  stol=0.3,
                  angle_tol=5,
-                 separate_mag_orderings=True,
+                 separate_mag_orderings=False,
                  **kwargs):
         """
         Creates a materials collection from tasks and tags
