@@ -145,7 +145,7 @@ class ThermoBuilder(Builder):
                 d["thermo"]["entry"] = e.as_dict()
                 d["thermo"]["explanation"] = self.compatibility.get_explanation_dict(e)
 
-                elsyms = sorted(set([el.symbol for el in comp.elements]))
+                elsyms = sorted(set([el.symbol for el in e.composition.elements]))
                 d["chemsys"] = "-".join(elsyms),
 
                 docs.append(d)
