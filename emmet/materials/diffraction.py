@@ -81,6 +81,11 @@ class DiffractionBuilder(Builder):
         xrd_doc = {"xrd": self.get_xrd_from_struct(struct)}
         xrd_doc[self.diffraction.key] = item[self.materials.key]
 
+        elsyms = sorted(set([el.symbol for el in struct.composition.elements]))
+        xrd_doc["chemsys"] = "-".join(elsyms)
+        xrd_doc["nelements"] = len(elsyms)
+        xrd_doc["elements"] = list(elsyms)
+        
         return xrd_doc
 
     def get_xrd_from_struct(self, structure):
