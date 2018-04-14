@@ -146,7 +146,9 @@ class ThermoBuilder(Builder):
                 d["thermo"]["explanation"] = self.compatibility.get_explanation_dict(e)
 
                 elsyms = sorted(set([el.symbol for el in e.composition.elements]))
-                d["chemsys"] = "-".join(elsyms),
+                d["chemsys"] = "-".join(elsyms)
+                d["nelements"] = len(elsyms)
+                d["elements"] = list(elsyms)
 
                 docs.append(d)
         except PhaseDiagramError as p:
