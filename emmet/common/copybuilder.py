@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from maggma.builder import Builder
 from tqdm import tqdm
 
