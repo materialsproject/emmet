@@ -6,9 +6,7 @@ class CopyBuilder(Builder):
     """Sync a source with a target.
 
     Uses `lu_field` of source and target Store to get new/updated documents.
-
     Can override `target.key` field to filter for target document to update.
-
     """
 
     def __init__(self, source, target, key=None, **kwargs):
