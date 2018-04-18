@@ -22,8 +22,7 @@ class CopyBuilder(Builder):
         lu_filter = source.lu_filter(target)
         self.logger.debug("lu_filter: {}".format(lu_filter))
         confirm_field_index(source, source.lu_field)
-        if isinstance(self.key, str):
-            target.ensure_index(self.key)
+        confirm_field_index(target, target.lu_field)
         confirm_field_index(target, self.key)
         cursor = source.query(criteria=lu_filter,
                               sort=[(source.lu_field, 1)])
