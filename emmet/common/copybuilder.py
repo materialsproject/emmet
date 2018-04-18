@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from maggma.builder import Builder
 from tqdm import tqdm
 
@@ -38,6 +40,7 @@ class CopyBuilder(Builder):
             item[target.lu_field] = source.lu_func[0](item[source.lu_field])
             if source.lu_field != target.lu_field:
                 del item[source.lu_field]
+            item["_bt"] = datetime.utcnow()
         target.update(items, update_lu=False, key=self.key)
 
 
