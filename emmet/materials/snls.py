@@ -6,6 +6,16 @@ from pymatgen.analysis.structure_matcher import StructureMatcher, ElementCompara
 from pymatgen.util.provenance import StructureNL
 from maggma.builder import Builder
 from pydash.objects import get
+from pybtex.database import parse_string
+
+mp_default_snl_fields = {
+    "references":
+    "@article{Jain2013,\nauthor = {Jain, Anubhav and Ong, Shyue Ping and Hautier, Geoffroy and Chen, Wei and Richards, William Davidson and Dacek, Stephen and Cholia, Shreyas and Gunter, Dan and Skinner, David and Ceder, Gerbrand and Persson, Kristin a.},\ndoi = {10.1063/1.4812323},\nissn = {2166532X},\njournal = {APL Materials},\nnumber = {1},\npages = {011002},\ntitle = {{The Materials Project: A materials genome approach to accelerating materials innovation}},\nurl = {http://link.aip.org/link/AMPADS/v1/i1/p011002/s1\\&Agg=doi},\nvolume = {1},\nyear = {2013}\n}\n\n@misc{MaterialsProject,\ntitle = {{Materials Project}},\nurl = {http://www.materialsproject.org}\n}",
+    "authors": [{
+        "name": "Materials Project",
+        "email": "feedback@materialsproject.org"
+    }],
+}
 
 
 class SNLBuilder(Builder):
@@ -94,15 +104,17 @@ class SNLBuilder(Builder):
         """
         mats = item[0]
         source_snls = item[1]
-        snls = defaultdict(list)
+        snl_docs = list()
         self.logger.debug("Tagging SNLs for {}".format(mats[0]["formula_pretty"]))
 
         # Match up SNLS with materials
         for mat in mats:
-            matched_snls = list(self.match(snls, mat))
-            doc = snls_to_doc(matched_snls)
-            doc[self.snls.key] = mat[self.materials.key]
-            snl_docs.append(doc)
+            matched_snls = list(self.match(source_snls, mat))
+            if len(matched_snls) > 0:
+                doc = snls_to_doc(matched_snls)
+                doc[self.snls.key] = mat[self.materials.key]
+                self.add_defaults(doc)
+                snl_docs.append(doc)
 
         return snl_docs
 
@@ -136,6 +148,17 @@ class SNLBuilder(Builder):
                 if struc.get_space_group_info()[0] == snl_spacegroup and sm.fit(struc, snl_struc):
                     yield snl
                     break
+
+    def add_defaults(self, snls):
+
+        for k, v in self.default_snl_fields:
+            for snl in snls:
+                if isinstance(v, list) and isinstance(snl[k], list):
+                    snl[k].extend(v)
+                elif isinstance(snl[k], list):
+                    snl[k].append(v)
+                elif isinstance(v, list):
+                    snl[k] = [snl[k]] + v
 
     def update_targets(self, items):
         """
