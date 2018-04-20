@@ -3,6 +3,7 @@ from unittest import TestCase
 from uuid import uuid4
 
 from maggma.stores import MongoStore
+from maggma.runner import Runner
 from emmet.common.copybuilder import CopyBuilder
 
 
@@ -33,6 +34,7 @@ class TestCopyBuilder(TestCase):
         self.source.connect()
         self.source.collection.create_index("lu")
         self.target.connect()
+        self.target.collection.create_index("lu")
         self.target.collection.create_index("k")
 
     def tearDown(self):
@@ -60,8 +62,8 @@ class TestCopyBuilder(TestCase):
         self.target.collection.insert_many(self.old_docs)
         items = list(map(self.builder.process_item, self.builder.get_items()))
         self.builder.update_targets(items)
-        self.assertTrue(self.target.query_one(criteria={"k": 0})["v"], "new")
-        self.assertTrue(self.target.query_one(criteria={"k": 10})["v"], "old")
+        self.assertEqual(self.target.query_one(criteria={"k": 0})["v"], "new")
+        self.assertEqual(self.target.query_one(criteria={"k": 10})["v"], "old")
 
     def test_confirm_lu_field_index(self):
         self.source.collection.drop_index("lu_1")
@@ -69,3 +71,12 @@ class TestCopyBuilder(TestCase):
             self.builder.get_items()
         self.assertTrue(cm.exception.args[0].startswith("Need index"))
         self.source.collection.create_index("lu")
+
+    def test_runner(self):
+        self.source.collection.insert_many(self.old_docs)
+        self.source.update(self.new_docs, update_lu=False)
+        self.target.collection.insert_many(self.old_docs)
+        runner = Runner([self.builder])
+        runner.run()
+        self.assertEqual(self.target.query_one(criteria={"k": 0})["v"], "new")
+        self.assertEqual(self.target.query_one(criteria={"k": 10})["v"], "old")
