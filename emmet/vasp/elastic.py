@@ -76,27 +76,28 @@ class ElasticBuilder(Builder):
         # Get only successful elastic deformation tasks with parent structure
         q = dict(self.query)
         q["state"] = "successful"
-        q["task_label"] = {"$in": ["elastic deformation",
-                                   "structure optimization"]}
+        q.update({"$or": [{"task_label": {"$regex": "elastic deformation"}},
+                          {"task_label": {"$regex": "structure optimization"}}]})
 
         return_props = ['output', 'input', 'completed_at',
                         'transmuter', 'task_id', 'task_label', 'formula_pretty']
         self.logger.debug("Getting criteria")
-        formulas = self.tasks.distinct('formula_pretty', criteria=q)
-
         material_dict = generate_formula_dict(self.materials)
 
         # formulas that have been updated since elasticity was last updated
         # Note that this makes the builder a bit slower if run for a complete
-        # build in non-incremental
+        # build in non-incremental, note that elasticity collection uses
+        # pretty_formula whereas atomate uses formula_pretty
         if self.incremental:
             self.logger.info("Ensuring indices on lu_field for sources/targets")
             self.tasks.ensure_index(self.tasks.lu_field)
             self.elasticity.ensure_index(self.elasticity.lu_field)
             incr_filter = q.copy()
             incr_filter.update(self.tasks.lu_filter(self.elasticity))
-            new_formulas = self.tasks.distinct("formula_pretty", incr_filter)
-            q.update({"formula_pretty": {"$in": new_formulas}})
+            formulas = self.tasks.distinct("formula_pretty", incr_filter)
+            q.update({"formula_pretty": {"$in": formulas}})
+        else:
+            formulas = self.tasks.distinct('formula_pretty', criteria=q)
 
         cmd_cursor = self.tasks.groupby("formula_pretty",
                                         properties=return_props,
@@ -105,7 +106,7 @@ class ElasticBuilder(Builder):
         for n, doc in enumerate(cmd_cursor):
             # TODO: refactor for task sets without structure opt
             logger.debug("Processing formula {}, {} of {}".format(
-                doc['_id'], n, len(formulas)))
+                doc['_id']['formula_pretty'], n, len(formulas)))
             possible_mp_ids = material_dict.get(doc['_id']["formula_pretty"])
             if possible_mp_ids:
                 yield doc['docs'], possible_mp_ids
@@ -114,7 +115,7 @@ class ElasticBuilder(Builder):
 
     def process_item(self, item):
         """
-        Process the tasks and materials into a elasticity collection
+        Process the tasks and materials into an elasticity collection
 
         Args:
             item: a dictionary of documents keyed by materials id
@@ -243,6 +244,8 @@ def get_elastic_analysis(opt_task, defo_tasks):
 
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
+        # TODO: more intelligently determine if independent 
+        # strain fitting can be done
         if len(cauchy_stresses) == 24:
             elastic_doc['legacy_fit'] = legacy_fit(strains, cauchy_stresses)
         et_raw = ElasticTensor.from_pseudoinverse(fstrains, fstresses)
@@ -328,9 +331,9 @@ def group_deformations_by_optimization_task(docs, tol=1e-6):
     tasks_by_opt_task = []
     for _, task_set in tasks_by_lattice:
         opt_struct_tasks = [task for task in task_set
-                            if task['task_label']=='structure optimization']
+                            if 'structure optimization' in task['task_label']]
         deformation_tasks = [task for task in task_set
-                             if task['task_label']=='elastic deformation']
+                             if 'elastic deformation' in task['task_label']]
         opt_struct_tasks.reverse()
         if opt_struct_tasks and deformation_tasks:
             tasks_by_opt_task.append((opt_struct_tasks[-1], deformation_tasks))

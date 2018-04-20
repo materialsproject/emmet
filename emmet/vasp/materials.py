@@ -3,7 +3,7 @@ from itertools import chain, groupby
 import os
 
 from monty.serialization import loadfn
-from pymatgen import Structure
+from pymatgen import Structure, Composition
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 
 from maggma.builder import Builder
@@ -132,14 +132,26 @@ class MaterialsBuilder(Builder):
         """
         Converts a group of tasks into one material
         """
+        # Convert the task to properties and flatten
         all_props = list(chain.from_iterable([self.task_to_prop_list(t) for t in task_group]))
+
+        # Sort and group based on materials key
         sorted_props = sorted(all_props, key=lambda x: x['materials_key'])
         grouped_props = groupby(sorted_props, lambda x: x['materials_key'])
-        best_props = []
-        for name, prop in grouped_props:
 
-            sorted_props = sorted(prop, key=lambda x: x['quality_score'], reverse=True)
-            best_props.append(sorted_props[0])
+        # Choose the best prop for each materials key: highest quality score and most recent updated
+        best_props = []
+        for _, props in grouped_props:
+            sorted_props = sorted(props, key=lambda x: (x['quality_score'], x["last_updated"]), reverse=True)
+            if sorted_props[0].get("aggregate",False):
+                vals = [prop["value"] for prop in sorted_props]
+                prop = sorted_props[0]
+                prop["value"] = vals
+                # Can't track an aggregated property
+                prop["track"] = False
+                best_props.append(prop)
+            else:
+                best_props.append(sorted_props[0])
 
         # Add in the provenance for the properties
         origins = [{k: prop[k]
@@ -147,12 +159,14 @@ class MaterialsBuilder(Builder):
                    for prop in best_props
                    if prop.get("track", False)]
 
+        # Store all the task_ids
         task_ids = list(sorted([t["task_id"] for t in task_group], key=lambda x: int(str(x).split("-")[-1])))
 
+        # Store task_types
         task_types = {t["task_id"]: t["task_type"] for t in all_props}
 
         mat = {
-            "updated_at": datetime.utcnow(),
+            "updated_at": max([prop["last_updated"] for prop in all_props]),
             "task_ids": task_ids,
             self.materials.key: task_ids[0],
             "origins": origins,
@@ -161,6 +175,8 @@ class MaterialsBuilder(Builder):
 
         for prop in best_props:
             set_(mat, prop["materials_key"], prop["value"])
+
+        self.post_analysis(mat)
 
         return mat
 
@@ -184,6 +200,16 @@ class MaterialsBuilder(Builder):
                     structure.add_spin_by_site(structure.site_properties['magmom'])
                     structure.remove_site_property('magmom')
 
+        grouped_structures = self.group_structures(structures)
+        grouped_tasks = [[filtered_tasks[struc.index] for struc in group] for group in grouped_structures]
+
+        return grouped_tasks
+
+    def group_structures(self, structures):
+        """
+        Groups structures according to space group and structure matching
+        """
+
         sm = StructureMatcher(
             ltol=self.ltol,
             stol=self.stol,
@@ -194,15 +220,17 @@ class MaterialsBuilder(Builder):
             allow_subset=False,
             comparator=ElementComparator())
 
-        grouped_structures = sm.group_structures(structures)
+        def get_sg(struc):
+            return struc.get_space_group_info()[0]
 
-        grouped_tasks = [[filtered_tasks[struc.index] for struc in group] for group in grouped_structures]
-
-        return grouped_tasks
+        # First group by spacegroup number then by structure matching
+        for _, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
+            for group in sm.group_structures(list(pregroup)):
+                yield group
 
     def task_to_prop_list(self, task):
         """
-        Converts a task into an list of properties
+        Converts a task into an list of properties with associated metadata
         """
         t_type = task_type(task['orig_inputs'])
         t_id = task["task_id"]
@@ -219,12 +247,40 @@ class MaterialsBuilder(Builder):
                         "task_id": t_id,
                         "quality_score": prop["quality_score"][t_type],
                         "track": prop.get("track", False),
-                        "last_updated": task["last_updated"],
+                        "aggregate": prop.get("aggregate",False),
+                        "last_updated": task[self.tasks.lu_field],
                         "materials_key": prop["materials_key"]
                     })
                 elif not prop.get("optional", False):
                     self.logger.error("Failed getting {} for task: {}".format(prop["tasks_key"], t_id))
         return props
+
+    def post_analysis(self, mat):
+
+        if "structure" in mat:
+            structure = Structure.from_dict(mat["structure"])
+
+            comp = structure.composition
+            elsyms = sorted(set([e.symbol for e in comp.elements]))
+            meta = {
+                "nsites": structure.num_sites,
+                "elements": elsyms,
+                "nelements": len(elsyms),
+                "composition": comp,
+                "composition_reduced": comp.reduced_composition,
+                "formula_pretty": comp.reduced_formula,
+                "formula_anonymous": comp.anonymized_formula,
+                "chemsys": "-".join(elsyms),
+                "volume": structure.volume,
+                "density": structure.density,
+            }
+            mat.update(meta)
+
+        for k, v in dict({"band_gap": "bandstructure.band_gap", "energy_per_atom": "output.energy_per_atom"}).items():
+            if has(mat, v):
+                mat[k] = get(mat, v)
+
+
 
     def update_targets(self, items):
         """

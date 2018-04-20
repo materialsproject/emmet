@@ -11,7 +11,6 @@ from monty.json import jsanitize
 from maggma.builder import Builder
 from pydash.objects import get, set_, has
 
-
 # Import for crazy things this builder needs
 from pymatgen.io.cif import CifWriter
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
@@ -23,25 +22,64 @@ from pymatgen.analysis.structure_analyzer import RelaxationAnalyzer
 from pymatgen.analysis.diffraction.xrd import XRDPattern
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 
-
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
-
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-mp_conversion_dict = loadfn(os.path.join(
-    module_dir, "settings", "mp_conversion.json"))
+mp_conversion_dict = {
+    "anonymous_formula": "anonymous_formula",
+    "band_gap.search_gap.band_gap": "bandstructure.band_gap",
+    "band_gap.search_gap.is_direct": "bandstructure.is_gap_direct",
+    "chemsys": "chemsys",
+    "delta_volume": "analysis.delta_volume",
+    "density": "density",
+    "efermi": "bandstructure.efermi",
+    "elements": "elements",
+    "final_energy": "thermo.energy",
+    "final_energy_per_atom": "thermo.energy_per_atom",
+    "hubbards": "calc_settings.hubbards",
+    "initial_structure": "initial_structure",
+    "input.crystal": "initial_structure",
+    "input.potcar_spec": "calc_settings.potcar_spec",
+    "is_hubbard": "calc_settings.is_hubbard",
+    "nelements": "nelements",
+    "nsites": "nsites",
+    "pretty_formula": "pretty_formula",
+    "reduced_cell_formula": "reduced_cell_formula",
+    "run_type": "calc_settings.run_type",
+    "spacegroup": "spacegroup",
+    "structure": "structure",
+    "total_magnetization": "magnestism.total_magnetization",
+    "unit_cell_formula": "unit_cell_formula",
+    "volume": "volume",
+    "warnings": "analysis.warnings",
+    "task_ids": "task_ids",
+    "task_id": "task_id",
+    "original_task_id": "task_id",
+    "input.incar": "inputs.structure_optimization.incar",
+    "input.kpoints": "inputs.structure_optimization.kpoints",
+    "encut": "inputs.structure_optimization.incar.ENCUT"
+}
 
-
-SANDBOXED_PROPERTIES = {"e_above_hull": "e_above_hull",
-                        "decomposes_to": "decomposes_to"}
+SANDBOXED_PROPERTIES = {"e_above_hull": "e_above_hull", "decomposes_to": "decomposes_to"}
 
 latt_para_interval = [1.50 - 1.96 * 3.14, 1.50 + 1.96 * 3.14]
 vol_interval = [4.56 - 1.96 * 7.82, 4.56 + 1.96 * 7.82]
 
 
 class MPBuilder(Builder):
-
-    def __init__(self, materials,  mp_materials, thermo=None, electronic_structure=None, magnetism=None, snls=None, xrd=None, elasticity=None, piezo=None, icsd=None, query=None,  **kwargs):
+    def __init__(self,
+                 materials,
+                 mp_materials,
+                 thermo=None,
+                 electronic_structure=None,
+                 magnetism=None,
+                 snls=None,
+                 xrd=None,
+                 elasticity=None,
+                 piezo=None,
+                 icsd=None,
+                 query=None,
+                 **kwargs):
         """
         Creates a MP Website style materials doc.
         This builder is a bit unweildy as MP will eventually move to a new format
@@ -64,12 +102,10 @@ class MPBuilder(Builder):
         self.piezo = piezo
         self.magnetism = magnetism
 
-        sources = list(filter(None, [
-                       materials, thermo, electronic_structure, magnetism, snls, elasticity, piezo, icsd, xrd]))
+        sources = list(
+            filter(None, [materials, thermo, electronic_structure, magnetism, snls, elasticity, piezo, icsd, xrd]))
 
-        super().__init__(sources=sources,
-                         targets=[mp_materials],
-                         **kwargs)
+        super().__init__(sources=sources, targets=[mp_materials], **kwargs)
 
     def get_items(self):
         """
@@ -86,45 +122,40 @@ class MPBuilder(Builder):
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.mp_materials))
         mats = list(self.materials.distinct(self.materials.key, q))
-        self.logger.info(
-            "Found {} new materials for the website".format(len(mats)))
+        self.logger.info("Found {} new materials for the website".format(len(mats)))
 
         for m in mats:
 
-            doc = {"material": self.materials.query_one(
-                criteria={self.materials.key: m})}
+            doc = {"material": self.materials.query_one(criteria={self.materials.key: m})}
 
             if self.electronic_structure:
-                doc["electronic_structure"] = self.electronic_structure.query_one(
-                    criteria={self.electronic_structure.key: m, "band_gap": {"$exists": 1}})
+                doc["electronic_structure"] = self.electronic_structure.query_one(criteria={
+                    self.electronic_structure.key: m,
+                    "band_gap": {
+                        "$exists": 1
+                    }
+                })
 
             if self.elasticity:
-                doc["elasticity"] = self.elasticity.query_one(
-                    criteria={self.elasticity.key: m})
+                doc["elasticity"] = self.elasticity.query_one(criteria={self.elasticity.key: m})
 
             if self.piezo:
-                doc["piezo"] = self.piezo.query_one(
-                    criteria={self.piezo.key: m})
+                doc["piezo"] = self.piezo.query_one(criteria={self.piezo.key: m})
 
             if self.thermo:
-                doc["thermo"] = self.thermo.query_one(
-                    criteria={self.thermo.key: m})
+                doc["thermo"] = self.thermo.query_one(criteria={self.thermo.key: m})
 
             if self.snls:
-                doc["snl"] = self.snls.query_one(
-                    criteria={self.snls.key: m})
+                doc["snl"] = self.snls.query_one(criteria={self.snls.key: m})
 
             if self.icsd:
-                doc["icsds"] = list(self.icsd.query(
-                    criteria={"chemsys": doc["material"]["chemsys"]}))
+                doc["icsds"] = list(self.icsd.query(criteria={"chemsys": doc["material"]["chemsys"]}))
 
             if self.magnetism:
-                doc["magnetism"] = self.magnetism.query_one(
-                    criteria={self.magnetism.key: m})
+                doc["magnetism"] = self.magnetism.query_one(criteria={self.magnetism.key: m})
 
             if self.xrd:
-                doc["xrd"] = self.xrd.query_one(
-                    criteria={self.xrd.key: m})
+                doc["xrd"] = self.xrd.query_one(criteria={self.xrd.key: m})
 
             self.logger.debug("Working on {}".format(m))
             yield doc
@@ -175,8 +206,7 @@ class MPBuilder(Builder):
         items = list(filter(None, items))
 
         if len(items) > 0:
-            self.logger.info(
-                "Updating {} mp materials docs".format(len(items)))
+            self.logger.info("Updating {} mp materials docs".format(len(items)))
             self.mp_materials.update(docs=items)
         else:
             self.logger.info("No items to update")
@@ -196,6 +226,7 @@ class MPBuilder(Builder):
         # Search index for materials
         self.materials.ensure_index(self.materials.key, unique=True)
         self.materials.ensure_index("task_ids")
+
 
 #
 #
@@ -224,8 +255,7 @@ def old_style_mat(new_mat):
     mat["reduced_cell_formula"] = struc.composition.as_dict()
     mat["full_formula"] = "".join(struc.formula.split())
     vals = sorted(mat["reduced_cell_formula"].values())
-    mat["anonymous_formula"] = {string.ascii_uppercase[i]: float(vals[i])
-                                for i in range(len(vals))}
+    mat["anonymous_formula"] = {string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))}
 
     set_(mat, "pseudo_potential.functional", "PBE")
 
@@ -302,8 +332,7 @@ def add_cifs(doc):
         doc["cifs"]["primitive"] = None
         doc["cifs"]["refined"] = None
         doc["cifs"]["conventional_standard"] = None
-        _log.error("Can't get alternative cells for task_id {i}".format(
-            i=doc["task_id"]))
+        _log.error("Can't get alternative cells for task_id {i}".format(i=doc["task_id"]))
 
 
 def add_xrd(mat, xrd):
@@ -315,13 +344,11 @@ def add_xrd(mat, xrd):
         el_doc["wavelength"] = doc["wavelength"]
 
         xrd_pattern = XRDPattern.from_dict(doc["pattern"])
-        el_doc["pattern"] = [[float(intensity),
-                              [int(x) for x in literal_eval(list(hkls.keys())[0])],
-                              two_theta,
-                              float(d_hkl)] for two_theta, intensity, hkls, d_hkl in zip(xrd_pattern.x,
-                                                                                         xrd_pattern.y,
-                                                                                         xrd_pattern.hkls,
-                                                                                         xrd_pattern.d_hkls)]
+        el_doc["pattern"] = [[
+            float(intensity), [int(x) for x in literal_eval(list(hkls.keys())[0])], two_theta,
+            float(d_hkl)
+        ] for two_theta, intensity, hkls, d_hkl in zip(xrd_pattern.x, xrd_pattern.y, xrd_pattern.hkls,
+                                                       xrd_pattern.d_hkls)]
 
         mat["xrd"][el] = el_doc
 
@@ -331,8 +358,7 @@ def add_thermo(mat, thermo):
         set_(mat, "e_above_hull", get(thermo, "thermo.e_above_hull"))
 
     if has(thermo, "thermo.formation_energy_per_atom"):
-        set_(mat, "formation_energy_per_atom", get(
-            thermo, "thermo.formation_energy_per_atom"))
+        set_(mat, "formation_energy_per_atom", get(thermo, "thermo.formation_energy_per_atom"))
 
     if has(thermo, "thermo.decmposes_to"):
         set_(mat, "decmposes_to", get(thermo, "thermo.decmposes_to"))
@@ -343,29 +369,25 @@ def sandbox_props(mat):
     mat["sbxd"] = []
 
     for sbx in mat["sbxn"]:
-        sbx_d = {k: get(mat, v)
-                 for k, v in SANDBOXED_PROPERTIES.items() if has(mat, k)}
+        sbx_d = {k: get(mat, v) for k, v in SANDBOXED_PROPERTIES.items() if has(mat, k)}
         sbx_d["id"] = sbx
         mat["sbxd"].append(sbx_d)
 
 
 def add_icsd(mat, icsds):
 
-    relevant_icsd = [icsd for icsd in icsds if icsd[
-        "icsd_id"] in mat.get("icsd_ids", [])]
+    relevant_icsd = [icsd for icsd in icsds if icsd["icsd_id"] in mat.get("icsd_ids", [])]
     results = []
     for icsd in relevant_icsd:
         result = {"warnings": []}
-        tags = [icsd[t]
-                for t in ["chem_name", "min_name"] if t in icsd and icsd[t]]
+        tags = [icsd[t] for t in ["chem_name", "min_name"] if t in icsd and icsd[t]]
         result["exp"] = {'pressure': icsd["pressure"], 'tags': tags}
         if icsd.get('pressure', 0) > 1:
             result["warnings"].append("High pressure experimental phase.")
         results.append(result)
 
     if len(results) == 0:
-        results.append({"warnings": ["Structure has been removed in the 2012 version of ICSD."],
-                        "exp": {}})
+        results.append({"warnings": ["Structure has been removed in the 2012 version of ICSD."], "exp": {}})
 
     if mat["icsd_ids"]:
         results[0]["exp_lattice"] = mat["snl"]["lattice"]
@@ -380,17 +402,14 @@ def add_icsd(mat, icsds):
         for l in ["a", "b", "c"]:
             change = latt_para_percentage_changes[l] * 100
             if change < latt_para_interval[0] or change > latt_para_interval[1]:
-                results[0]["warnings"].append(
-                    "Large change in {} lattice parameter during relaxation.".format(l))
+                results[0]["warnings"].append("Large change in {} lattice parameter during relaxation.".format(l))
         change = analyzer.get_percentage_volume_change() * 100
         if change < vol_interval[0] or change > vol_interval[1]:
-            results[0]["warnings"].append(
-                "Large change in volume during relaxation.")
+            results[0]["warnings"].append("Large change in volume during relaxation.")
     except Exception as ex:
         # print icsd_crystal.formula
         # print final_structure.formula
-        print("Relaxation analyzer failed for Material:{} due to {}".format(
-            mat["task_id"], traceback.print_exc()))
+        print("Relaxation analyzer failed for Material:{} due to {}".format(mat["task_id"], traceback.print_exc()))
 
     # Merge all the results
 
@@ -416,8 +435,7 @@ def add_icsd(mat, icsds):
                     high_pressure_count += 1
             results_union["warnings"] = [i for i in set(warnings)]
             if high_pressure_count != 0 and high_pressure_count != len(mat.get("icsd_ids", [])):
-                results_union["warnings"].remove(
-                    "High pressure experimental phase.")
+                results_union["warnings"].remove("High pressure experimental phase.")
         results = results_union
     else:
         results = results[0]
@@ -429,10 +447,7 @@ def add_icsd(mat, icsds):
 
 
 def add_magnetism(mat, mag=None):
-    mag_types = {"NM": "Non-magnetic",
-                 "FiM": "Ferri",
-                 "AFM": "AFM",
-                 "FM": "FM"}
+    mag_types = {"NM": "Non-magnetic", "FiM": "Ferri", "AFM": "AFM", "FM": "FM"}
 
     struc = Structure.from_dict(mat["structure"])
     msa = CollinearMagneticStructureAnalyzer(struc)
@@ -461,6 +476,5 @@ def add_snl(mat, snl=None):
     snl = snl if snl else {}
     mat["snl"] = snl.get("snl", None)
     mat["snl_final"] = snl.get("snl", None)
-    mat["created_at"] = get(snl, "snl.about.created_at") if has(
-        snl, "snl.about.created_at") else datetime.utcnow()
+    mat["created_at"] = get(snl, "snl.about.created_at") if has(snl, "snl.about.created_at") else datetime.utcnow()
     mat["icsd_ids"] = snl.get("icsd_ids", [])
