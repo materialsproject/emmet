@@ -140,3 +140,45 @@ class SNLBuilder(Builder):
             icsd_ids = list(filter(None, [get(snl, "about._icsd.icsd_id", None) for snl in snl_list]))
             snls.append({self.snls.key: mat_id, "snl": snl, "icsd_ids": icsd_ids})
         return snls
+
+
+DB_indexes = {
+    "ICSD": "icsd_ids"
+    "Pauling": "pf_ids"
+}
+
+
+def snls_to_doc(snls):
+    """
+    Converts a series of snls into a snl document with just metadata
+    no structure
+    """
+    # Choose earliesst created_at
+    created_at = sorted([s["about"]["created_at"]["string"] for s in snls])[0]
+    # Choose earliest history
+    history = sorted(snls, key=lambda x: StructureNL.from_dict(x).created_at)[0]["history"]
+    # Aggregate all references
+    references = sorted("\n".join(s["about"]["references"] for s in snls))
+    # Aggregate all remarks
+    remarks = list(set([remark for snl in snls for remark in s["about"]["remarks"]]))
+    # Aggregate all projects
+    projects = list(set([projects for snl in snls for projects in s["about"]["projects"]]))
+    # Aggregate all authors
+    authors = {n: e for snl in snls for entry in snl for n, e in entry.items()}
+    authors = [{n: e} for n, e in authors.items()]
+
+    # Aggregate all the database IDs
+    db_ids = defaultdict(list)
+    for s in snls:
+        if len(s["about"]["history"]) == 1 and \
+                s["about"]["history"][0]["name"] in DB_indexes:
+            db_ids[DB_indexes[s["about"]["history"]["name"]]].append(
+                s["about"]["history"][0]["description"].get("ID", None))
+    db_ids = {k: list(filter(None, v)) for k, v in db_ids.items()}
+
+    return {"created_at": created_at,
+            "history": history,
+            "references": references,
+            "remarks": remarks,
+            "projects": projects,
+            "authors": authors}
