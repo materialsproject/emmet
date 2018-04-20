@@ -82,8 +82,6 @@ class ElasticBuilder(Builder):
         return_props = ['output', 'input', 'completed_at',
                         'transmuter', 'task_id', 'task_label', 'formula_pretty']
         self.logger.debug("Getting criteria")
-        formulas = self.tasks.distinct('formula_pretty', criteria=q)
-
         material_dict = generate_formula_dict(self.materials)
 
         # formulas that have been updated since elasticity was last updated
@@ -96,8 +94,10 @@ class ElasticBuilder(Builder):
             self.elasticity.ensure_index(self.elasticity.lu_field)
             incr_filter = q.copy()
             incr_filter.update(self.tasks.lu_filter(self.elasticity))
-            new_formulas = self.tasks.distinct("formula_pretty", incr_filter)
-            q.update({"formula_pretty": {"$in": new_formulas}})
+            formulas = self.tasks.distinct("formula_pretty", incr_filter)
+            q.update({"formula_pretty": {"$in": formulas}})
+        else:
+            formulas = self.tasks.distinct('formula_pretty', criteria=q)
 
         cmd_cursor = self.tasks.groupby("formula_pretty",
                                         properties=return_props,
@@ -106,7 +106,7 @@ class ElasticBuilder(Builder):
         for n, doc in enumerate(cmd_cursor):
             # TODO: refactor for task sets without structure opt
             logger.debug("Processing formula {}, {} of {}".format(
-                doc['_id'], n, len(formulas)))
+                doc['_id']['formula_pretty'], n, len(formulas)))
             possible_mp_ids = material_dict.get(doc['_id']["formula_pretty"])
             if possible_mp_ids:
                 yield doc['docs'], possible_mp_ids
@@ -248,7 +248,6 @@ def get_elastic_analysis(opt_task, defo_tasks):
         # strain fitting can be done
         if len(cauchy_stresses) == 24:
             elastic_doc['legacy_fit'] = legacy_fit(strains, cauchy_stresses)
-
         et_raw = ElasticTensor.from_pseudoinverse(fstrains, fstresses)
         et = et_raw.voigt_symmetrized.convert_to_ieee(opt_struct)
         defo_tasks = sorted(defo_tasks, key=lambda x: x['completed_at'])
