@@ -3,6 +3,7 @@ from unittest import TestCase
 from uuid import uuid4
 
 from maggma.stores import MongoStore
+from maggma.runner import Runner
 from emmet.common.copybuilder import CopyBuilder
 
 
@@ -69,3 +70,10 @@ class TestCopyBuilder(TestCase):
             self.builder.get_items()
         self.assertTrue(cm.exception.args[0].startswith("Need index"))
         self.source.collection.create_index("lu")
+
+    def test_runner(self):
+        self.source.update(self.old_docs)
+        runner = Runner([self.builder])
+        runner.run()
+        self.assertTrue(self.target.query_one(criteria={"k": 0})["v"], "new")
+        self.assertTrue(self.target.query_one(criteria={"k": 10})["v"], "old")
