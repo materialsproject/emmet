@@ -34,6 +34,7 @@ class TestCopyBuilder(TestCase):
         self.source.connect()
         self.source.collection.create_index("lu")
         self.target.connect()
+        self.target.collection.create_index("lu")
         self.target.collection.create_index("k")
 
     def tearDown(self):
