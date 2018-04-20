@@ -62,8 +62,8 @@ class TestCopyBuilder(TestCase):
         self.target.collection.insert_many(self.old_docs)
         items = list(map(self.builder.process_item, self.builder.get_items()))
         self.builder.update_targets(items)
-        self.assertTrue(self.target.query_one(criteria={"k": 0})["v"], "new")
-        self.assertTrue(self.target.query_one(criteria={"k": 10})["v"], "old")
+        self.assertEqual(self.target.query_one(criteria={"k": 0})["v"], "new")
+        self.assertEqual(self.target.query_one(criteria={"k": 10})["v"], "old")
 
     def test_confirm_lu_field_index(self):
         self.source.collection.drop_index("lu_1")
@@ -73,8 +73,10 @@ class TestCopyBuilder(TestCase):
         self.source.collection.create_index("lu")
 
     def test_runner(self):
-        self.source.update(self.old_docs)
+        self.source.collection.insert_many(self.old_docs)
+        self.source.update(self.new_docs, update_lu=False)
+        self.target.collection.insert_many(self.old_docs)
         runner = Runner([self.builder])
         runner.run()
-        self.assertTrue(self.target.query_one(criteria={"k": 0})["v"], "new")
-        self.assertTrue(self.target.query_one(criteria={"k": 10})["v"], "old")
+        self.assertEqual(self.target.query_one(criteria={"k": 0})["v"], "new")
+        self.assertEqual(self.target.query_one(criteria={"k": 10})["v"], "old")
