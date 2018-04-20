@@ -23,7 +23,16 @@ class SNLBuilder(Builder):
     Builds a collection of materials with their corresponding SNL list
     """
 
-    def __init__(self, materials, snls, *source_snls, query=None, ltol=0.2, stol=0.3, angle_tol=5, **kwargs):
+    def __init__(self,
+                 materials,
+                 snls,
+                 *source_snls,
+                 query=None,
+                 ltol=0.2,
+                 stol=0.3,
+                 angle_tol=5,
+                 default_snl_fields=None,
+                 **kwargs):
         """
         Args:
             materials (Store): Store of materials docs to tag with SNLs
@@ -33,6 +42,7 @@ class SNLBuilder(Builder):
             ltol (float):  Length tolerance for structure matching
             stol (float): site tolerance for structure matching
             angle_tol (float): angle tolerance for structure matching
+            default_ref (str): string of bibtex entries to add by default to every document
         """
         self.materials = materials
         self.snls = snls
@@ -41,6 +51,7 @@ class SNLBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
         self.query = query if query else {}
+        self.default_snl_fields = default_snl_fields if default_snl_fields else mp_default_snl_fields
         self.kwargs = kwargs
 
         super(SNLBuilder, self).__init__(sources=[materials, *self.source_snls], targets=[snls], **kwargs)
@@ -48,8 +59,10 @@ class SNLBuilder(Builder):
     def ensure_indicies(self):
 
         self.materials.ensure_index(self.materials.key)
+        self.materials.ensure_index("formula_pretty")
         for s in self.source_snls:
             s.ensure_index(s.key)
+            s.ensure_index("formula_pretty")
 
     def get_items(self):
         """
@@ -139,11 +152,14 @@ class SNLBuilder(Builder):
             allow_subset=False,
             comparator=ElementComparator())
 
-        m_strucs = [Structure.from_dict(mat["structure"])] + [Structure.from_dict(init_struc)
-                                                              for init_struc in mat["initial_structures"]]
+        m_strucs = [Structure.from_dict(mat["structure"])
+                    ] + [Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]]
         for snl in snls:
             snl_struc = StructureNL.from_dict(snl).structure
-            snl_spacegroup = snl_struc.get_space_group_info()[0]
+            try:
+                snl_spacegroup = snl_struc.get_space_group_info()[0]
+            except:
+                snl_spacegroup = -1
             for struc in m_strucs:
                 if struc.get_space_group_info()[0] == snl_spacegroup and sm.fit(struc, snl_struc):
                     yield snl
@@ -174,10 +190,7 @@ class SNLBuilder(Builder):
             self.logger.info("No items to update")
 
 
-DB_indexes = {
-    "ICSD": "icsd_ids",
-    "Pauling": "pf_ids"
-}
+DB_indexes = {"ICSD": "icsd_ids", "Pauling": "pf_ids"}
 
 
 def snls_to_doc(snls):
@@ -186,32 +199,36 @@ def snls_to_doc(snls):
     no structure
     """
     # Choose earliesst created_at
-    created_at = sorted([s["about"]["created_at"]["string"] for s in snls])[0]
+    created_at = sorted([snl["about"]["created_at"]["string"] for snl in snls])[0]
     # Choose earliest history
-    history = sorted(snls, key=lambda x: StructureNL.from_dict(x).created_at)[0]["history"]
+    history = sorted(snls, key=lambda snl: snl["about"]["created_at"]["string"])[0]["about"]["history"]
     # Aggregate all references
-    references = sorted("\n".join(s["about"]["references"] for s in snls))
+    references = "\n".join(sorted([snl["about"]["references"] for snl in snls]))
     # Aggregate all remarks
-    remarks = list(set([remark for snl in snls for remark in s["about"]["remarks"]]))
+    remarks = list(set([remark for snl in snls for remark in snl["about"]["remarks"]]))
     # Aggregate all projects
-    projects = list(set([projects for snl in snls for projects in s["about"]["projects"]]))
-    # Aggregate all authors
-    authors = {n: e for snl in snls for entry in snl for n, e in entry.items()}
-    authors = [{n: e} for n, e in authors.items()]
+    projects = list(set([projects for snl in snls for projects in snl["about"]["projects"]]))
+    # Aggregate all authors - Converting a single dictionary first performs duplicate checking
+    authors = {name: email for snl in snls for entry in snl["about"]["authors"] for name, email in entry.items()}
+    authors = [{name: email} for name, email in authors.items()]
 
     # Aggregate all the database IDs
     db_ids = defaultdict(list)
-    for s in snls:
-        if len(s["about"]["history"]) == 1 and \
-                s["about"]["history"][0]["name"] in DB_indexes:
-            db_ids[DB_indexes[s["about"]["history"]["name"]]].append(
-                s["about"]["history"][0]["description"].get("ID", None))
-    db_ids = {k: list(filter(None, v)) for k, v in db_ids.items()}
+    for snl in snls:
+        if len(snl["about"]["history"]) == 1 and \
+                snl["about"]["history"][0]["name"] in DB_indexes:
+            db_name = snl["about"]["history"][0]["name"]
+            db_id_key = DB_indexes[db_name]
+            db_ids[db_id_key].append(snl["about"]["history"][0]["description"].get("id", None))
+    # remove Nones and empty lists
+    db_ids = {k: list(filter(None, v)) for k, v in db_ids.items() if len(list(filter(None, db_ids.items()))) > 0}
 
-    return {"created_at": created_at,
-            "history": history,
-            "references": references,
-            "remarks": remarks,
-            "projects": projects,
-            "authors": authors
-            "db_ids": db_ids}
+    return {
+        "created_at": created_at,
+        "history": history,
+        "references": references,
+        "remarks": remarks,
+        "projects": projects,
+        "authors": authors,
+        "db_ids": db_ids
+    }
