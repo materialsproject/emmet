@@ -74,7 +74,7 @@ class SNLBuilder(Builder):
             snls = []
 
             for source in self.source_snls:
-                snls.extend(source.query(criteria={"reduced_cell_formula": formula}))
+                snls.extend(source.query(criteria={"formula_pretty": formula}))
 
             #snls = [s["snl"] for s in snls]
             self.logger.debug("Found {} snls and {} mats".format(len(snls), len(mats)))
