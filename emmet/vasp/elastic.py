@@ -76,8 +76,8 @@ class ElasticBuilder(Builder):
         # Get only successful elastic deformation tasks with parent structure
         q = dict(self.query)
         q["state"] = "successful"
-        q["task_label"] = {"$in": ["elastic deformation",
-                                   "structure optimization"]}
+        q.update({"$or": [{"task_label": {"$regex": "elastic deformation"}},
+                          {"task_label": {"$regex": "structure optimization"}}]})
 
         return_props = ['output', 'input', 'completed_at',
                         'transmuter', 'task_id', 'task_label', 'formula_pretty']
@@ -88,7 +88,8 @@ class ElasticBuilder(Builder):
 
         # formulas that have been updated since elasticity was last updated
         # Note that this makes the builder a bit slower if run for a complete
-        # build in non-incremental
+        # build in non-incremental, note that elasticity collection uses
+        # pretty_formula whereas atomate uses formula_pretty
         if self.incremental:
             self.logger.info("Ensuring indices on lu_field for sources/targets")
             self.tasks.ensure_index(self.tasks.lu_field)
@@ -114,7 +115,7 @@ class ElasticBuilder(Builder):
 
     def process_item(self, item):
         """
-        Process the tasks and materials into a elasticity collection
+        Process the tasks and materials into an elasticity collection
 
         Args:
             item: a dictionary of documents keyed by materials id
@@ -243,8 +244,13 @@ def get_elastic_analysis(opt_task, defo_tasks):
 
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
+        # Determine if independent strain fitting can be done
+        # ind_strains = [s.zeroed(0.002) for s in fstrains]
+        # ind_strains = [s for s in ind_strains if len(np.nonzero(s.voigt)) == 1]
+
         if len(cauchy_stresses) == 24:
             elastic_doc['legacy_fit'] = legacy_fit(strains, cauchy_stresses)
+
         et_raw = ElasticTensor.from_pseudoinverse(fstrains, fstresses)
         et = et_raw.voigt_symmetrized.convert_to_ieee(opt_struct)
         defo_tasks = sorted(defo_tasks, key=lambda x: x['completed_at'])
@@ -328,9 +334,10 @@ def group_deformations_by_optimization_task(docs, tol=1e-6):
     tasks_by_opt_task = []
     for _, task_set in tasks_by_lattice:
         opt_struct_tasks = [task for task in task_set
-                            if task['task_label']=='structure optimization']
+                            if 'structure optimization' in task['task_label']]
         deformation_tasks = [task for task in task_set
-                             if task['task_label']=='elastic deformation']
+                             if 'elastic deformation' in task['task_label']]
+        # import nose; nose.tools.set_trace()
         opt_struct_tasks.reverse()
         if opt_struct_tasks and deformation_tasks:
             tasks_by_opt_task.append((opt_struct_tasks[-1], deformation_tasks))
@@ -366,6 +373,7 @@ def group_by_parent_lattice(docs, tol=1e-6):
                 break
         if not match:
             docs_by_lattice.append([parent_lattice, [doc]])
+    # import nose; nose.tools.set_trace()
     return docs_by_lattice
 
 
