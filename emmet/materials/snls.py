@@ -119,7 +119,7 @@ class SNLBuilder(Builder):
 
         """
 
-        snls = [snl for snl_dict in items for snl in self.collect_snls_mp(snl_dict)]
+        items = list(filter(None, chain.from_iterable(items)))
 
         if len(snls) > 0:
             self.logger.info("Found {} SNLs to update".format(len(snls)))
