@@ -149,16 +149,15 @@ class SNLBuilder(Builder):
                     yield snl
                     break
 
-    def add_defaults(self, snls):
+    def add_defaults(self, snl):
 
-        for k, v in self.default_snl_fields:
-            for snl in snls:
-                if isinstance(v, list) and isinstance(snl[k], list):
-                    snl[k].extend(v)
-                elif isinstance(snl[k], list):
-                    snl[k].append(v)
-                elif isinstance(v, list):
-                    snl[k] = [snl[k]] + v
+        for k, v in self.default_snl_fields.items():
+            if isinstance(v, list) and isinstance(snl[k], list):
+                snl[k].extend(v)
+            elif isinstance(snl[k], list):
+                snl[k].append(v)
+            elif isinstance(v, list):
+                snl[k] = [snl[k]] + v
 
     def update_targets(self, items):
         """
