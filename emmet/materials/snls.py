@@ -95,40 +95,47 @@ class SNLBuilder(Builder):
         mats = item[0]
         source_snls = item[1]
         snls = defaultdict(list)
-        self.logger.debug("Tagging SNLs for {}".format(
-            mats[0]["pretty_formula"]))
+        self.logger.debug("Tagging SNLs for {}".format(mats[0]["formula_pretty"]))
 
-        for snl in source_snls:
-            mat_id = self.match(snl, mats)
-            if mat_id is not None:
-                snls[mat_id].append(snl)
+        # Match up SNLS with materials
+        for mat in mats:
+            matched_snls = list(self.match(snls, mat))
+            doc = snls_to_doc(matched_snls)
+            doc[self.snls.key] = mat[self.materials.key]
+            snl_docs.append(doc)
 
-        return snls
+        return snl_docs
 
-    def match(self, snl, mats):
+    def match(self, snls, mat):
         """
         Finds a material doc that matches with the given snl
 
         Args:
-            snl (dict): the snl doc
-            mats ([dict]): the materials docs to match against
+            snl ([dict]): the snls list
+            mat (dict): a materials doc
 
         Returns:
-            dict: a materials doc if one is found otherwise returns None
+            generator of materials doc keys
         """
-        sm = StructureMatcher(ltol=self.ltol, stol=self.stol, angle_tol=self.angle_tol,
-                              primitive_cell=True, scale=True,
-                              attempt_supercell=False, allow_subset=False,
-                              comparator=ElementComparator())
-        snl_struc = StructureNL.from_dict(snl).structure
+        sm = StructureMatcher(
+            ltol=self.ltol,
+            stol=self.stol,
+            angle_tol=self.angle_tol,
+            primitive_cell=True,
+            scale=True,
+            attempt_supercell=False,
+            allow_subset=False,
+            comparator=ElementComparator())
 
-        for m in mats:
-            m_struct = Structure.from_dict(m["structure"])
-            init_m_struct = Structure.from_dict(m["initial_structure"])
-            if sm.fit(m_struct, snl_struc) or sm.fit(init_m_struct, snl_struc):
-                return m[self.materials.key]
-
-        return None
+        m_strucs = [Structure.from_dict(mat["structure"])] + [Structure.from_dict(init_struc)
+                                                              for init_struc in mat["initial_structures"]]
+        for snl in snls:
+            snl_struc = StructureNL.from_dict(snl).structure
+            snl_spacegroup = snl_struc.get_space_group_info()[0]
+            for struc in m_strucs:
+                if struc.get_space_group_info()[0] == snl_spacegroup and sm.fit(struc, snl_struc):
+                    yield snl
+                    break
 
     def update_targets(self, items):
         """
@@ -144,23 +151,9 @@ class SNLBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
-    def collect_snls_mp(self, snl_dict):
-        """
-        Converts a dict of materials and snls into docs for the snl by choosing the first by creation date and storing all applicable ICSD ids
-        """
-
-        snls = []
-
-        for mat_id, snl_list in snl_dict.items():
-            snl = sorted(
-                snl_list, key=lambda x: StructureNL.from_dict(x).created_at)[0]
-            icsd_ids = list(filter(None, [get(snl, "about._icsd.icsd_id", None) for snl in snl_list]))
-            snls.append({self.snls.key: mat_id, "snl": snl, "icsd_ids": icsd_ids})
-        return snls
-
 
 DB_indexes = {
-    "ICSD": "icsd_ids"
+    "ICSD": "icsd_ids",
     "Pauling": "pf_ids"
 }
 
@@ -198,4 +191,5 @@ def snls_to_doc(snls):
             "references": references,
             "remarks": remarks,
             "projects": projects,
-            "authors": authors}
+            "authors": authors
+            "db_ids": db_ids}
