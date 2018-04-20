@@ -244,7 +244,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
 
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        # TODO: more intelligently determine if independent 
+        # TODO: more intelligently determine if independent
         # strain fitting can be done
         if len(cauchy_stresses) == 24:
             elastic_doc['legacy_fit'] = legacy_fit(strains, cauchy_stresses)
