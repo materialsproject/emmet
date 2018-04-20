@@ -10,11 +10,20 @@ from pydash.objects import get
 
 class SNLBuilder(Builder):
     """
-    Builds SNL collection for materials
+    Builds a collection of materials with their corresponding SNL list
     """
 
-    def __init__(self, materials, snls, *source_snls, query=None, ltol=0.2, stol=0.3,
-                 angle_tol=5, **kwargs):
+    def __init__(self, materials, snls, *source_snls, query=None, ltol=0.2, stol=0.3, angle_tol=5, **kwargs):
+        """
+        Args:
+            materials (Store): Store of materials docs to tag with SNLs
+            snls (Store): Store to update with tagged SNLs
+            *source_snls ([Store]): List of locations to grab SNLs
+            query (dict): query on materials to limit search
+            ltol (float):  Length tolerance for structure matching
+            stol (float): site tolerance for structure matching
+            angle_tol (float): angle tolerance for structure matching
+        """
         self.materials = materials
         self.snls = snls
         self.source_snls = list(source_snls)
@@ -26,6 +35,12 @@ class SNLBuilder(Builder):
 
         super(SNLBuilder, self).__init__(sources=[materials, *self.source_snls], targets=[snls], **kwargs)
 
+    def ensure_indicies(self):
+
+        self.materials.ensure_index(self.materials.key)
+        for s in self.source_snls:
+            s.ensure_index(s.key)
+
     def get_items(self):
         """
         Gets all materials to assocaite with SNLs
@@ -36,6 +51,7 @@ class SNLBuilder(Builder):
         self.logger.info("SNL Builder Started")
 
         self.logger.info("Setting indexes")
+        self.ensure_indicies()
 
         # Find all formulas for materials that have been updated since this
         # builder was last ran
