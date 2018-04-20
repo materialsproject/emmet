@@ -27,7 +27,7 @@ class CopyBuilder(Builder):
         cursor = source.query(criteria=lu_filter,
                               sort=[(source.lu_field, 1)])
         self.logger.info("Will copy {} items".format(cursor.count()))
-        return tqdm(cursor, total=cursor.count())
+        return iter(tqdm(cursor, total=cursor.count()))
 
     def process_item(self, item):
         return item
