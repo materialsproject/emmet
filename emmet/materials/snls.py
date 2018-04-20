@@ -57,40 +57,41 @@ class SNLBuilder(Builder):
         # builder was last ran
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.snls))
-        forms_to_update = set(self.materials.distinct("pretty_formula", q))
-        #forms_to_update = set()
+        forms_to_update = set(self.materials.distinct("formula_pretty", q))
 
         # Find all new SNL formulas since the builder was last run
-        # for source in self.source_snls:
-        #    new_q = source.lu_filter(self.snls)
-        #    forms_to_update |= set(source.distinct("reduced_cell_formula", new_q))
+        for source in self.source_snls:
+            new_q = source.lu_filter(self.snls)
+            forms_to_update |= set(source.distinct("formula_pretty", new_q))
 
-        self.logger.info(
-            "Found {} new/updated systems to proces".format(len(forms_to_update)))
+        self.logger.info("Found {} new/updated systems to proces".format(len(forms_to_update)))
 
         for formula in forms_to_update:
-            mats = list(self.materials.query(properties=[
-                        self.materials.key, "structure", "initial_structure", "pretty_formula"], criteria={"pretty_formula": formula}))
+            mats = list(
+                self.materials.query(
+                    properties=[self.materials.key, "structure", "initial_structures", "formula_pretty"],
+                    criteria={
+                        "formula_pretty": formula
+                    }))
             snls = []
 
             for source in self.source_snls:
                 snls.extend(source.query(criteria={"formula_pretty": formula}))
 
-            #snls = [s["snl"] for s in snls]
             self.logger.debug("Found {} snls and {} mats".format(len(snls), len(mats)))
             if len(mats) > 0 and len(snls) > 0:
                 yield mats, snls
 
     def process_item(self, item):
         """
-        Calculates diffraction patterns for the structures
+        Matches SNLS and Materials
 
         Args:
             item (tuple): a tuple of materials and snls
 
         Returns:
             list(dict): a list of collected snls with material ids
-            """
+        """
         mats = item[0]
         source_snls = item[1]
         snls = defaultdict(list)
