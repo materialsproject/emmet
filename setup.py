@@ -20,7 +20,7 @@ if __name__ == "__main__":
         package_data={},
         zip_safe=False,
         install_requires=[
-            'atomate', 'pymatgen>=2018.3.2','maggma','monty',
+            'atomate', 'pymatgen>=2018.4.20','maggma','monty',
             'six', 'pydash', 'tqdm', 'matminer',
             'prettyplotlib', "pybtex"
         ],
