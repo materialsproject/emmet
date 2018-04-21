@@ -189,6 +189,25 @@ class SNLBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
+    def as_dict(self):
+        """
+        Custom as_dict to deal with the list of source_snls
+        """
+        d = {
+            "@module": self.__class__.__module__,
+            "@class": self.__class__.__name__,
+            "materials": self.materials.as_dict(),
+            "snls": self.snls.as_dict(),
+            "source_snls": [s.as_dict() for s in self.source_snls],
+            "query": self.query,
+            "ltol": self.ltol,
+            "stol": self.stol,
+            "angle_tol": self.angle_tol,
+            "default_snl_fields": self.default_snl_fields,
+            "kwargs": self.kwargs
+        }
+        return d
+
 
 DB_indexes = {"ICSD": "icsd_ids", "Pauling": "pf_ids"}
 
