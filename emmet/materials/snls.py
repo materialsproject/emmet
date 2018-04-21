@@ -7,6 +7,7 @@ from pymatgen.util.provenance import StructureNL
 from maggma.builder import Builder
 from pydash.objects import get
 from pybtex.database import parse_string
+from monty.json import MontyDecoder
 
 mp_default_snl_fields = {
     "references":
@@ -204,9 +205,24 @@ class SNLBuilder(Builder):
             "stol": self.stol,
             "angle_tol": self.angle_tol,
             "default_snl_fields": self.default_snl_fields,
-            "kwargs": self.kwargs
         }
+        d.update(**self.kwargs)
         return d
+
+    @classmethod
+    def from_dict(cls,d):
+        """
+        Custom from_dict to deal with the list of source_snls
+        """
+        decoded = {k: MontyDecoder().process_decoded(v) for k, v in d.items()
+           if not k.startswith("@")}
+
+        materials = decoded.pop("materials")
+        snls = decoded.pop("snls")
+        source_snls = decoded.pop("source_snls")
+        return cls(materials,snls,*source_snls,**decoded)
+
+
 
 
 DB_indexes = {"ICSD": "icsd_ids", "Pauling": "pf_ids"}
