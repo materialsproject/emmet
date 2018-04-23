@@ -183,11 +183,10 @@ class SNLBuilder(Builder):
 
     def update_targets(self, items):
         """
-        Inserts the new task_types into the task_types collection
-
+        Inserts the new SNL docs into the SNL collection
         """
 
-        items = list(filter(None, chain.from_iterable(items)))
+        snls = list(filter(None, chain.from_iterable(items)))
 
         if len(snls) > 0:
             self.logger.info("Found {} SNLs to update".format(len(snls)))
