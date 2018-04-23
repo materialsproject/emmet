@@ -38,7 +38,7 @@ class SNLBuilder(Builder):
         Args:
             materials (Store): Store of materials docs to tag with SNLs
             snls (Store): Store to update with tagged SNLs
-            *source_snls ([Store]): List of locations to grab SNLs
+            source_snls ([Store]): List of locations to grab SNLs
             query (dict): query on materials to limit search
             ltol (float):  Length tolerance for structure matching
             stol (float): site tolerance for structure matching
@@ -162,7 +162,12 @@ class SNLBuilder(Builder):
             except:
                 snl_spacegroup = -1
             for struc in m_strucs:
-                if struc.get_space_group_info()[0] == snl_spacegroup and sm.fit(struc, snl_struc):
+                try:
+                    struc_sg = struc.get_space_group_info()[0]
+                except:
+                    struc_sg = -1
+                # The try-excepts are a temp fix to a spglib bug
+                if struc_sg == snl_spacegroup and sm.fit(struc, snl_struc):
                     yield snl
                     break
 
