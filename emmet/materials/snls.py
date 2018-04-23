@@ -27,7 +27,7 @@ class SNLBuilder(Builder):
     def __init__(self,
                  materials,
                  snls,
-                 *source_snls,
+                 source_snls,
                  query=None,
                  ltol=0.2,
                  stol=0.3,
@@ -189,41 +189,6 @@ class SNLBuilder(Builder):
             self.snls.update(snls)
         else:
             self.logger.info("No items to update")
-
-    def as_dict(self):
-        """
-        Custom as_dict to deal with the list of source_snls
-        """
-        d = {
-            "@module": self.__class__.__module__,
-            "@class": self.__class__.__name__,
-            "materials": self.materials.as_dict(),
-            "snls": self.snls.as_dict(),
-            "source_snls": [s.as_dict() for s in self.source_snls],
-            "query": self.query,
-            "ltol": self.ltol,
-            "stol": self.stol,
-            "angle_tol": self.angle_tol,
-            "default_snl_fields": self.default_snl_fields,
-        }
-        d.update(**self.kwargs)
-        return d
-
-    @classmethod
-    def from_dict(cls,d):
-        """
-        Custom from_dict to deal with the list of source_snls
-        """
-        decoded = {k: MontyDecoder().process_decoded(v) for k, v in d.items()
-           if not k.startswith("@")}
-
-        materials = decoded.pop("materials")
-        snls = decoded.pop("snls")
-        source_snls = decoded.pop("source_snls")
-        return cls(materials,snls,*source_snls,**decoded)
-
-
-
 
 DB_indexes = {"ICSD": "icsd_ids", "Pauling": "pf_ids"}
 
