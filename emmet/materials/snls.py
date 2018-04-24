@@ -207,8 +207,19 @@ def snls_to_doc(snls):
     created_at = sorted([snl["about"]["created_at"]["string"] for snl in snls])[0]
     # Choose earliest history
     history = sorted(snls, key=lambda snl: snl["about"]["created_at"]["string"])[0]["about"]["history"]
-    # Aggregate all references
-    references = "\n".join(sorted([snl["about"]["references"] for snl in snls]))
+
+    # Aggregate all references into one dict to remove duplicates
+    refs = {}
+    for snl in snls:
+        try:
+            entries = parse_string(snl["about"]["references"], bib_format="bibtex")
+            refs.update(entries.entries)
+        except:
+            self.logger.debug("Failed parsing bibtex: {}".format(snl["about"]["references"]))
+
+    entries = BibliographyData(entries=new_entries)
+    references = entries.to_string("bibtex")
+
     # Aggregate all remarks
     remarks = list(set([remark for snl in snls for remark in snl["about"]["remarks"]]))
     # Aggregate all projects
