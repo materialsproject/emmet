@@ -130,11 +130,10 @@ class SNLBuilder(Builder):
         for mat in mats:
             matched_snls = list(self.match(source_snls, mat))
             if len(matched_snls) > 0:
-                snl_fields, db_ids = aggregate_snls(matched_snls)
+                snl_fields = aggregate_snls(matched_snls)
                 self.add_defaults(snl_fields)
                 snl_doc = StructureNL(Structure.from_dict(mat["structure"]), **snl_fields).as_dict()
                 snl_doc[self.snls.key] = mat[self.materials.key]
-                snl_doc["db_ids"] = db_ids
                 snl_docs.append(snl_doc)
 
         return snl_docs
@@ -255,6 +254,7 @@ def aggregate_snls(snls):
         "remarks": remarks,
         "projects": projects,
         "authors": authors,
+        "data": {"_db_ids": db_ids}
     }
 
-    return snl_fields, db_ids
+    return snl_fields
