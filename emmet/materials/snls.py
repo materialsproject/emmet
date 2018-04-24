@@ -7,7 +7,7 @@ from pymatgen.util.provenance import StructureNL
 from maggma.builder import Builder
 from pydash.objects import get
 from pybtex.database import parse_string
-from monty.json import MontyDecoder
+from pybtex.database import BibliographyData
 
 mp_default_snl_fields = {
     "references":
@@ -16,7 +16,11 @@ mp_default_snl_fields = {
         "name": "Materials Project",
         "email": "feedback@materialsproject.org"
     }],
-    "history": {"name": "Materials Project Optimized Structure", "url": "http://www.materialsproject.org"}
+    "history": {
+        "name": "Materials Project Optimized Structure",
+        "url": "http://www.materialsproject.org",
+        "description" : {}
+    }
 }
 
 
@@ -126,10 +130,12 @@ class SNLBuilder(Builder):
         for mat in mats:
             matched_snls = list(self.match(source_snls, mat))
             if len(matched_snls) > 0:
-                doc = snls_to_doc(matched_snls)
-                doc[self.snls.key] = mat[self.materials.key]
-                self.add_defaults(doc)
-                snl_docs.append(doc)
+                snl_fields, db_ids = aggregate_snls(matched_snls)
+                self.add_defaults(snl_fields)
+                snl_doc = StructureNL(Structure.from_dict(mat["structure"]), **snl_fields).as_dict()
+                snl_doc[self.snls.key] = mat[self.materials.key]
+                snl_doc["db_ids"] = db_ids
+                snl_docs.append(snl_doc)
 
         return snl_docs
 
@@ -154,8 +160,8 @@ class SNLBuilder(Builder):
             allow_subset=False,
             comparator=ElementComparator())
 
-        m_strucs = [Structure.from_dict(mat["structure"])] /
-                   + [Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]]
+        m_strucs = [Structure.from_dict(mat["structure"])
+                    ] + [Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]]
         for snl in snls:
             snl_struc = StructureNL.from_dict(snl).structure
             try:
@@ -199,10 +205,9 @@ class SNLBuilder(Builder):
 DB_indexes = {"ICSD": "icsd_ids", "Pauling": "pf_ids"}
 
 
-def snls_to_doc(snls):
+def aggregate_snls(snls):
     """
-    Converts a series of snls into a snl document with just metadata
-    no structure
+    Aggregates a series of SNLs into the fields for a single SNL
     """
     # Choose earliesst created_at
     created_at = sorted([snl["about"]["created_at"]["string"] for snl in snls])[0]
@@ -219,7 +224,7 @@ def snls_to_doc(snls):
         except:
             self.logger.debug("Failed parsing bibtex: {}".format(snl["about"]["references"]))
 
-    entries = BibliographyData(entries=new_entries)
+    entries = BibliographyData(entries=refs)
     references = entries.to_string("bibtex")
 
     # Aggregate all remarks
@@ -243,14 +248,13 @@ def snls_to_doc(snls):
     # remove Nones and empty lists
     db_ids = {k: list(filter(None, v)) for k, v in db_ids.items() if len(list(filter(None, db_ids.items()))) > 0}
 
-    return {
-        "about": {
-            "created_at": created_at,
-            "history": history,
-            "references": references,
-            "remarks": remarks,
-            "projects": projects,
-            "authors": authors,
-            "db_ids": db_ids
-        }
+    snl_fields = {
+        "created_at": created_at,
+        "history": history,
+        "references": references,
+        "remarks": remarks,
+        "projects": projects,
+        "authors": authors,
     }
+
+    return snl_fields, db_ids
