@@ -154,8 +154,8 @@ class SNLBuilder(Builder):
             allow_subset=False,
             comparator=ElementComparator())
 
-        m_strucs = [Structure.from_dict(mat["structure"])
-                    ] + [Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]]
+        m_strucs = [Structure.from_dict(mat["structure"])] /
+                   + [Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]]
         for snl in snls:
             snl_struc = StructureNL.from_dict(snl).structure
             try:
@@ -195,6 +195,7 @@ class SNLBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
+
 DB_indexes = {"ICSD": "icsd_ids", "Pauling": "pf_ids"}
 
 
@@ -205,6 +206,7 @@ def snls_to_doc(snls):
     """
     # Choose earliesst created_at
     created_at = sorted([snl["about"]["created_at"]["string"] for snl in snls])[0]
+
     # Choose earliest history
     history = sorted(snls, key=lambda snl: snl["about"]["created_at"]["string"])[0]["about"]["history"]
 
@@ -222,11 +224,13 @@ def snls_to_doc(snls):
 
     # Aggregate all remarks
     remarks = list(set([remark for snl in snls for remark in snl["about"]["remarks"]]))
+
     # Aggregate all projects
     projects = list(set([projects for snl in snls for projects in snl["about"]["projects"]]))
+
     # Aggregate all authors - Converting a single dictionary first performs duplicate checking
-    authors = {name: email for snl in snls for entry in snl["about"]["authors"] for name, email in entry.items()}
-    authors = [{name: email} for name, email in authors.items()]
+    authors = {entry["name"].lower(): entry["email"] for snl in snls for entry in snl["about"]["authors"]}
+    authors = [{"name": name.title(), "email": email} for name, email in authors.items()]
 
     # Aggregate all the database IDs
     db_ids = defaultdict(list)
@@ -240,11 +244,13 @@ def snls_to_doc(snls):
     db_ids = {k: list(filter(None, v)) for k, v in db_ids.items() if len(list(filter(None, db_ids.items()))) > 0}
 
     return {
-        "created_at": created_at,
-        "history": history,
-        "references": references,
-        "remarks": remarks,
-        "projects": projects,
-        "authors": authors,
-        "db_ids": db_ids
+        "about": {
+            "created_at": created_at,
+            "history": history,
+            "references": references,
+            "remarks": remarks,
+            "projects": projects,
+            "authors": authors,
+            "db_ids": db_ids
+        }
     }
