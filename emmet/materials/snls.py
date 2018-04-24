@@ -16,6 +16,7 @@ mp_default_snl_fields = {
         "name": "Materials Project",
         "email": "feedback@materialsproject.org"
     }],
+    "history": {"name": "Materials Project Optimized Structure", "url": "http://www.materialsproject.org"}
 }
 
 
