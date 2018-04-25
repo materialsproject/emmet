@@ -129,7 +129,6 @@ class ThermoBuilder(Builder):
                 d = {
                     self.thermo.key: e.entry_id,
                     "thermo": {
-                        "energy_per_atom": 
                         "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
                         "e_above_hull": ehull,
                         "is_stable": e in pd.stable_entries
