@@ -51,7 +51,7 @@ class DiffractionBuilder(Builder):
         self.logger.info("Diffraction Builder Started")
 
         self.logger.info("Setting indexes")
-        self.ensure_indexes()
+        self.ensure_indicies()
 
         # All relevant materials that have been updated since diffraction props
         # were last calculated
@@ -61,7 +61,8 @@ class DiffractionBuilder(Builder):
         self.logger.info(
             "Found {} new materials for diffraction data".format(len(mats)))
         for m in mats:
-            yield self.materials.query(properties=[self.materials.key, "structure"], criteria={self.materials.key: m}).limit(1)[0]
+            yield self.materials.query(properties=[self.materials.key, "structure", self.materials.lu_field],
+                                       criteria={self.materials.key: m}).limit(1)[0]
 
     def process_item(self, item):
         """
@@ -82,10 +83,8 @@ class DiffractionBuilder(Builder):
         xrd_doc[self.diffraction.key] = item[self.materials.key]
 
         elsyms = sorted(set([el.symbol for el in struct.composition.elements]))
-        xrd_doc["chemsys"] = "-".join(elsyms)
-        xrd_doc["nelements"] = len(elsyms)
-        xrd_doc["elements"] = list(elsyms)
-        
+        xrd_doc[self.diffraction.lu_field] = item[self.materials.lu_field]
+
         return xrd_doc
 
     def get_xrd_from_struct(self, structure):
@@ -97,7 +96,6 @@ class DiffractionBuilder(Builder):
 
             pattern = jsanitize(xrdcalc.get_xrd_pattern(
                 structure, two_theta_range=xs['two_theta']).as_dict())
-            # TODO: Make sure this is what the website actually needs
             d = {'wavelength': {'element': xs['target'],
                                 'in_angstroms': WAVELENGTHS["".join([xs['target'], xs['edge']])]},
                  'pattern': pattern}
@@ -119,13 +117,14 @@ class DiffractionBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
-    def ensure_indexes(self):
+    def ensure_indicies(self):
         """
-        Ensures indexes on the tasks and materials collections
-        :return:
+        Ensures indicies on the diffraction and materials collections
         """
-        # Search index for materials
+        # Search indicies for materials
         self.materials.ensure_index(self.materials.key, unique=True)
+        self.materials.ensure_index(self.materials.lu_field)
 
-        # Search index for materials
+        # Search indicies for diffraction
         self.diffraction.ensure_index(self.diffraction.key, unique=True)
+        self.diffraction.ensure_index(self.diffraction.lu_field)
