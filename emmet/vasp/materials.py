@@ -165,7 +165,7 @@ class MaterialsBuilder(Builder):
         task_types = {t["task_id"]: t["task_type"] for t in all_props}
 
         mat = {
-            "updated_at": max([prop["last_updated"] for prop in all_props]),
+            self.materials.lu_field: max([prop["last_updated"] for prop in all_props]),
             "task_ids": task_ids,
             self.materials.key: task_ids[0],
             "origins": origins,
@@ -266,7 +266,7 @@ class MaterialsBuilder(Builder):
         items = [i for i in filter(None, chain.from_iterable(items)) if self.valid(i)]
         if len(items) > 0:
             self.logger.info("Updating {} materials".format(len(items)))
-            self.materials.update(docs=items)
+            self.materials.update(docs=items, update_lu=False)
         else:
             self.logger.info("No items to update")
 
@@ -276,13 +276,13 @@ class MaterialsBuilder(Builder):
         """
         return "structure" in doc
 
-    def ensure_indexes(self):
+    def ensure_indicies(self):
         """
-        Ensures indexes on the tasks and materials collections
+        Ensures indicies on the tasks and materials collections
         """
 
         # Basic search index for tasks
-        self.tasks.ensure_index("task_id", unique=True)
+        self.tasks.ensure_index(self.tasks.key, unique=True)
         self.tasks.ensure_index("state")
         self.tasks.ensure_index("formula_pretty")
         self.tasks.ensure_index(self.tasks.lu_field)
@@ -290,6 +290,7 @@ class MaterialsBuilder(Builder):
         # Search index for materials
         self.materials.ensure_index(self.materials.key, unique=True)
         self.materials.ensure_index("task_ids")
+        self.materials.ensure_index(self.materials.lu_field)
 
 
 def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_orderings=False):
@@ -324,5 +325,5 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
 
     # First group by spacegroup number then by structure matching
     for _, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
-        for group in sm.group_structures(sorted(pregroup,key=get_sg)):
+        for group in sm.group_structures(sorted(pregroup, key=get_sg)):
             yield group
