@@ -15,6 +15,35 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 default_mat_settings = os.path.join(module_dir, "settings", "materials_settings.json")
 
+materials_structure_matcher = StructureMatcher(
+    ltol=0.2, stol=0.3, angle_tol=5,
+    primitive_cell=True, scale=True, attempt_supercell=False, allow_subset=False,
+    comparator=ElementComparator()
+)
+
+def group_structures(structures, sm=materials_structure_matcher, separate_mag_orderings=True):
+    """
+    Groups structures according to space group and structure matching
+
+    Args:
+        sm (object): StructureMatcher instance
+        separate_mag_orderings (bool): Separate magnetic orderings into different materials
+    """
+
+    if separate_mag_orderings:
+        for structure in structures:
+            if has(structure.site_properties, "magmom"):
+                structure.add_spin_by_site(structure.site_properties['magmom'])
+                structure.remove_site_property('magmom')
+
+    def get_sg(struc):
+        return struc.get_space_group_info()[0]
+
+    # First group by spacegroup number then by structure matching
+    for _, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
+        for group in sm.group_structures(list(pregroup)):
+            yield group
+
 
 class MaterialsBuilder(Builder):
     def __init__(self,
@@ -23,10 +52,6 @@ class MaterialsBuilder(Builder):
                  mat_prefix="mp-",
                  materials_settings=None,
                  query=None,
-                 ltol=0.2,
-                 stol=0.3,
-                 angle_tol=5,
-                 separate_mag_orderings=True,
                  **kwargs):
         """
         Creates a materials collection from tasks and tags
@@ -37,10 +62,6 @@ class MaterialsBuilder(Builder):
             mat_prefix (str): prefix for all materials ids
             materials_settings (Path): Path to settings files
             query (dict): dictionary to limit tasks to be analyzed
-            ltol (float): StructureMatcher tuning parameter for matching tasks to materials
-            stol (float): StructureMatcher tuning parameter for matching tasks to materials
-            angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
-            separate_mag_orderings (bool): Separate magnetic orderings into different materials
         """
 
         self.tasks = tasks
@@ -48,10 +69,6 @@ class MaterialsBuilder(Builder):
         self.materials = materials
         self.mat_prefix = mat_prefix
         self.query = query if query else {}
-        self.ltol = ltol
-        self.stol = stol
-        self.angle_tol = angle_tol
-        self.separate_mag_orderings = separate_mag_orderings
 
         self.__settings = loadfn(self.materials_settings)
 
@@ -194,39 +211,10 @@ class MaterialsBuilder(Builder):
             s.index = idx
             structures.append(s)
 
-        if self.separate_mag_orderings:
-            for structure in structures:
-                if has(structure.site_properties, "magmom"):
-                    structure.add_spin_by_site(structure.site_properties['magmom'])
-                    structure.remove_site_property('magmom')
-
-        grouped_structures = self.group_structures(structures)
+        grouped_structures = group_structures(structures)
         grouped_tasks = [[filtered_tasks[struc.index] for struc in group] for group in grouped_structures]
 
         return grouped_tasks
-
-    def group_structures(self, structures):
-        """
-        Groups structures according to space group and structure matching
-        """
-
-        sm = StructureMatcher(
-            ltol=self.ltol,
-            stol=self.stol,
-            angle_tol=self.angle_tol,
-            primitive_cell=True,
-            scale=True,
-            attempt_supercell=False,
-            allow_subset=False,
-            comparator=ElementComparator())
-
-        def get_sg(struc):
-            return struc.get_space_group_info()[0]
-
-        # First group by spacegroup number then by structure matching
-        for _, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
-            for group in sm.group_structures(list(pregroup)):
-                yield group
 
     def task_to_prop_list(self, task):
         """
