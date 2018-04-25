@@ -93,6 +93,11 @@ class SNLBuilder(Builder):
             new_q = source.lu_filter(self.snls)
             forms_to_update |= set(source.distinct("formula_pretty", new_q))
 
+        # Now reduce to the set of formulas we actually have
+        q = dict(self.query)
+        forms_avail = set(self.materials.distinct("formula_pretty"),q)
+        forms_to_update = forms_to_update & forms_avail
+
         self.logger.info("Found {} new/updated systems to proces".format(len(forms_to_update)))
 
         for formula in forms_to_update:
