@@ -14,7 +14,6 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class ThermoBuilder(Builder):
-
     def __init__(self, materials, thermo, query=None, compatibility=MaterialsProjectCompatibility("Advanced"),
                  **kwargs):
         """
@@ -43,14 +42,18 @@ class ThermoBuilder(Builder):
         """
         self.logger.info("Thermo Builder Started")
 
+        self.logger.info("Setting indexes")
+        self.ensure_indicies()
         # All relevant materials that have been updated since thermo props were
         # last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.thermo))
-        q.update({"chemsys": {"$exists": 1}})
+        updated_comps = set(self.materials.distinct("chemsys", q))
 
-        comps = self.materials.distinct("chemsys", q)
+        # All chemsys not present in thermo collection
+        new_comps = set(self.materials.distinct("chemsys"), self.query) - set(self.thermo.distinct("chemsys"))
 
+        comps = updated_comps | new_comps
         self.logger.info("Found {} compositions with new/updated materials".format(len(comps)))
 
         # Only yields maximal super sets: e.g. if ["A","B"] and ["A"] are both in the list, will only yield ["A","B"]
@@ -126,6 +129,7 @@ class ThermoBuilder(Builder):
                 d = {
                     self.thermo.key: e.entry_id,
                     "thermo": {
+                        "energy_per_atom": 
                         "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
                         "e_above_hull": ehull,
                         "is_stable": e in pd.stable_entries
@@ -165,10 +169,12 @@ class ThermoBuilder(Builder):
         Args:
             items ([[dict]]): a list of list of thermo dictionaries to update
         """
-        items = list(filter(None, chain.from_iterable(items)))  # flatten out lists
-        items = list({v[self.thermo.key]: v for v in items}.values())  # check for duplicates within this set
-        items = [i for i in items if i[self.thermo.key] not in self.completed_tasks
-                 ]  # Check if already updated this run
+        # flatten out lists
+        items = list(filter(None, chain.from_iterable(items))) 
+        # check for duplicates within this set
+        items = list({v[self.thermo.key]: v for v in items}.values())
+        # Check if already updated this run
+        items = [i for i in items if i[self.thermo.key] not in self.completed_tasks] 
 
         self.completed_tasks |= {i[self.thermo.key] for i in items}
 
@@ -177,6 +183,21 @@ class ThermoBuilder(Builder):
             self.thermo.update(docs=items)
         else:
             self.logger.info("No items to update")
+
+    def ensure_indicies(self):
+        """
+        Ensures indicies on the thermo and materials collections
+        :return:
+        """
+        # Search indicies for materials
+        self.materials.ensure_index(self.materials.key, unique=True)
+        self.materials.ensure_index(self.materials.lu_field)
+        self.materials.ensure_index("chemsys")
+
+        # Search indicies for thermo
+        self.thermo.ensure_index(self.thermo.key, unique=True)
+        self.thermo.ensure_index(self.thermo.lu_field)
+        self.materials.ensure_index("chemsys")
 
 
 def chemsys_permutations(chemsys):
