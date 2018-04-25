@@ -113,7 +113,7 @@ class DiffractionBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info("Updating {} diffraction docs".format(len(items)))
-            self.diffraction.update(docs=items)
+            self.diffraction.update(docs=items,update_lu=False)
         else:
             self.logger.info("No items to update")
 
