@@ -1,6 +1,3 @@
-import gridfs
-import json
-import zlib
 import io
 import traceback
 import numpy as np
@@ -10,7 +7,6 @@ import prettyplotlib as ppl
 import matplotlib
 import scipy.interpolate as scint
 from prettyplotlib import brewer2mpl
-from pymatgen.core.structure import Structure
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, BandStructure
 from pymatgen.electronic_structure.dos import CompleteDos
@@ -23,12 +19,7 @@ matplotlib.use('agg')
 
 
 class ElectronicStructureImageBuilder(Builder):
-
-    def __init__(self,
-                 materials,
-                 electronic_structure,
-                 query=None,
-                 **kwargs):
+    def __init__(self, materials, electronic_structure, bandstructures, dos, query=None, **kwargs):
         """
         Creates an electronic structure from a tasks collection, the associated band structures and density of states, and the materials structure
 
@@ -36,14 +27,18 @@ class ElectronicStructureImageBuilder(Builder):
 
         materials (Store) : Store of materials documents
         electronic_structure  (Store) : Store of electronic structure documents
+        bandstructures (Store) : store of bandstructures
+        dos (Store) : store of DOS
         query (dict): dictionary to limit tasks to be analyzed
         """
 
         self.materials = materials
         self.electronic_structure = electronic_structure
+        self.bandstructures = bandstructures
+        self.dos = dos
         self.query = query if query else {}
 
-        super().__init__(sources=[materials], targets=[electronic_structure], **kwargs)
+        super().__init__(sources=[materials, bandstructures, dos], targets=[electronic_structure], **kwargs)
 
     def get_items(self):
         """
@@ -59,11 +54,7 @@ class ElectronicStructureImageBuilder(Builder):
         # and there is either a dos or bandstructure
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.electronic_structure))
-        q["$or"] = [{"bandstructure.bs_oid": {"$exists": 1}}, {"bandstructure.dos_oid": {"$exists": 1}}]
-
-        # initialize the gridfs
-        self.bfs = gridfs.GridFS(self.materials.collection.database, "bandstructure_fs")
-        self.dfs = gridfs.GridFS(self.materials.collection.database, "dos_fs")
+        q["$and"] = [{"bandstructure.bs_task": {"$exists": 1}}, {"bandstructure.dos_task": {"$exists": 1}}]
 
         mats = list(self.materials.distinct(self.materials.key, criteria=q))
 
@@ -73,9 +64,13 @@ class ElectronicStructureImageBuilder(Builder):
                 [self.materials.key, "structure", "bandstructure", "origins", "calc_settings", "inputs"], {
                     self.materials.key: m
                 })
-            self.get_bandstructure(mat)
-            self.get_dos(mat)
+            mat["bandstructure"]["bs"] = self.bandstructures.query_one(criteria={
+                "task_id": get(mat, "bandstructure.bs_task")
+            })
 
+            mat["bandstructure"]["dos"] = self.bandstructures.query_one(criteria={
+                "task_id": get(mat, "bandstructure.dos_task")
+            })
             yield mat
 
     def process_item(self, mat):
@@ -91,9 +86,8 @@ class ElectronicStructureImageBuilder(Builder):
         d = {self.electronic_structure.key: mat[self.materials.key]}
         self.logger.info("Processing: {}".format(mat[self.materials.key]))
 
-        bs = extract_bs(mat)
-        dos = extract_dos(mat)
-        ylim = None
+        bs = BandStructureSymmLine.from_dict(mat["bandstructure"]["bs"])
+        dos = CompleteDos.from_dict(mat["bandstructure"]["dos"])
 
         # Plot Band structure
         if bs:
@@ -138,17 +132,9 @@ class ElectronicStructureImageBuilder(Builder):
                     "transition": bs.get_band_gap()["transition"]
                 }
             except Exception:
-                self.logger.warning("Caught error in calculating bandgap {}: {}".format(mat[self.materials.key],
-                                                                                        traceback.format_exc()))
+                self.logger.warning("Caught error in calculating bandgap {}: {}".format(
+                    mat[self.materials.key], traceback.format_exc()))
 
-        # Store OID for GridFS access from website
-        if "bs_oid" in mat.get("bandstructure", {}):
-            d["bs_oid"] = mat["bandstructure"]["bs_oid"]
-            d["bs_compression"] = mat["bandstructure"].get("bs_compression", "")
-
-        if "dos_oid" in mat.get("bandstructure", {}):
-            d["dos_oid"] = mat["bandstructure"]["dos_oid"]
-            d["dos_compression"] = mat["bandstructure"].get("dos_compression", "")
         return d
 
     def update_targets(self, items):
@@ -165,70 +151,6 @@ class ElectronicStructureImageBuilder(Builder):
             self.electronic_structure.update(items)
         else:
             self.logger.info("No electronic structure docs to update")
-
-    #
-    # These are all helper methods designed to take a chunk of code and provide a description
-    #
-
-    def get_bandstructure(self, mat):
-
-        # If a bandstructure oid exists
-        if "bs_oid" in mat.get("bandstructure", {}):
-            bs_json = self.bfs.get(mat["bandstructure"]["bs_oid"]).read()
-
-            if "zlib" in mat["bandstructure"].get("bs_compression", ""):
-                bs_json = zlib.decompress(bs_json)
-
-            bs_dict = json.loads(bs_json.decode())
-            mat["bandstructure"]["bs"] = bs_dict
-
-    def get_dos(self, mat):
-
-        # if a dos oid exists
-        if "dos_oid" in mat.get("bandstructure", {}):
-            dos_json = self.dfs.get(mat["bandstructure"]["dos_oid"]).read()
-
-            if "zlib" in mat["bandstructure"].get("dos_compression", ""):
-                dos_json = zlib.decompress(dos_json)
-
-            dos_dict = json.loads(dos_json.decode())
-            mat["bandstructure"]["dos"] = dos_dict
-
-def extract_bs(mat):
-
-    bs = None
-
-    # Process the bandstructure for information
-    if "bs" in mat["bandstructure"]:
-        bs_dict = mat["bandstructure"]["bs"]
-        # Add in structure if not already there
-        if "structure" not in bs_dict:
-            bs_dict["structure"] = mat["structure"]
-
-        # Add in High Symm K Path if not already there
-        if len(bs_dict.get("labels_dict", {})) == 0:
-            labels = get(mat, "inputs.nscf_line.kpoints.labels", None)
-            kpts = get(mat, "inputs.nscf_line.kpoints.kpoints", None)
-            if labels and kpts:
-                labels_dict = dict(zip(labels, kpts))
-                labels_dict.pop(None, None)
-            else:
-                struc = Structure.from_dict(mat["structure"])
-                labels_dict = HighSymmKpath(struc)._kpath["kpoints"]
-
-            bs_dict["labels_dict"] = labels_dict
-
-        bs = BandStructureSymmLine.from_dict(BandStructure.from_dict(bs_dict).as_dict())
-
-    return bs
-
-def extract_dos(mat):
-
-    dos = None
-    if "dos" in mat["bandstructure"]:
-        dos_dict = mat["bandstructure"]["dos"]
-        dos = CompleteDos.from_dict(dos_dict)
-    return dos
 
 
 def get_small_plot(plot_data, gap):

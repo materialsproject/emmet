@@ -42,14 +42,18 @@ class ThermoBuilder(Builder):
         """
         self.logger.info("Thermo Builder Started")
 
+        self.logger.info("Setting indexes")
+        self.ensure_indicies()
         # All relevant materials that have been updated since thermo props were
         # last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.thermo))
-        q.update({"chemsys": {"$exists": 1}})
+        updated_comps = set(self.materials.distinct("chemsys", q))
 
-        comps = self.materials.distinct("chemsys", q)
+        # All chemsys not present in thermo collection
+        new_comps = set(self.materials.distinct("chemsys"), self.query) - set(self.thermo.distinct("chemsys"))
 
+        comps = updated_comps | new_comps
         self.logger.info("Found {} compositions with new/updated materials".format(len(comps)))
 
         # Only yields maximal super sets: e.g. if ["A","B"] and ["A"] are both in the list, will only yield ["A","B"]
@@ -78,15 +82,16 @@ class ThermoBuilder(Builder):
 
         new_q = dict(self.query)
         new_q["chemsys"] = {"$in": list(chemsys_permutations(chemsys))}
-        fields = ["structure", self.materials.key, "thermo.energy", "unit_cell_formula", "calc_settings"]
+        fields = ["structure", self.materials.key, "thermo.energy_per_atom", "composition", "calc_settings"]
         data = list(self.materials.query(fields, new_q))
 
         all_entries = []
 
         for d in data:
+            comp = Composition(d["composition"])
             entry = ComputedEntry(
-                Composition(d["unit_cell_formula"]),
-                d["thermo"]["energy"],
+                comp,
+                d["thermo"]["energy_per_atom"] * comp.num_atoms,
                 0.0,
                 parameters=d["calc_settings"],
                 entry_id=d[self.materials.key],
@@ -130,8 +135,8 @@ class ThermoBuilder(Builder):
                     }
                 }
 
+                # Logic for if stable or decomposes
                 if d["thermo"]["is_stable"]:
-
                     d["thermo"]["eq_reaction_e"] = pd.get_equilibrium_reaction_energy(e)
                 else:
                     d["thermo"]["decomposes_to"] = [{
@@ -139,8 +144,15 @@ class ThermoBuilder(Builder):
                         "formula": de.composition.formula,
                         "amount": amt
                     } for de, amt in decomp.items()]
+
                 d["thermo"]["entry"] = e.as_dict()
                 d["thermo"]["explanation"] = self.compatibility.get_explanation_dict(e)
+
+                elsyms = sorted(set([el.symbol for el in e.composition.elements]))
+                d["chemsys"] = "-".join(elsyms)
+                d["nelements"] = len(elsyms)
+                d["elements"] = list(elsyms)
+
                 docs.append(d)
         except PhaseDiagramError as p:
             print(e.as_dict())
@@ -156,9 +168,12 @@ class ThermoBuilder(Builder):
         Args:
             items ([[dict]]): a list of list of thermo dictionaries to update
         """
-        items = list(filter(None, chain.from_iterable(items)))  # flatten out lists
-        items = list({v[self.thermo.key]: v for v in items}.values())  # check for duplicates within this set
-        items = [i for i in items if i[self.thermo.key] not in self.completed_tasks]  # Check if already updated this run
+        # flatten out lists
+        items = list(filter(None, chain.from_iterable(items)))
+        # check for duplicates within this set
+        items = list({v[self.thermo.key]: v for v in items}.values())
+        # Check if already updated this run
+        items = [i for i in items if i[self.thermo.key] not in self.completed_tasks]
 
         self.completed_tasks |= {i[self.thermo.key] for i in items}
 
@@ -167,6 +182,21 @@ class ThermoBuilder(Builder):
             self.thermo.update(docs=items)
         else:
             self.logger.info("No items to update")
+
+    def ensure_indicies(self):
+        """
+        Ensures indicies on the thermo and materials collections
+        :return:
+        """
+        # Search indicies for materials
+        self.materials.ensure_index(self.materials.key, unique=True)
+        self.materials.ensure_index(self.materials.lu_field)
+        self.materials.ensure_index("chemsys")
+
+        # Search indicies for thermo
+        self.thermo.ensure_index(self.thermo.key, unique=True)
+        self.thermo.ensure_index(self.thermo.lu_field)
+        self.materials.ensure_index("chemsys")
 
 
 def chemsys_permutations(chemsys):

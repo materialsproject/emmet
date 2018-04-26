@@ -60,11 +60,9 @@
     "tasks_key": "output.is_metal",
     "materials_key": "bandstructure.is_metal",
     "quality_score": {
-      "GGA Structure Optimization": 1,
       "GGA Static": 2,
       "GGA NSCF Line": 4,
       "GGA NSCF Uniform": 3,
-      "GGA+U Structure Optimization": 5,
       "GGA+U Static": 6,
       "GGA+U NSCF Line": 8,
       "GGA+U NSCF Uniform": 7
@@ -79,23 +77,21 @@
     }
   },
   {
-    "tasks_key": "calcs_reversed.0.bandstructure",
-    "materials_key": "bandstructure.bs",
+    "tasks_key": "task_id",
+    "materials_key": "bandstructure.bs_task",
     "quality_score": {
       "GGA NSCF Line": 3,
       "GGA+U NSCF Line": 7
     },
-    "track": true,
     "optional": true
   },
   {
-    "tasks_key": "calcs_reversed.0.dos",
-    "materials_key": "bandstructure.dos",
+    "tasks_key": "task_id",
+    "materials_key": "bandstructure.dos_task",
     "quality_score": {
       "GGA NSCF Uniform": 4,
       "GGA+U NSCF Uniform": 8
     },
-    "track": true,
     "optional": true
   },
   {

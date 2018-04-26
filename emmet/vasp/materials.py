@@ -3,7 +3,7 @@ from itertools import chain, groupby
 import os
 
 from monty.serialization import loadfn
-from pymatgen import Structure, Composition
+from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 
 from maggma.builder import Builder
@@ -26,7 +26,7 @@ class MaterialsBuilder(Builder):
                  ltol=0.2,
                  stol=0.3,
                  angle_tol=5,
-                 separate_mag_orderings=True,
+                 separate_mag_orderings=False,
                  **kwargs):
         """
         Creates a materials collection from tasks and tags
@@ -100,7 +100,6 @@ class MaterialsBuilder(Builder):
             tasks_q = dict(q)
             tasks_q["formula_pretty"] = formula
             tasks = list(self.tasks.query(criteria=tasks_q))
-
             yield tasks
 
     def process_item(self, tasks):
@@ -143,7 +142,7 @@ class MaterialsBuilder(Builder):
         best_props = []
         for _, props in grouped_props:
             sorted_props = sorted(props, key=lambda x: (x['quality_score'], x["last_updated"]), reverse=True)
-            if sorted_props[0].get("aggregate",False):
+            if sorted_props[0].get("aggregate", False):
                 vals = [prop["value"] for prop in sorted_props]
                 prop = sorted_props[0]
                 prop["value"] = vals
@@ -166,7 +165,7 @@ class MaterialsBuilder(Builder):
         task_types = {t["task_id"]: t["task_type"] for t in all_props}
 
         mat = {
-            "updated_at": max([prop["last_updated"] for prop in all_props]),
+            self.materials.lu_field: max([prop["last_updated"] for prop in all_props]),
             "task_ids": task_ids,
             self.materials.key: task_ids[0],
             "origins": origins,
@@ -194,39 +193,16 @@ class MaterialsBuilder(Builder):
             s.index = idx
             structures.append(s)
 
-        if self.separate_mag_orderings:
-            for structure in structures:
-                if has(structure.site_properties, "magmom"):
-                    structure.add_spin_by_site(structure.site_properties['magmom'])
-                    structure.remove_site_property('magmom')
-
-        grouped_structures = self.group_structures(structures)
-        grouped_tasks = [[filtered_tasks[struc.index] for struc in group] for group in grouped_structures]
-
-        return grouped_tasks
-
-    def group_structures(self, structures):
-        """
-        Groups structures according to space group and structure matching
-        """
-
-        sm = StructureMatcher(
+        grouped_structures = group_structures(
+            structures,
             ltol=self.ltol,
             stol=self.stol,
             angle_tol=self.angle_tol,
-            primitive_cell=True,
-            scale=True,
-            attempt_supercell=False,
-            allow_subset=False,
-            comparator=ElementComparator())
+            separate_mag_orderings=self.separate_mag_orderings)
 
-        def get_sg(struc):
-            return struc.get_space_group_info()[0]
+        grouped_tasks = [[filtered_tasks[struc.index] for struc in group] for group in grouped_structures]
 
-        # First group by spacegroup number then by structure matching
-        for _, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
-            for group in sm.group_structures(list(pregroup)):
-                yield group
+        return grouped_tasks
 
     def task_to_prop_list(self, task):
         """
@@ -247,7 +223,7 @@ class MaterialsBuilder(Builder):
                         "task_id": t_id,
                         "quality_score": prop["quality_score"][t_type],
                         "track": prop.get("track", False),
-                        "aggregate": prop.get("aggregate",False),
+                        "aggregate": prop.get("aggregate", False),
                         "last_updated": task[self.tasks.lu_field],
                         "materials_key": prop["materials_key"]
                     })
@@ -280,8 +256,6 @@ class MaterialsBuilder(Builder):
             if has(mat, v):
                 mat[k] = get(mat, v)
 
-
-
     def update_targets(self, items):
         """
         Inserts the new task_types into the task_types collection
@@ -292,7 +266,7 @@ class MaterialsBuilder(Builder):
         items = [i for i in filter(None, chain.from_iterable(items)) if self.valid(i)]
         if len(items) > 0:
             self.logger.info("Updating {} materials".format(len(items)))
-            self.materials.update(docs=items)
+            self.materials.update(docs=items, update_lu=False)
         else:
             self.logger.info("No items to update")
 
@@ -302,14 +276,13 @@ class MaterialsBuilder(Builder):
         """
         return "structure" in doc
 
-    def ensure_indexes(self):
+    def ensure_indicies(self):
         """
-        Ensures indexes on the tasks and materials collections
-        :return:
+        Ensures indicies on the tasks and materials collections
         """
 
         # Basic search index for tasks
-        self.tasks.ensure_index("task_id", unique=True)
+        self.tasks.ensure_index(self.tasks.key, unique=True)
         self.tasks.ensure_index("state")
         self.tasks.ensure_index("formula_pretty")
         self.tasks.ensure_index(self.tasks.lu_field)
@@ -317,3 +290,40 @@ class MaterialsBuilder(Builder):
         # Search index for materials
         self.materials.ensure_index(self.materials.key, unique=True)
         self.materials.ensure_index("task_ids")
+        self.materials.ensure_index(self.materials.lu_field)
+
+
+def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_orderings=False):
+    """
+    Groups structures according to space group and structure matching
+
+    Args:
+        structures ([Structure]): list of structures to group
+        ltol (float): StructureMatcher tuning parameter for matching tasks to materials
+        stol (float): StructureMatcher tuning parameter for matching tasks to materials
+        angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
+        separate_mag_orderings (bool): Separate magnetic orderings into different materials
+    """
+    if separate_mag_orderings:
+        for structure in structures:
+            if has(structure.site_properties, "magmom"):
+                structure.add_spin_by_site(structure.site_properties['magmom'])
+                structure.remove_site_property('magmom')
+
+    sm = StructureMatcher(
+        ltol=ltol,
+        stol=stol,
+        angle_tol=angle_tol,
+        primitive_cell=True,
+        scale=True,
+        attempt_supercell=False,
+        allow_subset=False,
+        comparator=ElementComparator())
+
+    def get_sg(struc):
+        return struc.get_space_group_info()[0]
+
+    # First group by spacegroup number then by structure matching
+    for _, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
+        for group in sm.group_structures(sorted(pregroup, key=get_sg)):
+            yield group

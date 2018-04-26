@@ -1,9 +1,15 @@
 [
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a6728b2380a4f7a90163933"
+    },
     "task_id": "mp-779001",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 260.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -802,19 +808,30 @@
       ]
     },
     "thermo": {
-      "energy": -284.75871489
+      "energy_per_atom": -8.375256320294119
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 12:20:59.577000"
+    },
+    "composition": {
       "Sr": 8.0,
       "Hf": 6.0,
       "O": 20.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a672ddb380a4f7a9016784a"
+    },
     "task_id": "mp-1009490",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 12.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE O 08Apr2002",
@@ -901,17 +918,28 @@
       ]
     },
     "thermo": {
-      "energy": -9.86021997
+      "energy_per_atom": -4.930109985
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 12:43:00.147000"
+    },
+    "composition": {
       "O": 2.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a672ddb380a4f7a9016784b"
+    },
     "task_id": "mp-610917",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 12.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE O 08Apr2002",
@@ -998,17 +1026,28 @@
       ]
     },
     "thermo": {
-      "energy": -9.82350231
+      "energy_per_atom": -4.911751155
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 12:43:00.147000"
+    },
+    "composition": {
       "O": 2.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a672ddb380a4f7a9016784c"
+    },
     "task_id": "mp-12957",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 48.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE O 08Apr2002",
@@ -1227,13 +1266,23 @@
       ]
     },
     "thermo": {
-      "energy": -39.42116819
+      "energy_per_atom": -4.92764602375
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 12:43:00.147000"
+    },
+    "composition": {
       "O": 8.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a672ddb380a4f7a9016784d"
+    },
     "task_id": "mp-607540",
     "calc_settings": {
       "hubbards": {},
@@ -1324,17 +1373,28 @@
       ]
     },
     "thermo": {
-      "energy": -9.63730854
+      "energy_per_atom": -4.81865427
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 12:43:00.147000"
+    },
+    "composition": {
       "O": 2.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a672ddb380a4f7a9016784e"
+    },
     "task_id": "mp-560602",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 144.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE O 08Apr2002",
@@ -1905,13 +1965,23 @@
       ]
     },
     "thermo": {
-      "energy": -108.49692225
+      "energy_per_atom": -4.52070509375
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 12:43:00.147000"
+    },
+    "composition": {
       "O": 24.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a672ddb380a4f7a9016784f"
+    },
     "task_id": "mp-1023923",
     "calc_settings": {
       "hubbards": {},
@@ -2090,17 +2160,28 @@
       ]
     },
     "thermo": {
-      "energy": -23.58680149
+      "energy_per_atom": -3.9311335816666664
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 12:43:00.147000"
+    },
+    "composition": {
       "O": 6.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a6731fa380a4f7a90169261"
+    },
     "task_id": "mp-139",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 20.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -2181,17 +2262,28 @@
       ]
     },
     "thermo": {
-      "energy": -3.3609473
+      "energy_per_atom": -1.68047365
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-02-27 07:50:41.374000"
+    },
+    "composition": {
       "Sr": 2.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a6731fa380a4f7a90169262"
+    },
     "task_id": "mp-95",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 10.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -2253,17 +2345,28 @@
       ]
     },
     "thermo": {
-      "energy": -1.67732814
+      "energy_per_atom": -1.67732814
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-02-27 07:50:41.380000"
+    },
+    "composition": {
       "Sr": 1.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a6731fa380a4f7a90169263"
+    },
     "task_id": "mp-19858",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 10.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -2420,17 +2523,28 @@
       ]
     },
     "thermo": {
-      "energy": -8.76644629
+      "energy_per_atom": -1.4610743816666665
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-02-27 07:50:41.388000"
+    },
+    "composition": {
       "Sr": 6.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a6731fa380a4f7a90169264"
+    },
     "task_id": "mp-10617",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 20.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -2511,17 +2625,28 @@
       ]
     },
     "thermo": {
-      "energy": -2.84780558
+      "energy_per_atom": -1.42390279
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-02-27 07:50:41.394000"
+    },
+    "composition": {
       "Sr": 2.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a6731fa380a4f7a90169265"
+    },
     "task_id": "mp-639774",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 10.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -2608,17 +2733,28 @@
       ]
     },
     "thermo": {
-      "energy": -2.59834087
+      "energy_per_atom": -1.299170435
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-02-27 07:50:41.399000"
+    },
+    "composition": {
       "Sr": 2.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a6731fa380a4f7a90169266"
+    },
     "task_id": "mp-76",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 10.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -2680,17 +2816,28 @@
       ]
     },
     "thermo": {
-      "energy": -1.68396221
+      "energy_per_atom": -1.68396221
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-02-27 07:50:41.405000"
+    },
+    "composition": {
       "Sr": 1.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a6731fa380a4f7a90169267"
+    },
     "task_id": "mp-867202",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 40.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -2821,17 +2968,28 @@
       ]
     },
     "thermo": {
-      "energy": -6.7227146
+      "energy_per_atom": -1.68067865
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-02-27 07:50:41.410000"
+    },
+    "composition": {
       "Sr": 4.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a674e5f380a4f7a90172022"
+    },
     "task_id": "mp-768305",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 54.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -3036,19 +3194,30 @@
       ]
     },
     "thermo": {
-      "energy": -55.46832019
+      "energy_per_atom": -7.924045741428571
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 15:01:39.043000"
+    },
+    "composition": {
       "Sr": 2.0,
       "Hf": 1.0,
       "O": 4.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a674e5f380a4f7a90172023"
+    },
     "task_id": "mp-754761",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 216.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -3715,19 +3884,30 @@
       ]
     },
     "thermo": {
-      "energy": -222.21581562
+      "energy_per_atom": -7.936279129285714
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 15:01:39.043000"
+    },
+    "composition": {
       "Sr": 8.0,
       "Hf": 4.0,
       "O": 16.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a674e5f380a4f7a90172024"
+    },
     "task_id": "mp-752537",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 108.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -4086,19 +4266,30 @@
       ]
     },
     "thermo": {
-      "energy": -110.54690472
+      "energy_per_atom": -7.89620748
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 15:01:39.043000"
+    },
+    "composition": {
       "Sr": 4.0,
       "Hf": 2.0,
       "O": 8.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a674e5f380a4f7a90172025"
+    },
     "task_id": "mp-752581",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 216.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -4765,19 +4956,30 @@
       ]
     },
     "thermo": {
-      "energy": -222.02579371
+      "energy_per_atom": -7.9294926325
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 15:01:39.043000"
+    },
+    "composition": {
       "Sr": 8.0,
       "Hf": 4.0,
       "O": 16.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a675226380a4f7a901734bb"
+    },
     "task_id": "mp-2697",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 22.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -4890,18 +5092,29 @@
       ]
     },
     "thermo": {
-      "energy": -17.24311834
+      "energy_per_atom": -5.747706113333333
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 15:17:55.994000"
+    },
+    "composition": {
       "Sr": 1.0,
       "O": 2.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a67657a380a4f7a9017dc44"
+    },
     "task_id": "mp-1009819",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 16.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -4992,18 +5205,29 @@
       ]
     },
     "thermo": {
-      "energy": -11.27390354
+      "energy_per_atom": -5.63695177
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 16:40:19.124000"
+    },
+    "composition": {
       "Sr": 1.0,
       "O": 1.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a67657a380a4f7a9017dc45"
+    },
     "task_id": "mp-754282",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 32.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -5138,18 +5362,29 @@
       ]
     },
     "thermo": {
-      "energy": -23.84809293
+      "energy_per_atom": -5.9620232325
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 16:40:19.124000"
+    },
+    "composition": {
       "Sr": 2.0,
       "O": 2.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a67657a380a4f7a9017dc46"
+    },
     "task_id": "mp-754824",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 32.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -5284,18 +5519,29 @@
       ]
     },
     "thermo": {
-      "energy": -24.00457132
+      "energy_per_atom": -6.00114283
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 16:40:19.124000"
+    },
+    "composition": {
       "Sr": 2.0,
       "O": 2.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a67657a380a4f7a9017dc47"
+    },
     "task_id": "mp-2472",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 16.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE O 08Apr2002",
@@ -5380,18 +5626,29 @@
       ]
     },
     "thermo": {
-      "energy": -12.10460644
+      "energy_per_atom": -6.05230322
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 16:40:19.124000"
+    },
+    "composition": {
       "O": 1.0,
       "Sr": 1.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a67690c380a4f7a901803ee"
+    },
     "task_id": "mp-1018721",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 44.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Hf_pv 06Sep2000",
@@ -5570,18 +5827,29 @@
       ]
     },
     "thermo": {
-      "energy": -60.74864968
+      "energy_per_atom": -10.124774946666667
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 16:55:36.593000"
+    },
+    "composition": {
       "Hf": 2.0,
       "O": 4.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a67690c380a4f7a901803ef"
+    },
     "task_id": "mp-352",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 88.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE O 08Apr2002",
@@ -5856,18 +6124,29 @@
       ]
     },
     "thermo": {
-      "energy": -122.15330333
+      "energy_per_atom": -10.179441944166667
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 16:55:36.593000"
+    },
+    "composition": {
       "O": 8.0,
       "Hf": 4.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a67690c380a4f7a901803f0"
+    },
     "task_id": "mp-776532",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 44.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Hf_pv 06Sep2000",
@@ -6046,18 +6325,29 @@
       ]
     },
     "thermo": {
-      "energy": -60.92763393
+      "energy_per_atom": -10.154605655
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 16:55:36.593000"
+    },
+    "composition": {
       "Hf": 2.0,
       "O": 4.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a67690c380a4f7a901803f1"
+    },
     "task_id": "mp-741",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 88.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE O 08Apr2002",
@@ -6332,18 +6622,29 @@
       ]
     },
     "thermo": {
-      "energy": -120.48246432
+      "energy_per_atom": -10.04020536
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 16:55:36.593000"
+    },
+    "composition": {
       "O": 8.0,
       "Hf": 4.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a67690c380a4f7a901803f2"
+    },
     "task_id": "mp-550893",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 22.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Hf_pv 06Sep2000",
@@ -6456,18 +6757,29 @@
       ]
     },
     "thermo": {
-      "energy": -30.27227831
+      "energy_per_atom": -10.090759436666668
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 16:55:36.593000"
+    },
+    "composition": {
       "Hf": 1.0,
       "O": 2.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a67690c380a4f7a901803f3"
+    },
     "task_id": "mp-1858",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 176.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE O 08Apr2002",
@@ -6970,18 +7282,29 @@
       ]
     },
     "thermo": {
-      "energy": -243.72791701
+      "energy_per_atom": -10.155329875416667
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 16:55:36.593000"
+    },
+    "composition": {
       "O": 16.0,
       "Hf": 8.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a67690c380a4f7a901803f4"
+    },
     "task_id": "mp-685097",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 88.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Hf_pv 06Sep2000",
@@ -7292,18 +7615,29 @@
       ]
     },
     "thermo": {
-      "energy": -121.81082738
+      "energy_per_atom": -10.150902281666667
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 16:55:36.593000"
+    },
+    "composition": {
       "Hf": 4.0,
       "O": 8.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a67690c380a4f7a901803f5"
+    },
     "task_id": "mp-775757",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 176.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Hf_pv 06Sep2000",
@@ -7878,18 +8212,29 @@
       ]
     },
     "thermo": {
-      "energy": -244.07719498
+      "energy_per_atom": -10.169883124166667
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 16:55:36.593000"
+    },
+    "composition": {
       "Hf": 8.0,
       "O": 16.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a67690c380a4f7a901803f6"
+    },
     "task_id": "mp-776097",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 264.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Hf_pv 06Sep2000",
@@ -8728,18 +9073,29 @@
       ]
     },
     "thermo": {
-      "energy": -365.452127
+      "energy_per_atom": -10.151447972222222
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 16:55:36.593000"
+    },
+    "composition": {
       "Hf": 12.0,
       "O": 24.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a676b5c380a4f7a90182b34"
+    },
     "task_id": "mp-757149",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 186.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -9340,19 +9696,30 @@
       ]
     },
     "thermo": {
-      "energy": -239.61095217
+      "energy_per_atom": -9.584438086799999
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 17:05:27.870000"
+    },
+    "composition": {
       "Sr": 2.0,
       "Hf": 7.0,
       "O": 16.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a676bf4380a4f7a9018360c"
+    },
     "task_id": "mp-779517",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 92.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -9667,19 +10034,30 @@
       ]
     },
     "thermo": {
-      "energy": -98.83886253
+      "energy_per_atom": -8.2365718775
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 17:07:57.304000"
+    },
+    "composition": {
       "Sr": 3.0,
       "Hf": 2.0,
       "O": 7.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a676bf4380a4f7a9018360d"
+    },
     "task_id": "mp-752691",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 184.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -10258,19 +10636,30 @@
       ]
     },
     "thermo": {
-      "energy": -197.98769102
+      "energy_per_atom": -8.249487125833333
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 17:07:57.304000"
+    },
+    "composition": {
       "Sr": 6.0,
       "Hf": 4.0,
       "O": 14.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a676bf6380a4f7a9018372f"
+    },
     "task_id": "mp-100",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 10.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Hf_pv 06Sep2000",
@@ -10332,17 +10721,28 @@
       ]
     },
     "thermo": {
-      "energy": -9.77315415
+      "energy_per_atom": -9.77315415
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 17:07:57.311000"
+    },
+    "composition": {
       "Hf": 1.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a676bf6380a4f7a90183730"
+    },
     "task_id": "mp-1009460",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 30.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Hf_pv 06Sep2000",
@@ -10451,17 +10851,28 @@
       ]
     },
     "thermo": {
-      "energy": -29.73774294
+      "energy_per_atom": -9.91258098
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 17:07:57.311000"
+    },
+    "composition": {
       "Hf": 3.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a676bf6380a4f7a90183731"
+    },
     "task_id": "mp-103",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 20.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Hf_pv 06Sep2000",
@@ -10542,17 +10953,28 @@
       ]
     },
     "thermo": {
-      "energy": -19.90845562
+      "energy_per_atom": -9.95422781
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 17:07:57.311000"
+    },
+    "composition": {
       "Hf": 2.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a676bf6380a4f7a90183732"
+    },
     "task_id": "mp-8640",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 10.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Hf_pv 06Sep2000",
@@ -10614,17 +11036,28 @@
       ]
     },
     "thermo": {
-      "energy": -9.88304915
+      "energy_per_atom": -9.88304915
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 17:07:57.311000"
+    },
+    "composition": {
       "Hf": 1.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a676d13380a4f7a90184c0d"
+    },
     "task_id": "mp-779428",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 172.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -11159,19 +11592,30 @@
       ]
     },
     "thermo": {
-      "energy": -158.18226755
+      "energy_per_atom": -7.190103070454546
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 17:12:39.867000"
+    },
+    "composition": {
       "Sr": 8.0,
       "Hf": 2.0,
       "O": 12.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a676e26380a4f7a90185f1b"
+    },
     "task_id": "mp-4551",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 38.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE O 08Apr2002",
@@ -11317,19 +11761,30 @@
       ]
     },
     "thermo": {
-      "energy": -43.32958294
+      "energy_per_atom": -8.665916588
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 17:17:16.480000"
+    },
+    "composition": {
       "O": 3.0,
       "Sr": 1.0,
       "Hf": 1.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a676e26380a4f7a90185f1c"
+    },
     "task_id": "mp-3721",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 76.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE O 08Apr2002",
@@ -11570,19 +12025,30 @@
       ]
     },
     "thermo": {
-      "energy": -86.96082833
+      "energy_per_atom": -8.696082833
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 17:17:16.480000"
+    },
+    "composition": {
       "O": 6.0,
       "Sr": 2.0,
       "Hf": 2.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a676e26380a4f7a90185f1d"
+    },
     "task_id": "mp-3378",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 152.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE Sr_sv 07Sep2000",
@@ -12073,19 +12539,30 @@
       ]
     },
     "thermo": {
-      "energy": -173.9484885
+      "energy_per_atom": -8.697424425
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 17:17:16.480000"
+    },
+    "composition": {
       "Sr": 4.0,
       "Hf": 4.0,
       "O": 12.0
     }
   },
   {
+    "_id": {
+      "@module": "bson.objectid",
+      "@class": "ObjectId",
+      "oid": "5a676e26380a4f7a90185f1e"
+    },
     "task_id": "mp-550908",
     "calc_settings": {
       "hubbards": {},
       "is_hubbard": false,
+      "nelect": 76.0,
       "potcar_spec": [
         {
           "titel": "PAW_PBE O 08Apr2002",
@@ -12380,9 +12857,14 @@
       ]
     },
     "thermo": {
-      "energy": -86.85963733
+      "energy_per_atom": -8.685963733
     },
-    "unit_cell_formula": {
+    "last_updated": {
+      "@module": "datetime",
+      "@class": "datetime",
+      "string": "2018-01-23 17:17:16.480000"
+    },
+    "composition": {
       "O": 6.0,
       "Hf": 2.0,
       "Sr": 2.0
