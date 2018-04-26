@@ -65,7 +65,7 @@ class MPWorksCompatibilityBuilder(Builder):
             to process into materials documents
         """
 
-        self.logger.info("MPWorks Elastic Compatibility Builder Started")
+        logger.info("MPWorks Elastic Compatibility Builder Started")
 
         # Get only successful tasks
         q = dict(self.query)
@@ -73,7 +73,7 @@ class MPWorksCompatibilityBuilder(Builder):
 
         # only consider tasks that have been updated since tasks was last updated
         if self.incremental:
-            self.logger.info("Ensuring indices on lu_field")
+            logger.info("Ensuring indices on lu_field")
             self.mpworks_tasks.ensure_index(self.mpworks_tasks.lu_field)
             self.atomate_tasks.ensure_index(self.atomate_tasks.lu_field)
             q.update(self.mpworks_tasks.lu_filter(self.atomate_tasks))
@@ -81,7 +81,7 @@ class MPWorksCompatibilityBuilder(Builder):
         # No cursor timeout should probably be fixed with smaller batch sizes
         tasks_to_convert = self.mpworks_tasks.query(criteria=q, no_cursor_timeout=True)
         count = tasks_to_convert.count()
-        self.logger.info("Found {} new/updated tasks to process".format(count))
+        logger.info("Found {} new/updated tasks to process".format(count))
 
         # Redo all task ids at the beginning
         if self.redo_task_ids:
@@ -97,7 +97,7 @@ class MPWorksCompatibilityBuilder(Builder):
 
         for n, task in enumerate(tasks_to_convert):
             new_task_id = n + starting_taskid
-            self.logger.debug("Processing item: {}->{}, {} of {}".format(
+            logger.debug("Processing item: {}->{}, {} of {}".format(
                 task['task_id'], new_task_id, n, count))
             yield task, new_task_id
 
@@ -128,7 +128,7 @@ class MPWorksCompatibilityBuilder(Builder):
             items ([([dict],[int])]): A list of tuples of materials to
                 update and the corresponding processed task_ids
         """
-        self.logger.info("Updating {} atomate documents".format(len(items)))
+        logger.info("Updating {} atomate documents".format(len(items)))
 
         self.atomate_tasks.update(items, key='task_id')
 

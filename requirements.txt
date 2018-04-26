@@ -1,5 +1,5 @@
 atomate>=0.6.5
-pymatgen>=2018.4.6
+pymatgen>=2018.4.20
 monty>=1.0.1
 pydash==4.1.0
 unittest2==1.1.0

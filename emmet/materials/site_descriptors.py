@@ -15,12 +15,6 @@ from maggma.builder import Builder
 __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
 
 
-cls_to_abbrev = {
-    'OPSiteFingerprint': 'opsf', 'CrystalSiteFingerprint': 'csf', \
-    'VoronoiNN': 'vnn', 'JMolNN': 'jmnn', 'MinimumDistanceNN': 'mdnn', \
-    'MinimumOKeeffeNN': 'moknn', 'MinimumVIRENN': 'mvirenn', \
-    'BrunnerNN': 'bnn'}
-
 class SiteDescriptorsBuilder(Builder):
 
     def __init__(self, materials, site_descriptors, mat_query=None, **kwargs):
@@ -48,9 +42,7 @@ class SiteDescriptorsBuilder(Builder):
         self.sds = {}
         for nn in NearNeighbors.__subclasses__():
             nn_ = getattr(pymatgen.analysis.local_env, nn.__name__)
-            t = nn.__name__ if nn.__name__ \
-                not in cls_to_abbrev.keys() \
-                else cls_to_abbrev[nn.__name__]
+            t = nn.__name__
             k = 'cn_{}'.format(t)
             self.sds[k] = CoordinationNumber(nn_(), use_weights='none')
             k = 'cn_wt_{}'.format(t)

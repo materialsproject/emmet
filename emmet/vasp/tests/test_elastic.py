@@ -27,15 +27,16 @@ class ElasticBuilderTest(unittest.TestCase):
         # Generate test materials collection
         cls.test_materials = MongoStore("test_emmet", "materials")
         cls.test_materials.connect()
+        cls.test_materials.collection.drop()
         opt_docs = cls.test_tasks.query(["output.structure", "formula_pretty"], {
             "task_label": "structure optimization"
         })
         mat_docs = [{
-            "material_id": "mp-{}".format(n),
+            "task_id": "mp-{}".format(n),
             "structure": opt_doc['output']['structure'],
             "pretty_formula": opt_doc['formula_pretty']
         } for n, opt_doc in enumerate(opt_docs)]
-        cls.test_materials.update(mat_docs, key='material_id', update_lu=False)
+        cls.test_materials.update(mat_docs, update_lu=False)
 
     def test_builder(self):
         ec_builder = ElasticBuilder(self.test_tasks, self.test_elasticity, self.test_materials, incremental=False)
@@ -58,7 +59,7 @@ class ElasticBuilderTest(unittest.TestCase):
         self.assertEqual(len(grouped_by_opt), 1)
 
         materials_dict = generate_formula_dict(self.test_materials)
-        grouped_by_mpid = group_by_material_id(materials_dict['NaN3'], docs1)
+        grouped_by_mpid = group_by_task_id(materials_dict['NaN3'], docs1)
         self.assertEqual(len(grouped_by_mpid), 1)
 
         docs2 = self.test_tasks.query(criteria={"task_label": "elastic deformation"})
