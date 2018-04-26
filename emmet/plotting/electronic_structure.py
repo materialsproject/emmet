@@ -1,17 +1,16 @@
 import io
 import traceback
-import numpy as np
 from maggma.builder import Builder
 from pydash.objects import get
-import prettyplotlib as ppl
 import matplotlib
-import scipy.interpolate as scint
-from prettyplotlib import brewer2mpl
-from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, BandStructure
 from pymatgen.electronic_structure.dos import CompleteDos
-from pymatgen.electronic_structure.plotter import DosPlotter, BSPlotter
-from pymatgen.util.plotting import pretty_plot
+from sumo.plotting.dos_plotter import SDOSPlotter
+from sumo.plotting.bs_plotter import SBSPlotter
+from sumo.electronic_structure.dos import get_pdos
+
+
+
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
