@@ -169,11 +169,11 @@ class ThermoBuilder(Builder):
             items ([[dict]]): a list of list of thermo dictionaries to update
         """
         # flatten out lists
-        items = list(filter(None, chain.from_iterable(items))) 
+        items = list(filter(None, chain.from_iterable(items)))
         # check for duplicates within this set
         items = list({v[self.thermo.key]: v for v in items}.values())
         # Check if already updated this run
-        items = [i for i in items if i[self.thermo.key] not in self.completed_tasks] 
+        items = [i for i in items if i[self.thermo.key] not in self.completed_tasks]
 
         self.completed_tasks |= {i[self.thermo.key] for i in items}
 
