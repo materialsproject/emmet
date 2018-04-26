@@ -1,6 +1,3 @@
-import gridfs
-import json
-import zlib
 import io
 import traceback
 import numpy as np
@@ -10,7 +7,6 @@ import prettyplotlib as ppl
 import matplotlib
 import scipy.interpolate as scint
 from prettyplotlib import brewer2mpl
-from pymatgen.core.structure import Structure
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, BandStructure
 from pymatgen.electronic_structure.dos import CompleteDos
