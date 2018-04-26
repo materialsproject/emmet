@@ -71,7 +71,7 @@ class MaterialsBuilder(Builder):
         self.logger.info("Allowed Task Types: {}".format(self.allowed_tasks))
 
         self.logger.info("Setting indexes")
-        self.ensure_indexes()
+        self.ensure_indicies()
 
         # Save timestamp for update operation
         self.time_stamp = datetime.utcnow()
