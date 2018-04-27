@@ -25,8 +25,9 @@ from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+
 mp_conversion_dict = {
-    "anonymous_formula": "anonymous_formula",
+    "anonymous_formula": "formula_anonymous",
     "band_gap.search_gap.band_gap": "bandstructure.band_gap",
     "band_gap.search_gap.is_direct": "bandstructure.is_gap_direct",
     "chemsys": "chemsys",
@@ -43,13 +44,13 @@ mp_conversion_dict = {
     "is_hubbard": "calc_settings.is_hubbard",
     "nelements": "nelements",
     "nsites": "nsites",
-    "pretty_formula": "pretty_formula",
-    "reduced_cell_formula": "reduced_cell_formula",
+    "pretty_formula": "formula_pretty",
+    "reduced_cell_formula": "composition_reduced",
     "run_type": "calc_settings.run_type",
     "spacegroup": "spacegroup",
     "structure": "structure",
     "total_magnetization": "magnestism.total_magnetization",
-    "unit_cell_formula": "unit_cell_formula",
+    "unit_cell_formula": "composition",
     "volume": "volume",
     "warnings": "analysis.warnings",
     "task_ids": "task_ids",
@@ -92,7 +93,6 @@ class MPBuilder(Builder):
         """
         self.materials = materials
         self.mp_materials = mp_materials
-        self.electronic_structure = electronic_structure
         self.snls = snls
         self.thermo = thermo
         self.query = query if query else None
@@ -165,14 +165,11 @@ class MPBuilder(Builder):
         new_mat = item["material"]
 
         mat = old_style_mat(new_mat)
+        add_es(mat, new_mat)
 
         if item.get("xrd", None):
             xrd = item["xrd"]
             add_xrd(mat, xrd)
-
-        if item.get("electronic_structure", None):
-            es = item["electronic_structure"]
-            add_es(mat, new_mat, es)
 
         if item.get("piezo", None):
             pass
@@ -187,11 +184,6 @@ class MPBuilder(Builder):
         if item.get("snl", None):
             snl = item["snl"]
             add_snl(mat, snl)
-
-            if item.get("icsds", None):
-                icsds = item["icsds"]
-                if icsds:
-                    add_icsd(mat, icsds)
 
         sandbox_props(mat)
         return jsanitize(mat)
@@ -262,14 +254,14 @@ def old_style_mat(new_mat):
     set_(mat, "pseudo_potential.labels", [p["titel"].split()[1] for p in get(new_mat, "calc_settings.potcar_spec")])
     mat["ntask_ids"] = len(get(new_mat, "task_ids"))
     set_(mat, "pseudo_potential.pot_type", "paw")
-    add_bv_structure(mat)
     add_blessed_tasks(mat, new_mat)
     add_cifs(mat)
+    check_relaxation(mat,new_mat)
 
     return mat
 
 
-def add_es(mat, new_mat, es):
+def add_es(mat, new_mat):
 
     bs_origin = None
     dos_origin = None
@@ -280,8 +272,6 @@ def add_es(mat, new_mat, es):
         if bs_origin:
             u_type = "GGA+U" if "+U" in bs_origin["task_type"] else "GGA"
             set_(mat, "band_structure.{}.task_id".format(u_type), bs_origin["task_id"])
-            if has(es, "band_gap"):
-                set_(mat, "band_gap.search_gap", get(es, "band_gap"))
 
         if dos_origin:
             u_type = "GGA+U" if "+U" in dos_origin["task_type"] else "GGA"
@@ -299,16 +289,6 @@ def add_blessed_tasks(mat, new_mat):
         blessed_tasks[doc["task_type"]] = doc["task_id"]
 
     mat["blessed_tasks"] = blessed_tasks
-
-
-def add_bv_structure(doc):
-    struc = Structure.from_dict(doc["structure"])
-    try:
-        bva = BVAnalyzer()
-        bv_struct = bva.get_oxi_state_decorated_structure(struc)
-        doc["bv_structure"] = bv_struct.as_dict()
-    except Exception as e:
-        print("BVAnalyzer error: {}".format(e))
 
 
 def add_cifs(doc):
@@ -332,8 +312,6 @@ def add_cifs(doc):
         doc["cifs"]["primitive"] = None
         doc["cifs"]["refined"] = None
         doc["cifs"]["conventional_standard"] = None
-        _log.error("Can't get alternative cells for task_id {i}".format(i=doc["task_id"]))
-
 
 def add_xrd(mat, xrd):
     mat["xrd"] = {}
@@ -365,7 +343,7 @@ def add_thermo(mat, thermo):
 
 
 def sandbox_props(mat):
-    mat["sbxn"] = mat.get("sbxn", ["core"])
+    mat["sbxn"] = mat.get("sbxn", ["core","jcesr","vw","shyamd","kitchaev"])
     mat["sbxd"] = []
 
     for sbx in mat["sbxn"]:
@@ -374,107 +352,43 @@ def sandbox_props(mat):
         mat["sbxd"].append(sbx_d)
 
 
-def add_icsd(mat, icsds):
-
-    relevant_icsd = [icsd for icsd in icsds if icsd["icsd_id"] in mat.get("icsd_ids", [])]
-    results = []
-    for icsd in relevant_icsd:
-        result = {"warnings": []}
-        tags = [icsd[t] for t in ["chem_name", "min_name"] if t in icsd and icsd[t]]
-        result["exp"] = {'pressure': icsd["pressure"], 'tags': tags}
-        if icsd.get('pressure', 0) > 1:
-            result["warnings"].append("High pressure experimental phase.")
-        results.append(result)
-
-    if len(results) == 0:
-        results.append({"warnings": ["Structure has been removed in the 2012 version of ICSD."], "exp": {}})
-
-    if mat["icsd_ids"]:
-        results[0]["exp_lattice"] = mat["snl"]["lattice"]
-
-    # Check relaxation
-    orig_crystal = Structure.from_dict(mat["snl"])
-    final_structure = Structure.from_dict(mat["structure"])
-
-    try:
-        analyzer = RelaxationAnalyzer(orig_crystal, final_structure)
-        latt_para_percentage_changes = analyzer.get_percentage_lattice_parameter_changes()
-        for l in ["a", "b", "c"]:
-            change = latt_para_percentage_changes[l] * 100
-            if change < latt_para_interval[0] or change > latt_para_interval[1]:
-                results[0]["warnings"].append("Large change in {} lattice parameter during relaxation.".format(l))
-        change = analyzer.get_percentage_volume_change() * 100
-        if change < vol_interval[0] or change > vol_interval[1]:
-            results[0]["warnings"].append("Large change in volume during relaxation.")
-    except Exception as ex:
-        # print icsd_crystal.formula
-        # print final_structure.formula
-        print("Relaxation analyzer failed for Material:{} due to {}".format(mat["task_id"], traceback.print_exc()))
-
-    # Merge all the results
-
-    if len(results) > 1:
-
-        results_union = {"exp": {"tags": []}, "warnings": []}
-        tags = []
-        warnings = []
-        for i in results:
-            if i.get("exp_lattice"):
-                results_union["exp_lattice"] = i["exp_lattice"]
-            if i.get("exp"):
-                if i["exp"].get("tags"):
-                    tags.extend(i["exp"]["tags"])
-            if i.get("warnings"):
-                warnings.extend(i["warnings"])
-        if tags:
-            results_union["exp"]["tags"] = [i for i in set(tags)]
-        if warnings:
-            high_pressure_count = 0
-            for w in warnings:
-                if w == "High pressure experimental phase.":
-                    high_pressure_count += 1
-            results_union["warnings"] = [i for i in set(warnings)]
-            if high_pressure_count != 0 and high_pressure_count != len(mat.get("icsd_ids", [])):
-                results_union["warnings"].remove("High pressure experimental phase.")
-        results = results_union
-    else:
-        results = results[0]
-
-    if results.get("exp_lattice"):
-        mat["exp_lattice"] = results["exp_lattice"]
-    mat["exp"] = results["exp"]
-    mat["warnings"] = results["warnings"]
-
-
-def add_magnetism(mat, mag=None):
+def add_magnetism(mat):
     mag_types = {"NM": "Non-magnetic", "FiM": "Ferri", "AFM": "AFM", "FM": "FM"}
 
     struc = Structure.from_dict(mat["structure"])
     msa = CollinearMagneticStructureAnalyzer(struc)
     mat["magnetic_type"] = mag_types[msa.ordering.value]
 
+def add_snl(mat, snl=None):    
+    mat["snl"] = copy.deepcopy(mat["structre"])
+    if snl:
+        mat["snl"].update(snl)
 
-def add_elasticity(mat, elasticity=None):
-    elasticity = elasticity if elasticity else None
-    if "elasticity" in elasticity:
-        mat["elasticity"] = elasticity.get("elasticity")
+    mat["snl_final"] = mat["snl"]
+    mat["icsd_ids"] = get(snl,"data._db_ids.icsd_ids",[])
+    mat["tags"] = snl["remarks"]
 
+def check_relaxation(mat,new_mat):
+    final_structure = Structure.from_dict(mat["structure"])
 
-def add_piezo(mat, piezo=None):
-    piezo = piezo if piezo else None
-    if "piezo" in piezo:
-        mat["piezo"] = piezo.get("piezo")
+    warnings = []
+    for init_struc in new_mat["initial_structures"]:
+        # Check relaxation
+        orig_crystal = Structure.from_dict(init_struc)
+        
+        try:
+            analyzer = RelaxationAnalyzer(orig_crystal, final_structure)
+            latt_para_percentage_changes = analyzer.get_percentage_lattice_parameter_changes()
+            for l in ["a", "b", "c"]:
+                change = latt_para_percentage_changes[l] * 100
+                if change < latt_para_interval[0] or change > latt_para_interval[1]:
+                    warnings.append("Large change in a lattice parameter during relaxation.")
+            change = analyzer.get_percentage_volume_change() * 100
+            if change < vol_interval[0] or change > vol_interval[1]:
+                warnings.append("Large change in volume during relaxation.")
+        except Exception as ex:
+            # print icsd_crystal.formula
+            # print final_structure.formula
+            print("Relaxation analyzer failed for Material:{} due to {}".format(mat["task_id"], traceback.print_exc()))
 
-
-def add_diel(mat, diel=None):
-    diel = diel if diel else None
-    if "diel" in diel:
-        mat["diel"] = diel.get("diel")
-
-
-def add_snl(mat, snl=None):
-    snl = snl if snl else {}
-    mat["snl"] = snl.get("snl", None)
-    mat["snl_final"] = snl.get("snl", None)
-    mat["created_at"] = get(snl, "snl.about.created_at") if has(snl, "snl.about.created_at") else datetime.utcnow()
-    mat["icsd_ids"] = snl.get("icsd_ids", [])
+    mat["warnings"] = warnings
