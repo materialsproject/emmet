@@ -17,12 +17,13 @@ if __name__ == "__main__":
         author_email='matproj-develop@googlegroups.com',
         license='modified BSD',
         packages=find_packages(),
+        include_package_data=True,
         package_data={},
         zip_safe=False,
         install_requires=[
             'atomate', 'pymatgen>=2018.4.20','maggma','monty',
             'six', 'pydash', 'tqdm', 'matminer',
-            'prettyplotlib', "pybtex"
+            'prettyplotlib', "pybtex", "Click"
         ],
         classifiers=["Programming Language :: Python :: 3",
                      "Programming Language :: Python :: 3.6",
@@ -34,5 +35,10 @@ if __name__ == "__main__":
                      'Topic :: Other/Nonlisted Topic',
                      'Topic :: Scientific/Engineering'],
         test_suite='nose.collector',
-        tests_require=['nose']
+        tests_require=['nose'],
+        py_modules=['emmet'],
+        entry_points='''
+        [console_scripts]
+        emmet=emmet.scripts.emmet:cli
+        ''',
     )
