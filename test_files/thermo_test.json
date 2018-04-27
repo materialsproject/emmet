@@ -810,11 +810,7 @@
     "thermo": {
       "energy_per_atom": -8.375256320294119
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 12:20:59.577000"
-    },
+    "last_updated": "2018-01-23 12:20:59.577000",
     "composition": {
       "Sr": 8.0,
       "Hf": 6.0,
@@ -920,11 +916,7 @@
     "thermo": {
       "energy_per_atom": -4.930109985
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 12:43:00.147000"
-    },
+    "last_updated": "2018-01-23 12:43:00.147000",
     "composition": {
       "O": 2.0
     }
@@ -1028,11 +1020,7 @@
     "thermo": {
       "energy_per_atom": -4.911751155
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 12:43:00.147000"
-    },
+    "last_updated": "2018-01-23 12:43:00.147000",
     "composition": {
       "O": 2.0
     }
@@ -1268,11 +1256,7 @@
     "thermo": {
       "energy_per_atom": -4.92764602375
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 12:43:00.147000"
-    },
+    "last_updated": "2018-01-23 12:43:00.147000",
     "composition": {
       "O": 8.0
     }
@@ -1375,11 +1359,7 @@
     "thermo": {
       "energy_per_atom": -4.81865427
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 12:43:00.147000"
-    },
+    "last_updated": "2018-01-23 12:43:00.147000",
     "composition": {
       "O": 2.0
     }
@@ -1967,11 +1947,7 @@
     "thermo": {
       "energy_per_atom": -4.52070509375
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 12:43:00.147000"
-    },
+    "last_updated": "2018-01-23 12:43:00.147000",
     "composition": {
       "O": 24.0
     }
@@ -2162,11 +2138,7 @@
     "thermo": {
       "energy_per_atom": -3.9311335816666664
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 12:43:00.147000"
-    },
+    "last_updated": "2018-01-23 12:43:00.147000",
     "composition": {
       "O": 6.0
     }
@@ -2264,11 +2236,7 @@
     "thermo": {
       "energy_per_atom": -1.68047365
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-02-27 07:50:41.374000"
-    },
+    "last_updated": "2018-02-27 07:50:41.374000",
     "composition": {
       "Sr": 2.0
     }
@@ -2347,11 +2315,7 @@
     "thermo": {
       "energy_per_atom": -1.67732814
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-02-27 07:50:41.380000"
-    },
+    "last_updated": "2018-02-27 07:50:41.380000",
     "composition": {
       "Sr": 1.0
     }
@@ -2525,11 +2489,7 @@
     "thermo": {
       "energy_per_atom": -1.4610743816666665
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-02-27 07:50:41.388000"
-    },
+    "last_updated": "2018-02-27 07:50:41.388000",
     "composition": {
       "Sr": 6.0
     }
@@ -2627,11 +2587,7 @@
     "thermo": {
       "energy_per_atom": -1.42390279
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-02-27 07:50:41.394000"
-    },
+    "last_updated": "2018-02-27 07:50:41.394000",
     "composition": {
       "Sr": 2.0
     }
@@ -2735,11 +2691,7 @@
     "thermo": {
       "energy_per_atom": -1.299170435
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-02-27 07:50:41.399000"
-    },
+    "last_updated": "2018-02-27 07:50:41.399000",
     "composition": {
       "Sr": 2.0
     }
@@ -2818,11 +2770,7 @@
     "thermo": {
       "energy_per_atom": -1.68396221
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-02-27 07:50:41.405000"
-    },
+    "last_updated": "2018-02-27 07:50:41.405000",
     "composition": {
       "Sr": 1.0
     }
@@ -2970,11 +2918,7 @@
     "thermo": {
       "energy_per_atom": -1.68067865
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-02-27 07:50:41.410000"
-    },
+    "last_updated": "2018-02-27 07:50:41.410000",
     "composition": {
       "Sr": 4.0
     }
@@ -3196,11 +3140,7 @@
     "thermo": {
       "energy_per_atom": -7.924045741428571
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 15:01:39.043000"
-    },
+    "last_updated": "2018-01-23 15:01:39.043000",
     "composition": {
       "Sr": 2.0,
       "Hf": 1.0,
@@ -3886,11 +3826,7 @@
     "thermo": {
       "energy_per_atom": -7.936279129285714
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 15:01:39.043000"
-    },
+    "last_updated": "2018-01-23 15:01:39.043000",
     "composition": {
       "Sr": 8.0,
       "Hf": 4.0,
@@ -4268,11 +4204,7 @@
     "thermo": {
       "energy_per_atom": -7.89620748
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 15:01:39.043000"
-    },
+    "last_updated": "2018-01-23 15:01:39.043000",
     "composition": {
       "Sr": 4.0,
       "Hf": 2.0,
@@ -4958,11 +4890,7 @@
     "thermo": {
       "energy_per_atom": -7.9294926325
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 15:01:39.043000"
-    },
+    "last_updated": "2018-01-23 15:01:39.043000",
     "composition": {
       "Sr": 8.0,
       "Hf": 4.0,
@@ -5094,11 +5022,7 @@
     "thermo": {
       "energy_per_atom": -5.747706113333333
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 15:17:55.994000"
-    },
+    "last_updated": "2018-01-23 15:17:55.994000",
     "composition": {
       "Sr": 1.0,
       "O": 2.0
@@ -5207,11 +5131,7 @@
     "thermo": {
       "energy_per_atom": -5.63695177
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 16:40:19.124000"
-    },
+    "last_updated": "2018-01-23 16:40:19.124000",
     "composition": {
       "Sr": 1.0,
       "O": 1.0
@@ -5364,11 +5284,7 @@
     "thermo": {
       "energy_per_atom": -5.9620232325
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 16:40:19.124000"
-    },
+    "last_updated": "2018-01-23 16:40:19.124000",
     "composition": {
       "Sr": 2.0,
       "O": 2.0
@@ -5521,11 +5437,7 @@
     "thermo": {
       "energy_per_atom": -6.00114283
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 16:40:19.124000"
-    },
+    "last_updated": "2018-01-23 16:40:19.124000",
     "composition": {
       "Sr": 2.0,
       "O": 2.0
@@ -5628,11 +5540,7 @@
     "thermo": {
       "energy_per_atom": -6.05230322
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 16:40:19.124000"
-    },
+    "last_updated": "2018-01-23 16:40:19.124000",
     "composition": {
       "O": 1.0,
       "Sr": 1.0
@@ -5829,11 +5737,7 @@
     "thermo": {
       "energy_per_atom": -10.124774946666667
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 16:55:36.593000"
-    },
+    "last_updated": "2018-01-23 16:55:36.593000",
     "composition": {
       "Hf": 2.0,
       "O": 4.0
@@ -6126,11 +6030,7 @@
     "thermo": {
       "energy_per_atom": -10.179441944166667
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 16:55:36.593000"
-    },
+    "last_updated": "2018-01-23 16:55:36.593000",
     "composition": {
       "O": 8.0,
       "Hf": 4.0
@@ -6327,11 +6227,7 @@
     "thermo": {
       "energy_per_atom": -10.154605655
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 16:55:36.593000"
-    },
+    "last_updated": "2018-01-23 16:55:36.593000",
     "composition": {
       "Hf": 2.0,
       "O": 4.0
@@ -6624,11 +6520,7 @@
     "thermo": {
       "energy_per_atom": -10.04020536
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 16:55:36.593000"
-    },
+    "last_updated": "2018-01-23 16:55:36.593000",
     "composition": {
       "O": 8.0,
       "Hf": 4.0
@@ -6759,11 +6651,7 @@
     "thermo": {
       "energy_per_atom": -10.090759436666668
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 16:55:36.593000"
-    },
+    "last_updated": "2018-01-23 16:55:36.593000",
     "composition": {
       "Hf": 1.0,
       "O": 2.0
@@ -7284,11 +7172,7 @@
     "thermo": {
       "energy_per_atom": -10.155329875416667
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 16:55:36.593000"
-    },
+    "last_updated": "2018-01-23 16:55:36.593000",
     "composition": {
       "O": 16.0,
       "Hf": 8.0
@@ -7617,11 +7501,7 @@
     "thermo": {
       "energy_per_atom": -10.150902281666667
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 16:55:36.593000"
-    },
+    "last_updated": "2018-01-23 16:55:36.593000",
     "composition": {
       "Hf": 4.0,
       "O": 8.0
@@ -8214,11 +8094,7 @@
     "thermo": {
       "energy_per_atom": -10.169883124166667
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 16:55:36.593000"
-    },
+    "last_updated": "2018-01-23 16:55:36.593000",
     "composition": {
       "Hf": 8.0,
       "O": 16.0
@@ -9075,11 +8951,7 @@
     "thermo": {
       "energy_per_atom": -10.151447972222222
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 16:55:36.593000"
-    },
+    "last_updated": "2018-01-23 16:55:36.593000",
     "composition": {
       "Hf": 12.0,
       "O": 24.0
@@ -9698,11 +9570,7 @@
     "thermo": {
       "energy_per_atom": -9.584438086799999
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 17:05:27.870000"
-    },
+    "last_updated": "2018-01-23 17:05:27.870000",
     "composition": {
       "Sr": 2.0,
       "Hf": 7.0,
@@ -10036,11 +9904,7 @@
     "thermo": {
       "energy_per_atom": -8.2365718775
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 17:07:57.304000"
-    },
+    "last_updated": "2018-01-23 17:07:57.304000",
     "composition": {
       "Sr": 3.0,
       "Hf": 2.0,
@@ -10638,11 +10502,7 @@
     "thermo": {
       "energy_per_atom": -8.249487125833333
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 17:07:57.304000"
-    },
+    "last_updated": "2018-01-23 17:07:57.304000",
     "composition": {
       "Sr": 6.0,
       "Hf": 4.0,
@@ -10723,11 +10583,7 @@
     "thermo": {
       "energy_per_atom": -9.77315415
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 17:07:57.311000"
-    },
+    "last_updated": "2018-01-23 17:07:57.311000",
     "composition": {
       "Hf": 1.0
     }
@@ -10853,11 +10709,7 @@
     "thermo": {
       "energy_per_atom": -9.91258098
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 17:07:57.311000"
-    },
+    "last_updated": "2018-01-23 17:07:57.311000",
     "composition": {
       "Hf": 3.0
     }
@@ -10955,11 +10807,7 @@
     "thermo": {
       "energy_per_atom": -9.95422781
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 17:07:57.311000"
-    },
+    "last_updated": "2018-01-23 17:07:57.311000",
     "composition": {
       "Hf": 2.0
     }
@@ -11038,11 +10886,7 @@
     "thermo": {
       "energy_per_atom": -9.88304915
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 17:07:57.311000"
-    },
+    "last_updated": "2018-01-23 17:07:57.311000",
     "composition": {
       "Hf": 1.0
     }
@@ -11594,11 +11438,7 @@
     "thermo": {
       "energy_per_atom": -7.190103070454546
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 17:12:39.867000"
-    },
+    "last_updated": "2018-01-23 17:12:39.867000",
     "composition": {
       "Sr": 8.0,
       "Hf": 2.0,
@@ -11763,11 +11603,7 @@
     "thermo": {
       "energy_per_atom": -8.665916588
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 17:17:16.480000"
-    },
+    "last_updated": "2018-01-23 17:17:16.480000",
     "composition": {
       "O": 3.0,
       "Sr": 1.0,
@@ -12027,11 +11863,7 @@
     "thermo": {
       "energy_per_atom": -8.696082833
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 17:17:16.480000"
-    },
+    "last_updated": "2018-01-23 17:17:16.480000",
     "composition": {
       "O": 6.0,
       "Sr": 2.0,
@@ -12541,11 +12373,7 @@
     "thermo": {
       "energy_per_atom": -8.697424425
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 17:17:16.480000"
-    },
+    "last_updated": "2018-01-23 17:17:16.480000",
     "composition": {
       "Sr": 4.0,
       "Hf": 4.0,
@@ -12859,11 +12687,7 @@
     "thermo": {
       "energy_per_atom": -8.685963733
     },
-    "last_updated": {
-      "@module": "datetime",
-      "@class": "datetime",
-      "string": "2018-01-23 17:17:16.480000"
-    },
+    "last_updated": "2018-01-23 17:17:16.480000",
     "composition": {
       "O": 6.0,
       "Hf": 2.0,
