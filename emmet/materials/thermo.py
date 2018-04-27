@@ -51,7 +51,7 @@ class ThermoBuilder(Builder):
         updated_comps = set(self.materials.distinct("chemsys", q))
 
         # All chemsys not present in thermo collection
-        new_comps = set(self.materials.distinct("chemsys"), self.query) - set(self.thermo.distinct("chemsys"))
+        new_comps = set(self.materials.distinct("chemsys", self.query)) - set(self.thermo.distinct("chemsys"))
 
         comps = updated_comps | new_comps
         self.logger.info("Found {} compositions with new/updated materials".format(len(comps)))
