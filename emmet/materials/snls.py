@@ -18,7 +18,7 @@ mp_default_snl_fields = {
     "history": {
         "name": "Materials Project Optimized Structure",
         "url": "http://www.materialsproject.org",
-        "description" : {}
+        "description": {}
     }
 }
 
@@ -63,7 +63,7 @@ class SNLBuilder(Builder):
 
     def ensure_indicies(self):
 
-        self.materials.ensure_index(self.materials.key,unique=True)
+        self.materials.ensure_index(self.materials.key, unique=True)
         self.materials.ensure_index("formula_pretty")
         for s in self.source_snls:
             s.ensure_index(s.key)
@@ -94,7 +94,7 @@ class SNLBuilder(Builder):
 
         # Now reduce to the set of formulas we actually have
         q = dict(self.query)
-        forms_avail = set(self.materials.distinct("formula_pretty",q))
+        forms_avail = set(self.materials.distinct("formula_pretty", q))
         forms_to_update = forms_to_update & forms_avail
 
         self.logger.info("Found {} new/updated systems to proces".format(len(forms_to_update)))
@@ -134,7 +134,7 @@ class SNLBuilder(Builder):
         for mat in mats:
             matched_snls = list(self.match(source_snls, mat))
             if len(matched_snls) > 0:
-                snl_doc = {self.snls.key : mat[self.materials.key]}
+                snl_doc = {self.snls.key: mat[self.materials.key]}
                 snl_fields = aggregate_snls(matched_snls)
                 self.add_defaults(snl_fields)
                 snl_doc["snl"] = StructureNL(Structure.from_dict(mat["structure"]), **snl_fields).as_dict()
@@ -232,7 +232,7 @@ def aggregate_snls(snls):
 
     # Aggregate all remarks and keep character count less than 280 <-- requirement from SNL
     remarks = list(set([remark for snl in snls for remark in snl["about"]["remarks"]]))
-    remarks = [r for in remarks in len(r) < 280]
+    remarks = [r for r in remarks in len(r) < 280]
 
     # Aggregate all projects
     projects = list(set([projects for snl in snls for projects in snl["about"]["projects"]]))
@@ -259,7 +259,9 @@ def aggregate_snls(snls):
         "remarks": remarks,
         "projects": projects,
         "authors": authors,
-        "data": {"_db_ids": db_ids}
+        "data": {
+            "_db_ids": db_ids
+        }
     }
 
     return snl_fields
