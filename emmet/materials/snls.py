@@ -230,9 +230,9 @@ def aggregate_snls(snls):
     entries = BibliographyData(entries=refs)
     references = entries.to_string("bibtex")
 
-    # Aggregate all remarks and keep character count less than 280 <-- requirement from SNL
+    # Aggregate all remarks and keep character count less than 140 <-- requirement from SNL
     remarks = list(set([remark for snl in snls for remark in snl["about"]["remarks"]]))
-    remarks = [r for r in remarks in len(r) < 280]
+    remarks = [r for r in remarks if len(r) < 140]
 
     # Aggregate all projects
     projects = list(set([projects for snl in snls for projects in snl["about"]["projects"]]))
