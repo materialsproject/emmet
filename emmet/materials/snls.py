@@ -63,7 +63,7 @@ class SNLBuilder(Builder):
 
     def ensure_indicies(self):
 
-        self.materials.ensure_index(self.materials.key)
+        self.materials.ensure_index(self.materials.key,unique=True)
         self.materials.ensure_index("formula_pretty")
         for s in self.source_snls:
             s.ensure_index(s.key)
