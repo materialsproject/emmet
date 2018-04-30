@@ -200,9 +200,8 @@ class MaterialsBuilder(Builder):
             angle_tol=self.angle_tol,
             separate_mag_orderings=self.separate_mag_orderings)
 
-        grouped_tasks = [[filtered_tasks[struc.index] for struc in group] for group in grouped_structures]
-
-        return grouped_tasks
+        for group in grouped_structures:
+            yield [filtered_tasks[struc.index] for struc in group]
 
     def task_to_prop_list(self, task):
         """
