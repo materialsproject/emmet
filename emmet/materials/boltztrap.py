@@ -110,8 +110,8 @@ class BoltztrapDosBuilder(Builder):
                 bta_dw = BoltztrapAnalyzer.from_files(btrap_dir)
                  
                 cdos=an_up.get_complete_dos(bs.structure,an_dw)
-             
-             else:
+            
+            else:
                 run_path = os.path.join(os.getcwd(), "dos")
                 makedirs_p(run_path)
                 BoltztrapRunner(bs=bs, nelec=nelect,run_type="DOS",
