@@ -162,10 +162,10 @@ class MPBuilder(Builder):
 
     def process_item(self, item):
 
-        new_mat = item["material"]
+        new_style_mat = item["material"]
 
-        mat = old_style_mat(new_mat)
-        add_es(mat, new_mat)
+        mat = old_style_mat(new_style_mat)
+        add_es(mat, new_style_mat)
 
         if item.get("xrd", None):
             xrd = item["xrd"]
@@ -229,15 +229,15 @@ class MPBuilder(Builder):
 #
 
 
-def old_style_mat(new_mat):
+def old_style_mat(new_style_mat):
     """
     Creates the base document for the old MP mapidoc style from the new document structure
     """
 
     mat = {}
     for mp, new_key in mp_conversion_dict.items():
-        if has(new_mat, new_key):
-            set_(mat, mp, get(new_mat, new_key))
+        if has(new_style_mat, new_key):
+            set_(mat, mp, get(new_style_mat, new_key))
 
     mat["is_orderd"] = True
     mat["is_compatible"] = True
@@ -251,23 +251,23 @@ def old_style_mat(new_mat):
 
     set_(mat, "pseudo_potential.functional", "PBE")
 
-    set_(mat, "pseudo_potential.labels", [p["titel"].split()[1] for p in get(new_mat, "calc_settings.potcar_spec")])
-    mat["ntask_ids"] = len(get(new_mat, "task_ids"))
+    set_(mat, "pseudo_potential.labels", [p["titel"].split()[1] for p in get(new_style_mat, "calc_settings.potcar_spec")])
+    mat["ntask_ids"] = len(get(new_style_mat, "task_ids"))
     set_(mat, "pseudo_potential.pot_type", "paw")
-    add_blessed_tasks(mat, new_mat)
+    add_blessed_tasks(mat, new_style_mat)
     add_cifs(mat)
-    check_relaxation(mat,new_mat)
+    check_relaxation(mat,new_style_mat)
 
     return mat
 
 
-def add_es(mat, new_mat):
+def add_es(mat, new_style_mat):
 
     bs_origin = None
     dos_origin = None
     try:
-        bs_origin = next((origin for origin in new_mat.get("origins", []) if "Line" in origin["task_type"]), None)
-        dos_origin = next((origin for origin in new_mat.get("origins", []) if "Uniform" in origin["task_type"]), None)
+        bs_origin = next((origin for origin in new_style_mat.get("origins", []) if "Line" in origin["task_type"]), None)
+        dos_origin = next((origin for origin in new_style_mat.get("origins", []) if "Uniform" in origin["task_type"]), None)
 
         if bs_origin:
             u_type = "GGA+U" if "+U" in bs_origin["task_type"] else "GGA"
@@ -283,9 +283,9 @@ def add_es(mat, new_mat):
     mat["has_bandstructure"] = bool(bs_origin) and bool(dos_origin)
 
 
-def add_blessed_tasks(mat, new_mat):
+def add_blessed_tasks(mat, new_style_mat):
     blessed_tasks = {}
-    for doc in new_mat["origins"]:
+    for doc in new_style_mat["origins"]:
         blessed_tasks[doc["task_type"]] = doc["task_id"]
 
     mat["blessed_tasks"] = blessed_tasks
@@ -368,11 +368,11 @@ def add_snl(mat, snl=None):
     mat["icsd_ids"] = get(snl,"data._db_ids.icsd_ids",[])
     mat["tags"] = snl["remarks"]
 
-def check_relaxation(mat,new_mat):
+def check_relaxation(mat,new_style_mat):
     final_structure = Structure.from_dict(mat["structure"])
 
     warnings = []
-    for init_struc in new_mat["initial_structures"]:
+    for init_struc in new_style_mat["initial_structures"]:
         # Check relaxation
         orig_crystal = Structure.from_dict(init_struc)
         
