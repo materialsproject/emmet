@@ -94,7 +94,7 @@ class SNLBuilder(Builder):
 
         # Now reduce to the set of formulas we actually have
         q = dict(self.query)
-        forms_avail = set(self.materials.distinct("formula_pretty"),q)
+        forms_avail = set(self.materials.distinct("formula_pretty",q))
         forms_to_update = forms_to_update & forms_avail
 
         self.logger.info("Found {} new/updated systems to proces".format(len(forms_to_update)))
@@ -134,10 +134,10 @@ class SNLBuilder(Builder):
         for mat in mats:
             matched_snls = list(self.match(source_snls, mat))
             if len(matched_snls) > 0:
+                snl_doc = {self.snls.key : mat[self.materials.key]}
                 snl_fields = aggregate_snls(matched_snls)
                 self.add_defaults(snl_fields)
-                snl_doc = StructureNL(Structure.from_dict(mat["structure"]), **snl_fields).as_dict()
-                snl_doc[self.snls.key] = mat[self.materials.key]
+                snl_doc["snl"] = StructureNL(Structure.from_dict(mat["structure"]), **snl_fields).as_dict()
                 snl_docs.append(snl_doc)
 
         return snl_docs
@@ -230,8 +230,9 @@ def aggregate_snls(snls):
     entries = BibliographyData(entries=refs)
     references = entries.to_string("bibtex")
 
-    # Aggregate all remarks
+    # Aggregate all remarks and keep character count less than 280 <-- requirement from SNL
     remarks = list(set([remark for snl in snls for remark in snl["about"]["remarks"]]))
+    remarks = [r for in remarks in len(r) < 280]
 
     # Aggregate all projects
     projects = list(set([projects for snl in snls for projects in snl["about"]["projects"]]))
