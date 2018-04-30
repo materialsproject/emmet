@@ -140,7 +140,7 @@ class ThermoBuilder(Builder):
                     d["thermo"]["eq_reaction_e"] = pd.get_equilibrium_reaction_energy(e)
                 else:
                     d["thermo"]["decomposes_to"] = [{
-                        "material_id": de.entry_id,
+                        "task_id": de.entry_id,
                         "formula": de.composition.formula,
                         "amount": amt
                     } for de, amt in decomp.items()]
