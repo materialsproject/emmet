@@ -428,16 +428,16 @@ def get_warnings(elastic_tensor, structure):
 
     # TODO: these should be revisited at some point, are they complete?
     #       I think they might only apply to cubic systems
-    if not (abs((c11 - c12) / c11) < 0.05 or c11 < c12):
+    if (abs((c11 - c12) / c11) < 0.05 or c11 < c12):
         warnings.append("c11 and c12 are within 5% or c12 is greater than c11")
-    if not (abs((c11 - c13) / c11) < 0.05 or c11 < c13):
+    if (abs((c11 - c13) / c11) < 0.05 or c11 < c13):
         warnings.append("c11 and c13 are within 5% or c13 is greater than c11")
-    if not (abs((c11 - c23) / c11) < 0.05 or c11 < c23):
+    if (abs((c11 - c23) / c11) < 0.05 or c11 < c23):
         warnings.append("c11 and c23 are within 5% or c23 is greater than c11")
 
     moduli = ["k_voigt", "k_reuss", "k_vrh", "g_voigt", "g_reuss", "g_vrh"]
     moduli_array = np.array([getattr(elastic_tensor, m) for m in moduli])
-    if np.any(moduli_array) < 2:
+    if np.any(moduli_array < 2):
         warnings.append("One or more K, G below 2 GPa")
 
     return warnings
