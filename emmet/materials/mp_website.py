@@ -13,6 +13,8 @@ from monty.json import jsanitize
 from maggma.builder import Builder
 from pydash.objects import get, set_, has
 
+from emmet.materials.snls import mp_default_snl_fields
+
 # Import for crazy things this builder needs
 from pymatgen.io.cif import CifWriter
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
@@ -23,6 +25,7 @@ from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.analysis.structure_analyzer import RelaxationAnalyzer
 from pymatgen.analysis.diffraction.core import DiffractionPattern
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
+from pymatgen.util.provenance import StructureNL
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -77,7 +80,7 @@ class MPBuilder(Builder):
                  electronic_structure=None,
                  snls=None,
                  xrd=None,
-                 elasticity=None,
+                 elastic=None,
                  piezo=None,
                  query=None,
                  **kwargs):
@@ -98,10 +101,10 @@ class MPBuilder(Builder):
         self.thermo = thermo
         self.query = query if query else {}
         self.xrd = xrd
-        self.elasticity = elasticity
+        self.elastic = elastic
         self.piezo = piezo
 
-        sources = list(filter(None, [materials, thermo, electronic_structure, snls, elasticity, piezo, xrd]))
+        sources = list(filter(None, [materials, thermo, electronic_structure, snls, elastic, piezo, xrd]))
 
         super().__init__(sources=sources, targets=[mp_materials], **kwargs)
 
@@ -136,8 +139,8 @@ class MPBuilder(Builder):
                     }
                 })
 
-            if self.elasticity:
-                doc["elasticity"] = self.elasticity.query_one(criteria={self.elasticity.key: m})
+            if self.elastic:
+                doc["elastic"] = self.elastic.query_one(criteria={self.elastic.key: m})
 
             if self.piezo:
                 doc["piezo"] = self.piezo.query_one(criteria={self.piezo.key: m})
@@ -167,16 +170,16 @@ class MPBuilder(Builder):
         if item.get("piezo", None):
             pass
 
-        if item.get("elasticity", None):
-            pass
+        if item.get("elastic", None):
+            elastic = item["elastic"]
+            add_elastic(mat, elastic)
 
         if item.get("thermo", None):
             thermo = item["thermo"]
             add_thermo(mat, thermo)
 
-        if item.get("snl", None):
-            snl = item["snl"]
-            add_snl(mat, snl)
+        snl = item.get("snl", {})
+        add_snl(mat, snl)
 
         sandbox_props(mat)
         return jsanitize(mat)
@@ -296,7 +299,7 @@ def add_elastic(mat, elastic):
         "K_VRH": "k_vrh",
         "K_Voigt": "k_voigt",
         "K_Voigt_Reuss_Hill": "k_vrh",
-#        "calculations": "calculations",    <--- TODO: Add to elastic builder?
+        #        "calculations": "calculations",    <--- TODO: Add to elastic builder?
         "elastic_anisotropy": "universal_anisotropy",
         "elastic_tensor": "elastic_tensor",
         "homogeneous_poisson": "homogeneous_poisson",
@@ -305,7 +308,8 @@ def add_elastic(mat, elastic):
     }
 
     mat["elasticity"] = {k: elastic["elasticity"][v] for k, v in es_aliases.items()}
-    mat["elasticity"]["nsites"] = len(get(elastic,"elasticity.structure.sites" ))
+    mat["elasticity"]["nsites"] = len(get(elastic, "elasticity.structure.sites"))
+
 
 def add_cifs(doc):
     struc = Structure.from_dict(doc["structure"])
@@ -381,15 +385,19 @@ def add_snl(mat, snl=None):
     mat["snl"] = copy.deepcopy(mat["structure"])
     if snl:
         mat["snl"].update(snl["snl"])
+    else:
+        mat["snl"] = StructureNL(Structure.from_dict(mat["structure"]), []).as_dict()
+        mat["snl"]["about"].update(mp_default_snl_fields)
 
     mat["snl_final"] = mat["snl"]
-    mat["icsd_ids"] = get(snl, "data._db_ids.icsd_ids", [])
+    mat["icsd_ids"] = get(mat["snl"], "about._db_ids.icsd_ids", [])
+    mat["pf_ids"] = get(mat["snl"], "about._db_ids.pf_ids", [])
 
     # Extract tags from remarks by looking for just nounds and adjectives
     mat["tags"] = []
-    for remark in snl["remarks"]:
+    for remark in mat["snl"]["about"].get("remarks", []):
         tokens = set(tok[1] for tok in nltk.pos_tag(nltk.word_tokenize(remark), tagset='universal'))
-        if len(tokens.intersection({"ADJ", "ADP", "VERB"})) == 0:
+        if len(tokens.intersection({"ADV", "ADP", "VERB"})) == 0:
             mat["tags"].append(remark)
 
 
@@ -416,4 +424,4 @@ def check_relaxation(mat, new_style_mat):
             # print final_structure.formula
             print("Relaxation analyzer failed for Material:{} due to {}".format(mat["task_id"], traceback.print_exc()))
 
-    mat["warnings"] = warnings
+    mat["warnings"] = list(set(warnings))

@@ -248,14 +248,14 @@ def aggregate_snls(snls):
     # Aggregate all the database IDs
     db_ids = defaultdict(list)
     for snl in snls:
-        if len(snl["about"]["history"]) == 1 and get(snl,"about.history.0.name","") in DB_indexes:
-            db_name = get(snl,"about.history.0.name","")
+        if len(snl["about"]["history"]) == 1 and get(snl, "about.history.0.name", "") in DB_indexes:
+            db_name = get(snl, "about.history.0.name", "")
             db_id_key = DB_indexes[db_name]
             db_ids[db_id_key].append(snl["about"]["history"][0]["description"].get("id", None))
 
     # remove Nones and empty lists
     db_ids = {k: list(filter(None, v)) for k, v in db_ids.items()}
-    db_ids = {k: v if len(v) > 0 for k,v in db_ids.items()}
+    db_ids = {k: v for k, v in db_ids.items() if len(v) > 0}
 
     snl_fields = {
         "created_at": created_at,
