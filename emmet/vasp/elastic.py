@@ -76,8 +76,8 @@ class ElasticBuilder(Builder):
         # Get only successful elastic deformation tasks with parent structure
         q = dict(self.query)
         q["state"] = "successful"
-        q.update({"$or": [{"task_label": {"$regex": "elastic deformation"}},
-                          {"task_label": {"$regex": "structure optimization"}}]})
+        q.update({"task_label": {
+            "$regex": "[(elastic deformation)(structure optimization)]"}})
 
         return_props = ['output', 'input', 'completed_at',
                         'transmuter', 'task_id', 'task_label', 'formula_pretty']
