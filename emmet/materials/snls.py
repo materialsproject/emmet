@@ -255,7 +255,7 @@ def aggregate_snls(snls):
 
     # remove Nones and empty lists
     db_ids = {k: list(filter(None, v)) for k, v in db_ids.items()}
-    db_ids = {k: v if len(v) > 0}
+    db_ids = {k: v if len(v) > 0 for k,v in db_ids.items()}
 
     snl_fields = {
         "created_at": created_at,
