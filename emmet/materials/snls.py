@@ -252,8 +252,10 @@ def aggregate_snls(snls):
             db_name = get(snl,"about.history.0.name","")
             db_id_key = DB_indexes[db_name]
             db_ids[db_id_key].append(snl["about"]["history"][0]["description"].get("id", None))
+
     # remove Nones and empty lists
-    db_ids = {k: list(filter(None, v)) for k, v in db_ids.items() if len(list(filter(None, db_ids.items()))) > 0}
+    db_ids = {k: list(filter(None, v)) for k, v in db_ids.items()}
+    db_ids = {k: v if len(v) > 0}
 
     snl_fields = {
         "created_at": created_at,
