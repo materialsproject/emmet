@@ -286,6 +286,27 @@ def add_blessed_tasks(mat, new_style_mat):
     mat["blessed_tasks"] = blessed_tasks
 
 
+def add_elastic(mat, elastic):
+    es_aliases = {
+        "G_Reuss": "g_reuss",
+        "G_VRH": "g_vrh",
+        "G_Voigt": "g_voigt",
+        "G_Voigt_Reuss_Hill": "g_vrh",
+        "K_Reuss": "k_reuss",
+        "K_VRH": "k_vrh",
+        "K_Voigt": "k_voigt",
+        "K_Voigt_Reuss_Hill": "k_vrh",
+#        "calculations": "calculations",    <--- TODO: Add to elastic builder?
+        "elastic_anisotropy": "universal_anisotropy",
+        "elastic_tensor": "elastic_tensor",
+        "homogeneous_poisson": "homogeneous_poisson",
+        "poisson_ratio": "homogeneous_poisson",
+        "universal_anisotropy": "universal_anisotropy"
+    }
+
+    mat["elasticity"] = {k: elastic["elasticity"][v] for k, v in es_aliases.items()}
+    mat["elasticity"]["nsites"] = len(get(elastic,"elasticity.structure.sites" ))
+
 def add_cifs(doc):
     struc = Structure.from_dict(doc["structure"])
     sym_finder = SpacegroupAnalyzer(struc, symprec=0.1)
