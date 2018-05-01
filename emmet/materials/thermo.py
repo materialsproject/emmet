@@ -54,17 +54,22 @@ class ThermoBuilder(Builder):
         new_comps = set(self.materials.distinct("chemsys", self.query)) - set(self.thermo.distinct("chemsys"))
 
         comps = updated_comps | new_comps
-        self.logger.info("Found {} compositions with new/updated materials".format(len(comps)))
 
-        # Only yields maximal super sets: e.g. if ["A","B"] and ["A"] are both in the list, will only yield ["A","B"]
+        # Only process maximal super sets: e.g. if ["A","B"] and ["A"] are both in the list, will only yield ["A","B"]
         # as this will calculate thermo props for all ["A"] compounds
         processed = set()
 
-        # Start with the largest set to ensure we don"t miss superset/subset
-        # relations
+        to_process = []
+
         for chemsys in sorted(comps, key=lambda x: len(x.split("-")), reverse=True):
             if chemsys not in processed:
                 processed |= chemsys_permutations(chemsys)
+                to_process.append(chemsys)
+
+        self.logger.info("Found {} compositions with new/updated materials".format(len(to_process)))
+        self.total = len(to_process)
+        
+        for chemsys in to_process:
                 yield self.get_entries(chemsys)
 
     def get_entries(self, chemsys):

@@ -54,6 +54,9 @@ class ElectronicStructureImageBuilder(Builder):
         mats = list(self.materials.distinct(self.materials.key, criteria=q))
 
         self.logger.debug("Processing {} materials for electronic structure".format(len(mats)))
+
+        self.total = len(mats)
+        
         for m in mats:
             mat = self.materials.query_one(
                 [self.materials.key, "structure", "bandstructure", "inputs"], {

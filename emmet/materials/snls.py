@@ -99,6 +99,8 @@ class SNLBuilder(Builder):
 
         self.logger.info("Found {} new/updated systems to proces".format(len(forms_to_update)))
 
+        self.total = len(forms_to_update)
+
         for formula in forms_to_update:
             mats = list(
                 self.materials.query(

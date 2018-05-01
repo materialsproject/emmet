@@ -95,6 +95,7 @@ class MaterialsBuilder(Builder):
 
         forms_to_update = set(updated_forms) | set(to_process_forms)
         self.logger.info("Processing {} total systems".format(len(forms_to_update)))
+        self.total = len(forms_to_update)
 
         for formula in forms_to_update:
             tasks_q = dict(q)

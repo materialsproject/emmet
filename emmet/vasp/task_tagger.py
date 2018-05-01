@@ -34,7 +34,9 @@ class TaskTagger(Builder):
         previous_task_ids = self.task_types.distinct("task_id")
         to_process = list(set(all_task_ids) - set(previous_task_ids))
 
-        self.logger.info("Yielding task documents")
+        self.logger.info("Yielding {} task documents".format(len(to_process)))
+        self.total = len(to_process)
+
         for task_id in to_process:
             yield self.tasks.query_one(criteria={"task_id": task_id}, properties=["task_id", "orig_inputs"])
 
