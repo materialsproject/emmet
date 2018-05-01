@@ -1,6 +1,8 @@
 from itertools import chain
 from collections import defaultdict
 
+from pydash.objects import get, has
+
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.util.provenance import StructureNL
@@ -246,9 +248,8 @@ def aggregate_snls(snls):
     # Aggregate all the database IDs
     db_ids = defaultdict(list)
     for snl in snls:
-        if len(snl["about"]["history"]) == 1 and \
-                snl["about"]["history"][0]["name"] in DB_indexes:
-            db_name = snl["about"]["history"][0]["name"]
+        if len(snl["about"]["history"]) == 1 and get(snl,"about.history.0.name","") in DB_indexes:
+            db_name = get(snl,"about.history.0.name","")
             db_id_key = DB_indexes[db_name]
             db_ids[db_id_key].append(snl["about"]["history"][0]["description"].get("id", None))
     # remove Nones and empty lists
