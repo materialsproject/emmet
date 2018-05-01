@@ -96,11 +96,9 @@ class MPBuilder(Builder):
         self.snls = snls
         self.thermo = thermo
         self.query = query if query else None
-        self.icsd = icsd
         self.xrd = xrd
         self.elasticity = elasticity
         self.piezo = piezo
-        self.magnetism = magnetism
 
         sources = list(
             filter(None, [materials, thermo, electronic_structure, magnetism, snls, elasticity, piezo, icsd, xrd]))
@@ -122,7 +120,9 @@ class MPBuilder(Builder):
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.mp_materials))
         mats = list(self.materials.distinct(self.materials.key, q))
+
         self.logger.info("Found {} new materials for the website".format(len(mats)))
+        self.total = len(mats)
 
         for m in mats:
 
@@ -148,16 +148,9 @@ class MPBuilder(Builder):
             if self.snls:
                 doc["snl"] = self.snls.query_one(criteria={self.snls.key: m})
 
-            if self.icsd:
-                doc["icsds"] = list(self.icsd.query(criteria={"chemsys": doc["material"]["chemsys"]}))
-
-            if self.magnetism:
-                doc["magnetism"] = self.magnetism.query_one(criteria={self.magnetism.key: m})
-
             if self.xrd:
                 doc["xrd"] = self.xrd.query_one(criteria={self.xrd.key: m})
 
-            self.logger.debug("Working on {}".format(m))
             yield doc
 
     def process_item(self, item):
@@ -338,7 +331,7 @@ def add_thermo(mat, thermo):
     if has(thermo, "thermo.formation_energy_per_atom"):
         set_(mat, "formation_energy_per_atom", get(thermo, "thermo.formation_energy_per_atom"))
 
-    if has(thermo, "thermo.decmposes_to"):
+    if has(thermo, "thermo.decomposes_to"):
         set_(mat, "decmposes_to", get(thermo, "thermo.decmposes_to"))
 
 
