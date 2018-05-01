@@ -2,6 +2,8 @@ from datetime import datetime
 import os
 import string
 import traceback
+import copy
+import nltk
 from ast import literal_eval
 from pymongo import ASCENDING, DESCENDING
 
@@ -19,7 +21,7 @@ from pymatgen import Structure
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.analysis.structure_analyzer import RelaxationAnalyzer
-from pymatgen.analysis.diffraction.xrd import XRDPattern
+from pymatgen.analysis.diffraction.core import DiffractionPattern
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
@@ -73,12 +75,10 @@ class MPBuilder(Builder):
                  mp_materials,
                  thermo=None,
                  electronic_structure=None,
-                 magnetism=None,
                  snls=None,
                  xrd=None,
                  elasticity=None,
                  piezo=None,
-                 icsd=None,
                  query=None,
                  **kwargs):
         """
@@ -93,15 +93,15 @@ class MPBuilder(Builder):
         """
         self.materials = materials
         self.mp_materials = mp_materials
+        self.electronic_structure = electronic_structure
         self.snls = snls
         self.thermo = thermo
-        self.query = query if query else None
+        self.query = query if query else {}
         self.xrd = xrd
         self.elasticity = elasticity
         self.piezo = piezo
 
-        sources = list(
-            filter(None, [materials, thermo, electronic_structure, magnetism, snls, elasticity, piezo, icsd, xrd]))
+        sources = list(filter(None, [materials, thermo, electronic_structure, snls, elasticity, piezo, xrd]))
 
         super().__init__(sources=sources, targets=[mp_materials], **kwargs)
 
@@ -244,12 +244,13 @@ def old_style_mat(new_style_mat):
 
     set_(mat, "pseudo_potential.functional", "PBE")
 
-    set_(mat, "pseudo_potential.labels", [p["titel"].split()[1] for p in get(new_style_mat, "calc_settings.potcar_spec")])
+    set_(mat, "pseudo_potential.labels",
+         [p["titel"].split()[1] for p in get(new_style_mat, "calc_settings.potcar_spec")])
     mat["ntask_ids"] = len(get(new_style_mat, "task_ids"))
     set_(mat, "pseudo_potential.pot_type", "paw")
     add_blessed_tasks(mat, new_style_mat)
     add_cifs(mat)
-    check_relaxation(mat,new_style_mat)
+    check_relaxation(mat, new_style_mat)
 
     return mat
 
@@ -260,7 +261,8 @@ def add_es(mat, new_style_mat):
     dos_origin = None
     try:
         bs_origin = next((origin for origin in new_style_mat.get("origins", []) if "Line" in origin["task_type"]), None)
-        dos_origin = next((origin for origin in new_style_mat.get("origins", []) if "Uniform" in origin["task_type"]), None)
+        dos_origin = next((origin for origin in new_style_mat.get("origins", []) if "Uniform" in origin["task_type"]),
+                          None)
 
         if bs_origin:
             u_type = "GGA+U" if "+U" in bs_origin["task_type"] else "GGA"
@@ -306,6 +308,7 @@ def add_cifs(doc):
         doc["cifs"]["refined"] = None
         doc["cifs"]["conventional_standard"] = None
 
+
 def add_xrd(mat, xrd):
     mat["xrd"] = {}
     for el, doc in xrd["xrd"].items():
@@ -314,7 +317,7 @@ def add_xrd(mat, xrd):
         el_doc["created_at"] = datetime.now().isoformat()
         el_doc["wavelength"] = doc["wavelength"]
 
-        xrd_pattern = XRDPattern.from_dict(doc["pattern"])
+        xrd_pattern = DiffractionPattern.from_dict(doc["pattern"])
         el_doc["pattern"] = [[
             float(intensity), [int(x) for x in literal_eval(list(hkls.keys())[0])], two_theta,
             float(d_hkl)
@@ -336,7 +339,7 @@ def add_thermo(mat, thermo):
 
 
 def sandbox_props(mat):
-    mat["sbxn"] = mat.get("sbxn", ["core","jcesr","vw","shyamd","kitchaev"])
+    mat["sbxn"] = mat.get("sbxn", ["core", "jcesr", "vw", "shyamd", "kitchaev"])
     mat["sbxd"] = []
 
     for sbx in mat["sbxn"]:
@@ -352,23 +355,31 @@ def add_magnetism(mat):
     msa = CollinearMagneticStructureAnalyzer(struc)
     mat["magnetic_type"] = mag_types[msa.ordering.value]
 
-def add_snl(mat, snl=None):    
-    mat["snl"] = copy.deepcopy(mat["structre"])
+
+def add_snl(mat, snl=None):
+    mat["snl"] = copy.deepcopy(mat["structure"])
     if snl:
-        mat["snl"].update(snl)
+        mat["snl"].update(snl["snl"])
 
     mat["snl_final"] = mat["snl"]
-    mat["icsd_ids"] = get(snl,"data._db_ids.icsd_ids",[])
-    mat["tags"] = snl["remarks"]
+    mat["icsd_ids"] = get(snl, "data._db_ids.icsd_ids", [])
 
-def check_relaxation(mat,new_style_mat):
+    # Extract tags from remarks by looking for just nounds and adjectives
+    mat["tags"] = []
+    for remark in snl["remarks"]:
+        tokens = set(tok[1] for tok in nltk.pos_tag(nltk.word_tokenize(remark), tagset='universal'))
+        if len(tokens.intersection({"ADJ", "ADP", "VERB"})) == 0:
+            mat["tags"].append(remark)
+
+
+def check_relaxation(mat, new_style_mat):
     final_structure = Structure.from_dict(mat["structure"])
 
     warnings = []
     for init_struc in new_style_mat["initial_structures"]:
         # Check relaxation
         orig_crystal = Structure.from_dict(init_struc)
-        
+
         try:
             analyzer = RelaxationAnalyzer(orig_crystal, final_structure)
             latt_para_percentage_changes = analyzer.get_percentage_lattice_parameter_changes()
