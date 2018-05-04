@@ -43,13 +43,12 @@ class ElasticBuilderTest(unittest.TestCase):
         ec_builder.connect()
         for t in ec_builder.get_items():
             processed = ec_builder.process_item(t)
-            if processed:
-                pass
-            else:
-                import nose
-                nose.tools.set_trace()
+            self.assertTrue(bool(processed))
         runner = Runner([ec_builder])
         runner.run()
+        # Test warnings
+        doc = ec_builder.elasticity.query_one(criteria={"pretty_formula": "NaN3"})
+        self.assertEqual(doc['elasticity']['warnings'], None)
 
     def test_grouping_functions(self):
         docs1 = list(self.test_tasks.query(criteria={"formula_pretty": "NaN3"}))
@@ -67,6 +66,7 @@ class ElasticBuilderTest(unittest.TestCase):
 
     def test_materials_aggregator(self):
         materials_dict = generate_formula_dict(self.test_materials)
+
 
 
 if __name__ == "__main__":

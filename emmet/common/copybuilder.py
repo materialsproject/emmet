@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from maggma.builder import Builder
-from tqdm import tqdm
 
 
 class CopyBuilder(Builder):
@@ -27,7 +26,8 @@ class CopyBuilder(Builder):
         cursor = source.query(criteria=lu_filter,
                               sort=[(source.lu_field, 1)])
         self.logger.info("Will copy {} items".format(cursor.count()))
-        return iter(tqdm(cursor, total=cursor.count()))
+
+        return cursor
 
     def process_item(self, item):
         return item
