@@ -63,6 +63,20 @@ class TaskTagger(Builder):
         if len(with_task_type) > 0:
             self.task_types.update(with_task_type)
 
+    def ensure_indicies(self):
+        """
+        Ensures indicies on the tasks and materials collections
+        """
+
+        # Basic search index for tasks
+        self.tasks.ensure_index(self.tasks.key, unique=True)
+        self.tasks.ensure_index("state")
+        self.tasks.ensure_index(self.tasks.lu_field)
+
+        # Search index for materials
+        self.task_types.ensure_index(self.task_types.key, unique=True)
+        self.task_types.ensure_index(self.task_types.lu_field)
+
 
 def task_type(inputs, include_calc_type=True):
     """
