@@ -6,7 +6,6 @@ __email__ = "shyamd@lbl.gov"
 
 
 class TaskTagger(Builder):
-
     def __init__(self, tasks, task_types, **kwargs):
         """
         Creates task_types from tasks and type definitions
@@ -27,6 +26,9 @@ class TaskTagger(Builder):
         Returns:
             generator or list of task docs and tag definitions
         """
+
+        self.logger.info("Setting up indicies")
+        self.ensure_indicies()
 
         # Determine tasks to process.
         self.logger.info("Determining tasks to process")
@@ -108,16 +110,22 @@ def task_type(inputs, include_calc_type=True):
         else:
             return calc_type + "NSCF Uniform"
 
-    if incar.get("LEPSILON", False):
+    elif incar.get("LEPSILON", False):
         return calc_type + "Static Dielectric"
 
-    if incar.get("NSW", 1) == 0:
+    elif incar.get("LCHIMAG", False):
+        return calc_type + "NMR Chemical Shielding"
+
+    elif incar.get("LEFG", False):
+        return calc_type + "NMR Electric Field Gradient"
+
+    elif incar.get("NSW", 1) == 0:
         return calc_type + "Static"
 
-    if incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
+    elif incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
         return calc_type + "Structure Optimization"
 
-    if incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
+    elif incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
         return calc_type + "Deformation"
 
     return ""
