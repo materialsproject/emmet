@@ -321,7 +321,7 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
         comparator=ElementComparator())
 
     def get_sg(struc):
-        return struc.get_space_group_info()[0]
+        return struc.get_space_group_info(symprec=0.1)[1]
 
     # First group by spacegroup number then by structure matching
     for _, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
