@@ -201,7 +201,7 @@ class ThermoBuilder(Builder):
         # Search indicies for thermo
         self.thermo.ensure_index(self.thermo.key, unique=True)
         self.thermo.ensure_index(self.thermo.lu_field)
-        self.materials.ensure_index("chemsys")
+        self.thermo.ensure_index("chemsys")
 
 
 def chemsys_permutations(chemsys):
