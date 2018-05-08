@@ -323,6 +323,7 @@ def add_cifs(doc):
         doc["cifs"]["primitive"] = str(CifWriter(primitive))
         doc["cifs"]["refined"] = str(CifWriter(refined))
         doc["cifs"]["conventional_standard"] = str(CifWriter(conventional))
+        doc["cifs"]["computed"] = dict(doc["cif"])
         doc["spacegroup"]["symbol"] = sym_finder.get_space_group_symbol()
         doc["spacegroup"]["number"] = sym_finder.get_space_group_number()
         doc["spacegroup"]["point_group"] = sym_finder.get_point_group_symbol()
