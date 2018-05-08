@@ -255,5 +255,45 @@
       "GGA+U Structure Optimization": 5,
       "GGA+U Static": 6
     }
+  },
+  {
+    "tasks_key": "calcs_reversed.0.output.outcar.dielectric_tensor",
+    "materials_key": "dielectric.static",
+    "quality_score": {
+      "GGA Static Dielectric": 2,
+      "GGA+U Static Dielectric": 6
+    }
+  },
+  {
+    "tasks_key": "calcs_reversed.0.output.outcar.dielectric_ionic_tensor",
+    "materials_key": "dielectric.ionic",
+    "quality_score": {
+      "GGA Static Dielectric": 2,
+      "GGA+U Static Dielectric": 6
+    }
+  },
+  {
+    "tasks_key": "calcs_reversed.0.output.outcar.piezo_tensor",
+    "materials_key": "piezo.static",
+    "quality_score": {
+      "GGA Static piezo": 2,
+      "GGA+U Static piezo": 6
+    }
+  },
+  {
+    "tasks_key": "calcs_reversed.0.output.outcar.piezo_ionic_tensor",
+    "materials_key": "piezo.ionic",
+    "quality_score": {
+      "GGA Static piezo": 2,
+      "GGA+U Static piezo": 6
+    }
+  }
+  {
+    "tasks_key": "calcs_reversed.0.output.outcar.born",
+    "materials_key": "born",
+    "quality_score": {
+      "GGA Static piezo": 2,
+      "GGA+U Static piezo": 6
+    }
   }
 ]
