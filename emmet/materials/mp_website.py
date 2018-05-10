@@ -2,6 +2,8 @@ from datetime import datetime
 import os
 import string
 import traceback
+import copy
+import nltk
 from ast import literal_eval
 from pymongo import ASCENDING, DESCENDING
 
@@ -11,6 +13,8 @@ from monty.json import jsanitize
 from maggma.builder import Builder
 from pydash.objects import get, set_, has
 
+from emmet.materials.snls import mp_default_snl_fields
+
 # Import for crazy things this builder needs
 from pymatgen.io.cif import CifWriter
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
@@ -19,14 +23,16 @@ from pymatgen import Structure
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.analysis.structure_analyzer import RelaxationAnalyzer
-from pymatgen.analysis.diffraction.xrd import XRDPattern
+from pymatgen.analysis.diffraction.core import DiffractionPattern
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
+from pymatgen.util.provenance import StructureNL
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+
 mp_conversion_dict = {
-    "anonymous_formula": "anonymous_formula",
+    "anonymous_formula": "formula_anonymous",
     "band_gap.search_gap.band_gap": "bandstructure.band_gap",
     "band_gap.search_gap.is_direct": "bandstructure.is_gap_direct",
     "chemsys": "chemsys",
@@ -43,13 +49,13 @@ mp_conversion_dict = {
     "is_hubbard": "calc_settings.is_hubbard",
     "nelements": "nelements",
     "nsites": "nsites",
-    "pretty_formula": "pretty_formula",
-    "reduced_cell_formula": "reduced_cell_formula",
+    "pretty_formula": "formula_pretty",
+    "reduced_cell_formula": "composition_reduced",
     "run_type": "calc_settings.run_type",
     "spacegroup": "spacegroup",
     "structure": "structure",
     "total_magnetization": "magnestism.total_magnetization",
-    "unit_cell_formula": "unit_cell_formula",
+    "unit_cell_formula": "composition",
     "volume": "volume",
     "warnings": "analysis.warnings",
     "task_ids": "task_ids",
@@ -72,12 +78,10 @@ class MPBuilder(Builder):
                  mp_materials,
                  thermo=None,
                  electronic_structure=None,
-                 magnetism=None,
                  snls=None,
                  xrd=None,
-                 elasticity=None,
+                 elastic=None,
                  piezo=None,
-                 icsd=None,
                  query=None,
                  **kwargs):
         """
@@ -95,15 +99,12 @@ class MPBuilder(Builder):
         self.electronic_structure = electronic_structure
         self.snls = snls
         self.thermo = thermo
-        self.query = query if query else None
-        self.icsd = icsd
+        self.query = query if query else {}
         self.xrd = xrd
-        self.elasticity = elasticity
+        self.elastic = elastic
         self.piezo = piezo
-        self.magnetism = magnetism
 
-        sources = list(
-            filter(None, [materials, thermo, electronic_structure, magnetism, snls, elasticity, piezo, icsd, xrd]))
+        sources = list(filter(None, [materials, thermo, electronic_structure, snls, elastic, piezo, xrd]))
 
         super().__init__(sources=sources, targets=[mp_materials], **kwargs)
 
@@ -122,7 +123,9 @@ class MPBuilder(Builder):
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.mp_materials))
         mats = list(self.materials.distinct(self.materials.key, q))
+
         self.logger.info("Found {} new materials for the website".format(len(mats)))
+        self.total = len(mats)
 
         for m in mats:
 
@@ -136,8 +139,8 @@ class MPBuilder(Builder):
                     }
                 })
 
-            if self.elasticity:
-                doc["elasticity"] = self.elasticity.query_one(criteria={self.elasticity.key: m})
+            if self.elastic:
+                doc["elastic"] = self.elastic.query_one(criteria={self.elastic.key: m})
 
             if self.piezo:
                 doc["piezo"] = self.piezo.query_one(criteria={self.piezo.key: m})
@@ -148,50 +151,35 @@ class MPBuilder(Builder):
             if self.snls:
                 doc["snl"] = self.snls.query_one(criteria={self.snls.key: m})
 
-            if self.icsd:
-                doc["icsds"] = list(self.icsd.query(criteria={"chemsys": doc["material"]["chemsys"]}))
-
-            if self.magnetism:
-                doc["magnetism"] = self.magnetism.query_one(criteria={self.magnetism.key: m})
-
             if self.xrd:
                 doc["xrd"] = self.xrd.query_one(criteria={self.xrd.key: m})
 
-            self.logger.debug("Working on {}".format(m))
             yield doc
 
     def process_item(self, item):
 
-        new_mat = item["material"]
+        new_style_mat = item["material"]
 
-        mat = old_style_mat(new_mat)
+        mat = old_style_mat(new_style_mat)
+        add_es(mat, new_style_mat)
 
         if item.get("xrd", None):
             xrd = item["xrd"]
             add_xrd(mat, xrd)
 
-        if item.get("electronic_structure", None):
-            es = item["electronic_structure"]
-            add_es(mat, new_mat, es)
-
         if item.get("piezo", None):
             pass
 
-        if item.get("elasticity", None):
-            pass
+        if item.get("elastic", None):
+            elastic = item["elastic"]
+            add_elastic(mat, elastic)
 
         if item.get("thermo", None):
             thermo = item["thermo"]
             add_thermo(mat, thermo)
 
-        if item.get("snl", None):
-            snl = item["snl"]
-            add_snl(mat, snl)
-
-            if item.get("icsds", None):
-                icsds = item["icsds"]
-                if icsds:
-                    add_icsd(mat, icsds)
+        snl = item.get("snl", {})
+        add_snl(mat, snl)
 
         sandbox_props(mat)
         return jsanitize(mat)
@@ -237,15 +225,15 @@ class MPBuilder(Builder):
 #
 
 
-def old_style_mat(new_mat):
+def old_style_mat(new_style_mat):
     """
     Creates the base document for the old MP mapidoc style from the new document structure
     """
 
     mat = {}
     for mp, new_key in mp_conversion_dict.items():
-        if has(new_mat, new_key):
-            set_(mat, mp, get(new_mat, new_key))
+        if has(new_style_mat, new_key):
+            set_(mat, mp, get(new_style_mat, new_key))
 
     mat["is_orderd"] = True
     mat["is_compatible"] = True
@@ -259,29 +247,29 @@ def old_style_mat(new_mat):
 
     set_(mat, "pseudo_potential.functional", "PBE")
 
-    set_(mat, "pseudo_potential.labels", [p["titel"].split()[1] for p in get(new_mat, "calc_settings.potcar_spec")])
-    mat["ntask_ids"] = len(get(new_mat, "task_ids"))
+    set_(mat, "pseudo_potential.labels",
+         [p["titel"].split()[1] for p in get(new_style_mat, "calc_settings.potcar_spec")])
+    mat["ntask_ids"] = len(get(new_style_mat, "task_ids"))
     set_(mat, "pseudo_potential.pot_type", "paw")
-    add_bv_structure(mat)
-    add_blessed_tasks(mat, new_mat)
+    add_blessed_tasks(mat, new_style_mat)
     add_cifs(mat)
+    check_relaxation(mat, new_style_mat)
 
     return mat
 
 
-def add_es(mat, new_mat, es):
+def add_es(mat, new_style_mat):
 
     bs_origin = None
     dos_origin = None
     try:
-        bs_origin = next((origin for origin in new_mat.get("origins", []) if "Line" in origin["task_type"]), None)
-        dos_origin = next((origin for origin in new_mat.get("origins", []) if "Uniform" in origin["task_type"]), None)
+        bs_origin = next((origin for origin in new_style_mat.get("origins", []) if "Line" in origin["task_type"]), None)
+        dos_origin = next((origin for origin in new_style_mat.get("origins", []) if "Uniform" in origin["task_type"]),
+                          None)
 
         if bs_origin:
             u_type = "GGA+U" if "+U" in bs_origin["task_type"] else "GGA"
             set_(mat, "band_structure.{}.task_id".format(u_type), bs_origin["task_id"])
-            if has(es, "band_gap"):
-                set_(mat, "band_gap.search_gap", get(es, "band_gap"))
 
         if dos_origin:
             u_type = "GGA+U" if "+U" in dos_origin["task_type"] else "GGA"
@@ -293,22 +281,34 @@ def add_es(mat, new_mat, es):
     mat["has_bandstructure"] = bool(bs_origin) and bool(dos_origin)
 
 
-def add_blessed_tasks(mat, new_mat):
+def add_blessed_tasks(mat, new_style_mat):
     blessed_tasks = {}
-    for doc in new_mat["origins"]:
+    for doc in new_style_mat["origins"]:
         blessed_tasks[doc["task_type"]] = doc["task_id"]
 
     mat["blessed_tasks"] = blessed_tasks
 
 
-def add_bv_structure(doc):
-    struc = Structure.from_dict(doc["structure"])
-    try:
-        bva = BVAnalyzer()
-        bv_struct = bva.get_oxi_state_decorated_structure(struc)
-        doc["bv_structure"] = bv_struct.as_dict()
-    except Exception as e:
-        print("BVAnalyzer error: {}".format(e))
+def add_elastic(mat, elastic):
+    es_aliases = {
+        "G_Reuss": "g_reuss",
+        "G_VRH": "g_vrh",
+        "G_Voigt": "g_voigt",
+        "G_Voigt_Reuss_Hill": "g_vrh",
+        "K_Reuss": "k_reuss",
+        "K_VRH": "k_vrh",
+        "K_Voigt": "k_voigt",
+        "K_Voigt_Reuss_Hill": "k_vrh",
+        #        "calculations": "calculations",    <--- TODO: Add to elastic builder?
+        "elastic_anisotropy": "universal_anisotropy",
+        "elastic_tensor": "elastic_tensor",
+        "homogeneous_poisson": "homogeneous_poisson",
+        "poisson_ratio": "homogeneous_poisson",
+        "universal_anisotropy": "universal_anisotropy"
+    }
+
+    mat["elasticity"] = {k: elastic["elasticity"][v] for k, v in es_aliases.items()}
+    mat["elasticity"]["nsites"] = len(get(elastic, "elasticity.structure.sites"))
 
 
 def add_cifs(doc):
@@ -323,6 +323,7 @@ def add_cifs(doc):
         doc["cifs"]["primitive"] = str(CifWriter(primitive))
         doc["cifs"]["refined"] = str(CifWriter(refined))
         doc["cifs"]["conventional_standard"] = str(CifWriter(conventional))
+        doc["cifs"]["computed"] = dict(doc["cif"])
         doc["spacegroup"]["symbol"] = sym_finder.get_space_group_symbol()
         doc["spacegroup"]["number"] = sym_finder.get_space_group_number()
         doc["spacegroup"]["point_group"] = sym_finder.get_point_group_symbol()
@@ -332,7 +333,6 @@ def add_cifs(doc):
         doc["cifs"]["primitive"] = None
         doc["cifs"]["refined"] = None
         doc["cifs"]["conventional_standard"] = None
-        _log.error("Can't get alternative cells for task_id {i}".format(i=doc["task_id"]))
 
 
 def add_xrd(mat, xrd):
@@ -343,7 +343,7 @@ def add_xrd(mat, xrd):
         el_doc["created_at"] = datetime.now().isoformat()
         el_doc["wavelength"] = doc["wavelength"]
 
-        xrd_pattern = XRDPattern.from_dict(doc["pattern"])
+        xrd_pattern = DiffractionPattern.from_dict(doc["pattern"])
         el_doc["pattern"] = [[
             float(intensity), [int(x) for x in literal_eval(list(hkls.keys())[0])], two_theta,
             float(d_hkl)
@@ -360,12 +360,12 @@ def add_thermo(mat, thermo):
     if has(thermo, "thermo.formation_energy_per_atom"):
         set_(mat, "formation_energy_per_atom", get(thermo, "thermo.formation_energy_per_atom"))
 
-    if has(thermo, "thermo.decmposes_to"):
+    if has(thermo, "thermo.decomposes_to"):
         set_(mat, "decmposes_to", get(thermo, "thermo.decmposes_to"))
 
 
 def sandbox_props(mat):
-    mat["sbxn"] = mat.get("sbxn", ["core"])
+    mat["sbxn"] = mat.get("sbxn", ["core", "jcesr", "vw", "shyamd", "kitchaev"])
     mat["sbxd"] = []
 
     for sbx in mat["sbxn"]:
@@ -374,79 +374,7 @@ def sandbox_props(mat):
         mat["sbxd"].append(sbx_d)
 
 
-def add_icsd(mat, icsds):
-
-    relevant_icsd = [icsd for icsd in icsds if icsd["icsd_id"] in mat.get("icsd_ids", [])]
-    results = []
-    for icsd in relevant_icsd:
-        result = {"warnings": []}
-        tags = [icsd[t] for t in ["chem_name", "min_name"] if t in icsd and icsd[t]]
-        result["exp"] = {'pressure': icsd["pressure"], 'tags': tags}
-        if icsd.get('pressure', 0) > 1:
-            result["warnings"].append("High pressure experimental phase.")
-        results.append(result)
-
-    if len(results) == 0:
-        results.append({"warnings": ["Structure has been removed in the 2012 version of ICSD."], "exp": {}})
-
-    if mat["icsd_ids"]:
-        results[0]["exp_lattice"] = mat["snl"]["lattice"]
-
-    # Check relaxation
-    orig_crystal = Structure.from_dict(mat["snl"])
-    final_structure = Structure.from_dict(mat["structure"])
-
-    try:
-        analyzer = RelaxationAnalyzer(orig_crystal, final_structure)
-        latt_para_percentage_changes = analyzer.get_percentage_lattice_parameter_changes()
-        for l in ["a", "b", "c"]:
-            change = latt_para_percentage_changes[l] * 100
-            if change < latt_para_interval[0] or change > latt_para_interval[1]:
-                results[0]["warnings"].append("Large change in {} lattice parameter during relaxation.".format(l))
-        change = analyzer.get_percentage_volume_change() * 100
-        if change < vol_interval[0] or change > vol_interval[1]:
-            results[0]["warnings"].append("Large change in volume during relaxation.")
-    except Exception as ex:
-        # print icsd_crystal.formula
-        # print final_structure.formula
-        print("Relaxation analyzer failed for Material:{} due to {}".format(mat["task_id"], traceback.print_exc()))
-
-    # Merge all the results
-
-    if len(results) > 1:
-
-        results_union = {"exp": {"tags": []}, "warnings": []}
-        tags = []
-        warnings = []
-        for i in results:
-            if i.get("exp_lattice"):
-                results_union["exp_lattice"] = i["exp_lattice"]
-            if i.get("exp"):
-                if i["exp"].get("tags"):
-                    tags.extend(i["exp"]["tags"])
-            if i.get("warnings"):
-                warnings.extend(i["warnings"])
-        if tags:
-            results_union["exp"]["tags"] = [i for i in set(tags)]
-        if warnings:
-            high_pressure_count = 0
-            for w in warnings:
-                if w == "High pressure experimental phase.":
-                    high_pressure_count += 1
-            results_union["warnings"] = [i for i in set(warnings)]
-            if high_pressure_count != 0 and high_pressure_count != len(mat.get("icsd_ids", [])):
-                results_union["warnings"].remove("High pressure experimental phase.")
-        results = results_union
-    else:
-        results = results[0]
-
-    if results.get("exp_lattice"):
-        mat["exp_lattice"] = results["exp_lattice"]
-    mat["exp"] = results["exp"]
-    mat["warnings"] = results["warnings"]
-
-
-def add_magnetism(mat, mag=None):
+def add_magnetism(mat):
     mag_types = {"NM": "Non-magnetic", "FiM": "Ferri", "AFM": "AFM", "FM": "FM"}
 
     struc = Structure.from_dict(mat["structure"])
@@ -454,27 +382,47 @@ def add_magnetism(mat, mag=None):
     mat["magnetic_type"] = mag_types[msa.ordering.value]
 
 
-def add_elasticity(mat, elasticity=None):
-    elasticity = elasticity if elasticity else None
-    if "elasticity" in elasticity:
-        mat["elasticity"] = elasticity.get("elasticity")
-
-
-def add_piezo(mat, piezo=None):
-    piezo = piezo if piezo else None
-    if "piezo" in piezo:
-        mat["piezo"] = piezo.get("piezo")
-
-
-def add_diel(mat, diel=None):
-    diel = diel if diel else None
-    if "diel" in diel:
-        mat["diel"] = diel.get("diel")
-
-
 def add_snl(mat, snl=None):
-    snl = snl if snl else {}
-    mat["snl"] = snl.get("snl", None)
-    mat["snl_final"] = snl.get("snl", None)
-    mat["created_at"] = get(snl, "snl.about.created_at") if has(snl, "snl.about.created_at") else datetime.utcnow()
-    mat["icsd_ids"] = snl.get("icsd_ids", [])
+    mat["snl"] = copy.deepcopy(mat["structure"])
+    if snl:
+        mat["snl"].update(snl["snl"])
+    else:
+        mat["snl"] = StructureNL(Structure.from_dict(mat["structure"]), []).as_dict()
+        mat["snl"]["about"].update(mp_default_snl_fields)
+
+    mat["snl_final"] = mat["snl"]
+    mat["icsd_ids"] = get(mat["snl"], "about._db_ids.icsd_ids", [])
+    mat["pf_ids"] = get(mat["snl"], "about._db_ids.pf_ids", [])
+
+    # Extract tags from remarks by looking for just nounds and adjectives
+    mat["tags"] = []
+    for remark in mat["snl"]["about"].get("remarks", []):
+        tokens = set(tok[1] for tok in nltk.pos_tag(nltk.word_tokenize(remark), tagset='universal'))
+        if len(tokens.intersection({"ADV", "ADP", "VERB"})) == 0:
+            mat["tags"].append(remark)
+
+
+def check_relaxation(mat, new_style_mat):
+    final_structure = Structure.from_dict(mat["structure"])
+
+    warnings = []
+    for init_struc in new_style_mat["initial_structures"]:
+        # Check relaxation
+        orig_crystal = Structure.from_dict(init_struc)
+
+        try:
+            analyzer = RelaxationAnalyzer(orig_crystal, final_structure)
+            latt_para_percentage_changes = analyzer.get_percentage_lattice_parameter_changes()
+            for l in ["a", "b", "c"]:
+                change = latt_para_percentage_changes[l] * 100
+                if change < latt_para_interval[0] or change > latt_para_interval[1]:
+                    warnings.append("Large change in a lattice parameter during relaxation.")
+            change = analyzer.get_percentage_volume_change() * 100
+            if change < vol_interval[0] or change > vol_interval[1]:
+                warnings.append("Large change in volume during relaxation.")
+        except Exception as ex:
+            # print icsd_crystal.formula
+            # print final_structure.formula
+            print("Relaxation analyzer failed for Material:{} due to {}".format(mat["task_id"], traceback.print_exc()))
+
+    mat["warnings"] = list(set(warnings))

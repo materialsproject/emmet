@@ -60,6 +60,7 @@ class DiffractionBuilder(Builder):
         mats = list(self.materials.distinct(self.materials.key, q))
         self.logger.info(
             "Found {} new materials for diffraction data".format(len(mats)))
+        self.total = len(mats)
         for m in mats:
             yield self.materials.query(properties=[self.materials.key, "structure", self.materials.lu_field],
                                        criteria={self.materials.key: m}).limit(1)[0]
@@ -94,7 +95,7 @@ class DiffractionBuilder(Builder):
             xrdcalc = XRDCalculator(wavelength="".join([xs['target'], xs['edge']]),
                                     symprec=xs.get('symprec', 0))
 
-            pattern = jsanitize(xrdcalc.get_xrd_pattern(
+            pattern = jsanitize(xrdcalc.get_pattern(
                 structure, two_theta_range=xs['two_theta']).as_dict())
             d = {'wavelength': {'element': xs['target'],
                                 'in_angstroms': WAVELENGTHS["".join([xs['target'], xs['edge']])]},

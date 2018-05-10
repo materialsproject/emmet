@@ -71,7 +71,7 @@ class MaterialsBuilder(Builder):
         self.logger.info("Allowed Task Types: {}".format(self.allowed_tasks))
 
         self.logger.info("Setting indexes")
-        self.ensure_indexes()
+        self.ensure_indicies()
 
         # Save timestamp for update operation
         self.time_stamp = datetime.utcnow()
@@ -95,6 +95,7 @@ class MaterialsBuilder(Builder):
 
         forms_to_update = set(updated_forms) | set(to_process_forms)
         self.logger.info("Processing {} total systems".format(len(forms_to_update)))
+        self.total = len(forms_to_update)
 
         for formula in forms_to_update:
             tasks_q = dict(q)
@@ -200,9 +201,8 @@ class MaterialsBuilder(Builder):
             angle_tol=self.angle_tol,
             separate_mag_orderings=self.separate_mag_orderings)
 
-        grouped_tasks = [[filtered_tasks[struc.index] for struc in group] for group in grouped_structures]
-
-        return grouped_tasks
+        for group in grouped_structures:
+            yield [filtered_tasks[struc.index] for struc in group]
 
     def task_to_prop_list(self, task):
         """
@@ -321,7 +321,7 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
         comparator=ElementComparator())
 
     def get_sg(struc):
-        return struc.get_space_group_info()[0]
+        return struc.get_space_group_info(symprec=0.1)[1]
 
     # First group by spacegroup number then by structure matching
     for _, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
