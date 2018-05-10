@@ -1,5 +1,6 @@
 import click, os
 from atomate.vasp.database import VaspCalcDb
+from pymongo.collection import ReturnDocument
 
 @click.group()
 def cli():
@@ -12,6 +13,8 @@ def cli():
 @click.option('--insert/--no-insert', default=False, help='actually execute task addition')
 def add_tasks(source_db_file, target_db_file, tag, insert):
     """Retrieve tasks from source and add to target"""
+
+    exclude = {'tags': {'$ne': 'deprecated'}}
 
     def get_subdir(dn):
         return dn.rsplit(os.sep, 1)[-1]
@@ -28,32 +31,40 @@ def add_tasks(source_db_file, target_db_file, tag, insert):
     target = VaspCalcDb.from_db_file(target_db_file, admin=True) # 'db_atomate.json'
     print('connected to target db with', target.collection.count(), 'tasks')
 
+    indexes = ['task_id', 'tags', 'dir_name']
+    for index in indexes:
+        for db in [source, target]:
+           keys = [k.rsplit('_', 1)[0] for k in db.collection.index_information().keys()]
+           if index not in keys:
+               db.collection.ensure_index(index)
+               print('ensured index', index)
+
     tags = [tag]
     if tag is None:
-        tags = [t for t in source.collection.distinct('tags') if t is not None]
+        tags = [t for t in source.collection.find(exclude).distinct('tags') if t is not None]
         print(len(tags), 'tags in source collection')
 
     for t in tags:
 
-        print('tag:', t)
-        query = {'tags': t}
+        print('### {} ###'.format(t))
+        query = {'$and': [{'tags': t}, exclude]}
         source_count = source.collection.count(query)
-        print('source:', source_count, 'tasks out of', source.collection.count())
-        print('target:', target.collection.count(query), 'tasks out of', target.collection.count())
+        print('source / target:', source_count, '/', target.collection.count(query))
 
         # skip tasks with task_id existing in target (have to be a string [mp-*, mvc-*])
         source_task_ids = source.collection.find(query).distinct('task_id')
         source_mp_task_ids = [task_id for task_id in source_task_ids if isinstance(task_id, str)]
         skip_task_ids = target.collection.find({'task_id': {'$in': source_mp_task_ids}}).distinct('task_id')
-        print('skip', len(skip_task_ids), 'existing MP task ids out of', len(source_mp_task_ids))
+        if len(skip_task_ids):
+            print('skip', len(skip_task_ids), 'existing MP task ids out of', len(source_mp_task_ids))
 
         query.update({'task_id': {'$nin': skip_task_ids}})
         already_inserted_subdirs = [get_subdir(dn) for dn in target.collection.find(query).distinct('dir_name')]
         subdirs = [get_subdir(dn) for dn in source.collection.find(query).distinct('dir_name') if get_subdir(dn) not in already_inserted_subdirs]
-        print(len(subdirs), 'candidate tasks to insert')
         if len(subdirs) < 1:
             continue
 
+        print(len(subdirs), 'candidate tasks to insert')
         if not insert:
             print('add --insert flag to actually add tasks to production')
             continue
