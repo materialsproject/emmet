@@ -38,6 +38,12 @@ class ElasticBuilderTest(unittest.TestCase):
         } for n, opt_doc in enumerate(opt_docs)]
         cls.test_materials.update(mat_docs, update_lu=False)
 
+    @classmethod
+    def tearDownClass(cls):
+        cls.test_tasks.collection.drop()
+        cls.test_elasticity.collection.drop()
+        cls.test_materials.collection.drop()
+
     def test_builder(self):
         ec_builder = ElasticBuilder(self.test_tasks, self.test_elasticity, self.test_materials, incremental=False)
         ec_builder.connect()
