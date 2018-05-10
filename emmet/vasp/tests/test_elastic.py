@@ -38,18 +38,23 @@ class ElasticBuilderTest(unittest.TestCase):
         } for n, opt_doc in enumerate(opt_docs)]
         cls.test_materials.update(mat_docs, update_lu=False)
 
+    @classmethod
+    def tearDownClass(cls):
+        cls.test_tasks.collection.drop()
+        cls.test_elasticity.collection.drop()
+        cls.test_materials.collection.drop()
+
     def test_builder(self):
         ec_builder = ElasticBuilder(self.test_tasks, self.test_elasticity, self.test_materials, incremental=False)
         ec_builder.connect()
         for t in ec_builder.get_items():
             processed = ec_builder.process_item(t)
-            if processed:
-                pass
-            else:
-                import nose
-                nose.tools.set_trace()
+            self.assertTrue(bool(processed))
         runner = Runner([ec_builder])
         runner.run()
+        # Test warnings
+        doc = ec_builder.elasticity.query_one(criteria={"pretty_formula": "NaN3"})
+        self.assertEqual(doc['elasticity']['warnings'], None)
 
     def test_grouping_functions(self):
         docs1 = list(self.test_tasks.query(criteria={"formula_pretty": "NaN3"}))
@@ -67,6 +72,7 @@ class ElasticBuilderTest(unittest.TestCase):
 
     def test_materials_aggregator(self):
         materials_dict = generate_formula_dict(self.test_materials)
+
 
 
 if __name__ == "__main__":
