@@ -54,7 +54,7 @@ class DielectricBuilder(Builder):
 
         self.logger.info("Found {} new materials for dielectric data".format(len(mats)))
 
-        return self.materials.query_one(criteria=q, properties=[self.materials.key, "dielectric", "piezo", "structure"])
+        return self.materials.query(criteria=q, properties=[self.materials.key, "dielectric", "piezo", "structure"])
 
     def process_item(self, item):
         """
