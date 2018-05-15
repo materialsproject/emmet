@@ -158,7 +158,11 @@ class ElasticBuilder(Builder):
             elements = [s.symbol for s in structure.composition.elements]
             chemsys = '-'.join(elements)
             final_doc.update(c_ijkl.property_dict)
-            final_doc.update(c_ijkl.get_structure_property_dict(structure))
+            try:
+                final_doc.update(c_ijkl.get_structure_property_dict(structure))
+            except:
+                self.logger.warn("Negative K or G found, structure property "
+                                 "dict not computed")
 
             elastic_summary = {'task_id': mp_id,
                                'all_elastic_fits': elastic_docs,
