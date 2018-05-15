@@ -99,9 +99,11 @@ class ElasticBuilder(Builder):
         else:
             formulas = self.tasks.distinct('formula_pretty', criteria=q)
 
+        self.logger.info("Starting aggregation")
         cmd_cursor = self.tasks.groupby("formula_pretty",
                                         properties=return_props,
                                         criteria=q)
+        self.logger.info("Aggregation pipeline")
 
         for n, doc in enumerate(cmd_cursor):
             # TODO: refactor for task sets without structure opt
