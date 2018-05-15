@@ -89,7 +89,7 @@ class BondBuilder(Builder):
         q = {'task_id': {'$nin': already_calculated}}
         q.update(self.query)
         materials = self.materials.query(criteria=q,
-                                         properties=["task_id", "task_types", "structure"])
+                                         properties=["task_id", "structure"])
 
         self.total = materials.count()
         self.logger.info("Found {} new materials for topological analysis".format(self.total))
@@ -131,8 +131,7 @@ class BondBuilder(Builder):
 
                 self.logger.warning(e)
                 self.logger.warning("Failed to calculate bonding for {} using "
-                                      "{} local_env strategy.".format(task_id,
-                                                                      method))
+                                    "{} strategy.".format(task_id, method))
 
         return topology_docs
 
