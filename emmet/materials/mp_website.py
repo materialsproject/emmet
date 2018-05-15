@@ -184,6 +184,7 @@ class MPBuilder(Builder):
         add_snl(mat, snl)
 
         sandbox_props(mat)
+        has_fields(mat)
         return jsanitize(mat)
 
     def update_targets(self, items):
@@ -451,3 +452,6 @@ def add_dielectric(mat, dielectric):
             "piezoelectric_tensor": d["total"],
             "v_max": d["max_direction"]
         }
+
+def has_fields(mat):
+    mat["has"] = [prop for prop in ["elasticity","piezo","diel","bandstructure"] if prop in mat]
