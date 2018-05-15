@@ -4,6 +4,7 @@ import string
 import traceback
 import copy
 import nltk
+import numpy as np
 from ast import literal_eval
 from pymongo import ASCENDING, DESCENDING
 
@@ -81,7 +82,7 @@ class MPBuilder(Builder):
                  snls=None,
                  xrd=None,
                  elastic=None,
-                 piezo=None,
+                 dielectric=None,
                  query=None,
                  **kwargs):
         """
@@ -102,9 +103,9 @@ class MPBuilder(Builder):
         self.query = query if query else {}
         self.xrd = xrd
         self.elastic = elastic
-        self.piezo = piezo
+        self.dielectric = dielectric
 
-        sources = list(filter(None, [materials, thermo, electronic_structure, snls, elastic, piezo, xrd]))
+        sources = list(filter(None, [materials, thermo, electronic_structure, snls, elastic, dielectric, xrd]))
 
         super().__init__(sources=sources, targets=[mp_materials], **kwargs)
 
@@ -142,8 +143,8 @@ class MPBuilder(Builder):
             if self.elastic:
                 doc["elastic"] = self.elastic.query_one(criteria={self.elastic.key: m})
 
-            if self.piezo:
-                doc["piezo"] = self.piezo.query_one(criteria={self.piezo.key: m})
+            if self.dielectric:
+                doc["dielectric"] = self.dielectric.query_one(criteria={self.dielectric.key: m})
 
             if self.thermo:
                 doc["thermo"] = self.thermo.query_one(criteria={self.thermo.key: m})
@@ -167,8 +168,9 @@ class MPBuilder(Builder):
             xrd = item["xrd"]
             add_xrd(mat, xrd)
 
-        if item.get("piezo", None):
-            pass
+        if item.get("dielectric", None):
+            dielectric = item["dielectric"]
+            add_dielectric(mat, dielectric)
 
         if item.get("elastic", None):
             elastic = item["elastic"]
@@ -323,7 +325,7 @@ def add_cifs(doc):
         doc["cifs"]["primitive"] = str(CifWriter(primitive))
         doc["cifs"]["refined"] = str(CifWriter(refined))
         doc["cifs"]["conventional_standard"] = str(CifWriter(conventional))
-        doc["cifs"]["computed"] = dict(doc["cif"])
+        doc["cifs"]["computed"] = str(CifWriter(struc))
         doc["spacegroup"]["symbol"] = sym_finder.get_space_group_symbol()
         doc["spacegroup"]["number"] = sym_finder.get_space_group_number()
         doc["spacegroup"]["point_group"] = sym_finder.get_point_group_symbol()
@@ -426,3 +428,26 @@ def check_relaxation(mat, new_style_mat):
             print("Relaxation analyzer failed for Material:{} due to {}".format(mat["task_id"], traceback.print_exc()))
 
     mat["warnings"] = list(set(warnings))
+
+
+def add_dielectric(mat, dielectric):
+
+    if "dielectric" in dielectric:
+        d = mat["dielectric"]
+
+        mat["diel"] = {
+            "e_electronic": d["static"],
+            "e_total": d["tota"],
+            "n": np.sqrt(d["e_static"]),
+            "poly_electronic": d["e_static"],
+            "poly_total": d["e_static"]
+        }
+
+    if "piezo" in dielectric:
+        d = mat["piezo"]
+
+        mat["piezo"] = {
+            "eij_max": d["e_ij_max"],
+            "piezoelectric_tensor": d["total"],
+            "v_max": d["max_direction"]
+        }

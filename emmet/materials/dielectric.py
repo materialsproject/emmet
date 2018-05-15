@@ -8,7 +8,7 @@ from pymongo import ASCENDING
 from pymatgen import Structure
 from pymatgen.analysis.elasticity.tensors import Tensor
 from pymatgen.analysis.piezo import PiezoTensor
-from pymatgen.symmetry.analyzer import SpaceGroupAnalyzer
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from maggma.builder import Builder
 
@@ -32,9 +32,7 @@ class DielectricBuilder(Builder):
 
         self.query = query
 
-        super().__init__(sources=[materials],
-                         targets=[dielectric],
-                         **kwargs)
+        super().__init__(sources=[materials], targets=[dielectric], **kwargs)
 
     def get_items(self):
         """
@@ -52,11 +50,11 @@ class DielectricBuilder(Builder):
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.dielectric))
         q["dielectric"] = {"$exists": 1}
-        mats = self.materials.distinct(self.materials.key,q)
+        mats = self.materials.distinct(self.materials.key, q)
 
         self.logger.info("Found {} new materials for dielectric data".format(len(mats)))
-        
-        return self.materials.query_one(criteria= q, properties=[self.materials.key, "dielectric", "piezo", "structure"])
+
+        return self.materials.query_one(criteria=q, properties=[self.materials.key, "dielectric", "piezo", "structure"])
 
     def process_item(self, item):
         """
@@ -73,15 +71,14 @@ class DielectricBuilder(Builder):
             diags = np.diagonal(matrix)
             return np.prod(diags) / np.sum(np.prod(comb) for comb in combinations(diags, 2))
 
-        d = {
-            self.dielectric.key: item[self.materials.key]
-        }
+        d = {self.dielectric.key: item[self.materials.key]}
 
         structure = Structure.from_dict(item["structure"])
 
-        if item.get("dielectric",False):
+        if item.get("dielectric", False):
             ionic = Tensor(d["dielectric"]["ionic"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)
-            static = Tensor(d["dielectric"]["static"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)
+            static = Tensor(
+                d["dielectric"]["static"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)
             total = ionic + static
 
             d["dielectric"] = {
@@ -95,9 +92,11 @@ class DielectricBuilder(Builder):
 
         sga = SpaceGroupAnalyzer(structure)
         # Update piezo if non_centrosymmetric
-        if item.get("piezo",False) and not sga.is_laue:
-            static = PiezoTensor.from_voigt(np.array(item['piezo']["static"])).symmetrized.fit_to_structure(structure).convert_to_ieee(structure).voigt
-            ionic = PiezoTensor.from_voigt(np.array(item['piezo']["ionic"])).symmetrized.fit_to_structure(structure).convert_to_ieee(structure).voigt
+        if item.get("piezo", False) and not sga.is_laue:
+            static = PiezoTensor.from_voigt(np.array(
+                item['piezo']["static"])).symmetrized.fit_to_structure(structure).convert_to_ieee(structure).voigt
+            ionic = PiezoTensor.from_voigt(np.array(
+                item['piezo']["ionic"])).symmetrized.fit_to_structure(structure).convert_to_ieee(structure).voigt
             total = ionic + static
 
             directions, charges, strains = np.linalg.svd(total)
@@ -132,7 +131,6 @@ class DielectricBuilder(Builder):
             self.dielectric.update(items)
         else:
             self.logger.info("No items to update")
-
 
     def ensure_indicies(self):
         """
