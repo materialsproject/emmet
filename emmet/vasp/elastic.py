@@ -96,6 +96,9 @@ class ElasticBuilder(Builder):
             incr_filter.update(self.tasks.lu_filter(self.elasticity))
             formulas = self.tasks.distinct("formula_pretty", incr_filter)
             q.update({"formula_pretty": {"$in": formulas}})
+            if len(formulas) > 500:
+                self.logger.warn("More than 500 new formulas, incremental mode "
+                                 "may be inefficient")
         else:
             formulas = self.tasks.distinct('formula_pretty', criteria=q)
 
@@ -267,7 +270,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
                             "strains": strains,
                             "deformations": defos,
                             "elastic_tensor": et.voigt,
-                            "compliance_tensor": et.compliance_tensor,
+                            "compliance_tensor": et.compliance_tensor.voigt,
                             "elastic_tensor_raw": et_raw.voigt,
                             "optimized_structure": opt_struct,
                             "completed_at": defo_tasks[-1]['completed_at'],
