@@ -45,7 +45,8 @@ class ElasticBuilderTest(unittest.TestCase):
         cls.test_materials.collection.drop()
 
     def test_builder(self):
-        ec_builder = ElasticBuilder(self.test_tasks, self.test_elasticity, self.test_materials, incremental=False)
+        ec_builder = ElasticBuilder(self.test_tasks, self.test_elasticity,
+                                    self.test_materials, incremental=False)
         ec_builder.connect()
         for t in ec_builder.get_items():
             processed = ec_builder.process_item(t)
@@ -55,6 +56,8 @@ class ElasticBuilderTest(unittest.TestCase):
         # Test warnings
         doc = ec_builder.elasticity.query_one(criteria={"pretty_formula": "NaN3"})
         self.assertEqual(doc['elasticity']['warnings'], None)
+        self.assertAlmostEqual(doc['elasticity']['compliance_tensor'][0][0][0][0],
+                               0.039886929539)
 
     def test_grouping_functions(self):
         docs1 = list(self.test_tasks.query(criteria={"formula_pretty": "NaN3"}))
