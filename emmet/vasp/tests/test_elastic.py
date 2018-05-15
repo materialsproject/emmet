@@ -74,6 +74,5 @@ class ElasticBuilderTest(unittest.TestCase):
         materials_dict = generate_formula_dict(self.test_materials)
 
 
-
 if __name__ == "__main__":
     unittest.main()

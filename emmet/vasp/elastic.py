@@ -127,14 +127,18 @@ class ElasticBuilder(Builder):
         tasks, material_dict = item
         if not tasks:
             return all_docs
+
+        # Group tasks by material task_id (i.e. material id)
         grouped = group_by_task_id(material_dict, tasks)
         for mp_id, task_sets in grouped.items():
             elastic_docs = []
+            # Task sets are grouped by parent lattice
             for opt_task, defo_tasks in task_sets:
                 elastic_doc = get_elastic_analysis(opt_task, defo_tasks)
                 if elastic_doc:
                     elastic_docs.append(elastic_doc)
 
+            # Handle no task doc
             if not elastic_docs:
                 logger.warning("No elastic doc for mp_id {}".format(mp_id))
                 continue
@@ -261,6 +265,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
                             "strains": strains,
                             "deformations": defos,
                             "elastic_tensor": et.voigt,
+                            "compliance_tensor": et.compliance_tensor,
                             "elastic_tensor_raw": et_raw.voigt,
                             "optimized_structure": opt_struct,
                             "completed_at": defo_tasks[-1]['completed_at'],
@@ -276,8 +281,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
     return elastic_doc
 
 
-def group_by_task_id(materials_dict, docs, tol=1e-6,
-                         structure_matcher=None):
+def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None):
     """
     Groups a collection of documents by material id
     as found in a materials collection
