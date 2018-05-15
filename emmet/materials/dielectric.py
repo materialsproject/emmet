@@ -8,6 +8,7 @@ from pymongo import ASCENDING
 from pymatgen import Structure
 from pymatgen.analysis.elasticity.tensors import Tensor
 from pymatgen.analysis.piezo import PiezoTensor
+from pymatgen.symmetry.analyzer import SpaceGroupAnalyzer
 
 from maggma.builder import Builder
 
@@ -15,7 +16,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class DielectricBuilder(Builder):
-    def __init__(self, materials, dielectric, min_band_gap=0.1, query={}, **kwargs):
+    def __init__(self, materials, dielectric, query={}, **kwargs):
         """
         Creates a dielectric collection for materials
 
@@ -28,7 +29,7 @@ class DielectricBuilder(Builder):
 
         self.materials = materials
         self.dielectric = dielectric
-        self.min_band_gap = min_band_gap
+
         self.query = query
 
         super().__init__(sources=[materials],
@@ -46,18 +47,16 @@ class DielectricBuilder(Builder):
         self.logger.info("Dielectric Builder Started")
 
         self.logger.info("Setting indexes")
-        self.ensure_indexes()
+        self.ensure_indicies()
 
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.dielectric))
         q["dielectric"] = {"$exists": 1}
-        mats = list(self.materials.find(q, {"material_id": 1}))
+        mats = self.materials.distinct(self.materials.key,q)
 
         self.logger.info("Found {} new materials for dielectric data".format(len(mats)))
-
-        for m in mats:
-            mat = self.materials().find_one(m, {"material_id": 1, "dielectric": 1, "piezo": 1, "structure": 1})
-            yield mat
+        
+        return self.materials.query_one(criteria= q, properties=[self.materials.key, "dielectric", "piezo", "structure"])
 
     def process_item(self, item):
         """
@@ -75,40 +74,43 @@ class DielectricBuilder(Builder):
             return np.prod(diags) / np.sum(np.prod(comb) for comb in combinations(diags, 2))
 
         d = {
-            "material_id": item["material_id"]
+            self.dielectric.key: item[self.materials.key]
         }
 
         structure = Structure.from_dict(item["structure"])
 
-        if item.get("dielectric") is not None:
-            ionic = Tensor(d["dielectric"]["ionic"])
-            static = Tensor(d["dielectric"]["static"])
+        if item.get("dielectric",False):
+            ionic = Tensor(d["dielectric"]["ionic"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)
+            static = Tensor(d["dielectric"]["static"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)
             total = ionic + static
 
             d["dielectric"] = {
-                "total": total.symmetrized.fit_to_structure(structure).convert_to_ieee(structure),
-                "ionic": ionic.symmetrized.fit_to_structure(structure).convert_to_ieee(structure),
-                "static": static.symmetrized.fit_to_structure(structure).convert_to_ieee(structure),
+                "total": total,
+                "ionic": ionic,
+                "static": static,
                 "e_total": poly(total),
                 "e_ionic": poly(ionic),
                 "e_static": poly(static)
             }
 
+        sga = SpaceGroupAnalyzer(structure)
         # Update piezo if non_centrosymmetric
-        if item.get("piezo") is not None:
-            static = PiezoTensor.from_voigt(np.array(item['piezo']["piezo_tensor"]))
-            ionic = PiezoTensor.from_voigt(np.array(item['piezo']["piezo_ionic_tensor"]))
+        if item.get("piezo",False) and not sga.is_laue:
+            static = PiezoTensor.from_voigt(np.array(item['piezo']["static"])).symmetrized.fit_to_structure(structure).convert_to_ieee(structure).voigt
+            ionic = PiezoTensor.from_voigt(np.array(item['piezo']["ionic"])).symmetrized.fit_to_structure(structure).convert_to_ieee(structure).voigt
             total = ionic + static
 
-            d["piezo"] = {
-                "total": total.symmetrized.fit_to_structure(structure).convert_to_ieee(structure).voigt,
-                "ionic": ionic.symmetrized.fit_to_structure(structure).convert_to_ieee(structure).voigt,
-                "static": static.symmetrized.fit_to_structure(structure).convert_to_ieee(structure).voigt,
-                "e_ij_max": np.max(total.voigt)
-            }
+            directions, charges, strains = np.linalg.svd(total)
 
-            # TODO Add in more analysis: v_max ?
-            # TODO: Add in unstable phonon mode analysis of piezoelectric for potentially ferroelectric
+            max_index = np.argmax(np.abs(charges))
+            d["piezo"] = {
+                "total": total,
+                "ionic": ionic,
+                "static": statict,
+                "e_ij_max": charges[max_index],
+                "max_direction": directions[max_index],
+                "strain_for_max": strains[max_index]
+            }
 
         if len(d) > 1:
             return d
@@ -127,19 +129,21 @@ class DielectricBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info("Updating {} dielectrics".format(len(items)))
-            bulk = self.dielectric().initialize_ordered_bulk_op()
-
-            for m in filter(None, items):
-                m[self.dielectric.lu_field] = datetime.utcnow()
-                bulk.find({"material_id": m["material_id"]}).upsert().replace_one(m)
-            bulk.execute()
+            self.dielectric.update(items)
         else:
             self.logger.info("No items to update")
 
-    def ensure_indexes(self):
+
+    def ensure_indicies(self):
         """
-        Ensures indexes on the tasks and materials collections
+        Ensures indexes on the materials and dielectric collection
         :return:
         """
+
         # Search index for materials
-        self.materials().create_index("material_id", unique=True, background=True)
+        self.materials.ensure_index(self.materials.key, unique=True)
+        self.materials.ensure_index("task_ids")
+
+        # Search index for dielectric
+        self.dielectric.ensure_index(self.dielectric.key, unique=True)
+        self.dielectric.ensure_index("task_ids")
