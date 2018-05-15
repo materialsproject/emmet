@@ -107,6 +107,7 @@ class ElasticBuilder(Builder):
                                         properties=return_props,
                                         criteria=q)
         self.logger.info("Aggregation pipeline")
+        self.total = len(formulas)
 
         for n, doc in enumerate(cmd_cursor):
             # TODO: refactor for task sets without structure opt
