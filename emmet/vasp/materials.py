@@ -128,6 +128,20 @@ class MaterialsBuilder(Builder):
 
         return materials
 
+    def update_targets(self, items):
+        """
+        Inserts the new task_types into the task_types collection
+
+        Args:
+            items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
+        """
+        items = [i for i in filter(None, chain.from_iterable(items)) if self.valid(i)]
+        if len(items) > 0:
+            self.logger.info("Updating {} materials".format(len(items)))
+            self.materials.update(docs=items, update_lu=False)
+        else:
+            self.logger.info("No items to update")
+
     def make_mat(self, task_group):
         """
         Converts a group of tasks into one material
@@ -142,7 +156,8 @@ class MaterialsBuilder(Builder):
         # Choose the best prop for each materials key: highest quality score and most recent updated
         best_props = []
         for _, props in grouped_props:
-            sorted_props = sorted(props, key=lambda x: (x['quality_score'], x["last_updated"]), reverse=True)
+            # Sort for highest quality score and lowest energy
+            sorted_props = sorted(props, key=lambda x: (x['quality_score'], -1.0 * x["energy"]), reverse=True)
             if sorted_props[0].get("aggregate", False):
                 vals = [prop["value"] for prop in sorted_props]
                 prop = sorted_props[0]
@@ -229,26 +244,12 @@ class MaterialsBuilder(Builder):
                         "track": prop.get("track", False),
                         "aggregate": prop.get("aggregate", False),
                         "last_updated": task[self.tasks.lu_field],
+                        "energy": get(task, "output.energy", 0.0),
                         "materials_key": prop["materials_key"]
                     })
                 elif not prop.get("optional", False):
                     self.logger.error("Failed getting {} for task: {}".format(prop["tasks_key"], t_id))
         return props
-
-
-    def update_targets(self, items):
-        """
-        Inserts the new task_types into the task_types collection
-
-        Args:
-            items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
-        """
-        items = [i for i in filter(None, chain.from_iterable(items)) if self.valid(i)]
-        if len(items) > 0:
-            self.logger.info("Updating {} materials".format(len(items)))
-            self.materials.update(docs=items, update_lu=False)
-        else:
-            self.logger.info("No items to update")
 
     def valid(self, doc):
         """
