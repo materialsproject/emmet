@@ -176,7 +176,11 @@ class MaterialsBuilder(Builder):
         for prop in best_props:
             set_(mat, prop["materials_key"], prop["value"])
 
-        self.post_analysis(mat)
+        # Add metadata back into document
+
+        if "structure" in mat:
+            structure = Structure.from_dict(mat["structure"])
+            mat.update(structure_metadata(structure))
 
         return mat
 
@@ -231,30 +235,6 @@ class MaterialsBuilder(Builder):
                     self.logger.error("Failed getting {} for task: {}".format(prop["tasks_key"], t_id))
         return props
 
-    def post_analysis(self, mat):
-
-        if "structure" in mat:
-            structure = Structure.from_dict(mat["structure"])
-
-            comp = structure.composition
-            elsyms = sorted(set([e.symbol for e in comp.elements]))
-            meta = {
-                "nsites": structure.num_sites,
-                "elements": elsyms,
-                "nelements": len(elsyms),
-                "composition": comp,
-                "composition_reduced": comp.reduced_composition,
-                "formula_pretty": comp.reduced_formula,
-                "formula_anonymous": comp.anonymized_formula,
-                "chemsys": "-".join(elsyms),
-                "volume": structure.volume,
-                "density": structure.density,
-            }
-            mat.update(meta)
-
-        for k, v in dict({"band_gap": "bandstructure.band_gap", "energy_per_atom": "output.energy_per_atom"}).items():
-            if has(mat, v):
-                mat[k] = get(mat, v)
 
     def update_targets(self, items):
         """
@@ -291,6 +271,28 @@ class MaterialsBuilder(Builder):
         self.materials.ensure_index(self.materials.key, unique=True)
         self.materials.ensure_index("task_ids")
         self.materials.ensure_index(self.materials.lu_field)
+
+
+def structure_metadata(structure):
+    """
+    Generates metadata based on a structure
+    """
+    comp = structure.composition
+    elsyms = sorted(set([e.symbol for e in comp.elements]))
+    meta = {
+        "nsites": structure.num_sites,
+        "elements": elsyms,
+        "nelements": len(elsyms),
+        "composition": comp,
+        "composition_reduced": comp.reduced_composition,
+        "formula_pretty": comp.reduced_formula,
+        "formula_anonymous": comp.anonymized_formula,
+        "chemsys": "-".join(elsyms),
+        "volume": structure.volume,
+        "density": structure.density,
+    }
+
+    return meta
 
 
 def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_orderings=False):
