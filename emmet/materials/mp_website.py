@@ -119,13 +119,23 @@ class MPBuilder(Builder):
 
         self.logger.info("MP Website Builder Started")
 
+        # Get all new materials
+        q = dict(self.query)
+        new_mats = set(self.materials.distinct(self.materials.key)) - set(
+            self.mp_materials.distinct(self.mp_materials.key, q))
+
+        self.logger.info("Found {} new materials for the website".format(len(new_mats)))
+
         # All relevant materials that have been updated since MP Website Materials
         # were last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.mp_materials))
-        mats = list(self.materials.distinct(self.materials.key, q))
+        mats = set(self.materials.distinct(self.materials.key, q))
 
-        self.logger.info("Found {} new materials for the website".format(len(mats)))
+        self.logger.info("Found {} updated materials for the website".format(len(mats)))
+
+        mats = set(mats) | new_mats
+        self.logger.info("Processing {} total materials".format(len(mats)))
         self.total = len(mats)
 
         for m in mats:
@@ -434,24 +444,21 @@ def check_relaxation(mat, new_style_mat):
 def add_dielectric(mat, dielectric):
 
     if "dielectric" in dielectric:
-        d = mat["dielectric"]
+        d = dielectric["dielectric"]
 
         mat["diel"] = {
             "e_electronic": d["static"],
-            "e_total": d["tota"],
+            "e_total": d["total"],
             "n": np.sqrt(d["e_static"]),
             "poly_electronic": d["e_static"],
             "poly_total": d["e_static"]
         }
 
     if "piezo" in dielectric:
-        d = mat["piezo"]
+        d = dielectric["piezo"]
 
-        mat["piezo"] = {
-            "eij_max": d["e_ij_max"],
-            "piezoelectric_tensor": d["total"],
-            "v_max": d["max_direction"]
-        }
+        mat["piezo"] = {"eij_max": d["e_ij_max"], "piezoelectric_tensor": d["total"], "v_max": d["max_direction"]}
+
 
 def has_fields(mat):
-    mat["has"] = [prop for prop in ["elasticity","piezo","diel","bandstructure"] if prop in mat]
+    mat["has"] = [prop for prop in ["elasticity", "piezo", "diel", "bandstructure"] if prop in mat]
