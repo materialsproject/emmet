@@ -91,7 +91,7 @@ class DielectricBuilder(Builder):
 
         sga = SpacegroupAnalyzer(structure)
         # Update piezo if non_centrosymmetric
-        if item.get("piezo", False) and not sga.is_laue:
+        if item.get("piezo", False) and not sga.is_laue():
             static = PiezoTensor.from_voigt(np.array(
                 item['piezo']["static"])).symmetrized.fit_to_structure(structure).convert_to_ieee(structure).voigt
             ionic = PiezoTensor.from_voigt(np.array(
@@ -104,7 +104,7 @@ class DielectricBuilder(Builder):
             d["piezo"] = {
                 "total": total,
                 "ionic": ionic,
-                "static": statict,
+                "static": static,
                 "e_ij_max": charges[max_index],
                 "max_direction": directions[max_index],
                 "strain_for_max": strains[max_index]
