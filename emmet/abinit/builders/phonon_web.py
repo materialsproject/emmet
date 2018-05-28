@@ -10,7 +10,6 @@ import prettyplotlib as ppl
 from prettyplotlib import brewer2mpl
 import matplotlib
 from monty.json import MontyDecoder
-from monty.json import jsanitize
 from pymatgen.phonon.plotter import PhononBSPlotter, PhononDosPlotter, freq_units, ThermoPlotter
 from pymatgen.util.plotting import pretty_plot
 
@@ -19,7 +18,7 @@ matplotlib.use('agg')
 
 
 class PhononWebBuilder(Builder):
-    def __init__(self, pmg_bs_docs, ph_calc_docs, web_docs, images, ph_processed_docs,
+    def __init__(self, pmg_bs_docs, pmg_dos_docs, ph_calc_docs, web_docs, images, ph_processed_docs,
                  ignore_lu=False, query=None, **kwargs):
         """
         Produce docs for interactive and static plots of phonon dispersion.
@@ -28,10 +27,12 @@ class PhononWebBuilder(Builder):
         Args:
             pmg_bs_docs (Store): source of serialized
                 `pymatgen.phonon.bandstructure.PhononBandStructure` objects.
+            pmg_dos_docs (Store): source of serialized
+                `pymatgen.phonon.dos.CompletePhononDos` objects.
             ph_calc_docs (Store): source of other iformation directly extracted from
-                the calculation results (should include the serializazion of
-                `pymatgen.phonon.bandstructure.CompletePhononDos` objects).
-            web_docs (Store): target for data needed by interactive plots.
+                the calculation results.
+            web_docs (Store): target for data needed by interactive plots. The document
+                may exceed the 16MB limit of the mongodb collections.
             images (Store): target for png images of phonon related quantities.
             ph_processed_docs (Store) target for other post-preocessed quantities.
             ignore_lu (bool): Ignore ph_calc_docs.lu_filter when getting items.
@@ -39,6 +40,7 @@ class PhononWebBuilder(Builder):
             query (dict): dictionary to limit the entries to be analyzed
         """
         self.pmg_bs_docs = pmg_bs_docs
+        self.pmg_dos_docs = pmg_dos_docs
         self.ph_calc_docs = ph_calc_docs
         self.web_docs = web_docs
         self.images = images
@@ -48,7 +50,7 @@ class PhononWebBuilder(Builder):
             query = {}
         self.query = query
         super().__init__(
-            sources=[pmg_bs_docs, ph_calc_docs],
+            sources=[pmg_bs_docs, pmg_dos_docs, ph_calc_docs],
             targets=[web_docs, images, ph_processed_docs], **kwargs)
 
     def get_items(self):
@@ -77,6 +79,8 @@ class PhononWebBuilder(Builder):
 
             item["pmg_ph_bs"] = self.pmg_bs_docs.query_one(criteria={self.pmg_bs_docs.key: m})
 
+            item["pmg_ph_dos"] = self.pmg_dos_docs.query_one(criteria={self.pmg_dos_docs.key: m})
+
             yield item
 
     def process_item(self, item):
@@ -103,7 +107,7 @@ class PhononWebBuilder(Builder):
         bs_plotter = WebBSPlotter(ph_bs)
         ph_bs_image = image_from_plotter(bs_plotter, ylim, units="cm-1")
 
-        ph_dos = decoder.process_decoded(item['ph_calc']['phonon']['ph_dos'])
+        ph_dos = decoder.process_decoded(item['pmg_ph_dos']['ph_dos'])
         dos_dict = ph_dos.get_element_dos()
         dos_plotter = WebPhononDosVertPlotter()
         if len(dos_dict) > 1:
@@ -118,6 +122,9 @@ class PhononWebBuilder(Builder):
         thermo_data, thermo_image = self.get_thermodynamic_properties(ph_dos)
 
         images = {"dos": ph_dos_image, "bs": ph_bs_image, "thermodynamic": thermo_image}
+        self.logger.debug("image class {}".format(images["bs"].__class__))
+        from monty.json import jsanitize
+        self.logger.debug("image class after sanitize {}".format(jsanitize(images)["bs"].__class__))
 
         return {self.ph_calc_docs.key: item['ph_calc'][self.ph_calc_docs.key],
                 "web_doc": web_doc, "images": images, "thermodynamic": thermo_data}
