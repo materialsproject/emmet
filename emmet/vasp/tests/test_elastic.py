@@ -56,7 +56,7 @@ class ElasticBuilderTest(unittest.TestCase):
         # Test warnings
         doc = ec_builder.elasticity.query_one(criteria={"pretty_formula": "NaN3"})
         self.assertEqual(doc['elasticity']['warnings'], None)
-        self.assertAlmostEqual(doc['elasticity']['compliance_tensor'][0][0][0][0],
+        self.assertAlmostEqual(doc['elasticity']['compliance_tensor'][0][0],
                                0.039886929539)
 
     def test_grouping_functions(self):
