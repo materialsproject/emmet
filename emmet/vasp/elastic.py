@@ -248,12 +248,13 @@ def get_elastic_analysis(opt_task, defo_tasks):
     # strains" below.
     vstrains = [s.voigt for s in strains]
     if np.linalg.matrix_rank(vstrains) < 6:
-        symmops = SpacegroupAnalyzer(opt_struct).get_symmetry_operations()
+        symmops = SpacegroupAnalyzer(opt_struct).get_symmetry_operations(
+            cartesian=True)
         fstrains = [[s.transform(symmop) for symmop in symmops]
                     for s in strains]
         fstrains = list(chain.from_iterable(fstrains))
         vfstrains = [s.voigt for s in fstrains]
-        if not np.linalg.matrix_rank(vfstrains) == 6:
+        if np.linalg.matrix_rank(vfstrains) < 6:
             logger.warning("Insufficient data to form SOEC")
             elastic_doc['warnings'].append("insufficient strains")
             return None
