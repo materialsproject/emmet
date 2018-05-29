@@ -366,14 +366,14 @@ def group_deformations_by_optimization_task(docs, tol=1e-6):
     return tasks_by_opt_task
 
 
-def group_by_parent_lattice(docs, tol=1e-6):
+def group_by_parent_lattice(docs, tol=1e-5):
     """
     Groups a set of documents by parent lattice equivalence
 
     Args:
         docs ([{}]): list of documents e. g. dictionaries or cursor
         tol (float): tolerance for equivalent lattice finding using,
-            np.allclose, default 1e-10
+            np.allclose, default 1e-5
     """
     docs_by_lattice = []
     for doc in docs:
