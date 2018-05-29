@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 class ElasticBuilder(Builder):
     def __init__(self, tasks, elasticity, materials,
-                 query=None, incremental=True, **kwargs):
+                 query=None, incremental=None, **kwargs):
         """
         Creates a elastic collection for materials
 
@@ -40,13 +40,23 @@ class ElasticBuilder(Builder):
             materials (Store): Store of materials properties
             query (dict): dictionary to limit tasks to be analyzed
             incremental (bool): whether or not to use a lu_filter based
-                on the current datetime
+                on the current datetime, is set to True if target
+                is empty, but false if not
         """
 
         self.tasks = tasks
         self.elasticity = elasticity
         self.materials = materials
         self.query = query if query is not None else {}
+        # By default, incremental
+        if incremental is None:
+            self.elasticity.connect()
+            if self.elasticity.query().count() > 0:
+                self.incremental = True
+            else:
+                self.incremental = False
+        else:
+            self.incremental = incremental
         self.incremental = incremental
         self.start_date = datetime.utcnow()
 
