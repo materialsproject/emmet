@@ -113,10 +113,9 @@ class ElasticBuilder(Builder):
             formulas = self.tasks.distinct('formula_pretty', criteria=q)
 
         self.logger.info("Starting aggregation")
-        cmd_cursor = self.tasks.groupby("formula_pretty",
-                                        properties=return_props,
-                                        criteria=q)
-        self.logger.info("Aggregation pipeline")
+        cmd_cursor = self.tasks.groupby("formula_pretty", criteria=q,
+                                        properties=return_props)
+        self.logger.info("Aggregation complete")
         self.total = len(formulas)
 
         for n, doc in enumerate(cmd_cursor):
@@ -170,7 +169,7 @@ class ElasticBuilder(Builder):
             final_doc.update(c_ijkl.property_dict)
             try:
                 final_doc.update(c_ijkl.get_structure_property_dict(structure))
-            except:
+            except ValueError:
                 self.logger.warn("Negative K or G found, structure property "
                                  "dict not computed")
 
