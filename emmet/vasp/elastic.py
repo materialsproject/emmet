@@ -10,7 +10,7 @@ from pymatgen import Structure
 from pymatgen.analysis.elasticity.elastic import ElasticTensor
 from pymatgen.analysis.elasticity.strain import Deformation
 from pymatgen.analysis.elasticity.stress import Stress
-from pymatgen.analysis.structure_matcher import StructureMatcher
+from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from maggma.builder import Builder
@@ -301,7 +301,8 @@ def get_elastic_analysis(opt_task, defo_tasks):
     return elastic_doc
 
 
-def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None):
+def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None,
+                     loosen_if_no_match=True):
     """
     Groups a collection of documents by material id
     as found in a materials collection
@@ -312,12 +313,14 @@ def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None):
         tol: tolerance for lattice grouping
         structure_matcher (StructureMatcher): structure
             matcher for finding equivalent structures
+        loosen_if_no_match (bool): try with looser structure matcher
+            if no match is found
 
     Returns:
         documents grouped by task_id from the materials
         collection
     """
-    sm = structure_matcher or StructureMatcher()
+    sm = structure_matcher or StructureMatcher(comparator=ElementComparator())
     tasks_by_opt = group_deformations_by_optimization_task(docs, tol)
     task_sets_by_mp_id = {}
     for opt_task, defo_tasks in tasks_by_opt:
@@ -334,6 +337,16 @@ def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None):
                 task_sets_by_mp_id[mp_id].append((opt_task, defo_tasks))
             else:
                 task_sets_by_mp_id[mp_id] = [(opt_task, defo_tasks)]
+        else:
+            logger.warning("No material match found for formula {}".format(
+                structure.composition.reduced_formula))
+            logger.warning("Attempting match with looser SM criteria")
+            if loosen_if_no_match:
+                sm = StructureMatcher(ltol=0.6, stol=1.0, angle_tol=5,
+                                      comparator=ElementComparator())
+                task_sets_by_mp_id = group_by_task_id(
+                    materials_dict, docs, tol, structure_matcher=sm,
+                    loosen_if_no_match=False)
     return task_sets_by_mp_id
 
 
