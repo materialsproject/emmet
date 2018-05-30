@@ -107,8 +107,8 @@ class ElasticBuilder(Builder):
             formulas = self.tasks.distinct("formula_pretty", incr_filter)
             q.update({"formula_pretty": {"$in": formulas}})
             if len(formulas) > 500:
-                self.logger.warn("More than 500 new formulas, incremental mode "
-                                 "may be inefficient")
+                self.logger.debug("More than 500 new formulas, incremental "
+                                  "mode may be inefficient")
         else:
             formulas = self.tasks.distinct('formula_pretty', criteria=q)
 
@@ -155,7 +155,7 @@ class ElasticBuilder(Builder):
 
             # Handle no task doc
             if not elastic_docs:
-                logger.warning("No elastic doc for mp_id {}".format(mp_id))
+                logger.debug("No elastic doc for mp_id {}".format(mp_id))
                 continue
 
             # For now just do the most recent one that's not failed
@@ -170,9 +170,8 @@ class ElasticBuilder(Builder):
             try:
                 final_doc.update(c_ijkl.get_structure_property_dict(structure))
             except ValueError:
-                self.logger.warn("Negative K or G found, structure property "
-                                 "dict not computed")
-
+                self.logger.debug("Negative K or G found, structure property "
+                                  "dict not computed")
             elastic_summary = {'task_id': mp_id,
                                'all_elastic_fits': elastic_docs,
                                'elasticity': final_doc,
@@ -229,7 +228,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
                      ['deformation'] for d in defo_tasks]
     if not np.allclose(defos, stored_defos, atol=1e-5):
         wmsg = "Inequivalent stored and calc. deformations."
-        logger.warning(wmsg)
+        logger.debug(wmsg)
         elastic_doc["warnings"].append(wmsg)
 
     # Collect all fitting data and task ids
@@ -255,7 +254,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
         fstrains = list(chain.from_iterable(fstrains))
         vfstrains = [s.voigt for s in fstrains]
         if np.linalg.matrix_rank(vfstrains) < 6:
-            logger.warning("Insufficient data to form SOEC")
+            logger.debug("Insufficient data to form SOEC")
             elastic_doc['warnings'].append("insufficient strains")
             return None
         else:
@@ -363,7 +362,7 @@ def group_deformations_by_optimization_task(docs, tol=1e-6):
         if opt_struct_tasks and deformation_tasks:
             tasks_by_opt_task.append((opt_struct_tasks[-1], deformation_tasks))
         else:
-            logger.warning("No structure opt matching tasks")
+            logger.debug("No structure opt matching tasks")
     return tasks_by_opt_task
 
 
