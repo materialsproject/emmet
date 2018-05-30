@@ -276,7 +276,8 @@ def get_elastic_analysis(opt_task, defo_tasks):
         et = et_raw.voigt_symmetrized.convert_to_ieee(opt_struct)
         defo_tasks = sorted(defo_tasks, key=lambda x: x['completed_at'])
         vasp_input = opt_task['input']
-        vasp_input.pop('structure')
+        if 'structure' in vasp_input:
+            vasp_input.pop('structure')
 
         elastic_doc.update({"deformation_task_ids": defo_task_ids,
                             "optimization_task_id": opt_task['task_id'],
