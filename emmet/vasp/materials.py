@@ -128,6 +128,20 @@ class MaterialsBuilder(Builder):
 
         return materials
 
+    def update_targets(self, items):
+        """
+        Inserts the new task_types into the task_types collection
+
+        Args:
+            items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
+        """
+        items = [i for i in filter(None, chain.from_iterable(items)) if self.valid(i)]
+        if len(items) > 0:
+            self.logger.info("Updating {} materials".format(len(items)))
+            self.materials.update(docs=items, update_lu=False)
+        else:
+            self.logger.info("No items to update")
+
     def make_mat(self, task_group):
         """
         Converts a group of tasks into one material
@@ -142,7 +156,8 @@ class MaterialsBuilder(Builder):
         # Choose the best prop for each materials key: highest quality score and most recent updated
         best_props = []
         for _, props in grouped_props:
-            sorted_props = sorted(props, key=lambda x: (x['quality_score'], x["last_updated"]), reverse=True)
+            # Sort for highest quality score and lowest energy
+            sorted_props = sorted(props, key=lambda x: (x['quality_score'], -1.0 * x["energy"]), reverse=True)
             if sorted_props[0].get("aggregate", False):
                 vals = [prop["value"] for prop in sorted_props]
                 prop = sorted_props[0]
@@ -176,7 +191,11 @@ class MaterialsBuilder(Builder):
         for prop in best_props:
             set_(mat, prop["materials_key"], prop["value"])
 
-        self.post_analysis(mat)
+        # Add metadata back into document
+
+        if "structure" in mat:
+            structure = Structure.from_dict(mat["structure"])
+            mat.update(structure_metadata(structure))
 
         return mat
 
@@ -225,50 +244,12 @@ class MaterialsBuilder(Builder):
                         "track": prop.get("track", False),
                         "aggregate": prop.get("aggregate", False),
                         "last_updated": task[self.tasks.lu_field],
+                        "energy": get(task, "output.energy", 0.0),
                         "materials_key": prop["materials_key"]
                     })
                 elif not prop.get("optional", False):
                     self.logger.error("Failed getting {} for task: {}".format(prop["tasks_key"], t_id))
         return props
-
-    def post_analysis(self, mat):
-
-        if "structure" in mat:
-            structure = Structure.from_dict(mat["structure"])
-
-            comp = structure.composition
-            elsyms = sorted(set([e.symbol for e in comp.elements]))
-            meta = {
-                "nsites": structure.num_sites,
-                "elements": elsyms,
-                "nelements": len(elsyms),
-                "composition": comp,
-                "composition_reduced": comp.reduced_composition,
-                "formula_pretty": comp.reduced_formula,
-                "formula_anonymous": comp.anonymized_formula,
-                "chemsys": "-".join(elsyms),
-                "volume": structure.volume,
-                "density": structure.density,
-            }
-            mat.update(meta)
-
-        for k, v in dict({"band_gap": "bandstructure.band_gap", "energy_per_atom": "output.energy_per_atom"}).items():
-            if has(mat, v):
-                mat[k] = get(mat, v)
-
-    def update_targets(self, items):
-        """
-        Inserts the new task_types into the task_types collection
-
-        Args:
-            items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
-        """
-        items = [i for i in filter(None, chain.from_iterable(items)) if self.valid(i)]
-        if len(items) > 0:
-            self.logger.info("Updating {} materials".format(len(items)))
-            self.materials.update(docs=items, update_lu=False)
-        else:
-            self.logger.info("No items to update")
 
     def valid(self, doc):
         """
@@ -291,6 +272,28 @@ class MaterialsBuilder(Builder):
         self.materials.ensure_index(self.materials.key, unique=True)
         self.materials.ensure_index("task_ids")
         self.materials.ensure_index(self.materials.lu_field)
+
+
+def structure_metadata(structure):
+    """
+    Generates metadata based on a structure
+    """
+    comp = structure.composition
+    elsyms = sorted(set([e.symbol for e in comp.elements]))
+    meta = {
+        "nsites": structure.num_sites,
+        "elements": elsyms,
+        "nelements": len(elsyms),
+        "composition": comp,
+        "composition_reduced": comp.reduced_composition,
+        "formula_pretty": comp.reduced_formula,
+        "formula_anonymous": comp.anonymized_formula,
+        "chemsys": "-".join(elsyms),
+        "volume": structure.volume,
+        "density": structure.density,
+    }
+
+    return meta
 
 
 def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_orderings=False):
