@@ -286,7 +286,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
                             "deformations": defos,
                             "elastic_tensor": et.voigt,
                             "compliance_tensor": et.compliance_tensor.voigt,
-                            "elastic_tensor_raw": et_raw.voigt,
+                            "elastic_tensor_original": et_raw.voigt,
                             "optimized_structure": opt_struct,
                             "completed_at": defo_tasks[-1]['completed_at'],
                             "optimization_input": vasp_input})
