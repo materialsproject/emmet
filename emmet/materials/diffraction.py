@@ -94,7 +94,7 @@ class DiffractionBuilder(Builder):
             xrdcalc = XRDCalculator(wavelength="".join([xs['target'], xs['edge']]),
                                     symprec=xs.get('symprec', 0))
 
-            pattern = jsanitize(xrdcalc.get_xrd_pattern(
+            pattern = jsanitize(xrdcalc.get_pattern(
                 structure, two_theta_range=xs['two_theta']).as_dict())
             d = {'wavelength': {'element': xs['target'],
                                 'in_angstroms': WAVELENGTHS["".join([xs['target'], xs['edge']])]},
