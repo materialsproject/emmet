@@ -248,7 +248,7 @@ def old_style_mat(new_style_mat):
         if has(new_style_mat, new_key):
             set_(mat, mp, get(new_style_mat, new_key))
 
-    mat["is_orderd"] = True
+    mat["is_ordered"] = True
     mat["is_compatible"] = True
 
     struc = Structure.from_dict(mat["structure"])
@@ -257,7 +257,8 @@ def old_style_mat(new_style_mat):
     mat["full_formula"] = "".join(struc.formula.split())
     vals = sorted(mat["reduced_cell_formula"].values())
     mat["anonymous_formula"] = {string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))}
-
+    mat["initial_structure"] = new_style_mat.get("initial_structure",None)
+    
     set_(mat, "pseudo_potential.functional", "PBE")
 
     set_(mat, "pseudo_potential.labels",
@@ -317,7 +318,8 @@ def add_elastic(mat, elastic):
         "elastic_tensor": "elastic_tensor",
         "homogeneous_poisson": "homogeneous_poisson",
         "poisson_ratio": "homogeneous_poisson",
-        "universal_anisotropy": "universal_anisotropy"
+        "universal_anisotropy": "universal_anisotropy",
+        "elastic_tensor_original": "elastic_tensor_original"
     }
 
     mat["elasticity"] = {k: elastic["elasticity"][v] for k, v in es_aliases.items()}
@@ -374,7 +376,7 @@ def add_thermo(mat, thermo):
         set_(mat, "formation_energy_per_atom", get(thermo, "thermo.formation_energy_per_atom"))
 
     if has(thermo, "thermo.decomposes_to"):
-        set_(mat, "decmposes_to", get(thermo, "thermo.decmposes_to"))
+        set_(mat, "decomposes_to", get(thermo, "thermo.decomposes_to"))
 
 
 def sandbox_props(mat):
