@@ -262,6 +262,14 @@
     "aggregate": true
   },
   {
+    "tasks_key": "input.structure",
+    "materials_key": "initial_structure",
+    "quality_score": {
+      "GGA Structure Optimization": 1,
+      "GGA+U Structure Optimization": 5
+    },
+  },
+  {
     "tasks_key": "calcs_reversed.0.output.outcar.total_magnetization",
     "materials_key": "magnestism.total_magnetization",
     "quality_score": {
