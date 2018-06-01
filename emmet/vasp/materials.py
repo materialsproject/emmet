@@ -8,6 +8,7 @@ from pymatgen.analysis.structure_matcher import StructureMatcher, ElementCompara
 
 from maggma.builder import Builder
 from emmet.vasp.task_tagger import task_type
+from emmet.common.utils import load_settings
 from pydash.objects import get, set_, has
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
@@ -44,7 +45,7 @@ class MaterialsBuilder(Builder):
         """
 
         self.tasks = tasks
-        self.materials_settings = materials_settings if materials_settings else default_mat_settings
+        self.materials_settings = materials_settings
         self.materials = materials
         self.mat_prefix = mat_prefix
         self.query = query if query else {}
@@ -53,7 +54,7 @@ class MaterialsBuilder(Builder):
         self.angle_tol = angle_tol
         self.separate_mag_orderings = separate_mag_orderings
 
-        self.__settings = loadfn(self.materials_settings)
+        self.__settings = load_settings(self.materials_settings,default_mat_settings)
 
         self.allowed_tasks = {t_type for d in self.__settings for t_type in d['quality_score']}
 
