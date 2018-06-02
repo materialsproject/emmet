@@ -301,6 +301,36 @@ def get_elastic_analysis(opt_task, defo_tasks):
     return elastic_doc
 
 
+# TODO: finish this
+def generate_all_independent(strains, stresses, structure, tol=1e-3):
+    """
+    Generates all independent stress strain pairs from a
+    list of stresses and strains, essentially "completes"
+    the strain space if it is incomplete according to
+    the symmetry of the structure
+
+    Args:
+        strains ([Strain]): list of strains
+        stresses ([Stress]): list of stresses
+        structure (Structure): structure for which to find symmops
+
+    Returns:
+        list of "completed" strains and stresses
+    """
+    symmops = SpacegroupAnalyzer(structure).get_symmetry_operations(
+        cartesian=True)
+    # Get independent strains and corresponding stresses
+    ss_pairs = [(strain, stress) for strain, stress in zip(strains, stresses)
+                if strain.is_independent(tol)]
+
+    # Determine which strain states are missing
+
+    for strain, stress in ss_pairs:
+        for symmop in symmops:
+            new = strain.transform(symmop)
+        ss_pairs.append((strain, stress))
+
+
 def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None,
                      loosen_if_no_match=True):
     """
