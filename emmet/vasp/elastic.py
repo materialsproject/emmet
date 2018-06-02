@@ -253,7 +253,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
                     for s in strains]
         fstrains = list(chain.from_iterable(fstrains))
         vfstrains = [s.voigt for s in fstrains]
-        if np.linalg.matrix_rank(vfstrains) < 6:
+        if np.linalg.matrix_rank(vfstrains, tol=1e-7) < 6:
             logger.debug("Insufficient data to form SOEC")
             elastic_doc['warnings'].append("insufficient strains")
             return None
@@ -270,13 +270,17 @@ def get_elastic_analysis(opt_task, defo_tasks):
         # TODO: more intelligently determine if independent
         # strain fitting can be done
         if len(cauchy_stresses) == 24:
-            elastic_doc['legacy_fit'] = legacy_fit(strains, cauchy_stresses)
+            try:
+                elastic_doc['legacy_fit'] = legacy_fit(strains, cauchy_stresses)
+            # TODO: fix crappy exception handling
+            except:
+                logger.debug("Legacy fitting failed")
         et_raw = ElasticTensor.from_pseudoinverse(fstrains, fstresses)
         et = et_raw.voigt_symmetrized.convert_to_ieee(opt_struct)
         defo_tasks = sorted(defo_tasks, key=lambda x: x['completed_at'])
         vasp_input = opt_task['input']
-        if 'structure' in vasp_input:
-            vasp_input.pop('structure')
+        # if 'structure' in vasp_input:
+        #     vasp_input.pop('structure')
 
         elastic_doc.update({"deformation_task_ids": defo_task_ids,
                             "optimization_task_id": opt_task['task_id'],
@@ -323,30 +327,38 @@ def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None,
     sm = structure_matcher or StructureMatcher(comparator=ElementComparator())
     tasks_by_opt = group_deformations_by_optimization_task(docs, tol)
     task_sets_by_mp_id = {}
+    # Iterate over all set of optimizations/deformations
     for opt_task, defo_tasks in tasks_by_opt:
-        structure = Structure.from_dict(opt_task['output']['structure'])
+        # import nose; nose.tools.set_trace()
+        structure = Structure.from_dict(opt_task['input']['structure'])
         match = False
+        # Iterate over all candidates until match is found
         for c_id, candidate in materials_dict.items():
             c_structure = Structure.from_dict(candidate)
             if sm.fit(c_structure, structure):
                 mp_id = c_id
                 match = True
                 break
+        # TODO: this should be cleaner and not duplicate code
+        if not match and loosen_if_no_match:
+            logger.debug("Attempting match with looser SM criteria")
+            sm_loose = StructureMatcher(ltol=0.6, stol=1.0, angle_tol=5,
+                                        comparator=ElementComparator())
+            for c_id, candidate in materials_dict.items():
+                c_structure = Structure.from_dict(candidate)
+                if sm_loose.fit(c_structure, structure):
+                    mp_id = c_id
+                    match = True
+                    break
+            # import nose; nose.tools.set_trace()
         if match:
             if mp_id in task_sets_by_mp_id:
                 task_sets_by_mp_id[mp_id].append((opt_task, defo_tasks))
             else:
                 task_sets_by_mp_id[mp_id] = [(opt_task, defo_tasks)]
         else:
-            logger.warning("No material match found for formula {}".format(
+            logger.debug("No material match found for formula {}".format(
                 structure.composition.reduced_formula))
-            logger.warning("Attempting match with looser SM criteria")
-            if loosen_if_no_match:
-                sm = StructureMatcher(ltol=0.6, stol=1.0, angle_tol=5,
-                                      comparator=ElementComparator())
-                task_sets_by_mp_id = group_by_task_id(
-                    materials_dict, docs, tol, structure_matcher=sm,
-                    loosen_if_no_match=False)
     return task_sets_by_mp_id
 
 
