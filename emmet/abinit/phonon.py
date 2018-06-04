@@ -92,8 +92,7 @@ class PhononBuilder(Builder):
         # basic informations
         projection = {"mp_id": 1, "spacegroup.number":1}
         # input data
-        input_attr_list = ["structure", "ngkpt", "shiftk", "ecut", "ngqpt", "occopt", "tsmear"]
-        projection.update({"abinit_input.{}".format(i): 1 for i in input_attr_list})
+        projection["abinit_input"] = 1
         # file ids to be fetched
         projection["abinit_output.ddb_id"] = 1
 
@@ -416,12 +415,27 @@ class PhononBuilder(Builder):
 
         data = {}
 
+        def get_vars(label):
+            if label in i and i[label]:
+                return {k:v for (k,v) in i[label]['abi_args']}
+            else:
+                return {}
+
+        data['gs_input'] = get_vars('gs_input')
+        data['ddk_input'] = get_vars('ddk_input')
+        data['dde_input'] = get_vars('dde_input')
+        data['phonon_input'] = get_vars('phonon_input')
+        data['wfq_input'] = get_vars('wfq_input')
+
         data['ngqpt'] = i['ngqpt']
         data['ngkpt'] = i['ngkpt']
         data['shiftk'] = i['shiftk']
         data['ecut'] = i['ecut']
         data['occopt'] = i['occopt']
         data['tsmear'] = i.get('tsmear', 0)
+
+        data['pseudopotentials'] = {'name': i['pseudopotentials']['pseudos_name'],
+                                    'md5': i['pseudopotentials']['pseudos_md5']}
 
         return data
 
@@ -460,9 +474,9 @@ class PhononBuilder(Builder):
 
         # Search index for materials
         self.phonon.ensure_index(self.phonon.key, unique=True)
-        self.phonon_bs.ensure_index(self.phonon_bs.key, unique=True)
-        self.phonon_dos.ensure_index(self.phonon_dos.key, unique=True)
-        self.ddb_files.ensure_index(self.ddb_files.key, unique=True)
+        # self.phonon_bs.ensure_index(self.phonon_bs.key, unique=True)
+        # self.phonon_dos.ensure_index(self.phonon_dos.key, unique=True)
+        # self.ddb_files.ensure_index(self.ddb_files.key, unique=True)
 
 
 def get_warnings(asr_break, cnsr_break, ph_bs):
@@ -494,7 +508,6 @@ def get_warnings(asr_break, cnsr_break, ph_bs):
         qpoints = np.array(ph_bs['qpoints'])
 
         qpt_has_neg_freq = np.any(neg_freq, axis=0)
-        print(qpt_has_neg_freq)
 
         if np.max(np.linalg.norm(qpoints[qpt_has_neg_freq], axis=1)) < 0.05:
             warnings['small_q_neg_fr'] = True
