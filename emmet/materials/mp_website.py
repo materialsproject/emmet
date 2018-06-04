@@ -413,11 +413,12 @@ def add_snl(mat, snl=None):
     mat["pf_ids"] = get(mat["snl"], "about._db_ids.pf_ids", [])
 
     # Extract tags from remarks by looking for just nounds and adjectives
+    mat["exp"] = {"tags": []}
     mat["tags"] = []
     for remark in mat["snl"]["about"].get("remarks", []):
         tokens = set(tok[1] for tok in nltk.pos_tag(nltk.word_tokenize(remark), tagset='universal'))
         if len(tokens.intersection({"ADV", "ADP", "VERB"})) == 0:
-            mat["tags"].append(remark)
+            mat["exp"]["tags"].append(remark)
 
 
 def check_relaxation(mat, new_style_mat):
