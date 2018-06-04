@@ -323,7 +323,10 @@ def add_elastic(mat, elastic):
     }
 
     mat["elasticity"] = {k: elastic["elasticity"][v] for k, v in es_aliases.items()}
-    mat["elasticity"]["nsites"] = len(get(elastic, "elasticity.structure.sites"))
+    if has(elastic, "elasticity.structure.sites"):
+        mat["elasticity"]["nsites"] = len(get(elastic, "elasticity.structure.sites"))
+    else:
+        mat["elasticity"]["nsites"] = len(get(mat, "structure.sites"))
 
 
 def add_cifs(doc):
