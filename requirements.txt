@@ -1,8 +1,12 @@
-FireWorks==1.5.3
-atomate==0.6.5
-pymatgen==2017.9.23
-monty==1.0.1
+atomate>=0.6.5
+abipy>=0.4.1
+pymatgen>=2018.4.20
+monty>=1.0.1
 pydash==4.1.0
 unittest2==1.1.0
 coverage==4.4.1
+tqdm>=4.19.5
+prettyplotlib==0.1.7
+pybtex==0.21
+-e git://github.com/hackingmaterials/matminer#egg=matminer
 -e git://github.com/materialsproject/maggma#egg=maggma
