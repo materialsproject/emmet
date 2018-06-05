@@ -22,7 +22,6 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.core.composition import Composition
 from pymatgen import Structure
 from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.analysis.structure_analyzer import RelaxationAnalyzer
 from pymatgen.analysis.diffraction.core import DiffractionPattern
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer

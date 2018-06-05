@@ -2,7 +2,6 @@ from datetime import datetime
 from itertools import chain, groupby
 import os
 
-from monty.serialization import loadfn
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 
@@ -54,7 +53,7 @@ class MaterialsBuilder(Builder):
         self.angle_tol = angle_tol
         self.separate_mag_orderings = separate_mag_orderings
 
-        self.__settings = load_settings(self.materials_settings,default_mat_settings)
+        self.__settings = load_settings(self.materials_settings, default_mat_settings)
 
         self.allowed_tasks = {t_type for d in self.__settings for t_type in d['quality_score']}
 

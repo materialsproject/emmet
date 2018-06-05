@@ -1,7 +1,7 @@
 from itertools import chain
 from collections import defaultdict
 
-from pydash.objects import get, has
+from pydash.objects import get
 
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator

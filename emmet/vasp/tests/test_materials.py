@@ -63,11 +63,12 @@ class TestMaterials(unittest.TestCase):
         mat = self.mbuilder.make_mat(tasks)
         self.assertEqual(mat["task_ids"], ["mp-1", "mp-2"])
 
-        for k in [ "task_ids", "task_id", "origins", "task_types", "formula_anonymous", 
-                "bandstructure", "inputs", "formula_pretty", "structure"
+        for k in [
+                "task_ids", "task_id", "origins", "task_types", "formula_anonymous", "bandstructure", "inputs",
+                "formula_pretty", "structure"
         ]:
             self.assertIn(k, mat)
-        self.assertIn(self.mbuilder.materials.lu_field,mat)
+        self.assertIn(self.mbuilder.materials.lu_field, mat)
 
     def test_filter_and_group_tasks(self):
         si = self.structure

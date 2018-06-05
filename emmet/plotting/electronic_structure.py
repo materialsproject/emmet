@@ -13,6 +13,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 matplotlib.use('agg')
 
+
 class ElectronicStructureImageBuilder(Builder):
     def __init__(self, materials, electronic_structure, bandstructures, dos, query=None, **kwargs):
         """
@@ -56,12 +57,11 @@ class ElectronicStructureImageBuilder(Builder):
         self.logger.debug("Processing {} materials for electronic structure".format(len(mats)))
 
         self.total = len(mats)
-        
+
         for m in mats:
-            mat = self.materials.query_one(
-                [self.materials.key, "structure", "bandstructure", "inputs"], {
-                    self.materials.key: m
-                })
+            mat = self.materials.query_one([self.materials.key, "structure", "bandstructure", "inputs"], {
+                self.materials.key: m
+            })
             mat["bandstructure"]["bs"] = self.bandstructures.query_one(criteria={
                 "task_id": get(mat, "bandstructure.bs_task")
             })

@@ -35,7 +35,7 @@ class ThermoBuilder(Builder):
 
     def get_items(self):
         """
-        Gets sets of entries from chemical systems that need to be processed 
+        Gets sets of entries from chemical systems that need to be processed
 
         Returns:
             generator of relevant entries from one chemical system
@@ -68,9 +68,9 @@ class ThermoBuilder(Builder):
 
         self.logger.info("Found {} compositions with new/updated materials".format(len(to_process)))
         self.total = len(to_process)
-        
+
         for chemsys in to_process:
-                yield self.get_entries(chemsys)
+            yield self.get_entries(chemsys)
 
     def get_entries(self, chemsys):
         """
