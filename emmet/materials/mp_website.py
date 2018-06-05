@@ -121,6 +121,8 @@ class MPBuilder(Builder):
 
         self.logger.info("MP Website Builder Started")
 
+        self.ensure_indicies()
+
         # Get all new materials
         q = dict(self.query)
         new_mats = set(self.materials.distinct(self.materials.key)) - set(
@@ -221,7 +223,7 @@ class MPBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
-    def ensure_indexes(self):
+    def ensure_indicies(self):
         """
         Ensures indexes on the tasks and materials collections
         :return:
