@@ -268,8 +268,8 @@ def old_style_mat(new_style_mat):
     mat["full_formula"] = "".join(struc.formula.split())
     vals = sorted(mat["reduced_cell_formula"].values())
     mat["anonymous_formula"] = {string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))}
-    mat["initial_structure"] = new_style_mat.get("initial_structure",None)
-    
+    mat["initial_structure"] = new_style_mat.get("initial_structure", None)
+
     set_(mat, "pseudo_potential.functional", "PBE")
 
     set_(mat, "pseudo_potential.labels",
@@ -478,7 +478,10 @@ def add_dielectric(mat, dielectric):
 
 
 def has_fields(mat):
-    mat["has"] = [prop for prop in ["elasticity", "piezo", "diel", "bandstructure"] if prop in mat]def add_dois(mat, doi):
+    mat["has"] = [prop for prop in ["elasticity", "piezo", "diel", "bandstructure"] if prop in mat]
+
+
+def add_dois(mat, doi):
     if "doi" in doi:
         mat["doi"] = doi["doi"]
     if "bibtex" in doi:
