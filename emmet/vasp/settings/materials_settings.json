@@ -16,7 +16,7 @@
       "GGA Static": 2,
       "GGA+U NSCF Line": 8,
       "GGA+U NSCF Uniform": 7,
-      "GGA+U Static": 6,
+      "GGA+U Static": 6
     },
     "tasks_key": "output.bandgap",
     "track": true
