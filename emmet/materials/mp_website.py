@@ -83,6 +83,7 @@ class MPBuilder(Builder):
                  xrd=None,
                  elastic=None,
                  dielectric=None,
+                 dois=None,
                  query=None,
                  **kwargs):
         """
@@ -104,6 +105,7 @@ class MPBuilder(Builder):
         self.xrd = xrd
         self.elastic = elastic
         self.dielectric = dielectric
+        self.dois = dois
 
         sources = list(filter(None, [materials, thermo, electronic_structure, snls, elastic, dielectric, xrd]))
 
@@ -165,6 +167,9 @@ class MPBuilder(Builder):
             if self.xrd:
                 doc["xrd"] = self.xrd.query_one(criteria={self.xrd.key: m})
 
+            if self.dois:
+                doc["dois"] = self.dois.query_one(criteria={self.dois.key: m})
+
             yield doc
 
     def process_item(self, item):
@@ -189,6 +194,10 @@ class MPBuilder(Builder):
         if item.get("thermo", None):
             thermo = item["thermo"]
             add_thermo(mat, thermo)
+
+        if item.get("doi", None):
+            doi = item["doi"]
+            add_dois(mat, doi)
 
         snl = item.get("snl", {})
         add_snl(mat, snl)
@@ -467,4 +476,8 @@ def add_dielectric(mat, dielectric):
 
 
 def has_fields(mat):
-    mat["has"] = [prop for prop in ["elasticity", "piezo", "diel", "bandstructure"] if prop in mat]
+    mat["has"] = [prop for prop in ["elasticity", "piezo", "diel", "bandstructure"] if prop in mat]def add_dois(mat, doi):
+    if "doi" in doi:
+        mat["doi"] = doi["doi"]
+    if "bibtex" in doi:
+        mat["doi_bibtex"] = doi["bibtex"]
