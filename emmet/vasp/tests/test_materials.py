@@ -104,9 +104,9 @@ class TestMaterials(unittest.TestCase):
                     "IBRION": 1
                 }
             },
-            "structure": "What structure",
             "output": {
-                "bandgap": 1.3
+                "bandgap": 1.3,
+                "structure": "What structure"
             },
             "formula_anonymous": "A",
             "formula_pretty": "Cl",
@@ -124,9 +124,9 @@ class TestMaterials(unittest.TestCase):
             self.assertIn("materials_key", p)
 
         prop_names = [p["materials_key"] for p in prop_list]
-        props_in = ['bandstructure.band_gap', 'inputs.structure_optimization']
+        props_in = ['structure', 'inputs.structure_optimization']
         props_not_in = [
-            'formula_anonymous', 'formula_pretty', 'band_gap', 'structure', 'bandstructure.cbm', 'bandstructure.vbm',
+            'formula_anonymous', 'formula_pretty', 'bandstructure.band_gap', 'bandstructure.cbm', 'bandstructure.vbm',
             'chemsys', 'analysis.delta_volume', 'thermo.energy'
         ]
 
