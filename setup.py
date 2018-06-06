@@ -9,7 +9,7 @@ module_dir = os.path.dirname(os.path.abspath(__file__))
 if __name__ == "__main__":
     setup(
         name='emmet',
-        version='2018.4.2',
+        version="2018.06.06",
         description='Emmet is a builder framework for the Materials Project',
         long_description=open(os.path.join(module_dir, 'README.md'),encoding='utf-8').read(),
         long_description_content_type="text/markdown",
@@ -35,5 +35,6 @@ if __name__ == "__main__":
                      'Topic :: Other/Nonlisted Topic',
                      'Topic :: Scientific/Engineering'],
         test_suite='nose.collector',
-        tests_require=['nose']
+        tests_require=['nose'],
+        python_requires='>=3.6',
     )
