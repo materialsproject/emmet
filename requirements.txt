@@ -8,5 +8,6 @@ tqdm>=4.19.5
 prettyplotlib==0.1.7
 pybtex==0.21
 networkx==2.1
+sumo==1.0.8
 -e git://github.com/hackingmaterials/matminer#egg=matminer
 -e git://github.com/materialsproject/maggma#egg=maggma

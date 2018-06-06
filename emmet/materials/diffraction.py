@@ -60,6 +60,7 @@ class DiffractionBuilder(Builder):
         mats = list(self.materials.distinct(self.materials.key, q))
         self.logger.info(
             "Found {} new materials for diffraction data".format(len(mats)))
+        self.total = len(mats)
         for m in mats:
             yield self.materials.query(properties=[self.materials.key, "structure", self.materials.lu_field],
                                        criteria={self.materials.key: m}).limit(1)[0]

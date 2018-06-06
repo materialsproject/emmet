@@ -13,7 +13,7 @@ test_mats = os.path.join(module_dir, "..", "..", "..", "test_files", "thermo_tes
 
 class TestThermo(unittest.TestCase):
     def setUp(self):
-        self.materials = JSONStore(test_mats)
+        self.materials = JSONStore(test_mats,lu_type='isoformat')
         self.materials.connect()
         self.thermo = MemoryStore("thermo")
         self.thermo.connect()
@@ -77,6 +77,10 @@ class TestThermo(unittest.TestCase):
 
         self.assertEqual(len(self.thermo.distinct("task_id")), 3)
         self.assertEqual(tbuilder.completed_tasks, {1, 2, 3})
+
+    def test_get_items(self):
+        tbuilder = ThermoBuilder(self.materials, self.thermo)
+        self.assertEqual(len(list(tbuilder.get_items())),1)
 
 
 if __name__ == "__main__":

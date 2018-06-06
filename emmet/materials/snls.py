@@ -1,11 +1,12 @@
 from itertools import chain
 from collections import defaultdict
 
+from pydash.objects import get
+
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.util.provenance import StructureNL
 from maggma.builder import Builder
-from pydash.objects import get
 from pybtex.database import parse_string
 from pybtex.database import BibliographyData
 
@@ -19,7 +20,7 @@ mp_default_snl_fields = {
     "history": {
         "name": "Materials Project Optimized Structure",
         "url": "http://www.materialsproject.org",
-        "description" : {}
+        "description": {}
     }
 }
 
@@ -64,8 +65,12 @@ class SNLBuilder(Builder):
 
     def ensure_indicies(self):
 
-        self.materials.ensure_index(self.materials.key)
+        self.materials.ensure_index(self.materials.key, unique=True)
         self.materials.ensure_index("formula_pretty")
+
+        self.snls.ensure_index(self.materials.key, unique=True)
+        self.snls.ensure_index("formula_pretty")
+
         for s in self.source_snls:
             s.ensure_index(s.key)
             s.ensure_index("formula_pretty")
@@ -95,10 +100,12 @@ class SNLBuilder(Builder):
 
         # Now reduce to the set of formulas we actually have
         q = dict(self.query)
-        forms_avail = set(self.materials.distinct("formula_pretty"),q)
+        forms_avail = set(self.materials.distinct("formula_pretty", q))
         forms_to_update = forms_to_update & forms_avail
 
         self.logger.info("Found {} new/updated systems to proces".format(len(forms_to_update)))
+
+        self.total = len(forms_to_update)
 
         for formula in forms_to_update:
             mats = list(
@@ -135,10 +142,10 @@ class SNLBuilder(Builder):
         for mat in mats:
             matched_snls = list(self.match(source_snls, mat))
             if len(matched_snls) > 0:
+                snl_doc = {self.snls.key: mat[self.materials.key]}
                 snl_fields = aggregate_snls(matched_snls)
                 self.add_defaults(snl_fields)
-                snl_doc = StructureNL(Structure.from_dict(mat["structure"]), **snl_fields).as_dict()
-                snl_doc[self.snls.key] = mat[self.materials.key]
+                snl_doc["snl"] = StructureNL(Structure.from_dict(mat["structure"]), **snl_fields).as_dict()
                 snl_docs.append(snl_doc)
 
         return snl_docs
@@ -231,8 +238,9 @@ def aggregate_snls(snls):
     entries = BibliographyData(entries=refs)
     references = entries.to_string("bibtex")
 
-    # Aggregate all remarks
+    # Aggregate all remarks and keep character count less than 140 <-- requirement from SNL
     remarks = list(set([remark for snl in snls for remark in snl["about"]["remarks"]]))
+    remarks = [r for r in remarks if len(r) < 140]
 
     # Aggregate all projects
     projects = list(set([projects for snl in snls for projects in snl["about"]["projects"]]))
@@ -244,13 +252,14 @@ def aggregate_snls(snls):
     # Aggregate all the database IDs
     db_ids = defaultdict(list)
     for snl in snls:
-        if len(snl["about"]["history"]) == 1 and \
-                snl["about"]["history"][0]["name"] in DB_indexes:
-            db_name = snl["about"]["history"][0]["name"]
+        if len(snl["about"]["history"]) == 1 and get(snl, "about.history.0.name", "") in DB_indexes:
+            db_name = get(snl, "about.history.0.name", "")
             db_id_key = DB_indexes[db_name]
             db_ids[db_id_key].append(snl["about"]["history"][0]["description"].get("id", None))
+
     # remove Nones and empty lists
-    db_ids = {k: list(filter(None, v)) for k, v in db_ids.items() if len(list(filter(None, db_ids.items()))) > 0}
+    db_ids = {k: list(filter(None, v)) for k, v in db_ids.items()}
+    db_ids = {k: v for k, v in db_ids.items() if len(v) > 0}
 
     snl_fields = {
         "created_at": created_at,
@@ -259,7 +268,9 @@ def aggregate_snls(snls):
         "remarks": remarks,
         "projects": projects,
         "authors": authors,
-        "data": {"_db_ids": db_ids}
+        "data": {
+            "_db_ids": db_ids
+        }
     }
 
     return snl_fields
