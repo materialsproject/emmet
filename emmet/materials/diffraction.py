@@ -10,6 +10,8 @@ from pymatgen.analysis.diffraction.xrd import XRDCalculator, WAVELENGTHS
 
 from maggma.builder import Builder
 
+from emmet.common.utils import load_settings
+
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
@@ -34,8 +36,7 @@ class DiffractionBuilder(Builder):
         self.diffraction = diffraction
         self.xrd_settings = xrd_settings
         self.query = query if query else {}
-        self.__settings = loadfn(
-            self.xrd_settings if self.xrd_settings else default_xrd_settings)
+        self.__settings = load_settings(self.xrd_settings, default_xrd_settings)
 
         super().__init__(sources=[materials],
                          targets=[diffraction],
