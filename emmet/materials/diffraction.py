@@ -32,9 +32,10 @@ class DiffractionBuilder(Builder):
 
         self.materials = materials
         self.diffraction = diffraction
-        self.xrd_settings = xrd_settings if xrd_settings else default_xrd_settings
+        self.xrd_settings = xrd_settings
         self.query = query if query else {}
-        self.__settings = loadfn(self.xrd_settings)
+        self.__settings = loadfn(
+            self.xrd_settings if self.xrd_settings else default_xrd_settings)
 
         super().__init__(sources=[materials],
                          targets=[diffraction],
