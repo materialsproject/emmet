@@ -263,7 +263,8 @@ def old_style_mat(new_style_mat):
 
     struc = Structure.from_dict(mat["structure"])
     mat["oxide_type"] = oxide_type(struc)
-    mat["reduced_cell_formula"] = struc.composition.as_dict()
+    mat["reduced_cell_formula"] = struc.composition.reduced_composition.as_dict()
+    mat["unit_cell_formula"] = struc.composition.as_dict()
     mat["full_formula"] = "".join(struc.formula.split())
     vals = sorted(mat["reduced_cell_formula"].values())
     mat["anonymous_formula"] = {string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))}
