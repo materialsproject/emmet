@@ -419,7 +419,7 @@ def add_snl(mat, snl=None):
         mat["snl"]["about"].update(mp_default_snl_fields)
 
     mat["snl_final"] = mat["snl"]
-    mat["icsd_ids"] = get(mat["snl"], "about._db_ids.icsd_ids", [])
+    mat["icsd_ids"] = [int(i) for i in get(mat["snl"], "about._db_ids.icsd_ids", [])]
     mat["pf_ids"] = get(mat["snl"], "about._db_ids.pf_ids", [])
 
     # Extract tags from remarks by looking for just nounds and adjectives
