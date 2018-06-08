@@ -67,7 +67,7 @@ class DiffractionBuilder(Builder):
         curr_diffraction = set(self.diffraction.distinct(self.diffraction.key))
         self.logger.info("Found {} new materials for diffraction data".format(len(all_mats - curr_diffraction)))
 
-        mats = list(all_mats - curr_diffraction | updated_mats)
+        mats = list((all_mats - curr_diffraction) | updated_mats)
         self.total = len(mats)
         for m in mats:
             yield self.materials.query(properties=[self.materials.key, "structure", self.materials.lu_field],
