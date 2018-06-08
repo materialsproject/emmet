@@ -106,7 +106,7 @@ class MPBuilder(Builder):
         self.dielectric = dielectric
         self.dois = dois
 
-        sources = list(filter(None, [materials, thermo, electronic_structure, snls, elastic, dielectric, xrd]))
+        sources = list(filter(None, [materials, thermo, electronic_structure, snls, elastic, dielectric, xrd, dois]))
 
         super().__init__(sources=sources, targets=[mp_materials], **kwargs)
 
@@ -137,7 +137,7 @@ class MPBuilder(Builder):
 
         self.logger.info("Found {} updated materials for the website".format(len(mats)))
 
-        mats = set(mats) | new_mats
+        mats = mats | new_mats
         self.logger.info("Processing {} total materials".format(len(mats)))
         self.total = len(mats)
 
@@ -227,12 +227,6 @@ class MPBuilder(Builder):
         Ensures indexes on the tasks and materials collections
         :return:
         """
-
-        # Basic search index for tasks
-        self.tasks.ensure_index("task_id", unique=True)
-        self.tasks.ensure_index("state")
-        self.tasks.ensure_index("formula_pretty")
-        self.tasks.ensure_index(self.tasks.lu_field)
 
         # Search index for materials
         self.materials.ensure_index(self.materials.key, unique=True)
