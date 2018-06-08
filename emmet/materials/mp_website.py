@@ -196,8 +196,8 @@ class MPBuilder(Builder):
             thermo = item["thermo"]
             add_thermo(mat, thermo)
 
-        if item.get("doi", None):
-            doi = item["doi"]
+        if item.get("dois", None):
+            doi = item["dois"]
             add_dois(mat, doi)
 
         snl = item.get("snl", {})
