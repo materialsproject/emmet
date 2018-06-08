@@ -477,7 +477,9 @@ def add_dielectric(mat, dielectric):
 
 
 def has_fields(mat):
-    mat["has"] = [prop for prop in ["elasticity", "piezo", "diel", "bandstructure"] if prop in mat]
+    mat["has"] = [prop for prop in ["elasticity", "piezo", "diel"] if prop in mat]
+    if  "band_structure" in mat:
+        mat["has"].append("bandstructure")
 
 
 def add_dois(mat, doi):
