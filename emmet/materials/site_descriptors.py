@@ -3,8 +3,8 @@ import numpy as np
 from pymatgen.core.structure import Structure
 import pymatgen.analysis
 from pymatgen.analysis.local_env import *
-from matminer.featurizers.site import OPSiteFingerprint ,\
-CrystalSiteFingerprint, CoordinationNumber
+from matminer.featurizers.site import OPSiteFingerprint, CoordinationNumber
+from matminer.featurizers.deprecated import CrystalSiteFingerprint
 
 # TODO:
 # 1) Add checking OPs present in current implementation of site fingerprints.

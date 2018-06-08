@@ -37,3 +37,7 @@ class TestDiffractionBuilder(TestCase):
         builder = DiffractionBuilder(self.source, self.target)
         structure = PymatgenTest.get_structure("Si")
         self.assertIn("Cu", builder.get_xrd_from_struct(structure))
+
+    def test_serialization(self):
+        builder = DiffractionBuilder(self.source, self.target)
+        self.assertIsNone(builder.as_dict()["xrd_settings"])
