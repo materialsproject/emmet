@@ -6,9 +6,6 @@ from maggma.stores import MemoryStore
 
 from monty.serialization import loadfn
 
-from matminer.featurizers.site import OPSiteFingerprint ,\
-    CrystalSiteFingerprint
-
 __author__ = "Nils E. R. Zimmermann"
 __email__ = "nerz@lbl.gov"
 
