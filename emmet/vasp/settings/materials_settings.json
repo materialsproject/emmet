@@ -11,12 +11,14 @@
   {
     "materials_key": "bandstructure.band_gap",
     "quality_score": {
-      "GGA NSCF Line": 4,
-      "GGA NSCF Uniform": 3,
-      "GGA Static": 2,
+      "GGA Structure Optimization": 1,
+      "GGA+U Structure Optimization": 2,
+      "GGA NSCF Line": 7,
+      "GGA NSCF Uniform": 5,
+      "GGA Static": 3,
       "GGA+U NSCF Line": 8,
-      "GGA+U NSCF Uniform": 7,
-      "GGA+U Static": 6
+      "GGA+U NSCF Uniform": 6,
+      "GGA+U Static": 4
     },
     "tasks_key": "output.bandgap",
     "track": true
