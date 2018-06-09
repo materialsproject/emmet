@@ -219,7 +219,7 @@ class MPBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info("Updating {} mp materials docs".format(len(items)))
-            self.mp_materials.update(docs=items)
+            self.mp_materials.update(docs=items,ordered=False)
         else:
             self.logger.info("No items to update")
 
