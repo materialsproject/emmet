@@ -176,12 +176,12 @@ class SNLBuilder(Builder):
         for snl in snls:
             snl_struc = StructureNL.from_dict(snl).structure
             try:
-                snl_spacegroup = snl_struc.get_space_group_info()[0]
+                snl_spacegroup = snl_struc.get_space_group_info(symprec=0.1)[0]
             except:
                 snl_spacegroup = -1
             for struc in m_strucs:
                 try:
-                    struc_sg = struc.get_space_group_info()[0]
+                    struc_sg = struc.get_space_group_info(symprec=0.1)[0]
                 except:
                     struc_sg = -1
                 # The try-excepts are a temp fix to a spglib bug
