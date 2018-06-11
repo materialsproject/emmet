@@ -175,16 +175,21 @@ class SNLBuilder(Builder):
                     ] + [Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]]
         for snl in snls:
             snl_struc = StructureNL.from_dict(snl).structure
+            # Get SNL Spacegroup
+            # This try-except fixes issues for some structures where space group data is not returned by spglib
             try:
                 snl_spacegroup = snl_struc.get_space_group_info(symprec=0.1)[0]
             except:
                 snl_spacegroup = -1
             for struc in m_strucs:
+
+                # Get Materials Structure Spacegroup
                 try:
                     struc_sg = struc.get_space_group_info(symprec=0.1)[0]
                 except:
                     struc_sg = -1
-                # The try-excepts are a temp fix to a spglib bug
+
+                # Match spacegroups
                 if struc_sg == snl_spacegroup and sm.fit(struc, snl_struc):
                     yield snl
                     break

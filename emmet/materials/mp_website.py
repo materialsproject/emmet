@@ -219,7 +219,7 @@ class MPBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info("Updating {} mp materials docs".format(len(items)))
-            self.mp_materials.update(docs=items,ordered=False)
+            self.mp_materials.update(docs=items, ordered=False)
         else:
             self.logger.info("No items to update")
 
@@ -474,7 +474,7 @@ def add_dielectric(mat, dielectric):
 
 def has_fields(mat):
     mat["has"] = [prop for prop in ["elasticity", "piezo", "diel"] if prop in mat]
-    if  "band_structure" in mat:
+    if "band_structure" in mat:
         mat["has"].append("bandstructure")
 
 
