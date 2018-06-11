@@ -430,24 +430,25 @@ def check_relaxation(mat, new_style_mat):
     final_structure = Structure.from_dict(mat["structure"])
 
     warnings = []
-    for init_struc in new_style_mat["initial_structures"]:
-        # Check relaxation
-        orig_crystal = Structure.from_dict(init_struc)
+    # Check relaxation for just the initial structure to optimized structure
+    init_struc = new_style_mat["initial_structure"]
 
-        try:
-            analyzer = RelaxationAnalyzer(orig_crystal, final_structure)
-            latt_para_percentage_changes = analyzer.get_percentage_lattice_parameter_changes()
-            for l in ["a", "b", "c"]:
-                change = latt_para_percentage_changes[l] * 100
-                if change < latt_para_interval[0] or change > latt_para_interval[1]:
-                    warnings.append("Large change in a lattice parameter during relaxation.")
-            change = analyzer.get_percentage_volume_change() * 100
-            if change < vol_interval[0] or change > vol_interval[1]:
-                warnings.append("Large change in volume during relaxation.")
-        except Exception as ex:
-            # print icsd_crystal.formula
-            # print final_structure.formula
-            print("Relaxation analyzer failed for Material:{} due to {}".format(mat["task_id"], traceback.print_exc()))
+    orig_crystal = Structure.from_dict(init_struc)
+
+    try:
+        analyzer = RelaxationAnalyzer(orig_crystal, final_structure)
+        latt_para_percentage_changes = analyzer.get_percentage_lattice_parameter_changes()
+        for l in ["a", "b", "c"]:
+            change = latt_para_percentage_changes[l] * 100
+            if change < latt_para_interval[0] or change > latt_para_interval[1]:
+                warnings.append("Large change in a lattice parameter during relaxation.")
+        change = analyzer.get_percentage_volume_change() * 100
+        if change < vol_interval[0] or change > vol_interval[1]:
+            warnings.append("Large change in volume during relaxation.")
+    except Exception as ex:
+        # print icsd_crystal.formula
+        # print final_structure.formula
+        print("Relaxation analyzer failed for Material:{} due to {}".format(mat["task_id"], traceback.print_exc()))
 
     mat["warnings"] = list(set(warnings))
 
