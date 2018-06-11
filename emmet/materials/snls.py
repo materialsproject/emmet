@@ -238,9 +238,11 @@ def aggregate_snls(snls):
     entries = BibliographyData(entries=refs)
     references = entries.to_string("bibtex")
 
-    # Aggregate all remarks and keep character count less than 140 <-- requirement from SNL
-    remarks = list(set([remark for snl in snls for remark in snl["about"]["remarks"]]))
+    # Keep first SNL remarks since that should assocaited with the base structure
+    remarks = list(set([remark for remark in snls[0]["about"]["remarks"]]))
     remarks = [r for r in remarks if len(r) < 140]
+    # The rest get stored in tags
+    tags = list(set([remark for snl in snls for remark in snl["about"]["remarks"]]))
 
     # Aggregate all projects
     projects = list(set([projects for snl in snls for projects in snl["about"]["projects"]]))
@@ -269,7 +271,8 @@ def aggregate_snls(snls):
         "projects": projects,
         "authors": authors,
         "data": {
-            "_db_ids": db_ids
+            "_db_ids": db_ids,
+            "_tags": tags,
         }
     }
 
