@@ -4,6 +4,7 @@ import os
 
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
+from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 
 from maggma.builder import Builder
 from emmet.vasp.task_tagger import task_type
@@ -307,11 +308,6 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
         angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
         separate_mag_orderings (bool): Separate magnetic orderings into different materials
     """
-    if separate_mag_orderings:
-        for structure in structures:
-            if has(structure.site_properties, "magmom"):
-                structure.add_spin_by_site(structure.site_properties['magmom'])
-                structure.remove_site_property('magmom')
 
     sm = StructureMatcher(
         ltol=ltol,
@@ -326,7 +322,15 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
     def get_sg(struc):
         return struc.get_space_group_info(symprec=0.1)[1]
 
+    def get_mag_ordering(struc):
+        return CollinearMagneticStructureAnalyzer(struc).ordering.value
+
     # First group by spacegroup number then by structure matching
     for _, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
         for group in sm.group_structures(sorted(pregroup, key=get_sg)):
-            yield group
+            # Match magnetic orderings here
+            if separate_mag_orderings:
+                for mag_group in groupby(sorted(group, key=get_mag_ordering), key=get_mag_ordering):
+                    yield mag_group
+            else:
+                yield group
