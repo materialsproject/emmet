@@ -203,7 +203,7 @@ class MPBuilder(Builder):
 
         snl = item.get("snl", {})
         add_snl(mat, snl)
-
+        add_magnetism(mat)
         sandbox_props(mat)
         has_fields(mat)
         return jsanitize(mat)
