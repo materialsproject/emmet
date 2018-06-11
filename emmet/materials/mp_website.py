@@ -420,7 +420,7 @@ def add_snl(mat, snl=None):
 
     # Extract tags from remarks by looking for just nounds and adjectives
     mat["exp"] = {"tags": []}
-    for remark in mat["snl"]["about"].get("remarks", []):
+    for remark in mat["snl"]["about"].get("_tags", []):
         tokens = set(tok[1] for tok in nltk.pos_tag(nltk.word_tokenize(remark), tagset='universal'))
         if len(tokens.intersection({"ADV", "ADP", "VERB"})) == 0:
             mat["exp"]["tags"].append(remark)
