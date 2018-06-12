@@ -264,6 +264,8 @@ def old_style_mat(new_style_mat):
     vals = sorted(mat["reduced_cell_formula"].values())
     mat["anonymous_formula"] = {string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))}
     mat["initial_structure"] = new_style_mat.get("initial_structure", None)
+    mat["nsites"] = struc.get_primitive_structure().num_sites
+
 
     set_(mat, "pseudo_potential.functional", "PBE")
 
