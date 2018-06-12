@@ -325,7 +325,8 @@ def add_elastic(mat, elastic):
         "homogeneous_poisson": "homogeneous_poisson",
         "poisson_ratio": "homogeneous_poisson",
         "universal_anisotropy": "universal_anisotropy",
-        "elastic_tensor_original": "elastic_tensor_original"
+        "elastic_tensor_original": "elastic_tensor_original",
+        "compliance_tensor": "compliance_tensor"
     }
 
     mat["elasticity"] = {k: elastic["elasticity"][v] for k, v in es_aliases.items()}
