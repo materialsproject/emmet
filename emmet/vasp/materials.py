@@ -274,6 +274,8 @@ class MaterialsBuilder(Builder):
         self.materials.ensure_index("task_ids")
         self.materials.ensure_index(self.materials.lu_field)
 
+def get_sg(struc):
+    return struc.get_space_group_info(symprec=0.1)[1]
 
 def structure_metadata(structure):
     """
@@ -318,9 +320,6 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
         attempt_supercell=False,
         allow_subset=False,
         comparator=ElementComparator())
-
-    def get_sg(struc):
-        return struc.get_space_group_info(symprec=0.1)[1]
 
     def get_mag_ordering(struc):
         return CollinearMagneticStructureAnalyzer(struc).ordering.value
