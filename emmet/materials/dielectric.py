@@ -1,6 +1,5 @@
 import logging
 import numpy as np
-from datetime import datetime
 from itertools import combinations
 
 from pymongo import ASCENDING
@@ -16,7 +15,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class DielectricBuilder(Builder):
-    def __init__(self, materials, dielectric, query={}, **kwargs):
+    def __init__(self, materials, dielectric, query=None, **kwargs):
         """
         Creates a dielectric collection for materials
 
@@ -30,7 +29,7 @@ class DielectricBuilder(Builder):
         self.materials = materials
         self.dielectric = dielectric
 
-        self.query = query
+        self.query = query if query else {}
 
         super().__init__(sources=[materials], targets=[dielectric], **kwargs)
 

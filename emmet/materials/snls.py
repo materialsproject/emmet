@@ -1,7 +1,7 @@
 from itertools import chain
 from collections import defaultdict
 
-from pydash.objects import get, has
+from pydash.objects import get
 
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
@@ -175,16 +175,21 @@ class SNLBuilder(Builder):
                     ] + [Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]]
         for snl in snls:
             snl_struc = StructureNL.from_dict(snl).structure
+            # Get SNL Spacegroup
+            # This try-except fixes issues for some structures where space group data is not returned by spglib
             try:
-                snl_spacegroup = snl_struc.get_space_group_info()[0]
+                snl_spacegroup = snl_struc.get_space_group_info(symprec=0.1)[0]
             except:
                 snl_spacegroup = -1
             for struc in m_strucs:
+
+                # Get Materials Structure Spacegroup
                 try:
-                    struc_sg = struc.get_space_group_info()[0]
+                    struc_sg = struc.get_space_group_info(symprec=0.1)[0]
                 except:
                     struc_sg = -1
-                # The try-excepts are a temp fix to a spglib bug
+
+                # Match spacegroups
                 if struc_sg == snl_spacegroup and sm.fit(struc, snl_struc):
                     yield snl
                     break
@@ -238,9 +243,11 @@ def aggregate_snls(snls):
     entries = BibliographyData(entries=refs)
     references = entries.to_string("bibtex")
 
-    # Aggregate all remarks and keep character count less than 140 <-- requirement from SNL
-    remarks = list(set([remark for snl in snls for remark in snl["about"]["remarks"]]))
+    # Keep first SNL remarks since that should assocaited with the base structure
+    remarks = list(set([remark for remark in snls[0]["about"]["remarks"]]))
     remarks = [r for r in remarks if len(r) < 140]
+    # The rest get stored in tags
+    tags = list(set([remark for snl in snls for remark in snl["about"]["remarks"]]))
 
     # Aggregate all projects
     projects = list(set([projects for snl in snls for projects in snl["about"]["projects"]]))
@@ -269,7 +276,8 @@ def aggregate_snls(snls):
         "projects": projects,
         "authors": authors,
         "data": {
-            "_db_ids": db_ids
+            "_db_ids": db_ids,
+            "_tags": tags,
         }
     }
 

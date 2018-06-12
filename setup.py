@@ -9,7 +9,7 @@ module_dir = os.path.dirname(os.path.abspath(__file__))
 if __name__ == "__main__":
     setup(
         name='emmet',
-        version='2018.4.2',
+        version="2018.06.07",
         description='Emmet is a builder framework for the Materials Project',
         long_description=open(os.path.join(module_dir, 'README.md'),encoding='utf-8').read(),
         long_description_content_type="text/markdown",
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         install_requires=[
             'atomate', 'pymatgen>=2018.4.20','maggma','monty',
             'six', 'pydash', 'tqdm', 'matminer',
-            'prettyplotlib', "pybtex", "Click"
+            'prettyplotlib', 'pybtex', 'Click', 'networkx', 'sumo',
         ],
         classifiers=["Programming Language :: Python :: 3",
                      "Programming Language :: Python :: 3.6",
@@ -42,4 +42,5 @@ if __name__ == "__main__":
         [console_scripts]
         emmet=emmet.scripts.emmet:cli
         ''',
+        python_requires='>=3.6',
     )

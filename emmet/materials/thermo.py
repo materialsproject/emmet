@@ -35,7 +35,7 @@ class ThermoBuilder(Builder):
 
     def get_items(self):
         """
-        Gets sets of entries from chemical systems that need to be processed 
+        Gets sets of entries from chemical systems that need to be processed
 
         Returns:
             generator of relevant entries from one chemical system
@@ -50,10 +50,16 @@ class ThermoBuilder(Builder):
         q.update(self.materials.lu_filter(self.thermo))
         updated_comps = set(self.materials.distinct("chemsys", q))
 
+        # All materials that are not present in the thermo collection
+        thermo_mat_ids = self.thermo.distinct("task_id")
+        q = dict(self.query)
+        q.update({"task_id": {"$nin": thermo_mat_ids}})
+        new_mat_comps = set(self.materials.distinct("chemsys",q))
+
         # All chemsys not present in thermo collection
         new_comps = set(self.materials.distinct("chemsys", self.query)) - set(self.thermo.distinct("chemsys"))
 
-        comps = updated_comps | new_comps
+        comps = updated_comps | new_comps | new_mat_comps
 
         # Only process maximal super sets: e.g. if ["A","B"] and ["A"] are both in the list, will only yield ["A","B"]
         # as this will calculate thermo props for all ["A"] compounds
@@ -68,9 +74,9 @@ class ThermoBuilder(Builder):
 
         self.logger.info("Found {} compositions with new/updated materials".format(len(to_process)))
         self.total = len(to_process)
-        
+
         for chemsys in to_process:
-                yield self.get_entries(chemsys)
+            yield self.get_entries(chemsys)
 
     def get_entries(self, chemsys):
         """

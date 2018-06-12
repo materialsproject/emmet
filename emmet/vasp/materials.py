@@ -2,12 +2,13 @@ from datetime import datetime
 from itertools import chain, groupby
 import os
 
-from monty.serialization import loadfn
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
+from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 
 from maggma.builder import Builder
 from emmet.vasp.task_tagger import task_type
+from emmet.common.utils import load_settings
 from pydash.objects import get, set_, has
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
@@ -44,7 +45,7 @@ class MaterialsBuilder(Builder):
         """
 
         self.tasks = tasks
-        self.materials_settings = materials_settings if materials_settings else default_mat_settings
+        self.materials_settings = materials_settings
         self.materials = materials
         self.mat_prefix = mat_prefix
         self.query = query if query else {}
@@ -53,7 +54,7 @@ class MaterialsBuilder(Builder):
         self.angle_tol = angle_tol
         self.separate_mag_orderings = separate_mag_orderings
 
-        self.__settings = loadfn(self.materials_settings)
+        self.__settings = load_settings(self.materials_settings, default_mat_settings)
 
         self.allowed_tasks = {t_type for d in self.__settings for t_type in d['quality_score']}
 
@@ -284,8 +285,8 @@ def structure_metadata(structure):
         "nsites": structure.num_sites,
         "elements": elsyms,
         "nelements": len(elsyms),
-        "composition": comp,
-        "composition_reduced": comp.reduced_composition,
+        "composition": comp.as_dict(),
+        "composition_reduced": comp.reduced_composition.as_dict(),
         "formula_pretty": comp.reduced_formula,
         "formula_anonymous": comp.anonymized_formula,
         "chemsys": "-".join(elsyms),
@@ -307,11 +308,6 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
         angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
         separate_mag_orderings (bool): Separate magnetic orderings into different materials
     """
-    if separate_mag_orderings:
-        for structure in structures:
-            if has(structure.site_properties, "magmom"):
-                structure.add_spin_by_site(structure.site_properties['magmom'])
-                structure.remove_site_property('magmom')
 
     sm = StructureMatcher(
         ltol=ltol,
@@ -326,7 +322,15 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
     def get_sg(struc):
         return struc.get_space_group_info(symprec=0.1)[1]
 
+    def get_mag_ordering(struc):
+        return CollinearMagneticStructureAnalyzer(struc).ordering.value
+
     # First group by spacegroup number then by structure matching
     for _, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
         for group in sm.group_structures(sorted(pregroup, key=get_sg)):
-            yield group
+            # Match magnetic orderings here
+            if separate_mag_orderings:
+                for _,mag_group in groupby(sorted(group, key=get_mag_ordering), key=get_mag_ordering):
+                    yield list(mag_group)
+            else:
+                yield group
