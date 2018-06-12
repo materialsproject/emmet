@@ -330,7 +330,7 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
         for group in sm.group_structures(sorted(pregroup, key=get_sg)):
             # Match magnetic orderings here
             if separate_mag_orderings:
-                for mag_group in groupby(sorted(group, key=get_mag_ordering), key=get_mag_ordering):
-                    yield mag_group
+                for _,mag_group in groupby(sorted(group, key=get_mag_ordering), key=get_mag_ordering):
+                    yield list(mag_group)
             else:
                 yield group
