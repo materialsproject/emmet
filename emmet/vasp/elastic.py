@@ -219,87 +219,42 @@ def get_elastic_analysis(opt_task, defo_tasks):
     """
     elastic_doc = {"warnings": []}
     opt_struct = Structure.from_dict(opt_task['output']['structure'])
-    d_structs = [Structure.from_dict(d['output']['structure'])
-                 for d in defo_tasks]
-    defos = [calculate_deformation(opt_struct, def_structure)
-             for def_structure in d_structs]
-
-    # Warning if deformation is not equivalent to stored deformation
-    stored_defos = [d['transmuter']['transformation_params'][0]\
-                     ['deformation'] for d in defo_tasks]
-    if not np.allclose(defos, stored_defos, atol=1e-5):
-        wmsg = "Inequivalent stored and calc. deformations."
-        logger.debug(wmsg)
-        elastic_doc["warnings"].append(wmsg)
-
-    # Collect all fitting data and task ids
-    defos = [Deformation(d) for d in defos]
-    strains = [d.green_lagrange_strain for d in defos]
-    vasp_stresses = [d['output']['stress'] for d in defo_tasks]
-    cauchy_stresses = [-0.1 * Stress(s) for s in vasp_stresses]
-    pk_stresses = [Stress(s.piola_kirchoff_2(d))
-                   for s, d in zip(cauchy_stresses, defos)]
-    defo_task_ids = [d['task_id'] for d in defo_tasks]
-
-    # Determine whether data is sufficient to fit tensor
-    # If raw data is insufficient but can be symmetrically transformed
-    # to provide a sufficient set, use the expanded set with appropriate
-    # symmetry transformations, fstresses/strains are "fitting
-    # strains" below.
-    vstrains = [s.voigt for s in strains]
-    if np.linalg.matrix_rank(vstrains) < 6:
-        symmops = SpacegroupAnalyzer(opt_struct).get_symmetry_operations(
-            cartesian=True)
-        fstrains = [[s.transform(symmop) for symmop in symmops]
-                    for s in strains]
-        fstrains = list(chain.from_iterable(fstrains))
-        vfstrains = [s.voigt for s in fstrains]
-        if np.linalg.matrix_rank(vfstrains) < 6:
-            logger.debug("Insufficient data to form SOEC")
-            elastic_doc['warnings'].append("insufficient strains")
-            return None
-        else:
-            fstresses = [[s.transform(symmop) for symmop in symmops]
-                         for s in pk_stresses]
-            fstresses = list(chain.from_iterable(fstresses))
+    input_struct = Structure.from_dict(opt_task['input']['structure'])
+    explicit, derived = process_elastic_calcs(opt_task, defo_tasks)
+    all_calcs = explicit + derived
+    stresses = [c.get("cauchy_stress") for c in all_calcs]
+    strains = [c.get("strain") for c in all_calcs]
+    vstrains = [s.zeroed(0.0002).voigt for s in strains]
+    if np.linalg.matrix_rank(vstrains) == 6:
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            et_fit = legacy_fit(strains, stresses)
+            et = et_fit.voigt_symmetrized.convert_to_ieee(opt_struct)
+            vasp_input = opt_task['input']
+            if 'structure' in vasp_input:
+                vasp_input.pop('structure')
+            completed_at = max([d['completed_at'] for d in defo_tasks])
+            elastic_doc.update({"optimization_task_id": opt_task['task_id'],
+                                "cauchy_stresses": stresses,
+                                "strains": strains,
+                                "elastic_tensor": et.voigt,
+                                "compliance_tensor": et.compliance_tensor.voigt,
+                                "elastic_tensor_original": et_fit.voigt,
+                                "optimized_structure": opt_struct,
+                                "completed_at": completed_at,
+                                "optimization_input": vasp_input})
+            # Process input
+        elastic_doc['warnings'] = get_warnings(et, opt_struct) or None
+        #TODO: process MPWorks metadata?
+        #TODO: higher order
+        #TODO: add some of the relevant DFT params, kpoints
+        elastic_doc['state'] = "filter_failed" if elastic_doc['warnings']\
+            else "successful"
+        return elastic_doc
     else:
-        fstrains = strains
-        fstresses = pk_stresses
-
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        # TODO: more intelligently determine if independent
-        # strain fitting can be done
-        if len(cauchy_stresses) == 24:
-            elastic_doc['legacy_fit'] = legacy_fit(strains, cauchy_stresses)
-        et_raw = ElasticTensor.from_pseudoinverse(fstrains, fstresses)
-        et = et_raw.voigt_symmetrized.convert_to_ieee(opt_struct)
-        defo_tasks = sorted(defo_tasks, key=lambda x: x['completed_at'])
-        vasp_input = opt_task['input']
-        if 'structure' in vasp_input:
-            vasp_input.pop('structure')
-
-        elastic_doc.update({"deformation_task_ids": defo_task_ids,
-                            "optimization_task_id": opt_task['task_id'],
-                            "pk_stresses": pk_stresses,
-                            "cauchy_stresses": cauchy_stresses,
-                            "strains": strains,
-                            "deformations": defos,
-                            "elastic_tensor": et.voigt,
-                            "compliance_tensor": et.compliance_tensor.voigt,
-                            "elastic_tensor_original": et_raw.voigt,
-                            "optimized_structure": opt_struct,
-                            "completed_at": defo_tasks[-1]['completed_at'],
-                            "optimization_input": vasp_input})
-
-    # Process input
-    elastic_doc['warnings'] = get_warnings(et, opt_struct) or None
-    #TODO: process MPWorks metadata?
-    #TODO: higher order
-    #TODO: add some of the relevant DFT params, kpoints
-    elastic_doc['state'] = "filter_failed" if elastic_doc['warnings']\
-        else "successful"
-    return elastic_doc
+        logger.info("Insufficient valid strains for {}".format(
+            opt_task['formula_pretty']))
+        return None
 
 
 def get_distinct_rotations(structure, symprec=0.1, atol=1e-6):
@@ -559,7 +514,7 @@ def legacy_fit(strains, stresses):
         elastic tensor fit using the legacy functionality
 
     """
-    strains = [s.zeroed(0.002) for s in strains]
+    strains = [s.zeroed(0.0002) for s in strains]
     return ElasticTensor.from_independent_strains(strains, stresses)
 
 
