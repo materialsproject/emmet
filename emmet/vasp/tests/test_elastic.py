@@ -4,6 +4,7 @@ import os
 from emmet.vasp.elastic import *
 from maggma.stores import MongoStore
 from maggma.runner import Runner
+from pymatgen.util.testing import PymatgenTest
 
 from monty.serialization import loadfn
 
@@ -13,36 +14,39 @@ __email__ = "montoyjh@lbl.gov"
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 test_tasks = os.path.join(module_dir, "..", "..", "..", "test_files", "vasp", "elastic_tasks.json")
 
+DEBUG_MODE = True
 
 class ElasticBuilderTest(unittest.TestCase):
     @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         # Set up test db, set up mpsft, etc.
-        cls.test_tasks = MongoStore("test_emmet", "tasks")
-        cls.test_tasks.connect()
+        self.test_tasks = MongoStore("test_emmet", "tasks")
+        self.test_tasks.connect()
         docs = loadfn(test_tasks, cls=None)
-        cls.test_tasks.update(docs)
-        cls.test_elasticity = MongoStore("test_emmet", "elasticity")
+        self.test_tasks.update(docs)
+        self.test_elasticity = MongoStore("test_emmet", "elasticity")
+        self.test_elasticity.connect()
 
         # Generate test materials collection
-        cls.test_materials = MongoStore("test_emmet", "materials")
-        cls.test_materials.connect()
-        cls.test_materials.collection.drop()
-        opt_docs = cls.test_tasks.query(["output.structure", "formula_pretty"], {
-            "task_label": "structure optimization"
-        })
+        self.test_materials = MongoStore("test_emmet", "materials")
+        self.test_materials.connect()
+        self.test_materials.collection.drop()
+        opt_docs = self.test_tasks.query(
+            ["output.structure", "formula_pretty"],
+            {"task_label": "structure optimization"})
         mat_docs = [{
             "task_id": "mp-{}".format(n),
             "structure": opt_doc['output']['structure'],
             "pretty_formula": opt_doc['formula_pretty']
         } for n, opt_doc in enumerate(opt_docs)]
-        cls.test_materials.update(mat_docs, update_lu=False)
+        self.test_materials.update(mat_docs, update_lu=False)
 
     @classmethod
-    def tearDownClass(cls):
-        cls.test_tasks.collection.drop()
-        cls.test_elasticity.collection.drop()
-        cls.test_materials.collection.drop()
+    def tearDown(self):
+        if not DEBUG_MODE:
+            self.test_elasticity.collection.drop()
+            self.test_tasks.collection.drop()
+            self.test_materials.collection.drop()
 
     def test_builder(self):
         ec_builder = ElasticBuilder(self.test_tasks, self.test_elasticity,
@@ -75,6 +79,25 @@ class ElasticBuilderTest(unittest.TestCase):
 
     def test_materials_aggregator(self):
         materials_dict = generate_formula_dict(self.test_materials)
+
+    def test_get_distinct_rotations(self):
+        struct = PymatgenTest.get_structure("Si")
+        conv = SpacegroupAnalyzer(struct).get_conventional_standard_structure()
+        rots = get_distinct_rotations(conv)
+        ops = SpacegroupAnalyzer(conv).get_symmetry_operations()
+        for op in ops:
+            self.assertTrue(any([np.allclose(op.rotation_matrix, r)
+                                 for r in rots]))
+        self.assertEqual(len(rots), 48)
+
+    def test_process_elastic_calcs(self):
+        docs = list(self.test_tasks.query(criteria={"formula_pretty": "PtO"}))
+        docs_grouped = group_deformations_by_optimization_task(docs)
+        opt_task, defo_tasks = docs_grouped[0]
+        test_struct = PymatgenTest.get_structure('Sn') # use cubic test struct
+        explicit, derived = process_elastic_calcs(defo_tasks, test_struct)
+        self.assertEqual(len(explicit), 23)
+        self.assertEqual(len(derived), 1)
 
 
 if __name__ == "__main__":

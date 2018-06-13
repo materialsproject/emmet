@@ -8,8 +8,9 @@ from monty.json import jsanitize
 
 from pymatgen import Structure
 from pymatgen.analysis.elasticity.elastic import ElasticTensor
-from pymatgen.analysis.elasticity.strain import Deformation
+from pymatgen.analysis.elasticity.strain import Deformation, Strain
 from pymatgen.analysis.elasticity.stress import Stress
+from pymatgen.analysis.elasticity.tensors import get_tkd_value
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
@@ -301,13 +302,35 @@ def get_elastic_analysis(opt_task, defo_tasks):
     return elastic_doc
 
 
-# TODO: finish this
-def generate_all_independent(strains, stresses, structure, tol=1e-3):
+def get_distinct_rotations(structure, symprec=0.1, atol=1e-6):
     """
-    Generates all independent stress strain pairs from a
-    list of stresses and strains, essentially "completes"
-    the strain space if it is incomplete according to
-    the symmetry of the structure
+    Get distinct rotations from structure spacegroup operations
+
+    Args:
+        structure (Structure): structure object to analyze and
+            get corresponding rotations for
+        symprec (float): symprec for SpacegroupAnalyzer
+        atol (float): absolute tolerance for relative indices
+    """
+    sga = SpacegroupAnalyzer(structure, symprec)
+    rotations = sga.get_symmetry_dataset()['rotations']
+    if len(rotations) == 1:
+        return rotations
+    unique_rotations = [np.array(rotations[0])]
+    for rotation in rotations[1:]:
+        if not any([np.allclose(urot, rotation, atol=atol)
+                    for urot in unique_rotations]):
+            unique_rotations.append(rotation)
+    return unique_rotations
+
+
+# TODO: finish this
+def process_elastic_calcs(defo_docs, opt_doc, tol=0.002):
+    """
+    Generates the list of calcs from deformation docs, along with 'derived
+    stresses', i. e. stresses derived from symmop transformations of existing
+    calcs from transformed strains resulting in an independent strain
+    not in the input list
 
     Args:
         strains ([Strain]): list of strains
@@ -317,19 +340,87 @@ def generate_all_independent(strains, stresses, structure, tol=1e-3):
     Returns:
         list of "completed" strains and stresses
     """
-    symmops = SpacegroupAnalyzer(structure).get_symmetry_operations(
-        cartesian=True)
-    # Get independent strains and corresponding stresses
-    ss_pairs = [(strain, stress) for strain, stress in zip(strains, stresses)
-                if strain.is_independent(tol)]
+    structure = Structure.from_dict(opt_doc['output']['structure'])
+    explicit_calcs = []
+    for doc in defo_docs:
+        calc = {"stress": defo_doc['output']["stress"], "type": "explicit",
+                "input": defo_doc["input"], "output": defo_doc["output"],
+                "task_id": defo_doc["task_id"]}
+        deformed_structure = Structure.from_dict(doc['output']['structure'])
+        defo = calculate_deformation(structure, deformed_structure)
+        calc.update({"deformation": defo, "strain": defo.green_lagrange_strain})
 
-    # Determine which strain states are missing
+    # Create tensor-keyed dictionary of strains to stress
+    explicit_tkd = {Strain(d['strain']): d['stress'] for d in explicit_calcs}
 
-    for strain, stress in ss_pairs:
-        for symmop in symmops:
-            new = strain.transform(symmop)
-        ss_pairs.append((strain, stress))
+    # Determine all of the implicit calculations to include
+    sga = SpacegroupAnalyzer(structure, symprec=0.1)
+    symmops = sga.get_symmetry_operations(cartesian=True)
+    derived_calcs_by_strain = {}
+    allclose_kwargs = {"atol": 2e-3} # define this for the purposes of matching
+    for calc in explicit_calcs:
+        # Generate all transformed strains
+        strain = Strain(calc['strain'])
+        task_id = calc['task_id']
+        tstrains = [(symmop, strain.transform(symmop))
+                    for symmop in symmops]
+        # Filter strains by those which are independent and new
+        tstrains = [(symmop, tstrain) for symmop, tstrain in tstrains
+                    if tstrain.deformation_matrix.is_independent(tol) and \
+                    not get_tkd_value(explicit_tkd, tstrain, allclose_kwargs)]
+        # Add surviving tensors to derived_strains dict
+        for symmop, tstrain in tstrains:
+            curr_set = get_tkd_value(derived_calcs_by_strain,
+                                     tstrain, allclose_kwargs)
+            if curr_set:
+                curr_task_ids = [c[1] for c in curr_set]
+                if task_id not in curr_task_ids:
+                    curr_set += [(symmop, calc['task_id'])]
+                    set_tkd_value(derived_calcs_by_strain, tstrain, curr_set,
+                                  allclose_kwargs)
+            else:
+                derived_calcs_by_strain[tstrain] = [(symmop, calc['task_id'])]
 
+    # Process derived calcs
+    explicit_calcs_by_id = {d['task_id']: d for d in explicit_calcs}
+    derived_calcs = []
+    for strain, calc_set in derived_calcs_by_strain.items():
+
+        symmops, task_ids = zip(*calc_set)
+        task_strains = [Strain(explicit_calcs_by_id[task_id]['strain'])
+                        for task_id in task_ids]
+        task_stresses = [Stress(explicit_calcs_by_id[task_id]['stress'])
+                         for task_id in task_ids]
+        derived_strains = [tstrain.transform(symmop)
+                           for tstrain, symmop in zip(task_strains, symmops)]
+        for derived_strain in derived_strains:
+            if not np.allclose(derived_strain, strain):
+                logger.info("Issue with derived strains")
+                raise ValueError("Issue with derived strains")
+        derived_stresses = [tstress.transform(symmop)
+                            for tstress in task_stresses]
+        input_docs = [{"task_id": task_id, "strain": task_strain,
+                       "stress": task_stress, "symmop": symmop}
+                      for task_id, task_strain, task_stress, symmop
+                      in zip(task_ids, task_strains, task_stresses, symmops)]
+        calc = {"strain": strain,
+                "stress": np.average(derived_stresses, axis=0),
+                "deformation": strain.deformation_matrix,
+                "input_tasks": input_docs,
+                "type": "derived"}
+        derived_calcs.append(calc)
+
+    #assert len(all_calcs) <= 24
+    return explicit_calcs, derived_calcs
+
+# TODO: move to pymatgen
+def set_tkd_value(tensor_keyed_dict, tensor, set_value, allclose_kwargs=None):
+    if allclose_kwargs is None:
+        allclose_kwargs = {}
+    for tkey, value in tensor_keyed_dict.items():
+        if np.allclose(tensor, tkey, **allclose_kwargs):
+            tensor_keyed_dict[tkey] = set_value
+            return
 
 def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None,
                      loosen_if_no_match=True):
