@@ -5,6 +5,7 @@ from emmet.vasp.elastic import *
 from maggma.stores import MongoStore
 from maggma.runner import Runner
 from pymatgen.util.testing import PymatgenTest
+from pymatgen.analysis.elasticity.strain import DeformedStructureSet
 
 from monty.serialization import loadfn
 
@@ -91,11 +92,25 @@ class ElasticBuilderTest(unittest.TestCase):
         self.assertEqual(len(rots), 48)
 
     def test_process_elastic_calcs(self):
-        docs = list(self.test_tasks.query(criteria={"formula_pretty": "PtO"}))
-        docs_grouped = group_deformations_by_optimization_task(docs)
-        opt_task, defo_tasks = docs_grouped[0]
+        # docs = list(self.test_tasks.query(criteria={"formula_pretty": "NaN3"}))
         test_struct = PymatgenTest.get_structure('Sn') # use cubic test struct
-        explicit, derived = process_elastic_calcs(defo_tasks, test_struct)
+        dss = DeformedStructureSet(test_struct)
+        # Construct test task set
+        opt_task = {"output": {"structure": test_struct.as_dict()},
+                    "input": None}
+        defo_tasks = []
+        for n, (struct, defo) in enumerate(zip(dss, dss.deformations)):
+            strain = defo.green_lagrange_strain
+            defo_task = {"output": {"structure": struct.as_dict(),
+                                    "stress": (strain * 5).tolist()},
+                         "input": None, "task_id": n}
+            defo_task.update({"transmuter": {
+                "transformation_params": [{"deformation": defo}]}})
+            defo_tasks.append(defo_task)
+
+        defo_tasks.pop(0)
+        #opt_task['output']['structure'] = test_struct.as_dict()
+        explicit, derived = process_elastic_calcs(opt_task, defo_tasks)
         self.assertEqual(len(explicit), 23)
         self.assertEqual(len(derived), 1)
 

@@ -185,7 +185,6 @@ class ElasticBuilder(Builder):
 
         return all_docs
 
-
     def update_targets(self, items):
         """
         Inserts the new elasticity documents into the elasticity collection
@@ -203,6 +202,7 @@ class ElasticBuilder(Builder):
 
     def finalize(self, items):
         pass
+
 
 def get_elastic_analysis(opt_task, defo_tasks):
     """
@@ -324,8 +324,8 @@ def get_distinct_rotations(structure, symprec=0.1, atol=1e-6):
     return unique_rotations
 
 
-# TODO: finish this
-def process_elastic_calcs(defo_docs, opt_doc, tol=0.002):
+# TODO: make it so opt_doc not necessary?
+def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
     """
     Generates the list of calcs from deformation docs, along with 'derived
     stresses', i. e. stresses derived from symmop transformations of existing
@@ -333,25 +333,39 @@ def process_elastic_calcs(defo_docs, opt_doc, tol=0.002):
     not in the input list
 
     Args:
-        strains ([Strain]): list of strains
-        stresses ([Stress]): list of stresses
-        structure (Structure): structure for which to find symmops
+        opt_doc (dict): document for optimization task
+        defo_docs ([dict]) list of documents for deformation tasks
+        tol (float): tolerance for assigning equivalent stresses/strains
 
     Returns:
-        list of "completed" strains and stresses
+        list of summary documents corresponding to strains and stresses
     """
     structure = Structure.from_dict(opt_doc['output']['structure'])
     explicit_calcs = []
+    # Process explicit calcs
     for doc in defo_docs:
-        calc = {"stress": defo_doc['output']["stress"], "type": "explicit",
-                "input": defo_doc["input"], "output": defo_doc["output"],
-                "task_id": defo_doc["task_id"]}
+        calc = {"type": "explicit", "input": doc["input"],
+                "output": doc["output"], "task_id": doc["task_id"]}
         deformed_structure = Structure.from_dict(doc['output']['structure'])
-        defo = calculate_deformation(structure, deformed_structure)
-        calc.update({"deformation": defo, "strain": defo.green_lagrange_strain})
+        defo = Deformation(calculate_deformation(structure, deformed_structure))
+        # Warning if deformation is not equivalent to stored deformation
+        stored_defo = doc['transmuter']['transformation_params'][0]\
+            ['deformation']
+        if not np.allclose(defo, stored_defo, atol=1e-5):
+            wmsg = "Inequivalent stored and calc. deformations."
+            logger.debug(wmsg)
+            calc["warnings"] = wmsg
+            import nose; nose.tools.set_trace()
 
-    # Create tensor-keyed dictionary of strains to stress
-    explicit_tkd = {Strain(d['strain']): d['stress'] for d in explicit_calcs}
+        cauchy_stress = -0.1 * Stress(doc['output']['stress'])
+        pk_stress = cauchy_stress.piola_kirchoff_2(defo)
+        calc.update({"deformation": defo, "cauchy_stress": cauchy_stress,
+                     "strain": defo.green_lagrange_strain,
+                     "pk_stress": pk_stress})
+        explicit_calcs.append(calc)
+
+    # Create tensor-keyed dictionary of strains to docs
+    explicit_tkd = {Strain(d['strain']): d for d in explicit_calcs}
 
     # Determine all of the implicit calculations to include
     sga = SpacegroupAnalyzer(structure, symprec=0.1)
@@ -385,11 +399,10 @@ def process_elastic_calcs(defo_docs, opt_doc, tol=0.002):
     explicit_calcs_by_id = {d['task_id']: d for d in explicit_calcs}
     derived_calcs = []
     for strain, calc_set in derived_calcs_by_strain.items():
-
         symmops, task_ids = zip(*calc_set)
         task_strains = [Strain(explicit_calcs_by_id[task_id]['strain'])
                         for task_id in task_ids]
-        task_stresses = [Stress(explicit_calcs_by_id[task_id]['stress'])
+        task_stresses = [explicit_calcs_by_id[task_id]['cauchy_stress']
                          for task_id in task_ids]
         derived_strains = [tstrain.transform(symmop)
                            for tstrain, symmop in zip(task_strains, symmops)]
@@ -400,18 +413,21 @@ def process_elastic_calcs(defo_docs, opt_doc, tol=0.002):
         derived_stresses = [tstress.transform(symmop)
                             for tstress in task_stresses]
         input_docs = [{"task_id": task_id, "strain": task_strain,
-                       "stress": task_stress, "symmop": symmop}
+                       "cauchy_stress": task_stress, "symmop": symmop}
                       for task_id, task_strain, task_stress, symmop
                       in zip(task_ids, task_strains, task_stresses, symmops)]
         calc = {"strain": strain,
-                "stress": np.average(derived_stresses, axis=0),
+                "cauchy_stress": Stress(np.average(derived_stresses, axis=0)),
                 "deformation": strain.deformation_matrix,
                 "input_tasks": input_docs,
                 "type": "derived"}
+        calc['pk_stress'] = calc['cauchy_stress'].piola_kirchoff_2(
+            calc['deformation'])
         derived_calcs.append(calc)
 
     #assert len(all_calcs) <= 24
     return explicit_calcs, derived_calcs
+
 
 # TODO: move to pymatgen
 def set_tkd_value(tensor_keyed_dict, tensor, set_value, allclose_kwargs=None):
@@ -421,6 +437,7 @@ def set_tkd_value(tensor_keyed_dict, tensor, set_value, allclose_kwargs=None):
         if np.allclose(tensor, tkey, **allclose_kwargs):
             tensor_keyed_dict[tkey] = set_value
             return
+
 
 def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None,
                      loosen_if_no_match=True):
