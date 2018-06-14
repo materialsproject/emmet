@@ -1,6 +1,7 @@
 import click, os, yaml, sys, logging, operator
-from collections import Counter
+from collections import Counter, OrderedDict
 from pymongo import MongoClient
+from pymongo.errors import CursorNotFound
 from pymongo.collection import ReturnDocument
 from pymatgen.analysis.structure_prediction.volume_predictor import DLSVolumePredictor
 from pymatgen import Structure
@@ -140,20 +141,29 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
 
     structure_keys = ['snl_id', 'lattice', 'sites', 'charge', 'about._materialsproject.task_id']
     NO_POTCARS = ['Po', 'At', 'Rn', 'Fr', 'Ra', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr']
-    base_query = {'is_ordered': True, 'is_valid': True, 'nsites': {'$lt': 200}, 'sites.label': {'$nin': ['He', 'Ar', 'Ne']}} # exclude no electroneg elements
+    no_electroneg = ['He', 'He0+', 'Ar', 'Ar0+', 'Ne', 'Ne0+']
+    base_query = {'is_ordered': True, 'is_valid': True, 'nsites': {'$lt': 200}, 'sites.label': {'$nin': no_electroneg}}
     task_base_query = {'_mpworks_meta': {'$exists': 0}}
     vp = DLSVolumePredictor()
 
-    ensure_indexes(['snl_id', 'reduced_cell_formula', 'about.remarks', 'sites.label'], [snl_coll])
+    ensure_indexes(['snl_id', 'reduced_cell_formula', 'about.remarks', 'sites.label', 'nsites', 'nelements'], [snl_coll])
 
-    tags = [tag]
+    tags = []
     if tag is None:
-        tags = dict(
-            (t, snl_coll.count({'$and': [{'about.remarks': t}, exclude]}))
-            for t in snl_coll.find(exclude).distinct('about.remarks') if t is not None
-        )
+        query = dict(exclude)
+        query.update(base_query)
+        remarks = filter(None, snl_coll.find(query).distinct('about.remarks'))
+        for t in remarks:
+            query = {'$and': [{'about.remarks': t}, exclude]}
+            query.update(base_query)
+            tags.append((t, snl_coll.count(query)))
         tags = sorted(tags.items(), key=operator.itemgetter(1), reverse=True)
-        print(len(tags), 'tags in source collection')
+        print(len(tags), 'tags in source collection => TOP10:')
+        print('\n'.join(['{} ({})'.format(*t) for t in tags[:10]]))
+    else:
+        query = {'$and': [{'about.remarks': tag}, exclude]}
+        query.update(base_query)
+        tags = [(tag, snl_coll.count(query))]
 
     canonical_task_structures = {}
     grouped_workflow_structures = {}
@@ -174,217 +184,229 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
 
         print('aggregate', ndocs, 'structures for', tag, '...')
         structure_groups = snl_coll.aggregate([
-            {'$match': query}, {'$group': {
+            {'$match': query}, {'$sort': OrderedDict([('nelements', 1), ('nsites', 1)])},
+            {'$group': {
                 '_id': '$reduced_cell_formula',
                 'structures': {'$push': dict((k.split('.')[-1], '${}'.format(k)) for k in structure_keys)}
             }}
-        ], allowDiskUse=True, batchSize=50)
+        ], allowDiskUse=True, batchSize=1)
 
         print('loop formulas for', tag, '...')
         counter = Counter()
         structures, canonical_structures = {}, {}
 
-        for idx_group, group in enumerate(structure_groups):
+        try:
+            for idx_group, group in enumerate(structure_groups):
 
-            counter['formulas'] += 1
-            formula = group['_id']
-            if formula not in structures:
-                structures[formula] = {}
-            if formula not in canonical_structures:
-                canonical_structures[formula] = {}
-            if idx_group and not idx_group%1000:
-                print(idx_group, '...')
+                counter['formulas'] += 1
+                formula = group['_id']
+                if formula not in structures:
+                    structures[formula] = {}
+                if formula not in canonical_structures:
+                    canonical_structures[formula] = {}
+                if idx_group and not idx_group%1000:
+                    print(idx_group, '...')
 
-            for dct in group['structures']:
-                if mongo_handler.collection.find_one({'level': 'WARNING', 'formula': formula, 'snl_id': dct['snl_id']}):
-                    continue # already checked
-                counter['structures'] += 1
-                s = Structure.from_dict(dct)
-                s.snl_id = dct['snl_id']
-                s.task_id = dct.get('task_id')
-                s.remove_oxidation_states()
-                try:
-                    sgnum = get_sg(s)
-                except Exception as ex:
-                    s.to(fmt='json', filename='sgnum-{}.json'.format(s.snl_id))
-                    print(str(ex))
-                    sys.exit(0)
-                if sgnum not in structures[formula]:
-                    structures[formula][sgnum] = []
-                structures[formula][sgnum].append(s)
-
-            for sgnum, slist in structures[formula].items():
-                for g in group_structures(slist):
-                    if sgnum not in canonical_structures[formula]:
-                        canonical_structures[formula][sgnum] = []
-                    canonical_structures[formula][sgnum].append(g[0])
-                    if len(g) > 1:
-                        for s in g[1:]:
-                            logger.warning('duplicate structure', extra={
-                                'formula': formula, 'snl_id': s.snl_id, 'canonical_snl_id': g[0].snl_id
-                            })
-
-            if not canonical_structures[formula]:
-                continue
-            #print(sum([len(x) for x in canonical_structures[formula].values()]), 'canonical structure(s) for', formula)
-
-            if formula not in canonical_workflow_structures:
-                canonical_workflow_structures[formula], grouped_workflow_structures[formula] = {}, {}
-                workflows = lpad.workflows.find({'metadata.formula_pretty': formula}, {'metadata.structure': 1, 'nodes': 1, 'parent_links': 1})
-                if workflows.count() > 0:
-                    workflow_structures = {}
-                    for wf in workflows:
-                        s = Structure.from_dict(wf['metadata']['structure'])
-                        s.remove_oxidation_states()
-                        sgnum = get_sg(s)
-                        if sgnum in canonical_structures[formula]:
-                            if sgnum not in workflow_structures:
-                                workflow_structures[sgnum] = []
-                            s.fw_id = [n for n in wf['nodes'] if str(n) not in wf['parent_links']][0] # first node = SO firework
-                            workflow_structures[sgnum].append(s)
-                    if workflow_structures:
-                        for sgnum, slist in workflow_structures.items():
-                            grouped_workflow_structures[formula][sgnum] = [g for g in group_structures(slist)]
-                            canonical_workflow_structures[formula][sgnum] = [g[0] for g in grouped_workflow_structures[formula][sgnum]]
-                        #print(sum([len(x) for x in canonical_workflow_structures[formula].values()]), 'canonical workflow structure(s) for', formula)
-
-            for idx_canonical, (sgnum, slist) in enumerate(canonical_structures[formula].items()):
-
-                for struc in slist:
-
+                for dct in group['structures']:
+                    if mongo_handler.collection.find_one({'level': 'WARNING', 'formula': formula, 'snl_id': dct['snl_id']}):
+                        continue # already checked
+                    mongo_handler.collection.remove({'level': 'ERROR', 'formula': formula, 'snl_id': dct['snl_id']}) # avoid dups
+                    counter['structures'] += 1
+                    s = Structure.from_dict(dct)
+                    s.snl_id = dct['snl_id']
+                    s.task_id = dct.get('task_id')
+                    s.remove_oxidation_states()
                     try:
-                        struct = vp.get_predicted_structure(struc)
-                        struct.snl_id, struct.task_id = struc.snl_id, struc.task_id
+                        sgnum = get_sg(s)
                     except Exception as ex:
-                        print('Structure for SNL', struc.snl_id, '--> VP error: use original structure!')
-                        print(ex)
-                        struct = struc
-
-                    if not structures_match(struct, struc):
-                        print('Structure for SNL', struc.snl_id, '--> VP mismatch: use original structure!')
-                        struct = struc
-
-                    wf_found, readd_wf = False, False
-                    if sgnum in canonical_workflow_structures[formula] and canonical_workflow_structures[formula][sgnum]:
-                        for sidx, s in enumerate(canonical_workflow_structures[formula][sgnum]):
-                            if structures_match(struct, s):
-                                msg = 'Structure for SNL {} already added in WF {}'.format(struct.snl_id, s.fw_id)
-                                print(msg)
-                                if struct.task_id is not None:
-                                    task_query = {'task_id': struct.task_id}
-                                    task_query.update(task_base_query)
-                                    task = tasks_coll.find_one(task_query, ['input.structure'])
-                                    if task:
-                                        s_task = Structure.from_dict(task['input']['structure'])
-                                        s_task.remove_oxidation_states()
-                                        if not structures_match(struct, s_task):
-                                            msg = '  --> ERROR: Structure for SNL {} does not match {}'.format(struct.snl_id, struct.task_id)
-                                            print(msg)
-                                            logger.error(msg, extra={
-                                                'formula': formula, 'snl_id': struct.snl_id, 'error': 'SNL-TASK structure mismatch'
-                                            })
-                                            counter['snl-task_mismatch'] += 1
-                                        else:
-                                            msg = '  --> OK: workflow resulted in matching task {}'.format(struct.task_id)
-                                            print(msg)
-                                            logger.warning(msg, extra={
-                                                'formula': formula, 'snl_id': struct.snl_id, 'task_id': struct.task_id
-                                            })
-                                    else:
-                                        print('  --> did not find task', struct.task_id, 'for WF', s.fw_id)
-                                        fw_ids = [x.fw_id for x in grouped_workflow_structures[formula][sgnum][sidx]]
-                                        fws = lpad.fireworks.find({'fw_id': {'$in': fw_ids}}, ['fw_id', 'spec._tasks'])
-                                        fw_found = False
-                                        for fw in fws:
-                                            if fw['spec']['_tasks'][5]['additional_fields'].get('task_id') == struct.task_id:
-                                                msg = '  --> OK: workflow {} will result in intended task-id {}'.format(fw['fw_id'], struct.task_id)
-                                                print(msg)
-                                                logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'task_id': struct.task_id})
-                                                fw_found = True
-                                                break
-                                        if not fw_found:
-                                            print('  --> no WF with enforced task-id', struct.task_id, '-> re-add workflow')
-                                            readd_wf = True
-                                            break
-                                else:
-                                    logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': s.fw_id})
-                                wf_found = True
-                                break
-
-                    if wf_found:
+                        s.to(fmt='json', filename='sgnum-{}.json'.format(s.snl_id))
+                        msg = 'SNL {}: {}'.format(s.snl_id, ex)
+                        logger.error(msg, extra={'formula': formula, 'snl_id': s.snl_id, 'error': str(ex)})
                         continue
+                    if sgnum not in structures[formula]:
+                        structures[formula][sgnum] = []
+                    structures[formula][sgnum].append(s)
 
-                    # need to check tasks b/c not every task is guaranteed to have a workflow (e.g. VASP dir parsing)
-                    if not readd_wf:
+                for sgnum, slist in structures[formula].items():
+                    for g in group_structures(slist):
+                        if sgnum not in canonical_structures[formula]:
+                            canonical_structures[formula][sgnum] = []
+                        canonical_structures[formula][sgnum].append(g[0])
+                        if len(g) > 1:
+                            for s in g[1:]:
+                                logger.warning('duplicate structure', extra={
+                                    'formula': formula, 'snl_id': s.snl_id, 'canonical_snl_id': g[0].snl_id
+                                })
+
+                if not canonical_structures[formula]:
+                    continue
+                canonical_structures_list = [x for sublist in canonical_structures[formula].values() for x in sublist]
+
+                if formula not in canonical_workflow_structures:
+                    canonical_workflow_structures[formula], grouped_workflow_structures[formula] = {}, {}
+                    workflows = lpad.workflows.find({'metadata.formula_pretty': formula}, {'metadata.structure': 1, 'nodes': 1, 'parent_links': 1})
+                    if workflows.count() > 0:
+                        workflow_structures = {}
+                        for wf in workflows:
+                            s = Structure.from_dict(wf['metadata']['structure'])
+                            s.remove_oxidation_states()
+                            sgnum = get_sg(s)
+                            if sgnum in canonical_structures[formula]:
+                                if sgnum not in workflow_structures:
+                                    workflow_structures[sgnum] = []
+                                s.fw_id = [n for n in wf['nodes'] if str(n) not in wf['parent_links']][0] # first node = SO firework
+                                workflow_structures[sgnum].append(s)
+                        if workflow_structures:
+                            for sgnum, slist in workflow_structures.items():
+                                grouped_workflow_structures[formula][sgnum] = [g for g in group_structures(slist)]
+                                canonical_workflow_structures[formula][sgnum] = [g[0] for g in grouped_workflow_structures[formula][sgnum]]
+                            #print(sum([len(x) for x in canonical_workflow_structures[formula].values()]), 'canonical workflow structure(s) for', formula)
+
+                for idx_canonical, (sgnum, slist) in enumerate(canonical_structures[formula].items()):
+
+                    for struc in slist:
+
                         try:
-                            if formula not in canonical_task_structures:
-                                canonical_task_structures[formula] = {}
-                                task_query = {'formula_pretty': formula}
-                                task_query.update(task_base_query)
-                                tasks = tasks_coll.find(task_query, {'input.structure': 1, 'task_id': 1, 'orig_inputs': 1})
-                                if tasks.count() > 0:
-                                    task_structures = {}
-                                    for task in tasks:
-                                        task_label = task_type(task['orig_inputs'], include_calc_type=False)
-                                        if task_label == "Structure Optimization":
-                                            s = Structure.from_dict(task['input']['structure'])
-                                            sg = get_sg(s)
-                                            if sg in canonical_structures[formula]:
-                                                if sg not in task_structures:
-                                                    task_structures[sg] = []
-                                                s.task_id = task['task_id']
-                                                task_structures[sg].append(s)
-                                    if task_structures:
-                                        for sg, slist in task_structures.items():
-                                            canonical_task_structures[formula][sg] = [g[0] for g in group_structures(slist)]
-                                        #print(sum([len(x) for x in canonical_task_structures[formula].values()]), 'canonical task structure(s) for', formula)
+                            struct = vp.get_predicted_structure(struc)
+                            struct.snl_id, struct.task_id = struc.snl_id, struc.task_id
+                        except Exception as ex:
+                            print('Structure for SNL', struc.snl_id, '--> VP error: use original structure!')
+                            print(ex)
+                            struct = struc
 
-                            matched_task_ids = []
-                            if sgnum in canonical_task_structures[formula] and canonical_task_structures[formula][sgnum]:
-                                for s in canonical_task_structures[formula][sgnum]:
-                                    if structures_match(struct, s):
-                                        print('Structure for SNL', struct.snl_id, 'already added in task', s.task_id)
-                                        matched_task_ids.append(s.task_id)
-                                if struct.task_id is not None and matched_task_ids and struct.task_id not in matched_task_ids:
-                                    print('  --> ERROR: task', struct.task_id, 'not in', matched_task_ids)
-                                    raise ValueError
-                            if matched_task_ids:
-                                logger.warning('matched task ids', extra={'formula': formula, 'snl_id': struct.snl_id, 'task_id(s)': matched_task_ids})
-                                continue
-                        except ValueError as ex:
-                            counter['unmatched_task_id'] += 1
+                        if not structures_match(struct, struc):
+                            print('Structure for SNL', struc.snl_id, '--> VP mismatch: use original structure!')
+                            struct = struc
+
+                        wf_found, readd_wf = False, False
+                        if sgnum in canonical_workflow_structures[formula] and canonical_workflow_structures[formula][sgnum]:
+                            for sidx, s in enumerate(canonical_workflow_structures[formula][sgnum]):
+                                if structures_match(struct, s):
+                                    msg = 'Structure for SNL {} already added in WF {}'.format(struct.snl_id, s.fw_id)
+                                    print(msg)
+                                    if struct.task_id is not None:
+                                        task_query = {'task_id': struct.task_id}
+                                        task_query.update(task_base_query)
+                                        task = tasks_coll.find_one(task_query, ['input.structure'])
+                                        if task:
+                                            s_task = Structure.from_dict(task['input']['structure'])
+                                            s_task.remove_oxidation_states()
+                                            if not structures_match(struct, s_task):
+                                                msg = '  --> ERROR: Structure for SNL {} does not match {}'.format(struct.snl_id, struct.task_id)
+                                                print(msg)
+                                                logger.error(msg, extra={
+                                                    'formula': formula, 'snl_id': struct.snl_id, 'error': 'SNL-TASK structure mismatch'
+                                                })
+                                                counter['snl-task_mismatch'] += 1
+                                            else:
+                                                msg = '  --> OK: workflow resulted in matching task {}'.format(struct.task_id)
+                                                print(msg)
+                                                logger.warning(msg, extra={
+                                                    'formula': formula, 'snl_id': struct.snl_id, 'task_id': struct.task_id
+                                                })
+                                        else:
+                                            print('  --> did not find task', struct.task_id, 'for WF', s.fw_id)
+                                            fw_ids = [x.fw_id for x in grouped_workflow_structures[formula][sgnum][sidx]]
+                                            fws = lpad.fireworks.find({'fw_id': {'$in': fw_ids}}, ['fw_id', 'spec._tasks'])
+                                            fw_found = False
+                                            for fw in fws:
+                                                if fw['spec']['_tasks'][5]['additional_fields'].get('task_id') == struct.task_id:
+                                                    msg = '  --> OK: workflow {} will result in intended task-id {}'.format(fw['fw_id'], struct.task_id)
+                                                    print(msg)
+                                                    logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'task_id': struct.task_id})
+                                                    fw_found = True
+                                                    break
+                                            if not fw_found:
+                                                print('  --> no WF with enforced task-id', struct.task_id, '-> re-add workflow')
+                                                readd_wf = True
+                                                break
+                                    else:
+                                        logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': s.fw_id})
+                                    wf_found = True
+                                    break
+
+                        if wf_found:
                             continue
 
-                    msg = 'Structure for SNL {} --> ADD WORKFLOW'.format(struct.snl_id)
-                    if struct.task_id is not None:
-                        msg += ' --> enforcing task-id {}'.format(struct.task_id)
-                    print(msg)
+                        # need to check tasks b/c not every task is guaranteed to have a workflow (e.g. VASP dir parsing)
+                        if not readd_wf:
+                            try:
+                                if formula not in canonical_task_structures:
+                                    canonical_task_structures[formula] = {}
+                                    task_query = {'formula_pretty': formula}
+                                    task_query.update(task_base_query)
+                                    tasks = tasks_coll.find(task_query, {'input.structure': 1, 'task_id': 1, 'orig_inputs': 1})
+                                    if tasks.count() > 0:
+                                        task_structures = {}
+                                        for task in tasks:
+                                            task_label = task_type(task['orig_inputs'], include_calc_type=False)
+                                            if task_label == "Structure Optimization":
+                                                s = Structure.from_dict(task['input']['structure'])
+                                                sg = get_sg(s)
+                                                if sg in canonical_structures[formula]:
+                                                    if sg not in task_structures:
+                                                        task_structures[sg] = []
+                                                    s.task_id = task['task_id']
+                                                    task_structures[sg].append(s)
+                                        if task_structures:
+                                            for sg, slist in task_structures.items():
+                                                canonical_task_structures[formula][sg] = [g[0] for g in group_structures(slist)]
+                                            #print(sum([len(x) for x in canonical_task_structures[formula].values()]), 'canonical task structure(s) for', formula)
 
-                    no_potcars = set(NO_POTCARS) & set(struct.composition.elements)
-                    if len(no_potcars) > 0:
-                        msg = 'Structure for SNL {} --> NO POTCARS: {}'.format(struct.snl_id, no_potcars)
-                        print(msg)
-                        logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'no_potcars': no_potcars})
-                        continue
+                                matched_task_ids = []
+                                if sgnum in canonical_task_structures[formula] and canonical_task_structures[formula][sgnum]:
+                                    for s in canonical_task_structures[formula][sgnum]:
+                                        if structures_match(struct, s):
+                                            print('Structure for SNL', struct.snl_id, 'already added in task', s.task_id)
+                                            matched_task_ids.append(s.task_id)
+                                    if struct.task_id is not None and matched_task_ids and struct.task_id not in matched_task_ids:
+                                        print('  --> ERROR: task', struct.task_id, 'not in', matched_task_ids)
+                                        raise ValueError
+                                if matched_task_ids:
+                                    logger.warning('matched task ids', extra={'formula': formula, 'snl_id': struct.snl_id, 'task_id(s)': matched_task_ids})
+                                    continue
+                            except ValueError as ex:
+                                counter['unmatched_task_id'] += 1
+                                continue
 
-                    try:
-                        wf = wf_structure_optimization(struct, c={'ADD_MODIFY_INCAR': True})
-                        wf = add_trackers(wf)
-                        wf = add_tags(wf, [tag])
+                        msg = 'Structure for SNL {} --> ADD WORKFLOW'.format(struct.snl_id)
                         if struct.task_id is not None:
-                            wf = add_additional_fields_to_taskdocs(wf, update_dict={'task_id': struct.task_id})
-                        #if struct.icsd_id is not None:
-                        #    wf = add_additional_fields_to_taskdocs(wf, update_dict={'icsd_id': struct.icsd_id})
-                    except:
-                        msg = 'Structure for SNL {} --> SKIP: Could not make workflow'.format(struct.snl_id)
+                            msg += ' --> enforcing task-id {}'.format(struct.task_id)
                         print(msg)
-                        logger.error(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'error': 'could not make workflow'})
-                        continue
 
-                    if insert:
-                        old_new = lpad.add_wf(wf)
-                        logger.warning('workflow added', extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': list(old_new.values())[0]})
-                    counter['add(ed)'] += 1
+                        no_potcars = set(NO_POTCARS) & set(struct.composition.elements)
+                        if len(no_potcars) > 0:
+                            msg = 'Structure for SNL {} --> NO POTCARS: {}'.format(struct.snl_id, no_potcars)
+                            print(msg)
+                            logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'no_potcars': no_potcars})
+                            continue
+
+                        try:
+                            wf = wf_structure_optimization(struct, c={'ADD_MODIFY_INCAR': True})
+                            wf = add_trackers(wf)
+                            wf = add_tags(wf, [tag])
+                            if struct.task_id is not None:
+                                wf = add_additional_fields_to_taskdocs(wf, update_dict={'task_id': struct.task_id})
+                            #if struct.icsd_id is not None:
+                            #    wf = add_additional_fields_to_taskdocs(wf, update_dict={'icsd_id': struct.icsd_id})
+                        except:
+                            msg = 'Structure for SNL {} --> SKIP: Could not make workflow'.format(struct.snl_id)
+                            print(msg)
+                            logger.error(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'error': 'could not make workflow'})
+                            continue
+
+                        if insert:
+                            old_new = lpad.add_wf(wf)
+                            logger.warning('workflow added', extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': list(old_new.values())[0]})
+                        counter['add(ed)'] += 1
+
+        except CursorNotFound as ex:
+            print(ex)
+            sites_elements = [
+                (len(set([e.symbol for e in x.composition.elements])), x.num_sites)
+                for x in canonical_structures_list
+            ]
+            print(len(canonical_structures_list), 'canonical structure(s) for', formula, sites_elements)
 
         print(counter)
 
