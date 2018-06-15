@@ -54,16 +54,27 @@ def add_tasks(target_db_file, tag, insert):
         source_count = source.count(query)
         print('source / target:', source_count, '/', target.collection.count(query))
 
-        # skip tasks with task_id existing in target (have to be a string [mp-*, mvc-*])
-        source_task_ids = source.find(query).distinct('task_id')
-        source_mp_task_ids = [task_id for task_id in source_task_ids if isinstance(task_id, str)]
-        skip_task_ids = target.collection.find({'task_id': {'$in': source_mp_task_ids}}).distinct('task_id')
+        # skip tasks with task_id existing in target and with matching dir_name (have to be a string [mp-*, mvc-*])
+        nr_source_mp_tasks, skip_task_ids = 0, []
+        for doc in source.find(query, ['task_id', 'dir_name']):
+            if isinstance(doc['task_id'], str):
+                nr_source_mp_tasks += 1
+                task_query = {'task_id': doc['task_id'], 'dir_name': doc['dir_name']}
+                if target.collection.count(task_query):
+                    skip_task_ids.append(doc['task_id'])
         if len(skip_task_ids):
-            print('skip', len(skip_task_ids), 'existing MP task ids out of', len(source_mp_task_ids))
+            print('skip', len(skip_task_ids), 'existing MP task ids out of', nr_source_mp_tasks)
 
         query.update({'task_id': {'$nin': skip_task_ids}})
         already_inserted_subdirs = [get_subdir(dn) for dn in target.collection.find(query).distinct('dir_name')]
-        subdirs = [get_subdir(dn) for dn in source.find(query).distinct('dir_name') if get_subdir(dn) not in already_inserted_subdirs]
+        subdirs = []
+        for doc in source.find(query, ['dir_name', 'task_id', 'retired_task_id']):
+            subdir = get_subdir(doc['dir_name'])
+            if subdir not in already_inserted_subdirs or 'retired_task_id' in doc:
+                entry = {'subdir': subdir}
+                if 'retired_task_id' in doc:
+                    entry.update({'task_id': doc['task_id']})
+                subdirs.append(entry)
         if len(subdirs) < 1:
             continue
 
@@ -72,11 +83,20 @@ def add_tasks(target_db_file, tag, insert):
             print('add --insert flag to actually add tasks to production')
             continue
 
-        for subdir in subdirs:
-            subdir_query = {'dir_name': {'$regex': '/{}$'.format(subdir)}}
+        for subdir_doc in subdirs:
+            subdir_query = {'dir_name': {'$regex': '/{}$'.format(subdir_doc['subdir'])}}
             doc = target.collection.find_one(subdir_query, {'task_id': 1})
             if doc:
-                print(subdir, 'already inserted as', doc['task_id'])
+                print(subdir_doc['subdir'], 'already inserted as', doc['task_id'])
+                if 'task_id' in subdir_doc and subdir_doc['task_id'] != doc['task_id']:
+                    target.collection.remove({'task_id': subdir_doc['task_id']})
+                    target.collection.update(
+                        {'task_id': doc['task_id']}, {
+                            '$set': {'task_id': subdir_doc['task_id'], 'retired_task_id': doc['task_id']},
+                            '$addToSet': {'tags': t}
+                        }
+                    )
+                    print('replaced task_id', doc['task_id'], 'with', subdir_doc['task_id'])
                 continue
 
             source_task_id = source.find_one(subdir_query, {'task_id': 1})['task_id']
@@ -118,7 +138,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
         snl_coll = None
         print('to be implemented')
         return
-    print('# SNLs:\t', snl_coll.count(exclude))
+    print(snl_coll.count(exclude), 'SNLs in', snl_coll.full_name)
 
     lpad = LaunchPad.auto_load()
 
@@ -132,12 +152,13 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
     if clear_logs:
         mongo_handler.collection.drop()
 
-    if alt_tasks_db_file is not None:
+    tasks_collections = OrderedDict()
+    tasks_collections[lpad.db.tasks.full_name] = lpad.db.tasks
+    if alt_tasks_db_file is not None: # TODO multiple alt_task_db_files?
         target = VaspCalcDb.from_db_file(alt_tasks_db_file, admin=True)
-        tasks_coll = target.collection
-    else:
-        tasks_coll = lpad.db.tasks
-    print('# tasks:', tasks_coll.count())
+        tasks_collections[target.collection.full_name] = target.collection
+    for full_name, tasks_coll in tasks_collections.items():
+        print(tasks_coll.count(), 'tasks in', full_name)
 
     structure_keys = ['snl_id', 'lattice', 'sites', 'charge', 'about._materialsproject.task_id']
     NO_POTCARS = ['Po', 'At', 'Rn', 'Fr', 'Ra', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr']
@@ -168,6 +189,41 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
     canonical_task_structures = {}
     grouped_workflow_structures = {}
     canonical_workflow_structures = {}
+
+    def load_canonical_task_structures(formula, full_name):
+        if full_name not in canonical_task_structures:
+            canonical_task_structures[full_name] = {}
+        if formula not in canonical_task_structures[full_name]:
+            canonical_task_structures[full_name][formula] = {}
+            task_query = {'formula_pretty': formula}
+            task_query.update(task_base_query)
+            tasks = tasks_collections[full_name].find(task_query, {'input.structure': 1, 'task_id': 1, 'orig_inputs': 1})
+            if tasks.count() > 0:
+                task_structures = {}
+                for task in tasks:
+                    task_label = task_type(task['orig_inputs'], include_calc_type=False)
+                    if task_label == "Structure Optimization":
+                        s = Structure.from_dict(task['input']['structure'])
+                        sg = get_sg(s)
+                        if sg in canonical_structures[formula]:
+                            if sg not in task_structures:
+                                task_structures[sg] = []
+                            s.task_id = task['task_id']
+                            task_structures[sg].append(s)
+                if task_structures:
+                    for sg, slist in task_structures.items():
+                        canonical_task_structures[full_name][formula][sg] = [g[0] for g in group_structures(slist)]
+                    #print(sum([len(x) for x in canonical_task_structures[full_name][formula].values()]), 'canonical task structure(s) for', formula)
+
+    def find_matching_canonical_task_structures(formula, struct, full_name):
+        matched_task_ids = []
+        if sgnum in canonical_task_structures[full_name][formula] and canonical_task_structures[full_name][formula][sgnum]:
+            for s in canonical_task_structures[full_name][formula][sgnum]:
+                if structures_match(struct, s):
+                    print('Structure for SNL', struct.snl_id, 'already added in task', s.task_id, 'in', full_name)
+                    matched_task_ids.append(s.task_id)
+        return matched_task_ids
+
 
     for tag, ndocs in tags:
         query = {'$and': [{'about.remarks': tag}, exclude]}
@@ -278,7 +334,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                             print('Structure for SNL', struc.snl_id, '--> VP mismatch: use original structure!')
                             struct = struc
 
-                        wf_found, readd_wf = False, False
+                        wf_found = False
                         if sgnum in canonical_workflow_structures[formula] and canonical_workflow_structures[formula][sgnum]:
                             for sidx, s in enumerate(canonical_workflow_structures[formula][sgnum]):
                                 if structures_match(struct, s):
@@ -287,7 +343,10 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                                     if struct.task_id is not None:
                                         task_query = {'task_id': struct.task_id}
                                         task_query.update(task_base_query)
-                                        task = tasks_coll.find_one(task_query, ['input.structure'])
+                                        for full_name in reversed(tasks_collections):
+                                            task = tasks_collections[full_name].find_one(task_query, ['input.structure'])
+                                            if task:
+                                                break
                                         if task:
                                             s_task = Structure.from_dict(task['input']['structure'])
                                             s_task.remove_oxidation_states()
@@ -317,9 +376,38 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                                                     fw_found = True
                                                     break
                                             if not fw_found:
-                                                print('  --> no WF with enforced task-id', struct.task_id, '-> re-add workflow')
-                                                readd_wf = True
-                                                break
+                                                print('  --> no WF with enforced task-id', struct.task_id)
+                                                fw = lpad.fireworks.find_one({'fw_id': s.fw_id}, {'state': 1})
+                                                print('  -->', s.fw_id, fw['state'])
+                                                if fw['state'] == 'COMPLETED':
+                                                    # the task is in lpad.db.tasks with different integer task_id
+                                                    #    => find task => overwrite task_id => add_tasks will pick it up
+                                                    full_name = list(tasks_collections.keys())[0]
+                                                    load_canonical_task_structures(formula, full_name)
+                                                    matched_task_ids = find_matching_canonical_task_structures(formula, struct, full_name)
+                                                    if len(matched_task_ids) == 1:
+                                                        tasks_collections[full_name].update(
+                                                            {'task_id': matched_task_ids[0]}, {
+                                                                '$set': {'task_id': struct.task_id, 'retired_task_id': matched_task_ids[0]},
+                                                                '$addToSet': {'tags': tag}
+                                                            }
+                                                        )
+                                                        print(' --> replaced task_id', matched_task_ids[0], 'with', struct.task_id, 'in', full_name)
+                                                    elif matched_task_ids:
+                                                        msg = '  --> ERROR: multiple tasks {} for completed WF {}'.format(matched_task_ids, s.fw_id)
+                                                        print(msg)
+                                                        logger.error(msg, extra={
+                                                            'formula': formula, 'snl_id': struct.snl_id, 'error': 'Multiple tasks for Completed WF'
+                                                        })
+                                                    else:
+                                                        msg = '  --> ERROR: task for completed WF {} does not exist!?'.format(s.fw_id)
+                                                        print(msg)
+                                                        logger.error(msg, extra={
+                                                            'formula': formula, 'snl_id': struct.snl_id, 'error': 'Task for Completed WF missing'
+                                                        })
+                                                else:
+                                                    # update WF to include task_id as additional_field
+                                                    sys.exit(0)
                                     else:
                                         logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': s.fw_id})
                                     wf_found = True
@@ -329,45 +417,22 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                             continue
 
                         # need to check tasks b/c not every task is guaranteed to have a workflow (e.g. VASP dir parsing)
-                        if not readd_wf:
-                            try:
-                                if formula not in canonical_task_structures:
-                                    canonical_task_structures[formula] = {}
-                                    task_query = {'formula_pretty': formula}
-                                    task_query.update(task_base_query)
-                                    tasks = tasks_coll.find(task_query, {'input.structure': 1, 'task_id': 1, 'orig_inputs': 1})
-                                    if tasks.count() > 0:
-                                        task_structures = {}
-                                        for task in tasks:
-                                            task_label = task_type(task['orig_inputs'], include_calc_type=False)
-                                            if task_label == "Structure Optimization":
-                                                s = Structure.from_dict(task['input']['structure'])
-                                                sg = get_sg(s)
-                                                if sg in canonical_structures[formula]:
-                                                    if sg not in task_structures:
-                                                        task_structures[sg] = []
-                                                    s.task_id = task['task_id']
-                                                    task_structures[sg].append(s)
-                                        if task_structures:
-                                            for sg, slist in task_structures.items():
-                                                canonical_task_structures[formula][sg] = [g[0] for g in group_structures(slist)]
-                                            #print(sum([len(x) for x in canonical_task_structures[formula].values()]), 'canonical task structure(s) for', formula)
-
-                                matched_task_ids = []
-                                if sgnum in canonical_task_structures[formula] and canonical_task_structures[formula][sgnum]:
-                                    for s in canonical_task_structures[formula][sgnum]:
-                                        if structures_match(struct, s):
-                                            print('Structure for SNL', struct.snl_id, 'already added in task', s.task_id)
-                                            matched_task_ids.append(s.task_id)
-                                    if struct.task_id is not None and matched_task_ids and struct.task_id not in matched_task_ids:
-                                        print('  --> ERROR: task', struct.task_id, 'not in', matched_task_ids)
-                                        raise ValueError
-                                if matched_task_ids:
-                                    logger.warning('matched task ids', extra={'formula': formula, 'snl_id': struct.snl_id, 'task_id(s)': matched_task_ids})
-                                    continue
-                            except ValueError as ex:
-                                counter['unmatched_task_id'] += 1
+                        try:
+                            matched_task_ids = OrderedDict()
+                            for full_name in reversed(tasks_collections):
+                                load_canonical_task_structures(formula, full_name)
+                                matched_task_ids[full_name] = find_matching_canonical_task_structures(formula, struct, full_name)
+                                if struct.task_id is not None and matched_task_ids[full_name] and struct.task_id not in matched_task_ids[full_name]:
+                                    print('  --> ERROR: task', struct.task_id, 'not in', matched_task_ids[full_name])
+                                    raise ValueError
+                                if matched_task_ids[full_name]:
+                                    break
+                            if any(matched_task_ids.values()):
+                                logger.warning('matched task ids', extra={'formula': formula, 'snl_id': struct.snl_id, 'task_id(s)': matched_task_ids})
                                 continue
+                        except ValueError as ex:
+                            counter['unmatched_task_id'] += 1
+                            continue
 
                         msg = 'Structure for SNL {} --> ADD WORKFLOW'.format(struct.snl_id)
                         if struct.task_id is not None:
