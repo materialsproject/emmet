@@ -41,8 +41,8 @@ class ElasticBuilder(Builder):
             materials (Store): Store of materials properties
             query (dict): dictionary to limit tasks to be analyzed
             incremental (bool): whether or not to use a lu_filter based
-                on the current datetime, is set to True if target
-                is empty, but false if not
+                on the current datetime, is set to False if target
+                is empty, but True if not
         """
 
         self.tasks = tasks
@@ -92,13 +92,12 @@ class ElasticBuilder(Builder):
 
         return_props = ['output', 'input', 'completed_at',
                         'transmuter', 'task_id', 'task_label', 'formula_pretty']
-        self.logger.debug("Getting criteria")
+        self.logger.debug("Generating formula dict")
         material_dict = generate_formula_dict(self.materials)
 
         # formulas that have been updated since elasticity was last updated
         # Note that this makes the builder a bit slower if run for a complete
-        # build in non-incremental, note that elasticity collection uses
-        # pretty_formula whereas atomate uses formula_pretty
+        # build in non-incremental
         if self.incremental:
             self.logger.info("Ensuring indices on lu_field for sources/targets")
             self.tasks.ensure_index(self.tasks.lu_field)
@@ -121,7 +120,7 @@ class ElasticBuilder(Builder):
 
         for n, doc in enumerate(cmd_cursor):
             # TODO: refactor for task sets without structure opt
-            logger.debug("Processing formula {}, {} of {}".format(
+            logger.debug("Getting formula {}, {} of {}".format(
                 doc['_id']['formula_pretty'], n, len(formulas)))
             possible_mp_ids = material_dict.get(doc['_id']["formula_pretty"])
             if possible_mp_ids:
@@ -139,10 +138,12 @@ class ElasticBuilder(Builder):
         Returns:
             an elasticity document
         """
+
         all_docs = []
         tasks, material_dict = item
         if not tasks:
             return all_docs
+        logger.debug("Processing formula {}".format(tasks[0]['formula_pretty']))
 
         # Group tasks by material task_id (i.e. material id)
         grouped = group_by_task_id(material_dict, tasks)
@@ -514,7 +515,7 @@ def legacy_fit(strains, stresses):
         elastic tensor fit using the legacy functionality
 
     """
-    strains = [s.zeroed(0.0002) for s in strains]
+    strains = [s.zeroed(0.002) for s in strains]
     return ElasticTensor.from_independent_strains(strains, stresses)
 
 
