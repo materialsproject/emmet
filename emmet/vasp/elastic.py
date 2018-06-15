@@ -28,6 +28,8 @@ __email__ = "montoyjh@lbl.gov"
 
 logger = logging.getLogger(__name__)
 
+# TODO: I think the structure matching and the analysis builders
+#       should be separated into two builders
 
 class ElasticBuilder(Builder):
     def __init__(self, tasks, elasticity, materials,
@@ -297,11 +299,12 @@ def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
         list of summary documents corresponding to strains and stresses
     """
     structure = Structure.from_dict(opt_doc['output']['structure'])
-    explicit_calcs = []
-    # Process explicit calcs
+    # Process explicit calcs, store in dict keyed by strain
+    explicit_calcs = {}
     for doc in defo_docs:
         calc = {"type": "explicit", "input": doc["input"],
-                "output": doc["output"], "task_id": doc["task_id"]}
+                "output": doc["output"], "task_id": doc["task_id"],
+                "completed_at": doc["completed_at"]}
         deformed_structure = Structure.from_dict(doc['output']['structure'])
         defo = Deformation(calculate_deformation(structure, deformed_structure))
         # Warning if deformation is not equivalent to stored deformation
@@ -311,33 +314,33 @@ def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
             wmsg = "Inequivalent stored and calc. deformations."
             logger.debug(wmsg)
             calc["warnings"] = wmsg
-            import nose; nose.tools.set_trace()
-
         cauchy_stress = -0.1 * Stress(doc['output']['stress'])
         pk_stress = cauchy_stress.piola_kirchoff_2(defo)
+        strain = defo.green_lagrange_strain
         calc.update({"deformation": defo, "cauchy_stress": cauchy_stress,
-                     "strain": defo.green_lagrange_strain,
-                     "pk_stress": pk_stress})
-        explicit_calcs.append(calc)
-
-    # Create tensor-keyed dictionary of strains to docs
-    explicit_tkd = {Strain(d['strain']): d for d in explicit_calcs}
+                     "strain": strain, "pk_stress": pk_stress})
+        existing_value = get_tkd_value(explicit_calcs, strain)
+        if existing_value:
+            if doc['completed_at'] > existing_value['completed_at']:
+                set_tkd_value(explicit_calcs, strain, calc)
+        else:
+            explicit_calcs[strain] = calc
 
     # Determine all of the implicit calculations to include
     sga = SpacegroupAnalyzer(structure, symprec=0.1)
     symmops = sga.get_symmetry_operations(cartesian=True)
     derived_calcs_by_strain = {}
     allclose_kwargs = {"atol": 2e-3} # define this for the purposes of matching
-    for calc in explicit_calcs:
+    for strain, calc in explicit_calcs.items():
         # Generate all transformed strains
-        strain = Strain(calc['strain'])
+        # strain = calc['strain']
         task_id = calc['task_id']
         tstrains = [(symmop, strain.transform(symmop))
                     for symmop in symmops]
         # Filter strains by those which are independent and new
         tstrains = [(symmop, tstrain) for symmop, tstrain in tstrains
                     if tstrain.deformation_matrix.is_independent(tol) and \
-                    not get_tkd_value(explicit_tkd, tstrain, allclose_kwargs)]
+                    not get_tkd_value(explicit_calcs, tstrain, allclose_kwargs)]
         # Add surviving tensors to derived_strains dict
         for symmop, tstrain in tstrains:
             curr_set = get_tkd_value(derived_calcs_by_strain,
@@ -352,7 +355,7 @@ def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
                 derived_calcs_by_strain[tstrain] = [(symmop, calc['task_id'])]
 
     # Process derived calcs
-    explicit_calcs_by_id = {d['task_id']: d for d in explicit_calcs}
+    explicit_calcs_by_id = {d['task_id']: d for d in explicit_calcs.values()}
     derived_calcs = []
     for strain, calc_set in derived_calcs_by_strain.items():
         symmops, task_ids = zip(*calc_set)
@@ -382,7 +385,7 @@ def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
         derived_calcs.append(calc)
 
     #assert len(all_calcs) <= 24
-    return explicit_calcs, derived_calcs
+    return list(explicit_calcs.values()), derived_calcs
 
 
 # TODO: move to pymatgen
@@ -393,7 +396,6 @@ def set_tkd_value(tensor_keyed_dict, tensor, set_value, allclose_kwargs=None):
         if np.allclose(tensor, tkey, **allclose_kwargs):
             tensor_keyed_dict[tkey] = set_value
             return
->>>>>>> 151ce6c26c0b16f4f9f0f30f2f246188080d51eb
 
 
 def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None,
