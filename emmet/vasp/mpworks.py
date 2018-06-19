@@ -94,9 +94,14 @@ class MPWorksCompatibilityBuilder(Builder):
             else:
                 starting_taskid = counter_doc['c']
             counter.find_one_and_update({"_id": "taskid"}, {"$inc": {"c": count}})
+        else:
+            starting_task_id = 1
 
         for n, task in enumerate(tasks_to_convert):
-            new_task_id = n + starting_taskid
+            if self.redo_task_ids:
+                new_task_id = n + starting_taskid
+            else:
+                new_task_id = None
             logger.debug("Processing item: {}->{}, {} of {}".format(
                 task['task_id'], new_task_id, n, count))
             yield task, new_task_id

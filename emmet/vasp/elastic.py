@@ -227,7 +227,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
     all_calcs = explicit + derived
     stresses = [c.get("cauchy_stress") for c in all_calcs]
     strains = [c.get("strain") for c in all_calcs]
-    vstrains = [s.zeroed(0.0002).voigt for s in strains]
+    vstrains = [s.zeroed(0.002).voigt for s in strains]
     if np.linalg.matrix_rank(vstrains) == 6:
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
@@ -299,6 +299,7 @@ def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
         list of summary documents corresponding to strains and stresses
     """
     structure = Structure.from_dict(opt_doc['output']['structure'])
+    input_structure = Structure.from_dict(opt_doc['input']['structure'])
     # Process explicit calcs, store in dict keyed by strain
     explicit_calcs = {}
     for doc in defo_docs:
@@ -369,8 +370,8 @@ def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
             if not np.allclose(derived_strain, strain, atol=2e-3):
                 logger.info("Issue with derived strains")
                 raise ValueError("Issue with derived strains")
-        derived_stresses = [tstress.transform(symmop)
-                            for tstress in task_stresses]
+        derived_stresses = [tstress.transform(sop)
+                            for sop, tstress in zip(symmops, task_stresses)]
         input_docs = [{"task_id": task_id, "strain": task_strain,
                        "cauchy_stress": task_stress, "symmop": symmop}
                       for task_id, task_strain, task_stress, symmop
@@ -383,8 +384,6 @@ def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
         calc['pk_stress'] = calc['cauchy_stress'].piola_kirchoff_2(
             calc['deformation'])
         derived_calcs.append(calc)
-
-    #assert len(all_calcs) <= 24
     return list(explicit_calcs.values()), derived_calcs
 
 
