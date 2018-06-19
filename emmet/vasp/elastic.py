@@ -366,7 +366,7 @@ def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
         derived_strains = [tstrain.transform(symmop)
                            for tstrain, symmop in zip(task_strains, symmops)]
         for derived_strain in derived_strains:
-            if not np.allclose(derived_strain, strain):
+            if not np.allclose(derived_strain, strain, atol=2e-3):
                 logger.info("Issue with derived strains")
                 raise ValueError("Issue with derived strains")
         derived_stresses = [tstress.transform(symmop)
@@ -421,7 +421,6 @@ def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None,
     task_sets_by_mp_id = {}
     # Iterate over all set of optimizations/deformations
     for opt_task, defo_tasks in tasks_by_opt:
-        # import nose; nose.tools.set_trace()
         sm = structure_matcher or StructureMatcher(comparator=ElementComparator())
         structure = Structure.from_dict(opt_task['input']['structure'])
         match = False
@@ -459,7 +458,6 @@ def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None,
                     mp_id = c_id
                     match = True
                     break
-            # import nose; nose.tools.set_trace()
         if match:
             if mp_id in task_sets_by_mp_id:
                 task_sets_by_mp_id[mp_id].append((opt_task, defo_tasks))
