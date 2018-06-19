@@ -416,6 +416,7 @@ def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None,
         documents grouped by task_id from the materials
         collection
     """
+    materials_dict = {mp_id: Structure.from_dict(struct) for mp_id, struct in materials_dict.items()}
     tasks_by_opt = group_deformations_by_optimization_task(docs, tol)
     task_sets_by_mp_id = {}
     # Iterate over all set of optimizations/deformations
@@ -427,37 +428,18 @@ def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None,
         matches = {c_id: candidate for c_id, candidate in
                    materials_dict.items() if sm.fit(candidate, structure)}
         niter = 0
-        while len(matches) != 1 and niter < 5:
-            if len(matches) > 1:
-                logger.debug("Tightening sm criteria")
-                sm = StructureMatcher(sm.ltol * 0.5, sm.stol * 0.5,
-                                      sm.angle_tol * 0.5)
-            elif len(matches) < 1:
-                logger.debug("Loosening sm criteria")
-                sm = StructureMatcher(sm.ltol * 1.5, sm.stol * 1.5,
-                                      sm.angle_tol * 1.5)
+        while len(matches) < 1 and niter < 4:
+            logger.debug("Loosening sm criteria")
+            sm = StructureMatcher(sm.ltol * 2, sm.stol * 2,
+                                  sm.angle_tol * 2)
             matches = {c_id: candidate for c_id, candidate in
                        materials_dict.items() if sm.fit(candidate, structure)}
             niter += 1
-
-        # for c_id, candidate in materials_dict.items():
-        #     c_structure = Structure.from_dict(candidate)
-        #     if sm.fit(c_structure, structure):
-        #         mp_id = c_id
-        #         match = True
-        #         break
-        # TODO: this should be cleaner and not duplicate code
-        if not match and loosen_if_no_match:
-            logger.debug("Attempting match with looser SM criteria")
-            sm_loose = StructureMatcher(ltol=0.6, stol=1.0, angle_tol=5,
-                                        comparator=ElementComparator())
-            for c_id, candidate in materials_dict.items():
-                c_structure = Structure.from_dict(candidate)
-                if sm_loose.fit(c_structure, structure):
-                    mp_id = c_id
-                    match = True
-                    break
-        if match:
+        if matches:
+            # Get best match by closest density
+            sorted_ids = sorted(list(matches.keys()),
+                                key=lambda x: abs(matches[x].density - structure.density))
+            mp_id = sorted_ids[0]
             if mp_id in task_sets_by_mp_id:
                 task_sets_by_mp_id[mp_id].append((opt_task, defo_tasks))
             else:
@@ -618,8 +600,6 @@ def generate_formula_dict(materials_store, query=None):
     for result in tqdm.tqdm(results):
         formula = result['_id']['pretty_formula']
         task_ids = [d['task_id'] for d in result['docs']]
-        structures = [Structure.from_dict(d['structure'])
-                      for d in result['docs']]
-
+        structures = [d['structure'] for d in result['docs']]
         formula_dict[formula] = dict(zip(task_ids, structures))
     return formula_dict
