@@ -1,4 +1,5 @@
-import click, os, yaml, sys, logging, operator
+import click, os, yaml, sys, logging, operator, json
+from datetime import datetime
 from collections import Counter, OrderedDict
 from pymongo import MongoClient
 from pymongo.errors import CursorNotFound
@@ -27,12 +28,15 @@ def add_tasks(target_db_file, tag, insert):
 
     exclude = {'tags': {'$ne': 'deprecated'}}
 
+    if not insert:
+        print('DRY RUN: add --insert flag to actually add tasks to production')
+
     def get_subdir(dn):
         return dn.rsplit(os.sep, 1)[-1]
 
     lpad = LaunchPad.auto_load()
-    source = lpad.db.tasks
-    print('connected to source db with', source.count(), 'tasks')
+    source = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
+    print('connected to source db with', source.collection.count(), 'tasks')
 
     if not os.path.exists(target_db_file):
         print(target_db_file, 'not found!')
@@ -40,26 +44,26 @@ def add_tasks(target_db_file, tag, insert):
     target = VaspCalcDb.from_db_file(target_db_file, admin=True) # 'db_atomate.json'
     print('connected to target db with', target.collection.count(), 'tasks')
 
-    ensure_indexes(['task_id', 'tags', 'dir_name'], [source, target.collection])
+    ensure_indexes(['task_id', 'tags', 'dir_name', 'retired_task_id'], [source.collection, target.collection])
 
     tags = [tag]
     if tag is None:
-        tags = [t for t in source.find(exclude).distinct('tags') if t is not None]
+        tags = [t for t in source.collection.find(exclude).distinct('tags') if t is not None]
         print(len(tags), 'tags in source collection')
 
     for t in tags:
 
         print('### {} ###'.format(t))
         query = {'$and': [{'tags': t}, exclude]}
-        source_count = source.count(query)
+        source_count = source.collection.count(query)
         print('source / target:', source_count, '/', target.collection.count(query))
 
         # skip tasks with task_id existing in target and with matching dir_name (have to be a string [mp-*, mvc-*])
         nr_source_mp_tasks, skip_task_ids = 0, []
-        for doc in source.find(query, ['task_id', 'dir_name']):
+        for doc in source.collection.find(query, ['task_id', 'dir_name']):
             if isinstance(doc['task_id'], str):
                 nr_source_mp_tasks += 1
-                task_query = {'task_id': doc['task_id'], 'dir_name': doc['dir_name']}
+                task_query = {'task_id': doc['task_id'], '$or': [{'dir_name': doc['dir_name']}, {'_mpworks_meta': {'$exists': 0}}]}
                 if target.collection.count(task_query):
                     skip_task_ids.append(doc['task_id'])
         if len(skip_task_ids):
@@ -68,7 +72,7 @@ def add_tasks(target_db_file, tag, insert):
         query.update({'task_id': {'$nin': skip_task_ids}})
         already_inserted_subdirs = [get_subdir(dn) for dn in target.collection.find(query).distinct('dir_name')]
         subdirs = []
-        for doc in source.find(query, ['dir_name', 'task_id', 'retired_task_id']):
+        for doc in source.collection.find(query, ['dir_name', 'task_id', 'retired_task_id']):
             subdir = get_subdir(doc['dir_name'])
             if subdir not in already_inserted_subdirs or 'retired_task_id' in doc:
                 entry = {'subdir': subdir}
@@ -79,9 +83,6 @@ def add_tasks(target_db_file, tag, insert):
             continue
 
         print(len(subdirs), 'candidate tasks to insert')
-        if not insert:
-            print('add --insert flag to actually add tasks to production')
-            continue
 
         for subdir_doc in subdirs:
             subdir_query = {'dir_name': {'$regex': '/{}$'.format(subdir_doc['subdir'])}}
@@ -89,25 +90,46 @@ def add_tasks(target_db_file, tag, insert):
             if doc:
                 print(subdir_doc['subdir'], 'already inserted as', doc['task_id'])
                 if 'task_id' in subdir_doc and subdir_doc['task_id'] != doc['task_id']:
-                    target.collection.remove({'task_id': subdir_doc['task_id']})
-                    target.collection.update(
-                        {'task_id': doc['task_id']}, {
-                            '$set': {'task_id': subdir_doc['task_id'], 'retired_task_id': doc['task_id']},
-                            '$addToSet': {'tags': t}
-                        }
-                    )
+                    if insert:
+                        target.collection.remove({'task_id': subdir_doc['task_id']})
+                        target.collection.update(
+                            {'task_id': doc['task_id']}, {
+                                '$set': {'task_id': subdir_doc['task_id'], 'retired_task_id': doc['task_id'], 'last_updated': datetime.utcnow()},
+                                '$addToSet': {'tags': t}
+                            }
+                        )
                     print('replaced task_id', doc['task_id'], 'with', subdir_doc['task_id'])
                 continue
 
-            source_task_id = source.find_one(subdir_query, {'task_id': 1})['task_id']
-            print('retrieve', source_task_id, 'for', subdir)
+            source_task_id = source.collection.find_one(subdir_query, {'task_id': 1})['task_id']
+            print('retrieve', source_task_id, 'for', subdir_doc['subdir'])
             task_doc = source.retrieve_task(source_task_id)
 
             if isinstance(task_doc['task_id'], int):
-                c = target.db.counter.find_one_and_update({"_id": "taskid"}, {"$inc": {"c": 1}}, return_document=ReturnDocument.AFTER)["c"]
-                task_doc['task_id'] = 'mp-{}'.format(c)
+                if insert:
+                    c = target.db.counter.find_one_and_update({"_id": "taskid"}, {"$inc": {"c": 1}}, return_document=ReturnDocument.AFTER)["c"]
+                    task_doc['task_id'] = 'mp-{}'.format(c)
+            else:
+                task = target.collection.find_one({'task_id': task_doc['task_id']}, ['orig_inputs', 'output.structure'])
+                if task:
+                    task_label = task_type(task['orig_inputs'], include_calc_type=False)
+                    if task_label == "Structure Optimization":
+                        s1 = Structure.from_dict(task['output']['structure'])
+                        s2 = Structure.from_dict(task_doc['output']['structure'])
+                        if structures_match(s1, s2):
+                            if insert:
+                                target.collection.remove({'task_id': task_doc['task_id']})
+                            print('INFO: removed old task!')
+                        else:
+                            print('ERROR: structures do not match!')
+                            #json.dump({'old': s1.as_dict(), 'new': s2.as_dict()}, open('{}.json'.format(task_doc['task_id']), 'w'))
+                            continue
+                    else:
+                        print('ERROR: not a SO task!')
+                        continue
 
-            target.insert_task(task_doc, use_gridfs=True)
+            if insert:
+                target.insert_task(task_doc, use_gridfs=True)
 
 
 @cli.command()
@@ -169,7 +191,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
 
     ensure_indexes(['snl_id', 'reduced_cell_formula', 'about.remarks', 'sites.label', 'nsites', 'nelements'], [snl_coll])
 
-    tags = []
+    tags = OrderedDict()
     if tag is None:
         query = dict(exclude)
         query.update(base_query)
@@ -177,14 +199,14 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
         for t in remarks:
             query = {'$and': [{'about.remarks': t}, exclude]}
             query.update(base_query)
-            tags.append((t, snl_coll.count(query)))
-        tags = sorted(tags.items(), key=operator.itemgetter(1), reverse=True)
+            tags[t] = snl_coll.count(query)
+        tags = OrderedDict((el[0], el[1]) for el in sorted(tags.items(), key=operator.itemgetter(1), reverse=True))
         print(len(tags), 'tags in source collection => TOP10:')
-        print('\n'.join(['{} ({})'.format(*t) for t in tags[:10]]))
+        print('\n'.join(['{} ({})'.format(k, v) for k, v in list(tags.items())[:10]]))
     else:
         query = {'$and': [{'about.remarks': tag}, exclude]}
         query.update(base_query)
-        tags = [(tag, snl_coll.count(query))]
+        tags = OrderedDict((tag, snl_coll.count(query)))
 
     canonical_task_structures = {}
     grouped_workflow_structures = {}
@@ -225,7 +247,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
         return matched_task_ids
 
 
-    for tag, ndocs in tags:
+    for tag, ndocs in tags.items():
         query = {'$and': [{'about.remarks': tag}, exclude]}
         query.update(base_query)
 
@@ -316,7 +338,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                             for sgnum, slist in workflow_structures.items():
                                 grouped_workflow_structures[formula][sgnum] = [g for g in group_structures(slist)]
                                 canonical_workflow_structures[formula][sgnum] = [g[0] for g in grouped_workflow_structures[formula][sgnum]]
-                            #print(sum([len(x) for x in canonical_workflow_structures[formula].values()]), 'canonical workflow structure(s) for', formula)
+                            print(sum([len(x) for x in canonical_workflow_structures[formula].values()]), 'canonical workflow structure(s) for', formula)
 
                 for idx_canonical, (sgnum, slist) in enumerate(canonical_structures[formula].items()):
 
@@ -388,7 +410,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                                                     if len(matched_task_ids) == 1:
                                                         tasks_collections[full_name].update(
                                                             {'task_id': matched_task_ids[0]}, {
-                                                                '$set': {'task_id': struct.task_id, 'retired_task_id': matched_task_ids[0]},
+                                                                '$set': {'task_id': struct.task_id, 'retired_task_id': matched_task_ids[0], 'last_updated': datetime.utcnow()},
                                                                 '$addToSet': {'tags': tag}
                                                             }
                                                         )
@@ -406,8 +428,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                                                             'formula': formula, 'snl_id': struct.snl_id, 'error': 'Task for Completed WF missing'
                                                         })
                                                 else:
-                                                    # update WF to include task_id as additional_field
-                                                    sys.exit(0)
+                                                    print('  --> TODO: update {} WF to include task_id as additional_field'.format(fw['state'], s.fw_id))
                                     else:
                                         logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': s.fw_id})
                                     wf_found = True
@@ -428,16 +449,14 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                                 if matched_task_ids[full_name]:
                                     break
                             if any(matched_task_ids.values()):
-                                logger.warning('matched task ids', extra={'formula': formula, 'snl_id': struct.snl_id, 'task_id(s)': matched_task_ids})
+                                logger.warning('matched task ids', extra={
+                                    'formula': formula, 'snl_id': struct.snl_id,
+                                    'task_id(s)': dict((k.replace('.', '#'), v) for k, v in matched_task_ids.items())
+                                })
                                 continue
                         except ValueError as ex:
                             counter['unmatched_task_id'] += 1
                             continue
-
-                        msg = 'Structure for SNL {} --> ADD WORKFLOW'.format(struct.snl_id)
-                        if struct.task_id is not None:
-                            msg += ' --> enforcing task-id {}'.format(struct.task_id)
-                        print(msg)
 
                         no_potcars = set(NO_POTCARS) & set(struct.composition.elements)
                         if len(no_potcars) > 0:
@@ -460,9 +479,14 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                             logger.error(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'error': 'could not make workflow'})
                             continue
 
+                        msg = 'Structure for SNL {} --> ADD WORKFLOW'.format(struct.snl_id)
+                        if struct.task_id is not None:
+                            msg += ' --> enforcing task-id {}'.format(struct.task_id)
+                        print(msg)
+
                         if insert:
                             old_new = lpad.add_wf(wf)
-                            logger.warning('workflow added', extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': list(old_new.values())[0]})
+                            #logger.warning('workflow added', extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': list(old_new.values())[0]})
                         counter['add(ed)'] += 1
 
         except CursorNotFound as ex:
