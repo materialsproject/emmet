@@ -181,10 +181,16 @@ class MaterialsBuilder(Builder):
         # Store task_types
         task_types = {t["task_id"]: t["task_type"] for t in all_props}
 
+        # Store task_id of first structure as material task_id
+        structure_task_ids = list(
+            sorted(
+                [prop["task_id"] for prop in all_props if prop["materials_key"] == "structure"],
+                key=lambda x: int(str(x).split("-")[-1])))[0]
+
         mat = {
             self.materials.lu_field: max([prop["last_updated"] for prop in all_props]),
             "task_ids": task_ids,
-            self.materials.key: task_ids[0],
+            self.materials.key: structure_task_ids[0],
             "origins": origins,
             "task_types": task_types
         }
