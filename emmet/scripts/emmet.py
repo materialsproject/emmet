@@ -6,7 +6,7 @@ from pymongo.errors import CursorNotFound
 from pymongo.collection import ReturnDocument
 from pymatgen.analysis.structure_prediction.volume_predictor import DLSVolumePredictor
 from pymatgen import Structure
-from fireworks import LaunchPad
+from fireworks import LaunchPad, Workflow
 from atomate.vasp.database import VaspCalcDb
 from atomate.vasp.workflows.presets.core import wf_structure_optimization
 from atomate.vasp.database import VaspCalcDb
@@ -186,7 +186,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
     NO_POTCARS = ['Po', 'At', 'Rn', 'Fr', 'Ra', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr']
     no_electroneg = ['He', 'He0+', 'Ar', 'Ar0+', 'Ne', 'Ne0+']
     base_query = {'is_ordered': True, 'is_valid': True, 'nsites': {'$lt': 200}, 'sites.label': {'$nin': no_electroneg}}
-    task_base_query = {'_mpworks_meta': {'$exists': 0}}
+    task_base_query = {'tags': {'$ne': 'deprecated'}, '_mpworks_meta': {'$exists': 0}}
     vp = DLSVolumePredictor()
 
     ensure_indexes(['snl_id', 'reduced_cell_formula', 'about.remarks', 'sites.label', 'nsites', 'nelements'], [snl_coll])
@@ -206,7 +206,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
     else:
         query = {'$and': [{'about.remarks': tag}, exclude]}
         query.update(base_query)
-        tags = OrderedDict((tag, snl_coll.count(query)))
+        tags[tag] = snl_coll.count(query)
 
     canonical_task_structures = {}
     grouped_workflow_structures = {}
@@ -299,6 +299,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                     except Exception as ex:
                         s.to(fmt='json', filename='sgnum-{}.json'.format(s.snl_id))
                         msg = 'SNL {}: {}'.format(s.snl_id, ex)
+                        print(msg)
                         logger.error(msg, extra={'formula': formula, 'snl_id': s.snl_id, 'error': str(ex)})
                         continue
                     if sgnum not in structures[formula]:
@@ -338,7 +339,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                             for sgnum, slist in workflow_structures.items():
                                 grouped_workflow_structures[formula][sgnum] = [g for g in group_structures(slist)]
                                 canonical_workflow_structures[formula][sgnum] = [g[0] for g in grouped_workflow_structures[formula][sgnum]]
-                            print(sum([len(x) for x in canonical_workflow_structures[formula].values()]), 'canonical workflow structure(s) for', formula)
+                            #print(sum([len(x) for x in canonical_workflow_structures[formula].values()]), 'canonical workflow structure(s) for', formula)
 
                 for idx_canonical, (sgnum, slist) in enumerate(canonical_structures[formula].items()):
 
@@ -374,10 +375,10 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                                             s_task.remove_oxidation_states()
                                             if not structures_match(struct, s_task):
                                                 msg = '  --> ERROR: Structure for SNL {} does not match {}'.format(struct.snl_id, struct.task_id)
+                                                msg += '  --> CLEANUP: remove task_id from SNL'
                                                 print(msg)
-                                                logger.error(msg, extra={
-                                                    'formula': formula, 'snl_id': struct.snl_id, 'error': 'SNL-TASK structure mismatch'
-                                                })
+                                                snl_coll.update({'snl_id': struct.snl_id}, {'$unset': {'about._materialsproject.task_id': 1}})
+                                                logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': s.fw_id})
                                                 counter['snl-task_mismatch'] += 1
                                             else:
                                                 msg = '  --> OK: workflow resulted in matching task {}'.format(struct.task_id)
@@ -422,13 +423,15 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                                                             'formula': formula, 'snl_id': struct.snl_id, 'error': 'Multiple tasks for Completed WF'
                                                         })
                                                     else:
-                                                        msg = '  --> ERROR: task for completed WF {} does not exist!?'.format(s.fw_id)
+                                                        msg = '  --> ERROR: task for completed WF {} does not exist!'.format(s.fw_id)
+                                                        msg += ' --> CLEANUP: delete {} WF and re-add/run to enforce task-id {}'.format(fw['state'], struct.task_id)
                                                         print(msg)
-                                                        logger.error(msg, extra={
-                                                            'formula': formula, 'snl_id': struct.snl_id, 'error': 'Task for Completed WF missing'
-                                                        })
+                                                        lpad.delete_wf(s.fw_id)
+                                                        break
                                                 else:
-                                                    print('  --> TODO: update {} WF to include task_id as additional_field'.format(fw['state'], s.fw_id))
+                                                    print('  --> CLEANUP: delete {} WF and re-add to include task_id as additional_field'.format(fw['state'], s.fw_id))
+                                                    lpad.delete_wf(s.fw_id)
+                                                    break
                                     else:
                                         logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': s.fw_id})
                                     wf_found = True
@@ -438,24 +441,20 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                             continue
 
                         # need to check tasks b/c not every task is guaranteed to have a workflow (e.g. VASP dir parsing)
-                        try:
-                            matched_task_ids = OrderedDict()
-                            for full_name in reversed(tasks_collections):
-                                load_canonical_task_structures(formula, full_name)
-                                matched_task_ids[full_name] = find_matching_canonical_task_structures(formula, struct, full_name)
-                                if struct.task_id is not None and matched_task_ids[full_name] and struct.task_id not in matched_task_ids[full_name]:
-                                    print('  --> ERROR: task', struct.task_id, 'not in', matched_task_ids[full_name])
-                                    raise ValueError
-                                if matched_task_ids[full_name]:
-                                    break
-                            if any(matched_task_ids.values()):
-                                logger.warning('matched task ids', extra={
-                                    'formula': formula, 'snl_id': struct.snl_id,
-                                    'task_id(s)': dict((k.replace('.', '#'), v) for k, v in matched_task_ids.items())
-                                })
-                                continue
-                        except ValueError as ex:
-                            counter['unmatched_task_id'] += 1
+                        msg, matched_task_ids = '', OrderedDict()
+                        for full_name in reversed(tasks_collections):
+                            load_canonical_task_structures(formula, full_name)
+                            matched_task_ids[full_name] = find_matching_canonical_task_structures(formula, struct, full_name)
+                            if struct.task_id is not None and matched_task_ids[full_name] and struct.task_id not in matched_task_ids[full_name]:
+                                msg = '  --> WARNING: task {} not in {}'.format(struct.task_id, matched_task_ids[full_name])
+                                print(msg)
+                            if matched_task_ids[full_name]:
+                                break
+                        if any(matched_task_ids.values()):
+                            logger.warning('matched task ids' + msg, extra={
+                                'formula': formula, 'snl_id': struct.snl_id,
+                                'task_id(s)': dict((k.replace('.', '#'), v) for k, v in matched_task_ids.items())
+                            })
                             continue
 
                         no_potcars = set(NO_POTCARS) & set(struct.composition.elements)
@@ -486,7 +485,9 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
 
                         if insert:
                             old_new = lpad.add_wf(wf)
-                            #logger.warning('workflow added', extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': list(old_new.values())[0]})
+                            logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': list(old_new.values())[0]})
+                        else:
+                            logger.error(msg + ' --> DRY RUN', extra={'formula': formula, 'snl_id': struct.snl_id})
                         counter['add(ed)'] += 1
 
         except CursorNotFound as ex:
