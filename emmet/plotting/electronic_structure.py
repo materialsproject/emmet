@@ -131,6 +131,8 @@ def get_small_plot(plot_data, gap):
             for band in v:
                 if min(band) < gap + 3 and max(band) > -3:
                     new_bands.append(band)
+                else:
+                    new_bands.append([])
             branch[spin] = new_bands
     return plot_data
 
