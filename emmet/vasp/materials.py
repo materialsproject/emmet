@@ -1,6 +1,6 @@
+import os
 from datetime import datetime
 from itertools import chain, groupby
-import os
 
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
@@ -139,6 +139,7 @@ class MaterialsBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
+
         items = [i for i in filter(None, chain.from_iterable(items)) if self.valid(i)]
         if len(items) > 0:
             self.logger.info("Updating {} materials".format(len(items)))
@@ -150,6 +151,7 @@ class MaterialsBuilder(Builder):
         """
         Converts a group of tasks into one material
         """
+
         # Convert the task to properties and flatten
         all_props = list(chain.from_iterable([self.task_to_prop_list(t) for t in task_group]))
 
@@ -171,7 +173,7 @@ class MaterialsBuilder(Builder):
         sorted_props = sorted(all_props, key=lambda x: x['materials_key'])
         grouped_props = groupby(sorted_props, lambda x: x['materials_key'])
 
-        # Choose the best prop for each materials key: highest quality score and most recent updated
+        # Choose the best prop for each materials key: highest quality score and lowest energy
         best_props = []
         for _, props in grouped_props:
             # Sort for highest quality score and lowest energy
@@ -193,7 +195,7 @@ class MaterialsBuilder(Builder):
                    if prop.get("track", False)]
 
         # Store all the task_ids
-        task_ids = list(sorted([t["task_id"] for t in task_group], key=lambda x: int(str(x).split("-")[-1])))
+        task_ids = list(sorted([t["task_id"] for t in task_group], key=ID_to_int))
 
         # Store task_types
         task_types = {t["task_id"]: t["task_type"] for t in all_props}
@@ -351,9 +353,11 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
         comparator=ElementComparator())
 
     def get_sg(struc):
+        # helper function to get spacegroup with a loose tolerance
         return struc.get_space_group_info(symprec=0.1)[1]
 
     def get_mag_ordering(struc):
+        # helperd function to get a label of the magnetic ordering type
         return CollinearMagneticStructureAnalyzer(struc).ordering.value
 
     # First group by spacegroup number then by structure matching
@@ -361,7 +365,7 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
         for group in sm.group_structures(sorted(pregroup, key=get_sg)):
             # Match magnetic orderings here
             if separate_mag_orderings:
-                for _,mag_group in groupby(sorted(group, key=get_mag_ordering), key=get_mag_ordering):
+                for _, mag_group in groupby(sorted(group, key=get_mag_ordering), key=get_mag_ordering):
                     yield list(mag_group)
             else:
                 yield group
