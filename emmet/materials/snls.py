@@ -68,7 +68,7 @@ class SNLBuilder(Builder):
         self.materials.ensure_index(self.materials.key, unique=True)
         self.materials.ensure_index("formula_pretty")
 
-        self.snls.ensure_index(self.materials.key, unique=True)
+        self.snls.ensure_index(self.snls.key, unique=True)
         self.snls.ensure_index("formula_pretty")
 
         for s in self.source_snls:
