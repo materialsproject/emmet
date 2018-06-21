@@ -30,10 +30,9 @@ logger = logging.getLogger(__name__)
 
 # TODO: I think the structure matching and the analysis builders
 #       should be separated into two builders
-
-class ElasticBuilder(Builder):
-    def __init__(self, tasks, elasticity, materials,
-                 query=None, incremental=None, **kwargs):
+class ElasticAnalysisBuilder(Builder):
+    def __init__(self, tasks, elasticity, query=None, incremental=None,
+                 **kwargs):
         """
         Creates a elastic collection for materials
 
@@ -49,7 +48,6 @@ class ElasticBuilder(Builder):
 
         self.tasks = tasks
         self.elasticity = elasticity
-        self.materials = materials
         self.query = query if query is not None else {}
         # By default, incremental
         if incremental is None:
@@ -70,7 +68,6 @@ class ElasticBuilder(Builder):
     def connect(self):
         self.tasks.connect()
         self.elasticity.connect()
-        self.materials.connect()
 
     def get_items(self):
         """
@@ -92,10 +89,8 @@ class ElasticBuilder(Builder):
         q.update({"task_label": {
             "$regex": "[(elastic deformation)(structure optimization)]"}})
 
-        return_props = ['output', 'input', 'completed_at',
-                        'transmuter', 'task_id', 'task_label', 'formula_pretty']
-        self.logger.debug("Generating formula dict")
-        material_dict = generate_formula_dict(self.materials)
+        return_props = ['output', 'input', 'completed_at', 'transmuter',
+                        'task_id', 'task_label', 'formula_pretty']
 
         # formulas that have been updated since elasticity was last updated
         # Note that this makes the builder a bit slower if run for a complete
@@ -124,11 +119,7 @@ class ElasticBuilder(Builder):
             # TODO: refactor for task sets without structure opt
             logger.debug("Getting formula {}, {} of {}".format(
                 doc['_id']['formula_pretty'], n, len(formulas)))
-            possible_mp_ids = material_dict.get(doc['_id']["formula_pretty"])
-            if possible_mp_ids:
-                yield doc['docs'], possible_mp_ids
-            else:
-                yield None, None
+            yield doc['docs']
 
     def process_item(self, item):
         """
@@ -142,51 +133,20 @@ class ElasticBuilder(Builder):
         """
 
         all_docs = []
-        tasks, material_dict = item
-        if not tasks:
+        tasks = item
+        if not item:
             return all_docs
         logger.debug("Processing formula {}".format(tasks[0]['formula_pretty']))
 
-        # Group tasks by material task_id (i.e. material id)
-        grouped = group_by_task_id(material_dict, tasks)
-        for mp_id, task_sets in grouped.items():
-            elastic_docs = []
-            # Task sets are grouped by parent lattice
-            for opt_task, defo_tasks in task_sets:
-                elastic_doc = get_elastic_analysis(opt_task, defo_tasks)
-                if elastic_doc:
-                    elastic_docs.append(elastic_doc)
+        # Group tasks by optimization with corresponding lattice
+        grouped = group_deformations_by_optimization_task(tasks)
+        elastic_docs = []
+        for opt_task, defo_tasks in grouped:
+            elastic_doc = get_elastic_analysis(opt_task, defo_tasks)
+            if elastic_doc:
+                elastic_docs.append(elastic_doc)
 
-            # Handle no task doc
-            if not elastic_docs:
-                logger.debug("No elastic doc for mp_id {}".format(mp_id))
-                continue
-
-            # For now just do the most recent one that's not failed
-            sorted(elastic_docs, key=lambda x: (x['state'], x['completed_at']))
-            final_doc = elastic_docs[-1]
-            c_ijkl = ElasticTensor.from_voigt(final_doc['elastic_tensor'])
-            structure = final_doc['optimized_structure']
-            formula = structure.composition.reduced_formula
-            elements = [s.symbol for s in structure.composition.elements]
-            chemsys = '-'.join(elements)
-            final_doc.update(c_ijkl.property_dict)
-            try:
-                final_doc.update(c_ijkl.get_structure_property_dict(structure))
-            except ValueError:
-                self.logger.debug("Negative K or G found, structure property "
-                                  "dict not computed")
-            elastic_summary = {'task_id': mp_id,
-                               'all_elastic_fits': elastic_docs,
-                               'elasticity': final_doc,
-                               'pretty_formula': formula,
-                               'chemsys': chemsys,
-                               'elements': elements,
-                               'last_updated': self.elasticity.lu_field}
-            all_docs.append(elastic_summary)
-            # elastic_summary.update(final_doc)
-
-        return all_docs
+        return elastic_docs
 
     def update_targets(self, items):
         """
@@ -205,6 +165,90 @@ class ElasticBuilder(Builder):
 
     def finalize(self, items):
         pass
+
+
+# TODO: this could probably be abstracted to make a very general
+#       aggregator for anything with a structure and formula, which
+#       might be good for standardization
+class ElasticAggregateBuilder(builder):
+    def __init__(self, elasticity, query=None, incremental=None, **kwargs):
+        """
+        Aggregates elasticity results based on materials
+
+        Args:
+            tasks (Store): Store of task documents
+            elastic (Store): Store of elastic properties
+            materials (Store): Store of materials properties
+            query (dict): dictionary to limit tasks to be analyzed
+            incremental (bool): whether or not to use a lu_filter based
+                on the current datetime, is set to False if target
+                is empty, but True if not
+        """
+
+        self.tasks = tasks
+        self.elasticity = elasticity
+        self.query = query if query is not None else {}
+        # By default, incremental
+        if incremental is None:
+            self.elasticity.connect()
+            if self.elasticity.query().count() > 0:
+                self.incremental = True
+            else:
+                self.incremental = False
+        else:
+            self.incremental = incremental
+        self.incremental = incremental
+        self.start_date = datetime.utcnow()
+
+        super().__init__(sources=[tasks],
+                         targets=[elasticity],
+                         **kwargs)
+
+    def connect(self):
+        self.tasks.connect()
+        self.elasticity.connect()
+
+    def get_items(self):
+        """
+        Gets all items to process into materials documents
+
+        Returns:
+            generator of tasks aggregated by formula with relevant data
+            projection to process into elasticity documents
+        """
+        pass
+
+    def process_items(self, item):
+        all_elastic_docs = item
+        if not elastic_docs:
+            logger.debug("No elastic doc for mp_id {}".format(mp_id))
+            continue
+
+        # For now just do the most recent one that's not failed
+        sorted(elastic_docs, key=lambda x: (x['state'], x['completed_at']))
+        final_doc = elastic_docs[-1]
+        c_ijkl = ElasticTensor.from_voigt(final_doc['elastic_tensor'])
+        structure = final_doc['optimized_structure']
+        formula = structure.composition.reduced_formula
+        elements = [s.symbol for s in structure.composition.elements]
+        chemsys = '-'.join(elements)
+        final_doc.update(c_ijkl.property_dict)
+        try:
+            final_doc.update(c_ijkl.get_structure_property_dict(structure))
+        except ValueError:
+            self.logger.debug("Negative K or G found, structure property "
+                              "dict not computed")
+        elastic_summary = {'task_id': mp_id,
+                           'all_elastic_fits': elastic_docs,
+                           'elasticity': final_doc,
+                           'pretty_formula': formula,
+                           'chemsys': chemsys,
+                           'elements': elements,
+                           'last_updated': self.elasticity.lu_field}
+        all_docs.append(elastic_summary)
+        # elastic_summary.update(final_doc)
+
+        return all_docs
 
 
 def get_elastic_analysis(opt_task, defo_tasks):
