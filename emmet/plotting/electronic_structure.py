@@ -106,6 +106,12 @@ class ElectronicStructureImageBuilder(Builder):
         except Exception:
             self.logger.warning("Caught error in generating reduced bandstructure plot for {}: {}".format(
                 mat[self.materials.key], traceback.format_exc()))
+
+        # Store task_ids
+        for k in ["bs_task", "dos_task", "uniform_task"]:
+            if k in mat["bandstructure"]:
+                d[k] = mat["bandstructure"][k]
+
         return d
 
     def update_targets(self, items):
