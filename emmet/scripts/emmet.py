@@ -511,3 +511,43 @@ def ensure_indexes(indexes, colls):
            if index not in keys:
                coll.ensure_index(index)
                print('ensured index', index, 'on', coll.full_name)
+
+
+@cli.command()
+@click.option('--tag', default=None, help='only include structures with specific tag')
+def report(tag):
+    """generate a report of calculations status"""
+
+    lpad = LaunchPad.auto_load()
+    states = ['COMPLETED', 'FIZZLED', 'READY', 'RUNNING']
+
+    tags = [tag]
+    if tag is None:
+        tags = [t for t in lpad.workflows.distinct('metadata.tags') if t is not None]
+        print(len(tags), 'tags in workflows collection')
+
+    from prettytable import PrettyTable
+    table = PrettyTable()
+    table.field_names = ['tag', 'workflows'] + states + ['% FIZZLED', 'progress']
+
+    for t in tags:
+        wflows = lpad.workflows.find({'metadata.tags': t}, {'state': 1})
+        counter = Counter([wf['state'] for wf in wflows])
+        total = sum(v for k, v in counter.items() if k in states)
+        tc, progress = t, '-'
+        if counter['COMPLETED'] + counter['FIZZLED'] != total:
+            tc = "\033[1;34m{}\033[0m".format(t)
+            progress = (counter['COMPLETED'] + counter['FIZZLED']) / total * 100.
+            progress = '{:.0f}%'.format(progress)
+        entry = [tc, total] + [counter[state] for state in states]
+        fizzled = counter['FIZZLED'] / total
+        percent_fizzled = "\033[1;31m{:.0f}%\033[0m".format(fizzled*100.) \
+                if fizzled > 0.2 else '{:.0f}%'.format(fizzled*100.)
+        entry.append(percent_fizzled)
+        entry.append(progress)
+        table.add_row(entry)
+
+    table.sortby = 'workflows'
+    table.reversesort = True
+    table.align['tag'] = 'r'
+    print(table)
