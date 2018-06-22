@@ -170,8 +170,13 @@ class ElasticAnalysisBuilder(Builder):
 # TODO: this could probably be abstracted to make a very general
 #       aggregator for anything with a structure and formula, which
 #       might be good for standardization
-class ElasticAggregateBuilder(builder):
-    def __init__(self, elasticity, query=None, incremental=None, **kwargs):
+# TODO: this could also be implemented using a lookup aggregation system
+#       which would be very efficient, but would require sources
+#       to be in the same database
+# TODO: gotta be a better keyword arg than elasticity aggregated
+class ElasticAggregateBuilder(Builder):
+    def __init__(self, elasticity, elasticity_aggregated,
+                 query=None, incremental=None, **kwargs):
         """
         Aggregates elasticity results based on materials
 
@@ -185,8 +190,8 @@ class ElasticAggregateBuilder(builder):
                 is empty, but True if not
         """
 
-        self.tasks = tasks
         self.elasticity = elasticity
+        self.elasticity_aggregated = elasticity_aggregated
         self.query = query if query is not None else {}
         # By default, incremental
         if incremental is None:
@@ -199,8 +204,9 @@ class ElasticAggregateBuilder(builder):
             self.incremental = incremental
         self.incremental = incremental
         self.start_date = datetime.utcnow()
+        self.elasticity.groupby("formula_pretty")
 
-        super().__init__(sources=[tasks],
+        super().__init__(sources=[elasticity],
                          targets=[elasticity],
                          **kwargs)
 
