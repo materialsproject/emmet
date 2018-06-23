@@ -1,4 +1,4 @@
-import click, os, yaml, sys, logging, operator, json
+import click, os, yaml, sys, logging, json
 from datetime import datetime
 from collections import Counter, OrderedDict
 from pymongo import MongoClient
@@ -14,6 +14,10 @@ from atomate.vasp.powerups import add_trackers, add_tags, add_additional_fields_
 from emmet.vasp.materials import group_structures, get_sg
 from emmet.vasp.task_tagger import task_type
 from log4mongo.handlers import MongoHandler, MongoFormatter
+
+if 'FW_CONFIG_FILE' not in os.environ:
+    print('Please set FW_CONFIG_FILE!')
+    sys.exit(0)
 
 @click.group()
 def cli():
@@ -133,36 +137,34 @@ def add_tasks(target_db_file, tag, insert):
 
 
 @cli.command()
-@click.argument('list_of_structures', type=click.File('rb'))
-@click.option('-a', '--alt_tasks_db_file', type=click.Path(exists=True), help='config file for alternative tasks collection')
+@click.option('--add_snls_db', type=click.Path(exists=True), help='config file for additional SNLs collection')
+@click.option('--add_tasks_db', type=click.Path(exists=True), help='config file for additional tasks collection')
 @click.option('--tag', default=None, help='only include structures with specific tag')
 @click.option('--insert/--no-insert', default=False, help='actually execute workflow addition')
 @click.option('--clear-logs/--no-clear-logs', default=False, help='clear MongoDB logs collection')
-def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
-    """add workflows for list of structures / SNLs (YAML config or JSON list of pymatgen structures"""
+@click.option('--max-structures', default=1000, help='set max structures for tags to scan')
+def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structures):
+    """add workflows based on tags in SNL collection"""
 
     exclude = {'about.remarks': {'$ne': 'DEPRECATED'}}
 
     if not insert:
         print('DRY RUN! Add --insert flag to actually add workflows')
 
-    try:
-        snl_db_config = yaml.load(list_of_structures)
+    lpad = LaunchPad.auto_load()
+
+    # TODO use add_snls first, and then add_wflows based on SNL collection
+    snl_collections = [lpad.db.snls]
+    if add_snls_db is not None:
+        snl_db_config = yaml.load(open(add_snls_db, 'r'))
         snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
         snl_db = snl_db_conn[snl_db_config['db']]
         snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
-        snl_coll = snl_db[snl_db_config['collection']]
-    except Exception as ex:
-        print(ex)
-        # NOTE WIP might change it to use add_snls first, and then add_wflows based on SNL collection only
-        # TODO load pymatgen structures from JSON file into MongoDB collection
-        # TODO also fake-tag them, add SNL info
-        snl_coll = None
-        print('to be implemented')
-        return
-    print(snl_coll.count(exclude), 'SNLs in', snl_coll.full_name)
+        snl_collections.append(snl_db[snl_db_config['collection']])
 
-    lpad = LaunchPad.auto_load()
+    ensure_indexes(['snl_id', 'reduced_cell_formula', 'about.remarks', 'sites.label', 'nsites', 'nelements'], snl_collections)
+    for snl_coll in snl_collections:
+        print(snl_coll.count(exclude), 'SNLs in', snl_coll.full_name)
 
     logger = logging.getLogger('add_wflows')
     mongo_handler = MongoHandler(
@@ -172,12 +174,12 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
     logger.addHandler(mongo_handler)
     if clear_logs:
         mongo_handler.collection.drop()
-    ensure_indexes(['level', 'message', 'snl_id', 'formula', 'tag'], [mongo_handler.collection])
+    ensure_indexes(['level', 'message', 'snl_id', 'formula', 'tags'], [mongo_handler.collection])
 
     tasks_collections = OrderedDict()
     tasks_collections[lpad.db.tasks.full_name] = lpad.db.tasks
-    if alt_tasks_db_file is not None: # TODO multiple alt_task_db_files?
-        target = VaspCalcDb.from_db_file(alt_tasks_db_file, admin=True)
+    if add_tasks_db is not None: # TODO multiple alt_task_db_files?
+        target = VaspCalcDb.from_db_file(add_tasks_db, admin=True)
         tasks_collections[target.collection.full_name] = target.collection
     for full_name, tasks_coll in tasks_collections.items():
         print(tasks_coll.count(), 'tasks in', full_name)
@@ -189,24 +191,40 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
     task_base_query = {'tags': {'$ne': 'deprecated'}, '_mpworks_meta': {'$exists': 0}}
     vp = DLSVolumePredictor()
 
-    ensure_indexes(['snl_id', 'reduced_cell_formula', 'about.remarks', 'sites.label', 'nsites', 'nelements'], [snl_coll])
-
     tags = OrderedDict()
     if tag is None:
+        all_tags = OrderedDict()
         query = dict(exclude)
         query.update(base_query)
-        remarks = filter(None, snl_coll.find(query).distinct('about.remarks'))
-        for t in remarks:
-            query = {'$and': [{'about.remarks': t}, exclude]}
-            query.update(base_query)
-            tags[t] = snl_coll.count(query)
-        tags = OrderedDict((el[0], el[1]) for el in sorted(tags.items(), key=operator.itemgetter(1), reverse=True))
-        print(len(tags), 'tags in source collection => TOP10:')
-        print('\n'.join(['{} ({})'.format(k, v) for k, v in list(tags.items())[:10]]))
+        for snl_coll in snl_collections:
+            remarks = filter(None, snl_coll.find(query).distinct('about.remarks'))
+            for t in remarks:
+                query = {'$and': [{'about.remarks': t}, exclude]}
+                query.update(base_query)
+                if t not in all_tags:
+                    all_tags[t] = [snl_coll.count(query), snl_coll]
+                else:
+                    print('tag -', t, '- already in', all_tags[t][-1].full_name)
+        sorted_tags = sorted(all_tags.items(), key=lambda x: x[1][0])
+        for item in sorted_tags:
+            to_scan = item[1][0] - lpad.db.add_wflows_logs.count({'tags': item[0]})
+            if item[1][0] < max_structures and to_scan:
+                tags[item[0]] = [item[1][0], to_scan, item[1][-1]]
     else:
         query = {'$and': [{'about.remarks': tag}, exclude]}
         query.update(base_query)
-        tags[tag] = snl_coll.count(query)
+        for snl_coll in snl_collections:
+            cnt = snl_coll.count(query)
+            if cnt:
+                to_scan = cnt - lpad.db.add_wflows_logs.count({'tags': tag})
+                tags[tag] = [cnt, to_scan, snl_coll]
+                break
+
+    if not tags:
+        print('nothing to scan')
+        return
+    print(len(tags), 'tags to scan in source SNL collections:')
+    print('\n'.join(['{} {} ({}) --> {} TO SCAN'.format(v[2].full_name, k, v[0], v[1]) for k, v in tags.items()]))
 
     canonical_task_structures = {}
     grouped_workflow_structures = {}
@@ -247,21 +265,17 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
         return matched_task_ids
 
 
-    for tag, ndocs in tags.items():
+    for tag, value in tags.items():
         query = {'$and': [{'about.remarks': tag}, exclude]}
         query.update(base_query)
 
-        # TODO WIP will be removed
-        if tag == 'new_ordered_icsd_2017':
+        if tag == 'new_ordered_icsd_2017': # TODO WIP will be removed
             #TODO for new_ordered_icsd_2017: docs = db.icsd.find(query, {'snl': 1, 'formula_reduced_abc': 1, 'icsd_id': 1, 'elements': 1})
-            print(tag, 'TODO implement db.icsd as snl_coll')
-            continue
-        elif tag == 'pre-atomate production':
-            # TODO scan last
+            print(tag, 'TODO implement db.icsd as snl_coll -> add_snls?')
             continue
 
-        print('aggregate', ndocs, 'structures for', tag, '...')
-        structure_groups = snl_coll.aggregate([
+        print('aggregate', value[0], 'structures for', tag, '...')
+        structure_groups = value[-1].aggregate([
             {'$match': query}, {'$sort': OrderedDict([('nelements', 1), ('nsites', 1)])},
             {'$group': {
                 '_id': '$reduced_cell_formula',
@@ -286,7 +300,9 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                     print(idx_group, '...')
 
                 for dct in group['structures']:
-                    if mongo_handler.collection.find_one({'level': 'WARNING', 'formula': formula, 'snl_id': dct['snl_id']}):
+                    q = {'level': 'WARNING', 'formula': formula, 'snl_id': dct['snl_id']}
+                    if mongo_handler.collection.find_one(q):
+                        lpad.db.add_wflows_logs.update(q, {'$addToSet': {'tags': tag}})
                         continue # already checked
                     mongo_handler.collection.remove({'level': 'ERROR', 'formula': formula, 'snl_id': dct['snl_id']}) # avoid dups
                     counter['structures'] += 1
@@ -300,7 +316,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                         s.to(fmt='json', filename='sgnum-{}.json'.format(s.snl_id))
                         msg = 'SNL {}: {}'.format(s.snl_id, ex)
                         print(msg)
-                        logger.error(msg, extra={'formula': formula, 'snl_id': s.snl_id, 'tag': tag, 'error': str(ex)})
+                        logger.error(msg, extra={'formula': formula, 'snl_id': s.snl_id, 'tags': [tag], 'error': str(ex)})
                         continue
                     if sgnum not in structures[formula]:
                         structures[formula][sgnum] = []
@@ -314,7 +330,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                         if len(g) > 1:
                             for s in g[1:]:
                                 logger.warning('duplicate structure', extra={
-                                    'formula': formula, 'snl_id': s.snl_id, 'tag': tag, 'canonical_snl_id': g[0].snl_id
+                                    'formula': formula, 'snl_id': s.snl_id, 'tags': [tag], 'canonical_snl_id': g[0].snl_id
                                 })
 
                 if not canonical_structures[formula]:
@@ -377,14 +393,14 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                                                 msg = '  --> ERROR: Structure for SNL {} does not match {}'.format(struct.snl_id, struct.task_id)
                                                 msg += '  --> CLEANUP: remove task_id from SNL'
                                                 print(msg)
-                                                snl_coll.update({'snl_id': struct.snl_id}, {'$unset': {'about._materialsproject.task_id': 1}})
-                                                logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': s.fw_id, 'tag': tag})
+                                                value[-1].update({'snl_id': struct.snl_id}, {'$unset': {'about._materialsproject.task_id': 1}})
+                                                logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': s.fw_id, 'tags': [tag]})
                                                 counter['snl-task_mismatch'] += 1
                                             else:
                                                 msg = '  --> OK: workflow resulted in matching task {}'.format(struct.task_id)
                                                 print(msg)
                                                 logger.warning(msg, extra={
-                                                    'formula': formula, 'snl_id': struct.snl_id, 'task_id': struct.task_id, 'tag': tag
+                                                    'formula': formula, 'snl_id': struct.snl_id, 'task_id': struct.task_id, 'tags': [tag]
                                                 })
                                         else:
                                             print('  --> did not find task', struct.task_id, 'for WF', s.fw_id)
@@ -395,7 +411,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                                                 if fw['spec']['_tasks'][5]['additional_fields'].get('task_id') == struct.task_id:
                                                     msg = '  --> OK: workflow {} will result in intended task-id {}'.format(fw['fw_id'], struct.task_id)
                                                     print(msg)
-                                                    logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'task_id': struct.task_id, 'tag': tag})
+                                                    logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'task_id': struct.task_id, 'tags': [tag]})
                                                     fw_found = True
                                                     break
                                             if not fw_found:
@@ -420,7 +436,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                                                         msg = '  --> ERROR: multiple tasks {} for completed WF {}'.format(matched_task_ids, s.fw_id)
                                                         print(msg)
                                                         logger.error(msg, extra={
-                                                            'formula': formula, 'snl_id': struct.snl_id, 'tag': tag, 'error': 'Multiple tasks for Completed WF'
+                                                            'formula': formula, 'snl_id': struct.snl_id, 'tags': [tag], 'error': 'Multiple tasks for Completed WF'
                                                         })
                                                     else:
                                                         msg = '  --> ERROR: task for completed WF {} does not exist!'.format(s.fw_id)
@@ -433,7 +449,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                                                     lpad.delete_wf(s.fw_id)
                                                     break
                                     else:
-                                        logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': s.fw_id, 'tag': tag})
+                                        logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'fw_id': s.fw_id, 'tags': [tag]})
                                     wf_found = True
                                     break
 
@@ -452,7 +468,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                                 break
                         if any(matched_task_ids.values()):
                             logger.warning('matched task ids' + msg, extra={
-                                'formula': formula, 'snl_id': struct.snl_id, 'tag': tag,
+                                'formula': formula, 'snl_id': struct.snl_id, 'tags': [tag],
                                 'task_id(s)': dict((k.replace('.', '#'), v) for k, v in matched_task_ids.items())
                             })
                             continue
@@ -461,7 +477,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                         if len(no_potcars) > 0:
                             msg = 'Structure for SNL {} --> NO POTCARS: {}'.format(struct.snl_id, no_potcars)
                             print(msg)
-                            logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'tag': tag, 'error': no_potcars})
+                            logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'tags': [tag], 'error': no_potcars})
                             continue
 
                         try:
@@ -475,7 +491,7 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
                         except:
                             msg = 'Structure for SNL {} --> SKIP: Could not make workflow'.format(struct.snl_id)
                             print(msg)
-                            logger.error(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'tag': tag, 'error': 'could not make workflow'})
+                            logger.error(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'tags': [tag], 'error': 'could not make workflow'})
                             continue
 
                         msg = 'Structure for SNL {} --> ADD WORKFLOW'.format(struct.snl_id)
@@ -485,17 +501,17 @@ def add_wflows(list_of_structures, alt_tasks_db_file, tag, insert, clear_logs):
 
                         if insert:
                             old_new = lpad.add_wf(wf)
-                            logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'tag': tag, 'fw_id': list(old_new.values())[0]})
+                            logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'tags': [tag], 'fw_id': list(old_new.values())[0]})
                         else:
-                            logger.error(msg + ' --> DRY RUN', extra={'formula': formula, 'snl_id': struct.snl_id, 'tag': tag})
+                            logger.error(msg + ' --> DRY RUN', extra={'formula': formula, 'snl_id': struct.snl_id, 'tags': [tag]})
                         counter['add(ed)'] += 1
 
         except CursorNotFound as ex:
             print(ex)
-            sites_elements = [
+            sites_elements = set([
                 (len(set([e.symbol for e in x.composition.elements])), x.num_sites)
                 for x in canonical_structures_list
-            ]
+            ])
             print(len(canonical_structures_list), 'canonical structure(s) for', formula, sites_elements)
 
         print(counter)
@@ -513,7 +529,7 @@ def ensure_indexes(indexes, colls):
                print('ensured index', index, 'on', coll.full_name)
 
 class MyMongoFormatter(logging.Formatter):
-    KEEP_KEYS = ['timestamp', 'level', 'message', 'formula', 'snl_id', 'tag', 'error', 'canonical_snl_id', 'fw_id', 'task_id', 'task_id(s)']
+    KEEP_KEYS = ['timestamp', 'level', 'message', 'formula', 'snl_id', 'tags', 'error', 'canonical_snl_id', 'fw_id', 'task_id', 'task_id(s)']
 
     def format(self, record):
         mongoformatter = MongoFormatter()
@@ -535,31 +551,33 @@ def report(tag):
     tags = [tag]
     if tag is None:
         tags = [t for t in lpad.workflows.distinct('metadata.tags') if t is not None]
-        print(len(tags), 'tags in workflows collection')
+        tags += [t for t in lpad.db.add_wflows_logs.distinct('tags') if t is not None and t not in tags]
+        print(len(tags), 'tags in WFs and logs collections')
 
     from prettytable import PrettyTable
     table = PrettyTable()
-    table.field_names = ['tag', 'SNLs', 'workflows'] + states + ['% FIZZLED', 'progress']
+    table.field_names = ['Tag', 'SNLs', 'WFs2Add', 'WFs'] + states + ['% FIZZLED', 'Progress']
 
     for t in tags:
         wflows = lpad.workflows.find({'metadata.tags': t}, {'state': 1})
-        nr_snls = lpad.db.add_wflows_logs.count({'tag': t})
+        nr_snls = lpad.db.add_wflows_logs.count({'tags': t})
+        wflows_to_add = lpad.db.add_wflows_logs.count({'tags': t, 'level': 'ERROR', 'error': {'$exists': 0}})
         counter = Counter([wf['state'] for wf in wflows])
         total = sum(v for k, v in counter.items() if k in states)
         tc, progress = t, '-'
-        if counter['COMPLETED'] + counter['FIZZLED'] != total:
+        if wflows_to_add or counter['COMPLETED'] + counter['FIZZLED'] != total:
             tc = "\033[1;34m{}\033[0m".format(t)
-            progress = (counter['COMPLETED'] + counter['FIZZLED']) / total * 100.
+            progress = (counter['COMPLETED'] + counter['FIZZLED']) / total * 100. if total else 0.
             progress = '{:.0f}%'.format(progress)
-        entry = [tc, nr_snls, total] + [counter[state] for state in states]
-        fizzled = counter['FIZZLED'] / total
+        entry = [tc, nr_snls, wflows_to_add, total] + [counter[state] for state in states]
+        fizzled = counter['FIZZLED'] / total if total else 0.
         percent_fizzled = "\033[1;31m{:.0f}%\033[0m".format(fizzled*100.) \
                 if fizzled > 0.2 else '{:.0f}%'.format(fizzled*100.)
         entry.append(percent_fizzled)
         entry.append(progress)
         table.add_row(entry)
 
-    table.sortby = 'workflows'
+    table.sortby = 'SNLs'
     table.reversesort = True
-    table.align['tag'] = 'r'
+    table.align['Tag'] = 'r'
     print(table)
