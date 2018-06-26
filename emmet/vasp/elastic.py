@@ -161,10 +161,7 @@ class ElasticAnalysisBuilder(Builder):
 
         self.logger.info("Updating {} elastic documents".format(len(items)))
 
-        self.elasticity.update(items, key='task_id')
-
-    def finalize(self, items):
-        pass
+        self.elasticity.update(items, key='optimization_task_id')
 
 
 # TODO: this could probably be abstracted to make a very general
@@ -226,9 +223,8 @@ class ElasticAggregateBuilder(Builder):
 
     def process_items(self, item):
         all_elastic_docs = item
-        if not elastic_docs:
+        if not all_elastic_docs:
             logger.debug("No elastic doc for mp_id {}".format(mp_id))
-            continue
 
         # For now just do the most recent one that's not failed
         sorted(elastic_docs, key=lambda x: (x['state'], x['completed_at']))
