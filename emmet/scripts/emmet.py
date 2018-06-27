@@ -275,10 +275,10 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
                         try:
                             sgnum = get_sg(s)
                         except Exception as ex:
-                            s.to(fmt='json', filename='sgnum-{}.json'.format(s.snl_id))
-                            msg = 'SNL {}: {}'.format(s.snl_id, ex)
+                            s.to(fmt='json', filename='sgnum_{}.json'.format(task['task_id']))
+                            msg = 'SNL {}: {}'.format(task['task_id'], ex)
                             print(msg)
-                            logger.error(msg, extra={'formula': formula, 'snl_id': s.snl_id, 'tags': [tag], 'error': str(ex)})
+                            logger.error(msg, extra={'formula': formula, 'task_id': task['task_id'], 'tags': [tag], 'error': str(ex)})
                             continue
                         if sg in canonical_structures[formula]:
                             if sg not in task_structures:
