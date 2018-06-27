@@ -28,26 +28,11 @@ class ElasticAnalysisBuilderTest(unittest.TestCase):
         self.test_elasticity = MongoStore("test_emmet", "elasticity")
         self.test_elasticity.connect()
 
-        # Generate test materials collection
-        self.test_materials = MongoStore("test_emmet", "materials")
-        self.test_materials.connect()
-        self.test_materials.collection.drop()
-        opt_docs = self.test_tasks.query(
-            ["output.structure", "formula_pretty"],
-            {"task_label": "structure optimization"})
-        mat_docs = [{
-            "task_id": "mp-{}".format(n),
-            "structure": opt_doc['output']['structure'],
-            "pretty_formula": opt_doc['formula_pretty']
-        } for n, opt_doc in enumerate(opt_docs)]
-        self.test_materials.update(mat_docs, update_lu=False)
-
     @classmethod
     def tearDown(self):
         if not DEBUG_MODE:
             self.test_elasticity.collection.drop()
             self.test_tasks.collection.drop()
-            self.test_materials.collection.drop()
 
     def test_builder(self):
         ec_builder = ElasticAnalysisBuilder(
@@ -71,15 +56,12 @@ class ElasticAnalysisBuilderTest(unittest.TestCase):
         grouped_by_opt = group_deformations_by_optimization_task(docs1)
         self.assertEqual(len(grouped_by_opt), 1)
 
-        materials_dict = generate_formula_dict(self.test_materials)
-        grouped_by_mpid = group_by_task_id(materials_dict['NaN3'], docs1)
-        self.assertEqual(len(grouped_by_mpid), 1)
+
 
         docs2 = self.test_tasks.query(criteria={"task_label": "elastic deformation"})
         sgroup2 = group_by_parent_lattice(docs2)
 
-    def test_materials_aggregator(self):
-        materials_dict = generate_formula_dict(self.test_materials)
+
 
     def test_get_distinct_rotations(self):
         struct = PymatgenTest.get_structure("Si")
@@ -114,6 +96,45 @@ class ElasticAnalysisBuilderTest(unittest.TestCase):
         explicit, derived = process_elastic_calcs(opt_task, defo_tasks)
         self.assertEqual(len(explicit), 23)
         self.assertEqual(len(derived), 1)
+
+
+class ElasticAggregateBuilder(unittest.TestCase):
+    def setUp(self):
+        self.test_elasticity = MongoStore("test_emmet", "elasticity")
+        self.test_elasticity.connect()
+
+        # Generate test materials collection
+        self.test_materials = MongoStore("test_emmet", "materials")
+        self.test_materials.connect()
+        mat_docs = [{
+            "task_id": "mp-{}".format(n),
+            "structure": PymatgenTest.get_structure(formula),
+            "pretty_formula": formula
+        } for n, formula in enumerate(['Si', 'BaNiO3', 'Li2O2', 'TiO2'])]
+        self.test_materials.update(mat_docs, update_lu=False)
+
+    def tearDown(self):
+        if not DEBUG_MODE:
+            self.test_elasticity.collection.drop()
+            self.test_materials.collection.drop()
+
+    def test_materials_aggregator(self):
+        materials_dict = generate_formula_dict(self.test_materials)
+        grouped_by_mpid = group_by_task_id(
+            materials_dict['NaN3'], {})
+        self.assertEqual(len(grouped_by_mpid), 1)
+        materials_dict = generate_formula_dict(self.test_materials)
+
+    def test_get_items(self):
+        builder = ElasticAggregateBuilder()
+        cursor = builder.get_items()
+
+    def test_process_items(self):
+        builder = ElasticAggregateBuilder()
+        test_doc = {"_id": {"formula_pretty": "Si", "":""}}
+
+    def test_aggregation(self):
+        pass
 
 
 if __name__ == "__main__":
