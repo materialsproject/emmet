@@ -16,7 +16,7 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from maggma.builder import Builder
 
-from atomate.utils.utils import get_mongolike
+from pydash.objects import get, set_, has
 
 import tqdm
 
@@ -200,15 +200,13 @@ class ElasticAggregateBuilder(Builder):
             self.incremental = incremental
         self.incremental = incremental
         self.start_date = datetime.utcnow()
-        self.elasticity.groupby("formula_pretty")
-
         super().__init__(sources=[elasticity],
                          targets=[elasticity],
                          **kwargs)
 
     def connect(self):
-        self.tasks.connect()
         self.elasticity.connect()
+        self.materials.connect()
 
     def get_items(self):
         """
@@ -218,9 +216,31 @@ class ElasticAggregateBuilder(Builder):
             generator of tasks aggregated by formula with relevant data
             projection to process into elasticity documents
         """
-        pass
+        self.logger.info("Ensuring indices on lu_field for sources/targets")
+        q = self.query
+        if self.incremental:
+            self.tasks.ensure_index(self.tasks.lu_field)
+            self.elasticity.ensure_index(self.elasticity.lu_field)
+            incr_filter = self.query
+            incr_filter.update(self.tasks.lu_filter(self.elasticity))
+            formulas = self.elasticity.distinct("formula_pretty", incr_filter)
+            q.update({"formula_pretty": {"$in": formulas}})
+            if len(formulas) > 500:
+                self.logger.debug("More than 500 new formulas, incremental "
+                                  "mode may be inefficient")
+            material_filter = {"pretty_formula": {"$in": formulas}}
+        else:
+            formulas = self.tasks.distinct('formula_pretty', criteria=q)
+            material_filter = {}
+        material_dict = generate_formula_dict(self.materials, material_filter)
+        cursor = self.elasticity.groupby("formula_pretty", criteria=q)
+        for result in cursor:
+            structures_by_mp_id = material_dict[result['_id']]
+            yield result['docs'], structures_by_mp_id
 
     def process_items(self, item):
+        docs, material_dict = item
+        grouped = group_by_material_id(docs, material_dict, 'input_structure')
         all_elastic_docs = item
         if not all_elastic_docs:
             logger.debug("No elastic doc for mp_id {}".format(mp_id))
@@ -442,8 +462,8 @@ def set_tkd_value(tensor_keyed_dict, tensor, set_value, allclose_kwargs=None):
             return
 
 
-def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None,
-                     loosen_if_no_match=True):
+def group_by_material_id(materials_dict, docs, tol=1e-6, loosen=True,
+                         structure_key='structure', structure_matcher=None):
     """
     Groups a collection of documents by material id
     as found in a materials collection
@@ -451,17 +471,20 @@ def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None,
     Args:
         materials_dict (dict): dictionary of structures keyed by task_id
         docs ([dict]): list of documents
-        tol: tolerance for lattice grouping
+        tol (float): tolerance for lattice grouping
+        loosen (bool): whether or not to loosen criteria if no matches are
+            found
+        structure_key (string): mongo-style key of documents where structures
+            are contained (e. g. input.structure or output.structure)
         structure_matcher (StructureMatcher): structure
             matcher for finding equivalent structures
-        loosen_if_no_match (bool): try with looser structure matcher
-            if no match is found
 
     Returns:
         documents grouped by task_id from the materials
         collection
     """
-    materials_dict = {mp_id: Structure.from_dict(struct) for mp_id, struct in materials_dict.items()}
+    materials_dict = {mp_id: Structure.from_dict(struct)
+                      for mp_id, struct in materials_dict.items()}
     tasks_by_opt = group_deformations_by_optimization_task(docs, tol)
     task_sets_by_mp_id = {}
     # Iterate over all set of optimizations/deformations
@@ -481,6 +504,7 @@ def group_by_task_id(materials_dict, docs, tol=1e-6, structure_matcher=None,
                        materials_dict.items() if sm.fit(candidate, structure)}
             niter += 1
         if matches:
+            # TODO: add spacegroup maybe?
             # Get best match by closest density
             sorted_ids = sorted(list(matches.keys()),
                                 key=lambda x: abs(matches[x].density - structure.density))
@@ -535,8 +559,7 @@ def group_by_parent_lattice(docs, tol=1e-5):
     """
     docs_by_lattice = []
     for doc in docs:
-        sim_lattice = get_mongolike(doc, "output.structure.lattice.matrix")
-
+        sim_lattice = get(doc, "output.structure.lattice.matrix")
         if "deformation" in doc['task_label']:
             # Note that this assumes only one transformation, deformstructuretransformation
             defo = doc['transmuter']['transformation_params'][0]['deformation']
