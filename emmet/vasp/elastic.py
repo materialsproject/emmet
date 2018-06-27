@@ -28,8 +28,7 @@ __email__ = "montoyjh@lbl.gov"
 
 logger = logging.getLogger(__name__)
 
-# TODO: I think the structure matching and the analysis builders
-#       should be separated into two builders
+# TODO: this could probably be an atomate builder?
 class ElasticAnalysisBuilder(Builder):
     def __init__(self, tasks, elasticity, query=None, incremental=None,
                  **kwargs):

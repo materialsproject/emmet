@@ -17,7 +17,7 @@ test_tasks = os.path.join(module_dir, "..", "..", "..", "test_files", "vasp", "e
 
 DEBUG_MODE = True
 
-class ElasticBuilderTest(unittest.TestCase):
+class ElasticAnalysisBuilderTest(unittest.TestCase):
     @classmethod
     def setUp(self):
         # Set up test db, set up mpsft, etc.
@@ -50,8 +50,8 @@ class ElasticBuilderTest(unittest.TestCase):
             self.test_materials.collection.drop()
 
     def test_builder(self):
-        ec_builder = ElasticBuilder(self.test_tasks, self.test_elasticity,
-                                    self.test_materials, incremental=False)
+        ec_builder = ElasticAnalysisBuilder(
+            self.test_tasks, self.test_elasticity, incremental=False)
         ec_builder.connect()
         for t in ec_builder.get_items():
             processed = ec_builder.process_item(t)
@@ -97,13 +97,14 @@ class ElasticBuilderTest(unittest.TestCase):
         dss = DeformedStructureSet(test_struct)
         # Construct test task set
         opt_task = {"output": {"structure": test_struct.as_dict()},
-                    "input": None}
+                    "input": {"structure" : test_struct.as_dict()}}
         defo_tasks = []
         for n, (struct, defo) in enumerate(zip(dss, dss.deformations)):
             strain = defo.green_lagrange_strain
             defo_task = {"output": {"structure": struct.as_dict(),
                                     "stress": (strain * 5).tolist()},
-                         "input": None, "task_id": n}
+                         "input": None, "task_id": n,
+                         "completed_at": datetime.utcnow()}
             defo_task.update({"transmuter": {
                 "transformation_params": [{"deformation": defo}]}})
             defo_tasks.append(defo_task)
