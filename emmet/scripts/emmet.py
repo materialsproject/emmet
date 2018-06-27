@@ -1,4 +1,5 @@
-import click, os, yaml, sys, logging, json
+import click, os, yaml, sys, logging, json, tarfile
+from fnmatch import fnmatch
 from datetime import datetime
 from collections import Counter, OrderedDict
 from pymongo import MongoClient
@@ -6,6 +7,7 @@ from pymongo.errors import CursorNotFound
 from pymongo.collection import ReturnDocument
 from pymatgen.analysis.structure_prediction.volume_predictor import DLSVolumePredictor
 from pymatgen import Structure
+from pymatgen.util.provenance import StructureNL, Author
 from fireworks import LaunchPad, Workflow
 from atomate.vasp.database import VaspCalcDb
 from atomate.vasp.workflows.presets.core import wf_structure_optimization
@@ -617,3 +619,93 @@ def report(tag):
     table.reversesort = True
     table.align['Tag'] = 'r'
     print(table)
+
+
+@cli.command()
+@click.argument('archive', type=click.Path(exists=True))
+@click.option('--add_snls_dbs', '-a', multiple=True, type=click.Path(exists=True), help='config files for additional SNLs collections')
+def add_snls(archive, add_snls_dbs):
+    """add structures from archive of structure files (CIF, POSCAR, ...) to (local) SNLs collection"""
+    # TODO assign task_ids to structures?
+
+    lpad = LaunchPad.auto_load()
+    snl_collections = [lpad.db.snls]
+    if add_snls_dbs:
+        for add_snls_db in add_snls_dbs:
+            snl_db_config = yaml.load(open(add_snls_db, 'r'))
+            snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
+            snl_db = snl_db_conn[snl_db_config['db']]
+            snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
+            snl_collections.append(snl_db[snl_db_config['collection']])
+    for snl_coll in snl_collections:
+        print(snl_coll.count(), 'SNLs in', snl_coll.full_name)
+
+    fname, ext = os.path.splitext(os.path.basename(archive))
+    tag, sec_ext = fname.rsplit('.', 1) if '.' in fname else fname, ''
+    if sec_ext:
+        ext = ''.join([sec_ext, ext])
+    exts = ['tar.gz', '.tgz']
+    if ext not in exts:
+        print(ext, 'not supported (yet)! Please use one of', exts)
+        return
+
+    meta_path = '{}.yaml'.format(tag)
+    if not os.path.exists(meta_path):
+        print('Please include meta info in', meta_path)
+        return
+    with open(meta_path, 'r') as f:
+        meta = yaml.load(f)
+        meta['authors'] = [Author.parse_author(a) for a in meta['authors']]
+
+    exclude = {'about.remarks': {'$ne': 'DEPRECATED'}}
+
+    snls = []
+    tar = tarfile.open(archive, 'r:gz')
+    for member in tar.getmembers():
+        if os.path.basename(member.name).startswith('.'):
+            continue
+        f = tar.extractfile(member)
+        if f:
+            print(member.name)
+            contents = f.read().decode('utf-8')
+            fname = member.name.lower()
+            if fnmatch(fname, "*.cif*") or fnmatch(fname, "*.mcif*"):
+                fmt = 'cif'
+            elif fnmatch(fname, "*.json*") or fnmatch(fname, "*.mson*"):
+                fmt = 'json'
+            else:
+                print('reading', fname, 'not supported (yet)')
+                continue
+
+            try:
+                struct = Structure.from_str(contents, fmt=fmt)
+            except Exception as ex:
+                print(ex)
+                break #continue
+
+            formula = struct.composition.reduced_formula
+            query = {'$and': [{'formula_pretty': formula}, exclude]}
+            query.update(base_query)
+
+            for snl_coll in snl_collections:
+                snl_groups = snl_coll.aggregate([
+                    {'$match': query}, {'$sort': OrderedDict([('nelements', 1), ('nsites', 1)])},
+                    {'$group': {
+                        '_id': '$formula_pretty',
+                        'snls': {'$push': dict((k.split('.')[-1], '${}'.format(k)) for k in structure_keys)}
+                    }}
+                ], allowDiskUse=True, batchSize=1)
+            return
+
+            snls.append(StructureNL(
+                struct, authors, references=references.strip(), remarks=[tag]
+            ))
+    print(len(snls))
+
+#                snls.append(snl.as_dict())
+#    if snls:
+#        print('add', len(snls), 'SNLs')
+#        result = target.db.snls.insert_many(snls)
+#        print('#SNLs inserted:', len(result.inserted_ids))
+#    else:
+#        print('no SNLs to insert')
