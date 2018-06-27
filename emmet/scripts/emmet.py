@@ -19,6 +19,12 @@ if 'FW_CONFIG_FILE' not in os.environ:
     print('Please set FW_CONFIG_FILE!')
     sys.exit(0)
 
+exclude = {'about.remarks': {'$nin': ['DEPRECATED', 'deprecated']}}
+no_electroneg = ['He', 'He0+', 'Ar', 'Ar0+', 'Ne', 'Ne0+']
+base_query = {'is_ordered': True, 'is_valid': True, 'nsites': {'$lt': 200}, 'sites.label': {'$nin': no_electroneg}}
+task_base_query = {'tags': {'$nin': ['DEPRECATED', 'deprecated']}, '_mpworks_meta': {'$exists': 0}}
+structure_keys = ['snl_id', 'lattice', 'sites', 'charge', 'about._materialsproject.task_id']
+
 @click.group()
 def cli():
     pass
@@ -56,8 +62,6 @@ def ensure_meta(snls_db):
 @click.option('--insert/--no-insert', default=False, help='actually execute task addition')
 def add_tasks(target_db_file, tag, insert):
     """Retrieve tasks from source and add to target"""
-
-    exclude = {'tags': {'$ne': 'deprecated'}}
 
     if not insert:
         print('DRY RUN: add --insert flag to actually add tasks to production')
@@ -174,8 +178,6 @@ def add_tasks(target_db_file, tag, insert):
 def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structures, skip_all_scanned):
     """add workflows based on tags in SNL collection"""
 
-    exclude = {'about.remarks': {'$ne': 'DEPRECATED'}}
-
     if not insert:
         print('DRY RUN! Add --insert flag to actually add workflows')
 
@@ -212,11 +214,7 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
     for full_name, tasks_coll in tasks_collections.items():
         print(tasks_coll.count(), 'tasks in', full_name)
 
-    structure_keys = ['snl_id', 'lattice', 'sites', 'charge', 'about._materialsproject.task_id']
     NO_POTCARS = ['Po', 'At', 'Rn', 'Fr', 'Ra', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr']
-    no_electroneg = ['He', 'He0+', 'Ar', 'Ar0+', 'Ne', 'Ne0+']
-    base_query = {'is_ordered': True, 'is_valid': True, 'nsites': {'$lt': 200}, 'sites.label': {'$nin': no_electroneg}}
-    task_base_query = {'tags': {'$ne': 'deprecated'}, '_mpworks_meta': {'$exists': 0}}
     vp = DLSVolumePredictor()
 
     tags = OrderedDict()
