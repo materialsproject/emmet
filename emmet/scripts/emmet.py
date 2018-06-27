@@ -613,7 +613,8 @@ def report(tag):
                 if fizzled > 0.2 else '{:.0f}%'.format(fizzled*100.)
         entry.append(percent_fizzled)
         entry.append(progress)
-        table.add_row(entry)
+        if any(entry[2:-2]):
+            table.add_row(entry)
 
     table.sortby = 'SNLs'
     table.reversesort = True
