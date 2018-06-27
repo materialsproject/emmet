@@ -23,6 +23,33 @@ if 'FW_CONFIG_FILE' not in os.environ:
 def cli():
     pass
 
+
+@cli.command()
+@click.argument('snls_db', type=click.Path(exists=True))
+def ensure_meta(snls_db):
+    """ensure meta-data fields are set in SNL collection"""
+
+    snl_db_config = yaml.load(open(snls_db, 'r'))
+    snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
+    snl_db = snl_db_conn[snl_db_config['db']]
+    snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
+    snl_coll = snl_db[snl_db_config['collection']]
+    print(snl_coll.count(), 'SNLs in', snl_coll.full_name)
+
+    for idx, doc in enumerate(snl_coll.find({}, structure_keys)):
+        if idx and not idx%1000:
+            print(idx, '...')
+        struct = Structure.from_dict(doc)
+        d = {'formula_pretty': struct.composition.reduced_formula}
+        d['nelements'] = len(set(struct.composition.elements))
+        d['nsites'] = len(struct)
+        d['is_ordered'] = struct.is_ordered
+        d['is_valid'] = struct.is_valid()
+        snl_coll.update({'snl_id': doc['snl_id']}, {'$set': d})
+
+    ensure_indexes(['snl_id', 'formula_pretty', 'nelements', 'nsites', 'is_ordered', 'is_valid'], [snl_coll])
+
+
 @cli.command()
 @click.option('--target_db_file', default="target.json", help='target db file')
 @click.option('--tag', default=None, help='only insert tasks with specific tag')
