@@ -143,7 +143,8 @@ def add_tasks(target_db_file, tag, insert):
 @click.option('--insert/--no-insert', default=False, help='actually execute workflow addition')
 @click.option('--clear-logs/--no-clear-logs', default=False, help='clear MongoDB logs collection')
 @click.option('--max-structures', default=1000, help='set max structures for tags to scan')
-def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structures):
+@click.option('--skip-all-scanned/--no-skip-all-scanned', default=False, help='skip all already scanned structures incl. WFs2Add/Errors')
+def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structures, skip_all_scanned):
     """add workflows based on tags in SNL collection"""
 
     exclude = {'about.remarks': {'$ne': 'DEPRECATED'}}
@@ -244,7 +245,14 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
                     task_label = task_type(task['orig_inputs'], include_calc_type=False)
                     if task_label == "Structure Optimization":
                         s = Structure.from_dict(task['input']['structure'])
-                        sg = get_sg(s)
+                        try:
+                            sgnum = get_sg(s)
+                        except Exception as ex:
+                            s.to(fmt='json', filename='sgnum-{}.json'.format(s.snl_id))
+                            msg = 'SNL {}: {}'.format(s.snl_id, ex)
+                            print(msg)
+                            logger.error(msg, extra={'formula': formula, 'snl_id': s.snl_id, 'tags': [tag], 'error': str(ex)})
+                            continue
                         if sg in canonical_structures[formula]:
                             if sg not in task_structures:
                                 task_structures[sg] = []
@@ -304,7 +312,10 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
                     if mongo_handler.collection.find_one(q):
                         lpad.db.add_wflows_logs.update(q, {'$addToSet': {'tags': tag}})
                         continue # already checked
-                    mongo_handler.collection.remove({'level': 'ERROR', 'formula': formula, 'snl_id': dct['snl_id']}) # avoid dups
+                    q['level'] = 'ERROR'
+                    if skip_all_scanned and mongo_handler.collection.find_one(q):
+                        continue
+                    mongo_handler.collection.remove(q) # avoid dups
                     counter['structures'] += 1
                     s = Structure.from_dict(dct)
                     s.snl_id = dct['snl_id']
