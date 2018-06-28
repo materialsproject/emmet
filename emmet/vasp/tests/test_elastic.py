@@ -15,7 +15,7 @@ __email__ = "montoyjh@lbl.gov"
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 test_tasks = os.path.join(module_dir, "..", "..", "..", "test_files", "vasp", "elastic_tasks.json")
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 
 class ElasticAnalysisBuilderTest(unittest.TestCase):
     @classmethod
@@ -45,8 +45,8 @@ class ElasticAnalysisBuilderTest(unittest.TestCase):
         runner.run()
         # Test warnings
         doc = ec_builder.elasticity.query_one(criteria={"pretty_formula": "NaN3"})
-        self.assertEqual(doc['elasticity']['warnings'], None)
-        self.assertAlmostEqual(doc['elasticity']['compliance_tensor'][0][0],
+        self.assertEqual(doc['warnings'], None)
+        self.assertAlmostEqual(doc['compliance_tensor'][0][0],
                                0.041576072)
 
     def test_grouping_functions(self):
@@ -156,12 +156,16 @@ class ElasticAggregateBuilderTest(unittest.TestCase):
             self.assertIsNotNone(item)
 
     def test_process_items(self):
-        builder = self.get_a_new_builder()
         docs = list(self.test_elasticity.query(None, {"pretty_formula": "Si"}))
         formula_dict = generate_formula_dict(self.test_materials)
-        processed = builder.process_item((docs, formula_dict['Si']))
+        processed = self.builder.process_item((docs, formula_dict['Si']))
         self.assertEqual(len(processed), 1)
         self.assertEqual(len(processed[0]['all_elastic_fits']), 2)
+
+    def test_update_targets(self):
+        processed = [self.builder.process_item(item)
+                     for item in self.builder.get_items()]
+        self.builder.update_targets(processed)
 
     def test_aggregation(self):
         runner = Runner([self.builder])

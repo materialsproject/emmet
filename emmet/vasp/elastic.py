@@ -271,6 +271,7 @@ class ElasticAggregateBuilder(Builder):
         return all_docs
 
     def update_targets(self, items):
+        items = chain.from_iterable(items)
         self.elasticity_aggregated.update(items)
 
 
@@ -313,9 +314,9 @@ def get_elastic_analysis(opt_task, defo_tasks):
                                 "optimized_structure": opt_struct,
                                 "input_structure": input_struct,
                                 "completed_at": completed_at,
-                                "optimization_input": vasp_input,
-                                "order": 2})
-            elastic_doc['warnings'] = get_warnings(et, opt_struct)
+                                "optimization_input": vasp_input, "order": 2,
+                                "pretty_formula": opt_struct.composition.reduced_formula})
+            elastic_doc['warnings'] = get_warnings(et, opt_struct) or None
             try:
                 elastic_doc.update(et.get_structure_property_dict(opt_struct))
             except ValueError:
