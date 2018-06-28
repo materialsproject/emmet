@@ -8,7 +8,7 @@ from pymongo.collection import ReturnDocument
 from pymatgen.analysis.structure_prediction.volume_predictor import DLSVolumePredictor
 from pymatgen import Structure
 from pymatgen.util.provenance import StructureNL, Author
-from fireworks import LaunchPad, Workflow
+from fireworks import LaunchPad
 from atomate.vasp.database import VaspCalcDb
 from atomate.vasp.workflows.presets.core import wf_structure_optimization
 from atomate.vasp.powerups import add_trackers, add_tags, add_additional_fields_to_taskdocs
@@ -530,8 +530,8 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
                                 wf = add_additional_fields_to_taskdocs(wf, update_dict={'task_id': struct.task_id})
                             #if struct.icsd_id is not None:
                             #    wf = add_additional_fields_to_taskdocs(wf, update_dict={'icsd_id': struct.icsd_id})
-                        except:
-                            msg = 'Structure for SNL {} --> SKIP: Could not make workflow'.format(struct.snl_id)
+                        except Exception as ex:
+                            msg = 'Structure for SNL {} --> SKIP: Could not make workflow --> {}'.format(struct.snl_id, str(ex))
                             print(msg)
                             logger.error(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'tags': [tag], 'error': 'could not make workflow'})
                             continue
