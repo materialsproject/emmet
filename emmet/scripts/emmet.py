@@ -1,4 +1,4 @@
-import click, os, yaml, sys, logging, json, tarfile
+import click, os, yaml, sys, logging, tarfile
 from fnmatch import fnmatch
 from datetime import datetime
 from collections import Counter, OrderedDict
@@ -11,7 +11,6 @@ from pymatgen.util.provenance import StructureNL, Author
 from fireworks import LaunchPad, Workflow
 from atomate.vasp.database import VaspCalcDb
 from atomate.vasp.workflows.presets.core import wf_structure_optimization
-from atomate.vasp.database import VaspCalcDb
 from atomate.vasp.powerups import add_trackers, add_tags, add_additional_fields_to_taskdocs
 from emmet.vasp.materials import group_structures, get_sg
 from emmet.vasp.task_tagger import task_type
@@ -37,7 +36,7 @@ def cli():
 def ensure_meta(snls_db):
     """ensure meta-data fields are set in SNL collection"""
 
-    snl_db_config = yaml.load(open(snls_db, 'r'))
+    snl_db_config = yaml.safe_load(open(snls_db, 'r'))
     snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
     snl_db = snl_db_conn[snl_db_config['db']]
     snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
@@ -188,7 +187,7 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
     # TODO use add_snls first, and then add_wflows based on SNL collection
     snl_collections = [lpad.db.snls]
     if add_snls_db is not None:
-        snl_db_config = yaml.load(open(add_snls_db, 'r'))
+        snl_db_config = yaml.safe_load(open(add_snls_db, 'r'))
         snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
         snl_db = snl_db_conn[snl_db_config['db']]
         snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
@@ -273,7 +272,7 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
                     if task_label == "Structure Optimization":
                         s = Structure.from_dict(task['input']['structure'])
                         try:
-                            sgnum = get_sg(s)
+                            sg = get_sg(s)
                         except Exception as ex:
                             s.to(fmt='json', filename='sgnum_{}.json'.format(task['task_id']))
                             msg = 'SNL {}: {}'.format(task['task_id'], ex)
@@ -483,7 +482,7 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
                                                         lpad.delete_wf(s.fw_id)
                                                         break
                                                 else:
-                                                    print('  --> CLEANUP: delete {} WF and re-add to include task_id as additional_field'.format(fw['state'], s.fw_id))
+                                                    print('  --> CLEANUP: delete {} WF and re-add to include task_id as additional_field'.format(fw['state']))
                                                     lpad.delete_wf(s.fw_id)
                                                     break
                                     else:
@@ -633,7 +632,7 @@ def add_snls(archive, add_snls_dbs):
     snl_collections = [lpad.db.snls]
     if add_snls_dbs:
         for add_snls_db in add_snls_dbs:
-            snl_db_config = yaml.load(open(add_snls_db, 'r'))
+            snl_db_config = yaml.safe_load(open(add_snls_db, 'r'))
             snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
             snl_db = snl_db_conn[snl_db_config['db']]
             snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
@@ -655,7 +654,7 @@ def add_snls(archive, add_snls_dbs):
         print('Please include meta info in', meta_path)
         return
     with open(meta_path, 'r') as f:
-        meta = yaml.load(f)
+        meta = yaml.safe_load(f)
         meta['authors'] = [Author.parse_author(a) for a in meta['authors']]
 
     exclude = {'about.remarks': {'$ne': 'DEPRECATED'}}
