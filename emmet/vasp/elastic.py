@@ -171,7 +171,7 @@ class ElasticAnalysisBuilder(Builder):
 #       to be in the same database
 # TODO: gotta be a better keyword arg than elasticity aggregated
 class ElasticAggregateBuilder(Builder):
-    def __init__(self, elasticity, elasticity_aggregated,
+    def __init__(self, elasticity, materials, elasticity_aggregated,
                  query=None, incremental=None, **kwargs):
         """
         Aggregates elasticity results based on materials
@@ -198,78 +198,80 @@ class ElasticAggregateBuilder(Builder):
                 self.incremental = False
         else:
             self.incremental = incremental
+        self.materials = materials
         self.incremental = incremental
         self.start_date = datetime.utcnow()
-        super().__init__(sources=[elasticity],
-                         targets=[elasticity],
+        super().__init__(sources=[elasticity, materials],
+                         targets=[elasticity_aggregated],
                          **kwargs)
-
-    def connect(self):
-        self.elasticity.connect()
-        self.materials.connect()
 
     def get_items(self):
         """
         Gets all items to process into materials documents
 
         Returns:
-            generator of tasks aggregated by formula with relevant data
-            projection to process into elasticity documents
+            generator of elasticity documents aggregated by formula
+            with relevant data projection to process into elasticity documents
         """
         self.logger.info("Ensuring indices on lu_field for sources/targets")
         q = self.query
         if self.incremental:
-            self.tasks.ensure_index(self.tasks.lu_field)
-            self.elasticity.ensure_index(self.elasticity.lu_field)
+            self.materials.ensure_index(self.elasticity.lu_field)
+            self.elasticity_aggregated.ensure_index(self.elasticity.lu_field)
             incr_filter = self.query
             incr_filter.update(self.tasks.lu_filter(self.elasticity))
-            formulas = self.elasticity.distinct("formula_pretty", incr_filter)
-            q.update({"formula_pretty": {"$in": formulas}})
+            formulas = self.elasticity.distinct("pretty_formula", incr_filter)
+            q.update({"pretty_formula": {"$in": formulas}})
             if len(formulas) > 500:
                 self.logger.debug("More than 500 new formulas, incremental "
                                   "mode may be inefficient")
             material_filter = {"pretty_formula": {"$in": formulas}}
         else:
-            formulas = self.tasks.distinct('formula_pretty', criteria=q)
+            formulas = self.elasticity.distinct('pretty_formula', criteria=q)
             material_filter = {}
         material_dict = generate_formula_dict(self.materials, material_filter)
-        cursor = self.elasticity.groupby("formula_pretty", criteria=q)
+        cursor = self.elasticity.groupby("pretty_formula", criteria=q)
         for result in cursor:
-            structures_by_mp_id = material_dict[result['_id']]
+            structures_by_mp_id = material_dict[result['_id']['pretty_formula']]
             yield result['docs'], structures_by_mp_id
 
-    def process_items(self, item):
+    def process_item(self, item):
         docs, material_dict = item
-        grouped = group_by_material_id(docs, material_dict, 'input_structure')
-        all_elastic_docs = item
-        if not all_elastic_docs:
-            logger.debug("No elastic doc for mp_id {}".format(mp_id))
+        grouped = group_by_material_id(material_dict, docs, 'input_structure')
+        if not grouped:
+            logger.debug("No material match for {}".format(formula))
 
         # For now just do the most recent one that's not failed
-        sorted(elastic_docs, key=lambda x: (x['state'], x['completed_at']))
-        final_doc = elastic_docs[-1]
-        c_ijkl = ElasticTensor.from_voigt(final_doc['elastic_tensor'])
-        structure = final_doc['optimized_structure']
-        formula = structure.composition.reduced_formula
-        elements = [s.symbol for s in structure.composition.elements]
-        chemsys = '-'.join(elements)
-        final_doc.update(c_ijkl.property_dict)
-        try:
-            final_doc.update(c_ijkl.get_structure_property_dict(structure))
-        except ValueError:
-            self.logger.debug("Negative K or G found, structure property "
-                              "dict not computed")
-        elastic_summary = {'task_id': mp_id,
-                           'all_elastic_fits': elastic_docs,
-                           'elasticity': final_doc,
-                           'pretty_formula': formula,
-                           'chemsys': chemsys,
-                           'elements': elements,
-                           'last_updated': self.elasticity.lu_field}
-        all_docs.append(elastic_summary)
-        # elastic_summary.update(final_doc)
-
+        # TODO: better sorting of docs
+        all_docs = []
+        for task_id, elastic_docs in grouped.items():
+            elastic_docs = sorted(
+                elastic_docs, key=lambda x: (x['state'], x['completed_at']))
+            final_doc = elastic_docs[-1]
+            c_ijkl = ElasticTensor.from_voigt(final_doc['elastic_tensor'])
+            structure = Structure.from_dict(final_doc['optimized_structure'])
+            formula = structure.composition.reduced_formula
+            elements = [s.symbol for s in structure.composition.elements]
+            chemsys = '-'.join(elements)
+            final_doc.update(c_ijkl.property_dict)
+            try:
+                final_doc.update(c_ijkl.get_structure_property_dict(structure))
+            except ValueError:
+                self.logger.debug("Negative K or G found, structure property "
+                                  "dict not computed")
+            elastic_summary = {'task_id': task_id,
+                               'all_elastic_fits': elastic_docs,
+                               'elasticity': final_doc,
+                               'pretty_formula': formula,
+                               'chemsys': chemsys,
+                               'elements': elements,
+                               'last_updated': self.elasticity.lu_field}
+            all_docs.append(elastic_summary)
+            # elastic_summary.update(final_doc)
         return all_docs
+
+    def update_targets(self, items):
+        self.elasticity_aggregated.update(items)
 
 
 def get_elastic_analysis(opt_task, defo_tasks):
@@ -309,10 +311,17 @@ def get_elastic_analysis(opt_task, defo_tasks):
                                 "compliance_tensor": et.compliance_tensor.voigt,
                                 "elastic_tensor_original": et_fit.voigt,
                                 "optimized_structure": opt_struct,
+                                "input_structure": input_struct,
                                 "completed_at": completed_at,
-                                "optimization_input": vasp_input})
-            # Process input
-        elastic_doc['warnings'] = get_warnings(et, opt_struct) or None
+                                "optimization_input": vasp_input,
+                                "order": 2})
+            elastic_doc['warnings'] = get_warnings(et, opt_struct)
+            try:
+                elastic_doc.update(et.get_structure_property_dict(opt_struct))
+            except ValueError:
+                logger.debug("Negative K or G found, structure property "
+                             "dict not computed")
+
         #TODO: process MPWorks metadata?
         #TODO: higher order
         #TODO: add some of the relevant DFT params, kpoints
@@ -462,8 +471,8 @@ def set_tkd_value(tensor_keyed_dict, tensor, set_value, allclose_kwargs=None):
             return
 
 
-def group_by_material_id(materials_dict, docs, tol=1e-6, loosen=True,
-                         structure_key='structure', structure_matcher=None):
+def group_by_material_id(materials_dict, docs, structure_key='structure',
+                         tol=1e-6, loosen=True, structure_matcher=None):
     """
     Groups a collection of documents by material id
     as found in a materials collection
@@ -485,18 +494,15 @@ def group_by_material_id(materials_dict, docs, tol=1e-6, loosen=True,
     """
     materials_dict = {mp_id: Structure.from_dict(struct)
                       for mp_id, struct in materials_dict.items()}
-    tasks_by_opt = group_deformations_by_optimization_task(docs, tol)
-    task_sets_by_mp_id = {}
-    # Iterate over all set of optimizations/deformations
-    for opt_task, defo_tasks in tasks_by_opt:
+    docs_by_mp_id = {}
+    for doc in docs:
         sm = structure_matcher or StructureMatcher(comparator=ElementComparator())
-        structure = Structure.from_dict(opt_task['input']['structure'])
-        match = False
+        structure = Structure.from_dict(get(doc, structure_key))
         # Iterate over all candidates until match is found
         matches = {c_id: candidate for c_id, candidate in
                    materials_dict.items() if sm.fit(candidate, structure)}
         niter = 0
-        while len(matches) < 1 and niter < 4:
+        while len(matches) < 1 and niter < 4 and loosen:
             logger.debug("Loosening sm criteria")
             sm = StructureMatcher(sm.ltol * 2, sm.stol * 2,
                                   sm.angle_tol * 2)
@@ -509,14 +515,14 @@ def group_by_material_id(materials_dict, docs, tol=1e-6, loosen=True,
             sorted_ids = sorted(list(matches.keys()),
                                 key=lambda x: abs(matches[x].density - structure.density))
             mp_id = sorted_ids[0]
-            if mp_id in task_sets_by_mp_id:
-                task_sets_by_mp_id[mp_id].append((opt_task, defo_tasks))
+            if mp_id in docs_by_mp_id:
+                docs_by_mp_id[mp_id].append(doc)
             else:
-                task_sets_by_mp_id[mp_id] = [(opt_task, defo_tasks)]
+                docs_by_mp_id[mp_id] = [doc]
         else:
             logger.debug("No material match found for formula {}".format(
                 structure.composition.reduced_formula))
-    return task_sets_by_mp_id
+    return docs_by_mp_id
 
 
 def group_deformations_by_optimization_task(docs, tol=1e-6):

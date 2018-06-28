@@ -55,13 +55,8 @@ class ElasticAnalysisBuilderTest(unittest.TestCase):
         self.assertEqual(len(docs_grouped1), 1)
         grouped_by_opt = group_deformations_by_optimization_task(docs1)
         self.assertEqual(len(grouped_by_opt), 1)
-
-
-
         docs2 = self.test_tasks.query(criteria={"task_label": "elastic deformation"})
         sgroup2 = group_by_parent_lattice(docs2)
-
-
 
     def test_get_distinct_rotations(self):
         struct = PymatgenTest.get_structure("Si")
