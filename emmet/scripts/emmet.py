@@ -26,6 +26,25 @@ base_query = {'is_ordered': True, 'is_valid': True, 'nsites': {'$lt': 200}, 'sit
 task_base_query = {'tags': {'$nin': ['DEPRECATED', 'deprecated']}, '_mpworks_meta': {'$exists': 0}}
 structure_keys = ['snl_id', 'lattice', 'sites', 'charge', 'about._materialsproject.task_id']
 
+def aggregate_by_formula(coll, q, key='reduced_cell_formula'):
+    query = {'$and': [q, exclude]}
+    query.update(base_query)
+    return coll.aggregate([
+        {'$match': query}, {'$sort': OrderedDict([('nelements', 1), ('nsites', 1)])},
+        {'$group': {
+            '_id': '${}'.format(key),
+            'structures': {'$push': dict((k.split('.')[-1], '${}'.format(k)) for k in structure_keys)}
+        }}
+    ], allowDiskUse=True, batchSize=1)
+
+def get_meta_from_structure(struct):
+    d = {'formula_pretty': struct.composition.reduced_formula}
+    d['nelements'] = len(set(struct.composition.elements))
+    d['nsites'] = len(struct)
+    d['is_ordered'] = struct.is_ordered
+    d['is_valid'] = struct.is_valid()
+    return d
+
 @click.group()
 def cli():
     pass
@@ -47,18 +66,13 @@ def ensure_meta(snls_db):
         if idx and not idx%1000:
             print(idx, '...')
         struct = Structure.from_dict(doc)
-        d = {'formula_pretty': struct.composition.reduced_formula}
-        d['nelements'] = len(set(struct.composition.elements))
-        d['nsites'] = len(struct)
-        d['is_ordered'] = struct.is_ordered
-        d['is_valid'] = struct.is_valid()
-        snl_coll.update({'snl_id': doc['snl_id']}, {'$set': d})
+        snl_coll.update({'snl_id': doc['snl_id']}, {'$set': get_meta_from_structure(struct)})
 
     ensure_indexes(['snl_id', 'formula_pretty', 'nelements', 'nsites', 'is_ordered', 'is_valid'], [snl_coll])
 
 
 @cli.command()
-@click.option('--target_db_file', default="target.json", help='target db file')
+@click.argument('target_db_file', type=click.Path(exists=True))
 @click.option('--tag', default=None, help='only insert tasks with specific tag')
 @click.option('--insert/--no-insert', default=False, help='actually execute task addition')
 def add_tasks(target_db_file, tag, insert):
@@ -74,10 +88,7 @@ def add_tasks(target_db_file, tag, insert):
     source = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
     print('connected to source db with', source.collection.count(), 'tasks')
 
-    if not os.path.exists(target_db_file):
-        print(target_db_file, 'not found!')
-        return
-    target = VaspCalcDb.from_db_file(target_db_file, admin=True) # 'db_atomate.json'
+    target = VaspCalcDb.from_db_file(target_db_file, admin=True)
     print('connected to target db with', target.collection.count(), 'tasks')
 
     ensure_indexes(['task_id', 'tags', 'dir_name', 'retired_task_id'], [source.collection, target.collection])
@@ -184,7 +195,6 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
 
     lpad = LaunchPad.auto_load()
 
-    # TODO use add_snls first, and then add_wflows based on SNL collection
     snl_collections = [lpad.db.snls]
     if add_snls_db is not None:
         snl_db_config = yaml.safe_load(open(add_snls_db, 'r'))
@@ -300,22 +310,17 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
 
 
     for tag, value in tags.items():
-        query = {'$and': [{'about.remarks': tag}, exclude]}
-        query.update(base_query)
 
         if tag == 'new_ordered_icsd_2017': # TODO WIP will be removed
             #TODO for new_ordered_icsd_2017: docs = db.icsd.find(query, {'snl': 1, 'formula_reduced_abc': 1, 'icsd_id': 1, 'elements': 1})
             print(tag, 'TODO implement db.icsd as snl_coll -> add_snls?')
             continue
 
+        if skip_all_scanned and not value[1]:
+            continue
+
         print('aggregate', value[0], 'structures for', tag, '...')
-        structure_groups = value[-1].aggregate([
-            {'$match': query}, {'$sort': OrderedDict([('nelements', 1), ('nsites', 1)])},
-            {'$group': {
-                '_id': '$reduced_cell_formula',
-                'structures': {'$push': dict((k.split('.')[-1], '${}'.format(k)) for k in structure_keys)}
-            }}
-        ], allowDiskUse=True, batchSize=1)
+        structure_groups = aggregate_by_formula(value[-1], {'about.remarks': tag})
 
         print('loop formulas for', tag, '...')
         counter = Counter()
@@ -350,7 +355,7 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
                     try:
                         sgnum = get_sg(s)
                     except Exception as ex:
-                        s.to(fmt='json', filename='sgnum-{}.json'.format(s.snl_id))
+                        s.to(fmt='json', filename='sgnum_{}.json'.format(s.snl_id))
                         msg = 'SNL {}: {}'.format(s.snl_id, ex)
                         print(msg)
                         logger.error(msg, extra={'formula': formula, 'snl_id': s.snl_id, 'tags': [tag], 'error': str(ex)})
@@ -624,9 +629,13 @@ def report(tag):
 @cli.command()
 @click.argument('archive', type=click.Path(exists=True))
 @click.option('--add_snls_dbs', '-a', multiple=True, type=click.Path(exists=True), help='config files for additional SNLs collections')
-def add_snls(archive, add_snls_dbs):
+@click.option('--insert/--no-insert', default=False, help='actually execute SNL insertion')
+def add_snls(archive, add_snls_dbs, insert):
     """add structures from archive of structure files (CIF, POSCAR, ...) to (local) SNLs collection"""
     # TODO assign task_ids to structures?
+
+    if not insert:
+        print('DRY RUN! Add --insert flag to actually add SNLs')
 
     lpad = LaunchPad.auto_load()
     snl_collections = [lpad.db.snls]
@@ -641,7 +650,7 @@ def add_snls(archive, add_snls_dbs):
         print(snl_coll.count(), 'SNLs in', snl_coll.full_name)
 
     fname, ext = os.path.splitext(os.path.basename(archive))
-    tag, sec_ext = fname.rsplit('.', 1) if '.' in fname else fname, ''
+    tag, sec_ext = fname.rsplit('.', 1) if '.' in fname else [fname, '']
     if sec_ext:
         ext = ''.join([sec_ext, ext])
     exts = ['tar.gz', '.tgz']
@@ -666,7 +675,6 @@ def add_snls(archive, add_snls_dbs):
             continue
         f = tar.extractfile(member)
         if f:
-            print(member.name)
             contents = f.read().decode('utf-8')
             fname = member.name.lower()
             if fnmatch(fname, "*.cif*") or fnmatch(fname, "*.mcif*"):
@@ -684,28 +692,64 @@ def add_snls(archive, add_snls_dbs):
                 break #continue
 
             formula = struct.composition.reduced_formula
-            query = {'$and': [{'formula_pretty': formula}, exclude]}
-            query.update(base_query)
+            sg = get_sg(struct)
+            struct_added = False
 
             for snl_coll in snl_collections:
-                snl_groups = snl_coll.aggregate([
-                    {'$match': query}, {'$sort': OrderedDict([('nelements', 1), ('nsites', 1)])},
-                    {'$group': {
-                        '_id': '$formula_pretty',
-                        'snls': {'$push': dict((k.split('.')[-1], '${}'.format(k)) for k in structure_keys)}
-                    }}
-                ], allowDiskUse=True, batchSize=1)
-            return
+                try:
+                    group = aggregate_by_formula(snl_coll, {'formula_pretty': formula}, key='formula_pretty').next() # only one formula
+                except StopIteration:
+                    continue
 
-            snls.append(StructureNL(
-                struct, authors, references=references.strip(), remarks=[tag]
-            ))
-    print(len(snls))
+                structures = []
+                for dct in group['structures']:
+                    s = Structure.from_dict(dct)
+                    s.snl_id = dct['snl_id']
+                    s.remove_oxidation_states()
+                    try:
+                        sgnum = get_sg(s)
+                    except Exception as ex:
+                        s.to(fmt='json', filename='sgnum_{}.json'.format(s.snl_id))
+                        print('SNL {}: {}'.format(s.snl_id, ex))
+                        continue
+                    if sgnum == sg:
+                        structures.append(s)
 
-#                snls.append(snl.as_dict())
-#    if snls:
-#        print('add', len(snls), 'SNLs')
-#        result = target.db.snls.insert_many(snls)
-#        print('#SNLs inserted:', len(result.inserted_ids))
-#    else:
-#        print('no SNLs to insert')
+                if not structures:
+                    continue
+
+                canonical_structures = []
+                for g in group_structures(structures):
+                    canonical_structures.append(g[0])
+
+                if not canonical_structures:
+                    continue
+
+                for s in canonical_structures:
+                    if structures_match(struct, s):
+                        print('Structure from', member.name, 'already added as SNL', s.snl_id, 'in', snl_coll.full_name)
+                        struct_added = True
+                        break
+
+                if struct_added:
+                    break
+
+            if struct_added:
+                continue
+
+            print('append SNL for structure from', member.name)
+            snl_dct = StructureNL(struct, meta['authors'], references=meta.get('references', '').strip(), projects=[tag]).as_dict()
+            snl_dct.update(get_meta_from_structure(struct))
+            prefix = snl_collections[0].database.name
+            index = max([int(snl_id[len(prefix)+1:]) for snl_id in snl_collections[0].distinct('snl_id')]) + len(snls) + 1
+            snl_dct['snl_id'] = '{}-{}'.format(prefix, index)
+            snls.append(snl_dct)
+
+    if snls:
+        print('add', len(snls), 'SNLs')
+        if insert:
+            result = snl_collections[0].insert_many(snls)
+            print('#SNLs inserted:', len(result.inserted_ids))
+    else:
+        print('no SNLs to insert')
+
