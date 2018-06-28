@@ -68,7 +68,7 @@ class SNLBuilder(Builder):
         self.materials.ensure_index(self.materials.key, unique=True)
         self.materials.ensure_index("formula_pretty")
 
-        self.snls.ensure_index(self.materials.key, unique=True)
+        self.snls.ensure_index(self.snls.key, unique=True)
         self.snls.ensure_index("formula_pretty")
 
         for s in self.source_snls:
@@ -92,6 +92,13 @@ class SNLBuilder(Builder):
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.snls))
         forms_to_update = set(self.materials.distinct("formula_pretty", q))
+
+        # Find all formulas for materials not present in the target SNL collection
+        q = dict(self.query)
+        mat_ids = self.materials.distinct("task_id", q)
+        snl_t_ids = self.snls.distinct("task_id")
+        to_update_t_ids = list(set(mat_ids) - set(snl_t_ids))
+        forms_to_update |= set(self.materials.distinct("formula_pretty", {"task_id": {"$in": to_update_t_ids}}))
 
         # Find all new SNL formulas since the builder was last run
         for source in self.source_snls:

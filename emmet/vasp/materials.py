@@ -1,6 +1,6 @@
+import os
 from datetime import datetime
 from itertools import chain, groupby
-import os
 
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
@@ -28,6 +28,7 @@ class MaterialsBuilder(Builder):
                  stol=0.3,
                  angle_tol=5,
                  separate_mag_orderings=False,
+                 require_structure_opt=True,
                  **kwargs):
         """
         Creates a materials collection from tasks and tags
@@ -42,6 +43,7 @@ class MaterialsBuilder(Builder):
             stol (float): StructureMatcher tuning parameter for matching tasks to materials
             angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
             separate_mag_orderings (bool): Separate magnetic orderings into different materials
+            require_structure_opt (bool): Requires every material have a structure optimization
         """
 
         self.tasks = tasks
@@ -53,6 +55,7 @@ class MaterialsBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
         self.separate_mag_orderings = separate_mag_orderings
+        self.require_structure_opt = require_structure_opt
 
         self.__settings = load_settings(self.materials_settings, default_mat_settings)
 
@@ -136,6 +139,7 @@ class MaterialsBuilder(Builder):
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
+
         items = [i for i in filter(None, chain.from_iterable(items)) if self.valid(i)]
         if len(items) > 0:
             self.logger.info("Updating {} materials".format(len(items)))
@@ -147,14 +151,29 @@ class MaterialsBuilder(Builder):
         """
         Converts a group of tasks into one material
         """
+
         # Convert the task to properties and flatten
         all_props = list(chain.from_iterable([self.task_to_prop_list(t) for t in task_group]))
+
+        # Store task_id of first structure as material task_id
+        structure_task_ids = list(
+            sorted(
+                [
+                    prop["task_id"]
+                    for prop in all_props
+                    if prop["materials_key"] == "structure" and "Structure Optimization" in prop["task_type"]
+                ],
+                key=ID_to_int))
+
+        # If we don't have a structure optimization then just return no material
+        if len(structure_task_ids) == 0 and self.require_structure_opt:
+            return None
 
         # Sort and group based on materials key
         sorted_props = sorted(all_props, key=lambda x: x['materials_key'])
         grouped_props = groupby(sorted_props, lambda x: x['materials_key'])
 
-        # Choose the best prop for each materials key: highest quality score and most recent updated
+        # Choose the best prop for each materials key: highest quality score and lowest energy
         best_props = []
         for _, props in grouped_props:
             # Sort for highest quality score and lowest energy
@@ -176,7 +195,7 @@ class MaterialsBuilder(Builder):
                    if prop.get("track", False)]
 
         # Store all the task_ids
-        task_ids = list(sorted([t["task_id"] for t in task_group], key=lambda x: int(str(x).split("-")[-1])))
+        task_ids = list(sorted([t["task_id"] for t in task_group], key=ID_to_int))
 
         # Store task_types
         task_types = {t["task_id"]: t["task_type"] for t in all_props}
@@ -184,7 +203,7 @@ class MaterialsBuilder(Builder):
         mat = {
             self.materials.lu_field: max([prop["last_updated"] for prop in all_props]),
             "task_ids": task_ids,
-            self.materials.key: task_ids[0],
+            self.materials.key: structure_task_ids[0],
             "origins": origins,
             "task_types": task_types
         }
@@ -193,7 +212,6 @@ class MaterialsBuilder(Builder):
             set_(mat, prop["materials_key"], prop["value"])
 
         # Add metadata back into document
-
         if "structure" in mat:
             structure = Structure.from_dict(mat["structure"])
             mat.update(structure_metadata(structure))
@@ -275,6 +293,7 @@ class MaterialsBuilder(Builder):
         self.materials.ensure_index(self.materials.lu_field)
 
 def get_sg(struc):
+    # helper function to get spacegroup with a loose tolerance
     return struc.get_space_group_info(symprec=0.1)[1]
 
 def structure_metadata(structure):
@@ -297,6 +316,21 @@ def structure_metadata(structure):
     }
 
     return meta
+
+
+def ID_to_int(s_id):
+    """
+    Converts a string id to int
+    falls back to assuming ID is an Int if it can't process
+    Assumes string IDs are of form "[chars]-[int]" such as
+    mp-234
+    """
+    if isinstance(s_id, str):
+        return int(str(s_id).split("-")[-1])
+    elif isinstance(s_id, (int, float)):
+        return s_id
+    else:
+        raise Exception("Could not parse {} into a number".format(s_id))
 
 
 def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_orderings=False):
@@ -322,6 +356,7 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
         comparator=ElementComparator())
 
     def get_mag_ordering(struc):
+        # helperd function to get a label of the magnetic ordering type
         return CollinearMagneticStructureAnalyzer(struc).ordering.value
 
     # First group by spacegroup number then by structure matching
@@ -329,7 +364,7 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
         for group in sm.group_structures(sorted(pregroup, key=get_sg)):
             # Match magnetic orderings here
             if separate_mag_orderings:
-                for _,mag_group in groupby(sorted(group, key=get_mag_ordering), key=get_mag_ordering):
+                for _, mag_group in groupby(sorted(group, key=get_mag_ordering), key=get_mag_ordering):
                     yield list(mag_group)
             else:
                 yield group
