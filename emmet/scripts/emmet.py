@@ -25,10 +25,20 @@ no_electroneg = ['He', 'He0+', 'Ar', 'Ar0+', 'Ne', 'Ne0+']
 base_query = {'is_ordered': True, 'is_valid': True, 'nsites': {'$lt': 200}, 'sites.label': {'$nin': no_electroneg}}
 task_base_query = {'tags': {'$nin': ['DEPRECATED', 'deprecated']}, '_mpworks_meta': {'$exists': 0}}
 structure_keys = ['snl_id', 'lattice', 'sites', 'charge', 'about._materialsproject.task_id']
+aggregation_keys = ['reduced_cell_formula', 'formula_pretty']
 
-def aggregate_by_formula(coll, q, key='reduced_cell_formula'):
+def aggregate_by_formula(coll, q, key=None):
     query = {'$and': [q, exclude]}
     query.update(base_query)
+    if key is None:
+        for k in aggregation_keys:
+            q = {k: {'$exists': 1}}
+            q.update(base_query)
+            if coll.count(q):
+                key = k
+                break
+        if key is None:
+            raise ValueError('could not find aggregation keys', aggregation_keys, 'in', coll.full_name)
     return coll.aggregate([
         {'$match': query}, {'$sort': OrderedDict([('nelements', 1), ('nsites', 1)])},
         {'$group': {
@@ -75,8 +85,8 @@ def ensure_meta(snls_db):
 @click.argument('target_db_file', type=click.Path(exists=True))
 @click.option('--tag', default=None, help='only insert tasks with specific tag')
 @click.option('--insert/--no-insert', default=False, help='actually execute task addition')
-def add_tasks(target_db_file, tag, insert):
-    """Retrieve tasks from source and add to target"""
+def copy_tasks(target_db_file, tag, insert):
+    """Retrieve tasks from source and copy to target task collection"""
 
     if not insert:
         print('DRY RUN: add --insert flag to actually add tasks to production')
@@ -180,14 +190,14 @@ def add_tasks(target_db_file, tag, insert):
 
 
 @cli.command()
-@click.option('--add_snls_db', type=click.Path(exists=True), help='config file for additional SNLs collection')
-@click.option('--add_tasks_db', type=click.Path(exists=True), help='config file for additional tasks collection')
+@click.option('--add_snls_dbs', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
+@click.option('--add_tasks_db', type=click.Path(exists=True), help='config file for additional tasks collection to scan')
 @click.option('--tag', default=None, help='only include structures with specific tag')
 @click.option('--insert/--no-insert', default=False, help='actually execute workflow addition')
-@click.option('--clear-logs/--no-clear-logs', default=False, help='clear MongoDB logs collection')
-@click.option('--max-structures', default=1000, help='set max structures for tags to scan')
+@click.option('--clear-logs/--no-clear-logs', default=False, help='clear MongoDB logs collection for specific tag')
+@click.option('--max-structures', '-m', default=1000, help='set max structures for tags to scan')
 @click.option('--skip-all-scanned/--no-skip-all-scanned', default=False, help='skip all already scanned structures incl. WFs2Add/Errors')
-def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structures, skip_all_scanned):
+def add_wflows(add_snls_dbs, add_tasks_db, tag, insert, clear_logs, max_structures, skip_all_scanned):
     """add workflows based on tags in SNL collection"""
 
     if not insert:
@@ -196,14 +206,14 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
     lpad = LaunchPad.auto_load()
 
     snl_collections = [lpad.db.snls]
-    if add_snls_db is not None:
-        snl_db_config = yaml.safe_load(open(add_snls_db, 'r'))
-        snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
-        snl_db = snl_db_conn[snl_db_config['db']]
-        snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
-        snl_collections.append(snl_db[snl_db_config['collection']])
+    if add_snls_dbs is not None:
+        for snl_db_config in yaml.load_all(open(add_snls_dbs, 'r')):
+            snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
+            snl_db = snl_db_conn[snl_db_config['db']]
+            snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
+            snl_collections.append(snl_db[snl_db_config['collection']])
 
-    ensure_indexes(['snl_id', 'reduced_cell_formula', 'about.remarks', 'about.projects', 'sites.label', 'nsites', 'nelements'], snl_collections)
+    ensure_indexes(['snl_id', 'reduced_cell_formula', 'formula_pretty', 'about.remarks', 'about.projects', 'sites.label', 'nsites', 'nelements'], snl_collections)
     for snl_coll in snl_collections:
         print(snl_coll.count(exclude), 'SNLs in', snl_coll.full_name)
 
@@ -213,8 +223,8 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
         username=lpad.username, password=lpad.password, authentication_db=lpad.name, formatter=MyMongoFormatter()
     )
     logger.addHandler(mongo_handler)
-    if clear_logs:
-        mongo_handler.collection.drop()
+    if clear_logs and tag is not None:
+        mongo_handler.collection.remove({'tags': tag})
     ensure_indexes(['level', 'message', 'snl_id', 'formula', 'tags'], [mongo_handler.collection])
 
     tasks_collections = OrderedDict()
@@ -234,14 +244,22 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
         query = dict(exclude)
         query.update(base_query)
         for snl_coll in snl_collections:
-            remarks_projects = snl_coll.distinct('about.projects', query) + snl_coll.distinct('about.remarks', query)
-            for t in set(remarks_projects):
+            print('collecting tags from', snl_coll.full_name, '...')
+            projects = snl_coll.distinct('about.projects', query)
+            remarks = snl_coll.distinct('about.remarks', query)
+            projects_remarks = projects
+            if len(remarks) < 100:
+                projects_remarks += remarks
+            else:
+                print('too many remarks in', snl_coll.full_name, '({})'.format(len(remarks)))
+            for t in set(projects_remarks):
                 q = {'$and': [{'$or': [{'about.remarks': t}, {'about.projects': t}]}, exclude]}
                 q.update(base_query)
                 if t not in all_tags:
                     all_tags[t] = [snl_coll.count(q), snl_coll]
                 else:
                     print('tag -', t, '- already in', all_tags[t][-1].full_name)
+        print('sort and analyze tags ...')
         sorted_tags = sorted(all_tags.items(), key=lambda x: x[1][0])
         for item in sorted_tags:
             to_scan = item[1][0] - lpad.db.add_wflows_logs.count({'tags': item[0]})
@@ -313,16 +331,11 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
 
     for tag, value in tags.items():
 
-        if tag == 'new_ordered_icsd_2017': # TODO WIP will be removed
-            #TODO for new_ordered_icsd_2017: docs = db.icsd.find(query, {'snl': 1, 'formula_reduced_abc': 1, 'icsd_id': 1, 'elements': 1})
-            print(tag, 'TODO implement db.icsd as snl_coll -> add_snls?')
-            continue
-
         if skip_all_scanned and not value[1]:
             continue
 
         print('aggregate', value[0], 'structures for', tag, '...')
-        structure_groups = aggregate_by_formula(value[-1], {'about.remarks': tag})
+        structure_groups = aggregate_by_formula(value[-1], {'$or': [{'about.remarks': tag}, {'about.projects': tag}]})
 
         print('loop formulas for', tag, '...')
         counter = Counter()
@@ -530,8 +543,6 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
                             wf = add_tags(wf, [tag])
                             if struct.task_id is not None:
                                 wf = add_additional_fields_to_taskdocs(wf, update_dict={'task_id': struct.task_id})
-                            #if struct.icsd_id is not None:
-                            #    wf = add_additional_fields_to_taskdocs(wf, update_dict={'icsd_id': struct.icsd_id})
                         except Exception as ex:
                             msg = 'Structure for SNL {} --> SKIP: Could not make workflow --> {}'.format(struct.snl_id, str(ex))
                             print(msg)
@@ -557,6 +568,9 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
                 for x in canonical_structures_list
             ])
             print(len(canonical_structures_list), 'canonical structure(s) for', formula, sites_elements)
+            if tag is not None:
+                print('trying again ...')
+                add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structures, True)
 
         print(counter)
 
@@ -596,11 +610,16 @@ def report(tag):
     if tag is None:
         tags = [t for t in lpad.workflows.distinct('metadata.tags') if t is not None]
         tags += [t for t in lpad.db.add_wflows_logs.distinct('tags') if t is not None and t not in tags]
+        all_tags = []
+        for t in tags:
+            all_tags.append((t, lpad.db.add_wflows_logs.count({'tags': t})))
+        tags = [t[0] for t in sorted(all_tags, key=lambda x: x[1], reverse=True)]
         print(len(tags), 'tags in WFs and logs collections')
 
     from prettytable import PrettyTable
     table = PrettyTable()
     table.field_names = ['Tag', 'SNLs', 'WFs2Add', 'WFs'] + states + ['% FIZZLED', 'Progress']
+    sums = ['total'] + [0] * (len(table.field_names)-1)
 
     for t in tags:
         wflows = lpad.workflows.find({'metadata.tags': t}, {'state': 1})
@@ -615,22 +634,27 @@ def report(tag):
             progress = '{:.0f}%'.format(progress)
         entry = [tc, nr_snls, wflows_to_add, total] + [counter[state] for state in states]
         fizzled = counter['FIZZLED'] / total if total else 0.
+        if progress != '-':
+            fizzled = counter['FIZZLED'] / counter['COMPLETED'] if counter['COMPLETED'] else 0.
         percent_fizzled = "\033[1;31m{:.0f}%\033[0m".format(fizzled*100.) \
                 if fizzled > 0.2 else '{:.0f}%'.format(fizzled*100.)
         entry.append(percent_fizzled)
         entry.append(progress)
+        for idx, e in enumerate(entry):
+            if isinstance(e, int):
+                sums[idx] += e
         if any(entry[2:-2]):
             table.add_row(entry)
 
-    table.sortby = 'SNLs'
-    table.reversesort = True
+    if tag is None:
+        table.add_row(['\033[1;32m{}\033[0m'.format(s if s else '-') for s in sums])
     table.align['Tag'] = 'r'
     print(table)
 
 
 @cli.command()
 @click.argument('archive', type=click.Path(exists=True))
-@click.option('--add_snls_dbs', '-a', multiple=True, type=click.Path(exists=True), help='config files for additional SNLs collections')
+@click.option('--add_snls_dbs', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to check against')
 @click.option('--insert/--no-insert', default=False, help='actually execute SNL insertion')
 def add_snls(archive, add_snls_dbs, insert):
     """add structures from archive of structure files (CIF, POSCAR, ...) to (local) SNLs collection"""
@@ -641,9 +665,8 @@ def add_snls(archive, add_snls_dbs, insert):
 
     lpad = LaunchPad.auto_load()
     snl_collections = [lpad.db.snls]
-    if add_snls_dbs:
-        for add_snls_db in add_snls_dbs:
-            snl_db_config = yaml.safe_load(open(add_snls_db, 'r'))
+    if add_snls_dbs is not None:
+        for snl_db_config in yaml.load_all(open(add_snls_dbs, 'r')):
             snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
             snl_db = snl_db_conn[snl_db_config['db']]
             snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
@@ -661,14 +684,14 @@ def add_snls(archive, add_snls_dbs, insert):
         return
 
     meta_path = '{}.yaml'.format(tag)
+    meta = None
     if not os.path.exists(meta_path):
-        print('Please include meta info in', meta_path)
-        return
-    with open(meta_path, 'r') as f:
-        meta = yaml.safe_load(f)
-        meta['authors'] = [Author.parse_author(a) for a in meta['authors']]
-
-    exclude = {'about.remarks': {'$ne': 'DEPRECATED'}}
+        meta = {'authors': ['Materials Project <feedback@materialsproject.org>']}
+        print(meta_path, 'not found. Using', meta)
+    else:
+        with open(meta_path, 'r') as f:
+            meta = yaml.safe_load(f)
+    meta['authors'] = [Author.parse_author(a) for a in meta['authors']]
 
     snls = []
     tar = tarfile.open(archive, 'r:gz')
@@ -693,13 +716,18 @@ def add_snls(archive, add_snls_dbs, insert):
                 print(ex)
                 break #continue
 
+            if not (struct.is_ordered and struct.is_valid()):
+                print('Structure from', member.name, 'not ordered and valid!')
+                continue
+
             formula = struct.composition.reduced_formula
             sg = get_sg(struct)
             struct_added = False
 
             for snl_coll in snl_collections:
                 try:
-                    group = aggregate_by_formula(snl_coll, {'formula_pretty': formula}, key='formula_pretty').next() # only one formula
+                    q = {'$or': [{k: formula} for k in aggregation_keys]}
+                    group = aggregate_by_formula(snl_coll, q).next() # only one formula
                 except StopIteration:
                     continue
 
