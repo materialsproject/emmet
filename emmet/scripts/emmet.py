@@ -203,7 +203,7 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
         snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
         snl_collections.append(snl_db[snl_db_config['collection']])
 
-    ensure_indexes(['snl_id', 'reduced_cell_formula', 'about.remarks', 'sites.label', 'nsites', 'nelements'], snl_collections)
+    ensure_indexes(['snl_id', 'reduced_cell_formula', 'about.remarks', 'about.projects', 'sites.label', 'nsites', 'nelements'], snl_collections)
     for snl_coll in snl_collections:
         print(snl_coll.count(exclude), 'SNLs in', snl_coll.full_name)
 
@@ -234,12 +234,12 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
         query = dict(exclude)
         query.update(base_query)
         for snl_coll in snl_collections:
-            remarks = filter(None, snl_coll.find(query).distinct('about.remarks'))
-            for t in remarks:
-                query = {'$and': [{'about.remarks': t}, exclude]}
-                query.update(base_query)
+            remarks_projects = snl_coll.distinct('about.projects', query) + snl_coll.distinct('about.remarks', query)
+            for t in set(remarks_projects):
+                q = {'$and': [{'$or': [{'about.remarks': t}, {'about.projects': t}]}, exclude]}
+                q.update(base_query)
                 if t not in all_tags:
-                    all_tags[t] = [snl_coll.count(query), snl_coll]
+                    all_tags[t] = [snl_coll.count(q), snl_coll]
                 else:
                     print('tag -', t, '- already in', all_tags[t][-1].full_name)
         sorted_tags = sorted(all_tags.items(), key=lambda x: x[1][0])
@@ -248,7 +248,7 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
             if item[1][0] < max_structures and to_scan:
                 tags[item[0]] = [item[1][0], to_scan, item[1][-1]]
     else:
-        query = {'$and': [{'about.remarks': tag}, exclude]}
+        query = {'$and': [{'$or': [{'about.remarks': tag}, {'about.projects': tag}]}, exclude]}
         query.update(base_query)
         for snl_coll in snl_collections:
             cnt = snl_coll.count(query)
@@ -261,6 +261,8 @@ def add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structure
         print('nothing to scan')
         return
     print(len(tags), 'tags to scan in source SNL collections:')
+    if tag is None:
+        print('[with < {} structures to scan]'.format(max_structures))
     print('\n'.join(['{} {} ({}) --> {} TO SCAN'.format(v[2].full_name, k, v[0], v[1]) for k, v in tags.items()]))
 
     canonical_task_structures = {}
