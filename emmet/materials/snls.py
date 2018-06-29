@@ -68,7 +68,7 @@ class SNLBuilder(Builder):
         self.materials.ensure_index(self.materials.key, unique=True)
         self.materials.ensure_index("formula_pretty")
 
-        self.snls.ensure_index(self.materials.key, unique=True)
+        self.snls.ensure_index(self.snls.key, unique=True)
         self.snls.ensure_index("formula_pretty")
 
         for s in self.source_snls:
@@ -92,6 +92,13 @@ class SNLBuilder(Builder):
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.snls))
         forms_to_update = set(self.materials.distinct("formula_pretty", q))
+
+        # Find all formulas for materials not present in the target SNL collection
+        q = dict(self.query)
+        mat_ids = self.materials.distinct("task_id", q)
+        snl_t_ids = self.snls.distinct("task_id")
+        to_update_t_ids = list(set(mat_ids) - set(snl_t_ids))
+        forms_to_update |= set(self.materials.distinct("formula_pretty", {"task_id": {"$in": to_update_t_ids}}))
 
         # Find all new SNL formulas since the builder was last run
         for source in self.source_snls:
@@ -175,16 +182,21 @@ class SNLBuilder(Builder):
                     ] + [Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]]
         for snl in snls:
             snl_struc = StructureNL.from_dict(snl).structure
+            # Get SNL Spacegroup
+            # This try-except fixes issues for some structures where space group data is not returned by spglib
             try:
-                snl_spacegroup = snl_struc.get_space_group_info()[0]
+                snl_spacegroup = snl_struc.get_space_group_info(symprec=0.1)[0]
             except:
                 snl_spacegroup = -1
             for struc in m_strucs:
+
+                # Get Materials Structure Spacegroup
                 try:
-                    struc_sg = struc.get_space_group_info()[0]
+                    struc_sg = struc.get_space_group_info(symprec=0.1)[0]
                 except:
                     struc_sg = -1
-                # The try-excepts are a temp fix to a spglib bug
+
+                # Match spacegroups
                 if struc_sg == snl_spacegroup and sm.fit(struc, snl_struc):
                     yield snl
                     break
@@ -238,9 +250,11 @@ def aggregate_snls(snls):
     entries = BibliographyData(entries=refs)
     references = entries.to_string("bibtex")
 
-    # Aggregate all remarks and keep character count less than 140 <-- requirement from SNL
-    remarks = list(set([remark for snl in snls for remark in snl["about"]["remarks"]]))
+    # Keep first SNL remarks since that should assocaited with the base structure
+    remarks = list(set([remark for remark in snls[0]["about"]["remarks"]]))
     remarks = [r for r in remarks if len(r) < 140]
+    # The rest get stored in tags
+    tags = list(set([remark for snl in snls for remark in snl["about"]["remarks"]]))
 
     # Aggregate all projects
     projects = list(set([projects for snl in snls for projects in snl["about"]["projects"]]))
@@ -269,7 +283,8 @@ def aggregate_snls(snls):
         "projects": projects,
         "authors": authors,
         "data": {
-            "_db_ids": db_ids
+            "_db_ids": db_ids,
+            "_tags": tags,
         }
     }
 

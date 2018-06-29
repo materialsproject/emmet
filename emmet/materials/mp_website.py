@@ -63,7 +63,8 @@ mp_conversion_dict = {
     "original_task_id": "task_id",
     "input.incar": "inputs.structure_optimization.incar",
     "input.kpoints": "inputs.structure_optimization.kpoints",
-    "encut": "inputs.structure_optimization.incar.ENCUT"
+    "encut": "inputs.structure_optimization.incar.ENCUT",
+    "formula_anonymous": "formula_anonymous"
 }
 
 SANDBOXED_PROPERTIES = {"e_above_hull": "e_above_hull", "decomposes_to": "decomposes_to"}
@@ -106,7 +107,7 @@ class MPBuilder(Builder):
         self.dielectric = dielectric
         self.dois = dois
 
-        sources = list(filter(None, [materials, thermo, electronic_structure, snls, elastic, dielectric, xrd]))
+        sources = list(filter(None, [materials, thermo, electronic_structure, snls, elastic, dielectric, xrd, dois]))
 
         super().__init__(sources=sources, targets=[mp_materials], **kwargs)
 
@@ -137,7 +138,7 @@ class MPBuilder(Builder):
 
         self.logger.info("Found {} updated materials for the website".format(len(mats)))
 
-        mats = set(mats) | new_mats
+        mats = mats | new_mats
         self.logger.info("Processing {} total materials".format(len(mats)))
         self.total = len(mats)
 
@@ -196,13 +197,13 @@ class MPBuilder(Builder):
             thermo = item["thermo"]
             add_thermo(mat, thermo)
 
-        if item.get("doi", None):
-            doi = item["doi"]
+        if item.get("dois", None):
+            doi = item["dois"]
             add_dois(mat, doi)
 
         snl = item.get("snl", {})
         add_snl(mat, snl)
-
+        add_magnetism(mat)
         sandbox_props(mat)
         has_fields(mat)
         return jsanitize(mat)
@@ -218,7 +219,7 @@ class MPBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info("Updating {} mp materials docs".format(len(items)))
-            self.mp_materials.update(docs=items)
+            self.mp_materials.update(docs=items, ordered=False)
         else:
             self.logger.info("No items to update")
 
@@ -227,12 +228,6 @@ class MPBuilder(Builder):
         Ensures indexes on the tasks and materials collections
         :return:
         """
-
-        # Basic search index for tasks
-        self.tasks.ensure_index("task_id", unique=True)
-        self.tasks.ensure_index("state")
-        self.tasks.ensure_index("formula_pretty")
-        self.tasks.ensure_index(self.tasks.lu_field)
 
         # Search index for materials
         self.materials.ensure_index(self.materials.key, unique=True)
@@ -263,11 +258,14 @@ def old_style_mat(new_style_mat):
 
     struc = Structure.from_dict(mat["structure"])
     mat["oxide_type"] = oxide_type(struc)
-    mat["reduced_cell_formula"] = struc.composition.as_dict()
+    mat["reduced_cell_formula"] = struc.composition.reduced_composition.as_dict()
+    mat["unit_cell_formula"] = struc.composition.as_dict()
     mat["full_formula"] = "".join(struc.formula.split())
     vals = sorted(mat["reduced_cell_formula"].values())
     mat["anonymous_formula"] = {string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))}
     mat["initial_structure"] = new_style_mat.get("initial_structure", None)
+    mat["nsites"] = struc.get_primitive_structure().num_sites
+
 
     set_(mat, "pseudo_potential.functional", "PBE")
 
@@ -329,7 +327,8 @@ def add_elastic(mat, elastic):
         "homogeneous_poisson": "homogeneous_poisson",
         "poisson_ratio": "homogeneous_poisson",
         "universal_anisotropy": "universal_anisotropy",
-        "elastic_tensor_original": "elastic_tensor_original"
+        "elastic_tensor_original": "elastic_tensor_original",
+        "compliance_tensor": "compliance_tensor"
     }
 
     mat["elasticity"] = {k: elastic["elasticity"][v] for k, v in es_aliases.items()}
@@ -419,13 +418,12 @@ def add_snl(mat, snl=None):
         mat["snl"]["about"].update(mp_default_snl_fields)
 
     mat["snl_final"] = mat["snl"]
-    mat["icsd_ids"] = get(mat["snl"], "about._db_ids.icsd_ids", [])
+    mat["icsd_ids"] = [int(i) for i in get(mat["snl"], "about._db_ids.icsd_ids", [])]
     mat["pf_ids"] = get(mat["snl"], "about._db_ids.pf_ids", [])
 
     # Extract tags from remarks by looking for just nounds and adjectives
     mat["exp"] = {"tags": []}
-    mat["tags"] = []
-    for remark in mat["snl"]["about"].get("remarks", []):
+    for remark in mat["snl"]["about"].get("_tags", []):
         tokens = set(tok[1] for tok in nltk.pos_tag(nltk.word_tokenize(remark), tagset='universal'))
         if len(tokens.intersection({"ADV", "ADP", "VERB"})) == 0:
             mat["exp"]["tags"].append(remark)
@@ -435,24 +433,25 @@ def check_relaxation(mat, new_style_mat):
     final_structure = Structure.from_dict(mat["structure"])
 
     warnings = []
-    for init_struc in new_style_mat["initial_structures"]:
-        # Check relaxation
-        orig_crystal = Structure.from_dict(init_struc)
+    # Check relaxation for just the initial structure to optimized structure
+    init_struc = new_style_mat["initial_structure"]
 
-        try:
-            analyzer = RelaxationAnalyzer(orig_crystal, final_structure)
-            latt_para_percentage_changes = analyzer.get_percentage_lattice_parameter_changes()
-            for l in ["a", "b", "c"]:
-                change = latt_para_percentage_changes[l] * 100
-                if change < latt_para_interval[0] or change > latt_para_interval[1]:
-                    warnings.append("Large change in a lattice parameter during relaxation.")
-            change = analyzer.get_percentage_volume_change() * 100
-            if change < vol_interval[0] or change > vol_interval[1]:
-                warnings.append("Large change in volume during relaxation.")
-        except Exception as ex:
-            # print icsd_crystal.formula
-            # print final_structure.formula
-            print("Relaxation analyzer failed for Material:{} due to {}".format(mat["task_id"], traceback.print_exc()))
+    orig_crystal = Structure.from_dict(init_struc)
+
+    try:
+        analyzer = RelaxationAnalyzer(orig_crystal, final_structure)
+        latt_para_percentage_changes = analyzer.get_percentage_lattice_parameter_changes()
+        for l in ["a", "b", "c"]:
+            change = latt_para_percentage_changes[l] * 100
+            if change < latt_para_interval[0] or change > latt_para_interval[1]:
+                warnings.append("Large change in a lattice parameter during relaxation.")
+        change = analyzer.get_percentage_volume_change() * 100
+        if change < vol_interval[0] or change > vol_interval[1]:
+            warnings.append("Large change in volume during relaxation.")
+    except Exception as ex:
+        # print icsd_crystal.formula
+        # print final_structure.formula
+        print("Relaxation analyzer failed for Material:{} due to {}".format(mat["task_id"], traceback.print_exc()))
 
     mat["warnings"] = list(set(warnings))
 
@@ -477,7 +476,9 @@ def add_dielectric(mat, dielectric):
 
 
 def has_fields(mat):
-    mat["has"] = [prop for prop in ["elasticity", "piezo", "diel", "bandstructure"] if prop in mat]
+    mat["has"] = [prop for prop in ["elasticity", "piezo", "diel"] if prop in mat]
+    if "band_structure" in mat:
+        mat["has"].append("bandstructure")
 
 
 def add_dois(mat, doi):

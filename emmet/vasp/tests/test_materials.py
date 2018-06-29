@@ -124,9 +124,9 @@ class TestMaterials(unittest.TestCase):
             self.assertIn("materials_key", p)
 
         prop_names = [p["materials_key"] for p in prop_list]
-        props_in = ['structure', 'inputs.structure_optimization']
+        props_in = ['structure', 'inputs.structure_optimization', 'bandstructure.band_gap']
         props_not_in = [
-            'formula_anonymous', 'formula_pretty', 'bandstructure.band_gap', 'bandstructure.cbm', 'bandstructure.vbm',
+            'formula_anonymous', 'formula_pretty', 'bandstructure.cbm', 'bandstructure.vbm',
             'chemsys', 'analysis.delta_volume', 'thermo.energy'
         ]
 
