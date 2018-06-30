@@ -1,4 +1,4 @@
-import click, os, yaml, sys, logging, tarfile
+import click, os, yaml, sys, logging, tarfile, bson, gzip
 from fnmatch import fnmatch
 from datetime import datetime
 from collections import Counter, OrderedDict
@@ -7,6 +7,7 @@ from pymongo.errors import CursorNotFound
 from pymongo.collection import ReturnDocument
 from pymatgen.analysis.structure_prediction.volume_predictor import DLSVolumePredictor
 from pymatgen import Structure
+from pymatgen.alchemy.materials import TransformedStructure
 from pymatgen.util.provenance import StructureNL, Author
 from fireworks import LaunchPad
 from atomate.vasp.database import VaspCalcDb
@@ -678,7 +679,7 @@ def add_snls(archive, add_snls_dbs, insert):
     tag, sec_ext = fname.rsplit('.', 1) if '.' in fname else [fname, '']
     if sec_ext:
         ext = ''.join([sec_ext, ext])
-    exts = ['tar.gz', '.tgz']
+    exts = ['tar.gz', '.tgz', 'bson.gz']
     if ext not in exts:
         print(ext, 'not supported (yet)! Please use one of', exts)
         return
@@ -693,37 +694,46 @@ def add_snls(archive, add_snls_dbs, insert):
             meta = yaml.safe_load(f)
     meta['authors'] = [Author.parse_author(a) for a in meta['authors']]
 
+    input_structures = []
+    if ext == 'bson.gz':
+        for idx, doc in enumerate(bson.decode_file_iter(gzip.open(archive))):
+            if idx and not idx%1000:
+                print(idx, '...')
+            input_structures.append(TransformedStructure.from_dict(doc['structure']))
+    else:
+        tar = tarfile.open(archive, 'r:gz')
+        for member in tar.getmembers():
+            if os.path.basename(member.name).startswith('.'):
+                continue
+            f = tar.extractfile(member)
+            if f:
+                contents = f.read().decode('utf-8')
+                fname = member.name.lower()
+                if fnmatch(fname, "*.cif*") or fnmatch(fname, "*.mcif*"):
+                    fmt = 'cif'
+                elif fnmatch(fname, "*.json*") or fnmatch(fname, "*.mson*"):
+                    fmt = 'json'
+                else:
+                    print('reading', fname, 'not supported (yet)')
+                    continue
+                try:
+                    input_structures.append(Structure.from_str(contents, fmt=fmt))
+                except Exception as ex:
+                    print(ex)
+                    break #continue
+
+    print(len(input_structures), 'structure(s) loaded.')
+
     snls = []
-    tar = tarfile.open(archive, 'r:gz')
-    for member in tar.getmembers():
-        if os.path.basename(member.name).startswith('.'):
-            continue
-        f = tar.extractfile(member)
-        if f:
-            contents = f.read().decode('utf-8')
-            fname = member.name.lower()
-            if fnmatch(fname, "*.cif*") or fnmatch(fname, "*.mcif*"):
-                fmt = 'cif'
-            elif fnmatch(fname, "*.json*") or fnmatch(fname, "*.mson*"):
-                fmt = 'json'
-            else:
-                print('reading', fname, 'not supported (yet)')
-                continue
-
-            try:
-                struct = Structure.from_str(contents, fmt=fmt)
-            except Exception as ex:
-                print(ex)
-                break #continue
-
-            if not (struct.is_ordered and struct.is_valid()):
-                print('Structure from', member.name, 'not ordered and valid!')
-                continue
+    for struct in input_structures:
 
             formula = struct.composition.reduced_formula
             sg = get_sg(struct)
-            struct_added = False
+            if not (struct.is_ordered and struct.is_valid()):
+                print('Structure for', formula, sg, 'not ordered and valid!')
+                continue
 
+            struct_added = False
             for snl_coll in snl_collections:
                 try:
                     q = {'$or': [{k: formula} for k in aggregation_keys]}
@@ -757,7 +767,7 @@ def add_snls(archive, add_snls_dbs, insert):
 
                 for s in canonical_structures:
                     if structures_match(struct, s):
-                        print('Structure from', member.name, 'already added as SNL', s.snl_id, 'in', snl_coll.full_name)
+                        print('Structure for', formula, sg, 'already added as SNL', s.snl_id, 'in', snl_coll.full_name)
                         struct_added = True
                         break
 
@@ -767,12 +777,18 @@ def add_snls(archive, add_snls_dbs, insert):
             if struct_added:
                 continue
 
-            print('append SNL for structure from', member.name)
-            snl_dct = StructureNL(struct, meta['authors'], references=meta.get('references', '').strip(), projects=[tag]).as_dict()
-            snl_dct.update(get_meta_from_structure(struct))
             prefix = snl_collections[0].database.name
             index = max([int(snl_id[len(prefix)+1:]) for snl_id in snl_collections[0].distinct('snl_id')]) + len(snls) + 1
-            snl_dct['snl_id'] = '{}-{}'.format(prefix, index)
+            snl_id = '{}-{}'.format(prefix, index)
+            print('append SNL for structure with', formula, sg, 'as', snl_id)
+            references = meta.get('references', '').strip()
+            if isinstance(struct, TransformedStructure):
+                snl = struct.to_snl(meta['authors'], references=references, projects=[tag])
+            else:
+                snl = StructureNL(struct, meta['authors'], references=references, projects=[tag])
+            snl_dct = snl.as_dict()
+            snl_dct.update(get_meta_from_structure(struct))
+            snl_dct['snl_id'] = snl_id
             snls.append(snl_dct)
 
     if snls:
