@@ -7,11 +7,13 @@ from itertools import chain
 from monty.json import jsanitize
 
 from pymatgen import Structure
-from pymatgen.analysis.elasticity.elastic import ElasticTensor
+from pymatgen.analysis.elasticity.elastic import ElasticTensor, \
+    ElasticTensorExpansion
 from pymatgen.analysis.elasticity.strain import Deformation, Strain
 from pymatgen.analysis.elasticity.stress import Stress
 from pymatgen.analysis.elasticity.tensors import get_tkd_value
-from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
+from pymatgen.analysis.structure_matcher import StructureMatcher, \
+    ElementComparator
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from maggma.builder import Builder
@@ -295,11 +297,33 @@ def get_elastic_analysis(opt_task, defo_tasks):
     all_calcs = explicit + derived
     stresses = [c.get("cauchy_stress") for c in all_calcs]
     strains = [c.get("strain") for c in all_calcs]
+    elastic_doc['calculations'] = all_calcs
     vstrains = [s.zeroed(0.002).voigt for s in strains]
     if np.linalg.matrix_rank(vstrains) == 6:
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
-            et_fit = legacy_fit(strains, stresses)
+            # Process SOEC runs
+            if len(vstrains) < 28:
+                et_fit = legacy_fit(strains, stresses)
+                elastic_doc.update({"order": 2})
+            # Process TOEC runs
+            else:
+                # TODO: better error checking here
+                pk_stresses = [c.get("pk_stress") for c in all_calcs]
+                eq_stress = -0.1 * Stress(opt_task['output']['stress'])
+                et_exp_raw = ElasticTensorExpansion.from_diff_fit(
+                    strains, pk_stresses, eq_stress=eq_stress, order=3)
+                et_exp = et_exp_raw.fit_to_structure(opt_struct)
+                et_fit = ElasticTensor(et_exp[0])
+                # We can add other derivations (YS etc.) here as needed
+                elastic_doc.update({
+                    "elastic_tensor_expansion": [
+                        c.voigt.tolist() for c in et_exp],
+                    "elastic_tensor_expansion_original": [
+                        c.voigt.tolist() for c in et_exp_raw],
+                    "thermal_expansion_tensor": et_exp.thermal_expansion_coeff(
+                        opt_struct, 300),
+                    "order": 3})
             et = et_fit.voigt_symmetrized.convert_to_ieee(opt_struct)
             vasp_input = opt_task['input']
             if 'structure' in vasp_input:

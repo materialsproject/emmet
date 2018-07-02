@@ -13,10 +13,12 @@ __author__ = "Joseph Montoya"
 __email__ = "montoyjh@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-test_tasks = os.path.join(module_dir, "..", "..", "..", "test_files", "vasp", "elastic_tasks.json")
+test_tasks = os.path.join(module_dir, "..", "..", "..", "test_files",
+                          "vasp", "elastic_tasks.json")
 
 DEBUG_MODE = False
 
+# TODO: add TOEC functionality test
 class ElasticAnalysisBuilderTest(unittest.TestCase):
     @classmethod
     def setUp(self):
