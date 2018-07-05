@@ -44,6 +44,8 @@ class MagneticBuilder(Builder):
         mats = list(self.materials.distinct(self.materials.key, q))
         self.logger.info(
             "Found {} new materials for magnetism data".format(len(mats)))
+        self.total = len(mats)
+
         for m in mats:
             yield self.materials.query(properties=[self.materials.key, "structure"],criteria={self.materials.key: m}).limit(1)[0]
 
