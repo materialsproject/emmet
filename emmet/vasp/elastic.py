@@ -81,6 +81,7 @@ class ElasticAnalysisBuilder(Builder):
         self.logger.debug("Adding indices")
         self.tasks.ensure_index("nsites")
         self.tasks.ensure_index("formula_pretty")
+        self.elasticity.ensure_index("optimization_task_id")
 
         # Get only successful elastic deformation tasks with parent structure
         q = dict(self.query)
@@ -103,8 +104,8 @@ class ElasticAnalysisBuilder(Builder):
             formulas = self.tasks.distinct("formula_pretty", incr_filter)
             q.update({"formula_pretty": {"$in": formulas}})
             if len(formulas) > 500:
-                self.logger.debug("More than 500 new formulas, incremental "
-                                  "mode may be inefficient")
+                self.logger.debug("{} new formulas, incremental "
+                                  "mode may be inefficient".format(len(formulas)))
         else:
             formulas = self.tasks.distinct('formula_pretty', criteria=q)
 
@@ -168,7 +169,7 @@ class ElasticAnalysisBuilder(Builder):
 #       might be good for standardization
 # TODO: this could also be implemented using a lookup aggregation system
 #       which would be very efficient, but would require sources
-#       to be in the same database
+#       to be in the same database, doesn't seem necessary at this point
 # TODO: gotta be a better keyword arg than elasticity aggregated
 class ElasticAggregateBuilder(Builder):
     def __init__(self, elasticity, materials, elasticity_aggregated,
@@ -219,7 +220,7 @@ class ElasticAggregateBuilder(Builder):
             self.materials.ensure_index(self.elasticity.lu_field)
             self.elasticity_aggregated.ensure_index(self.elasticity.lu_field)
             incr_filter = self.query
-            incr_filter.update(self.tasks.lu_filter(self.elasticity))
+            incr_filter.update(self.elasticity.lu_filter(self.elasticity_aggregated))
             formulas = self.elasticity.distinct("pretty_formula", incr_filter)
             q.update({"pretty_formula": {"$in": formulas}})
             if len(formulas) > 500:
@@ -229,15 +230,21 @@ class ElasticAggregateBuilder(Builder):
         else:
             formulas = self.elasticity.distinct('pretty_formula', criteria=q)
             material_filter = {}
+        self.total = len(formulas)
         material_dict = generate_formula_dict(self.materials, material_filter)
         cursor = self.elasticity.groupby("pretty_formula", criteria=q)
         for result in cursor:
-            structures_by_mp_id = material_dict[result['_id']['pretty_formula']]
-            yield result['docs'], structures_by_mp_id
+            formula = result['_id']['pretty_formula']
+            structures_by_mp_id = material_dict.get(formula, None)
+            if not structures_by_mp_id:
+                logger.info("No materials for formula {}".format(formula))
+            else:
+                yield result['docs'], structures_by_mp_id
 
     def process_item(self, item):
         docs, material_dict = item
         grouped = group_by_material_id(material_dict, docs, 'input_structure')
+        formula = docs[0]['pretty_formula']
         if not grouped:
             logger.debug("No material match for {}".format(formula))
 
@@ -248,25 +255,27 @@ class ElasticAggregateBuilder(Builder):
             elastic_docs = sorted(
                 elastic_docs, key=lambda x: (x['state'], x['completed_at']))
             final_doc = elastic_docs[-1]
-            c_ijkl = ElasticTensor.from_voigt(final_doc['elastic_tensor'])
             structure = Structure.from_dict(final_doc['optimized_structure'])
             formula = structure.composition.reduced_formula
             elements = [s.symbol for s in structure.composition.elements]
             chemsys = '-'.join(elements)
-            final_doc.update(c_ijkl.property_dict)
-            try:
-                final_doc.update(c_ijkl.get_structure_property_dict(structure))
-            except ValueError:
-                self.logger.debug("Negative K or G found, structure property "
-                                  "dict not computed")
+            # Filter for failure, etc.
+            # TODO: fix analysis builder so k_vrh included
+            if 'k_vrh' < 0 in final_doc:
+                state = 'failed'
+            # if final_doc['k_vrh'] < 0 or final_doc['g_vrh'] < 0:
+            #     state = 'failed'
+            else:
+                state = 'successful'
             elastic_summary = {'task_id': task_id,
                                'all_elastic_fits': elastic_docs,
                                'elasticity': final_doc,
                                'pretty_formula': formula,
                                'chemsys': chemsys,
                                'elements': elements,
-                               'last_updated': self.elasticity.lu_field}
-            all_docs.append(elastic_summary)
+                               'last_updated': self.elasticity.lu_field,
+                               'state': state}
+            all_docs.append(jsanitize(elastic_summary))
             # elastic_summary.update(final_doc)
         return all_docs
 
@@ -308,8 +317,9 @@ def get_elastic_analysis(opt_task, defo_tasks):
             elastic_doc.update({"optimization_task_id": opt_task['task_id'],
                                 "cauchy_stresses": stresses,
                                 "strains": strains,
-                                "elastic_tensor": et.voigt,
-                                "compliance_tensor": et.compliance_tensor.voigt,
+                                "elastic_tensor": et.voigt.round(0),
+                                # Convert compliance to 10^-12 Pa
+                                "compliance_tensor": (et.compliance_tensor.voigt * 1000).round(1),
                                 "elastic_tensor_original": et_fit.voigt,
                                 "optimized_structure": opt_struct,
                                 "input_structure": input_struct,
@@ -318,10 +328,14 @@ def get_elastic_analysis(opt_task, defo_tasks):
                                 "pretty_formula": opt_struct.composition.reduced_formula})
             elastic_doc['warnings'] = get_warnings(et, opt_struct) or None
             try:
-                elastic_doc.update(et.get_structure_property_dict(opt_struct))
+                prop_dict = et.get_structure_property_dict(opt_struct)
+                prop_dict.pop('structure')
             except ValueError:
                 logger.debug("Negative K or G found, structure property "
                              "dict not computed")
+                prop_dict = et.property_dict
+            prop_dict = {k: np.round(v, 0) for k, v in prop_dict.items()}
+            elastic_doc.update(prop_dict)
 
         #TODO: process MPWorks metadata?
         #TODO: higher order
@@ -493,12 +507,14 @@ def group_by_material_id(materials_dict, docs, structure_key='structure',
         documents grouped by task_id from the materials
         collection
     """
+    # Structify all input structures
     materials_dict = {mp_id: Structure.from_dict(struct)
                       for mp_id, struct in materials_dict.items()}
     docs_by_mp_id = {}
     for doc in docs:
         sm = structure_matcher or StructureMatcher(comparator=ElementComparator())
         structure = Structure.from_dict(get(doc, structure_key))
+        input_sg_symbol = SpacegroupAnalyzer(structure, 0.1).get_space_group_symbol()
         # Iterate over all candidates until match is found
         matches = {c_id: candidate for c_id, candidate in
                    materials_dict.items() if sm.fit(candidate, structure)}
@@ -511,10 +527,12 @@ def group_by_material_id(materials_dict, docs, structure_key='structure',
                        materials_dict.items() if sm.fit(candidate, structure)}
             niter += 1
         if matches:
-            # TODO: add spacegroup maybe?
-            # Get best match by closest density
-            sorted_ids = sorted(list(matches.keys()),
-                                key=lambda x: abs(matches[x].density - structure.density))
+            # Get best match by spacegroup, then closest density
+            def f(m_id):
+                dens_diff = abs(matches[m_id].density - structure.density)
+                sg = SpacegroupAnalyzer(matches[m_id], 0.1).get_space_group_symbol()
+                return (sg != input_sg_symbol, dens_diff)
+            sorted_ids = sorted(list(matches.keys()), key=f)
             mp_id = sorted_ids[0]
             if mp_id in docs_by_mp_id:
                 docs_by_mp_id[mp_id].append(doc)
