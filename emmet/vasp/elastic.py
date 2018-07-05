@@ -11,10 +11,12 @@ from pymatgen.analysis.elasticity.elastic import ElasticTensor
 from pymatgen.analysis.elasticity.strain import Deformation, Strain
 from pymatgen.analysis.elasticity.stress import Stress
 from pymatgen.analysis.elasticity.tensors import get_tkd_value
+from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from maggma.builder import Builder
+from emmet.materials.mp_website import mag_types
 
 from pydash.objects import get, set_, has
 
@@ -326,6 +328,9 @@ def get_elastic_analysis(opt_task, defo_tasks):
                                 "completed_at": completed_at,
                                 "optimization_input": vasp_input, "order": 2,
                                 "pretty_formula": opt_struct.composition.reduced_formula})
+            # Add magnetic type
+            mag = CollinearMagneticStructureAnalyzer(opt_struct).ordering.value
+            elastic_doc['magnetic_type'] = mag_types[mag]
             elastic_doc['warnings'] = get_warnings(et, opt_struct) or None
             try:
                 prop_dict = et.get_structure_property_dict(opt_struct)
@@ -510,15 +515,23 @@ def group_by_material_id(materials_dict, docs, structure_key='structure',
     # Structify all input structures
     materials_dict = {mp_id: Structure.from_dict(struct)
                       for mp_id, struct in materials_dict.items()}
+    # Get magnetism
+    mags = {}
+    for mp_id, structure in materials_dict.items():
+        mags[mp_id] = CollinearMagneticStructureAnalyzer(structure).ordering.value
     docs_by_mp_id = {}
     for doc in docs:
         sm = structure_matcher or StructureMatcher(comparator=ElementComparator())
         structure = Structure.from_dict(get(doc, structure_key))
+        mag_structure = Structure.from_dict(doc['optimized_structure'])
+        mag = CollinearMagneticStructureAnalyzer(mag_structure).ordering.value
+        import nose; nose.tools.set_trace()
         input_sg_symbol = SpacegroupAnalyzer(structure, 0.1).get_space_group_symbol()
         # Iterate over all candidates until match is found
         matches = {c_id: candidate for c_id, candidate in
-                   materials_dict.items() if sm.fit(candidate, structure)}
+                   materials_dict.items() if sm.fit(candidate, structure) and mag == mags[c_id]}
         niter = 0
+        # If no matches, loosen match criteria
         while len(matches) < 1 and niter < 4 and loosen:
             logger.debug("Loosening sm criteria")
             sm = StructureMatcher(sm.ltol * 2, sm.stol * 2,
@@ -530,7 +543,7 @@ def group_by_material_id(materials_dict, docs, structure_key='structure',
             # Get best match by spacegroup, then closest density
             def f(m_id):
                 dens_diff = abs(matches[m_id].density - structure.density)
-                sg = SpacegroupAnalyzer(matches[m_id], 0.1).get_space_group_symbol()
+                sg = matches[m_id].get_space_group_info(0.1)[0]
                 return (sg != input_sg_symbol, dens_diff)
             sorted_ids = sorted(list(matches.keys()), key=f)
             mp_id = sorted_ids[0]
