@@ -263,7 +263,7 @@ class ElasticAggregateBuilder(Builder):
             chemsys = '-'.join(elements)
             # Filter for failure, etc.
             # TODO: fix analysis builder so k_vrh included
-            if 'k_vrh' < 0 in final_doc:
+            if final_doc['k_vrh'] < 0 in final_doc:
                 state = 'failed'
             # if final_doc['k_vrh'] < 0 or final_doc['g_vrh'] < 0:
             #     state = 'failed'
