@@ -22,8 +22,8 @@ if 'FW_CONFIG_FILE' not in os.environ:
     sys.exit(0)
 
 exclude = {'about.remarks': {'$nin': ['DEPRECATED', 'deprecated']}}
-no_electroneg = ['He', 'He0+', 'Ar', 'Ar0+', 'Ne', 'Ne0+']
-base_query = {'is_ordered': True, 'is_valid': True, 'nsites': {'$lt': 200}, 'sites.label': {'$nin': no_electroneg}}
+skip_labels = ['He', 'He0+', 'Ar', 'Ar0+', 'Ne', 'Ne0+', 'D', 'D+']
+base_query = {'is_ordered': True, 'is_valid': True, 'nsites': {'$lt': 200}, 'sites.label': {'$nin': skip_labels}}
 task_base_query = {'tags': {'$nin': ['DEPRECATED', 'deprecated']}, '_mpworks_meta': {'$exists': 0}}
 structure_keys = ['snl_id', 'lattice', 'sites', 'charge', 'about._materialsproject.task_id']
 aggregation_keys = ['reduced_cell_formula', 'formula_pretty']
@@ -367,7 +367,13 @@ def add_wflows(add_snls_dbs, add_tasks_db, tag, insert, clear_logs, max_structur
                     s = Structure.from_dict(dct)
                     s.snl_id = dct['snl_id']
                     s.task_id = dct.get('task_id')
-                    s.remove_oxidation_states()
+                    try:
+                        s.remove_oxidation_states()
+                    except Exception as ex:
+                        msg = 'SNL {}: {}'.format(s.snl_id, ex)
+                        print(msg)
+                        logger.error(msg, extra={'formula': formula, 'snl_id': s.snl_id, 'tags': [tag], 'error': str(ex)})
+                        continue
                     try:
                         sgnum = get_sg(s)
                     except Exception as ex:
@@ -571,7 +577,7 @@ def add_wflows(add_snls_dbs, add_tasks_db, tag, insert, clear_logs, max_structur
             print(len(canonical_structures_list), 'canonical structure(s) for', formula, sites_elements)
             if tag is not None:
                 print('trying again ...')
-                add_wflows(add_snls_db, add_tasks_db, tag, insert, clear_logs, max_structures, True)
+                add_wflows(add_snls_dbs, add_tasks_db, tag, insert, clear_logs, max_structures, True)
 
         print(counter)
 
@@ -675,6 +681,17 @@ def add_snls(archive, add_snls_dbs, insert):
     for snl_coll in snl_collections:
         print(snl_coll.count(), 'SNLs in', snl_coll.full_name)
 
+    def insert_snls(snls_list):
+        if snls_list:
+            print('add', len(snls_list), 'SNLs')
+            if insert:
+                result = snl_collections[0].insert_many(snls_list)
+                print('#SNLs inserted:', len(result.inserted_ids))
+                snls_list.clear()
+        else:
+            print('no SNLs to insert')
+
+
     fname, ext = os.path.splitext(os.path.basename(archive))
     tag, sec_ext = fname.rsplit('.', 1) if '.' in fname else [fname, '']
     if sec_ext:
@@ -699,6 +716,9 @@ def add_snls(archive, add_snls_dbs, insert):
         for idx, doc in enumerate(bson.decode_file_iter(gzip.open(archive))):
             if idx and not idx%1000:
                 print(idx, '...')
+            elements = set([specie['element'] for site in doc['structure']['sites'] for specie in site['species']])
+            if any([bool(l in elements) for l in skip_labels]):
+                continue
             input_structures.append(TransformedStructure.from_dict(doc['structure']))
     else:
         tar = tarfile.open(archive, 'r:gz')
@@ -724,78 +744,89 @@ def add_snls(archive, add_snls_dbs, insert):
 
     print(len(input_structures), 'structure(s) loaded.')
 
-    snls = []
-    for struct in input_structures:
+    snls, index = [], None
+    for idx, istruct in enumerate(input_structures):
 
-            formula = struct.composition.reduced_formula
+        struct = istruct.final_structure if isinstance(istruct, TransformedStructure) else istruct
+        formula = struct.composition.reduced_formula
+        try:
             sg = get_sg(struct)
-            if not (struct.is_ordered and struct.is_valid()):
-                print('Structure for', formula, sg, 'not ordered and valid!')
+        except Exception as ex:
+            struct.to(fmt='json', filename='sgnum_{}_{}.json'.format(tag, formula))
+            print('Structure for {}: {}'.format(formula, ex))
+            continue
+        if not (struct.is_ordered and struct.is_valid()):
+            print('Structure for', formula, sg, 'not ordered and valid!')
+            continue
+        try:
+            struct.remove_oxidation_states()
+        except Exception as ex:
+            print(struct.sites)
+            print(ex)
+            print('Structure for', formula, sg, 'error in remove_oxidation_states!')
+            sys.exit(0) #continue
+
+        struct_added = False
+        for snl_coll in snl_collections:
+            try:
+                q = {'$or': [{k: formula} for k in aggregation_keys]}
+                group = aggregate_by_formula(snl_coll, q).next() # only one formula
+            except StopIteration:
                 continue
 
-            struct_added = False
-            for snl_coll in snl_collections:
+            structures = []
+            for dct in group['structures']:
+                s = Structure.from_dict(dct)
+                s.snl_id = dct['snl_id']
+                s.remove_oxidation_states()
                 try:
-                    q = {'$or': [{k: formula} for k in aggregation_keys]}
-                    group = aggregate_by_formula(snl_coll, q).next() # only one formula
-                except StopIteration:
+                    sgnum = get_sg(s)
+                except Exception as ex:
+                    s.to(fmt='json', filename='sgnum_{}.json'.format(s.snl_id))
+                    print('SNL {}: {}'.format(s.snl_id, ex))
                     continue
+                if sgnum == sg:
+                    structures.append(s)
 
-                structures = []
-                for dct in group['structures']:
-                    s = Structure.from_dict(dct)
-                    s.snl_id = dct['snl_id']
-                    s.remove_oxidation_states()
-                    try:
-                        sgnum = get_sg(s)
-                    except Exception as ex:
-                        s.to(fmt='json', filename='sgnum_{}.json'.format(s.snl_id))
-                        print('SNL {}: {}'.format(s.snl_id, ex))
-                        continue
-                    if sgnum == sg:
-                        structures.append(s)
+            if not structures:
+                continue
 
-                if not structures:
-                    continue
+            canonical_structures = []
+            for g in group_structures(structures):
+                canonical_structures.append(g[0])
 
-                canonical_structures = []
-                for g in group_structures(structures):
-                    canonical_structures.append(g[0])
+            if not canonical_structures:
+                continue
 
-                if not canonical_structures:
-                    continue
-
-                for s in canonical_structures:
-                    if structures_match(struct, s):
-                        print('Structure for', formula, sg, 'already added as SNL', s.snl_id, 'in', snl_coll.full_name)
-                        struct_added = True
-                        break
-
-                if struct_added:
+            for s in canonical_structures:
+                if structures_match(struct, s):
+                    print('Structure for', formula, sg, 'already added as SNL', s.snl_id, 'in', snl_coll.full_name)
+                    struct_added = True
                     break
 
             if struct_added:
-                continue
+                break
 
-            prefix = snl_collections[0].database.name
-            index = max([int(snl_id[len(prefix)+1:]) for snl_id in snl_collections[0].distinct('snl_id')]) + len(snls) + 1
-            snl_id = '{}-{}'.format(prefix, index)
-            print('append SNL for structure with', formula, sg, 'as', snl_id)
-            references = meta.get('references', '').strip()
-            if isinstance(struct, TransformedStructure):
-                snl = struct.to_snl(meta['authors'], references=references, projects=[tag])
-            else:
-                snl = StructureNL(struct, meta['authors'], references=references, projects=[tag])
-            snl_dct = snl.as_dict()
-            snl_dct.update(get_meta_from_structure(struct))
-            snl_dct['snl_id'] = snl_id
-            snls.append(snl_dct)
+        if struct_added:
+            continue
 
-    if snls:
-        print('add', len(snls), 'SNLs')
-        if insert:
-            result = snl_collections[0].insert_many(snls)
-            print('#SNLs inserted:', len(result.inserted_ids))
-    else:
-        print('no SNLs to insert')
+        prefix = snl_collections[0].database.name
+        if index is None:
+            index = max([int(snl_id[len(prefix)+1:]) for snl_id in snl_collections[0].distinct('snl_id')]) + 1
+        else:
+            index += 1
+        snl_id = '{}-{}'.format(prefix, index)
+        print('append SNL for structure with', formula, sg, 'as', snl_id)
+        references = meta.get('references', '').strip()
+        if isinstance(istruct, TransformedStructure):
+            snl = istruct.to_snl(meta['authors'], references=references, projects=[tag])
+        else:
+            snl = StructureNL(istruct, meta['authors'], references=references, projects=[tag])
+        snl_dct = snl.as_dict()
+        snl_dct.update(get_meta_from_structure(struct))
+        snl_dct['snl_id'] = snl_id
+        snls.append(snl_dct)
+
+        if idx and not idx%100 or idx == len(input_structures)-1:
+            insert_snls(snls)
 
