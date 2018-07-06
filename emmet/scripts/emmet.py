@@ -269,10 +269,11 @@ def add_wflows(add_snls_dbs, add_tasks_db, tag, insert, clear_logs, max_structur
     else:
         query = {'$and': [{'$or': [{'about.remarks': tag}, {'about.projects': tag}]}, exclude]}
         query.update(base_query)
-        total = sum([snl_coll.count(query) for snl_coll in snl_collections])
+        cnts = [snl_coll.count(query) for snl_coll in snl_collections]
+        total = sum(cnts)
         if total:
             to_scan = total - lpad.db.add_wflows_logs.count({'tags': tag})
-            tags[tag] = [total, to_scan, snl_collections]
+            tags[tag] = [total, to_scan, [snl_coll for idx, snl_coll in enumerate(snl_collections) if cnts[idx]]]
 
     if not tags:
         print('nothing to scan')
