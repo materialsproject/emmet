@@ -173,6 +173,7 @@ class ElasticAnalysisBuilder(Builder):
 #       which would be very efficient, but would require sources
 #       to be in the same database, doesn't seem necessary at this point
 # TODO: gotta be a better keyword arg than elasticity aggregated
+# TODO: issue warning for non-match magnetic
 class ElasticAggregateBuilder(Builder):
     def __init__(self, elasticity, materials, elasticity_aggregated,
                  query=None, incremental=None, **kwargs):
@@ -232,8 +233,13 @@ class ElasticAggregateBuilder(Builder):
         else:
             formulas = self.elasticity.distinct('pretty_formula', criteria=q)
             material_filter = {}
+            if q.get("pretty_formula"):
+                material_filter.update({"pretty_formula": q.get("pretty_formula")})
+
         self.total = len(formulas)
+        logger.info("Generating formula dict")
         material_dict = generate_formula_dict(self.materials, material_filter)
+        logger.info("Starting formula aggregation")
         cursor = self.elasticity.groupby("pretty_formula", criteria=q)
         for result in cursor:
             formula = result['_id']['pretty_formula']
@@ -262,16 +268,28 @@ class ElasticAggregateBuilder(Builder):
             elements = [s.symbol for s in structure.composition.elements]
             chemsys = '-'.join(elements)
             # Filter for failure, etc.
-            # TODO: fix analysis builder so k_vrh included
             if final_doc['k_vrh'] < 0 in final_doc:
                 state = 'failed'
-            # if final_doc['k_vrh'] < 0 or final_doc['g_vrh'] < 0:
-            #     state = 'failed'
             else:
                 state = 'successful'
+            # Issue warning if relaxed structure differs
+            warnings = final_doc['warnings'] or []
+            opt = Structure.from_dict(final_doc['optimized_structure'])
+            init = Structure.from_dict(final_doc['input_structure'])
+            if not StructureMatcher().fit(init, opt):
+                warnings.append("Inequivalent optimization structure")
+            material_mag = CollinearMagneticStructureAnalyzer(opt).ordering.value
+            material_mag = mag_types[material_mag]
+            if final_doc['magnetic_type'] != material_mag:
+                warnings.append("Elastic magnetic phase is {}".format(
+                    final_doc['magnetic_type']))
+            final_doc.update({"warnings": warnings})
+            warnings = warnings or None
             elastic_summary = {'task_id': task_id,
                                'all_elastic_fits': elastic_docs,
                                'elasticity': final_doc,
+                               'spacegroup': init.get_space_group_info()[0],
+                               'magnetic_type': final_doc['magnetic_type'],
                                'pretty_formula': formula,
                                'chemsys': chemsys,
                                'elements': elements,
@@ -324,6 +342,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
                                 "compliance_tensor": (et.compliance_tensor.voigt * 1000).round(1),
                                 "elastic_tensor_original": et_fit.voigt,
                                 "optimized_structure": opt_struct,
+                                "spacegroup": input_struct.get_space_group_info()[0],
                                 "input_structure": input_struct,
                                 "completed_at": completed_at,
                                 "optimization_input": vasp_input, "order": 2,
@@ -515,37 +534,49 @@ def group_by_material_id(materials_dict, docs, structure_key='structure',
     # Structify all input structures
     materials_dict = {mp_id: Structure.from_dict(struct)
                       for mp_id, struct in materials_dict.items()}
-    # Get magnetism
+    # Get magnetic phases
     mags = {}
     for mp_id, structure in materials_dict.items():
-        mags[mp_id] = CollinearMagneticStructureAnalyzer(structure).ordering.value
+        mag = CollinearMagneticStructureAnalyzer(structure).ordering.value
+        mags[mp_id] = mag_types[mag]
     docs_by_mp_id = {}
     for doc in docs:
         sm = structure_matcher or StructureMatcher(comparator=ElementComparator())
         structure = Structure.from_dict(get(doc, structure_key))
-        mag_structure = Structure.from_dict(doc['optimized_structure'])
-        mag = CollinearMagneticStructureAnalyzer(mag_structure).ordering.value
-        import nose; nose.tools.set_trace()
         input_sg_symbol = SpacegroupAnalyzer(structure, 0.1).get_space_group_symbol()
         # Iterate over all candidates until match is found
         matches = {c_id: candidate for c_id, candidate in
-                   materials_dict.items() if sm.fit(candidate, structure) and mag == mags[c_id]}
+                   materials_dict.items() if sm.fit(candidate, structure)}
         niter = 0
-        # If no matches, loosen match criteria
-        while len(matches) < 1 and niter < 4 and loosen:
-            logger.debug("Loosening sm criteria")
-            sm = StructureMatcher(sm.ltol * 2, sm.stol * 2,
-                                  sm.angle_tol * 2)
-            matches = {c_id: candidate for c_id, candidate in
-                       materials_dict.items() if sm.fit(candidate, structure)}
-            niter += 1
+        if not matches:
+            # First try with conventional structure then loosen match criteria
+            convs = {c_id: SpacegroupAnalyzer(candidate, 0.1).get_conventional_standard_structure()
+                     for c_id, candidate in materials_dict.items()}
+            matches = {c_id: candidate for c_id, candidate in materials_dict.items()
+                       if sm.fit(convs[c_id], structure)}
+            while len(matches) < 1 and niter < 4 and loosen:
+                logger.debug("Loosening sm criteria")
+                sm = StructureMatcher(sm.ltol * 2, sm.stol * 2,
+                                      sm.angle_tol * 2, primitive_cell=False)
+                matches = {c_id: candidate for c_id, candidate in
+                           materials_dict.items() if sm.fit(convs[c_id], structure)}
+                niter += 1
         if matches:
-            # Get best match by spacegroup, then closest density
-            def f(m_id):
+            # Get best match by spacegroup, then mag phase, then closest density
+            mag = doc['magnetic_type']
+            def sort_criteria(m_id):
                 dens_diff = abs(matches[m_id].density - structure.density)
                 sg = matches[m_id].get_space_group_info(0.1)[0]
-                return (sg != input_sg_symbol, dens_diff)
-            sorted_ids = sorted(list(matches.keys()), key=f)
+                mag_id = mags[m_id]
+                # prefer explicit matches, allow non-mag materials match with FM tensors
+                if mag_id == mag:
+                    mag_match = 0
+                elif mag_id == 'Non-magnetic' and mag == 'FM':
+                    mag_match = 1
+                else:
+                    mag_match = 2
+                return (sg != input_sg_symbol, mag_match, dens_diff)
+            sorted_ids = sorted(list(matches.keys()), key=sort_criteria)
             mp_id = sorted_ids[0]
             if mp_id in docs_by_mp_id:
                 docs_by_mp_id[mp_id].append(doc)
