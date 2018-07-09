@@ -173,7 +173,6 @@ class ElasticAnalysisBuilder(Builder):
 #       which would be very efficient, but would require sources
 #       to be in the same database, doesn't seem necessary at this point
 # TODO: gotta be a better keyword arg than elasticity aggregated
-# TODO: issue warning for non-match magnetic
 class ElasticAggregateBuilder(Builder):
     def __init__(self, elasticity, materials, elasticity_aggregated,
                  query=None, incremental=None, **kwargs):
@@ -337,7 +336,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
             elastic_doc.update({"optimization_task_id": opt_task['task_id'],
                                 "cauchy_stresses": stresses,
                                 "strains": strains,
-                                "elastic_tensor": et.voigt.round(0),
+                                "elastic_tensor": et.voigt.zeroed(0.01).round(0),
                                 # Convert compliance to 10^-12 Pa
                                 "compliance_tensor": (et.compliance_tensor.voigt * 1000).round(1),
                                 "elastic_tensor_original": et_fit.voigt,
@@ -358,12 +357,15 @@ def get_elastic_analysis(opt_task, defo_tasks):
                 logger.debug("Negative K or G found, structure property "
                              "dict not computed")
                 prop_dict = et.property_dict
-            prop_dict = {k: np.round(v, 0) for k, v in prop_dict.items()}
+            for k, v in prop_dict.items():
+                if k in ['homogeneous_poisson', 'universal_anisotropy']:
+                    prop_dict[k] = np.round(v, 2)
+                else:
+                    prop_dict[k] = np.round(v, 0)
             elastic_doc.update(prop_dict)
 
-        #TODO: process MPWorks metadata?
         #TODO: higher order
-        #TODO: add some of the relevant DFT params, kpoints
+        #TODO: add kpoints params?
         elastic_doc['state'] = "filter_failed" if elastic_doc['warnings']\
             else "successful"
         return elastic_doc
