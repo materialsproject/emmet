@@ -336,7 +336,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
             elastic_doc.update({"optimization_task_id": opt_task['task_id'],
                                 "cauchy_stresses": stresses,
                                 "strains": strains,
-                                "elastic_tensor": et.voigt.zeroed(0.01).round(0),
+                                "elastic_tensor": et.zeroed(0.01).voigt.round(0),
                                 # Convert compliance to 10^-12 Pa
                                 "compliance_tensor": (et.compliance_tensor.voigt * 1000).round(1),
                                 "elastic_tensor_original": et_fit.voigt,
