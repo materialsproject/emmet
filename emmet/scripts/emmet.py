@@ -106,13 +106,13 @@ def copy_tasks(target_db_file, tag, insert):
 
     tags = [tag]
     if tag is None:
-        tags = [t for t in source.collection.find(exclude).distinct('tags') if t is not None]
+        tags = [t for t in source.collection.find(task_base_query).distinct('tags') if t is not None]
         print(len(tags), 'tags in source collection')
 
     for t in tags:
 
         print('### {} ###'.format(t))
-        query = {'$and': [{'tags': t}, exclude]}
+        query = {'$and': [{'tags': t}, task_base_query]}
         source_count = source.collection.count(query)
         print('source / target:', source_count, '/', target.collection.count(query))
 
