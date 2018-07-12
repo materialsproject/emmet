@@ -35,7 +35,7 @@ class ThermoBuilder(Builder):
 
     def get_items(self):
         """
-        Gets sets of entries from chemical systems that need to be processed 
+        Gets sets of entries from chemical systems that need to be processed
 
         Returns:
             generator of relevant entries from one chemical system
@@ -50,22 +50,33 @@ class ThermoBuilder(Builder):
         q.update(self.materials.lu_filter(self.thermo))
         updated_comps = set(self.materials.distinct("chemsys", q))
 
+        # All materials that are not present in the thermo collection
+        thermo_mat_ids = self.thermo.distinct("task_id")
+        q = dict(self.query)
+        q.update({"task_id": {"$nin": thermo_mat_ids}})
+        new_mat_comps = set(self.materials.distinct("chemsys",q))
+
         # All chemsys not present in thermo collection
-        new_comps = set(self.materials.distinct("chemsys"), self.query) - set(self.thermo.distinct("chemsys"))
+        new_comps = set(self.materials.distinct("chemsys", self.query)) - set(self.thermo.distinct("chemsys"))
 
-        comps = updated_comps | new_comps
-        self.logger.info("Found {} compositions with new/updated materials".format(len(comps)))
+        comps = updated_comps | new_comps | new_mat_comps
 
-        # Only yields maximal super sets: e.g. if ["A","B"] and ["A"] are both in the list, will only yield ["A","B"]
+        # Only process maximal super sets: e.g. if ["A","B"] and ["A"] are both in the list, will only yield ["A","B"]
         # as this will calculate thermo props for all ["A"] compounds
         processed = set()
 
-        # Start with the largest set to ensure we don"t miss superset/subset
-        # relations
+        to_process = []
+
         for chemsys in sorted(comps, key=lambda x: len(x.split("-")), reverse=True):
             if chemsys not in processed:
                 processed |= chemsys_permutations(chemsys)
-                yield self.get_entries(chemsys)
+                to_process.append(chemsys)
+
+        self.logger.info("Found {} compositions with new/updated materials".format(len(to_process)))
+        self.total = len(to_process)
+
+        for chemsys in to_process:
+            yield self.get_entries(chemsys)
 
     def get_entries(self, chemsys):
         """
@@ -140,7 +151,7 @@ class ThermoBuilder(Builder):
                     d["thermo"]["eq_reaction_e"] = pd.get_equilibrium_reaction_energy(e)
                 else:
                     d["thermo"]["decomposes_to"] = [{
-                        "material_id": de.entry_id,
+                        "task_id": de.entry_id,
                         "formula": de.composition.formula,
                         "amount": amt
                     } for de, amt in decomp.items()]
@@ -196,7 +207,7 @@ class ThermoBuilder(Builder):
         # Search indicies for thermo
         self.thermo.ensure_index(self.thermo.key, unique=True)
         self.thermo.ensure_index(self.thermo.lu_field)
-        self.materials.ensure_index("chemsys")
+        self.thermo.ensure_index("chemsys")
 
 
 def chemsys_permutations(chemsys):

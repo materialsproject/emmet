@@ -52,6 +52,7 @@ class MLStructuresBuilder(Builder):
 
         self.logger.info(
             "Found {} tasks to extract information from".format(len(to_process_tasks)))
+        self.total = len(to_process_tasks)
 
         for t_id in to_process_tasks:
             task = self.tasks.query_one(properties=["task_id","orig_inputs","calcs_reversed"],criteria={"task_id": t_id})

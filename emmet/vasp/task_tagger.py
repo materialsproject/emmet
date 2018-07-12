@@ -6,7 +6,6 @@ __email__ = "shyamd@lbl.gov"
 
 
 class TaskTagger(Builder):
-
     def __init__(self, tasks, task_types, **kwargs):
         """
         Creates task_types from tasks and type definitions
@@ -28,13 +27,18 @@ class TaskTagger(Builder):
             generator or list of task docs and tag definitions
         """
 
+        self.logger.info("Setting up indicies")
+        self.ensure_indicies()
+
         # Determine tasks to process.
         self.logger.info("Determining tasks to process")
         all_task_ids = self.tasks.distinct("task_id", {"state": "successful"})
         previous_task_ids = self.task_types.distinct("task_id")
         to_process = list(set(all_task_ids) - set(previous_task_ids))
 
-        self.logger.info("Yielding task documents")
+        self.logger.info("Yielding {} task documents".format(len(to_process)))
+        self.total = len(to_process)
+
         for task_id in to_process:
             yield self.tasks.query_one(criteria={"task_id": task_id}, properties=["task_id", "orig_inputs"])
 
@@ -60,6 +64,20 @@ class TaskTagger(Builder):
             self.logger.error("No task type found for {}".format(without_task_type))
         if len(with_task_type) > 0:
             self.task_types.update(with_task_type)
+
+    def ensure_indicies(self):
+        """
+        Ensures indicies on the tasks and materials collections
+        """
+
+        # Basic search index for tasks
+        self.tasks.ensure_index(self.tasks.key, unique=True)
+        self.tasks.ensure_index("state")
+        self.tasks.ensure_index(self.tasks.lu_field)
+
+        # Search index for materials
+        self.task_types.ensure_index(self.task_types.key, unique=True)
+        self.task_types.ensure_index(self.task_types.lu_field)
 
 
 def task_type(inputs, include_calc_type=True):
@@ -92,16 +110,22 @@ def task_type(inputs, include_calc_type=True):
         else:
             return calc_type + "NSCF Uniform"
 
-    if incar.get("LEPSILON", False):
+    elif incar.get("LEPSILON", False):
         return calc_type + "Static Dielectric"
 
-    if incar.get("NSW", 1) == 0:
+    elif incar.get("LCHIMAG", False):
+        return calc_type + "NMR Chemical Shielding"
+
+    elif incar.get("LEFG", False):
+        return calc_type + "NMR Electric Field Gradient"
+
+    elif incar.get("NSW", 1) == 0:
         return calc_type + "Static"
 
-    if incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
+    elif incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
         return calc_type + "Structure Optimization"
 
-    if incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
+    elif incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
         return calc_type + "Deformation"
 
     return ""
