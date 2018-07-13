@@ -11,4 +11,4 @@ networkx==2.1
 sumo==1.0.8
 -e git://github.com/hackingmaterials/matminer#egg=matminer
 -e git://github.com/materialsproject/maggma#egg=maggma
-abipy>=0.5.0
+-e git://github.com/abinit/abipy@maggma#egg=abipy
