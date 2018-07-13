@@ -1,5 +1,4 @@
 atomate>=0.6.5
-abipy>=0.5.0
 pymatgen>=2018.4.20
 monty>=1.0.1
 pydash==4.1.0
@@ -12,3 +11,4 @@ networkx==2.1
 sumo==1.0.8
 -e git://github.com/hackingmaterials/matminer#egg=matminer
 -e git://github.com/materialsproject/maggma#egg=maggma
+abipy>=0.5.0
