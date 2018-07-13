@@ -1,5 +1,5 @@
 atomate>=0.6.5
-abipy>=0.4.1
+abipy>=0.5.0
 pymatgen>=2018.4.20
 monty>=1.0.1
 pydash==4.1.0
