@@ -6,7 +6,6 @@ from pydash import py_
 
 import numpy as np
 import decimal
-# import prettyplotlib as ppl
 from prettyplotlib import brewer2mpl
 import matplotlib
 from monty.json import MontyDecoder
@@ -63,10 +62,8 @@ class PhononWebBuilder(Builder):
 
         self.logger.info("Phonon Web Builder Started")
 
-        # All relevant materials that have been updated since diffraction props were last calculated
         q = dict(self.query)
         if not self.ignore_lu:
-            # q.update(self.ph_calc_docs.lu_filter(self.targets))
             q.update(self.ph_calc_docs.lu_filter(self.targets))
         self.logger.info("Filtering ph_calc_docs by {}".format(q))
 

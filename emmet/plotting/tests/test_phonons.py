@@ -1,10 +1,6 @@
 import unittest
 import os
-import logging
-import sys
-import glob
 import json
-import numpy as np
 
 from monty.io import zopen
 from emmet.plotting.phonon import PhononWebBuilder

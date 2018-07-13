@@ -1,9 +1,7 @@
-import logging
 import tempfile
 import gridfs
 import os
 
-from abipy.dfpt.phonons import get_dyn_mat_eigenvec, match_eigenvectors, PhbstFile, PhdosFile
 from abipy.dfpt.anaddbnc import AnaddbNcFile
 from monty.json import jsanitize
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
@@ -12,7 +10,6 @@ from pymatgen.io.abinit.abiobjects import KSampling
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 import numpy as np
 from abipy.abio.inputs import AnaddbInput
-from abipy.core.abinit_units import Ha_cmm1
 from abipy.flowtk.tasks import AnaddbTask, TaskManager
 from abipy.dfpt.ddb import AnaddbError
 from abipy.core.abinit_units import eV_to_THz
@@ -169,6 +166,7 @@ class PhononBuilder(Builder):
                 e_electronic = ananc_file.emacro.cartesian_tensor.tolist()
                 e_total = ananc_file.emacro_rlx.cartesian_tensor.tolist()
 
+            dos_method = "tetrahedron"
             with task.open_phdos() as phdos_file:
                 complete_dos = phdos_file.to_pymatgen()
 
@@ -185,7 +183,10 @@ class PhononBuilder(Builder):
                     with task_dos.open_phdos() as phdos_file:
                         complete_dos = phdos_file.to_pymatgen()
 
+                dos_method = "gaussian"
+
             data = {"ph_dos": complete_dos.as_dict(),
+                    "ph_dos_method": dos_method,
                     "ph_bs": symm_line_bands.as_dict(),
                     "becs": becs,
                     "e_electronic": e_electronic,
@@ -474,9 +475,9 @@ class PhononBuilder(Builder):
 
         # Search index for materials
         self.phonon.ensure_index(self.phonon.key, unique=True)
-        # self.phonon_bs.ensure_index(self.phonon_bs.key, unique=True)
-        # self.phonon_dos.ensure_index(self.phonon_dos.key, unique=True)
-        # self.ddb_files.ensure_index(self.ddb_files.key, unique=True)
+        self.phonon_bs.ensure_index(self.phonon_bs.key, unique=True)
+        self.phonon_dos.ensure_index(self.phonon_dos.key, unique=True)
+        self.ddb_files.ensure_index(self.ddb_files.key, unique=True)
 
 
 def get_warnings(asr_break, cnsr_break, ph_bs):
