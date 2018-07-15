@@ -21,7 +21,7 @@ if __name__ == "__main__":
         include_package_data=True,
         zip_safe=False,
         install_requires=[
-            'atomate', 'abipy>=0.4.1', 'pymatgen>=2018.4.20', 'maggma','monty',
+            'atomate', 'abipy', 'pymatgen>=2018.4.20', 'maggma','monty',
             'six', 'pydash', 'tqdm', 'matminer',
             'prettyplotlib', 'pybtex', 'networkx', 'sumo',
         ],
