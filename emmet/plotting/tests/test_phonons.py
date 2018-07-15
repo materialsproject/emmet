@@ -8,7 +8,7 @@ from maggma.stores import MongoStore, GridFSStore
 
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-test_files_dir = os.path.join(module_dir, "..", "..", "..", "test_files", "abinit", "builders")
+test_files_dir = os.path.join(module_dir, "..", "..", "..", "test_files", "abinit")
 
 
 class TestPhononWebBuilder(unittest.TestCase):
@@ -22,7 +22,8 @@ class TestPhononWebBuilder(unittest.TestCase):
         cls.images_store = MongoStore("emmet_test", "images", lu_field="last_updated", key="task_id")
         cls.processed_store = MongoStore("emmet_test", "processed", lu_field="last_updated", key="task_id")
 
-        with zopen(os.path.join(test_files_dir, "phonon_items", "mp-1565_phonon_plot_item.json.gz")) as item_f:
+        item_path = os.path.join(test_files_dir, "builders", "phonon_items", "mp-1565_phonon_plot_item.json.gz")
+        with zopen(item_path) as item_f:
             cls.item = json.loads(item_f.read().decode())
 
     @classmethod
@@ -31,12 +32,15 @@ class TestPhononWebBuilder(unittest.TestCase):
 
     def setUp(self):
 
-
         self.builder = PhononWebBuilder(self.phonon_bs_store, self.phonon_dos_store, self.phonon_store, self.web_store,
                                         self.images_store, self.processed_store)
         self.builder.connect()
 
     def test_process_item(self):
+        
+        # Disabling latex for testing.
+        from matplotlib import rc
+        rc('text', usetex=False)
         d = self.builder.process_item(self.item)
 
 
