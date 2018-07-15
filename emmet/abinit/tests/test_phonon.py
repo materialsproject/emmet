@@ -9,10 +9,11 @@ import numpy as np
 from monty.io import zopen
 from emmet.abinit.phonon import PhononBuilder, get_warnings
 from maggma.stores import MongoStore, GridFSStore
+from pymatgen.io.abinit.tasks import TaskManager
 
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-test_files_dir = os.path.join(module_dir, "..", "..", "..", "test_files", "abinit", "builders")
+test_files_dir = os.path.join(module_dir, "..", "..", "..", "test_files", "abinit")
 
 
 class PhononBuilderTest(unittest.TestCase):
@@ -38,9 +39,9 @@ class PhononBuilderTest(unittest.TestCase):
         cleardb(cls.phonons_results_store.collection.database)
 
         docs = []
-        for result in glob.glob(os.path.join(test_files_dir, "phonon_results", "*_phonon_out.json.gz")):
+        for result in glob.glob(os.path.join(test_files_dir, "builders", "phonon_results", "*_phonon_out.json.gz")):
             mp_id = os.path.basename(result).split("_")[0]
-            ddb_path = os.path.join(test_files_dir, "ddb_files", "{}_DDB.gz".format(mp_id))
+            ddb_path = os.path.join(test_files_dir, "builders", "ddb_files", "{}_DDB.gz".format(mp_id))
             with zopen(ddb_path) as ddb_f:
                 ddb_id = cls.ddb_in_gridfs.collection.put(ddb_f.read())
             with zopen(result) as f:
@@ -52,7 +53,8 @@ class PhononBuilderTest(unittest.TestCase):
         cls.num_items = len(docs)
         cls.phonons_results_store.update(docs)
 
-        with zopen(os.path.join(test_files_dir, "phonon_items", "mp-1565_phonon_item.json.gz")) as item_f:
+        item_path = os.path.join(test_files_dir, "builders", "phonon_items", "mp-1565_phonon_item.json.gz")
+        with zopen(item_path) as item_f:
             cls.item = json.loads(item_f.read().decode())
 
     @classmethod
@@ -65,8 +67,15 @@ class PhononBuilderTest(unittest.TestCase):
         self.phonon_dos_store = GridFSStore("emmet_test", "phonon_dos", lu_field="last_updated", key="task_id")
         self.ddb_out_store = GridFSStore("emmet_test", "ddb_out", lu_field="last_updated", key="task_id")
 
+        # Since the tests do not call anaddb (no integration tests) the manager is never used,
+        # but should be created. If not available in the system define the simple one used for travis.
+        try:
+            manager = TaskManager.from_user_config()
+        except RuntimeError:
+            manager = TaskManager.from_file(os.path.join(test_files_dir, "manager", "travis_manager.yml"))
+
         self.builder = PhononBuilder(self.phonons_results_store, self.phonon_store, self.phonon_bs_store,
-                                     self.phonon_dos_store, self.ddb_out_store)
+                                     self.phonon_dos_store, self.ddb_out_store, manager=manager)
         self.builder.connect()
 
     def test_get_items(self):
