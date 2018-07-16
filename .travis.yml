@@ -5,7 +5,13 @@ python:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq python-openbabel
+  # Tectonic (LaTeX) deps
+  - sudo apt-get install -qq libfontconfig1-dev libgraphite2-dev libharfbuzz-dev libicu-dev zlib1g-dev
 install:
+  # Tectonic (LaTeX)
+  - curl -sSf https://static.rust-lang.org/rustup.sh | sh
+  - cargo install tectonic
+  # Conda
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -17,7 +23,6 @@ install:
   - conda create -q -n testenv python=$TRAVIS_PYTHON_VERSION numpy
   - source activate testenv
   - conda install -q -c openbabel openbabel
-  - conda install -q -c conda-forge tectonic
   - pip install -r requirements.txt
   - pip install nose
   - pip install coverage
