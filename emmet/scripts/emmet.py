@@ -263,7 +263,10 @@ def add_wflows(add_snls_dbs, add_tasks_db, tag, insert, clear_logs, max_structur
         sorted_tags = sorted(all_tags.items(), key=lambda x: x[1][0][0])
         for item in sorted_tags:
             total = sum([x[0] for x in item[1]])
-            to_scan = total - lpad.db.add_wflows_logs.count({'tags': item[0]})
+            q = {'tags': item[0]}
+            if not skip_all_scanned:
+                q['level'] = 'WARNING'
+            to_scan = total - lpad.db.add_wflows_logs.count(q)
             if total < max_structures and to_scan:
                 tags[item[0]] = [total, to_scan, [x[-1] for x in item[1]]]
     else:
@@ -272,7 +275,10 @@ def add_wflows(add_snls_dbs, add_tasks_db, tag, insert, clear_logs, max_structur
         cnts = [snl_coll.count(query) for snl_coll in snl_collections]
         total = sum(cnts)
         if total:
-            to_scan = total - lpad.db.add_wflows_logs.count({'tags': tag})
+            q = {'tags': tag}
+            if not skip_all_scanned:
+                q['level'] = 'WARNING'
+            to_scan = total - lpad.db.add_wflows_logs.count(q)
             tags[tag] = [total, to_scan, [snl_coll for idx, snl_coll in enumerate(snl_collections) if cnts[idx]]]
 
     if not tags:
@@ -362,6 +368,7 @@ def add_wflows(add_snls_dbs, add_tasks_db, tag, insert, clear_logs, max_structur
                             continue # already checked
                         q['level'] = 'ERROR'
                         if skip_all_scanned and mongo_handler.collection.find_one(q):
+                            lpad.db.add_wflows_logs.update(q, {'$addToSet': {'tags': tag}})
                             continue
                         mongo_handler.collection.remove(q) # avoid dups
                         counter['structures'] += 1
@@ -642,8 +649,8 @@ def report(tag):
             progress = '{:.0f}%'.format(progress)
         entry = [tc, nr_snls, wflows_to_add, total] + [counter[state] for state in states]
         fizzled = counter['FIZZLED'] / total if total else 0.
-        if progress != '-':
-            fizzled = counter['FIZZLED'] / counter['COMPLETED'] if counter['COMPLETED'] else 0.
+        if progress != '-' and bool(counter['COMPLETED'] + counter['FIZZLED']):
+            fizzled = counter['FIZZLED'] / (counter['COMPLETED'] + counter['FIZZLED'])
         percent_fizzled = "\033[1;31m{:.0f}%\033[0m".format(fizzled*100.) \
                 if fizzled > 0.2 else '{:.0f}%'.format(fizzled*100.)
         entry.append(percent_fizzled)
