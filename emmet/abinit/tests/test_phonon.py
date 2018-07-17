@@ -9,7 +9,7 @@ import numpy as np
 from monty.io import zopen
 from emmet.abinit.phonon import PhononBuilder, get_warnings
 from maggma.stores import MongoStore, GridFSStore
-from pymatgen.io.abinit.tasks import TaskManager
+from abipy.flowtk.tasks import TaskManager
 
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
