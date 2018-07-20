@@ -5,6 +5,7 @@ from itertools import chain, groupby
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from maggma.builder import Builder
 from emmet.vasp.task_tagger import task_type
@@ -59,7 +60,7 @@ class MaterialsBuilder(Builder):
 
         self.__settings = load_settings(self.materials_settings, default_mat_settings)
 
-        self.allowed_tasks = {t_type for d in self.__settings for t_type in d['quality_score']}
+        self.allowed_tasks = {t_type for d in self.__settings for t_type in d["quality_score"]}
 
         super().__init__(sources=[tasks], targets=[materials], **kwargs)
 
@@ -71,8 +72,8 @@ class MaterialsBuilder(Builder):
             generator or list relevant tasks and materials to process into materials documents
         """
 
-        self.logger.info("Materials Builder Started")
-        self.logger.info("Allowed Task Types: {}".format(self.allowed_tasks))
+        self.logger.info("Materials builder started")
+        self.logger.info("Allowed task types: {}".format(self.allowed_tasks))
 
         self.logger.info("Setting indexes")
         self.ensure_indicies()
@@ -84,6 +85,7 @@ class MaterialsBuilder(Builder):
         q = dict(self.query)
         q["state"] = "successful"
 
+        self.logger.info("Finding tasks to process")
         all_tasks = set(self.tasks.distinct("task_id", q))
         processed_tasks = set(self.materials.distinct("task_ids"))
         to_process_tasks = all_tasks - processed_tasks
@@ -165,24 +167,24 @@ class MaterialsBuilder(Builder):
                 ],
                 key=ID_to_int))
 
-        # If we don't have a structure optimization then just return no material
+        # If we don"t have a structure optimization then just return no material
         if len(structure_task_ids) == 0 and self.require_structure_opt:
             return None
 
         # Sort and group based on materials key
-        sorted_props = sorted(all_props, key=lambda x: x['materials_key'])
-        grouped_props = groupby(sorted_props, lambda x: x['materials_key'])
+        sorted_props = sorted(all_props, key=lambda x: x["materials_key"])
+        grouped_props = groupby(sorted_props, lambda x: x["materials_key"])
 
-        # Choose the best prop for each materials key: highest quality score and lowest energy
+        # Choose the best prop for each materials key: highest quality score and lowest energy calculation
         best_props = []
         for _, props in grouped_props:
             # Sort for highest quality score and lowest energy
-            sorted_props = sorted(props, key=lambda x: (x['quality_score'], -1.0 * x["energy"]), reverse=True)
+            sorted_props = sorted(props, key=lambda x: (x["quality_score"], -1.0 * x["energy"]), reverse=True)
             if sorted_props[0].get("aggregate", False):
                 vals = [prop["value"] for prop in sorted_props]
                 prop = sorted_props[0]
                 prop["value"] = vals
-                # Can't track an aggregated property
+                # Can"t track an aggregated property
                 prop["track"] = False
                 best_props.append(prop)
             else:
@@ -225,7 +227,7 @@ class MaterialsBuilder(Builder):
         Groups tasks by structure matching
         """
 
-        filtered_tasks = [t for t in tasks if task_type(t['orig_inputs']) in self.allowed_tasks]
+        filtered_tasks = [t for t in tasks if task_type(t["orig_inputs"]) in self.allowed_tasks]
 
         structures = []
 
@@ -254,7 +256,7 @@ class MaterialsBuilder(Builder):
         """
         Converts a task into an list of properties with associated metadata
         """
-        t_type = task_type(task['orig_inputs'])
+        t_type = task_type(task["orig_inputs"])
         t_id = task["task_id"]
 
         # Convert the task doc into a serious of properties in the materials
