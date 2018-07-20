@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from itertools import chain, groupby
+import numpy as np
 
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
