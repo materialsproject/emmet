@@ -211,9 +211,11 @@ class MaterialsBuilder(Builder):
         for prop in best_props:
             set_(mat, prop["materials_key"], prop["value"])
 
-        # Add metadata back into document
+        # Add metadata back into document and convert back to conventional standard
         if "structure" in mat:
             structure = Structure.from_dict(mat["structure"])
+            sga = SpacegroupAnalyzer(structure)
+            structure = sga.get_conventional_standard_structure()
             mat.update(structure_metadata(structure))
 
         return mat
