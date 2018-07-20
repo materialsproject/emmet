@@ -228,8 +228,14 @@ class MaterialsBuilder(Builder):
         structures = []
 
         for idx, t in enumerate(filtered_tasks):
-            s = Structure.from_dict(t["output"]['structure'])
+            s = Structure.from_dict(t["output"]["structure"])
             s.index = idx
+            total_mag = get(t,"calcs_reversed.0.output.outcar.total_magnetization",0)
+            s.total_magnetization = total_mag if total_mag else 0
+            s.total_magnetization /= s.volume
+            if not s.site_properties.get("magmom", False):
+                if "MAGMOM" in t["input"]["parameters"]:
+                    s.add_site_property("magmom",t["input"]["parameters"]["MAGMOM"])
             structures.append(s)
 
         grouped_structures = group_structures(
@@ -358,7 +364,7 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
 
     def get_mag_ordering(struc):
         # helperd function to get a label of the magnetic ordering type
-        return CollinearMagneticStructureAnalyzer(struc).ordering.value
+        return np.around(np.abs(struc.total_magnetization)/struc.volume,decimal=1)
 
     # First group by spacegroup number then by structure matching
     for _, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
