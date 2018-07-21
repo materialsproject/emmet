@@ -24,6 +24,7 @@ mp_default_snl_fields = {
     }
 }
 
+DB_indexes = {"ICSD": "icsd_ids", "Pauling": "pf_ids"}
 
 class SNLBuilder(Builder):
     """
@@ -181,25 +182,28 @@ class SNLBuilder(Builder):
         m_strucs = [Structure.from_dict(mat["structure"])
                     ] + [Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]]
         for snl in snls:
-            snl_struc = StructureNL.from_dict(snl).structure
-            # Get SNL Spacegroup
-            # This try-except fixes issues for some structures where space group data is not returned by spglib
             try:
-                snl_spacegroup = snl_struc.get_space_group_info(symprec=0.1)[0]
-            except:
-                snl_spacegroup = -1
-            for struc in m_strucs:
-
-                # Get Materials Structure Spacegroup
+                snl_struc = StructureNL.from_dict(snl).structure
+                # Get SNL Spacegroup
+                # This try-except fixes issues for some structures where space group data is not returned by spglib
                 try:
-                    struc_sg = struc.get_space_group_info(symprec=0.1)[0]
+                    snl_spacegroup = snl_struc.get_space_group_info(symprec=0.1)[0]
                 except:
-                    struc_sg = -1
+                    snl_spacegroup = -1
+                for struc in m_strucs:
 
-                # Match spacegroups
-                if struc_sg == snl_spacegroup and sm.fit(struc, snl_struc):
-                    yield snl
-                    break
+                    # Get Materials Structure Spacegroup
+                    try:
+                        struc_sg = struc.get_space_group_info(symprec=0.1)[0]
+                    except:
+                        struc_sg = -1
+
+                    # Match spacegroups
+                    if struc_sg == snl_spacegroup and sm.fit(struc, snl_struc):
+                        yield snl
+                        break
+            except:
+                self.logger.warning("Bad SNL found : {}".format(snl.get("task_id")))
 
     def add_defaults(self, snl):
 
@@ -223,9 +227,6 @@ class SNLBuilder(Builder):
             self.snls.update(snls)
         else:
             self.logger.info("No items to update")
-
-
-DB_indexes = {"ICSD": "icsd_ids", "Pauling": "pf_ids"}
 
 
 def aggregate_snls(snls):
