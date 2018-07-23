@@ -24,6 +24,7 @@ __email__ = "montoyjh@lbl.gov"
 
 # TODO: this could be abstracted to allow for multiple kinds of workflows
 # TODO: maybe input should be a fws store instead of an lpad
+# TODO: incremental building doesn't currently work, but needs to be fixed on the propjockey side
 class ElasticPropjockeyPrioritizer(Builder):
     def __init__(self, pj_store, lpad, incremental=True, 
                  query=None, **kwargs):
