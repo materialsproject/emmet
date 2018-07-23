@@ -7,6 +7,7 @@ from itertools import chain
 from monty.json import jsanitize
 
 from pymatgen import Structure
+from pymatgen.util.coord import in_coord_list
 from pymatgen.analysis.elasticity.elastic import ElasticTensor, \
     ElasticTensorExpansion
 from pymatgen.analysis.elasticity.strain import Deformation, Strain
@@ -15,6 +16,7 @@ from pymatgen.analysis.elasticity.tensors import get_tkd_value
 from pymatgen.analysis.structure_matcher import StructureMatcher, \
     ElementComparator
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from atomate.vasp.workflows.base.elastic import get_default_strain_states
 
 from maggma.builder import Builder
 
@@ -381,6 +383,25 @@ def get_distinct_rotations(structure, symprec=0.1, atol=1e-6):
     return unique_rotations
 
 
+def get_strain_state(strain):
+    """
+    Helper function to get strain state
+
+    Args:
+        strain (Strain): Input strain
+
+    Returns:
+        6-tuple corresponding to strain state
+    """
+    vstrain = strain.zeroed(5e-5).voigt
+    vstrain[vstrain == 0] = np.inf
+    min_nonzero = np.argmin(np.abs(vstrain))
+    vstrain[vstrain == np.inf] = 0
+    strain_state = vstrain / vstrain[min_nonzero]
+    return strain_state.round(4)
+
+
+allowed_strain_states = get_default_strain_states(3)
 # TODO: make it so opt_doc not necessary?
 def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
     """
@@ -427,20 +448,22 @@ def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
             explicit_calcs[strain] = calc
 
     # Determine all of the implicit calculations to include
-    sga = SpacegroupAnalyzer(structure, symprec=0.1)
+    sga = SpacegroupAnalyzer(input_structure, symprec=0.1)
     symmops = sga.get_symmetry_operations(cartesian=True)
     derived_calcs_by_strain = {}
     allclose_kwargs = {"atol": 2e-3} # define this for the purposes of matching
     for strain, calc in explicit_calcs.items():
+        num_ind_elts = len(np.nonzero(strain.zeroed(0.002).voigt))
         # Generate all transformed strains
         # strain = calc['strain']
         task_id = calc['task_id']
         tstrains = [(symmop, strain.transform(symmop))
                     for symmop in symmops]
-        # Filter strains by those which are independent and new
+        # Filter strains by those which are new and in allowed strain states
+        # import nose; nose.tools.set_trace()
         tstrains = [(symmop, tstrain) for symmop, tstrain in tstrains
-                    if tstrain.deformation_matrix.is_independent(tol) and \
-                    not get_tkd_value(explicit_calcs, tstrain, allclose_kwargs)]
+                    if not get_tkd_value(explicit_calcs, tstrain, allclose_kwargs)
+                    and in_coord_list(allowed_strain_states, get_strain_state(tstrain))]
         # Add surviving tensors to derived_strains dict
         for symmop, tstrain in tstrains:
             curr_set = get_tkd_value(derived_calcs_by_strain,
