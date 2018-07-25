@@ -182,8 +182,10 @@ class ElasticAggregateBuilder(Builder):
 
         Args:
             tasks (Store): Store of task documents
-            elastic (Store): Store of elastic properties
+            elasticity (Store): Store of elastic properties
             materials (Store): Store of materials properties
+            elasticity_aggregated (Store): Store of aggregated elastic
+                properties matched to materials
             query (dict): dictionary to limit tasks to be analyzed
             incremental (bool): whether or not to use a lu_filter based
                 on the current datetime, is set to False if target
@@ -231,7 +233,6 @@ class ElasticAggregateBuilder(Builder):
                                   "mode may be inefficient")
             material_filter = {"pretty_formula": {"$in": formulas}}
         else:
-            formulas = self.elasticity.distinct('pretty_formula', criteria=q)
             material_filter = {}
         material_dict = generate_formula_dict(self.materials, material_filter)
         cursor = self.elasticity.groupby("pretty_formula", criteria=q)
@@ -243,6 +244,8 @@ class ElasticAggregateBuilder(Builder):
         docs, material_dict = item
         grouped = group_by_material_id(material_dict, docs, 'input_structure')
         if not grouped:
+            formula = Structure.from_dict(list(
+                material_dict.values())[0].composition.reduced_formula)
             logger.debug("No material match for {}".format(formula))
 
         # For now just do the most recent one that's not failed
@@ -317,6 +320,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
                     strains, pk_stresses, eq_stress=eq_stress, order=3)
                 et_exp = et_exp_raw.fit_to_structure(opt_struct)
                 et_fit = ElasticTensor(et_exp[0])
+                import nose; nose.tools.set_trace()
                 # We can add other derivations (YS etc.) here as needed
                 elastic_doc.update({
                     "elastic_tensor_expansion": [
@@ -331,6 +335,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
             if 'structure' in vasp_input:
                 vasp_input.pop('structure')
             completed_at = max([d['completed_at'] for d in defo_tasks])
+            state, warnings = get_state_and_warnings(et, opt_struct)
             elastic_doc.update({"optimization_task_id": opt_task['task_id'],
                                 "cauchy_stresses": stresses,
                                 "strains": strains,
@@ -341,8 +346,9 @@ def get_elastic_analysis(opt_task, defo_tasks):
                                 "input_structure": input_struct,
                                 "completed_at": completed_at,
                                 "optimization_input": vasp_input, "order": 2,
-                                "pretty_formula": opt_struct.composition.reduced_formula})
-            elastic_doc['warnings'] = get_warnings(et, opt_struct) or None
+                                "pretty_formula": opt_struct.composition.reduced_formula,
+                                "state": state,
+                                "warnings": warnings})
             try:
                 elastic_doc.update(et.get_structure_property_dict(opt_struct))
             except ValueError:
@@ -350,10 +356,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
                              "dict not computed")
 
         #TODO: process MPWorks metadata?
-        #TODO: higher order
         #TODO: add some of the relevant DFT params, kpoints
-        elastic_doc['state'] = "filter_failed" if elastic_doc['warnings']\
-            else "successful"
         return elastic_doc
     else:
         logger.info("Insufficient valid strains for {}".format(
@@ -403,7 +406,7 @@ def get_strain_state(strain):
 
 allowed_strain_states = get_default_strain_states(3)
 # TODO: make it so opt_doc not necessary?
-def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
+def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, tol=0.002):
     """
     Generates the list of calcs from deformation docs, along with 'derived
     stresses', i. e. stresses derived from symmop transformations of existing
@@ -413,6 +416,8 @@ def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
     Args:
         opt_doc (dict): document for optimization task
         defo_docs ([dict]) list of documents for deformation tasks
+        add_derived (bool): flag for whether or not to add derived
+            stress-strain pairs based on symmetry
         tol (float): tolerance for assigning equivalent stresses/strains
 
     Returns:
@@ -420,6 +425,7 @@ def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
     """
     structure = Structure.from_dict(opt_doc['output']['structure'])
     input_structure = Structure.from_dict(opt_doc['input']['structure'])
+
     # Process explicit calcs, store in dict keyed by strain
     explicit_calcs = {}
     for doc in defo_docs:
@@ -447,65 +453,63 @@ def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
         else:
             explicit_calcs[strain] = calc
 
-    # Determine all of the implicit calculations to include
-    sga = SpacegroupAnalyzer(input_structure, symprec=0.1)
-    symmops = sga.get_symmetry_operations(cartesian=True)
-    derived_calcs_by_strain = {}
-    allclose_kwargs = {"atol": 2e-3} # define this for the purposes of matching
-    for strain, calc in explicit_calcs.items():
-        num_ind_elts = len(np.nonzero(strain.zeroed(0.002).voigt))
-        # Generate all transformed strains
-        # strain = calc['strain']
-        task_id = calc['task_id']
-        tstrains = [(symmop, strain.transform(symmop))
-                    for symmop in symmops]
-        # Filter strains by those which are new and in allowed strain states
-        # import nose; nose.tools.set_trace()
-        tstrains = [(symmop, tstrain) for symmop, tstrain in tstrains
-                    if not get_tkd_value(explicit_calcs, tstrain, allclose_kwargs)
-                    and in_coord_list(allowed_strain_states, get_strain_state(tstrain))]
-        # Add surviving tensors to derived_strains dict
-        for symmop, tstrain in tstrains:
-            curr_set = get_tkd_value(derived_calcs_by_strain,
-                                     tstrain, allclose_kwargs)
-            if curr_set:
-                curr_task_ids = [c[1] for c in curr_set]
-                if task_id not in curr_task_ids:
-                    curr_set += [(symmop, calc['task_id'])]
-                    set_tkd_value(derived_calcs_by_strain, tstrain, curr_set,
-                                  allclose_kwargs)
-            else:
-                derived_calcs_by_strain[tstrain] = [(symmop, calc['task_id'])]
+    if add_derived:
+        # Determine all of the implicit calculations to include
+        sga = SpacegroupAnalyzer(input_structure, symprec=0.1)
+        symmops = sga.get_symmetry_operations(cartesian=True)
+        derived_calcs_by_strain = {}
+        allclose_kwargs = {"atol": tol} # define this for the purposes of matching
+        for strain, calc in explicit_calcs.items():
+            # Generate all transformed strains
+            task_id = calc['task_id']
+            tstrains = [(symmop, strain.transform(symmop))
+                        for symmop in symmops]
+            # Filter strains by those which are new and in allowed strain states
+            tstrains = [(symmop, tstrain) for symmop, tstrain in tstrains
+                        if not get_tkd_value(explicit_calcs, tstrain, allclose_kwargs)
+                        and in_coord_list(allowed_strain_states, get_strain_state(tstrain))]
+            # Add surviving tensors to derived_strains dict
+            for symmop, tstrain in tstrains:
+                curr_set = get_tkd_value(derived_calcs_by_strain,
+                                         tstrain, allclose_kwargs)
+                if curr_set:
+                    curr_task_ids = [c[1] for c in curr_set]
+                    if task_id not in curr_task_ids:
+                        curr_set += [(symmop, calc['task_id'])]
+                        set_tkd_value(derived_calcs_by_strain, tstrain, curr_set,
+                                      allclose_kwargs)
+                else:
+                    derived_calcs_by_strain[tstrain] = [(symmop, calc['task_id'])]
 
-    # Process derived calcs
-    explicit_calcs_by_id = {d['task_id']: d for d in explicit_calcs.values()}
-    derived_calcs = []
-    for strain, calc_set in derived_calcs_by_strain.items():
-        symmops, task_ids = zip(*calc_set)
-        task_strains = [Strain(explicit_calcs_by_id[task_id]['strain'])
-                        for task_id in task_ids]
-        task_stresses = [explicit_calcs_by_id[task_id]['cauchy_stress']
-                         for task_id in task_ids]
-        derived_strains = [tstrain.transform(symmop)
-                           for tstrain, symmop in zip(task_strains, symmops)]
-        for derived_strain in derived_strains:
-            if not np.allclose(derived_strain, strain, atol=2e-3):
-                logger.info("Issue with derived strains")
-                raise ValueError("Issue with derived strains")
-        derived_stresses = [tstress.transform(sop)
-                            for sop, tstress in zip(symmops, task_stresses)]
-        input_docs = [{"task_id": task_id, "strain": task_strain,
-                       "cauchy_stress": task_stress, "symmop": symmop}
-                      for task_id, task_strain, task_stress, symmop
-                      in zip(task_ids, task_strains, task_stresses, symmops)]
-        calc = {"strain": strain,
-                "cauchy_stress": Stress(np.average(derived_stresses, axis=0)),
-                "deformation": strain.deformation_matrix,
-                "input_tasks": input_docs,
-                "type": "derived"}
-        calc['pk_stress'] = calc['cauchy_stress'].piola_kirchoff_2(
-            calc['deformation'])
-        derived_calcs.append(calc)
+        # Process derived calcs
+        explicit_calcs_by_id = {d['task_id']: d for d in explicit_calcs.values()}
+        derived_calcs = []
+        for strain, calc_set in derived_calcs_by_strain.items():
+            symmops, task_ids = zip(*calc_set)
+            task_strains = [Strain(explicit_calcs_by_id[task_id]['strain'])
+                            for task_id in task_ids]
+            task_stresses = [explicit_calcs_by_id[task_id]['cauchy_stress']
+                             for task_id in task_ids]
+            derived_strains = [tstrain.transform(symmop)
+                               for tstrain, symmop in zip(task_strains, symmops)]
+            for derived_strain in derived_strains:
+                if not np.allclose(derived_strain, strain, atol=2e-3):
+                    logger.info("Issue with derived strains")
+                    raise ValueError("Issue with derived strains")
+            derived_stresses = [tstress.transform(sop)
+                                for sop, tstress in zip(symmops, task_stresses)]
+            input_docs = [{"task_id": task_id, "strain": task_strain,
+                           "cauchy_stress": task_stress, "symmop": symmop}
+                          for task_id, task_strain, task_stress, symmop
+                          in zip(task_ids, task_strains, task_stresses, symmops)]
+            calc = {"strain": strain,
+                    "cauchy_stress": Stress(np.average(derived_stresses, axis=0)),
+                    "deformation": strain.deformation_matrix,
+                    "input_tasks": input_docs,
+                    "type": "derived"}
+            calc['pk_stress'] = calc['cauchy_stress'].piola_kirchoff_2(
+                calc['deformation'])
+            derived_calcs.append(calc)
     return list(explicit_calcs.values()), derived_calcs
 
 
@@ -662,7 +666,7 @@ def calculate_deformation(undeformed_structure, deformed_structure):
     return np.transpose(np.dot(np.linalg.inv(ulatt), dlatt))
 
 
-def get_warnings(elastic_tensor, structure):
+def get_state_and_warnings(elastic_tensor, structure):
     """
     Generates all warnings that apply to a fitted elastic tensor
 
@@ -678,7 +682,7 @@ def get_warnings(elastic_tensor, structure):
     """
     warnings = []
     if any([s.is_rare_earth_metal for s in structure.species]):
-        warnings.append("Contains a rare earth element")
+        warnings.append("Structure contains a rare earth element")
     eigs, eigvecs = np.linalg.eig(elastic_tensor.voigt)
     if np.any(eigs < 0.0):
         warnings.append("Elastic tensor has a negative eigenvalue")
@@ -699,7 +703,19 @@ def get_warnings(elastic_tensor, structure):
     if np.any(moduli_array < 2):
         warnings.append("One or more K, G below 2 GPa")
 
-    return warnings
+    if np.any(moduli_array > 1000):
+        warnings.append("One or more K, G above 1000 GPa")
+
+    failure_states = [elastic_tensor.k_vrh < 0]
+    if any(failure_states):
+        state = "failed"
+    elif warnings:
+        state = "warning"
+    else:
+        state = "successful"
+        warnings = None
+
+    return state, warnings
 
 
 def generate_formula_dict(materials_store, query=None):
