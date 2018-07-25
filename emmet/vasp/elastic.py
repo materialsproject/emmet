@@ -7,7 +7,8 @@ from itertools import chain
 from monty.json import jsanitize
 
 from pymatgen import Structure
-from pymatgen.analysis.elasticity.elastic import ElasticTensor
+from pymatgen.analysis.elasticity.elastic import ElasticTensor,\
+        ElasticTensorExpansion
 from pymatgen.analysis.elasticity.strain import Deformation, Strain
 from pymatgen.analysis.elasticity.stress import Stress
 from pymatgen.analysis.elasticity.tensors import get_tkd_value
@@ -144,10 +145,12 @@ class ElasticAnalysisBuilder(Builder):
         grouped = group_deformations_by_optimization_task(tasks)
         elastic_docs = []
         for opt_task, defo_tasks in grouped:
-            elastic_doc = get_elastic_analysis(opt_task, defo_tasks)
-            if elastic_doc:
-                elastic_docs.append(elastic_doc)
-
+            # Catch the warnings, just for convenience
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                elastic_doc = get_elastic_analysis(opt_task, defo_tasks)
+                if elastic_doc:
+                    elastic_docs.append(elastic_doc)
         return elastic_docs
 
     def update_targets(self, items):
@@ -319,58 +322,95 @@ def get_elastic_analysis(opt_task, defo_tasks):
     elastic_doc = {"warnings": []}
     opt_struct = Structure.from_dict(opt_task['output']['structure'])
     input_struct = Structure.from_dict(opt_task['input']['structure'])
-    explicit, derived = process_elastic_calcs(opt_task, defo_tasks)
-    all_calcs = explicit + derived
+    # For now, discern order (i.e. TOEC) using parameters from optimization
+    # TODO: figure this out more intelligently    
+    # TODO: fix symmetry population for TOECs
+    diff = get(opt_task, "input.incar.EDIFFG")
+    # TOEC runs
+    if diff == -0.001:
+        all_calcs, derived = process_elastic_calcs(
+            opt_task, defo_tasks, add_derived=False)
+        order = 3
+    # Non-TOEC runs
+    else:
+        explicit, derived = process_elastic_calcs(opt_task, defo_tasks)
+        all_calcs = explicit + derived
+        order = 2
     stresses = [c.get("cauchy_stress") for c in all_calcs]
+    pk_stresses = [c.get("pk_stress") for c in all_calcs]
     strains = [c.get("strain") for c in all_calcs]
     vstrains = [s.zeroed(0.002).voigt for s in strains]
     if np.linalg.matrix_rank(vstrains) == 6:
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
+        if order == 2:
             et_fit = legacy_fit(strains, stresses)
-            et = et_fit.voigt_symmetrized.convert_to_ieee(opt_struct)
-            vasp_input = opt_task['input']
-            if 'structure' in vasp_input:
-                vasp_input.pop('structure')
-            completed_at = max([d['completed_at'] for d in defo_tasks])
-            elastic_doc.update({"optimization_task_id": opt_task['task_id'],
-                                "cauchy_stresses": stresses,
-                                "strains": strains,
-                                "elastic_tensor": et.zeroed(0.01).voigt.round(0),
-                                # Convert compliance to 10^-12 Pa
-                                "compliance_tensor": (et.compliance_tensor.voigt * 1000).round(1),
-                                "elastic_tensor_original": et_fit.voigt,
-                                "optimized_structure": opt_struct,
-                                "spacegroup": input_struct.get_space_group_info()[0],
-                                "input_structure": input_struct,
-                                "completed_at": completed_at,
-                                "optimization_input": vasp_input, "order": 2,
-                                "pretty_formula": opt_struct.composition.reduced_formula})
-            # Add magnetic type
-            mag = CollinearMagneticStructureAnalyzer(opt_struct).ordering.value
-            elastic_doc['magnetic_type'] = mag_types[mag]
-            elastic_doc['warnings'] = get_warnings(et, opt_struct) or None
-            try:
-                prop_dict = et.get_structure_property_dict(opt_struct)
-                prop_dict.pop('structure')
-            except ValueError:
-                logger.debug("Negative K or G found, structure property "
-                             "dict not computed")
-                prop_dict = et.property_dict
-            for k, v in prop_dict.items():
-                if k in ['homogeneous_poisson', 'universal_anisotropy']:
-                    prop_dict[k] = np.round(v, 2)
-                else:
-                    prop_dict[k] = np.round(v, 0)
-            elastic_doc.update(prop_dict)
+        elif order == 3:
+            # Test for TOEC
+            if len(strains) < 80:
+                logger.info("insufficient valid strains for {} TOEC".format(
+                    opt_task['formula_pretty']))
+                return None
+            eq_stress = -0.1 * Stress(opt_task['output']['stress'])
+            # strains = [s.zeroed(0.0001) for s in strains]
+            from personal.functions import pdb_function
+            # et_expansion = pdb_function(ElasticTensorExpansion.from_diff_fit,
+            #     strains, pk_stresses, eq_stress=eq_stress, tol=1e-5)
+            et_exp_raw = ElasticTensorExpansion.from_diff_fit(
+                strains, pk_stresses, eq_stress=eq_stress, tol=1e-6)
+            et_exp = et_exp_raw.voigt_symmetrized.convert_to_ieee(opt_struct)
+            et_exp = et_exp.round(1)
+            et_fit = ElasticTensor(et_exp[0])
+            # Update elastic doc with TOEC stuff
+            elastic_doc.update({
+                "elastic_tensor_expansion": [
+                    c.voigt.tolist() for c in et_exp],
+                "elastic_tensor_expansion_original": [
+                    c.voigt.tolist() for c in et_exp_raw],
+                "thermal_expansion_tensor": et_exp.thermal_expansion_coeff(
+                    opt_struct, 300)})
+        et = et_fit.voigt_symmetrized.convert_to_ieee(opt_struct)
+        vasp_input = opt_task['input']
+        if 'structure' in vasp_input:
+            vasp_input.pop('structure')
+        completed_at = max([d['completed_at'] for d in defo_tasks])
+        elastic_doc.update({
+            "optimization_task_id": opt_task['task_id'],
+            "cauchy_stresses": stresses,
+            "strains": strains,
+            "elastic_tensor": et.zeroed(0.01).voigt.round(0),
+            # Convert compliance to 10^-12 Pa
+            "compliance_tensor": (et.compliance_tensor.voigt * 1000).round(1),
+            "elastic_tensor_original": et_fit.voigt,
+            "optimized_structure": opt_struct,
+            "spacegroup": input_struct.get_space_group_info()[0],
+            "input_structure": input_struct,
+            "completed_at": completed_at,
+            "optimization_input": vasp_input, 
+            "order": order,
+            "pretty_formula": opt_struct.composition.reduced_formula})
+        # Add magnetic type
+        mag = CollinearMagneticStructureAnalyzer(opt_struct).ordering.value
+        elastic_doc['magnetic_type'] = mag_types[mag]
+        elastic_doc['warnings'] = get_warnings(et, opt_struct) or None
+        try:
+            prop_dict = et.get_structure_property_dict(opt_struct)
+            prop_dict.pop('structure')
+        except ValueError:
+            logger.debug("Negative K or G found, structure property "
+                         "dict not computed")
+            prop_dict = et.property_dict
+        for k, v in prop_dict.items():
+            if k in ['homogeneous_poisson', 'universal_anisotropy']:
+                prop_dict[k] = np.round(v, 2)
+            else:
+                prop_dict[k] = np.round(v, 0)
+        elastic_doc.update(prop_dict)
 
-        #TODO: higher order
         #TODO: add kpoints params?
         elastic_doc['state'] = "filter_failed" if elastic_doc['warnings']\
             else "successful"
         return elastic_doc
     else:
-        logger.info("Insufficient valid strains for {}".format(
+        logger.info("insufficient valid strains for {}".format(
             opt_task['formula_pretty']))
         return None
 
@@ -398,7 +438,8 @@ def get_distinct_rotations(structure, symprec=0.1, atol=1e-6):
 
 
 # TODO: make it so opt_doc not necessary?
-def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
+def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, 
+                          tol=0.002):
     """
     Generates the list of calcs from deformation docs, along with 'derived
     stresses', i. e. stresses derived from symmop transformations of existing
@@ -408,10 +449,13 @@ def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
     Args:
         opt_doc (dict): document for optimization task
         defo_docs ([dict]) list of documents for deformation tasks
+        add_derived_calcs (bool): flag to determine whether to add
+            derived stress-strain pairs from symmetry of structure
         tol (float): tolerance for assigning equivalent stresses/strains
 
-    Returns:
-        list of summary documents corresponding to strains and stresses
+    Returns ([dict], [dict]):
+        Two lists of summary documents corresponding to strains 
+        and stresses, one explicit and one derived
     """
     structure = Structure.from_dict(opt_doc['output']['structure'])
     input_structure = Structure.from_dict(opt_doc['input']['structure'])
@@ -442,11 +486,13 @@ def process_elastic_calcs(opt_doc, defo_docs, tol=0.002):
         else:
             explicit_calcs[strain] = calc
 
+    if not add_derived:
+        return explicit_calcs.values(), None
     # Determine all of the implicit calculations to include
     sga = SpacegroupAnalyzer(structure, symprec=0.1)
     symmops = sga.get_symmetry_operations(cartesian=True)
     derived_calcs_by_strain = {}
-    allclose_kwargs = {"atol": 2e-3} # define this for the purposes of matching
+    allclose_kwargs = {"atol": tol} # define this for the purposes of matching
     for strain, calc in explicit_calcs.items():
         # Generate all transformed strains
         # strain = calc['strain']
