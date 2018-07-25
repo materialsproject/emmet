@@ -41,10 +41,14 @@ def msonify_xas(item):
             i == item['absorbing_atom']
             for i, _ in enumerate(structure.sites)
         ])
-    return {"spectrum": XANES(
-        x=energy, y=intensity, structure=structure,
-        absorption_specie=absorption_specie, edge=edge,
-    ).as_dict()}
+    try:
+        out = {"spectrum": XANES(
+            x=energy, y=intensity, structure=structure,
+            absorption_specie=absorption_specie, edge=edge,
+        ).as_dict()}
+    except ValueError as e:
+        out = {"spectrum": None, "error": str(e)}
+    return out
 
 
 class XASAverager(Builder):
