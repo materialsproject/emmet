@@ -5,10 +5,46 @@ import numpy as np
 from scipy.interpolate import interp1d
 
 from maggma.builder import Builder
+from maggma.examples.builders import MapBuilder
 from pydash import py_
 from pymatgen import Structure
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.analysis.xas.spectrum import XANES
 from tqdm import tqdm
+
+
+class XASBuilder(MapBuilder):
+    def __init__(self, calcs, xas, **kwargs):
+        """MSONable site-specific spectra from calculations.
+
+        Args:
+            calcs (Store): XAS calculations with raw output
+            xas (Store): output serialized pymatgen XANES objects
+        """
+        self.calcs = calcs
+        self.xas = xas
+        self.ufn = msonify_xas
+        super().__init__(
+            source=calcs, target=xas,
+            **kwargs
+        )
+
+
+def msonify_xas(item):
+    energy = py_.pluck(item['spectrum'], 0) # (eV)
+    intensity = py_.pluck(item['spectrum'], 3) # (mu)
+    structure = Structure.from_dict(item['structure'])
+    absorption_specie = structure[item['absorbing_atom']].species_string
+    edge = "K"
+    structure.add_site_property(
+        'absorbing_atom', [
+            i == item['absorbing_atom']
+            for i, _ in enumerate(structure.sites)
+        ])
+    return {"spectrum": XANES(
+        x=energy, y=intensity, structure=structure,
+        absorption_specie=absorption_specie, edge=edge,
+    ).as_dict()}
 
 
 class XASAverager(Builder):
