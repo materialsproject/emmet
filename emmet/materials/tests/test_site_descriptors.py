@@ -66,10 +66,8 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         self.assertAlmostEqual(d['cn_wt_MinimumVIRENN'][0]['CN_MinimumVIRENN'], 4)
         self.assertEqual(d['cn_BrunnerNN_reciprocal'][0]['CN_BrunnerNN_reciprocal'], 4)
         self.assertAlmostEqual(d['cn_wt_BrunnerNN_reciprocal'][0]['CN_BrunnerNN_reciprocal'], 4)
-        self.assertAlmostEqual(d['opsf'][0]['tetrahedral CN_4'], 0.9995)
-        #self.assertAlmostEqual(d['csf'][0]['tetrahedral CN_4'], 0.9886777)
+        self.assertAlmostEqual(d['csf'][0]['tetrahedral CN_4'], 1)
         ds = sd_builder.get_statistics(d)
-        self.assertTrue('opsf' in list(ds.keys()))
         self.assertTrue('csf' in list(ds.keys()))
         for k, dsk in ds.items():
             for di in dsk:
@@ -79,31 +77,29 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
                 if di['name'] == optype:
                     return i
             raise RuntimeError('did not find optype {}'.format(optype))
-        self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'tetrahedral CN_4')]['max'], 0.9995)
-        self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'tetrahedral CN_4')]['min'], 0.9995)
-        self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'tetrahedral CN_4')]['mean'], 0.9995)
-        self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'tetrahedral CN_4')]['std'], 0)
-        self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'octahedral CN_6')]['mean'], 0.0005)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['max'], 1)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['min'], 1)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['mean'], 1)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['std'], 0)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'octahedral CN_6')]['mean'], 0)
 
         # NaCl.
         d = sd_builder.get_site_descriptors_from_struct(Structure.from_dict(NaCl["structure"]))
-        self.assertAlmostEqual(d['opsf'][0]['octahedral CN_6'], 0.9995)
-        #self.assertAlmostEqual(d['csf'][0]['octahedral CN_6'], 1)
+        self.assertAlmostEqual(d['csf'][0]['octahedral CN_6'], 1)
         ds = sd_builder.get_statistics(d)
-        self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'octahedral CN_6')]['max'], 0.9995)
-        self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'octahedral CN_6')]['min'], 0.9995)
-        self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'octahedral CN_6')]['mean'], 0.9995)
-        self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'octahedral CN_6')]['std'], 0)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'octahedral CN_6')]['max'], 1)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'octahedral CN_6')]['min'], 1)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'octahedral CN_6')]['mean'], 1)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'octahedral CN_6')]['std'], 0)
 
         # Iron.
         d = sd_builder.get_site_descriptors_from_struct(Structure.from_dict(Fe["structure"]))
-        self.assertAlmostEqual(d['opsf'][0]['body-centered cubic CN_8'], 0.9995)
-        #self.assertAlmostEqual(d['csf'][0]['body-centered cubic CN_8'], 0.755096)
+        self.assertAlmostEqual(d['csf'][0]['body-centered cubic CN_8'], 0.57918, 4)
         ds = sd_builder.get_statistics(d)
-        self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'body-centered cubic CN_8')]['max'], 0.9995)
-        self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'body-centered cubic CN_8')]['min'], 0.9995)
-        self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'body-centered cubic CN_8')]['mean'], 0.9995)
-        self.assertAlmostEqual(ds['opsf'][get_index(ds['opsf'], 'body-centered cubic CN_8')]['std'], 0)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'body-centered cubic CN_8')]['max'], 0.57918, 4)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'body-centered cubic CN_8')]['min'], 0.57918, 4)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'body-centered cubic CN_8')]['mean'], 0.57918, 4)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'body-centered cubic CN_8')]['std'], 0)
 
 
 if __name__ == "__main__":
