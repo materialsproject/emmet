@@ -3,8 +3,7 @@ import numpy as np
 from pymatgen.core.structure import Structure
 import pymatgen.analysis
 from pymatgen.analysis.local_env import *
-from matminer.featurizers.site import OPSiteFingerprint, CoordinationNumber
-from matminer.featurizers.deprecated import CrystalSiteFingerprint
+from matminer.featurizers.site import CrystalNNFingerprint, CoordinationNumber
 
 # TODO:
 # 1) Add checking OPs present in current implementation of site fingerprints.
@@ -13,6 +12,11 @@ from matminer.featurizers.deprecated import CrystalSiteFingerprint
 from maggma.builder import Builder
 
 __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
+
+nn_target_classes = ["MinimumDistanceNN", "VoronoiNN", \
+    "CrystalNN", "JMolNN", "MinimumOKeeffeNN", "MinimumVIRENN", \
+    "BrunnerNN_reciprocal", "BrunnerNN_relative", "BrunnerNN_real", \
+    "EconNN"]
 
 
 class SiteDescriptorsBuilder(Builder):
@@ -40,17 +44,15 @@ class SiteDescriptorsBuilder(Builder):
 
         # Set up all targeted site descriptors.
         self.sds = {}
-        for nn in NearNeighbors.__subclasses__():
-            nn_ = getattr(pymatgen.analysis.local_env, nn.__name__)
-            t = nn.__name__
-            k = 'cn_{}'.format(t)
+        for nn in nn_target_classes:
+            nn_ = getattr(pymatgen.analysis.local_env, nn)
+            k = 'cn_{}'.format(nn)
             self.sds[k] = CoordinationNumber(nn_(), use_weights='none')
-            k = 'cn_wt_{}'.format(t)
+            k = 'cn_wt_{}'.format(nn)
             self.sds[k] = CoordinationNumber(nn_(), use_weights='sum')
         self.all_output_pieces = {'site_descriptors': [k for k in self.sds.keys()]}
-        self.sds['opsf'] = OPSiteFingerprint()
-        self.sds['csf'] = CrystalSiteFingerprint.from_preset('ops')
-        self.all_output_pieces['statistics'] = ['opsf', 'csf']
+        self.sds['csf'] = CrystalNNFingerprint.from_preset('ops')
+        self.all_output_pieces['statistics'] = ['csf']
 
         super().__init__(sources=[materials],
                          targets=[site_descriptors],
@@ -105,12 +107,11 @@ class SiteDescriptorsBuilder(Builder):
                                 any_piece = True
                                 break
                 if not any_piece:
-                    for fp in ['opsf', 'csf']:
-                        for l in self.sds[fp].feature_labels():
-                            for fpi in data_present['site_descriptors'][fp]:
-                                if l not in fpi.keys():
-                                    any_piece = True
-                                    break
+                    for l in self.sds['csf'].feature_labels():
+                        for fpi in data_present['site_descriptors']['csf']:
+                            if l not in fpi.keys():
+                                any_piece = True
+                                break
             if any_piece:
                 yield self.materials.query(
                         properties=[self.materials.key, "structure"],
@@ -178,7 +179,7 @@ class SiteDescriptorsBuilder(Builder):
 
         return doc
 
-    def get_statistics(self, site_descr, fps=('opsf', 'csf')):
+    def get_statistics(self, site_descr, fps=('csf', )):
         doc = {}
 
         # Compute site-descriptor statistics.
