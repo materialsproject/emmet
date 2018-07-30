@@ -5,7 +5,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 
 from maggma.builder import Builder
-from maggma.examples.builders import MapBuilder
+from maggma.examples.builders import MapBuilder, GroupBuilder
 from pydash import py_
 from pymatgen import Structure
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
@@ -23,11 +23,11 @@ class XASBuilder(MapBuilder):
         """
         self.calcs = calcs
         self.xas = xas
-        self.ufn = msonify_xas
-        super().__init__(
-            source=calcs, target=xas,
-            **kwargs
-        )
+        super().__init__(source=calcs, target=xas, **kwargs)
+
+    @staticmethod
+    def ufn(item):
+        return msonify_xas(item)
 
 
 def msonify_xas(item):
@@ -35,6 +35,7 @@ def msonify_xas(item):
     intensity = py_.pluck(item['spectrum'], 3) # (mu)
     structure = Structure.from_dict(item['structure'])
     absorption_specie = structure[item['absorbing_atom']].species_string
+    mid_and_el = ",".join([item["mp_id"], absorption_specie])
     edge = "K"
     structure.add_site_property(
         'absorbing_atom', [
@@ -42,16 +43,19 @@ def msonify_xas(item):
             for i, _ in enumerate(structure.sites)
         ])
     try:
-        out = {"spectrum": XANES(
-            x=energy, y=intensity, structure=structure,
-            absorption_specie=absorption_specie, edge=edge,
-        ).as_dict()}
+        out = {
+            "spectrum": XANES(
+                x=energy, y=intensity, structure=structure,
+                absorption_specie=absorption_specie, edge=edge,
+            ).as_dict(),
+            "mid_and_el": mid_and_el,
+        }
     except ValueError as e:
-        out = {"spectrum": None, "error": str(e)}
+        out = {"spectrum": None, "mid_and_el": mid_and_el, "error": str(e)}
     return out
 
 
-class XASAverager(Builder):
+class XASAverager(GroupBuilder):
     def get_items(self):
         self.logger.info("Getting unprocessed mpids...")
         mpids = unprocessed_mpids(self.sources, self.targets)
