@@ -191,7 +191,7 @@ def site_weighted_spectrum(xas_docs, num_samples=200):
         # fs.append(f)
 
         # Avoid scipy's interp1d, which causes issues on threading servers.
-        fs.append(spectra.get_interpolated_value)
+        fs.append(spectrum.get_interpolated_value)
 
         absorbing_atoms |= set(
             SymmSites(structure).get_equivalent_site_indices(absorbing_atom))
