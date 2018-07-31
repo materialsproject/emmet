@@ -189,11 +189,16 @@ def site_weighted_spectrum(xas_docs, num_samples=200):
         # interpolation within the intersection of x-axis ranges.
         mins.append(spectrum.energy[0])
         maxes.append(spectrum.energy[-1])
+
         # 3rd-order spline interpolation
-        f = interp1d(
-            spectrum.energy, spectrum.intensity,
-            kind='cubic', bounds_error=False, fill_value=0)
-        fs.append(f)
+        # f = interp1d(
+        #     spectrum.energy, spectrum.intensity,
+        #     kind='cubic', bounds_error=False, fill_value=0)
+        # fs.append(f)
+
+        # Avoid scipy's interp1d, which causes issues on threading servers.
+        fs.append(spectra.get_interpolated_value)
+
         absorbing_atoms |= set(
             SymmSites(structure).get_equivalent_site_indices(absorbing_atom))
 
