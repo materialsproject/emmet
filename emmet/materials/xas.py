@@ -5,6 +5,7 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.xas.spectrum import XANES
 
 from maggma.examples.builders import MapBuilder, GroupBuilder
+from scipy.interpolate import interp1d
 
 
 class XASBuilder(MapBuilder):
@@ -185,13 +186,10 @@ def site_weighted_spectrum(xas_docs, num_samples=200):
         maxes.append(spectrum.energy[-1])
 
         # 3rd-order spline interpolation
-        # f = interp1d(
-        #     spectrum.energy, spectrum.intensity,
-        #     kind='cubic', bounds_error=False, fill_value=0)
-        # fs.append(f)
-
-        # Avoid scipy's interp1d, which causes issues on threading servers.
-        fs.append(spectrum.get_interpolated_value)
+        f = interp1d(
+            spectrum.energy, spectrum.intensity,
+            kind='cubic', bounds_error=False, fill_value=0)
+        fs.append(f)
 
         absorbing_atoms |= set(
             SymmSites(structure).get_equivalent_site_indices(absorbing_atom))
