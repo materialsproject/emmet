@@ -1,16 +1,10 @@
-from datetime import datetime
-from itertools import groupby
-
 import numpy as np
-from scipy.interpolate import interp1d
-
-from maggma.builder import Builder
-from maggma.examples.builders import MapBuilder, GroupBuilder
 from pydash import py_
 from pymatgen import Structure
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.xas.spectrum import XANES
-from tqdm import tqdm
+
+from maggma.examples.builders import MapBuilder, GroupBuilder
 
 
 class XASBuilder(MapBuilder):
