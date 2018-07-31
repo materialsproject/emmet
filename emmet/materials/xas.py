@@ -63,6 +63,7 @@ class XASAverager(GroupBuilder):
         self.spectra_site = spectra_site
         self.spectra_avg = spectra_avg
         super().__init__(source=spectra_site, target=spectra_avg, **kwargs)
+        self.n_items_per_group = 1
 
     @staticmethod
     def grouping_properties():
