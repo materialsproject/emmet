@@ -84,17 +84,24 @@ class XASAverager(GroupBuilder):
     def ufn(item):
         xas_docs = item["xas_docs"]
         mid_and_el = xas_docs[0]["mid_and_el"]
+        mp_id, element = xas_docs[0]["mid_and_el"].split(",")
         msg = data_missing(xas_docs)
         if msg:
             out = {
                 "spectrum": None,
                 "mid_and_el": mid_and_el,
-                "error": "Some sites have no spectra recorded: "+str(msg)
+                "error": "Some sites have no spectra recorded: "+str(msg),
+                "valid": False,
+                "mp_id": mp_id,
+                "element": element,
             }
         else:
             out = {
                 "spectrum": site_weighted_spectrum(xas_docs).as_dict(),
                 "mid_and_el": mid_and_el,
+                "valid": True,
+                "mp_id": mp_id,
+                "element": element,
             }
         return out
 
