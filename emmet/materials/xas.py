@@ -1,4 +1,6 @@
+import os
 import numpy as np
+from monty.serialization import loadfn
 from pydash import py_
 from pymatgen import Structure
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
@@ -6,6 +8,11 @@ from pymatgen.analysis.xas.spectrum import XANES
 
 from maggma.examples.builders import MapBuilder, GroupBuilder
 from scipy.interpolate import interp1d
+
+# Mapping from MP task ids / deprecated material ids to current material ids
+# Most XAS calculations were done with reference to a past material id.
+tid_mid = loadfn(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "settings", "tid_mid.json"))
 
 
 class XASBuilder(MapBuilder):
@@ -92,7 +99,7 @@ class XASAverager(GroupBuilder):
                 "mid_and_el": mid_and_el,
                 "error": "Some sites have no spectra recorded: "+str(msg),
                 "valid": False,
-                "mp_id": mp_id,
+                "mp_id": tid_mid[mp_id],
                 "element": element,
             }
         else:
@@ -100,7 +107,7 @@ class XASAverager(GroupBuilder):
                 "spectrum": site_weighted_spectrum(xas_docs).as_dict(),
                 "mid_and_el": mid_and_el,
                 "valid": True,
-                "mp_id": mp_id,
+                "mp_id": tid_mid[mp_id],
                 "element": element,
             }
         return out
