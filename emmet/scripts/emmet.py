@@ -10,7 +10,9 @@ from pymatgen import Structure
 from pymatgen.alchemy.materials import TransformedStructure
 from pymatgen.util.provenance import StructureNL, Author
 from fireworks import LaunchPad
+from fireworks.fw_config import FW_BLOCK_FORMAT
 from atomate.vasp.database import VaspCalcDb
+from atomate.vasp.drones import VaspDrone
 from atomate.vasp.workflows.presets.core import wf_structure_optimization
 from atomate.vasp.powerups import add_trackers, add_tags, add_additional_fields_to_taskdocs
 from emmet.vasp.materials import group_structures, get_sg
@@ -82,6 +84,9 @@ def ensure_meta(snls_db):
     ensure_indexes(['snl_id', 'formula_pretty', 'nelements', 'nsites', 'is_ordered', 'is_valid'], [snl_coll])
 
 
+def get_subdir(dn):
+    return dn.rsplit(os.sep, 1)[-1]
+
 @cli.command()
 @click.argument('target_db_file', type=click.Path(exists=True))
 @click.option('--tag', default=None, help='only insert tasks with specific tag')
@@ -91,9 +96,6 @@ def copy_tasks(target_db_file, tag, insert):
 
     if not insert:
         print('DRY RUN: add --insert flag to actually add tasks to production')
-
-    def get_subdir(dn):
-        return dn.rsplit(os.sep, 1)[-1]
 
     lpad = LaunchPad.auto_load()
     source = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
@@ -843,3 +845,63 @@ def add_snls(archive, add_snls_dbs, insert):
         if idx and not idx%100 or idx == len(input_structures)-1:
             insert_snls(snls)
 
+
+@cli.command()
+@click.argument('base_path', type=click.Path(exists=True))
+@click.option('--insert/--no-insert', default=False, help='actually execute task insertion')
+def parse(base_path, insert):
+    """parse VASP output directories in base_path into tasks and tag"""
+    if not insert:
+        print('DRY RUN: add --insert flag to actually insert tasks')
+
+    lpad = LaunchPad.auto_load()
+    target = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
+    print('connected to target db with', target.collection.count(), 'tasks')
+    base_path_split = base_path.split(os.sep)
+    tag = base_path_split[-1] if base_path_split[-1] else base_path_split[-2]
+    drone = VaspDrone(parse_dos='auto', additional_fields={'tags': [tag]})
+    already_inserted_subdirs = [get_subdir(dn) for dn in target.collection.find({'tags': tag}).distinct('dir_name')]
+    print(len(already_inserted_subdirs), 'VASP directories already inserted for', tag)
+
+    def get_timestamp_dir(prefix='launcher'):
+        time_now = datetime.utcnow().strftime(FW_BLOCK_FORMAT)
+        return '_'.join([prefix, time_now])
+
+    def get_vasp_dirs():
+        for root, dirs, files in os.walk(base_path):
+            # TODO ignore relax1/2 subdirs if INCAR.orig found
+            if any(f.startswith("INCAR") for f in files):
+                if insert:
+                    root_split = os.path.realpath(root).split(os.sep)
+                    idx = len(base_path_split)
+                    if not root_split[idx-1].startswith('block_'):
+                        rootdir = os.sep.join(root_split[:idx])
+                        block = get_timestamp_dir(prefix='block')
+                        block_dir = os.sep.join(root_split[:idx-1] + [block])
+                        os.rename(rootdir, block_dir)
+                        os.symlink(block_dir, rootdir)
+                        print(rootdir, '->', block_dir)
+                    subdir = os.sep.join(root_split)
+                    if not root_split[-1].startswith('launcher_'):
+                        launch = get_timestamp_dir()
+                        launch_dir = os.sep.join(root_split[:-1] + [launch])
+                        os.rename(subdir, launch_dir)
+                        os.symlink(launch_dir, subdir)
+                        print(subdir, '->', launch_dir)
+                        yield launch_dir
+                    else:
+                        yield subdir
+                else:
+                    yield root
+
+    for vaspdir in get_vasp_dirs():
+        subdir = get_subdir(vaspdir)
+        if subdir not in already_inserted_subdirs:
+            print(vaspdir)
+            try:
+                task_doc = drone.assimilate(vaspdir)
+            except Exception as ex:
+                print(str(ex))
+                continue
+            if insert:
+                target.insert_task(task_doc, use_gridfs=True)
