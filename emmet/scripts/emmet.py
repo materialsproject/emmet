@@ -141,6 +141,8 @@ def copy_tasks(target_db_file, tag, insert):
             continue
 
         print(len(subdirs), 'candidate tasks to insert')
+        if not insert:
+            continue
 
         for subdir_doc in subdirs:
             subdir_query = {'dir_name': {'$regex': '/{}$'.format(subdir_doc['subdir'])}}
@@ -615,7 +617,8 @@ class MyMongoFormatter(logging.Formatter):
 
 @cli.command()
 @click.option('--tag', default=None, help='only include structures with specific tag')
-def report(tag):
+@click.option('--in-progress/--no-in-progress', default=False, help='show in-progress only')
+def report(tag, in_progress):
     """generate a report of calculations status"""
 
     lpad = LaunchPad.auto_load()
@@ -647,6 +650,8 @@ def report(tag):
             tc = "\033[1;34m{}\033[0m".format(t)
             progress = (counter['COMPLETED'] + counter['FIZZLED']) / total * 100. if total else 0.
             progress = '{:.0f}%'.format(progress)
+        elif in_progress:
+            continue
         entry = [tc, nr_snls, wflows_to_add, total] + [counter[state] for state in states]
         fizzled = counter['FIZZLED'] / total if total else 0.
         if progress != '-' and bool(counter['COMPLETED'] + counter['FIZZLED']):
