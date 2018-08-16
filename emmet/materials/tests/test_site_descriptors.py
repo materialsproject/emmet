@@ -66,7 +66,7 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         self.assertAlmostEqual(d['cn_wt_MinimumVIRENN'][0]['CN_MinimumVIRENN'], 4)
         self.assertEqual(d['cn_BrunnerNN_reciprocal'][0]['CN_BrunnerNN_reciprocal'], 4)
         self.assertAlmostEqual(d['cn_wt_BrunnerNN_reciprocal'][0]['CN_BrunnerNN_reciprocal'], 4)
-        self.assertAlmostEqual(d['csf'][0]['tetrahedral CN_4'], 1)
+        self.assertAlmostEqual(d['csf'][0]['tetrahedral CN_4'], 0.9618085)
         ds = sd_builder.get_statistics(d)
         self.assertTrue('csf' in list(ds.keys()))
         for k, dsk in ds.items():
@@ -77,9 +77,9 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
                 if di['name'] == optype:
                     return i
             raise RuntimeError('did not find optype {}'.format(optype))
-        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['max'], 1)
-        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['min'], 1)
-        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['mean'], 1)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['max'], 0.9618085)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['min'], 0.9618085)
+        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['mean'], 0.9618085)
         self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['std'], 0)
         self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'octahedral CN_6')]['mean'], 0)
 
