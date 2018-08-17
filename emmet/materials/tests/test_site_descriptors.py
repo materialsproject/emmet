@@ -71,14 +71,12 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         self.assertTrue('csf' in list(ds.keys()))
         for k, dsk in ds.items():
             for di in dsk:
-                self.assertEqual(len(list(di.keys())), 5)
+                self.assertEqual(len(list(di.keys())), 3)
         def get_index(li, optype):
             for i, di in enumerate(li):
                 if di['name'] == optype:
                     return i
             raise RuntimeError('did not find optype {}'.format(optype))
-        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['max'], 1)
-        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['min'], 1)
         self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['mean'], 1)
         self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['std'], 0)
         self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'octahedral CN_6')]['mean'], 0)
@@ -87,8 +85,6 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         d = sd_builder.get_site_descriptors_from_struct(Structure.from_dict(NaCl["structure"]))
         self.assertAlmostEqual(d['csf'][0]['octahedral CN_6'], 1)
         ds = sd_builder.get_statistics(d)
-        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'octahedral CN_6')]['max'], 1)
-        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'octahedral CN_6')]['min'], 1)
         self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'octahedral CN_6')]['mean'], 1)
         self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'octahedral CN_6')]['std'], 0)
 
@@ -96,8 +92,6 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         d = sd_builder.get_site_descriptors_from_struct(Structure.from_dict(Fe["structure"]))
         self.assertAlmostEqual(d['csf'][0]['body-centered cubic CN_8'], 0.57918, 4)
         ds = sd_builder.get_statistics(d)
-        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'body-centered cubic CN_8')]['max'], 0.57918, 4)
-        self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'body-centered cubic CN_8')]['min'], 0.57918, 4)
         self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'body-centered cubic CN_8')]['mean'], 0.57918, 4)
         self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'body-centered cubic CN_8')]['std'], 0)
 
