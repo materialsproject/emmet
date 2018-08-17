@@ -79,10 +79,10 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
                     return i
             raise RuntimeError('did not find optype {}'.format(optype))
         # Current value for the three below quantities is 0.9618085
-        self.assertTrue(0.95 <= ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['max'] <= 1) 
+        self.assertTrue(0.95 <= ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['max'] <= 1)
         self.assertTrue(0.95 <= ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['min'] <= 1)
         self.assertTrue(0.95 <= ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['mean'] <= 1)
-        
+
         self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'tetrahedral CN_4')]['std'], 0)
         self.assertAlmostEqual(ds['csf'][get_index(ds['csf'], 'octahedral CN_6')]['mean'], 0)
 
