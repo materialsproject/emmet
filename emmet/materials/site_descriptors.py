@@ -198,8 +198,6 @@ class SiteDescriptorsBuilder(Builder):
                 d = []
                 for k, l in tmp.items():
                     dtmp = {'name': k}
-                    dtmp['min'] = min(tmp[k])
-                    dtmp['max'] = max(tmp[k])
                     dtmp['mean'] = np.mean(tmp[k])
                     dtmp['std'] = np.std(tmp[k])
                     d.append(dtmp)
