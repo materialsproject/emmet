@@ -4,6 +4,7 @@ from pymatgen.core.structure import Structure
 import pymatgen.analysis
 from pymatgen.analysis.local_env import *
 from matminer.featurizers.site import CrystalNNFingerprint, CoordinationNumber
+from matminer.featurizers.composition import ElementProperty
 
 # TODO:
 # 1) Add checking OPs present in current implementation of site fingerprints.
@@ -21,7 +22,7 @@ nn_target_classes = ["MinimumDistanceNN", "VoronoiNN", \
 
 class SiteDescriptorsBuilder(Builder):
 
-    def __init__(self, materials, site_descriptors, mat_query=None, **kwargs):
+    def __init__(self, materials, comp_descriptors, site_descriptors, mat_query=None, **kwargs):
         """
         Calculates site-based descriptors (e.g., coordination numbers
         with different near-neighbor finding approaches) for materials and
@@ -32,6 +33,8 @@ class SiteDescriptorsBuilder(Builder):
 
         Args:
             materials (Store): Store of materials documents.
+            comp_descriptors (store): Store of composition-descriptors data
+                                      such as Magpie element property.
             site_descriptors (Store): Store of site-descriptors data such
                                       as tetrahedral order parameter or
                                       fraction of being 8-fold coordinated.
@@ -40,6 +43,7 @@ class SiteDescriptorsBuilder(Builder):
 
         self.materials = materials
         self.site_descriptors = site_descriptors
+        self.comp_descriptors = comp_descriptors
         self.mat_query = mat_query if mat_query else {}
 
         # Set up all targeted site descriptors.
@@ -55,6 +59,10 @@ class SiteDescriptorsBuilder(Builder):
                                                            distance_cutoffs=None,
                                                            x_diff_weight=None)
         self.all_output_pieces['statistics'] = ['csf']
+
+        # Set up all targeted composition descriptors.
+        self.cds = {}
+        self.cds["magpie"] = ElementProperty.from_preset('magpie')
 
         super().__init__(sources=[materials],
                          targets=[site_descriptors],
