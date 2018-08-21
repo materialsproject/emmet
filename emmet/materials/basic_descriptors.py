@@ -113,26 +113,22 @@ class BasicDescriptorsBuilder(Builder):
                                     "site_descriptors", \
                                     "statistics"],
                         criteria={self.descriptors.key: task_id}).limit(1)[0]
-                #print("data present: "+str(data_present))
                 any_piece = False
                 for k, v in self.all_output_pieces.items():
                     if k not in list(data_present.keys()):
                         any_piece = True
-                        #print("1 {}".format(k))
                         break
                     else:
                         any_piece = False
                         for e in v:
                             if e not in data_present[k]:
                                 any_piece = True
-                                #print("2 {} {}".format(k, e))
                                 break
                 if not any_piece:
                     for l in self.sds['csf'].feature_labels():
                         for fpi in data_present['site_descriptors']['csf']:
                             if l not in fpi.keys():
                                 any_piece = True
-                                #print("3")
                                 break
             if any_piece:
                 yield self.materials.query(
