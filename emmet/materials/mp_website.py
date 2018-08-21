@@ -54,7 +54,7 @@ mp_conversion_dict = {
     "run_type": "calc_settings.run_type",
     "spacegroup": "spacegroup",
     "structure": "structure",
-    "total_magnetization": "magnestism.total_magnetization",
+    "total_magnetization": "magnetism.total_magnetization",
     "unit_cell_formula": "composition",
     "volume": "volume",
     "warnings": "analysis.warnings",

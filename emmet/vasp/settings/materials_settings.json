@@ -268,7 +268,7 @@
     "tasks_key": "input.structure"
   },
   {
-    "materials_key": "magnestism.total_magnetization",
+    "materials_key": "magnetism.total_magnetization",
     "quality_score": {
       "GGA Static": 2,
       "GGA Structure Optimization": 1,
