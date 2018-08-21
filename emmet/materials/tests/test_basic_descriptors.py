@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from emmet.materials.site_descriptors import *
+from emmet.materials.basic_descriptors import *
 from maggma.stores import MemoryStore
 
 from monty.serialization import loadfn
@@ -13,19 +13,19 @@ module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 test_structs = os.path.join(module_dir, "..", "..", "..", "test_files", "simple_structs.json")
 
 
-class SiteDescriptorsBuilderTest(unittest.TestCase):
+class BasicDescriptorsBuilderTest(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         # Set up test db, etc.
-        self.test_materials = MemoryStore("mat_site_fingerprint")
+        self.test_materials = MemoryStore("mat_descriptors")
 
         self.test_materials.connect()
         struct_docs = loadfn(test_structs, cls=None)
         self.test_materials.update(struct_docs)
 
     def test_builder(self):
-        test_site_descriptors = MemoryStore("test_site_descriptors")
-        sd_builder = SiteDescriptorsBuilder(self.test_materials, test_site_descriptors)
+        test_basic_descriptors = MemoryStore("test_basic_descriptors")
+        sd_builder = BasicDescriptorsBuilder(self.test_materials, test_basic_descriptors)
         sd_builder.connect()
         for t in sd_builder.get_items():
             processed = sd_builder.process_item(t)
@@ -37,14 +37,14 @@ class SiteDescriptorsBuilderTest(unittest.TestCase):
         self.assertEqual(len([t for t in sd_builder.get_items()]), 0)
 
         # Remove one data piece in diamond entry and test partial update.
-        test_site_descriptors.collection.find_one_and_update(
+        test_basic_descriptors.collection.find_one_and_update(
                 {'task_id': 'mp-66'}, {'$unset': {'site_descriptors': 1}})
         items = [e for e in list(sd_builder.get_items())]
         self.assertEqual(len(items), 1)
 
-    def test_get_all_site_descriptors(self):
-        test_site_descriptors = MemoryStore("test_site_descriptors")
-        sd_builder = SiteDescriptorsBuilder(self.test_materials, test_site_descriptors)
+    def test_get_all_basic_descriptors(self):
+        test_basic_descriptors = MemoryStore("test_basic_descriptors")
+        sd_builder = BasicDescriptorsBuilder(self.test_materials, test_basic_descriptors)
 
         C = self.test_materials.query_one(criteria={"task_id": "mp-66"})
         NaCl = self.test_materials.query_one(criteria={"task_id": "mp-22862"})

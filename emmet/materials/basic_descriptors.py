@@ -20,9 +20,9 @@ nn_target_classes = ["MinimumDistanceNN", "VoronoiNN", \
     "EconNN"]
 
 
-class SiteDescriptorsBuilder(Builder):
+class BasicDescriptorsBuilder(Builder):
 
-    def __init__(self, materials, comp_descriptors, site_descriptors, mat_query=None, **kwargs):
+    def __init__(self, materials, descriptors, mat_query=None, **kwargs):
         """
         Calculates site-based descriptors (e.g., coordination numbers
         with different near-neighbor finding approaches) for materials and
@@ -30,20 +30,20 @@ class SiteDescriptorsBuilder(Builder):
         (order parameter-based site fingerprints).  The latter is
         useful as a definition of a structure fingerprint
         on the basis of local coordination information.
+        Furthermore, composition descriptors are calculated
+        (Magpie element property vector). 
 
         Args:
             materials (Store): Store of materials documents.
-            comp_descriptors (store): Store of composition-descriptors data
-                                      such as Magpie element property.
-            site_descriptors (Store): Store of site-descriptors data such
-                                      as tetrahedral order parameter or
-                                      fraction of being 8-fold coordinated.
+            descriptors (Store): Store of composition, site, and
+                                 structure descriptor data such
+                                 as tetrahedral order parameter or
+                                 fraction of being 8-fold coordinated.
             mat_query (dict): dictionary to limit materials to be analyzed.
         """
 
         self.materials = materials
-        self.site_descriptors = site_descriptors
-        self.comp_descriptors = comp_descriptors
+        self.descriptors = descriptors
         self.mat_query = mat_query if mat_query else {}
 
         # Set up all targeted site descriptors.
@@ -65,46 +65,48 @@ class SiteDescriptorsBuilder(Builder):
         self.cds["magpie"] = ElementProperty.from_preset('magpie')
 
         super().__init__(sources=[materials],
-                         targets=[site_descriptors],
+                         targets=[descriptors],
                          **kwargs)
 
     def get_items(self):
         """
-        Gets all materials that need new site descriptors.
+        Gets all materials that need new descriptors.
         For example, entirely new materials and materials
         for which certain descriptor in the current Store
         are still missing.
 
         Returns:
-            generator of materials to calculate site descriptors
+            generator of materials to calculate basic descriptors
             and of the target quantities to be calculated
             (e.g., CN with the minimum distance near neighbor
             (MinimumDistanceNN) finding class from pymatgen which has label
             "cn_mdnn").
         """
 
-        self.logger.info("Site-Descriptors Builder Started")
+        self.logger.info("Basic-Descriptors Builder Started")
 
         self.logger.info("Setting indexes")
 
-        # All relevant materials that have been updated since site-descriptors
+        # All relevant materials that have been updated since descriptors
         # were last calculated
 
         q = dict(self.mat_query)
         all_task_ids = list(self.materials.distinct(self.materials.key, q))
-        q.update(self.materials.lu_filter(self.site_descriptors))
+        q.update(self.materials.lu_filter(self.descriptors))
         new_task_ids = list(self.materials.distinct(self.materials.key, q))
         self.logger.info(
-            "Found {} entirely new materials for site-descriptors data".format(
+            "Found {} entirely new materials for descriptors data".format(
             len(new_task_ids)))
         for task_id in all_task_ids:
             if task_id in new_task_ids:
                 any_piece = True
 
             else: # Any piece of info missing?
-                data_present = self.site_descriptors.query(
-                        properties=[self.site_descriptors.key, "site_descriptors", "statistics"],
-                        criteria={self.site_descriptors.key: task_id}).limit(1)[0]
+                data_present = self.descriptors.query(
+                        properties=[self.descriptors.key, \
+                                    "composition_descriptors", \
+                                    "site_descriptors", "statistics"],
+                        criteria={self.descriptors.key: task_id}).limit(1)[0]
                 any_piece = False
                 for k, v in self.all_output_pieces.items():
                     if k not in list(data_present.keys()):
@@ -129,43 +131,49 @@ class SiteDescriptorsBuilder(Builder):
 
     def process_item(self, item):
         """
-        Calculates all site descriptors for the structures
+        Calculates all basic descriptors for the structures
 
 
         Args:
             item (dict): a dict with a task_id and a structure
 
         Returns:
-            dict: a site-descriptors dict
+            dict: a basic-descriptors dict
         """
-        self.logger.debug("Calculating site descriptors for {}".format(
+        self.logger.debug("Calculating basic descriptors for {}".format(
             item[self.materials.key]))
 
         struct = Structure.from_dict(item['structure'])
 
-        site_descr_doc = {'structure': struct.copy()}
-        site_descr_doc['site_descriptors'] = \
+        descr_doc = {'structure': struct.copy()}
+        try:
+            descr_doc['composition_descriptors'] = {
+                    "magpie": self.cds["magpie"](struct.composition)}
+        except Exception as e:
+            self.logger.error("Failed getting Magpie descriptors: "
+                              "{}".format(e))
+        descr_doc['site_descriptors'] = \
                 self.get_site_descriptors_from_struct(
-                site_descr_doc['structure'])
-        site_descr_doc['statistics'] = \
+                descr_doc['structure'])
+        descr_doc['statistics'] = \
                 self.get_statistics(
-                site_descr_doc['site_descriptors'])
-        site_descr_doc[self.site_descriptors.key] = item[self.materials.key]
+                descr_doc['site_descriptors'])
+        descr_doc[self.descriptors.key] = item[self.materials.key]
 
-        return site_descr_doc
+        return descr_doc
 
     def update_targets(self, items):
         """
         Inserts the new task_types into the task_types collection.
 
         Args:
-            items ([[dict]]): a list of list of site-descriptors dictionaries to update.
+            items ([[dict]]): a list of list of descriptors dictionaries to update.
         """
         items = list(filter(None, items))
 
         if len(items) > 0:
-            self.logger.info("Updating {} site-descriptors docs".format(len(items)))
-            self.site_descriptors.update(docs=items)
+            self.logger.info("Updating {} basic-descriptors docs".format(len(items)))
+            self.descriptors.update(docs=items)
         else:
             self.logger.info("No items to update")
 
