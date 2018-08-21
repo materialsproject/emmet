@@ -14,7 +14,7 @@ __email__ = "nerz@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 test_structs = os.path.join(module_dir, "..", "..", "..", "test_files", "simple_structs.json")
-
+test_meta_comp_descr = os.path.join(module_dir, "..", "..", "..", "test_files", "meta_comp_descr.json")
 
 class BasicDescriptorsBuilderTest(unittest.TestCase):
     @classmethod
@@ -30,6 +30,8 @@ class BasicDescriptorsBuilderTest(unittest.TestCase):
         test_basic_descriptors = MemoryStore("test_basic_descriptors")
         sd_builder = BasicDescriptorsBuilder(self.test_materials, test_basic_descriptors)
         sd_builder.connect()
+        meta_comp_descr = loadfn(test_meta_comp_descr, cls=None)
+
         for t in sd_builder.get_items():
             processed = sd_builder.process_item(t)
             if processed:
@@ -37,6 +39,10 @@ class BasicDescriptorsBuilderTest(unittest.TestCase):
             else:
                 import nose
                 nose.tools.set_trace()
+            for md in ['nsites', 'formula_pretty', 'nelements']:
+                self.assertEqual(processed['meta']['atomate'][md], meta_comp_descr['meta'][t['task_id']][md])
+            for i in range(len(meta_comp_descr['comp_descr'][t['task_id']])):
+                self.assertAlmostEqual(processed['composition_descriptors']['magpie'][i], meta_comp_descr['comp_descr'][t['task_id']][i])
         self.assertEqual(len([t for t in sd_builder.get_items()]), 0)
 
         # Remove one data piece in diamond entry and test partial update.
