@@ -1,6 +1,9 @@
 import unittest
 import os
 
+from pymatgen.core.composition import Composition
+from matminer.featurizers.composition import ElementProperty
+
 from emmet.materials.basic_descriptors import *
 from maggma.stores import MemoryStore
 
