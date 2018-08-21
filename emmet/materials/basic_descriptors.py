@@ -31,7 +31,7 @@ class BasicDescriptorsBuilder(Builder):
         useful as a definition of a structure fingerprint
         on the basis of local coordination information.
         Furthermore, composition descriptors are calculated
-        (Magpie element property vector). 
+        (Magpie element property vector).
 
         Args:
             materials (Store): Store of materials documents.
