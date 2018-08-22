@@ -41,8 +41,9 @@ class BasicDescriptorsBuilderTest(unittest.TestCase):
                 nose.tools.set_trace()
             for md in ['nsites', 'formula_pretty', 'nelements']:
                 self.assertEqual(processed['meta']['atomate'][md], meta_comp_descr['meta'][t['task_id']][md])
-            for i in range(len(meta_comp_descr['comp_descr'][t['task_id']])):
-                self.assertAlmostEqual(processed['composition_descriptors']['magpie'][i], meta_comp_descr['comp_descr'][t['task_id']][i])
+            for k, v in meta_comp_descr['comp_descr'][t['task_id']][0].items():
+                if k != 'name':
+                    self.assertAlmostEqual(processed['composition_descriptors'][0][k], v)
         self.assertEqual(len([t for t in sd_builder.get_items()]), 0)
 
         # Remove one data piece in diamond entry and test partial update.

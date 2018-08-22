@@ -154,8 +154,12 @@ class BasicDescriptorsBuilder(Builder):
         descr_doc = {'structure': struct.copy()}
         descr_doc['meta'] = {'atomate': get_meta_from_structure(struct)}
         try:
-            descr_doc['composition_descriptors'] = {
-                    "magpie": self.cds["magpie"].featurize(struct.composition)}
+            comp_descr = [{'name': 'magpie'}]
+            labels = self.cds["magpie"].feature_labels()
+            values = self.cds["magpie"].featurize(struct.composition)
+            for label, value in zip(labels, values):
+                comp_descr[0][label] = value
+            descr_doc['composition_descriptors'] = comp_descr
         except Exception as e:
             self.logger.error("Failed getting Magpie descriptors: "
                               "{}".format(e))
