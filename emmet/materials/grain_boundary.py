@@ -14,7 +14,7 @@ __author__ = "Xiang-Guo Li <xil110@ucsd.edu>"
 class GBBuilder(Builder):
     def __init__(self, materials, gb, bulk, query=None, **kwargs):
         """
-        Calculates thermodynamic quantities for materials from phase diagram constructions
+        Calculates grain boundary energies from gb and bulk data.
 
         Args:
             materials (Store): Store of materials documents from gb task.
