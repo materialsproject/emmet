@@ -3,6 +3,7 @@ import numpy as np
 from pymatgen.core.structure import Structure
 import pymatgen.analysis
 from pymatgen.analysis.local_env import *
+from atomate.utils.utils import get_meta_from_structure
 from matminer.featurizers.site import CrystalNNFingerprint, CoordinationNumber
 from matminer.featurizers.composition import ElementProperty
 
@@ -63,6 +64,9 @@ class BasicDescriptorsBuilder(Builder):
         # Set up all targeted composition descriptors.
         self.cds = {}
         self.cds["magpie"] = ElementProperty.from_preset('magpie')
+        self.all_output_pieces['composition_descriptors'] = ['magpie']
+
+        self.all_output_pieces['meta'] = ['atomate']
 
         super().__init__(sources=[materials],
                          targets=[descriptors],
@@ -104,8 +108,10 @@ class BasicDescriptorsBuilder(Builder):
             else: # Any piece of info missing?
                 data_present = self.descriptors.query(
                         properties=[self.descriptors.key, \
+                                    "meta", \
                                     "composition_descriptors", \
-                                    "site_descriptors", "statistics"],
+                                    "site_descriptors", \
+                                    "statistics"],
                         criteria={self.descriptors.key: task_id}).limit(1)[0]
                 any_piece = False
                 for k, v in self.all_output_pieces.items():
@@ -146,9 +152,14 @@ class BasicDescriptorsBuilder(Builder):
         struct = Structure.from_dict(item['structure'])
 
         descr_doc = {'structure': struct.copy()}
+        descr_doc['meta'] = {'atomate': get_meta_from_structure(struct)}
         try:
-            descr_doc['composition_descriptors'] = {
-                    "magpie": self.cds["magpie"](struct.composition)}
+            comp_descr = [{'name': 'magpie'}]
+            labels = self.cds["magpie"].feature_labels()
+            values = self.cds["magpie"].featurize(struct.composition)
+            for label, value in zip(labels, values):
+                comp_descr[0][label] = value
+            descr_doc['composition_descriptors'] = comp_descr
         except Exception as e:
             self.logger.error("Failed getting Magpie descriptors: "
                               "{}".format(e))
