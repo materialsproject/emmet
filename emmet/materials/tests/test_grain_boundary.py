@@ -1,5 +1,4 @@
 from maggma.stores import MemoryStore, JSONStore
-from pymatgen.util.testing import PymatgenTest
 from unittest import TestCase
 import os
 
