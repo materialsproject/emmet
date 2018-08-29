@@ -278,6 +278,14 @@
     "tasks_key": "calcs_reversed.0.output.outcar.total_magnetization"
   },
   {
+    "materials_key": "dielectric.structure",
+    "quality_score": {
+      "GGA Static Dielectric": 2,
+      "GGA+U Static Dielectric": 6
+    },
+    "tasks_key": "output.structure"
+  },
+  {
     "materials_key": "dielectric.static",
     "quality_score": {
       "GGA Static Dielectric": 2,
