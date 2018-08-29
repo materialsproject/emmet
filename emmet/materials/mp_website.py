@@ -348,7 +348,7 @@ def add_cifs(doc):
         conventional = sym_finder.get_conventional_standard_structure()
         refined = sym_finder.get_refined_structure()
         doc["cifs"]["primitive"] = str(CifWriter(primitive))
-        doc["cifs"]["refined"] = str(CifWriter(refined))
+        doc["cifs"]["refined"] = str(CifWriter(refined, symprec=0.1))
         doc["cifs"]["conventional_standard"] = str(CifWriter(conventional))
         doc["cifs"]["computed"] = str(CifWriter(struc))
         doc["spacegroup"]["symbol"] = sym_finder.get_space_group_symbol()
