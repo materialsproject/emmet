@@ -2,7 +2,7 @@ import numpy as np
 import logging
 import warnings
 from datetime import datetime
-from itertools import chain
+from itertools import chain, groupby
 
 from monty.json import jsanitize
 
@@ -267,8 +267,10 @@ class ElasticAggregateBuilder(Builder):
         all_docs = []
         for task_id, elastic_docs in grouped.items():
             elastic_docs = sorted(
-                elastic_docs, key=lambda x: (x['state'], x['completed_at']))
-            final_doc = elastic_docs[-1]
+                elastic_docs, key=lambda x: (x['order'], x['state'],
+                                             x['completed_at']))
+            soec_docs, toec_docs = groupby(elastic_docs, key=x['order'])
+            final_doc = soec_docs[-1]
             structure = Structure.from_dict(final_doc['optimized_structure'])
             formula = structure.composition.reduced_formula
             elements = [s.symbol for s in structure.composition.elements]
@@ -278,6 +280,7 @@ class ElasticAggregateBuilder(Builder):
             warnings = final_doc['warnings'] or []
             opt = Structure.from_dict(final_doc['optimized_structure'])
             init = Structure.from_dict(final_doc['input_structure'])
+            # TODO: are these the right params?
             if not StructureMatcher().fit(init, opt):
                 warnings.append("Inequivalent optimization structure")
             material_mag = CollinearMagneticStructureAnalyzer(opt).ordering.value
@@ -305,6 +308,14 @@ class ElasticAggregateBuilder(Builder):
                                'elements': elements,
                                'last_updated': self.elasticity.lu_field,
                                'state': state}
+            if toec_docs:
+                # TODO: this should be a bit more refined
+                final_toec_doc = toec_docs[-1]
+                et_exp = ElasticTensorExpansion.from_voigt(
+                    final_toec_doc['elastic_tensor_expansion'])
+                symbol_dict = et_exp[1].zeroed(1e-2).get_symbol_dict()
+                final_toec_doc.update({"symbol_dict": symbol_dict})
+                elastic_summary.update({"third_order": toec_docs[-1]})
             all_docs.append(jsanitize(elastic_summary))
             # elastic_summary.update(final_doc)
         return all_docs
