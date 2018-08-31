@@ -4,15 +4,14 @@ from maggma.builder import Builder
 from pydash.objects import get
 import matplotlib
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, BandStructure
+from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.electronic_structure.dos import CompleteDos
+from pymatgen.symmetry.electronic
 from sumo.plotting.dos_plotter import SDOSPlotter
 from sumo.plotting.bs_plotter import SBSPlotter
 from sumo.electronic_structure.dos import get_pdos
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
-
-matplotlib.use('agg')
-
 
 class ElectronicStructureImageBuilder(Builder):
     def __init__(self, materials, electronic_structure, bandstructures, dos, query=None, plot_options=None, **kwargs):
@@ -131,6 +130,8 @@ class ElectronicStructureImageBuilder(Builder):
         """
         items = list(filter(None, items))
 
+
+
         if len(items) > 0:
             self.logger.info("Updating {} electronic structure docs".format(len(items)))
             self.electronic_structure.update(items)
@@ -153,6 +154,7 @@ def get_small_plot(plot_data, gap):
 
 def image_from_plot(plot):
     imgdata = io.BytesIO()
+    plot.tight_layout()
     plot.savefig(imgdata, format="png", dpi=100)
     plot_img = imgdata.getvalue()
     return plot_img
@@ -170,7 +172,7 @@ def build_bs(bs_dict, mat):
             labels_dict = dict(zip(labels, kpts))
             labels_dict.pop(None, None)
         else:
-            struc = Structure.from_dict(mat["structure"])
+            struc = Structure.from_dict(bs_dict["structure"])
             labels_dict = HighSymmKpath(struc)._kpath["kpoints"]
 
         bs_dict["labels_dict"] = labels_dict
