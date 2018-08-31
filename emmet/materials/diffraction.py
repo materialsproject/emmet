@@ -8,6 +8,7 @@ from monty.serialization import loadfn
 from pymatgen.core.structure import Structure
 from pymatgen.analysis.diffraction.xrd import XRDCalculator, WAVELENGTHS
 
+from emmet.common.utils import load_settings
 from maggma.builder import Builder
 
 from emmet.common.utils import load_settings
