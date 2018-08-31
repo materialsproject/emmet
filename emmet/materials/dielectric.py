@@ -1,11 +1,8 @@
-import logging
 import numpy as np
 from itertools import combinations
 
-from pymongo import ASCENDING
-
 from pymatgen import Structure
-from pymatgen.analysis.elasticity.tensors import Tensor
+from pymatgen.core.tensors import Tensor
 from pymatgen.analysis.piezo import PiezoTensor
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
@@ -63,7 +60,7 @@ class DielectricBuilder(Builder):
             item dict: a dict of material_id, structure, and tasks
 
         Returns:
-            dict: a dieletrics dictionary  
+            dict: a dieletrics dictionary
         """
 
         def poly(matrix):

@@ -12,7 +12,7 @@ from maggma.builder import Builder
 from atomate.vasp.workflows.presets.core import wf_elastic_constant
 from atomate.vasp.powerups import add_tags, add_modify_incar, add_priority
 from atomate.utils.utils import get_fws_and_tasks, load_class
-from pymatgen.analysis.elasticity.tensors import Tensor, SquareTensor,\
+from pymatgen.core.tensors import Tensor, SquareTensor,\
         get_tkd_value, symmetry_reduce
 from pymatgen.analysis.elasticity.strain import Strain
 from pymatgen.core.operations import SymmOp

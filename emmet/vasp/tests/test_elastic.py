@@ -6,6 +6,7 @@ from maggma.stores import MongoStore
 from maggma.runner import Runner
 from pymatgen.util.testing import PymatgenTest
 from pymatgen.analysis.elasticity.strain import DeformedStructureSet
+from pymatgen.analysis.elasticity.elastic import ComplianceTensor
 
 from monty.serialization import loadfn
 
@@ -48,8 +49,8 @@ class ElasticAnalysisBuilderTest(unittest.TestCase):
         # Test warnings
         doc = ec_builder.elasticity.query_one(criteria={"pretty_formula": "NaN3"})
         self.assertEqual(doc['warnings'], None)
-        self.assertAlmostEqual(doc['compliance_tensor'][0][0],
-                               0.041576072)
+        comp = ComplianceTensor.from_dict(doc['compliance_tensor'])
+        self.assertAlmostEqual(comp.voigt[0][0], 0.041576072, 5)
 
     def test_grouping_functions(self):
         docs1 = list(self.test_tasks.query(criteria={"formula_pretty": "NaN3"}))
@@ -71,7 +72,6 @@ class ElasticAnalysisBuilderTest(unittest.TestCase):
         self.assertEqual(len(rots), 48)
 
     def test_process_elastic_calcs(self):
-        # docs = list(self.test_tasks.query(criteria={"formula_pretty": "NaN3"}))
         test_struct = PymatgenTest.get_structure('Sn') # use cubic test struct
         dss = DeformedStructureSet(test_struct)
         # Construct test task set
@@ -103,12 +103,14 @@ class ElasticAggregateBuilderTest(unittest.TestCase):
         # Generate test materials collection
         self.test_materials = MongoStore("test_emmet", "materials")
         self.test_materials.connect()
-        mat_docs = [{
+        mat_docs = []
+        for n, formula in enumerate(['Si', 'BaNiO3', 'Li2O2', 'TiO2']):
+            structure = PymatgenTest.get_structure(formula)
+            structure.add_site_property("magmoms", [0.0] * len(structure))
+            mat_docs.append({
             "task_id": "mp-{}".format(n),
-            "structure": PymatgenTest.get_structure(formula).as_dict(),
-            "pretty_formula": formula,
-            "magnetic_type": "non-magnetic"
-        } for n, formula in enumerate(['Si', 'BaNiO3', 'Li2O2', 'TiO2'])]
+            "structure": structure.as_dict(),
+            "pretty_formula": formula})
         self.test_materials.update(mat_docs, update_lu=False)
 
         # Create elasticity collection and add docs
@@ -117,18 +119,24 @@ class ElasticAggregateBuilderTest(unittest.TestCase):
         self.test_elasticity.connect()
 
         si = PymatgenTest.get_structure("Si")
+        si.add_site_property("magmoms", [0.0] * len(si))
+        et = ElasticTensor.from_voigt(
+            [[50, 25, 25, 0, 0, 0],
+             [25, 50, 25, 0, 0, 0],
+             [25, 25, 50, 0, 0, 0],
+             [0, 0, 0, 75, 0, 0],
+             [0, 0, 0, 0, 75, 0],
+             [0, 0, 0, 0, 0, 75]])
         doc = {"input_structure": si.copy().as_dict(),
+               "order": 2,
+               "magnetic_type": "non-magnetic",
                "optimization_task_id": "mp-1",
                "last_updated": datetime.utcnow(),
                "completed_at": datetime.utcnow(),
                "optimized_structure": si.copy().as_dict(),
                "pretty_formula": "Si", "state": "successful"}
-        doc['elastic_tensor'] = [[50, 25, 25, 0, 0, 0],
-                                 [25, 50, 25, 0, 0, 0],
-                                 [25, 25, 50, 0, 0, 0],
-                                 [0, 0, 0, 75, 0, 0],
-                                 [0, 0, 0, 0, 75, 0],
-                                 [0, 0, 0, 0, 0, 75]]
+        doc['elastic_tensor'] = et.voigt
+        doc.update(et.property_dict)
         self.test_elasticity.update([doc])
         # Insert second doc with diff params
         si.perturb(0.005)
