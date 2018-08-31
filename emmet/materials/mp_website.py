@@ -339,8 +339,9 @@ def add_elastic(mat, elastic):
 
 
 def add_cifs(doc):
+    symprec = 0.1
     struc = Structure.from_dict(doc["structure"])
-    sym_finder = SpacegroupAnalyzer(struc, symprec=0.1)
+    sym_finder = SpacegroupAnalyzer(struc, symprec=symprec)
     doc["cif"] = str(CifWriter(struc))
     doc["cifs"] = {}
     if sym_finder.get_hall():
@@ -348,7 +349,7 @@ def add_cifs(doc):
         conventional = sym_finder.get_conventional_standard_structure()
         refined = sym_finder.get_refined_structure()
         doc["cifs"]["primitive"] = str(CifWriter(primitive))
-        doc["cifs"]["refined"] = str(CifWriter(refined))
+        doc["cifs"]["refined"] = str(CifWriter(refined, symprec=symprec))
         doc["cifs"]["conventional_standard"] = str(CifWriter(conventional))
         doc["cifs"]["computed"] = str(CifWriter(struc))
         doc["spacegroup"]["symbol"] = sym_finder.get_space_group_symbol()
