@@ -239,6 +239,7 @@ class ElasticAggregateBuilder(Builder):
             material_filter = {}
             if q.get("pretty_formula"):
                 material_filter.update({"pretty_formula": q.get("pretty_formula")})
+            formulas = self.elasticity.distinct("pretty_formula")
 
         self.total = len(formulas)
         logger.info("Generating formula dict")
@@ -291,7 +292,7 @@ class ElasticAggregateBuilder(Builder):
             warnings = warnings or None
 
             # Filter for failure and warnings
-            if final_doc['k_vrh'] < 0 in final_doc:
+            if final_doc['k_vrh'] < 0 or final_doc['k_vrh'] > 2000 in final_doc:
                 state = 'failed'
             elif warnings is not None:
                 state = 'warning'
@@ -381,10 +382,8 @@ def get_elastic_analysis(opt_task, defo_tasks):
             et_fit = ElasticTensor(et_exp[0])
             # Update elastic doc with TOEC stuff
             elastic_doc.update({
-                "elastic_tensor_expansion": [
-                    c.voigt.tolist() for c in et_exp],
-                "elastic_tensor_expansion_original": [
-                    c.voigt.tolist() for c in et_exp_raw],
+                "elastic_tensor_expansion": et_exp.as_dict(voigt=True),
+                "elastic_tensor_expansion_original": et_exp_raw.as_dict(True),
                 "thermal_expansion_tensor": et_exp.thermal_expansion_coeff(
                     opt_struct, 300)})
         et = et_fit.voigt_symmetrized.convert_to_ieee(opt_struct)
@@ -397,10 +396,10 @@ def get_elastic_analysis(opt_task, defo_tasks):
             "optimization_task_id": opt_task['task_id'],
             "cauchy_stresses": stresses,
             "strains": strains,
-            "elastic_tensor": et.zeroed(0.01).voigt.round(0),
+            "elastic_tensor": et.zeroed(0.01).round(0).as_dict(True),
             # Convert compliance to 10^-12 Pa
-            "compliance_tensor": (et.compliance_tensor.voigt * 1000).round(1),
-            "elastic_tensor_original": et_fit.voigt,
+            "compliance_tensor": (et.compliance_tensor * 1000).round(1).as_dict(True),
+            "elastic_tensor_original": et_fit.as_dict(True),
             "optimized_structure": opt_struct,
             "spacegroup": input_struct.get_space_group_info()[0],
             "input_structure": input_struct,
@@ -819,7 +818,7 @@ def generate_formula_dict(materials_store, query=None):
         Nested dictionary keyed by formula-mp_id with structure values.
 
     """
-    props = ["pretty_formula", "structure", "task_id"]
+    props = ["pretty_formula", "structure", "task_id", "magnetic_type"]
     results = list(materials_store.groupby("pretty_formula", properties=props,
                                            criteria=query))
     formula_dict = {}

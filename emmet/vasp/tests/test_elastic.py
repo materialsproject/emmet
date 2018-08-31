@@ -106,7 +106,8 @@ class ElasticAggregateBuilderTest(unittest.TestCase):
         mat_docs = [{
             "task_id": "mp-{}".format(n),
             "structure": PymatgenTest.get_structure(formula).as_dict(),
-            "pretty_formula": formula
+            "pretty_formula": formula,
+            "magnetic_type": "non-magnetic"
         } for n, formula in enumerate(['Si', 'BaNiO3', 'Li2O2', 'TiO2'])]
         self.test_materials.update(mat_docs, update_lu=False)
 
@@ -148,7 +149,8 @@ class ElasticAggregateBuilderTest(unittest.TestCase):
         docs = []
         grouped_by_mpid = group_by_material_id(
             materials_dict['Si'],
-            [{'structure': PymatgenTest.get_structure('Si').as_dict()}])
+            [{'structure': PymatgenTest.get_structure('Si').as_dict(),
+              'magnetic_type': "non-magnetic"}])
         self.assertEqual(len(grouped_by_mpid), 1)
         materials_dict = generate_formula_dict(self.test_materials)
 
