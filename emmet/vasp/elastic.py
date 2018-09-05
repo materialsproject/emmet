@@ -397,8 +397,8 @@ def get_elastic_analysis(opt_task, defo_tasks):
             et_fit = ElasticTensor(et_exp[0])
             # Update elastic doc with TOEC stuff
             elastic_doc.update({
-                "elastic_tensor_expansion": et_exp.as_dict(voigt=True),
-                "elastic_tensor_expansion_original": et_exp_raw.as_dict(True),
+                "elastic_tensor_expansion": elastic_sanitize(et_exp),
+                "elastic_tensor_expansion_original": elastic_sanitize(et_exp_raw),
                 "thermal_expansion_tensor": et_exp.thermal_expansion_coeff(
                     opt_struct, 300)})
         et = et_fit.voigt_symmetrized.convert_to_ieee(opt_struct)
@@ -411,10 +411,10 @@ def get_elastic_analysis(opt_task, defo_tasks):
             "optimization_task_id": opt_task['task_id'],
             "cauchy_stresses": stresses,
             "strains": strains,
-            "elastic_tensor": et.zeroed(0.01).round(0).as_dict(True),
+            "elastic_tensor": elastic_sanitize(et.zeroed(0.01).round(0)),
             # Convert compliance to 10^-12 Pa
-            "compliance_tensor": (et.compliance_tensor * 1000).round(1).as_dict(True),
-            "elastic_tensor_original": et_fit.as_dict(True),
+            "compliance_tensor": elastic_sanitize(et.compliance_tensor * 1000),
+            "elastic_tensor_original": elastic_sanitize(et_fit),
             "optimized_structure": opt_struct,
             "spacegroup": input_struct.get_space_group_info()[0],
             "input_structure": input_struct,
@@ -843,3 +843,20 @@ def generate_formula_dict(materials_store, query=None):
         structures = [d['structure'] for d in result['docs']]
         formula_dict[formula] = dict(zip(task_ids, structures))
     return formula_dict
+
+
+def elastic_sanitize(tensor):
+    """
+    Simple method to sanitize elastic tensor objects
+
+    Args:
+        tensor (ElasticTensor or ElasticTensorExpansion):
+            elastic tensor to be sanitized
+
+    Returns:
+        voigt-notation elastic tensor as a list of lists
+    """
+    if isinstance(tensor, ElasticTensorExpansion):
+        return [e.voigt.tolist() for e in tensor]
+    else:
+        return tensor.voigt.tolist()
