@@ -296,7 +296,7 @@ class ElasticAggregateBuilder(Builder):
             chemsys = '-'.join(elements)
 
             # Issue warning if relaxed structure differs
-            warnings = final_doc.get('warnings', [])
+            warnings = final_doc.get('warnings') or []
             opt = Structure.from_dict(final_doc['optimized_structure'])
             init = Structure.from_dict(final_doc['input_structure'])
             # TODO: are these the right params?
