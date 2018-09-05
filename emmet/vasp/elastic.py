@@ -1,3 +1,18 @@
+"""
+This module contains 3 builders for elastic properties.
+
+1.  The ElasticAnalysisBuilder builds individual documents
+    corresponding to aggregated tasks corresponding to a
+    single input structure, e. g. all of the tasks in one
+    workflow.  This is where elastic tensors are fitted.
+2.  The ElasticAggregateBuilder aggregates elastic documents
+    that all correspond to the same structure and also
+    assigns a "state" based on the elastic document's validity.
+3.  The ElasticCopyBuilder is a simple copy builder that
+    transfers all of the aggregated tasks with "successful" states
+    into a production collection.  It's not strictly necessary,
+    but is currently in use in the production pipeline.
+"""
 import numpy as np
 import logging
 import warnings
