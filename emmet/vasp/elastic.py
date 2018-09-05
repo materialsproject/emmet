@@ -285,7 +285,10 @@ class ElasticAggregateBuilder(Builder):
             elastic_docs = sorted(
                 elastic_docs, key=lambda x: (x['order'], x['state'],
                                              x['completed_at']))
-            soec_docs, toec_docs = groupby(elastic_docs, key=x['order'])
+            grouped_by_order = {k: list(v) for k, v in groupby(
+                elastic_docs, key=lambda x: x['order'])}
+            soec_docs = grouped_by_order.get(2)
+            toec_docs = grouped_by_order.get(3)
             final_doc = soec_docs[-1]
             structure = Structure.from_dict(final_doc['optimized_structure'])
             formula = structure.composition.reduced_formula
@@ -293,7 +296,7 @@ class ElasticAggregateBuilder(Builder):
             chemsys = '-'.join(elements)
 
             # Issue warning if relaxed structure differs
-            warnings = final_doc['warnings'] or []
+            warnings = final_doc.get('warnings', [])
             opt = Structure.from_dict(final_doc['optimized_structure'])
             init = Structure.from_dict(final_doc['input_structure'])
             # TODO: are these the right params?
@@ -307,7 +310,8 @@ class ElasticAggregateBuilder(Builder):
             warnings = warnings or None
 
             # Filter for failure and warnings
-            if final_doc['k_vrh'] < 0 or final_doc['k_vrh'] > 2000 in final_doc:
+            k_vrh = final_doc['k_vrh']
+            if k_vrh < 0 or k_vrh > 600:
                 state = 'failed'
             elif warnings is not None:
                 state = 'warning'
@@ -387,7 +391,6 @@ def get_elastic_analysis(opt_task, defo_tasks):
                 return None
             eq_stress = -0.1 * Stress(opt_task['output']['stress'])
             # strains = [s.zeroed(0.0001) for s in strains]
-            from personal.functions import pdb_function
             # et_expansion = pdb_function(ElasticTensorExpansion.from_diff_fit,
             #     strains, pk_stresses, eq_stress=eq_stress, tol=1e-5)
             et_exp_raw = ElasticTensorExpansion.from_diff_fit(
@@ -627,6 +630,7 @@ def group_by_material_id(materials_dict, docs, structure_key='structure',
                       for mp_id, struct in materials_dict.items()}
     # Get magnetic phases
     mags = {}
+    # TODO: refactor this with data from materials collection?
     for mp_id, structure in materials_dict.items():
         mag = CollinearMagneticStructureAnalyzer(structure).ordering.value
         mags[mp_id] = mag_types[mag]
