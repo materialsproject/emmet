@@ -26,7 +26,7 @@ from pymatgen.analysis.elasticity.elastic import ElasticTensor,\
         ElasticTensorExpansion
 from pymatgen.analysis.elasticity.strain import Deformation, Strain
 from pymatgen.analysis.elasticity.stress import Stress
-from pymatgen.analysis.elasticity.tensors import get_tkd_value, set_tkd_value
+from pymatgen.core.tensors import get_tkd_value, set_tkd_value
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 from pymatgen.analysis.structure_matcher import StructureMatcher,\
     ElementComparator
