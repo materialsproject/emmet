@@ -1,12 +1,18 @@
 import unittest
 import os
+import datetime
+import numpy as np
 
-from emmet.vasp.elastic import *
+from emmet.vasp.elastic import ElasticAnalysisBuilder, ElasticAggregateBuilder,\
+    group_deformations_by_optimization_task, group_by_parent_lattice,\
+    get_distinct_rotations, process_elastic_calcs, generate_formula_dict,\
+    group_by_material_id
 from maggma.stores import MongoStore
 from maggma.runner import Runner
 from pymatgen.util.testing import PymatgenTest
 from pymatgen.analysis.elasticity.strain import DeformedStructureSet
-from pymatgen.analysis.elasticity.elastic import ComplianceTensor
+from pymatgen.analysis.elasticity.elastic import ElasticTensor
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from monty.serialization import loadfn
 
