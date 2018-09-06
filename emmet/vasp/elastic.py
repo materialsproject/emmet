@@ -17,7 +17,7 @@ import numpy as np
 import logging
 import warnings
 from datetime import datetime
-from itertools import chain, groupby
+from itertools import chain, groupby, product
 
 from monty.json import jsanitize
 
@@ -462,7 +462,8 @@ def get_distinct_rotations(structure, symprec=0.1, atol=1e-6):
         atol (float): absolute tolerance for relative indices
     """
     sga = SpacegroupAnalyzer(structure, symprec)
-    rotations = sga.get_symmetry_dataset()['rotations']
+    symmops = sga.get_symmetry_operations(cartesian=True)
+    rotations = [s.rotation_matrix for s in symmops]
     if len(rotations) == 1:
         return rotations
     unique_rotations = [np.array(rotations[0])]
