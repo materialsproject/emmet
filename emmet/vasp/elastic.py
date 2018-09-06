@@ -183,7 +183,7 @@ class ElasticAnalysisBuilder(Builder):
 
         self.logger.info("Updating {} elastic documents".format(len(items)))
 
-        self.elasticity.update(items, key='optimization_task_id')
+        self.elasticity.update(items, key='optimization_dir_name')
 
 
 # TODO: this could probably be abstracted to make a very general
