@@ -364,7 +364,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
     # For now, discern order (i.e. TOEC) using parameters from optimization
     # TODO: figure this out more intelligently
     diff = get(opt_task, "input.incar.EDIFFG")
-    order = 3 if diff == 0.001 else 2
+    order = 3 if np.isclose(diff, -0.001) else 2
     explicit, derived = process_elastic_calcs(opt_task, defo_tasks)
     all_calcs = explicit + derived
     stresses = [c.get("cauchy_stress") for c in all_calcs]
@@ -391,17 +391,20 @@ def get_elastic_analysis(opt_task, defo_tasks):
             et_exp = et_exp.round(1)
             et_fit = ElasticTensor(et_exp[0])
             # Update elastic doc with TOEC stuff
+            tec = et_exp.thermal_expansion_coeff(opt_struct, 300)
             elastic_doc.update({
                 "elastic_tensor_expansion": elastic_sanitize(et_exp),
                 "elastic_tensor_expansion_original": elastic_sanitize(et_exp_raw),
-                "thermal_expansion_tensor": et_exp.thermal_expansion_coeff(
-                    opt_struct, 300)})
+                "thermal_expansion_tensor": tec,
+                "average_linear_thermal_expansion": np.trace(tec)})
         et = et_fit.voigt_symmetrized.convert_to_ieee(opt_struct)
         vasp_input = opt_task['input']
         if 'structure' in vasp_input:
             vasp_input.pop('structure')
         completed_at = max([d['completed_at'] for d in defo_tasks])
         state, warnings = get_state_and_warnings(et, opt_struct)
+        if elastic_doc.get("average_linear_thermal_expansion", 0) < -0.1:
+            warnings.append("Negative thermal expansion")
         elastic_doc.update({
             "optimization_task_id": opt_task['task_id'],
             "cauchy_stresses": stresses,
