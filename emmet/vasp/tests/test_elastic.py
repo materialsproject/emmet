@@ -3,6 +3,8 @@ import os
 from datetime import datetime
 import numpy as np
 from itertools import product
+import cProfile
+from pstats import Stats
 
 from emmet.vasp.elastic import ElasticAnalysisBuilder, ElasticAggregateBuilder,\
     group_deformations_by_optimization_task, group_by_parent_lattice,\
@@ -27,6 +29,7 @@ test_tasks = os.path.join(module_dir, "..", "..", "..", "test_files",
                           "vasp", "elastic_tasks.json")
 
 DEBUG_MODE = False
+PROFILE_MODE = False
 
 # TODO: add TOEC functionality test
 class ElasticAnalysisBuilderTest(unittest.TestCase):
@@ -39,12 +42,22 @@ class ElasticAnalysisBuilderTest(unittest.TestCase):
         self.test_tasks.update(docs)
         self.test_elasticity = MongoStore("test_emmet", "elasticity")
         self.test_elasticity.connect()
+        if PROFILE_MODE:
+            self.pr = cProfile.Profile()
+            self.pr.enable()
+            print("\n<<<---")
 
     @classmethod
     def tearDown(self):
         if not DEBUG_MODE:
             self.test_elasticity.collection.drop()
             self.test_tasks.collection.drop()
+        if PROFILE_MODE:
+            p = Stats(self.pr)
+            p.strip_dirs()
+            p.sort_stats('cumtime')
+            p.print_stats()
+            print("\n--->>>")
 
     def test_builder(self):
         ec_builder = ElasticAnalysisBuilder(
@@ -129,6 +142,9 @@ class ElasticAnalysisBuilderTest(unittest.TestCase):
         explicit, derived = process_elastic_calcs(opt_task, defo_tasks)
         self.assertEqual(len(explicit), len(sym_reduced))
         self.assertEqual(len(derived), len(strains) - len(sym_reduced))
+        for calc in derived:
+            self.assertTrue(np.allclose(
+                calc['strain'], calc['cauchy_stress'] / -0.5))
 
 
 class ElasticAggregateBuilderTest(unittest.TestCase):
