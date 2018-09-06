@@ -110,7 +110,7 @@ class ElasticAnalysisBuilder(Builder):
             "$regex": "[(elastic deformation)(structure optimization)]"}})
 
         return_props = ['output', 'input', 'completed_at', 'transmuter',
-                        'task_id', 'task_label', 'formula_pretty']
+                        'task_id', 'task_label', 'formula_pretty', 'dir_name']
 
         # formulas that have been updated since elasticity was last updated
         # Note that this makes the builder a bit slower if run for a complete
@@ -410,6 +410,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
                 warnings.append("Fewer than 80 strains, TOEC may be deficient")
         elastic_doc.update({
             "optimization_task_id": opt_task['task_id'],
+            "optimization_dir_name": opt_task['dir_name'],
             "cauchy_stresses": stresses,
             "strains": strains,
             "elastic_tensor": elastic_sanitize(et.zeroed(0.01).round(0)),
