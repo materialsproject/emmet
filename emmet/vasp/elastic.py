@@ -402,12 +402,6 @@ def get_elastic_analysis(opt_task, defo_tasks):
         if 'structure' in vasp_input:
             vasp_input.pop('structure')
         completed_at = max([d['completed_at'] for d in defo_tasks])
-        state, warnings = get_state_and_warnings(et, opt_struct)
-        if order == 3:
-            if elastic_doc.get("average_linear_thermal_expansion", 0) < -0.1:
-                warnings.append("Negative thermal expansion")
-            if len(strains) < 80:
-                warnings.append("Fewer than 80 strains, TOEC may be deficient")
         elastic_doc.update({
             "optimization_task_id": opt_task['task_id'],
             "optimization_dir_name": opt_task['dir_name'],
@@ -423,9 +417,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
             "completed_at": completed_at,
             "optimization_input": vasp_input,
             "order": order,
-            "pretty_formula": opt_struct.composition.reduced_formula,
-            "state": state,
-            "warnings": warnings})
+            "pretty_formula": opt_struct.composition.reduced_formula})
         # Add magnetic type
         mag = CollinearMagneticStructureAnalyzer(opt_struct).ordering.value
         elastic_doc['magnetic_type'] = mag_types[mag]
@@ -442,6 +434,11 @@ def get_elastic_analysis(opt_task, defo_tasks):
             else:
                 prop_dict[k] = np.round(v, 0)
         elastic_doc.update(prop_dict)
+        # Update with state and warnings
+        state, warnings = get_state_and_warnings(elastic_doc)
+        elastic_doc.update({
+            "state": state,
+            "warnings": warnings})
         # TODO: add kpoints params?
         return elastic_doc
     else:
@@ -559,7 +556,6 @@ def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, tol=0.002):
             tstrains = [(symmop, tstrain) for symmop, tstrain in tstrains
                         if tstrain.get_deformation_matrix().is_independent(tol)
                         and not tstrain in explicit_calcs]
-        # TODO: this is pretty slow, should probably speed it up if possible
         # For third order
         else:
             strain_states = get_default_strain_states(3)
@@ -784,7 +780,7 @@ def calculate_deformation(undeformed_structure, deformed_structure):
     return np.transpose(np.dot(np.linalg.inv(ulatt), dlatt))
 
 
-def get_state_and_warnings(elastic_tensor, structure):
+def get_state_and_warnings(elastic_doc):
     """
     Generates all warnings that apply to a fitted elastic tensor
 
@@ -798,14 +794,16 @@ def get_state_and_warnings(elastic_tensor, structure):
         list of warnings
 
     """
+    structure = elastic_doc['optimized_structure']
     warnings = []
     if any([s.is_rare_earth_metal for s in structure.species]):
         warnings.append("Structure contains a rare earth element")
-    eigs, eigvecs = np.linalg.eig(elastic_tensor.voigt)
+    vet = np.array(elastic_doc['elastic_tensor'])
+    eigs, eigvecs = np.linalg.eig(vet)
     if np.any(eigs < 0.0):
         warnings.append("Elastic tensor has a negative eigenvalue")
-    c11, c12, c13 = elastic_tensor.voigt[0, 0:3]
-    c23 = elastic_tensor.voigt[1, 2]
+    c11, c12, c13 = vet[0, 0:3]
+    c23 = vet[1, 2]
 
     # TODO: these should be revisited at some point, are they complete?
     #       I think they might only apply to cubic systems
@@ -817,14 +815,20 @@ def get_state_and_warnings(elastic_tensor, structure):
         warnings.append("c11 and c23 are within 5% or c23 is greater than c11")
 
     moduli = ["k_voigt", "k_reuss", "k_vrh", "g_voigt", "g_reuss", "g_vrh"]
-    moduli_array = np.array([getattr(elastic_tensor, m) for m in moduli])
+    moduli_array = np.array([get(elastic_doc, m) for m in moduli])
     if np.any(moduli_array < 2):
         warnings.append("One or more K, G below 2 GPa")
 
     if np.any(moduli_array > 1000):
         warnings.append("One or more K, G above 1000 GPa")
 
-    failure_states = [elastic_tensor.k_vrh < 0]
+    if elastic_doc['order'] == 3:
+        if elastic_doc.get("average_linear_thermal_expansion", 0) < -0.1:
+            warnings.append("Negative thermal expansion")
+        if len(elastic_doc['strains']) < 80:
+            warnings.append("Fewer than 80 strains, TOEC may be deficient")
+
+    failure_states = [moduli_array[2] < 0]
     if any(failure_states):
         state = "failed"
     elif warnings:
