@@ -17,7 +17,7 @@ import numpy as np
 import logging
 import warnings
 from datetime import datetime
-from itertools import chain, groupby
+from itertools import chain, groupby, product
 
 from monty.json import jsanitize
 
@@ -462,7 +462,8 @@ def get_distinct_rotations(structure, symprec=0.1, atol=1e-6):
         atol (float): absolute tolerance for relative indices
     """
     sga = SpacegroupAnalyzer(structure, symprec)
-    rotations = sga.get_symmetry_dataset()['rotations']
+    symmops = sga.get_symmetry_operations(cartesian=True)
+    rotations = [s.rotation_matrix for s in symmops]
     if len(rotations) == 1:
         return rotations
     unique_rotations = [np.array(rotations[0])]
@@ -555,9 +556,24 @@ def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, tol=0.002):
         tstrains = [(symmop, strain.transform(symmop))
                     for symmop in symmops]
         # Filter strains by those which are independent and new
-        tstrains = [(symmop, tstrain) for symmop, tstrain in tstrains
-                    if tstrain.deformation_matrix.is_independent(tol) and \
-                    not get_tkd_value(explicit_calcs, tstrain, allclose_kwargs)]
+        # For second order
+        if len(explicit_calcs) < 30:
+            tstrains = [(symmop, tstrain) for symmop, tstrain in tstrains
+                        if tstrain.deformation_matrix.is_independent(tol) and \
+                        not get_tkd_value(explicit_calcs, tstrain, allclose_kwargs)]
+        # TODO: this is pretty slow, should probably speed it up if possible
+        # For third order
+        else:
+            strain_states = get_default_strain_states(3)
+            # Default stencil in atomate, this maybe shouldn't be hard-coded
+            stencil = np.linspace(-0.075, 0.075, 7)
+            valid_strains = [Strain.from_voigt(s * np.array(strain_state))
+                             for s, strain_state in product(stencil, strain_states)]
+            valid_strains = {v: True for v in valid_strains
+                             if not np.allclose(v, 0)}
+            tstrains = [(symmop, tstrain) for symmop, tstrain in tstrains
+                        if get_tkd_value(valid_strains, tstrain) and \
+                        not get_tkd_value(explicit_calcs, tstrain, allclose_kwargs)]
         # Add surviving tensors to derived_strains dict
         for symmop, tstrain in tstrains:
             curr_set = get_tkd_value(derived_calcs_by_strain,
