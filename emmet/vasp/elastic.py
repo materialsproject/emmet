@@ -377,7 +377,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
             et_fit = legacy_fit(strains, stresses)
         elif order == 3:
             # Test for TOEC
-            if len(strains) < 80:
+            if len(strains) < 70:
                 logger.info("insufficient valid strains for {} TOEC".format(
                     opt_task['formula_pretty']))
                 return None
@@ -403,8 +403,11 @@ def get_elastic_analysis(opt_task, defo_tasks):
             vasp_input.pop('structure')
         completed_at = max([d['completed_at'] for d in defo_tasks])
         state, warnings = get_state_and_warnings(et, opt_struct)
-        if elastic_doc.get("average_linear_thermal_expansion", 0) < -0.1:
-            warnings.append("Negative thermal expansion")
+        if order == 3:
+            if elastic_doc.get("average_linear_thermal_expansion", 0) < -0.1:
+                warnings.append("Negative thermal expansion")
+            if len(strains) < 80:
+                warnings.append("Fewer than 80 strains, TOEC may be deficient")
         elastic_doc.update({
             "optimization_task_id": opt_task['task_id'],
             "cauchy_stresses": stresses,
