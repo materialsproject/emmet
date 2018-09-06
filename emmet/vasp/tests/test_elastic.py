@@ -1,7 +1,8 @@
 import unittest
 import os
-import datetime
+from datetime import datetime
 import numpy as np
+from itertools import product
 
 from emmet.vasp.elastic import ElasticAnalysisBuilder, ElasticAggregateBuilder,\
     group_deformations_by_optimization_task, group_by_parent_lattice,\
@@ -10,9 +11,11 @@ from emmet.vasp.elastic import ElasticAnalysisBuilder, ElasticAggregateBuilder,\
 from maggma.stores import MongoStore
 from maggma.runner import Runner
 from pymatgen.util.testing import PymatgenTest
-from pymatgen.analysis.elasticity.strain import DeformedStructureSet
+from pymatgen.analysis.elasticity.strain import DeformedStructureSet, Strain
 from pymatgen.analysis.elasticity.elastic import ElasticTensor
+from pymatgen.core.tensors import symmetry_reduce
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from atomate.vasp.workflows.base.elastic import get_default_strain_states
 
 from monty.serialization import loadfn
 
@@ -80,6 +83,7 @@ class ElasticAnalysisBuilderTest(unittest.TestCase):
     def test_process_elastic_calcs(self):
         test_struct = PymatgenTest.get_structure('Sn') # use cubic test struct
         dss = DeformedStructureSet(test_struct)
+
         # Construct test task set
         opt_task = {"output": {"structure": test_struct.as_dict()},
                     "input": {"structure" : test_struct.as_dict()}}
@@ -98,6 +102,33 @@ class ElasticAnalysisBuilderTest(unittest.TestCase):
         explicit, derived = process_elastic_calcs(opt_task, defo_tasks)
         self.assertEqual(len(explicit), 23)
         self.assertEqual(len(derived), 1)
+
+    def test_process_elastic_calcs_toec(self):
+        # Test TOEC tasks
+        test_struct = PymatgenTest.get_structure('Sn') # use cubic test struct
+        strain_states = get_default_strain_states(3)
+        # Default stencil in atomate, this maybe shouldn't be hard-coded
+        stencil = np.linspace(-0.075, 0.075, 7)
+        strains = [Strain.from_voigt(s * np.array(strain_state))
+                   for s, strain_state in product(stencil, strain_states)]
+        strains = [s for s in strains if not np.allclose(s, 0)]
+        sym_reduced = symmetry_reduce(strains, test_struct)
+        opt_task = {"output": {"structure": test_struct.as_dict()},
+                    "input": {"structure" : test_struct.as_dict()}}
+        defo_tasks = []
+        for n, strain in enumerate(sym_reduced):
+            defo = strain.deformation_matrix
+            new_struct = defo.apply_to_structure(test_struct)
+            defo_task = {"output": {"structure": new_struct.as_dict(),
+                                    "stress": (strain * 5).tolist()},
+                         "input": None, "task_id": n,
+                         "completed_at": datetime.utcnow()}
+            defo_task.update({"transmuter": {
+                "transformation_params": [{"deformation": defo}]}})
+            defo_tasks.append(defo_task)
+        explicit, derived = process_elastic_calcs(opt_task, defo_tasks)
+        self.assertEqual(len(explicit), len(sym_reduced))
+        self.assertEqual(len(derived), len(strains) - len(sym_reduced))
 
 
 class ElasticAggregateBuilderTest(unittest.TestCase):
