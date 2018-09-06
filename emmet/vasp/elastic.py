@@ -289,7 +289,10 @@ class ElasticAggregateBuilder(Builder):
                 elastic_docs, key=lambda x: x['order'])}
             soec_docs = grouped_by_order.get(2)
             toec_docs = grouped_by_order.get(3)
-            final_doc = soec_docs[-1]
+            if soec_docs:
+                final_doc = soec_docs[-1]
+            else:
+                final_doc = toec_docs[-1]
             structure = Structure.from_dict(final_doc['optimized_structure'])
             formula = structure.composition.reduced_formula
             elements = [s.symbol for s in structure.composition.elements]
