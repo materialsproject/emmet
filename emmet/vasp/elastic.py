@@ -363,7 +363,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
     input_struct = Structure.from_dict(opt_task['input']['structure'])
     # For now, discern order (i.e. TOEC) using parameters from optimization
     # TODO: figure this out more intelligently
-    diff = get(opt_task, "input.incar.EDIFFG")
+    diff = get(opt_task, "input.incar.EDIFFG", 0)
     order = 3 if np.isclose(diff, -0.001) else 2
     explicit, derived = process_elastic_calcs(opt_task, defo_tasks)
     all_calcs = explicit + derived
@@ -557,8 +557,8 @@ def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, tol=0.002):
         # For second order
         if len(explicit_calcs) < 30:
             tstrains = [(symmop, tstrain) for symmop, tstrain in tstrains
-                        if tstrain.deformation_matrix.is_independent(tol) and \
-                        not tstrain in explicit_calcs]
+                        if tstrain.get_deformation_matrix().is_independent(tol)
+                        and not tstrain in explicit_calcs]
         # TODO: this is pretty slow, should probably speed it up if possible
         # For third order
         else:
@@ -606,7 +606,7 @@ def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, tol=0.002):
                       in zip(task_ids, task_strains, task_stresses, symmops)]
         calc = {"strain": strain,
                 "cauchy_stress": Stress(np.average(derived_stresses, axis=0)),
-                "deformation": strain.deformation_matrix,
+                "deformation": strain.get_deformation_matrix(),
                 "input_tasks": input_docs,
                 "type": "derived"}
         calc['pk_stress'] = calc['cauchy_stress'].piola_kirchoff_2(

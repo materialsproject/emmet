@@ -130,7 +130,7 @@ class ElasticAnalysisBuilderTest(unittest.TestCase):
                     "input": {"structure" : test_struct.as_dict()}}
         defo_tasks = []
         for n, strain in enumerate(sym_reduced):
-            defo = strain.deformation_matrix
+            defo = strain.get_deformation_matrix()
             new_struct = defo.apply_to_structure(test_struct)
             defo_task = {"output": {"structure": new_struct.as_dict(),
                                     "stress": (strain * 5).tolist()},
