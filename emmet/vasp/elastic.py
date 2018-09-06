@@ -276,7 +276,7 @@ class ElasticAggregateBuilder(Builder):
         formula = docs[0]['pretty_formula']
         if not grouped:
             formula = Structure.from_dict(list(
-                material_dict.values())[0].composition.reduced_formula)
+                material_dict.values())[0]).composition.reduced_formula
             logger.debug("No material match for {}".format(formula))
 
         # For now just do the most recent one that's not failed
