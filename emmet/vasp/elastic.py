@@ -363,18 +363,10 @@ def get_elastic_analysis(opt_task, defo_tasks):
     input_struct = Structure.from_dict(opt_task['input']['structure'])
     # For now, discern order (i.e. TOEC) using parameters from optimization
     # TODO: figure this out more intelligently
-    # TODO: fix symmetry population for TOECs
     diff = get(opt_task, "input.incar.EDIFFG")
-    # TOEC runs
-    if diff == -0.001:
-        all_calcs, derived = process_elastic_calcs(
-            opt_task, defo_tasks, add_derived=False)
-        order = 3
-    # Non-TOEC runs
-    else:
-        explicit, derived = process_elastic_calcs(opt_task, defo_tasks)
-        all_calcs = explicit + derived
-        order = 2
+    order = 3 if diff == 0.001 else 2
+    explicit, derived = process_elastic_calcs(opt_task, defo_tasks)
+    all_calcs = explicit + derived
     stresses = [c.get("cauchy_stress") for c in all_calcs]
     pk_stresses = [c.get("pk_stress") for c in all_calcs]
     strains = [c.get("strain") for c in all_calcs]
