@@ -18,6 +18,7 @@ import logging
 import warnings
 from datetime import datetime
 from itertools import chain, groupby, product
+from copy import deepcopy
 
 from monty.json import jsanitize
 
@@ -333,7 +334,7 @@ class ElasticAggregateBuilder(Builder):
                                'state': state}
             if toec_docs:
                 # TODO: this should be a bit more refined
-                final_toec_doc = toec_docs[-1]
+                final_toec_doc = deepcopy(toec_docs[-1])
                 et_exp = ElasticTensorExpansion.from_voigt(
                     final_toec_doc['elastic_tensor_expansion'])
                 symbol_dict = et_exp[1].zeroed(1e-2).get_symbol_dict()
