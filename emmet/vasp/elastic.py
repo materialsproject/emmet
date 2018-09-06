@@ -36,7 +36,7 @@ from atomate.vasp.workflows.base.elastic import get_default_strain_states
 from maggma.builder import Builder
 from emmet.materials.mp_website import mag_types
 
-from pydash.objects import get
+from pydash.objects import get, set_
 
 import tqdm
 
@@ -338,7 +338,7 @@ class ElasticAggregateBuilder(Builder):
                     final_toec_doc['elastic_tensor_expansion'])
                 symbol_dict = et_exp[1].zeroed(1e-2).get_symbol_dict()
                 final_toec_doc.update({"symbol_dict": symbol_dict})
-                elastic_summary.update({"third_order": toec_docs[-1]})
+                set_(elastic_summary, "elasticity.third_order", final_toec_doc)
             all_docs.append(jsanitize(elastic_summary))
             # elastic_summary.update(final_doc)
         return all_docs
