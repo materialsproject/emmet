@@ -26,7 +26,7 @@ from pymatgen.analysis.elasticity.elastic import ElasticTensor,\
         ElasticTensorExpansion
 from pymatgen.analysis.elasticity.strain import Deformation, Strain
 from pymatgen.analysis.elasticity.stress import Stress
-from pymatgen.core.tensors import get_tkd_value, set_tkd_value
+from pymatgen.core.tensors import TensorMapping
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 from pymatgen.analysis.structure_matcher import StructureMatcher,\
     ElementComparator
@@ -516,7 +516,7 @@ def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, tol=0.002):
     input_structure = Structure.from_dict(opt_doc['input']['structure'])
 
     # Process explicit calcs, store in dict keyed by strain
-    explicit_calcs = {}
+    explicit_calcs = TensorMapping()
     for doc in defo_docs:
         calc = {"type": "explicit", "input": doc["input"],
                 "output": doc["output"], "task_id": doc["task_id"],
@@ -535,10 +535,10 @@ def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, tol=0.002):
         strain = defo.green_lagrange_strain
         calc.update({"deformation": defo, "cauchy_stress": cauchy_stress,
                      "strain": strain, "pk_stress": pk_stress})
-        existing_value = get_tkd_value(explicit_calcs, strain)
-        if existing_value:
+        if strain in explicit_calcs:
+            existing_value = explicit_calcs[strain]
             if doc['completed_at'] > existing_value['completed_at']:
-                set_tkd_value(explicit_calcs, strain, calc)
+                explicit_calcs[strain] = calc
         else:
             explicit_calcs[strain] = calc
 
@@ -548,8 +548,7 @@ def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, tol=0.002):
     # Determine all of the implicit calculations to include
     sga = SpacegroupAnalyzer(structure, symprec=0.1)
     symmops = sga.get_symmetry_operations(cartesian=True)
-    derived_calcs_by_strain = {}
-    allclose_kwargs = {"atol": tol} # define this for the purposes of matching
+    derived_calcs_by_strain = TensorMapping(tol=0.002)
     for strain, calc in explicit_calcs.items():
         # Generate all transformed strains
         task_id = calc['task_id']
@@ -560,7 +559,7 @@ def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, tol=0.002):
         if len(explicit_calcs) < 30:
             tstrains = [(symmop, tstrain) for symmop, tstrain in tstrains
                         if tstrain.deformation_matrix.is_independent(tol) and \
-                        not get_tkd_value(explicit_calcs, tstrain, allclose_kwargs)]
+                        not tstrain in explicit_calcs]
         # TODO: this is pretty slow, should probably speed it up if possible
         # For third order
         else:
@@ -569,21 +568,19 @@ def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, tol=0.002):
             stencil = np.linspace(-0.075, 0.075, 7)
             valid_strains = [Strain.from_voigt(s * np.array(strain_state))
                              for s, strain_state in product(stencil, strain_states)]
-            valid_strains = {v: True for v in valid_strains
-                             if not np.allclose(v, 0)}
+            valid_strains = [v for v in valid_strains if not np.allclose(v, 0)]
+            valid_strains = TensorMapping(valid_strains, [True] * len(valid_strains))
             tstrains = [(symmop, tstrain) for symmop, tstrain in tstrains
-                        if get_tkd_value(valid_strains, tstrain) and \
-                        not get_tkd_value(explicit_calcs, tstrain, allclose_kwargs)]
+                        if tstrain in valid_strains and
+                        not tstrain in explicit_calcs]
         # Add surviving tensors to derived_strains dict
         for symmop, tstrain in tstrains:
-            curr_set = get_tkd_value(derived_calcs_by_strain,
-                                     tstrain, allclose_kwargs)
-            if curr_set:
+            # curr_set = derived_calcs_by_strain[tstrain]
+            if tstrain in derived_calcs_by_strain:
+                curr_set = derived_calcs_by_strain[tstrain]
                 curr_task_ids = [c[1] for c in curr_set]
                 if task_id not in curr_task_ids:
-                    curr_set += [(symmop, calc['task_id'])]
-                    set_tkd_value(derived_calcs_by_strain, tstrain, curr_set,
-                                  allclose_kwargs)
+                    curr_set.append((symmop, calc['task_id']))
             else:
                 derived_calcs_by_strain[tstrain] = [(symmop, calc['task_id'])]
 
