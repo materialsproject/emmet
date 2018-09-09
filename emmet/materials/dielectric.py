@@ -72,21 +72,20 @@ class DielectricBuilder(Builder):
 
         d = {self.dielectric.key: item[self.materials.key]}
 
-        structure = Structure.from_dict(item["structure"])
+        structure = Structure.from_dict(item.get("dielectric",{}).get("structure",None))
 
-        if item.get("dielectric", False):
-            ionic = Tensor(item["dielectric"]["ionic"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)
-            static = Tensor(item["dielectric"]["static"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)
-            total = ionic + static
+        ionic = Tensor(item["dielectric"]["ionic"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)
+        static = Tensor(item["dielectric"]["static"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)
+        total = ionic + static
 
-            d["dielectric"] = {
-                "total": total,
-                "ionic": ionic,
-                "static": static,
-                "e_total": poly(total),
-                "e_ionic": poly(ionic),
-                "e_static": poly(static)
-            }
+        d["dielectric"] = {
+            "total": total,
+            "ionic": ionic,
+            "static": static,
+            "e_total": poly(total),
+            "e_ionic": poly(ionic),
+            "e_static": poly(static)
+        }
 
         sga = SpacegroupAnalyzer(structure)
         # Update piezo if non_centrosymmetric
