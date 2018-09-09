@@ -6,20 +6,18 @@ import copy
 import nltk
 import numpy as np
 from ast import literal_eval
-from pymongo import ASCENDING, DESCENDING
 
-from monty.serialization import loadfn
 from monty.json import jsanitize
 
 from maggma.builder import Builder
 from pydash.objects import get, set_, has
 
 from emmet.materials.snls import mp_default_snl_fields
+from emmet.common.utils import scrub_class_and_module
 
 # Import for crazy things this builder needs
 from pymatgen.io.cif import CifWriter
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pymatgen.core.composition import Composition
 from pymatgen import Structure
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.analysis.structure_analyzer import RelaxationAnalyzer
@@ -449,8 +447,8 @@ def add_propnet(mat, propnet):
                     'pretty_formula', 'input_quantities', 'last_updated']
     for e in exclude_list:
         if e in propnet:
-            propnet.pop(e)
-    mat["propnet"] = propnet
+            del propnet[e]
+    mat["propnet"] = scrub_class_and_module(propnet)
 
 
 def check_relaxation(mat, new_style_mat):
