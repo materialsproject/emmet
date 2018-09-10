@@ -1,4 +1,4 @@
-import click, os, yaml, sys, logging, tarfile, bson, gzip
+import click, os, yaml, sys, logging, tarfile, bson, gzip, csv
 from fnmatch import fnmatch
 from datetime import datetime
 from collections import Counter, OrderedDict
@@ -620,7 +620,8 @@ class MyMongoFormatter(logging.Formatter):
 @cli.command()
 @click.option('--tag', default=None, help='only include structures with specific tag')
 @click.option('--in-progress/--no-in-progress', default=False, help='show in-progress only')
-def report(tag, in_progress):
+@click.option('--to-csv/--no-to-csv', default=False, help='save report as CSV')
+def report(tag, in_progress, to_csv):
     """generate a report of calculations status"""
 
     lpad = LaunchPad.auto_load()
@@ -649,7 +650,7 @@ def report(tag, in_progress):
         total = sum(v for k, v in counter.items() if k in states)
         tc, progress = t, '-'
         if wflows_to_add or counter['COMPLETED'] + counter['FIZZLED'] != total:
-            tc = "\033[1;34m{}\033[0m".format(t)
+            tc = "\033[1;34m{}\033[0m".format(t) if not to_csv else t
             progress = (counter['COMPLETED'] + counter['FIZZLED']) / total * 100. if total else 0.
             progress = '{:.0f}%'.format(progress)
         elif in_progress:
@@ -658,8 +659,8 @@ def report(tag, in_progress):
         fizzled = counter['FIZZLED'] / total if total else 0.
         if progress != '-' and bool(counter['COMPLETED'] + counter['FIZZLED']):
             fizzled = counter['FIZZLED'] / (counter['COMPLETED'] + counter['FIZZLED'])
-        percent_fizzled = "\033[1;31m{:.0f}%\033[0m".format(fizzled*100.) \
-                if fizzled > 0.2 else '{:.0f}%'.format(fizzled*100.)
+        sfmt = "\033[1;31m{:.0f}%\033[0m" if (not to_csv and fizzled > 0.2) else '{:.0f}%'
+        percent_fizzled = sfmt.format(fizzled*100.)
         entry.append(percent_fizzled)
         entry.append(progress)
         for idx, e in enumerate(entry):
@@ -669,9 +670,18 @@ def report(tag, in_progress):
             table.add_row(entry)
 
     if tag is None:
-        table.add_row(['\033[1;32m{}\033[0m'.format(s if s else '-') for s in sums])
+        sfmt = '{}' if to_csv else '\033[1;32m{}\033[0m'
+        table.add_row([sfmt.format(s if s else '-') for s in sums])
     table.align['Tag'] = 'r'
     print(table)
+
+    if to_csv:
+        with open('emmet_report.csv', 'w') as csv_file:
+            writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            writer.writerow(table._field_names)
+            options = table._get_options({})
+            for row in table._get_rows(options):
+                writer.writerow(row)
 
 
 @cli.command()
