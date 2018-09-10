@@ -6,20 +6,18 @@ import copy
 import nltk
 import numpy as np
 from ast import literal_eval
-from pymongo import ASCENDING, DESCENDING
 
-from monty.serialization import loadfn
 from monty.json import jsanitize
 
 from maggma.builder import Builder
 from pydash.objects import get, set_, has
 
 from emmet.materials.snls import mp_default_snl_fields
+from emmet.common.utils import scrub_class_and_module
 
 # Import for crazy things this builder needs
 from pymatgen.io.cif import CifWriter
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pymatgen.core.composition import Composition
 from pymatgen import Structure
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.analysis.structure_analyzer import RelaxationAnalyzer
@@ -84,6 +82,7 @@ class MPBuilder(Builder):
                  elastic=None,
                  dielectric=None,
                  dois=None,
+                 propnet=None,
                  query=None,
                  **kwargs):
         """
@@ -106,8 +105,11 @@ class MPBuilder(Builder):
         self.elastic = elastic
         self.dielectric = dielectric
         self.dois = dois
+        self.propnet = propnet
 
-        sources = list(filter(None, [materials, thermo, electronic_structure, snls, elastic, dielectric, xrd, dois]))
+        sources = list(
+            filter(None, [materials, thermo, electronic_structure, snls,
+                          elastic, dielectric, xrd, dois, propnet]))
 
         super().__init__(sources=sources, targets=[mp_materials], **kwargs)
 
@@ -172,6 +174,10 @@ class MPBuilder(Builder):
             if self.dois:
                 doc["dois"] = self.dois.query_one(criteria={self.dois.key: m})
 
+            if self.propnet:
+                doc['propnet'] = self.propnet.query_one(
+                    criteria={self.propnet.key: m})
+
             yield doc
 
     def process_item(self, item):
@@ -200,6 +206,10 @@ class MPBuilder(Builder):
         if item.get("dois", None):
             doi = item["dois"]
             add_dois(mat, doi)
+
+        if item.get("propnet", None):
+            propnet = item["propnet"]
+            add_propnet(mat, propnet)
 
         snl = item.get("snl", {})
         add_snl(mat, snl)
@@ -328,10 +338,12 @@ def add_elastic(mat, elastic):
         "poisson_ratio": "homogeneous_poisson",
         "universal_anisotropy": "universal_anisotropy",
         "elastic_tensor_original": "elastic_tensor_original",
-        "compliance_tensor": "compliance_tensor"
+        "compliance_tensor": "compliance_tensor",
+        "third_order": "third_order"
     }
 
-    mat["elasticity"] = {k: elastic["elasticity"][v] for k, v in es_aliases.items()}
+    mat["elasticity"] = {k: elastic["elasticity"].get(v, None)
+                         for k, v in es_aliases.items()}
     if has(elastic, "elasticity.structure.sites"):
         mat["elasticity"]["nsites"] = len(get(elastic, "elasticity.structure.sites"))
     else:
@@ -428,6 +440,15 @@ def add_snl(mat, snl=None):
         tokens = set(tok[1] for tok in nltk.pos_tag(nltk.word_tokenize(remark), tagset='universal'))
         if len(tokens.intersection({"ADV", "ADP", "VERB"})) == 0:
             mat["exp"]["tags"].append(remark)
+
+
+def add_propnet(mat, propnet):
+    exclude_list = ['compliance_tensor_voigt', 'task_id', '_id',
+                    'pretty_formula', 'input_quantities', 'last_updated']
+    for e in exclude_list:
+        if e in propnet:
+            del propnet[e]
+    mat["propnet"] = scrub_class_and_module(propnet)
 
 
 def check_relaxation(mat, new_style_mat):
