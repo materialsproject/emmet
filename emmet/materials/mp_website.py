@@ -444,7 +444,7 @@ def add_snl(mat, snl=None):
 
 def add_propnet(mat, propnet):
     exclude_list = ['compliance_tensor_voigt', 'task_id', '_id',
-                    'pretty_formula', 'input_quantities', 'last_updated']
+                    'pretty_formula', 'inputs', 'last_updated']
     for e in exclude_list:
         if e in propnet:
             del propnet[e]
