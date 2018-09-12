@@ -400,7 +400,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
                 "elastic_tensor_expansion": elastic_sanitize(et_exp),
                 "elastic_tensor_expansion_original": elastic_sanitize(et_exp_raw),
                 "thermal_expansion_tensor": tec,
-                "average_linear_thermal_expansion": np.trace(tec)})
+                "average_linear_thermal_expansion": np.trace(tec) / 3})
         et = et_fit.voigt_symmetrized.convert_to_ieee(opt_struct)
         vasp_input = opt_task['input']
         if 'structure' in vasp_input:
