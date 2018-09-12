@@ -82,6 +82,8 @@ class MPBuilder(Builder):
                  elastic=None,
                  dielectric=None,
                  dois=None,
+                 magnetism=None,
+                 bond_valence=None,
                  propnet=None,
                  query=None,
                  **kwargs):
@@ -105,11 +107,14 @@ class MPBuilder(Builder):
         self.elastic = elastic
         self.dielectric = dielectric
         self.dois = dois
+        self.magnetism = magnetism
+        self.bond_valence = bond_valence
         self.propnet = propnet
 
         sources = list(
             filter(None, [materials, thermo, electronic_structure, snls,
-                          elastic, dielectric, xrd, dois, propnet]))
+                          elastic, dielectric, xrd, dois, magnetism,
+                          bond_valence, propnet]))
 
         super().__init__(sources=sources, targets=[mp_materials], **kwargs)
 
@@ -174,6 +179,13 @@ class MPBuilder(Builder):
             if self.dois:
                 doc["dois"] = self.dois.query_one(criteria={self.dois.key: m})
 
+            if self.magnetism:
+                doc['magnetism'] = self.magnetism.query_one(criteria={self.magnetism.key: m})
+
+            if self.bond_valence:
+                doc['bond_valence'] = self.bond_valence.query_one(
+                    criteria={self.bond_valence.key: m})
+
             if self.propnet:
                 doc['propnet'] = self.propnet.query_one(
                     criteria={self.propnet.key: m})
@@ -207,13 +219,17 @@ class MPBuilder(Builder):
             doi = item["dois"]
             add_dois(mat, doi)
 
+        if item.get("bond_valence", None):
+            bond_valence = item["bond_valence"]
+            add_bond_valence(mat, bond_valence)
+
         if item.get("propnet", None):
             propnet = item["propnet"]
             add_propnet(mat, propnet)
 
         snl = item.get("snl", {})
         add_snl(mat, snl)
-        add_magnetism(mat)
+        add_magnetism(mat, item.get("magnetism", None))
         sandbox_props(mat)
         has_fields(mat)
         return jsanitize(mat)
@@ -414,12 +430,26 @@ def sandbox_props(mat):
         mat["sbxd"].append(sbx_d)
 
 
-def add_magnetism(mat):
+def add_magnetism(mat, magnetism=None):
+
     mag_types = {"NM": "Non-magnetic", "FiM": "Ferri", "AFM": "AFM", "FM": "FM"}
 
     struc = Structure.from_dict(mat["structure"])
     msa = CollinearMagneticStructureAnalyzer(struc)
     mat["magnetic_type"] = mag_types[msa.ordering.value]
+
+    # TODO: will deprecate the above from dedicated magnetism builder
+    if magnetism:
+        mat["magnetism"] = magnetism["magnetism"]
+
+
+def add_bond_valence(mat, bond_valence):
+    exclude_list = ['task_id', 'pymatgen_version', 'successful']
+    if bond_valence.get('successful', False):
+        for e in exclude_list:
+            if e in bond_valence:
+                del bond_valence[e]
+        mat["bond_valence"] = bond_valence
 
 
 def add_snl(mat, snl=None):
