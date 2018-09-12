@@ -9,7 +9,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>, Matthew Horton <mkhorton@lbl.go
 
 
 class MagneticBuilder(Builder):
-    def __init__(self, materials, magnetism, query={}, **kwargs):
+    def __init__(self, materials, magnetism, query=None, **kwargs):
         """
         Creates a magnetism collection for materials
 
@@ -21,7 +21,7 @@ class MagneticBuilder(Builder):
 
         self.materials = materials
         self.magnetism = magnetism
-        self.query = query
+        self.query = query or {}
 
         super().__init__(sources=[materials],
                          targets=[magnetism],
