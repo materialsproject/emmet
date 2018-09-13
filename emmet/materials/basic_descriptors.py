@@ -107,10 +107,10 @@ class BasicDescriptorsBuilder(Builder):
 
             else: # Any piece of info missing?
                 data_present = self.descriptors.query(
-                        properties=[self.descriptors.key, \
-                                    "meta", \
-                                    "composition_descriptors", \
-                                    "site_descriptors", \
+                        properties=[self.descriptors.key,
+                                    "meta",
+                                    "composition_descriptors",
+                                    "site_descriptors",
                                     "statistics"],
                         criteria={self.descriptors.key: task_id}).limit(1)[0]
                 any_piece = False

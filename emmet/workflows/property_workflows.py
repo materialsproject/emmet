@@ -86,8 +86,9 @@ class PropertyWorkflowBuilder(Builder):
         Returns:
              generator for items
         """
-        wf_inputs = self.materials.query(["structure", "task_id"],
-                                         self.material_filter, no_cursor_timeout=True)
+        wf_inputs = self.materials.query(properties=["structure", "task_id"],
+                                         criteria=self.material_filter,
+                                         no_cursor_timeout=True)
         # find existing tags in workflows
         current_prop_ids = self.source.distinct("task_id")
         current_wf_tags = self.lpad.workflows.distinct("metadata.tags")
