@@ -25,7 +25,8 @@ __email__ = "montoyjh@lbl.gov"
 #       fixed on the propjockey side
 class ElasticPropjockeyPrioritizer(Builder):
     def __init__(self, pj_store, lpad, incremental=True,
-                 query=None, **kwargs):
+                 query=None, base_priority=2500, site_penalty=10,
+                 vote_weight=10, **kwargs):
         """
         Takes a propjockey collection and sets the priority
         of a fireworks in a fireworks collection from a LaunchPad
@@ -33,6 +34,10 @@ class ElasticPropjockeyPrioritizer(Builder):
         Args:
             pj_store (Store): store corresponding to propjockey collection
             lpad (LaunchPad): fireworks launchpad
+            query (dict): query to filter the propjockey store
+            base_priority (int): base priority to assign to fireworks
+            site_penalty (int): per-site penalty to priority
+            vote_weight (int): priority boost per vote
             **kwargs (kwargs): kwargs for builder
         """
         self.pj_store = pj_store
@@ -45,6 +50,9 @@ class ElasticPropjockeyPrioritizer(Builder):
         self.incremental = incremental
         self.start_date = datetime.utcnow()
         self.query = query or {}
+        self.base_priority = base_priority
+        self.site_penalty = site_penalty
+        self.vote_weight = vote_weight
 
         super().__init__(sources=[self.pj_store],
                          targets=[self.fws_store], **kwargs)
@@ -93,7 +101,8 @@ class ElasticPropjockeyPrioritizer(Builder):
         """
         doc, fw = item
         nsites = len(fw['spec']['_tasks'][1]['structure']['sites'])
-        priority = 2500 - nsites + 10 * doc['nrequesters']
+        priority = self.base_priority - nsites * self.site_penalty + \
+            self.vote_weight * doc['nrequesters']
         return (doc['material_id'], priority)
 
     def update_targets(self, items):
