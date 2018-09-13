@@ -4,14 +4,11 @@ for material properties based on missing properties in a
 materials collection
 """
 
-import numpy as np
 import logging
-import six
 import tqdm
 
 from maggma.builder import Builder
 from maggma.stores import MongoStore
-from pymatgen import Structure
 from fireworks import LaunchPad
 from datetime import datetime
 
@@ -24,14 +21,15 @@ __email__ = "montoyjh@lbl.gov"
 
 # TODO: this could be abstracted to allow for multiple kinds of workflows
 # TODO: maybe input should be a fws store instead of an lpad
-# TODO: incremental building doesn't currently work, but needs to be fixed on the propjockey side
+# TODO: incremental building doesn't currently work, but needs to be,
+#       fixed on the propjockey side
 class ElasticPropjockeyPrioritizer(Builder):
-    def __init__(self, pj_store, lpad, incremental=True, 
+    def __init__(self, pj_store, lpad, incremental=True,
                  query=None, **kwargs):
         """
-        Takes a propjockey collection and sets the priority 
+        Takes a propjockey collection and sets the priority
         of a fireworks in a fireworks collection from a LaunchPad
-        
+
         Args:
             pj_store (Store): store corresponding to propjockey collection
             lpad (LaunchPad): fireworks launchpad
@@ -68,7 +66,7 @@ class ElasticPropjockeyPrioritizer(Builder):
             pj_filter = self.query
 
         pj_filter.update({"state": {"$ne": "COMPLETED"}})
-        pj_cursor = self.pj_store.query(['nrequesters', 'material_id'], 
+        pj_cursor = self.pj_store.query(['nrequesters', 'material_id'],
                                         pj_filter)
         self.total = pj_cursor.count()
         self.fws_store.ensure_index("spec.tags")
@@ -95,7 +93,7 @@ class ElasticPropjockeyPrioritizer(Builder):
         """
         doc, fw = item
         nsites = len(fw['spec']['_tasks'][1]['structure']['sites'])
-        priority = 2500 - nsites + 10 * doc['nrequesters'] 
+        priority = 2500 - nsites + 10 * doc['nrequesters']
         return (doc['material_id'], priority)
 
     def update_targets(self, items):
