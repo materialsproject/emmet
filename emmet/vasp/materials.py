@@ -362,8 +362,9 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, s
         return CollinearMagneticStructureAnalyzer(struc).ordering.value
 
     # First group by spacegroup number then by structure matching
-    for _, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
-        for group in sm.group_structures(pregroup):
+    for sg, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
+        for group in sm.group_structures(list(pregroup)):
+
             # Match magnetic orderings here
             if separate_mag_orderings:
                 for _, mag_group in groupby(sorted(group, key=get_mag_ordering), key=get_mag_ordering):
