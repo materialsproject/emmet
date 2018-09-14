@@ -16,7 +16,7 @@ from maggma.builder import Builder
 __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
 
 nn_target_classes = ["MinimumDistanceNN", "VoronoiNN", \
-    "CrystalNN", "JMolNN", "MinimumOKeeffeNN", "MinimumVIRENN", \
+    "CrystalNN", "JmolNN", "MinimumOKeeffeNN", "MinimumVIRENN", \
     "BrunnerNN_reciprocal", "BrunnerNN_relative", "BrunnerNN_real", \
     "EconNN"]
 
