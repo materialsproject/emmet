@@ -1,6 +1,8 @@
 import unittest
+import os
 
-from emmet.materials.basic_descriptors import *
+from pymatgen import Structure
+from emmet.materials.basic_descriptors import BasicDescriptorsBuilder
 from maggma.stores import MemoryStore
 
 from monty.serialization import loadfn
