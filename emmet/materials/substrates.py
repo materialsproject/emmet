@@ -1,9 +1,12 @@
 import os
+import itertools
+from operator import itemgetter
 
 from pymatgen.analysis.elasticity.elastic import ElasticTensor
 from pymatgen.analysis.substrate_analyzer import SubstrateAnalyzer
 from pymatgen.core import Structure
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pydash import get
 
 from maggma.builder import Builder
 
@@ -21,7 +24,7 @@ class SubstrateBuilder(Builder):
     def __init__(self, materials, substrates, elasticity=None, substrate_settings=None,
                  query=None, **kwargs):
         """
-        Calculates matching substrates for 
+        Calculates matching substrates for
 
         Args:
             materials (Store): Store of materials documents
@@ -124,7 +127,7 @@ class SubstrateBuilder(Builder):
 
                 all_matches.append(db_entry)
 
-    return all_matches
+        return all_matches
 
     def update_targets(self, items):
         """
@@ -134,7 +137,7 @@ class SubstrateBuilder(Builder):
             items ([[dict]]): a list of list of thermo dictionaries to update
         """
 
-        items = list(filter(None, chain.from_iterable(items)))
+        items = list(filter(None, itertools.chain.from_iterable(items)))
 
         if len(items) > 0:
             self.logger.info(
@@ -167,7 +170,7 @@ class SubstrateBuilder(Builder):
             e_tensor_updated_mats = self.elasticity.distinct(
                 self.elasticity.key, criteria=q)
             # Ensure these materials are within our materials query
-            q = dict(query)
+            q = dict(self.query)
             q.update({self.materials.key: {"$in": e_tensor_updated_mats}})
             e_tensor_updated_mats = self.materials.distinct(
                 self.materials.key, criteria=q)

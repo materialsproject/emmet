@@ -1,8 +1,7 @@
 import numpy as np
 
 from pymatgen.core.structure import Structure
-import pymatgen.analysis
-from pymatgen.analysis.local_env import *
+from pymatgen.analysis import local_env
 from atomate.utils.utils import get_meta_from_structure
 from matminer.featurizers.site import CrystalNNFingerprint, CoordinationNumber
 from matminer.featurizers.composition import ElementProperty
@@ -15,9 +14,9 @@ from maggma.builder import Builder
 
 __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
 
-nn_target_classes = ["MinimumDistanceNN", "VoronoiNN", \
-    "CrystalNN", "JMolNN", "MinimumOKeeffeNN", "MinimumVIRENN", \
-    "BrunnerNN_reciprocal", "BrunnerNN_relative", "BrunnerNN_real", \
+nn_target_classes = ["MinimumDistanceNN", "VoronoiNN",
+    "CrystalNN", "JmolNN", "MinimumOKeeffeNN", "MinimumVIRENN",
+    "BrunnerNN_reciprocal", "BrunnerNN_relative", "BrunnerNN_real",
     "EconNN"]
 
 
@@ -50,7 +49,7 @@ class BasicDescriptorsBuilder(Builder):
         # Set up all targeted site descriptors.
         self.sds = {}
         for nn in nn_target_classes:
-            nn_ = getattr(pymatgen.analysis.local_env, nn)
+            nn_ = getattr(local_env, nn)
             k = 'cn_{}'.format(nn)
             self.sds[k] = CoordinationNumber(nn_(), use_weights='none')
             k = 'cn_wt_{}'.format(nn)
@@ -107,10 +106,10 @@ class BasicDescriptorsBuilder(Builder):
 
             else: # Any piece of info missing?
                 data_present = self.descriptors.query(
-                        properties=[self.descriptors.key, \
-                                    "meta", \
-                                    "composition_descriptors", \
-                                    "site_descriptors", \
+                        properties=[self.descriptors.key,
+                                    "meta",
+                                    "composition_descriptors",
+                                    "site_descriptors",
                                     "statistics"],
                         criteria={self.descriptors.key: task_id}).limit(1)[0]
                 any_piece = False

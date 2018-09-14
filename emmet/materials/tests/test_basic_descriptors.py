@@ -1,6 +1,8 @@
 import unittest
+import os
 
-from emmet.materials.basic_descriptors import *
+from pymatgen import Structure
+from emmet.materials.basic_descriptors import BasicDescriptorsBuilder
 from maggma.stores import MemoryStore
 
 from monty.serialization import loadfn
@@ -71,8 +73,8 @@ class BasicDescriptorsBuilderTest(unittest.TestCase):
         self.assertEqual(d['cn_VoronoiNN'][0]['CN_VoronoiNN'], 20)
         self.assertAlmostEqual(
             d['cn_wt_VoronoiNN'][0]['CN_VoronoiNN'], 4.5381162)
-        self.assertEqual(d['cn_JMolNN'][0]['CN_JMolNN'], 4)
-        self.assertAlmostEqual(d['cn_wt_JMolNN'][0]['CN_JMolNN'], 4.9617398)
+        self.assertEqual(d['cn_JmolNN'][0]['CN_JmolNN'], 4)
+        self.assertAlmostEqual(d['cn_wt_JmolNN'][0]['CN_JmolNN'], 4.9617398)
         self.assertEqual(
             d['cn_MinimumDistanceNN'][0]['CN_MinimumDistanceNN'], 4)
         self.assertAlmostEqual(
