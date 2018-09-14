@@ -201,6 +201,6 @@ def get_elastic_wf_builder(elasticity, materials, lpad=None, material_filter=Non
     Returns:
         PropertyWorkflowBuilder for elastic workflow
     """
-    wf_method = "emmet.materials.property_workflows.generate_elastic_workflow"
+    wf_method = "emmet.workflows.property_workflows.generate_elastic_workflow"
     return PropertyWorkflowBuilder(elasticity, materials, wf_method,
                                    material_filter, lpad)

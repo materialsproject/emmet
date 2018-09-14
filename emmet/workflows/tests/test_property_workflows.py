@@ -58,7 +58,7 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         serialized = builder.as_dict()
         new = PropertyWorkflowBuilder.from_dict(serialized)
         self.assertEqual(new._wf_function_string,
-                         "emmet.materials.property_workflows.generate_elastic_workflow")
+                         "emmet.workflows.property_workflows.generate_elastic_workflow")
         with ScratchDir('.') as sdir:
             with cd(sdir):
                 dumpfn(builder, "builder.yaml")
