@@ -47,7 +47,7 @@ class MagneticBuilder(Builder):
         self.total = len(mats)
 
         for m in mats:
-            yield self.materials.query(properties=[self.materials.key, "structure"],criteria={self.materials.key: m}).limit(1)[0]
+            yield self.materials.query(properties=[self.materials.key, "structure", "magnetism"],criteria={self.materials.key: m}).limit(1)[0]
 
     def process_item(self, item):
         """
@@ -61,12 +61,20 @@ class MagneticBuilder(Builder):
         """
 
         struc = Structure.from_dict(item["structure"])
+        total_magnetization = item["magnetism"].get("total_magnetization", 0)  # not necessarily == sum(magmoms)
         msa = CollinearMagneticStructureAnalyzer(struc)
 
         magnetism = {
             self.magnetism.key : item[self.materials.key],
             "magnetism": {
-                'ordering': msa.ordering.value
+                'ordering': msa.ordering.value,
+                'is_magnetic': msa.is_magnetic,
+                'exchange_symmetry': msa.get_exchange_group_info()[1],
+                'num_magnetic_sites': msa.number_of_magnetic_sites,
+                'num_unique_magnetic_sites': msa.number_of_unique_magnetic_sites(),
+                'types_of_magnetic_species': [str(t) for t in msa.types_of_magnetic_specie],
+                'magmoms': list(msa.magmoms),
+                'total_magnetization_normalized': total_magnetization/struc.volume
                 }
         }
 
