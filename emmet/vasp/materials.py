@@ -5,7 +5,6 @@ import numpy as np
 
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
-from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from maggma.builder import Builder
