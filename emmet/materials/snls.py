@@ -70,10 +70,12 @@ class SNLBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
         self.query = query if query else {}
-        self.default_snl_fields = default_snl_fields if default_snl_fields else mp_default_snl_fields
+        self.default_snl_fields = default_snl_fields if default_snl_fields\
+            else mp_default_snl_fields
         self.kwargs = kwargs
 
-        super(SNLBuilder, self).__init__(sources=[materials, *self.source_snls], targets=[snls], **kwargs)
+        super(SNLBuilder, self).__init__(sources=[materials, *self.source_snls],
+                                         targets=[snls], **kwargs)
 
     def ensure_indicies(self):
 
