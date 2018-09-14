@@ -221,7 +221,7 @@ class ElasticAggregateBuilderTest(unittest.TestCase):
             self.assertIsNotNone(item)
 
     def test_process_items(self):
-        docs = list(self.test_elasticity.query(None, {"pretty_formula": "Si"}))
+        docs = list(self.test_elasticity.query(criteria={"pretty_formula": "Si"}))
         formula_dict = generate_formula_dict(self.test_materials)
         processed = self.builder.process_item((docs, formula_dict['Si']))
         self.assertEqual(len(processed), 1)
