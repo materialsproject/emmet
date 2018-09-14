@@ -53,7 +53,7 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         # Test invocation from string method
         builder = PropertyWorkflowBuilder(
             self.elasticity, self.materials,
-            "emmet.materials.property_workflows.generate_elastic_workflow",
+            "emmet.workflows.property_workflows.generate_elastic_workflow",
             lpad=self.lpad)
         serialized = builder.as_dict()
         new = PropertyWorkflowBuilder.from_dict(serialized)
@@ -100,6 +100,7 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         el_wf_builder = get_elastic_wf_builder(self.elasticity, self.materials,
                                                self.lpad)
         self.assertEqual(len(list(el_wf_builder.get_items())), 4)
+        # TODO: Test the functionality of this builder
 
 
 if __name__ == "__main__":
