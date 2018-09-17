@@ -8,7 +8,7 @@ from pymatgen.entries.computed_entries import ComputedEntry
 
 from maggma.builder import Builder
 
-from atomate.utils.utils import get_mongolike
+from pydash.objects import get, set_
 
 from monty.serialization import loadfn
 
@@ -94,9 +94,14 @@ class MPWorksCompatibilityBuilder(Builder):
             else:
                 starting_taskid = counter_doc['c']
             counter.find_one_and_update({"_id": "taskid"}, {"$inc": {"c": count}})
+        else:
+            starting_task_id = 1
 
         for n, task in enumerate(tasks_to_convert):
-            new_task_id = n + starting_taskid
+            if self.redo_task_ids:
+                new_task_id = n + starting_taskid
+            else:
+                new_task_id = None
             logger.debug("Processing item: {}->{}, {} of {}".format(
                 task['task_id'], new_task_id, n, count))
             yield task, new_task_id
@@ -152,8 +157,8 @@ def convert_mpworks_to_atomate(mpworks_doc, update_mpworks=True):
 
     atomate_doc = {}
     for key_mpworks, key_atomate in settings['task_conversion_keys'].items():
-        val = get_mongolike(mpworks_doc, key_mpworks)
-        set_mongolike(atomate_doc, key_atomate, val)
+        val = get(mpworks_doc, key_mpworks)
+        set_(atomate_doc, key_atomate, val)
 
     # Task type
     atomate_doc["task_label"] = settings['task_label_conversions'].get(
@@ -173,44 +178,12 @@ def convert_mpworks_to_atomate(mpworks_doc, update_mpworks=True):
         if isinstance(defo, str):
             defo = convert_string_deformation_to_list(defo)
         defo = np.transpose(defo).tolist()
-        set_mongolike(atomate_doc, "transmuter.transformations",
+        set_(atomate_doc, "transmuter.transformations",
                       ["DeformStructureTransformation"])
-        set_mongolike(atomate_doc, "transmuter.transformation_params",
+        set_(atomate_doc, "transmuter.transformation_params",
                       [{"deformation": defo}])
 
     return atomate_doc
-
-
-def set_mongolike(ddict, key, value):
-    """
-    Function to set key in a dictionary to value
-    using a mongolike key
-
-    Args:
-        ddict (dict): dictionary for which to set key
-        key (string): key containing strings and/or integers separated
-            by periods to indicate subfields, e. g. calcs_reversed.0.output
-        value: value to be placed into the dictionary corresponding to
-            the mongolike key
-    """
-    lead_key = key.split('.', 1)[0]
-    try:
-        lead_key = int(lead_key) # for searching array data
-        lead_key_is_int = True
-    except ValueError:
-        lead_key_is_int = False
-
-    if '.' in key:
-        remainder = key.split('.', 1)[1]
-        if lead_key not in ddict:
-            if lead_key_is_int:
-                raise ValueError("Error for key {}, One or more keys is an integer,"
-                                 "but no list exists at that key, integer keys may "
-                                 "only be specified when a list exists at that key.")
-            ddict[lead_key] = {}
-        set_mongolike(ddict[lead_key], remainder, value)
-    else:
-        ddict[key] = value
 
 
 def convert_string_deformation_to_list(string_defo):

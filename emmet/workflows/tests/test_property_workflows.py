@@ -4,7 +4,7 @@ import unittest
 from maggma.stores import MemoryStore
 from maggma.runner import Runner
 from maggma.builder import Builder
-from emmet.materials.property_workflows import PropertyWorkflowBuilder,\
+from emmet.workflows.property_workflows import PropertyWorkflowBuilder,\
     get_elastic_wf_builder
 from pymatgen.util.testing import PymatgenTest
 from atomate.vasp.workflows.presets.core import wf_elastic_constant
@@ -53,12 +53,12 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         # Test invocation from string method
         builder = PropertyWorkflowBuilder(
             self.elasticity, self.materials,
-            "emmet.materials.property_workflows.generate_elastic_workflow",
+            "emmet.workflows.property_workflows.generate_elastic_workflow",
             lpad=self.lpad)
         serialized = builder.as_dict()
         new = PropertyWorkflowBuilder.from_dict(serialized)
         self.assertEqual(new._wf_function_string,
-                         "emmet.materials.property_workflows.generate_elastic_workflow")
+                         "emmet.workflows.property_workflows.generate_elastic_workflow")
         with ScratchDir('.') as sdir:
             with cd(sdir):
                 dumpfn(builder, "builder.yaml")
@@ -100,6 +100,7 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         el_wf_builder = get_elastic_wf_builder(self.elasticity, self.materials,
                                                self.lpad)
         self.assertEqual(len(list(el_wf_builder.get_items())), 4)
+        # TODO: Test the functionality of this builder
 
 
 if __name__ == "__main__":

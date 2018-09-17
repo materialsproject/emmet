@@ -1,12 +1,12 @@
 import os
 import itertools
-
 from operator import itemgetter
 
 from pymatgen.core import Structure
 from pymatgen.analysis.elasticity.elastic import ElasticTensor
 from pymatgen.analysis.substrate_analyzer import SubstrateAnalyzer
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pydash import get
 
 from pydash.objects import get
 from maggma.builder import Builder
@@ -177,6 +177,7 @@ class SubstrateBuilder(Builder):
             e_tensor_updated_mats = self.materials.distinct(self.materials.key, criteria=q)
 
             self.logger.info("Found {} new/updated elastic tensors".format(len(e_tensor_updated_mats)))
+
 
         return e_tensor_updated_mats
 

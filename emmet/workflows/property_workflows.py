@@ -12,7 +12,7 @@ from maggma.builder import Builder
 from atomate.vasp.workflows.presets.core import wf_elastic_constant
 from atomate.vasp.powerups import add_tags, add_modify_incar, add_priority
 from atomate.utils.utils import get_fws_and_tasks, load_class
-from pymatgen.analysis.elasticity.tensors import Tensor, SquareTensor,\
+from pymatgen.core.tensors import Tensor, SquareTensor,\
         get_tkd_value, symmetry_reduce
 from pymatgen.analysis.elasticity.strain import Strain
 from pymatgen.core.operations import SymmOp
@@ -86,8 +86,9 @@ class PropertyWorkflowBuilder(Builder):
         Returns:
              generator for items
         """
-        wf_inputs = self.materials.query(["structure", "task_id"],
-                                         self.material_filter, no_cursor_timeout=True)
+        wf_inputs = self.materials.query(properties=["structure", "task_id"],
+                                         criteria=self.material_filter,
+                                         no_cursor_timeout=True)
         # find existing tags in workflows
         current_prop_ids = self.source.distinct("task_id")
         current_wf_tags = self.lpad.workflows.distinct("metadata.tags")
@@ -200,6 +201,6 @@ def get_elastic_wf_builder(elasticity, materials, lpad=None, material_filter=Non
     Returns:
         PropertyWorkflowBuilder for elastic workflow
     """
-    wf_method = "emmet.materials.property_workflows.generate_elastic_workflow"
+    wf_method = "emmet.workflows.property_workflows.generate_elastic_workflow"
     return PropertyWorkflowBuilder(elasticity, materials, wf_method,
                                    material_filter, lpad)
