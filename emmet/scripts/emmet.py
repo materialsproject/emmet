@@ -111,12 +111,60 @@ def copy_tasks(target_db_file, tag, insert):
         tags = [t for t in source.collection.find(task_base_query).distinct('tags') if t is not None]
         print(len(tags), 'tags in source collection')
 
+    def insert_snls(snls_list):
+        if snls_list:
+            print('copy', len(snls_list), 'SNLs')
+            if insert:
+                result = target.db.snls.insert_many(snls_list)
+                print('#SNLs inserted:', len(result.inserted_ids))
+            snls_list.clear()
+        else:
+            print('no SNLs to insert')
+
     for t in tags:
 
         print('### {} ###'.format(t))
         query = {'$and': [{'tags': t}, task_base_query]}
         source_count = source.collection.count(query)
         print('source / target:', source_count, '/', target.collection.count(query))
+
+        # get list of SNLs to copy over
+        # only need to check tagged SNLs in source and target; dup-check across SNL collections already done in add_snls
+        # also only need to check about.projects; add_snls adds tag to about.projects and not remarks
+        snls = lpad.db.snls.find({'about.projects': t})
+        nr_snls = snls.count()
+        if nr_snls < target.db.snls.count({'about.projects': t}):
+            snls_to_copy, index, prefix = [], None, 'snl'
+            for idx, doc in enumerate(snls):
+                snl = StructureNL.from_dict(doc)
+                formula = snl.structure.composition.reduced_formula
+                snl_copied = False
+                try:
+                    q = {'about.projects': t, '$or': [{k: formula} for k in aggregation_keys]}
+                    group = aggregate_by_formula(target.db.snls, q).next() # only one formula
+                    for dct in group['structures']:
+                        existing_structure = Structure.from_dict(dct)
+                        if structures_match(snl.structure, existing_structure):
+                            snl_copied = True
+                            print('SNL', doc['snl_id'], 'already added.')
+                            break
+                except StopIteration:
+                    pass
+                if snl_copied:
+                    continue
+                snl_dct = snl.as_dict()
+                if index is None:
+                    index = max([int(snl_id[len(prefix)+1:]) for snl_id in target.db.snls.distinct('snl_id')]) + 1
+                else:
+                    index += 1
+                snl_id = '{}-{}'.format(prefix, index)
+                snl_dct['snl_id'] = snl_id
+                snl_dct.update(get_meta_from_structure(snl.structure))
+                snls_to_copy.append(snl_dct)
+                if idx and not idx%100 or idx == nr_snls-1:
+                    insert_snls(snls_to_copy)
+        else:
+            print('SNLs already copied.')
 
         # skip tasks with task_id existing in target and with matching dir_name (have to be a string [mp-*, mvc-*])
         nr_source_mp_tasks, skip_task_ids = 0, []
@@ -712,7 +760,7 @@ def add_snls(archive, add_snls_dbs, insert):
             if insert:
                 result = snl_collections[0].insert_many(snls_list)
                 print('#SNLs inserted:', len(result.inserted_ids))
-                snls_list.clear()
+            snls_list.clear()
         else:
             print('no SNLs to insert')
 
