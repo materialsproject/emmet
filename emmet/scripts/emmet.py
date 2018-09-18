@@ -961,5 +961,5 @@ def parse(base_path, insert):
             except Exception as ex:
                 print(str(ex))
                 continue
-            if insert:
+            if insert and task_doc['state'] == 'successful':
                 target.insert_task(task_doc, use_gridfs=True)
