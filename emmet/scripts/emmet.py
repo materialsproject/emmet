@@ -243,14 +243,14 @@ def copy_tasks(target_db_file, tag, insert):
 
 
 @cli.command()
-@click.option('--add_snls_dbs', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
+@click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
 @click.option('--add_tasks_db', type=click.Path(exists=True), help='config file for additional tasks collection to scan')
 @click.option('--tag', default=None, help='only include structures with specific tag')
 @click.option('--insert/--no-insert', default=False, help='actually execute workflow addition')
 @click.option('--clear-logs/--no-clear-logs', default=False, help='clear MongoDB logs collection for specific tag')
 @click.option('--max-structures', '-m', default=1000, help='set max structures for tags to scan')
 @click.option('--skip-all-scanned/--no-skip-all-scanned', default=False, help='skip all already scanned structures incl. WFs2Add/Errors')
-def add_wflows(add_snls_dbs, add_tasks_db, tag, insert, clear_logs, max_structures, skip_all_scanned):
+def add_wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, skip_all_scanned):
     """add workflows based on tags in SNL collection"""
 
     if not insert:
@@ -259,8 +259,8 @@ def add_wflows(add_snls_dbs, add_tasks_db, tag, insert, clear_logs, max_structur
     lpad = LaunchPad.auto_load()
 
     snl_collections = [lpad.db.snls]
-    if add_snls_dbs is not None:
-        for snl_db_config in yaml.load_all(open(add_snls_dbs, 'r')):
+    if add_snlcolls is not None:
+        for snl_db_config in yaml.load_all(open(add_snlcolls, 'r')):
             snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
             snl_db = snl_db_conn[snl_db_config['db']]
             snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
@@ -637,7 +637,7 @@ def add_wflows(add_snls_dbs, add_tasks_db, tag, insert, clear_logs, max_structur
                 print(len(canonical_structures_list), 'canonical structure(s) for', formula, sites_elements)
                 if tag is not None:
                     print('trying again ...')
-                    add_wflows(add_snls_dbs, add_tasks_db, tag, insert, clear_logs, max_structures, True)
+                    add_wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, True)
 
             print(counter)
 
@@ -734,36 +734,14 @@ def report(tag, in_progress, to_csv):
 
 @cli.command()
 @click.argument('archive', type=click.Path(exists=True))
-@click.option('--add_snls_dbs', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to check against')
+@click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to check against')
 @click.option('--insert/--no-insert', default=False, help='actually execute SNL insertion')
-def add_snls(archive, add_snls_dbs, insert):
+def load(archive, add_snlcolls, insert):
     """add structures from archive of structure files (CIF, POSCAR, ...) to (local) SNLs collection"""
     # TODO assign task_ids to structures?
 
     if not insert:
         print('DRY RUN! Add --insert flag to actually add SNLs')
-
-    lpad = LaunchPad.auto_load()
-    snl_collections = [lpad.db.snls]
-    if add_snls_dbs is not None:
-        for snl_db_config in yaml.load_all(open(add_snls_dbs, 'r')):
-            snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
-            snl_db = snl_db_conn[snl_db_config['db']]
-            snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
-            snl_collections.append(snl_db[snl_db_config['collection']])
-    for snl_coll in snl_collections:
-        print(snl_coll.count(), 'SNLs in', snl_coll.full_name)
-
-    def insert_snls(snls_list):
-        if snls_list:
-            print('add', len(snls_list), 'SNLs')
-            if insert:
-                result = snl_collections[0].insert_many(snls_list)
-                print('#SNLs inserted:', len(result.inserted_ids))
-            snls_list.clear()
-        else:
-            print('no SNLs to insert')
-
 
     fname, ext = os.path.splitext(os.path.basename(archive))
     tag, sec_ext = fname.rsplit('.', 1) if '.' in fname else [fname, '']
@@ -773,16 +751,6 @@ def add_snls(archive, add_snls_dbs, insert):
     if ext not in exts:
         print(ext, 'not supported (yet)! Please use one of', exts)
         return
-
-    meta_path = '{}.yaml'.format(tag)
-    meta = None
-    if not os.path.exists(meta_path):
-        meta = {'authors': ['Materials Project <feedback@materialsproject.org>']}
-        print(meta_path, 'not found. Using', meta)
-    else:
-        with open(meta_path, 'r') as f:
-            meta = yaml.safe_load(f)
-    meta['authors'] = [Author.parse_author(a) for a in meta['authors']]
 
     input_structures = []
     if ext == 'bson.gz':
@@ -816,6 +784,42 @@ def add_snls(archive, add_snls_dbs, insert):
                     break #continue
 
     print(len(input_structures), 'structure(s) loaded.')
+    add_snls(tag, input_structures, add_snlcolls, insert)
+
+
+def add_snls(tag, input_structures, add_snlcolls, insert):
+    """add structures to (local) SNLs collection"""
+
+    meta_path = '{}.yaml'.format(tag)
+    meta = None
+    if not os.path.exists(meta_path):
+        meta = {'authors': ['Materials Project <feedback@materialsproject.org>']}
+        print(meta_path, 'not found. Using', meta)
+    else:
+        with open(meta_path, 'r') as f:
+            meta = yaml.safe_load(f)
+    meta['authors'] = [Author.parse_author(a) for a in meta['authors']]
+
+    lpad = LaunchPad.auto_load()
+    snl_collections = [lpad.db.snls]
+    if add_snlcolls is not None:
+        for snl_db_config in yaml.load_all(open(add_snlcolls, 'r')):
+            snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
+            snl_db = snl_db_conn[snl_db_config['db']]
+            snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
+            snl_collections.append(snl_db[snl_db_config['collection']])
+    for snl_coll in snl_collections:
+        print(snl_coll.count(), 'SNLs in', snl_coll.full_name)
+
+    def insert_snls(snls_list):
+        if snls_list:
+            print('add', len(snls_list), 'SNLs')
+            if insert:
+                result = snl_collections[0].insert_many(snls_list)
+                print('#SNLs inserted:', len(result.inserted_ids))
+            snls_list.clear()
+        else:
+            print('no SNLs to insert')
 
     snls, index = [], None
     for idx, istruct in enumerate(input_structures):
@@ -906,8 +910,9 @@ def add_snls(archive, add_snls_dbs, insert):
 
 @cli.command()
 @click.argument('base_path', type=click.Path(exists=True))
+@click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
 @click.option('--insert/--no-insert', default=False, help='actually execute task insertion')
-def parse(base_path, insert):
+def parse(base_path, add_snlcolls, insert):
     """parse VASP output directories in base_path into tasks and tag"""
     if not insert:
         print('DRY RUN: add --insert flag to actually insert tasks')
@@ -952,6 +957,7 @@ def parse(base_path, insert):
                 else:
                     yield root
 
+    input_structures = []
     for vaspdir in get_vasp_dirs():
         subdir = get_subdir(vaspdir)
         if subdir not in already_inserted_subdirs:
@@ -963,3 +969,9 @@ def parse(base_path, insert):
                 continue
             if insert and task_doc['state'] == 'successful':
                 target.insert_task(task_doc, use_gridfs=True)
+                s = Structure.from_dict(task_doc['input']['structure'])
+                input_structures.append(s)
+
+    print('add SNLs for', len(input_structures), 'structures')
+    add_snls(tag, input_structures, add_snlcolls, insert)
+
