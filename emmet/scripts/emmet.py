@@ -133,7 +133,7 @@ def copy_tasks(target_db_file, tag, insert):
         # also only need to check about.projects; add_snls adds tag to about.projects and not remarks
         snls = lpad.db.snls.find({'about.projects': t})
         nr_snls = snls.count()
-        if nr_snls < target.db.snls.count({'about.projects': t}):
+        if nr_snls and nr_snls < target.db.snls.count({'about.projects': t}):
             snls_to_copy, index, prefix = [], None, 'snl'
             for idx, doc in enumerate(snls):
                 snl = StructureNL.from_dict(doc)
@@ -164,7 +164,7 @@ def copy_tasks(target_db_file, tag, insert):
                 if idx and not idx%100 or idx == nr_snls-1:
                     insert_snls(snls_to_copy)
         else:
-            print('SNLs already copied.')
+            print('SNLs not available or already copied.')
 
         # skip tasks with task_id existing in target and with matching dir_name (have to be a string [mp-*, mvc-*])
         nr_source_mp_tasks, skip_task_ids = 0, []
