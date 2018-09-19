@@ -1,4 +1,4 @@
-import click, os, yaml, sys, logging, tarfile, bson, gzip, csv
+import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile
 from fnmatch import fnmatch
 from datetime import datetime
 from collections import Counter, OrderedDict
@@ -91,7 +91,8 @@ def get_subdir(dn):
 @click.argument('target_db_file', type=click.Path(exists=True))
 @click.option('--tag', default=None, help='only insert tasks with specific tag')
 @click.option('--insert/--no-insert', default=False, help='actually execute task addition')
-def copy(target_db_file, tag, insert):
+@click.option('--copy-snls/--no-copy-snls', default=False, help='also copy SNLs')
+def copy(target_db_file, tag, insert, copy_snls):
     """Retrieve tasks from source and copy to target task collection (incl. SNLs if available)"""
 
     if not insert:
@@ -131,40 +132,42 @@ def copy(target_db_file, tag, insert):
         # get list of SNLs to copy over
         # only need to check tagged SNLs in source and target; dup-check across SNL collections already done in add_snls
         # also only need to check about.projects; add_snls adds tag to about.projects and not remarks
-        snls = lpad.db.snls.find({'about.projects': t})
-        nr_snls = snls.count()
-        if nr_snls and nr_snls < target.db.snls.count({'about.projects': t}):
-            snls_to_copy, index, prefix = [], None, 'snl'
-            for idx, doc in enumerate(snls):
-                snl = StructureNL.from_dict(doc)
-                formula = snl.structure.composition.reduced_formula
-                snl_copied = False
-                try:
-                    q = {'about.projects': t, '$or': [{k: formula} for k in aggregation_keys]}
-                    group = aggregate_by_formula(target.db.snls, q).next() # only one formula
-                    for dct in group['structures']:
-                        existing_structure = Structure.from_dict(dct)
-                        if structures_match(snl.structure, existing_structure):
-                            snl_copied = True
-                            print('SNL', doc['snl_id'], 'already added.')
-                            break
-                except StopIteration:
-                    pass
-                if snl_copied:
-                    continue
-                snl_dct = snl.as_dict()
-                if index is None:
-                    index = max([int(snl_id[len(prefix)+1:]) for snl_id in target.db.snls.distinct('snl_id')]) + 1
-                else:
-                    index += 1
-                snl_id = '{}-{}'.format(prefix, index)
-                snl_dct['snl_id'] = snl_id
-                snl_dct.update(get_meta_from_structure(snl.structure))
-                snls_to_copy.append(snl_dct)
-                if idx and not idx%100 or idx == nr_snls-1:
-                    insert_snls(snls_to_copy)
-        else:
-            print('SNLs not available or already copied.')
+        # TODO only need to copy if author not Materials Project!?
+        if copy_snls:
+            snls = lpad.db.snls.find({'about.projects': t})
+            nr_snls = snls.count()
+            if nr_snls:
+                snls_to_copy, index, prefix = [], None, 'snl'
+                for idx, doc in enumerate(snls):
+                    snl = StructureNL.from_dict(doc)
+                    formula = snl.structure.composition.reduced_formula
+                    snl_copied = False
+                    try:
+                        q = {'about.projects': t, '$or': [{k: formula} for k in aggregation_keys]}
+                        group = aggregate_by_formula(target.db.snls, q).next() # only one formula
+                        for dct in group['structures']:
+                            existing_structure = Structure.from_dict(dct)
+                            if structures_match(snl.structure, existing_structure):
+                                snl_copied = True
+                                print('SNL', doc['snl_id'], 'already added.')
+                                break
+                    except StopIteration:
+                        pass
+                    if snl_copied:
+                        continue
+                    snl_dct = snl.as_dict()
+                    if index is None:
+                        index = max([int(snl_id[len(prefix)+1:]) for snl_id in target.db.snls.distinct('snl_id')]) + 1
+                    else:
+                        index += 1
+                    snl_id = '{}-{}'.format(prefix, index)
+                    snl_dct['snl_id'] = snl_id
+                    snl_dct.update(get_meta_from_structure(snl.structure))
+                    snls_to_copy.append(snl_dct)
+                    if idx and not idx%100 or idx == nr_snls-1:
+                        insert_snls(snls_to_copy)
+            else:
+                print('No SNLs available for', t)
 
         # skip tasks with task_id existing in target and with matching dir_name (have to be a string [mp-*, mvc-*])
         nr_source_mp_tasks, skip_task_ids = 0, []
@@ -912,7 +915,8 @@ def add_snls(tag, input_structures, add_snlcolls, insert):
 @click.argument('base_path', type=click.Path(exists=True))
 @click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
 @click.option('--insert/--no-insert', default=False, help='actually execute task insertion')
-def parse(base_path, add_snlcolls, insert):
+@click.option('--make-snls/--no-make-snls', default=False, help='also create SNLs for parsed tasks')
+def parse(base_path, add_snlcolls, insert, make_snls):
     """parse VASP output directories in base_path into tasks and tag"""
     if not insert:
         print('DRY RUN: add --insert flag to actually insert tasks')
@@ -930,48 +934,70 @@ def parse(base_path, add_snlcolls, insert):
         time_now = datetime.utcnow().strftime(FW_BLOCK_FORMAT)
         return '_'.join([prefix, time_now])
 
-    def get_vasp_dirs():
-        for root, dirs, files in os.walk(base_path):
+    def get_symlinked_path(root):
+        root_split = os.path.realpath(root).split(os.sep)
+        idx = len(base_path_split)
+        if not root_split[idx-1].startswith('block_'):
+            rootdir = os.sep.join(root_split[:idx])
+            block = get_timestamp_dir(prefix='block')
+            block_dir = os.sep.join(root_split[:idx-1] + [block])
+            if insert:
+                os.rename(rootdir, block_dir)
+                os.symlink(block_dir, rootdir)
+            print(rootdir, '->', block_dir)
+        subdir = os.sep.join(root_split)
+        if not root_split[-1].startswith('launcher_'):
+            launch = get_timestamp_dir()
+            launch_dir = os.path.join(os.path.realpath(os.sep.join(root_split[:-1])), launch)
+            if insert:
+                os.rename(subdir, launch_dir)
+                os.symlink(launch_dir, subdir)
+            print(subdir, '->', launch_dir)
+            return launch_dir
+        else:
+            return os.path.realpath(subdir)
+
+    def contains_vasp_dirs(list_of_files):
+        for f in list_of_files:
+            if f.startswith("INCAR"):
+                return True
+
+    def get_vasp_dirs(scan_path):
+        # NOTE os.walk followlinks=False by default, as intended here
+        for root, dirs, files in os.walk(scan_path):
             # TODO ignore relax1/2 subdirs if INCAR.orig found
-            if any(f.startswith("INCAR") for f in files):
-                if insert:
-                    root_split = os.path.realpath(root).split(os.sep)
-                    idx = len(base_path_split)
-                    if not root_split[idx-1].startswith('block_'):
-                        rootdir = os.sep.join(root_split[:idx])
-                        block = get_timestamp_dir(prefix='block')
-                        block_dir = os.sep.join(root_split[:idx-1] + [block])
-                        os.rename(rootdir, block_dir)
-                        os.symlink(block_dir, rootdir)
-                        print(rootdir, '->', block_dir)
-                    subdir = os.sep.join(root_split)
-                    if not root_split[-1].startswith('launcher_'):
-                        launch = get_timestamp_dir()
-                        launch_dir = os.sep.join(root_split[:-1] + [launch])
-                        os.rename(subdir, launch_dir)
-                        os.symlink(launch_dir, subdir)
-                        print(subdir, '->', launch_dir)
-                        yield launch_dir
-                    else:
-                        yield subdir
-                else:
-                    yield root
+            if contains_vasp_dirs(files):
+                yield get_symlinked_path(root)
+            else:
+                for f in files:
+                    if f.endswith('.tar.gz'):
+                        cwd = os.path.realpath(root)
+                        path = os.path.join(cwd, f)
+                        with tarfile.open(path, 'r:gz') as tf:
+                            tf.extractall(cwd)
+                        os.remove(path)
+                        for vaspdir in get_vasp_dirs(path.replace('.tar.gz', '')):
+                            yield vaspdir
+
 
     input_structures = []
-    for vaspdir in get_vasp_dirs():
+    for vaspdir in get_vasp_dirs(base_path):
         subdir = get_subdir(vaspdir)
         if subdir not in already_inserted_subdirs:
-            print(vaspdir)
-            try:
-                task_doc = drone.assimilate(vaspdir)
-            except Exception as ex:
-                print(str(ex))
-                continue
-            if insert and task_doc['state'] == 'successful':
-                target.insert_task(task_doc, use_gridfs=True)
-                s = Structure.from_dict(task_doc['input']['structure'])
-                input_structures.append(s)
+            print('vaspdir:', vaspdir)
+            if insert:
+                try:
+                    task_doc = drone.assimilate(vaspdir)
+                except Exception as ex:
+                    print(str(ex))
+                    continue
+                if task_doc['state'] == 'successful':
+                    target.insert_task(task_doc, use_gridfs=True)
+                    if make_snls:
+                        s = Structure.from_dict(task_doc['input']['structure'])
+                        input_structures.append(s)
 
-    print('add SNLs for', len(input_structures), 'structures')
-    add_snls(tag, input_structures, add_snlcolls, insert)
+    if insert and make_snls:
+        print('add SNLs for', len(input_structures), 'structures')
+        add_snls(tag, input_structures, add_snlcolls, insert)
 
