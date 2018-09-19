@@ -91,8 +91,8 @@ def get_subdir(dn):
 @click.argument('target_db_file', type=click.Path(exists=True))
 @click.option('--tag', default=None, help='only insert tasks with specific tag')
 @click.option('--insert/--no-insert', default=False, help='actually execute task addition')
-def copy_tasks(target_db_file, tag, insert):
-    """Retrieve tasks from source and copy to target task collection"""
+def copy(target_db_file, tag, insert):
+    """Retrieve tasks from source and copy to target task collection (incl. SNLs if available)"""
 
     if not insert:
         print('DRY RUN: add --insert flag to actually add tasks to production')
@@ -250,7 +250,7 @@ def copy_tasks(target_db_file, tag, insert):
 @click.option('--clear-logs/--no-clear-logs', default=False, help='clear MongoDB logs collection for specific tag')
 @click.option('--max-structures', '-m', default=1000, help='set max structures for tags to scan')
 @click.option('--skip-all-scanned/--no-skip-all-scanned', default=False, help='skip all already scanned structures incl. WFs2Add/Errors')
-def add_wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, skip_all_scanned):
+def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, skip_all_scanned):
     """add workflows based on tags in SNL collection"""
 
     if not insert:
@@ -637,7 +637,7 @@ def add_wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structur
                 print(len(canonical_structures_list), 'canonical structure(s) for', formula, sites_elements)
                 if tag is not None:
                     print('trying again ...')
-                    add_wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, True)
+                    wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, True)
 
             print(counter)
 
