@@ -9,7 +9,7 @@ from pymatgen.core.structure import Structure
 from pymatgen.analysis.diffraction.xrd import XRDCalculator, WAVELENGTHS
 
 from emmet.common.utils import load_settings
-from maggma.builder import Builder
+from maggma.examples.builders import MapBuilder
 
 from emmet.common.utils import load_settings
 
@@ -20,7 +20,7 @@ default_xrd_settings = os.path.join(
     module_dir, "settings", "xrd.json")
 
 
-class DiffractionBuilder(Builder):
+class DiffractionBuilder(MapBuilder):
 
     def __init__(self, materials, diffraction, xrd_settings=None, query=None, **kwargs):
         """
@@ -39,42 +39,14 @@ class DiffractionBuilder(Builder):
         self.query = query if query else {}
         self.__settings = load_settings(self.xrd_settings, default_xrd_settings)
 
-        super().__init__(sources=[materials],
-                         targets=[diffraction],
+        super().__init__(source=materials,
+                         target=diffraction,
+                         query=query,
+                         ufn=self.calc,
+                         projection=["structure"],
                          **kwargs)
 
-    def get_items(self):
-        """
-        Gets all materials that need a new XRD 
-
-        Returns:
-            generator of materials to calculate xrd
-        """
-
-        self.logger.info("Diffraction Builder Started")
-
-        self.logger.info("Setting indexes")
-        self.ensure_indicies()
-
-        # All relevant materials that have been updated since diffraction props
-        # were last calculated
-        q = dict(self.query)
-        q.update(self.materials.lu_filter(self.diffraction))
-        updated_mats = set(self.materials.distinct(self.materials.key, q))
-        self.logger.info(
-            "Found {} updated materials for diffraction data".format(len(updated_mats)))
-
-        all_mats = set(self.materials.distinct(self.materials.key,self.query))
-        curr_diffraction = set(self.diffraction.distinct(self.diffraction.key))
-        self.logger.info("Found {} new materials for diffraction data".format(len(all_mats - curr_diffraction)))
-
-        mats = list((all_mats - curr_diffraction) | updated_mats)
-        self.total = len(mats)
-        for m in mats:
-            yield self.materials.query(properties=[self.materials.key, "structure", self.materials.lu_field],
-                                       criteria={self.materials.key: m}).limit(1)[0]
-
-    def process_item(self, item):
+    def calc(self,item):
         """
         Calculates diffraction patterns for the structures
 
