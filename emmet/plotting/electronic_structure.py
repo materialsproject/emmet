@@ -6,7 +6,6 @@ import matplotlib
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, BandStructure
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.electronic_structure.dos import CompleteDos
-from pymatgen.symmetry.electronic
 from sumo.plotting.dos_plotter import SDOSPlotter
 from sumo.plotting.bs_plotter import SBSPlotter
 from sumo.electronic_structure.dos import get_pdos
