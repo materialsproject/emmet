@@ -1,4 +1,6 @@
 import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile
+from shutil import copyfile
+from glob import glob
 from fnmatch import fnmatch
 from datetime import datetime
 from collections import Counter, OrderedDict
@@ -980,6 +982,7 @@ def parse(base_path, add_snlcolls, insert, make_snls):
                             yield vaspdir
 
 
+    inputs = ['INCAR', 'KPOINTS', 'POTCAR', 'POSCAR']
     input_structures = []
     for vaspdir in get_vasp_dirs(base_path):
         subdir = get_subdir(vaspdir)
@@ -987,6 +990,12 @@ def parse(base_path, add_snlcolls, insert, make_snls):
             print('vaspdir:', vaspdir)
             if insert:
                 try:
+                    for inp in inputs:
+                        input_path = os.path.join(vaspdir, inp)
+                        orig_path = input_path + '.orig'
+                        if not glob(orig_path+'*'):
+                            copyfile(input_path, orig_path)
+                            print('cp', input_path, '->', orig_path)
                     task_doc = drone.assimilate(vaspdir)
                 except Exception as ex:
                     print(str(ex))
