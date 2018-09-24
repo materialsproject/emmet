@@ -7,6 +7,7 @@ from collections import Counter, OrderedDict
 from pymongo import MongoClient
 from pymongo.errors import CursorNotFound
 from pymongo.collection import ReturnDocument
+from pymongo.errors import DocumentTooLarge
 from pymatgen.analysis.structure_prediction.volume_predictor import DLSVolumePredictor
 from pymatgen import Structure
 from pymatgen.alchemy.materials import TransformedStructure
@@ -1005,7 +1006,19 @@ def parse(base_path, add_snlcolls, insert, make_snls):
                         print('removed', vaspdir)
                     continue
                 if task_doc['state'] == 'successful':
-                    target.insert_task(task_doc, use_gridfs=True)
+                    try:
+                        target.insert_task(task_doc, use_gridfs=True)
+                    except DocumentTooLarge as ex:
+                        print(str(ex))
+                        print('remove normalmode_eigenvecs and retry ...')
+                        task_doc['calcs_reversed'][0]['output'].pop('normalmode_eigenvecs')
+                        try:
+                            target.insert_task(task_doc, use_gridfs=True)
+                        except DocumentTooLarge as ex:
+                            print(str(ex))
+                            print('also remove force_constants and retry ...')
+                            task_doc['calcs_reversed'][0]['output'].pop('force_constants')
+                            target.insert_task(task_doc, use_gridfs=True)
                     if make_snls:
                         s = Structure.from_dict(task_doc['input']['structure'])
                         input_structures.append(s)
