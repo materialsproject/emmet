@@ -990,17 +990,16 @@ def parse(base_path, add_snlcolls, insert, make_snls):
         if subdir not in already_inserted_subdirs:
             print('vaspdir:', vaspdir)
             if insert:
+                for inp in inputs:
+                    input_path = os.path.join(vaspdir, inp)
+                    orig_path = input_path + '.orig'
+                    if not glob(orig_path+'*'):
+                        copyfile(input_path, orig_path)
+                        print('cp', input_path, '->', orig_path)
                 try:
-                    for inp in inputs:
-                        input_path = os.path.join(vaspdir, inp)
-                        orig_path = input_path + '.orig'
-                        if not glob(orig_path+'*'):
-                            copyfile(input_path, orig_path)
-                            print('cp', input_path, '->', orig_path)
                     task_doc = drone.assimilate(vaspdir)
                 except Exception as ex:
                     err = str(ex)
-                    print(err)
                     if err == 'No VASP files found!':
                         rmtree(vaspdir)
                         print('removed', vaspdir)
