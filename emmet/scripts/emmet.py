@@ -1,5 +1,5 @@
 import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile
-from shutil import copyfile
+from shutil import copyfile, rmtree
 from glob import glob
 from fnmatch import fnmatch
 from datetime import datetime
@@ -998,7 +998,11 @@ def parse(base_path, add_snlcolls, insert, make_snls):
                             print('cp', input_path, '->', orig_path)
                     task_doc = drone.assimilate(vaspdir)
                 except Exception as ex:
-                    print(str(ex))
+                    err = str(ex)
+                    print(err)
+                    if err == 'No VASP files found!':
+                        rmtree(vaspdir)
+                        print('removed', vaspdir)
                     continue
                 if task_doc['state'] == 'successful':
                     target.insert_task(task_doc, use_gridfs=True)
