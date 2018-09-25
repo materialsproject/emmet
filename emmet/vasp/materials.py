@@ -204,7 +204,7 @@ class MaterialsBuilder(Builder):
 
         mat = {
             self.materials.lu_field: max([prop["last_updated"] for prop in all_props]),
-            "created_at": max([prop["last_updated"] for prop in all_props]),
+            "created_at": min([prop["last_updated"] for prop in all_props]),
             "task_ids": task_ids,
             self.materials.key: structure_task_ids[0],
             "origins": origins,
