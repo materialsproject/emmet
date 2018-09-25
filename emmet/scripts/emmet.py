@@ -927,8 +927,10 @@ def parse(base_path, add_snlcolls, insert, make_snls):
     lpad = LaunchPad.auto_load()
     target = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
     print('connected to target db with', target.collection.count(), 'tasks')
+    base_path = os.path.join(base_path, '')
     base_path_split = base_path.split(os.sep)
     tag = base_path_split[-1] if base_path_split[-1] else base_path_split[-2]
+    idx = len(base_path_split)
     drone = VaspDrone(parse_dos='auto', additional_fields={'tags': [tag]})
     already_inserted_subdirs = [get_subdir(dn) for dn in target.collection.find({'tags': tag}).distinct('dir_name')]
     print(len(already_inserted_subdirs), 'VASP directories already inserted for', tag)
@@ -939,7 +941,6 @@ def parse(base_path, add_snlcolls, insert, make_snls):
 
     def get_symlinked_path(root):
         root_split = os.path.realpath(root).split(os.sep)
-        idx = len(base_path_split)
         if not root_split[idx-1].startswith('block_'):
             rootdir = os.sep.join(root_split[:idx])
             block = get_timestamp_dir(prefix='block')
