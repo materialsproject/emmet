@@ -23,7 +23,7 @@ if __name__ == "__main__":
         zip_safe=False,
         install_requires=[
             'atomate', 'pymatgen>=2018.4.20','maggma','monty',
-            'six', 'pydash', 'tqdm', 'matminer',
+            'six', 'pydash', 'tqdm', 'matminer', 'log4mongo', 'prettytable',
             'prettyplotlib', 'pybtex', 'Click', 'networkx', 'sumo',
         ],
         classifiers=["Programming Language :: Python :: 3",
