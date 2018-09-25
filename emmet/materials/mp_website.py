@@ -62,7 +62,8 @@ mp_conversion_dict = {
     "input.incar": "inputs.structure_optimization.incar",
     "input.kpoints": "inputs.structure_optimization.kpoints",
     "encut": "inputs.structure_optimization.incar.ENCUT",
-    "formula_anonymous": "formula_anonymous"
+    "formula_anonymous": "formula_anonymous",
+    "created_at": "created_at"
 }
 
 SANDBOXED_PROPERTIES = {"e_above_hull": "e_above_hull", "decomposes_to": "decomposes_to"}
