@@ -25,6 +25,11 @@ from pymatgen.analysis.diffraction.core import DiffractionPattern
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 from pymatgen.util.provenance import StructureNL
 
+# Silly fix to keep pybtex from spamming warnings
+import os, pybtex
+devnull = open(os.devnull, 'w')
+pybtex.io.stderr = devnull
+
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
@@ -111,8 +116,7 @@ class MPBuilder(Builder):
         self.propnet = propnet
 
         sources = list(
-            filter(None, [materials, thermo, electronic_structure, snls,
-                          elastic, dielectric, xrd, dois, propnet]))
+            filter(None, [materials, thermo, electronic_structure, snls, elastic, dielectric, xrd, dois, propnet]))
 
         super().__init__(sources=sources, targets=[mp_materials], **kwargs)
 
@@ -178,8 +182,7 @@ class MPBuilder(Builder):
                 doc["dois"] = self.dois.query_one(criteria={self.dois.key: m})
 
             if self.propnet:
-                doc['propnet'] = self.propnet.query_one(
-                    criteria={self.propnet.key: m})
+                doc['propnet'] = self.propnet.query_one(criteria={self.propnet.key: m})
 
             yield doc
 
@@ -279,7 +282,6 @@ def old_style_mat(new_style_mat):
     mat["initial_structure"] = new_style_mat.get("initial_structure", None)
     mat["nsites"] = struc.get_primitive_structure().num_sites
 
-
     set_(mat, "pseudo_potential.functional", "PBE")
 
     set_(mat, "pseudo_potential.labels",
@@ -345,8 +347,7 @@ def add_elastic(mat, elastic):
         "third_order": "third_order"
     }
 
-    mat["elasticity"] = {k: elastic["elasticity"].get(v, None)
-                         for k, v in es_aliases.items()}
+    mat["elasticity"] = {k: elastic["elasticity"].get(v, None) for k, v in es_aliases.items()}
     if has(elastic, "elasticity.structure.sites"):
         mat["elasticity"]["nsites"] = len(get(elastic, "elasticity.structure.sites"))
     else:
@@ -390,8 +391,8 @@ def add_xrd(mat, xrd):
         el_doc["pattern"] = [[
             float(intensity), [int(x) for x in literal_eval(list(hkls.keys())[0])], two_theta,
             float(d_hkl)
-        ] for two_theta, intensity, hkls, d_hkl in zip(xrd_pattern.x, xrd_pattern.y, xrd_pattern.hkls,
-                                                       xrd_pattern.d_hkls)]
+        ] for two_theta, intensity, hkls, d_hkl in zip(xrd_pattern.x, xrd_pattern.y, xrd_pattern.hkls, xrd_pattern.
+                                                       d_hkls)]
 
         mat["xrd"][el] = el_doc
 
@@ -444,8 +445,7 @@ def add_snl(mat, snl=None):
 
 
 def add_propnet(mat, propnet):
-    exclude_list = ['compliance_tensor_voigt', 'task_id', '_id',
-                    'pretty_formula', 'inputs', 'last_updated']
+    exclude_list = ['compliance_tensor_voigt', 'task_id', '_id', 'pretty_formula', 'inputs', 'last_updated']
     for e in exclude_list:
         if e in propnet:
             del propnet[e]

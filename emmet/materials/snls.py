@@ -10,6 +10,11 @@ from maggma.builder import Builder
 from pybtex.database import parse_string
 from pybtex.database import BibliographyData
 
+# Silly fix to keep pybtex from spamming warnings
+import os, pybtex
+devnull = open(os.devnull, 'w')
+pybtex.io.stderr = devnull
+
 mp_default_snl_fields = {
     "references":
     "@article{Jain2013,\nauthor = {Jain, Anubhav and Ong, Shyue Ping and "
