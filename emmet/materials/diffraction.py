@@ -45,7 +45,7 @@ class DiffractionBuilder(MapBuilder):
                          ufn=self.calc,
                          projection=["structure"],
                          **kwargs)
-
+ 
     def calc(self,item):
         """
         Calculates diffraction patterns for the structures
@@ -83,21 +83,6 @@ class DiffractionBuilder(MapBuilder):
                  'pattern': pattern}
             doc[xs['target']] = d
         return doc
-
-    def update_targets(self, items):
-        """
-        Inserts the new task_types into the task_types collection
-
-        Args:
-            items ([[dict]]): a list of list of thermo dictionaries to update
-        """
-        items = list(filter(None, items))
-
-        if len(items) > 0:
-            self.logger.info("Updating {} diffraction docs".format(len(items)))
-            self.diffraction.update(docs=items,update_lu=False)
-        else:
-            self.logger.info("No items to update")
 
     def ensure_indicies(self):
         """
