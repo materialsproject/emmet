@@ -27,7 +27,7 @@ class MLStructuresBuilder(MapBuilder):
         super().__init__(source=tasks,
                          target=ml_strucs,
                          ufn=self.calc,
-                         projection=["orig_inputs","input","calcs_reversed"]
+                         projection=["orig_inputs","input","calcs_reversed"],
                          query=query,
                          **kwargs)
 
