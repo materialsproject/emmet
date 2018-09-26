@@ -174,8 +174,11 @@ class ThermoBuilder(Builder):
 
                 docs.append(d)
         except PhaseDiagramError as p:
-            print(e.as_dict())
-            self.logger.warning("Phase diagram error: {}".format(p))
+            elsyms = []
+            for e in entries:
+                elsyms.extend([el.symbol for el in e.composition.elements])
+
+            self.logger.warning("Phase diagram errorin chemsys {}: {}".format("-".join(sorted(set(elsyms))),p))
             return []
 
         return docs
