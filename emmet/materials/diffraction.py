@@ -11,17 +11,13 @@ from pymatgen.analysis.diffraction.xrd import XRDCalculator, WAVELENGTHS
 from emmet.common.utils import load_settings
 from maggma.examples.builders import MapBuilder
 
-from emmet.common.utils import load_settings
-
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-default_xrd_settings = os.path.join(
-    module_dir, "settings", "xrd.json")
+default_xrd_settings = os.path.join(module_dir, "settings", "xrd.json")
 
 
 class DiffractionBuilder(MapBuilder):
-
     def __init__(self, materials, diffraction, xrd_settings=None, query=None, **kwargs):
         """
         Calculates diffraction patterns for materials
@@ -39,14 +35,10 @@ class DiffractionBuilder(MapBuilder):
         self.query = query if query else {}
         self.__settings = load_settings(self.xrd_settings, default_xrd_settings)
 
-        super().__init__(source=materials,
-                         target=diffraction,
-                         query=query,
-                         ufn=self.calc,
-                         projection=["structure"],
-                         **kwargs)
- 
-    def calc(self,item):
+        super().__init__(
+            source=materials, target=diffraction, query=query, ufn=self.calc, projection=["structure"], **kwargs)
+
+    def calc(self, item):
         """
         Calculates diffraction patterns for the structures
 
@@ -56,8 +48,7 @@ class DiffractionBuilder(MapBuilder):
         Returns:
             dict: a diffraction dict
         """
-        self.logger.debug("Calculating diffraction for {}".format(
-            item[self.materials.key]))
+        self.logger.debug("Calculating diffraction for {}".format(item[self.materials.key]))
 
         struct = Structure.from_dict(item['structure'])
 
@@ -73,25 +64,15 @@ class DiffractionBuilder(MapBuilder):
         doc = {}
 
         for xs in self.__settings:
-            xrdcalc = XRDCalculator(wavelength="".join([xs['target'], xs['edge']]),
-                                    symprec=xs.get('symprec', 0))
+            xrdcalc = XRDCalculator(wavelength="".join([xs['target'], xs['edge']]), symprec=xs.get('symprec', 0))
 
-            pattern = jsanitize(xrdcalc.get_pattern(
-                structure, two_theta_range=xs['two_theta']).as_dict())
-            d = {'wavelength': {'element': xs['target'],
-                                'in_angstroms': WAVELENGTHS["".join([xs['target'], xs['edge']])]},
-                 'pattern': pattern}
+            pattern = jsanitize(xrdcalc.get_pattern(structure, two_theta_range=xs['two_theta']).as_dict())
+            d = {
+                'wavelength': {
+                    'element': xs['target'],
+                    'in_angstroms': WAVELENGTHS["".join([xs['target'], xs['edge']])]
+                },
+                'pattern': pattern
+            }
             doc[xs['target']] = d
         return doc
-
-    def ensure_indicies(self):
-        """
-        Ensures indicies on the diffraction and materials collections
-        """
-        # Search indicies for materials
-        self.materials.ensure_index(self.materials.key, unique=True)
-        self.materials.ensure_index(self.materials.lu_field)
-
-        # Search indicies for diffraction
-        self.diffraction.ensure_index(self.diffraction.key, unique=True)
-        self.diffraction.ensure_index(self.diffraction.lu_field)

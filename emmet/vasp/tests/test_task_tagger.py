@@ -8,7 +8,7 @@ __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-test_tasks = os.path.join(module_dir, "..",  "..", "..", "test_files", "test_tasktagger_tasks.json")
+test_tasks = os.path.join(module_dir, "..", "..", "..", "test_files", "test_tasktagger_tasks.json")
 
 
 class TaskTaggerTest(unittest.TestCase):

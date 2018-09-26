@@ -1,5 +1,4 @@
 from maggma.examples.builders import MapBuilder
-from pydash import py_
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
@@ -29,6 +28,7 @@ class TaskTagger(MapBuilder):
         """
         tt = task_type(item["orig_inputs"])
         return {"task_type": tt}
+
 
 def task_type(inputs, include_calc_type=True):
     """

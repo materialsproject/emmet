@@ -2,7 +2,6 @@ import io
 import traceback
 from maggma.builder import Builder
 from pydash.objects import get
-import matplotlib
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, BandStructure
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.electronic_structure.dos import CompleteDos
@@ -11,6 +10,7 @@ from sumo.plotting.bs_plotter import SBSPlotter
 from sumo.electronic_structure.dos import get_pdos
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
+
 
 class ElectronicStructureImageBuilder(Builder):
     def __init__(self, materials, electronic_structure, bandstructures, dos, query=None, plot_options=None, **kwargs):
@@ -65,12 +65,10 @@ class ElectronicStructureImageBuilder(Builder):
         self.total = len(mats)
 
         for m in mats:
-            mat = self.materials.query_one([self.materials.key, "structure", "bandstructure", "inputs"], {
-                self.materials.key: m
-            })
-            mat["bandstructure"]["bs"] = self.bandstructures.query_one(criteria={
-                "task_id": get(mat, "bandstructure.bs_task")
-            })
+            mat = self.materials.query_one([self.materials.key, "structure", "bandstructure", "inputs"],
+                                           {self.materials.key: m})
+            mat["bandstructure"]["bs"] = self.bandstructures.query_one(
+                criteria={"task_id": get(mat, "bandstructure.bs_task")})
 
             mat["bandstructure"]["dos"] = self.dos.query_one(criteria={"task_id": get(mat, "bandstructure.dos_task")})
             yield mat
@@ -128,8 +126,6 @@ class ElectronicStructureImageBuilder(Builder):
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
         items = list(filter(None, items))
-
-
 
         if len(items) > 0:
             self.logger.info("Updating {} electronic structure docs".format(len(items)))

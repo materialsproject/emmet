@@ -69,7 +69,7 @@ class DielectricBuilder(Builder):
 
         d = {self.dielectric.key: item[self.materials.key]}
 
-        structure = Structure.from_dict(item.get("dielectric",{}).get("structure",None))
+        structure = Structure.from_dict(item.get("dielectric", {}).get("structure", None))
 
         ionic = Tensor(item["dielectric"]["ionic"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)
         static = Tensor(item["dielectric"]["static"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)

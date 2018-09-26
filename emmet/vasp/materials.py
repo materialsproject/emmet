@@ -159,13 +159,12 @@ class MaterialsBuilder(Builder):
 
         # Store task_id of first structure as material task_id
         structure_task_ids = list(
-            sorted(
-                [
-                    prop["task_id"]
-                    for prop in all_props
-                    if prop["materials_key"] == "structure" and "Structure Optimization" in prop["task_type"]
-                ],
-                key=ID_to_int))
+            sorted([
+                prop["task_id"]
+                for prop in all_props
+                if prop["materials_key"] == "structure" and "Structure Optimization" in prop["task_type"]
+            ],
+                   key=ID_to_int))
 
         # If we don"t have a structure optimization then just return no material
         if len(structure_task_ids) == 0 and self.require_structure_opt:
@@ -217,7 +216,7 @@ class MaterialsBuilder(Builder):
         # Add metadata back into document and convert back to conventional standard
         if "structure" in mat:
             structure = Structure.from_dict(mat["structure"])
-            sga = SpacegroupAnalyzer(structure,symprec=0.1)
+            sga = SpacegroupAnalyzer(structure, symprec=0.1)
             structure = sga.get_conventional_standard_structure()
             mat["structure"] = structure.as_dict()
             mat.update(structure_metadata(structure))
@@ -236,11 +235,11 @@ class MaterialsBuilder(Builder):
         for idx, t in enumerate(filtered_tasks):
             s = Structure.from_dict(t["output"]["structure"])
             s.index = idx
-            total_mag = get(t,"calcs_reversed.0.output.outcar.total_magnetization",0)
+            total_mag = get(t, "calcs_reversed.0.output.outcar.total_magnetization", 0)
             s.total_magnetization = total_mag if total_mag else 0
             if not s.site_properties.get("magmom", False):
-                if has(t,"input.parameters.MAGMOM"):
-                    s.add_site_property("magmom",t["input"]["parameters"]["MAGMOM"])
+                if has(t, "input.parameters.MAGMOM"):
+                    s.add_site_property("magmom", t["input"]["parameters"]["MAGMOM"])
             structures.append(s)
 
         grouped_structures = group_structures(
@@ -370,7 +369,7 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, s
 
     def get_mag_ordering(struc):
         # helperd function to get a label of the magnetic ordering type
-        return np.around(np.abs(struc.total_magnetization)/struc.volume,decimals=1)
+        return np.around(np.abs(struc.total_magnetization) / struc.volume, decimals=1)
 
     # First group by spacegroup number then by structure matching
     for sg, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):

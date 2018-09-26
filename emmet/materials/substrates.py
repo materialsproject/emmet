@@ -6,9 +6,7 @@ from pymatgen.core import Structure
 from pymatgen.analysis.elasticity.elastic import ElasticTensor
 from pymatgen.analysis.substrate_analyzer import SubstrateAnalyzer
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pydash import get
 
-from pydash.objects import get
 from maggma.builder import Builder
 
 from emmet.common.utils import load_settings
@@ -21,7 +19,7 @@ default_substrate_settings = os.path.join(module_dir, "settings", "substrates.js
 class SubstrateBuilder(Builder):
     def __init__(self, materials, substrates, elasticity=None, substrate_settings=None, query=None, **kwargs):
         """
-        Calculates matching substrates for
+        Calculates matching substrates
 
         Args:
             materials (Store): Store of materials documents
@@ -177,7 +175,6 @@ class SubstrateBuilder(Builder):
             e_tensor_updated_mats = self.materials.distinct(self.materials.key, criteria=q)
 
             self.logger.info("Found {} new/updated elastic tensors".format(len(e_tensor_updated_mats)))
-
 
         return e_tensor_updated_mats
 
