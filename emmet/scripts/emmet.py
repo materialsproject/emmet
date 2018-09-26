@@ -1,9 +1,9 @@
-import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile
+import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, itertools, multiprocessing
 from shutil import copyfile, rmtree
 from glob import glob
 from fnmatch import fnmatch
 from datetime import datetime
-from collections import Counter, OrderedDict
+from collections import Counter, OrderedDict, deque
 from pymongo import MongoClient
 from pymongo.errors import CursorNotFound
 from pymongo.collection import ReturnDocument
@@ -21,6 +21,7 @@ from atomate.vasp.powerups import add_trackers, add_tags, add_additional_fields_
 from emmet.vasp.materials import group_structures, get_sg
 from emmet.vasp.task_tagger import task_type
 from log4mongo.handlers import MongoHandler, MongoFormatter
+from prettytable import PrettyTable
 
 if 'FW_CONFIG_FILE' not in os.environ:
     print('Please set FW_CONFIG_FILE!')
@@ -61,6 +62,124 @@ def get_meta_from_structure(struct):
     d['is_valid'] = struct.is_valid()
     return d
 
+# a utility function to get us a slice of an iterator, as an iterator
+# when working with iterators maximum lazyness is preferred 
+def iterator_slice(iterator, length):
+    iterator = iter(iterator)
+    while True:
+        res = tuple(itertools.islice(iterator, length))
+        if not res:
+            break
+        yield res
+
+def get_subdir(dn):
+    return dn.rsplit(os.sep, 1)[-1]
+
+def get_timestamp_dir(prefix='launcher'):
+    time_now = datetime.utcnow().strftime(FW_BLOCK_FORMAT)
+    return '_'.join([prefix, time_now])
+
+def contains_vasp_dirs(list_of_files):
+    for f in list_of_files:
+        if f.startswith("INCAR"):
+            return True
+    
+def get_symlinked_path(root, base_path_index):
+    root_split = os.path.realpath(root).split(os.sep)
+    if not root_split[base_path_index-1].startswith('block_'):
+        rootdir = os.sep.join(root_split[:base_path_index])
+        block = get_timestamp_dir(prefix='block')
+        block_dir = os.sep.join(root_split[:base_path_index-1] + [block])
+        if insert:
+            os.rename(rootdir, block_dir)
+            os.symlink(block_dir, rootdir)
+        print(rootdir, '->', block_dir)
+    subdir = os.sep.join(root_split)
+    if not root_split[-1].startswith('launcher_'):
+        launch = get_timestamp_dir()
+        launch_dir = os.path.join(os.path.realpath(os.sep.join(root_split[:-1])), launch)
+        if insert:
+            os.rename(subdir, launch_dir)
+            os.symlink(launch_dir, subdir)
+        print(subdir, '->', launch_dir)
+        return launch_dir
+    else:
+        return os.path.realpath(subdir)
+
+def get_vasp_dirs(scan_path, base_path, max_dirs):
+    base_path_split = base_path.split(os.sep)
+    base_path_index = len(base_path_split)
+    # NOTE os.walk followlinks=False by default, as intended here
+    counter = 0
+    for root, dirs, files in os.walk(scan_path):
+        # TODO ignore relax1/2 subdirs if INCAR.orig found
+        if contains_vasp_dirs(files):
+            yield get_symlinked_path(root, base_path_index)
+            counter += 1
+            if counter >= max_dirs:
+                break
+        else:
+            for f in files:
+                if f.endswith('.tar.gz'):
+                    cwd = os.path.realpath(root)
+                    path = os.path.join(cwd, f)
+                    with tarfile.open(path, 'r:gz') as tf:
+                        tf.extractall(cwd)
+                    os.remove(path)
+                    for vaspdir in get_vasp_dirs(path.replace('.tar.gz', ''), base_path, max_dirs):
+                        yield vaspdir
+                        counter += 1
+                        if counter >= max_dirs:
+                            break
+
+def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
+    name = multiprocessing.current_process().name
+    print(name, 'starting')
+    lpad = LaunchPad.auto_load()
+    target = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
+    print(name, 'connected to target db with', target.collection.count(), 'tasks')
+    for vaspdir in vaspdirs:
+        if get_subdir(vaspdir) in already_inserted_subdirs:
+            print(name, vaspdir, 'already parsed')
+            continue
+        print(name, 'vaspdir:', vaspdir)
+        #poscar_path = os.path.join(vaspdir, 'POSCAR.relax2.gz')
+        #s = Structure.from_file(poscar_path)
+        #nelements = len(s.composition.elements)
+        #if nelements > 1:
+        #     print(name, '   -> SKIP (#elements > 1)')
+        #     continue
+        if insert:
+            for inp in ['INCAR', 'KPOINTS', 'POTCAR', 'POSCAR']:
+                input_path = os.path.join(vaspdir, inp)
+                orig_path = input_path + '.orig'
+                if not glob(orig_path+'*'):
+                    copyfile(input_path, orig_path)
+                    print(name, 'cp', input_path, '->', orig_path)
+            try:
+                task_doc = drone.assimilate(vaspdir)
+            except Exception as ex:
+                err = str(ex)
+                if err == 'No VASP files found!':
+                    rmtree(vaspdir)
+                    print(name, 'removed', vaspdir)
+                continue
+            if task_doc['state'] == 'successful':
+                try:
+                    target.insert_task(task_doc, use_gridfs=True)
+                except DocumentTooLarge as ex:
+                    print(name, 'remove normalmode_eigenvecs and retry ...')
+                    task_doc['calcs_reversed'][0]['output'].pop('normalmode_eigenvecs')
+                    try:
+                        target.insert_task(task_doc, use_gridfs=True)
+                    except DocumentTooLarge as ex:
+                        print(name, 'also remove force_constants and retry ...')
+                        task_doc['calcs_reversed'][0]['output'].pop('force_constants')
+                        target.insert_task(task_doc, use_gridfs=True)
+    nr_vaspdirs = len(vaspdirs)
+    print(name, 'processed', nr_vaspdirs, 'VASP directories')
+    return nr_vaspdirs
+
 @click.group()
 def cli():
     pass
@@ -86,9 +205,6 @@ def ensure_meta(snls_db):
 
     ensure_indexes(['snl_id', 'formula_pretty', 'nelements', 'nsites', 'is_ordered', 'is_valid'], [snl_coll])
 
-
-def get_subdir(dn):
-    return dn.rsplit(os.sep, 1)[-1]
 
 @cli.command()
 @click.argument('target_db_file', type=click.Path(exists=True))
@@ -691,7 +807,6 @@ def report(tag, in_progress, to_csv):
         tags = [t[0] for t in sorted(all_tags, key=lambda x: x[1], reverse=True)]
         print(len(tags), 'tags in WFs and logs collections')
 
-    from prettytable import PrettyTable
     table = PrettyTable()
     table.field_names = ['Tag', 'SNLs', 'WFs2Add', 'WFs'] + states + ['% FIZZLED', 'Progress']
     sums = ['total'] + [0] * (len(table.field_names)-1)
@@ -919,7 +1034,9 @@ def add_snls(tag, input_structures, add_snlcolls, insert):
 @click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
 @click.option('--insert/--no-insert', default=False, help='actually execute task insertion')
 @click.option('--make-snls/--no-make-snls', default=False, help='also create SNLs for parsed tasks')
-def parse(base_path, add_snlcolls, insert, make_snls):
+@click.option('--nproc', '-n', type=int, default=1, help='number of processes for parallel parsing')
+@click.option('--max-dirs', '-m', type=int, default=10, help='maximum number of directories to parse')
+def parse(base_path, add_snlcolls, insert, make_snls, nproc, max_dirs):
     """parse VASP output directories in base_path into tasks and tag"""
     if not insert:
         print('DRY RUN: add --insert flag to actually insert tasks')
@@ -930,100 +1047,41 @@ def parse(base_path, add_snlcolls, insert, make_snls):
     base_path = os.path.join(base_path, '')
     base_path_split = base_path.split(os.sep)
     tag = base_path_split[-1] if base_path_split[-1] else base_path_split[-2]
-    idx = len(base_path_split)
     drone = VaspDrone(parse_dos='auto', additional_fields={'tags': [tag]})
     already_inserted_subdirs = [get_subdir(dn) for dn in target.collection.find({'tags': tag}).distinct('dir_name')]
     print(len(already_inserted_subdirs), 'VASP directories already inserted for', tag)
 
-    def get_timestamp_dir(prefix='launcher'):
-        time_now = datetime.utcnow().strftime(FW_BLOCK_FORMAT)
-        return '_'.join([prefix, time_now])
-
-    def get_symlinked_path(root):
-        root_split = os.path.realpath(root).split(os.sep)
-        if not root_split[idx-1].startswith('block_'):
-            rootdir = os.sep.join(root_split[:idx])
-            block = get_timestamp_dir(prefix='block')
-            block_dir = os.sep.join(root_split[:idx-1] + [block])
-            if insert:
-                os.rename(rootdir, block_dir)
-                os.symlink(block_dir, rootdir)
-            print(rootdir, '->', block_dir)
-        subdir = os.sep.join(root_split)
-        if not root_split[-1].startswith('launcher_'):
-            launch = get_timestamp_dir()
-            launch_dir = os.path.join(os.path.realpath(os.sep.join(root_split[:-1])), launch)
-            if insert:
-                os.rename(subdir, launch_dir)
-                os.symlink(launch_dir, subdir)
-            print(subdir, '->', launch_dir)
-            return launch_dir
-        else:
-            return os.path.realpath(subdir)
-
-    def contains_vasp_dirs(list_of_files):
-        for f in list_of_files:
-            if f.startswith("INCAR"):
-                return True
-
-    def get_vasp_dirs(scan_path):
-        # NOTE os.walk followlinks=False by default, as intended here
-        for root, dirs, files in os.walk(scan_path):
-            # TODO ignore relax1/2 subdirs if INCAR.orig found
-            if contains_vasp_dirs(files):
-                yield get_symlinked_path(root)
+    chunk_size = 100
+    if nproc > 1 and max_dirs <= chunk_size:
+        nproc = 1
+        print('max_dirs =', max_dirs, 'but chunk size =', chunk_size, '-> parsing sequentially')
+    pool = multiprocessing.Pool(processes=nproc)
+    iterator_vaspdirs = get_vasp_dirs(base_path, base_path, max_dirs)
+    iterator = iterator_slice(iterator_vaspdirs, chunk_size) # process in chunks
+    queue = deque()
+    total_nr_vaspdirs_parsed = 0
+    while iterator or queue:
+        try:
+            args = [next(iterator), insert, drone, already_inserted_subdirs]
+            queue.append(pool.apply_async(parse_vasp_dirs, args))
+        except (StopIteration, TypeError):
+            iterator = None
+        while queue and (len(queue) >= pool._processes or not iterator):
+            process = queue.pop()
+            process.wait(1)
+            if not process.ready():
+                queue.append(process)
             else:
-                for f in files:
-                    if f.endswith('.tar.gz'):
-                        cwd = os.path.realpath(root)
-                        path = os.path.join(cwd, f)
-                        with tarfile.open(path, 'r:gz') as tf:
-                            tf.extractall(cwd)
-                        os.remove(path)
-                        for vaspdir in get_vasp_dirs(path.replace('.tar.gz', '')):
-                            yield vaspdir
+                total_nr_vaspdirs_parsed += process.get()
+    pool.close()
+    print('DONE:', total_nr_vaspdirs_parsed, 'parsed')
 
+    #input_structures = []
+    #                if make_snls:
+    #                    s = Structure.from_dict(task_doc['input']['structure'])
+    #                    input_structures.append(s)
 
-    inputs = ['INCAR', 'KPOINTS', 'POTCAR', 'POSCAR']
-    input_structures = []
-    for vaspdir in get_vasp_dirs(base_path):
-        subdir = get_subdir(vaspdir)
-        if subdir not in already_inserted_subdirs:
-            print('vaspdir:', vaspdir)
-            if insert:
-                for inp in inputs:
-                    input_path = os.path.join(vaspdir, inp)
-                    orig_path = input_path + '.orig'
-                    if not glob(orig_path+'*'):
-                        copyfile(input_path, orig_path)
-                        print('cp', input_path, '->', orig_path)
-                try:
-                    task_doc = drone.assimilate(vaspdir)
-                except Exception as ex:
-                    err = str(ex)
-                    if err == 'No VASP files found!':
-                        rmtree(vaspdir)
-                        print('removed', vaspdir)
-                    continue
-                if task_doc['state'] == 'successful':
-                    try:
-                        target.insert_task(task_doc, use_gridfs=True)
-                    except DocumentTooLarge as ex:
-                        print(str(ex))
-                        print('remove normalmode_eigenvecs and retry ...')
-                        task_doc['calcs_reversed'][0]['output'].pop('normalmode_eigenvecs')
-                        try:
-                            target.insert_task(task_doc, use_gridfs=True)
-                        except DocumentTooLarge as ex:
-                            print(str(ex))
-                            print('also remove force_constants and retry ...')
-                            task_doc['calcs_reversed'][0]['output'].pop('force_constants')
-                            target.insert_task(task_doc, use_gridfs=True)
-                    if make_snls:
-                        s = Structure.from_dict(task_doc['input']['structure'])
-                        input_structures.append(s)
-
-    if insert and make_snls:
-        print('add SNLs for', len(input_structures), 'structures')
-        add_snls(tag, input_structures, add_snlcolls, insert)
+    #if insert and make_snls:
+    #    print('add SNLs for', len(input_structures), 'structures')
+    #    add_snls(tag, input_structures, add_snlcolls, insert)
 
