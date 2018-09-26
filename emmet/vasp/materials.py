@@ -239,7 +239,7 @@ class MaterialsBuilder(Builder):
             total_mag = get(t,"calcs_reversed.0.output.outcar.total_magnetization",0)
             s.total_magnetization = total_mag if total_mag else 0
             if not s.site_properties.get("magmom", False):
-                if "MAGMOM" in t["input"].get("parameters",{}):
+                if has(t,"input.parameters.MAGMOM"):
                     s.add_site_property("magmom",t["input"]["parameters"]["MAGMOM"])
             structures.append(s)
 
