@@ -23,7 +23,7 @@ class TaskTaggerTest(unittest.TestCase):
         task_tagger = TaskTagger(tasks=self.test_tasks, task_types=self.task_types)
 
         for t in task_tagger.get_items():
-            processed = task_tagger.process_item(t)
+            processed = task_tagger.calc(t)
             true_type = self.test_tasks.query_one(
                 criteria={"task_id": t["task_id"]},
                 properties=["true_task_type"],
