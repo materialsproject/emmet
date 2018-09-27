@@ -10,7 +10,7 @@ from itertools import chain, combinations
 from itertools import groupby
 from pymatgen import MPRester
 from pymatgen.entries.computed_entries import ComputedStructureEntry
-from db_battery import DbInsertionElectrode
+from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 
 
 default_substrate_settings = os.path.join("/Users/lik/repos/emmet/emmet/materials/settings", "electrodes.yaml") # TODO this substrate file needs to be updated
@@ -87,7 +87,7 @@ class ElectrodesBuilder(Builder):
         elements = set(chemsys.split("-"))
         chemsys_w_wo_ion = {"-".join(sorted(c))
                 for c in [elements, elements-{self.working_ion}]}
-        # print("chemsys list: {}".format(chemsys_w_wo_ion))
+        print("chemsys list: {}".format(chemsys_w_wo_ion))
         q = {'chemsys' : {"$in" : list(chemsys_w_wo_ion)}}
         #p = ['structure', 'final_energy_per_atom','unit_cell_formula', 'pretty_formula', 'elements','task_id']
         th_docs = self.thermo.collection.find(q)
@@ -118,15 +118,22 @@ class ElectrodesBuilder(Builder):
         # then perform PD analysis
         all_entries = item[1]
 
-        grouped_entries = self.get_sorted_subgroups(all_entries)
+        grouped_entries = list(self.get_sorted_subgroups(all_entries))
+        docs = []
         for group in grouped_entries:
+            # print(result.to_dict_summary())
+            result = InsertionElectrode(group, self.working_ion_entry)
+            d = result.as_dict_summary()
+            id_num = int(result.get_all_entries()[0].entry_id.split('-')[-1])
+            d['batt_id'] = 'bat-' + str(id_num + 40000000)
+            docs.append(d)
             try:
+                pass
                 # in some cases entries in a group might be too far above the covex hull which will break
                 # InsertionElectrode, in those case we can just ignore those entries
-                results = DBInsertionElectrode(group, working_ion_entry)
-                yield results
             except:
                 pass
+        return docs
 
     def get_sorted_subgroups(self, group):
         matching_subgroups = list(self.group_entries(group))
@@ -217,7 +224,11 @@ class ElectrodesBuilder(Builder):
             entries.append(self.compatibility.process_entry(new_entry))
         return entries
             
-    def update_targets(self):
-        pass
-
-    
+    def update_targets(self, items):
+        items = list(filter(None, chain.from_iterable(items)))
+        print(items)
+        if len(items) > 0:
+            self.logger.info("Updating {} thermo documents".format(len(items)))
+            self.electro.update(docs=items, key='batt_id')
+        else:
+            self.logger.info("No items to update")
