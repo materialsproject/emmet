@@ -46,6 +46,8 @@ class DielectricBuilder(Builder):
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.dielectric))
         q["dielectric"] = {"$exists": 1}
+        q["bandstructure.band_gap"] = {"$gt": 0.0}
+        
         mats = self.materials.distinct(self.materials.key, q)
 
         self.logger.info("Found {} new materials for dielectric data".format(len(mats)))
