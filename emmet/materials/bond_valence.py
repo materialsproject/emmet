@@ -67,7 +67,7 @@ class BondValenceBuilder(Builder):
                                 for idx, valence in enumerate(valences)}
 
             method = "BVAnalyzer"
-        except:
+        except ValueError:
             try:
                 first_oxi_state_guess = s.composition.oxi_state_guesses()[0]
                 valences = [first_oxi_state_guess[site.species_string] for site in s]
