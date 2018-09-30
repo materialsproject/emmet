@@ -15,6 +15,7 @@ from pydash.objects import get, set_, has
 
 from emmet.materials.snls import mp_default_snl_fields
 from emmet.common.utils import scrub_class_and_module
+from emmet import __version__ as emmet_version
 
 # Import for crazy things this builder needs
 from pymatgen.io.cif import CifWriter
@@ -25,6 +26,7 @@ from pymatgen.analysis.structure_analyzer import RelaxationAnalyzer
 from pymatgen.analysis.diffraction.core import DiffractionPattern
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 from pymatgen.util.provenance import StructureNL
+from pymatgen import __version__ as pymatgen_version
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -248,6 +250,8 @@ class MPBuilder(Builder):
         snl = item.get("snl", {})
         add_snl(mat, snl)
         add_magnetism(mat, item.get("magnetism", None))
+        add_viewer_json(mat)
+        add_meta(mat)
         sandbox_props(mat)
         has_fields(mat)
         return jsanitize(mat)
@@ -551,6 +555,25 @@ def add_dielectric(mat, dielectric):
         mat["piezo"] = {"eij_max": d["e_ij_max"], "piezoelectric_tensor": d["total"], "v_max": d["max_direction"]}
 
 
+def add_viewer_json(mat):
+    """
+    Generate JSON for structure viewer.
+    """
+
+    from mp_dash_components.converters.structure import StructureIntermediateFormat
+    from mp_dash_components import __version__ as mp_dash_components_version
+    structure = Structure.from_dict(mat['structure'])
+    canonical_json = StructureIntermediateFormat(structure).json
+    sga = SpacegroupAnalyzer(structure, symprec=0.1)
+    conventional_structure = sga.get_conventional_standard_structure()
+    conventional_json = StructureIntermediateFormat(conventional_structure).json
+    mat["_viewer"] = {
+        "structure_json": canonical_json,
+        "conventional_structure_json": conventional_json,
+        "_mp_dash_components_version": mp_dash_components_version
+    }
+
+
 def has_fields(mat):
     mat["has"] = [prop for prop in ["elasticity", "piezo", "diel"] if prop in mat]
     if "band_structure" in mat:
@@ -562,3 +585,11 @@ def add_dois(mat, doi):
         mat["doi"] = doi["doi"]
     if "bibtex" in doi:
         mat["doi_bibtex"] = doi["bibtex"]
+
+def add_meta(mat):
+
+    meta = {
+        'emmet_version': emmet_version,
+        'pymatgen_version': pymatgen_version
+    }
+    mat['_meta'] = meta
