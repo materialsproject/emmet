@@ -6,33 +6,24 @@ from pymatgen.analysis.graphs import StructureGraph
 from pymatgen import __version__ as pymatgen_version
 
 from maggma.builder import Builder
-from maggma.validator import StandardValidator
+from maggma.validator import JSONSchemaValidator, msonable_schema
 
 __author__ = "Matthew Horton <mkhorton@lbl.gov>"
 
 
-class BondValidator(StandardValidator):
-    """
-    Validates documents for bonding stores.
-    """
-
-    @property
-    def schema(self):
-        return {
-            "type": "object",
-            "properties":
-                {
-                    "task_id": {"type": "string"},
-                    "method": {"type": "string"},
-                    "successful": {"type": "boolean"},
-                    "pymatgen_version": {"type": "string"}
-                },
-            "required": ["task_id", "method", "successful"]
-        }
-
-    @property
-    def msonable_keypaths(self):
-        return {"graph": StructureGraph}
+BOND_SCHEMA = {
+    "title": "bonding",
+    "type": "object",
+    "properties":
+        {
+            "task_id": {"type": "string"},
+            "strategy": {"type": "string"},
+            "successful": {"type": "boolean"},
+            "pymatgen_version": {"type": "string"},
+            "graph": msonable_schema(StructureGraph)
+        },
+    "required": ["task_id", "strategy", "successful", "pymatgen_version"]
+}
 
 
 class BondBuilder(Builder):
@@ -58,7 +49,7 @@ class BondBuilder(Builder):
         self.bonding = bonding
         self.query = query or {}
 
-        # self.bonding.validator = BondValidator()
+        self.bonding.validator = JSONSchemaValidator(BOND_SCHEMA)
 
         available_strategies = {nn.__name__: nn for nn in NearNeighbors.__subclasses__()}
 

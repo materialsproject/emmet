@@ -10,6 +10,7 @@ from ast import literal_eval
 from monty.json import jsanitize
 
 from maggma.builder import Builder
+from maggma.validator import JSONSchemaValidator, msonable_schema
 from pydash.objects import get, set_, has
 
 from emmet.materials.snls import mp_default_snl_fields
@@ -71,6 +72,20 @@ latt_para_interval = [1.50 - 1.96 * 3.14, 1.50 + 1.96 * 3.14]
 vol_interval = [4.56 - 1.96 * 7.82, 4.56 + 1.96 * 7.82]
 
 
+# minimal schema for now
+MPBUILDER_SCHEMA = {
+    "title": "mp_materials",
+    "type": "object",
+    "properties":
+        {
+            "task_id": {"type": "string"},
+            "e_above_hull": {"type": "number", "minimum": 0},
+            "structure": msonable_schema(Structure)
+        },
+    "required": ["task_id", "e_above_hull", "structure"]
+}
+
+
 class MPBuilder(Builder):
     def __init__(self,
                  materials,
@@ -110,6 +125,8 @@ class MPBuilder(Builder):
         self.magnetism = magnetism
         self.bond_valence = bond_valence
         self.propnet = propnet
+
+        self.mp_materials.validator = JSONSchemaValidator(MPBUILDER_SCHEMA)
 
         sources = list(
             filter(None, [materials, thermo, electronic_structure, snls,

@@ -2,10 +2,23 @@ from pymatgen import Structure
 from pymatgen.analysis.magnetism import MagneticStructureAnalyzer
 
 from maggma.builder import Builder
+from maggma.validator import JSONSchemaValidator
 
 import numpy as np
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>, Matthew Horton <mkhorton@lbl.gov>"
+
+
+MAGNETISM_SCHEMA = {
+    "title": "magnetism",
+    "type": "object",
+    "properties":
+        {
+            "task_id": {"type": "string"},
+            "magnetism": {"type": "object"}
+        },
+    "required": ["task_id", "magnetism"]
+}
 
 
 class MagneticBuilder(Builder):
@@ -22,6 +35,8 @@ class MagneticBuilder(Builder):
         self.materials = materials
         self.magnetism = magnetism
         self.query = query or {}
+
+        self.magnetism.validator = JSONSchemaValidator(MAGNETISM_SCHEMA)
 
         super().__init__(sources=[materials],
                          targets=[magnetism],

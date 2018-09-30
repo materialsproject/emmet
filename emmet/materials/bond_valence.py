@@ -4,6 +4,23 @@ from pymatgen.core.periodic_table import Specie
 from pymatgen import __version__ as pymatgen_version
 
 from maggma.builder import Builder
+from maggma.validator import JSONSchemaValidator
+
+
+BOND_VALENCE_SCHEMA = {
+    "title": "bond_valence",
+    "type": "object",
+    "properties":
+        {
+            "task_id": {"type": "string"},
+            "method": {"type": "string"},
+            "possible_species": {"type": "array", "items": {"type": "strinig"}},
+            "possible_valences": {"type": "array", "items": {"type": "number"}},
+            "successful": {"type": "boolean"},
+            "pymatgen_version": {"type": "string"},
+        },
+    "required": ["task_id", "successful", "pymatgen_version"]
+}
 
 
 class BondValenceBuilder(Builder):
