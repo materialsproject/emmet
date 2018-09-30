@@ -1,5 +1,6 @@
 from pymatgen import Structure
-from pymatgen.analysis.magnetism import MagneticStructureAnalyzer
+from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
+from pymatgen import __version__ as pymatgen_version
 
 from maggma.builder import Builder
 from maggma.validator import JSONSchemaValidator
@@ -15,9 +16,10 @@ MAGNETISM_SCHEMA = {
     "properties":
         {
             "task_id": {"type": "string"},
-            "magnetism": {"type": "object"}
+            "magnetism": {"type": "object"},
+            "pymatgen_version": {"type": "string"}
         },
-    "required": ["task_id", "magnetism"]
+    "required": ["task_id", "magnetism", "pymatgen_version"]
 }
 
 
@@ -61,8 +63,8 @@ class MagneticBuilder(Builder):
         self.total = len(mats)
 
         for m in mats:
-            yield self.materials.query(properties=[self.materials.key, "structure"],
-                                       criteria={self.materials.key: m}).limit(1)[0]
+            yield self.materials.query_one(properties=[self.materials.key, "structure", "magnetism"],
+                                           criteria={self.materials.key: m})
 
     def process_item(self, item):
         """
@@ -77,7 +79,7 @@ class MagneticBuilder(Builder):
 
         struct = Structure.from_dict(item["structure"])
         total_magnetization = item["magnetism"].get("total_magnetization", 0)  # not necessarily == sum(magmoms)
-        msa = MagneticStructureAnalyzer(struct)
+        msa = CollinearMagneticStructureAnalyzer(struct)
 
         sign = np.sign(total_magnetization)
         total_magnetization = abs(total_magnetization)
@@ -96,7 +98,8 @@ class MagneticBuilder(Builder):
                 'total_magnetization_normalized_vol': total_magnetization/struct.volume,
                 'total_magnetization_normalized_formula_units': total_magnetization/
                 (struct.composition.get_reduced_composition_and_factor()[1])
-                }
+                },
+            "pymatgen_version": pymatgen_version
         }
         return magnetism
 
