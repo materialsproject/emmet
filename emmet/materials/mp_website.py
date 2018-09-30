@@ -68,7 +68,6 @@ mp_conversion_dict = {
 
 SANDBOXED_PROPERTIES = {"e_above_hull": "e_above_hull", "decomposes_to": "decomposes_to"}
 
-mag_types = {"NM": "Non-magnetic", "FiM": "Ferri", "AFM": "AFM", "FM": "FM"}
 
 latt_para_interval = [1.50 - 1.96 * 3.14, 1.50 + 1.96 * 3.14]
 vol_interval = [4.56 - 1.96 * 7.82, 4.56 + 1.96 * 7.82]
@@ -457,6 +456,11 @@ def add_magnetism(mat, magnetism=None):
     struc = Structure.from_dict(mat["structure"])
     msa = CollinearMagneticStructureAnalyzer(struc)
     mat["magnetic_type"] = mag_types[msa.ordering.value]
+
+    # this should never happen for future mats, and should have been fixed
+    # for older mats, but just in case
+    if 'magmom' not in struc.site_properties and mat['total_magnetization'] > 0.1:
+        mat["magnetic_type"] = "Magnetic (unknown ordering)"
 
     # TODO: will deprecate the above from dedicated magnetism builder
     if magnetism:
