@@ -1,5 +1,6 @@
 from itertools import chain
 from collections import defaultdict
+import logging
 
 from pydash.objects import get
 
@@ -12,7 +13,17 @@ from pybtex.database import BibliographyData
 
 mp_default_snl_fields = {
     "references":
-    "@article{Jain2013,\nauthor = {Jain, Anubhav and Ong, Shyue Ping and Hautier, Geoffroy and Chen, Wei and Richards, William Davidson and Dacek, Stephen and Cholia, Shreyas and Gunter, Dan and Skinner, David and Ceder, Gerbrand and Persson, Kristin a.},\ndoi = {10.1063/1.4812323},\nissn = {2166532X},\njournal = {APL Materials},\nnumber = {1},\npages = {011002},\ntitle = {{The Materials Project: A materials genome approach to accelerating materials innovation}},\nurl = {http://link.aip.org/link/AMPADS/v1/i1/p011002/s1\\&Agg=doi},\nvolume = {1},\nyear = {2013}\n}\n\n@misc{MaterialsProject,\ntitle = {{Materials Project}},\nurl = {http://www.materialsproject.org}\n}",
+        "@article{Jain2013,\nauthor = {Jain, Anubhav and Ong, Shyue Ping and "
+        "Hautier, Geoffroy and Chen, Wei and Richards, William Davidson and "
+        "Dacek, Stephen and Cholia, Shreyas and Gunter, Dan and Skinner, David "
+        "and Ceder, Gerbrand and Persson, Kristin a.},\n"
+        "doi = {10.1063/1.4812323},\nissn = {2166532X},\n"
+        "journal = {APL Materials},\nnumber = {1},\npages = {011002},\n"
+        "title = {{The Materials Project: A materials genome approach to "
+        "accelerating materials innovation}},\n"
+        "url = {http://link.aip.org/link/AMPADS/v1/i1/p011002/s1\\&Agg=doi},\n"
+        "volume = {1},\nyear = {2013}\n}\n\n@misc{MaterialsProject,\n"
+        "title = {{Materials Project}},\nurl = {http://www.materialsproject.org}\n}",
     "authors": [{
         "name": "Materials Project",
         "email": "feedback@materialsproject.org"
@@ -49,7 +60,8 @@ class SNLBuilder(Builder):
             ltol (float):  Length tolerance for structure matching
             stol (float): site tolerance for structure matching
             angle_tol (float): angle tolerance for structure matching
-            default_ref (str): string of bibtex entries to add by default to every document
+            default_ref (str): string of bibtex entries to add by default
+                to every document
         """
         self.materials = materials
         self.snls = snls
@@ -58,10 +70,12 @@ class SNLBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
         self.query = query if query else {}
-        self.default_snl_fields = default_snl_fields if default_snl_fields else mp_default_snl_fields
+        self.default_snl_fields = default_snl_fields if default_snl_fields\
+            else mp_default_snl_fields
         self.kwargs = kwargs
 
-        super(SNLBuilder, self).__init__(sources=[materials, *self.source_snls], targets=[snls], **kwargs)
+        super(SNLBuilder, self).__init__(sources=[materials, *self.source_snls],
+                                         targets=[snls], **kwargs)
 
     def ensure_indicies(self):
 
@@ -117,7 +131,8 @@ class SNLBuilder(Builder):
         for formula in forms_to_update:
             mats = list(
                 self.materials.query(
-                    properties=[self.materials.key, "structure", "initial_structures", "formula_pretty"],
+                    properties=[self.materials.key, "structure",
+                                "initial_structures", "formula_pretty"],
                     criteria={
                         "formula_pretty": formula
                     }))
@@ -152,7 +167,8 @@ class SNLBuilder(Builder):
                 snl_doc = {self.snls.key: mat[self.materials.key]}
                 snl_fields = aggregate_snls(matched_snls)
                 self.add_defaults(snl_fields)
-                snl_doc["snl"] = StructureNL(Structure.from_dict(mat["structure"]), **snl_fields).as_dict()
+                snl_doc["snl"] = StructureNL(Structure.from_dict(mat["structure"]),
+                                             **snl_fields).as_dict()
                 snl_docs.append(snl_doc)
 
         return snl_docs
@@ -179,11 +195,13 @@ class SNLBuilder(Builder):
             comparator=ElementComparator())
 
         m_strucs = [Structure.from_dict(mat["structure"])
-                    ] + [Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]]
+                    ] + [Structure.from_dict(init_struc)
+                         for init_struc in mat["initial_structures"]]
         for snl in snls:
             snl_struc = StructureNL.from_dict(snl).structure
             # Get SNL Spacegroup
-            # This try-except fixes issues for some structures where space group data is not returned by spglib
+            # This try-except fixes issues for some structures where space
+            # group data is not returned by spglib
             try:
                 snl_spacegroup = snl_struc.get_space_group_info(symprec=0.1)[0]
             except:
@@ -227,6 +245,7 @@ class SNLBuilder(Builder):
 
 DB_indexes = {"ICSD": "icsd_ids", "Pauling": "pf_ids"}
 
+logger = logging.getLogger(__name__)
 
 def aggregate_snls(snls):
     """
@@ -236,7 +255,8 @@ def aggregate_snls(snls):
     created_at = sorted([snl["about"]["created_at"]["string"] for snl in snls])[0]
 
     # Choose earliest history
-    history = sorted(snls, key=lambda snl: snl["about"]["created_at"]["string"])[0]["about"]["history"]
+    history = sorted(snls, key=lambda snl: snl["about"]["created_at"]["string"])\
+        [0]["about"]["history"]
 
     # Aggregate all references into one dict to remove duplicates
     refs = {}
@@ -245,7 +265,8 @@ def aggregate_snls(snls):
             entries = parse_string(snl["about"]["references"], bib_format="bibtex")
             refs.update(entries.entries)
         except:
-            self.logger.debug("Failed parsing bibtex: {}".format(snl["about"]["references"]))
+            logger.debug("Failed parsing bibtex: {}".format(
+                snl["about"]["references"]))
 
     entries = BibliographyData(entries=refs)
     references = entries.to_string("bibtex")
@@ -257,19 +278,25 @@ def aggregate_snls(snls):
     tags = list(set([remark for snl in snls for remark in snl["about"]["remarks"]]))
 
     # Aggregate all projects
-    projects = list(set([projects for snl in snls for projects in snl["about"]["projects"]]))
+    projects = list(set([projects for snl in snls
+                         for projects in snl["about"]["projects"]]))
 
-    # Aggregate all authors - Converting a single dictionary first performs duplicate checking
-    authors = {entry["name"].lower(): entry["email"] for snl in snls for entry in snl["about"]["authors"]}
-    authors = [{"name": name.title(), "email": email} for name, email in authors.items()]
+    # Aggregate all authors - Converting a single dictionary first
+    # performs duplicate checking
+    authors = {entry["name"].lower(): entry["email"]
+               for snl in snls for entry in snl["about"]["authors"]}
+    authors = [{"name": name.title(), "email": email}
+               for name, email in authors.items()]
 
     # Aggregate all the database IDs
     db_ids = defaultdict(list)
     for snl in snls:
-        if len(snl["about"]["history"]) == 1 and get(snl, "about.history.0.name", "") in DB_indexes:
+        if len(snl["about"]["history"]) == 1 \
+                and get(snl, "about.history.0.name", "") in DB_indexes:
             db_name = get(snl, "about.history.0.name", "")
             db_id_key = DB_indexes[db_name]
-            db_ids[db_id_key].append(snl["about"]["history"][0]["description"].get("id", None))
+            db_ids[db_id_key].append(
+                snl["about"]["history"][0]["description"].get("id", None))
 
     # remove Nones and empty lists
     db_ids = {k: list(filter(None, v)) for k, v in db_ids.items()}

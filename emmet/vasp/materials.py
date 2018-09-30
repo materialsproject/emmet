@@ -330,7 +330,7 @@ def ID_to_int(s_id):
         raise Exception("Could not parse {} into a number".format(s_id))
 
 
-def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_orderings=False):
+def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, separate_mag_orderings=False):
     """
     Groups structures according to space group and structure matching
 
@@ -339,6 +339,7 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
         ltol (float): StructureMatcher tuning parameter for matching tasks to materials
         stol (float): StructureMatcher tuning parameter for matching tasks to materials
         angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
+        symprec (float): symmetry tolerance for space group finding
         separate_mag_orderings (bool): Separate magnetic orderings into different materials
     """
 
@@ -354,15 +355,16 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
 
     def get_sg(struc):
         # helper function to get spacegroup with a loose tolerance
-        return struc.get_space_group_info(symprec=0.1)[1]
+        return struc.get_space_group_info(symprec=symprec)[1]
 
     def get_mag_ordering(struc):
         # helperd function to get a label of the magnetic ordering type
         return CollinearMagneticStructureAnalyzer(struc).ordering.value
 
     # First group by spacegroup number then by structure matching
-    for _, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
-        for group in sm.group_structures(sorted(pregroup, key=get_sg)):
+    for sg, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
+        for group in sm.group_structures(list(pregroup)):
+
             # Match magnetic orderings here
             if separate_mag_orderings:
                 for _, mag_group in groupby(sorted(group, key=get_mag_ordering), key=get_mag_ordering):

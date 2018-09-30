@@ -68,6 +68,8 @@ mp_conversion_dict = {
 
 SANDBOXED_PROPERTIES = {"e_above_hull": "e_above_hull", "decomposes_to": "decomposes_to"}
 
+mag_types = {"NM": "Non-magnetic", "FiM": "Ferri", "AFM": "AFM", "FM": "FM"}
+
 latt_para_interval = [1.50 - 1.96 * 3.14, 1.50 + 1.96 * 3.14]
 vol_interval = [4.56 - 1.96 * 7.82, 4.56 + 1.96 * 7.82]
 
@@ -449,6 +451,7 @@ def sandbox_props(mat):
 
 def add_magnetism(mat, magnetism=None):
 
+    # for historical consistency
     mag_types = {"NM": "Non-magnetic", "FiM": "Ferri", "AFM": "AFM", "FM": "FM"}
 
     struc = Structure.from_dict(mat["structure"])
