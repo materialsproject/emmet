@@ -52,7 +52,7 @@ class BondValenceBuilder(Builder):
         materials = self.materials.query(criteria={self.materials.key: {'$in': new_keys}},
                                          properties=["task_id", "structure"])
 
-        self.total = len(materials)
+        self.total = materials.count()
         self.logger.info("Found {} new materials for bond valence analysis".format(self.total))
 
         for material in materials:
