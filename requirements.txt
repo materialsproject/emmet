@@ -1,5 +1,5 @@
 atomate>=0.6.5
-pymatgen>=2018.4.20
+pymatgen>=2018.9.30
 monty>=1.0.1
 pydash==4.1.0
 unittest2==1.1.0
@@ -10,5 +10,6 @@ pybtex==0.21
 networkx==2.1
 sumo==1.0.8
 nltk==3.3
+mp_dash_components>=0.0.2
 -e git://github.com/hackingmaterials/matminer#egg=matminer
 -e git://github.com/materialsproject/maggma#egg=maggma

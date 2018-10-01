@@ -10,10 +10,12 @@ from ast import literal_eval
 from monty.json import jsanitize
 
 from maggma.builder import Builder
+from maggma.validator import JSONSchemaValidator, msonable_schema
 from pydash.objects import get, set_, has
 
 from emmet.materials.snls import mp_default_snl_fields
 from emmet.common.utils import scrub_class_and_module
+from emmet import __version__ as emmet_version
 
 # Import for crazy things this builder needs
 from pymatgen.io.cif import CifWriter
@@ -24,6 +26,7 @@ from pymatgen.analysis.structure_analyzer import RelaxationAnalyzer
 from pymatgen.analysis.diffraction.core import DiffractionPattern
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 from pymatgen.util.provenance import StructureNL
+from pymatgen import __version__ as pymatgen_version
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -73,6 +76,20 @@ latt_para_interval = [1.50 - 1.96 * 3.14, 1.50 + 1.96 * 3.14]
 vol_interval = [4.56 - 1.96 * 7.82, 4.56 + 1.96 * 7.82]
 
 
+# minimal schema for now
+MPBUILDER_SCHEMA = {
+    "title": "mp_materials",
+    "type": "object",
+    "properties":
+        {
+            "task_id": {"type": "string"},
+            "e_above_hull": {"type": "number", "minimum": 0},
+            "structure": msonable_schema(Structure)
+        },
+    "required": ["task_id", "e_above_hull", "structure"]
+}
+
+
 class MPBuilder(Builder):
     def __init__(self,
                  materials,
@@ -84,6 +101,9 @@ class MPBuilder(Builder):
                  elastic=None,
                  dielectric=None,
                  dois=None,
+                 magnetism=None,
+                 bond_valence=None,
+                 bonds=None,
                  propnet=None,
                  query=None,
                  **kwargs):
@@ -107,11 +127,17 @@ class MPBuilder(Builder):
         self.elastic = elastic
         self.dielectric = dielectric
         self.dois = dois
+        self.magnetism = magnetism
+        self.bond_valence = bond_valence
+        self.bonds = bonds
         self.propnet = propnet
+
+        self.mp_materials.validator = JSONSchemaValidator(MPBUILDER_SCHEMA)
 
         sources = list(
             filter(None, [materials, thermo, electronic_structure, snls,
-                          elastic, dielectric, xrd, dois, propnet]))
+                          elastic, dielectric, xrd, dois, magnetism,
+                          bond_valence, propnet]))
 
         super().__init__(sources=sources, targets=[mp_materials], **kwargs)
 
@@ -176,6 +202,15 @@ class MPBuilder(Builder):
             if self.dois:
                 doc["dois"] = self.dois.query_one(criteria={self.dois.key: m})
 
+            if self.magnetism:
+                doc['magnetism'] = self.magnetism.query_one(criteria={self.magnetism.key: m})
+
+            if self.bond_valence:
+                doc['bond_valence'] = self.bond_valence.query_one(criteria={self.bond_valence.key: m})
+
+            if self.bonds:
+                doc['bonds'] = self.bonds.query_one(criteria={self.bonds.key: m, "strategy": "CrystalNN"})
+
             if self.propnet:
                 doc['propnet'] = self.propnet.query_one(
                     criteria={self.propnet.key: m})
@@ -209,13 +244,23 @@ class MPBuilder(Builder):
             doi = item["dois"]
             add_dois(mat, doi)
 
+        if item.get("bond_valence", None):
+            bond_valence = item["bond_valence"]
+            add_bond_valence(mat, bond_valence)
+
+        if item.get("bonds", None):
+            bonds = item["bonds"]
+            add_bonds(mat, bonds)
+
         if item.get("propnet", None):
             propnet = item["propnet"]
             add_propnet(mat, propnet)
 
         snl = item.get("snl", {})
         add_snl(mat, snl)
-        add_magnetism(mat)
+        add_magnetism(mat, item.get("magnetism", None))
+        add_viewer_json(mat)
+        add_meta(mat)
         sandbox_props(mat)
         has_fields(mat)
         return jsanitize(mat)
@@ -416,10 +461,37 @@ def sandbox_props(mat):
         mat["sbxd"].append(sbx_d)
 
 
-def add_magnetism(mat):
+def add_magnetism(mat, magnetism=None):
+
+    # for historical consistency
+    mag_types = {"NM": "Non-magnetic", "FiM": "Ferri", "AFM": "AFM", "FM": "FM"}
+
     struc = Structure.from_dict(mat["structure"])
     msa = CollinearMagneticStructureAnalyzer(struc)
     mat["magnetic_type"] = mag_types[msa.ordering.value]
+
+    # this should never happen for future mats, and should have been fixed
+    # for older mats, but just in case
+    if 'magmom' not in struc.site_properties and mat['total_magnetization'] > 0.1:
+        mat["magnetic_type"] = "Magnetic (unknown ordering)"
+
+    # TODO: will deprecate the above from dedicated magnetism builder
+    if magnetism:
+        mat["magnetism"] = magnetism["magnetism"]
+
+
+def add_bond_valence(mat, bond_valence):
+    exclude_list = ['task_id', 'pymatgen_version', 'successful']
+    if bond_valence.get('successful', False):
+        for e in exclude_list:
+            if e in bond_valence:
+                del bond_valence[e]
+        mat["bond_valence"] = bond_valence
+
+
+def add_bonds(mat, bonds):
+    if bonds.get('successful', False):
+        mat["bonds"] = bonds["summary"]
 
 
 def add_snl(mat, snl=None):
@@ -497,6 +569,25 @@ def add_dielectric(mat, dielectric):
         mat["piezo"] = {"eij_max": d["e_ij_max"], "piezoelectric_tensor": d["total"], "v_max": d["max_direction"]}
 
 
+def add_viewer_json(mat):
+    """
+    Generate JSON for structure viewer.
+    """
+
+    from mp_dash_components.converters.structure import StructureIntermediateFormat
+    from mp_dash_components import __version__ as mp_dash_components_version
+    structure = Structure.from_dict(mat['structure'])
+    canonical_json = StructureIntermediateFormat(structure).json
+    sga = SpacegroupAnalyzer(structure, symprec=0.1)
+    conventional_structure = sga.get_conventional_standard_structure()
+    conventional_json = StructureIntermediateFormat(conventional_structure).json
+    mat["_viewer"] = {
+        "structure_json": canonical_json,
+        "conventional_structure_json": conventional_json,
+        "_mp_dash_components_version": mp_dash_components_version
+    }
+
+
 def has_fields(mat):
     mat["has"] = [prop for prop in ["elasticity", "piezo", "diel"] if prop in mat]
     if "band_structure" in mat:
@@ -508,3 +599,11 @@ def add_dois(mat, doi):
         mat["doi"] = doi["doi"]
     if "bibtex" in doi:
         mat["doi_bibtex"] = doi["bibtex"]
+
+def add_meta(mat):
+
+    meta = {
+        'emmet_version': emmet_version,
+        'pymatgen_version': pymatgen_version
+    }
+    mat['_meta'] = meta
