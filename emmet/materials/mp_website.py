@@ -103,6 +103,7 @@ class MPBuilder(Builder):
                  dois=None,
                  magnetism=None,
                  bond_valence=None,
+                 bonds=None,
                  propnet=None,
                  query=None,
                  **kwargs):
@@ -128,6 +129,7 @@ class MPBuilder(Builder):
         self.dois = dois
         self.magnetism = magnetism
         self.bond_valence = bond_valence
+        self.bonds = bonds
         self.propnet = propnet
 
         self.mp_materials.validator = JSONSchemaValidator(MPBUILDER_SCHEMA)
@@ -204,8 +206,10 @@ class MPBuilder(Builder):
                 doc['magnetism'] = self.magnetism.query_one(criteria={self.magnetism.key: m})
 
             if self.bond_valence:
-                doc['bond_valence'] = self.bond_valence.query_one(
-                    criteria={self.bond_valence.key: m})
+                doc['bond_valence'] = self.bond_valence.query_one(criteria={self.bond_valence.key: m})
+
+            if self.bonds:
+                doc['bonds'] = self.bonds.query_one(criteria={self.bonds.key: m, "strategy": "CrystalNN"})
 
             if self.propnet:
                 doc['propnet'] = self.propnet.query_one(
@@ -243,6 +247,10 @@ class MPBuilder(Builder):
         if item.get("bond_valence", None):
             bond_valence = item["bond_valence"]
             add_bond_valence(mat, bond_valence)
+
+        if item.get("bonds", None):
+            bonds = item["bonds"]
+            add_bonds(mat, bonds)
 
         if item.get("propnet", None):
             propnet = item["propnet"]
@@ -479,6 +487,11 @@ def add_bond_valence(mat, bond_valence):
             if e in bond_valence:
                 del bond_valence[e]
         mat["bond_valence"] = bond_valence
+
+
+def add_bonds(mat, bonds):
+    if bonds.get('successful', False):
+        mat["bonds"] = bonds["summary"]
 
 
 def add_snl(mat, snl=None):
