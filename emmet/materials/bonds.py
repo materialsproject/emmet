@@ -1,3 +1,5 @@
+import numpy as np
+
 from itertools import chain
 
 from pymatgen import Structure
@@ -19,6 +21,12 @@ BOND_SCHEMA = {
             "task_id": {"type": "string"},
             "strategy": {"type": "string"},
             "successful": {"type": "boolean"},
+            "summary": {"type": "object", "properties": {
+                "bond_types": {"type": "object"},
+                "bond_length_stats": {"type": "object"},
+                "coordination_envs": {"type": "array"},
+                "coordination_envs_anonymous": {"type": "array"}
+            }},
             "pymatgen_version": {"type": "string"},
             "graph": msonable_schema(StructureGraph)
         },
@@ -111,14 +119,35 @@ class BondBuilder(Builder):
 
                 # failure statistics are interesting
                 try:
+
+                    sg = StructureGraph.with_local_env_strategy(structure,
+                                                                strategy)
+
+                    # ensure edge weights are specifically bond lengths
+                    edge_weights = []
+                    for u, v, d in sg.graph.edges(data=True):
+                        jimage = np.array(d['to_jimage'])
+                        dist = sg.structure.get_distance(u, v, jimage=jimage)
+                        edge_weights.append(
+                            (u, v, d['to_jimage'], dist)
+                        )
+                    for u, v, to_jimage, dist in edge_weights:
+                        sg.alter_edge(u, v, to_jimage=to_jimage, new_weight=dist)
+
                     topology_docs.append({
                         'task_id': task_id,
                         'strategy': strategy_name,
-                        'graph': StructureGraph.with_local_env_strategy(structure,
-                                                                        strategy).as_dict(),
+                        'graph': sg.as_dict(),
                         'pymatgen_version': pymatgen_version,
+                        'summary': {
+                            'bond_types': sg.types_and_weights_of_connections,
+                            'bond_length_stats': sg.weight_statistics,
+                            'coordination_envs': sg.types_of_coordination_environments(),
+                            'coordination_envs_anonymous': sg.types_of_coordination_environments(anonymous=True)
+                        },
                         'successful': True
                     })
+
                 except Exception as e:
 
                     self.logger.warning(

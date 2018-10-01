@@ -28,6 +28,7 @@ class TestBondBuilder(unittest.TestCase):
         doc = list(self.bonding.query(criteria={'task_id': 'mp-779001'}))[0]
         sg = StructureGraph.from_dict(doc['graph'])
         self.assertIsInstance(sg, StructureGraph)
+        self.assertIn('Hf-O(6)', doc['summary']['coordination_envs'])
 
 
 if __name__ == "__main__":
