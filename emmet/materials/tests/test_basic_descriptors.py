@@ -50,12 +50,6 @@ class BasicDescriptorsBuilderTest(unittest.TestCase):
                         processed['composition_descriptors'][0][k], v)
         self.assertEqual(len([t for t in sd_builder.get_items()]), 0)
 
-        # Remove one data piece in diamond entry and test partial update.
-        test_basic_descriptors.collection.find_one_and_update(
-                {'task_id': 'mp-66'}, {'$unset': {'site_descriptors': 1}})
-        items = [e for e in list(sd_builder.get_items())]
-        self.assertEqual(len(items), 1)
-
     def test_get_all_basic_descriptors(self):
         test_basic_descriptors = MemoryStore("test_basic_descriptors")
         sd_builder = BasicDescriptorsBuilder(

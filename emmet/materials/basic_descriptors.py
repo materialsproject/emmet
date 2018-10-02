@@ -10,7 +10,7 @@ from matminer.featurizers.composition import ElementProperty
 # 1) Add checking OPs present in current implementation of site fingerprints.
 # 2) Complete documentation!!!
 
-from maggma.builder import Builder
+from maggma.examples.builders import MapBuilder
 
 __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
 
@@ -20,9 +20,9 @@ nn_target_classes = ["MinimumDistanceNN", "VoronoiNN",
     "EconNN"]
 
 
-class BasicDescriptorsBuilder(Builder):
+class BasicDescriptorsBuilder(MapBuilder):
 
-    def __init__(self, materials, descriptors, mat_query=None, **kwargs):
+    def __init__(self, materials, descriptors, **kwargs):
         """
         Calculates site-based descriptors (e.g., coordination numbers
         with different near-neighbor finding approaches) for materials and
@@ -44,7 +44,6 @@ class BasicDescriptorsBuilder(Builder):
 
         self.materials = materials
         self.descriptors = descriptors
-        self.mat_query = mat_query if mat_query else {}
 
         # Set up all targeted site descriptors.
         self.sds = {}
@@ -67,74 +66,13 @@ class BasicDescriptorsBuilder(Builder):
 
         self.all_output_pieces['meta'] = ['atomate']
 
-        super().__init__(sources=[materials],
-                         targets=[descriptors],
+        super().__init__(source=materials,
+                         target=descriptors,
+                         ufn=self.calc,
+                         projection=["structure"],
                          **kwargs)
 
-    def get_items(self):
-        """
-        Gets all materials that need new descriptors.
-        For example, entirely new materials and materials
-        for which certain descriptor in the current Store
-        are still missing.
-
-        Returns:
-            generator of materials to calculate basic descriptors
-            and of the target quantities to be calculated
-            (e.g., CN with the minimum distance near neighbor
-            (MinimumDistanceNN) finding class from pymatgen which has label
-            "cn_mdnn").
-        """
-
-        self.logger.info("Basic-Descriptors Builder Started")
-
-        self.logger.info("Setting indexes")
-
-        # All relevant materials that have been updated since descriptors
-        # were last calculated
-
-        q = dict(self.mat_query)
-        all_task_ids = list(self.materials.distinct(self.materials.key, q))
-        q.update(self.materials.lu_filter(self.descriptors))
-        new_task_ids = list(self.materials.distinct(self.materials.key, q))
-        self.logger.info(
-            "Found {} entirely new materials for descriptors data".format(
-            len(new_task_ids)))
-        for task_id in all_task_ids:
-            if task_id in new_task_ids:
-                any_piece = True
-
-            else: # Any piece of info missing?
-                data_present = self.descriptors.query(
-                        properties=[self.descriptors.key,
-                                    "meta",
-                                    "composition_descriptors",
-                                    "site_descriptors",
-                                    "statistics"],
-                        criteria={self.descriptors.key: task_id}).limit(1)[0]
-                any_piece = False
-                for k, v in self.all_output_pieces.items():
-                    if k not in list(data_present.keys()):
-                        any_piece = True
-                        break
-                    else:
-                        any_piece = False
-                        for e in v:
-                            if e not in data_present[k]:
-                                any_piece = True
-                                break
-                if not any_piece:
-                    for l in self.sds['csf'].feature_labels():
-                        for fpi in data_present['site_descriptors']['csf']:
-                            if l not in fpi.keys():
-                                any_piece = True
-                                break
-            if any_piece:
-                yield self.materials.query(
-                        properties=[self.materials.key, "structure"],
-                        criteria={self.materials.key: task_id}).limit(1)[0]
-
-    def process_item(self, item):
+    def calc(self, item):
         """
         Calculates all basic descriptors for the structures
 
@@ -171,21 +109,6 @@ class BasicDescriptorsBuilder(Builder):
         descr_doc[self.descriptors.key] = item[self.materials.key]
 
         return descr_doc
-
-    def update_targets(self, items):
-        """
-        Inserts the new task_types into the task_types collection.
-
-        Args:
-            items ([[dict]]): a list of list of descriptors dictionaries to update.
-        """
-        items = list(filter(None, items))
-
-        if len(items) > 0:
-            self.logger.info("Updating {} basic-descriptors docs".format(len(items)))
-            self.descriptors.update(docs=items)
-        else:
-            self.logger.info("No items to update")
 
     def get_site_descriptors_from_struct(self, structure):
         doc = {}
