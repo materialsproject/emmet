@@ -217,7 +217,6 @@ class MaterialsBuilder(Builder):
         if "structure" in mat:
             structure = Structure.from_dict(mat["structure"])
             sga = SpacegroupAnalyzer(structure, symprec=0.1)
-            structure = sga.get_conventional_standard_structure()
             mat["structure"] = structure.as_dict()
             mat.update(structure_metadata(structure))
 
