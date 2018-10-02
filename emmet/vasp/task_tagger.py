@@ -47,8 +47,9 @@ def task_type(inputs, include_calc_type=True):
     if include_calc_type:
         if incar.get("LHFCALC", False):
             calc_type += "HSE "
-        elif incar.get("METAGGA", "") == "SCAN":
-            calc_type += "SCAN "
+        elif incar.get("METAGGA", ""):
+            calc_type += incar["METAGGA"].strip().upper()
+            calc_type += " "
         elif incar.get("LDAU", False):
             calc_type += "GGA+U "
         else:
