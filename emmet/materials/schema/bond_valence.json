@@ -1,33 +1,38 @@
 {
-  "title": "bond_valence",
-  "type": "object",
-  "properties": {
-    "task_id": {
-      "type": "string"
+  "title":"bond_valence",
+  "type":"object",
+  "properties":{
+    "task_id":{
+      "type":"string"
     },
-    "method": {
-      "type": "string"
+    "method":{
+      "type":"string"
     },
-    "possible_species": {
-      "type": "array",
-      "items": {
-        "type": "string"
+    "bond_valence":{
+      "type":"object",
+      "properties":{
+        "possible_species":{
+          "type":"array",
+          "items":{
+            "type":"string"
+          }
+        },
+        "possible_valences":{
+          "type":"array",
+          "items":{
+            "type":"number"
+          }
+        }
       }
     },
-    "possible_valences": {
-      "type": "array",
-      "items": {
-        "type": "number"
-      }
+    "successful":{
+      "type":"boolean"
     },
-    "successful": {
-      "type": "boolean"
-    },
-    "pymatgen_version": {
-      "type": "string"
+    "pymatgen_version":{
+      "type":"string"
     }
   },
-  "required": [
+  "required":[
     "task_id",
     "successful",
     "pymatgen_version"
