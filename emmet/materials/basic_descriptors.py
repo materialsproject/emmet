@@ -49,22 +49,22 @@ class BasicDescriptorsBuilder(MapBuilder):
         self.sds = {}
         for nn in nn_target_classes:
             nn_ = getattr(local_env, nn)
-            k = 'cn_{}'.format(nn)
-            self.sds[k] = CoordinationNumber(nn_(), use_weights='none')
-            k = 'cn_wt_{}'.format(nn)
-            self.sds[k] = CoordinationNumber(nn_(), use_weights='sum')
-        self.all_output_pieces = {'site_descriptors': [k for k in self.sds.keys()]}
-        self.sds['csf'] = CrystalNNFingerprint.from_preset('ops',
+            k = "cn_{}".format(nn)
+            self.sds[k] = CoordinationNumber(nn_(), use_weights="none")
+            k = "cn_wt_{}".format(nn)
+            self.sds[k] = CoordinationNumber(nn_(), use_weights="sum")
+        self.all_output_pieces = {"site_descriptors": [k for k in self.sds.keys()]}
+        self.sds["csf"] = CrystalNNFingerprint.from_preset("ops",
                                                            distance_cutoffs=None,
                                                            x_diff_weight=None)
-        self.all_output_pieces['statistics'] = ['csf']
+        self.all_output_pieces["statistics"] = ["csf"]
 
         # Set up all targeted composition descriptors.
         self.cds = {}
-        self.cds["magpie"] = ElementProperty.from_preset('magpie')
-        self.all_output_pieces['composition_descriptors'] = ['magpie']
+        self.cds["magpie"] = ElementProperty.from_preset("magpie")
+        self.all_output_pieces["composition_descriptors"] = ["magpie"]
 
-        self.all_output_pieces['meta'] = ['atomate']
+        self.all_output_pieces["meta"] = ["atomate"]
 
         super().__init__(source=materials,
                          target=descriptors,
@@ -86,26 +86,26 @@ class BasicDescriptorsBuilder(MapBuilder):
         self.logger.debug("Calculating basic descriptors for {}".format(
             item[self.materials.key]))
 
-        struct = Structure.from_dict(item['structure'])
+        struct = Structure.from_dict(item["structure"])
 
-        descr_doc = {'structure': struct.copy()}
-        descr_doc['meta'] = {'atomate': get_meta_from_structure(struct)}
+        descr_doc = {"structure": struct.copy()}
+        descr_doc["meta"] = {"atomate": get_meta_from_structure(struct)}
         try:
-            comp_descr = [{'name': 'magpie'}]
+            comp_descr = [{"name": "magpie"}]
             labels = self.cds["magpie"].feature_labels()
             values = self.cds["magpie"].featurize(struct.composition)
             for label, value in zip(labels, values):
                 comp_descr[0][label] = value
-            descr_doc['composition_descriptors'] = comp_descr
+            descr_doc["composition_descriptors"] = comp_descr
         except Exception as e:
             self.logger.error("Failed getting Magpie descriptors: "
                               "{}".format(e))
-        descr_doc['site_descriptors'] = \
+        descr_doc["site_descriptors"] = \
                 self.get_site_descriptors_from_struct(
-                descr_doc['structure'])
-        descr_doc['statistics'] = \
+                descr_doc["structure"])
+        descr_doc["statistics"] = \
                 self.get_statistics(
-                descr_doc['site_descriptors'])
+                descr_doc["site_descriptors"])
         descr_doc[self.descriptors.key] = item[self.materials.key]
 
         return descr_doc
@@ -119,7 +119,7 @@ class BasicDescriptorsBuilder(MapBuilder):
                 d = []
                 l = sd.feature_labels()
                 for i, s in enumerate(structure.sites):
-                    d.append({'site': i})
+                    d.append({"site": i})
                     for j, desc in enumerate(sd.featurize(structure, i)):
                         d[i][l[j]] = desc
                 doc[k] = d
@@ -130,7 +130,7 @@ class BasicDescriptorsBuilder(MapBuilder):
 
         return doc
 
-    def get_statistics(self, site_descr, fps=('csf', )):
+    def get_statistics(self, site_descr, fps=("csf", )):
         doc = {}
 
         # Compute site-descriptor statistics.
@@ -146,9 +146,9 @@ class BasicDescriptorsBuilder(MapBuilder):
                         tmp[l].append(v)
                 d = []
                 for k, l in tmp.items():
-                    dtmp = {'name': k}
-                    dtmp['mean'] = np.mean(tmp[k])
-                    dtmp['std'] = np.std(tmp[k])
+                    dtmp = {"name": k}
+                    dtmp["mean"] = np.mean(tmp[k])
+                    dtmp["std"] = np.std(tmp[k])
                     d.append(dtmp)
                 doc[fp] = d
 
