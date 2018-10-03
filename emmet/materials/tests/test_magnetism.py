@@ -15,7 +15,7 @@ class TestMagneticBuilder(unittest.TestCase):
 
     def setUp(self):
 
-        self.materials = JSONStore(test_mats, lu_type='isoformat')
+        self.materials = JSONStore(test_mats)
         self.magnetism = MemoryStore("magnetism")
 
     def test_build(self):

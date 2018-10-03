@@ -13,12 +13,12 @@ from maggma.examples.builders import MapBuilder
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
-module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-default_xrd_settings = os.path.join(module_dir, "settings", "xrd.json")
+MODULE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_XRD_SETTINGS = os.path.join(MODULE_DIR, "settings", "xrd.json")
 
 
 class DiffractionBuilder(MapBuilder):
-    def __init__(self, materials, diffraction, xrd_settings=None, query=None, **kwargs):
+    def __init__(self, materials, diffraction, xrd_settings=None, **kwargs):
         """
         Calculates diffraction patterns for materials
 
@@ -26,14 +26,12 @@ class DiffractionBuilder(MapBuilder):
             materials (Store): Store of materials documents
             diffraction (Store): Store of diffraction data such as formation energy and decomposition pathway
             xrd_settings (Store): Store of xrd settings
-            query (dict): dictionary to limit materials to be analyzed
         """
 
         self.materials = materials
         self.diffraction = diffraction
         self.xrd_settings = xrd_settings
-        self.query = query if query else {}
-        self.__settings = load_settings(self.xrd_settings, default_xrd_settings)
+        self.__settings = load_settings(self.xrd_settings, DEFAULT_XRD_SETTINGS)
 
         super().__init__(
             source=materials, target=diffraction, query=query, ufn=self.calc, projection=["structure"], **kwargs)

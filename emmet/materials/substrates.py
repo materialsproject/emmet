@@ -12,8 +12,8 @@ from maggma.builder import Builder
 from emmet.common.utils import load_settings
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
-module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-default_substrate_settings = os.path.join(module_dir, "settings", "substrates.json")
+MODULE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_SUBSTRATES = os.path.join(MODULE_DIR, "settings", "substrates.json")
 
 
 class SubstrateBuilder(Builder):
@@ -34,7 +34,7 @@ class SubstrateBuilder(Builder):
         self.elasticity = elasticity
         self.substrate_settings = substrate_settings
         self.query = query if query else {}
-        self.__settings = load_settings(self.substrate_settings, default_substrate_settings)
+        self.__settings = load_settings(self.substrate_settings, DEFAULT_SUBSTRATES)
 
         super().__init__(sources=[materials, elasticity], targets=[substrates], **kwargs)
 
