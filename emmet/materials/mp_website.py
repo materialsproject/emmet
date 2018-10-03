@@ -1,5 +1,6 @@
 from datetime import datetime
 import os
+import os.path
 import string
 import traceback
 import copy
@@ -8,6 +9,7 @@ import numpy as np
 from ast import literal_eval
 
 from monty.json import jsanitize
+from monty.serialization import loadfn
 
 from maggma.builder import Builder
 from maggma.validator import JSONSchemaValidator, msonable_schema
@@ -28,6 +30,9 @@ from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 from pymatgen.util.provenance import StructureNL
 from pymatgen import __version__ as pymatgen_version
 
+from mp_dash_components.converters.structure import StructureIntermediateFormat
+from mp_dash_components import __version__ as mp_dash_components_version
+
 # Silly fix to keep pybtex from spamming warnings
 import os, pybtex
 devnull = open(os.devnull, 'w')
@@ -35,7 +40,9 @@ pybtex.io.stderr = devnull
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
-module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+
+MODULE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+MPBUILDER_SCHEMA = os.path.join(MODULE_DIR, "schema", "mp_website.json")
 
 mp_conversion_dict = {
     "anonymous_formula": "formula_anonymous",
@@ -81,18 +88,7 @@ mag_types = {"NM": "Non-magnetic", "FiM": "Ferri", "AFM": "AFM", "FM": "FM"}
 latt_para_interval = [1.50 - 1.96 * 3.14, 1.50 + 1.96 * 3.14]
 vol_interval = [4.56 - 1.96 * 7.82, 4.56 + 1.96 * 7.82]
 
-# minimal schema for now
-MPBUILDER_SCHEMA = {
-    "title": "mp_materials",
-    "type": "object",
-    "properties":
-        {
-            "task_id": {"type": "string"},
-            "e_above_hull": {"type": "number", "minimum": 0},
-            "structure": msonable_schema(Structure)
-        },
-    "required": ["task_id", "e_above_hull", "structure"]
-}
+
 
 class MPBuilder(Builder):
     def __init__(self,
@@ -118,28 +114,14 @@ class MPBuilder(Builder):
 
         Args:
             tasks (Store): Store of task documents
-            materials (Store): Store of materials documents
+            materials (Store): Store of materials documents - should be aggregate across multiple stores using JointStore
             mp_web (Store): Store of the mp style website docs, This will also make an electronic_structure collection and an es_plot gridfs
         """
         self.materials = materials
         self.mp_materials = mp_materials
-        self.electronic_structure = electronic_structure
-        self.snls = snls
-        self.thermo = thermo
-        self.query = query if query else {}
-        self.xrd = xrd
-        self.elastic = elastic
-        self.dielectric = dielectric
-        self.dois = dois
-        self.magnetism = magnetism
-        self.bond_valence = bond_valence
-        self.bonds = bonds
-        self.propnet = propnet
-
         self.mp_materials.validator = JSONSchemaValidator(MPBUILDER_SCHEMA)
 
-        sources = list(
-            filter(None, [materials, thermo, electronic_structure, snls, elastic, dielectric, xrd, dois, magnetism, bond_valence, propnet]))
+        sources = list(filter(None, [materials]))
 
         super().__init__(sources=sources, targets=[mp_materials], **kwargs)
 
@@ -177,45 +159,6 @@ class MPBuilder(Builder):
         for m in mats:
 
             doc = {"material": self.materials.query_one(criteria={self.materials.key: m})}
-
-            if self.electronic_structure:
-                doc["electronic_structure"] = self.electronic_structure.query_one(criteria={
-                    self.electronic_structure.key: m,
-                    "band_gap": {
-                        "$exists": 1
-                    }
-                })
-
-            if self.elastic:
-                doc["elastic"] = self.elastic.query_one(criteria={self.elastic.key: m})
-
-            if self.dielectric:
-                doc["dielectric"] = self.dielectric.query_one(criteria={self.dielectric.key: m})
-
-            if self.thermo:
-                doc["thermo"] = self.thermo.query_one(criteria={self.thermo.key: m})
-
-            if self.snls:
-                doc["snl"] = self.snls.query_one(criteria={self.snls.key: m})
-
-            if self.xrd:
-                doc["xrd"] = self.xrd.query_one(criteria={self.xrd.key: m})
-
-            if self.dois:
-                doc["dois"] = self.dois.query_one(criteria={self.dois.key: m})
-
-            if self.magnetism:
-                doc['magnetism'] = self.magnetism.query_one(criteria={self.magnetism.key: m})
-
-            if self.bond_valence:
-                doc['bond_valence'] = self.bond_valence.query_one(criteria={self.bond_valence.key: m})
-
-            if self.bonds:
-                doc['bonds'] = self.bonds.query_one(criteria={self.bonds.key: m, "strategy": "CrystalNN"})
-
-            if self.propnet:
-                doc['propnet'] = self.propnet.query_one(criteria={self.propnet.key: m})
-
             yield doc
 
     def process_item(self, item):
@@ -572,8 +515,6 @@ def add_viewer_json(mat):
     Generate JSON for structure viewer.
     """
 
-    from mp_dash_components.converters.structure import StructureIntermediateFormat
-    from mp_dash_components import __version__ as mp_dash_components_version
     structure = Structure.from_dict(mat['structure'])
     canonical_json = StructureIntermediateFormat(structure).json
     sga = SpacegroupAnalyzer(structure, symprec=0.1)
@@ -598,10 +539,8 @@ def add_dois(mat, doi):
     if "bibtex" in doi:
         mat["doi_bibtex"] = doi["bibtex"]
 
+
 def add_meta(mat):
 
-    meta = {
-        'emmet_version': emmet_version,
-        'pymatgen_version': pymatgen_version
-    }
+    meta = {'emmet_version': emmet_version, 'pymatgen_version': pymatgen_version}
     mat['_meta'] = meta
