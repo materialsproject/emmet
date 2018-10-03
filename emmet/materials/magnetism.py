@@ -29,7 +29,7 @@ class MagneticBuilder(MapBuilder):
         self.materials = materials
         self.magnetism = magnetism
 
-        self.magnetism.validator = JSONSchemaValidator(MAGNETISM_SCHEMA)
+        self.magnetism.validator = JSONSchemaValidator(loadfn(MAGNETISM_SCHEMA))
 
         super().__init__(
             source=materials, target=magnetism, projection=["structure", "magnetism"], ufn=self.calc, **kwargs)
