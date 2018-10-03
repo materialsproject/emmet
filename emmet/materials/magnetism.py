@@ -1,3 +1,6 @@
+import os.path
+from monty.serialization import loadfn
+
 from pymatgen import Structure
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 from pymatgen import __version__ as pymatgen_version
@@ -8,22 +11,8 @@ import numpy as np
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>, Matthew Horton <mkhorton@lbl.gov>"
 
-MAGNETISM_SCHEMA = {
-    "title": "magnetism",
-    "type": "object",
-    "properties": {
-        "task_id": {
-            "type": "string"
-        },
-        "magnetism": {
-            "type": "object"
-        },
-        "pymatgen_version": {
-            "type": "string"
-        }
-    },
-    "required": ["task_id", "magnetism", "pymatgen_version"]
-}
+MODULE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+MAGNETISM_SCHEMA = os.path.join(MODULE_DIR, "schema", "magnetism.json")
 
 
 class MagneticBuilder(MapBuilder):
@@ -66,15 +55,23 @@ class MagneticBuilder(MapBuilder):
 
         magnetism = {
             "magnetism": {
-                'ordering':msa.ordering.value,
-                'is_magnetic': msa.is_magnetic,
-                'exchange_symmetry': msa.get_exchange_group_info()[1],
-                'num_magnetic_sites': msa.number_of_magnetic_sites,
-                'num_unique_magnetic_sites': msa.number_of_unique_magnetic_sites(),
+                'ordering':
+                msa.ordering.value,
+                'is_magnetic':
+                msa.is_magnetic,
+                'exchange_symmetry':
+                msa.get_exchange_group_info()[1],
+                'num_magnetic_sites':
+                msa.number_of_magnetic_sites,
+                'num_unique_magnetic_sites':
+                msa.number_of_unique_magnetic_sites(),
                 'types_of_magnetic_species': [str(t) for t in msa.types_of_magnetic_specie],
-                'magmoms': magmoms,
-                'total_magnetization_normalized_vol': total_magnetization / struct.volume,
-                'total_magnetization_normalized_formula_units': total_magnetization / (struct.composition.get_reduced_composition_and_factor()[1])
+                'magmoms':
+                magmoms,
+                'total_magnetization_normalized_vol':
+                total_magnetization / struct.volume,
+                'total_magnetization_normalized_formula_units':
+                total_magnetization / (struct.composition.get_reduced_composition_and_factor()[1])
             },
             "pymatgen_version": pymatgen_version
         }
