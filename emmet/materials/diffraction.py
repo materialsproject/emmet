@@ -34,7 +34,7 @@ class DiffractionBuilder(MapBuilder):
         self.__settings = load_settings(self.xrd_settings, DEFAULT_XRD_SETTINGS)
 
         super().__init__(
-            source=materials, target=diffraction, query=query, ufn=self.calc, projection=["structure"], **kwargs)
+            source=materials, target=diffraction, ufn=self.calc, projection=["structure"], **kwargs)
 
     def calc(self, item):
         """
