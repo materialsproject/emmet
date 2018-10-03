@@ -1,3 +1,6 @@
+import os.path
+from monty.serialization import loadfn
+
 from pymatgen.core.structure import Structure
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.core.periodic_table import Specie
@@ -6,37 +9,8 @@ from pymatgen import __version__ as pymatgen_version
 from maggma.examples.builders import MapBuilder
 from maggma.validator import JSONSchemaValidator
 
-BOND_VALENCE_SCHEMA = {
-    "title": "bond_valence",
-    "type": "object",
-    "properties": {
-        "task_id": {
-            "type": "string"
-        },
-        "method": {
-            "type": "string"
-        },
-        "possible_species": {
-            "type": "array",
-            "items": {
-                "type": "strinig"
-            }
-        },
-        "possible_valences": {
-            "type": "array",
-            "items": {
-                "type": "number"
-            }
-        },
-        "successful": {
-            "type": "boolean"
-        },
-        "pymatgen_version": {
-            "type": "string"
-        },
-    },
-    "required": ["task_id", "successful", "pymatgen_version"]
-}
+MODULE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+BOND_VALENCE_SCHEMA = os.path.join(MODULE_DIR, "schema", "bond_valence.json")
 
 
 class BondValenceBuilder(MapBuilder):
@@ -48,7 +22,7 @@ class BondValenceBuilder(MapBuilder):
 
         self.materials = materials
         self.bond_valence = bond_valence
-
+        self.bond_valence.validator = JSONSchemaValidator(loadfn(BOND_VALENCE_SCHEMA))
         super().__init__(source=materials, target=bond_valence, ufn=self.calc, projection=["structure"], **kwargs)
 
     def calc(self, item):
@@ -66,8 +40,11 @@ class BondValenceBuilder(MapBuilder):
             method = "BVAnalyzer"
 
             d["successful"] = True
-            d["method"] = "oxi_state_guesses"
-            d["bond_valence"] = {"possible_species": list(possible_species), "possible_valences": valences}
+            d["bond_valence"] = {
+                "possible_species": list(possible_species),
+                "possible_valences": valences,
+                "method": "oxi_state_guesses"
+            }
 
         except ValueError:
             try:
@@ -77,8 +54,11 @@ class BondValenceBuilder(MapBuilder):
                     str(Specie(el, oxidation_state=valence)) for el, valence in first_oxi_state_guess.items()
                 }
                 d["successful"] = True
-                d["method"] = "oxi_state_guesses"
-                d["bond_valence"] = {"possible_species": list(possible_species), "possible_valences": valences}
+                d["bond_valence"] = {
+                    "possible_species": list(possible_species),
+                    "possible_valences": valences,
+                    "method": "oxi_state_guesses"
+                }
             except:
                 pass
 

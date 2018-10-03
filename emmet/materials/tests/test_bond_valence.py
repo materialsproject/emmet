@@ -12,7 +12,6 @@ test_mats = os.path.join(module_dir, "..", "..", "..", "test_files", "thermo_tes
 
 
 class TestBondValence(unittest.TestCase):
-
     def setUp(self):
 
         self.materials = JSONStore(test_mats)
