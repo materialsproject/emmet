@@ -63,9 +63,9 @@ class DielectricBuilder(MapBuilder):
                 "total": total,
                 "ionic": ionic,
                 "static": static,
-                "e_total": np.average(np.diagonal(matrix)),
-                "e_ionic": np.average(np.diagonal(matrix)),
-                "e_static": np.average(np.diagonal(matrix)),
+                "e_total": np.average(np.diagonal(total)),
+                "e_ionic": np.average(np.diagonal(ionic)),
+                "e_static": np.average(np.diagonal(static)),
                 "n": np.sqrt(static),
             }
         }
