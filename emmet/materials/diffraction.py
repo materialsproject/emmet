@@ -49,13 +49,7 @@ class DiffractionBuilder(MapBuilder):
         self.logger.debug("Calculating diffraction for {}".format(item[self.materials.key]))
 
         struct = Structure.from_dict(item['structure'])
-
         xrd_doc = {"xrd": self.get_xrd_from_struct(struct)}
-        xrd_doc[self.diffraction.key] = item[self.materials.key]
-
-        elsyms = sorted(set([el.symbol for el in struct.composition.elements]))
-        xrd_doc[self.diffraction.lu_field] = item[self.materials.lu_field]
-
         return xrd_doc
 
     def get_xrd_from_struct(self, structure):
