@@ -364,7 +364,12 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, s
 
     def get_sg(struc):
         # helper function to get spacegroup with a loose tolerance
-        return struc.get_space_group_info(symprec=symprec)[1]
+        try:
+            sg =struc.get_space_group_info(symprec=symprec)[1]
+        except:
+            sg = -1
+
+        return sg
 
     def get_mag_ordering(struc):
         # helperd function to get a label of the magnetic ordering type
