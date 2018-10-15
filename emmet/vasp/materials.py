@@ -236,9 +236,12 @@ class MaterialsBuilder(Builder):
             s.index = idx
             total_mag = get(t, "calcs_reversed.0.output.outcar.total_magnetization", 0)
             s.total_magnetization = total_mag if total_mag else 0
-            if not s.site_properties.get("magmom", False):
-                if has(t, "input.parameters.MAGMOM"):
-                    s.add_site_property("magmom", t["input"]["parameters"]["MAGMOM"])
+            # a fix for very old tasks that did not report site-projected magnetic moments
+            # so that we can group them appropriately
+            if ('magmom' not in s.site_properties) and (get(t, "input.parameters.ISPIN", 1) == 2) and \
+                    has(t, "input.parameters.MAGMOM"):
+                # TODO: map input structure sites to output structure sites
+                s.add_site_property("magmom", t["input"]["parameters"]["MAGMOM"])
             structures.append(s)
 
         grouped_structures = group_structures(
@@ -365,7 +368,7 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, s
     def get_sg(struc):
         # helper function to get spacegroup with a loose tolerance
         try:
-            sg =struc.get_space_group_info(symprec=symprec)[1]
+            sg = struc.get_space_group_info(symprec=symprec)[1]
         except:
             sg = -1
 
