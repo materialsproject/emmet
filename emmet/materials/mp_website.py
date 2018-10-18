@@ -386,7 +386,8 @@ def add_elastic(mat, elastic):
         "universal_anisotropy": "universal_anisotropy",
         "elastic_tensor_original": "elastic_tensor_original",
         "compliance_tensor": "compliance_tensor",
-        "third_order": "third_order"
+        "third_order": "third_order",
+        "warnings": "warnings",
     }
 
     mat["elasticity"] = {k: elastic["elasticity"].get(v, None)
