@@ -40,50 +40,9 @@ pybtex.io.stderr = devnull
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
-
 MODULE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 MPBUILDER_SCHEMA = os.path.join(MODULE_DIR, "schema", "mp_website.json")
-
-mp_conversion_dict = {
-    "anonymous_formula": "formula_anonymous",
-    "band_gap.search_gap.band_gap": "bandstructure.band_gap",
-    "band_gap.search_gap.is_direct": "bandstructure.is_gap_direct",
-    "chemsys": "chemsys",
-    "delta_volume": "analysis.delta_volume",
-    "density": "density",
-    "efermi": "bandstructure.efermi",
-    "elements": "elements",
-    "final_energy": "thermo.energy",
-    "final_energy_per_atom": "thermo.energy_per_atom",
-    "hubbards": "calc_settings.hubbards",
-    "initial_structure": "initial_structure",
-    "input.crystal": "initial_structure",
-    "input.potcar_spec": "calc_settings.potcar_spec",
-    "is_hubbard": "calc_settings.is_hubbard",
-    "nelements": "nelements",
-    "nsites": "nsites",
-    "pretty_formula": "formula_pretty",
-    "reduced_cell_formula": "composition_reduced",
-    "run_type": "calc_settings.run_type",
-    "spacegroup": "spacegroup",
-    "structure": "structure",
-    "total_magnetization": "magnetism.total_magnetization",
-    "unit_cell_formula": "composition",
-    "volume": "volume",
-    "warnings": "analysis.warnings",
-    "task_ids": "task_ids",
-    "task_id": "task_id",
-    "original_task_id": "task_id",
-    "input.incar": "inputs.structure_optimization.incar",
-    "input.kpoints": "inputs.structure_optimization.kpoints",
-    "encut": "inputs.structure_optimization.incar.ENCUT",
-    "formula_anonymous": "formula_anonymous",
-    "created_at": "created_at"
-}
-
-SANDBOXED_PROPERTIES = {"e_above_hull": "e_above_hull", "decomposes_to": "decomposes_to"}
-
-mag_types = {"NM": "Non-magnetic", "FiM": "Ferri", "AFM": "AFM", "FM": "FM"}
+MPBUILDER_SETTINGS = os.path.join(MODULE_DIR, "settings", "mp_website.json")
 
 latt_para_interval = [1.50 - 1.96 * 3.14, 1.50 + 1.96 * 3.14]
 vol_interval = [4.56 - 1.96 * 7.82, 4.56 + 1.96 * 7.82]
