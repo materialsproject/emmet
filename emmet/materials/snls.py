@@ -134,17 +134,20 @@ class SNLBuilder(Builder):
         self.total = len(forms_to_update)
 
         for formula in forms_to_update:
-            mats = list(
-                self.materials.query(
-                    properties=[self.materials.key, "structure", "initial_structures", "formula_pretty"],
-                    criteria={"formula_pretty": formula}))
+
             snls = []
 
             for source in self.source_snls:
                 snls.extend(source.query(criteria={"formula_pretty": formula}))
 
-            self.logger.debug("Found {} snls and {} mats".format(len(snls), len(mats)))
-            if len(mats) > 0 and len(snls) > 0:
+            # Guaranteed to be mat per above reduction so just check for SNLS
+            if len(snls) > 0:
+                mats = list(
+                    self.materials.query(
+                        properties=[self.materials.key, "structure", "initial_structures", "formula_pretty"],
+                        criteria={"formula_pretty": formula}))
+
+                self.logger.debug("Found {} snls and {} mats".format(len(snls), len(mats)))
                 yield mats, snls
 
     def process_item(self, item):
