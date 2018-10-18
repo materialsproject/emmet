@@ -86,30 +86,53 @@ class MPBuilder(MapBuilder):
 
         return jsanitize(mat)
 
-    def update_targets(self, items):
+    def old_style_mat(self, new_style_mat):
         """
-        Inserts the new task_types into the task_types collection
-
-        Args:
-            items ([[dict]]): a list of list of thermo dictionaries to update
-        """
-        items = list(filter(None, items))
-
-        if len(items) > 0:
-            self.logger.info("Updating {} mp materials docs".format(len(items)))
-            self.mp_materials.update(docs=items, ordered=False)
-        else:
-            self.logger.info("No items to update")
-
-    def ensure_indicies(self):
-        """
-        Ensures indexes on the tasks and materials collections
-        :return:
+        Creates the base document for the old MP mapidoc style from the new document structure
         """
 
-        # Search index for materials
-        self.materials.ensure_index(self.materials.key, unique=True)
-        self.materials.ensure_index("task_ids")
+        mat = {}
+        mp_conversion_dict = self._settings["conversion_dict"]
+        mag_types = self._settings["mag_types"]
+
+        # Uses the conversion dict to copy over values which handles the bulk of the work.
+        for mp, new_key in mp_conversion_dict.items():
+            if has(new_style_mat, new_key):
+                set_(mat, mp, get(new_style_mat, new_key))
+
+        struc = Structure.from_dict(mat["structure"])
+        mat["is_ordered"] = True
+        mat["is_compatible"] = True
+        mat["oxide_type"] = oxide_type(struc)
+        mat["reduced_cell_formula"] = struc.composition.reduced_composition.as_dict()
+        mat["unit_cell_formula"] = struc.composition.as_dict()
+        mat["full_formula"] = "".join(struc.formula.split())
+        vals = sorted(mat["reduced_cell_formula"].values())
+        mat["anonymous_formula"] = {string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))}
+        mat["initial_structure"] = new_style_mat.get("initial_structure", None)
+        mat["nsites"] = struc.get_primitive_structure().num_sites
+        mat["magnetic_type"] = mag_types.get(mat.get("magnetic_type", None), "Unknown")
+
+        set_(mat, "pseudo_potential.functional", "PBE")
+
+        set_(mat, "pseudo_potential.labels",
+             [p["titel"].split()[1] for p in get(new_style_mat, "calc_settings.potcar_spec")])
+        set_(mat, "pseudo_potential.pot_type", "paw")
+
+        mat["ntask_ids"] = len(get(new_style_mat, "task_ids"))
+        mat["blessed_tasks"] = {v: k for k, v in new_style_mat.get("task_types", {}).items()}
+
+        return mat
+
+    def sandbox_props(self, mat):
+        sandbox_props = self._settings["sandboxed_properties"]
+        mat["sbxn"] = mat.get("sbxn", ["core", "jcesr", "vw", "shyamd", "kitchaev"])
+        mat["sbxd"] = []
+
+        for sbx in mat["sbxn"]:
+            sbx_d = {k: get(mat, v) for k, v in sandbox_props.items() if has(mat, k)}
+            sbx_d["id"] = sbx
+            mat["sbxd"].append(sbx_d)
 
 
 #
@@ -119,42 +142,6 @@ class MPBuilder(MapBuilder):
 # THIS SECTION DEFINES EXTRA FUNCTIONS THAT MODIFY THE MAT DOC PER MP DOC STRUCTURE
 #
 #
-
-
-def old_style_mat(new_style_mat):
-    """
-    Creates the base document for the old MP mapidoc style from the new document structure
-    """
-
-    mat = {}
-    for mp, new_key in mp_conversion_dict.items():
-        if has(new_style_mat, new_key):
-            set_(mat, mp, get(new_style_mat, new_key))
-
-    mat["is_ordered"] = True
-    mat["is_compatible"] = True
-
-    struc = Structure.from_dict(mat["structure"])
-    mat["oxide_type"] = oxide_type(struc)
-    mat["reduced_cell_formula"] = struc.composition.reduced_composition.as_dict()
-    mat["unit_cell_formula"] = struc.composition.as_dict()
-    mat["full_formula"] = "".join(struc.formula.split())
-    vals = sorted(mat["reduced_cell_formula"].values())
-    mat["anonymous_formula"] = {string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))}
-    mat["initial_structure"] = new_style_mat.get("initial_structure", None)
-    mat["nsites"] = struc.get_primitive_structure().num_sites
-
-    set_(mat, "pseudo_potential.functional", "PBE")
-
-    set_(mat, "pseudo_potential.labels",
-         [p["titel"].split()[1] for p in get(new_style_mat, "calc_settings.potcar_spec")])
-    mat["ntask_ids"] = len(get(new_style_mat, "task_ids"))
-    set_(mat, "pseudo_potential.pot_type", "paw")
-    add_blessed_tasks(mat, new_style_mat)
-    add_cifs(mat)
-    check_relaxation(mat, new_style_mat)
-
-    return mat
 
 
 def add_es(mat, new_style_mat):
@@ -180,40 +167,13 @@ def add_es(mat, new_style_mat):
     mat["has_bandstructure"] = bool(bs_origin) and bool(dos_origin)
 
 
-def add_blessed_tasks(mat, new_style_mat):
-    blessed_tasks = {}
-    for doc in new_style_mat["origins"]:
-        blessed_tasks[doc["task_type"]] = doc["task_id"]
-
-    mat["blessed_tasks"] = blessed_tasks
-
-
-def add_elastic(mat, elastic):
-    es_aliases = {
-        "G_Reuss": "g_reuss",
-        "G_VRH": "g_vrh",
-        "G_Voigt": "g_voigt",
-        "G_Voigt_Reuss_Hill": "g_vrh",
-        "K_Reuss": "k_reuss",
-        "K_VRH": "k_vrh",
-        "K_Voigt": "k_voigt",
-        "K_Voigt_Reuss_Hill": "k_vrh",
-        #        "calculations": "calculations",    <--- TODO: Add to elastic builder?
-        "elastic_anisotropy": "universal_anisotropy",
-        "elastic_tensor": "elastic_tensor",
-        "homogeneous_poisson": "homogeneous_poisson",
-        "poisson_ratio": "homogeneous_poisson",
-        "universal_anisotropy": "universal_anisotropy",
-        "elastic_tensor_original": "elastic_tensor_original",
-        "compliance_tensor": "compliance_tensor",
-        "third_order": "third_order"
-    }
-
-    mat["elasticity"] = {k: elastic["elasticity"].get(v, None) for k, v in es_aliases.items()}
-    if has(elastic, "elasticity.structure.sites"):
-        mat["elasticity"]["nsites"] = len(get(elastic, "elasticity.structure.sites"))
-    else:
-        mat["elasticity"]["nsites"] = len(get(mat, "structure.sites"))
+def add_elastic(mat, new_style_mat):
+    if "elasticity" in new_style_mat:
+        mat["elasticity"] = {k: elastic["elasticity"].get(v, None) for k, v in es_aliases.items()}
+        if has(elastic, "elasticity.structure.sites"):
+            mat["elasticity"]["nsites"] = len(get(elastic, "elasticity.structure.sites"))
+        else:
+            mat["elasticity"]["nsites"] = len(get(mat, "structure.sites"))
 
 
 def add_cifs(doc):
@@ -241,9 +201,9 @@ def add_cifs(doc):
         doc["cifs"]["conventional_standard"] = None
 
 
-def add_xrd(mat, xrd):
+def add_xrd(mat, new_style_mat):
     mat["xrd"] = {}
-    for el, doc in xrd["xrd"].items():
+    for el, doc in new_style_mat["xrd"].items():
         el_doc = {}
         el_doc["meta"] = ["amplitude", "hkl", "two_theta", "d_spacing"]
         el_doc["created_at"] = datetime.now().isoformat()
@@ -257,55 +217,6 @@ def add_xrd(mat, xrd):
                                                        d_hkls)]
 
         mat["xrd"][el] = el_doc
-
-
-def add_thermo(mat, thermo):
-    if has(thermo, "thermo.e_above_hull"):
-        set_(mat, "e_above_hull", get(thermo, "thermo.e_above_hull"))
-
-    if has(thermo, "thermo.formation_energy_per_atom"):
-        set_(mat, "formation_energy_per_atom", get(thermo, "thermo.formation_energy_per_atom"))
-
-    if has(thermo, "thermo.decomposes_to"):
-        set_(mat, "decomposes_to", get(thermo, "thermo.decomposes_to"))
-
-
-def sandbox_props(mat):
-    mat["sbxn"] = mat.get("sbxn", ["core", "jcesr", "vw", "shyamd", "kitchaev"])
-    mat["sbxd"] = []
-
-    for sbx in mat["sbxn"]:
-        sbx_d = {k: get(mat, v) for k, v in SANDBOXED_PROPERTIES.items() if has(mat, k)}
-        sbx_d["id"] = sbx
-        mat["sbxd"].append(sbx_d)
-
-
-def add_magnetism(mat, magnetism=None):
-
-    # for historical consistency
-    mag_types = {"NM": "Non-magnetic", "FiM": "Ferri", "AFM": "AFM", "FM": "FM"}
-
-    struc = Structure.from_dict(mat["structure"])
-    msa = CollinearMagneticStructureAnalyzer(struc)
-    mat["magnetic_type"] = mag_types[msa.ordering.value]
-
-    # this should never happen for future mats, and should have been fixed
-    # for older mats, but just in case
-    if 'magmom' not in struc.site_properties and mat['total_magnetization'] > 0.1:
-        mat["magnetic_type"] = "Magnetic (unknown ordering)"
-
-    # TODO: will deprecate the above from dedicated magnetism builder
-    if magnetism:
-        mat["magnetism"] = magnetism["magnetism"]
-
-
-def add_bond_valence(mat, bond_valence):
-    exclude_list = ['task_id', 'pymatgen_version', 'successful']
-    if bond_valence.get('successful', False):
-        for e in exclude_list:
-            if e in bond_valence:
-                del bond_valence[e]
-        mat["bond_valence"] = bond_valence
 
 
 def add_bonds(mat, bonds):
@@ -368,30 +279,10 @@ def check_relaxation(mat, new_style_mat):
     mat["warnings"] = list(set(warnings))
 
 
-def add_dielectric(mat, dielectric):
-
-    if "dielectric" in dielectric:
-        d = dielectric["dielectric"]
-
-        mat["diel"] = {
-            "e_electronic": d["static"],
-            "e_total": d["total"],
-            "n": np.sqrt(d["e_static"]),
-            "poly_electronic": d["e_static"],
-            "poly_total": d["e_static"]
-        }
-
-    if "piezo" in dielectric:
-        d = dielectric["piezo"]
-
-        mat["piezo"] = {"eij_max": d["e_ij_max"], "piezoelectric_tensor": d["total"], "v_max": d["max_direction"]}
-
-
 def add_viewer_json(mat):
     """
     Generate JSON for structure viewer.
     """
-
     structure = Structure.from_dict(mat['structure'])
     canonical_json = StructureIntermediateFormat(structure).json
     sga = SpacegroupAnalyzer(structure, symprec=0.1)
@@ -410,14 +301,6 @@ def has_fields(mat):
         mat["has"].append("bandstructure")
 
 
-def add_dois(mat, doi):
-    if "doi" in doi:
-        mat["doi"] = doi["doi"]
-    if "bibtex" in doi:
-        mat["doi_bibtex"] = doi["bibtex"]
-
-
 def add_meta(mat):
-
     meta = {'emmet_version': emmet_version, 'pymatgen_version': pymatgen_version}
     mat['_meta'] = meta
