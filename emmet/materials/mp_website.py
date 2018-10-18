@@ -66,41 +66,24 @@ class MPBuilder(MapBuilder):
 
         super().__init__(source=materials, targets=mp_materials, ufn=self.calc, **kwargs)
 
-        if item.get("dielectric", None):
-            dielectric = item["dielectric"]
-            add_dielectric(mat, dielectric)
+    def calc(self, item):
 
-        if item.get("elastic", None):
-            elastic = item["elastic"]
-            add_elastic(mat, elastic)
+        mat = old_style_mat(item)
 
-        if item.get("thermo", None):
-            thermo = item["thermo"]
-            add_thermo(mat, thermo)
-
-        if item.get("dois", None):
-            doi = item["dois"]
-            add_dois(mat, doi)
-
-        if item.get("bond_valence", None):
-            bond_valence = item["bond_valence"]
-            add_bond_valence(mat, bond_valence)
-
-        if item.get("bonds", None):
-            bonds = item["bonds"]
-            add_bonds(mat, bonds)
-
-        if item.get("propnet", None):
-            propnet = item["propnet"]
-            add_propnet(mat, propnet)
-
-        snl = item.get("snl", {})
-        add_snl(mat, snl)
-        add_magnetism(mat, item.get("magnetism", None))
+        # These functions convert data from old style to new style
+        add_es(mat, item)
+        add_xrd(mat, item)
+        add_elastic(mat, item)
+        add_bonds(mat, item)
+        add_propnet(mat, item)
+        add_snl(mat, item)
+        check_relaxation(mat, new_style_mat)
+        add_cifs(mat)
         add_viewer_json(mat)
         add_meta(mat)
         sandbox_props(mat)
         has_fields(mat)
+
         return jsanitize(mat)
 
     def update_targets(self, items):
