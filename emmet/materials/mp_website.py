@@ -9,9 +9,8 @@ import numpy as np
 from ast import literal_eval
 
 from monty.json import jsanitize
-from monty.serialization import loadfn
 
-from maggma.builder import Builder
+from maggma.examples.builders import MapBuilder
 from maggma.validator import JSONSchemaValidator, msonable_schema
 from pydash.objects import get, set_, has
 
@@ -48,24 +47,8 @@ latt_para_interval = [1.50 - 1.96 * 3.14, 1.50 + 1.96 * 3.14]
 vol_interval = [4.56 - 1.96 * 7.82, 4.56 + 1.96 * 7.82]
 
 
-
-class MPBuilder(Builder):
-    def __init__(self,
-                 materials,
-                 mp_materials,
-                 thermo=None,
-                 electronic_structure=None,
-                 snls=None,
-                 xrd=None,
-                 elastic=None,
-                 dielectric=None,
-                 dois=None,
-                 magnetism=None,
-                 bond_valence=None,
-                 bonds=None,
-                 propnet=None,
-                 query=None,
-                 **kwargs):
+class MPBuilder(MapBuilder):
+    def __init__(self, materials, mp_materials, **kwargs):
         """
         Creates a MP Website style materials doc.
         This builder is a bit unweildy as MP will eventually move to a new format
@@ -79,57 +62,9 @@ class MPBuilder(Builder):
         self.materials = materials
         self.mp_materials = mp_materials
         self.mp_materials.validator = JSONSchemaValidator(MPBUILDER_SCHEMA)
+        self._settings = loadfn(MPBUILDER_SETTINGS)
 
-        sources = list(filter(None, [materials]))
-
-        super().__init__(sources=sources, targets=[mp_materials], **kwargs)
-
-    def get_items(self):
-        """
-        Gets all materials that need a new MP Style materials document
-
-        Returns:
-            generator of materials to calculate xrd
-        """
-
-        self.logger.info("MP Website Builder Started")
-
-        self.ensure_indicies()
-
-        # Get all new materials
-        q = dict(self.query)
-        new_mats = set(self.materials.distinct(self.materials.key)) - set(
-            self.mp_materials.distinct(self.mp_materials.key, q))
-
-        self.logger.info("Found {} new materials for the website".format(len(new_mats)))
-
-        # All relevant materials that have been updated since MP Website Materials
-        # were last calculated
-        q = dict(self.query)
-        q.update(self.materials.lu_filter(self.mp_materials))
-        mats = set(self.materials.distinct(self.materials.key, q))
-
-        self.logger.info("Found {} updated materials for the website".format(len(mats)))
-
-        mats = mats | new_mats
-        self.logger.info("Processing {} total materials".format(len(mats)))
-        self.total = len(mats)
-
-        for m in mats:
-
-            doc = {"material": self.materials.query_one(criteria={self.materials.key: m})}
-            yield doc
-
-    def process_item(self, item):
-
-        new_style_mat = item["material"]
-
-        mat = old_style_mat(new_style_mat)
-        add_es(mat, new_style_mat)
-
-        if item.get("xrd", None):
-            xrd = item["xrd"]
-            add_xrd(mat, xrd)
+        super().__init__(source=materials, targets=mp_materials, ufn=self.calc, **kwargs)
 
         if item.get("dielectric", None):
             dielectric = item["dielectric"]
