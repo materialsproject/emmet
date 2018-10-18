@@ -239,13 +239,7 @@
   {
     "materials_key": "structure",
     "quality_score": {
-      "GGA NSCF Line": 4,
-      "GGA NSCF Uniform": 4,
-      "GGA Static": 5,
       "GGA Structure Optimization": 7,
-      "GGA+U NSCF Line": 4,
-      "GGA+U NSCF Uniform": 4,
-      "GGA+U Static": 6,
       "GGA+U Structure Optimization": 8
     },
     "tasks_key": "output.structure"
@@ -276,6 +270,16 @@
       "GGA+U Structure Optimization": 5
     },
     "tasks_key": "calcs_reversed.0.output.outcar.total_magnetization"
+  },
+  {
+    "materials_key": "magnetism.magmoms",
+    "quality_score": {
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1,
+      "GGA+U Static": 6,
+      "GGA+U Structure Optimization": 5
+    },
+    "tasks_key": "calcs_reversed.0.output.outcar.magmom"
   },
   {
     "materials_key": "dielectric.structure",
