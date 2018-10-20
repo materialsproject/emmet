@@ -50,24 +50,29 @@ latt_para_interval = [1.50 - 1.96 * 3.14, 1.50 + 1.96 * 3.14]
 vol_interval = [4.56 - 1.96 * 7.82, 4.56 + 1.96 * 7.82]
 
 
-class MPBuilder(MapBuilder):
-    def __init__(self, materials, mp_materials, **kwargs):
+class MPBuilder(Builder):
+    def __init__(self, materials, website, aux=None, query=None, **kwargs):
         """
         Creates a MP Website style materials doc.
         This builder is a bit unweildy as MP will eventually move to a new format
-        Written for backwards compatability with previous infrastructure
+        written for backwards compatability with previous infrastructure
 
         Args:
             tasks (Store): Store of task documents
-            materials (Store): Store of materials documents - should be aggregate across multiple stores using JointStore
-            mp_web (Store): Store of the mp style website docs, This will also make an electronic_structure collection and an es_plot gridfs
+            materials (Store): Store of materials documents - 
+                should be aggregate across multiple stores using JointStore
+            website (Store): Store of the mp style website docs
+            aux ([Store]): Auxillary data collection to join to materials doc
+                for processing
         """
         self.materials = materials
-        self.mp_materials = mp_materials
-        self.mp_materials.validator = JSONSchemaValidator(MPBUILDER_SCHEMA)
+        self.website = website
+        self.aux = aux if aux else []
+        self.query = query
+        #        self.website.validator = JSONSchemaValidator(MPBUILDER_SCHEMA)
         self._settings = loadfn(MPBUILDER_SETTINGS)
 
-        super().__init__(source=materials, targets=mp_materials, ufn=self.calc, **kwargs)
+        super().__init__(sources=[materials] + aux, targets=[website], **kwargs)
 
     def calc(self, item):
 
