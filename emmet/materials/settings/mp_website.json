@@ -37,7 +37,6 @@
     "volume": "volume",
     "warnings": "analysis.warnings",
     "task_ids": "task_ids",
-    "task_id": "task_id",
     "original_task_id": "task_id",
     "input.incar": "inputs.structure_optimization.incar",
     "input.kpoints": "inputs.structure_optimization.kpoints",
