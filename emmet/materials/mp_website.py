@@ -130,6 +130,49 @@ class MPBuilder(Builder):
 
                 yield d
 
+    def process_item(self, item):
+
+        self.logger.debug("Processing: {}".format(item[self.materials.key]))
+
+        try:
+            mat = self.old_style_mat(item)
+
+            # These functions convert data from old style to new style
+            add_es(mat, item)
+            add_xrd(mat, item)
+            add_elastic(mat, item)
+            add_bonds(mat, item)
+            add_propnet(mat, item)
+            add_snl(mat, item)
+            check_relaxation(mat, item)
+            add_cifs(mat)
+            add_viewer_json(mat)
+            add_meta(mat)
+            sandbox_props(mat,self._settings["sandboxed_properties"])
+            has_fields(mat)
+
+            processed = jsanitize(mat)
+
+        except Exception as e:
+            self.logger.error(traceback.format_exc())
+            processed = {"error": str(e)}
+
+        key, lu_field = self.materials.key, self.materials.lu_field
+        out = {self.website.key: item[key]}
+        out[self.website.lu_field] = self.materials.lu_func[0](item[self.materials.lu_field])
+        out.update(processed)
+        return out
+
+    def update_targets(self, items):
+        for item in items:
+            # Add in build timestamp
+            item["_bt"] = datetime.utcnow()
+            if "_id" in item:
+                del item["_id"]
+
+        if len(items) > 0:
+            self.website.update(items, update_lu=False)
+
     def old_style_mat(self, new_style_mat):
         """
         Creates the base document for the old MP mapidoc style from the new document structure
@@ -144,9 +187,11 @@ class MPBuilder(Builder):
             if has(new_style_mat, new_key):
                 set_(mat, mp, get(new_style_mat, new_key))
 
-        struc = Structure.from_dict(mat["structure"])
+        # Anything coming through DFT is always ordered
         mat["is_ordered"] = True
         mat["is_compatible"] = True
+
+        struc = Structure.from_dict(mat["structure"])
         mat["oxide_type"] = oxide_type(struc)
         mat["reduced_cell_formula"] = struc.composition.reduced_composition.as_dict()
         mat["unit_cell_formula"] = struc.composition.as_dict()
@@ -155,7 +200,6 @@ class MPBuilder(Builder):
         mat["anonymous_formula"] = {string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))}
         mat["initial_structure"] = new_style_mat.get("initial_structure", None)
         mat["nsites"] = struc.get_primitive_structure().num_sites
-        mat["magnetic_type"] = mag_types.get(mat.get("magnetic_type", None), "Unknown")
 
         set_(mat, "pseudo_potential.functional", "PBE")
 
@@ -167,17 +211,6 @@ class MPBuilder(Builder):
         mat["blessed_tasks"] = {v: k for k, v in new_style_mat.get("task_types", {}).items()}
 
         return mat
-
-    def sandbox_props(self, mat):
-        sandbox_props = self._settings["sandboxed_properties"]
-        mat["sbxn"] = mat.get("sbxn", ["core", "jcesr", "vw", "shyamd", "kitchaev"])
-        mat["sbxd"] = []
-
-        for sbx in mat["sbxn"]:
-            sbx_d = {k: get(mat, v) for k, v in sandbox_props.items() if has(mat, k)}
-            sbx_d["id"] = sbx
-            mat["sbxd"].append(sbx_d)
-
 
 #
 #
@@ -213,9 +246,8 @@ def add_es(mat, new_style_mat):
 
 def add_elastic(mat, new_style_mat):
     if "elasticity" in new_style_mat:
-        mat["elasticity"] = {k: elastic["elasticity"].get(v, None) for k, v in es_aliases.items()}
-        if has(elastic, "elasticity.structure.sites"):
-            mat["elasticity"]["nsites"] = len(get(elastic, "elasticity.structure.sites"))
+        if has(new_style_mat, "elasticity.structure.sites"):
+            mat["elasticity"]["nsites"] = len(get(new_style_mat, "elasticity.structure.sites"))
         else:
             mat["elasticity"]["nsites"] = len(get(mat, "structure.sites"))
 
@@ -234,11 +266,6 @@ def add_cifs(doc):
         doc["cifs"]["refined"] = str(CifWriter(refined, symprec=symprec))
         doc["cifs"]["conventional_standard"] = str(CifWriter(conventional, symprec=symprec))
         doc["cifs"]["computed"] = str(CifWriter(struc, symprec=symprec))
-        doc["spacegroup"]["symbol"] = sym_finder.get_space_group_symbol()
-        doc["spacegroup"]["number"] = sym_finder.get_space_group_number()
-        doc["spacegroup"]["point_group"] = sym_finder.get_point_group_symbol()
-        doc["spacegroup"]["crystal_system"] = sym_finder.get_crystal_system()
-        doc["spacegroup"]["hall"] = sym_finder.get_hall()
     else:
         doc["cifs"]["primitive"] = None
         doc["cifs"]["refined"] = None
@@ -247,7 +274,7 @@ def add_cifs(doc):
 
 def add_xrd(mat, new_style_mat):
     mat["xrd"] = {}
-    for el, doc in new_style_mat["xrd"].items():
+    for el, doc in new_style_mat.get("xrd",{}).items():
         el_doc = {}
         el_doc["meta"] = ["amplitude", "hkl", "two_theta", "d_spacing"]
         el_doc["created_at"] = datetime.now().isoformat()
@@ -263,15 +290,15 @@ def add_xrd(mat, new_style_mat):
         mat["xrd"][el] = el_doc
 
 
-def add_bonds(mat, bonds):
-    if bonds.get('successful', False):
-        mat["bonds"] = bonds["summary"]
+def add_bonds(mat, new_style_mat):
+    if get("bonds.successful",new_style_mat, False):
+        mat["bonds"] = get("bonds.summary",new_style_mat)
 
-
-def add_snl(mat, snl=None):
+def add_snl(mat, new_style_mat):
+    snl = new_style_mat.get("snl",None)
     mat["snl"] = copy.deepcopy(mat["structure"])
     if snl:
-        mat["snl"].update(snl["snl"])
+        mat["snl"].update(snl)
     else:
         mat["snl"] = StructureNL(Structure.from_dict(mat["structure"]), []).as_dict()
         mat["snl"]["about"].update(mp_default_snl_fields)
@@ -288,16 +315,18 @@ def add_snl(mat, snl=None):
             mat["exp"]["tags"].append(remark)
 
 
-def add_propnet(mat, propnet):
-    exclude_list = ['compliance_tensor_voigt', 'task_id', '_id', 'pretty_formula', 'inputs', 'last_updated']
-    for e in exclude_list:
-        if e in propnet:
-            del propnet[e]
-    mat["propnet"] = scrub_class_and_module(propnet)
+def add_propnet(mat, new_style_mat):
+    if "propnet" in new_style_mat:
+        propnet = new_style_mat.get("propnet",{})
+        exclude_list = ['compliance_tensor_voigt', 'task_id', '_id', 'pretty_formula', 'inputs', 'last_updated']
+        for e in exclude_list:
+            if e in propnet:
+                del propnet[e]
+        mat["propnet"] = scrub_class_and_module(propnet)
 
 
 def check_relaxation(mat, new_style_mat):
-    final_structure = Structure.from_dict(mat["structure"])
+    final_structure = Structure.from_dict(new_style_mat["structure"])
 
     warnings = []
     # Check relaxation for just the initial structure to optimized structure
@@ -348,3 +377,12 @@ def has_fields(mat):
 def add_meta(mat):
     meta = {'emmet_version': emmet_version, 'pymatgen_version': pymatgen_version}
     mat['_meta'] = meta
+
+def sandbox_props(mat, sandbox_props):
+    mat["sbxn"] = mat.get("sbxn", ["core", "jcesr", "vw", "shyamd", "kitchaev"])
+    mat["sbxd"] = []
+
+    for sbx in mat["sbxn"]:
+        sbx_d = {k: get(mat, v) for k, v in sandbox_props.items() if has(mat, k)}
+        sbx_d["id"] = sbx
+        mat["sbxd"].append(sbx_d)
