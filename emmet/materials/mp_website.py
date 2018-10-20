@@ -74,25 +74,61 @@ class MPBuilder(Builder):
 
         super().__init__(sources=[materials] + aux, targets=[website], **kwargs)
 
-    def calc(self, item):
+    def get_items(self):
+        """
+        Custom get items to allow for incremental building for a whole set of stores
+        """
 
-        mat = old_style_mat(item)
+        self.logger.info("Starting Website Builder")
+        mat_keys = set(self.materials.distinct(self.materials.key, critiria=self.query))
+        keys = set(get_keys(source=self.materials, target=self.website, query=self.query, logger=self.logger))
+        for source in self.aux:
+            keys |= set(get_keys(source=source, target=self.website, query=self.query, logger=self.logger)) & mat_keys
 
-        # These functions convert data from old style to new style
-        add_es(mat, item)
-        add_xrd(mat, item)
-        add_elastic(mat, item)
-        add_bonds(mat, item)
-        add_propnet(mat, item)
-        add_snl(mat, item)
-        check_relaxation(mat, new_style_mat)
-        add_cifs(mat)
-        add_viewer_json(mat)
-        add_meta(mat)
-        sandbox_props(mat)
-        has_fields(mat)
+        self.logger.info("Processing {} items".format(len(keys)))
 
-        return jsanitize(mat)
+        self.total = len(keys)
+        # Chunk keys by chunk size for good data IO
+        for chunked_keys in grouper(keys, self.chunk_size, None):
+            chunked_keys = list(filter(None.__ne__, chunked_keys))
+
+            # Get documents across all stores
+            docs = list(self.materials.query(criteria={self.materials.key: {"$in": chunked_keys}}))
+            for source in self.aux:
+                temp_docs = list(source.query(criteria={source.key: {"$in": chunked_keys}}))
+                self.logger.debug("Found {} docs in {} for {}".format(
+                    len(temp_docs), source.collection_name, chunked_keys))
+                
+                # Ensure same key field for all docs
+                if source.key != self.materials.key:
+                    for d in temp_docs:
+                        d[self.materials.key] = d[source.key]
+                        del d[source.key]
+
+                # Ensure same lu_field for all docs
+                if source.lu_field != self.materials.lu_field:
+                    for d in temp_docs:
+                        d[self.materials.lu_field] = d[source.lu_field]
+                        del d[source.lu_field]
+
+                # Add to our giant pile of docs
+                docs.extend(temp_docs)
+
+            # Sort and group docs by materials key
+            docs = list(sorted(docs, key=lambda x: x[self.materials.key]))
+            docs = groupby(docs, key=lambda x: x[self.materials.key])
+
+            # get docs all for the same materials key
+            for merge_key, sub_docs in docs:
+                #sort and group docs by last_updated
+                sub_docs = list(sorted(sub_docs, key=lambda x: x[self.materials.lu_field]))
+                self.logger.debug("Merging {} docs for {}".format(len(sub_docs),merge_key))
+                # merge all docs in this group together
+                d = {k: v for doc in sub_docs for k, v in doc.items()}
+                # delete any private keys
+                d = {k: v for k, v in d.items() if not k.startswith("_")}
+
+                yield d
 
     def old_style_mat(self, new_style_mat):
         """
