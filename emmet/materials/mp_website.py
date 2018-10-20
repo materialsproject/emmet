@@ -7,10 +7,13 @@ import copy
 import nltk
 import numpy as np
 from ast import literal_eval
+from itertools import groupby
 
 from monty.json import jsanitize
+from monty.serialization import loadfn
 
-from maggma.examples.builders import MapBuilder
+from maggma.examples.builders import Builder, get_keys
+from maggma.utils import grouper
 from maggma.validator import JSONSchemaValidator, msonable_schema
 from pydash.objects import get, set_, has
 
