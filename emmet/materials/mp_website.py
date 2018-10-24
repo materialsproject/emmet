@@ -265,7 +265,7 @@ def add_cifs(doc):
     sym_finder = SpacegroupAnalyzer(struc, symprec=symprec)
     doc["cif"] = str(CifWriter(struc))
     doc["cifs"] = {}
-    if sym_finder.get_hall():
+    try:
         primitive = sym_finder.get_primitive_standard_structure()
         conventional = sym_finder.get_conventional_standard_structure()
         refined = sym_finder.get_refined_structure()
@@ -273,7 +273,7 @@ def add_cifs(doc):
         doc["cifs"]["refined"] = str(CifWriter(refined, symprec=symprec))
         doc["cifs"]["conventional_standard"] = str(CifWriter(conventional, symprec=symprec))
         doc["cifs"]["computed"] = str(CifWriter(struc, symprec=symprec))
-    else:
+    except:
         doc["cifs"]["primitive"] = None
         doc["cifs"]["refined"] = None
         doc["cifs"]["conventional_standard"] = None
