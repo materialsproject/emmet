@@ -16,6 +16,7 @@ from maggma.examples.builders import Builder, get_keys
 from maggma.utils import grouper
 from maggma.validator import JSONSchemaValidator, msonable_schema
 from pydash.objects import get, set_, has
+import pybtex
 
 from emmet.materials.snls import mp_default_snl_fields
 from emmet.common.utils import scrub_class_and_module
@@ -36,7 +37,7 @@ from mp_dash_components.converters.structure import StructureIntermediateFormat
 from mp_dash_components import __version__ as mp_dash_components_version
 
 # Silly fix to keep pybtex from spamming warnings
-import os, pybtex
+
 devnull = open(os.devnull, 'w')
 pybtex.io.stderr = devnull
 
@@ -59,7 +60,7 @@ class MPBuilder(Builder):
 
         Args:
             tasks (Store): Store of task documents
-            materials (Store): Store of materials documents - 
+            materials (Store): Store of materials documents
                 should be aggregate across multiple stores using JointStore
             website (Store): Store of the mp style website docs
             aux ([Store]): Auxillary data collection to join to materials doc
@@ -69,7 +70,7 @@ class MPBuilder(Builder):
         self.website = website
         self.aux = aux if aux else []
         self.query = query
-        #        self.website.validator = JSONSchemaValidator(MPBUILDER_SCHEMA)
+        self.website.validator = JSONSchemaValidator(loadfn(MPBUILDER_SCHEMA))
         self._settings = loadfn(MPBUILDER_SETTINGS)
 
         super().__init__(sources=[materials] + aux, targets=[website], **kwargs)
@@ -98,7 +99,7 @@ class MPBuilder(Builder):
                 temp_docs = list(source.query(criteria={source.key: {"$in": chunked_keys}}))
                 self.logger.debug("Found {} docs in {} for {}".format(
                     len(temp_docs), source.collection_name, chunked_keys))
-                
+
                 # Ensure same key field for all docs
                 if source.key != self.materials.key:
                     for d in temp_docs:
@@ -122,7 +123,7 @@ class MPBuilder(Builder):
             for merge_key, sub_docs in docs:
                 #sort and group docs by last_updated
                 sub_docs = list(sorted(sub_docs, key=lambda x: x[self.materials.lu_field]))
-                self.logger.debug("Merging {} docs for {}".format(len(sub_docs),merge_key))
+                self.logger.debug("Merging {} docs for {}".format(len(sub_docs), merge_key))
                 # merge all docs in this group together
                 d = {k: v for doc in sub_docs for k, v in doc.items()}
                 # delete any private keys
@@ -148,7 +149,7 @@ class MPBuilder(Builder):
             add_cifs(mat)
             add_viewer_json(mat)
             add_meta(mat)
-            sandbox_props(mat,self._settings["sandboxed_properties"])
+            sandbox_props(mat, self._settings["sandboxed_properties"])
             has_fields(mat)
 
             processed = jsanitize(mat)
@@ -212,6 +213,7 @@ class MPBuilder(Builder):
 
         return mat
 
+
 #
 #
 #
@@ -274,7 +276,7 @@ def add_cifs(doc):
 
 def add_xrd(mat, new_style_mat):
     mat["xrd"] = {}
-    for el, doc in new_style_mat.get("xrd",{}).items():
+    for el, doc in new_style_mat.get("xrd", {}).items():
         el_doc = {}
         el_doc["meta"] = ["amplitude", "hkl", "two_theta", "d_spacing"]
         el_doc["created_at"] = datetime.now().isoformat()
@@ -291,11 +293,12 @@ def add_xrd(mat, new_style_mat):
 
 
 def add_bonds(mat, new_style_mat):
-    if get("bonds.successful",new_style_mat, False):
-        mat["bonds"] = get("bonds.summary",new_style_mat)
+    if get("bonds.successful", new_style_mat, False):
+        mat["bonds"] = get("bonds.summary", new_style_mat)
+
 
 def add_snl(mat, new_style_mat):
-    snl = new_style_mat.get("snl",None)
+    snl = new_style_mat.get("snl", None)
     mat["snl"] = copy.deepcopy(mat["structure"])
     if snl:
         mat["snl"].update(snl)
@@ -317,7 +320,7 @@ def add_snl(mat, new_style_mat):
 
 def add_propnet(mat, new_style_mat):
     if "propnet" in new_style_mat:
-        propnet = new_style_mat.get("propnet",{})
+        propnet = new_style_mat.get("propnet", {})
         exclude_list = ['compliance_tensor_voigt', 'task_id', '_id', 'pretty_formula', 'inputs', 'last_updated']
         for e in exclude_list:
             if e in propnet:
@@ -377,6 +380,7 @@ def has_fields(mat):
 def add_meta(mat):
     meta = {'emmet_version': emmet_version, 'pymatgen_version': pymatgen_version}
     mat['_meta'] = meta
+
 
 def sandbox_props(mat, sandbox_props):
     mat["sbxn"] = mat.get("sbxn", ["core", "jcesr", "vw", "shyamd", "kitchaev"])
