@@ -76,7 +76,6 @@
     "elasticity.third_order": "elasticity.third_order",
     "elasticity.warnings": "elasticity.warnings",
     "bond_valence": "bond_valence",
-    "reduced_cell_formula": "composition_reduced",
     "unit_cell_formula": "composition"
   }
 }
