@@ -128,6 +128,8 @@ class MPBuilder(Builder):
                 d = {k: v for doc in sub_docs for k, v in doc.items()}
                 # delete any private keys
                 d = {k: v for k, v in d.items() if not k.startswith("_")}
+                # Set to most recent lu_field
+                d[self.materials.lu_field] = sub_docs[-1][self.materials.lu_field]
 
                 yield d
 
@@ -252,6 +254,9 @@ def add_elastic(mat, new_style_mat):
             mat["elasticity"]["nsites"] = len(get(new_style_mat, "elasticity.structure.sites"))
         else:
             mat["elasticity"]["nsites"] = len(get(mat, "structure.sites"))
+
+        if get("elasticity.warnings",None) is None:
+            mat["elasticity"]["warnings"] = []
 
 
 def add_cifs(doc):
