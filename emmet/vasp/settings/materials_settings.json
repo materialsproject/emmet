@@ -229,7 +229,7 @@
     "tasks_key": "orig_inputs"
   },
   {
-    "materials_key": "spacegroup",
+    "materials_key": "symmetry",
     "quality_score": {
       "GGA Structure Optimization": 1,
       "GGA+U Structure Optimization": 5

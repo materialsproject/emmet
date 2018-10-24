@@ -30,7 +30,7 @@
     "pretty_formula": "formula_pretty",
     "reduced_cell_formula": "composition_reduced",
     "run_type": "calc_settings.run_type",
-    "spacegroup": "spacegroup",
+    "spacegroup": "symmetry",
     "structure": "structure",
     "total_magnetization": "magnetism.total_magnetization",
     "unit_cell_formula": "composition",
