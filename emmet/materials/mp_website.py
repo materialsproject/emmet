@@ -129,7 +129,7 @@ class MPBuilder(Builder):
                 # delete any private keys
                 d = {k: v for k, v in d.items() if not k.startswith("_")}
                 # Set to most recent lu_field
-                d[self.materials.lu_field] = sub_docs[-1][self.materials.lu_field]
+                d[self.materials.lu_field] = max(doc[self.materials.lu_field] for doc in sub_docs)
 
                 yield d
 
