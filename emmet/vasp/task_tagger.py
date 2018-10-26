@@ -56,7 +56,7 @@ def task_type(inputs, include_calc_type=True):
             calc_type += "GGA "
 
     if incar.get("ICHARG", 0) > 10:
-        if len(list(filter(None, inputs.get("kpoints", {}).get("labels", [])))) > 0:
+        if len(list(filter(None.__ne__, inputs.get("kpoints", {}).get("labels", [])))) > 0:
             return calc_type + "NSCF Line"
         else:
             return calc_type + "NSCF Uniform"
