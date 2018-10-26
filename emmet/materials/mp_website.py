@@ -70,7 +70,7 @@ class MPBuilder(Builder):
         self.website = website
         self.aux = aux if aux else []
         self.query = query
-        self.website.validator = JSONSchemaValidator(loadfn(MPBUILDER_SCHEMA))
+        #self.website.validator = JSONSchemaValidator(loadfn(MPBUILDER_SCHEMA))
         self._settings = loadfn(MPBUILDER_SETTINGS)
 
         super().__init__(sources=[materials] + aux, targets=[website], **kwargs)
@@ -93,8 +93,10 @@ class MPBuilder(Builder):
         for chunked_keys in grouper(keys, self.chunk_size, None):
             chunked_keys = list(filter(None.__ne__, chunked_keys))
 
-            # Get documents across all stores
+            # Get documents for main materials store
             docs = list(self.materials.query(criteria={self.materials.key: {"$in": chunked_keys}}))
+
+            # Get documents from all aux stores
             for source in self.aux:
                 temp_docs = list(source.query(criteria={source.key: {"$in": chunked_keys}}))
                 self.logger.debug("Found {} docs in {} for {}".format(
@@ -149,7 +151,6 @@ class MPBuilder(Builder):
             add_snl(mat, item)
             check_relaxation(mat, item)
             add_cifs(mat)
-            add_viewer_json(mat)
             add_meta(mat)
             sandbox_props(mat, self._settings["sandboxed_properties"])
             has_fields(mat)
@@ -161,8 +162,10 @@ class MPBuilder(Builder):
             processed = {"error": str(e)}
 
         key, lu_field = self.materials.key, self.materials.lu_field
-        out = {self.website.key: item[key]}
-        out[self.website.lu_field] = self.materials.lu_func[0](item[self.materials.lu_field])
+        out = {
+            self.website.key: item[key],
+            self.website.lu_field: self.website.lu_func[1](self.materials.lu_func[0](item[lu_field]))
+        }
         out.update(processed)
         return out
 
@@ -255,7 +258,7 @@ def add_elastic(mat, new_style_mat):
         else:
             mat["elasticity"]["nsites"] = len(get(mat, "structure.sites"))
 
-        if get("elasticity.warnings",None) is None:
+        if get("elasticity.warnings", None) is None:
             mat["elasticity"]["warnings"] = []
 
 
