@@ -158,7 +158,6 @@ class MPBuilder(Builder):
             add_cifs(mat)
             add_meta(mat)
             sandbox_props(mat, self._settings["sandboxed_properties"])
-            has_fields(mat)
 
             processed = jsanitize(mat)
 
@@ -366,13 +365,6 @@ def check_relaxation(mat, new_style_mat):
         print("Relaxation analyzer failed for Material:{} due to {}".format(mat["task_id"], traceback.print_exc()))
 
     mat["warnings"] = list(set(warnings))
-
-
-def has_fields(mat):
-    mat["has"] = [prop for prop in ["elasticity", "piezo", "diel"] if prop in mat]
-    if "band_structure" in mat:
-        mat["has"].append("bandstructure")
-
 
 def add_meta(mat):
     meta = {'emmet_version': emmet_version, 'pymatgen_version': pymatgen_version}
