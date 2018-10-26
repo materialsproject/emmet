@@ -143,15 +143,15 @@ class ThermoBuilder(Builder):
                 d = {
                     self.thermo.key: e.entry_id,
                     "thermo": {
-                        "energy": e.energy,
-                        "energy_per_atom": e.energy_per_atom,
+                        "energy": e.uncorrected_energy, 
+                        "energy_per_atom": e.uncorrected_energy / e.composition.num_atoms,
                         "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
                         "e_above_hull": ehull,
                         "is_stable": e in pd.stable_entries
                     }
                 }
 
-                # Logic for if stable or decomposes
+                # Store different info if stable vs decomposes
                 if d["thermo"]["is_stable"]:
                     d["thermo"]["eq_reaction_e"] = pd.get_equilibrium_reaction_energy(e)
                 else:
