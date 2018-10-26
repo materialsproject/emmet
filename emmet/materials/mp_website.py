@@ -81,7 +81,7 @@ class MPBuilder(Builder):
         """
 
         self.logger.info("Starting Website Builder")
-        mat_keys = set(self.materials.distinct(self.materials.key, critiria=self.query))
+        mat_keys = set(self.materials.distinct(self.materials.key, criteria=self.query))
         keys = set(get_keys(source=self.materials, target=self.website, query=self.query, logger=self.logger))
         for source in self.aux:
             keys |= set(get_keys(source=source, target=self.website, query=self.query, logger=self.logger)) & mat_keys
