@@ -360,22 +360,6 @@ def check_relaxation(mat, new_style_mat):
     mat["warnings"] = list(set(warnings))
 
 
-def add_viewer_json(mat):
-    """
-    Generate JSON for structure viewer.
-    """
-    structure = Structure.from_dict(mat['structure'])
-    canonical_json = StructureIntermediateFormat(structure).json
-    sga = SpacegroupAnalyzer(structure, symprec=0.1)
-    conventional_structure = sga.get_conventional_standard_structure()
-    conventional_json = StructureIntermediateFormat(conventional_structure).json
-    mat["_viewer"] = {
-        "structure_json": canonical_json,
-        "conventional_structure_json": conventional_json,
-        "_mp_dash_components_version": mp_dash_components_version
-    }
-
-
 def has_fields(mat):
     mat["has"] = [prop for prop in ["elasticity", "piezo", "diel"] if prop in mat]
     if "band_structure" in mat:
