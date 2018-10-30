@@ -66,7 +66,7 @@ class DielectricBuilder(MapBuilder):
                 "e_total": np.average(np.diagonal(total)),
                 "e_ionic": np.average(np.diagonal(ionic)),
                 "e_static": np.average(np.diagonal(static)),
-                "n": np.sqrt(static),
+                "n": np.sqrt(np.average(np.diagonal(static))),
             }
         }
 
