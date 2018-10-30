@@ -65,9 +65,12 @@ class MagneticBuilder(MapBuilder):
                 msa.number_of_magnetic_sites,
                 'num_unique_magnetic_sites':
                 msa.number_of_unique_magnetic_sites(),
-                'types_of_magnetic_species': [str(t) for t in msa.types_of_magnetic_specie],
+                'types_of_magnetic_species': 
+                [str(t) for t in msa.types_of_magnetic_specie],
                 'magmoms':
                 magmoms,
+                'total_magnetization':
+                total_magnetization,
                 'total_magnetization_normalized_vol':
                 total_magnetization / struct.volume,
                 'total_magnetization_normalized_formula_units':
