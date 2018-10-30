@@ -1,0 +1,33 @@
+{
+  "title": "mp_website",
+  "type": "object",
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "e_above_hull": {
+      "type": "number",
+      "minimum": 0
+    },
+    "structure": {
+      "type": "object",
+      "required": [
+        "@class",
+        "@module"
+      ],
+      "properties": {
+        "@class": {
+          "const": "Structure"
+        },
+        "@module": {
+          "const": "pymatgen.core.structure"
+        }
+      }
+    }
+  },
+  "required": [
+    "task_id",
+    "e_above_hull",
+    "structure"
+  ]
+}

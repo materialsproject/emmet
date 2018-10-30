@@ -1,0 +1,16 @@
+{
+    "title": "magnetism",
+    "type": "object",
+    "properties": {
+        "task_id": {
+            "type": "string"
+        },
+        "magnetism": {
+            "type": "object"
+        },
+        "pymatgen_version": {
+            "type": "string"
+        }
+    },
+    "required": ["task_id", "magnetism", "pymatgen_version"]
+}

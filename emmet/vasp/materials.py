@@ -5,7 +5,6 @@ import numpy as np
 
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
-from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from maggma.builder import Builder
@@ -160,13 +159,12 @@ class MaterialsBuilder(Builder):
 
         # Store task_id of first structure as material task_id
         structure_task_ids = list(
-            sorted(
-                [
-                    prop["task_id"]
-                    for prop in all_props
-                    if prop["materials_key"] == "structure" and "Structure Optimization" in prop["task_type"]
-                ],
-                key=ID_to_int))
+            sorted([
+                prop["task_id"]
+                for prop in all_props
+                if prop["materials_key"] == "structure" and "Structure Optimization" in prop["task_type"]
+            ],
+                   key=ID_to_int))
 
         # If we don"t have a structure optimization then just return no material
         if len(structure_task_ids) == 0 and self.require_structure_opt:
@@ -205,6 +203,7 @@ class MaterialsBuilder(Builder):
 
         mat = {
             self.materials.lu_field: max([prop["last_updated"] for prop in all_props]),
+            "created_at": min([prop["last_updated"] for prop in all_props]),
             "task_ids": task_ids,
             self.materials.key: structure_task_ids[0],
             "origins": origins,
@@ -217,8 +216,8 @@ class MaterialsBuilder(Builder):
         # Add metadata back into document and convert back to conventional standard
         if "structure" in mat:
             structure = Structure.from_dict(mat["structure"])
-            sga = SpacegroupAnalyzer(structure)
-            structure = sga.get_conventional_standard_structure()
+            sga = SpacegroupAnalyzer(structure, symprec=0.1)
+            mat["structure"] = structure.as_dict()
             mat.update(structure_metadata(structure))
 
         return mat
@@ -235,11 +234,14 @@ class MaterialsBuilder(Builder):
         for idx, t in enumerate(filtered_tasks):
             s = Structure.from_dict(t["output"]["structure"])
             s.index = idx
-            total_mag = get(t,"calcs_reversed.0.output.outcar.total_magnetization",0)
+            total_mag = get(t, "calcs_reversed.0.output.outcar.total_magnetization", 0)
             s.total_magnetization = total_mag if total_mag else 0
-            if not s.site_properties.get("magmom", False):
-                if "MAGMOM" in t["input"]["parameters"]:
-                    s.add_site_property("magmom",t["input"]["parameters"]["MAGMOM"])
+            # a fix for very old tasks that did not report site-projected magnetic moments
+            # so that we can group them appropriately
+            if ('magmom' not in s.site_properties) and (get(t, "input.parameters.ISPIN", 1) == 2) and \
+                    has(t, "input.parameters.MAGMOM"):
+                # TODO: map input structure sites to output structure sites
+                s.add_site_property("magmom", t["input"]["parameters"]["MAGMOM"])
             structures.append(s)
 
         grouped_structures = group_structures(
@@ -343,7 +345,7 @@ def ID_to_int(s_id):
         raise Exception("Could not parse {} into a number".format(s_id))
 
 
-def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_orderings=False):
+def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, separate_mag_orderings=False):
     """
     Groups structures according to space group and structure matching
 
@@ -352,6 +354,7 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
         ltol (float): StructureMatcher tuning parameter for matching tasks to materials
         stol (float): StructureMatcher tuning parameter for matching tasks to materials
         angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
+        symprec (float): symmetry tolerance for space group finding
         separate_mag_orderings (bool): Separate magnetic orderings into different materials
     """
 
@@ -365,13 +368,23 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, separate_mag_o
         allow_subset=False,
         comparator=ElementComparator())
 
+    def get_sg(struc):
+        # helper function to get spacegroup with a loose tolerance
+        try:
+            sg = struc.get_space_group_info(symprec=symprec)[1]
+        except:
+            sg = -1
+
+        return sg
+
     def get_mag_ordering(struc):
         # helperd function to get a label of the magnetic ordering type
-        return np.around(np.abs(struc.total_magnetization)/struc.volume,decimals=1)
+        return np.around(np.abs(struc.total_magnetization) / struc.volume, decimals=1)
 
     # First group by spacegroup number then by structure matching
-    for _, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
-        for group in sm.group_structures(sorted(pregroup, key=get_sg)):
+    for sg, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
+        for group in sm.group_structures(list(pregroup)):
+
             # Match magnetic orderings here
             if separate_mag_orderings:
                 for _, mag_group in groupby(sorted(group, key=get_mag_ordering), key=get_mag_ordering):
