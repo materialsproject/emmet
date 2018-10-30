@@ -13,10 +13,9 @@ test_mats = os.path.join(module_dir, "..", "..", "..", "test_files", "thermo_tes
 
 
 class TestBondBuilder(unittest.TestCase):
-
     def setUp(self):
 
-        self.materials = JSONStore(test_mats, lu_type='isoformat')
+        self.materials = JSONStore(test_mats)
         self.bonding = MemoryStore("bonding")
 
     def test_build(self):
@@ -25,7 +24,7 @@ class TestBondBuilder(unittest.TestCase):
         runner = Runner([builder])
         runner.run()
 
-        doc = list(self.bonding.query(criteria={'task_id': 'mp-779001'}))[0]
+        doc = self.bonding.query_one(criteria={'task_id': 'mp-779001'})["bonding"][0]
         sg = StructureGraph.from_dict(doc['graph'])
         self.assertIsInstance(sg, StructureGraph)
         self.assertIn('Hf-O(6)', doc['summary']['coordination_envs'])

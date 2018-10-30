@@ -8,7 +8,7 @@ __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-test_tasks = os.path.join(module_dir, "..",  "..", "..", "test_files", "test_tasktagger_tasks.json")
+test_tasks = os.path.join(module_dir, "..", "..", "..", "test_files", "test_tasktagger_tasks.json")
 
 
 class TaskTaggerTest(unittest.TestCase):
@@ -23,7 +23,7 @@ class TaskTaggerTest(unittest.TestCase):
         task_tagger = TaskTagger(tasks=self.test_tasks, task_types=self.task_types)
 
         for t in task_tagger.get_items():
-            processed = task_tagger.process_item(t)
+            processed = task_tagger.calc(t)
             true_type = self.test_tasks.query_one(
                 criteria={"task_id": t["task_id"]},
                 properties=["true_task_type"],

@@ -12,10 +12,9 @@ test_mats = os.path.join(module_dir, "..", "..", "..", "test_files", "thermo_tes
 
 
 class TestBondValence(unittest.TestCase):
-
     def setUp(self):
 
-        self.materials = JSONStore(test_mats, lu_type='isoformat')
+        self.materials = JSONStore(test_mats)
         self.bond_valence = MemoryStore("bond_valence")
 
     def test_build(self):
@@ -25,7 +24,7 @@ class TestBondValence(unittest.TestCase):
         runner.run()
 
         doc = list(self.bond_valence.query(criteria={'task_id': 'mp-779001'}))[0]
-        self.assertSetEqual(set(doc['possible_species']), {'Hf4+', 'Sr2+', 'O2-'})
+        self.assertSetEqual(set(doc["bond_valence"]['possible_species']), {'Hf4+', 'Sr2+', 'O2-'})
 
 
 if __name__ == "__main__":

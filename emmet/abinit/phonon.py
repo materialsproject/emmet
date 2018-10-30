@@ -65,7 +65,7 @@ class PhononBuilder(Builder):
         # All relevant materials that have been updated since diffraction props were last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.phonon))
-        mats = list(self.materials().find(q, {"mp_id": 1}))
+        mats = list(self.materials.find(q, {"mp_id": 1}))
         self.logger.info("Found {} new materials for phonon data".format(len(mats)))
 
         # list of properties queried from the results DB
