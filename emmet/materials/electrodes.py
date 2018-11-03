@@ -148,7 +148,6 @@ class ElectrodesBuilder(Builder):
                     ]
                 else:
                     d_muO2 = None
-
                 en.data['muO2'] = d_muO2
                 en.data['decomposition_energy'] = phdi.get_e_above_hull(en)
 
@@ -156,7 +155,7 @@ class ElectrodesBuilder(Builder):
             result = InsertionElectrode(group, self.working_ion_entry)
             d = result.as_dict_summary()
             d['stable_entries'] = [{'entry_id': entry.entry_id, 'muO2': entry.data['muO2'],
-                                        'e_above_hull': entry.data['decomposition_energy']}
+                                        'decomposition_energy': entry.data['decomposition_energy']}
                                    for entry in result.get_stable_entries()]
 
             id_num = int(result.get_all_entries()[0].entry_id.split('-')[-1])
