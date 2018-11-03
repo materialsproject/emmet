@@ -11,13 +11,13 @@ from itertools import groupby
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 
-default_substrate_settings = os.path.join("/Users/lik/repos/emmet/emmet/materials/settings", "electrodes.yaml")  # TODO this substrate file needs to be updated
+
+s_hash = lambda el: el.data['comp_delith']
+redox_els = ['Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Nb', 'Mo',
+             'Sn', 'Sb', 'W', 'Re', 'Bi']
+mat_props = ['structure', 'thermo.energy', 'calc_settings', 'task_id']
 
 class ElectrodesBuilder(Builder):
-    s_hash = lambda el: el.data['comp_delith']
-    redox_els = ['Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Nb', 'Mo',
-                 'Sn', 'Sb', 'W', 'Re', 'Bi']
-
     def __init__(self, materials, electro, working_ion, query=None,
                  compatibility=MaterialsProjectCompatibility("Advanced"),
                  **kwargs):
@@ -36,12 +36,20 @@ class ElectrodesBuilder(Builder):
         self.sm = StructureMatcher(comparator=ElementComparator(),
                                    primitive_cell=False)
         self.materials = materials
+        self.materials.connect()
         self.electro = electro
+        self.electro.connect()
         self.working_ion = working_ion
         self.query = query if query else {}
         self.compatibility = compatibility
         self.completed_tasks = set()
-        self.working_ion_entry = None
+        # We only need the working_ion_entry once
+        working_ion_entries = self.materials.query(criteria={"chemsys": self.working_ion}, properties=mat_props)
+        working_ion_entries = self._mat_doc2comp_entry(working_ion_entries, store_struct=False)
+
+        if working_ion_entries:
+            self.working_ion_entry = min(working_ion_entries, key=lambda e: e.energy_per_atom)
+
         super().__init__(sources=[materials], targets=[electro], **kwargs)
 
     def get_items(self):
@@ -54,23 +62,25 @@ class ElectrodesBuilder(Builder):
         """
 
 
-        # We only need the working_ion_entry once
-        working_ion_entries = self.materials.collection.find({"chemsys": self.working_ion})
-        working_ion_entries = self._mat_doc2comp_entry(working_ion_entries, store_struct=False)
-
-        if working_ion_entries:
-            self.working_ion_entry = min(working_ion_entries, key=lambda e: e.energy_per_atom)
-
         self.logger.info("Grabbing the relavant chemical systems containing the current \
                 working ion and a single redox element.")
         q = dict(self.query)
         q.update({'$and': [
             {"elements": {'$in': [self.working_ion]}},
-            {"elements": {'$in': ElectrodesBuilder.redox_els}}
+            {"elements": {'$in': redox_els}}
         ]})
         chemsys_names = self.materials.distinct('chemsys', q)
         for chemsys in chemsys_names:
-            return (self.get_hashed_entries_from_chemsys(chemsys))
+            print(chemsys)
+            # get the phase diagram from using the chemsys
+            pd_q = {'chemsys':{"$in": list(chemsys_permutations(chemsys))}}
+            pd_docs = list(self.materials.query(properties=mat_props, criteria=pd_q))
+            pd_ents = self._mat_doc2comp_entry(pd_docs, store_struct=False)
+            pd_ents = list(filter(None.__ne__, pd_ents))
+            phdi = PhaseDiagram(pd_ents)
+            for item in self.get_hashed_entries_from_chemsys(chemsys):
+                item.update({'pd':phdi})
+                yield item
 
     def get_hashed_entries_from_chemsys(self, chemsys):
         """
@@ -88,21 +98,24 @@ class ElectrodesBuilder(Builder):
                 for c in [elements, elements-{self.working_ion}]}
         print("chemsys list: {}".format(chemsys_w_wo_ion))
         q = {'chemsys' : {"$in" : list(chemsys_w_wo_ion)}}
-        docs = self.materials.collection.find(q)
-        #entries = self._thermo_doc2comp_entry(docs)
+        docs = self.materials.query(q, mat_props)
         entries = self._mat_doc2comp_entry(docs)
-
+        print("Found {} entries in the database".format(len(entries)))
+        entries = list(filter(None.__ne__, entries))
         self.logger.debug("Found {} entries in the database".format(len(entries)))
+
+
+
         if len(entries) > 1:
             # ignore systems with only one entry
             # group entries together by their composition sans the working ion
-            del docs
-            entries = sorted(entries, key=ElectrodesBuilder.s_hash)
-            for _, g in groupby(entries, key=ElectrodesBuilder.s_hash):
+            entries = sorted(entries, key=s_hash)
+            for _, g in groupby(entries, key=s_hash):
                 g = list(g)
                 self.logger.debug("The group: {}".format([el.composition for el in g]))
                 if len(g) > 1:
-                    yield (chemsys, g)
+                    #print('read')
+                    yield {'chemsys': chemsys, 'all_entries': g}
 
     def process_item(self, item):
         """
@@ -115,47 +128,40 @@ class ElectrodesBuilder(Builder):
         """
         # sort the entries intro subgroups
         # then perform PD analysis
-        chemsys = item[0]
-        all_entries = item[1]
+        all_entries = item['all_entries']
+        phdi = item['pd']
         
         grouped_entries = list(self.get_sorted_subgroups(all_entries))
         docs = [] # results 
         
-        # get the phase diagram from using the chemsys
-        new_q = dict(self.query)
-        new_q["chemsys"] = {"$in": list(chemsys_permutations(chemsys))}
-        fields = ["structure", self.materials.key, "thermo.energy",
-                  "composition", "calc_settings"]
-        pd_docs = list(self.materials.query(properties=fields, criteria=new_q))
-        pd_ents = self._mat_doc2comp_entry(pd_docs, store_struct=False)
-        phdi = PhaseDiagram(pd_ents)
-
-        
         for group in grouped_entries:
             for en in group:
-                #print(en.composition)
-                d_muO2 = [
-                    {'reaction' : str(itr['reaction']),
-                     'chempot' : itr['chempot'],
-                     'evolution' : itr['evolution']
-                    } 
-                    for itr in phdi.get_element_profile('O', en.composition)
-                ]
+                print(en.composition)
+                # skip this d_muO2 stuff if you do note have oxygen
+                if Element('O') in ent.composition.elements:
+                    d_muO2 = [
+                        {'reaction' : str(itr['reaction']),
+                         'chempot' : itr['chempot'],
+                         'evolution' : itr['evolution']
+                        }
+                        for itr in phdi.get_element_profile('O', en.composition)
+                    ]
+                else:
+                    d_muO2 = None
+
                 en.data['muO2'] = d_muO2
                 en.data['decomposition_energy'] = phdi.get_e_above_hull(en)
-            result = InsertionElectrode(group, self.working_ion_entry)
 
-            try:
-                # in some cases entries in a group might be too far above the covex hull which will break
-                # InsertionElectrode, in those case we can just ignore those entries
-                result = InsertionElectrode(group, self.working_ion_entry)
-                d = result.as_dict_summary()
-                id_num = int(result.get_all_entries()[0].entry_id.split('-')[-1])
-                d['batt_id'] = 'bat-' + str(id_num + 40000000)
-                docs.append(d)
-            except:
-                self.logger.debug("InsertionElectrode was not generated for the \
-                                   group containing [{}]".format([el.entry_id for el in group]))
+            #print([str(itr.data['muO2'])+"\n" for itr in group])
+            result = InsertionElectrode(group, self.working_ion_entry)
+            d = result.as_dict_summary()
+            d['stable_entries'] = [{'entry_id': entry.entry_id, 'muO2': entry.data['muO2'],
+                                        'e_above_hull': entry.data['decomposition_energy']}
+                                   for entry in result.get_stable_entries()]
+
+            id_num = int(result.get_all_entries()[0].entry_id.split('-')[-1])
+            d['batt_id'] = 'bat-' + str(id_num + 40000000)
+            docs.append(d)
         return docs
 
     def update_targets(self, items):
@@ -228,40 +234,13 @@ class ElectrodesBuilder(Builder):
         return {"-".join(sorted(c))
                 for c in [elements, elements-{self.working_ion}]}
 
-    def _thermo_doc2comp_entry(self, th_docs, store_struct=True):
-        def get_prim_host(struct):
-            """
-            Get the primitive structure with all of the lithiums removed
-            """
-            structure = struct.copy()
-            structure.remove_species(['Li'])
-            prim = PrimitiveCellTransformation()
-            return prim.apply_transformation(structure)
-
-        entries=[]
-        for th_doc in th_docs:
-            q = {'task_ids': {'$in': [th_doc['task_id']]}}
-            p = ['structure', 'task_id']
-            mdoc = self.materials.collection.find_one(q, projection=p)
-            struct = Structure.from_dict(mdoc['structure'])
-            th_doc['thermo']['entry']['structure'] = struct
-            new_entry = ComputedStructureEntry.from_dict(th_doc['thermo']['entry'])
-            if store_struct:
-                struct_delith = get_prim_host(struct)
-                comp_delith = self.sm._comparator.get_hash(struct_delith.composition)
-                #new_entry.data['structure'] = struct
-                new_entry.data['structure_delith'] = struct_delith
-                new_entry.data['comp_delith'] = comp_delith
-            entries.append(self.compatibility.process_entry(new_entry))
-        return entries
-
     def _mat_doc2comp_entry(self, docs, store_struct=True):
         def get_prim_host(struct):
             """
             Get the primitive structure with all of the lithiums removed
             """
             structure = struct.copy()
-            structure.remove_species(['Li'])
+            structure.remove_species([self.working_ion])
             prim = PrimitiveCellTransformation()
             return prim.apply_transformation(structure)
         
