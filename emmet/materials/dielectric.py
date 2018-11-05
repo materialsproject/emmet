@@ -74,18 +74,21 @@ class DielectricBuilder(MapBuilder):
         # Update piezo if non_centrosymmetric
         if item.get("piezo", False) and not sga.is_laue():
             static = PiezoTensor.from_voigt(np.array(
-                item['piezo']["static"])).fit_to_structure(structure).convert_to_ieee(structure).voigt
+                item['piezo']["static"]))
             ionic = PiezoTensor.from_voigt(np.array(
-                item['piezo']["ionic"])).fit_to_structure(structure).convert_to_ieee(structure).voigt
+                item['piezo']["ionic"]))
             total = ionic + static
 
             directions, charges, strains = np.linalg.svd(total)
 
             max_index = np.argmax(np.abs(charges))
             d["piezo"] = {
-                "total": total,
-                "ionic": ionic,
-                "static": static,
+                "total_raw":  total.voigt,
+                "ionic_raw": ionic.voigt,
+                "static_raw": static.voigt,
+                "total": total.fit_to_structure(structure).convert_to_ieee(structure).voigt,
+                "ionic": ionic.fit_to_structure(structure).convert_to_ieee(structure).voigt,
+                "static": static.fit_to_structure(structure).convert_to_ieee(structure).voigt,
                 "e_ij_max": charges[max_index],
                 "max_direction": directions[max_index],
                 "strain_for_max": strains[max_index]
