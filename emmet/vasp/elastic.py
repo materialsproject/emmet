@@ -35,7 +35,7 @@ from pymatgen.analysis.structure_matcher import StructureMatcher,\
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from atomate.vasp.workflows.base.elastic import get_default_strain_states
 
-from maggma.builder import Builder
+from maggma.builders import Builder
 from emmet.materials.mp_website import MPBUILDER_SETTINGS
 
 from pydash.objects import get, set_

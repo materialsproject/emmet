@@ -6,7 +6,7 @@ from pymatgen.core.tensors import Tensor
 from pymatgen.analysis.piezo import PiezoTensor
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-from maggma.examples.builders import MapBuilder
+from maggma.builders import MapBuilder
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 

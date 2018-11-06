@@ -6,7 +6,7 @@ from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.core.periodic_table import Specie
 from pymatgen import __version__ as pymatgen_version
 
-from maggma.examples.builders import MapBuilder
+from maggma.builders import MapBuilder
 from maggma.validator import JSONSchemaValidator
 
 MODULE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))

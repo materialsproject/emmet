@@ -8,7 +8,7 @@ from pymatgen.entries.computed_entries import ComputedEntry
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.analysis.structure_analyzer import oxide_type, sulfide_type
 
-from maggma.builder import Builder
+from maggma.builders import Builder
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 

@@ -6,7 +6,7 @@ from pydash.objects import get
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.util.provenance import StructureNL
-from maggma.builder import Builder
+from maggma.builders import Builder
 from pybtex.database import parse_string
 from pybtex.database import BibliographyData
 

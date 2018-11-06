@@ -3,7 +3,7 @@ import unittest
 
 from maggma.stores import MemoryStore
 from maggma.runner import Runner
-from maggma.builder import Builder
+from maggma.builders import Builder
 from emmet.workflows.property_workflows import PropertyWorkflowBuilder,\
     get_elastic_wf_builder
 from pymatgen.util.testing import PymatgenTest
