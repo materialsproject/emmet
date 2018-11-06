@@ -1,4 +1,4 @@
-from maggma.builder import Builder
+from maggma.builders import Builder
 from pydash.objects import get
 
 

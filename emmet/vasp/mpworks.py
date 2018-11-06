@@ -6,7 +6,7 @@ from pymatgen import Composition
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility
 from pymatgen.entries.computed_entries import ComputedEntry
 
-from maggma.builder import Builder
+from maggma.builders import Builder
 
 from pydash.objects import get, set_
 

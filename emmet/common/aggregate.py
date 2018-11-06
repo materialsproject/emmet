@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from maggma.builder import Builder
+from maggma.builders import Builder
 from maggma.utils import recursive_update
 
 class AggregateBuilder(Builder):

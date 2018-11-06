@@ -9,7 +9,7 @@ from pymatgen.core.structure import Structure
 from pymatgen.analysis.diffraction.xrd import XRDCalculator, WAVELENGTHS
 
 from emmet.common.utils import load_settings
-from maggma.examples.builders import MapBuilder
+from maggma.builders import MapBuilder
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 

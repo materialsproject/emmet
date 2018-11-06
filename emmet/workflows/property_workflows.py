@@ -8,7 +8,7 @@ import numpy as np
 import logging
 import six
 
-from maggma.builder import Builder
+from maggma.builders import Builder
 from atomate.vasp.workflows.presets.core import wf_elastic_constant
 from atomate.vasp.powerups import add_tags, add_modify_incar, add_priority
 from atomate.utils.utils import get_fws_and_tasks, load_class
