@@ -1,5 +1,5 @@
 import os
-from pymatgen.core import Structure
+from pymatgen.core import Structure, Element
 from maggma.builder import Builder
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
@@ -71,7 +71,7 @@ class ElectrodesBuilder(Builder):
         ]})
         chemsys_names = self.materials.distinct('chemsys', q)
         for chemsys in chemsys_names:
-            print(chemsys)
+            self.logger.debug("Calculating the phase diagram for: ", chemsys)
             # get the phase diagram from using the chemsys
             pd_q = {'chemsys':{"$in": list(chemsys_permutations(chemsys))}}
             pd_docs = list(self.materials.query(properties=mat_props, criteria=pd_q))
@@ -96,11 +96,11 @@ class ElectrodesBuilder(Builder):
         elements = set(chemsys.split("-"))
         chemsys_w_wo_ion = {"-".join(sorted(c))
                 for c in [elements, elements-{self.working_ion}]}
-        print("chemsys list: {}".format(chemsys_w_wo_ion))
+        self.logger.info("chemsys list: {}".format(chemsys_w_wo_ion))
         q = {'chemsys' : {"$in" : list(chemsys_w_wo_ion)}}
         docs = self.materials.query(q, mat_props)
         entries = self._mat_doc2comp_entry(docs)
-        print("Found {} entries in the database".format(len(entries)))
+        self.logger.info("Found {} entries in the database".format(len(entries)))
         entries = list(filter(None.__ne__, entries))
         self.logger.debug("Found {} entries in the database".format(len(entries)))
 
@@ -136,9 +136,9 @@ class ElectrodesBuilder(Builder):
         
         for group in grouped_entries:
             for en in group:
-                print(en.composition)
+                self.logger.info(en.composition)
                 # skip this d_muO2 stuff if you do note have oxygen
-                if Element('O') in ent.composition.elements:
+                if Element('O') in en.composition.elements:
                     d_muO2 = [
                         {'reaction' : str(itr['reaction']),
                          'chempot' : itr['chempot'],
