@@ -14,8 +14,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class ThermoBuilder(Builder):
-    def __init__(self, materials, thermo, query=None,
-                 compatibility=MaterialsProjectCompatibility("Advanced"),
+    def __init__(self, materials, thermo, query=None, compatibility=MaterialsProjectCompatibility("Advanced"),
                  **kwargs):
         """
         Calculates thermodynamic quantities for materials from phase
@@ -58,7 +57,7 @@ class ThermoBuilder(Builder):
         thermo_mat_ids = self.thermo.distinct("task_id")
         q = dict(self.query)
         q.update({"task_id": {"$nin": thermo_mat_ids}})
-        new_mat_comps = set(self.materials.distinct("chemsys",q))
+        new_mat_comps = set(self.materials.distinct("chemsys", q))
 
         # All chemsys not present in thermo collection
         new_comps = set(self.materials.distinct("chemsys", self.query))\
@@ -78,8 +77,7 @@ class ThermoBuilder(Builder):
                 processed |= chemsys_permutations(chemsys)
                 to_process.append(chemsys)
 
-        self.logger.info(
-            "Found {} compositions with new/updated materials".format(len(to_process)))
+        self.logger.info("Found {} compositions with new/updated materials".format(len(to_process)))
         self.total = len(to_process)
 
         for chemsys in to_process:
@@ -100,8 +98,7 @@ class ThermoBuilder(Builder):
 
         new_q = dict(self.query)
         new_q["chemsys"] = {"$in": list(chemsys_permutations(chemsys))}
-        fields = ["structure", self.materials.key, "thermo.energy_per_atom",
-                  "composition", "calc_settings"]
+        fields = ["structure", self.materials.key, "thermo.energy_per_atom", "composition", "calc_settings"]
         data = list(self.materials.query(properties=fields, criteria=new_q))
 
         all_entries = []
@@ -114,9 +111,7 @@ class ThermoBuilder(Builder):
                 0.0,
                 parameters=d["calc_settings"],
                 entry_id=d[self.materials.key],
-                data={
-                    "oxide_type": oxide_type(Structure.from_dict(d["structure"]))
-                })
+                data={"oxide_type": oxide_type(Structure.from_dict(d["structure"]))})
 
             all_entries.append(entry)
 
@@ -148,13 +143,15 @@ class ThermoBuilder(Builder):
                 d = {
                     self.thermo.key: e.entry_id,
                     "thermo": {
+                        "energy": e.uncorrected_energy, 
+                        "energy_per_atom": e.uncorrected_energy / e.composition.num_atoms,
                         "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
                         "e_above_hull": ehull,
                         "is_stable": e in pd.stable_entries
                     }
                 }
 
-                # Logic for if stable or decomposes
+                # Store different info if stable vs decomposes
                 if d["thermo"]["is_stable"]:
                     d["thermo"]["eq_reaction_e"] = pd.get_equilibrium_reaction_energy(e)
                 else:
@@ -174,8 +171,11 @@ class ThermoBuilder(Builder):
 
                 docs.append(d)
         except PhaseDiagramError as p:
-            print(e.as_dict())
-            self.logger.warning("Phase diagram error: {}".format(p))
+            elsyms = []
+            for e in entries:
+                elsyms.extend([el.symbol for el in e.composition.elements])
+
+            self.logger.warning("Phase diagram errorin chemsys {}: {}".format("-".join(sorted(set(elsyms))), p))
             return []
 
         return docs
@@ -222,6 +222,4 @@ def chemsys_permutations(chemsys):
     # Fancy way of getting every unique permutation of elements for all
     # possible number of elements:
     elements = chemsys.split("-")
-    return {"-".join(sorted(c))
-            for c in chain(*[combinations(elements, i)
-                             for i in range(1, len(elements) + 1)])}
+    return {"-".join(sorted(c)) for c in chain(*[combinations(elements, i) for i in range(1, len(elements) + 1)])}

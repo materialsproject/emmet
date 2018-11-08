@@ -21,6 +21,7 @@ from itertools import chain, groupby, product
 from copy import deepcopy
 
 from monty.json import jsanitize
+from monty.serialization import loadfn
 
 from pymatgen import Structure
 from pymatgen.analysis.elasticity.elastic import ElasticTensor,\
@@ -35,7 +36,7 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from atomate.vasp.workflows.base.elastic import get_default_strain_states
 
 from maggma.builder import Builder
-from emmet.materials.mp_website import mag_types
+from emmet.materials.mp_website import MPBUILDER_SETTINGS
 
 from pydash.objects import get, set_
 
@@ -46,6 +47,8 @@ __author__ = "Joseph Montoya, Shyam Dwaraknath"
 __maintainer__ = "Joseph Montoya"
 __email__ = "montoyjh@lbl.gov"
 
+
+mag_types =  loadfn(MPBUILDER_SETTINGS)["mag_types"]
 
 logger = logging.getLogger(__name__)
 

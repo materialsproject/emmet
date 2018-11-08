@@ -1,5 +1,6 @@
 from maggma.stores import MongoStore
 from pymatgen.util.testing import PymatgenTest
+import unittest
 from unittest import TestCase
 from uuid import uuid4
 
@@ -41,3 +42,6 @@ class TestDiffractionBuilder(TestCase):
     def test_serialization(self):
         builder = DiffractionBuilder(self.source, self.target)
         self.assertIsNone(builder.as_dict()["xrd_settings"])
+
+if __name__ == "__main__":
+    unittest.main()
