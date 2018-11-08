@@ -77,9 +77,8 @@ class ElectrodesBuilder(Builder):
             pd_docs = list(self.materials.query(properties=mat_props, criteria=pd_q))
             pd_ents = self._mat_doc2comp_entry(pd_docs, store_struct=False)
             pd_ents = list(filter(None.__ne__, pd_ents))
-            phdi = PhaseDiagram(pd_ents)
             for item in self.get_hashed_entries_from_chemsys(chemsys):
-                item.update({'pd':phdi})
+                item.update({'pd_ents':pd_ents})
                 yield item
 
     def get_hashed_entries_from_chemsys(self, chemsys):
@@ -129,8 +128,9 @@ class ElectrodesBuilder(Builder):
         # sort the entries intro subgroups
         # then perform PD analysis
         all_entries = item['all_entries']
-        phdi = item['pd']
-        
+        pd_ents = item['pd_ents']
+        phdi = PhaseDiagram(pd_ents)
+
         grouped_entries = list(self.get_sorted_subgroups(all_entries))
         docs = [] # results 
         
