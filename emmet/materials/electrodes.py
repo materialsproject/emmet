@@ -26,7 +26,6 @@ class ElectrodesBuilder(Builder):
         groups of ComputedStructureEntry and the entry for the most stable version of the working_ion in the system
         Args:
             materials (Store): Store of materials documents that contains the structures
-            thermo (Store): Store of thermo entries that act as the basis of the batteries database
             batt (Store): Store of thermodynamic data such as formation
                 energy and decomposition pathway
             query (dict): dictionary to limit materials to be analyzed
@@ -72,6 +71,7 @@ class ElectrodesBuilder(Builder):
         chemsys_names = self.materials.distinct('chemsys', q)
         for chemsys in chemsys_names:
             self.logger.debug("Calculating the phase diagram for: ", chemsys)
+            print("Calculating the phase diagram for: ", chemsys)
             # get the phase diagram from using the chemsys
             pd_q = {'chemsys':{"$in": list(chemsys_permutations(chemsys))}}
             pd_docs = list(self.materials.query(properties=mat_props, criteria=pd_q))
@@ -102,7 +102,7 @@ class ElectrodesBuilder(Builder):
         entries = self._mat_doc2comp_entry(docs)
         self.logger.info("Found {} entries in the database".format(len(entries)))
         entries = list(filter(None.__ne__, entries))
-        self.logger.debug("Found {} entries in the database".format(len(entries)))
+        print("Found {} entries in the database".format(len(entries)))
 
 
 
