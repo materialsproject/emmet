@@ -11,23 +11,22 @@ from maggma.builder import Builder
 __author__ = "Francesco Ricci <francesco.ricci@uclouvain.be>"
 
 class Boltztrap2DosBuilder(Builder):
-    def __init__(self, materials, boltztrap, bandstructure_fs="bandstructure_fs", btz_cdos_fs=None, query={}, **kwargs):
+    def __init__(self, materials, bandstructure, boltztrap4dos, query={}, **kwargs):
         """
         Calculates Density of States (DOS) using BoltzTrap
         Saves the dos object
 
         Args:
             materials (Store): Store of materials documents
-            boltztrap (Store): Store of boltztrap
-            bandstructure_fs (str): Name of the GridFS where bandstructures are stored
+            bandstructure (Store): Name of the GridFS where bandstructures are stored
+            boltztrap4dos (Store): Store of boltztrap4dos
             query (dict): dictionary to limit materials to be analyzed
 
         """
 
         self.materials = materials
-        self.boltztrap = boltztrap
-        self.bandstructure_fs = bandstructure_fs
-        self.btz_cdos_fs = btz_cdos_fs
+        self.bandstructure = bandstructure
+        self.boltztrap4dos = boltztrap4dos
         self.query = query
 
         super().__init__(sources=[materials],
@@ -52,24 +51,17 @@ class Boltztrap2DosBuilder(Builder):
         #q["output.bandgap"] = {"$gt": 0.0}
         mats = set(self.materials.distinct(self.materials.key, criteria=q))
 
-        # initialize the gridfs
-        bfs = gridfs.GridFS(self.materials.database, self.bandstructure_fs)
-
         self.logger.info(
             "Found {} new materials for calculating boltztrap dos".format(len(mats)))
+
         for m in mats:
             mat = self.materials.query(
                 [self.materials.key, "structure", "input.parameters.NELECT", "bandstructure"], criteria={self.materials.key: m})
 
             # If a bandstructure oid exists
-            if "uniform_bs_oid" in mat.get("bandstructure", {}):
-                bs_json = bfs.get(mat["bandstructure"][
-                                  "uniform_bs_oid"]).read()
-
-                if "zlib" in mat["bandstructure"].get("uniform_bs_compression", ""):
-                    bs_json = zlib.decompress(bs_json)
-
-                bs_dict = json.loads(bs_json.decode())
+            bs_task_id = mat.get("bandstructure",{}).get("uniform_task",None)
+            if bs_task_id:
+                bs_dict = self.bandstructures.query_one({self.bandstructures.key : bs_task_id})
                 mat["bandstructure"]["uniform_bs"] = bs_dict
 
             yield mat
@@ -89,9 +81,10 @@ class Boltztrap2DosBuilder(Builder):
 
         nelect = item["input"]["parameters"]["NELECT"]
 
-        bs_dict = item["uniform_bandstructure"]["bs"]
+        bs_dict = item["bandstructure"]["uniform_bs"]
         bs_dict['structure'] = item['structure']
         bs = BandStructure.from_dict(bs_dict)
+        st = bs.structure
         
         #projection are not available in the bs obj taken from the DB
         #either the DB has to be updated with projections or they need to be
