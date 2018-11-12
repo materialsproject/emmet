@@ -12,8 +12,8 @@ from itertools import groupby
 from monty.json import jsanitize
 from monty.serialization import loadfn
 
-from maggma.examples.builders import Builder, get_keys
-from maggma.utils import grouper
+from maggma.builders import Builder
+from maggma.utils import grouper, source_keys_updated
 from maggma.validator import JSONSchemaValidator, msonable_schema
 from pydash.objects import get, set_, has
 import pybtex
@@ -82,15 +82,16 @@ class MPBuilder(Builder):
 
         self.logger.info("Starting Website Builder")
         mat_keys = set(self.materials.distinct(self.materials.key, criteria=self.query))
-        keys = set(get_keys(source=self.materials, target=self.website, query=self.query, logger=self.logger))
-        
-        # Get keys for aux docs that have been updated since last processed. 
+        keys = set(
+            source_keys_updated(source=self.materials, target=self.website, query=self.query, logger=self.logger))
+
+        # Get keys for aux docs that have been updated since last processed.
         for source in self.aux:
-            new_keys = get_keys(source=source, target=self.website, logger=self.logger)
-            self.logger.info("Only considering {} new keys for {}".format(len(new_keys),source.collection_name))
+            new_keys = source_keys_updated(source=source, target=self.website, logger=self.logger)
+            self.logger.info("Only considering {} new keys for {}".format(len(new_keys), source.collection_name))
             keys |= set(new_keys)
 
-        keys &= mat_keys # Ensure all keys are present in main materials collection
+        keys &= mat_keys  # Ensure all keys are present in main materials collection
         self.logger.info("Processing {} items".format(len(keys)))
 
         self.total = len(keys)
@@ -237,7 +238,8 @@ def add_es(mat, new_style_mat):
     bs_origin = None
     dos_origin = None
     try:
-        bs_origin = next((origin for origin in new_style_mat.get("origins", []) if "Line" in origin["task_type"]), None)
+        bs_origin = next((origin for origin in new_style_mat.get("origins", []) if "Line" in origin["task_type"]),
+                         None)
         dos_origin = next((origin for origin in new_style_mat.get("origins", []) if "Uniform" in origin["task_type"]),
                           None)
 
@@ -365,6 +367,7 @@ def check_relaxation(mat, new_style_mat):
         print("Relaxation analyzer failed for Material:{} due to {}".format(mat["task_id"], traceback.print_exc()))
 
     mat["warnings"] = list(set(warnings))
+
 
 def add_meta(mat):
     meta = {'emmet_version': emmet_version, 'pymatgen_version': pymatgen_version}

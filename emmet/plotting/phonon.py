@@ -1,7 +1,7 @@
 import io
 
 from bson.binary import Binary
-from maggma.builder import Builder
+from maggma.builders import Builder
 from pydash import py_
 
 import matplotlib

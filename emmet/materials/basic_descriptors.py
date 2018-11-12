@@ -10,7 +10,7 @@ from matminer.featurizers.composition import ElementProperty
 # 1) Add checking OPs present in current implementation of site fingerprints.
 # 2) Complete documentation!!!
 
-from maggma.examples.builders import MapBuilder
+from maggma.builders import MapBuilder
 
 __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
 

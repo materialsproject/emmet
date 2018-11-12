@@ -7,7 +7,7 @@ materials collection
 import logging
 import tqdm
 
-from maggma.builder import Builder
+from maggma.builders import Builder
 from maggma.stores import MongoStore
 from fireworks import LaunchPad
 from datetime import datetime

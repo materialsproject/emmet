@@ -10,7 +10,7 @@ from pymatgen.analysis.local_env import NearNeighbors
 from pymatgen.analysis.graphs import StructureGraph
 from pymatgen import __version__ as pymatgen_version
 
-from maggma.examples.builders import MapBuilder
+from maggma.builders import MapBuilder
 from maggma.validator import JSONSchemaValidator, msonable_schema
 
 __author__ = "Matthew Horton <mkhorton@lbl.gov>"

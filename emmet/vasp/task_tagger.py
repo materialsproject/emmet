@@ -1,4 +1,4 @@
-from maggma.examples.builders import MapBuilder
+from maggma.builders import MapBuilder
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"

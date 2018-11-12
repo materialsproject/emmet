@@ -2,7 +2,7 @@ from itertools import chain
 from pymatgen import Structure
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 from emmet.vasp.task_tagger import task_type
-from maggma.builder import Builder
+from maggma.builders import Builder
 from pydash.objects import get
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
