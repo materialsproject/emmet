@@ -126,7 +126,8 @@ class PhononWebBuilder(Builder):
         return {self.ph_calc_docs.key: item['ph_calc'][self.ph_calc_docs.key],
                 "web_doc": web_doc, "images": images, "thermodynamic": thermo_data}
 
-    def get_thermodynamic_properties(self, ph_dos):
+    @staticmethod
+    def get_thermodynamic_properties(ph_dos):
         """
         Calculates the thermodynamic properties and prepare the figure with those values
 

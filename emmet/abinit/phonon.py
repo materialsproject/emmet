@@ -263,7 +263,8 @@ class PhononBuilder(Builder):
 
         return task
 
-    def get_properties_anaddb_input(self, item, bs=True, dos='tetra', lo_to_splitting=True):
+    @staticmethod
+    def get_properties_anaddb_input(item, bs=True, dos='tetra', lo_to_splitting=True):
         """
         creates the AnaddbInput object to calculate the phonon properties.
         It also returns the list of qpoints labels for generating the PhononBandStructureSymmLine.
@@ -369,7 +370,8 @@ class PhononBuilder(Builder):
 
         return inp, labels_list
 
-    def get_pmg_bs(self, phbands, labels_list):
+    @staticmethod
+    def get_pmg_bs(phbands, labels_list):
         """
         Generates a PhononBandStructureSymmLine starting from a abipy PhononBands object
 
@@ -414,7 +416,8 @@ class PhononBuilder(Builder):
 
         return ph_bs_sl
 
-    def abinit_input_vars(self, item):
+    @staticmethod
+    def abinit_input_vars(item):
         """
         Extracts the useful abinit input parameters from an item.
         """
