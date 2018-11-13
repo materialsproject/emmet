@@ -5,6 +5,7 @@ import os
 from abipy.dfpt.anaddbnc import AnaddbNcFile
 from monty.json import jsanitize
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
+from pymatgen.phonon.ir_spectra import IRDielectricTensorGenerator
 from pymatgen.core.structure import Structure
 from pymatgen.io.abinit.abiobjects import KSampling
 from pymatgen.symmetry.bandstructure import HighSymmKpath
@@ -188,15 +189,14 @@ class PhononBuilder(Builder):
                         complete_dos = phdos_file.to_pymatgen()
                 dos_method = "gaussian"
 
-            ir_spectra = {"oscillator_strength": dielectric.oscillator_strength.tolist(),
-                          "phfreqs": dielectric.phfreqs.tolist(),
-                          "epsinf": dielectric.epsinf.tolist()}
+            ir_spectra = IRDielectricTensorGenerator(dielectric.oscillator_strength,dielectric.phfreqs,
+                                                     dielectric.epsinf,dielectric.structure)
 
             data = {"ph_dos": complete_dos.as_dict(),
                     "ph_dos_method": dos_method,
                     "ph_bs": symm_line_bands.as_dict(),
                     "becs": becs,
-                    "ir_spectra": ir_spectra,
+                    "ir_spectra": ir_spectra.as_dict(),
                     "e_electronic": e_electronic,
                     "e_total": e_total}
 
