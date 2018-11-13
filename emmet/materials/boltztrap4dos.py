@@ -1,5 +1,6 @@
 from pymatgen.electronic_structure.bandstructure import BandStructure
-from pymatgen.electronic_structure.boltztrap2 import BandstructureLoader, BztInterpolator
+from pymatgen.electronic_structure.boltztrap2 import BandstructureLoader, 
+                                                     BztInterpolator, units
 
 from maggma.builders import Builder
 from maggma.utils import source_keys_updated
