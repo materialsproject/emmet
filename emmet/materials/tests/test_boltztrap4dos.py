@@ -29,7 +29,7 @@ class Boltztrap4DosBuilder(unittest.TestCase):
         
         item = self.materials.query_one()
         bs_dict = self.bandstructure.query_one()
-        item["band_structure_uniform"]['GGA']["uniform_bs"] = bs_dict
+        item["bandstructure_uniform"] = bs_dict
         
         dos = dosbuilder.process_item(item)
         density = dos['cdos']['densities']['1'][3900]
@@ -44,6 +44,17 @@ class Boltztrap4DosBuilder(unittest.TestCase):
         dosbuilder.update_targets(items)
 
         self.assertListEqual(self.dos.query_one.distinct("mp_id"),['mp-12103'])
+    
+    def test_dos_from_boltztrap(self):
+        item = self.materials.query_one()
+        bs_dict = self.bandstructure.query_one()
+        bs_dict['structure'] = item['structure']
         
+        bzt_dos = dos_from_boltztrap(bs_dict)
+        
+        density = bzt_dos['cdos']['densities']['1'][3900]
+        self.assertAlmostEqual(density,202.4261998089978,5)
+
+    
 if __name__ == "__main__":
     unittest.main()
