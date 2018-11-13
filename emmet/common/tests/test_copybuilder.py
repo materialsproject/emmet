@@ -80,3 +80,13 @@ class TestCopyBuilder(TestCase):
         runner.run()
         self.assertEqual(self.target.query_one(criteria={"k": 0})["v"], "new")
         self.assertEqual(self.target.query_one(criteria={"k": 10})["v"], "old")
+
+    def test_query(self):
+        self.builder.query = {"k": {"$gt": 5}}
+        self.source.collection.insert_many(self.old_docs)
+        self.source.update(self.new_docs, update_lu=False)
+        runner = Runner([self.builder])
+        runner.run()
+        all_docs = list(self.target.query(criteria={}))
+        self.assertEqual(len(all_docs), 14)
+        self.assertTrue(min([d['k'] for d in all_docs]), 6)

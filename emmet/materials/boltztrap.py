@@ -6,7 +6,7 @@ from monty.tempfile import ScratchDir
 from pymatgen.core.structure import Structure
 from pymatgen.electronic_structure.boltztrap import BoltztrapRunner
 
-from maggma.builder import Builder
+from maggma.builders import Builder
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 

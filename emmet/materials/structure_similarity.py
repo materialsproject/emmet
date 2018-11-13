@@ -1,7 +1,6 @@
 import numpy as np
-from math import sqrt
 
-from maggma.builder import Builder
+from maggma.builders import Builder
 
 __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
 

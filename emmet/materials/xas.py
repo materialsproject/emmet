@@ -1,110 +1,145 @@
-from datetime import datetime
-from itertools import groupby
-
+import os
 import numpy as np
-from scipy.interpolate import interp1d
-
-from maggma.builder import Builder
+from monty.serialization import loadfn
 from pydash import py_
 from pymatgen import Structure
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from tqdm import tqdm
+from pymatgen.analysis.xas.spectrum import XANES
+
+from maggma.builders import MapBuilder, GroupBuilder
+from scipy.interpolate import interp1d
+
+# Mapping from MP task ids / deprecated material ids to current material ids
+# Most XAS calculations were done with reference to a past material id.
+tid_mid = loadfn(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "settings", "tid_mid.json"))
 
 
-class XASAverager(Builder):
-    def get_items(self):
-        self.logger.info("Getting unprocessed mpids...")
-        mpids = unprocessed_mpids(self.sources, self.targets)
-        xas = self.sources[0]
-        self.dt_fetch = datetime.utcnow()
-        self.logger.info("Yielding XAS data for processing...")
-        self.logger.info("{} unprocessed mpids".format(len(mpids)))
-        for mp_id in tqdm(mpids):
-            criteria = xas_criteria_base()
-            criteria.update({'mp_id': mp_id})
-            if not xas.query(criteria=criteria).count():
-                raise Exception("No source docs for {}".format(mp_id))
-            yield list(xas.query(criteria=criteria))
+class XASBuilder(MapBuilder):
+    def __init__(self, calcs, xas, **kwargs):
+        """MSONable site-specific spectra from calculations.
 
-    def process_item(self, item):
-        xas_docs_for_mpid = item
-        mp_id = xas_docs_for_mpid[0]["mp_id"]
-        if data_missing(xas_docs_for_mpid):
-            return mark_invalid({"mp_id": mp_id})
+        Args:
+            calcs (Store): XAS calculations with raw output
+            xas (Store): output serialized pymatgen XANES objects
+        """
+        self.calcs = calcs
+        self.xas = xas
+        super().__init__(source=calcs, target=xas, **kwargs)
 
-        spectra = species_spectra(xas_docs_for_mpid)
-        valids = [{
-            "mp_id": mp_id,
-            "element": element,
-            "spectrum": [ary.tolist() for ary in spectrum]
-        } for element, spectrum in spectra.items()]
-        return [mark_valid(v) for v in valids]
-
-    def update_targets(self, items):
-        xas_averaged = self.targets[0]
-        xas_averaged.ensure_index([("valid", 1), ("mp_id", 1)])
-        xas_averaged.ensure_index([("mp_id", 1), ("element", 1)])
-        xas_averaged.ensure_index([("chemsys", 1), ("element", 1)])
-        valids, invalids = py_.partition(
-            mark_lu(py_.flatten(items), xas_averaged.lu_field, self.dt_fetch),
-            'valid')
-        # Remove documents flagging now-valid data as invalid.
-        xas_averaged.collection.delete_many(
-            mark_invalid({
-                "mp_id": {
-                    "$in": py_.pluck(valids, 'mp_id')
-                }
-            }))
-        bulk = xas_averaged.collection.initialize_ordered_bulk_op()
-        for doc in valids:
-            (bulk.find(py_.pick(doc, 'mp_id', 'element'))
-                .upsert().replace_one(doc))
-        for doc in invalids:
-            (bulk.find(mark_invalid(py_.pick(doc, 'mp_id')))
-                .upsert().replace_one(doc))
-        bulk.execute()
+    @staticmethod
+    def ufn(item):
+        return msonify_xas(item)
 
 
-def xas_criteria_base():
-    return {'spectrum_type': 'XANES', 'edge': 'K'}
+def msonify_xas(item):
+    energy = py_.pluck(item['spectrum'], 0) # (eV)
+    intensity = py_.pluck(item['spectrum'], 3) # (mu)
+    structure = Structure.from_dict(item['structure'])
+    absorption_specie = structure[item['absorbing_atom']].species_string
+    mid_and_el = ",".join([item["mp_id"], absorption_specie])
+    edge = "K"
+    structure.add_site_property(
+        'absorbing_atom', [
+            i == item['absorbing_atom']
+            for i, _ in enumerate(structure.sites)
+        ])
+    if len(energy) == 0:
+        return {"spectrum": None, "mid_and_el": mid_and_el,
+                "error": "Empty spectrum"}
+    try:
+        out = {
+            "spectrum": XANES(
+                x=energy, y=intensity, structure=structure,
+                absorption_specie=absorption_specie, edge=edge,
+            ).as_dict(),
+            "mid_and_el": mid_and_el,
+        }
+    except ValueError as e:
+        out = {"spectrum": None, "mid_and_el": mid_and_el, "error": str(e)}
+    return out
 
 
-def unprocessed_mpids(sources, targets):
-    xas = sources[0]
-    materials = sources[1]
-    xas_averaged = targets[0]
-    mpids_marked_invalid = set(invalid_pks(xas_averaged, 'mp_id'))
-    mpids_source_updated = set(
-        updated_pks(xas, targets, 'mp_id', dt_map=lambda dt: dt.isoformat()))
-    mpids_xas = xas.distinct('mp_id', criteria=xas_criteria_base())
-    should = list(materials.query(
-        criteria={'task_id': {'$in': mpids_xas}},
-        properties={'_id': 0, 'task_id': 1, 'nelements': 1}))
-    should = {(s['task_id'], s['nelements']) for s in should}
-    actual = xas_averaged.collection.aggregate([
-        {'$group': {'_id': '$mp_id', 'n': {'$sum': 1}}}
-    ])
-    actual = {(a['_id'], a['n']) for a in actual}
-    mpids_build_incomplete = {s[0] for s in should - actual}
-    return mpids_source_updated | (
-        mpids_build_incomplete - mpids_marked_invalid)
+class XASAverager(GroupBuilder):
+    def __init__(self, spectra_site, spectra_avg, **kwargs):
+        self.spectra_site = spectra_site
+        self.spectra_avg = spectra_avg
+        super().__init__(source=spectra_site, target=spectra_avg, **kwargs)
+        self.n_items_per_group = 1
+
+    @staticmethod
+    def grouping_properties():
+        return ["mid_and_el"]
+
+    @staticmethod
+    def docs_to_groups(docs):
+        return {d["mid_and_el"] for d in docs}
+
+    def group_to_items(self, group):
+        # XXX a list of docs is the one item yielded by this group.
+        docs = list(self.source.query(criteria={"mid_and_el": group}))
+        key_val = docs[0][self.source.key]
+        lu_field_val = max(d[self.source.lu_field] for d in docs)
+
+        return [{
+            "xas_docs": docs,
+            self.source.key: key_val,
+            self.source.lu_field: lu_field_val
+        }]
+
+    @staticmethod
+    def ufn(item):
+        xas_docs = item["xas_docs"]
+        mid_and_el = xas_docs[0]["mid_and_el"]
+        mp_id, element = xas_docs[0]["mid_and_el"].split(",")
+        msg = data_missing(xas_docs)
+        if msg:
+            out = {
+                "spectrum": None,
+                "mid_and_el": mid_and_el,
+                "error": "Some sites have no spectra recorded: "+str(msg),
+                "valid": False,
+                "mp_id": tid_mid[mp_id],
+                "element": element,
+            }
+        else:
+            out = {
+                "spectrum": site_weighted_spectrum(xas_docs).as_dict(),
+                "mid_and_el": mid_and_el,
+                "valid": True,
+                "mp_id": tid_mid[mp_id],
+                "element": element,
+            }
+        return out
 
 
-def data_missing(xas_docs_for_mpid):
+def data_missing(xas_docs):
     """
     Do some sites have no spectra recorded?
 
     Checks symmetrically equivalent sites.
     """
-    structure = Structure.from_dict(xas_docs_for_mpid[0]['structure'])
-    ss = SymmSites(structure)
-    absorbing_atoms = set([d['absorbing_atom'] for d in xas_docs_for_mpid])
+    xas_docs = [d for d in xas_docs if "error" not in d]
+    if len(xas_docs) == 0:
+        return "No docs at all"
+    spectra = [XANES.from_dict(d['spectrum']) for d in xas_docs]
+    absorption_specie = spectra[0].absorption_specie
+    ss = SymmSites(spectra[0].structure)
+    absorbing_atoms = set([next(
+        i for i, yes in
+        enumerate(s.structure.site_properties['absorbing_atom']) if yes)
+        for s in spectra])
+    site_indices_with_absorption_specie = [
+        i for i, site in enumerate(spectra[0].structure.sites)
+        if site.species_and_occu.reduced_formula == absorption_specie
+    ]
     some_sites_absent = any(
         len(set(ss.get_equivalent_site_indices(i)) & absorbing_atoms) == 0
-        for i in range(structure.num_sites))
-    some_spectra_empty = any(
-        len(d['spectrum']) == 0 for d in xas_docs_for_mpid)
-    return some_sites_absent or some_spectra_empty
+        for i in site_indices_with_absorption_specie)
+    some_spectra_empty = any(len(s.energy) == 0 for s in spectra)
+    return ((some_sites_absent and
+             ("absent sites", absorbing_atoms)
+             ) or (some_spectra_empty and "empty spectra"))
 
 
 class SymmSites:
@@ -126,32 +161,6 @@ class SymmSites:
         return rv
 
 
-def species_spectra(xas_docs):
-    """
-    Get an equivalent-site-weighted spectrum for each specie in a structure.
-
-    Args:
-        xas_docs (list): MongoDB docs for all XAS XANES K-edge spectra
-            for a structure.
-
-    Returns:
-        dict: {specie: (x, y)} a plottable (x, y) pair
-            for each specie in the structure.
-    """
-    if not xas_docs:
-        return []
-
-    def absorbing_atom_element(d):
-        site = d['structure']['sites'][d['absorbing_atom']]
-        return site['species'][0]['element']
-
-    xas_docs = sorted(xas_docs, key=absorbing_atom_element)
-    spectrum = {}
-    for element, group in groupby(xas_docs, absorbing_atom_element):
-        spectrum[element] = site_weighted_spectrum(list(group))
-    return spectrum
-
-
 def site_weighted_spectrum(xas_docs, num_samples=200):
     """
     Equivalent-site-weighted spectrum for a specie in a structure.
@@ -168,65 +177,51 @@ def site_weighted_spectrum(xas_docs, num_samples=200):
     maxes, mins = [], []
     fs = []
     multiplicities = []
+    absorbing_atoms = set()
 
-    for doc in xas_docs:
-        energies = [e[0] for e in doc["spectrum"]]
+    spectra = [XANES.from_dict(d['spectrum']) for d in xas_docs]
+
+    for spectrum in spectra:
         # Checking the multiplicities of sites
-        s = Structure.from_dict(doc['structure'])
-        sa = SpacegroupAnalyzer(s)
+        structure = spectrum.structure
+        sa = SpacegroupAnalyzer(structure)
         ss = sa.get_symmetrized_structure()
-        multiplicity = len(ss.find_equivalent_sites(s[doc['absorbing_atom']]))
+        absorbing_atom = next(
+            i for i, yes in
+            enumerate(structure.site_properties['absorbing_atom']) if yes)
+        multiplicity = len(ss.find_equivalent_sites(structure[absorbing_atom]))
         multiplicities.append(multiplicity)
 
         # Getting axis limits for each spectrum for the sites corresponding to
         # K-edge is a bit tricky, because the x-axis data points don't align
         # among different spectra for the same structure. So, prepare for
         # interpolation within the intersection of x-axis ranges.
-        maxes.append(doc['spectrum'][-1][0])
-        mins.append(doc['spectrum'][0][0])
-        d0 = np.array(doc['spectrum'])
-        # use 3rd-order spline interpolation for mu (idx 3) vs energy (idx 0).
+        mins.append(spectrum.energy[0])
+        maxes.append(spectrum.energy[-1])
+
+        # 3rd-order spline interpolation
         f = interp1d(
-            d0[:, 0], d0[:, 3], kind='cubic', bounds_error=False, fill_value=0)
+            spectrum.energy, spectrum.intensity,
+            kind='cubic', bounds_error=False, fill_value=0)
         fs.append(f)
 
-    x_axis = np.linspace(max(mins), min(maxes), num=num_samples)
-    weighted_spectrum = np.zeros(num_samples)
+        absorbing_atoms |= set(
+            SymmSites(structure).get_equivalent_site_indices(absorbing_atom))
+
+    energy = np.linspace(max(mins), min(maxes), num=num_samples)
+    weighted_intensity = np.zeros(num_samples)
     sum_multiplicities = sum(multiplicities)
     for i in range(len(multiplicities)):
-        weighted_spectrum += (
-            multiplicities[i] * fs[i](x_axis)) / sum_multiplicities
-    return (x_axis, weighted_spectrum)
-
-# TODO: Migrate below functionality to emmet (or maggma) core / utils.
-
-def mark_valid(doc):
-    doc.update({"valid": True})
-    return doc
-
-
-def mark_invalid(doc):
-    doc.update({"valid": False})
-    return doc
-
-
-def invalid_pks(target, pk):
-    """Fetch values of primary key `pk` marked as invalid in target."""
-    cursor = target.query(criteria=mark_invalid({}),
-                          properties={'_id': 0, pk: 1})
-    return py_.pluck(cursor, pk)
-
-
-def updated_pks(source, targets, pk, dt_map=None):
-    """Fetch primary key values that have new source data."""
-    lu_targets = max([t.last_updated for t in targets])
-    lu_targets = dt_map(lu_targets) if dt_map else lu_targets
-    lu_filter = {source.lu_field: {'$gt': lu_targets}}
-    criteria = xas_criteria_base()
-    criteria.update(lu_filter)
-    return source.distinct(pk, criteria=criteria)
-
-
-def mark_lu(docs, lu_key, lu_val):
-    """Mark documents with last-updated info."""
-    return [py_.assign(d, {lu_key: lu_val}) for d in docs]
+        weighted_intensity += (
+            multiplicities[i] * fs[i](energy)) / sum_multiplicities
+    structure = spectra[0].structure
+    structure.remove_site_property('absorbing_atom')
+    structure.add_site_property(
+        'absorbing_atom', [
+            i in absorbing_atoms
+            for i, _ in enumerate(structure.sites)
+        ])
+    return XANES(
+        x=energy, y=weighted_intensity, structure=structure,
+        absorption_specie=spectra[0].absorption_specie, edge=spectra[0].edge,
+    )

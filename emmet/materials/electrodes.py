@@ -3,7 +3,7 @@ import os
 
 from pymatgen.core import Structure
 
-from maggma.builder import Builder
+from maggma.builders import Builder
 
 from emmet.common.utils import load_settings
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
