@@ -1,42 +1,26 @@
+import os.path
+from monty.serialization import loadfn
+
+import numpy as np
+
+from itertools import chain
+
 from pymatgen import Structure
 from pymatgen.analysis.local_env import NearNeighbors
 from pymatgen.analysis.graphs import StructureGraph
-from maggma.builder import Builder
-from maggma.validator import StandardValidator
+from pymatgen import __version__ as pymatgen_version
+
+from maggma.builders import MapBuilder
+from maggma.validator import JSONSchemaValidator, msonable_schema
 
 __author__ = "Matthew Horton <mkhorton@lbl.gov>"
 
-
-class BondValidator(StandardValidator):
-    """
-    Validates documents for bonding stores.
-    """
-
-    @property
-    def schema(self):
-        return {
-            "type": "object",
-            "properties":
-                {
-                    "task_id": {"type": "string"},
-                    "method": {"type": "string"},
-                    "successful": {"type": "boolean"}
-                },
-            "required": ["task_id", "method", "successful"]
-        }
-
-    @property
-    def msonable_keypaths(self):
-        return {"graph": StructureGraph}
+MODULE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+BOND_SCHEMA = os.path.join(MODULE_DIR, "schema", "bond.json")
 
 
-class BondBuilder(Builder):
-    def __init__(self, materials, bonding,
-                 strategies=('MinimumDistanceNN', 'MinimumOKeeffeNN', 'JMolNN',
-                             'MinimumVIRENN', 'VoronoiNN', 'CrystalNN', 'EconNN',
-                             'BrunnerNN_real', 'BrunnerNN_relative',
-                             'BrunnerNN_reciprocal', 'Critic2NN'),
-                 query=None, **kwargs):
+class BondBuilder(MapBuilder):
+    def __init__(self, materials, bonding, strategies=("CrystalNN", ), **kwargs):
         """
         Builder to calculate bonding in a crystallographic
         structure via near neighbor strategies, including those
@@ -51,92 +35,71 @@ class BondBuilder(Builder):
             query (dict): dictionary to limit materials to be analyzed
         """
 
-        self.chunk_size = 100
-
         self.materials = materials
         self.bonding = bonding
-        self.query = query or {}
+        self.bonding.validator = JSONSchemaValidator(loadfn(BOND_SCHEMA))
 
         available_strategies = {nn.__name__: nn for nn in NearNeighbors.__subclasses__()}
 
-        if strategies:
-            # use the class if passed directly (e.g. with custom kwargs),
-            # otherwise instantiate class with default options
-            self.strategies = [strategy if isinstance(strategy, NearNeighbors)
-                                else available_strategies[strategy]()
-                                for strategy in strategies]
-        else:
-            # calculate all the strategies
-            self.strategies = available_strategies.values()
+        # use the class if passed directly (e.g. with custom kwargs),
+        # otherwise instantiate class with default options
+        self.strategies = [
+            strategy if isinstance(strategy, NearNeighbors) else available_strategies[strategy]()
+            for strategy in strategies
+        ]
+        self.strategy_names = [strategy.__class__.__name__ for strategy in self.strategies]
 
-        bonding.validator = BondValidator()
+        self.bad_task_ids = []  # Voronoi-based strategies can cause some structures to cause crash
 
-        super().__init__(sources=[materials],
-                         targets=[bonding],
-                         **kwargs)
+        super().__init__(source=materials, target=bonding, ufn=self.calc, projection=["structure"], **kwargs)
 
-    def get_items(self):
-        """
-        Gets all materials that need topology analysis
-        """
-
-        self.logger.info("Topology Builder Started")
-
-        # All relevant materials that have been updated since topology
-        # was last calculated
-        already_calculated = list(self.bonding.query(criteria={}, properties=["task_id"]))
-        already_calculated = [d["task_id"] for d in already_calculated]
-        q = {'task_id': {'$nin': already_calculated}}
-        q.update(self.query)
-        materials = self.materials.query(criteria=q,
-                                         properties=["task_id", "structure"])
-
-        self.total = materials.count()
-        self.logger.info("Found {} new materials for topological analysis".format(self.total))
-        return materials
-
-    def process_item(self, item):
+    def calc(self, item):
         """
         Calculates StructureGraphs (bonding information) for a material
         """
 
-        topology_docs = []
-
-        task_id = item['task_id']
-        structure = Structure.from_dict(item['structure'])
-
-        self.logger.debug("Calculating bonding for {}".format(task_id))
+        bonding_docs = []
+        structure = Structure.from_dict(item["structure"])
+        task_id = item[self.materials.key]
 
         # try all local_env strategies
-        for strategy in self.strategies:
-            method = strategy.__class__.__name__
+        for strategy, strategy_name in zip(self.strategies, self.strategy_names):
+            self.logger.debug("Calculating bonding for {} {}".format(task_id, strategy_name))
 
             # failure statistics are interesting
             try:
-                topology_docs.append({
-                    'task_id': task_id,
-                    'method': method,
-                    'graph': StructureGraph.with_local_env_strategy(structure,
-                                                                    strategy).as_dict(),
-                    'successful': True
+
+                sg = StructureGraph.with_local_env_strategy(structure, strategy)
+
+                # ensure edge weights are specifically bond lengths
+                edge_weights = []
+                for u, v, d in sg.graph.edges(data=True):
+                    jimage = np.array(d["to_jimage"])
+                    dist = sg.structure.get_distance(u, v, jimage=jimage)
+                    edge_weights.append((u, v, d["to_jimage"], dist))
+                for u, v, to_jimage, dist in edge_weights:
+                    sg.alter_edge(u, v, to_jimage=to_jimage, new_weight=dist)
+
+                bonding_docs.append({
+                    "strategy": strategy_name,
+                    "graph": sg.as_dict(),
+                    "summary": {
+                        "bond_types": sg.types_and_weights_of_connections,
+                        "bond_length_stats": sg.weight_statistics,
+                        "coordination_envs": sg.types_of_coordination_environments(),
+                        "coordination_envs_anonymous": sg.types_of_coordination_environments(anonymous=True)
+                    },
+                    "successful": True
                 })
+
             except Exception as e:
 
-                topology_docs.append({
-                    'task_id': task_id,
-                    'method': method,
-                    'successful': False,
-                    'error_message': str(e)
-                })
+                self.logger.warning("Failed to calculate bonding: {} {} {}".format(task_id, strategy_name, e))
 
-                self.logger.warning(e)
-                self.logger.warning("Failed to calculate bonding for {} using "
-                                    "{} strategy.".format(task_id, method))
+                bonding_docs.append({"strategy": strategy_name, "successful": False, "error_message": str(e)})
 
-        return topology_docs
-
-    def update_targets(self, items):
-
-        self.logger.info("Updating {} topology documents".format(len(items)))
-        for item in items:
-            self.bonding.update(item, key=['task_id', 'method'])
+        return {
+            "pymatgen_version": str(pymatgen_version),
+            "bonding": [b for b in bonding_docs if b["successful"]],
+            "failed_bonding": [b["strategy"] for b in bonding_docs if not b["successful"]]
+        }

@@ -1,9 +1,8 @@
-
 from itertools import chain
 from pymatgen import Structure
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 from emmet.vasp.task_tagger import task_type
-from maggma.builder import Builder
+from maggma.builders import Builder
 from pydash.objects import get
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
@@ -14,7 +13,6 @@ class MLStructuresBuilder(Builder):
     def __init__(self, tasks, ml_strucs, task_types= ("Structure Optimization",),query=None, **kwargs):
         """
         Creates a collection of structures, energies, forces, and stresses for machine learning efforts
-
         Args:
             tasks (Store): Store of task documents
             ml_strucs (Store): Store of materials documents to generate
@@ -32,7 +30,6 @@ class MLStructuresBuilder(Builder):
     def get_items(self):
         """
         Gets all items to process into materials documents
-
         Returns:
             generator or list relevant tasks and materials to process into materials documents
         """
@@ -61,10 +58,8 @@ class MLStructuresBuilder(Builder):
     def process_item(self, task):
         """
         Process the tasks into a list of materials
-
         Args:
             task [dict] : a task doc
-
         Returns:
             list of C
         """
@@ -117,7 +112,6 @@ class MLStructuresBuilder(Builder):
     def update_targets(self, items):
         """
         Inserts the new entires into the task_types collection
-
         Args:
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """

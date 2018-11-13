@@ -1,8 +1,10 @@
 import os
+import itertools
+from operator import itemgetter
 
+from pymatgen.core import Structure
 from pymatgen.analysis.elasticity.elastic import ElasticTensor
 from pymatgen.analysis.substrate_analyzer import SubstrateAnalyzer
-from pymatgen.core import Structure
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from maggma.builder import Builder
@@ -10,18 +12,14 @@ from maggma.builder import Builder
 from emmet.common.utils import load_settings
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
-
-module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-default_substrate_settings = os.path.join(
-    module_dir, "settings", "substrates.yaml")
+MODULE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_SUBSTRATES = os.path.join(MODULE_DIR, "settings", "substrates.json")
 
 
 class SubstrateBuilder(Builder):
-
-    def __init__(self, materials, substrates, elasticity=None, substrate_settings=None,
-                 query=None, **kwargs):
+    def __init__(self, materials, substrates, elasticity=None, substrate_settings=None, query=None, **kwargs):
         """
-        Calculates matching substrates for 
+        Calculates matching substrates
 
         Args:
             materials (Store): Store of materials documents
@@ -36,12 +34,9 @@ class SubstrateBuilder(Builder):
         self.elasticity = elasticity
         self.substrate_settings = substrate_settings
         self.query = query if query else {}
-        self.__settings = load_settings(
-            self.substrate_settings, default_substrate_settings)
+        self.__settings = load_settings(self.substrate_settings, DEFAULT_SUBSTRATES)
 
-        super().__init__(sources=[materials],
-                         targets=[substrates],
-                         **kwargs)
+        super().__init__(sources=[materials, elasticity], targets=[substrates], **kwargs)
 
     def get_items(self):
         """
@@ -53,25 +48,28 @@ class SubstrateBuilder(Builder):
 
         self.logger.info("Substrate Builder Started")
 
-        self.logger.info("Getting substrate structures")
-        self.load_substrate_mats()
+        self.logger.info("Setting up indicies")
+        self.ensure_indicies()
+
+        substrates = self.__settings
 
         e_tensor_updated_mats = self.get_mats_w_updated_elastic_tensors()
         updated_mats = self.get_updated_mats()
-        updated_substrates = self.get_updated_substrates()
 
         mats = set(e_tensor_updated_mats + updated_mats)
-        self.logger.info(
-            "Updating all substrate calculations for {} materials".format(len(mats)))
-        self.yield_mats(mats, self.substrate_mats)
+        self.logger.info("Updating all substrate calculations for {} materials".format(len(mats)))
 
-        self.logger.info(
-            "Updating remaining materials for {} new/updated substrates".format(len(updated_substrates)))
-        updated_substrate_mats = [s for s in self.substrate_mats if s[
-            self.materials.key] in updated_substrates]
-        remaining_mats = set(self.materials.distinct(
-            self.materials.key, self.query)) - set(mats)
-        self.yield_mats(remaining_mats, updated_substrate_mats)
+        for m in mats:
+            e_tensor = self.elasticity.query_one(criteria={self.elasticity.key: m})
+            mat = self.materials.query_one(
+                criteria={self.materials.key: m}, properties=["structure", self.materials.key])
+
+            yield {
+                "structure": mat["structure"],
+                "task_id": mat[self.materials.key],
+                "elastic_tensor": e_tensor.get("elasticity", {}).get("elastic_tensor", None) if e_tensor else None,
+                "substrates": substrates
+            }
 
     def process_item(self, item):
         """
@@ -83,14 +81,13 @@ class SubstrateBuilder(Builder):
         Returns:
             dict: a diffraction dict
         """
-        material = item["material"]
         elastic_tensor = item.get("elastic_tensor", None)
+        elastic_tensor = ElasticTensor.from_voigt(elastic_tensor) if elastic_tensor else None
         substrates = item["substrates"]
 
-        self.logger.debug("Calculating substrates for {}".format(
-            get(self.materials.key, material)))
+        self.logger.debug("Calculating substrates for {}".format(item["task_id"]))
 
-        film = Structure.from_dict(material["structure"])
+        film = Structure.from_dict(item["structure"])
 
         all_matches = []
 
@@ -98,33 +95,43 @@ class SubstrateBuilder(Builder):
 
         for s in substrates:
 
-            substrate = Structure.from_dict(s["structure"])
+            substrate = s["structure"]
 
             # Calculate all matches and group by substrate orientation
             matches_by_orient = groupby_itemkey(
-                sa.calculate(film, substrate, elastic_tensor, lowest=True),
-                "sub_miller")
+                sa.calculate(film, substrate, elastic_tensor, lowest=True), "sub_miller")
 
             # Find the lowest area match for each substrate orientation
-            lowest_matches = [min(g, key=itemgetter("match_area"))
-                              for k, g in matches_by_orient]
+            lowest_matches = [min(g, key=itemgetter("match_area")) for k, g in matches_by_orient]
 
             for match in lowest_matches:
                 db_entry = {
-                    "film_id": material[self.materials.key],
-                    "sub_id": s[self.materials.key],
+                    "sub_id": s["task_id"],
                     "orient": " ".join(map(str, match["sub_miller"])),
                     "sub_form": substrate.composition.reduced_formula,
                     "film_orient": " ".join(map(str, match["film_miller"])),
                     "area": match["match_area"],
                 }
+
                 if "elastic_energy" in match:
                     db_entry["energy"] = match["elastic_energy"]
                     db_entry["strain"] = match["strain"]
 
                 all_matches.append(db_entry)
 
-    return all_matches
+        # Sort based on energy if an elastic tensor is present otherwise the area
+        if elastic_tensor is not None:
+            sort_key = itemgetter("energy")
+        else:
+            sort_key = itemgetter("area")
+
+        all_matches = list(sorted(all_matches, key=sort_key))
+
+        d = {self.substrates.key: item["task_id"], "matches": all_matches}
+
+        # TODO: What other metadata do we want?
+
+        return d
 
     def update_targets(self, items):
         """
@@ -134,29 +141,19 @@ class SubstrateBuilder(Builder):
             items ([[dict]]): a list of list of thermo dictionaries to update
         """
 
-        items = list(filter(None, chain.from_iterable(items)))
+        items = list(filter(None, items))
 
         if len(items) > 0:
-            self.logger.info(
-                "Updating {} substrate matches".format(len(items)))
-            self.substrates.update(
-                key=["film_id", "sub_id", "orient"], docs=items)
+            self.logger.info("Updating {} substrate matches".format(len(items)))
+            self.substrates.update(docs=items)
         else:
             self.logger.info("No items to update")
 
-    def load_substrate_mats(self):
-        """
-        Loads the substrate structures from the materials collection
-        """
-
-        # TODO: Switch this to be able to take a list of structures and match materials
-        # Much more usefull if you want to just prescribe ICSD structures for
-        # instance
-        mats = [self.materials.find_one(properties=["structure", self.materials.key, self.materials.lu_key], criteria={
-                                        self.materials.key: mpid}) for mpid in self.__settings]
-        self.substrate_mats = list(filter(None, mats))
-
     def get_mats_w_updated_elastic_tensors(self):
+        """
+        Gets all materials that have had their elastic tensor updated
+        since substrates were last calculated
+        """
         e_tensor_updated_mats = []
         self.logger.info("Checking for new/updated elastic tensors")
         if self.elasticity:
@@ -164,43 +161,49 @@ class SubstrateBuilder(Builder):
             # substrate builder was last run and rerun all substrates for
             # analysis
             q = self.elasticity.lu_filter(self.substrates)
-            e_tensor_updated_mats = self.elasticity.distinct(
-                self.elasticity.key, criteria=q)
+            e_tensor_updated_mats = self.elasticity.distinct(self.elasticity.key, criteria=q)
+
             # Ensure these materials are within our materials query
-            q = dict(query)
-            q.update({self.materials.key: {"$in": e_tensor_updated_mats}})
-            e_tensor_updated_mats = self.materials.distinct(
-                self.materials.key, criteria=q)
-            self.logger.info(
-                "Found {} new/updated elastic tensors".format(len(e_tensor_updated_mats)))
+            # Account for when we want to constrain the materials key with the query already
+            q = dict(self.query)
+            if self.materials.key not in q:
+                q.update({self.materials.key: {"$in": e_tensor_updated_mats}})
+            else:
+                temp_q = q[self.materials.key]
+                q.update({"$and": [temp_q, {self.materials.key: {"$in": e_tensor_updated_mats}}]})
+
+            e_tensor_updated_mats = self.materials.distinct(self.materials.key, criteria=q)
+
+            self.logger.info("Found {} new/updated elastic tensors".format(len(e_tensor_updated_mats)))
 
         return e_tensor_updated_mats
 
     def get_updated_mats(self):
+        """
+        Gets all materials that have been updated since substrate builder was last run
+        """
         self.logger.info("Checking for new/updated materials")
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.substrates))
-        updated_mats = list(self.materials.distinct(self.materials.key, q))
-        self.logger.info(
-            "Found {} new materials for substrate processing".format(len(updated_mats)))
+        updated_mats = self.materials.distinct(self.materials.key, q)
+        self.logger.info("Found {} new materials for substrate processing".format(len(updated_mats)))
         return updated_mats
 
-    def get_updated_substrates(self):
-        # TODO: How do we want to do this?
-        self.logger.info("Checking for new/updated substrates")
-        for s in self.substrate_mats:
-            pass
-        return []
+    def ensure_indicies(self):
+        """
+        Ensures indicies on the substrates, materials, and elastic collections
+        """
+        # Search indicies for materials
+        self.materials.ensure_index(self.materials.key, unique=True)
+        self.materials.ensure_index(self.materials.lu_field)
 
-    def yield_mats(self, mats, substrates):
-        for m in mats:
-            e_tensor = self.elasticity.find_one(
-                criteria={self.elasticity.key: m})
-            mat = self.materials.find_one(
-                props=["structure", self.materials.key], criteria={self.materials.key: m})
-            yield {"material": mat,
-                   "elastic_tensor": e_tensor,
-                   "substrates": substrates}
+        # Search indicies for elasticity
+        self.elasticity.ensure_index(self.elasticity.key, unique=True)
+        self.elasticity.ensure_index(self.elasticity.lu_field)
+
+        # Search indicies for substrates
+        self.substrates.ensure_index(self.substrates.key, unique=True)
+        self.substrates.ensure_index(self.substrates.lu_field)
 
 
 def conventional_standard_structure(doc):

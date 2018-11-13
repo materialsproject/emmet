@@ -1,0 +1,50 @@
+{
+  "title": "bonding",
+  "type": "object",
+  "properties": {
+    "pymatgen_version": {
+      "type": "string"
+    },
+    "bonding": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "strategy": {
+            "type": "string"
+          },
+          "successful": {
+            "type": "boolean"
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "bond_types": {
+                "type": "object"
+              },
+              "bond_length_stats": {
+                "type": "object"
+              },
+              "coordination_envs": {
+                "type": "array"
+              },
+              "coordination_envs_anonymous": {
+                "type": "array"
+              }
+            }
+          },
+          "graph": {
+            "type": "object",
+            "required": [
+              "@class",
+              "@module"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "pymatgen_version"
+  ]
+}

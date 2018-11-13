@@ -1,17 +1,15 @@
 import io
 import traceback
-from maggma.builder import Builder
+from maggma.builders import Builder
 from pydash.objects import get
-import matplotlib
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, BandStructure
+from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.electronic_structure.dos import CompleteDos
 from sumo.plotting.dos_plotter import SDOSPlotter
 from sumo.plotting.bs_plotter import SBSPlotter
 from sumo.electronic_structure.dos import get_pdos
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
-
-matplotlib.use('agg')
 
 
 class ElectronicStructureImageBuilder(Builder):
@@ -67,12 +65,10 @@ class ElectronicStructureImageBuilder(Builder):
         self.total = len(mats)
 
         for m in mats:
-            mat = self.materials.query_one([self.materials.key, "structure", "bandstructure", "inputs"], {
-                self.materials.key: m
-            })
-            mat["bandstructure"]["bs"] = self.bandstructures.query_one(criteria={
-                "task_id": get(mat, "bandstructure.bs_task")
-            })
+            mat = self.materials.query_one([self.materials.key, "structure", "bandstructure", "inputs"],
+                                           {self.materials.key: m})
+            mat["bandstructure"]["bs"] = self.bandstructures.query_one(
+                criteria={"task_id": get(mat, "bandstructure.bs_task")})
 
             mat["bandstructure"]["dos"] = self.dos.query_one(criteria={"task_id": get(mat, "bandstructure.dos_task")})
             yield mat
@@ -153,6 +149,7 @@ def get_small_plot(plot_data, gap):
 
 def image_from_plot(plot):
     imgdata = io.BytesIO()
+    plot.tight_layout()
     plot.savefig(imgdata, format="png", dpi=100)
     plot_img = imgdata.getvalue()
     return plot_img
@@ -170,7 +167,7 @@ def build_bs(bs_dict, mat):
             labels_dict = dict(zip(labels, kpts))
             labels_dict.pop(None, None)
         else:
-            struc = Structure.from_dict(mat["structure"])
+            struc = Structure.from_dict(bs_dict["structure"])
             labels_dict = HighSymmKpath(struc)._kpath["kpoints"]
 
         bs_dict["labels_dict"] = labels_dict

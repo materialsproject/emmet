@@ -8,7 +8,7 @@ from pymatgen.entries.computed_entries import ComputedEntry
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.analysis.structure_analyzer import oxide_type, sulfide_type
 
-from maggma.builder import Builder
+from maggma.builders import Builder
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -17,13 +17,16 @@ class ThermoBuilder(Builder):
     def __init__(self, materials, thermo, query=None, compatibility=MaterialsProjectCompatibility("Advanced"),
                  **kwargs):
         """
-        Calculates thermodynamic quantities for materials from phase diagram constructions
+        Calculates thermodynamic quantities for materials from phase
+        diagram constructions
 
         Args:
             materials (Store): Store of materials documents
-            thermo (Store): Store of thermodynamic data such as formation energy and decomposition pathway
+            thermo (Store): Store of thermodynamic data such as formation
+                energy and decomposition pathway
             query (dict): dictionary to limit materials to be analyzed
-            compatibility (PymatgenCompatability): Compatability module to ensure energies are compatible
+            compatibility (PymatgenCompatability): Compatability module
+                to ensure energies are compatible
         """
 
         self.materials = materials
@@ -54,15 +57,17 @@ class ThermoBuilder(Builder):
         thermo_mat_ids = self.thermo.distinct("task_id")
         q = dict(self.query)
         q.update({"task_id": {"$nin": thermo_mat_ids}})
-        new_mat_comps = set(self.materials.distinct("chemsys",q))
+        new_mat_comps = set(self.materials.distinct("chemsys", q))
 
         # All chemsys not present in thermo collection
-        new_comps = set(self.materials.distinct("chemsys", self.query)) - set(self.thermo.distinct("chemsys"))
+        new_comps = set(self.materials.distinct("chemsys", self.query))\
+            - set(self.thermo.distinct("chemsys"))
 
         comps = updated_comps | new_comps | new_mat_comps
 
-        # Only process maximal super sets: e.g. if ["A","B"] and ["A"] are both in the list, will only yield ["A","B"]
-        # as this will calculate thermo props for all ["A"] compounds
+        # Only process maximal super sets: e.g. if ["A","B"] and ["A"]
+        # are both in the list, will only yield ["A","B"] as this will
+        # calculate thermo props for all ["A"] compounds
         processed = set()
 
         to_process = []
@@ -94,7 +99,7 @@ class ThermoBuilder(Builder):
         new_q = dict(self.query)
         new_q["chemsys"] = {"$in": list(chemsys_permutations(chemsys))}
         fields = ["structure", self.materials.key, "thermo.energy_per_atom", "composition", "calc_settings"]
-        data = list(self.materials.query(fields, new_q))
+        data = list(self.materials.query(properties=fields, criteria=new_q))
 
         all_entries = []
 
@@ -106,9 +111,7 @@ class ThermoBuilder(Builder):
                 0.0,
                 parameters=d["calc_settings"],
                 entry_id=d[self.materials.key],
-                data={
-                    "oxide_type": oxide_type(Structure.from_dict(d["structure"]))
-                })
+                data={"oxide_type": oxide_type(Structure.from_dict(d["structure"]))})
 
             all_entries.append(entry)
 
@@ -140,13 +143,15 @@ class ThermoBuilder(Builder):
                 d = {
                     self.thermo.key: e.entry_id,
                     "thermo": {
+                        "energy": e.uncorrected_energy, 
+                        "energy_per_atom": e.uncorrected_energy / e.composition.num_atoms,
                         "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
                         "e_above_hull": ehull,
                         "is_stable": e in pd.stable_entries
                     }
                 }
 
-                # Logic for if stable or decomposes
+                # Store different info if stable vs decomposes
                 if d["thermo"]["is_stable"]:
                     d["thermo"]["eq_reaction_e"] = pd.get_equilibrium_reaction_energy(e)
                 else:
@@ -166,8 +171,11 @@ class ThermoBuilder(Builder):
 
                 docs.append(d)
         except PhaseDiagramError as p:
-            print(e.as_dict())
-            self.logger.warning("Phase diagram error: {}".format(p))
+            elsyms = []
+            for e in entries:
+                elsyms.extend([el.symbol for el in e.composition.elements])
+
+            self.logger.warning("Phase diagram errorin chemsys {}: {}".format("-".join(sorted(set(elsyms))), p))
             return []
 
         return docs

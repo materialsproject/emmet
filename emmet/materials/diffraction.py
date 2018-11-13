@@ -8,20 +8,17 @@ from monty.serialization import loadfn
 from pymatgen.core.structure import Structure
 from pymatgen.analysis.diffraction.xrd import XRDCalculator, WAVELENGTHS
 
-from maggma.builder import Builder
-
 from emmet.common.utils import load_settings
+from maggma.builders import MapBuilder
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
-module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-default_xrd_settings = os.path.join(
-    module_dir, "settings", "xrd.json")
+MODULE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_XRD_SETTINGS = os.path.join(MODULE_DIR, "settings", "xrd.json")
 
 
-class DiffractionBuilder(Builder):
-
-    def __init__(self, materials, diffraction, xrd_settings=None, query=None, **kwargs):
+class DiffractionBuilder(MapBuilder):
+    def __init__(self, materials, diffraction, xrd_settings=None, **kwargs):
         """
         Calculates diffraction patterns for materials
 
@@ -29,51 +26,17 @@ class DiffractionBuilder(Builder):
             materials (Store): Store of materials documents
             diffraction (Store): Store of diffraction data such as formation energy and decomposition pathway
             xrd_settings (Store): Store of xrd settings
-            query (dict): dictionary to limit materials to be analyzed
         """
 
         self.materials = materials
         self.diffraction = diffraction
         self.xrd_settings = xrd_settings
-        self.query = query if query else {}
-        self.__settings = load_settings(self.xrd_settings, default_xrd_settings)
+        self.__settings = load_settings(self.xrd_settings, DEFAULT_XRD_SETTINGS)
 
-        super().__init__(sources=[materials],
-                         targets=[diffraction],
-                         **kwargs)
+        super().__init__(
+            source=materials, target=diffraction, ufn=self.calc, projection=["structure"], **kwargs)
 
-    def get_items(self):
-        """
-        Gets all materials that need a new XRD 
-
-        Returns:
-            generator of materials to calculate xrd
-        """
-
-        self.logger.info("Diffraction Builder Started")
-
-        self.logger.info("Setting indexes")
-        self.ensure_indicies()
-
-        # All relevant materials that have been updated since diffraction props
-        # were last calculated
-        q = dict(self.query)
-        q.update(self.materials.lu_filter(self.diffraction))
-        updated_mats = set(self.materials.distinct(self.materials.key, q))
-        self.logger.info(
-            "Found {} updated materials for diffraction data".format(len(updated_mats)))
-
-        all_mats = set(self.materials.distinct(self.materials.key,self.query))
-        curr_diffraction = set(self.diffraction.distinct(self.diffraction.key))
-        self.logger.info("Found {} new materials for diffraction data".format(len(all_mats - curr_diffraction)))
-
-        mats = list((all_mats - curr_diffraction) | updated_mats)
-        self.total = len(mats)
-        for m in mats:
-            yield self.materials.query(properties=[self.materials.key, "structure", self.materials.lu_field],
-                                       criteria={self.materials.key: m}).limit(1)[0]
-
-    def process_item(self, item):
+    def calc(self, item):
         """
         Calculates diffraction patterns for the structures
 
@@ -83,57 +46,25 @@ class DiffractionBuilder(Builder):
         Returns:
             dict: a diffraction dict
         """
-        self.logger.debug("Calculating diffraction for {}".format(
-            item[self.materials.key]))
+        self.logger.debug("Calculating diffraction for {}".format(item[self.materials.key]))
 
         struct = Structure.from_dict(item['structure'])
-
         xrd_doc = {"xrd": self.get_xrd_from_struct(struct)}
-        xrd_doc[self.diffraction.key] = item[self.materials.key]
-
-        elsyms = sorted(set([el.symbol for el in struct.composition.elements]))
-        xrd_doc[self.diffraction.lu_field] = item[self.materials.lu_field]
-
         return xrd_doc
 
     def get_xrd_from_struct(self, structure):
         doc = {}
 
         for xs in self.__settings:
-            xrdcalc = XRDCalculator(wavelength="".join([xs['target'], xs['edge']]),
-                                    symprec=xs.get('symprec', 0))
+            xrdcalc = XRDCalculator(wavelength="".join([xs['target'], xs['edge']]), symprec=xs.get('symprec', 0))
 
-            pattern = jsanitize(xrdcalc.get_pattern(
-                structure, two_theta_range=xs['two_theta']).as_dict())
-            d = {'wavelength': {'element': xs['target'],
-                                'in_angstroms': WAVELENGTHS["".join([xs['target'], xs['edge']])]},
-                 'pattern': pattern}
+            pattern = jsanitize(xrdcalc.get_pattern(structure, two_theta_range=xs['two_theta']).as_dict())
+            d = {
+                'wavelength': {
+                    'element': xs['target'],
+                    'in_angstroms': WAVELENGTHS["".join([xs['target'], xs['edge']])]
+                },
+                'pattern': pattern
+            }
             doc[xs['target']] = d
         return doc
-
-    def update_targets(self, items):
-        """
-        Inserts the new task_types into the task_types collection
-
-        Args:
-            items ([[dict]]): a list of list of thermo dictionaries to update
-        """
-        items = list(filter(None, items))
-
-        if len(items) > 0:
-            self.logger.info("Updating {} diffraction docs".format(len(items)))
-            self.diffraction.update(docs=items,update_lu=False)
-        else:
-            self.logger.info("No items to update")
-
-    def ensure_indicies(self):
-        """
-        Ensures indicies on the diffraction and materials collections
-        """
-        # Search indicies for materials
-        self.materials.ensure_index(self.materials.key, unique=True)
-        self.materials.ensure_index(self.materials.lu_field)
-
-        # Search indicies for diffraction
-        self.diffraction.ensure_index(self.diffraction.key, unique=True)
-        self.diffraction.ensure_index(self.diffraction.lu_field)

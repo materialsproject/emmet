@@ -14,7 +14,7 @@ from abipy.flowtk.tasks import AnaddbTask, TaskManager
 from abipy.dfpt.ddb import AnaddbError
 from abipy.core.abinit_units import eV_to_THz
 
-from maggma.builder import Builder
+from maggma.builders import Builder
 
 
 #TODO - handle possible other sources for the anaddb netcdf files?
@@ -514,3 +514,4 @@ def get_warnings(asr_break, cnsr_break, ph_bs):
             warnings['small_q_neg_fr'] = True
 
     return warnings
+

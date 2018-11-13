@@ -1,0 +1,215 @@
+{
+  "title": "mp_website",
+  "type": "object",
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "e_above_hull": {
+      "type": "number",
+      "minimum": 0
+    },
+    "structure": {
+      "type": "object"
+    },
+    "anonymous_formula": {
+      "type": "object"
+    },
+    "elements": {
+      "type": "array"
+    },
+    "final_energy": {
+      "type": "number"
+    },
+    "final_energy_per_atom": {
+      "type": "number"
+    },
+    "hubbards": {
+      "type": "object"
+    },
+    "initial_structure": {
+      "type": "object"
+    },
+    "input.crystal": {
+      "type": "object"
+    },
+    "input.potcar_spec": {
+      "type": "array"
+    },
+    "is_hubbard": {
+      "type": "boolean"
+    },
+    "nelements": {
+      "type": "number",
+      "minimum": 1
+    },
+    "nsites": {
+      "type": "number",
+      "minimum": 1
+    },
+    "pretty_formula": {
+      "type": "string"
+    },
+    "reduced_cell_formula": {
+      "type": "object"
+    },
+    "run_type": {
+      "type": "string"
+    },
+    "spacegroup": {
+      "type": "object"
+    },
+    "total_magnetization": {
+      "type": "number",
+      "minimum": 0
+    },
+    "unit_cell_formula": {
+      "type": "object"
+    },
+    "volume": {
+      "type": "number",
+      "minimum": 0
+    },
+    "warnings": {
+      "type": "array"
+    },
+    "task_ids": {
+      "type": "array"
+    },
+    "original_task_id": {
+      "type": "string"
+    },
+    "input.incar": {
+      "type": "object"
+    },
+    "input.kpoints": {
+      "type": "object"
+    },
+    "encut": {
+      "type": "number",
+      "minimum": 0
+    },
+    "formula_anonymous": {
+      "type": "string"
+    },
+    "formation_energy_per_atom": {
+      "type": "number"
+    },
+    "decomposes_to": {
+      "type": "array"
+    },
+    "magnetism": {
+      "type": "object"
+    },
+    "magnetic_type": {
+      "type": "string"
+    },
+    "doi": {
+      "type": "string"
+    },
+    "doi_bibtex": {
+      "type": "string"
+    },
+    "diel.e_electronic": {
+      "type": "array"
+    },
+    "diel.e_total": {
+      "type": "array"
+    },
+    "diel.n": {
+      "type": "number",
+      "minimum": 0
+    },
+    "diel.poly_electronic": {
+      "type": "number",
+      "minimum": 0
+    },
+    "diel.poly_total": {
+      "type": "number",
+      "minimum": 0
+    },
+    "piezo.e_ij_max": {
+      "type": "number",
+      "minimum": 0
+    },
+    "piezo.piezoelectric_tensor": {
+      "type": "array"
+    },
+    "piezo.v_max": {
+      "type": "array"
+    },
+    "elasticity.G_Reuss": {
+      "type": "number",
+      "minimum": 0
+    },
+    "elasticity.G_VRH": {
+      "type": "number",
+      "minimum": 0
+    },
+    "elasticity.G_Voigt": {
+      "type": "number",
+      "minimum": 0
+    },
+    "elasticity.G_Voigt_Reuss_Hill": {
+      "type": "number",
+      "minimum": 0
+    },
+    "elasticity.K_Reuss": {
+      "type": "number",
+      "minimum": 0
+    },
+    "elasticity.K_VRH": {
+      "type": "number",
+      "minimum": 0
+    },
+    "elasticity.K_Voigt": {
+      "type": "number",
+      "minimum": 0
+    },
+    "elasticity.K_Voigt_Reuss_Hill": {
+      "type": "number",
+      "minimum": 0
+    },
+    "elasticity.elastic_anisotropy": {
+      "type": "number",
+      "minimum": 0
+    },
+    "elasticity.elastic_tensor": {
+      "type": "array"
+    },
+    "elasticity.homogeneous_poisson": {
+      "type": "number",
+      "minimum": -1,
+      "maximum": 1
+    },
+    "elasticity.poisson_ratio": {
+      "type": "number",
+      "minimum": -1,
+      "maximum": 1
+    },
+    "elasticity.universal_anisotropy": {
+      "type": "number",
+      "minimum": 0
+    },
+    "elasticity.elastic_tensor_original": {
+      "type": "array"
+    },
+    "elasticity.compliance_tensor": {
+      "type": "array"
+    },
+    "elasticity.third_order": {
+      "type": "array"
+    },
+    "elasticity.warnings": {
+      "type": "array"
+    },
+    "bond_valence": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "task_id",
+    "e_above_hull",
+    "structure"
+  ]
+}
