@@ -14,7 +14,7 @@ import numpy as np
 from abipy.abio.inputs import AnaddbInput
 from abipy.core.abinit_units import Ha_cmm1
 from abipy.flowtk.tasks import AnaddbTask, TaskManager
-from abipy.dfpt.ddb import AnaddbError
+from abipy.dfpt.ddb import AnaddbError, DielectricTensorGenerator 
 from abipy.core.abinit_units import eV_to_THz
 
 from maggma.builders import Builder
@@ -30,7 +30,7 @@ from maggma.builders import Builder
 class PhononBuilder(Builder):
     def __init__(self, materials, phonon, query=None, **kwargs):
         """
-        CCreates a phonon collection for materials
+        Creates a phonon collection for materials
 
         Args:
             materials (Store): Store of materials documents
@@ -134,6 +134,8 @@ class PhononBuilder(Builder):
             complete_dos = phdos_file.to_pymatgen()
             phdos = phdos_file.phdos
 
+            dielectric = DielectricTensorGenerator.from_objects(phbands,ananc_file)
+
             tstart, tstop, nt = 5, 800, 160
             temp = np.linspace(tstart, tstop, nt)
 
@@ -142,10 +144,16 @@ class PhononBuilder(Builder):
                       "cv": phdos.get_cv(tstart, tstop, nt).values.tolist(),
                       "free_energy": phdos.get_free_energy(tstart, tstop, nt).values.tolist(),
                       }
+            
+            ir_spectra = {"oscillator_strength": dielectric.oscillator_strength,
+                          "phfreqs": dielectric.phfreqs,
+                          "epsinf": dielectric.epsinf
+                         }
 
             data = {"dos": complete_dos.as_dict(),
                     "bs": symm_line_bands.as_dict(),
                     "thermodynamic": thermo,
+                    "ir_spcetra": ir_spectra,
                     "becs": ananc_file.becs.values.tolist()}
 
             return jsanitize(data)
@@ -176,7 +184,6 @@ class PhononBuilder(Builder):
         ananc_file = AnaddbNcFile.from_file(os.path.join(workdir, "anaddb.nc"))
 
         return phbst_file, phdos_file, ananc_file, labels_list
-
 
 
     def get_anaddb_input(self, item):
