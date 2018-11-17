@@ -157,18 +157,21 @@ class MaterialsBuilder(Builder):
         # Convert the task to properties and flatten
         all_props = list(chain.from_iterable([self.task_to_prop_list(t) for t in task_group]))
 
-        # Store task_id of first structure as material task_id
-        structure_task_ids = list(
-            sorted([
-                prop["task_id"]
-                for prop in all_props
-                if prop["materials_key"] == "structure" and "Structure Optimization" in prop["task_type"]
-            ],
-                   key=ID_to_int))
+        if self.require_structure_opt:
+            # Only consider structure optimization task_ids for material task_id
+            structure_opt_props = [prop for prop in all_props if "Structure Optimization" in prop["task_type"]]
+        else:
+            structure_opt_props = all_props
+
+        # Sort task_ids by last_updated
+        structure_task_ids = [prop[self.tasks.key] for prop in sorted(structure_opt_props,key=lambda x:[self.tasks.lu_field])]
+
 
         # If we don"t have a structure optimization then just return no material
-        if len(structure_task_ids) == 0 and self.require_structure_opt:
+        if len(structure_task_ids) == 0:
             return None
+        else:
+            mat_id = structure_task_ids[0]
 
         # Sort and group based on materials key
         sorted_props = sorted(all_props, key=lambda x: x["materials_key"])
@@ -191,8 +194,7 @@ class MaterialsBuilder(Builder):
 
         # Add in the provenance for the properties
         origins = [{k: prop[k]
-                    for k in ["materials_key", "task_type", "task_id", "last_updated"]}
-                   for prop in best_props
+                    for k in ["materials_key", "task_type", "task_id", "last_updated"]} for prop in best_props
                    if prop.get("track", False)]
 
         # Store all the task_ids
@@ -205,7 +207,7 @@ class MaterialsBuilder(Builder):
             self.materials.lu_field: max([prop["last_updated"] for prop in all_props]),
             "created_at": min([prop["last_updated"] for prop in all_props]),
             "task_ids": task_ids,
-            self.materials.key: structure_task_ids[0],
+            self.materials.key: mat_id,
             "origins": origins,
             "task_types": task_types
         }
