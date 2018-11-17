@@ -328,22 +328,6 @@ def structure_metadata(structure):
 
     return meta
 
-
-def ID_to_int(s_id):
-    """
-    Converts a string id to int
-    falls back to assuming ID is an Int if it can't process
-    Assumes string IDs are of form "[chars]-[int]" such as
-    mp-234
-    """
-    if isinstance(s_id, str):
-        return int(str(s_id).split("-")[-1])
-    elif isinstance(s_id, (int, float)):
-        return s_id
-    else:
-        raise Exception("Could not parse {} into a number".format(s_id))
-
-
 def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, separate_mag_orderings=False):
     """
     Groups structures according to space group and structure matching
