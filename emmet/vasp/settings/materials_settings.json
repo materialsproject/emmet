@@ -223,8 +223,10 @@
   {
     "materials_key": "inputs.hse_band_gap",
     "quality_score": {
-      "HSE Static": 2,
-      "HSE Structure Optimization": 1
+      "HSE Static": 2
+    },
+    "tasks_key": "orig_inputs"
+  },
   {
     "materials_key": "inputs.dielectric",
     "quality_score": {
