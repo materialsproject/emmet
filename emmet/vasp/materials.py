@@ -209,7 +209,8 @@ class MaterialsBuilder(Builder):
             "task_ids": task_ids,
             self.materials.key: mat_id,
             "origins": origins,
-            "task_types": task_types
+            "task_types": task_types,
+            "_bt": self.timestamp
         }
 
         for prop in best_props:
