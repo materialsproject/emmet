@@ -32,11 +32,11 @@ mp_default_snl_fields = {
         "name": "Materials Project",
         "email": "feedback@materialsproject.org"
     }],
-    "history": {
+    "history": [{
         "name": "Materials Project Optimized Structure",
         "url": "http://www.materialsproject.org",
         "description": {}
-    }
+    }]
 }
 
 DB_indexes = {"ICSD": "icsd_ids", "Pauling": "pf_ids"}
