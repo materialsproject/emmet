@@ -76,7 +76,7 @@ class MaterialsBuilder(Builder):
         self.logger.info("Allowed task types: {}".format(self.allowed_tasks))
 
         self.logger.info("Setting indexes")
-        self.ensure_indicies()
+        self.ensure_indexes()
 
         # Save timestamp for update operation
         self.time_stamp = datetime.utcnow()
@@ -290,7 +290,7 @@ class MaterialsBuilder(Builder):
         """
         return "structure" in doc
 
-    def ensure_indicies(self):
+    def ensure_indexes(self):
         """
         Ensures indicies on the tasks and materials collections
         """
