@@ -196,7 +196,7 @@ class MaterialsBuilder(Builder):
                    if prop.get("track", False)]
 
         # Store all the task_ids
-        task_ids = list(sorted([t["task_id"] for t in task_group], key=ID_to_int))
+        task_ids = list(set([t["task_id"] for t in task_group]))
 
         # Store task_types
         task_types = {t["task_id"]: t["task_type"] for t in all_props}
