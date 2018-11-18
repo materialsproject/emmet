@@ -79,7 +79,7 @@ class MaterialsBuilder(Builder):
         self.ensure_indexes()
 
         # Save timestamp for update operation
-        self.time_stamp = datetime.utcnow()
+        self.timestamp = datetime.utcnow()
 
         # Get all processed tasks:
         q = dict(self.query)
