@@ -44,10 +44,12 @@ def task_type(inputs, include_calc_type=True):
 
     incar = inputs.get("incar", {})
 
+    METAGGA_TYPES = {"TPSS", "RTPSS", "M06L", "MBJL", "SCAN", "MS0", "MS1", "MS2"}
+
     if include_calc_type:
         if incar.get("LHFCALC", False):
             calc_type += "HSE "
-        elif incar.get("METAGGA", ""):
+        elif incar.get("METAGGA", "").strip().upper() in METAGGA_TYPES:
             calc_type += incar["METAGGA"].strip().upper()
             calc_type += " "
         elif incar.get("LDAU", False):
