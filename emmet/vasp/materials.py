@@ -143,6 +143,10 @@ class MaterialsBuilder(Builder):
         """
 
         items = [i for i in filter(None, chain.from_iterable(items)) if self.valid(i)]
+
+        for item in items:
+            item.update({"_bt": self.timestamp})
+
         if len(items) > 0:
             self.logger.info("Updating {} materials".format(len(items)))
             self.materials.update(docs=items, update_lu=False)
@@ -209,8 +213,7 @@ class MaterialsBuilder(Builder):
             "task_ids": task_ids,
             self.materials.key: mat_id,
             "origins": origins,
-            "task_types": task_types,
-            "_bt": self.timestamp
+            "task_types": task_types
         }
 
         for prop in best_props:
