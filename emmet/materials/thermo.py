@@ -8,13 +8,13 @@ from pymatgen.entries.computed_entries import ComputedEntry
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.analysis.structure_analyzer import oxide_type, sulfide_type
 
-from maggma.builder import Builder
+from maggma.builders import Builder
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class ThermoBuilder(Builder):
-    def __init__(self, materials, thermo, query=None, compatibility=MaterialsProjectCompatibility("Advanced"),
+    def __init__(self, materials, thermo, query=None, compatibility=None,
                  **kwargs):
         """
         Calculates thermodynamic quantities for materials from phase
@@ -32,7 +32,7 @@ class ThermoBuilder(Builder):
         self.materials = materials
         self.thermo = thermo
         self.query = query if query else {}
-        self.compatibility = compatibility
+        self.compatibility = compatibility if compatibility else MaterialsProjectCompatibility("Advanced")
         self.completed_tasks = set()
         super().__init__(sources=[materials], targets=[thermo], **kwargs)
 

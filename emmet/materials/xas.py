@@ -6,7 +6,7 @@ from pymatgen import Structure
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.xas.spectrum import XANES
 
-from maggma.examples.builders import MapBuilder, GroupBuilder
+from maggma.builders import MapBuilder, GroupBuilder
 from scipy.interpolate import interp1d
 
 # Mapping from MP task ids / deprecated material ids to current material ids

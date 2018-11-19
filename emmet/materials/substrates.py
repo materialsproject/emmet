@@ -7,7 +7,8 @@ from pymatgen.analysis.elasticity.elastic import ElasticTensor
 from pymatgen.analysis.substrate_analyzer import SubstrateAnalyzer
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-from maggma.builder import Builder
+from maggma.builders import Builder
+from maggma.utils import source_keys_updated
 
 from emmet.common.utils import load_settings
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
@@ -17,7 +18,7 @@ DEFAULT_SUBSTRATES = os.path.join(MODULE_DIR, "settings", "substrates.json")
 
 
 class SubstrateBuilder(Builder):
-    def __init__(self, materials, substrates, elasticity=None, substrate_settings=None, query=None, **kwargs):
+    def __init__(self, materials, substrates, elasticity=None, substrates_file=None, query=None, **kwargs):
         """
         Calculates matching substrates
 
@@ -25,16 +26,16 @@ class SubstrateBuilder(Builder):
             materials (Store): Store of materials documents
             diffraction (Store): Store of substrate matches
             elasticity (Store): Store of elastic tensor documents
-            substrate_settings (path): Store of xrd settings
+            substrates_file (path): file of substrates to consider
             query (dict): dictionary to limit materials to be analyzed
         """
 
         self.materials = materials
         self.substrates = substrates
         self.elasticity = elasticity
-        self.substrate_settings = substrate_settings
+        self.substrates_file = substrates_file
         self.query = query if query else {}
-        self.__settings = load_settings(self.substrate_settings, DEFAULT_SUBSTRATES)
+        self.__settings = load_settings(self.substrates_file, DEFAULT_SUBSTRATES)
 
         super().__init__(sources=[materials, elasticity], targets=[substrates], **kwargs)
 
@@ -51,25 +52,23 @@ class SubstrateBuilder(Builder):
         self.logger.info("Setting up indicies")
         self.ensure_indicies()
 
-        substrates = self.__settings
 
-        e_tensor_updated_mats = self.get_mats_w_updated_elastic_tensors()
-        updated_mats = self.get_updated_mats()
+        mat_keys = set(self.materials.distinct(self.materials.key, criteria=self.query))
+        updated_mats = source_keys_updated(source=self.materials, target=self.substrates, query=self.query)
+        e_tensor_updated_mats = source_keys_updated(source=self.elasticity, target=self.substrates)
 
-        mats = set(e_tensor_updated_mats + updated_mats)
+        # To ensure all mats are within our scope
+        mats = set(e_tensor_updated_mats + updated_mats) & mat_keys
+
         self.logger.info("Updating all substrate calculations for {} materials".format(len(mats)))
 
         for m in mats:
             e_tensor = self.elasticity.query_one(criteria={self.elasticity.key: m})
+            e_tensor = e_tensor.get("elasticity", {}).get("elastic_tensor", None) if e_tensor else None
             mat = self.materials.query_one(
                 criteria={self.materials.key: m}, properties=["structure", self.materials.key])
 
-            yield {
-                "structure": mat["structure"],
-                "task_id": mat[self.materials.key],
-                "elastic_tensor": e_tensor.get("elasticity", {}).get("elastic_tensor", None) if e_tensor else None,
-                "substrates": substrates
-            }
+            yield {"structure": mat["structure"], "task_id": mat[self.materials.key], "elastic_tensor": e_tensor}
 
     def process_item(self, item):
         """
@@ -81,9 +80,10 @@ class SubstrateBuilder(Builder):
         Returns:
             dict: a diffraction dict
         """
+        substrates = self.__settings
+
         elastic_tensor = item.get("elastic_tensor", None)
         elastic_tensor = ElasticTensor.from_voigt(elastic_tensor) if elastic_tensor else None
-        substrates = item["substrates"]
 
         self.logger.debug("Calculating substrates for {}".format(item["task_id"]))
 
@@ -97,7 +97,7 @@ class SubstrateBuilder(Builder):
 
             substrate = s["structure"]
 
-            # Calculate all matches and group by substrate orientation
+            # Calculate lowest matches and group by substrate orientation
             matches_by_orient = groupby_itemkey(
                 sa.calculate(film, substrate, elastic_tensor, lowest=True), "sub_miller")
 
@@ -127,9 +127,7 @@ class SubstrateBuilder(Builder):
 
         all_matches = list(sorted(all_matches, key=sort_key))
 
-        d = {self.substrates.key: item["task_id"], "matches": all_matches}
-
-        # TODO: What other metadata do we want?
+        d = {self.substrates.key: item["task_id"], "substratess": all_matches}
 
         return d
 
