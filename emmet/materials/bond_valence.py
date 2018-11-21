@@ -46,7 +46,9 @@ class BondValenceBuilder(MapBuilder):
                 "method": "BVAnalyzer"
             }
 
-        except ValueError:
+        except e:
+            self.logger.error("BVAnalyzer failed with: {}".format(e))
+
             try:
                 first_oxi_state_guess = s.composition.oxi_state_guesses()[0]
                 valences = [first_oxi_state_guess[site.species_string] for site in s]
