@@ -34,7 +34,8 @@ class BondValenceBuilder(MapBuilder):
             bva = BVAnalyzer()
             valences = bva.get_valences(s)
             possible_species = {
-                str(Specie(s[idx].specie, oxidation_state=valence)) for idx, valence in enumerate(valences)
+                str(Specie(s[idx].specie, oxidation_state=valence))
+                for idx, valence in enumerate(valences)
             }
 
             method = "BVAnalyzer"
@@ -53,7 +54,8 @@ class BondValenceBuilder(MapBuilder):
                 first_oxi_state_guess = s.composition.oxi_state_guesses()[0]
                 valences = [first_oxi_state_guess[site.species_string] for site in s]
                 possible_species = {
-                    str(Specie(el, oxidation_state=valence)) for el, valence in first_oxi_state_guess.items()
+                    str(Specie(el, oxidation_state=valence))
+                    for el, valence in first_oxi_state_guess.items()
                 }
                 d["successful"] = True
                 d["bond_valence"] = {
@@ -61,7 +63,7 @@ class BondValenceBuilder(MapBuilder):
                     "possible_valences": valences,
                     "method": "oxi_state_guesses"
                 }
-            except:
-                pass
+            except Exception as e:
+                self.logger.error("Oxidation state guess failed with: {}".format(e))
 
         return d
