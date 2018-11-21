@@ -46,7 +46,7 @@ class BondValenceBuilder(MapBuilder):
                 "method": "BVAnalyzer"
             }
 
-        except e:
+        except Exception as e:
             self.logger.error("BVAnalyzer failed with: {}".format(e))
 
             try:
