@@ -43,7 +43,7 @@ class BondValenceBuilder(MapBuilder):
             d["bond_valence"] = {
                 "possible_species": list(possible_species),
                 "possible_valences": valences,
-                "method": "oxi_state_guesses"
+                "method": "BVAnalyzer"
             }
 
         except ValueError:
