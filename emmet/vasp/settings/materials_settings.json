@@ -336,6 +336,36 @@
     "tasks_key": "calcs_reversed.0.output.outcar.magmom"
   },
   {
+    "materials_key": "magnetism.structures",
+    "quality_score": {
+      "GGA Static": 2,
+      "GGA+U Static": 6,
+      "SCAN Structure Optimization": 7
+    },
+    "tasks_key": "output.structure",
+    "aggregate": true
+  },
+  {
+    "materials_key": "magnetism.energy_per_atom",
+    "quality_score": {
+      "GGA Static": 2,
+      "GGA+U Static": 6,
+      "SCAN Structure Optimization": 7
+    },
+    "tasks_key": "output.energy_per_atom",
+    "aggregate": true
+  },
+  {
+    "materials_key": "magnetism.total_magnetizations",
+    "quality_score": {
+      "GGA Static": 2,
+      "GGA+U Static": 6,
+      "SCAN Structure Optimization": 7
+    },
+    "tasks_key": "calcs_reversed.0.output.outcar.total_magnetization",
+    "aggregate": true
+  },
+  {
     "materials_key": "dielectric.structure",
     "quality_score": {
       "GGA Static Dielectric": 2,
