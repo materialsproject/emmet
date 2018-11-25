@@ -55,7 +55,7 @@
     "diel.n": "dielectric.n",
     "diel.poly_electronic": "dielectric.e_static",
     "diel.poly_total": "dielectric.e_total",
-    "piezo.e_ij_max": "piezo.e_ij_max",
+    "piezo.eij_max": "piezo.e_ij_max",
     "piezo.piezoelectric_tensor": "piezo.total",
     "piezo.v_max": "piezo.max_direction",
     "elasticity.G_Reuss": "elasticity.g_reuss",
