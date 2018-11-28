@@ -1,6 +1,6 @@
 import io
 import traceback
-from maggma.builder import Builder
+from maggma.builders import Builder
 from pydash.objects import get
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, BandStructure
 from pymatgen.symmetry.bandstructure import HighSymmKpath

@@ -1,6 +1,6 @@
 import os
 from pymatgen.core import Structure, Element
-from maggma.builder import Builder
+from maggma.builders import Builder
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
@@ -35,20 +35,11 @@ class ElectrodesBuilder(Builder):
         self.sm = StructureMatcher(comparator=ElementComparator(),
                                    primitive_cell=False)
         self.materials = materials
-        self.materials.connect()
         self.electro = electro
-        self.electro.connect()
         self.working_ion = working_ion
         self.query = query if query else {}
         self.compatibility = compatibility
         self.completed_tasks = set()
-        # We only need the working_ion_entry once
-        working_ion_entries = self.materials.query(criteria={"chemsys": self.working_ion}, properties=mat_props)
-        working_ion_entries = self._mat_doc2comp_entry(working_ion_entries, store_struct=False)
-
-        if working_ion_entries:
-            self.working_ion_entry = min(working_ion_entries, key=lambda e: e.energy_per_atom)
-
         super().__init__(sources=[materials], targets=[electro], **kwargs)
 
     def get_items(self):
@@ -59,6 +50,13 @@ class ElectrodesBuilder(Builder):
         Returns:
             set(ComputedStructureEntry): a set of entries for this system
         """
+
+        # We only need the working_ion_entry once
+        working_ion_entries = self.materials.query(criteria={"chemsys": self.working_ion}, properties=mat_props)
+        working_ion_entries = self._mat_doc2comp_entry(working_ion_entries, store_struct=False)
+
+        if working_ion_entries:
+            self.working_ion_entry = min(working_ion_entries, key=lambda e: e.energy_per_atom)
 
 
         self.logger.info("Grabbing the relavant chemical systems containing the current \

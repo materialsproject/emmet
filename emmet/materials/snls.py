@@ -6,7 +6,7 @@ from pydash.objects import get
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.util.provenance import StructureNL
-from maggma.builder import Builder
+from maggma.builders import Builder
 from pybtex.database import parse_string
 from pybtex.database import BibliographyData
 
@@ -32,11 +32,11 @@ mp_default_snl_fields = {
         "name": "Materials Project",
         "email": "feedback@materialsproject.org"
     }],
-    "history": {
+    "history": [{
         "name": "Materials Project Optimized Structure",
         "url": "http://www.materialsproject.org",
         "description": {}
-    }
+    }]
 }
 
 DB_indexes = {"ICSD": "icsd_ids", "Pauling": "pf_ids"}
