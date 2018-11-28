@@ -168,7 +168,7 @@ class MaterialsBuilder(Builder):
             structure_opt_props = all_props
 
         # Sort task_ids by last_updated
-        structure_task_ids = [prop[self.tasks.key] for prop in sorted(structure_opt_props,key=lambda x:[self.tasks.lu_field])]
+        structure_task_ids = [prop[self.tasks.key] for prop in sorted(structure_opt_props,key=lambda x:x[self.tasks.lu_field])]
 
 
         # If we don"t have a structure optimization then just return no material
