@@ -218,8 +218,10 @@ class MPBuilder(Builder):
              [p["titel"].split()[1] for p in get(new_style_mat, "calc_settings.potcar_spec")])
         set_(mat, "pseudo_potential.pot_type", "paw")
 
-        mat["ntask_ids"] = len(get(new_style_mat, "task_ids"))
-        mat["blessed_tasks"] = {v: k for k, v in new_style_mat.get("task_types", {}).items()}
+        tasks = {k: v for k, v in new_style_mat.get("task_types", {}).items() if v in self._settings["task_types"]}
+        mat["blessed_tasks"] = {v: k for k, v in tasks.items()}
+        mat["task_ids"] = list(tasks.keys())
+        mat["ntask_ids"] = len(tasks)
 
         return mat
 
