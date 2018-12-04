@@ -83,11 +83,11 @@ class MPBuilder(Builder):
         self.logger.info("Starting Website Builder")
         mat_keys = set(self.materials.distinct(self.materials.key, criteria=self.query))
         keys = set(
-            source_keys_updated(source=self.materials, target=self.website, query=self.query, logger=self.logger))
+            source_keys_updated(source=self.materials, target=self.website, query=self.query))
 
         # Get keys for aux docs that have been updated since last processed.
         for source in self.aux:
-            new_keys = source_keys_updated(source=source, target=self.website, logger=self.logger)
+            new_keys = source_keys_updated(source=source, target=self.website)
             self.logger.info("Only considering {} new keys for {}".format(len(new_keys), source.collection_name))
             keys |= set(new_keys)
 
