@@ -163,19 +163,19 @@ class MaterialsBuilder(Builder):
 
         if self.require_structure_opt:
             # Only consider structure optimization task_ids for material task_id
-            structure_opt_props = [prop for prop in all_props if "Structure Optimization" in prop["task_type"]]
+            possible_mat_ids = [prop for prop in all_props if "Structure Optimization" in prop["task_type"]]
         else:
-            structure_opt_props = all_props
+            possible_mat_ids = all_props
 
         # Sort task_ids by last_updated
-        structure_task_ids = [prop[self.tasks.key] for prop in sorted(structure_opt_props,key=lambda x:x[self.tasks.lu_field])]
+        possible_mat_ids = [prop[self.tasks.key] for prop in sorted(structure_opt_props,key=lambda x:x[self.tasks.lu_field])]
 
 
         # If we don"t have a structure optimization then just return no material
-        if len(structure_task_ids) == 0:
+        if len(possible_mat_ids) == 0:
             return None
         else:
-            mat_id = structure_task_ids[0]
+            mat_id = possible_mat_ids[0]
 
         # Sort and group based on materials key
         sorted_props = sorted(all_props, key=lambda x: x["materials_key"])
