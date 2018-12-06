@@ -167,9 +167,8 @@ class MaterialsBuilder(Builder):
         else:
             possible_mat_ids = all_props
 
-        # Sort task_ids by last_updated
-        possible_mat_ids = [prop[self.tasks.key] for prop in sorted(structure_opt_props,key=lambda x:x[self.tasks.lu_field])]
-
+        # Sort task_ids by ID
+        possible_mat_ids = [prop[self.tasks.key] for prop in sorted(possible_mat_ids, key=lambda x: ID_to_int(x["task_id"]))]
 
         # If we don"t have a structure optimization then just return no material
         if len(possible_mat_ids) == 0:
@@ -332,6 +331,7 @@ def structure_metadata(structure):
 
     return meta
 
+
 def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, separate_mag_orderings=False):
     """
     Groups structures according to space group and structure matching
@@ -378,3 +378,17 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, s
                     yield list(mag_group)
             else:
                 yield group
+
+
+def ID_to_int(s_id):
+    """
+    Converts a string id to tuple
+    falls back to assuming ID is an Int if it can't process
+    Assumes string IDs are of form "[chars]-[int]" such as mp-234
+    """
+    if isinstance(s_id, str):
+        return (s_id.split("-")[0], int(str(s_id).split("-")[-1]))
+    elif isinstance(s_id, (int, float)):
+        return s_id
+    else:
+        raise Exception("Could not parse {} into a number".format(s_id))
