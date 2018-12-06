@@ -81,9 +81,11 @@ class MPBuilder(Builder):
         """
 
         self.logger.info("Starting Website Builder")
+
+        self.ensure_indexes()
+
         mat_keys = set(self.materials.distinct(self.materials.key, criteria=self.query))
-        keys = set(
-            source_keys_updated(source=self.materials, target=self.website, query=self.query))
+        keys = set(source_keys_updated(source=self.materials, target=self.website, query=self.query))
 
         # Get keys for aux docs that have been updated since last processed.
         for source in self.aux:
@@ -224,6 +226,70 @@ class MPBuilder(Builder):
         mat["ntask_ids"] = len(tasks)
 
         return mat
+
+    def ensure_indexes(self):
+        """
+        Ensures indexes on all the collections
+        """
+
+        self.materials.ensure_index(self.materials.key)
+        self.materials.ensure_index(self.materials.lu_field)
+
+        self.website.ensure_index(self.website.key)
+        self.website.ensure_index(self.website.lu_field)
+
+        for source in self.aux:
+            source.ensure_index(source.key)
+            source.ensure_index(source.lu_field)
+
+        # Indexes for website
+
+        self.website.ensure_index("unit_cell_formula")
+        self.website.ensure_index("reduced_cell_formula")
+        self.website.ensure_index("chemsys")
+        self.website.ensure_index("nsites")
+        self.website.ensure_index("e_above_hull")
+        self.website.ensure_index("pretty_formula")
+        self.website.ensure_index("run_type")
+        self.website.ensure_index("band_gap")
+        self.website.ensure_index("task_type")
+        self.website.ensure_index("snlgroup_id_final")
+        self.website.ensure_index("band_gap.search_gap.band_gap")
+        self.website.ensure_index("formation_energy_per_atom")
+        self.website.ensure_index("density")
+        self.website.ensure_index("volume")
+        self.website.ensure_index("spacegroup.crystal_system")
+        self.website.ensure_index("exp.tags")
+        self.website.ensure_index("anonymous_formula")
+        self.website.ensure_index("has_bandstructure")
+        self.website.ensure_index("spacegroup.symbol")
+        self.website.ensure_index("elasticity.homogeneous_poisson")
+        self.website.ensure_index("elasticity.universal_anisotropy")
+        self.website.ensure_index("elasticity.G_Voigt_Reuss_Hill")
+        self.website.ensure_index("elasticity.G_Reuss")
+        self.website.ensure_index("elasticity.G_Voigt")
+        self.website.ensure_index("elasticity.K_Reuss")
+        self.website.ensure_index("elasticity.K_Voigt_Reuss_Hill")
+        self.website.ensure_index("elasticity.K_Voigt")
+        self.website.ensure_index("nelements")
+        self.website.ensure_index("doi")
+        self.website.ensure_index("doi_bibtex")
+        self.website.ensure_index("elasticity.poisson_ratio")
+        self.website.ensure_index("nelements")
+        self.website.ensure_index("elasticity.K_VRH")
+        self.website.ensure_index("task_ids")
+        self.website.ensure_index("snl_final.about.remarks")
+        self.website.ensure_index("original_task_id")
+        self.website.ensure_index("sbxd.decomposes_to")
+        self.website.ensure_index("sbxn")
+        self.website.ensure_index("sbxd.e_above_hull")
+        self.website.ensure_index("piezo.eij_max")
+        self.website.ensure_index("exp_lattice.volume")
+        self.website.ensure_index("has")
+        self.website.ensure_index("formula_anonymous")
+        self.website.ensure_index("spacegroup.number")
+        self.website.ensure_index("last_updated")
+        self.website.ensure_index("_bt")
 
 
 #
