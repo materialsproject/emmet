@@ -90,12 +90,15 @@ class DielectricBuilder(MapBuilder):
 
             max_index = np.argmax(np.abs(charges))
 
+            max_direction = directions[max_index]
+            minval = np.min(np.abs(max_direction[np.nonzero(max_direction)]))
+
             d["piezo"] = {
                 "total": total.zeroed().voigt,
                 "ionic": ionic.zeroed().voigt,
                 "static": static.zeroed().voigt,
                 "e_ij_max": charges[max_index],
-                "max_direction": np.round(directions[max_index] / np.min(np.abs(directions[max_index]))),
+                "max_direction": np.round(max_direction / minval),
                 "strain_for_max": strains[max_index]
             }
 
