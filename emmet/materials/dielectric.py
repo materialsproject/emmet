@@ -79,7 +79,7 @@ class DielectricBuilder(MapBuilder):
             total = ionic + static
 
             # Enforce basic voigt symmetry
-            total = (total + np.transpose(total, [1, 0, 2])) / 2
+            total = (total + np.transpose(total, [0, 2, 1])) / 2
 
             # Convert to IEEE orientation
             total = total.convert_to_ieee(structure, initial_fit=False)
