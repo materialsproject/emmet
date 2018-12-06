@@ -82,9 +82,9 @@ class DielectricBuilder(MapBuilder):
             total = (total + np.transpose(total, [1, 0, 2])) / 2
 
             # Convert to IEEE orientation
-            total = total.convert_to_ieee(structure, initial_fit=False).voigt
-            ionic = ionic.convert_to_ieee(structure, initial_fit=False).voigt
-            static = static.convert_to_ieee(structure, initial_fit=False).voigt
+            total = total.convert_to_ieee(structure, initial_fit=False)
+            ionic = ionic.convert_to_ieee(structure, initial_fit=False)
+            static = static.convert_to_ieee(structure, initial_fit=False)
 
             directions, charges, strains = np.linalg.svd(total.voigt, full_matrices=False)
 
