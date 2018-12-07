@@ -5,21 +5,23 @@ from httplib2 import Http
 from oauth2client import file, client, tools
 from googleapiclient.http import MediaIoBaseDownload
 from pprint import pprint
+from tqdm import tqdm
 
 # If modifying these scopes, delete the file token.json.
 # see https://developers.google.com/identity/protocols/googlescopes#drivev3
 SCOPES = 'https://www.googleapis.com/auth/drive'
 OUTDIR = 'mpraw'
-CHUNKSIZE = 5*1024*1024 # 5MB
+CHUNKSIZE = 1024*1024 # 5MB
 
 def download_file(service, file_id):
     request = service.files().get_media(fileId=file_id)
     fh = io.BytesIO()
     downloader = MediaIoBaseDownload(fh, request, chunksize=CHUNKSIZE)
     done = False
-    while done is False:
-        status, done = downloader.next_chunk()
-        print("Download {:d}%.".format(int(status.progress() * 100)))
+    with tqdm(total=100) as pbar:
+        while done is False:
+            status, done = downloader.next_chunk()
+            pbar.update(int(status.progress() * 100))
     return fh.getvalue()
 
 def main():
