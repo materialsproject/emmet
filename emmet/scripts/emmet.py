@@ -1,4 +1,4 @@
-import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, itertools, multiprocessing
+import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, itertools, multiprocessing, math
 from shutil import copyfile, rmtree
 from glob import glob
 from fnmatch import fnmatch
@@ -1051,7 +1051,7 @@ def parse(base_path, add_snlcolls, insert, make_snls, nproc, max_dirs):
     already_inserted_subdirs = [get_subdir(dn) for dn in target.collection.find({'tags': tag}).distinct('dir_name')]
     print(len(already_inserted_subdirs), 'VASP directories already inserted for', tag)
 
-    chunk_size = 100
+    chunk_size = math.ceil(max_dirs/nproc)
     if nproc > 1 and max_dirs <= chunk_size:
         nproc = 1
         print('max_dirs =', max_dirs, 'but chunk size =', chunk_size, '-> parsing sequentially')
