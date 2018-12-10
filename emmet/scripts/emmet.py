@@ -339,8 +339,8 @@ def copy(target_db_file, tag, insert, copy_snls):
 
             if isinstance(task_doc['task_id'], int):
                 if insert:
-                    c = target.db.counter.find_one_and_update({"_id": "taskid"}, {"$inc": {"c": 1}}, return_document=ReturnDocument.AFTER)["c"]
-                    task_doc['task_id'] = 'mp-{}'.format(c)
+                    next_tid = max([int(tid[len('mp')+1:]) for tid in target.collection.distinct('task_id')]) + 1
+                    task_doc['task_id'] = 'mp-{}'.format(next_tid)
             else:
                 task = target.collection.find_one({'task_id': task_doc['task_id']}, ['orig_inputs', 'output.structure'])
                 if task:
