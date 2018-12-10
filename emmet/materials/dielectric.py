@@ -55,7 +55,8 @@ class DielectricBuilder(MapBuilder):
         structure = Structure.from_dict(item.get("dielectric", {}).get("structure", None))
 
         ionic = Tensor(item["dielectric"]["ionic"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)
-        static = Tensor(item["dielectric"]["static"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)
+        static = Tensor(
+            item["dielectric"]["static"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)
         total = ionic + static
 
         d = {
@@ -73,24 +74,36 @@ class DielectricBuilder(MapBuilder):
         sga = SpacegroupAnalyzer(structure)
         # Update piezo if non_centrosymmetric
         if item.get("piezo", False) and not sga.is_laue():
-            static = PiezoTensor.from_voigt(np.array(
-                item['piezo']["static"]))
-            ionic = PiezoTensor.from_voigt(np.array(
-                item['piezo']["ionic"]))
+            static = PiezoTensor.from_voigt(np.array(item['piezo']["static"]))
+            ionic = PiezoTensor.from_voigt(np.array(item['piezo']["ionic"]))
             total = ionic + static
 
-            directions, charges, strains = np.linalg.svd(total)
+            # Enforce basic voigt symmetry
+            total = (total + np.transpose(total, [0, 2, 1])) / 2
+
+            # Convert to IEEE orientation
+            total = total.convert_to_ieee(structure, initial_fit=False)
+            ionic = ionic.convert_to_ieee(structure, initial_fit=False)
+            static = static.convert_to_ieee(structure, initial_fit=False)
+
+            directions, charges, strains = np.linalg.svd(total.voigt, full_matrices=False)
 
             max_index = np.argmax(np.abs(charges))
+
+            max_direction = directions[max_index]
+
+            # Allow a max miller index of 10
+            max_miller = 10
+            min_val = np.abs(max_direction)
+            min_val = min_val[min_val > (np.max(min_val) / max_miller)]
+            min_val = np.min(min_val)
+
             d["piezo"] = {
-                "total_raw":  total.voigt,
-                "ionic_raw": ionic.voigt,
-                "static_raw": static.voigt,
-                "total": total.fit_to_structure(structure).convert_to_ieee(structure).voigt,
-                "ionic": ionic.fit_to_structure(structure).convert_to_ieee(structure).voigt,
-                "static": static.fit_to_structure(structure).convert_to_ieee(structure).voigt,
+                "total": total.zeroed().voigt,
+                "ionic": ionic.zeroed().voigt,
+                "static": static.zeroed().voigt,
                 "e_ij_max": charges[max_index],
-                "max_direction": directions[max_index],
+                "max_direction": np.round(max_direction / min_val),
                 "strain_for_max": strains[max_index]
             }
 

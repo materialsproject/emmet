@@ -163,19 +163,18 @@ class MaterialsBuilder(Builder):
 
         if self.require_structure_opt:
             # Only consider structure optimization task_ids for material task_id
-            structure_opt_props = [prop for prop in all_props if "Structure Optimization" in prop["task_type"]]
+            possible_mat_ids = [prop for prop in all_props if "Structure Optimization" in prop["task_type"]]
         else:
-            structure_opt_props = all_props
+            possible_mat_ids = all_props
 
-        # Sort task_ids by last_updated
-        structure_task_ids = [prop[self.tasks.key] for prop in sorted(structure_opt_props,key=lambda x:[self.tasks.lu_field])]
-
+        # Sort task_ids by ID
+        possible_mat_ids = [prop[self.tasks.key] for prop in sorted(possible_mat_ids, key=lambda x: ID_to_int(x["task_id"]))]
 
         # If we don"t have a structure optimization then just return no material
-        if len(structure_task_ids) == 0:
+        if len(possible_mat_ids) == 0:
             return None
         else:
-            mat_id = structure_task_ids[0]
+            mat_id = possible_mat_ids[0]
 
         # Sort and group based on materials key
         sorted_props = sorted(all_props, key=lambda x: x["materials_key"])
@@ -335,6 +334,7 @@ def structure_metadata(structure):
 
     return meta
 
+
 def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, separate_mag_orderings=False):
     """
     Groups structures according to space group and structure matching
@@ -381,3 +381,17 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, s
                     yield list(mag_group)
             else:
                 yield group
+
+
+def ID_to_int(s_id):
+    """
+    Converts a string id to tuple
+    falls back to assuming ID is an Int if it can't process
+    Assumes string IDs are of form "[chars]-[int]" such as mp-234
+    """
+    if isinstance(s_id, str):
+        return (s_id.split("-")[0], int(str(s_id).split("-")[-1]))
+    elif isinstance(s_id, (int, float)):
+        return s_id
+    else:
+        raise Exception("Could not parse {} into a number".format(s_id))
