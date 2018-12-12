@@ -13,3 +13,4 @@ nltk==3.3
 mp_dash_components>=0.0.2
 -e git://github.com/hackingmaterials/matminer#egg=matminer
 -e git://github.com/materialsproject/maggma#egg=maggma
+-e git@gitlab.com:sousaw/BoltzTraP2.git
