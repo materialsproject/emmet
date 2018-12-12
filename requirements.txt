@@ -12,5 +12,5 @@ sumo==1.0.8
 nltk==3.3
 mp_dash_components>=0.0.2
 matminer==0.4.5
-maggma==0.12.0-e 
-git@gitlab.com:sousaw/BoltzTraP2.git
+maggma==0.12.0
+-e git@gitlab.com:sousaw/BoltzTraP2.git
