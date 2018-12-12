@@ -76,10 +76,10 @@ class MaterialsBuilder(Builder):
         self.logger.info("Allowed task types: {}".format(self.allowed_tasks))
 
         self.logger.info("Setting indexes")
-        self.ensure_indicies()
+        self.ensure_indexes()
 
         # Save timestamp for update operation
-        self.time_stamp = datetime.utcnow()
+        self.timestamp = datetime.utcnow()
 
         # Get all processed tasks:
         q = dict(self.query)
@@ -143,6 +143,10 @@ class MaterialsBuilder(Builder):
         """
 
         items = [i for i in filter(None, chain.from_iterable(items)) if self.valid(i)]
+
+        for item in items:
+            item.update({"_bt": self.timestamp})
+
         if len(items) > 0:
             self.logger.info("Updating {} materials".format(len(items)))
             self.materials.update(docs=items, update_lu=False)
@@ -157,18 +161,20 @@ class MaterialsBuilder(Builder):
         # Convert the task to properties and flatten
         all_props = list(chain.from_iterable([self.task_to_prop_list(t) for t in task_group]))
 
-        # Store task_id of first structure as material task_id
-        structure_task_ids = list(
-            sorted([
-                prop["task_id"]
-                for prop in all_props
-                if prop["materials_key"] == "structure" and "Structure Optimization" in prop["task_type"]
-            ],
-                   key=ID_to_int))
+        if self.require_structure_opt:
+            # Only consider structure optimization task_ids for material task_id
+            possible_mat_ids = [prop for prop in all_props if "Structure Optimization" in prop["task_type"]]
+        else:
+            possible_mat_ids = all_props
+
+        # Sort task_ids by ID
+        possible_mat_ids = [prop[self.tasks.key] for prop in sorted(possible_mat_ids, key=lambda x: ID_to_int(x["task_id"]))]
 
         # If we don"t have a structure optimization then just return no material
-        if len(structure_task_ids) == 0 and self.require_structure_opt:
+        if len(possible_mat_ids) == 0:
             return None
+        else:
+            mat_id = possible_mat_ids[0]
 
         # Sort and group based on materials key
         sorted_props = sorted(all_props, key=lambda x: x["materials_key"])
@@ -191,12 +197,11 @@ class MaterialsBuilder(Builder):
 
         # Add in the provenance for the properties
         origins = [{k: prop[k]
-                    for k in ["materials_key", "task_type", "task_id", "last_updated"]}
-                   for prop in best_props
+                    for k in ["materials_key", "task_type", "task_id", "last_updated"]} for prop in best_props
                    if prop.get("track", False)]
 
         # Store all the task_ids
-        task_ids = list(sorted([t["task_id"] for t in task_group], key=ID_to_int))
+        task_ids = list(set([t["task_id"] for t in task_group]))
 
         # Store task_types
         task_types = {t["task_id"]: t["task_type"] for t in all_props}
@@ -205,7 +210,7 @@ class MaterialsBuilder(Builder):
             self.materials.lu_field: max([prop["last_updated"] for prop in all_props]),
             "created_at": min([prop["last_updated"] for prop in all_props]),
             "task_ids": task_ids,
-            self.materials.key: structure_task_ids[0],
+            self.materials.key: mat_id,
             "origins": origins,
             "task_types": task_types
         }
@@ -288,7 +293,7 @@ class MaterialsBuilder(Builder):
         """
         return "structure" in doc
 
-    def ensure_indicies(self):
+    def ensure_indexes(self):
         """
         Ensures indicies on the tasks and materials collections
         """
@@ -325,21 +330,6 @@ def structure_metadata(structure):
     }
 
     return meta
-
-
-def ID_to_int(s_id):
-    """
-    Converts a string id to int
-    falls back to assuming ID is an Int if it can't process
-    Assumes string IDs are of form "[chars]-[int]" such as
-    mp-234
-    """
-    if isinstance(s_id, str):
-        return int(str(s_id).split("-")[-1])
-    elif isinstance(s_id, (int, float)):
-        return s_id
-    else:
-        raise Exception("Could not parse {} into a number".format(s_id))
 
 
 def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, separate_mag_orderings=False):
@@ -388,3 +378,17 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, s
                     yield list(mag_group)
             else:
                 yield group
+
+
+def ID_to_int(s_id):
+    """
+    Converts a string id to tuple
+    falls back to assuming ID is an Int if it can't process
+    Assumes string IDs are of form "[chars]-[int]" such as mp-234
+    """
+    if isinstance(s_id, str):
+        return (s_id.split("-")[0], int(str(s_id).split("-")[-1]))
+    elif isinstance(s_id, (int, float)):
+        return s_id
+    else:
+        raise Exception("Could not parse {} into a number".format(s_id))
