@@ -126,6 +126,39 @@
     "tasks_key": "task_id"
   },
   {
+    "materials_key": "thermo.scan.energy",
+    "quality_score": {
+      "SCAN Static": 5,
+      "SCAN Structure Optimization": 6
+    },
+    "tasks_key": "output.energy",
+    "track": true
+  },
+  {
+    "materials_key": "thermo.scan.energy_per_atom",
+    "quality_score": {
+      "SCAN Static": 5,
+      "SCAN Structure Optimization": 6
+    },
+    "tasks_key": "output.energy_per_atom",
+    "track": true
+  },
+  {
+    "materials_key": "thermo.scan.magmoms",
+    "quality_score": {
+      "SCAN Static": 5,
+      "SCAN Structure Optimization": 6
+    },
+    "tasks_key": "calcs_reversed.0.output.outcar.magmom"
+  },
+  {
+    "materials_key": "thermo.scan.structure",
+    "quality_score": {
+      "SCAN Structure Optimization": 7
+    },
+    "tasks_key": "output.structure"
+  },
+  {
     "materials_key": "thermo.energy",
     "quality_score": {
       "GGA Static": 1,
@@ -223,8 +256,29 @@
   {
     "materials_key": "inputs.hse_band_gap",
     "quality_score": {
-      "HSE Static": 2,
-      "HSE Structure Optimization": 1
+      "HSE Static": 2
+    },
+    "tasks_key": "orig_inputs"
+  },
+  {
+    "materials_key": "inputs.dielectric",
+    "quality_score": {
+      "GGA Static Dielectric": 2,
+      "GGA+U Static Dielectric": 6
+    },
+    "tasks_key": "orig_inputs"
+  },
+  {
+    "materials_key": "inputs.scan_opt",
+    "quality_score": {
+      "SCAN Structure Optimization": 2
+    },
+    "tasks_key": "orig_inputs"
+  },
+  {
+    "materials_key": "inputs.scan_static",
+    "quality_score": {
+      "SCAN Static": 6
     },
     "tasks_key": "orig_inputs"
   },
@@ -280,6 +334,36 @@
       "GGA+U Structure Optimization": 5
     },
     "tasks_key": "calcs_reversed.0.output.outcar.magmom"
+  },
+  {
+    "materials_key": "magnetism.structures",
+    "quality_score": {
+      "GGA Static": 2,
+      "GGA+U Static": 6,
+      "SCAN Structure Optimization": 7
+    },
+    "tasks_key": "output.structure",
+    "aggregate": true
+  },
+  {
+    "materials_key": "magnetism.energy_per_atom",
+    "quality_score": {
+      "GGA Static": 2,
+      "GGA+U Static": 6,
+      "SCAN Structure Optimization": 7
+    },
+    "tasks_key": "output.energy_per_atom",
+    "aggregate": true
+  },
+  {
+    "materials_key": "magnetism.total_magnetizations",
+    "quality_score": {
+      "GGA Static": 2,
+      "GGA+U Static": 6,
+      "SCAN Structure Optimization": 7
+    },
+    "tasks_key": "calcs_reversed.0.output.outcar.total_magnetization",
+    "aggregate": true
   },
   {
     "materials_key": "dielectric.structure",

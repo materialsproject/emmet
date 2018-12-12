@@ -61,7 +61,7 @@ class TestMaterials(unittest.TestCase):
         }]
 
         mat = self.mbuilder.make_mat(tasks)
-        self.assertEqual(mat["task_ids"], ["mp-1", "mp-2"])
+        self.assertEqual(set(mat["task_ids"]), {"mp-1", "mp-2"})
 
         for k in [
                 "task_ids", "task_id", "origins", "task_types", "formula_anonymous", "bandstructure", "inputs",
