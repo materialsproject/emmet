@@ -22,6 +22,9 @@ from emmet.vasp.materials import group_structures, get_sg
 from emmet.vasp.task_tagger import task_type
 from log4mongo.handlers import MongoHandler, MongoFormatter
 from prettytable import PrettyTable
+from googleapiclient.discovery import build
+from httplib2 import Http
+from oauth2client import file, client, tools
 
 if 'FW_CONFIG_FILE' not in os.environ:
     print('Please set FW_CONFIG_FILE!')
@@ -33,6 +36,7 @@ base_query = {'is_ordered': True, 'is_valid': True, 'nsites': {'$lt': 200}, 'sit
 task_base_query = {'tags': {'$nin': ['DEPRECATED', 'deprecated']}, '_mpworks_meta': {'$exists': 0}}
 structure_keys = ['snl_id', 'lattice', 'sites', 'charge', 'about._materialsproject.task_id']
 aggregation_keys = ['reduced_cell_formula', 'formula_pretty']
+SCOPES = 'https://www.googleapis.com/auth/drive'
 
 def aggregate_by_formula(coll, q, key=None):
     query = {'$and': [q, exclude]}
@@ -1084,4 +1088,70 @@ def parse(base_path, add_snlcolls, insert, make_snls, nproc, max_dirs):
     #if insert and make_snls:
     #    print('add SNLs for', len(input_structures), 'structures')
     #    add_snls(tag, input_structures, add_snlcolls, insert)
+
+@cli.command()
+@click.argument('target_db_file', type=click.Path(exists=True))
+def gdrive(target_db_file):
+    """sync launch directories for target task DB to Google Drive"""
+    target = VaspCalcDb.from_db_file(target_db_file, admin=True)
+    print('connected to target db with', target.collection.count(), 'tasks')
+    print(target.db.materials.count(), 'materials')
+
+    store = file.Storage('token.json')
+    creds = store.get()
+    if not creds or creds.invalid:
+        flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
+        creds = tools.run_flow(flow, store)
+    service = build('drive', 'v3', http=creds.authorize(Http()))
+    garden_id = os.environ.get('MPDRIVE_GARDEN_ID')
+    if not garden_id:
+        print('MPDRIVE_GARDEN_ID not set!')
+        return
+    
+    query = {}
+    materials = target.db.materials.find(query, {'task_id': 1, 'blessed_tasks': 1})
+    blessed_tasks = dict((doc['task_id'], doc['blessed_tasks']) for doc in materials)
+    nr_blessed_tasks = sum([len(l) for l in blessed_tasks.values()])
+    print(nr_blessed_tasks, 'tasks to sync')
+
+    batch = service.new_batch_http_request()
+    splits = ['block_', 'aflow_']
+    nr_tasks_processed = 0
+    for mpid, tasks in blessed_tasks.items():
+        for task_type, task_id in tasks.items():
+            if task_type == 'GGA Structure Optimization': # TODO remove
+                if len(batch._order) == 100:
+                    print('execute batch request ...')
+                    batch.execute()
+                    batch = service.new_batch_http_request()
+                dir_name = target.collection.find_one({'task_id': task_id}, {'dir_name': 1})['dir_name']
+                if '_2011-' not in dir_name and '_2012-' not in dir_name: # TODO remove
+                    continue
+                for s in splits:
+                    ds = dir_name.split(s)
+                    if len(ds) == 2:
+                        block_launcher = s + ds[-1]
+                        print(mpid, task_id, block_launcher)
+                        block, launcher = block_launcher.rsplit(os.sep, 1)
+                        query = "name = '{}.tar.gz'".format(launcher)
+                        response = service.files().list(
+                            q=query, spaces='drive', fields='files(id, name, size)', pageSize=1
+                        ).execute()
+                        files = response['files']
+                        if files:
+                            if int(files[0]['size']) < 50:
+                                batch.add(service.files().delete(fileId=files[0]['id']))
+                                print('TODO: re-upload', files[0]['name'])
+                        else:
+                            print('to upload')
+                        nr_tasks_processed += 1
+                        break
+                else:
+                    print(mpid, task_id, ': could not split', dir_name)
+                    return
+
+    if len(batch._order) > 0:
+        print('execute final batch request ...')
+        batch.execute()
+    print(nr_tasks_processed)
 
