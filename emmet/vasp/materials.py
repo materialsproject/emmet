@@ -280,7 +280,7 @@ class MaterialsBuilder(Builder):
                         "track": prop.get("track", False),
                         "aggregate": prop.get("aggregate", False),
                         "last_updated": task[self.tasks.lu_field],
-                        "energy": get(task, "output.energy", 0.0),
+                        "energy": get(task, "output.energy_per_atom", 0.0),
                         "materials_key": prop["materials_key"]
                     })
                 elif not prop.get("optional", False):
