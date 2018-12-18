@@ -88,9 +88,10 @@ def contains_vasp_dirs(list_of_files):
         if f.startswith("INCAR"):
             return True
     
-def get_symlinked_path(root, base_path_index):
+def get_symlinked_path(root, base_path_index, insert):
     root_split = os.path.realpath(root).split(os.sep)
-    if not root_split[base_path_index-1].startswith('block_'):
+    if base_path_index != len(root_split) and \
+        not root_split[base_path_index-1].startswith('block_'):
         rootdir = os.sep.join(root_split[:base_path_index])
         block = get_timestamp_dir(prefix='block')
         block_dir = os.sep.join(root_split[:base_path_index-1] + [block])
@@ -110,7 +111,7 @@ def get_symlinked_path(root, base_path_index):
     else:
         return os.path.realpath(subdir)
 
-def get_vasp_dirs(scan_path, base_path, max_dirs):
+def get_vasp_dirs(scan_path, base_path, max_dirs, insert):
     base_path_split = base_path.split(os.sep)
     base_path_index = len(base_path_split)
     # NOTE os.walk followlinks=False by default, as intended here
@@ -118,7 +119,7 @@ def get_vasp_dirs(scan_path, base_path, max_dirs):
     for root, dirs, files in os.walk(scan_path):
         # TODO ignore relax1/2 subdirs if INCAR.orig found
         if contains_vasp_dirs(files):
-            yield get_symlinked_path(root, base_path_index)
+            yield get_symlinked_path(root, base_path_index, insert)
             counter += 1
             if counter >= max_dirs:
                 break
@@ -130,7 +131,7 @@ def get_vasp_dirs(scan_path, base_path, max_dirs):
                     with tarfile.open(path, 'r:gz') as tf:
                         tf.extractall(cwd)
                     os.remove(path)
-                    for vaspdir in get_vasp_dirs(path.replace('.tar.gz', ''), base_path, max_dirs):
+                    for vaspdir in get_vasp_dirs(path.replace('.tar.gz', ''), base_path, max_dirs, insert):
                         yield vaspdir
                         counter += 1
                         if counter >= max_dirs:
@@ -1060,7 +1061,7 @@ def parse(base_path, add_snlcolls, insert, make_snls, nproc, max_dirs):
         nproc = 1
         print('max_dirs =', max_dirs, 'but chunk size =', chunk_size, '-> parsing sequentially')
     pool = multiprocessing.Pool(processes=nproc)
-    iterator_vaspdirs = get_vasp_dirs(base_path, base_path, max_dirs)
+    iterator_vaspdirs = get_vasp_dirs(base_path, base_path, max_dirs, insert)
     iterator = iterator_slice(iterator_vaspdirs, chunk_size) # process in chunks
     queue = deque()
     total_nr_vaspdirs_parsed = 0
