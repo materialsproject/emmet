@@ -412,5 +412,14 @@
       "GGA+U Static Dielectric": 6
     },
     "tasks_key": "calcs_reversed.0.output.outcar.born"
+  },
+  {
+    "materials_key": "_sandbox",
+    "quality_score": {
+      "GGA Structure Optimization": 1,
+      "GGA+U Structure Optimization": 5
+    },
+    "tasks_key": "_sandbox",
+    "aggregate": true
   }
 ]
