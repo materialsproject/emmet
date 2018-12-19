@@ -25,6 +25,7 @@ from prettytable import PrettyTable
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
+from googleapiclient.http import MediaFileUpload
 
 if 'FW_CONFIG_FILE' not in os.environ:
     print('Please set FW_CONFIG_FILE!')
@@ -1091,6 +1092,17 @@ def parse(base_path, add_snlcolls, insert, make_snls, nproc, max_dirs):
     #    print('add SNLs for', len(input_structures), 'structures')
     #    add_snls(tag, input_structures, add_snlcolls, insert)
 
+def upload_archive(path, name, service, parent=None):
+    media = MediaFileUpload(path, mimetype='application/gzip', resumable=True)
+    body = {'name': name, 'parents': [parent]}
+    request = service.files().create(media_body=media, body=body)
+    response = None
+    while response is None:
+        status, response = request.next_chunk()
+        if status:
+            print("Uploaded %d%%." % int(status.progress() * 100))
+    print("Upload Complete!")
+
 @cli.command()
 @click.argument('target_db_file', type=click.Path(exists=True))
 def gdrive(target_db_file):
@@ -1111,49 +1123,89 @@ def gdrive(target_db_file):
         return
     
     query = {}
-    materials = target.db.materials.find(query, {'task_id': 1, 'blessed_tasks': 1})
-    blessed_tasks = dict((doc['task_id'], doc['blessed_tasks']) for doc in materials)
-    nr_blessed_tasks = sum([len(l) for l in blessed_tasks.values()])
-    print(nr_blessed_tasks, 'tasks to sync')
+    blessed_task_ids = [
+        task_id for doc in target.db.materials.find(query, {'task_id': 1, 'blessed_tasks': 1})
+        for task_type, task_id in doc['blessed_tasks'].items()
+    ]
+    print(len(blessed_task_ids), 'blessed tasks.')
 
-    batch = service.new_batch_http_request()
+    dir_names = []
+    for task in target.collection.find({'task_id': {'$in': blessed_task_ids}}, {'dir_name': 1}):
+        dir_name = task['dir_name']
+        if '2011-' in dir_name or '2012-' in dir_name: # TODO remove
+            dir_names.append(dir_name)
+    dir_names.sort()
+    print(len(dir_names), 'launcher directories to sync.')
+
     splits = ['block_', 'aflow_']
     nr_tasks_processed = 0
-    for mpid, tasks in blessed_tasks.items():
-        for task_type, task_id in tasks.items():
-            if task_type == 'GGA Structure Optimization': # TODO remove
-                if len(batch._order) == 100:
-                    print('execute batch request ...')
-                    batch.execute()
-                    batch = service.new_batch_http_request()
-                dir_name = target.collection.find_one({'task_id': task_id}, {'dir_name': 1})['dir_name']
-                if '_2011-' not in dir_name and '_2012-' not in dir_name: # TODO remove
-                    continue
-                for s in splits:
-                    ds = dir_name.split(s)
-                    if len(ds) == 2:
-                        block_launcher = s + ds[-1]
-                        print(mpid, task_id, block_launcher)
-                        block, launcher = block_launcher.rsplit(os.sep, 1)
-                        query = "name = '{}.tar.gz'".format(launcher)
-                        response = service.files().list(
-                            q=query, spaces='drive', fields='files(id, name, size)', pageSize=1
-                        ).execute()
-                        files = response['files']
-                        if files:
-                            if int(files[0]['size']) < 50:
-                                batch.add(service.files().delete(fileId=files[0]['id']))
-                                print('TODO: re-upload', files[0]['name'])
-                        else:
-                            print('to upload')
-                        nr_tasks_processed += 1
-                        break
-                else:
-                    print(mpid, task_id, ': could not split', dir_name)
-                    return
+    prev = None
+    outfile = open('launcher_paths.txt', 'w')
+    stage_dir = '/project/projectdirs/matgen/garden/rclone_to_mp_drive'
 
-    if len(batch._order) > 0:
-        print('execute final batch request ...')
-        batch.execute()
+    for dir_name in dir_names:
+
+        for s in splits:
+            ds = dir_name.split(s)
+            if len(ds) == 2:
+                block_launcher = s + ds[-1]
+                block_launcher_split = block_launcher.split(os.sep)
+                #if prev is not None and block_launcher_split[0] != prev \
+                #    and block_launcher_split[0] != 'aflow_engines-mag_special':
+                #    return # TODO remove
+
+                print(block_launcher)
+                archive_name = '{}.tar.gz'.format(block_launcher_split[-1])
+                query = "name = '{}'".format(archive_name)
+                response = service.files().list(
+                    q=query, spaces='drive', fields='files(id, name, size, parents)', pageSize=1
+                ).execute()
+                files = response['files']
+                archive_path = os.path.join(stage_dir, block_launcher + '.tar.gz')
+                if files:
+                    if int(files[0]['size']) < 50:
+                        service.files().delete(fileId=files[0]['id'])
+                        if os.path.exists(archive_path):
+                            parent = files[0]['parents'][0]
+                            #upload_archive(archive_path, archive_name, service, parent=parent)
+                            #return # TODO remove
+                        else:
+                            print('TODO: get from HPSS')
+                            outfile.write(block_launcher + '\n')
+                    else:
+                        print('OK:', files[0])
+                else:
+                    if os.path.exists(archive_path):
+                        # make directories
+                        parents = [garden_id]
+                        for folder in block_launcher_split[:-1]:
+                            query = "name = '{}'".format(folder)
+                            response = service.files().list(
+                                q=query, spaces='drive', fields='files(id, name)', pageSize=1
+                            ).execute()
+                            if not response['files']:
+                                print('create dir ...', folder)
+                                body = {
+                                  'name': folder,
+                                  'mimeType': "application/vnd.google-apps.folder",
+                                  'parents': [parents[-1]]
+                                }
+                                gdrive_folder = service.files().create(body=body).execute()
+                                parents.append(gdrive_folder['id'])
+                            else:
+                                parents.append(response['files'][0]['id'])
+
+                        #upload_archive(archive_path, archive_name, service, parent=parents[-1])
+                    else:
+                        print('TODO: get from HPSS')
+                        outfile.write(block_launcher + '\n')
+                nr_tasks_processed += 1
+                prev = block_launcher_split[0]
+                break
+        else:
+            print('could not split', dir_name)
+            return
+
     print(nr_tasks_processed)
+    outfile.close()
 

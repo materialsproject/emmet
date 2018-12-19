@@ -9,18 +9,20 @@ stage_dir="rclone_to_mp_drive"
 [[ ! -e $hpss_missing ]] && touch $hpss_missing
 
 for dir in $dirs; do
-  [[ ! -e ${dir}.tar.gz ]] && echo "skip ${dir}" && continue # TODO remove
+  #[[ ! -e ${dir}.tar.gz ]] && echo "skip ${dir}" && continue # TODO remove
 
   files=`grep "^$dir" $1`
   extract="${dir}.extract"
   grep -q "$dir" $hpss_missing
   [[ $? -eq 0 ]] && continue
 
-  [[ -d $stage_dir/$dir ]] && rclone -v copy $stage_dir/$dir mp-drive:calculations/garden/$dir
+  #[[ -d $stage_dir/$dir ]] && rclone -v copy $stage_dir/$dir mp-drive:calculations/garden/$dir
 
-  missing_paths="${dir}.paths"
   echo $files | tr ' ' '\n' | sort -u > ${dir}.files
   rclone lsf -R --files-only mp-drive:calculations/garden/$dir | sed "s:^:$dir/:g" | sed 's:.tar.gz::g' | sort -u > ${dir}.rclone_lsf
+
+  missing_paths="${dir}.paths"
+  [[ -e $missing_paths ]] && rm -v $missing_paths
   for f in $(comm --check-order -23 ${dir}.files ${dir}.rclone_lsf); do # launch dirs missing in mp-drive
     launch_dir_tar="${stage_dir}/${f}.tar.gz"
     if [[ ! -f $launch_dir_tar || ! -s $launch_dir_tar ]]; then
@@ -48,9 +50,11 @@ for dir in $dirs; do
   if [ ! -e ${dir}.tar_list ] || [ ! -s ${dir}.tar_list ]; then
     echo "make ${dir}.tar_list ..."
     tar -tzvf ${dir}.tar.gz | grep ^d | grep -v -e '/relax1/' -e '/relax2/' | awk {'print $6'} 2>&1 | tee ${dir}.tar_list
+    [[ $? -ne 0 ]] && exit
   fi
 
   paths=`cat $missing_paths`
+  [[ -e $extract ]] && rm -v $extract
   for f in $paths; do
     [[ ! -d $f ]] && grep $f ${dir}.tar_list >> $extract
   done
@@ -58,6 +62,7 @@ for dir in $dirs; do
   if [ -e $extract ] && [ -s $extract ]; then
     echo "extract" `wc -l $extract`
     tar -xvzf ${dir}.tar.gz --files-from $extract
+    [[ $? -ne 0 ]] && rm -v $extract && exit
   fi
   rm -v $extract
 
@@ -66,12 +71,13 @@ for dir in $dirs; do
     echo $launch_dir_tar ...
     mkdir -p `dirname $launch_dir_tar`
     tar_code=$(tar -czf $launch_dir_tar -C `dirname $f` `basename $f`)
-    [[ $tar_code -ne 0 ]] && echo 'problem with launch dir tar!' && break
+    [[ $tar_code -ne 0 ]] && echo 'problem with launch dir tar!' && exit
     ls -ltrh $launch_dir_tar
-    [[ -d $f ]] && rm -r $f
+    #[[ -d $f ]] && rm -rf $f
   done
   rm -v $missing_paths
 
-  rclone -v copy $stage_dir/$dir mp-drive:calculations/garden/$dir
+  #rclone -v copy $stage_dir/$dir mp-drive:calculations/garden/$dir
+  #rm -v ${dir}.tar.gz
 
 done
