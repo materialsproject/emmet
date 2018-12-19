@@ -157,8 +157,9 @@ def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
         if insert:
             for inp in ['INCAR', 'KPOINTS', 'POTCAR', 'POSCAR']:
                 input_path = os.path.join(vaspdir, inp)
-                orig_path = input_path + '.orig'
-                if not glob(orig_path+'*'):
+                if not glob(input_path+'.orig*'):
+                    input_path = glob(input_path+'*')[0]
+                    orig_path = input_path.replace(inp, inp+'.orig')
                     copyfile(input_path, orig_path)
                     print(name, 'cp', input_path, '->', orig_path)
             try:
