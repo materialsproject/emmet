@@ -1129,83 +1129,86 @@ def gdrive(target_db_file):
     ]
     print(len(blessed_task_ids), 'blessed tasks.')
 
+    splits = ['block_', 'aflow_engines-']
     dir_names = []
     for task in target.collection.find({'task_id': {'$in': blessed_task_ids}}, {'dir_name': 1}):
         dir_name = task['dir_name']
-        if '2011-' in dir_name or '2012-' in dir_name: # TODO remove
-            dir_names.append(dir_name)
+        # aflow_engines-mag_special
+        if '2011-' in dir_name and 'block_2011-10-07-08-57-17-804213' in dir_name: # TODO remove
+            for s in splits:
+                ds = dir_name.split(s)
+                if len(ds) == 2:
+                    block_launcher = s + ds[-1]
+                    dir_names.append(block_launcher)
+                    break
+            else:
+                print('could not split', dir_name)
+                return
+
     dir_names.sort()
     print(len(dir_names), 'launcher directories to sync.')
 
-    splits = ['block_', 'aflow_']
     nr_tasks_processed = 0
     prev = None
     outfile = open('launcher_paths.txt', 'w')
     stage_dir = '/project/projectdirs/matgen/garden/rclone_to_mp_drive'
 
-    for dir_name in dir_names:
-
-        for s in splits:
-            ds = dir_name.split(s)
-            if len(ds) == 2:
-                block_launcher = s + ds[-1]
-                block_launcher_split = block_launcher.split(os.sep)
-                #if prev is not None and block_launcher_split[0] != prev \
-                #    and block_launcher_split[0] != 'aflow_engines-mag_special':
-                #    return # TODO remove
-
-                print(block_launcher)
-                archive_name = '{}.tar.gz'.format(block_launcher_split[-1])
-                query = "name = '{}'".format(archive_name)
-                response = service.files().list(
-                    q=query, spaces='drive', fields='files(id, name, size, parents)', pageSize=1
-                ).execute()
-                files = response['files']
-                archive_path = os.path.join(stage_dir, block_launcher + '.tar.gz')
-                if files:
-                    if int(files[0]['size']) < 50:
-                        service.files().delete(fileId=files[0]['id'])
-                        if os.path.exists(archive_path):
-                            parent = files[0]['parents'][0]
-                            #upload_archive(archive_path, archive_name, service, parent=parent)
-                            #return # TODO remove
-                        else:
-                            print('TODO: get from HPSS')
-                            outfile.write(block_launcher + '\n')
-                    else:
-                        print('OK:', files[0])
+    for idx, dir_name in enumerate(dir_names):
+        block_launcher_split = dir_name.split(os.sep)
+        #if prev is not None and prev != block_launcher_split[0]: # TODO remove
+        #    break
+        print(idx, dir_name)
+        archive_name = '{}.tar.gz'.format(block_launcher_split[-1])
+        query = "name = '{}'".format(archive_name)
+        response = service.files().list(
+            q=query, spaces='drive', fields='files(id, name, size, parents)'
+        ).execute()
+        files = response['files']
+        archive_path = os.path.join(stage_dir, dir_name + '.tar.gz')
+        if files:
+            if len(files) > 1:
+                # duplicate uploads - delete all and re-upload
+                for f in files:
+                  print('removing', f['name'], '...')
+                  service.files().delete(fileId=f['id']).execute()
+                print('TODO: rerun to upload!')
+            elif int(files[0]['size']) < 50:
+                service.files().delete(fileId=files[0]['id']).execute()
+                if os.path.exists(archive_path):
+                    parent = files[0]['parents'][0]
+                    upload_archive(archive_path, archive_name, service, parent=parent)
                 else:
-                    if os.path.exists(archive_path):
-                        # make directories
-                        parents = [garden_id]
-                        for folder in block_launcher_split[:-1]:
-                            query = "name = '{}'".format(folder)
-                            response = service.files().list(
-                                q=query, spaces='drive', fields='files(id, name)', pageSize=1
-                            ).execute()
-                            if not response['files']:
-                                print('create dir ...', folder)
-                                body = {
-                                  'name': folder,
-                                  'mimeType': "application/vnd.google-apps.folder",
-                                  'parents': [parents[-1]]
-                                }
-                                gdrive_folder = service.files().create(body=body).execute()
-                                parents.append(gdrive_folder['id'])
-                            else:
-                                parents.append(response['files'][0]['id'])
-
-                        #upload_archive(archive_path, archive_name, service, parent=parents[-1])
-                    else:
-                        print('TODO: get from HPSS')
-                        outfile.write(block_launcher + '\n')
-                nr_tasks_processed += 1
-                prev = block_launcher_split[0]
-                break
+                    print('TODO: get from HPSS')
+                    outfile.write(dir_name + '\n')
+            else:
+                print('OK:', files[0])
         else:
-            print('could not split', dir_name)
-            return
+            if os.path.exists(archive_path):
+                # make directories
+                parents = [garden_id]
+                for folder in block_launcher_split[:-1]:
+                    query = "name = '{}'".format(folder)
+                    response = service.files().list(
+                        q=query, spaces='drive', fields='files(id, name)', pageSize=1
+                    ).execute()
+                    if not response['files']:
+                        print('create dir ...', folder)
+                        body = {
+                          'name': folder,
+                          'mimeType': "application/vnd.google-apps.folder",
+                          'parents': [parents[-1]]
+                        }
+                        gdrive_folder = service.files().create(body=body).execute()
+                        parents.append(gdrive_folder['id'])
+                    else:
+                        parents.append(response['files'][0]['id'])
+
+                upload_archive(archive_path, archive_name, service, parent=parents[-1])
+            else:
+                print('TODO: get from HPSS')
+                outfile.write(dir_name + '\n')
+        nr_tasks_processed += 1
+        prev = block_launcher_split[0]
 
     print(nr_tasks_processed)
     outfile.close()
-
