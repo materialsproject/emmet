@@ -1138,6 +1138,58 @@ def gdrive(target_db_file):
         print('MPDRIVE_GARDEN_ID not set!')
         return
     
+    launcher_paths = []
+    full_launcher_path = []
+
+    def recurse(service, folder_id):
+        page_token = None
+        query = "'{}' in parents".format(folder_id)
+        while True:
+            response = service.files().list(
+                q=query, spaces='drive', pageToken=page_token,
+                fields='nextPageToken, files(id, name, modifiedTime, size)',
+            ).execute()
+
+            for launcher in response['files']:
+                if '.json' not in launcher['name']:
+                    if '.tar.gz' in launcher['name']:
+                        launcher_name = launcher['name'].replace('.tar.gz', '')
+                        full_launcher_path.append(launcher_name)
+                        launcher_paths.append(os.path.join(*full_launcher_path))
+                    else:
+                        full_launcher_path.append(launcher['name'])
+                        recurse(service, launcher['id'])
+
+                    del full_launcher_path[-1:]
+
+            page_token = response.get('nextPageToken', None)
+            if page_token is None:
+                break # done with launchers in current block
+
+    block_page_token = None
+    sample_block = 'block_2012-0' #'block_2011-10-07-08-57-17-804213'
+    block_query = "'{}' in parents".format(garden_id) if sample_block is None \
+        else "'{}' in parents and name contains '{}'".format(garden_id, sample_block)
+
+    while True:
+        block_response = service.files().list(
+            q=block_query, spaces='drive', pageToken=block_page_token,
+            fields='nextPageToken, files(id, name)'
+        ).execute()
+
+        for block in block_response['files']:
+            print(block['name'])
+            full_launcher_path.clear()
+            full_launcher_path.append(block['name'])
+            recurse(service, block['id'])
+
+        block_page_token = block_response.get('nextPageToken', None)
+        if block_page_token is None:
+            break # done with blocks
+
+    launcher_paths.sort()
+    print(len(launcher_paths), 'launcher directories in GDrive')
+
     query = {}
     blessed_task_ids = [
         task_id for doc in target.db.materials.find(query, {'task_id': 1, 'blessed_tasks': 1})
@@ -1145,24 +1197,30 @@ def gdrive(target_db_file):
     ]
     print(len(blessed_task_ids), 'blessed tasks.')
 
-    splits = ['block_', 'aflow_engines-']
-    dir_names = []
+    nr_launchers_sync = 0
+    outfile = open('launcher_paths.txt', 'w')
+    splits = ['block_', 'aflow_engines-', 'launcher_']
     for task in target.collection.find({'task_id': {'$in': blessed_task_ids}}, {'dir_name': 1}):
         dir_name = task['dir_name']
         # aflow_engines-mag_special
-        if '2011-' in dir_name and 'block_2011-10-07-08-57-17-804213' in dir_name: # TODO remove
-            for s in splits:
-                ds = dir_name.split(s)
-                if len(ds) == 2:
-                    block_launcher = s + ds[-1]
-                    dir_names.append(block_launcher)
-                    break
-            else:
-                print('could not split', dir_name)
-                return
+        if sample_block is not None and sample_block not in dir_name:
+            continue
 
-    dir_names.sort()
-    print(len(dir_names), 'launcher directories to sync.')
+        for s in splits:
+            ds = dir_name.split(s)
+            if len(ds) == 2:
+                block_launcher = s + ds[-1]
+                if dir_name not in launcher_paths:
+                    nr_launchers_sync += 1
+                    outfile.write(block_launcher + '\n')
+                break
+        else:
+            print('could not split', dir_name)
+            return
+
+    outfile.close()
+    print(nr_launchers_sync, 'launchers to sync')
+    return
 
     nr_tasks_processed = 0
     prev = None
