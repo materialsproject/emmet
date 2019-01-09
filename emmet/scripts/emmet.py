@@ -248,12 +248,17 @@ def copy(target_db_file, tag, insert, copy_snls):
         else:
             print('no SNLs to insert')
 
+    table = PrettyTable()
+    table.field_names = ['Tag', 'Source', 'Target', 'Skipped', 'Insert']
+    sums = ['total'] + [0] * (len(table.field_names)-1)
+
     for t in tags:
 
-        print('### {} ###'.format(t))
+        print('- {}'.format(t))
+        row = [t]
         query = {'$and': [{'tags': t}, task_base_query]}
         source_count = source.collection.count(query)
-        print('source / target:', source_count, '/', target.collection.count(query))
+        row += [source_count, target.collection.count(query)]
 
         # get list of SNLs to copy over
         # only need to check tagged SNLs in source and target; dup-check across SNL collections already done in add_snls
@@ -303,8 +308,9 @@ def copy(target_db_file, tag, insert, copy_snls):
                 task_query = {'task_id': doc['task_id'], '$or': [{'dir_name': doc['dir_name']}, {'_mpworks_meta': {'$exists': 0}}]}
                 if target.collection.count(task_query):
                     skip_task_ids.append(doc['task_id'])
-        if len(skip_task_ids):
-            print('skip', len(skip_task_ids), 'existing MP task ids out of', nr_source_mp_tasks)
+        #if len(skip_task_ids):
+        #    print('skip', len(skip_task_ids), 'existing MP task ids out of', nr_source_mp_tasks)
+        row.append(len(skip_task_ids))
 
         query.update({'task_id': {'$nin': skip_task_ids}})
         already_inserted_subdirs = [get_subdir(dn) for dn in target.collection.find(query).distinct('dir_name')]
@@ -319,7 +325,11 @@ def copy(target_db_file, tag, insert, copy_snls):
         if len(subdirs) < 1:
             continue
 
-        print(len(subdirs), 'candidate tasks to insert')
+        row.append(len(subdirs))
+        table.add_row(row)
+        for idx, e in enumerate(row):
+            if isinstance(e, int):
+                sums[idx] += e
         if not insert:
             continue
 
@@ -369,6 +379,12 @@ def copy(target_db_file, tag, insert, copy_snls):
 
             if insert:
                 target.insert_task(task_doc, use_gridfs=True)
+
+    table.align['Tag'] = 'r'
+    if tag is None:
+        sfmt = '\033[1;32m{}\033[0m'
+        table.add_row([sfmt.format(s if s else '-') for s in sums])
+    print(table)
 
 
 @cli.command()
