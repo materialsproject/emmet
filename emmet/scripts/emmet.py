@@ -38,6 +38,7 @@ task_base_query = {'tags': {'$nin': ['DEPRECATED', 'deprecated']}, '_mpworks_met
 structure_keys = ['snl_id', 'lattice', 'sites', 'charge', 'about._materialsproject.task_id']
 aggregation_keys = ['reduced_cell_formula', 'formula_pretty']
 SCOPES = 'https://www.googleapis.com/auth/drive'
+current_year = int(datetime.today().year)
 
 def aggregate_by_formula(coll, q, key=None):
     query = {'$and': [q, exclude]}
@@ -752,7 +753,7 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
                             try:
                                 wf = wf_structure_optimization(struct, c={'ADD_MODIFY_INCAR': True})
                                 wf = add_trackers(wf)
-                                wf = add_tags(wf, [tag])
+                                wf = add_tags(wf, [tag, 'mp_{}'.format(current_year)])
                                 if struct.task_id is not None:
                                     wf = add_additional_fields_to_taskdocs(wf, update_dict={'task_id': struct.task_id})
                             except Exception as ex:
