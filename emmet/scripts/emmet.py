@@ -818,7 +818,7 @@ def report(tag, in_progress, to_csv):
     """generate a report of calculations status"""
 
     lpad = LaunchPad.auto_load()
-    states = ['COMPLETED', 'FIZZLED', 'READY', 'RUNNING']
+    states = ['READY', 'RESERVED', 'RUNNING', 'FIZZLED', 'COMPLETED']
 
     tags = [tag]
     if tag is None:
