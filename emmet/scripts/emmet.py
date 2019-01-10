@@ -39,6 +39,7 @@ structure_keys = ['snl_id', 'lattice', 'sites', 'charge', 'about._materialsproje
 aggregation_keys = ['reduced_cell_formula', 'formula_pretty']
 SCOPES = 'https://www.googleapis.com/auth/drive'
 current_year = int(datetime.today().year)
+year_tags = ['mp_{}'.format(y) for y in range(2018, current_year+1)]
 
 def aggregate_by_formula(coll, q, key=None):
     query = {'$and': [q, exclude]}
@@ -69,7 +70,7 @@ def get_meta_from_structure(struct):
     return d
 
 # a utility function to get us a slice of an iterator, as an iterator
-# when working with iterators maximum lazyness is preferred 
+# when working with iterators maximum lazyness is preferred
 def iterator_slice(iterator, length):
     iterator = iter(iterator)
     while True:
@@ -89,7 +90,7 @@ def contains_vasp_dirs(list_of_files):
     for f in list_of_files:
         if f.startswith("INCAR"):
             return True
-    
+
 def get_symlinked_path(root, base_path_index, insert):
     root_split = os.path.realpath(root).split(os.sep)
     if base_path_index != len(root_split) and \
@@ -234,9 +235,12 @@ def copy(target_db_file, tag, insert, copy_snls):
 
     ensure_indexes(['task_id', 'tags', 'dir_name', 'retired_task_id'], [source.collection, target.collection])
 
+    # don't accidentally copy tasks without year tag
+    task_base_query['tags']['$in'] = year_tags
+
     tags = [tag]
     if tag is None:
-        tags = [t for t in source.collection.find(task_base_query).distinct('tags') if t is not None]
+        tags = [t for t in source.collection.find(task_base_query).distinct('tags') if t is not None and t not in year_tags]
         print(len(tags), 'tags in source collection')
 
     def insert_snls(snls_list):
@@ -753,7 +757,7 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
                             try:
                                 wf = wf_structure_optimization(struct, c={'ADD_MODIFY_INCAR': True})
                                 wf = add_trackers(wf)
-                                wf = add_tags(wf, [tag, 'mp_{}'.format(current_year)])
+                                wf = add_tags(wf, [tag, year_tags[-1]])
                                 if struct.task_id is not None:
                                     wf = add_additional_fields_to_taskdocs(wf, update_dict={'task_id': struct.task_id})
                             except Exception as ex:
@@ -823,7 +827,7 @@ def report(tag, in_progress, to_csv):
 
     tags = [tag]
     if tag is None:
-        tags = [t for t in lpad.workflows.distinct('metadata.tags') if t is not None]
+        tags = [t for t in lpad.workflows.distinct('metadata.tags') if t is not None and t not in year_tags]
         tags += [t for t in lpad.db.add_wflows_logs.distinct('tags') if t is not None and t not in tags]
         all_tags = []
         for t in tags:
@@ -1138,7 +1142,7 @@ def gdrive(target_db_file):
     if not garden_id:
         print('MPDRIVE_GARDEN_ID not set!')
         return
-    
+
     launcher_paths = []
     full_launcher_path = []
 
