@@ -5,16 +5,17 @@ import os
 from abipy.dfpt.anaddbnc import AnaddbNcFile
 from monty.json import jsanitize
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
+from pymatgen.phonon.ir_spectra import IRDielectricTensorGenerator
 from pymatgen.core.structure import Structure
 from pymatgen.io.abinit.abiobjects import KSampling
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 import numpy as np
 from abipy.abio.inputs import AnaddbInput
 from abipy.flowtk.tasks import AnaddbTask, TaskManager
-from abipy.dfpt.ddb import AnaddbError
+from abipy.dfpt.ddb import AnaddbError, DielectricTensorGenerator
 from abipy.core.abinit_units import eV_to_THz
 
-from maggma.builders import Builder
+from maggma.builder import Builder
 
 
 #TODO - handle possible other sources for the anaddb netcdf files?
@@ -156,15 +157,19 @@ class PhononBuilder(Builder):
             anaddb_input, labels_list = self.get_properties_anaddb_input(item, bs=True, dos='tetra')
             task = self.run_anaddb(ddb_path=ddb_path, anaddb_input=anaddb_input, workdir=workdir)
 
-            with task.open_phbst() as phbst_file:
+            with task.open_phbst() as phbst_file, AnaddbNcFile(os.path.join(workdir, "anaddb.nc")) as ananc_file:
+                #phbst
                 phbands = phbst_file.phbands
                 phbands.read_non_anal_from_file(phbst_file.filepath)
                 symm_line_bands = self.get_pmg_bs(phbands, labels_list)
 
-            with AnaddbNcFile(os.path.join(workdir, "anaddb.nc")) as ananc_file:
+                #ananc
                 becs = ananc_file.becs.values.tolist()
                 e_electronic = ananc_file.emacro.cartesian_tensor.tolist()
                 e_total = ananc_file.emacro_rlx.cartesian_tensor.tolist()
+
+                #both
+                dielectric = DielectricTensorGenerator.from_objects(phbands,ananc_file)
 
             dos_method = "tetrahedron"
             with task.open_phdos() as phdos_file:
@@ -182,13 +187,16 @@ class PhononBuilder(Builder):
                     task_dos = self.run_anaddb(ddb_path=ddb_path, anaddb_input=anaddb_input_dos, workdir=workdir_dos)
                     with task_dos.open_phdos() as phdos_file:
                         complete_dos = phdos_file.to_pymatgen()
-
                 dos_method = "gaussian"
+
+            ir_spectra = IRDielectricTensorGenerator(dielectric.oscillator_strength,dielectric.phfreqs,
+                                                     dielectric.epsinf,dielectric.structure)
 
             data = {"ph_dos": complete_dos.as_dict(),
                     "ph_dos_method": dos_method,
                     "ph_bs": symm_line_bands.as_dict(),
                     "becs": becs,
+                    "ir_spectra": ir_spectra.as_dict(),
                     "e_electronic": e_electronic,
                     "e_total": e_total}
 
@@ -255,8 +263,8 @@ class PhononBuilder(Builder):
 
         return task
 
-
-    def get_properties_anaddb_input(self, item, bs=True, dos='tetra', lo_to_splitting=True):
+    @staticmethod
+    def get_properties_anaddb_input(item, bs=True, dos='tetra', lo_to_splitting=True):
         """
         creates the AnaddbInput object to calculate the phonon properties.
         It also returns the list of qpoints labels for generating the PhononBandStructureSymmLine.
@@ -362,7 +370,8 @@ class PhononBuilder(Builder):
 
         return inp, labels_list
 
-    def get_pmg_bs(self, phbands, labels_list):
+    @staticmethod
+    def get_pmg_bs(phbands, labels_list):
         """
         Generates a PhononBandStructureSymmLine starting from a abipy PhononBands object
 
@@ -407,7 +416,8 @@ class PhononBuilder(Builder):
 
         return ph_bs_sl
 
-    def abinit_input_vars(self, item):
+    @staticmethod
+    def abinit_input_vars(item):
         """
         Extracts the useful abinit input parameters from an item.
         """
@@ -514,4 +524,3 @@ def get_warnings(asr_break, cnsr_break, ph_bs):
             warnings['small_q_neg_fr'] = True
 
     return warnings
-
