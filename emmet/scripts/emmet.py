@@ -1126,7 +1126,8 @@ def upload_archive(path, name, service, parent=None):
 
 @cli.command()
 @click.argument('target_db_file', type=click.Path(exists=True))
-def gdrive(target_db_file):
+@click.option('--block-filter', '-f', help='block filter substring (e.g. block_2017-)')
+def gdrive(target_db_file, block_filter):
     """sync launch directories for target task DB to Google Drive"""
     target = VaspCalcDb.from_db_file(target_db_file, admin=True)
     print('connected to target db with', target.collection.count(), 'tasks')
@@ -1172,9 +1173,8 @@ def gdrive(target_db_file):
                 break # done with launchers in current block
 
     block_page_token = None
-    sample_block = 'block_2012-0' #'block_2011-10-07-08-57-17-804213'
-    block_query = "'{}' in parents".format(garden_id) if sample_block is None \
-        else "'{}' in parents and name contains '{}'".format(garden_id, sample_block)
+    block_query = "'{}' in parents".format(garden_id) if block_filter is None \
+        else "'{}' in parents and name contains '{}'".format(garden_id, block_filter)
 
     while True:
         block_response = service.files().list(
@@ -1203,19 +1203,19 @@ def gdrive(target_db_file):
     print(len(blessed_task_ids), 'blessed tasks.')
 
     nr_launchers_sync = 0
-    outfile = open('launcher_paths.txt', 'w')
+    outfile = open('launcher_paths_{}.txt'.format(block_filter), 'w')
     splits = ['block_', 'aflow_engines-', 'launcher_']
     for task in target.collection.find({'task_id': {'$in': blessed_task_ids}}, {'dir_name': 1}):
         dir_name = task['dir_name']
         # aflow_engines-mag_special
-        if sample_block is not None and sample_block not in dir_name:
+        if block_filter is not None and block_filter not in dir_name:
             continue
 
         for s in splits:
             ds = dir_name.split(s)
             if len(ds) == 2:
                 block_launcher = s + ds[-1]
-                if dir_name not in launcher_paths:
+                if block_launcher not in launcher_paths:
                     nr_launchers_sync += 1
                     outfile.write(block_launcher + '\n')
                 break
