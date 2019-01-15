@@ -96,7 +96,7 @@ class Boltztrap4DosBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info("Updating {} BoltzTrap DOS".format(len(items)))
-            self.dos.update(docs=items)
+            self.boltztrap_dos.update(docs=items)
 
         else:
             self.logger.info("No items to update")
