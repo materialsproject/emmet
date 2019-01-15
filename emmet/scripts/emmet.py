@@ -91,34 +91,52 @@ def contains_vasp_dirs(list_of_files):
         if f.startswith("INCAR"):
             return True
 
+def clean_path(path):
+    return os.path.join(os.path.abspath(os.path.realpath(path)), '') # trailing slash
+
+def make_block(base_path):
+    block = get_timestamp_dir(prefix='block')
+    block_dir = os.path.join(base_path, block)
+    os.mkdir(block_dir)
+    print('created', block_dir)
+    return block_dir
+
 def get_symlinked_path(root, base_path_index, insert):
-    root_split = os.path.realpath(root).split(os.sep)
-    if base_path_index != len(root_split) and \
-        not root_split[base_path_index-1].startswith('block_'):
-        rootdir = os.sep.join(root_split[:base_path_index])
-        block = get_timestamp_dir(prefix='block')
-        block_dir = os.sep.join(root_split[:base_path_index-1] + [block])
-        if insert:
-            os.rename(rootdir, block_dir)
-            os.symlink(block_dir, rootdir)
-        print(rootdir, '->', block_dir)
-    subdir = os.sep.join(root_split)
-    if not root_split[-1].startswith('launcher_'):
-        launch = get_timestamp_dir()
-        launch_dir = os.path.join(os.path.realpath(os.sep.join(root_split[:-1])), launch)
-        if insert:
-            os.rename(subdir, launch_dir)
-            os.symlink(launch_dir, subdir)
-        print(subdir, '->', launch_dir)
-        return launch_dir
+    """organize directory in block_*/launcher_* via symbolic links"""
+    root_split = root.split(os.sep)
+    base_path = os.sep.join(root_split[:base_path_index])
+
+    if not root_split[base_path_index].startswith('block_'):
+        all_blocks = glob(os.path.join(base_path, 'block_*/'))
+        if all_blocks:
+            block_dir = max(all_blocks, key=os.path.getmtime) # last-modified block
+            nr_launchers = len(glob(os.path.join(block_dir, 'launcher_*/')))
+            if nr_launchers > 300: # start new block
+                block_dir = make_block(base_path)
+        else:
+            block_dir = make_block(base_path)
     else:
-        return os.path.realpath(subdir)
+        block_dir = os.sep.join(root_split[:base_path_index+1])
+
+    if not root_split[-1].startswith('launcher_'):
+        launch = get_timestamp_dir(prefix='launcher')
+        launch_dir = os.path.join(block_dir, launch)
+    else:
+        launch_dir = os.sep.join(block_dir, root_split[-1])
+
+    if insert:
+        os.rename(root, launch_dir)
+        os.symlink(launch_dir, root)
+    print(root, '->', launch_dir)
+    return launch_dir
 
 def get_vasp_dirs(scan_path, base_path, max_dirs, insert):
-    base_path_split = base_path.split(os.sep)
-    base_path_index = len(base_path_split)
-    # NOTE os.walk followlinks=False by default, as intended here
+    scan_path = clean_path(scan_path)
+    base_path = clean_path(base_path)
+    base_path_index = len(base_path.split(os.sep))-1 # account for abspath
     counter = 0
+
+    # NOTE os.walk followlinks=False by default, as intended here
     for root, dirs, files in os.walk(scan_path):
         # TODO ignore relax1/2 subdirs if INCAR.orig found
         if contains_vasp_dirs(files):
@@ -140,12 +158,14 @@ def get_vasp_dirs(scan_path, base_path, max_dirs, insert):
                         if counter >= max_dirs:
                             break
 
+
 def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
     name = multiprocessing.current_process().name
     print(name, 'starting')
     lpad = LaunchPad.auto_load()
     target = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
     print(name, 'connected to target db with', target.collection.count(), 'tasks')
+
     for vaspdir in vaspdirs:
         if get_subdir(vaspdir) in already_inserted_subdirs:
             print(name, vaspdir, 'already parsed')
@@ -173,6 +193,7 @@ def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
                     rmtree(vaspdir)
                     print(name, 'removed', vaspdir)
                 continue
+
             if task_doc['state'] == 'successful':
                 try:
                     target.insert_task(task_doc, use_gridfs=True)
@@ -185,6 +206,7 @@ def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
                         print(name, 'also remove force_constants and retry ...')
                         task_doc['calcs_reversed'][0]['output'].pop('force_constants')
                         target.insert_task(task_doc, use_gridfs=True)
+
     nr_vaspdirs = len(vaspdirs)
     print(name, 'processed', nr_vaspdirs, 'VASP directories')
     return nr_vaspdirs
@@ -535,7 +557,6 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
                     print('Structure for SNL', struct.snl_id, 'already added in task', s.task_id, 'in', full_name)
                     matched_task_ids.append(s.task_id)
         return matched_task_ids
-
 
     for tag, value in tags.items():
 
@@ -1075,7 +1096,7 @@ def parse(base_path, add_snlcolls, insert, make_snls, nproc, max_dirs):
     base_path = os.path.join(base_path, '')
     base_path_split = base_path.split(os.sep)
     tag = base_path_split[-1] if base_path_split[-1] else base_path_split[-2]
-    drone = VaspDrone(parse_dos='auto', additional_fields={'tags': [tag]})
+    drone = VaspDrone(parse_dos='auto', additional_fields={'tags': [tag, year_tags[-1]]})
     already_inserted_subdirs = [get_subdir(dn) for dn in target.collection.find({'tags': tag}).distinct('dir_name')]
     print(len(already_inserted_subdirs), 'VASP directories already inserted for', tag)
 
@@ -1083,11 +1104,13 @@ def parse(base_path, add_snlcolls, insert, make_snls, nproc, max_dirs):
     if nproc > 1 and max_dirs <= chunk_size:
         nproc = 1
         print('max_dirs =', max_dirs, 'but chunk size =', chunk_size, '-> parsing sequentially')
+
     pool = multiprocessing.Pool(processes=nproc)
     iterator_vaspdirs = get_vasp_dirs(base_path, base_path, max_dirs, insert)
     iterator = iterator_slice(iterator_vaspdirs, chunk_size) # process in chunks
     queue = deque()
     total_nr_vaspdirs_parsed = 0
+
     while iterator or queue:
         try:
             args = [next(iterator), insert, drone, already_inserted_subdirs]
@@ -1101,6 +1124,7 @@ def parse(base_path, add_snlcolls, insert, make_snls, nproc, max_dirs):
                 queue.append(process)
             else:
                 total_nr_vaspdirs_parsed += process.get()
+
     pool.close()
     print('DONE:', total_nr_vaspdirs_parsed, 'parsed')
 
@@ -1231,6 +1255,7 @@ def gdrive(target_db_file, block_filter):
     prev = None
     outfile = open('launcher_paths.txt', 'w')
     stage_dir = '/project/projectdirs/matgen/garden/rclone_to_mp_drive'
+
 
     for idx, dir_name in enumerate(dir_names):
         block_launcher_split = dir_name.split(os.sep)
