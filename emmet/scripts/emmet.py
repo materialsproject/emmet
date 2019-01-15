@@ -109,6 +109,7 @@ def get_symlinked_path(root, base_path_index, insert):
     if not root_split[base_path_index].startswith('block_'):
         all_blocks = glob(os.path.join(base_path, 'block_*/'))
         if all_blocks:
+            # TODO: getmtime doesn't get last created
             block_dir = max(all_blocks, key=os.path.getmtime) # last-modified block
             nr_launchers = len(glob(os.path.join(block_dir, 'launcher_*/')))
             if nr_launchers > 300: # start new block
@@ -121,13 +122,13 @@ def get_symlinked_path(root, base_path_index, insert):
     if not root_split[-1].startswith('launcher_'):
         launch = get_timestamp_dir(prefix='launcher')
         launch_dir = os.path.join(block_dir, launch)
+        if insert:
+            os.rename(root, launch_dir)
+            os.symlink(launch_dir, root)
+        print(root, '->', launch_dir)
     else:
-        launch_dir = os.sep.join(block_dir, root_split[-1])
+        launch_dir = os.path.join(block_dir, root_split[-1])
 
-    if insert:
-        os.rename(root, launch_dir)
-        os.symlink(launch_dir, root)
-    print(root, '->', launch_dir)
     return launch_dir
 
 def get_vasp_dirs(scan_path, base_path, max_dirs, insert):
