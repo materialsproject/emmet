@@ -24,7 +24,7 @@ class TestBoltztrap4DosBuilder(unittest.TestCase):
         self.dos.connect()
 
     def test_process_items(self):
-        dosbuilder = Boltztrap4DosBuilder(self.materials, self.bandstructure, self.dos)
+        dosbuilder = Boltztrap4DosBuilder(self.materials, self.bandstructure, self.dos, energy_range=2.7)
 
         item = self.materials.query_one()
         bs_dict = self.bandstructure.query_one()
@@ -48,7 +48,7 @@ class TestBoltztrap4DosBuilder(unittest.TestCase):
         bs_dict = self.bandstructure.query_one()
         bs_dict['structure'] = item['structure']
 
-        bzt_dos = dos_from_boltztrap(bs_dict)
+        bzt_dos = dos_from_boltztrap(bs_dict, energy_range=2.7)
 
         density = bzt_dos['densities']['1'][3900]
         self.assertAlmostEqual(density, 5.446126162946311, 5)
