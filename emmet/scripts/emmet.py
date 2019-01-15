@@ -171,20 +171,20 @@ def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
             print(name, vaspdir, 'already parsed')
             continue
         print(name, 'vaspdir:', vaspdir)
-        #poscar_path = os.path.join(vaspdir, 'POSCAR.relax2.gz')
-        #s = Structure.from_file(poscar_path)
-        #nelements = len(s.composition.elements)
-        #if nelements > 1:
-        #     print(name, '   -> SKIP (#elements > 1)')
-        #     continue
+
         if insert:
-            for inp in ['INCAR', 'KPOINTS', 'POTCAR', 'POSCAR']:
-                input_path = os.path.join(vaspdir, inp)
-                if not glob(input_path+'.orig*'):
-                    input_path = glob(input_path+'*')[0]
-                    orig_path = input_path.replace(inp, inp+'.orig')
-                    copyfile(input_path, orig_path)
-                    print(name, 'cp', input_path, '->', orig_path)
+            try:
+                for inp in ['INCAR', 'KPOINTS', 'POTCAR', 'POSCAR']:
+                    input_path = os.path.join(vaspdir, inp)
+                    if not glob(input_path+'.orig*'):
+                        input_path = glob(input_path+'*')[0]
+                        orig_path = input_path.replace(inp, inp+'.orig')
+                        copyfile(input_path, orig_path)
+                        print(name, 'cp', input_path, '->', orig_path)
+            except Exception as ex:
+                print(str(ex))
+                continue
+
             try:
                 task_doc = drone.assimilate(vaspdir)
             except Exception as ex:
