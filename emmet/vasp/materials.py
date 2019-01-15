@@ -163,7 +163,7 @@ class MaterialsBuilder(Builder):
 
         if self.require_structure_opt:
             # Only consider structure optimization task_ids for material task_id
-            possible_mat_ids = [prop for prop in all_props if "Structure Optimization" in prop["task_type"]]
+            possible_mat_ids = [prop for prop in all_props if "structure" in prop["materials_key"]]
         else:
             possible_mat_ids = all_props
 
