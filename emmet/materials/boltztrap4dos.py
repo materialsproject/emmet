@@ -16,7 +16,8 @@ class Boltztrap4DosBuilder(Builder):
                  boltztrap_dos,
                  query=None,
                  energy_grid=0.005,
-                 energy_range=np.inf**kwargs):
+                 energy_range=np.inf,
+                 **kwargs):
         """
         Calculates Density of States (DOS) using BoltzTrap2
 
