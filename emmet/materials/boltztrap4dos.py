@@ -70,7 +70,7 @@ class Boltztrap4DosBuilder(Builder):
         Returns:
             cdos: a complete dos object
         """
-        self.logger.debug("Calculating Boltztrap for {}".format(item['task_id']))
+        self.logger.debug("Calculating Boltztrap for {}".format(item[self.materials.key]))
 
         bs_dict = item["bandstructure_uniform"]
         bs_dict['structure'] = item['structure']
