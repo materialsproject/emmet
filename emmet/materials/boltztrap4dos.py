@@ -10,7 +10,13 @@ __author__ = "Francesco Ricci <francesco.ricci@uclouvain.be>"
 
 
 class Boltztrap4DosBuilder(Builder):
-    def __init__(self, materials, bandstructures, boltztrap_dos, query=None, **kwargs):
+    def __init__(self,
+                 materials,
+                 bandstructures,
+                 boltztrap_dos,
+                 query=None,
+                 energy_grid=0.005,
+                 energy_range=np.inf**kwargs):
         """
         Calculates Density of States (DOS) using BoltzTrap2
 
@@ -19,6 +25,8 @@ class Boltztrap4DosBuilder(Builder):
             bandstructures (Store): Store where bandstructures are stored
             boltztrap_dos (Store): Store of DOS
             query (dict): dictionary to limit materials to be analyzed
+            energy_grid(float): the energy_grid spacing for the DOS in eV
+            energy_range(float): the max energy to consider for the DOS in eV
 
         """
 
@@ -26,6 +34,8 @@ class Boltztrap4DosBuilder(Builder):
         self.bandstructures = bandstructures
         self.boltztrap_dos = boltztrap_dos
         self.query = query if query else {}
+        self.energy_grid = energy_grid
+        self.energy_range = energy_range
 
         super().__init__(sources=[materials, bandstructures], targets=[boltztrap_dos], **kwargs)
 
@@ -76,7 +86,7 @@ class Boltztrap4DosBuilder(Builder):
         bs_dict['structure'] = item['structure']
 
         try:
-            btz_dos = dos_from_boltztrap(bs_dict)
+            btz_dos = dos_from_boltztrap(bs_dict, self.energy_grid, self.energy_range)
 
             return {self.boltztrap_dos.key: item[self.materials.key], "cdos": btz_dos}
         except Exception as e:
@@ -115,12 +125,13 @@ class Boltztrap4DosBuilder(Builder):
         self.boltztrap_dos.ensure_index(self.boltztrap_dos.lu_field)
 
 
-def dos_from_boltztrap(bs_dict, energy_grid=0.005):
+def dos_from_boltztrap(bs_dict, energy_grid=0.005, energy_range=np.inf):
     """
     Function to just interpolate a DOS from a bandstructure using BoltzTrap
     Args:
         bs_dict(dict): A MSONable dictionary for a bandstructure object
         energy_grid(float): the energy_grid spacing for the DOS in eV
+        energy_range(float): the max energy to consider for the DOS in eV
     """
 
     bs = BandStructure.from_dict(bs_dict)
@@ -136,8 +147,8 @@ def dos_from_boltztrap(bs_dict, energy_grid=0.005):
         max_bnd = max(data_up.ebands.max(), data_dn.ebands.max())
         data_up.set_upper_lower_bands(min_bnd, max_bnd)
         data_dn.set_upper_lower_bands(min_bnd, max_bnd)
-        bztI_up = BztInterpolator(data_up, energy_range=np.inf, curvature=False)
-        bztI_dn = BztInterpolator(data_dn, energy_range=np.inf, curvature=False)
+        bztI_up = BztInterpolator(data_up, energy_range=energy_range, curvature=False)
+        bztI_dn = BztInterpolator(data_dn, energy_range=energy_range, curvature=False)
 
         npts_mu = int((max_bnd - min_bnd) / energy_grid)
         dos_up = bztI_up.get_dos(partial_dos=projections, npts_mu=npts_mu)
@@ -146,7 +157,7 @@ def dos_from_boltztrap(bs_dict, energy_grid=0.005):
 
     else:
         data = BandstructureLoader(bs, st)
-        bztI = BztInterpolator(data, energy_range=np.inf, curvature=False)
+        bztI = BztInterpolator(data, energy_range=energy_range, curvature=False)
         cdos = bztI.get_dos(partial_dos=projections)
 
     return cdos.as_dict()
