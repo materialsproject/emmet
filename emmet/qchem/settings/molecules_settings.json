@@ -1,0 +1,10 @@
+[
+  {
+    "materials_key": "structure",
+    "quality_score": {
+      "GGA Structure Optimization": 7,
+      "GGA+U Structure Optimization": 8
+    },
+    "tasks_key": "output.structure"
+  }
+]
