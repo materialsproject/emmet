@@ -1,7 +1,6 @@
 import os
 import unittest
 from maggma.stores import JSONStore, MemoryStore
-from maggma.runner import Runner
 from emmet.materials.boltztrap4dos import Boltztrap4DosBuilder, dos_from_boltztrap
 
 __author__ = "Francesco Ricci"
