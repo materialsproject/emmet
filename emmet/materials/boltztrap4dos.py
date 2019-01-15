@@ -10,7 +10,7 @@ __author__ = "Francesco Ricci <francesco.ricci@uclouvain.be>"
 
 
 class Boltztrap4DosBuilder(Builder):
-    def __init__(self, materials, bandstructures, boltztrap_dos, query={}, **kwargs):
+    def __init__(self, materials, bandstructures, boltztrap_dos, query=None, **kwargs):
         """
         Calculates Density of States (DOS) using BoltzTrap2
 
@@ -25,7 +25,7 @@ class Boltztrap4DosBuilder(Builder):
         self.materials = materials
         self.bandstructures = bandstructures
         self.boltztrap_dos = boltztrap_dos
-        self.query = query
+        self.query = query if query else {}
 
         super().__init__(sources=[materials, bandstructures], targets=[boltztrap_dos], **kwargs)
 

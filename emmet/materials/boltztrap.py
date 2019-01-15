@@ -10,8 +10,15 @@ from maggma.builders import Builder
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
+
 class BoltztrapDosBuilder(Builder):
-    def __init__(self, materials, boltztrap, bandstructure_fs="bandstructure_fs", btz_cdos_fs=None, query={}, **kwargs):
+    def __init__(self,
+                 materials,
+                 boltztrap,
+                 bandstructure_fs="bandstructure_fs",
+                 btz_cdos_fs=None,
+                 query=None,
+                 **kwargs):
         """
         Calculates Density of States (DOS) using BoltzTrap
         Saves the dos object
@@ -28,11 +35,9 @@ class BoltztrapDosBuilder(Builder):
         self.boltztrap = boltztrap
         self.bandstructure_fs = bandstructure_fs
         self.btz_cdos_fs = btz_cdos_fs
-        self.query = query
+        self.query = query if query else {}
 
-        super().__init__(sources=[materials],
-                         targets=[boltztrap],
-                         **kwargs)
+        super().__init__(sources=[materials], targets=[boltztrap], **kwargs)
 
     def get_items(self):
         """
@@ -55,16 +60,14 @@ class BoltztrapDosBuilder(Builder):
         # initialize the gridfs
         bfs = gridfs.GridFS(self.materials.database, self.bandstructure_fs)
 
-        self.logger.info(
-            "Found {} new materials for calculating boltztrap dos".format(len(mats)))
+        self.logger.info("Found {} new materials for calculating boltztrap dos".format(len(mats)))
         for m in mats:
-            mat = self.materials.query(
-                [self.materials.key, "structure", "input.parameters.NELECT", "bandstructure"], criteria={self.materials.key: m})
+            mat = self.materials.query([self.materials.key, "structure", "input.parameters.NELECT", "bandstructure"],
+                                       criteria={self.materials.key: m})
 
             # If a bandstructure oid exists
             if "uniform_bs_oid" in mat.get("bandstructure", {}):
-                bs_json = bfs.get(mat["bandstructure"][
-                                  "uniform_bs_oid"]).read()
+                bs_json = bfs.get(mat["bandstructure"]["uniform_bs_oid"]).read()
 
                 if "zlib" in mat["bandstructure"].get("uniform_bs_compression", ""):
                     bs_json = zlib.decompress(bs_json)
@@ -84,8 +87,7 @@ class BoltztrapDosBuilder(Builder):
         Returns:
             cdos: a complete dos object
         """
-        self.logger.debug(
-            "Calculating Boltztrap for {}".format(item[self.materials.key]))
+        self.logger.debug("Calculating Boltztrap for {}".format(item[self.materials.key]))
 
         nelect = item["input"]["parameters"]["NELECT"]
 
@@ -97,31 +99,28 @@ class BoltztrapDosBuilder(Builder):
             if bs.is_spin_polarized:
                 run_path = os.path.join(os.getcwd(), "dos_up")
                 makedirs_p(run_path)
-                BoltztrapRunner(bs=bs, nelec=nelect,run_type="DOS",dos_type="TETRA",
-                                spin=1).run(path_dir=run_path)
+                BoltztrapRunner(bs=bs, nelec=nelect, run_type="DOS", dos_type="TETRA", spin=1).run(path_dir=run_path)
                 btrap_dir = os.path.join(run_path, "boltztrap")
                 bta_up = BoltztrapAnalyzer.from_files(btrap_dir)
-                
+
                 run_path = os.path.join(os.getcwd(), "dos_dw")
                 makedirs_p(run_path)
-                BoltztrapRunner(bs=bs, nelec=nelect,run_type="DOS",dos_type="TETRA",
-                                spin=-1).run(path_dir=run_path)
+                BoltztrapRunner(bs=bs, nelec=nelect, run_type="DOS", dos_type="TETRA", spin=-1).run(path_dir=run_path)
                 btrap_dir = os.path.join(run_path, "boltztrap")
                 bta_dw = BoltztrapAnalyzer.from_files(btrap_dir)
-                 
-                cdos=an_up.get_complete_dos(bs.structure,an_dw)
-            
+
+                cdos = an_up.get_complete_dos(bs.structure, an_dw)
+
             else:
                 run_path = os.path.join(os.getcwd(), "dos")
                 makedirs_p(run_path)
-                BoltztrapRunner(bs=bs, nelec=nelect,run_type="DOS",
-                                dos_type="TETRA").run(path_dir=run_path)
+                BoltztrapRunner(bs=bs, nelec=nelect, run_type="DOS", dos_type="TETRA").run(path_dir=run_path)
                 btrap_dir = os.path.join(run_path, "boltztrap")
                 bta = BoltztrapAnalyzer.from_files(btrap_dir)
 
                 cdos = an.get_complete_dos(bs.structure)
-                
-        return {'cdos':cdos.as_dict()}
+
+        return {'cdos': cdos.as_dict()}
 
     def update_targets(self, items):
         """
@@ -132,8 +131,7 @@ class BoltztrapDosBuilder(Builder):
         """
         items = list(filter(None, items))
 
-        btz_cdos_fs = gridfs.GridFS(self.materials.database,
-                               self.btz_cdos_fs) if self.btz_cdos_fs else None
+        btz_cdos_fs = gridfs.GridFS(self.materials.database, self.btz_cdos_fs) if self.btz_cdos_fs else None
 
         if len(items) > 0:
             self.logger.info("Updating {} boltztrap dos".format(len(items)))
@@ -156,8 +154,7 @@ class BoltztrapDosBuilder(Builder):
 
 
 class BoltztrapBuilder(Builder):
-
-    def __init__(self, materials, boltztrap, bandstructure_fs="bandstructure_fs", bta_fs=None, query={}, **kwargs):
+    def __init__(self, materials, boltztrap, bandstructure_fs="bandstructure_fs", bta_fs=None, query=None, **kwargs):
         """
         Calculates conducitivty parameters using BoltzTrap
         Saves the boltztrap analyzer in bta_fs if set otherwise doesn't store it
@@ -175,11 +172,9 @@ class BoltztrapBuilder(Builder):
         self.boltztrap = boltztrap
         self.bandstructure_fs = bandstructure_fs
         self.bta_fs = bta_fs
-        self.query = query
+        self.query = query if query else {}
 
-        super().__init__(sources=[materials],
-                         targets=[boltztrap],
-                         **kwargs)
+        super().__init__(sources=[materials], targets=[boltztrap], **kwargs)
 
     def get_items(self):
         """
@@ -202,16 +197,14 @@ class BoltztrapBuilder(Builder):
         # initialize the gridfs
         bfs = gridfs.GridFS(self.materials.database, self.bandstructure_fs)
 
-        self.logger.info(
-            "Found {} new materials for calculating boltztrap conductivity".format(len(mats)))
+        self.logger.info("Found {} new materials for calculating boltztrap conductivity".format(len(mats)))
         for m in mats:
-            mat = self.materials.query(
-                [self.materials.key, "structure", "input.parameters.NELECT", "bandstructure"], criteria={self.materials.key: m})
+            mat = self.materials.query([self.materials.key, "structure", "input.parameters.NELECT", "bandstructure"],
+                                       criteria={self.materials.key: m})
 
             # If a bandstructure oid exists
             if "uniform_bs_oid" in mat.get("bandstructure", {}):
-                bs_json = bfs.get(mat["bandstructure"][
-                                  "uniform_bs_oid"]).read()
+                bs_json = bfs.get(mat["bandstructure"]["uniform_bs_oid"]).read()
 
                 if "zlib" in mat["bandstructure"].get("uniform_bs_compression", ""):
                     bs_json = zlib.decompress(bs_json)
@@ -231,8 +224,7 @@ class BoltztrapBuilder(Builder):
         Returns:
             dict: a diffraction dict
         """
-        self.logger.debug(
-            "Calculating Boltztrap for {}".format(item[self.materials.key]))
+        self.logger.debug("Calculating Boltztrap for {}".format(item[self.materials.key]))
 
         nelect = item["input"]["parameters"]["NELECT"]
 
@@ -245,9 +237,13 @@ class BoltztrapBuilder(Builder):
             btrap_dir = os.path.join(os.getcwd(), "boltztrap")
             bta = BoltztrapAnalyzer.from_files(btrap_dir)
 
-        d = {"bta": bta.as_dict(),
-             "boltztrap": {"thermoelectric": bt_analysis_thermoelectric(bta),
-                           "tcm": bt_analysis_tcm(bta)}}
+        d = {
+            "bta": bta.as_dict(),
+            "boltztrap": {
+                "thermoelectric": bt_analysis_thermoelectric(bta),
+                "tcm": bt_analysis_tcm(bta)
+            }
+        }
 
         return d
 
@@ -260,8 +256,7 @@ class BoltztrapBuilder(Builder):
         """
         items = list(filter(None, items))
 
-        bta_fs = gridfs.GridFS(self.materials.database,
-                               self.bta_fs) if self.bta_fs else None
+        bta_fs = gridfs.GridFS(self.materials.database, self.bta_fs) if self.bta_fs else None
 
         if len(items) > 0:
             self.logger.info("Updating {} boltztrap docs".format(len(items)))
