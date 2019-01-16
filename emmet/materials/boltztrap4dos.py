@@ -10,7 +10,14 @@ __author__ = "Francesco Ricci <francesco.ricci@uclouvain.be>"
 
 
 class Boltztrap4DosBuilder(Builder):
-    def __init__(self, materials, bandstructures, boltztrap_dos, query=None, energy_grid=0.005, **kwargs):
+    def __init__(self,
+                 materials,
+                 bandstructures,
+                 boltztrap_dos,
+                 query=None,
+                 energy_grid=0.005,
+                 avoid_projections=False,
+                 **kwargs):
         """
         Calculates Density of States (DOS) using BoltzTrap2
 
@@ -20,6 +27,7 @@ class Boltztrap4DosBuilder(Builder):
             boltztrap_dos (Store): Store of DOS
             query (dict): dictionary to limit materials to be analyzed
             energy_grid(float): the energy_grid spacing for the DOS in eV
+            avoid_projections(bool): Don't interpolate projections even if present
         """
 
         self.materials = materials
@@ -27,6 +35,7 @@ class Boltztrap4DosBuilder(Builder):
         self.boltztrap_dos = boltztrap_dos
         self.query = query if query else {}
         self.energy_grid = energy_grid
+        self.avoid_projections = avoid_projections
 
         super().__init__(sources=[materials, bandstructures], targets=[boltztrap_dos], **kwargs)
 
@@ -77,7 +86,8 @@ class Boltztrap4DosBuilder(Builder):
         bs_dict['structure'] = item['structure']
 
         try:
-            btz_dos = dos_from_boltztrap(bs_dict, energy_grid=self.energy_grid)
+            btz_dos = dos_from_boltztrap(
+                bs_dict, energy_grid=self.energy_grid, avoid_projections=self.avoid_projections)
 
             return {self.boltztrap_dos.key: item[self.materials.key], "cdos": btz_dos}
         except Exception as e:
@@ -116,18 +126,19 @@ class Boltztrap4DosBuilder(Builder):
         self.boltztrap_dos.ensure_index(self.boltztrap_dos.lu_field)
 
 
-def dos_from_boltztrap(bs_dict, energy_grid=0.005):
+def dos_from_boltztrap(bs_dict, energy_grid=0.005, avoid_projections=False):
     """
     Function to just interpolate a DOS from a bandstructure using BoltzTrap
     Args:
         bs_dict(dict): A MSONable dictionary for a bandstructure object
         energy_grid(float): the energy_grid spacing for the DOS in eV
+        avoid_projections(bool): don't interpolate projections even if present
     """
 
     bs = BandStructure.from_dict(bs_dict)
     st = bs.structure
     energy_grid = energy_grid * units.eV
-    projections = True if bs.projections else False
+    projections = True if bs.projections and not avoid_projections else False
 
     if bs.is_spin_polarized:
         data_up = BandstructureLoader(bs, st, spin=1)
