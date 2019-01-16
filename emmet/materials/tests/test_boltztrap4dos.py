@@ -24,7 +24,7 @@ class TestBoltztrap4DosBuilder(unittest.TestCase):
         self.dos.connect()
 
     def test_process_items(self):
-        dosbuilder = Boltztrap4DosBuilder(self.materials, self.bandstructure, self.dos)
+        dosbuilder = Boltztrap4DosBuilder(self.materials, self.bandstructure, self.dos, avoid_projections=True)
 
         item = self.materials.query_one()
         bs_dict = self.bandstructure.query_one()
