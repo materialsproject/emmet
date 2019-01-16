@@ -1230,10 +1230,9 @@ def gdrive(target_db_file, block_filter):
 
     nr_launchers_sync = 0
     outfile = open('launcher_paths_{}.txt'.format(block_filter), 'w')
-    splits = ['block_', 'aflow_engines-', 'launcher_']
+    splits = ['block_', 'res_1_aflow_engines-', 'aflow_engines-']
     for task in target.collection.find({'task_id': {'$in': blessed_task_ids}}, {'dir_name': 1}):
         dir_name = task['dir_name']
-        # aflow_engines-mag_special
         if block_filter is not None and block_filter not in dir_name:
             continue
 
