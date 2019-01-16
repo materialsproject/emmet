@@ -21,5 +21,5 @@ for block_dir in `find $1 -maxdepth 1 -type d -name "block_*"`; do
     exit
   fi
   rm -v $1/archives/${subdir}.tar.gz
-  rm -rv $block_dir
+  rm -rfv $block_dir
 done
