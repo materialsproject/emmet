@@ -41,7 +41,7 @@ class TestBoltztrap4DosBuilder(unittest.TestCase):
         dosbuilder = Boltztrap4DosBuilder(self.materials, self.bandstructure, self.dos)
         dosbuilder.update_targets(items)
 
-        self.assertListEqual(self.dos.query_one.distinct("task_id"), ['mp-12103'])
+        self.assertListEqual(self.dos.distinct("task_id"), ['mp-663338'])
 
     def test_dos_from_boltztrap(self):
         item = self.materials.query_one()
