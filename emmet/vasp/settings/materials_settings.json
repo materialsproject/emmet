@@ -414,12 +414,12 @@
     "tasks_key": "calcs_reversed.0.output.outcar.born"
   },
   {
-    "materials_key": "_sandbox",
+    "materials_key": "_sbxn",
     "quality_score": {
       "GGA Structure Optimization": 1,
       "GGA+U Structure Optimization": 5
     },
-    "tasks_key": "_sandbox",
+    "tasks_key": "_sbxn",
     "aggregate": true
   }
 ]
