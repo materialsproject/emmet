@@ -77,7 +77,7 @@ class Boltztrap4DosBuilder(Builder):
         bs_dict['structure'] = item['structure']
 
         try:
-            btz_dos = dos_from_boltztrap(bs_dict, self.energy_grid)
+            btz_dos = dos_from_boltztrap(bs_dict, energy_grid=self.energy_grid)
 
             return {self.boltztrap_dos.key: item[self.materials.key], "cdos": btz_dos}
         except Exception as e:
@@ -147,7 +147,10 @@ def dos_from_boltztrap(bs_dict, energy_grid=0.005):
 
     else:
         data = BandstructureLoader(bs, st)
+        min_bnd = min(data.ebands.min(), data.ebands.min())
+        max_bnd = max(data.ebands.max(), data.ebands.max())
+        npts_mu = int((max_bnd - min_bnd) / energy_grid)
         bztI = BztInterpolator(data, energy_range=np.inf, curvature=False)
-        cdos = bztI.get_dos(partial_dos=projections)
+        cdos = bztI.get_dos(partial_dos=projections, npts_mu=npts_mu)
 
     return cdos.as_dict()
