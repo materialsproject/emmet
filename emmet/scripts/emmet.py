@@ -259,13 +259,36 @@ def copy(target_db_file, tag, insert, copy_snls):
 
     ensure_indexes(['task_id', 'tags', 'dir_name', 'retired_task_id'], [source.collection, target.collection])
 
-    # don't accidentally copy tasks without year tag
-    task_base_query['tags']['$in'] = year_tags
-
     tags = [tag]
     if tag is None:
         tags = [t for t in source.collection.find(task_base_query).distinct('tags') if t is not None and t not in year_tags]
         print(len(tags), 'tags in source collection')
+
+    # fix year tags before copying tasks
+    counter = Counter()
+    source_tasks = source.collection.find(
+        {'$and': [{'tags': {'$in': tags}}, {'tags': {'$nin': year_tags}}]}, {'_id': 0, 'dir_name': 1}
+    )
+    source_tasks_to_fix = source_tasks.count()
+    if source_tasks_to_fix > 0:
+        print(source_tasks_to_fix, 'source tasks are missing a year tag!')
+        print('ERROR: Aborting since this needs testing')
+        return
+
+    for idx, doc in enumerate(source_tasks):
+        print(idx, doc['dir_name'])
+        # check whether I copied it over to production already -> add tag for previous year
+        # anything not copied is tagged with the current year
+        prod_task = target.collection.find_one({'dir_name': doc['dir_name']}, {'dir_name': 1, 'tags': 1})
+        year_tag = year_tags[-1]
+        if prod_task:
+            for t in prod_task['tags']:
+                if t in year_tags:
+                    year_tag = t
+        print(year_tag)
+        #r = source.collection.update({'dir_name': doc['dir_name']}, {'$addToSet': {'tags': year_tag}})
+        #counter[year_tag] += r['nModified']
+    #print(counter)
 
     def insert_snls(snls_list):
         if snls_list:
