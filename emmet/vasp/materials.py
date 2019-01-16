@@ -186,6 +186,7 @@ class MaterialsBuilder(Builder):
             # Sort for highest quality score and lowest energy
             sorted_props = sorted(props, key=lambda x: (x["quality_score"], -1.0 * x["energy"]), reverse=True)
             if sorted_props[0].get("aggregate", False):
+                # Make this a list of lists and then flatten to deal with mixed value typing
                 vals = [prop["value"] if isinstance(prop["value"], list) else [prop["value"]] for prop in sorted_props]
                 vals = list(chain.from_iterable(vals))
                 prop = sorted_props[0]
