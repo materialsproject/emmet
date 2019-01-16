@@ -43,16 +43,6 @@ class TestBoltztrap4DosBuilder(unittest.TestCase):
 
         self.assertListEqual(self.dos.distinct("task_id"), ['mp-663338'])
 
-    def test_dos_from_boltztrap(self):
-        item = self.materials.query_one()
-        bs_dict = self.bandstructure.query_one()
-        bs_dict['structure'] = item['structure']
-
-        bzt_dos = dos_from_boltztrap(bs_dict)
-
-        density = bzt_dos['densities']['1'][3900]
-        self.assertAlmostEqual(density, 5.446126162946311, 5)
-
 
 if __name__ == "__main__":
     unittest.main()
