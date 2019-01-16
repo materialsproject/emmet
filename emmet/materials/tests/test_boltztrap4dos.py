@@ -23,6 +23,7 @@ class TestBoltztrap4DosBuilder(unittest.TestCase):
         self.dos = MemoryStore("dos")
         self.dos.connect()
 
+    @unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", "Skipping this test on Travis CI.")
     def test_process_items(self):
         dosbuilder = Boltztrap4DosBuilder(self.materials, self.bandstructure, self.dos, avoid_projections=True)
 
