@@ -31,7 +31,7 @@ class TestBoltztrap4DosBuilder(unittest.TestCase):
         item["bandstructure_uniform"] = bs_dict
 
         dos = dosbuilder.process_item(item)
-        density = dos['cdos']['densities']['1'][3900]
+        density = dos['densities']['1'][3900]
         self.assertAlmostEqual(density, 5.446126162946311, 5)
 
     def test_update_targets(self):

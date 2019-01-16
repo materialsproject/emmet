@@ -89,7 +89,8 @@ class Boltztrap4DosBuilder(Builder):
             btz_dos = dos_from_boltztrap(
                 bs_dict, energy_grid=self.energy_grid, avoid_projections=self.avoid_projections)
 
-            return {self.boltztrap_dos.key: item[self.materials.key], "cdos": btz_dos}
+            btz_dos.update({self.boltztrap_dos.key: item[self.materials.key]})
+            return btz_dos
         except Exception as e:
             self.logger.error("Error generating the DOS for {}: \
                             {}".format(item[self.materials.key], e))
