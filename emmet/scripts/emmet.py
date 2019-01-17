@@ -1316,14 +1316,14 @@ def gdrive(target_db_file, block_filter):
     splits = ['block_', 'res_1_aflow_engines-', 'aflow_engines-']
     for task in target.collection.find({'task_id': {'$in': blessed_task_ids}}, {'dir_name': 1}):
         dir_name = task['dir_name']
-        if block_filter is not None and block_filter not in dir_name:
-            continue
-
         for s in splits:
             ds = dir_name.split(s)
             if len(ds) == 2:
                 block_launcher = s + ds[-1]
-                if block_launcher not in launcher_paths:
+                if block_launcher not in launcher_paths and (
+		    block_filter is None or \
+		    (block_filter is not None and block_launcher.startswith(block_filter))
+		):
                     nr_launchers_sync += 1
                     outfile.write(block_launcher + '\n')
                 break
