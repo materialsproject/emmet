@@ -1,25 +1,20 @@
 #!/bin/bash
 
-[[ ! -d $1/archives ]] && mkdir -v $1/archives
+cd $1 && pwd
 
 for block_dir in `find $1 -maxdepth 1 -type d -name "block_*"`; do
   echo $block_dir
-  subdir=`basename $block_dir`
-  if [ ! -e $1/archives/${subdir}.tar.gz ]; then
-    tar -czvf $1/archives/${subdir}.tar.gz -C $1 $subdir
-    flag=$?
-    if [ $flag -ne 0 ]; then
-      echo "error with ${subdir}.tar.gz (flag=$flag)"
-      rm -v $1/archives/${subdir}.tar.gz
-      continue
-    fi
-  fi
-  hsi -l matcomp cput $1/archives/${subdir}.tar.gz : garden/${subdir}.tar.gz
+  chmod -Rv ug+rw $block_dir
+  [[ $? -ne 0 ]] && echo 'error in chmod' && exit
+  find $block_dir -type f -not -name "*.gz" -exec pigz -9v {} \;
+  [[ $? -ne 0 ]] && echo "error in pigz" && exit
+  block=`basename $block_dir`
+  htar -cvf garden/${block}.tar $block
   flag=$?
   if [ $flag -ne 0 ]; then
-    echo "error with hsi transfer for ${subdir}.tar.gz (flag=$flag)"
+    echo "error with htar (flag=$flag)"
     exit
   fi
-  rm -v $1/archives/${subdir}.tar.gz
-  rm -rfv $block_dir
+  #rm -rfv $block_dir
+  break
 done
