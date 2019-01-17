@@ -440,6 +440,66 @@ def copy(target_db_file, tag, insert, copy_snls):
 
 
 @cli.command()
+@click.argument('email')
+@click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
+@click.option('--add_tasks_db', type=click.Path(exists=True), help='config file for additional tasks collection to scan')
+def find(email, add_snlcolls, add_tasks_db):
+    """checks status of calculations by submitter or author email in SNLs"""
+    lpad = LaunchPad.auto_load()
+
+    snl_collections = [lpad.db.snls]
+    if add_snlcolls is not None:
+        for snl_db_config in yaml.load_all(open(add_snlcolls, 'r')):
+            snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
+            snl_db = snl_db_conn[snl_db_config['db']]
+            snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
+            snl_collections.append(snl_db[snl_db_config['collection']])
+    for snl_coll in snl_collections:
+        print(snl_coll.count(exclude), 'SNLs in', snl_coll.full_name)
+
+    tasks_collections = OrderedDict()
+    tasks_collections[lpad.db.tasks.full_name] = lpad.db.tasks
+    if add_tasks_db is not None: # TODO multiple alt_task_db_files?
+        target = VaspCalcDb.from_db_file(add_tasks_db, admin=True)
+        tasks_collections[target.collection.full_name] = target.collection
+    for full_name, tasks_coll in tasks_collections.items():
+        print(tasks_coll.count(), 'tasks in', full_name)
+
+    #ensure_indexes(['snl_id', 'about.remarks', 'submitter_email', 'about.authors.email'], snl_collections)
+    ensure_indexes(['snl_id', 'fw_id'], [lpad.db.add_wflows_logs])
+    ensure_indexes(['fw_id'], [lpad.fireworks])
+    ensure_indexes(['launch_id'], [lpad.launches])
+    ensure_indexes(['dir_name', 'task_id'], tasks_collections.values())
+
+    snl_ids = []
+    query = {'$or': [{'submitter_email': email}, {'about.authors.email': email}]}
+    query.update(exclude)
+    for snl_coll in snl_collections:
+        snl_ids.extend(snl_coll.distinct('snl_id', query))
+    print(len(snl_ids), 'SNLs')
+
+    fw_ids = lpad.db.add_wflows_logs.distinct('fw_id', {'snl_id': {'$in': snl_ids}})
+    print(len(fw_ids), 'FWs')
+
+    launch_ids = lpad.fireworks.distinct('launches', {'fw_id': {'$in': fw_ids}})
+    print(len(launch_ids), 'launches')
+
+    launches = lpad.launches.find({'launch_id': {'$in': launch_ids}}, {'launch_dir': 1})
+    subdirs = [get_subdir(launch['launch_dir']) for launch in launches]
+    print(len(subdirs), 'launch directories')
+
+    for full_name, tasks_coll in tasks_collections.items():
+        print(full_name)
+        for subdir in subdirs:
+            subdir_query = {'dir_name': {'$regex': '/{}$'.format(subdir)}}
+            task = tasks_coll.find_one(subdir_query, {'task_id': 1})
+            if task:
+                print(task['task_id'])
+            else:
+                print(subdir, 'not found')
+
+
+@cli.command()
 @click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
 @click.option('--add_tasks_db', type=click.Path(exists=True), help='config file for additional tasks collection to scan')
 @click.option('--tag', default=None, help='only include structures with specific tag')
