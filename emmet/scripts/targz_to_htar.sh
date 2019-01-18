@@ -9,7 +9,7 @@ while read block_tar_gz; do
   echo $block
   hsi -q -l matcomp cget garden/${block}.tar.gz
   [[ $? -ne 0 ]] && echo 'error in hsi cget' && exit
-  tar --skip-old-files -xvzf ${block}.tar.gz
+  tar -I pigz --skip-old-files -xvf ${block}.tar.gz
   [[ $? -ne 0 ]] && echo 'error in tar -x' && exit
   find $block -not -perm -660 -exec chmod -v g+rw {} \;
   [[ $? -ne 0 ]] && echo 'error in chmod' && exit
