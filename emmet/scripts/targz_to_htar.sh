@@ -11,7 +11,7 @@ while read block_tar_gz; do
   [[ $? -ne 0 ]] && echo 'error in hsi cget' && exit
   tar -I pigz --skip-old-files -xvf ${block}.tar.gz
   [[ $? -ne 0 ]] && echo 'error in tar -x' && exit
-  find $block -not -perm -660 -exec chmod -v g+rw {} \;
+  parallel -0m 'chmod -v g+rw {}' :::: <(find $block -not -perm -660 -print0)
   [[ $? -ne 0 ]] && echo 'error in chmod' && exit
   find ${block} -type f -not -name "*.gz" -exec pigz -9v {} \;
   [[ $? -ne 0 ]] && echo "error in pigz" && exit
