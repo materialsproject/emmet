@@ -1,27 +1,23 @@
 #!/bin/bash
 
-# $(find $dir -name 'INCAR.orig*' -printf '%h ')
-dirs=`awk -F/ '{print $1}' $1 | sort -u`
-hpss_missing="blocks_missing_in_hpss.txt"
+input=$PWD/launcher_paths.txt
+[[ ! -e $input ]] && echo $input missing && exit
+dirs=`awk -F/ '{print $1}' $input | sort -u`
 
-stage_dir="rclone_to_mp_drive"
-[[ ! -d $stage_dir ]] && mkdir $stage_dir
-[[ ! -e $hpss_missing ]] && touch $hpss_missing
+cd $1 && pwd
+stage_dir=rclone_to_mp_drive
+[[ ! -d $stage_dir ]] && mkdir -pv $stage_dir
 
 for dir in $dirs; do
-  #[[ ! -e ${dir}.tar.gz ]] && echo "skip ${dir}" && continue # TODO remove
-
-  files=`grep "^$dir" $1`
-  extract="${dir}.extract"
-  grep -q "$dir" $hpss_missing
-  [[ $? -eq 0 ]] && continue
-
-  [[ -d $stage_dir/$dir ]] && rclone -v copy $stage_dir/$dir mp-drive:calculations/garden/$dir
+  echo $dir
+  files=`grep "^$dir" $input`
 
   echo $files | tr ' ' '\n' | sort -u > ${dir}.files
+  wc -l ${dir}.files
   rclone lsf -R --files-only mp-drive:calculations/garden/$dir | sed "s:^:$dir/:g" | sed 's:.tar.gz::g' | sort -u > ${dir}.rclone_lsf
+  wc -l ${dir}.rclone_lsf
 
-  missing_paths="${dir}.paths"
+  missing_paths=${dir}.paths
   [[ -e $missing_paths ]] && rm -v $missing_paths
   for f in $(comm --check-order -23 ${dir}.files ${dir}.rclone_lsf); do # launch dirs missing in mp-drive
     launch_dir_tar="${stage_dir}/${f}.tar.gz"
@@ -39,57 +35,27 @@ for dir in $dirs; do
   done
   rm -v ${dir}.files ${dir}.rclone_lsf
 
-  [[ ! -e $missing_paths ]] && continue
+  [[ ! -e $missing_paths ]] && echo nothing missing on GDrive!? && exit #continue
+  wc -l $missing_paths
 
-  if [ ! -e ${dir}.tar.gz ] || [ ! -s ${dir}.tar.gz ]; then
-    hsi -q "get garden/${dir}.tar.gz"
-    [[ $? -ne 0 ]] && echo ${dir} >> $hpss_missing && continue
-  fi
-  ls -ltrh ${dir}.tar.gz
+  #htar -xvf garden/${dir}.tar -L $missing_paths
+  #[[ $? -ne 0 ]] && echo missing paths not found in HPSS!? && exit #continue
+  ls -ltrhd ${dir}
 
-  if [ ! -e ${dir}.tar_list ] || [ ! -s ${dir}.tar_list ]; then
-    echo "make ${dir}.tar_list ..."
-    tar -tzvf ${dir}.tar.gz | grep ^d | grep -v -e '/relax1/' -e '/relax2/' | awk {'print $6'} 2>&1 | tee ${dir}.tar_list
-    [[ $? -ne 0 ]] && exit
-  fi
-
-  paths=`cat $missing_paths`
-  [[ -e $extract ]] && rm -v $extract
-  for f in $paths; do
-    [[ ! -d $f ]] && grep $f ${dir}.tar_list >> $extract
-  done
-
-  if [ -e $extract ] && [ -s $extract ]; then
-    echo "extract" `wc -l $extract`
-    if tar -xvzf ${dir}.tar.gz --files-from $extract; then
-      echo 'extract OK'
-    else
-      rm -v $extract
-      echo 'problem with extract!'
-      continue
-    fi
-  else
-    echo 'nothing to extract'
-    rm -v $extract
-    continue
-  fi
-  rm -v $extract
-
-  for f in $paths; do
+  for f in `cat $missing_paths`; do
     launch_dir_tar="${stage_dir}/${f}.tar.gz"
     echo $launch_dir_tar ...
     mkdir -p `dirname $launch_dir_tar`
-    if tar -czf $launch_dir_tar -C `dirname $f` `basename $f`; then
+    if tar --use-compress-program="pigz -9rv" -cf $launch_dir_tar -C `dirname $f` `basename $f`; then
       ls -ltrh $launch_dir_tar
     else
       echo 'problem with launch dir tar!'
-      continue
+      rm -v $launch_dir_tar
+      exit
     fi
-    #[[ -d $f ]] && rm -rf $f
+    [[ -d $f ]] && rm -rv $f
   done
   rm -v $missing_paths
 
   rclone -v copy $stage_dir/$dir mp-drive:calculations/garden/$dir
-  #rm -v ${dir}.tar.gz
-
 done
