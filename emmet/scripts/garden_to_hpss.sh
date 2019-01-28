@@ -4,7 +4,7 @@ cd $1 && pwd
 
 for block_dir in `find $1 -maxdepth 1 -type d -name "block_*"`; do
   echo $block_dir
-  find $block_dir -not -perm -660 -exec chmod -v g+rw {} \;
+  parallel -0m 'chmod -v g+rw {}' :::: <(find $block_dir -not -perm -660 -print0)
   [[ $? -ne 0 ]] && echo 'error in chmod' && exit
   find $block_dir -type f -not -name "*.gz" -exec pigz -9v {} \;
   [[ $? -ne 0 ]] && echo "error in pigz" && exit
