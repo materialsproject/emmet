@@ -436,6 +436,7 @@
       "GGA+U Structure Optimization": 5
     },
     "tasks_key": "_sbxn",
+    "optional": true,
     "aggregate": true
   }
 ]
