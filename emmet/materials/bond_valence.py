@@ -51,7 +51,7 @@ class BondValenceBuilder(MapBuilder):
             self.logger.error("BVAnalyzer failed with: {}".format(e))
 
             try:
-                first_oxi_state_guess = s.composition.oxi_state_guesses()[0]
+                first_oxi_state_guess = s.composition.oxi_state_guesses(max_sites=-50)[0]
                 valences = [first_oxi_state_guess[site.species_string] for site in s]
                 possible_species = {
                     str(Specie(el, oxidation_state=valence))
