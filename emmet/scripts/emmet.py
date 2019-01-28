@@ -1321,9 +1321,9 @@ def gdrive(target_db_file, block_filter):
             if len(ds) == 2:
                 block_launcher = s + ds[-1]
                 if block_launcher not in launcher_paths and (
-		    block_filter is None or \
-		    (block_filter is not None and block_launcher.startswith(block_filter))
-		):
+                    block_filter is None or \
+                    (block_filter is not None and block_launcher.startswith(block_filter))
+                ):
                     nr_launchers_sync += 1
                     outfile.write(block_launcher + '\n')
                 break
