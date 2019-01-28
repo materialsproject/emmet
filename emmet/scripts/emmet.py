@@ -791,7 +791,7 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
                                                     if fw['spec']['_tasks'][5]['additional_fields'].get('task_id') == struct.task_id:
                                                         msg = '  --> OK: workflow {} will result in intended task-id {}'.format(fw['fw_id'], struct.task_id)
                                                         print(msg)
-                                                        logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'task_id': struct.task_id, 'tags': [tag]})
+                                                        logger.warning(msg, extra={'formula': formula, 'snl_id': struct.snl_id, 'task_id': struct.task_id, 'fw_id': fw['fw_id'], 'tags': [tag]})
                                                         fw_found = True
                                                         break
                                                 if not fw_found:
