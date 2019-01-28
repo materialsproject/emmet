@@ -30,14 +30,13 @@ class RobocrysBuilder(MapBuilder):
 
     def calc(self, item):
         """
-        Calculates all basic descriptors for the structures
-
+        Calculates robocrystallographer on an item.
 
         Args:
-            item (dict): a dict with a task_id and a structure
+            item (dict): A dict with a task_id and a structure.
 
         Returns:
-            dict: a basic-descriptors dict
+            dict: A basic-descriptors dict.
         """
         self.logger.debug("Running robocrys on {}".format(
             item[self.materials.key]))
