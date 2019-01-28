@@ -23,20 +23,22 @@ class RobocrysBuilder(MapBuilder):
         self.robocrys = robocrys
 
         self.condenser = StructureCondenser()
-        self.describer = StructureDescriber()
+        self.describer = StructureDescriber(describe_symmetry_labels=False)
 
         super().__init__(source=materials, target=robocrys, ufn=self.calc,
                          projection=["structure"], **kwargs)
 
     def calc(self, item):
-        """
-        Calculates robocrystallographer on an item.
+        """Calculates robocrystallographer on an item.
 
         Args:
             item (dict): A dict with a task_id and a structure.
 
         Returns:
-            dict: A basic-descriptors dict.
+            dict: The robocrystallographer information dict with they keys:
+
+            - ``"condensed_structure"``: The condensed structure dictionary.
+            - ``"description"``: The text description.
         """
         self.logger.debug("Running robocrys on {}".format(
             item[self.materials.key]))
