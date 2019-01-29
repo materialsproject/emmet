@@ -37,7 +37,6 @@ if __name__ == "__main__":
                      'Topic :: Scientific/Engineering'],
         test_suite='nose.collector',
         tests_require=['nose'],
-        py_modules=['emmet'],
         entry_points='''
         [console_scripts]
         emmet=emmet.scripts.emmet:cli
