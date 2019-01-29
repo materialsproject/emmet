@@ -789,17 +789,18 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
 
                         for struc in slist:
 
-                            try:
-                                struct = vp.get_predicted_structure(struc)
-                                struct.snl_id, struct.task_id = struc.snl_id, struc.task_id
-                            except Exception as ex:
-                                print('Structure for SNL', struc.snl_id, '--> VP error: use original structure!')
-                                print(ex)
-                                struct = struc
+                            #try:
+                            #    struct = vp.get_predicted_structure(struc)
+                            #    struct.snl_id, struct.task_id = struc.snl_id, struc.task_id
+                            #except Exception as ex:
+                            #    print('Structure for SNL', struc.snl_id, '--> VP error: use original structure!')
+                            #    print(ex)
+                            #    struct = struc
 
-                            if not structures_match(struct, struc):
-                                print('Structure for SNL', struc.snl_id, '--> VP mismatch: use original structure!')
-                                struct = struc
+                            #if not structures_match(struct, struc):
+                            #    print('Structure for SNL', struc.snl_id, '--> VP mismatch: use original structure!')
+                            #    struct = struc
+                            struct = struc
 
                             wf_found = False
                             if sgnum in canonical_workflow_structures[formula] and canonical_workflow_structures[formula][sgnum]:
