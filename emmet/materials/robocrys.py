@@ -14,7 +14,7 @@ class RobocrysBuilder(MapBuilder):
 
         Args:
             materials (Store): Store of materials documents.
-            descriptors (Store): Store of condensed structure and
+            robocrys (Store): Store of condensed structure and
                 text structure description.
             **kwargs: Keyword arguments that will get passed to the builder
                 super method.
@@ -47,17 +47,16 @@ class RobocrysBuilder(MapBuilder):
         doc = {}
 
         try:
-            self.logger.debug("Adding oxidation states")
+            self.logger.debug("Adding oxidation states for {}".format(
+                item[self.materials.key]))
             structure.add_oxidation_state_by_guess(max_sites=-80)
         except ValueError:
-            self.logger.warning("Could not add oxidation states!")
+            self.logger.warning("Could not add oxidation states for {}".format(
+                item[self.materials.key]))
 
-        try:
-            condensed_structure = self.condenser.condense_structure(structure)
-            description = self.describer.describe(condensed_structure)
-            doc.update({"condensed_structure": condensed_structure,
+        condensed_structure = self.condenser.condense_structure(structure)
+        description = self.describer.describe(condensed_structure)
+        doc.update({"condensed_structure": condensed_structure,
                         "description": description})
-        except Exception as e:
-            self.logger.error("Failed running robocrys: {}".format(e))
-
+        
         return doc
