@@ -12,7 +12,7 @@ from pymatgen.analysis.structure_prediction.volume_predictor import DLSVolumePre
 from pymatgen import Structure
 from pymatgen.alchemy.materials import TransformedStructure
 from pymatgen.util.provenance import StructureNL, Author
-from fireworks import LaunchPad
+from fireworks import LaunchPad, Firework
 from fireworks.fw_config import FW_BLOCK_FORMAT
 from atomate.vasp.database import VaspCalcDb
 from atomate.vasp.drones import VaspDrone
@@ -977,7 +977,8 @@ def report(tag, in_progress, to_csv):
     """generate a report of calculations status"""
 
     lpad = LaunchPad.auto_load()
-    states = ['READY', 'RESERVED', 'RUNNING', 'FIZZLED', 'COMPLETED']
+    states = Firework.STATE_RANKS
+    states = sorted(states, key=states.get)
 
     tags = [tag]
     if tag is None:
