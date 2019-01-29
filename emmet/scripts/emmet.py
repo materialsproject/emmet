@@ -16,8 +16,8 @@ from fireworks import LaunchPad
 from fireworks.fw_config import FW_BLOCK_FORMAT
 from atomate.vasp.database import VaspCalcDb
 from atomate.vasp.drones import VaspDrone
-from atomate.vasp.workflows.presets.core import wf_structure_optimization
-from atomate.vasp.powerups import add_trackers, add_tags, add_additional_fields_to_taskdocs
+from atomate.vasp.workflows.presets.core import wf_structure_optimization, wf_bandstructure
+from atomate.vasp.powerups import add_trackers, add_tags, add_additional_fields_to_taskdocs, add_wf_metadata
 from emmet.vasp.materials import group_structures, get_sg
 from emmet.vasp.task_tagger import task_type
 from log4mongo.handlers import MongoHandler, MongoFormatter
@@ -497,6 +497,54 @@ def find(email, add_snlcolls, add_tasks_db):
                 print(task['task_id'])
             else:
                 print(subdir, 'not found')
+
+@cli.command()
+@click.argument('target_db_file', type=click.Path(exists=True))
+@click.option('--insert/--no-insert', default=False, help='actually execute workflow addition')
+def bandstructure(target_db_file, insert):
+    """add workflows for bandstructure based on materials collection"""
+    lpad = LaunchPad.auto_load()
+    source = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
+    print('connected to source db with', source.collection.count(), 'tasks')
+    target = VaspCalcDb.from_db_file(target_db_file, admin=True)
+    print('connected to target db with', target.collection.count(), 'tasks')
+    materials = target.db["materials.core"]
+    ensure_indexes(['task_id'], [materials])
+    ensure_indexes(['metadata.task_id'], [lpad.workflows])
+    print(materials.count(), 'core materials')
+
+    all_mat_ids = set(materials.distinct('task_id'))
+    existing_mat_ids = set(filter(None, lpad.workflows.distinct('metadata.task_id')))
+    mat_ids = all_mat_ids.symmetric_difference(existing_mat_ids)
+    print(len(mat_ids), 'bandstructure workflows to add')
+
+    wflows = []
+    for mat_id in mat_ids:
+        structure = Structure.from_dict(materials.find_one({'task_id': mat_id}, {'structure': 1})['structure'])
+        dir_name = target.collection.find_one({'task_id': mat_id}, {'dir_name': 1})['dir_name']
+        subdir = get_subdir(dir_name)
+        subdir_query = {'dir_name': {'$regex': '/{}$'.format(subdir)}}
+        source_task = source.collection.find_one(subdir_query, {'tags': 1})
+        if not source_task:
+            print('source task not found -> TODO')
+            break
+
+        # bandstructure task has this year's tag (remove other year tags from source_task)
+        tags = [t for t in source_task['tags'] if t not in year_tags]
+        tags.append(year_tags[-1])
+
+        wf = wf_bandstructure(structure, c={'ADD_MODIFY_INCAR': True}) # TODO non-SO bandstructure workflow -> Alex
+        wf = add_trackers(wf)
+        wf = add_tags(wf, tags)
+        wf = add_wf_metadata(wf, structure)
+        wf.metadata["task_id"] = mat_id
+        wflows.append(wf)
+        print(wf.as_dict())
+        break
+
+    if insert:
+        lpad.bulk_add_wfs(wflows)
+
 
 
 @cli.command()
