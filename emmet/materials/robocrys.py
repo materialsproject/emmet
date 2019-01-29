@@ -2,6 +2,7 @@ from pymatgen.core.structure import Structure
 from maggma.builders import MapBuilder
 
 from robocrys import StructureCondenser, StructureDescriber
+from robocrys import __version__ as robocrys_version
 
 __author__ = "Alex Ganose"
 
@@ -44,7 +45,7 @@ class RobocrysBuilder(MapBuilder):
             item[self.materials.key]))
 
         structure = Structure.from_dict(item["structure"])
-        doc = {}
+        doc = {"_robocrys_version": robocrys_version}
 
         try:
             self.logger.debug("Adding oxidation states for {}".format(
@@ -57,6 +58,6 @@ class RobocrysBuilder(MapBuilder):
         condensed_structure = self.condenser.condense_structure(structure)
         description = self.describer.describe(condensed_structure)
         doc.update({"condensed_structure": condensed_structure,
-                        "description": description})
+                    "description": description})
         
         return doc
