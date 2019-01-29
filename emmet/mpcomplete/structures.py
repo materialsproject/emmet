@@ -4,7 +4,7 @@ from maggma.builders import Builder
 
 
 class StructureStatus(Builder):
-    def __init__(self, wflow_logs, status, **kwargs):
+    def __init__(self, wflow_logs, wflows, status, **kwargs):
         super().__init__(
             sources=[status, wflow_logs, wflows],
             target=[status],
