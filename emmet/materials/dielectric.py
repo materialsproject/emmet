@@ -12,7 +12,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class DielectricBuilder(MapBuilder):
-    def __init__(self, materials, dielectric, query=None, **kwargs):
+    def __init__(self, materials, dielectric, max_miller=10, query=None, **kwargs):
         """
         Creates a dielectric collection for materials
 
@@ -20,21 +20,22 @@ class DielectricBuilder(MapBuilder):
             materials (Store): Store of materials documents to match to
             dielectric (Store): Store of dielectric properties
             min_band_gap (float): minimum band gap for a material to look for a dielectric calculation to build
+            max_miller (int): Max miller index when searching for max direction for piezo response
             query (dict): dictionary to limit materials to be analyzed
         """
 
         self.materials = materials
         self.dielectric = dielectric
-
+        self.max_miller = max_miller
         self.query = query if query else {}
-        self.query.update({"dielectric": {"$exists": 1}, "bandstructure.band_gap": {"$gt": 0.0}})
+        self.query.update({"dielectric": {"$exists": 1}})
 
         super().__init__(
             source=materials,
             target=dielectric,
             query=self.query,
             ufn=self.calc,
-            projection=["dielectric", "piezo", "structure"],
+            projection=["dielectric", "piezo", "structure", "bandstructure.band_gap"],
             **kwargs)
 
     def calc(self, item):
@@ -52,59 +53,62 @@ class DielectricBuilder(MapBuilder):
             diags = np.diagonal(matrix)
             return np.prod(diags) / np.sum(np.prod(comb) for comb in combinations(diags, 2))
 
-        structure = Structure.from_dict(item.get("dielectric", {}).get("structure", None))
+        if item["bandstructure"]["band_gap"] > 0:
 
-        ionic = Tensor(item["dielectric"]["ionic"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)
-        static = Tensor(
-            item["dielectric"]["static"]).symmetrized.fit_to_structure(structure).convert_to_ieee(structure)
-        total = ionic + static
+            structure = Structure.from_dict(item.get("dielectric", {}).get("structure", None))
 
-        d = {
-            "dielectric": {
-                "total": total,
-                "ionic": ionic,
-                "static": static,
-                "e_total": np.average(np.diagonal(total)),
-                "e_ionic": np.average(np.diagonal(ionic)),
-                "e_static": np.average(np.diagonal(static)),
-                "n": np.sqrt(np.average(np.diagonal(static))),
-            }
-        }
-
-        sga = SpacegroupAnalyzer(structure)
-        # Update piezo if non_centrosymmetric
-        if item.get("piezo", False) and not sga.is_laue():
-            static = PiezoTensor.from_voigt(np.array(item['piezo']["static"]))
-            ionic = PiezoTensor.from_voigt(np.array(item['piezo']["ionic"]))
+            ionic = Tensor(item["dielectric"]["ionic"]).convert_to_ieee(structure)
+            static = Tensor(item["dielectric"]["static"]).convert_to_ieee(structure)
             total = ionic + static
 
-            # Enforce basic voigt symmetry
-            total = (total + np.transpose(total, [0, 2, 1])) / 2
+            d = {
+                "dielectric": {
+                    "total": total,
+                    "ionic": ionic,
+                    "static": static,
+                    "e_total": np.average(np.diagonal(total)),
+                    "e_ionic": np.average(np.diagonal(ionic)),
+                    "e_static": np.average(np.diagonal(static)),
+                    "n": np.sqrt(np.average(np.diagonal(static))),
+                }
+            }
 
-            # Convert to IEEE orientation
-            total = total.convert_to_ieee(structure, initial_fit=False)
-            ionic = ionic.convert_to_ieee(structure, initial_fit=False)
-            static = static.convert_to_ieee(structure, initial_fit=False)
+            sga = SpacegroupAnalyzer(structure)
+            # Update piezo if non_centrosymmetric
+            if item.get("piezo", False) and not sga.is_laue():
+                static = PiezoTensor.from_voigt(np.array(item['piezo']["static"]))
+                ionic = PiezoTensor.from_voigt(np.array(item['piezo']["ionic"]))
+                total = ionic + static
 
-            directions, charges, strains = np.linalg.svd(total.voigt, full_matrices=False)
+                # Symmeterize Convert to IEEE orientation
+                total = total.convert_to_ieee(structure)
+                ionic = ionic.convert_to_ieee(structure)
+                static = static.convert_to_ieee(structure)
 
-            max_index = np.argmax(np.abs(charges))
+                directions, charges, strains = np.linalg.svd(total.voigt, full_matrices=False)
 
-            max_direction = directions[max_index]
+                max_index = np.argmax(np.abs(charges))
 
-            # Allow a max miller index of 10
-            max_miller = 10
-            min_val = np.abs(max_direction)
-            min_val = min_val[min_val > (np.max(min_val) / max_miller)]
-            min_val = np.min(min_val)
+                max_direction = directions[max_index]
 
-            d["piezo"] = {
-                "total": total.zeroed().voigt,
-                "ionic": ionic.zeroed().voigt,
-                "static": static.zeroed().voigt,
-                "e_ij_max": charges[max_index],
-                "max_direction": np.round(max_direction / min_val),
-                "strain_for_max": strains[max_index]
+                # Allow a max miller index of 10
+                min_val = np.abs(max_direction)
+                min_val = min_val[min_val > (np.max(min_val) / self.max_miller)]
+                min_val = np.min(min_val)
+
+                d["piezo"] = {
+                    "total": total.zeroed().voigt,
+                    "ionic": ionic.zeroed().voigt,
+                    "static": static.zeroed().voigt,
+                    "e_ij_max": charges[max_index],
+                    "max_direction": np.round(max_direction / min_val),
+                    "strain_for_max": strains[max_index]
+                }
+        else:
+            d = {
+                "diel": {
+                    "warngings": ["Dielectric calculated for likely metal. Values are unlikely to be converged"]
+                }
             }
 
         return d

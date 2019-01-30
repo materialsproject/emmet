@@ -412,5 +412,31 @@
       "GGA+U Static Dielectric": 6
     },
     "tasks_key": "calcs_reversed.0.output.outcar.born"
+  },
+  {
+    "materials_key": "force_constants",
+    "quality_score": {
+      "GGA Static Dielectric": 2,
+      "GGA+U Static Dielectric": 6
+    },
+    "tasks_key": "calcs_reversed.output.force_constants"
+  },
+  {
+    "materials_key": "internal_strain_tensor",
+    "quality_score": {
+      "GGA Static Dielectric": 2,
+      "GGA+U Static Dielectric": 6
+    },
+    "tasks_key": "calcs_reversed.output.outcar.internal_strain_tensor"
+  },
+  {
+    "materials_key": "_sbxn",
+    "quality_score": {
+      "GGA Structure Optimization": 1,
+      "GGA+U Structure Optimization": 5
+    },
+    "tasks_key": "_sbxn",
+    "optional": true,
+    "aggregate": true
   }
 ]

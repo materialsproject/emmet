@@ -163,7 +163,7 @@ class MaterialsBuilder(Builder):
 
         if self.require_structure_opt:
             # Only consider structure optimization task_ids for material task_id
-            possible_mat_ids = [prop for prop in all_props if "Structure Optimization" in prop["task_type"]]
+            possible_mat_ids = [prop for prop in all_props if "structure" in prop["materials_key"]]
         else:
             possible_mat_ids = all_props
 
@@ -186,7 +186,9 @@ class MaterialsBuilder(Builder):
             # Sort for highest quality score and lowest energy
             sorted_props = sorted(props, key=lambda x: (x["quality_score"], -1.0 * x["energy"]), reverse=True)
             if sorted_props[0].get("aggregate", False):
-                vals = [prop["value"] for prop in sorted_props]
+                # Make this a list of lists and then flatten to deal with mixed value typing
+                vals = [prop["value"] if isinstance(prop["value"], list) else [prop["value"]] for prop in sorted_props]
+                vals = list(chain.from_iterable(vals))
                 prop = sorted_props[0]
                 prop["value"] = vals
                 # Can"t track an aggregated property
@@ -280,7 +282,7 @@ class MaterialsBuilder(Builder):
                         "track": prop.get("track", False),
                         "aggregate": prop.get("aggregate", False),
                         "last_updated": task[self.tasks.lu_field],
-                        "energy": get(task, "output.energy", 0.0),
+                        "energy": get(task, "output.energy_per_atom", 0.0),
                         "materials_key": prop["materials_key"]
                     })
                 elif not prop.get("optional", False):
