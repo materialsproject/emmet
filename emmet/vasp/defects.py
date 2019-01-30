@@ -9,31 +9,18 @@ This module contains 2 builders for defect properties in non-metals.
     documents from defect objects with identical bulk structures
     and calculation metadata.
 """
-# import os
-# import numpy as np
-# from monty.json import MontyDecoder, MontyEncoder
-#
-# from pymatgen.core import Structure
-# from pymatgen.analysis.structure_matcher import StructureMatcher, PointDefectComparator
-# from pymatgen import MPRester
-#
-# from pymatgen.analysis.defects.defect_compatibility import DefectCompatibility
-# from pymatgen.analysis.defects.core import DefectEntry, Interstitial
-# from pymatgen.analysis.defects.thermodynamics import DefectPhaseDiagram
-
 
 from datetime import datetime
-# from itertools import chain
 import numpy as np
 
 from monty.json import MontyDecoder, jsanitize
 
-from pymatgen import Structure
-from pymatgen.analysis.defects.defect_compatibility import DefectCompatibility
-from pymatgen.analysis.structure_matcher import StructureMatcher
-from pymatgen.analysis.defects.core import Interstitial, DefectEntry
-from pymatgen import MPRester
+from pymatgen import Structure, MPRester
+from pymatgen.analysis.structure_matcher import StructureMatcher, PointDefectComparator
 from pymatgen.electronic_structure.bandstructure import BandStructure
+from pymatgen.analysis.defects.core import Interstitial, DefectEntry
+from pymatgen.analysis.defects.thermodynamics import DefectPhaseDiagram
+from pymatgen.analysis.defects.defect_compatibility import DefectCompatibility
 
 from maggma.builder import Builder
 
