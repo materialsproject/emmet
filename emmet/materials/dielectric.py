@@ -12,7 +12,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class DielectricBuilder(MapBuilder):
-    def __init__(self, materials, dielectric, query=None, **kwargs):
+    def __init__(self, materials, dielectric, max_miller=10, query=None, **kwargs):
         """
         Creates a dielectric collection for materials
 
@@ -20,12 +20,13 @@ class DielectricBuilder(MapBuilder):
             materials (Store): Store of materials documents to match to
             dielectric (Store): Store of dielectric properties
             min_band_gap (float): minimum band gap for a material to look for a dielectric calculation to build
+            max_miller (int): Max miller index when searching for max direction for piezo response
             query (dict): dictionary to limit materials to be analyzed
         """
 
         self.materials = materials
         self.dielectric = dielectric
-
+        self.max_miller = max_miller
         self.query = query if query else {}
         self.query.update({"dielectric": {"$exists": 1}})
 
@@ -96,9 +97,8 @@ class DielectricBuilder(MapBuilder):
                 max_direction = directions[max_index]
 
                 # Allow a max miller index of 10
-                max_miller = 10
                 min_val = np.abs(max_direction)
-                min_val = min_val[min_val > (np.max(min_val) / max_miller)]
+                min_val = min_val[min_val > (np.max(min_val) / self.max_miller)]
                 min_val = np.min(min_val)
 
                 d["piezo"] = {
