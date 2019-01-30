@@ -160,7 +160,7 @@ class MPBuilder(Builder):
             check_relaxation(mat, item)
             add_cifs(mat)
             add_meta(mat)
-            sandbox_props(mat, self._settings["sandboxed_properties"])
+            sandbox_props(mat, item, self._settings["sandboxed_properties"])
 
             processed = jsanitize(mat)
 
@@ -442,8 +442,8 @@ def add_meta(mat):
     mat['_meta'] = meta
 
 
-def sandbox_props(mat, sandbox_props):
-    mat["sbxn"] = mat.get("sbxn", ["core", "jcesr", "vw", "shyamd", "kitchaev"])
+def sandbox_props(mat, new_style_mat, sandbox_props):
+    mat["sbxn"] = new_style_mat.get("_sbxn", ["core", "jcesr", "vw", "building33"])
     mat["sbxd"] = []
 
     for sbx in mat["sbxn"]:
