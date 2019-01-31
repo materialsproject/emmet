@@ -38,6 +38,7 @@ class DefectBuilder(Builder):
                  stol=0.3,
                  angle_tol=5,
                  max_items_size=0,
+                 update_all=False,
                  **kwargs):
         """
         Creates DefectEntry from vasp task docs
@@ -51,6 +52,8 @@ class DefectBuilder(Builder):
             stol (float): StructureMatcher tuning parameter for matching tasks to materials
             angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
             max_items_size (int): limits number of items approached from tasks (zero places no limit on number of items)
+            update_all (bool): Whether to consider all task ids from defects store.
+                Default is False (will not re-consider task-ids which have been considered previously.
         """
 
         self.tasks = tasks
@@ -61,6 +64,7 @@ class DefectBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
         self.max_items_size = max_items_size
+        self.update_all=update_all
         super().__init__(sources=[tasks], targets=[defects], **kwargs)
 
     def get_items(self):
@@ -85,13 +89,16 @@ class DefectBuilder(Builder):
         q["state"] = "successful"
         # q.update(self.defects.lu_filter(self.defects)) #This wasnt working because DefectEntries dont have obvious way of doing this? (tried parameters.last_updated but this broke because parameters is a property and last_updated is a key)
         #TODO: does self.tasks.lu_filter(self.defects) work better?
-        if 'task_id' in q:
-            if '$nin' in q['task_id']:
-                q['task_id']['$nin'].extend( self.defects.distinct('entry_id'))
+        if not self.update_all:
+            if 'task_id' in q:
+                if isinstance(q['task_id'], int) or isinstance(q['task_id'], float):
+                    q['task_id'] = {'$nin': [], '$in': [q['task_id']]}
+                if '$nin' in q['task_id']:
+                    q['task_id']['$nin'].extend( self.defects.distinct('entry_id'))
+                else:
+                    q['task_id'].update( {'$nin': self.defects.distinct('entry_id')})
             else:
-                q['task_id'].update( {'$nin': self.defects.distinct('entry_id')})
-        else:
-            q.update({'task_id': {'$nin': self.defects.distinct('entry_id')}})
+                q.update({'task_id': {'$nin': self.defects.distinct('entry_id')}})
 
         q.update({'transformations.history.@module':
                       {'$in': ['pymatgen.transformations.defect_transformations']}})
@@ -406,7 +413,7 @@ class DefectBuilder(Builder):
                     poss_deflist = sorted(bulk_sc_structure.get_sites_in_sphere(dsite.coords, 1,
                                                                                 include_index=True), key=lambda x: x[1])
                     bulkindex = poss_deflist[0][2]
-                    site_matching_indices.append( [bulkindex, dindex])
+                    site_matching_indices.append( [int(bulkindex), int(dindex)])
 
             # assuming Wigner-Seitz radius for sampling radius
             wz = initial_defect_structure.lattice.get_wigner_seitz_cell()
@@ -439,20 +446,20 @@ class DefectBuilder(Builder):
             self.logger.error('DEFECTTYPEcalc: {} (task-id {}) does not have defect data for parsing '
                   'delocalization.'.format(item['task_label'], item['task_id']))
 
-
         defect_entry = DefectEntry( defect, parameters['defect_energy'] - parameters['bulk_energy'],
                                     corrections = {}, parameters = parameters, entry_id= item['task_id'])
 
         defect_entry = self.compatibility.process_entry( defect_entry)
-        defect_entry.parameters['last_updated'] = datetime.utcnow()
+        defect_entry.parameters = jsanitize( defect_entry.parameters, strict=True, allow_bson=True)
         #hack to make sure that structures are stored as dict, otherwise they become strings in database
-        for struct_type in ['bulk_sc_structure', 'initial_defect_structure', 'final_defect_structure']:
-            if struct_type in defect_entry.parameters.keys() and type(defect_entry.parameters[struct_type]) != Structure:
-                defect_entry.parameters[struct_type] = defect_entry.parameters[struct_type].as_dict()
+        # for struct_type in ['bulk_sc_structure', 'initial_defect_structure', 'final_defect_structure']:
+        #     if struct_type in defect_entry.parameters.keys() and type(defect_entry.parameters[struct_type]) != Structure:
+        #         defect_entry.parameters[struct_type] = defect_entry.parameters[struct_type].as_dict()
 
         #add additional tags as desired...
         dentry_as_dict = defect_entry.as_dict()
-        dentry_as_dict['task_id'] = item['task_id'] #this will need to be deleted when loading DefectEntry.as_dict()
+        defect_entry.parameters['last_updated'] = datetime.utcnow()
+        dentry_as_dict['task_id'] = item['task_id']
 
         return dentry_as_dict
 
