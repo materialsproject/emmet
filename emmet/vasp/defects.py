@@ -417,7 +417,8 @@ class DefectBuilder(Builder):
                 if dsite.distance( defect_site_for_index_mapping) > 0.1:  #exclude the defect site from site_matching...
                     poss_deflist = sorted(bulk_sc_structure.get_sites_in_sphere(dsite.coords, 1,
                                                                                 include_index=True), key=lambda x: x[1])
-
+                    if not len(poss_deflist):
+                        raise ValueError("Could not find bulk site at {} {}".format(dindex, dsite ))
                     bulkindex = poss_deflist[0][2]
                     site_matching_indices.append( [int(bulkindex), int(dindex)])
 
