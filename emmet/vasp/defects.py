@@ -390,7 +390,7 @@ class DefectBuilder(Builder):
                                                to_unit_cell=True)
             struct_for_defect_site.make_supercell( scaling_matrix)
             # defect_site_coords = struct_for_defect_site[0].coords
-            defect_site_for_index_mapping = struct_for_defect_site[0]
+            defect_site_for_index_mapping = struct_for_defect_site.sites[0]
 
             # site_err_msg = "Could not find site index for {} {} (task id {})".format( defect.name,
             #                                                                           defect.charge,
@@ -418,7 +418,7 @@ class DefectBuilder(Builder):
                     poss_deflist = sorted(bulk_sc_structure.get_sites_in_sphere(dsite.coords, 1,
                                                                                 include_index=True), key=lambda x: x[1])
                     if not len(poss_deflist):
-                        raise ValueError("Could not find bulk site at {} {}".format(dindex, dsite ))
+                        raise ValueError("Could not match a bulk site to defect structure site at {} {}".format(dindex, dsite ))
                     bulkindex = poss_deflist[0][2]
                     site_matching_indices.append( [int(bulkindex), int(dindex)])
 
