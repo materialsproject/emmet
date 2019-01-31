@@ -93,7 +93,7 @@ class MPBuilder(Builder):
             self.logger.info("Only considering {} new keys for {}".format(len(new_keys), source.collection_name))
             keys |= set(new_keys)
 
-        keys &= mat_keys  # Ensure all keys are present in main materials collection
+        keys = keys & mat_keys  # Ensure all keys are present in main materials collection
         self.logger.info("Processing {} items".format(len(keys)))
 
         self.total = len(keys)
