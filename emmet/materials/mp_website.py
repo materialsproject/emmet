@@ -137,7 +137,7 @@ class MPBuilder(Builder):
                 # merge all docs in this group together
                 d = {k: v for doc in sub_docs for k, v in doc.items()}
                 # delete any private keys
-                d = {k: v for k, v in d.items() if not k.startswith("_")}
+                #d = {k: v for k, v in d.items() if not k.startswith("_")}
                 # Set to most recent lu_field
                 d[self.materials.lu_field] = max(doc[self.materials.lu_field] for doc in sub_docs)
 
