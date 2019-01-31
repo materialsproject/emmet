@@ -416,6 +416,7 @@ class DefectBuilder(Builder):
                 if dsite.distance_and_image_from_frac_coords( defect_frac_sc_coords)[0] > 0.001:  #exclude the defect site from site_matching...
                     poss_deflist = sorted(bulk_sc_structure.get_sites_in_sphere(dsite.coords, 1,
                                                                                 include_index=True), key=lambda x: x[1])
+
                     bulkindex = poss_deflist[0][2]
                     site_matching_indices.append( [int(bulkindex), int(dindex)])
 
@@ -548,7 +549,7 @@ class DefectBuilder(Builder):
                 #track to make sure that cartesian coords are same (important for several levels of analysis in defect builder)
                 same_cart_positions = True
                 for bsite_coords in bstruct.cart_coords:
-                    if not len( dstruct_withoutdefect.get_sites_in_sphere(bsite_coords, 1)):
+                    if not len( dstruct_withoutdefect.get_sites_in_sphere(bsite_coords, .1)):
                         same_cart_positions = False
 
                 if bincar_reduced == dincar_reduced and b_potcar == d_potcar and same_cart_positions:
