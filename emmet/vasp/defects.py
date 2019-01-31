@@ -327,7 +327,7 @@ class DefectBuilder(Builder):
         if type( item['transformations']) != dict:
             item['transformations'] = item['transformations'].as_dict()
         defect = item['transformations']['history'][0]['defect']
-        needed_keys = ['@module', '@class', 'structure', 'defect_site', 'charge']
+        needed_keys = ['@module', '@class', 'structure', 'defect_site', 'charge', 'site_name']
         defect = MontyDecoder().process_decoded( {k:v for k,v in defect.items() if k in needed_keys})
 
         scaling_matrix = MontyDecoder().process_decoded( item['transformations']['history'][0]['scaling_matrix'])
@@ -394,48 +394,17 @@ class DefectBuilder(Builder):
             struct_for_defect_site.make_supercell( scaling_matrix)
             defect_site_for_index_mapping = struct_for_defect_site.sites[0]
 
-            
+
             defect_index = None
             if not isinstance(defect, Vacancy):
                 for ind, site in enumerate(initial_defect_structure.sites):
                     if site.distance( defect_site_for_index_mapping) < 0.01:
                         defect_index = ind
                 if defect_index is None:
-                    raise ValueError("Could not find site {} in initial_defect_structure "
-                                     ":\n{}".format( defect_site_for_index_mapping,
+                    raise ValueError("Could not find site {} {} in initial_defect_structure "
+                                     ":\n{}".format( defect_site_for_index_mapping.frac_coords,
+                                                     defect_site_for_index_mapping.specie,
                                                      initial_defect_structure))
-
-            # site_err_msg = "Could not find site index for {} {} (task id {})".format( defect.name,
-            #                                                                           defect.charge,
-            #                                                                           item['task_id'])
-            # if type(defect) != Interstitial:
-            #     poss_deflist = sorted(
-            #         bulk_sc_structure.get_sites_in_sphere(defect_site_coords, 2,
-            #                                               include_index=True), key=lambda x: x[1])
-            #     if not len(poss_deflist):
-            #         raise ValueError(site_err_msg)
-            #     defect_frac_sc_coords = bulk_sc_structure[poss_deflist[0][2]].frac_coords
-            # else:
-            #     poss_deflist = sorted(
-            #         initial_defect_structure.get_sites_in_sphere(defect_site_coords, 2,
-            #                                                      include_index=True), key=lambda x: x[1])
-            #     if not len(poss_deflist):
-            #         raise ValueError(site_err_msg)
-            #     defect_frac_sc_coords = initial_defect_structure[poss_deflist[0][2]].frac_coords
-            #
-            # #create list that maps site indices from bulk structure to defect structure
-            # site_matching_indices = []
-            # for dindex, dsite in enumerate(initial_defect_structure.sites):
-            #     # if dsite.distance_and_image_from_frac_coords( defect_frac_sc_coords)[0] > 0.01:  #exclude the defect site from site_matching...
-            #     if dsite.distance( defect_site_for_index_mapping) > 0.1:  #exclude the defect site from site_matching...
-            #         poss_deflist = sorted(bulk_sc_structure.get_sites_in_sphere(dsite.coords, 1,
-            #                                                                     include_index=True), key=lambda x: x[1])
-            #         if not len(poss_deflist):
-            #             raise ValueError("For {} could not match a bulk site to defect structure site at {} {}".format(defect.name,
-            #                                                                                                            index, dsite ))
-            #         bulkindex = poss_deflist[0][2]
-            #         site_matching_indices.append( [int(bulkindex), int(dindex)])
-
 
             #create list that maps site indices from bulk structure to defect structure
             site_matching_indices = []
