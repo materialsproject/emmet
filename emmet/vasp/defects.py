@@ -452,7 +452,7 @@ class DefectBuilder(Builder):
             parameters.update( {'defect_atomic_site_averages': defect_atomic_site_averages,
                                 'site_matching_indices': site_matching_indices,
                                 'sampling_radius': sampling_radius,
-                                'defect_frac_sc_coords': defect_frac_sc_coords} )
+                                'defect_frac_sc_coords': defect_site_for_index_mapping.frac_coords} )
         else:
             self.logger.error('DEFECTTYPEcalc: {} (task-id {}) does not have outcar values for '
                               'parsing Kumagai'.format(item['task_label'], item['task_id']))
