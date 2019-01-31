@@ -18,7 +18,7 @@ from monty.json import MontyDecoder, jsanitize
 from pymatgen import Structure, MPRester
 from pymatgen.analysis.structure_matcher import StructureMatcher, PointDefectComparator
 from pymatgen.electronic_structure.bandstructure import BandStructure
-from pymatgen.analysis.defects.core import Interstitial, DefectEntry
+from pymatgen.analysis.defects.core import Vacancy, Interstitial, DefectEntry
 from pymatgen.analysis.defects.thermodynamics import DefectPhaseDiagram
 from pymatgen.analysis.defects.defect_compatibility import DefectCompatibility
 
@@ -385,13 +385,25 @@ class DefectBuilder(Builder):
             if type(bulk_sc_structure) == dict:
                 bulk_sc_structure = Structure.from_dict( bulk_sc_structure)
 
+            # get defect fractional coordinates and defect index and
+            # confirm site is in initial_defect_structure (if non Vacancy)
             struct_for_defect_site = Structure(defect.bulk_structure.copy().lattice,
                                                [defect.site.specie],
                                                [defect.site.frac_coords],
                                                to_unit_cell=True)
             struct_for_defect_site.make_supercell( scaling_matrix)
-            # defect_site_coords = struct_for_defect_site[0].coords
             defect_site_for_index_mapping = struct_for_defect_site.sites[0]
+
+            
+            defect_index = None
+            if not isinstance(defect, Vacancy):
+                for ind, site in enumerate(initial_defect_structure.sites):
+                    if site.distance( defect_site_for_index_mapping) < 0.01:
+                        defect_index = ind
+                if defect_index is None:
+                    raise ValueError("Could not find site {} in initial_defect_structure "
+                                     ":\n{}".format( defect_site_for_index_mapping,
+                                                     initial_defect_structure))
 
             # site_err_msg = "Could not find site index for {} {} (task id {})".format( defect.name,
             #                                                                           defect.charge,
@@ -453,7 +465,8 @@ class DefectBuilder(Builder):
             parameters.update( {'defect_atomic_site_averages': defect_atomic_site_averages,
                                 'site_matching_indices': site_matching_indices,
                                 'sampling_radius': sampling_radius,
-                                'defect_frac_sc_coords': defect_site_for_index_mapping.frac_coords} )
+                                'defect_frac_sc_coords': defect_site_for_index_mapping.frac_coords,
+                                'defect_index_sc_coords': defect_index} )
         else:
             self.logger.error('DEFECTTYPEcalc: {} (task-id {}) does not have outcar values for '
                               'parsing Kumagai'.format(item['task_label'], item['task_id']))
