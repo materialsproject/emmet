@@ -356,7 +356,8 @@ class DefectBuilder(Builder):
 
         parameters.update({'defect_energy': defect_energy,
                            'final_defect_structure': final_defect_structure,
-                           'initial_defect_structure': initial_defect_structure})
+                           'initial_defect_structure': initial_defect_structure,
+                           'scaling_matrix': scaling_matrix})
 
         if 'locpot' in item['calcs_reversed'][0]['output'].keys():
             #Load information for Freysoldt related parsing
