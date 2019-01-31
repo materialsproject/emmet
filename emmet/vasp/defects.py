@@ -389,26 +389,25 @@ class DefectBuilder(Builder):
                                                [defect.site.frac_coords],
                                                to_unit_cell=True)
             struct_for_defect_site.make_supercell( scaling_matrix)
-            # defect_site_coords = struct_for_defect_site[0].coords
-            defect_frac_sc_coords = struct_for_defect_site[0].frac_coords
+            defect_site_coords = struct_for_defect_site[0].coords
 
-            # site_err_msg = "Could not find site index for {} {} (task id {})".format( defect.name,
-            #                                                                           defect.charge,
-            #                                                                           item['task_id'])
-            # if type(defect) != Interstitial:
-            #     poss_deflist = sorted(
-            #         bulk_sc_structure.get_sites_in_sphere(defect_site_coords, 2,
-            #                                               include_index=True), key=lambda x: x[1])
-            #     if not len(poss_deflist):
-            #         raise ValueError(site_err_msg)
-            #     defect_frac_sc_coords = bulk_sc_structure[poss_deflist[0][2]].frac_coords
-            # else:
-            #     poss_deflist = sorted(
-            #         initial_defect_structure.get_sites_in_sphere(defect_site_coords, 2,
-            #                                                      include_index=True), key=lambda x: x[1])
-            #     if not len(poss_deflist):
-            #         raise ValueError(site_err_msg)
-            #     defect_frac_sc_coords = initial_defect_structure[poss_deflist[0][2]].frac_coords
+            site_err_msg = "Could not find site index for {} {} (task id {})".format( defect.name,
+                                                                                      defect.charge,
+                                                                                      item['task_id'])
+            if type(defect) != Interstitial:
+                poss_deflist = sorted(
+                    bulk_sc_structure.get_sites_in_sphere(defect_site_coords, 2,
+                                                          include_index=True), key=lambda x: x[1])
+                if not len(poss_deflist):
+                    raise ValueError(site_err_msg)
+                defect_frac_sc_coords = bulk_sc_structure[poss_deflist[0][2]].frac_coords
+            else:
+                poss_deflist = sorted(
+                    initial_defect_structure.get_sites_in_sphere(defect_site_coords, 2,
+                                                                 include_index=True), key=lambda x: x[1])
+                if not len(poss_deflist):
+                    raise ValueError(site_err_msg)
+                defect_frac_sc_coords = initial_defect_structure[poss_deflist[0][2]].frac_coords
 
             #create list that maps site indices from bulk structure to defect structure
             site_matching_indices = []
