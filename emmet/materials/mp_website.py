@@ -184,6 +184,7 @@ class MPBuilder(Builder):
                 del item["_id"]
 
         if len(items) > 0:
+            self.logger.debug(f"Updating {len(items)} items")
             self.website.update(items, update_lu=False)
 
     def old_style_mat(self, new_style_mat):
