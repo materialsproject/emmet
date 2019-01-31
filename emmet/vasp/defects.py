@@ -327,16 +327,11 @@ class DefectBuilder(Builder):
         if type( item['transformations']) != dict:
             item['transformations'] = item['transformations'].as_dict()
         defect = item['transformations']['history'][0]['defect']
-        try:
-            defect = MontyDecoder().process_decoded( defect)
-        except:
-            self.logger.info("Error with defect loading for task-id {}. "
-                             "Trying again after removing unnecessary keys.".format( item['task_id']))
-            needed_keys = ['@module', '@class', 'structure', 'defect_site', 'charge']
-            defect = MontyDecoder().process_decoded( {k:v for k,v in defect.items() if k in needed_keys})
+        needed_keys = ['@module', '@class', 'structure', 'defect_site', 'charge']
+        defect = MontyDecoder().process_decoded( {k:v for k,v in defect.items() if k in needed_keys})
 
         scaling_matrix = MontyDecoder().process_decoded( item['transformations']['history'][0]['scaling_matrix'])
-        initial_defect_structure = defect.generate_defect_structure(scaling_matrix)
+        initial_defect_structure = defect.generate_defect_structure( scaling_matrix)
         defect_energy = item['output']['energy']
         try:
             initial_defect_structure = self.reorder_structure(initial_defect_structure, final_defect_structure)
@@ -394,25 +389,26 @@ class DefectBuilder(Builder):
                                                [defect.site.frac_coords],
                                                to_unit_cell=True)
             struct_for_defect_site.make_supercell( scaling_matrix)
-            defect_site_coords = struct_for_defect_site[0].coords
+            # defect_site_coords = struct_for_defect_site[0].coords
+            defect_frac_sc_coords = struct_for_defect_site[0].frac_coords
 
-            site_err_msg = "Could not find site index for {} {} (task id {})".format( defect.name,
-                                                                                      defect.charge,
-                                                                                      item['task_id'])
-            if type(defect) != Interstitial:
-                poss_deflist = sorted(
-                    bulk_sc_structure.get_sites_in_sphere(defect_site_coords, 2,
-                                                          include_index=True), key=lambda x: x[1])
-                if not len(poss_deflist):
-                    raise ValueError(site_err_msg)
-                defect_frac_sc_coords = bulk_sc_structure[poss_deflist[0][2]].frac_coords
-            else:
-                poss_deflist = sorted(
-                    initial_defect_structure.get_sites_in_sphere(defect_site_coords, 2,
-                                                                 include_index=True), key=lambda x: x[1])
-                if not len(poss_deflist):
-                    raise ValueError(site_err_msg)
-                defect_frac_sc_coords = initial_defect_structure[poss_deflist[0][2]].frac_coords
+            # site_err_msg = "Could not find site index for {} {} (task id {})".format( defect.name,
+            #                                                                           defect.charge,
+            #                                                                           item['task_id'])
+            # if type(defect) != Interstitial:
+            #     poss_deflist = sorted(
+            #         bulk_sc_structure.get_sites_in_sphere(defect_site_coords, 2,
+            #                                               include_index=True), key=lambda x: x[1])
+            #     if not len(poss_deflist):
+            #         raise ValueError(site_err_msg)
+            #     defect_frac_sc_coords = bulk_sc_structure[poss_deflist[0][2]].frac_coords
+            # else:
+            #     poss_deflist = sorted(
+            #         initial_defect_structure.get_sites_in_sphere(defect_site_coords, 2,
+            #                                                      include_index=True), key=lambda x: x[1])
+            #     if not len(poss_deflist):
+            #         raise ValueError(site_err_msg)
+            #     defect_frac_sc_coords = initial_defect_structure[poss_deflist[0][2]].frac_coords
 
             #create list that maps site indices from bulk structure to defect structure
             site_matching_indices = []
@@ -422,6 +418,13 @@ class DefectBuilder(Builder):
                                                                                 include_index=True), key=lambda x: x[1])
                     bulkindex = poss_deflist[0][2]
                     site_matching_indices.append( [int(bulkindex), int(dindex)])
+
+            if len( site_matching_indices) != len( initial_defect_structure) - 1:
+                raise ValueError("Error occured in site_matching routine. Not enough sites exist with "
+                                 "different defect coordinates than {}".format( defect_frac_sc_coords))
+            elif len( set( np.array( site_matching_indices)[:,0])) != len( initial_defect_structure) - 1:
+                raise ValueError("Error occured in site_matching routine. Double counting of bulk sites "
+                                 "occured:{}".format( site_matching_indices))
 
             # assuming Wigner-Seitz radius for sampling radius
             wz = initial_defect_structure.lattice.get_wigner_seitz_cell()
