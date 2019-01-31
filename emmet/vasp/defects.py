@@ -393,6 +393,7 @@ class DefectBuilder(Builder):
                                                [defect.site.specie],
                                                [defect.site.frac_coords],
                                                to_unit_cell=True)
+            struct_for_defect_site.make_supercell( scaling_matrix)
             defect_site_coords = struct_for_defect_site[0].coords
 
             if type(defect) != Interstitial:
@@ -451,10 +452,6 @@ class DefectBuilder(Builder):
 
         defect_entry = self.compatibility.process_entry( defect_entry)
         defect_entry.parameters = jsanitize( defect_entry.parameters, strict=True, allow_bson=True)
-        #hack to make sure that structures are stored as dict, otherwise they become strings in database
-        # for struct_type in ['bulk_sc_structure', 'initial_defect_structure', 'final_defect_structure']:
-        #     if struct_type in defect_entry.parameters.keys() and type(defect_entry.parameters[struct_type]) != Structure:
-        #         defect_entry.parameters[struct_type] = defect_entry.parameters[struct_type].as_dict()
 
         #add additional tags as desired...
         dentry_as_dict = defect_entry.as_dict()
