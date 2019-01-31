@@ -391,7 +391,6 @@ class DefectBuilder(Builder):
             struct_for_defect_site.make_supercell( scaling_matrix)
             # defect_site_coords = struct_for_defect_site[0].coords
             defect_site_for_index_mapping = struct_for_defect_site.sites[0]
-            print('--> Defect site is {}'.format( defect_site_for_index_mapping))
 
             # site_err_msg = "Could not find site index for {} {} (task id {})".format( defect.name,
             #                                                                           defect.charge,
@@ -411,24 +410,35 @@ class DefectBuilder(Builder):
             #         raise ValueError(site_err_msg)
             #     defect_frac_sc_coords = initial_defect_structure[poss_deflist[0][2]].frac_coords
             #
+            # #create list that maps site indices from bulk structure to defect structure
+            # site_matching_indices = []
+            # for dindex, dsite in enumerate(initial_defect_structure.sites):
+            #     # if dsite.distance_and_image_from_frac_coords( defect_frac_sc_coords)[0] > 0.01:  #exclude the defect site from site_matching...
+            #     if dsite.distance( defect_site_for_index_mapping) > 0.1:  #exclude the defect site from site_matching...
+            #         poss_deflist = sorted(bulk_sc_structure.get_sites_in_sphere(dsite.coords, 1,
+            #                                                                     include_index=True), key=lambda x: x[1])
+            #         if not len(poss_deflist):
+            #             raise ValueError("For {} could not match a bulk site to defect structure site at {} {}".format(defect.name,
+            #                                                                                                            index, dsite ))
+            #         bulkindex = poss_deflist[0][2]
+            #         site_matching_indices.append( [int(bulkindex), int(dindex)])
+
+
             #create list that maps site indices from bulk structure to defect structure
             site_matching_indices = []
-            for dindex, dsite in enumerate(initial_defect_structure.sites):
+            for bindex, bsite in enumerate(bulk_sc_structure.sites):
                 # if dsite.distance_and_image_from_frac_coords( defect_frac_sc_coords)[0] > 0.01:  #exclude the defect site from site_matching...
-                if dsite.distance( defect_site_for_index_mapping) > 0.1:  #exclude the defect site from site_matching...
-                    poss_deflist = sorted(bulk_sc_structure.get_sites_in_sphere(dsite.coords, 1,
+                if bsite.distance( defect_site_for_index_mapping) > 0.1:  #exclude the defect site from site_matching...
+                    poss_matchlist = sorted(initial_defect_structure.get_sites_in_sphere(bsite.coords, 1,
                                                                                 include_index=True), key=lambda x: x[1])
-                    if not len(poss_deflist):
-                        raise ValueError("For {} could not match a bulk site to defect structure site at {} {}".format(defect.name,
-                                                                                                                       index, dsite ))
-                    bulkindex = poss_deflist[0][2]
-                    site_matching_indices.append( [int(bulkindex), int(dindex)])
+                    if not len(poss_matchlist):
+                        raise ValueError("For {} could not match a defect site to bulk structure site at {} {}".format(defect.name,
+                                                                                                                       bindex, bsite ))
+                    dindex = poss_matchlist[0][2]
+                    site_matching_indices.append( [int(bindex), int(dindex)])
 
-            if len( site_matching_indices) != len( initial_defect_structure) - 1:
-                raise ValueError("Error occured in site_matching routine. Not enough sites exist with "
-                                 "different defect coordinates than {}".format( defect_frac_sc_coords))
-            elif len( set( np.array( site_matching_indices)[:,0])) != len( initial_defect_structure) - 1:
-                raise ValueError("Error occured in site_matching routine. Double counting of bulk sites "
+            if len( set( np.array( site_matching_indices)[:,0])) != len( set( np.array( site_matching_indices)[:,1])):
+                raise ValueError("Error occured in site_matching routine. Double counting of site matching "
                                  "occured:{}".format( site_matching_indices))
 
             # assuming Wigner-Seitz radius for sampling radius
