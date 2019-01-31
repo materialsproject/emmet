@@ -419,7 +419,7 @@
       "GGA Static Dielectric": 2,
       "GGA+U Static Dielectric": 6
     },
-    "tasks_key": "calcs_reversed.output.force_constants"
+    "tasks_key": "calcs_reversed.0.output.force_constants"
   },
   {
     "materials_key": "internal_strain_tensor",
@@ -427,7 +427,7 @@
       "GGA Static Dielectric": 2,
       "GGA+U Static Dielectric": 6
     },
-    "tasks_key": "calcs_reversed.output.outcar.internal_strain_tensor"
+    "tasks_key": "calcs_reversed.0.output.outcar.internal_strain_tensor"
   },
   {
     "materials_key": "_sbxn",
