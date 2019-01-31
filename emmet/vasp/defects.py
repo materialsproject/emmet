@@ -734,7 +734,6 @@ class DefectThermoBuilder(Builder):
                  defects,
                  defectthermo,
                  query=None,
-                 compatibility=DefectCompatibility(),
                  ltol=0.2,
                  stol=0.3,
                  angle_tol=5,
@@ -747,7 +746,6 @@ class DefectThermoBuilder(Builder):
             defects (Store): Store of defect entries
             defectthermo (Store): Store of DefectPhaseDiagram documents
             query (dict): dictionary to limit materials to be analyzed (note query is for defects Store)
-            compatibility (PymatgenCompatability): Compatability module to ensure defect calculations are compatible
             ltol (float): StructureMatcher tuning parameter for matching tasks to materials
             stol (float): StructureMatcher tuning parameter for matching tasks to materials
             angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
@@ -758,7 +756,6 @@ class DefectThermoBuilder(Builder):
         self.defects = defects
         self.defectthermo = defectthermo
         self.query = query if query else {}
-        self.compatibility = compatibility #TODO: how it this going to be used? For cut off parameters?
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol
@@ -807,8 +804,10 @@ class DefectThermoBuilder(Builder):
         self.logger.info("Found {} new defect entries to consider".format( len(defect_entries)))
 
         #group defect entries based on bulk types and task level metadata info
-        sm = StructureMatcher(primitive_cell=True, scale=False, attempt_supercell=True,
-                              allow_subset=False)
+
+        sm = StructureMatcher(ltol=self.ltol, stol=self.stol, angle_tol=self.angle_tol,
+                              primitive_cell=True, scale=False, attempt_supercell=True,
+                                allow_subset=False)
         grpd_entry_list = []
         for entry_dict in defect_entries:
             #get bulk chemsys and struct
