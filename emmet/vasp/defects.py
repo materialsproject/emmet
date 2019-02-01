@@ -390,7 +390,7 @@ class DefectBuilder(Builder):
             struct_for_defect_site = Structure(defect.bulk_structure.copy().lattice,
                                                [defect.site.specie],
                                                [defect.site.frac_coords],
-                                               to_unit_cell=True)
+                                               to_unit_cell=True, coords_are_cartesian = False)
             struct_for_defect_site.make_supercell( scaling_matrix)
             defect_site_for_index_mapping = struct_for_defect_site.sites[0]
 
