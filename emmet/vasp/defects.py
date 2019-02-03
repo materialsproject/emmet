@@ -240,8 +240,10 @@ class DefectBuilder(Builder):
 
         defect_entry = self.compatibility.process_entry( defect_entry)
         defect_entry.parameters = jsanitize( defect_entry.parameters, strict=True, allow_bson=True)
+        defect_entry_as_dict = defect_entry.as_dict()
+        defect_entry_as_dict['task_id'] = defect_entry_as_dict['entry_id'] #this seemed neccessary for legacy db
 
-        return defect_entry.as_dict()
+        return defect_entry_as_dict
 
     def update_targets(self, items):
         """
