@@ -165,7 +165,6 @@ class DefectBuilder(Builder):
 
             yield [d_task, log_additional_tasks[chemsys]]
 
-
     def process_item(self, item):
         """
         Process a defect item (containing defect, bulk and dielectric information as processed in get_items)
@@ -255,7 +254,6 @@ class DefectBuilder(Builder):
         self.logger.info("Updating {} defect documents".format(len(items)))
 
         self.defects.update(items, update_lu=True, key='entry_id')
-
 
     def ensure_indicies(self):
         """
@@ -643,8 +641,10 @@ class DefectBuilder(Builder):
                         site_matching_indices.append( [bulk_index, defect_index])
                     elif isinstance(defect, Vacancy):
                         poss_defect.append( [bulk_index, bulksites[ bulk_index][:]])
-                    elif isinstance(defect, Interstitial):
-                        poss_defect.append( [defect_index, initsites[ defect_index][:]])
+
+                if isinstance(defect, Interstitial):
+                    site_matching_indices= [ [ind, fc[:]] for ind, fc in enumerate(initsites) \
+                                             if ind not in np.array(site_matching_indices)[:,1]]
 
             elif isinstance(defect, Substitution):
                 for mindist, bulk_index, defect_index in min_dist_with_index:
