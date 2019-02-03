@@ -919,7 +919,10 @@ class DefectThermoBuilder(Builder):
         for ident_entries in distinct_entries_full:
             all_entry_ids_considered.extend([ent['entry_id'] for ent in ident_entries])
             # sort based on which was done most recently
-            lu_list = [[ent['parameters']['last_updated'], ent_ind] for ent_ind, ent in enumerate(ident_entries)]
+            try:
+                lu_list = [[ent['parameters']['task_level_metadata']['defect_task_last_updated'], ent_ind] for ent_ind, ent in enumerate(ident_entries)]
+            except:
+                lu_list = [[ent['parameters']['last_updated'], ent_ind] for ent_ind, ent in enumerate(ident_entries)]
             lu_list.sort(reverse=True)
             recent_entry_dict = ident_entries[ lu_list[0][1]]
 
