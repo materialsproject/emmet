@@ -643,8 +643,8 @@ class DefectBuilder(Builder):
                         poss_defect.append( [bulk_index, bulksites[ bulk_index][:]])
 
                 if isinstance(defect, Interstitial):
-                    site_matching_indices= [ [ind, fc[:]] for ind, fc in enumerate(initsites) \
-                                             if ind not in np.array(site_matching_indices)[:,1]]
+                    poss_defect = [ [ind, fc[:]] for ind, fc in enumerate(initsites) \
+                                    if ind not in np.array(site_matching_indices)[:,1]]
 
             elif isinstance(defect, Substitution):
                 for mindist, bulk_index, defect_index in min_dist_with_index:
