@@ -15,10 +15,10 @@ import numpy as np
 
 from monty.json import MontyDecoder, jsanitize
 
-from pymatgen import Structure, MPRester
+from pymatgen import Structure, MPRester, PeriodicSite
 from pymatgen.analysis.structure_matcher import StructureMatcher, PointDefectComparator
 from pymatgen.electronic_structure.bandstructure import BandStructure
-from pymatgen.analysis.defects.core import Vacancy, Interstitial, DefectEntry
+from pymatgen.analysis.defects.core import Vacancy, Substitution, Interstitial, DefectEntry
 from pymatgen.analysis.defects.thermodynamics import DefectPhaseDiagram
 from pymatgen.analysis.defects.defect_compatibility import DefectCompatibility
 
@@ -47,7 +47,7 @@ class DefectBuilder(Builder):
             tasks (Store): Store of tasks documents
             defects (Store): Store of defect entries with all metadata required for followup decisions on defect thermo
             query (dict): dictionary to limit materials to be analyzed
-            compatibility (PymatgenCompatability): Compatability module to ensure defect calculations are compatible
+            compatibility (DefectCompatability): Compatability module to ensure defect calculations are compatible
             ltol (float): StructureMatcher tuning parameter for matching tasks to materials
             stol (float): StructureMatcher tuning parameter for matching tasks to materials
             angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
@@ -78,7 +78,7 @@ class DefectBuilder(Builder):
         self.logger.info("Defect Builder Started")
 
         self.logger.info("Setting indexes")
-        self.ensure_indicies() #TODO: is this neccessary? Is there a better way to use it?
+        self.ensure_indicies()
 
         # Save timestamp for update operation
         self.time_stamp = datetime.utcnow()
@@ -87,8 +87,6 @@ class DefectBuilder(Builder):
         # defect_store was last updated
         q = dict(self.query)
         q["state"] = "successful"
-        # q.update(self.defects.lu_filter(self.defects)) #This wasnt working because DefectEntries dont have obvious way of doing this? (tried parameters.last_updated but this broke because parameters is a property and last_updated is a key)
-        #TODO: does self.tasks.lu_filter(self.defects) work better?
         if not self.update_all:
             if 'task_id' in q:
                 if isinstance(q['task_id'], int) or isinstance(q['task_id'], float):
@@ -103,113 +101,69 @@ class DefectBuilder(Builder):
         q.update({'transformations.history.@module':
                       {'$in': ['pymatgen.transformations.defect_transformations']}})
         defect_tasks = list(self.tasks.query(criteria=q,
-                                             properties=['task_id', 'transformations', 'input',
-                                                         'task_label', 'last_updated',
-                                                         'output', 'calcs_reversed', 'chemsys']))
+                                             properties=['task_id', 'transformations.history.0.defect.structure']))
         if self.max_items_size and len(defect_tasks) > self.max_items_size:
             defect_tasks = [dtask for dind, dtask in enumerate(defect_tasks) if dind < self.max_items_size]
         task_ids = [dtask['task_id'] for dtask in defect_tasks]
         self.logger.info("Found {} new defect tasks to consider:\n{}".format( len(defect_tasks), task_ids))
-        log_defect_bulk_types = ["-".join(sorted((Structure.from_dict(dt['transformations']['history'][0]['defect']['structure']).symbol_set)))
-                                 for dt in defect_tasks]
-        log_defect_bulk_types = list(set( log_defect_bulk_types))
 
         # get a few other tasks which are needed for defect entries (regardless of when they were last updated):
         # bulk_supercell, dielectric calc, BS calc, HSE-BS calc
         bulksc = {"state": "successful", 'transformations.history.0.@module':
-            {'$in': ['pymatgen.transformations.standard_transformations']},
-                  "chemsys": {"$in": log_defect_bulk_types}}
+            {'$in': ['pymatgen.transformations.standard_transformations']}}
         dielq = {"state": "successful", "input.incar.LEPSILON": True, "input.incar.LPEAD": True}
         HSE_BSq = {"state": "successful", 'calcs_reversed.0.input.incar.LHFCALC': True,
                    'transformations.history.0.@module':
                         {'$nin': ['pymatgen.transformations.defect_transformations',
                                   'pymatgen.transformations.standard_transformations']}}
         # TODO: add smarter capability for getting HSE bandstructure from tasks
-        # TODO: add capability for getting GGA bandstructure from tasks? (Currently uses bulk supercell cbm/vbm when no MPID exists...)
+        # TODO: add capability for getting GGA bandstructure from tasks?
 
-        all_bulk_tasks = list(self.tasks.query(criteria=bulksc, properties=['task_id', 'chemsys', 'last_updated',
-                                                                            'input', 'task_label', 'calcs_reversed']))
-        self.logger.info('Queried {} bulk calculations'.format( len(all_bulk_tasks)))
+        # now load up all defect tasks with relevant information required for process_item step
+        # includes querying bulk, diel and hybrid calcs as you go along.
+        log_additional_tasks = dict() #to minimize number of bulk + diel + hse queries, log by chemsys
 
-        # update queries with chemsys of interest
-        log_additional_tasks = dict()
-        for blktask in all_bulk_tasks:
-            chemsys = blktask['chemsys']
+        needed_defect_properties = ['task_id', 'transformations', 'input',
+                                    'task_label', 'last_updated',
+                                    'output', 'calcs_reversed', 'chemsys']
+        needed_bulk_properties = ['task_id', 'chemsys', 'task_label',
+                                  'last_updated', 'transformations',
+                                  'input', 'output', 'calcs_reversed']
+        for d_task_id in task_ids:
+            d_task = list(self.tasks.query(criteria={"task_id": d_task_id},
+                                           properties=needed_defect_properties))[0]
+            chemsys = "-".join(sorted((Structure.from_dict(
+                d_task['transformations']['history'][0]['defect']['structure']).symbol_set)))
 
-            #grab bulk supercell
             if chemsys not in log_additional_tasks.keys():
-                log_additional_tasks[chemsys] = {'bulksc': [blktask.copy()]}
-            else:
-                log_additional_tasks[chemsys]['bulksc'].append( blktask.copy())
+                #grab all bulk calcs for chemsys
+                q = bulksc.copy()
+                q.update( {"chemsys": chemsys})
+                bulk_tasks = list(self.tasks.query(criteria=q, properties=needed_bulk_properties))
 
-            #grab all diel calcs for chemsys
-            if 'diel' not in log_additional_tasks[chemsys].keys():
+                #grab all diel calcs for chemsys
                 q = dielq.copy()
-                # q.update( {'elements': {'$all': list( sym_set)}})
                 q.update( {"chemsys": chemsys})
                 diel_tasks = list(self.tasks.query(criteria=q,
                                                    properties=['task_id', 'task_label', 'last_updated',
                                                                'input', 'output']))
-                # log_additional_tasks[sym_set]['diel'] = diel_tasks[:]
-                log_additional_tasks[chemsys]['diel'] = diel_tasks[:]
 
-            #grab all hse bs calcs for chemsys
-            if 'hsebs' not in log_additional_tasks[chemsys].keys():
+                #grab all hse bs calcs for chemsys
                 q = HSE_BSq.copy()
-                # q.update( {'elements': {'$all': list( sym_set)}})
                 q.update( {"chemsys": chemsys})
                 hybrid_tasks = list(self.tasks.query(criteria=q,
                                                      properties=['task_id', 'input',
                                                                  'output', 'task_label']))
-                log_additional_tasks[chemsys]['hsebs'] = hybrid_tasks[:]
 
-            self.logger.debug("\t{} has {} bulk loaded {} diel and {} hse"
-                              "".format( chemsys, len(log_additional_tasks[chemsys]),
-                                         len(log_additional_tasks[chemsys]['diel']),
-                                         len(log_additional_tasks[chemsys]['hsebs'])))
+                self.logger.debug("\t{} has {} bulk loaded {} diel and {} hse"
+                                  "".format( chemsys, len(bulk_tasks),
+                                             len(diel_tasks), len(hybrid_tasks)))
 
-        self.logger.info('Populated bulk, diel, and hse bs lists')
+                log_additional_tasks.update({chemsys: {'bulksc': bulk_tasks[:],
+                                                       'diel': diel_tasks[:],
+                                                       'hsebs': hybrid_tasks[:]}})
 
-        #now load up all defect tasks with relevant information required for process_item step
-        temp_log_bs_bulk = dict() #to minimize number of band structure queries to MP, log by element sets
-        for d_task in defect_tasks:
-            chemsys = "-".join(sorted((Structure.from_dict(
-                d_task['transformations']['history'][0]['defect']['structure']).symbol_set)))
-            defect_task = self.load_defect_task( d_task, log_additional_tasks[chemsys])
-            if defect_task is None:
-                continue
-
-            #import additional bulk task information and get mp-id / MP-BS as appropriate
-            bulk_task_id = defect_task['bulk_task']['task_id']
-            if bulk_task_id not in temp_log_bs_bulk.keys():
-                full_bulk_task = list(self.tasks.query(criteria={'task_id': bulk_task_id},
-                                                  properties=['task_id', 'chemsys', 'task_label',
-                                                              'transformations',
-                                                              'input', 'output', 'calcs_reversed']))
-                if len(full_bulk_task) != 1:
-                    raise ValueError("got {} bulk task for id {}?".format( len(full_bulk_task), bulk_task_id))
-                else:
-                    full_bulk_task = full_bulk_task[0]
-
-                bulk_structure = Structure.from_dict(full_bulk_task['input']['structure'])
-                mpid = self.get_bulk_mpid( bulk_structure)
-
-                if mpid:
-                    with MPRester() as mp:
-                        bs = mp.get_bandstructure_by_material_id(mpid)
-                    full_bulk_task['MP-gga-BScalc'] = bs.as_dict().copy()
-                    full_bulk_task['mpid'] = mpid
-                else:
-                    full_bulk_task['MP-gga-BScalc'] = None
-                    full_bulk_task['mpid'] = None
-                temp_log_bs_bulk[bulk_task_id] = full_bulk_task.copy()
-            else:
-                full_bulk_task = temp_log_bs_bulk[bulk_task_id].copy()
-
-            defect_task['bulk_task'] = full_bulk_task.copy()
-
-            if defect_task:
-                yield defect_task
+            yield [d_task, log_additional_tasks[chemsys]]
 
 
     def process_item(self, item):
@@ -222,251 +176,73 @@ class DefectBuilder(Builder):
         Returns:
             dict: a DefectEntry dictionary to update defect database with
         """
+        d_task, chemsys_additional_tasks = item
 
-        if 'bulk_task' not in item:
-            raise ValueError("bulk_task is not in item! Cannot parse this.")
-        elif 'diel_task_meta' not in item:
-            raise ValueError("diel_task_meta is not in item! Cannot parse this.")
+        defect_task = self.find_and_load_bulk_tasks(d_task, chemsys_additional_tasks)
+        if defect_task is None:
+            self.logger.error("Could not determine defect bulk properties for {}".format( d_task['task_id']))
+            return
+        elif 'bulk_task' not in defect_task.keys():
+            self.logger.error("bulk_task is not in item! Cannot parse task id = {}.".format( d_task['task_id']))
+            return
+        elif 'diel_task_meta' not in defect_task.keys():
+            self.logger.error("diel_task_meta is not in item! Cannot parse task id = {}.".format( d_task['task_id']))
+            return
 
         #initialize parameters with dielectric data
-        eps_ionic = item['diel_task_meta']['epsilon_ionic']
-        eps_static = item['diel_task_meta']['epsilon_static']
+        eps_ionic = defect_task['diel_task_meta']['epsilon_ionic']
+        eps_static = defect_task['diel_task_meta']['epsilon_static']
         eps_total = []
         for i in range(3):
             eps_total.append([e[0]+e[1] for e in zip(eps_ionic[i], eps_static[i])])
         parameters = {'epsilon_ionic': eps_ionic, 'epsilon_static':  eps_static,
                       'dielectric': eps_total,
                       'task_level_metadata':
-                          {'diel_taskdb_task_id': item['diel_task_meta']['diel_taskdb_task_id']}}
+                          {'diel_taskdb_task_id': defect_task['diel_task_meta']['diel_taskdb_task_id']}}
 
-        #initialize bulk data in parameters
-        bulk_task = item['bulk_task']
+        parameters = self.get_run_metadata( defect_task, parameters)
+
+        # add bulk data to parameters
+        bulk_task = defect_task['bulk_task']
         bulk_energy = bulk_task['output']['energy']
-        mpid = bulk_task['mpid']
-        bulk_sc_structure = bulk_task['input']['structure']
-        if type(bulk_sc_structure) == dict:
-            bulk_sc_structure = Structure.from_dict(bulk_sc_structure)
+        bulk_sc_structure = Structure.from_dict( bulk_task['input']['structure'])
+        parameters.update( {'bulk_energy': bulk_energy, 'bulk_sc_structure': bulk_sc_structure})
 
-        parameters.update( {'bulk_energy': bulk_energy, 'mpid': mpid,
-                            'bulk_sc_structure': bulk_sc_structure} )
-
-        if 'locpot' in bulk_task['calcs_reversed'][0]['output'].keys():
-            bulklpt = bulk_task['calcs_reversed'][0]['output']['locpot']
-            axes = list(bulklpt.keys())
-            axes.sort()
-            parameters.update( {'bulk_planar_averages': [bulklpt[ax] for ax in axes]} )
-        else:
-            self.logger.error('BULKTYPEcalc: {} (task-id {}) does not '
-                              'have locpot values for parsing'.format( bulk_task['task_label'],
-                                                                       bulk_task['task_id']))
-
-        if 'outcar' in bulk_task['calcs_reversed'][0]['output'].keys():
-            bulkoutcar = bulk_task['calcs_reversed'][0]['output']['outcar']
-            bulk_atomic_site_averages = bulkoutcar['electrostatic_potential']
-            parameters.update( {'bulk_atomic_site_averages': bulk_atomic_site_averages})
-        else:
-            self.logger.error('BULKTYPEcalc: {} (task-id {}) does not '
-                              'have outcar values for parsing'.format( bulk_task['task_label'],
-                                                                       bulk_task['task_id']))
-
-        #load INCAR, KPOINTS, POTCAR and task_id (for both bulk and defect)
-        potcar_summary = {'pot_spec': list([potelt["titel"] for potelt in item['input']['potcar_spec']]),
-                            'pot_labels': list(item['input']['pseudo_potential']['labels'][:]),
-                            'pot_type': item['input']['pseudo_potential']['pot_type'],
-                            'functional': item['input']['pseudo_potential']['functional']} #note bulk has these potcar values also, other wise it would not get to process_items
-        dincar = item["input"]["incar"].copy()
-        dincar_reduced = {k: dincar.get(k, None) for k in ["LHFCALC", "HFSCREEN", "IVDW", "LUSE_VDW",
-                                                           "LDAU", "METAGGA"]} #same as bulk
-        bincar = item["input"]["incar"].copy()
-        d_kpoints = item['calcs_reversed'][0]['input']['kpoints']
-        if type(d_kpoints) != dict:
-            d_kpoints = d_kpoints.as_dict()
-        b_kpoints = bulk_task['calcs_reversed'][0]['input']['kpoints']
-        if type(b_kpoints) != dict:
-            b_kpoints = b_kpoints.as_dict()
-
-        dir_name = item['calcs_reversed'][0]['dir_name']
-        bulk_dir_name = bulk_task['calcs_reversed'][0]['dir_name']
-
-        parameters['task_level_metadata'].update( {'defect_dir_name': dir_name, 'bulk_dir_name': bulk_dir_name,
-                                                   'bulk_taskdb_task_id': bulk_task['task_id'],
-                 'potcar_summary': potcar_summary.copy(), 'incar_calctype_summary': dincar_reduced.copy(),
-                 'defect_incar': dincar.copy(), 'bulk_incar': bincar.copy(),
-                 'defect_kpoints': d_kpoints.copy(), 'bulk_kpoints': b_kpoints.copy(),
-                                                   'defect_task_last_updated': item['last_updated']})
-
-        #load band edge characteristics
-        if mpid:
-            #TODO: NEED to be smarter about use of +U etc in the MP gga band structure calculations...
-            bs = bulk_task['MP-gga-BScalc']
-            if type(bs) == dict:
-                bs = BandStructure.from_dict( bs)
-
-            parameters['task_level_metadata'].update( {'MP_gga_BScalc_data':
-                                                           bs.get_band_gap().copy()} ) #contains gap kpt transition
-            cbm = bs.get_cbm()['energy']
-            vbm = bs.get_vbm()['energy']
-            gap = bs.get_band_gap()['energy']
-        else:
-            cbm = bulk_task['output']['cbm']
-            vbm = bulk_task['output']['vbm']
-            gap = bulk_task['output']['bandgap']
-
-        parameters.update( {"cbm": cbm, "vbm": vbm, "gap": gap})
-
-        if (dincar_reduced['HFSCREEN'] in [None, False, 'False']) and ("hybrid_bs_meta" in item):
-            parameters.update({k: item["hybrid_bs_meta"][k] for k in ['hybrid_cbm', 'hybrid_vbm']})
-            parameters.update({'hybrid_gap': parameters['hybrid_cbm'] - parameters['hybrid_vbm']})
-            parameters['task_level_metadata'].update( {k: item["hybrid_bs_meta"][k] for k in ['hybrid_CBM_task_id',
-                                                                                              'hybrid_VBM_task_id']})
-
-        # get defect object, energy and related structures
-        final_defect_structure = item['output']['structure']
-        if type(final_defect_structure) != Structure:
-            final_defect_structure = Structure.from_dict( final_defect_structure)
-        if type( item['transformations']) != dict:
-            item['transformations'] = item['transformations'].as_dict()
-        defect = item['transformations']['history'][0]['defect']
-        needed_keys = ['@module', '@class', 'structure', 'defect_site', 'charge', 'site_name']
-        defect = MontyDecoder().process_decoded( {k:v for k,v in defect.items() if k in needed_keys})
-
-        scaling_matrix = MontyDecoder().process_decoded( item['transformations']['history'][0]['scaling_matrix'])
-        initial_defect_structure = defect.generate_defect_structure( scaling_matrix)
-        defect_energy = item['output']['energy']
-        try:
-            initial_defect_structure = self.reorder_structure(initial_defect_structure, final_defect_structure)
-            parameters.update({'stdrd_init_to_final_structure_match': True})
-        except:
-            #above can fail in cases of large relaxation. If this is case, then can sometimes rely on input.structure
-            #for initial_defect_structure...this can cause minor problems if the defect required re-running...
-            self.logger.debug("WARNING: had issue with reordering_structure from the defect structure "
-                              "description. Switching to use of input.structure and confirming that "
-                              "species are identical and proceeding...Note that this can possibly cause "
-                              "problems with potential alignment or structure analysis later on")
-
-            initial_defect_structure = item['input']['structure']
-            if type( initial_defect_structure) != Structure:
-                initial_defect_structure = Structure.from_dict(initial_defect_structure)
-            for index, u, v in zip(range(len(initial_defect_structure)),
-                                   initial_defect_structure, final_defect_structure):
-                if u.specie != v.specie:
-                    raise ValueError("Could not match index {}. {} != {}".format(index, u, v))
-
-            parameters.update({'stdrd_init_to_final_structure_match': False})
-
-        parameters.update({'defect_energy': defect_energy,
-                           'final_defect_structure': final_defect_structure,
-                           'initial_defect_structure': initial_defect_structure,
-                           'scaling_matrix': scaling_matrix})
-
-        if 'locpot' in item['calcs_reversed'][0]['output'].keys():
-            #Load information for Freysoldt related parsing
-            deflpt = item['calcs_reversed'][0]['output']['locpot']
-            axes = list(deflpt.keys())
-            axes.sort()
-            defect_planar_averages = [deflpt[ax] for ax in axes]
-            abc = initial_defect_structure.lattice.abc
-            axis_grid = []
-            for ax in range(3):
-                num_pts = len(defect_planar_averages[ax])
-                axis_grid.append([i / num_pts * abc[ax] for i in range(num_pts)])
-            parameters.update({'axis_grid': axis_grid,
-                               'defect_planar_averages': defect_planar_averages})
-        else:
-            self.logger.error('DEFECTTYPEcalc: {} (task-id {}) does not have locpot values for '
-                              'parsing Freysoldt correction'.format(item['task_label'], item['task_id']))
+        parameters = self.get_bulk_gap_data( bulk_task, parameters)
+        parameters = self.get_bulk_chg_correction_metadata( bulk_task, parameters)
 
 
-        if 'outcar' in item['calcs_reversed'][0]['output'].keys():
-            #Load information for Kumagai related parsing
-            defoutcar = item['calcs_reversed'][0]['output']['outcar']
-            defect_atomic_site_averages = defoutcar['electrostatic_potential']
-            bulk_sc_structure = parameters['bulk_sc_structure']
-            if type(bulk_sc_structure) == dict:
-                bulk_sc_structure = Structure.from_dict( bulk_sc_structure)
+        # Add defect data to parameters
+        defect_energy = defect_task['output']['energy']
+        parameters.update({'defect_energy': defect_energy})
 
-            # get defect fractional coordinates and defect index and
-            # confirm site is in initial_defect_structure (if non Vacancy)
-            struct_for_defect_site = Structure(defect.bulk_structure.copy().lattice,
-                                               [defect.site.specie],
-                                               [defect.site.frac_coords],
-                                               to_unit_cell=True, coords_are_cartesian = False)
-            struct_for_defect_site.make_supercell( scaling_matrix)
-            defect_site_for_index_mapping = struct_for_defect_site.sites[0]
+        defect, parameters = self.load_defect_and_structure_data( defect_task, parameters)
 
+        parameters = self.load_defect_chg_correction_metadata( defect, defect_task, parameters)
 
-            defect_index = None
-            if not isinstance(defect, Vacancy):
-                for ind, site in enumerate(initial_defect_structure.sites):
-                    if site.distance( defect_site_for_index_mapping) < 0.01:
-                        defect_index = ind
-                if defect_index is None:
-                    raise ValueError("Could not find site {} {} in initial_defect_structure "
-                                     ":\n{}".format( defect_site_for_index_mapping.frac_coords,
-                                                     defect_site_for_index_mapping.specie,
-                                                     initial_defect_structure))
-
-            #create list that maps site indices from bulk structure to defect structure
-            site_matching_indices = []
-            for bindex, bsite in enumerate(bulk_sc_structure.sites):
-                # if dsite.distance_and_image_from_frac_coords( defect_frac_sc_coords)[0] > 0.01:  #exclude the defect site from site_matching...
-                if bsite.distance( defect_site_for_index_mapping) > 0.1:  #exclude the defect site from site_matching...
-                    poss_matchlist = sorted(initial_defect_structure.get_sites_in_sphere(bsite.coords, 1,
-                                                                                include_index=True), key=lambda x: x[1])
-                    if not len(poss_matchlist):
-                        raise ValueError("For {} could not match a defect site to bulk structure site at {} {}".format(defect.name,
-                                                                                                                       bindex, bsite ))
-                    dindex = poss_matchlist[0][2]
-                    site_matching_indices.append( [int(bindex), int(dindex)])
-
-            if len( set( np.array( site_matching_indices)[:,0])) != len( set( np.array( site_matching_indices)[:,1])):
-                raise ValueError("Error occured in site_matching routine. Double counting of site matching "
-                                 "occured:{}".format( site_matching_indices))
-
-            # assuming Wigner-Seitz radius for sampling radius
-            wz = initial_defect_structure.lattice.get_wigner_seitz_cell()
-            dist = []
-            for facet in wz:
-                midpt = np.mean(np.array(facet), axis=0)
-                dist.append(np.linalg.norm(midpt))
-            sampling_radius = min(dist)
-
-            parameters.update( {'defect_atomic_site_averages': defect_atomic_site_averages,
-                                'site_matching_indices': site_matching_indices,
-                                'sampling_radius': sampling_radius,
-                                'defect_frac_sc_coords': defect_site_for_index_mapping.frac_coords,
-                                'defect_index_sc_coords': defect_index} )
-        else:
-            self.logger.error('DEFECTTYPEcalc: {} (task-id {}) does not have outcar values for '
-                              'parsing Kumagai'.format(item['task_label'], item['task_id']))
-
-        if 'vr_eigenvalue_dict' in item['calcs_reversed'][0]['output'].keys():
-            eigenvalues = item['calcs_reversed'][0]['output']['vr_eigenvalue_dict']['eigenvalues']
-            kpoint_weights = item['calcs_reversed'][0]['output']['vr_eigenvalue_dict']['kpoint_weights']
+        if 'vr_eigenvalue_dict' in defect_task['calcs_reversed'][0]['output'].keys():
+            eigenvalues = defect_task['calcs_reversed'][0]['output']['vr_eigenvalue_dict']['eigenvalues']
+            kpoint_weights = defect_task['calcs_reversed'][0]['output']['vr_eigenvalue_dict']['kpoint_weights']
             parameters.update( {'eigenvalues': eigenvalues,
                                 'kpoint_weights': kpoint_weights} )
         else:
             self.logger.error('DEFECTTYPEcalc: {} (task-id {}) does not have eigenvalue data for parsing '
-                  'bandfilling.'.format(item['task_label'], item['task_id']))
+                  'bandfilling.'.format(defect_task['task_label'], defect_task['task_id']))
 
-        if 'defect' in item['calcs_reversed'][0]['output'].keys():
-            parameters.update( {'defect_ks_delocal_data': item['calcs_reversed'][0]['output']['defect']})
+        if 'defect' in defect_task['calcs_reversed'][0]['output'].keys():
+            parameters.update( {'defect_ks_delocal_data':
+                                    defect_task['calcs_reversed'][0]['output']['defect'].copy()})
         else:
             self.logger.error('DEFECTTYPEcalc: {} (task-id {}) does not have defect data for parsing '
-                  'delocalization.'.format(item['task_label'], item['task_id']))
+                  'delocalization.'.format(defect_task['task_label'], defect_task['task_id']))
 
         defect_entry = DefectEntry( defect, parameters['defect_energy'] - parameters['bulk_energy'],
-                                    corrections = {}, parameters = parameters, entry_id= item['task_id'])
+                                    corrections = {}, parameters = parameters, entry_id= defect_task['task_id'])
 
         defect_entry = self.compatibility.process_entry( defect_entry)
         defect_entry.parameters = jsanitize( defect_entry.parameters, strict=True, allow_bson=True)
 
-        #add additional tags as desired...
-        dentry_as_dict = defect_entry.as_dict()
-        defect_entry.parameters['last_updated'] = datetime.utcnow()
-        dentry_as_dict['task_id'] = item['task_id']
-
-        return dentry_as_dict
+        return defect_entry.as_dict()
 
     def update_targets(self, items):
         """
@@ -475,10 +251,11 @@ class DefectBuilder(Builder):
         Args:
             items ([dict]): a list of defect entries as dictionaries
         """
-
+        items = [item for item in items if item]
         self.logger.info("Updating {} defect documents".format(len(items)))
 
         self.defects.update(items, update_lu=True, key='entry_id')
+
 
     def ensure_indicies(self):
         """
@@ -487,15 +264,13 @@ class DefectBuilder(Builder):
         """
         # Search indicies for tasks
         self.tasks.ensure_index(self.tasks.key, unique=True)
-        # self.tasks.ensure_index(self.tasks.lu_field)
         self.tasks.ensure_index("chemsys")
 
         # Search indicies for defects
         self.defects.ensure_index(self.defects.key, unique=True)
-        # self.defects.ensure_index(self.defects.lu_field)
         self.defects.ensure_index("chemsys")
 
-    def load_defect_task(self, defect_task, additional_tasks):
+    def find_and_load_bulk_tasks(self, defect_task, additional_tasks):
         """
         This takes defect_task and finds bulk task, diel task, and other things as appropriate (example hse_data...)
 
@@ -527,7 +302,6 @@ class DefectBuilder(Builder):
 
         for b_task in bulk_tasks:
             bstruct = Structure.from_dict(b_task['input']['structure'])
-            self.logger.debug("\tTest b_task ({}) keys: {}".format( b_task['task_id'], b_task.keys()))
             if bulk_sm.fit( bstruct, dstruct_withoutdefect):
                 #also match essential INCAR and POTCAR settings
                 bincar = b_task["calcs_reversed"][0]["input"]["incar"]
@@ -663,7 +437,70 @@ class DefectBuilder(Builder):
 
         return out_defect_task
 
-    def get_bulk_mpid(self, bulk_structure):
+    def get_run_metadata(self, item, parameters):
+        bulk_task = item['bulk_task']
+
+        # load INCAR, KPOINTS, POTCAR and task_id (for both bulk and defect)
+        potcar_summary = {'pot_spec': list([potelt["titel"] for potelt in item['input']['potcar_spec']]),
+                          'pot_labels': list(item['input']['pseudo_potential']['labels'][:]),
+                          'pot_type': item['input']['pseudo_potential']['pot_type'],
+                          'functional': item['input']['pseudo_potential'][
+                              'functional']}  # note bulk has these potcar values also, other wise it would not get to process_items
+        dincar = item["input"]["incar"].copy()
+        dincar_reduced = {k: dincar.get(k, None) for k in ["LHFCALC", "HFSCREEN", "IVDW", "LUSE_VDW",
+                                                           "LDAU", "METAGGA"]}  # same as bulk
+        bincar = item["input"]["incar"].copy()
+        d_kpoints = item['calcs_reversed'][0]['input']['kpoints']
+        if type(d_kpoints) != dict:
+            d_kpoints = d_kpoints.as_dict()
+        b_kpoints = bulk_task['calcs_reversed'][0]['input']['kpoints']
+        if type(b_kpoints) != dict:
+            b_kpoints = b_kpoints.as_dict()
+
+        dir_name = item['calcs_reversed'][0]['dir_name']
+        bulk_dir_name = bulk_task['calcs_reversed'][0]['dir_name']
+
+        parameters['task_level_metadata'].update({'defect_dir_name': dir_name,
+                                                  'bulk_dir_name': bulk_dir_name,
+                                                  'bulk_taskdb_task_id': bulk_task['task_id'],
+                                                  'potcar_summary': potcar_summary.copy(),
+                                                  'incar_calctype_summary': dincar_reduced.copy(),
+                                                  'defect_incar': dincar.copy(),
+                                                  'bulk_incar': bincar.copy(),
+                                                  'defect_kpoints': d_kpoints.copy(),
+                                                  'bulk_kpoints': b_kpoints.copy(),
+                                                  'defect_task_last_updated': item['last_updated']})
+
+        if (dincar_reduced['HFSCREEN'] in [None, False, 'False']) and ("hybrid_bs_meta" in item):
+            parameters.update({k: item["hybrid_bs_meta"][k] for k in ['hybrid_cbm', 'hybrid_vbm']})
+            parameters.update({'hybrid_gap': parameters['hybrid_cbm'] - parameters['hybrid_vbm']})
+            parameters['task_level_metadata'].update({k: item["hybrid_bs_meta"][k] for k in ['hybrid_CBM_task_id',
+                                                                                             'hybrid_VBM_task_id']})
+        return parameters
+
+    def get_bulk_chg_correction_metadata(self, bulk_task, parameters):
+        if 'locpot' in bulk_task['calcs_reversed'][0]['output'].keys():
+            bulklpt = bulk_task['calcs_reversed'][0]['output']['locpot']
+            axes = list(bulklpt.keys())
+            axes.sort()
+            parameters.update( {'bulk_planar_averages': [bulklpt[ax] for ax in axes]} )
+        else:
+            self.logger.error('BULKTYPEcalc: {} (task-id {}) does not '
+                              'have locpot values for parsing'.format( bulk_task['task_label'],
+                                                                       bulk_task['task_id']))
+
+        if 'outcar' in bulk_task['calcs_reversed'][0]['output'].keys():
+            bulkoutcar = bulk_task['calcs_reversed'][0]['output']['outcar']
+            bulk_atomic_site_averages = bulkoutcar['electrostatic_potential']
+            parameters.update( {'bulk_atomic_site_averages': bulk_atomic_site_averages})
+        else:
+            self.logger.error('BULKTYPEcalc: {} (task-id {}) does not '
+                              'have outcar values for parsing'.format( bulk_task['task_label'],
+                                                                       bulk_task['task_id']))
+        return parameters
+
+    def get_bulk_gap_data(self, bulk_task, parameters):
+        bulk_structure = parameters['bulk_sc_structure']
         try:
             with MPRester() as mp:
                 # mplist = mp.find_structure(bulk_structure) #had to hack this because this wasnt working??
@@ -697,7 +534,165 @@ class DefectBuilder(Builder):
                               "following list:\n{}".format( mplist))
             mpid = None
 
-        return mpid
+        if mpid and not parameters['task_level_metadata']['incar_calctype_summary']['LHFCALC']:
+            #TODO: NEED to be smarter about use of +U etc in MP gga band structure calculations...
+            with MPRester() as mp:
+                bs = mp.get_bandstructure_by_material_id(mpid)
+
+            parameters['task_level_metadata'].update( {'MP_gga_BScalc_data':
+                                                           bs.get_band_gap().copy()} ) #contains gap kpt transition
+            cbm = bs.get_cbm()['energy']
+            vbm = bs.get_vbm()['energy']
+            gap = bs.get_band_gap()['energy']
+        else:
+            parameters['task_level_metadata'].update( {'MP_gga_BScalc_data': None}) #to signal no MP BS is used
+            cbm = bulk_task['output']['cbm']
+            vbm = bulk_task['output']['vbm']
+            gap = bulk_task['output']['bandgap']
+
+        parameters.update( {'mpid': mpid,
+                            "cbm": cbm, "vbm": vbm, "gap": gap} )
+
+        return parameters
+
+    def load_defect_and_structure_data(self, defect_task, parameters):
+        """
+        This loads defect object from task_dict AND
+        loads initial and final structures (making sure their sites are indexed in an equivalent manner)
+
+        if can't confirm that indices are equivalent, then initial_defect_structure = None
+
+        :param defect_task:
+        :param parameters:
+        :return:
+        """
+
+        if type(defect_task['transformations']) != dict:
+            defect_task['transformations'] = defect_task['transformations'].as_dict()
+
+        defect = defect_task['transformations']['history'][0]['defect']
+        needed_keys = ['@module', '@class', 'structure', 'defect_site', 'charge', 'site_name']
+        defect = MontyDecoder().process_decoded({k: v for k, v in defect.items() if k in needed_keys})
+
+        scaling_matrix = MontyDecoder().process_decoded(defect_task['transformations']['history'][0]['scaling_matrix'])
+
+        final_defect_structure = defect_task['output']['structure']
+        if type(final_defect_structure) != Structure:
+            final_defect_structure = Structure.from_dict(final_defect_structure)
+
+        # build initial_defect_structure from very first ionic relaxation step (ensures they are indexed the same]
+        initial_defect_structure = Structure.from_dict(
+            defect_task['calcs_reversed'][-1]['output']['ionic_steps'][0]['structure'])
+
+        # confirm structure matching
+        ids = defect.generate_defect_structure(scaling_matrix)
+        ids_sm = StructureMatcher( ltol=self.ltol, stol=self.stol, angle_tol=self.angle_tol,
+                                   primitive_cell=False, scale=False, attempt_supercell=False,
+                                   allow_subset=False)
+        if not ids_sm.fit( ids, initial_defect_structure):
+            self.logger.error("Could not match initial-to-final structure. Will not load initial structure.")
+            initial_defect_structure = None
+
+        parameters.update({'final_defect_structure': final_defect_structure,
+                           'initial_defect_structure': initial_defect_structure,
+                           'scaling_matrix': scaling_matrix})
+
+        return defect, parameters
+
+    def load_defect_chg_correction_metadata(self, defect, defect_task, parameters):
+
+        # --> Load information for Freysoldt related parsing
+        if 'locpot' in defect_task['calcs_reversed'][0]['output'].keys():
+            deflpt = defect_task['calcs_reversed'][0]['output']['locpot']
+            axes = list(deflpt.keys())
+            axes.sort()
+            defect_planar_averages = [deflpt[ax] for ax in axes]
+            abc = parameters['initial_defect_structure'].lattice.abc
+            axis_grid = []
+            for ax in range(3):
+                num_pts = len(defect_planar_averages[ax])
+                axis_grid.append([i / num_pts * abc[ax] for i in range(num_pts)])
+            parameters.update({'axis_grid': axis_grid,
+                               'defect_planar_averages': defect_planar_averages})
+        else:
+            self.logger.error('DEFECTTYPEcalc: {} (task-id {}) does not have locpot values for '
+                              'parsing Freysoldt correction'.format(defect_task['task_label'], defect_task['task_id']))
+
+
+        # --> Load information for Kumagai related parsing
+        if 'outcar' in defect_task['calcs_reversed'][0]['output'].keys() and \
+                parameters['initial_defect_structure']:
+
+            defoutcar = defect_task['calcs_reversed'][0]['output']['outcar']
+            defect_atomic_site_averages = defoutcar['electrostatic_potential']
+            bulk_sc_structure = parameters['bulk_sc_structure']
+            initial_defect_structure = parameters['initial_defect_structure']
+
+            bulksites = [site.frac_coords for site in bulk_sc_structure]
+            initsites = [site.frac_coords for site in initial_defect_structure]
+            distmatrix = initial_defect_structure.lattice.get_all_distances(bulksites, initsites) #first index of this list is bulk index
+            min_dist_with_index = [[min(distmatrix[bulk_index]), int(bulk_index),
+                                    int(distmatrix[bulk_index].argmin())] for bulk_index in range(len(distmatrix))] # list of [min dist, bulk ind, defect ind]
+
+            found_defect = False
+            site_matching_indices = []
+            poss_defect = []
+            if isinstance(defect, (Vacancy, Interstitial)):
+                for mindist, bulk_index, defect_index in min_dist_with_index:
+                    if mindist < self.ltol:
+                        site_matching_indices.append( [bulk_index, defect_index])
+                    elif isinstance(defect, Vacancy):
+                        poss_defect.append( [bulk_index, bulksites[ bulk_index][:]])
+                    elif isinstance(defect, Interstitial):
+                        poss_defect.append( [defect_index, initsites[ defect_index][:]])
+
+            elif isinstance(defect, Substitution):
+                for mindist, bulk_index, defect_index in min_dist_with_index:
+                    species_match = bulk_sc_structure[bulk_index].specie == \
+                                    initial_defect_structure[defect_index].specie
+                    if mindist < self.ltol and species_match:
+                        site_matching_indices.append( [bulk_index, defect_index])
+
+                    elif not species_match:
+                        poss_defect.append( [defect_index, initsites[ defect_index][:]])
+
+
+            if len(poss_defect) == 1:
+                found_defect = True
+                defect_index_sc_coords = poss_defect[0][0]
+                defect_frac_sc_coords = poss_defect[0][1]
+            else:
+                self.logger.error("Found {} possible defect sites when matching bulk and "
+                                  "defect structure".format(len(poss_defect)))
+
+
+            if len(set(np.array(site_matching_indices)[:, 0])) != len(set(np.array(site_matching_indices)[:, 1])):
+                self.logger.error("Error occured in site_matching routine. Double counting of site matching "
+                                  "occured:{}\nAbandoning Kumagai parsing.".format(site_matching_indices))
+                found_defect = False
+
+            # assuming Wigner-Seitz radius for sampling radius
+            wz = initial_defect_structure.lattice.get_wigner_seitz_cell()
+            dist = []
+            for facet in wz:
+                midpt = np.mean(np.array(facet), axis=0)
+                dist.append(np.linalg.norm(midpt))
+            sampling_radius = min(dist)
+
+            if found_defect:
+                parameters.update({'defect_atomic_site_averages': defect_atomic_site_averages,
+                                   'site_matching_indices': site_matching_indices,
+                                   'sampling_radius': sampling_radius,
+                                   'defect_frac_sc_coords': defect_frac_sc_coords,
+                                   'defect_index_sc_coords': defect_index_sc_coords})
+            else:
+                self.logger.error("Error in mapping procedure for bulk to initial defect structure.")
+
+        else:
+            self.logger.error('DEFECTTYPEcalc: {} (task-id {}) does not have outcar values for '
+                              'parsing Kumagai'.format(defect_task['task_label'], defect_task['task_id']))
+
+        return parameters
 
     def reorder_structure( self, s1, s2):
         """
