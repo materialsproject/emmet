@@ -1,0 +1,15 @@
+#!/bin/bash -l
+#SBATCH --qos=xfer
+#SBATCH --time=48:00:00
+#SBATCH --job-name=targz_to_htar
+#SBATCH --licenses=SCRATCH
+#SBATCH --mail-user=phuck@lbl.gov
+#SBATCH --mail-type=ALL
+#SBATCH --output=targz_to_htar-%j.out
+#SBATCH --error=targz_to_htar-%j.error
+#SBATCH --mem=10GB
+
+targz_to_htar=$HOME/mp_prod/codes/emmet/emmet/scripts/targz_to_htar.sh
+indir=/project/projectdirs/matgen/garden/hpss_to_mpdrive/raw/
+year=2019
+$targz_to_htar $indir $year
