@@ -28,9 +28,11 @@ from oauth2client import file, client, tools
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from tqdm import tqdm
 
-if 'FW_CONFIG_FILE' not in os.environ:
-    print('Please set FW_CONFIG_FILE!')
-    sys.exit(0)
+def get_lpad():
+    if 'FW_CONFIG_FILE' not in os.environ:
+        print('Please set FW_CONFIG_FILE!')
+        sys.exit(0)
+    return LaunchPad.auto_load()
 
 exclude = {'about.remarks': {'$nin': ['DEPRECATED', 'deprecated']}}
 skip_labels = ['He', 'He0+', 'Ar', 'Ar0+', 'Ne', 'Ne0+', 'D', 'D+']
@@ -167,7 +169,7 @@ def get_vasp_dirs(scan_path, base_path, max_dirs, insert):
 def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
     name = multiprocessing.current_process().name
     print(name, 'starting')
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
     target = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
     print(name, 'connected to target db with', target.collection.count(), 'tasks')
 
@@ -253,7 +255,7 @@ def copy(target_db_file, tag, insert, copy_snls):
     if not insert:
         print('DRY RUN: add --insert flag to actually add tasks to production')
 
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
     source = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
     print('connected to source db with', source.collection.count(), 'tasks')
 
@@ -448,7 +450,7 @@ def copy(target_db_file, tag, insert, copy_snls):
 @click.option('--add_tasks_db', type=click.Path(exists=True), help='config file for additional tasks collection to scan')
 def find(email, add_snlcolls, add_tasks_db):
     """checks status of calculations by submitter or author email in SNLs"""
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
 
     snl_collections = [lpad.db.snls]
     if add_snlcolls is not None:
@@ -506,7 +508,7 @@ def find(email, add_snlcolls, add_tasks_db):
 @click.option('--insert/--no-insert', default=False, help='actually execute workflow addition')
 def bandstructure(target_db_file, insert):
     """add workflows for bandstructure based on materials collection"""
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
     source = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
     print('connected to source db with', source.collection.count(), 'tasks')
     target = VaspCalcDb.from_db_file(target_db_file, admin=True)
@@ -564,7 +566,7 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
     if not insert:
         print('DRY RUN! Add --insert flag to actually add workflows')
 
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
 
     snl_collections = [lpad.db.snls]
     if add_snlcolls is not None:
@@ -980,7 +982,7 @@ class MyMongoFormatter(logging.Formatter):
 def report(tag, in_progress, to_csv):
     """generate a report of calculations status"""
 
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
     states = Firework.STATE_RANKS
     states = sorted(states, key=states.get)
 
@@ -1108,7 +1110,7 @@ def add_snls(tag, input_structures, add_snlcolls, insert):
             meta = yaml.safe_load(f)
     meta['authors'] = [Author.parse_author(a) for a in meta['authors']]
 
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
     snl_collections = [lpad.db.snls]
     if add_snlcolls is not None:
         for snl_db_config in yaml.load_all(open(add_snlcolls, 'r')):
@@ -1228,7 +1230,7 @@ def parse(base_path, add_snlcolls, insert, make_snls, nproc, max_dirs):
     if not insert:
         print('DRY RUN: add --insert flag to actually insert tasks')
 
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
     target = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
     print('connected to target db with', target.collection.count(), 'tasks')
     base_path = os.path.join(base_path, '')
