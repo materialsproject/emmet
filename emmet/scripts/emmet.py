@@ -1,4 +1,4 @@
-import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, itertools, multiprocessing, math
+import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, itertools, multiprocessing, math, io, requests
 from shutil import copyfile, rmtree
 from glob import glob
 from fnmatch import fnmatch
@@ -25,7 +25,8 @@ from prettytable import PrettyTable
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
-from googleapiclient.http import MediaFileUpload
+from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
+from tqdm import tqdm
 
 if 'FW_CONFIG_FILE' not in os.environ:
     print('Please set FW_CONFIG_FILE!')
@@ -40,6 +41,8 @@ aggregation_keys = ['reduced_cell_formula', 'formula_pretty']
 SCOPES = 'https://www.googleapis.com/auth/drive'
 current_year = int(datetime.today().year)
 year_tags = ['mp_{}'.format(y) for y in range(2018, current_year+1)]
+NOMAD_OUTDIR = '/nomad/nomadlab/mpraw'
+NOMAD_REPO = 'http://backend-repository-nomad.esc:8111/repo/search/calculations_oldformat?query={}'
 
 def aggregate_by_formula(coll, q, key=None):
     query = {'$and': [q, exclude]}
@@ -1283,6 +1286,17 @@ def upload_archive(path, name, service, parent=None):
             print("Uploaded %d%%." % int(status.progress() * 100))
     print("Upload Complete!")
 
+def download_file(service, file_id):
+    request = service.files().get_media(fileId=file_id)
+    fh = io.BytesIO()
+    downloader = MediaIoBaseDownload(fh, request)
+    done = False
+    with tqdm(total=100) as pbar:
+        while done is False:
+            status, done = downloader.next_chunk()
+            pbar.update(int(status.progress() * 100))
+    return fh.getvalue()
+
 @cli.command()
 @click.argument('target_db_file', type=click.Path(exists=True))
 @click.option('--block-filter', '-f', help='block filter substring (e.g. block_2017-)')
@@ -1324,6 +1338,28 @@ def gdrive(target_db_file, block_filter):
                         launcher_name = launcher['name'].replace('.tar.gz', '')
                         full_launcher_path.append(launcher_name)
                         launcher_paths.append(os.path.join(*full_launcher_path))
+
+			# TODO NoMaD integration
+			#nomad_query='repository_main_file_uri="{}"'.format(launcher_name)
+			##nomad_query='alltarget repository_uri.split="{}"'.format(','.join(full_launcher_path)) # TODO
+			#print(nomad_query)
+			#resp = requests.get(NOMAD_REPO.format(nomad_query)).json()
+			#if 'meta' in resp:
+			#    path = os.path.join(*full_launcher_path) + '.tar.gz'
+			#    if resp['meta']['total_hits'] < 1: # calculation not found in NoMaD repo
+			#	print('Retrieve', path, '...')
+			#	if not os.path.exists(path):
+			#	    os.makedirs(path)
+			#	    #content = download_file(service, launcher['id'])
+			#	    #with open(path, 'wb') as f:
+			#	    #    f.write(content)
+			#	    print('... DONE.')
+			#    else:
+			#	print(path, 'found in NoMaD repo:')
+			#	for d in resp['data']:
+			#	    print('\t', d['attributes']['repository_uri'])
+			#else:
+			#    raise Exception(resp['errors'][0]['detail'])
                     else:
                         full_launcher_path.append(launcher['name'])
                         recurse(service, launcher['id'])
@@ -1334,6 +1370,9 @@ def gdrive(target_db_file, block_filter):
             if page_token is None:
                 break # done with launchers in current block
 
+
+    # TODO older launcher directories don't have prefix
+    # TODO also cover non-b/l hierarchy
     block_page_token = None
     block_query = "'{}' in parents".format(garden_id) if block_filter is None \
         else "'{}' in parents and name contains '{}'".format(garden_id, block_filter)
