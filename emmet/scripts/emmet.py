@@ -8,7 +8,7 @@ from pymongo import MongoClient
 from pymongo.errors import CursorNotFound
 from pymongo.collection import ReturnDocument
 from pymongo.errors import DocumentTooLarge
-from pymatgen.analysis.structure_prediction.volume_predictor import DLSVolumePredictor
+#from pymatgen.analysis.structure_prediction.volume_predictor import DLSVolumePredictor
 from pymatgen import Structure
 from pymatgen.alchemy.materials import TransformedStructure
 from pymatgen.util.provenance import StructureNL, Author
@@ -597,7 +597,7 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
         print(tasks_coll.count(), 'tasks in', full_name)
 
     NO_POTCARS = ['Po', 'At', 'Rn', 'Fr', 'Ra', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr']
-    vp = DLSVolumePredictor()
+    #vp = DLSVolumePredictor()
 
     tags = OrderedDict()
     if tag is None:
