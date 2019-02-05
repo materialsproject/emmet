@@ -696,47 +696,6 @@ class DefectBuilder(Builder):
 
         return parameters
 
-    def reorder_structure( self, s1, s2):
-        """
-        This takes s1 and reorders the structure in same site-indexed fashion as s2
-
-        If substantial relaxation occurs this might cause errors...
-
-        returns: reordered s1 structure
-        """
-        if s1.composition != s2.composition:
-            raise ValueError('Compositions are not equivalent: {} vs. {}'.format( s1.composition, s2.composition))
-
-        list_matcher = []
-        for s2ind, s2site in enumerate(s2):
-            match_this_site = [[s2site.distance_and_image_from_frac_coords( s1site.frac_coords)[0],
-                               s1ind] for s1ind, s1site in enumerate( s1)]
-            match_this_site.sort() #put closest site first
-            for match in match_this_site:
-                #take first site matching that matches specie
-                if s1[match[1]].specie == s2site.specie:
-                    list_matcher.append( [ match[1], s2ind])
-                    break
-
-        s1_matcher_set = list(np.array( list_matcher)[:, 0])
-        num_unique_s1_sites_matched = len(set(s1_matcher_set))
-        s2_matcher_set = list(np.array( list_matcher)[:, 1])
-        num_unique_s2_sites_matched = len(set(s2_matcher_set))
-
-        if (len(s1) != num_unique_s1_sites_matched) or \
-            (len(s2) != num_unique_s2_sites_matched):
-            raise ValueError("Number of unique sites differs in defect site matching routine." \
-                  "\n\ts1 {} vs. {}\n\ts2 {} vs. {}".format(len(s1), num_unique_s1_sites_matched,
-                                                            len(s2), num_unique_s2_sites_matched))
-
-        new_species_list = [s1[ind].specie for ind in s1_matcher_set]
-        new_coords_list = [s1[ind].frac_coords for ind in s1_matcher_set]
-        new_struct = Structure( s1.lattice, new_species_list, new_coords_list,
-                               validate_proximity=True, to_unit_cell=True,
-                               coords_are_cartesian=False)
-
-        return new_struct
-
 
 class DefectThermoBuilder(Builder):
     def __init__(self,
