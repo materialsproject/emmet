@@ -1,6 +1,6 @@
 #!/bin/bash
 
-input=$PWD/launcher_paths.txt
+input=$2
 [[ ! -e $input ]] && echo $input missing && exit
 dirs=`awk -F/ '{print $1}' $input | sort -u`
 
@@ -35,14 +35,15 @@ for dir in $dirs; do
   done
   rm -v ${dir}.files ${dir}.rclone_lsf
 
-  [[ ! -e $missing_paths ]] && echo nothing missing on GDrive!? && exit #continue
+  [[ ! -e $missing_paths ]] && echo nothing missing on GDrive!? && continue
   wc -l $missing_paths
 
-  #htar -xvf garden/${dir}.tar -L $missing_paths
-  #[[ $? -ne 0 ]] && echo missing paths not found in HPSS!? && exit #continue
+  htar -xvf garden/${dir}.tar `cat $missing_paths | tr '\n' ' '`
   ls -ltrhd ${dir}
+  [[ $? -ne 0 ]] && echo missing paths not found in HPSS!? && continue
 
   for f in `cat $missing_paths`; do
+    [[ ! -e $f ]] && echo $f not found in HPSS!? && continue
     launch_dir_tar="${stage_dir}/${f}.tar.gz"
     echo $launch_dir_tar ...
     mkdir -p `dirname $launch_dir_tar`
@@ -58,4 +59,5 @@ for dir in $dirs; do
   rm -v $missing_paths
 
   rclone -v copy $stage_dir/$dir mp-drive:calculations/garden/$dir
+  find $dir -type d -empty -print -delete
 done

@@ -1,4 +1,4 @@
-import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, itertools, multiprocessing, math
+import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, itertools, multiprocessing, math, io, requests
 from shutil import copyfile, rmtree
 from glob import glob
 from fnmatch import fnmatch
@@ -8,7 +8,7 @@ from pymongo import MongoClient
 from pymongo.errors import CursorNotFound
 from pymongo.collection import ReturnDocument
 from pymongo.errors import DocumentTooLarge
-from pymatgen.analysis.structure_prediction.volume_predictor import DLSVolumePredictor
+#from pymatgen.analysis.structure_prediction.volume_predictor import DLSVolumePredictor
 from pymatgen import Structure
 from pymatgen.alchemy.materials import TransformedStructure
 from pymatgen.util.provenance import StructureNL, Author
@@ -25,11 +25,14 @@ from prettytable import PrettyTable
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
-from googleapiclient.http import MediaFileUpload
+from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
+from tqdm import tqdm
 
-if 'FW_CONFIG_FILE' not in os.environ:
-    print('Please set FW_CONFIG_FILE!')
-    sys.exit(0)
+def get_lpad():
+    if 'FW_CONFIG_FILE' not in os.environ:
+        print('Please set FW_CONFIG_FILE!')
+        sys.exit(0)
+    return LaunchPad.auto_load()
 
 exclude = {'about.remarks': {'$nin': ['DEPRECATED', 'deprecated']}}
 skip_labels = ['He', 'He0+', 'Ar', 'Ar0+', 'Ne', 'Ne0+', 'D', 'D+']
@@ -40,6 +43,8 @@ aggregation_keys = ['reduced_cell_formula', 'formula_pretty']
 SCOPES = 'https://www.googleapis.com/auth/drive'
 current_year = int(datetime.today().year)
 year_tags = ['mp_{}'.format(y) for y in range(2018, current_year+1)]
+NOMAD_OUTDIR = '/nomad/nomadlab/mpraw'
+NOMAD_REPO = 'http://backend-repository-nomad.esc:8111/repo/search/calculations_oldformat?query={}'
 
 def aggregate_by_formula(coll, q, key=None):
     query = {'$and': [q, exclude]}
@@ -164,7 +169,7 @@ def get_vasp_dirs(scan_path, base_path, max_dirs, insert):
 def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
     name = multiprocessing.current_process().name
     print(name, 'starting')
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
     target = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
     print(name, 'connected to target db with', target.collection.count(), 'tasks')
 
@@ -250,7 +255,7 @@ def copy(target_db_file, tag, insert, copy_snls):
     if not insert:
         print('DRY RUN: add --insert flag to actually add tasks to production')
 
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
     source = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
     print('connected to source db with', source.collection.count(), 'tasks')
 
@@ -445,7 +450,7 @@ def copy(target_db_file, tag, insert, copy_snls):
 @click.option('--add_tasks_db', type=click.Path(exists=True), help='config file for additional tasks collection to scan')
 def find(email, add_snlcolls, add_tasks_db):
     """checks status of calculations by submitter or author email in SNLs"""
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
 
     snl_collections = [lpad.db.snls]
     if add_snlcolls is not None:
@@ -503,7 +508,7 @@ def find(email, add_snlcolls, add_tasks_db):
 @click.option('--insert/--no-insert', default=False, help='actually execute workflow addition')
 def bandstructure(target_db_file, insert):
     """add workflows for bandstructure based on materials collection"""
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
     source = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
     print('connected to source db with', source.collection.count(), 'tasks')
     target = VaspCalcDb.from_db_file(target_db_file, admin=True)
@@ -561,7 +566,7 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
     if not insert:
         print('DRY RUN! Add --insert flag to actually add workflows')
 
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
 
     snl_collections = [lpad.db.snls]
     if add_snlcolls is not None:
@@ -594,7 +599,7 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
         print(tasks_coll.count(), 'tasks in', full_name)
 
     NO_POTCARS = ['Po', 'At', 'Rn', 'Fr', 'Ra', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr']
-    vp = DLSVolumePredictor()
+    #vp = DLSVolumePredictor()
 
     tags = OrderedDict()
     if tag is None:
@@ -977,7 +982,7 @@ class MyMongoFormatter(logging.Formatter):
 def report(tag, in_progress, to_csv):
     """generate a report of calculations status"""
 
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
     states = Firework.STATE_RANKS
     states = sorted(states, key=states.get)
 
@@ -1105,7 +1110,7 @@ def add_snls(tag, input_structures, add_snlcolls, insert):
             meta = yaml.safe_load(f)
     meta['authors'] = [Author.parse_author(a) for a in meta['authors']]
 
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
     snl_collections = [lpad.db.snls]
     if add_snlcolls is not None:
         for snl_db_config in yaml.load_all(open(add_snlcolls, 'r')):
@@ -1225,7 +1230,7 @@ def parse(base_path, add_snlcolls, insert, make_snls, nproc, max_dirs):
     if not insert:
         print('DRY RUN: add --insert flag to actually insert tasks')
 
-    lpad = LaunchPad.auto_load()
+    lpad = get_lpad()
     target = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
     print('connected to target db with', target.collection.count(), 'tasks')
     base_path = os.path.join(base_path, '')
@@ -1283,6 +1288,17 @@ def upload_archive(path, name, service, parent=None):
             print("Uploaded %d%%." % int(status.progress() * 100))
     print("Upload Complete!")
 
+def download_file(service, file_id):
+    request = service.files().get_media(fileId=file_id)
+    fh = io.BytesIO()
+    downloader = MediaIoBaseDownload(fh, request)
+    done = False
+    with tqdm(total=100) as pbar:
+        while done is False:
+            status, done = downloader.next_chunk()
+            pbar.update(int(status.progress() * 100))
+    return fh.getvalue()
+
 @cli.command()
 @click.argument('target_db_file', type=click.Path(exists=True))
 @click.option('--block-filter', '-f', help='block filter substring (e.g. block_2017-)')
@@ -1292,10 +1308,13 @@ def gdrive(target_db_file, block_filter):
     print('connected to target db with', target.collection.count(), 'tasks')
     print(target.db.materials.count(), 'materials')
 
-    store = file.Storage('token.json')
-    creds = store.get()
+    creds, store = None, None
+    if os.path.exists('token.json'):
+        store = file.Storage('token.json')
+        creds = store.get()
     if not creds or creds.invalid:
         flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
+        store = file.Storage('token.json')
         creds = tools.run_flow(flow, store)
     service = build('drive', 'v3', http=creds.authorize(Http()))
     garden_id = os.environ.get('MPDRIVE_GARDEN_ID')
@@ -1321,6 +1340,28 @@ def gdrive(target_db_file, block_filter):
                         launcher_name = launcher['name'].replace('.tar.gz', '')
                         full_launcher_path.append(launcher_name)
                         launcher_paths.append(os.path.join(*full_launcher_path))
+
+			# TODO NoMaD integration
+			#nomad_query='repository_main_file_uri="{}"'.format(launcher_name)
+			##nomad_query='alltarget repository_uri.split="{}"'.format(','.join(full_launcher_path)) # TODO
+			#print(nomad_query)
+			#resp = requests.get(NOMAD_REPO.format(nomad_query)).json()
+			#if 'meta' in resp:
+			#    path = os.path.join(*full_launcher_path) + '.tar.gz'
+			#    if resp['meta']['total_hits'] < 1: # calculation not found in NoMaD repo
+			#	print('Retrieve', path, '...')
+			#	if not os.path.exists(path):
+			#	    os.makedirs(path)
+			#	    #content = download_file(service, launcher['id'])
+			#	    #with open(path, 'wb') as f:
+			#	    #    f.write(content)
+			#	    print('... DONE.')
+			#    else:
+			#	print(path, 'found in NoMaD repo:')
+			#	for d in resp['data']:
+			#	    print('\t', d['attributes']['repository_uri'])
+			#else:
+			#    raise Exception(resp['errors'][0]['detail'])
                     else:
                         full_launcher_path.append(launcher['name'])
                         recurse(service, launcher['id'])
@@ -1331,6 +1372,9 @@ def gdrive(target_db_file, block_filter):
             if page_token is None:
                 break # done with launchers in current block
 
+
+    # TODO older launcher directories don't have prefix
+    # TODO also cover non-b/l hierarchy
     block_page_token = None
     block_query = "'{}' in parents".format(garden_id) if block_filter is None \
         else "'{}' in parents and name contains '{}'".format(garden_id, block_filter)

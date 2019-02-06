@@ -18,6 +18,8 @@ while read block_tar_gz; do
   [[ -d garden_cori/$block ]] && mv -vi garden_cori/$block .
   [[ -d garden_JulAug2018/$block ]] && mv -vi garden_JulAug2018/$block .
   [[ -d garden_Jul2018/$block ]] && mv -vi garden_Jul2018/$block .
+  [[ -d garden_Aug14-16_2018/$block ]] && mv -vi garden_Aug14-16_2018/$block .
+  [[ -d garden_Aug2018/$block ]] && mv -vi garden_Aug2018/$block .
   parallel -0m 'chmod -v g+rw {}' :::: <(find $block -not -perm -660 -print0)
   [[ $? -ne 0 ]] && echo 'error in chmod' && exit
   find ${block} -type f -not -name "*.gz" -exec pigz -9v {} \;
