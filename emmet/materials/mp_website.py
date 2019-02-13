@@ -70,7 +70,7 @@ class MPBuilder(Builder):
         self.website = website
         self.aux = aux if aux else []
         self.query = query
-        self.website.validator = JSONSchemaValidator(loadfn(MPBUILDER_SCHEMA))
+        #self.website.validator = JSONSchemaValidator(loadfn(MPBUILDER_SCHEMA))
         self._settings = loadfn(MPBUILDER_SETTINGS)
 
         super().__init__(sources=[materials] + aux, targets=[website], **kwargs)
