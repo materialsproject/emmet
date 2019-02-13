@@ -409,7 +409,7 @@ def add_xrd(mat, new_style_mat):
         xrd_pattern = DiffractionPattern.from_dict(doc["pattern"])
         el_doc["pattern"] = [[
             float(intensity),
-            [int(x) for x in literal_eval(list(hkls.keys())[0])], two_theta,
+            hkls[0]["hkl"], two_theta,
             float(d_hkl)
         ] for two_theta, intensity, hkls, d_hkl in zip(
             xrd_pattern.x, xrd_pattern.y, xrd_pattern.hkls, xrd_pattern.d_hkls)
