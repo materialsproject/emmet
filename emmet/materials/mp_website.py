@@ -500,8 +500,7 @@ def add_meta(mat):
 
 
 def sandbox_props(mat, new_style_mat, sandbox_props, default_sandboxes=None):
-    mat["sbxn"] = new_style_mat.get("_sbxn",
-                                    ["core", "jcesr", "vw", "building33"])
+    mat["sbxn"] = new_style_mat.get("_sbxn", default_sandboxes)
     mat["sbxd"] = []
 
     for sbx in mat["sbxn"]:
