@@ -1,3 +1,4 @@
+import itertools
 import os.path
 
 from monty.serialization import loadfn
@@ -32,3 +33,9 @@ def scrub_class_and_module(doc):
         return [scrub_class_and_module(k) for k in doc]
     else:
         return doc
+
+
+def get_chemsys_space(chemsys):
+    elements = chemsys.split("-")
+    combos = itertools.chain.from_iterable(itertools.combinations(elements, i) for i in range(1, len(elements) + 1))
+    return list("-".join(sorted(combo)) for combo in combos)

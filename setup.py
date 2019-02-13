@@ -24,6 +24,7 @@ if __name__ == "__main__":
             'atomate', 'pymatgen>=2018.4.20','maggma','monty',
             'six', 'pydash', 'tqdm', 'matminer',
             'prettyplotlib', 'pybtex', 'networkx', 'sumo',
+            'robocrys'
         ],
         classifiers=["Programming Language :: Python :: 3",
                      "Programming Language :: Python :: 3.6",
