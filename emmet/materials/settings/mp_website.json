@@ -73,8 +73,8 @@
     "elasticity.universal_anisotropy": "elasticity.universal_anisotropy",
     "elasticity.elastic_tensor_original": "elasticity.elastic_tensor_original",
     "elasticity.compliance_tensor": "elasticity.compliance_tensor",
-    "elasticity.third_order": "elasticity.third_order",
     "elasticity.warnings": "elasticity.warnings",
+    "elasticity_third_order": "elasticity.third_order",
     "bond_valence": "bond_valence",
     "unit_cell_formula": "composition"
   },
