@@ -97,4 +97,9 @@ class VisualizationBuilder(MapBuilder):
             hide_incomplete_bonds=self.settings["hide_incomplete_bonds"],
         )
 
-        return {"scene": scene, "legend": legend, "settings": self.settings}
+        return {
+            "scene": scene,
+            "legend": legend,
+            "settings": self.settings,
+            "structure": item["structure"],
+        }
