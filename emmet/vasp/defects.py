@@ -878,15 +878,25 @@ class DefectThermoBuilder(Builder):
         for ident_entries in distinct_entries_full:
             all_entry_ids_considered.extend([ent['entry_id'] for ent in ident_entries])
             # sort based on which was done most recently
-            try:
-                lu_list = [[ent['parameters']['task_level_metadata']['defect_task_last_updated'], ent_ind] for ent_ind, ent in enumerate(ident_entries)]
-            except:
-                lu_list = [[ent['parameters']['last_updated'], ent_ind] for ent_ind, ent in enumerate(ident_entries)]
+            lu_list = []
+            for ent_ind, ent in ident_entries:
+                try:
+                    lu = ent['parameters']['task_level_metadata']['defect_task_last_updated']
+                except:
+                    lu = ent['parameters']['last_updated']
+                if isinstance( lu, dict):
+                    lu = MontyDecoder().process_decoded( lu)
+                lu_list.append( [lu, ent_ind])
+            # try:
+            #     lu_list = [[ent['parameters']['task_level_metadata']['defect_task_last_updated'], ent_ind] for ent_ind, ent in enumerate(ident_entries)
+            #                if isinstance(ent['parameters']['task_level_metadata']['defect_task_last_updated'], dict)]
+            # except:
+            #     lu_list = [[ent['parameters']['last_updated'], ent_ind] for ent_ind, ent in enumerate(ident_entries)]
             try:
                 lu_list.sort(reverse=True)
             except:
                 for_print_lu_list = [[lu, ident_entries[ent_ind]['entry_id']] for lu, ent_ind in lu_list]
-                raise ValueError("Error with last_Updated sorting of list:\n{}".format( for_print_lu_list))
+                raise ValueError("Error with last_updated sorting of list:\n{}".format( for_print_lu_list))
             recent_entry_dict = ident_entries[ lu_list[0][1]]
 
             new_entry = DefectEntry.from_dict( {k:v for k,v in recent_entry_dict.items() if k in needed_entry_keys})
