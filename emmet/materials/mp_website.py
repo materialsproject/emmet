@@ -33,8 +33,6 @@ from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 from pymatgen.util.provenance import StructureNL
 from pymatgen import __version__ as pymatgen_version
 
-from mp_dash_components.converters.structure import StructureIntermediateFormat
-from mp_dash_components import __version__ as mp_dash_components_version
 
 # Silly fix to keep pybtex from spamming warnings
 
