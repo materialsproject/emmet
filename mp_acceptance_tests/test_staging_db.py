@@ -10,8 +10,6 @@ from monty.serialization import loadfn
 from pymatgen import MPRester
 import pymongo
 
-from emmet.common.utils import get_chemsys_space
-
 TESTFILES_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
