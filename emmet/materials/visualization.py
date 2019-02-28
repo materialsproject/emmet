@@ -98,7 +98,7 @@ class VisualizationBuilder(MapBuilder):
         )
 
         return {
-            "scene": scene,
+            "scene": scene.to_json(),
             "legend": legend,
             "settings": self.settings,
             "structure": item["structure"],
