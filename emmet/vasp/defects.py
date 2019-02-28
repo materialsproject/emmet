@@ -879,7 +879,7 @@ class DefectThermoBuilder(Builder):
             all_entry_ids_considered.extend([ent['entry_id'] for ent in ident_entries])
             # sort based on which was done most recently
             lu_list = []
-            for ent_ind, ent in ident_entries:
+            for ent_ind, ent in enumerate(ident_entries):
                 try:
                     lu = ent['parameters']['task_level_metadata']['defect_task_last_updated']
                 except:
