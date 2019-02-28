@@ -884,14 +884,9 @@ class DefectThermoBuilder(Builder):
                     lu = ent['parameters']['task_level_metadata']['defect_task_last_updated']
                 except:
                     lu = ent['parameters']['last_updated']
-                if isinstance( lu, dict):
+                if isinstance( lu, dict): #deal with case when datetime objects were not properly loaded
                     lu = MontyDecoder().process_decoded( lu)
                 lu_list.append( [lu, ent_ind])
-            # try:
-            #     lu_list = [[ent['parameters']['task_level_metadata']['defect_task_last_updated'], ent_ind] for ent_ind, ent in enumerate(ident_entries)
-            #                if isinstance(ent['parameters']['task_level_metadata']['defect_task_last_updated'], dict)]
-            # except:
-            #     lu_list = [[ent['parameters']['last_updated'], ent_ind] for ent_ind, ent in enumerate(ident_entries)]
             try:
                 lu_list.sort(reverse=True)
             except:
