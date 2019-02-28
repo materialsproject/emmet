@@ -32,13 +32,16 @@ optional_fields = set(["elasticity", "piezo", "diel"])
 required_fields = supported_fields - optional_fields
 
 
-@unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", "Skipping this test on Travis CI.")
 class TestMaterialsDb(unittest.TestCase):
     mats_stag: pymongo.collection.Collection
     mats_prod: pymongo.collection.Collection
 
     @classmethod
     def setUpClass(cls):
+        # `nosetests` does not see class decorators
+        # https://github.com/nose-devs/nose/issues/946
+        if "TRAVIS" in os.environ and os.environ["TRAVIS"] == "true":
+            raise unittest.SkipTest("Skipping this test on Travis CI.")
         cls.client = Client()
         cls.db_stag = cls.client.db("ro:staging/mp_core")
         cls.db_prod = cls.client.db("ro:prod/mp_emmet_prod")
