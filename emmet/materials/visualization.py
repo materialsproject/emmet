@@ -104,5 +104,5 @@ class VisualizationBuilder(MapBuilder):
             "scene": scene.to_json(),
             "legend": legend,
             "settings": self.settings,
-            "structure": item["structure"],
+            "source": item[self.projected_object_name],
         }
