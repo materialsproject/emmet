@@ -1,6 +1,6 @@
 from maggma.builders import MapBuilder
 
-from pymatgen.core.structure import Structure
+from monty.json import MontyDecoder
 from crystal_toolkit.components.structure import StructureMoleculeComponent
 
 
@@ -21,10 +21,12 @@ class VisualizationBuilder(MapBuilder):
         **kwargs
     ):
         """
-        Builds JSON to visualize crystal structures
+        Builds JSON to visualize crystal structures or molecules.
         :param materials: Any store whose docs contain structures
         :param visualization: Destination store
-        :param projection: The key for the origin structure
+        :param projection: The key for the origin structure or molecule (if
+        a StructureGraph or MoleculeGraph is provided directly, the graph
+        connections will be used as bonds, and bonding_strategy kwargs ignored)
         :param bonding_strategy: The name of a NearNeighbor class, see
         StructureMoleculeComponent.available_bonding_strategies.keys() for
         a full list
@@ -50,6 +52,7 @@ class VisualizationBuilder(MapBuilder):
 
         self.materials = materials
         self.visualization = visualization
+        self.projected_object_name = projection[0]
 
         # stored as a dict so settings can be stored in the visualization
         # document in case we want to store multiple visualizations
@@ -75,12 +78,12 @@ class VisualizationBuilder(MapBuilder):
 
     def calc(self, item):
 
-        struct = Structure.from_dict(item["structure"])
+        struct_or_mol = MontyDecoder().process_decoded(item[self.projected_object_name])
 
         # TODO: will combine these two functions into something more intuitive
 
         graph = StructureMoleculeComponent._preprocess_input_to_graph(
-            struct,
+            struct_or_mol,
             bonding_strategy=self.settings["bonding_strategy"],
             bonding_strategy_kwargs=self.settings["bonding_strategy_kwargs"],
         )
