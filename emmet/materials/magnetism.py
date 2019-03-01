@@ -46,17 +46,14 @@ class MagneticBuilder(MapBuilder):
         """
 
         struct = Structure.from_dict(item["structure"])
-        total_magnetization = item["magnetism"].get("total_magnetization", 0)  # not necessarily == sum(magmoms)
+        struct_has_magmoms = 'magmom' in struct.site_properties
+        total_magnetization = abs(item["magnetism"].get("total_magnetization", 0))  # not necessarily == sum(magmoms)
         msa = CollinearMagneticStructureAnalyzer(struct)
-
-        sign = np.sign(total_magnetization)
-        total_magnetization = abs(total_magnetization)
-        magmoms = list(sign * np.array(msa.magmoms))
+        magmoms = msa.magmoms
 
         magnetism = {
             "magnetism": {
-                'ordering':
-                msa.ordering.value,
+                'ordering': msa.ordering.value if struct_has_magmoms else "Unknown",
                 'is_magnetic':
                 msa.is_magnetic,
                 'exchange_symmetry':
