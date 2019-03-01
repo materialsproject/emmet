@@ -7,7 +7,8 @@
     "NM": "Non-magnetic",
     "FiM": "Ferri",
     "AFM": "AFM",
-    "FM": "FM"
+    "FM": "FM",
+    "Unknown": "Unknown"
   },
   "conversion_dict": {
     "anonymous_formula": "formula_anonymous",
