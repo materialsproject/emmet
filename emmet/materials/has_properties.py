@@ -1,4 +1,5 @@
 from collections import namedtuple, defaultdict
+from datetime import datetime
 
 from maggma.builders import Builder
 from pymongo import UpdateOne
@@ -47,5 +48,9 @@ class HasProps(Builder):
         return todo
 
     def update_targets(self, items):
+        now = datetime.utcnow()
+        for item in items:
+            item[1]["$set"][self.hasprops.lu_field] = now
         requests = [UpdateOne(*item, upsert=True) for item in items]
-        self.hasprops.collection.bulk_write(requests, ordered=False)
+        if requests:
+            self.hasprops.collection.bulk_write(requests, ordered=False)

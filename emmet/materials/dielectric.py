@@ -28,7 +28,7 @@ class DielectricBuilder(MapBuilder):
         self.dielectric = dielectric
         self.max_miller = max_miller
         self.query = query if query else {}
-        self.query.update({"dielectric": {"$exists": 1}})
+        self.query.update({"dielectric": {"$exists": 1}, "bandstructure.band_gap" : {"$gt": 0.0}})
 
         super().__init__(
             source=materials,

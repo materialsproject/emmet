@@ -126,45 +126,13 @@
     "tasks_key": "task_id"
   },
   {
-    "materials_key": "thermo.scan.energy",
-    "quality_score": {
-      "SCAN Static": 5,
-      "SCAN Structure Optimization": 6
-    },
-    "tasks_key": "output.energy",
-    "track": true
-  },
-  {
-    "materials_key": "thermo.scan.energy_per_atom",
-    "quality_score": {
-      "SCAN Static": 5,
-      "SCAN Structure Optimization": 6
-    },
-    "tasks_key": "output.energy_per_atom",
-    "track": true
-  },
-  {
-    "materials_key": "thermo.scan.magmoms",
-    "quality_score": {
-      "SCAN Static": 5,
-      "SCAN Structure Optimization": 6
-    },
-    "tasks_key": "calcs_reversed.0.output.outcar.magmom"
-  },
-  {
-    "materials_key": "thermo.scan.structure",
-    "quality_score": {
-      "SCAN Structure Optimization": 7
-    },
-    "tasks_key": "output.structure"
-  },
-  {
     "materials_key": "thermo.energy",
     "quality_score": {
       "GGA Static": 1,
       "GGA Structure Optimization": 2,
       "GGA+U Static": 5,
-      "GGA+U Structure Optimization": 6
+      "GGA+U Structure Optimization": 6,
+      "SCAN Structure Optimization": 7
     },
     "tasks_key": "output.energy",
     "track": true
@@ -175,7 +143,8 @@
       "GGA Static": 1,
       "GGA Structure Optimization": 2,
       "GGA+U Static": 5,
-      "GGA+U Structure Optimization": 6
+      "GGA+U Structure Optimization": 6,
+      "SCAN Structure Optimization": 7
     },
     "tasks_key": "output.energy_per_atom",
     "track": true
@@ -193,7 +162,8 @@
     "materials_key": "calc_settings.hubbards",
     "quality_score": {
       "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "SCAN Structure Optimization": 7
     },
     "tasks_key": "input.hubbards"
   },
@@ -201,7 +171,8 @@
     "materials_key": "calc_settings.potcar_spec",
     "quality_score": {
       "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "SCAN Structure Optimization": 7
     },
     "tasks_key": "input.potcar_spec"
   },
@@ -209,7 +180,8 @@
     "materials_key": "calc_settings.run_type",
     "quality_score": {
       "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "SCAN Structure Optimization": 7
     },
     "tasks_key": "calcs_reversed.0.run_type"
   },
@@ -217,7 +189,8 @@
     "materials_key": "calc_settings.is_hubbard",
     "quality_score": {
       "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "SCAN Structure Optimization": 7
     },
     "tasks_key": "input.is_hubbard"
   },
@@ -336,36 +309,6 @@
     "tasks_key": "calcs_reversed.0.output.outcar.magmom"
   },
   {
-    "materials_key": "magnetism.structures",
-    "quality_score": {
-      "GGA Static": 2,
-      "GGA+U Static": 6,
-      "SCAN Structure Optimization": 7
-    },
-    "tasks_key": "output.structure",
-    "aggregate": true
-  },
-  {
-    "materials_key": "magnetism.energy_per_atom",
-    "quality_score": {
-      "GGA Static": 2,
-      "GGA+U Static": 6,
-      "SCAN Structure Optimization": 7
-    },
-    "tasks_key": "output.energy_per_atom",
-    "aggregate": true
-  },
-  {
-    "materials_key": "magnetism.total_magnetizations",
-    "quality_score": {
-      "GGA Static": 2,
-      "GGA+U Static": 6,
-      "SCAN Structure Optimization": 7
-    },
-    "tasks_key": "calcs_reversed.0.output.outcar.total_magnetization",
-    "aggregate": true
-  },
-  {
     "materials_key": "dielectric.structure",
     "quality_score": {
       "GGA Static Dielectric": 2,
@@ -419,7 +362,7 @@
       "GGA Static Dielectric": 2,
       "GGA+U Static Dielectric": 6
     },
-    "tasks_key": "calcs_reversed.output.force_constants"
+    "tasks_key": "calcs_reversed.0.output.force_constants"
   },
   {
     "materials_key": "internal_strain_tensor",
@@ -427,7 +370,7 @@
       "GGA Static Dielectric": 2,
       "GGA+U Static Dielectric": 6
     },
-    "tasks_key": "calcs_reversed.output.outcar.internal_strain_tensor"
+    "tasks_key": "calcs_reversed.0.output.outcar.internal_strain_tensor"
   },
   {
     "materials_key": "_sbxn",

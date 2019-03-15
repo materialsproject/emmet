@@ -65,7 +65,8 @@ class StructureWorkflowStatus(Builder):
         for d in items:
             d[jobs.lu_field] = now
         requests = [UpdateOne({key: d[key]}, {"$set": {"wflow": d}}) for d in items]
-        jobs.collection.bulk_write(requests, ordered=False)
+        if requests:
+            jobs.collection.bulk_write(requests, ordered=False)
 
 
 class StructureReleaseStatus(Builder):
@@ -104,6 +105,7 @@ class StructureReleaseStatus(Builder):
         requests = []
         for (criteria, to_set) in items:
             requests.append(UpdateOne(criteria, {"$set": to_set}))
-        self.targets[0].collection.bulk_write(requests, ordered=False)
+        if requests:
+            self.targets[0].collection.bulk_write(requests, ordered=False)
 
 
