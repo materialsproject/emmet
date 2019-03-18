@@ -27,6 +27,7 @@ from httplib2 import Http
 from oauth2client import file, client, tools
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from tqdm import tqdm
+from pprint import pprint
 
 def get_lpad():
     if 'FW_CONFIG_FILE' not in os.environ:
@@ -1297,7 +1298,8 @@ def download_file(service, file_id):
 @cli.command()
 @click.argument('target_db_file', type=click.Path(exists=True))
 @click.option('--block-filter', '-f', help='block filter substring (e.g. block_2017-)')
-def gdrive(target_db_file, block_filter):
+@click.option('--sync-nomad/--no-sync-nomad', default=False, help='sync to NoMaD repository')
+def gdrive(target_db_file, block_filter, sync_nomad):
     """sync launch directories for target task DB to Google Drive"""
     target = VaspCalcDb.from_db_file(target_db_file, admin=True)
     print('connected to target db with', target.collection.count(), 'tasks')
@@ -1335,28 +1337,33 @@ def gdrive(target_db_file, block_filter):
                         launcher_name = launcher['name'].replace('.tar.gz', '')
                         full_launcher_path.append(launcher_name)
                         launcher_paths.append(os.path.join(*full_launcher_path))
-
-			# TODO NoMaD integration
-			#nomad_query='repository_main_file_uri="{}"'.format(launcher_name)
-			##nomad_query='alltarget repository_uri.split="{}"'.format(','.join(full_launcher_path)) # TODO
-			#print(nomad_query)
-			#resp = requests.get(NOMAD_REPO.format(nomad_query)).json()
-			#if 'meta' in resp:
-			#    path = os.path.join(*full_launcher_path) + '.tar.gz'
-			#    if resp['meta']['total_hits'] < 1: # calculation not found in NoMaD repo
-			#	print('Retrieve', path, '...')
-			#	if not os.path.exists(path):
-			#	    os.makedirs(path)
-			#	    #content = download_file(service, launcher['id'])
-			#	    #with open(path, 'wb') as f:
-			#	    #    f.write(content)
-			#	    print('... DONE.')
-			#    else:
-			#	print(path, 'found in NoMaD repo:')
-			#	for d in resp['data']:
-			#	    print('\t', d['attributes']['repository_uri'])
-			#else:
-			#    raise Exception(resp['errors'][0]['detail'])
+                        if sync_nomad:
+                            #nomad_query='alltarget repository_filepaths.split="{}"'.format(','.join(full_launcher_path))
+                            nomad_query='alltarget repository_filepaths.split="{}"'.format(full_launcher_path[-1])
+                            print(nomad_query)
+                            resp = requests.get(NOMAD_REPO.format(nomad_query)).json()
+                            if 'meta' in resp:
+                                path = launcher_paths[-1] + '.tar.gz'
+                                if resp['meta']['total_hits'] < 1: # calculation not found in NoMaD repo
+                                    print('Retrieve', path, '...')
+                                    if not os.path.exists(path):
+                                        outdir = os.path.join(*full_launcher_path[:-1])
+                                        if not os.path.exists(outdir):
+                                            os.makedirs(outdir)
+                                        content = download_file(service, launcher['id'])
+                                        with open(path, 'wb') as f:
+                                            f.write(content)
+                                        print('... DONE.')
+                                    else:
+                                        print('... ALREADY DOWNLOADED.')
+                                else:
+                                    print(path, 'found in NoMaD repo:')
+                                    #pprint(resp)
+                                    for d in resp['data']:
+                                        print('\t', d['attributes']['repository_archive_gid'])
+                                    sys.exit(0)
+                            else:
+                                raise Exception(resp['errors'][0]['detail'])
                     else:
                         full_launcher_path.append(launcher['name'])
                         recurse(service, launcher['id'])
@@ -1392,6 +1399,9 @@ def gdrive(target_db_file, block_filter):
 
     launcher_paths.sort()
     print(len(launcher_paths), 'launcher directories in GDrive')
+
+    if sync_nomad:
+        return
 
     query = {}
     blessed_task_ids = [
