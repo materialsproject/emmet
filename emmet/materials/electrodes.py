@@ -187,9 +187,9 @@ class ElectrodesBuilder(Builder):
                 # sort the ids based on value
                 ids = [entry.entry_id for entry in result.get_all_entries()]
                 lowest_id = sorted(ids, key=lambda x : x.split('-')[-1])[0]
-                d['space_group'] = {k: spacegroup._space_group_data[k] for k in sg_fields}
+                d['spacegroup'] = {k: spacegroup._space_group_data[k] for k in sg_fields}
 
-                d['batt_id'] = lowest_id+'_'+self.working_ion
+                d['battid'] = lowest_id+'_'+self.working_ion
                 # Only allow one sandbox value for each electrode
                 if isbx:
                     d['_sbxn'] = isbx
