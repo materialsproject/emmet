@@ -202,7 +202,7 @@ class ElectrodesBuilder(Builder):
         items = list(filter(None, chain.from_iterable(items)))
         if len(items) > 0:
             self.logger.info("Updating {} thermo documents".format(len(items)))
-            self.electro.update(docs=items, key='batt_id')
+            self.electro.update(docs=items, key='battid')
         else:
             self.logger.info("No items to update")
     
