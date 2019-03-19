@@ -289,7 +289,7 @@ class ElectrodesBuilder(Builder):
             if '_sbxn' in d:
                 en.data['_sbxn'] = d['_sbxn']
             else:
-                en.data['_sbxn'] = [None]
+                en.data['_sbxn'] = []
 
             if store_struct:
                 struct_delith = get_prim_host(struct)
