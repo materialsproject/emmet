@@ -136,6 +136,10 @@ def get_symlinked_path(root, base_path_index, insert):
         print(root, '->', launch_dir)
     else:
         launch_dir = os.path.join(block_dir, root_split[-1])
+        if not os.path.exists(launch_dir):
+            if insert:
+                os.rename(root, launch_dir)
+            print(root, '->', launch_dir)
 
     return launch_dir
 
@@ -1226,12 +1230,12 @@ def add_snls(tag, input_structures, add_snlcolls, insert):
 
 @cli.command()
 @click.argument('base_path', type=click.Path(exists=True))
-#@click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
 @click.option('--insert/--no-insert', default=False, help='actually execute task insertion')
-#@click.option('--make-snls/--no-make-snls', default=False, help='also create SNLs for parsed tasks')
 @click.option('--nproc', '-n', type=int, default=1, help='number of processes for parallel parsing')
 @click.option('--max-dirs', '-m', type=int, default=10, help='maximum number of directories to parse')
-def parse(base_path, add_snlcolls, insert, make_snls, nproc, max_dirs):
+#@click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
+#@click.option('--make-snls/--no-make-snls', default=False, help='also create SNLs for parsed tasks')
+def parse(base_path, insert, nproc, max_dirs):#, add_snlcolls, make_snls):
     """parse VASP output directories in base_path into tasks and tag"""
     if not insert:
         print('DRY RUN: add --insert flag to actually insert tasks')
