@@ -287,6 +287,7 @@ def old_style_mat(self, new_style_mat):
     set_(mat, "pseudo_potential.pot_type", "paw")
 
     mat["blessed_tasks"] = {d["task_type"]:d["task_id"] for d in new_style_mat["origins"]}
+    mat["deprecated_tasks"] = new_style_mat.get("deprecated_tasks",[])
     mat["task_ids"] = list(tasks.keys())
     mat["ntask_ids"] = len(tasks)
 
