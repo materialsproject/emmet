@@ -127,7 +127,7 @@ class SubstrateBuilder(Builder):
 
         all_matches = list(sorted(all_matches, key=sort_key))
 
-        d = {self.substrates.key: item["task_id"], "substratess": all_matches}
+        d = {self.substrates.key: item["task_id"], "substrates": all_matches}
 
         return d
 

@@ -32,7 +32,7 @@ onhull_prod_but_not_stag = set(onhull_prod) - set(onhull_stag)
 print(f"{len(onhull_prod_but_not_stag)} on hull in production but not in staging")
 
 print(f"Retrieving provenance of hull breaks...")
-cursor = db_stag.materials.find({"task_id": {"$in": list(onhull_prod_but_not_stag)}}, ["task_id", "chemsys"])
+cursor = db_stag.materials.find({"task_id": {"$in": list(onhull_prod_but_not_stag)}, "error": {"$exists": False}}, ["task_id", "chemsys"])
 breaks_via_new_mats = []
 breaks_via_old_mats_lower_e = []
 breaks_via_old_mats_higher_e = []

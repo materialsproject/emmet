@@ -7,7 +7,8 @@
     "NM": "Non-magnetic",
     "FiM": "Ferri",
     "AFM": "AFM",
-    "FM": "FM"
+    "FM": "FM",
+    "Unknown": "Unknown"
   },
   "conversion_dict": {
     "anonymous_formula": "formula_anonymous",
@@ -32,7 +33,7 @@
     "run_type": "calc_settings.run_type",
     "spacegroup": "symmetry",
     "structure": "structure",
-    "total_magnetization": "magnetism.total_magnetization",
+    "total_magnetization": "magnetism.total_magnetization_normalized_formula_units",
     "unit_cell_formula": "composition",
     "volume": "volume",
     "warnings": "analysis.warnings",
@@ -49,7 +50,7 @@
     "magnetism": "magnetism",
     "magnetic_type": "magnetism.ordering",
     "doi": "doi",
-    "doi_bibtex": "doi_bibtex",
+    "doi_bibtex": "bibtex",
     "diel.e_electronic": "dielectric.static",
     "diel.e_total": "dielectric.total",
     "diel.n": "dielectric.n",
@@ -73,10 +74,11 @@
     "elasticity.universal_anisotropy": "elasticity.universal_anisotropy",
     "elasticity.elastic_tensor_original": "elasticity.elastic_tensor_original",
     "elasticity.compliance_tensor": "elasticity.compliance_tensor",
-    "elasticity.third_order": "elasticity.third_order",
     "elasticity.warnings": "elasticity.warnings",
+    "elasticity_third_order": "elasticity.third_order",
     "bond_valence": "bond_valence",
-    "unit_cell_formula": "composition"
+    "unit_cell_formula": "composition",
+    "has": "has"
   },
   "task_types": [
     "GGA NSCF Line",
