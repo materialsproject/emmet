@@ -254,7 +254,8 @@ def ensure_meta(snl_coll):
 @click.option('--tag', default=None, help='only insert tasks with specific tag')
 @click.option('--insert/--no-insert', default=False, help='actually execute task addition')
 @click.option('--copy-snls/--no-copy-snls', default=False, help='also copy SNLs')
-def copy(target_db_file, tag, insert, copy_snls):
+@click.option('--sbxn', multiple=True, help='add task to sandbox')
+def copy(target_db_file, tag, insert, copy_snls, sbxn):
     """Retrieve tasks from source and copy to target task collection (incl. SNLs if available)"""
 
     if not insert:
@@ -433,6 +434,9 @@ def copy(target_db_file, tag, insert, copy_snls):
                     else:
                         print('ERROR: not a SO task!')
                         continue
+
+            if sbxn:
+                task_doc['sbxn'] = list(sbxn)
 
             if insert:
                 target.insert_task(task_doc, use_gridfs=True)
