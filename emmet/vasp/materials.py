@@ -22,7 +22,6 @@ class MaterialsBuilder(Builder):
     def __init__(self,
                  tasks,
                  materials,
-                 mat_prefix="mp-",
                  materials_settings=None,
                  query=None,
                  ltol=0.2,
@@ -37,7 +36,6 @@ class MaterialsBuilder(Builder):
         Args:
             tasks (Store): Store of task documents
             materials (Store): Store of materials documents to generate
-            mat_prefix (str): prefix for all materials ids
             materials_settings (Path): Path to settings files
             query (dict): dictionary to limit tasks to be analyzed
             ltol (float): StructureMatcher tuning parameter for matching tasks to materials
@@ -50,7 +48,6 @@ class MaterialsBuilder(Builder):
         self.tasks = tasks
         self.materials_settings = materials_settings
         self.materials = materials
-        self.mat_prefix = mat_prefix
         self.query = query if query else {}
         self.ltol = ltol
         self.stol = stol
