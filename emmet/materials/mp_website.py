@@ -1,4 +1,3 @@
-from datetime import datetime
 import os
 import os.path
 import string
@@ -7,6 +6,7 @@ import copy
 import nltk
 import numpy as np
 from ast import literal_eval
+from datetime import datetime
 from itertools import groupby
 
 from monty.json import jsanitize
@@ -286,8 +286,8 @@ def old_style_mat(self, new_style_mat):
          [p["titel"].split()[1] for p in get(new_style_mat, "calc_settings.potcar_spec")])
     set_(mat, "pseudo_potential.pot_type", "paw")
 
-    mat["blessed_tasks"] = {d["task_type"]:d["task_id"] for d in new_style_mat["origins"]}
-    mat["deprecated_tasks"] = new_style_mat.get("deprecated_tasks",[])
+    mat["blessed_tasks"] = {d["task_type"]: d["task_id"] for d in new_style_mat["origins"]}
+    mat["deprecated_tasks"] = new_style_mat.get("deprecated_tasks", [])
     mat["task_ids"] = list(tasks.keys())
     mat["ntask_ids"] = len(tasks)
 
