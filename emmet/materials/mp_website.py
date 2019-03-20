@@ -16,30 +16,19 @@ from maggma.builders import Builder
 from maggma.utils import grouper, source_keys_updated
 from maggma.validator import JSONSchemaValidator, msonable_schema
 from pydash.objects import get, set_, has
-import pybtex
 
 from emmet.materials.snls import mp_default_snl_fields
 from emmet.common.utils import scrub_class_and_module
 from emmet import __version__ as emmet_version
 
-# Import for crazy things this builder needs
+from pymatgen import Structure
 from pymatgen.io.cif import CifWriter
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pymatgen import Structure
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.analysis.structure_analyzer import RelaxationAnalyzer
 from pymatgen.analysis.diffraction.core import DiffractionPattern
-from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 from pymatgen.util.provenance import StructureNL
 from pymatgen import __version__ as pymatgen_version
-
-from mp_dash_components.converters.structure import StructureIntermediateFormat
-from mp_dash_components import __version__ as mp_dash_components_version
-
-# Silly fix to keep pybtex from spamming warnings
-
-devnull = open(os.devnull, 'w')
-pybtex.io.stderr = devnull
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -47,18 +36,13 @@ MODULE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 MPBUILDER_SCHEMA = os.path.join(MODULE_DIR, "schema", "mp_website.json")
 MPBUILDER_SETTINGS = os.path.join(MODULE_DIR, "settings", "mp_website.json")
 
+_settings = loadfn(MPBUILDER_SETTINGS)
 latt_para_interval = [1.50 - 1.96 * 3.14, 1.50 + 1.96 * 3.14]
 vol_interval = [4.56 - 1.96 * 7.82, 4.56 + 1.96 * 7.82]
 
 
 class MPBuilder(Builder):
-    def __init__(self,
-                 materials,
-                 website,
-                 aux=None,
-                 default_sandboxes=None,
-                 query=None,
-                 **kwargs):
+    def __init__(self, materials, website, aux=None, default_sandboxes=None, query=None, **kwargs):
         """
         Creates a MP Website style materials doc.
         This builder is a bit unweildy as MP will eventually move to a new format
@@ -79,10 +63,8 @@ class MPBuilder(Builder):
         self.default_sandboxes = default_sandboxes if default_sandboxes else []
         self.query = query
         #self.website.validator = JSONSchemaValidator(loadfn(MPBUILDER_SCHEMA))
-        self._settings = loadfn(MPBUILDER_SETTINGS)
 
-        super().__init__(
-            sources=[materials] + aux, targets=[website], **kwargs)
+        super().__init__(sources=[materials] + aux, targets=[website], **kwargs)
 
     def get_items(self):
         """
@@ -93,17 +75,13 @@ class MPBuilder(Builder):
 
         self.ensure_indexes()
 
-        mat_keys = set(
-            self.materials.distinct(self.materials.key, criteria=self.query))
-        keys = set(
-            source_keys_updated(
-                source=self.materials, target=self.website, query=self.query))
+        mat_keys = set(self.materials.distinct(self.materials.key, criteria=self.query))
+        keys = set(source_keys_updated(source=self.materials, target=self.website, query=self.query))
 
         # Get keys for aux docs that have been updated since last processed.
         for source in self.aux:
             new_keys = source_keys_updated(source=source, target=self.website)
-            self.logger.info("Only considering {} new keys for {}".format(
-                len(new_keys), source.collection_name))
+            self.logger.info("Only considering {} new keys for {}".format(len(new_keys), source.collection_name))
             keys |= set(new_keys)
 
         keys = keys & mat_keys  # Ensure all keys are present in main materials collection
@@ -115,18 +93,11 @@ class MPBuilder(Builder):
             chunked_keys = list(filter(None.__ne__, chunked_keys))
 
             # Get documents for main materials store
-            docs = list(
-                self.materials.query(
-                    criteria={self.materials.key: {
-                        "$in": chunked_keys
-                    }}))
+            docs = list(self.materials.query(criteria={self.materials.key: {"$in": chunked_keys}}))
 
             # Get documents from all aux stores
             for source in self.aux:
-                temp_docs = list(
-                    source.query(criteria={source.key: {
-                        "$in": chunked_keys
-                    }}))
+                temp_docs = list(source.query(criteria={source.key: {"$in": chunked_keys}}))
                 self.logger.debug("Found {} docs in {} for {}".format(
                     len(temp_docs), source.collection_name, chunked_keys))
 
@@ -152,17 +123,14 @@ class MPBuilder(Builder):
             # get docs all for the same materials key
             for merge_key, sub_docs in docs:
                 #sort and group docs by last_updated
-                sub_docs = list(
-                    sorted(sub_docs, key=lambda x: x[self.materials.lu_field]))
-                self.logger.debug("Merging {} docs for {}".format(
-                    len(sub_docs), merge_key))
+                sub_docs = list(sorted(sub_docs, key=lambda x: x[self.materials.lu_field]))
+                self.logger.debug("Merging {} docs for {}".format(len(sub_docs), merge_key))
                 # merge all docs in this group together
                 d = {k: v for doc in sub_docs for k, v in doc.items()}
                 # delete any private keys
                 #d = {k: v for k, v in d.items() if not k.startswith("_")}
                 # Set to most recent lu_field
-                d[self.materials.lu_field] = max(
-                    doc[self.materials.lu_field] for doc in sub_docs)
+                d[self.materials.lu_field] = max(doc[self.materials.lu_field] for doc in sub_docs)
 
                 yield d
 
@@ -171,7 +139,7 @@ class MPBuilder(Builder):
         self.logger.debug("Processing: {}".format(item[self.materials.key]))
 
         try:
-            mat = self.old_style_mat(item)
+            mat = old_style_mat(item)
 
             # These functions convert data from old style to new style
             add_es(mat, item)
@@ -183,8 +151,7 @@ class MPBuilder(Builder):
             check_relaxation(mat, item)
             add_cifs(mat)
             add_meta(mat)
-            sandbox_props(mat, item, self._settings["sandboxed_properties"],
-                          self.default_sandboxes)
+            sandbox_props(mat, item, self._settings["sandboxed_properties"], self.default_sandboxes)
 
             processed = jsanitize(mat)
 
@@ -194,10 +161,8 @@ class MPBuilder(Builder):
 
         key, lu_field = self.materials.key, self.materials.lu_field
         out = {
-            self.website.key:
-            item[key],
-            self.website.lu_field:
-            self.website.lu_func[1](self.materials.lu_func[0](item[lu_field]))
+            self.website.key: item[key],
+            self.website.lu_field: self.website.lu_func[1](self.materials.lu_func[0](item[lu_field]))
         }
         out.update(processed)
         return out
@@ -212,57 +177,6 @@ class MPBuilder(Builder):
         if len(items) > 0:
             self.logger.debug(f"Updating {len(items)} items")
             self.website.update(items, update_lu=False)
-
-    def old_style_mat(self, new_style_mat):
-        """
-        Creates the base document for the old MP mapidoc style from the new document structure
-        """
-
-        mat = {}
-        mp_conversion_dict = self._settings["conversion_dict"]
-        mag_types = self._settings["mag_types"]
-
-        # Uses the conversion dict to copy over values which handles the bulk of the work.
-        for mp, new_key in mp_conversion_dict.items():
-            if has(new_style_mat, new_key):
-                set_(mat, mp, get(new_style_mat, new_key))
-
-        # Anything coming through DFT is always ordered
-        mat["is_ordered"] = True
-        mat["is_compatible"] = True
-
-        struc = Structure.from_dict(mat["structure"])
-        mat["oxide_type"] = oxide_type(struc)
-        mat["reduced_cell_formula"] = struc.composition.reduced_composition.as_dict(
-        )
-        mat["unit_cell_formula"] = struc.composition.as_dict()
-        mat["full_formula"] = "".join(struc.formula.split())
-        vals = sorted(mat["reduced_cell_formula"].values())
-        mat["anonymous_formula"] = {
-            string.ascii_uppercase[i]: float(vals[i])
-            for i in range(len(vals))
-        }
-        mat["initial_structure"] = new_style_mat.get("initial_structure", None)
-        mat["nsites"] = struc.get_primitive_structure().num_sites
-
-        set_(mat, "pseudo_potential.functional", "PBE")
-
-        set_(mat, "pseudo_potential.labels", [
-            p["titel"].split()[1]
-            for p in get(new_style_mat, "calc_settings.potcar_spec")
-        ])
-        set_(mat, "pseudo_potential.pot_type", "paw")
-
-        tasks = {
-            k: v
-            for k, v in new_style_mat.get("task_types", {}).items()
-            if v in self._settings["task_types"]
-        }
-        mat["blessed_tasks"] = {v: k for k, v in tasks.items()}
-        mat["task_ids"] = list(tasks.keys())
-        mat["ntask_ids"] = len(tasks)
-
-        return mat
 
     def ensure_indexes(self):
         """
@@ -338,22 +252,60 @@ class MPBuilder(Builder):
 #
 
 
+def old_style_mat(self, new_style_mat):
+    """
+    Creates the base document for the old MP mapidoc style from the new document structure
+    """
+
+    mat = {}
+    mp_conversion_dict = _settings["conversion_dict"]
+    mag_types = _settings["mag_types"]
+
+    # Uses the conversion dict to copy over values which handles the bulk of the work.
+    for mp, new_key in mp_conversion_dict.items():
+        if has(new_style_mat, new_key):
+            set_(mat, mp, get(new_style_mat, new_key))
+
+    # Anything coming through DFT is always ordered
+    mat["is_ordered"] = True
+    mat["is_compatible"] = True
+
+    struc = Structure.from_dict(mat["structure"])
+    mat["oxide_type"] = oxide_type(struc)
+    mat["reduced_cell_formula"] = struc.composition.reduced_composition.as_dict()
+    mat["unit_cell_formula"] = struc.composition.as_dict()
+    mat["full_formula"] = "".join(struc.formula.split())
+    vals = sorted(mat["reduced_cell_formula"].values())
+    mat["anonymous_formula"] = {string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))}
+    mat["initial_structure"] = new_style_mat.get("initial_structure", None)
+    mat["nsites"] = struc.get_primitive_structure().num_sites
+
+    set_(mat, "pseudo_potential.functional", "PBE")
+
+    set_(mat, "pseudo_potential.labels",
+         [p["titel"].split()[1] for p in get(new_style_mat, "calc_settings.potcar_spec")])
+    set_(mat, "pseudo_potential.pot_type", "paw")
+
+    mat["blessed_tasks"] = {d["task_type"]:d["task_id"] for d in new_style_mat["origins"]}
+    mat["task_ids"] = list(tasks.keys())
+    mat["ntask_ids"] = len(tasks)
+
+    return mat
+
+
 def add_es(mat, new_style_mat):
 
     bs_origin = None
     dos_origin = None
     try:
-        bs_origin = next((origin
-                          for origin in new_style_mat.get("origins", [])
-                          if "Line" in origin["task_type"]), None)
-        dos_origin = next((origin
-                           for origin in new_style_mat.get("origins", [])
-                           if "Uniform" in origin["task_type"]), None)
+        bs_origin = next((origin for origin in new_style_mat.get("origins", []) if "Line" in origin["task_type"]),
+                         None)
+        dos_origin = next((origin for origin in new_style_mat.get("origins", []) if "Uniform" in origin["task_type"]),
+                          None)
 
         if bs_origin:
             u_type = "GGA+U" if "+U" in bs_origin["task_type"] else "GGA"
-            set_(mat, "band_structure.{}.task_id".format(u_type),
-                 bs_origin["task_id"])
+            set_(mat, "band_structure.{}.task_id".format(u_type), bs_origin["task_id"])
 
         if dos_origin:
             u_type = "GGA+U" if "+U" in dos_origin["task_type"] else "GGA"
@@ -368,8 +320,7 @@ def add_es(mat, new_style_mat):
 def add_elastic(mat, new_style_mat):
     if "elasticity" in new_style_mat:
         if has(new_style_mat, "elasticity.structure.sites"):
-            mat["elasticity"]["nsites"] = len(
-                get(new_style_mat, "elasticity.structure.sites"))
+            mat["elasticity"]["nsites"] = len(get(new_style_mat, "elasticity.structure.sites"))
         else:
             mat["elasticity"]["nsites"] = len(get(mat, "structure.sites"))
 
@@ -389,8 +340,7 @@ def add_cifs(doc):
         refined = sym_finder.get_refined_structure()
         doc["cifs"]["primitive"] = str(CifWriter(primitive))
         doc["cifs"]["refined"] = str(CifWriter(refined, symprec=symprec))
-        doc["cifs"]["conventional_standard"] = str(
-            CifWriter(conventional, symprec=symprec))
+        doc["cifs"]["conventional_standard"] = str(CifWriter(conventional, symprec=symprec))
         doc["cifs"]["computed"] = str(CifWriter(struc, symprec=symprec))
     except:
         doc["cifs"]["primitive"] = None
@@ -407,13 +357,9 @@ def add_xrd(mat, new_style_mat):
         el_doc["wavelength"] = doc["wavelength"]
 
         xrd_pattern = DiffractionPattern.from_dict(doc["pattern"])
-        el_doc["pattern"] = [[
-            float(intensity),
-            hkls[0]["hkl"], two_theta,
-            float(d_hkl)
-        ] for two_theta, intensity, hkls, d_hkl in zip(
-            xrd_pattern.x, xrd_pattern.y, xrd_pattern.hkls, xrd_pattern.d_hkls)
-                             ]
+        el_doc["pattern"] = [[float(intensity), hkls[0]["hkl"], two_theta,
+                              float(d_hkl)] for two_theta, intensity, hkls, d_hkl in zip(
+                                  xrd_pattern.x, xrd_pattern.y, xrd_pattern.hkls, xrd_pattern.d_hkls)]
 
         mat["xrd"][el] = el_doc
 
@@ -429,21 +375,17 @@ def add_snl(mat, new_style_mat):
     if snl:
         mat["snl"].update(snl)
     else:
-        mat["snl"] = StructureNL(Structure.from_dict(mat["structure"]),
-                                 []).as_dict()
+        mat["snl"] = StructureNL(Structure.from_dict(mat["structure"]), []).as_dict()
         mat["snl"]["about"].update(mp_default_snl_fields)
 
     mat["snl_final"] = mat["snl"]
-    mat["icsd_ids"] = [
-        int(i) for i in get(mat["snl"], "about._db_ids.icsd_ids", [])
-    ]
+    mat["icsd_ids"] = [int(i) for i in get(mat["snl"], "about._db_ids.icsd_ids", [])]
     mat["pf_ids"] = get(mat["snl"], "about._db_ids.pf_ids", [])
 
     # Extract tags from remarks by looking for just nounds and adjectives
     mat["exp"] = {"tags": []}
     for remark in mat["snl"]["about"].get("_tags", []):
-        tokens = set(tok[1] for tok in nltk.pos_tag(
-            nltk.word_tokenize(remark), tagset='universal'))
+        tokens = set(tok[1] for tok in nltk.pos_tag(nltk.word_tokenize(remark), tagset='universal'))
         if len(tokens.intersection({"ADV", "ADP", "VERB"})) == 0:
             mat["exp"]["tags"].append(remark)
 
@@ -451,10 +393,7 @@ def add_snl(mat, new_style_mat):
 def add_propnet(mat, new_style_mat):
     if "propnet" in new_style_mat:
         propnet = new_style_mat.get("propnet", {})
-        exclude_list = [
-            'compliance_tensor_voigt', 'task_id', '_id', 'pretty_formula',
-            'inputs', 'last_updated'
-        ]
+        exclude_list = ['compliance_tensor_voigt', 'task_id', '_id', 'pretty_formula', 'inputs', 'last_updated']
         for e in exclude_list:
             if e in propnet:
                 del propnet[e]
@@ -472,30 +411,24 @@ def check_relaxation(mat, new_style_mat):
 
     try:
         analyzer = RelaxationAnalyzer(orig_crystal, final_structure)
-        latt_para_percentage_changes = analyzer.get_percentage_lattice_parameter_changes(
-        )
+        latt_para_percentage_changes = analyzer.get_percentage_lattice_parameter_changes()
         for l in ["a", "b", "c"]:
             change = latt_para_percentage_changes[l] * 100
             if change < latt_para_interval[0] or change > latt_para_interval[1]:
-                warnings.append(
-                    "Large change in a lattice parameter during relaxation.")
+                warnings.append("Large change in a lattice parameter during relaxation.")
         change = analyzer.get_percentage_volume_change() * 100
         if change < vol_interval[0] or change > vol_interval[1]:
             warnings.append("Large change in volume during relaxation.")
     except Exception as ex:
         # print icsd_crystal.formula
         # print final_structure.formula
-        print("Relaxation analyzer failed for Material:{} due to {}".format(
-            mat["task_id"], traceback.print_exc()))
+        print("Relaxation analyzer failed for Material:{} due to {}".format(mat["task_id"], traceback.print_exc()))
 
     mat["warnings"] = list(set(warnings))
 
 
 def add_meta(mat):
-    meta = {
-        'emmet_version': emmet_version,
-        'pymatgen_version': pymatgen_version
-    }
+    meta = {'emmet_version': emmet_version, 'pymatgen_version': pymatgen_version}
     mat['_meta'] = meta
 
 
@@ -504,9 +437,6 @@ def sandbox_props(mat, new_style_mat, sandbox_props, default_sandboxes=None):
     mat["sbxd"] = []
 
     for sbx in mat["sbxn"]:
-        sbx_d = {
-            k: get(mat, v)
-            for k, v in sandbox_props.items() if has(mat, k)
-        }
+        sbx_d = {k: get(mat, v) for k, v in sandbox_props.items() if has(mat, k)}
         sbx_d["id"] = sbx
         mat["sbxd"].append(sbx_d)
