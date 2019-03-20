@@ -28,6 +28,7 @@ from oauth2client import file, client, tools
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from tqdm import tqdm
 from pprint import pprint
+from mongogrant.client import Client
 
 def get_lpad():
     if 'FW_CONFIG_FILE' not in os.environ:
@@ -40,7 +41,7 @@ skip_labels = ['He', 'He0+', 'Ar', 'Ar0+', 'Ne', 'Ne0+', 'D', 'D+']
 base_query = {'is_ordered': True, 'is_valid': True, 'nsites': {'$lt': 200}, 'sites.label': {'$nin': skip_labels}}
 task_base_query = {'tags': {'$nin': ['DEPRECATED', 'deprecated']}, '_mpworks_meta': {'$exists': 0}}
 structure_keys = ['snl_id', 'lattice', 'sites', 'charge', 'about._materialsproject.task_id']
-aggregation_keys = ['reduced_cell_formula', 'formula_pretty']
+aggregation_keys = ['formula_pretty', 'reduced_cell_formula']
 SCOPES = 'https://www.googleapis.com/auth/drive'
 current_year = int(datetime.today().year)
 year_tags = ['mp_{}'.format(y) for y in range(2018, current_year+1)]
@@ -57,7 +58,7 @@ def aggregate_by_formula(coll, q, key=None):
             if coll.count(q):
                 key = k
                 break
-        if key is None:
+        else:
             raise ValueError('could not find aggregation keys', aggregation_keys, 'in', coll.full_name)
     return coll.aggregate([
         {'$match': query}, {'$sort': OrderedDict([('nelements', 1), ('nsites', 1)])},
@@ -223,26 +224,25 @@ def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
 def cli():
     pass
 
+def ensure_meta(snl_coll):
+    """ensure meta-data fields and index are set in SNL collection"""
 
-@cli.command()
-@click.argument('snls_db', type=click.Path(exists=True))
-def ensure_meta(snls_db):
-    """ensure meta-data fields are set in SNL collection"""
+    meta_keys = ['formula_pretty', 'nelements', 'nsites', 'is_ordered', 'is_valid']
+    q = {'$or': [{k: {'$exists': 0}} for k in meta_keys]}
+    docs = snl_coll.find(q, structure_keys)
 
-    snl_db_config = yaml.safe_load(open(snls_db, 'r'))
-    snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
-    snl_db = snl_db_conn[snl_db_config['db']]
-    snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
-    snl_coll = snl_db[snl_db_config['collection']]
-    print(snl_coll.count(), 'SNLs in', snl_coll.full_name)
+    if docs.count() > 0:
+      print('fix meta for', docs.count(), 'SNLs ...')
+      for idx, doc in enumerate(docs):
+          if idx and not idx%1000:
+              print(idx, '...')
+          struct = Structure.from_dict(doc)
+          snl_coll.update({'snl_id': doc['snl_id']}, {'$set': get_meta_from_structure(struct)})
 
-    for idx, doc in enumerate(snl_coll.find({}, structure_keys)):
-        if idx and not idx%1000:
-            print(idx, '...')
-        struct = Structure.from_dict(doc)
-        snl_coll.update({'snl_id': doc['snl_id']}, {'$set': get_meta_from_structure(struct)})
-
-    ensure_indexes(['snl_id', 'formula_pretty', 'nelements', 'nsites', 'is_ordered', 'is_valid'], [snl_coll])
+    ensure_indexes([
+      'snl_id', 'reduced_cell_formula', 'formula_pretty', 'about.remarks', 'about.projects',
+      'sites.label', 'nsites', 'nelements', 'is_ordered', 'is_valid'
+    ], [snl_coll])
 
 
 @cli.command()
@@ -549,14 +549,15 @@ def bandstructure(target_db_file, insert):
 
 
 @cli.command()
-@click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
+@click.option('--add_snlcolls', '-a', multiple=True, help='mongogrant string for additional SNL collection to scan')
 @click.option('--add_tasks_db', type=click.Path(exists=True), help='config file for additional tasks collection to scan')
 @click.option('--tag', default=None, help='only include structures with specific tag')
 @click.option('--insert/--no-insert', default=False, help='actually execute workflow addition')
 @click.option('--clear-logs/--no-clear-logs', default=False, help='clear MongoDB logs collection for specific tag')
 @click.option('--max-structures', '-m', default=1000, help='set max structures for tags to scan')
 @click.option('--skip-all-scanned/--no-skip-all-scanned', default=False, help='skip all already scanned structures incl. WFs2Add/Errors')
-def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, skip_all_scanned):
+@click.option('--force-new/--no-force-new', default=False, help='force generation of new workflow')
+def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, skip_all_scanned, force_new):
     """add workflows based on tags in SNL collection"""
 
     if not insert:
@@ -564,16 +565,15 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
 
     lpad = get_lpad()
 
+    client = Client()
     snl_collections = [lpad.db.snls]
     if add_snlcolls is not None:
-        for snl_db_config in yaml.load_all(open(add_snlcolls, 'r')):
-            snl_db_conn = MongoClient(snl_db_config['host'], snl_db_config['port'], j=False, connect=False)
-            snl_db = snl_db_conn[snl_db_config['db']]
-            snl_db.authenticate(snl_db_config['username'], snl_db_config['password'])
-            snl_collections.append(snl_db[snl_db_config['collection']])
+        for snl_db_config in add_snlcolls:
+            snl_db = client.db(snl_db_config)
+            snl_collections.append(snl_db['snls_underconverged']) # TODO get all snls_* in db?
 
-    ensure_indexes(['snl_id', 'reduced_cell_formula', 'formula_pretty', 'about.remarks', 'about.projects', 'sites.label', 'nsites', 'nelements'], snl_collections)
     for snl_coll in snl_collections:
+        ensure_meta(snl_coll)
         print(snl_coll.count(exclude), 'SNLs in', snl_coll.full_name)
 
     logger = logging.getLogger('add_wflows')
@@ -720,10 +720,19 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
 
                     for dct in group['structures']:
                         q = {'level': 'WARNING', 'formula': formula, 'snl_id': dct['snl_id']}
-                        if mongo_handler.collection.find_one(q):
-                            lpad.db.add_wflows_logs.update(q, {'$addToSet': {'tags': tag}})
-                            continue # already checked
-                        q['level'] = 'ERROR'
+                        log_entries = mongo_handler.collection.find(q) # log entries for already inserted workflows
+                        if log_entries:
+                            if force_new:
+                                q['tags'] = tag # try avoid duplicate wf insertion for same tag even if forced
+                                log_entry = mongo_handler.collection.find_one(q, {'_id': 0, 'message': 1, 'canonical_snl_id': 1, 'fw_id': 1})
+                                if log_entry:
+                                    print('WF already inserted for SNL {} with tag {}'.format(dct['snl_id'], tag))
+                                    print(log_entry)
+                                    continue
+                            else:
+                                lpad.db.add_wflows_logs.update(q, {'$addToSet': {'tags': tag}})
+                                continue # already checked
+                        q = {'level': 'ERROR', 'formula': formula, 'snl_id': dct['snl_id']}
                         if skip_all_scanned and mongo_handler.collection.find_one(q):
                             lpad.db.add_wflows_logs.update(q, {'$addToSet': {'tags': tag}})
                             continue
@@ -766,7 +775,7 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
                         continue
                     canonical_structures_list = [x for sublist in canonical_structures[formula].values() for x in sublist]
 
-                    if formula not in canonical_workflow_structures:
+                    if not force_new and formula not in canonical_workflow_structures:
                         canonical_workflow_structures[formula], grouped_workflow_structures[formula] = {}, {}
                         workflows = lpad.workflows.find({'metadata.formula_pretty': formula}, {'metadata.structure': 1, 'nodes': 1, 'parent_links': 1})
                         if workflows.count() > 0:
@@ -804,7 +813,7 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
                             struct = struc
 
                             wf_found = False
-                            if sgnum in canonical_workflow_structures[formula] and canonical_workflow_structures[formula][sgnum]:
+                            if not force_new and sgnum in canonical_workflow_structures[formula] and canonical_workflow_structures[formula][sgnum]:
                                 for sidx, s in enumerate(canonical_workflow_structures[formula][sgnum]):
                                     if structures_match(struct, s):
                                         msg = 'Structure for SNL {} already added in WF {}'.format(struct.snl_id, s.fw_id)
@@ -887,21 +896,22 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
                                 continue
 
                             # need to check tasks b/c not every task is guaranteed to have a workflow (e.g. VASP dir parsing)
-                            msg, matched_task_ids = '', OrderedDict()
-                            for full_name in reversed(tasks_collections):
-                                load_canonical_task_structures(formula, full_name)
-                                matched_task_ids[full_name] = find_matching_canonical_task_structures(formula, struct, full_name)
-                                if struct.task_id is not None and matched_task_ids[full_name] and struct.task_id not in matched_task_ids[full_name]:
-                                    msg = '  --> WARNING: task {} not in {}'.format(struct.task_id, matched_task_ids[full_name])
-                                    print(msg)
-                                if matched_task_ids[full_name]:
-                                    break
-                            if any(matched_task_ids.values()):
-                                logger.warning('matched task ids' + msg, extra={
-                                    'formula': formula, 'snl_id': struct.snl_id, 'tags': [tag],
-                                    'task_id(s)': dict((k.replace('.', '#'), v) for k, v in matched_task_ids.items())
-                                })
-                                continue
+                            if not force_new:
+                                msg, matched_task_ids = '', OrderedDict()
+                                for full_name in reversed(tasks_collections):
+                                    load_canonical_task_structures(formula, full_name)
+                                    matched_task_ids[full_name] = find_matching_canonical_task_structures(formula, struct, full_name)
+                                    if struct.task_id is not None and matched_task_ids[full_name] and struct.task_id not in matched_task_ids[full_name]:
+                                        msg = '  --> WARNING: task {} not in {}'.format(struct.task_id, matched_task_ids[full_name])
+                                        print(msg)
+                                    if matched_task_ids[full_name]:
+                                        break
+                                if any(matched_task_ids.values()):
+                                    logger.warning('matched task ids' + msg, extra={
+                                        'formula': formula, 'snl_id': struct.snl_id, 'tags': [tag],
+                                        'task_id(s)': dict((k.replace('.', '#'), v) for k, v in matched_task_ids.items())
+                                    })
+                                    continue
 
                             no_potcars = set(NO_POTCARS) & set(struct.composition.elements)
                             if len(no_potcars) > 0:
@@ -1216,9 +1226,9 @@ def add_snls(tag, input_structures, add_snlcolls, insert):
 
 @cli.command()
 @click.argument('base_path', type=click.Path(exists=True))
-@click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
+#@click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
 @click.option('--insert/--no-insert', default=False, help='actually execute task insertion')
-@click.option('--make-snls/--no-make-snls', default=False, help='also create SNLs for parsed tasks')
+#@click.option('--make-snls/--no-make-snls', default=False, help='also create SNLs for parsed tasks')
 @click.option('--nproc', '-n', type=int, default=1, help='number of processes for parallel parsing')
 @click.option('--max-dirs', '-m', type=int, default=10, help='maximum number of directories to parse')
 def parse(base_path, add_snlcolls, insert, make_snls, nproc, max_dirs):
