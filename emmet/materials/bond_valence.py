@@ -23,12 +23,23 @@ class BondValenceBuilder(MapBuilder):
         self.materials = materials
         self.bond_valence = bond_valence
         self.bond_valence.validator = JSONSchemaValidator(loadfn(BOND_VALENCE_SCHEMA))
-        super().__init__(source=materials, target=bond_valence, ufn=self.calc, projection=["structure"], **kwargs)
+        super().__init__(
+            source=materials,
+            target=bond_valence,
+            ufn=self.calc,
+            projection=["structure"],
+            timeout=14,
+            **kwargs
+        )
 
     def calc(self, item):
-        s = Structure.from_dict(item['structure'])
+        s = Structure.from_dict(item["structure"])
 
-        d = {"pymatgen_version": pymatgen_version, "successful": False}
+        d = {
+            "pymatgen_version": pymatgen_version,
+            "successful": False,
+            "bond_valence": {"structure": item["structure"], "method": None},
+        }
 
         try:
             bva = BVAnalyzer()
@@ -38,30 +49,37 @@ class BondValenceBuilder(MapBuilder):
                 for idx, valence in enumerate(valences)
             }
 
-            method = "BVAnalyzer"
-
             d["successful"] = True
+            s = s.add_oxidation_state_by_site(valences)
+
             d["bond_valence"] = {
                 "possible_species": list(possible_species),
                 "possible_valences": valences,
-                "method": "BVAnalyzer"
+                "method": "BVAnalyzer",
+                "structure": s.as_dict(),
             }
 
         except Exception as e:
             self.logger.error("BVAnalyzer failed with: {}".format(e))
 
             try:
-                first_oxi_state_guess = s.composition.oxi_state_guesses(max_sites=-50)[0]
+                first_oxi_state_guess = s.composition.oxi_state_guesses(max_sites=-50)[
+                    0
+                ]
                 valences = [first_oxi_state_guess[site.species_string] for site in s]
                 possible_species = {
                     str(Specie(el, oxidation_state=valence))
                     for el, valence in first_oxi_state_guess.items()
                 }
+
                 d["successful"] = True
+                s = s.add_oxidation_state_by_site(valences)
+
                 d["bond_valence"] = {
                     "possible_species": list(possible_species),
                     "possible_valences": valences,
-                    "method": "oxi_state_guesses"
+                    "method": "oxi_state_guesses",
+                    "structure": s.as_dict(),
                 }
             except Exception as e:
                 self.logger.error("Oxidation state guess failed with: {}".format(e))
