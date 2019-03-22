@@ -248,24 +248,36 @@ def ensure_meta(snl_coll):
       'sites.label', 'nsites', 'nelements', 'is_ordered', 'is_valid'
     ], [snl_coll])
 
+def calcdb_from_mgrant(spec):
+    client = Client()
+    role = 'rw' # NOTE need write access to source to ensure indexes
+    host, dbname_or_alias = spec.split('/', 1)
+    auth = client.get_auth(host, dbname_or_alias, role)
+    if auth is None:
+        raise Exception("No valid auth credentials available!")
+    return VaspCalcDb(auth['host'], 27017, auth['db'], 'tasks', auth['username'], auth['password'])
 
 @cli.command()
-@click.argument('target_db_file', type=click.Path(exists=True))
+@click.argument('target_spec')
 @click.option('--tag', default=None, help='only insert tasks with specific tag')
 @click.option('--insert/--no-insert', default=False, help='actually execute task addition')
 @click.option('--copy-snls/--no-copy-snls', default=False, help='also copy SNLs')
 @click.option('--sbxn', multiple=True, help='add task to sandbox')
-def copy(target_db_file, tag, insert, copy_snls, sbxn):
+@click.option('--src', help='mongogrant string for source task db (overwrite default lpad)')
+def copy(target_spec, tag, insert, copy_snls, sbxn, src):
     """Retrieve tasks from source and copy to target task collection (incl. SNLs if available)"""
 
     if not insert:
         print('DRY RUN: add --insert flag to actually add tasks to production')
 
-    lpad = get_lpad()
-    source = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
-    print('connected to source db with', source.collection.count(), 'tasks')
+    if src:
+        source = calcdb_from_mgrant(src)
+    else:
+        lpad = get_lpad()
+        source = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
+    print('connected to source db', source.collection.full_name, 'with', source.collection.count(), 'tasks')
 
-    target = VaspCalcDb.from_db_file(target_db_file, admin=True)
+    target = calcdb_from_mgrant(target_spec)
     print('connected to target db with', target.collection.count(), 'tasks')
 
     ensure_indexes(['task_id', 'tags', 'dir_name', 'retired_task_id'], [source.collection, target.collection])
