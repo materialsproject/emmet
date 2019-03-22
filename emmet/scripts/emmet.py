@@ -1237,9 +1237,10 @@ def add_snls(tag, input_structures, add_snlcolls, insert):
 @click.option('--insert/--no-insert', default=False, help='actually execute task insertion')
 @click.option('--nproc', '-n', type=int, default=1, help='number of processes for parallel parsing')
 @click.option('--max-dirs', '-m', type=int, default=10, help='maximum number of directories to parse')
+@click.option('--force/--no-force', default=False, help='force re-parse and overwrite task')
 #@click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
 #@click.option('--make-snls/--no-make-snls', default=False, help='also create SNLs for parsed tasks')
-def parse(base_path, insert, nproc, max_dirs):#, add_snlcolls, make_snls):
+def parse(base_path, insert, nproc, max_dirs, force):#, add_snlcolls, make_snls):
     """parse VASP output directories in base_path into tasks and tag"""
     if not insert:
         print('DRY RUN: add --insert flag to actually insert tasks')
@@ -1252,7 +1253,10 @@ def parse(base_path, insert, nproc, max_dirs):#, add_snlcolls, make_snls):
     tag = base_path_split[-1] if base_path_split[-1] else base_path_split[-2]
     drone = VaspDrone(parse_dos='auto', additional_fields={'tags': [tag, year_tags[-1]]})
     already_inserted_subdirs = [get_subdir(dn) for dn in target.collection.find({'tags': tag}).distinct('dir_name')]
-    print(len(already_inserted_subdirs), 'VASP directories already inserted for', tag)
+    print(len(already_inserted_subdirs), 'unique VASP directories already inserted for', tag)
+    if force:
+        already_inserted_subdirs = []
+        print('FORCING directory re-parse and overriding tasks!')
 
     chunk_size = math.ceil(max_dirs/nproc)
     if nproc > 1 and max_dirs <= chunk_size:
