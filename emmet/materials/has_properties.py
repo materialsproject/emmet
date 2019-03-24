@@ -50,7 +50,7 @@ class HasProps(Builder):
     def update_targets(self, items):
         now = datetime.utcnow()
         for item in items:
-            item[self.hasprops.lu_field] = now
+            item[1]["$set"][self.hasprops.lu_field] = now
         requests = [UpdateOne(*item, upsert=True) for item in items]
         if requests:
             self.hasprops.collection.bulk_write(requests, ordered=False)
