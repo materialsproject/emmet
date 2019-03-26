@@ -33,8 +33,8 @@ class ElectrodesBuilder(Builder):
         groups of ComputedStructureEntry and the entry for the most stable version of the working_ion in the system
         Args:
             materials (Store): Store of materials documents that contains the structures
-            batt (Store): Store of insertion electrodes data such as voltage and capacity
-            query (dict): dictionary to limit materials to be analyzed
+            electro (Store): Store of insertion electrodes data such as voltage and capacity
+            query (dict): dictionary to limit materials to be analyzed --- not supported yet
             compatibility (PymatgenCompatability): Compatability module
                 to ensure energies are compatible
         """
@@ -68,11 +68,10 @@ class ElectrodesBuilder(Builder):
 
         self.logger.info("Grabbing the relavant chemical systems containing the current \
                 working ion and a single redox element.")
-        q = dict(self.query)
+        q = dict()
         q.update({'$and': [
             {"elements": {'$in': [self.working_ion]}},
             {"elements": {'$in': redox_els}},
-            self.query
         ]})
         chemsys_names = self.materials.distinct('chemsys', q)
         for chemsys in chemsys_names:
@@ -115,7 +114,7 @@ class ElectrodesBuilder(Builder):
             entries = sorted(entries, key=s_hash)
             for _, g in groupby(entries, key=s_hash):
                 g = list(g)
-                self.logger.debug("The group: {}".format([el.composition for el in g]))
+                self.logger.debug("The full group of entries found based on chemical formula alone: {}".format([el.name for el in g]))
                 if len(g) > 1:
                     #print('read')
                     yield {'chemsys': chemsys, 'all_entries': g}
@@ -260,7 +259,6 @@ class ElectrodesBuilder(Builder):
 
         for sg in subgroups:
             if len(sg)>1:
-                #print([(el[1]['task_id'], el[1]['pretty_formula']) for el in sg])
                 yield [el[1] for el in sg]
 
     def _chemsys_delith(self, chemsys):
