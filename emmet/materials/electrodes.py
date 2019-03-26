@@ -33,9 +33,8 @@ class ElectrodesBuilder(Builder):
         groups of ComputedStructureEntry and the entry for the most stable version of the working_ion in the system
         Args:
             materials (Store): Store of materials documents that contains the structures
-            batt (Store): Store of thermodynamic data such as formation
-                energy and decomposition pathway
-            query (dict): dictionary to limit materials to be analyzed
+            electro (Store): Store of insertion electrodes data such as voltage and capacity
+            query (dict): dictionary to limit materials to be analyzed --- not supported yet
             compatibility (PymatgenCompatability): Compatability module
                 to ensure energies are compatible
         """
@@ -69,16 +68,14 @@ class ElectrodesBuilder(Builder):
 
         self.logger.info("Grabbing the relavant chemical systems containing the current \
                 working ion and a single redox element.")
-        q = dict(self.query)
+        q = dict()
         q.update({'$and': [
             {"elements": {'$in': [self.working_ion]}},
             {"elements": {'$in': redox_els}},
-            self.query
         ]})
         chemsys_names = self.materials.distinct('chemsys', q)
-        print(chemsys_names)
         for chemsys in chemsys_names:
-            self.logger.debug("Calculating the phase diagram for: ", chemsys)
+            self.logger.debug(f"Calculating the phase diagram for: {chemsys}")
             # get the phase diagram from using the chemsys
             pd_q = {'chemsys':{"$in": list(chemsys_permutations(chemsys))}}
             pd_docs = list(self.materials.query(properties=mat_props, criteria=pd_q))
@@ -117,7 +114,7 @@ class ElectrodesBuilder(Builder):
             entries = sorted(entries, key=s_hash)
             for _, g in groupby(entries, key=s_hash):
                 g = list(g)
-                self.logger.debug("The group: {}".format([el.composition for el in g]))
+                self.logger.debug("The full group of entries found based on chemical formula alone: {}".format([el.name for el in g]))
                 if len(g) > 1:
                     #print('read')
                     yield {'chemsys': chemsys, 'all_entries': g}
@@ -141,13 +138,14 @@ class ElectrodesBuilder(Builder):
         # The working ion entries
         ents_wion = list(filter(lambda x: x.composition.get_integer_formula_and_factor()[0] == self.working_ion, pd_ents))
         self.working_ion_entry = min(ents_wion, key=lambda e: e.energy_per_atom)
+        assert(self.working_ion_entry != None)
 
         grouped_entries = list(self.get_sorted_subgroups(all_entries))
         docs = [] # results 
         
         for group in grouped_entries:
+            self.logger.debug(f"Grouped entries in all sandboxes {', '.join([en.name for en in group])}")
             for en in group:
-                self.logger.info(en.composition)
                 # skip this d_muO2 stuff if you do note have oxygen
                 if Element('O') in en.composition.elements:
                     d_muO2 = [
@@ -166,9 +164,11 @@ class ElectrodesBuilder(Builder):
             # for each sandbox core+sandbox will both contribute entries
             all_sbx = [ent.data['_sbxn'] for ent in group]
             all_sbx = set(chain.from_iterable(all_sbx))
+            self.logger.debug(f"All sandboxes {', '.join(list(all_sbx))}")
 
             for isbx in all_sbx:
-                group_sbx = list(filter(lambda ent : (isbx in ent.data['_sbxn']) or (not ent.data['_sbxn']), group))
+                group_sbx = list(filter(lambda ent : (isbx in ent.data['_sbxn']) or (ent.data['_sbxn']==['core']), group))
+                self.logger.debug(f"Grouped entries in sandbox {', '.join([en.name for en in group_sbx])}")
                 result = InsertionElectrode(group_sbx, self.working_ion_entry)
 
                 spacegroup = SpacegroupAnalyzer(result.get_stable_entries(charge_to_discharge=True)[0].structure)
@@ -191,7 +191,7 @@ class ElectrodesBuilder(Builder):
 
                 d['battid'] = lowest_id+'_'+self.working_ion
                 # Only allow one sandbox value for each electrode
-                if isbx:
+                if isbx != 'core':
                     d['_sbxn'] = isbx
 
                 docs.append(d)
@@ -201,7 +201,7 @@ class ElectrodesBuilder(Builder):
     def update_targets(self, items):
         items = list(filter(None, chain.from_iterable(items)))
         if len(items) > 0:
-            self.logger.info("Updating {} thermo documents".format(len(items)))
+            self.logger.info("Updating {} electro documents".format(len(items)))
             self.electro.update(docs=items, key='battid')
         else:
             self.logger.info("No items to update")
@@ -259,7 +259,6 @@ class ElectrodesBuilder(Builder):
 
         for sg in subgroups:
             if len(sg)>1:
-                #print([(el[1]['task_id'], el[1]['pretty_formula']) for el in sg])
                 yield [el[1] for el in sg]
 
     def _chemsys_delith(self, chemsys):
@@ -289,7 +288,7 @@ class ElectrodesBuilder(Builder):
             if '_sbxn' in d:
                 en.data['_sbxn'] = d['_sbxn']
             else:
-                en.data['_sbxn'] = []
+                en.data['_sbxn'] = ['core']
 
             if store_struct:
                 struct_delith = get_prim_host(struct)
