@@ -191,7 +191,7 @@ class ElectrodesBuilder(Builder):
 
                 d['battid'] = lowest_id+'_'+self.working_ion
                 # Only allow one sandbox value for each electrode
-                if isbx:
+                if isbx != 'core':
                     d['_sbxn'] = isbx
 
                 docs.append(d)
