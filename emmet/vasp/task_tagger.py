@@ -1,11 +1,19 @@
+import os
+import numpy as np
+from monty.serialization import loadfn
 from maggma.builders import MapBuilder
+from pymatgen import Structure
+from atomate.utils.utils import load_class
+
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
 
+module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+
 
 class TaskTagger(MapBuilder):
-    def __init__(self, tasks, task_types, **kwargs):
+    def __init__(self, tasks, task_types, input_sets=None, **kwargs):
         """
         Creates task_types from tasks and type definitions
 
@@ -15,9 +23,25 @@ class TaskTagger(MapBuilder):
         """
         self.tasks = tasks
         self.task_types = task_types
+        self.input_sets = input_sets
+        self._task_validation = loadfn(
+            os.path.join(module_dir, "settings", "task_validation.yaml")
+        )
+
+        self._input_sets = {
+            name: load_class("pymatgen.io.vasp.sets", inp_set)
+            for name, inp_set in self._task_validation["input_sets"].items()
+        }
+
         self.kwargs = kwargs
 
-        super().__init__(source=tasks, target=task_types, ufn=self.calc, projection=["orig_inputs"], **kwargs)
+        super().__init__(
+            source=tasks,
+            target=task_types,
+            ufn=self.calc,
+            projection=["orig_inputs", "output.structure"],
+            **kwargs,
+        )
 
     def calc(self, item):
         """
@@ -27,7 +51,14 @@ class TaskTagger(MapBuilder):
             item (dict): a (projection of a) task doc
         """
         tt = task_type(item["orig_inputs"])
-        return {"task_type": tt}
+        iv = is_valid(
+            item["output"]["structure"],
+            item["orig_inputs"],
+            self._input_sets,
+            self._task_validation.get("kpts_tolerance", 0.9),
+        )
+
+        return {"task_type": tt, "is_valid": iv}
 
 
 def task_type(inputs, include_calc_type=True):
@@ -58,7 +89,10 @@ def task_type(inputs, include_calc_type=True):
             calc_type += "GGA "
 
     if incar.get("ICHARG", 0) > 10:
-        if len(list(filter(None.__ne__, inputs.get("kpoints", {}).get("labels", [])))) > 0:
+        if (
+            len(list(filter(None.__ne__, inputs.get("kpoints", {}).get("labels", []))))
+            > 0
+        ):
             return calc_type + "NSCF Line"
         else:
             return calc_type + "NSCF Uniform"
@@ -82,3 +116,29 @@ def task_type(inputs, include_calc_type=True):
         return calc_type + "Deformation"
 
     return ""
+
+
+def is_valid(structure, inputs, input_sets, kpts_tolerance=0.9):
+
+    if isinstance(structure, dict):
+        structure = Structure.from_dict(structure)
+    tt = task_type(inputs)
+
+    if tt in input_sets:
+        print("Found a valid input set")
+        valid_input_set = input_sets[tt](structure)
+
+        valid_num_kpts = valid_input_set.kpoints.num_kpts or np.prod(
+            valid_input_set.kpoints.kpts[0]
+        )
+        num_kpts = inputs.get("kpoints", {}).get("num_kpts", 0) or np.prod(
+            inputs.get("kpoints", {}).get("kpts", [1, 1, 1])
+        )
+        print(f"Needed Kpts vs Actual Kpts: {valid_num_kpts}, {num_kpts}")
+        if (kpts_tolerance * num_kpts) < valid_num_kpts:
+            return False
+
+        if inputs.get("incar", {}).get("ENCUT") < valid_input_set.incar["ENCUT"]:
+            return False
+
+    return True
