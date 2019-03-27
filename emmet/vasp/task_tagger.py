@@ -125,7 +125,6 @@ def is_valid(structure, inputs, input_sets, kpts_tolerance=0.9):
     tt = task_type(inputs)
 
     if tt in input_sets:
-        print("Found a valid input set")
         valid_input_set = input_sets[tt](structure)
 
         valid_num_kpts = valid_input_set.kpoints.num_kpts or np.prod(
@@ -134,7 +133,6 @@ def is_valid(structure, inputs, input_sets, kpts_tolerance=0.9):
         num_kpts = inputs.get("kpoints", {}).get("num_kpts", 0) or np.prod(
             inputs.get("kpoints", {}).get("kpts", [1, 1, 1])
         )
-        print(f"Needed Kpts vs Actual Kpts: {valid_num_kpts}, {num_kpts}")
         if (kpts_tolerance * num_kpts) < valid_num_kpts:
             return False
 
