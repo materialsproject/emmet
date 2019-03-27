@@ -207,6 +207,19 @@ def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
                     print(name, 'removed', vaspdir)
                 continue
 
+            q = {'dir_name': {'$regex': get_subdir(vaspdir)}}
+            # check completed_at timestamp to decide on re-parse (only relevant for --force)
+            docs = list(target.collection.find(q, {'completed_at': 1}).sort([('_id', -1)]).limit(1))
+            if docs and docs[0]['completed_at'] == task_doc['completed_at']:
+                print('not forcing insertion of', vaspdir, '(matching completed_at timestamp)')
+                continue
+
+            # make sure that task gets the same tags as the previously parsed task (only relevant for --force)
+            tags = target.collection.distinct('tags', q)
+            if tags:
+                print('use existing tags:', tags)
+                task_doc['tags'] = tags
+
             if task_doc['state'] == 'successful':
                 try:
                     target.insert_task(task_doc, use_gridfs=True)
@@ -264,7 +277,8 @@ def calcdb_from_mgrant(spec):
 @click.option('--copy-snls/--no-copy-snls', default=False, help='also copy SNLs')
 @click.option('--sbxn', multiple=True, help='add task to sandbox')
 @click.option('--src', help='mongogrant string for source task db (overwrite default lpad)')
-def copy(target_spec, tag, insert, copy_snls, sbxn, src):
+@click.option('--force/--no-force', default=False, help='force overwrite existing target task')
+def copy(target_spec, tag, insert, copy_snls, sbxn, src, force):
     """Retrieve tasks from source and copy to target task collection (incl. SNLs if available)"""
 
     if not insert:
@@ -385,14 +399,27 @@ def copy(target_spec, tag, insert, copy_snls, sbxn, src):
         query.update({'task_id': {'$nin': skip_task_ids}})
         already_inserted_subdirs = [get_subdir(dn) for dn in target.collection.find(query).distinct('dir_name')]
         subdirs = []
-        for doc in source.collection.find(query, ['dir_name', 'task_id', 'retired_task_id']):
-            subdir = get_subdir(doc['dir_name'])
-            if subdir not in already_inserted_subdirs or 'retired_task_id' in doc:
-                entry = {'subdir': subdir}
-                if 'retired_task_id' in doc:
-                    entry.update({'task_id': doc['task_id']})
+        # NOTE make sure it's latest task if re-parse forced
+        fields = ['task_id', 'retired_task_id']
+        project = dict((k, True) for k in fields)
+        project['subdir'] = {'$let': { # gets launcher from dir_name
+            'vars': {'dir_name': {'$split': ['$dir_name', '/']}},
+            'in': {'$arrayElemAt': ['$$dir_name', -1]}
+        }}
+        group = dict((k, {'$last': f'${k}'}) for k in fields) # based on ObjectId
+        group['_id'] = '$subdir'
+        group['count'] = {'$sum': 1}
+        pipeline = [{'$match': query}, {'$project': project}, {'$group': group}]
+        if force:
+            pipeline.append({'$match': {'count': {'$gt': 1}}}) # only re-insert if duplicate parse exists
+        for doc in source.collection.aggregate(pipeline):
+            subdir = doc['_id']
+            if force or subdir not in already_inserted_subdirs or doc.get('retired_task_id'):
+                entry = dict((k, doc[k]) for k in fields)
+                entry['subdir'] = subdir
                 subdirs.append(entry)
         if len(subdirs) < 1:
+            print('no tasks to copy.')
             continue
 
         row.append(len(subdirs))
@@ -400,35 +427,52 @@ def copy(target_spec, tag, insert, copy_snls, sbxn, src):
         for idx, e in enumerate(row):
             if isinstance(e, int):
                 sums[idx] += e
-        if not insert:
-            continue
+        #if not insert: # avoid uncessary looping
+        #    continue
 
         for subdir_doc in subdirs:
             subdir_query = {'dir_name': {'$regex': '/{}$'.format(subdir_doc['subdir'])}}
-            doc = target.collection.find_one(subdir_query, {'task_id': 1})
-            if doc:
+            doc = target.collection.find_one(subdir_query, {'task_id': 1, 'completed_at': 1})
+
+            if doc and subdir_doc.get('retired_task_id') and subdir_doc['task_id'] != doc['task_id']:
+                # overwrite integer task_id (see wflows subcommand)
+                # in this case, subdir_doc['task_id'] is the task_id the task *should* have
                 print(subdir_doc['subdir'], 'already inserted as', doc['task_id'])
-                if 'task_id' in subdir_doc and subdir_doc['task_id'] != doc['task_id']:
-                    if insert:
-                        target.collection.remove({'task_id': subdir_doc['task_id']})
-                        target.collection.update(
-                            {'task_id': doc['task_id']}, {
-                                '$set': {'task_id': subdir_doc['task_id'], 'retired_task_id': doc['task_id'], 'last_updated': datetime.utcnow()},
-                                '$addToSet': {'tags': t}
-                            }
-                        )
-                    print('replaced task_id', doc['task_id'], 'with', subdir_doc['task_id'])
+                if insert:
+                    target.collection.remove({'task_id': subdir_doc['task_id']}) # remove task with wrong task_id if necessary
+                    target.collection.update(
+                        {'task_id': doc['task_id']}, {
+                            '$set': {'task_id': subdir_doc['task_id'], 'retired_task_id': doc['task_id'], 'last_updated': datetime.utcnow()},
+                            '$addToSet': {'tags': t}
+                        }
+                    )
+                print('replace(d) task_id', doc['task_id'], 'with', subdir_doc['task_id'])
                 continue
 
-            source_task_id = source.collection.find_one(subdir_query, {'task_id': 1})['task_id']
+            if not force and doc:
+                print(subdir_doc['subdir'], 'already inserted as', doc['task_id'])
+                continue
+
+            # NOTE make sure it's latest task if re-parse forced
+            source_task_id = subdir_doc['task_id'] if force else \
+                source.collection.find_one(subdir_query, {'task_id': 1})['task_id']
             print('retrieve', source_task_id, 'for', subdir_doc['subdir'])
             task_doc = source.retrieve_task(source_task_id)
 
-            if isinstance(task_doc['task_id'], int):
+            if doc: # NOTE: existing dir_name (re-parse forced)
+                if task_doc['completed_at'] == doc['completed_at']:
+                    print('re-parsed', subdir_doc['subdir'], 'already re-inserted into', target.collection.full_name)
+                    table._rows[-1][-1] -= 1 # update Insert count in table
+                    continue
+                task_doc['task_id'] = doc['task_id']
+                if insert:
+                    target.collection.remove({'task_id': doc['task_id']}) # TODO VaspCalcDb.remove_task to also remove GridFS entries
+                print('REMOVE(d) existing task', doc['task_id'])
+            elif isinstance(task_doc['task_id'], int): # new task
                 if insert:
                     next_tid = max([int(tid[len('mp')+1:]) for tid in target.collection.distinct('task_id')]) + 1
                     task_doc['task_id'] = 'mp-{}'.format(next_tid)
-            else:
+            else: # NOTE replace existing SO task with new calculation (different dir_name)
                 task = target.collection.find_one({'task_id': task_doc['task_id']}, ['orig_inputs', 'output.structure'])
                 if task:
                     task_label = task_type(task['orig_inputs'], include_calc_type=False)
@@ -437,7 +481,7 @@ def copy(target_spec, tag, insert, copy_snls, sbxn, src):
                         s2 = Structure.from_dict(task_doc['output']['structure'])
                         if structures_match(s1, s2):
                             if insert:
-                                target.collection.remove({'task_id': task_doc['task_id']})
+                                target.collection.remove({'task_id': task_doc['task_id']}) # TODO VaspCalcDb.remove_task
                             print('INFO: removed old task!')
                         else:
                             print('ERROR: structures do not match!')
@@ -457,7 +501,8 @@ def copy(target_spec, tag, insert, copy_snls, sbxn, src):
     if tag is None:
         sfmt = '\033[1;32m{}\033[0m'
         table.add_row([sfmt.format(s if s else '-') for s in sums])
-    print(table)
+    if table._rows:
+        print(table)
 
 
 @cli.command()
@@ -1249,7 +1294,7 @@ def add_snls(tag, input_structures, add_snlcolls, insert):
 @click.option('--insert/--no-insert', default=False, help='actually execute task insertion')
 @click.option('--nproc', '-n', type=int, default=1, help='number of processes for parallel parsing')
 @click.option('--max-dirs', '-m', type=int, default=10, help='maximum number of directories to parse')
-@click.option('--force/--no-force', default=False, help='force re-parse and overwrite task')
+@click.option('--force/--no-force', default=False, help='force re-parsing of task')
 #@click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
 #@click.option('--make-snls/--no-make-snls', default=False, help='also create SNLs for parsed tasks')
 def parse(base_path, insert, nproc, max_dirs, force):#, add_snlcolls, make_snls):
@@ -1330,12 +1375,12 @@ def download_file(service, file_id):
     return fh.getvalue()
 
 @cli.command()
-@click.argument('target_db_file', type=click.Path(exists=True))
+@click.argument('target_spec')
 @click.option('--block-filter', '-f', help='block filter substring (e.g. block_2017-)')
 @click.option('--sync-nomad/--no-sync-nomad', default=False, help='sync to NoMaD repository')
-def gdrive(target_db_file, block_filter, sync_nomad):
+def gdrive(target_spec, block_filter, sync_nomad):
     """sync launch directories for target task DB to Google Drive"""
-    target = VaspCalcDb.from_db_file(target_db_file, admin=True)
+    target = calcdb_from_mgrant(target_spec)
     print('connected to target db with', target.collection.count(), 'tasks')
     print(target.db.materials.count(), 'materials')
 
