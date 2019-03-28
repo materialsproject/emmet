@@ -254,13 +254,6 @@ class MaterialsBuilder(Builder):
         for prop in best_props:
             set_(mat, prop["materials_key"], prop["value"])
 
-        # Add metadata back into document and convert back to conventional standard
-        if "structure" in mat:
-            structure = Structure.from_dict(mat["structure"])
-            sga = SpacegroupAnalyzer(structure, symprec=0.1)
-            mat["structure"] = structure.as_dict()
-            mat.update(structure_metadata(structure))
-
         return mat
 
     def filter_and_group_tasks(self, tasks):
@@ -339,6 +332,19 @@ class MaterialsBuilder(Builder):
         Determines if the resulting material document is valid
         """
         return "structure" in doc
+
+
+    def post_process(self,mat):
+        """
+        Any extra post-processing on a material doc
+        """
+
+        # Add structure metadata back into document and convert back to conventional standard
+        if "structure" in mat:
+            structure = Structure.from_dict(mat["structure"])
+            sga = SpacegroupAnalyzer(structure, symprec=0.1)
+            mat["structure"] = structure.as_dict()
+            mat.update(structure_metadata(structure))
 
     def ensure_indexes(self):
         """
