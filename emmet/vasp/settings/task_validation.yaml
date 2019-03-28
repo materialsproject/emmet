@@ -2,4 +2,3 @@
 input_sets:
   GGA Structure Optimization: MPRelaxSet
   GGA+U Structure Optimization: MPRelaxSet
-kpts_tolerance: 0.9
