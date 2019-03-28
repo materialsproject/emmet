@@ -68,6 +68,7 @@ class MaterialsBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
         self.separate_mag_orderings = separate_mag_orderings
+        self.task_types = None
 
         self.__settings = load_settings(self.materials_settings, default_mat_settings)
 
@@ -124,6 +125,16 @@ class MaterialsBuilder(Builder):
             tasks_q = dict(q)
             tasks_q["formula_pretty"] = formula
             tasks = list(self.tasks.query(criteria=tasks_q))
+            if self.task_types:
+                valid_tasks = list(
+                    self.task_types.distinct(
+                        "task_id", {"formula_pretty": formula, "is_valid": True}
+                    )
+                )
+                for t in tasks:
+                    if t["task_id"] not in valid_tasks:
+                        t["is_valid"] = False
+
             yield tasks
 
     def process_item(self, tasks):
