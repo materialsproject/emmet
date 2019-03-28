@@ -58,7 +58,11 @@ class TaskTagger(MapBuilder):
             self._task_validation.get("kpts_tolerance", 0.9),
         )
 
-        return {"task_type": tt, "is_valid": iv}
+        d =  {"task_type": tt, "is_valid": iv[0]}
+        if not iv[0]:
+            d.update({"reason": iv[1]})
+
+        return d
 
 
 def task_type(inputs, include_calc_type=True):
