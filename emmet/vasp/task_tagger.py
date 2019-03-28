@@ -1,6 +1,5 @@
 import os
 import numpy as np
-from monty.serialization import loadfn
 from maggma.builders import MapBuilder
 from pymatgen import Structure
 from atomate.utils.utils import load_class
@@ -10,27 +9,34 @@ __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+default_validation_settings = os.path.join(
+    module_dir, "settings", "task_validation.yaml"
+)
 
 
 class TaskTagger(MapBuilder):
-    def __init__(self, tasks, task_types, input_sets=None, **kwargs):
+    def __init__(
+        self, tasks, task_types, input_sets=None, kpts_tolerance=0.9, **kwargs
+    ):
         """
         Creates task_types from tasks and type definitions
 
         Args:
             tasks (Store): Store of task documents
             task_types (Store): Store of task_types for tasks
+            input_sets (Dict): dictionary of task_type and pymatgen input set to validate against
         """
         self.tasks = tasks
         self.task_types = task_types
-        self.input_sets = input_sets
-        self._task_validation = loadfn(
-            os.path.join(module_dir, "settings", "task_validation.yaml")
-        )
+        self.input_sets = input_sets or {
+            "GGA Structure Optimization": "MPRelaxSet",
+            "GGA+U Structure Optimization": "MPRelaxSet",
+        }
+        self.kpts_tolerance = kpts_tolerance
 
         self._input_sets = {
             name: load_class("pymatgen.io.vasp.sets", inp_set)
-            for name, inp_set in self._task_validation["input_sets"].items()
+            for name, inp_set in self.input_sets.items()
         }
 
         self.kwargs = kwargs
@@ -55,7 +61,7 @@ class TaskTagger(MapBuilder):
             item["output"]["structure"],
             item["orig_inputs"],
             self._input_sets,
-            self._task_validation.get("kpts_tolerance", 0.9),
+            self.kpts_tolerance,
         )
 
         d =  {"task_type": tt, "is_valid": iv[0]}
