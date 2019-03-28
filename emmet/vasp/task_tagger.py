@@ -123,6 +123,15 @@ def task_type(inputs, include_calc_type=True):
 
 
 def is_valid(structure, inputs, input_sets, kpts_tolerance=0.9):
+    """
+    Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
+
+    Args:
+        structure (dict or Structure): the output structure from the calculation
+        inputs (dict): a dict representation of the inputs in traditional pymatgen inputset form
+        input_sets (dict): a dictionary of task_types -> pymatgen input set for validation
+        kpts_tolerance (float): the tolerance to allow kpts to lag behind the input set settings
+    """
 
     if isinstance(structure, dict):
         structure = Structure.from_dict(structure)
