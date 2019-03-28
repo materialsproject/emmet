@@ -29,7 +29,34 @@ class MaterialsBuilder(Builder):
                  angle_tol=5,
                  separate_mag_orderings=False,
                  require_structure_opt=True,
-                 **kwargs):
+    """
+    The Materials Builder aggregates VASP task documents by structure similarity into materials properties documents.
+    The process is as follows:
+
+        1.) Find all documents with the same formula
+        2.) Select only task documents for the task_types we can select properties from
+        3.) Aggregate task documents based on strucutre similarity
+        4.) Convert task docs to property docs with metadata for selection and aggregation
+        5.) Select the best property doc for each property
+        6.) Build material document from best property docs
+        7.) Post-process material document
+        8.) Validate material document
+
+    """
+
+    def __init__(
+        self,
+        tasks,
+        materials,
+        materials_settings=None,
+        query=None,
+        ltol=0.2,
+        stol=0.3,
+        angle_tol=5,
+        separate_mag_orderings=False,
+        require_structure_opt=True,
+        **kwargs
+    ):
         """
         Creates a materials collection from tasks and tags
 
