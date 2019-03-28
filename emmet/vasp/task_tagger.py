@@ -25,6 +25,7 @@ class TaskTagger(MapBuilder):
             tasks (Store): Store of task documents
             task_types (Store): Store of task_types for tasks
             input_sets (Dict): dictionary of task_type and pymatgen input set to validate against
+            kpts_tolerance (float): the minimum kpt density as dictated by the InputSet to require
         """
         self.tasks = tasks
         self.task_types = task_types
@@ -64,7 +65,7 @@ class TaskTagger(MapBuilder):
             self.kpts_tolerance,
         )
 
-        d =  {"task_type": tt, "is_valid": iv[0]}
+        d = {"task_type": tt, "is_valid": iv[0]}
         if not iv[0]:
             d.update({"reason": iv[1]})
 
@@ -153,9 +154,12 @@ def is_valid(structure, inputs, input_sets, kpts_tolerance=0.9):
             inputs.get("kpoints", {}).get("kpoints", [1, 1, 1])
         )
         if num_kpts < valid_num_kpts * kpts_tolerance:
-            return False, f"Too few Kpts at {num_kpts}, need at least {valid_num_kpts * kpts_tolerance}"
+            return (
+                False,
+                f"Too few Kpts at {num_kpts}, need at least {valid_num_kpts * kpts_tolerance}",
+            )
 
-        encut =  inputs.get("incar", {}).get("ENCUT")
+        encut = inputs.get("incar", {}).get("ENCUT")
         valid_encut = valid_input_set.incar["ENCUT"]
         if encut < valid_encut:
             return False, f"ENCUT too low at {encut}, need at least {valid_encut}"
