@@ -38,6 +38,7 @@ class MaterialsBuilder(Builder):
         self,
         tasks,
         materials,
+        task_types=None,
         materials_settings=None,
         query=None,
         ltol=0.2,
@@ -195,12 +196,11 @@ class MaterialsBuilder(Builder):
             chain.from_iterable([self.task_to_prop_list(t) for t in task_group])
         )
 
-        
         # Only consider structure optimization task_ids for material task_id
         possible_mat_ids = [
             prop for prop in all_props if "structure" in prop["materials_key"]
         ]
-        
+
         # Sort task_ids by ID
         possible_mat_ids = [
             prop[self.tasks.key]
@@ -322,6 +322,7 @@ class MaterialsBuilder(Builder):
                             "last_updated": task[self.tasks.lu_field],
                             "energy": get(task, "output.energy_per_atom", 0.0),
                             "materials_key": prop["materials_key"],
+                            "is_valid": task.get("is_valid",True)
                         }
                     )
                 elif not prop.get("optional", False):
