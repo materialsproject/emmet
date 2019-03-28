@@ -130,13 +130,15 @@ def is_valid(structure, inputs, input_sets, kpts_tolerance=0.9):
         valid_num_kpts = valid_input_set.kpoints.num_kpts or np.prod(
             valid_input_set.kpoints.kpts[0]
         )
-        num_kpts = inputs.get("kpoints", {}).get("num_kpts", 0) or np.prod(
-            inputs.get("kpoints", {}).get("kpts", [1, 1, 1])
+        num_kpts = inputs.get("kpoints", {}).get("nkpoints", 0) or np.prod(
+            inputs.get("kpoints", {}).get("kpoints", [1, 1, 1])
         )
-        if (kpts_tolerance * num_kpts) < valid_num_kpts:
-            return False
+        if num_kpts < valid_num_kpts * kpts_tolerance:
+            return False, f"Too few Kpts at {num_kpts}, need at least {valid_num_kpts * kpts_tolerance}"
 
-        if inputs.get("incar", {}).get("ENCUT") < valid_input_set.incar["ENCUT"]:
-            return False
+        encut =  inputs.get("incar", {}).get("ENCUT")
+        valid_encut = valid_input_set.incar["ENCUT"]
+        if encut < valid_encut:
+            return False, f"ENCUT too low at {encut}, need at least {valid_encut}"
 
-    return True
+    return True, ""
