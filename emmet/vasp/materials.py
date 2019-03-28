@@ -19,16 +19,6 @@ default_mat_settings = os.path.join(module_dir, "settings", "materials_settings.
 
 
 class MaterialsBuilder(Builder):
-    def __init__(self,
-                 tasks,
-                 materials,
-                 materials_settings=None,
-                 query=None,
-                 ltol=0.2,
-                 stol=0.3,
-                 angle_tol=5,
-                 separate_mag_orderings=False,
-                 require_structure_opt=True,
     """
     The Materials Builder aggregates VASP task documents by structure similarity into materials properties documents.
     The process is as follows:
@@ -54,7 +44,6 @@ class MaterialsBuilder(Builder):
         stol=0.3,
         angle_tol=5,
         separate_mag_orderings=False,
-        require_structure_opt=True,
         **kwargs
     ):
         """
@@ -80,11 +69,12 @@ class MaterialsBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
         self.separate_mag_orderings = separate_mag_orderings
-        self.require_structure_opt = require_structure_opt
 
         self.__settings = load_settings(self.materials_settings, default_mat_settings)
 
-        self.allowed_tasks = {t_type for d in self.__settings for t_type in d["quality_score"]}
+        self.allowed_tasks = {
+            t_type for d in self.__settings for t_type in d["quality_score"]
+        }
 
         super().__init__(sources=[tasks], targets=[materials], **kwargs)
 
@@ -113,7 +103,9 @@ class MaterialsBuilder(Builder):
         all_tasks = set(self.tasks.distinct("task_id", q))
         processed_tasks = set(self.materials.distinct("task_ids"))
         to_process_tasks = all_tasks - processed_tasks
-        to_process_forms = self.tasks.distinct("formula_pretty", {"task_id": {"$in": list(to_process_tasks)}})
+        to_process_forms = self.tasks.distinct(
+            "formula_pretty", {"task_id": {"$in": list(to_process_tasks)}}
+        )
         self.logger.info("Found {} unprocessed tasks".format(len(to_process_tasks)))
         self.logger.info("Found {} unprocessed formulas".format(len(to_process_forms)))
 
@@ -121,7 +113,9 @@ class MaterialsBuilder(Builder):
         update_q = dict(q)
         update_q.update(self.tasks.lu_filter(self.materials))
         updated_forms = self.tasks.distinct("formula_pretty", update_q)
-        self.logger.info("Found {} updated systems to proces".format(len(updated_forms)))
+        self.logger.info(
+            "Found {} updated systems to proces".format(len(updated_forms))
+        )
 
         forms_to_update = set(updated_forms) | set(to_process_forms)
         self.logger.info("Processing {} total systems".format(len(forms_to_update)))
@@ -154,7 +148,11 @@ class MaterialsBuilder(Builder):
         for group in grouped_tasks:
             materials.append(self.make_mat(group))
 
-        self.logger.debug("Produced {} materials for {}".format(len(materials), tasks[0]["formula_pretty"]))
+        self.logger.debug(
+            "Produced {} materials for {}".format(
+                len(materials), tasks[0]["formula_pretty"]
+            )
+        )
 
         return materials
 
@@ -183,16 +181,23 @@ class MaterialsBuilder(Builder):
         """
 
         # Convert the task to properties and flatten
-        all_props = list(chain.from_iterable([self.task_to_prop_list(t) for t in task_group]))
+        all_props = list(
+            chain.from_iterable([self.task_to_prop_list(t) for t in task_group])
+        )
 
         if self.require_structure_opt:
             # Only consider structure optimization task_ids for material task_id
-            possible_mat_ids = [prop for prop in all_props if "structure" in prop["materials_key"]]
+            possible_mat_ids = [
+                prop for prop in all_props if "structure" in prop["materials_key"]
+            ]
         else:
             possible_mat_ids = all_props
 
         # Sort task_ids by ID
-        possible_mat_ids = [prop[self.tasks.key] for prop in sorted(possible_mat_ids, key=lambda x: ID_to_int(x["task_id"]))]
+        possible_mat_ids = [
+            prop[self.tasks.key]
+            for prop in sorted(possible_mat_ids, key=lambda x: ID_to_int(x["task_id"]))
+        ]
 
         # If we don"t have a structure optimization then just return no material
         if len(possible_mat_ids) == 0:
@@ -208,10 +213,19 @@ class MaterialsBuilder(Builder):
         best_props = []
         for _, props in grouped_props:
             # Sort for highest quality score and lowest energy
-            sorted_props = sorted(props, key=lambda x: (x["quality_score"], -1.0 * x["energy"]), reverse=True)
+            sorted_props = sorted(
+                props,
+                key=lambda x: (x["quality_score"], -1.0 * x["energy"]),
+                reverse=True,
+            )
             if sorted_props[0].get("aggregate", False):
                 # Make this a list of lists and then flatten to deal with mixed value typing
-                vals = [prop["value"] if isinstance(prop["value"], list) else [prop["value"]] for prop in sorted_props]
+                vals = [
+                    prop["value"]
+                    if isinstance(prop["value"], list)
+                    else [prop["value"]]
+                    for prop in sorted_props
+                ]
                 vals = list(chain.from_iterable(vals))
                 prop = sorted_props[0]
                 prop["value"] = vals
@@ -222,9 +236,14 @@ class MaterialsBuilder(Builder):
                 best_props.append(sorted_props[0])
 
         # Add in the provenance for the properties
-        origins = [{k: prop[k]
-                    for k in ["materials_key", "task_type", "task_id", "last_updated"]} for prop in best_props
-                   if prop.get("track", False)]
+        origins = [
+            {
+                k: prop[k]
+                for k in ["materials_key", "task_type", "task_id", "last_updated"]
+            }
+            for prop in best_props
+            if prop.get("track", False)
+        ]
 
         # Store all the task_ids
         task_ids = list(set([t["task_id"] for t in task_group]))
@@ -238,7 +257,7 @@ class MaterialsBuilder(Builder):
             "task_ids": task_ids,
             self.materials.key: mat_id,
             "origins": origins,
-            "task_types": task_types
+            "task_types": task_types,
         }
 
         for prop in best_props:
@@ -258,7 +277,9 @@ class MaterialsBuilder(Builder):
         Groups tasks by structure matching
         """
 
-        filtered_tasks = [t for t in tasks if task_type(t["orig_inputs"]) in self.allowed_tasks]
+        filtered_tasks = [
+            t for t in tasks if task_type(t["orig_inputs"]) in self.allowed_tasks
+        ]
 
         structures = []
 
@@ -269,8 +290,11 @@ class MaterialsBuilder(Builder):
             s.total_magnetization = total_mag if total_mag else 0
             # a fix for very old tasks that did not report site-projected magnetic moments
             # so that we can group them appropriately
-            if ('magmom' not in s.site_properties) and (get(t, "input.parameters.ISPIN", 1) == 2) and \
-                    has(t, "input.parameters.MAGMOM"):
+            if (
+                ("magmom" not in s.site_properties)
+                and (get(t, "input.parameters.ISPIN", 1) == 2)
+                and has(t, "input.parameters.MAGMOM")
+            ):
                 # TODO: map input structure sites to output structure sites
                 s.add_site_property("magmom", t["input"]["parameters"]["MAGMOM"])
             structures.append(s)
@@ -280,7 +304,8 @@ class MaterialsBuilder(Builder):
             ltol=self.ltol,
             stol=self.stol,
             angle_tol=self.angle_tol,
-            separate_mag_orderings=self.separate_mag_orderings)
+            separate_mag_orderings=self.separate_mag_orderings,
+        )
 
         for group in grouped_structures:
             yield [filtered_tasks[struc.index] for struc in group]
@@ -298,19 +323,23 @@ class MaterialsBuilder(Builder):
         for prop in self.__settings:
             if t_type in prop["quality_score"].keys():
                 if has(task, prop["tasks_key"]):
-                    props.append({
-                        "value": get(task, prop["tasks_key"]),
-                        "task_type": t_type,
-                        "task_id": t_id,
-                        "quality_score": prop["quality_score"][t_type],
-                        "track": prop.get("track", False),
-                        "aggregate": prop.get("aggregate", False),
-                        "last_updated": task[self.tasks.lu_field],
-                        "energy": get(task, "output.energy_per_atom", 0.0),
-                        "materials_key": prop["materials_key"]
-                    })
+                    props.append(
+                        {
+                            "value": get(task, prop["tasks_key"]),
+                            "task_type": t_type,
+                            "task_id": t_id,
+                            "quality_score": prop["quality_score"][t_type],
+                            "track": prop.get("track", False),
+                            "aggregate": prop.get("aggregate", False),
+                            "last_updated": task[self.tasks.lu_field],
+                            "energy": get(task, "output.energy_per_atom", 0.0),
+                            "materials_key": prop["materials_key"],
+                        }
+                    )
                 elif not prop.get("optional", False):
-                    self.logger.error("Failed getting {} for task: {}".format(prop["tasks_key"], t_id))
+                    self.logger.error(
+                        "Failed getting {} for task: {}".format(prop["tasks_key"], t_id)
+                    )
         return props
 
     def valid(self, doc):
@@ -358,7 +387,14 @@ def structure_metadata(structure):
     return meta
 
 
-def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, separate_mag_orderings=False):
+def group_structures(
+    structures,
+    ltol=0.2,
+    stol=0.3,
+    angle_tol=5,
+    symprec=0.1,
+    separate_mag_orderings=False,
+):
     """
     Groups structures according to space group and structure matching
 
@@ -379,7 +415,8 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, s
         scale=True,
         attempt_supercell=False,
         allow_subset=False,
-        comparator=ElementComparator())
+        comparator=ElementComparator(),
+    )
 
     def get_sg(struc):
         # helper function to get spacegroup with a loose tolerance
@@ -400,7 +437,9 @@ def group_structures(structures, ltol=0.2, stol=0.3, angle_tol=5, symprec=0.1, s
 
             # Match magnetic orderings here
             if separate_mag_orderings:
-                for _, mag_group in groupby(sorted(group, key=get_mag_ordering), key=get_mag_ordering):
+                for _, mag_group in groupby(
+                    sorted(group, key=get_mag_ordering), key=get_mag_ordering
+                ):
                     yield list(mag_group)
             else:
                 yield group
