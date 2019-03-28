@@ -102,7 +102,7 @@ class MaterialsBuilder(Builder):
         self.logger.info("Setting indexes")
         self.ensure_indexes()
 
-        # Save timestamp for update operation
+        # Save timestamp to mark buildtime for material documents
         self.timestamp = datetime.utcnow()
 
         # Get all processed tasks:
