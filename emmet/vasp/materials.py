@@ -202,35 +202,15 @@ class MaterialsBuilder(Builder):
         else:
             mat_id = possible_mat_ids[0]
 
-        # Sort and group based on materials key
-        sorted_props = sorted(all_props, key=lambda x: x["materials_key"])
-        grouped_props = groupby(sorted_props, lambda x: x["materials_key"])
+        # Filter out any invalid tasks, then sort and group based on materials key
+        
+        sorted_props = sorted(valid_props, key=lambda x: x["materials_key"])
+        grouped_props = groupby(sorted_props, key=lambda x: x["materials_key"])
 
         # Choose the best prop for each materials key: highest quality score and lowest energy calculation
         best_props = []
         for _, props in grouped_props:
-            # Sort for highest quality score and lowest energy
-            sorted_props = sorted(
-                props,
-                key=lambda x: (x["quality_score"], -1.0 * x["energy"]),
-                reverse=True,
-            )
-            if sorted_props[0].get("aggregate", False):
-                # Make this a list of lists and then flatten to deal with mixed value typing
-                vals = [
-                    prop["value"]
-                    if isinstance(prop["value"], list)
-                    else [prop["value"]]
-                    for prop in sorted_props
-                ]
-                vals = list(chain.from_iterable(vals))
-                prop = sorted_props[0]
-                prop["value"] = vals
-                # Can"t track an aggregated property
-                prop["track"] = False
-                best_props.append(prop)
-            else:
-                best_props.append(sorted_props[0])
+            best_props.append(find_best_prop(props))
 
         # Add in the provenance for the properties
         origins = [
@@ -361,6 +341,41 @@ class MaterialsBuilder(Builder):
         self.materials.ensure_index("task_ids")
         self.materials.ensure_index(self.materials.lu_field)
 
+
+
+def best_prop(props):
+    """
+    Takes a list of property docs all for the same property
+    1.) Filters out props from invalid tasks
+    2.) Sorts according to highest quality score and lowest energy
+    3.) Checks if this is an aggregation prop and aggregates
+    4.) Returns best propr
+    """
+    # Only count valid props
+    valid_props = [prop for prop in props if prop["is_valid"]]
+    # Sort for highest quality score and lowest energy
+    sorted_props = sorted(
+        valid_props,
+        key=lambda x: (x["quality_score"], -1.0 * x["energy"]),
+        reverse=True,
+    )
+    if sorted_props[0].get("aggregate", False):
+        # Make this a list of lists and then flatten to deal with mixed value typing
+        vals = [
+            prop["value"]
+            if isinstance(prop["value"], list)
+            else [prop["value"]]
+            for prop in sorted_props
+        ]
+        vals = list(chain.from_iterable(vals))
+        prop = sorted_props[0]
+        prop["value"] = vals
+        # Can"t track an aggregated property
+        prop["track"] = False
+    else:
+        prop = sorted_props[0]
+
+    return prop
 
 def structure_metadata(structure):
     """
