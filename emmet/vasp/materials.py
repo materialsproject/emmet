@@ -58,7 +58,6 @@ class MaterialsBuilder(Builder):
             stol (float): StructureMatcher tuning parameter for matching tasks to materials
             angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
             separate_mag_orderings (bool): Separate magnetic orderings into different materials
-            require_structure_opt (bool): Requires every material have a structure optimization
         """
 
         self.tasks = tasks
@@ -185,14 +184,12 @@ class MaterialsBuilder(Builder):
             chain.from_iterable([self.task_to_prop_list(t) for t in task_group])
         )
 
-        if self.require_structure_opt:
-            # Only consider structure optimization task_ids for material task_id
-            possible_mat_ids = [
-                prop for prop in all_props if "structure" in prop["materials_key"]
-            ]
-        else:
-            possible_mat_ids = all_props
-
+        
+        # Only consider structure optimization task_ids for material task_id
+        possible_mat_ids = [
+            prop for prop in all_props if "structure" in prop["materials_key"]
+        ]
+        
         # Sort task_ids by ID
         possible_mat_ids = [
             prop[self.tasks.key]
