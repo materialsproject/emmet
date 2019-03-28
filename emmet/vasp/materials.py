@@ -157,7 +157,10 @@ class MaterialsBuilder(Builder):
         grouped_tasks = self.filter_and_group_tasks(tasks)
 
         for group in grouped_tasks:
-            materials.append(self.make_mat(group))
+            mat = self.make_mat(group)
+            if mat and self.is_valid(mat):
+                self.post_process(mat)
+                materials.append(mat)
 
         self.logger.debug(
             "Produced {} materials for {}".format(
