@@ -178,7 +178,7 @@ class MaterialsBuilder(Builder):
             items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
         """
 
-        items = [i for i in filter(None, chain.from_iterable(items)) if self.valid(i)]
+        items = [i for i in filter(None, chain.from_iterable(items))]
 
         for item in items:
             item.update({"_bt": self.timestamp})
@@ -216,15 +216,13 @@ class MaterialsBuilder(Builder):
         else:
             mat_id = possible_mat_ids[0]
 
-        # Filter out any invalid tasks, then sort and group based on materials key
-        
+    
+        # Sort and group based on property    
         sorted_props = sorted(valid_props, key=lambda x: x["materials_key"])
         grouped_props = groupby(sorted_props, key=lambda x: x["materials_key"])
 
         # Choose the best prop for each materials key: highest quality score and lowest energy calculation
-        best_props = []
-        for _, props in grouped_props:
-            best_props.append(find_best_prop(props))
+        best_props = [find_best_prop(props) for _,props in grouped_props]
 
         # Add in the provenance for the properties
         origins = [
@@ -238,6 +236,7 @@ class MaterialsBuilder(Builder):
 
         # Store all the task_ids
         task_ids = list(set([t["task_id"] for t in task_group]))
+        deprecated_tasks = list(set([t["task_id"] for t in task_group if not t.get("is_valid",True)]))
 
         # Store task_types
         task_types = {t["task_id"]: t["task_type"] for t in all_props}
@@ -246,6 +245,7 @@ class MaterialsBuilder(Builder):
             self.materials.lu_field: max([prop["last_updated"] for prop in all_props]),
             "created_at": min([prop["last_updated"] for prop in all_props]),
             "task_ids": task_ids,
+            "deprecated_tasks": deprecated_tasks,
             self.materials.key: mat_id,
             "origins": origins,
             "task_types": task_types,
