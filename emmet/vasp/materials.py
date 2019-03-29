@@ -64,12 +64,12 @@ class MaterialsBuilder(Builder):
         self.tasks = tasks
         self.materials_settings = materials_settings
         self.materials = materials
+        self.task_types = None
         self.query = query if query else {}
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol
         self.separate_mag_orderings = separate_mag_orderings
-        self.task_types = None
 
         self.__settings = load_settings(self.materials_settings, default_mat_settings)
 
@@ -127,13 +127,13 @@ class MaterialsBuilder(Builder):
             tasks_q["formula_pretty"] = formula
             tasks = list(self.tasks.query(criteria=tasks_q))
             if self.task_types:
-                valid_tasks = list(
+                invalid_tasks = list(
                     self.task_types.distinct(
-                        "task_id", {"formula_pretty": formula, "is_valid": True}
+                        "task_id", {"formula_pretty": formula, "is_valid": False}
                     )
                 )
                 for t in tasks:
-                    if t["task_id"] not in valid_tasks:
+                    if t["task_id"] in invalid_tasks:
                         t["is_valid"] = False
 
             yield tasks
@@ -216,13 +216,12 @@ class MaterialsBuilder(Builder):
         else:
             mat_id = possible_mat_ids[0]
 
-    
-        # Sort and group based on property    
+        # Sort and group based on property
         sorted_props = sorted(valid_props, key=lambda x: x["materials_key"])
         grouped_props = groupby(sorted_props, key=lambda x: x["materials_key"])
 
         # Choose the best prop for each materials key: highest quality score and lowest energy calculation
-        best_props = [find_best_prop(props) for _,props in grouped_props]
+        best_props = [find_best_prop(props) for _, props in grouped_props]
 
         # Add in the provenance for the properties
         origins = [
@@ -236,7 +235,9 @@ class MaterialsBuilder(Builder):
 
         # Store all the task_ids
         task_ids = list(set([t["task_id"] for t in task_group]))
-        deprecated_tasks = list(set([t["task_id"] for t in task_group if not t.get("is_valid",True)]))
+        deprecated_tasks = list(
+            set([t["task_id"] for t in task_group if not t.get("is_valid", True)])
+        )
 
         # Store task_types
         task_types = {t["task_id"]: t["task_type"] for t in all_props}
@@ -318,7 +319,7 @@ class MaterialsBuilder(Builder):
                             "last_updated": task[self.tasks.lu_field],
                             "energy": get(task, "output.energy_per_atom", 0.0),
                             "materials_key": prop["materials_key"],
-                            "is_valid": task.get("is_valid",True)
+                            "is_valid": task.get("is_valid", True),
                         }
                     )
                 elif not prop.get("optional", False):
@@ -333,8 +334,7 @@ class MaterialsBuilder(Builder):
         """
         return "structure" in doc
 
-
-    def post_process(self,mat):
+    def post_process(self, mat):
         """
         Any extra post-processing on a material doc
         """
@@ -363,7 +363,6 @@ class MaterialsBuilder(Builder):
         self.materials.ensure_index(self.materials.lu_field)
 
 
-
 def best_prop(props):
     """
     Takes a list of property docs all for the same property
@@ -383,9 +382,7 @@ def best_prop(props):
     if sorted_props[0].get("aggregate", False):
         # Make this a list of lists and then flatten to deal with mixed value typing
         vals = [
-            prop["value"]
-            if isinstance(prop["value"], list)
-            else [prop["value"]]
+            prop["value"] if isinstance(prop["value"], list) else [prop["value"]]
             for prop in sorted_props
         ]
         vals = list(chain.from_iterable(vals))
@@ -397,6 +394,7 @@ def best_prop(props):
         prop = sorted_props[0]
 
     return prop
+
 
 def structure_metadata(structure):
     """
