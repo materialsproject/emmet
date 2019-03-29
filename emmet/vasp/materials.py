@@ -64,7 +64,7 @@ class MaterialsBuilder(Builder):
         self.tasks = tasks
         self.materials_settings = materials_settings
         self.materials = materials
-        self.task_types = None
+        self.task_types = task_types
         self.query = query if query else {}
         self.ltol = ltol
         self.stol = stol
