@@ -158,7 +158,7 @@ class MaterialsBuilder(Builder):
 
         for group in grouped_tasks:
             mat = self.make_mat(group)
-            if mat and self.is_valid(mat):
+            if mat and self.valid(mat):
                 self.post_process(mat)
                 materials.append(mat)
 
@@ -217,7 +217,7 @@ class MaterialsBuilder(Builder):
             mat_id = possible_mat_ids[0]
 
         # Sort and group based on property
-        sorted_props = sorted(valid_props, key=lambda x: x["materials_key"])
+        sorted_props = sorted(all_props, key=lambda x: x["materials_key"])
         grouped_props = groupby(sorted_props, key=lambda x: x["materials_key"])
 
         # Choose the best prop for each materials key: highest quality score and lowest energy calculation
@@ -363,7 +363,7 @@ class MaterialsBuilder(Builder):
         self.materials.ensure_index(self.materials.lu_field)
 
 
-def best_prop(props):
+def find_best_prop(props):
     """
     Takes a list of property docs all for the same property
     1.) Filters out props from invalid tasks
