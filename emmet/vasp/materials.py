@@ -77,7 +77,10 @@ class MaterialsBuilder(Builder):
             t_type for d in self.__settings for t_type in d["quality_score"]
         }
 
-        super().__init__(sources=[tasks], targets=[materials], **kwargs)
+        sources = [tasks]
+        if self.task_types:
+            sources.append(task_types)
+        super().__init__(sources=sources, targets=[materials], **kwargs)
 
     def get_items(self):
         """
