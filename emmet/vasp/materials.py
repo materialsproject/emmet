@@ -10,6 +10,7 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from maggma.builders import Builder
 from emmet.vasp.task_tagger import task_type
 from emmet.common.utils import load_settings
+from emmet.magic_numbers import LTOL, STOL, ANGLE_TOL
 from pydash.objects import get, set_, has
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
@@ -25,9 +26,9 @@ class MaterialsBuilder(Builder):
                  mat_prefix="mp-",
                  materials_settings=None,
                  query=None,
-                 ltol=0.2,
-                 stol=0.3,
-                 angle_tol=5,
+                 ltol=LTOL,
+                 stol=STOL,
+                 angle_tol=ANGLE_TOL,
                  separate_mag_orderings=False,
                  require_structure_opt=True,
                  **kwargs):
