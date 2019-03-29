@@ -10,6 +10,8 @@ from maggma.builders import Builder
 from pybtex.database import parse_string
 from pybtex.database import BibliographyData
 
+from emmet.magic_numbers import LTOL, STOL, ANGLE_TOL
+
 # Silly fix to keep pybtex from spamming warnings
 import os, pybtex
 devnull = open(os.devnull, 'w')
@@ -189,9 +191,9 @@ class SNLBuilder(Builder):
             generator of materials doc keys
         """
         sm = StructureMatcher(
-            ltol=self.ltol,
-            stol=self.stol,
-            angle_tol=self.angle_tol,
+            ltol=LTOL,
+            stol=STOL,
+            angle_tol=ANGLE_TOL,
             primitive_cell=True,
             scale=True,
             attempt_supercell=False,
