@@ -306,7 +306,8 @@
       "GGA+U Static": 6,
       "GGA+U Structure Optimization": 5
     },
-    "tasks_key": "calcs_reversed.0.output.outcar.magmom"
+    "tasks_key": "calcs_reversed.0.output.outcar.magmom",
+    "optional": true
   },
   {
     "materials_key": "dielectric.structure",
