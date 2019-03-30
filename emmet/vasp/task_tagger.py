@@ -152,14 +152,14 @@ def is_valid(structure, inputs, input_sets, kpts_tolerance=0.9):
         num_kpts = inputs.get("kpoints", {}).get("nkpoints", 0) or np.prod(
             inputs.get("kpoints", {}).get("kpoints", [1, 1, 1])
         )
-        if num_kpts / valid_num_kpts < kpts_tolerance:
+        d["kpts_ratio"] = num_kpts / valid_num_kpts
+        if d["kpts_ratio"] < kpts_tolerance:
             d["is_valid"] = False
-            d["kpts_ratio"] = num_kpts / valid_num_kpts
 
         encut = inputs.get("incar", {}).get("ENCUT")
         valid_encut = valid_input_set.incar["ENCUT"]
-        if encut < valid_encut:
+        d["encut_ratio"] = float(encut) / valid_encut
+        if d["encut_ratio"] < 1:
             d["is_valid"] = False
-            d["encut_ratio"] = encut / valid_encut
 
     return d
