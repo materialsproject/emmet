@@ -65,10 +65,7 @@ class TaskTagger(MapBuilder):
             self.kpts_tolerance,
         )
 
-        d = {"task_type": tt, "is_valid": iv[0]}
-        if not iv[0]:
-            d.update({"reason": iv[1]})
-
+        d = {"task_type": tt, **iv}
         return d
 
 
@@ -144,6 +141,8 @@ def is_valid(structure, inputs, input_sets, kpts_tolerance=0.9):
         structure = Structure.from_dict(structure)
     tt = task_type(inputs)
 
+    d = {"is_valid": True}
+
     if tt in input_sets:
         valid_input_set = input_sets[tt](structure)
 
@@ -153,15 +152,14 @@ def is_valid(structure, inputs, input_sets, kpts_tolerance=0.9):
         num_kpts = inputs.get("kpoints", {}).get("nkpoints", 0) or np.prod(
             inputs.get("kpoints", {}).get("kpoints", [1, 1, 1])
         )
-        if num_kpts < valid_num_kpts * kpts_tolerance:
-            return (
-                False,
-                f"Too few Kpts at {num_kpts}, need at least {valid_num_kpts * kpts_tolerance}",
-            )
+        if num_kpts / valid_num_kpts < kpts_tolerance:
+            d["is_valid"] = False
+            d["kpts_ratio"] = num_kpts / valid_num_kpts
 
         encut = inputs.get("incar", {}).get("ENCUT")
         valid_encut = valid_input_set.incar["ENCUT"]
         if encut < valid_encut:
-            return False, f"ENCUT too low at {encut}, need at least {valid_encut}"
+            d["is_valid"] = False
+            d["encut_ratio"] = encut / valid_encut
 
-    return True, ""
+    return d
