@@ -98,6 +98,8 @@ class ThermoBuilder(Builder):
 
         new_q = dict(self.query)
         new_q["chemsys"] = {"$in": list(chemsys_permutations(chemsys))}
+        new_q["status"] =  "successful"
+
         fields = ["structure", self.materials.key, "thermo.energy_per_atom", "composition", "calc_settings"]
         data = list(self.materials.query(properties=fields, criteria=new_q))
 
