@@ -104,7 +104,7 @@ class MaterialsBuilder(Builder):
         q["state"] = "successful"
 
         self.logger.info("Finding tasks to process")
-        all_tasks = set(self.tasks.distinct("task_id", q))
+        all_tasks = set(self.tasks.distinct(self.tasks.key, q))
         processed_tasks = set(self.materials.distinct("task_ids"))
         to_process_tasks = all_tasks - processed_tasks
         to_process_forms = self.tasks.distinct(
@@ -125,19 +125,20 @@ class MaterialsBuilder(Builder):
         self.logger.info("Processing {} total systems".format(len(forms_to_update)))
         self.total = len(forms_to_update)
 
+        if self.task_types:
+            invalid_ids = set(
+                self.task_types.distinct(self.task_types.key, {"is_valid": False})
+            )
+        else:
+            invalid_ids = set()
+
         for formula in forms_to_update:
             tasks_q = dict(q)
             tasks_q["formula_pretty"] = formula
             tasks = list(self.tasks.query(criteria=tasks_q))
-            if self.task_types:
-                invalid_tasks = list(
-                    self.task_types.distinct(
-                        "task_id", {"formula_pretty": formula, "is_valid": False}
-                    )
-                )
-                for t in tasks:
-                    if t["task_id"] in invalid_tasks:
-                        t["is_valid"] = False
+            for t in tasks:
+                if t[self.tasks.key] in invalid_ids:
+                    t["is_valid"] = False
 
             yield tasks
 
@@ -219,8 +220,19 @@ class MaterialsBuilder(Builder):
         else:
             mat_id = possible_mat_ids[0]
 
+        # Only count valid props
+        valid_props = [prop for prop in all_props if prop["is_valid"]]
+
+        # Is valid if there is atleast one good structure optimization
+        is_valid = (
+            len([prop for prop in valid_props if "structure" in prop["materials_key"]])
+            > 0
+        )
+        if not is_valid:
+            valid_props = all_props
+
         # Sort and group based on property
-        sorted_props = sorted(all_props, key=lambda x: x["materials_key"])
+        sorted_props = sorted(valid_props, key=lambda x: x["materials_key"])
         grouped_props = groupby(sorted_props, key=lambda x: x["materials_key"])
 
         # Choose the best prop for each materials key: highest quality score and lowest energy calculation
@@ -253,6 +265,7 @@ class MaterialsBuilder(Builder):
             self.materials.key: mat_id,
             "origins": origins,
             "task_types": task_types,
+            "status": "successful" if is_valid else "deprecated",
         }
 
         for prop in best_props:
@@ -374,13 +387,10 @@ def find_best_prop(props):
     3.) Checks if this is an aggregation prop and aggregates
     4.) Returns best propr
     """
-    # Only count valid props
-    valid_props = [prop for prop in props if prop["is_valid"]]
+
     # Sort for highest quality score and lowest energy
     sorted_props = sorted(
-        valid_props,
-        key=lambda x: (x["quality_score"], -1.0 * x["energy"]),
-        reverse=True,
+        props, key=lambda x: (x["quality_score"], -1.0 * x["energy"]), reverse=True
     )
     if sorted_props[0].get("aggregate", False):
         # Make this a list of lists and then flatten to deal with mixed value typing
