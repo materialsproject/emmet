@@ -101,6 +101,7 @@ class ThermoBuilder(Builder):
         new_q["status"] =  "successful"
 
         fields = ["structure", self.materials.key, "thermo.energy_per_atom", "composition", "calc_settings"]
+        new_q["deprecated"] = False
         data = list(self.materials.query(properties=fields, criteria=new_q))
 
         all_entries = []
