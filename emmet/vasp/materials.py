@@ -357,6 +357,11 @@ class MaterialsBuilder(Builder):
         self.materials.ensure_index("task_ids")
         self.materials.ensure_index(self.materials.lu_field)
 
+        if self.task_types:
+            self.task_types.ensure_index(self.task_types.key)
+            self.task_types.ensure_index("is_valid")
+
+
 def find_mat_id(props):
 
     # Only consider structure optimization task_ids for material task_id
