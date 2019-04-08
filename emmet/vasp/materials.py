@@ -322,7 +322,12 @@ class MaterialsBuilder(Builder):
         """
         Determines if the resulting material document is valid
         """
-        return "structure" in doc
+        if doc["task_id"] == None:
+            return False
+        elif "structure" not in doc:
+            return False
+
+        return True
 
     def post_process(self, mat):
         """
