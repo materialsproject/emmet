@@ -269,7 +269,8 @@
       "GGA Structure Optimization": 7,
       "GGA+U Structure Optimization": 8
     },
-    "tasks_key": "output.structure"
+    "tasks_key": "output.structure",
+    "track": true
   },
   {
     "aggregate": true,
