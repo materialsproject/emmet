@@ -349,8 +349,6 @@ class MaterialsBuilder(Builder):
             mat.update({"deprecated": True})
         elif "thermo.energy_per_atom" in doc["invalid_props"]:
             mat.update({"deprecated": True})
-        else:
-            mat.update({"deprecated": False})
 
 
     def ensure_indexes(self):
