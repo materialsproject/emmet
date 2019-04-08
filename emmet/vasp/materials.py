@@ -183,6 +183,7 @@ class MaterialsBuilder(Builder):
         """
 
         items = [i for i in filter(None, chain.from_iterable(items))]
+        items = [i for i in items if self.valid(i)]
 
         for item in items:
             item.update({"_bt": self.timestamp})
