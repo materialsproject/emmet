@@ -79,7 +79,7 @@ class MaterialsBuilder(Builder):
 
         sources = [tasks]
         if self.task_types:
-            sources.append(task_types)
+            sources.append(self.task_types)
         super().__init__(sources=sources, targets=[materials], **kwargs)
 
     def get_items(self):
@@ -154,7 +154,7 @@ class MaterialsBuilder(Builder):
         """
 
         formula = tasks[0]["formula_pretty"]
-        t_ids = [t["task_id"] for t in tasks]
+        t_ids = [t[self.tasks.key] for t in tasks]
         self.logger.debug("Processing {} : {}".format(formula, t_ids))
 
         materials = []
@@ -316,7 +316,7 @@ class MaterialsBuilder(Builder):
         Converts a task into an list of properties with associated metadata
         """
         t_type = task_type(task["orig_inputs"])
-        t_id = task["task_id"]
+        t_id = task[self.tasks.key]
 
         # Convert the task doc into a serious of properties in the materials
         # doc with the right document structure
