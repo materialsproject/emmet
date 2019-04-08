@@ -222,6 +222,8 @@ class MaterialsBuilder(Builder):
             if prop.get("track", False)
         ]
 
+        invalid_props = [k for k in best_props if not k["is_valid"]]
+
         # Store all the task_ids
         task_ids = list(set([t["task_id"] for t in task_group]))
         deprecated_tasks = list(
@@ -239,7 +241,7 @@ class MaterialsBuilder(Builder):
             self.materials.key: mat_id,
             "origins": origins,
             "task_types": task_types,
-            "status": "successful" if is_valid else "deprecated",
+            "invalid_props": invalid_props
         }
 
         for prop in best_props:
@@ -384,15 +386,14 @@ def find_mat_id(props):
 def find_best_prop(props):
     """
     Takes a list of property docs all for the same property
-    1.) Filters out props from invalid tasks
-    2.) Sorts according to highest quality score and lowest energy
-    3.) Checks if this is an aggregation prop and aggregates
-    4.) Returns best propr
+    1.) Sorts according to valid tasks, highest quality score and lowest energy
+    2.) Checks if this is an aggregation prop and aggregates
+    3.) Returns best property
     """
 
     # Sort for highest quality score and lowest energy
     sorted_props = sorted(
-        props, key=lambda x: (x["quality_score"], -1.0 * x["energy"]), reverse=True
+        props, key=lambda x: (-1 * ["is_valid"], -1 * x["quality_score"], x["energy"])
     )
     if sorted_props[0].get("aggregate", False):
         # Make this a list of lists and then flatten to deal with mixed value typing
