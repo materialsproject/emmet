@@ -344,6 +344,15 @@ class MaterialsBuilder(Builder):
             mat["structure"] = structure.as_dict()
             mat.update(structure_metadata(structure))
 
+        # Deprecate materials with bad structures or energies
+        if "structure" in doc["invalid_props"]:
+            mat.update({"deprecated": True})
+        elif "thermo.energy_per_atom" in doc["invalid_props"]:
+            mat.update({"deprecated": True})
+        else:
+            mat.update({"deprecated": False})
+
+
     def ensure_indexes(self):
         """
         Ensures indicies on the tasks and materials collections
