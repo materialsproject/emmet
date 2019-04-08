@@ -216,7 +216,7 @@ class ThermoBuilder(Builder):
         self.materials.ensure_index("chemsys")
 
         # Search indicies for thermo
-        self.thermo.ensure_index(self.thermo.key, unique=True)
+        self.thermo.ensure_index(self.thermo.key)
         self.thermo.ensure_index(self.thermo.lu_field)
         self.thermo.ensure_index("chemsys")
 
