@@ -203,33 +203,7 @@ class MaterialsBuilder(Builder):
             chain.from_iterable([self.task_to_prop_list(t) for t in task_group])
         )
 
-        # Only consider structure optimization task_ids for material task_id
-        possible_mat_ids = [
-            prop for prop in all_props if "structure" in prop["materials_key"]
-        ]
-
-        # Sort task_ids by ID
-        possible_mat_ids = [
-            prop[self.tasks.key]
-            for prop in sorted(possible_mat_ids, key=lambda x: ID_to_int(x["task_id"]))
-        ]
-
-        # If we don"t have a structure optimization then just return no material
-        if len(possible_mat_ids) == 0:
-            return None
-        else:
-            mat_id = possible_mat_ids[0]
-
-        # Only count valid props
-        valid_props = [prop for prop in all_props if prop["is_valid"]]
-
-        # Is valid if there is atleast one good structure optimization
-        is_valid = (
-            len([prop for prop in valid_props if "structure" in prop["materials_key"]])
-            > 0
-        )
-        if not is_valid:
-            valid_props = all_props
+        mat_id = find_mat_id(props)
 
         # Sort and group based on property
         sorted_props = sorted(valid_props, key=lambda x: x["materials_key"])
@@ -377,6 +351,24 @@ class MaterialsBuilder(Builder):
         self.materials.ensure_index(self.materials.key, unique=True)
         self.materials.ensure_index("task_ids")
         self.materials.ensure_index(self.materials.lu_field)
+
+def find_mat_id(props):
+
+    # Only consider structure optimization task_ids for material task_id
+    possible_mat_ids = [
+        prop for prop in all_props if "structure" in prop["materials_key"]
+    ]
+
+    # Sort task_ids by ID
+    possible_mat_ids = [
+        prop["task_id"]
+        for prop in sorted(possible_mat_ids, key=lambda x: ID_to_int(x["task_id"]))
+    ]
+
+    if len(possible_mat_ids) == 0:
+        return None
+    else:
+        return possible_mat_ids[0]
 
 
 def find_best_prop(props):
