@@ -118,13 +118,15 @@ class ThermoBuilder(Builder):
 
         docs = []
 
+        entries = self.compatibility.process_entries(item)
+
+        # Determine the sandbox set we're in
         sandbox_sets = set(
             [frozenset(entry.data.get("_sbxn", {})) for entry in entries]
         )
         sandboxes = reduce(sandbox_sets, lambda a, b: a.intersection(b))
 
-        self.logger.debug(f"Procesing chemsys-sandboxes: {chemsys} - {sandboxes}")
-        entries = self.compatibility.process_entries(item)
+        self.logger.debug(f"Procesing {len(entries)} for {chemsys} - {sandboxes}")
 
         try:
             pd = PhaseDiagram(entries)
