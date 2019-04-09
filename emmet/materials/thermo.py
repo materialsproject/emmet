@@ -168,7 +168,7 @@ class ThermoBuilder(Builder):
                 d["chemsys"] = "-".join(elsyms)
                 d["nelements"] = len(elsyms)
                 d["elements"] = list(elsyms)
-                d["_sbxn"] = sandboxes
+                d["_sbxn"] = list(sandboxes)
 
                 docs.append(d)
         except PhaseDiagramError as p:
