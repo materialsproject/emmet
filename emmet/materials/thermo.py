@@ -149,6 +149,11 @@ class ThermoBuilder(Builder):
         """
         entries = self.compatibility.process_entries(item)
 
+        elements = sorted(
+            set([el.symbol for entry in entries for el in entry.composition.elements])
+        )
+        chemsys = "-".join(elements)
+
         # build sandbox sets: ["a"] , ["a","b"], ["core","a","b"]
         sandbox_sets = set(
             [frozenset(entry.data.get("_sbxn", {})) for entry in entries]
@@ -156,6 +161,7 @@ class ThermoBuilder(Builder):
 
         docs = []
         for sandboxes in sandbox_sets:
+            self.logger.debug(f"Procesing chemsys-sandboxes: {chemsys} - {sandboxes}")
             sandbox_entries = [
                 entry
                 for entry in entries
@@ -167,8 +173,6 @@ class ThermoBuilder(Builder):
 
             docs.extend(sandbox_docs)
 
-        elements = sorted(set(chain.from_iterable([doc["elements"] for doc in docs])))
-        chemsys = "-".join(elements)
         self.logger.debug(f"Created: {len(docs)} entries for {chemsys}")
         return docs
 
