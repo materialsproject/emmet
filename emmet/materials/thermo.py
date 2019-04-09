@@ -14,8 +14,7 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class ThermoBuilder(Builder):
-    def __init__(self, materials, thermo, query=None, compatibility=None,
-                 **kwargs):
+    def __init__(self, materials, thermo, query=None, compatibility=None, **kwargs):
         """
         Calculates thermodynamic quantities for materials from phase
         diagram constructions
@@ -32,7 +31,11 @@ class ThermoBuilder(Builder):
         self.materials = materials
         self.thermo = thermo
         self.query = query if query else {}
-        self.compatibility = compatibility if compatibility else MaterialsProjectCompatibility("Advanced")
+        self.compatibility = (
+            compatibility
+            if compatibility
+            else MaterialsProjectCompatibility("Advanced")
+        )
         self.completed_tasks = set()
         super().__init__(sources=[materials], targets=[thermo], **kwargs)
 
@@ -60,8 +63,9 @@ class ThermoBuilder(Builder):
         new_mat_comps = set(self.materials.distinct("chemsys", q))
 
         # All chemsys not present in thermo collection
-        new_comps = set(self.materials.distinct("chemsys", self.query))\
-            - set(self.thermo.distinct("chemsys"))
+        new_comps = set(self.materials.distinct("chemsys", self.query)) - set(
+            self.thermo.distinct("chemsys")
+        )
 
         comps = updated_comps | new_comps | new_mat_comps
 
@@ -77,7 +81,9 @@ class ThermoBuilder(Builder):
                 processed |= chemsys_permutations(chemsys)
                 to_process.append(chemsys)
 
-        self.logger.info("Found {} compositions with new/updated materials".format(len(to_process)))
+        self.logger.info(
+            "Found {} compositions with new/updated materials".format(len(to_process))
+        )
         self.total = len(to_process)
 
         for chemsys in to_process:
@@ -120,7 +126,11 @@ class ThermoBuilder(Builder):
                 0.0,
                 parameters=d["calc_settings"],
                 entry_id=d[self.materials.key],
-                data={"oxide_type": oxide_type(Structure.from_dict(d["structure"]))})
+                data={
+                    "oxide_type": oxide_type(Structure.from_dict(d["structure"])),
+                    "_sbxn": d.get("_sbxn", []),
+                },
+            )
 
             all_entries.append(entry)
 
@@ -130,8 +140,7 @@ class ThermoBuilder(Builder):
 
     def process_item(self, item):
         """
-        Process the list of entries into a phase diagram
-
+        Process the list of entries into thermo docs for each sandbox
         Args:
             item (set(entry)): a list of entries to process into a phase diagram
 
@@ -140,35 +149,61 @@ class ThermoBuilder(Builder):
         """
         entries = self.compatibility.process_entries(item)
 
+        # build sandbox sets: ["a"] , ["a","b"], ["core","a","b"]
+        sbx_sets = set([e.data.get("_sbxn", []) for e in entries])
+
+        docs = []
+        for sbx_set in sandboxes:
+            sbx_entries = [
+                e
+                for e in entries
+                if all(sbx in e.data.get("_sbxn", []) for sbx in sbx_set)
+            ]
+            sbx_docs = self.process_entries(sbx_entries)
+            for d in sbx_docs:
+                d["_sbxn"] = sbx_set
+
+            docs.extend(sbx_docs)
+
+        return docs
+
+    def process_entries(self, entries):
+        """
+        Process the list of entries into thermo documents
+        """
+
         try:
             pd = PhaseDiagram(entries)
 
             docs = []
 
             for e in entries:
-                (decomp, ehull) = \
-                    pd.get_decomp_and_e_above_hull(e)
+                (decomp, ehull) = pd.get_decomp_and_e_above_hull(e)
 
                 d = {
                     self.thermo.key: e.entry_id,
                     "thermo": {
-                        "energy": e.uncorrected_energy, 
-                        "energy_per_atom": e.uncorrected_energy / e.composition.num_atoms,
+                        "energy": e.uncorrected_energy,
+                        "energy_per_atom": e.uncorrected_energy
+                        / e.composition.num_atoms,
                         "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
                         "e_above_hull": ehull,
-                        "is_stable": e in pd.stable_entries
-                    }
+                        "is_stable": e in pd.stable_entries,
+                    },
                 }
 
                 # Store different info if stable vs decomposes
                 if d["thermo"]["is_stable"]:
                     d["thermo"]["eq_reaction_e"] = pd.get_equilibrium_reaction_energy(e)
                 else:
-                    d["thermo"]["decomposes_to"] = [{
-                        "task_id": de.entry_id,
-                        "formula": de.composition.formula,
-                        "amount": amt
-                    } for de, amt in decomp.items()]
+                    d["thermo"]["decomposes_to"] = [
+                        {
+                            "task_id": de.entry_id,
+                            "formula": de.composition.formula,
+                            "amount": amt,
+                        }
+                        for de, amt in decomp.items()
+                    ]
 
                 d["thermo"]["entry"] = e.as_dict()
                 d["thermo"]["explanation"] = self.compatibility.get_explanation_dict(e)
@@ -184,7 +219,11 @@ class ThermoBuilder(Builder):
             for e in entries:
                 elsyms.extend([el.symbol for el in e.composition.elements])
 
-            self.logger.warning("Phase diagram errorin chemsys {}: {}".format("-".join(sorted(set(elsyms))), p))
+            self.logger.warning(
+                "Phase diagram errorin chemsys {}: {}".format(
+                    "-".join(sorted(set(elsyms))), p
+                )
+            )
             return []
 
         return docs
@@ -199,7 +238,7 @@ class ThermoBuilder(Builder):
         # flatten out lists
         items = list(filter(None, chain.from_iterable(items)))
         # check for duplicates within this set
-        items = list({v[self.thermo.key]: v for v in items}.values())
+        items = list({(v[self.thermo.key], v["_sbxn"]): v for v in items}.values())
         # Check if already updated this run
         items = [i for i in items if i[self.thermo.key] not in self.completed_tasks]
 
@@ -207,7 +246,7 @@ class ThermoBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info("Updating {} thermo documents".format(len(items)))
-            self.thermo.update(docs=items)
+            self.thermo.update(docs=items, key=[self.thermo.key, "_sbxn"])
         else:
             self.logger.info("No items to update")
 
@@ -231,4 +270,9 @@ def chemsys_permutations(chemsys):
     # Fancy way of getting every unique permutation of elements for all
     # possible number of elements:
     elements = chemsys.split("-")
-    return {"-".join(sorted(c)) for c in chain(*[combinations(elements, i) for i in range(1, len(elements) + 1)])}
+    return {
+        "-".join(sorted(c))
+        for c in chain(
+            *[combinations(elements, i) for i in range(1, len(elements) + 1)]
+        )
+    }
