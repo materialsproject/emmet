@@ -87,56 +87,24 @@ class ThermoBuilder(Builder):
         self.total = len(to_process)
 
         for chemsys in to_process:
-            yield self.get_entries(chemsys)
+            entries = self.get_entries(chemsys)
 
-    def get_entries(self, chemsys):
-        """
-        Get all entries in a chemsys from materials
-
-        Args:
-            chemsys(str): a chemical system represented by string elements seperated by a dash (-)
-
-        Returns:
-            set(ComputedEntry): a set of entries for this system
-        """
-
-        self.logger.info("Getting entries for: {}".format(chemsys))
-
-        new_q = dict(self.query)
-        new_q["chemsys"] = {"$in": list(chemsys_permutations(chemsys))}
-        new_q["deprecated"] = {"$exists": 0}
-
-        fields = [
-            "structure",
-            self.materials.key,
-            "thermo.energy_per_atom",
-            "composition",
-            "calc_settings",
-            "_sbxn",
-        ]
-        data = list(self.materials.query(properties=fields, criteria=new_q))
-
-        all_entries = []
-
-        for d in data:
-            comp = Composition(d["composition"])
-            entry = ComputedEntry(
-                comp,
-                d["thermo"]["energy_per_atom"] * comp.num_atoms,
-                0.0,
-                parameters=d["calc_settings"],
-                entry_id=d[self.materials.key],
-                data={
-                    "oxide_type": oxide_type(Structure.from_dict(d["structure"])),
-                    "_sbxn": d.get("_sbxn", []),
-                },
+            # build sandbox sets: ["a"] , ["a","b"], ["core","a","b"]
+            sandbox_sets = set(
+                [frozenset(entry.data.get("_sbxn", {})) for entry in entries]
             )
 
-            all_entries.append(entry)
+            for sandboxes in sandbox_sets:
+                # only yield maximal subsets so that we can process a equivalent sandbox combinations at a time
+                sandbox_entries = [
+                    entry
+                    for entry in entries
+                    if all(
+                        sandbox in entry.data.get("_sbxn", []) for sandbox in sandboxes
+                    )
+                ]
 
-        self.logger.info("Total entries in {} : {}".format(chemsys, len(all_entries)))
-
-        return all_entries
+                yield entries
 
     def process_item(self, item):
         """
@@ -147,39 +115,16 @@ class ThermoBuilder(Builder):
         Returns:
             [dict]: a list of thermo dictionaries to update thermo with
         """
-        entries = self.compatibility.process_entries(item)
 
-        elements = sorted(
-            set([el.symbol for entry in entries for el in entry.composition.elements])
-        )
-        chemsys = "-".join(elements)
+        docs = []
 
-        # build sandbox sets: ["a"] , ["a","b"], ["core","a","b"]
         sandbox_sets = set(
             [frozenset(entry.data.get("_sbxn", {})) for entry in entries]
         )
+        sandboxes = reduce(sandbox_sets, lambda a, b: a.intersection(b))
 
-        docs = []
-        for sandboxes in sandbox_sets:
-            self.logger.debug(f"Procesing chemsys-sandboxes: {chemsys} - {sandboxes}")
-            sandbox_entries = [
-                entry
-                for entry in entries
-                if all(sandbox in entry.data.get("_sbxn", []) for sandbox in sandboxes)
-            ]
-            sandbox_docs = self.process_entries(sandbox_entries)
-            for doc in sandbox_docs:
-                doc["_sbxn"] = sandboxes
-
-            docs.extend(sandbox_docs)
-
-        self.logger.debug(f"Created: {len(docs)} entries for {chemsys}")
-        return docs
-
-    def process_entries(self, entries):
-        """
-        Process the list of entries into thermo documents
-        """
+        self.logger.debug(f"Procesing chemsys-sandboxes: {chemsys} - {sandboxes}")
+        entries = self.compatibility.process_entries(item)
 
         try:
             pd = PhaseDiagram(entries)
@@ -221,6 +166,7 @@ class ThermoBuilder(Builder):
                 d["chemsys"] = "-".join(elsyms)
                 d["nelements"] = len(elsyms)
                 d["elements"] = list(elsyms)
+                d["_sbxn"] = sandboxes
 
                 docs.append(d)
         except PhaseDiagramError as p:
@@ -273,6 +219,55 @@ class ThermoBuilder(Builder):
         self.thermo.ensure_index(self.thermo.key)
         self.thermo.ensure_index(self.thermo.lu_field)
         self.thermo.ensure_index("chemsys")
+
+    def get_entries(self, chemsys):
+        """
+        Get all entries in a chemsys from materials
+
+        Args:
+            chemsys(str): a chemical system represented by string elements seperated by a dash (-)
+
+        Returns:
+            set(ComputedEntry): a set of entries for this system
+        """
+
+        self.logger.info("Getting entries for: {}".format(chemsys))
+
+        new_q = dict(self.query)
+        new_q["chemsys"] = {"$in": list(chemsys_permutations(chemsys))}
+        new_q["deprecated"] = {"$exists": 0}
+
+        fields = [
+            "structure",
+            self.materials.key,
+            "thermo.energy_per_atom",
+            "composition",
+            "calc_settings",
+            "_sbxn",
+        ]
+        data = list(self.materials.query(properties=fields, criteria=new_q))
+
+        all_entries = []
+
+        for d in data:
+            comp = Composition(d["composition"])
+            entry = ComputedEntry(
+                comp,
+                d["thermo"]["energy_per_atom"] * comp.num_atoms,
+                0.0,
+                parameters=d["calc_settings"],
+                entry_id=d[self.materials.key],
+                data={
+                    "oxide_type": oxide_type(Structure.from_dict(d["structure"])),
+                    "_sbxn": d.get("_sbxn", []),
+                },
+            )
+
+            all_entries.append(entry)
+
+        self.logger.info("Total entries in {} : {}".format(chemsys, len(all_entries)))
+
+        return all_entries
 
 
 def chemsys_permutations(chemsys):
