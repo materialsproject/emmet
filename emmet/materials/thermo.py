@@ -98,10 +98,16 @@ class ThermoBuilder(Builder):
 
         new_q = dict(self.query)
         new_q["chemsys"] = {"$in": list(chemsys_permutations(chemsys))}
-        new_q["status"] =  "successful"
-
-        fields = ["structure", self.materials.key, "thermo.energy_per_atom", "composition", "calc_settings"]
         new_q["deprecated"] = False
+
+        fields = [
+            "structure",
+            self.materials.key,
+            "thermo.energy_per_atom",
+            "composition",
+            "calc_settings",
+            "_sbxn",
+        ]
         data = list(self.materials.query(properties=fields, criteria=new_q))
 
         all_entries = []
