@@ -223,6 +223,7 @@ class MaterialsBuilder(Builder):
             if prop.get("track", False)
         ]
 
+        # Store any bad props
         invalid_props = [k for k in best_props if not k["is_valid"]]
 
         # Store all the task_ids
@@ -234,6 +235,9 @@ class MaterialsBuilder(Builder):
         # Store task_types
         task_types = {t["task_id"]: t["task_type"] for t in all_props}
 
+        # Store sandboxes
+        sandboxes = list(set(chain.from_iterable([k["sbxn"] for k in  best_props])))
+
         mat = {
             self.materials.lu_field: max([prop["last_updated"] for prop in all_props]),
             "created_at": min([prop["last_updated"] for prop in all_props]),
@@ -242,7 +246,8 @@ class MaterialsBuilder(Builder):
             self.materials.key: mat_id,
             "origins": origins,
             "task_types": task_types,
-            "invalid_props": invalid_props
+            "invalid_props": invalid_props,
+            "_sbxn": sandboxes
         }
 
         for prop in best_props:
@@ -313,6 +318,7 @@ class MaterialsBuilder(Builder):
                             "energy": get(task, "output.energy_per_atom", 0.0),
                             "materials_key": prop["materials_key"],
                             "is_valid": task.get("is_valid", True),
+                            "sbxn": task.get("sbxn",[])
                         }
                     )
                 elif not prop.get("optional", False):
