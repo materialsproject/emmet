@@ -165,6 +165,9 @@ class ThermoBuilder(Builder):
 
             docs.extend(sandbox_docs)
 
+        elements = sorted({chain.from_iterable([doc["elements"] for doc in docs])})
+        chemsys = "-".join(elements)
+        self.logger.debug(f"Created: {len(docs)} entries for {chemsys}")
         return docs
 
     def process_entries(self, entries):
