@@ -150,20 +150,20 @@ class ThermoBuilder(Builder):
         entries = self.compatibility.process_entries(item)
 
         # build sandbox sets: ["a"] , ["a","b"], ["core","a","b"]
-        sbx_sets = set([e.data.get("_sbxn", []) for e in entries])
+        sandbox_sets = set([entry.data.get("_sbxn", []) for entry in entries])
 
         docs = []
-        for sbx_set in sandboxes:
-            sbx_entries = [
-                e
-                for e in entries
-                if all(sbx in e.data.get("_sbxn", []) for sbx in sbx_set)
+        for sandboxes in sandbox_sets:
+            sandbox_entries = [
+                entry
+                for entry in entries
+                if all(sandbox in entry.data.get("_sbxn", []) for sandbox in sandboxes)
             ]
-            sbx_docs = self.process_entries(sbx_entries)
-            for d in sbx_docs:
-                d["_sbxn"] = sbx_set
+            sandbox_docs = self.process_entries(sandbox_entries)
+            for doc in sandbox_docs:
+                doc["_sbxn"] = sandboxes
 
-            docs.extend(sbx_docs)
+            docs.extend(sandbox_docs)
 
         return docs
 
