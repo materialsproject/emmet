@@ -104,7 +104,7 @@ class ThermoBuilder(Builder):
 
         new_q = dict(self.query)
         new_q["chemsys"] = {"$in": list(chemsys_permutations(chemsys))}
-        new_q["deprecated"] = False
+        new_q["deprecated"] = {"$exists": 0}
 
         fields = [
             "structure",
@@ -150,7 +150,9 @@ class ThermoBuilder(Builder):
         entries = self.compatibility.process_entries(item)
 
         # build sandbox sets: ["a"] , ["a","b"], ["core","a","b"]
-        sandbox_sets = set([entry.data.get("_sbxn", []) for entry in entries])
+        sandbox_sets = set(
+            [frozenset(entry.data.get("_sbxn", {})) for entry in entries]
+        )
 
         docs = []
         for sandboxes in sandbox_sets:
@@ -165,7 +167,7 @@ class ThermoBuilder(Builder):
 
             docs.extend(sandbox_docs)
 
-        elements = sorted({chain.from_iterable([doc["elements"] for doc in docs])})
+        elements = sorted(set(chain.from_iterable([doc["elements"] for doc in docs])))
         chemsys = "-".join(elements)
         self.logger.debug(f"Created: {len(docs)} entries for {chemsys}")
         return docs
