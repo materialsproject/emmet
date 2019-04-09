@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 from itertools import chain, combinations
+from functools import reduce
 
 from pymatgen import Structure, Composition
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility
@@ -93,6 +94,7 @@ class ThermoBuilder(Builder):
             sandbox_sets = set(
                 [frozenset(entry.data.get("_sbxn", {})) for entry in entries]
             )
+            self.logger.debug(f"Found {len(sandbox_sets)}: {sandbox_sets}")
 
             for sandboxes in sandbox_sets:
                 # only yield maximal subsets so that we can process a equivalent sandbox combinations at a time
@@ -104,7 +106,7 @@ class ThermoBuilder(Builder):
                     )
                 ]
 
-                yield entries
+                yield sandbox_entries
 
     def process_item(self, item):
         """
@@ -124,9 +126,16 @@ class ThermoBuilder(Builder):
         sandbox_sets = set(
             [frozenset(entry.data.get("_sbxn", {})) for entry in entries]
         )
-        sandboxes = reduce(sandbox_sets, lambda a, b: a.intersection(b))
+        sandboxes = reduce(lambda a, b: a.intersection(b), sandbox_sets)
 
-        self.logger.debug(f"Procesing {len(entries)} for {chemsys} - {sandboxes}")
+        # determine chemsys
+        chemsys = "-".join(
+            sorted(set([el.symbol for e in entries for el in e.composition.elements]))
+        )
+
+        self.logger.debug(
+            f"Procesing {len(entries)} entries for {chemsys} - {sandboxes}"
+        )
 
         try:
             pd = PhaseDiagram(entries)
