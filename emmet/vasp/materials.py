@@ -204,7 +204,7 @@ class MaterialsBuilder(Builder):
             chain.from_iterable([self.task_to_prop_list(t) for t in task_group])
         )
 
-        mat_id = find_mat_id(props)
+        mat_id = find_mat_id(all_props)
 
         # Sort and group based on property
         sorted_props = sorted(all_props, key=lambda x: x["materials_key"])
@@ -351,9 +351,9 @@ class MaterialsBuilder(Builder):
             mat.update(structure_metadata(structure))
 
         # Deprecate materials with bad structures or energies
-        if "structure" in doc["invalid_props"]:
+        if "structure" in mat["invalid_props"]:
             mat.update({"deprecated": True})
-        elif "thermo.energy_per_atom" in doc["invalid_props"]:
+        elif "thermo.energy_per_atom" in mat["invalid_props"]:
             mat.update({"deprecated": True})
 
 
@@ -382,7 +382,7 @@ def find_mat_id(props):
 
     # Only consider structure optimization task_ids for material task_id
     possible_mat_ids = [
-        prop for prop in all_props if "structure" in prop["materials_key"]
+        prop for prop in props if "structure" in prop["materials_key"]
     ]
 
     # Sort task_ids by ID
