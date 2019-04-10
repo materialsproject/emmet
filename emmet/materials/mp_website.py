@@ -252,7 +252,7 @@ class MPBuilder(Builder):
 #
 
 
-def old_style_mat(self, new_style_mat):
+def old_style_mat(new_style_mat):
     """
     Creates the base document for the old MP mapidoc style from the new document structure
     """
