@@ -125,9 +125,10 @@ class MPBuilder(Builder):
                 #sort and group docs by last_updated
                 sub_docs = list(sorted(sub_docs, key=lambda x: x[self.materials.lu_field]))
                 self.logger.debug("Merging {} docs for {}".format(len(sub_docs), merge_key))
-                # merge all docs in this group together
-                d = {k: v for doc in sub_docs for k, v in doc.items()}
+                # merge all docs in this group together if not thermo
+                d = {k: v for doc in sub_docs for k, v in doc.items() if "thermo" not in doc}
                 # delete any private keys
+                d.update({"thermo": [doc["thermo"] for doc in sub_docs if "thermo" in doc]})
                 #d = {k: v for k, v in d.items() if not k.startswith("_")}
                 # Set to most recent lu_field
                 d[self.materials.lu_field] = max(doc[self.materials.lu_field] for doc in sub_docs)
