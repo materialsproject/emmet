@@ -544,7 +544,7 @@ def add_thermo(mat, new_style_mat):
             sbx_d["id"] = sbx
             sbxd[sbx] = sbx_d
 
-    mat["sbxd"] = list(sbxd.items())
+    mat["sbxd"] = list(sbxd.values())
 
 
 def add_meta(mat):
