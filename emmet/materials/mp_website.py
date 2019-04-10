@@ -518,10 +518,10 @@ def add_thermo(mat, new_style_mat):
     """
     thermo = new_style_mat["thermo"]
 
-    if "core" in mat["_sbxn"]:
+    if "core" in mat["sbxn"]:
         main_sbx = "core"
     else:
-        main_sbx = mat["_sbxn"][0]
+        main_sbx = mat["sbxn"][0]
 
     # Get the primary document and set in mat document
     core_thermo = next(d for d in thermo if main_sbx in d["_sbxn"])
