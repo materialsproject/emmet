@@ -184,6 +184,7 @@ class MPBuilder(Builder):
             check_relaxation(mat, item)
             add_cifs(mat)
             add_meta(mat)
+            add_thermo(mat, item)
 
             processed = jsanitize(mat)
 
@@ -541,10 +542,3 @@ def add_thermo(mat, new_style_mat):
 def add_meta(mat):
     meta = {"emmet_version": emmet_version, "pymatgen_version": pymatgen_version}
     mat["_meta"] = meta
-
-
-def sandbox_props(mat, new_style_mat, sandbox_props, default_sandboxes=None):
-
-    for sbx in mat["sbxn"]:
-
-        mat["sbxd"].append(sbx_d)
