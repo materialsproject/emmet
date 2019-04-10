@@ -151,13 +151,8 @@ class MPBuilder(Builder):
                     "Merging {} docs for {}".format(len(sub_docs), merge_key)
                 )
                 # merge all docs in this group together if not thermo
-                d = {
-                    k: v
-                    for doc in sub_docs
-                    for k, v in doc.items()
-                    if "thermo" not in doc
-                }
-                # delete any private keys
+                d = {k: v for doc in sub_docs for k, v in doc.items()}
+                # aggregate all the thermo docs
                 d.update({"thermo": [doc for doc in sub_docs if "thermo" in doc]})
                 # d = {k: v for k, v in d.items() if not k.startswith("_")}
                 # Set to most recent lu_field
