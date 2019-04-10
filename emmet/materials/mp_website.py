@@ -151,7 +151,12 @@ class MPBuilder(Builder):
                     "Merging {} docs for {}".format(len(sub_docs), merge_key)
                 )
                 # merge all docs in this group together if not thermo
-                d = {k: v for doc in sub_docs for k, v in doc.items()}
+                d = {
+                    k: v
+                    for doc in sub_docs
+                    for k, v in doc.items()
+                    if "thermo" not in doc or "structure" in doc
+                }
                 # aggregate all the thermo docs
                 d.update(
                     {
