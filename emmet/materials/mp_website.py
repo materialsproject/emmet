@@ -517,8 +517,14 @@ def add_thermo(mat, new_style_mat):
     Add's the thermo values in with sandboxing
     """
     thermo = new_style_mat["thermo"]
+
+    if "core" in mat["_sbxn"]:
+        main_sbx = "core"
+    else:
+        main_sbx = mat["_sbxn"][0]
+
     # Get the primary document and set in mat document
-    core_thermo = next(d for d in thermo if "core" in d["_sbxn"])
+    core_thermo = next(d for d in thermo if main_sbx in d["_sbxn"])
 
     mat["e_above_hull"] = core_thermo["thermo"]["e_above_hull"]
     mat["formation_energy_per_atom"] = core_thermo["thermo"][
