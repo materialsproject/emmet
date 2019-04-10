@@ -540,7 +540,7 @@ def add_thermo(mat, new_style_mat):
     }
     for doc in thermo:
         for sbx in doc["_sbxn"]:
-            sbx_d = {k: get(doc, v) for k, v in sandbox_props.items() if has(thermo, v)}
+            sbx_d = {k: get(doc, v) for k, v in sandbox_props.items() if has(doc, v)}
             sbx_d["id"] = sbx
             sbxd[sbx] = sbx_d
 
