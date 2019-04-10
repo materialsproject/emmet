@@ -42,7 +42,9 @@ vol_interval = [4.56 - 1.96 * 7.82, 4.56 + 1.96 * 7.82]
 
 
 class MPBuilder(Builder):
-    def __init__(self, materials, website, aux=None, default_sandboxes=None, query=None, **kwargs):
+    def __init__(
+        self, materials, website, aux=None, default_sandboxes=None, query=None, **kwargs
+    ):
         """
         Creates a MP Website style materials doc.
         This builder is a bit unweildy as MP will eventually move to a new format
@@ -62,7 +64,7 @@ class MPBuilder(Builder):
         self.aux = aux if aux else []
         self.default_sandboxes = default_sandboxes if default_sandboxes else []
         self.query = query
-        #self.website.validator = JSONSchemaValidator(loadfn(MPBUILDER_SCHEMA))
+        # self.website.validator = JSONSchemaValidator(loadfn(MPBUILDER_SCHEMA))
 
         super().__init__(sources=[materials] + aux, targets=[website], **kwargs)
 
@@ -76,15 +78,25 @@ class MPBuilder(Builder):
         self.ensure_indexes()
 
         mat_keys = set(self.materials.distinct(self.materials.key, criteria=self.query))
-        keys = set(source_keys_updated(source=self.materials, target=self.website, query=self.query))
+        keys = set(
+            source_keys_updated(
+                source=self.materials, target=self.website, query=self.query
+            )
+        )
 
         # Get keys for aux docs that have been updated since last processed.
         for source in self.aux:
             new_keys = source_keys_updated(source=source, target=self.website)
-            self.logger.info("Only considering {} new keys for {}".format(len(new_keys), source.collection_name))
+            self.logger.info(
+                "Only considering {} new keys for {}".format(
+                    len(new_keys), source.collection_name
+                )
+            )
             keys |= set(new_keys)
 
-        keys = keys & mat_keys  # Ensure all keys are present in main materials collection
+        keys = (
+            keys & mat_keys
+        )  # Ensure all keys are present in main materials collection
         self.logger.info("Processing {} items".format(len(keys)))
 
         self.total = len(keys)
@@ -93,13 +105,22 @@ class MPBuilder(Builder):
             chunked_keys = list(filter(None.__ne__, chunked_keys))
 
             # Get documents for main materials store
-            docs = list(self.materials.query(criteria={self.materials.key: {"$in": chunked_keys}}))
+            docs = list(
+                self.materials.query(
+                    criteria={self.materials.key: {"$in": chunked_keys}}
+                )
+            )
 
             # Get documents from all aux stores
             for source in self.aux:
-                temp_docs = list(source.query(criteria={source.key: {"$in": chunked_keys}}))
-                self.logger.debug("Found {} docs in {} for {}".format(
-                    len(temp_docs), source.collection_name, chunked_keys))
+                temp_docs = list(
+                    source.query(criteria={source.key: {"$in": chunked_keys}})
+                )
+                self.logger.debug(
+                    "Found {} docs in {} for {}".format(
+                        len(temp_docs), source.collection_name, chunked_keys
+                    )
+                )
 
                 # Ensure same key field for all docs
                 if source.key != self.materials.key:
@@ -122,16 +143,27 @@ class MPBuilder(Builder):
 
             # get docs all for the same materials key
             for merge_key, sub_docs in docs:
-                #sort and group docs by last_updated
-                sub_docs = list(sorted(sub_docs, key=lambda x: x[self.materials.lu_field]))
-                self.logger.debug("Merging {} docs for {}".format(len(sub_docs), merge_key))
+                # sort and group docs by last_updated
+                sub_docs = list(
+                    sorted(sub_docs, key=lambda x: x[self.materials.lu_field])
+                )
+                self.logger.debug(
+                    "Merging {} docs for {}".format(len(sub_docs), merge_key)
+                )
                 # merge all docs in this group together if not thermo
-                d = {k: v for doc in sub_docs for k, v in doc.items() if "thermo" not in doc}
+                d = {
+                    k: v
+                    for doc in sub_docs
+                    for k, v in doc.items()
+                    if "thermo" not in doc
+                }
                 # delete any private keys
-                d.update({"thermo": [doc["thermo"] for doc in sub_docs if "thermo" in doc]})
-                #d = {k: v for k, v in d.items() if not k.startswith("_")}
+                d.update({"thermo": [doc for doc in sub_docs if "thermo" in doc]})
+                # d = {k: v for k, v in d.items() if not k.startswith("_")}
                 # Set to most recent lu_field
-                d[self.materials.lu_field] = max(doc[self.materials.lu_field] for doc in sub_docs)
+                d[self.materials.lu_field] = max(
+                    doc[self.materials.lu_field] for doc in sub_docs
+                )
 
                 yield d
 
@@ -152,7 +184,6 @@ class MPBuilder(Builder):
             check_relaxation(mat, item)
             add_cifs(mat)
             add_meta(mat)
-            sandbox_props(mat, item, self._settings["sandboxed_properties"], self.default_sandboxes)
 
             processed = jsanitize(mat)
 
@@ -163,7 +194,9 @@ class MPBuilder(Builder):
         key, lu_field = self.materials.key, self.materials.lu_field
         out = {
             self.website.key: item[key],
-            self.website.lu_field: self.website.lu_func[1](self.materials.lu_func[0](item[lu_field]))
+            self.website.lu_field: self.website.lu_func[1](
+                self.materials.lu_func[0](item[lu_field])
+            ),
         }
         out.update(processed)
         return out
@@ -277,17 +310,27 @@ def old_style_mat(new_style_mat):
     mat["unit_cell_formula"] = struc.composition.as_dict()
     mat["full_formula"] = "".join(struc.formula.split())
     vals = sorted(mat["reduced_cell_formula"].values())
-    mat["anonymous_formula"] = {string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))}
+    mat["anonymous_formula"] = {
+        string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))
+    }
     mat["initial_structure"] = new_style_mat.get("initial_structure", None)
     mat["nsites"] = struc.get_primitive_structure().num_sites
 
     set_(mat, "pseudo_potential.functional", "PBE")
 
-    set_(mat, "pseudo_potential.labels",
-         [p["titel"].split()[1] for p in get(new_style_mat, "calc_settings.potcar_spec")])
+    set_(
+        mat,
+        "pseudo_potential.labels",
+        [
+            p["titel"].split()[1]
+            for p in get(new_style_mat, "calc_settings.potcar_spec")
+        ],
+    )
     set_(mat, "pseudo_potential.pot_type", "paw")
 
-    mat["blessed_tasks"] = {d["task_type"]: d["task_id"] for d in new_style_mat["origins"]}
+    mat["blessed_tasks"] = {
+        d["task_type"]: d["task_id"] for d in new_style_mat["origins"]
+    }
     mat["deprecated_tasks"] = new_style_mat.get("deprecated_tasks", [])
     mat["task_ids"] = list(tasks.keys())
     mat["ntask_ids"] = len(tasks)
@@ -300,10 +343,22 @@ def add_es(mat, new_style_mat):
     bs_origin = None
     dos_origin = None
     try:
-        bs_origin = next((origin for origin in new_style_mat.get("origins", []) if "Line" in origin["task_type"]),
-                         None)
-        dos_origin = next((origin for origin in new_style_mat.get("origins", []) if "Uniform" in origin["task_type"]),
-                          None)
+        bs_origin = next(
+            (
+                origin
+                for origin in new_style_mat.get("origins", [])
+                if "Line" in origin["task_type"]
+            ),
+            None,
+        )
+        dos_origin = next(
+            (
+                origin
+                for origin in new_style_mat.get("origins", [])
+                if "Uniform" in origin["task_type"]
+            ),
+            None,
+        )
 
         if bs_origin:
             u_type = "GGA+U" if "+U" in bs_origin["task_type"] else "GGA"
@@ -322,7 +377,9 @@ def add_es(mat, new_style_mat):
 def add_elastic(mat, new_style_mat):
     if "elasticity" in new_style_mat:
         if has(new_style_mat, "elasticity.structure.sites"):
-            mat["elasticity"]["nsites"] = len(get(new_style_mat, "elasticity.structure.sites"))
+            mat["elasticity"]["nsites"] = len(
+                get(new_style_mat, "elasticity.structure.sites")
+            )
         else:
             mat["elasticity"]["nsites"] = len(get(mat, "structure.sites"))
 
@@ -342,7 +399,9 @@ def add_cifs(doc):
         refined = sym_finder.get_refined_structure()
         doc["cifs"]["primitive"] = str(CifWriter(primitive))
         doc["cifs"]["refined"] = str(CifWriter(refined, symprec=symprec))
-        doc["cifs"]["conventional_standard"] = str(CifWriter(conventional, symprec=symprec))
+        doc["cifs"]["conventional_standard"] = str(
+            CifWriter(conventional, symprec=symprec)
+        )
         doc["cifs"]["computed"] = str(CifWriter(struc, symprec=symprec))
     except:
         doc["cifs"]["primitive"] = None
@@ -359,9 +418,12 @@ def add_xrd(mat, new_style_mat):
         el_doc["wavelength"] = doc["wavelength"]
 
         xrd_pattern = DiffractionPattern.from_dict(doc["pattern"])
-        el_doc["pattern"] = [[float(intensity), hkls[0]["hkl"], two_theta,
-                              float(d_hkl)] for two_theta, intensity, hkls, d_hkl in zip(
-                                  xrd_pattern.x, xrd_pattern.y, xrd_pattern.hkls, xrd_pattern.d_hkls)]
+        el_doc["pattern"] = [
+            [float(intensity), hkls[0]["hkl"], two_theta, float(d_hkl)]
+            for two_theta, intensity, hkls, d_hkl in zip(
+                xrd_pattern.x, xrd_pattern.y, xrd_pattern.hkls, xrd_pattern.d_hkls
+            )
+        ]
 
         mat["xrd"][el] = el_doc
 
@@ -387,7 +449,10 @@ def add_snl(mat, new_style_mat):
     # Extract tags from remarks by looking for just nounds and adjectives
     mat["exp"] = {"tags": []}
     for remark in mat["snl"]["about"].get("_tags", []):
-        tokens = set(tok[1] for tok in nltk.pos_tag(nltk.word_tokenize(remark), tagset='universal'))
+        tokens = set(
+            tok[1]
+            for tok in nltk.pos_tag(nltk.word_tokenize(remark), tagset="universal")
+        )
         if len(tokens.intersection({"ADV", "ADP", "VERB"})) == 0:
             mat["exp"]["tags"].append(remark)
 
@@ -395,7 +460,14 @@ def add_snl(mat, new_style_mat):
 def add_propnet(mat, new_style_mat):
     if "propnet" in new_style_mat:
         propnet = new_style_mat.get("propnet", {})
-        exclude_list = ['compliance_tensor_voigt', 'task_id', '_id', 'pretty_formula', 'inputs', 'last_updated']
+        exclude_list = [
+            "compliance_tensor_voigt",
+            "task_id",
+            "_id",
+            "pretty_formula",
+            "inputs",
+            "last_updated",
+        ]
         for e in exclude_list:
             if e in propnet:
                 del propnet[e]
@@ -413,18 +485,26 @@ def check_relaxation(mat, new_style_mat):
 
     try:
         analyzer = RelaxationAnalyzer(orig_crystal, final_structure)
-        latt_para_percentage_changes = analyzer.get_percentage_lattice_parameter_changes()
+        latt_para_percentage_changes = (
+            analyzer.get_percentage_lattice_parameter_changes()
+        )
         for l in ["a", "b", "c"]:
             change = latt_para_percentage_changes[l] * 100
             if change < latt_para_interval[0] or change > latt_para_interval[1]:
-                warnings.append("Large change in a lattice parameter during relaxation.")
+                warnings.append(
+                    "Large change in a lattice parameter during relaxation."
+                )
         change = analyzer.get_percentage_volume_change() * 100
         if change < vol_interval[0] or change > vol_interval[1]:
             warnings.append("Large change in volume during relaxation.")
     except Exception as ex:
         # print icsd_crystal.formula
         # print final_structure.formula
-        print("Relaxation analyzer failed for Material:{} due to {}".format(mat["task_id"], traceback.print_exc()))
+        print(
+            "Relaxation analyzer failed for Material:{} due to {}".format(
+                mat["task_id"], traceback.print_exc()
+            )
+        )
 
     mat["warnings"] = list(set(warnings))
 
@@ -437,35 +517,34 @@ def add_thermo(mat, new_style_mat):
     # Get the primary document and set in mat document
     core_thermo = next(d for d in thermo if "core" in d["_sbxn"])
 
-    mat["e_above_hull"]= core_thermo["thermo"]["e_above_hull"]
-    mat["formation_energy_per_atom"]= core_thermo["thermo"]["formation_energy_per_atom"]
+    mat["e_above_hull"] = core_thermo["thermo"]["e_above_hull"]
+    mat["formation_energy_per_atom"] = core_thermo["thermo"][
+        "formation_energy_per_atom"
+    ]
     if "decomposes_to" in core_thermo["thermo"]:
-        mat["decomposes_to"]= core_thermo["thermo"]["decomposes_to"]
+        mat["decomposes_to"] = core_thermo["thermo"]["decomposes_to"]
 
     sbxd = {}
-    sandbox_props = {"e_above_hull": "thermo.e_above_hull",
-                     "decomposes_to": "thermo.decomposes_to"}
+    sandbox_props = {
+        "e_above_hull": "thermo.e_above_hull",
+        "decomposes_to": "thermo.decomposes_to",
+    }
     for doc in thermo:
         for sbx in doc["_sbxn"]:
             sbx_d = {k: get(doc, v) for k, v in sandbox_props.items() if has(thermo, v)}
             sbx_d["id"] = sbx
             sbxd[sbx] = sbx_d
-    
+
     mat["sbxd"] = list(sbxd.items())
 
 
-
-
 def add_meta(mat):
-    meta = {'emmet_version': emmet_version, 'pymatgen_version': pymatgen_version}
-    mat['_meta'] = meta
+    meta = {"emmet_version": emmet_version, "pymatgen_version": pymatgen_version}
+    mat["_meta"] = meta
 
 
 def sandbox_props(mat, new_style_mat, sandbox_props, default_sandboxes=None):
-    mat["sbxn"] = new_style_mat.get("_sbxn", default_sandboxes)
-    mat["sbxd"] = []
 
     for sbx in mat["sbxn"]:
-        sbx_d = {k: get(mat, v) for k, v in sandbox_props.items() if has(mat, k)}
-        sbx_d["id"] = sbx
+
         mat["sbxd"].append(sbx_d)
