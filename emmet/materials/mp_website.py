@@ -328,8 +328,7 @@ def old_style_mat(new_style_mat):
         d["task_type"]: d["task_id"] for d in new_style_mat["origins"]
     }
     mat["deprecated_tasks"] = new_style_mat.get("deprecated_tasks", [])
-    mat["task_ids"] = list(tasks.keys())
-    mat["ntask_ids"] = len(tasks)
+    mat["ntask_ids"] = len(mat["task_ids"])
 
     return mat
 
