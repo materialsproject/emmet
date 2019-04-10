@@ -429,6 +429,33 @@ def check_relaxation(mat, new_style_mat):
     mat["warnings"] = list(set(warnings))
 
 
+def add_thermo(mat, new_style_mat):
+    """
+    Add's the thermo values in with sandboxing
+    """
+    thermo = new_style_mat["thermo"]
+    # Get the primary document and set in mat document
+    core_thermo = next(d for d in thermo if "core" in d["_sbxn"])
+
+    mat["e_above_hull"]= core_thermo["thermo"]["e_above_hull"]
+    mat["formation_energy_per_atom"]= core_thermo["thermo"]["formation_energy_per_atom"]
+    if "decomposes_to" in core_thermo["thermo"]:
+        mat["decomposes_to"]= core_thermo["thermo"]["decomposes_to"]
+
+    sbxd = {}
+    sandbox_props = {"e_above_hull": "thermo.e_above_hull",
+                     "decomposes_to": "thermo.decomposes_to"}
+    for doc in thermo:
+        for sbx in doc["_sbxn"]:
+            sbx_d = {k: get(doc, v) for k, v in sandbox_props.items() if has(thermo, v)}
+            sbx_d["id"] = sbx
+            sbxd[sbx] = sbx_d
+    
+    mat["sbxd"] = list(sbxd.items())
+
+
+
+
 def add_meta(mat):
     meta = {'emmet_version': emmet_version, 'pymatgen_version': pymatgen_version}
     mat['_meta'] = meta

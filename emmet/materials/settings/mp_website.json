@@ -1,8 +1,4 @@
 {
-  "sandboxed_properties": {
-    "e_above_hull": "e_above_hull",
-    "decomposes_to": "decomposes_to"
-  },
   "mag_types": {
     "NM": "Non-magnetic",
     "FiM": "Ferri",
@@ -44,9 +40,6 @@
     "encut": "inputs.structure_optimization.incar.ENCUT",
     "formula_anonymous": "formula_anonymous",
     "created_at": "created_at",
-    "e_above_hull": "thermo.e_above_hull",
-    "formation_energy_per_atom": "thermo.formation_energy_per_atom",
-    "decomposes_to": "thermo.decomposes_to",
     "magnetism": "magnetism",
     "magnetic_type": "magnetism.ordering",
     "doi": "doi",
@@ -78,7 +71,8 @@
     "elasticity_third_order": "elasticity.third_order",
     "bond_valence": "bond_valence",
     "unit_cell_formula": "composition",
-    "has": "has"
+    "has": "has",
+    "sbxn": "_sbxn"
   },
   "task_types": [
     "GGA NSCF Line",
