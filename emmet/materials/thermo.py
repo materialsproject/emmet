@@ -247,7 +247,7 @@ class ThermoBuilder(Builder):
 
         new_q = dict(self.query)
         new_q["chemsys"] = {"$in": list(chemsys_permutations(chemsys))}
-        new_q["deprecated"] = {"$exists": 0}
+        new_q["deprecated"] = False
 
         fields = [
             "structure",
