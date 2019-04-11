@@ -94,6 +94,7 @@ class ThermoBuilder(Builder):
             sandbox_sets = set(
                 [frozenset(entry.data.get("_sbxn", {})) for entry in entries]
             )
+            sandbox_sets = maximal_spanning_non_intersecting_subsets(sandbox_sets)
             self.logger.debug(f"Found {len(sandbox_sets)}: {sandbox_sets}")
 
             for sandboxes in sandbox_sets:
@@ -291,3 +292,31 @@ def chemsys_permutations(chemsys):
             *[combinations(elements, i) for i in range(1, len(elements) + 1)]
         )
     }
+
+
+def maximal_spanning_non_intersecting_subsets(sets):
+    """
+    Finds the maximal spanning non intersecting subsets of a group of sets
+    This is usefull for parsing out the sandboxes and figuring out how to group
+    and calculate these for thermo documents
+
+    sets (set(frozenset)): sets of keys to subsect, expected as a set of frozensets
+    """
+    to_return_subsets = []
+
+    # Find the overlapping portions and independent portions
+    for subset in sets:
+        for other_set in sets:
+            subset = frozenset(subset.intersection(other_set)) or subset
+        if subset:
+            to_return_subsets.append(subset)
+
+    # Remove accounted for elements and recurse on remaining sets
+    accounted_elements = set(chain.from_iterable(to_return_subsets))
+    sets = {frozenset(subset - accounted_elements) for subset in sets}
+    sets = {subset for subset in sets if subset}
+
+    if sets:
+        to_return_subsets.extend(maximal_spanning_non_intersecting_subsets(sets))
+
+    return set(to_return_subsets)
