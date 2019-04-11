@@ -69,15 +69,23 @@ class ElectrodesBuilder(Builder):
         self.logger.info("Grabbing the relavant chemical systems containing the current \
                 working ion and a single redox element.")
         q = dict()
-        q.update({'$and': [
-            {"elements": {'$in': [self.working_ion]}},
-            {"elements": {'$in': redox_els}},
-        ]})
-        chemsys_names = self.materials.distinct('chemsys', q)
+        q.update(
+            {
+                "$and": [
+                    {"elements": {"$in": [self.working_ion]}},
+                    {"elements": {"$in": redox_els}},
+                ],
+                "deprecated": False,
+            }
+        )
+        chemsys_names = self.materials.distinct("chemsys", q)
         for chemsys in chemsys_names:
             self.logger.debug(f"Calculating the phase diagram for: {chemsys}")
             # get the phase diagram from using the chemsys
-            pd_q = {'chemsys':{"$in": list(chemsys_permutations(chemsys))}}
+            pd_q = {
+                "chemsys": {"$in": list(chemsys_permutations(chemsys))},
+                "deprecated": False,
+            }
             pd_docs = list(self.materials.query(properties=mat_props, criteria=pd_q))
             pd_ents = self._mat_doc2comp_entry(pd_docs, store_struct=False)
             pd_ents = list(filter(None.__ne__, pd_ents))
@@ -100,7 +108,7 @@ class ElectrodesBuilder(Builder):
         chemsys_w_wo_ion = {"-".join(sorted(c))
                 for c in [elements, elements-{self.working_ion}]}
         self.logger.info("chemsys list: {}".format(chemsys_w_wo_ion))
-        q = {'chemsys' : {"$in" : list(chemsys_w_wo_ion)}}
+        q = {"chemsys": {"$in": list(chemsys_w_wo_ion)}, "deprecated": False}
         docs = self.materials.query(q, mat_props)
         entries = self._mat_doc2comp_entry(docs)
         self.logger.info("Found {} entries in the database".format(len(entries)))
