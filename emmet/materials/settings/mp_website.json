@@ -72,7 +72,8 @@
     "bond_valence": "bond_valence",
     "unit_cell_formula": "composition",
     "has": "has",
-    "sbxn": "_sbxn"
+    "sbxn": "_sbxn",
+    "deprecated": "deprecated"
   },
   "task_types": [
     "GGA NSCF Line",
