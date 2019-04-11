@@ -205,7 +205,9 @@ class ThermoBuilder(Builder):
         # flatten out lists
         items = list(filter(None, chain.from_iterable(items)))
         # check for duplicates within this set
-        items = list({(v[self.thermo.key], v["_sbxn"]): v for v in items}.values())
+        items = list(
+            {(v[self.thermo.key], frozenset(v["_sbxn"])): v for v in items}.values()
+        )
         # Check if already updated this run
         items = [i for i in items if i[self.thermo.key] not in self.completed_tasks]
 
