@@ -139,6 +139,8 @@ class MaterialsBuilder(Builder):
             for t in tasks:
                 if t[self.tasks.key] in invalid_ids:
                     t["is_valid"] = False
+                else:
+                    t["is_valid"] = True
 
             yield tasks
 
@@ -224,7 +226,7 @@ class MaterialsBuilder(Builder):
         ]
 
         # Store any bad props
-        invalid_props = [k for k in best_props if not k["is_valid"]]
+        invalid_props = [prop["materials_key"] for prop in best_props if not prop["is_valid"]]
 
         # Store all the task_ids
         task_ids = list(set([t["task_id"] for t in task_group]))
@@ -355,6 +357,8 @@ class MaterialsBuilder(Builder):
             mat.update({"deprecated": True})
         elif "thermo.energy_per_atom" in mat["invalid_props"]:
             mat.update({"deprecated": True})
+        else:
+            mat.update({"deprecated": False})
 
 
     def ensure_indexes(self):
