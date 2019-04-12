@@ -191,10 +191,12 @@ class ElectrodesBuilder(Builder):
                 lowest_id = sorted(ids, key=lambda x : x.split('-')[-1])[0]
                 d['spacegroup'] = {k: spacegroup._space_group_data[k] for k in sg_fields}
 
-                d['battid'] = lowest_id+'_'+self.working_ion
+                if isbx == 'core':
+                    d['battid'] = lowest_id+'_'+self.working_ion
+                else:
+                    d['battid'] = lowest_id+'_'+self.working_ion+'_'+isbx
                 # Only allow one sandbox value for each electrode
-                if isbx != 'core':
-                    d['_sbxn'] = [isbx]
+                d['_sbxn'] = [isbx]
 
                 docs.append(d)
 
@@ -204,7 +206,7 @@ class ElectrodesBuilder(Builder):
         items = list(filter(None, chain.from_iterable(items)))
         if len(items) > 0:
             self.logger.info("Updating {} electro documents".format(len(items)))
-            self.electro.update(docs=items, key='battid')
+            self.electro.update(docs=items, key=['battid'])
         else:
             self.logger.info("No items to update")
     
