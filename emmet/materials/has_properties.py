@@ -54,7 +54,9 @@ class HasProps(Builder):
             if mid not in hasmap:
                 hasmap[mid] = {}
 
-        docs = [{self.hasmap.key: mid, "has": list(has)} for mid, has in hasmap.items()]
+        docs = [
+            {self.hasprops.key: mid, "has": list(has)} for mid, has in hasmap.items()
+        ]
 
         return docs
 
