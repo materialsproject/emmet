@@ -167,12 +167,12 @@ def is_valid(structure, inputs, input_sets, kpts_tolerance=0.9):
         # Checking U-values
         if valid_input_set.incar.get("LDAU"):
             ldau_fields = ["LDAUU", "LDAUJ", "LDAUL"]
-            d["ldau_fields"] = []
+            d["diff_ldau_fields"] = []
             for k in ldau_fields:
                 if not valid_input_set.incar.get(k) == inputs.get("incar", {}).get(k):
-                    d["ldau_fields"].append(k)
+                    d["diff_ldau_fields"].append(k)
 
-            if len(d["ldau_fields"]) > 0:
+            if len(d["diff_ldau_fields"]) > 0:
                 d["is_valid"] = False
 
     return d
