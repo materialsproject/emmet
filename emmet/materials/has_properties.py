@@ -21,7 +21,7 @@ class HasProps(Builder):
     def __init__(self, materials, prop_stores, hasprops, **kwargs):
         self.materials = materials
         sources = [self.materials]
-        for key in (set(prop_stores) - set(getters)):
+        for key in set(prop_stores) - set(getters):
             del prop_stores[key]
         self.prop_stores = prop_stores
         sources.extend(list(self.prop_stores.values()))
@@ -32,6 +32,7 @@ class HasProps(Builder):
     def get_items(self):
         self.materials.ensure_index("has")
         self.hasprops.ensure_index("task_id")
+
         hasmap = defaultdict(set)
         for prop, getter in getters.items():
             self.logger.info(f"{prop}: getting mids to update...")
@@ -39,13 +40,30 @@ class HasProps(Builder):
             mids_to_update = store.distinct(getter.idfield, getter.filter)
             if store.collection.full_name != self.materials.collection.full_name:
                 # Resolve to canonical mids
-                mids_to_update = self.materials.distinct("task_id", {"task_ids": {"$in": mids_to_update}})
+                mids_to_update = self.materials.distinct(
+                    "task_id", {"task_ids": {"$in": mids_to_update}}
+                )
             for mid in mids_to_update:
                 hasmap[mid].add(prop)
-        upstream = {d["task_id"]: set(d["has"]) for d in self.hasprops.query({}, ["task_id", "has"])}
-        todo = [({"task_id": mid}, {"$set": {"has": list(props)}})
-                for mid, props in hasmap.items() if props != upstream.get(mid)]
-        return todo
+
+        all_mids = self.materials.distinct(self.materials.key)
+        upstream = {
+            d["task_id"]: set(d["has"])
+            for d in self.hasprops.query({}, ["task_id", "has"])
+        }
+        todo = [
+            ({"task_id": mid}, {"$set": {"has": list(props)}})
+            for mid, props in hasmap.items()
+            if props != upstream.get(mid)
+        ]
+
+        empty_has = [
+            ({"task_id": mid}, {"$set": {"has": []}})
+            for mid in all_mids
+            if mid not in hasmap and mid not in upstream
+        ]
+
+        return todo + empty_has
 
     def update_targets(self, items):
         now = datetime.utcnow()
