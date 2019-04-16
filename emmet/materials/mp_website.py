@@ -158,15 +158,15 @@ class MPBuilder(Builder):
                     if "thermo" not in doc or "structure" in doc
                 }
                 # aggregate all the thermo docs
-                d.update(
-                    {
-                        "thermo": [
-                            doc
-                            for doc in sub_docs
-                            if "thermo" in doc and "structure" not in doc
-                        ]
-                    }
-                )
+                thermo_docs = {
+                    "thermo": [
+                        doc
+                        for doc in sub_docs
+                        if "thermo" in doc and "structure" not in doc
+                    ]
+                }
+                if len(thermo_docs["thermo"]) > 0:
+                    d.update(thermo_docs)
                 # d = {k: v for k, v in d.items() if not k.startswith("_")}
                 # Set to most recent lu_field
                 d[self.materials.lu_field] = max(
