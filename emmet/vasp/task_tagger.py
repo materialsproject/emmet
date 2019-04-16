@@ -146,6 +146,7 @@ def is_valid(structure, inputs, input_sets, kpts_tolerance=0.9):
     if tt in input_sets:
         valid_input_set = input_sets[tt](structure)
 
+        # Checking K-Points
         valid_num_kpts = valid_input_set.kpoints.num_kpts or np.prod(
             valid_input_set.kpoints.kpts[0]
         )
@@ -156,10 +157,22 @@ def is_valid(structure, inputs, input_sets, kpts_tolerance=0.9):
         if d["kpts_ratio"] < kpts_tolerance:
             d["is_valid"] = False
 
+        # Checking ENCUT
         encut = inputs.get("incar", {}).get("ENCUT")
         valid_encut = valid_input_set.incar["ENCUT"]
         d["encut_ratio"] = float(encut) / valid_encut
         if d["encut_ratio"] < 1:
             d["is_valid"] = False
+
+        # Checking U-values
+        if valid_input_set.incar.get("LDAU"):
+            ldau_fields = ["LDAUU", "LDAUJ", "LDAUL"]
+            d["ldau_fields"] = []
+            for k in ldau_fields:
+                if not valid_input_set.incar.get(k) == inputs.get("incar", {}).get(k):
+                    d["ldau_fields"].append(k)
+
+            if len(d["ldau_fields"]) > 0:
+                d["is_valid"] = False
 
     return d
