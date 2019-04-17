@@ -615,14 +615,14 @@ def bandstructure(target_db_file, insert):
 
 @cli.command()
 @click.option('--add_snlcolls', '-a', multiple=True, help='mongogrant string for additional SNL collection to scan')
-@click.option('--add_tasks_db', type=click.Path(exists=True), help='config file for additional tasks collection to scan')
+@click.option('--add_taskdbs', '-t', multiple=True, help='mongogrant string for additional tasks collection to scan')
 @click.option('--tag', default=None, help='only include structures with specific tag')
 @click.option('--insert/--no-insert', default=False, help='actually execute workflow addition')
 @click.option('--clear-logs/--no-clear-logs', default=False, help='clear MongoDB logs collection for specific tag')
 @click.option('--max-structures', '-m', default=1000, help='set max structures for tags to scan')
 @click.option('--skip-all-scanned/--no-skip-all-scanned', default=False, help='skip all already scanned structures incl. WFs2Add/Errors')
 @click.option('--force-new/--no-force-new', default=False, help='force generation of new workflow')
-def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, skip_all_scanned, force_new):
+def wflows(add_snlcolls, add_taskdbs, tag, insert, clear_logs, max_structures, skip_all_scanned, force_new):
     """add workflows based on tags in SNL collection"""
 
     if not insert:
@@ -635,7 +635,8 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
     if add_snlcolls is not None:
         for snl_db_config in add_snlcolls:
             snl_db = client.db(snl_db_config)
-            snl_collections.append(snl_db['snls_underconverged']) # TODO get all snls_* in db?
+            #snl_collections.append(snl_db['snls_underconverged']) # TODO get all snls_* in db?
+            snl_collections.append(snl_db['valid_user_snls'])
 
     for snl_coll in snl_collections:
         ensure_meta(snl_coll)
@@ -653,9 +654,10 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
 
     tasks_collections = OrderedDict()
     tasks_collections[lpad.db.tasks.full_name] = lpad.db.tasks
-    if add_tasks_db is not None: # TODO multiple alt_task_db_files?
-        target = VaspCalcDb.from_db_file(add_tasks_db, admin=True)
-        tasks_collections[target.collection.full_name] = target.collection
+    if add_taskdbs is not None:
+        for add_taskdb in add_taskdbs:
+            target = calcdb_from_mgrant(add_taskdb)
+            tasks_collections[target.collection.full_name] = target.collection
     for full_name, tasks_coll in tasks_collections.items():
         print(tasks_coll.count(), 'tasks in', full_name)
 
@@ -785,7 +787,7 @@ def wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, 
 
                     for dct in group['structures']:
                         q = {'level': 'WARNING', 'formula': formula, 'snl_id': dct['snl_id']}
-                        log_entries = mongo_handler.collection.find(q) # log entries for already inserted workflows
+                        log_entries = list(mongo_handler.collection.find(q)) # log entries for already inserted workflows
                         if log_entries:
                             if force_new:
                                 q['tags'] = tag # try avoid duplicate wf insertion for same tag even if forced
