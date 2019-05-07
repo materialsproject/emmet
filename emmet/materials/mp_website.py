@@ -150,23 +150,17 @@ class MPBuilder(Builder):
                 self.logger.debug(
                     "Merging {} docs for {}".format(len(sub_docs), merge_key)
                 )
-                # merge all docs in this group together if not thermo
-                d = {
-                    k: v
-                    for doc in sub_docs
-                    for k, v in doc.items()
-                    if "thermo" not in doc or "structure" in doc
-                }
+                # merge all docs in this group together
+                d = {k: v for doc in sub_docs for k, v in doc.items()}
                 # aggregate all the thermo docs
-                thermo_docs = {
-                    "thermo": [
-                        doc
-                        for doc in sub_docs
-                        if "thermo" in doc and "structure" not in doc
-                    ]
-                }
-                if len(thermo_docs["thermo"]) > 0:
-                    d.update(thermo_docs)
+                thermo_docs = [
+                    doc
+                    for doc in sub_docs
+                    if "thermo" in doc and "structure" not in doc
+                ]
+
+                if len(thermo_docs) > 0:
+                    d.update({"thermo_docs": thermo_docs})
                 # d = {k: v for k, v in d.items() if not k.startswith("_")}
                 # Set to most recent lu_field
                 d[self.materials.lu_field] = max(
@@ -522,7 +516,7 @@ def add_thermo(mat, new_style_mat):
     Add's the thermo values in with sandboxing
     """
     if not mat["deprecated"]:
-        thermo = new_style_mat["thermo"]
+        thermo = new_style_mat["thermo_docs"]
 
         if "core" in mat["sbxn"]:
             main_sbx = "core"
