@@ -77,10 +77,10 @@ class TestMaterialsDb(unittest.TestCase):
         self.assertTrue(True)
 
     def test_presence_of_required_fields(self):
-        nmats_stag = self.mats_stag.estimated_document_count()
+        nmats_stag = self.mats_stag.count_documents({"deprecated": False})
         for field in required_fields:
             self.assertEqual(
-                self.mats_stag.count_documents({field: {"$exists": True}}),
+                self.mats_stag.count_documents({field: {"$exists": True}, "deprecated": False}),
                 nmats_stag,
                 msg="{}".format(field)
             )
@@ -95,12 +95,13 @@ class TestMaterialsDb(unittest.TestCase):
         self.assertEqual(len(unfaithful_taskids), 0)
 
     def test_nprops_nondecreasing(self):
-        for prop in self.mats_prod.distinct("has"):
-            n_prod = self.mats_prod.count_documents({"has": prop})
-            n_stag = self.mats_stag.count_documents({"has": prop})
-            self.assertGreaterEqual(
-                n_stag, n_prod, "{}: {} in prod but {} in staging".format(
-                    prop, n_prod, n_stag))
+        depr_mids = self.mats_stag.distinct("task_id", {"deprecated": True})
+        for prop in filter(None, self.mats_prod.distinct("has")):
+            prod_mids = set(self.mats_prod.distinct("task_id", {"has": prop, "deprecated": {"$ne": True}}))
+            stag_mids = set(self.mats_stag.distinct("task_id", {"has": prop, "deprecated": False}))
+            for mid in prod_mids:
+                self.assertTrue(mid in depr_mids or mid in stag_mids, f'non-deprecated {mid} missing {prop}')
+
 
     @unittest.skip("Many of these calculations need to be redone.")
     def test_piezo_og_formulae_present(self):
@@ -116,6 +117,7 @@ class TestMaterialsDb(unittest.TestCase):
         self.assertEqual(count, 0)
 
     def test_mid_in_task_ids(self):
+        self.assertEqual(self.mats_stag.count_documents({"task_ids": {"$exists": False}}, 0))
         missing = list(self.mats_stag.find({}, ["task_id"]).where("this.task_ids.indexOf(this.task_id) == -1"))
         self.assertEqual(len(missing), 0)
 
