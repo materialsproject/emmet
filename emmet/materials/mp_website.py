@@ -85,26 +85,7 @@ class MPBuilder(Builder):
 
         self.ensure_indexes()
 
-        mat_keys = set(self.materials.distinct(self.materials.key, criteria=self.query))
-        keys = set(
-            source_keys_updated(
-                source=self.materials, target=self.website, query=self.query
-            )
-        )
-
-        # Get keys for aux docs that have been updated since last processed.
-        for source in self.aux:
-            new_keys = source_keys_updated(source=source, target=self.website)
-            self.logger.info(
-                "Only considering {} new keys for {}".format(
-                    len(new_keys), source.collection_name
-                )
-            )
-            keys |= set(new_keys)
-
-        keys = (
-            keys & mat_keys
-        )  # Ensure all keys are present in main materials collection
+        keys = self.get_keys()
         self.logger.info("Processing {} items".format(len(keys)))
 
         self.total = len(keys)
@@ -286,6 +267,34 @@ class MPBuilder(Builder):
         self.website.ensure_index("spacegroup.number")
         self.website.ensure_index("last_updated")
         self.website.ensure_index("_bt")
+
+    def get_keys(self):
+        """
+        Gets the doc keys to process
+        """
+        mat_keys = set(self.materials.distinct(self.materials.key, criteria=self.query))
+        keys = set(
+            source_keys_updated(
+                source=self.materials, target=self.website, query=self.query
+            )
+        )
+        keys |= set(source_keys_updated(source=self.thermo, target=self.website))
+
+        # Get keys for aux docs that have been updated since last processed.
+        for source in self.aux:
+            new_keys = source_keys_updated(source=source, target=self.website)
+            self.logger.info(
+                "Only considering {} new keys for {}".format(
+                    len(new_keys), source.collection_name
+                )
+            )
+            keys |= set(new_keys)
+
+        keys = (
+            keys & mat_keys
+        )  # Ensure all keys are present in main materials collection
+
+        return keys
 
 
 #
