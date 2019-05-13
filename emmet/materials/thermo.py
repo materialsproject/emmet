@@ -107,7 +107,7 @@ class ThermoBuilder(Builder):
                     )
                 ]
 
-                yield sandbox_entries
+                yield sandboxes, sandbox_entries
 
     def process_item(self, item):
         """
@@ -121,13 +121,8 @@ class ThermoBuilder(Builder):
 
         docs = []
 
-        entries = self.compatibility.process_entries(item)
-
-        # Determine the sandbox set we're in
-        sandbox_sets = set(
-            [frozenset(entry.data.get("_sbxn", {})) for entry in entries]
-        )
-        sandboxes = reduce(lambda a, b: a.intersection(b), sandbox_sets)
+        sandboxes, entries = items
+        entries = self.compatibility.process_entries(entries)
 
         # determine chemsys
         chemsys = "-".join(
