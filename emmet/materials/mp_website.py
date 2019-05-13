@@ -43,7 +43,14 @@ vol_interval = [4.56 - 1.96 * 7.82, 4.56 + 1.96 * 7.82]
 
 class MPBuilder(Builder):
     def __init__(
-        self, materials, website, aux=None, default_sandboxes=None, query=None, **kwargs
+        self,
+        materials,
+        website,
+        thermo,
+        aux=None,
+        default_sandboxes=None,
+        query=None,
+        **kwargs,
     ):
         """
         Creates a MP Website style materials doc.
@@ -61,6 +68,7 @@ class MPBuilder(Builder):
         """
         self.materials = materials
         self.website = website
+        self.thermo = thermo
         self.aux = aux if aux else []
         self.default_sandboxes = default_sandboxes if default_sandboxes else []
         self.query = query
