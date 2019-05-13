@@ -288,7 +288,8 @@ class MPBuilder(Builder):
             sub_docs = list(sorted(sub_docs, key=lambda x: x[self.materials.lu_field]))
             self.logger.debug("Merging {} docs for {}".format(len(sub_docs), task_id))
             # merge all docs in this group together
-            d = {k: v for doc in sub_docs for k, v in doc.items()}
+            d = docs[task_id]
+            d.update({k: v for doc in sub_docs for k, v in doc.items()})
             # d = {k: v for k, v in d.items() if not k.startswith("_")}
             # Set to most recent lu_field
             d[self.materials.lu_field] = max(
