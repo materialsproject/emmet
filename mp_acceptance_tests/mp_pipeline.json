@@ -262,7 +262,7 @@
       "@module": "maggma.advanced_stores",
       "@class": "MongograntStore",
       "mongogrant_spec": "ro:staging/mp_core",
-      "collection_name": "materials",
+      "collection_name": "materials.core",
       "mgclient_config_path": null
     },
     "prop_stores": {
