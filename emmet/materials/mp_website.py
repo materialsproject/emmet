@@ -93,8 +93,72 @@ class MPBuilder(Builder):
         for chunked_keys in grouper(keys, self.chunk_size, None):
             chunked_keys = list(filter(None.__ne__, chunked_keys))
 
-            for doc in self.get_docs(chunked_keys):
-                yield doc
+            docs = {
+                d[self.materials.key]: d
+                for d in self.materials.query(
+                    criteria={self.materials.key: {"$in": chunked_keys}}
+                )
+            }
+
+            # Add in thermo
+            thermo_docs = list(
+                self.thermo.query(criteria={self.materials.key: {"$in": chunked_keys}})
+            )
+            thermo_docs = list(sorted(thermo_docs, key=lambda x: x[self.thermo.key]))
+            thermo_docs = groupby(thermo_docs, key=lambda x: x[self.thermo.key])
+            for task_id, t_docs in thermo_docs:
+                docs[task_id]["thermo_docs"] = list(thermo_docs)
+
+            # Get documents from all aux stores
+            aux_docs = []
+            for source in self.aux:
+                temp_docs = list(
+                    source.query(criteria={source.key: {"$in": chunked_keys}})
+                )
+                self.logger.debug(
+                    "Found {} docs in {} for {}".format(
+                        len(temp_docs), source.collection_name, chunked_keys
+                    )
+                )
+
+                # Ensure same key field for all docs
+                if source.key != self.materials.key:
+                    for d in temp_docs:
+                        d[self.materials.key] = d[source.key]
+                        del d[source.key]
+
+                # Ensure same lu_field for all docs
+                if source.lu_field != self.materials.lu_field:
+                    for d in temp_docs:
+                        d[self.materials.lu_field] = d[source.lu_field]
+                        del d[source.lu_field]
+
+                # Add to our giant pile of docs
+                aux_docs.extend(temp_docs)
+
+            # Sort and group docs by materials key
+            aux_docs = list(sorted(aux_docs, key=lambda x: x[self.materials.key]))
+            aux_docs = groupby(aux_docs, key=lambda x: x[self.materials.key])
+
+            # get docs all for the same materials key
+            for task_id, sub_docs in aux_docs:
+                # sort and group docs by last_updated
+                sub_docs = list(
+                    sorted(sub_docs, key=lambda x: x[self.materials.lu_field])
+                )
+                self.logger.debug(
+                    "Merging {} docs for {}".format(len(sub_docs), task_id)
+                )
+                # merge all docs in this group together
+                d = docs[task_id]
+                d.update({k: v for doc in sub_docs for k, v in doc.items()})
+                # d = {k: v for k, v in d.items() if not k.startswith("_")}
+                # Set to most recent lu_field
+                d[self.materials.lu_field] = max(
+                    doc[self.materials.lu_field] for doc in sub_docs
+                )
+
+                yield d
 
     def process_item(self, item):
 
@@ -234,69 +298,11 @@ class MPBuilder(Builder):
 
         return keys
 
-    def get_docs(self, keys):
+    def get_docs(self, chunked_keys):
         """
         Aggregates docs from various sources
         """
         # Get documents for main materials store
-        docs = {
-            d[self.materials.key]: d
-            for d in self.materials.query(criteria={self.materials.key: {"$in": keys}})
-        }
-
-        # Add in thermo
-        thermo_docs = list(
-            self.thermo.query(criteria={self.materials.key: {"$in": keys}})
-        )
-        thermo_docs = list(sorted(thermo_docs, key=lambda x: x[self.thermo.key]))
-        thermo_docs = groupby(thermo_docs, key=lambda x: x[self.thermo.key])
-        for task_id, t_docs in thermo_docs:
-            docs[task_id]["thermo_docs"] = thermo_docs
-
-        # Get documents from all aux stores
-        aux_docs = []
-        for source in self.aux:
-            temp_docs = list(source.query(criteria={source.key: {"$in": keys}}))
-            self.logger.debug(
-                "Found {} docs in {} for {}".format(
-                    len(temp_docs), source.collection_name, keys
-                )
-            )
-
-            # Ensure same key field for all docs
-            if source.key != self.materials.key:
-                for d in temp_docs:
-                    d[self.materials.key] = d[source.key]
-                    del d[source.key]
-
-            # Ensure same lu_field for all docs
-            if source.lu_field != self.materials.lu_field:
-                for d in temp_docs:
-                    d[self.materials.lu_field] = d[source.lu_field]
-                    del d[source.lu_field]
-
-            # Add to our giant pile of docs
-            aux_docs.extend(temp_docs)
-
-        # Sort and group docs by materials key
-        aux_docs = list(sorted(aux_docs, key=lambda x: x[self.materials.key]))
-        aux_docs = groupby(aux_docs, key=lambda x: x[self.materials.key])
-
-        # get docs all for the same materials key
-        for task_id, sub_docs in aux_docs:
-            # sort and group docs by last_updated
-            sub_docs = list(sorted(sub_docs, key=lambda x: x[self.materials.lu_field]))
-            self.logger.debug("Merging {} docs for {}".format(len(sub_docs), task_id))
-            # merge all docs in this group together
-            d = docs[task_id]
-            d.update({k: v for doc in sub_docs for k, v in doc.items()})
-            # d = {k: v for k, v in d.items() if not k.startswith("_")}
-            # Set to most recent lu_field
-            d[self.materials.lu_field] = max(
-                doc[self.materials.lu_field] for doc in sub_docs
-            )
-
-            yield d
 
 
 #
