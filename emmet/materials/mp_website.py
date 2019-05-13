@@ -234,21 +234,19 @@ class MPBuilder(Builder):
 
         return keys
 
-    def get_docs(self, chunked_keys):
+    def get_docs(self, keys):
         """
         Aggregates docs from various sources
         """
         # Get documents for main materials store
         docs = {
             d[self.materials.key]: d
-            for d in self.materials.query(
-                criteria={self.materials.key: {"$in": chunked_keys}}
-            )
+            for d in self.materials.query(criteria={self.materials.key: {"$in": keys}})
         }
 
         # Add in thermo
         thermo_docs = list(
-            self.thermo.query(criteria={self.materials.key: {"$in": chunked_keys}})
+            self.thermo.query(criteria={self.materials.key: {"$in": keys}})
         )
         thermo_docs = list(sorted(thermo_docs, key=lambda x: x[self.thermo.key]))
         thermo_docs = groupby(thermo_docs, key=lambda x: x[self.thermo.key])
@@ -258,10 +256,10 @@ class MPBuilder(Builder):
         # Get documents from all aux stores
         aux_docs = []
         for source in self.aux:
-            temp_docs = list(source.query(criteria={source.key: {"$in": chunked_keys}}))
+            temp_docs = list(source.query(criteria={source.key: {"$in": keys}}))
             self.logger.debug(
                 "Found {} docs in {} for {}".format(
-                    len(temp_docs), source.collection_name, chunked_keys
+                    len(temp_docs), source.collection_name, keys
                 )
             )
 
@@ -288,7 +286,7 @@ class MPBuilder(Builder):
         for task_id, sub_docs in aux_docs:
             # sort and group docs by last_updated
             sub_docs = list(sorted(sub_docs, key=lambda x: x[self.materials.lu_field]))
-            self.logger.debug("Merging {} docs for {}".format(len(sub_docs), merge_key))
+            self.logger.debug("Merging {} docs for {}".format(len(sub_docs), task_id))
             # merge all docs in this group together
             d = {k: v for doc in sub_docs for k, v in doc.items()}
             # d = {k: v for k, v in d.items() if not k.startswith("_")}
