@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from itertools import chain, combinations
 from functools import reduce
+from collections import defaultdict
 
 from pymatgen import Structure, Composition
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility
@@ -38,6 +39,7 @@ class ThermoBuilder(Builder):
             else MaterialsProjectCompatibility("Advanced")
         )
         self.completed_tasks = set()
+        self.entries_cache = defaultdict(list)
         super().__init__(sources=[materials], targets=[thermo], **kwargs)
 
     def get_items(self):
@@ -244,8 +246,18 @@ class ThermoBuilder(Builder):
 
         self.logger.info("Getting entries for: {}".format(chemsys))
 
+        # First check the cache
+        all_chemsys = chemsys_permutations(chemsys)
+        cached_chemsys = all_chemsys & set(self.entries_cache.keys())
+        query_chemsys = all_chemsys - cached_chemsys
+
+        self.logger.debug(
+            "Getting {} entries from cache for {}".format(len(cached_chemsys), chemsys)
+        )
+
+        # Query for any chemsys we don't have
         new_q = dict(self.query)
-        new_q["chemsys"] = {"$in": list(chemsys_permutations(chemsys))}
+        new_q["chemsys"] = {"$in": list(query_chemsys)}
         new_q["deprecated"] = False
 
         fields = [
@@ -258,7 +270,10 @@ class ThermoBuilder(Builder):
         ]
         data = list(self.materials.query(properties=fields, criteria=new_q))
 
-        all_entries = []
+        # Start with entries from cache
+        all_entries = list(
+            chain.from_iterable(self.entries_cache[c] for c in cached_chemsys)
+        )
 
         for d in data:
             comp = Composition(d["composition"])
@@ -273,6 +288,10 @@ class ThermoBuilder(Builder):
                     "_sbxn": d.get("_sbxn", []),
                 },
             )
+
+            # Add to cache
+            elsyms = sorted(set([el.symbol for el in comp.elements]))
+            self.entries_cache["-".join(elsyms)].append(entry)
 
             all_entries.append(entry)
 
