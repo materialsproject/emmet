@@ -74,7 +74,7 @@ class MPBuilder(Builder):
         self.query = query
         # self.website.validator = JSONSchemaValidator(loadfn(MPBUILDER_SCHEMA))
 
-        super().__init__(sources=[materials] + aux, targets=[website], **kwargs)
+        super().__init__(sources=[materials, thermo] + aux, targets=[website], **kwargs)
 
     def get_items(self):
         """
