@@ -234,7 +234,7 @@ class MPBuilder(Builder):
 
         return keys
 
-    def get_docs(self, keys):
+    def get_docs(self, chunked_keys):
         """
         Aggregates docs from various sources
         """
