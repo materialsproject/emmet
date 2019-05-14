@@ -136,6 +136,10 @@ class TestMaterialsDb(unittest.TestCase):
         for doc in cursor:
             self.assertIn("doi_bibtex", doc)
 
+    def test_has_bandstructure(self):
+        mids = self.mats_stag.distinct("task_id", {"has": "bandstructure"})
+        self.assertEqual(len(mids), self.db_stag.electronic_structure.count_documents({"task_id": {"$in": mids}}))
+
 
     @classmethod
     def tearDownClass(cls):
