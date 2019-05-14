@@ -7,8 +7,8 @@ from pymongo import UpdateOne
 IDGetter = namedtuple("IDGetter", ["filter", "idfield"])
 getters = {
     "elasticity": IDGetter({"elasticity": {"$exists": True}}, "task_id"),
-    "piezo": IDGetter({"piezo": {"$exists": True}}, "task_id"),
-    "diel": IDGetter({"diel": {"$exists": True}}, "task_id"),
+    "piezo": IDGetter({"piezo.eij_max": {"$exists": True}}, "task_id"),
+    "diel": IDGetter({"diel.n": {"$exists": True}}, "task_id"),
     "phonons": IDGetter({}, "mp-id"),
     "eos": IDGetter({}, "mp_id"),
     "xas": IDGetter({"valid": True}, "mp_id"),
