@@ -393,7 +393,7 @@ def add_es(mat, new_style_mat):
     except Exception as e:
         print("Error in adding electronic structure: {}".format(e))
 
-    mat["has_bandstructure"] = bool(bs_origin) and bool(dos_origin)
+    mat["has_bandstructure"] = "bandstructure" in new_style_mat.get("has",[])
 
 
 def add_elastic(mat, new_style_mat):
