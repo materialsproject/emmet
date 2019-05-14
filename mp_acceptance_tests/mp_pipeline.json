@@ -270,21 +270,21 @@
         "@module": "maggma.advanced_stores",
         "@class": "MongograntStore",
         "mongogrant_spec": "ro:staging/mp_core",
-        "collection_name": "materials",
+        "collection_name": "elasticity",
         "mgclient_config_path": null
       },
       "piezo": {
         "@module": "maggma.advanced_stores",
         "@class": "MongograntStore",
         "mongogrant_spec": "ro:staging/mp_core",
-        "collection_name": "materials",
+        "collection_name": "dielectric",
         "mgclient_config_path": null
       },
       "diel": {
         "@module": "maggma.advanced_stores",
         "@class": "MongograntStore",
         "mongogrant_spec": "ro:staging/mp_core",
-        "collection_name": "materials",
+        "collection_name": "dielectric",
         "mgclient_config_path": null
       },
       "phonons": {
@@ -312,7 +312,7 @@
         "@module": "maggma.advanced_stores",
         "@class": "MongograntStore",
         "mongogrant_spec": "ro:staging/mp_core",
-        "collection_name": "materials",
+        "collection_name": "electronic_structure",
         "mgclient_config_path": null
       },
       "surfaces": {
