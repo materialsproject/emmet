@@ -28,7 +28,7 @@ class DielectricBuilder(MapBuilder):
         self.dielectric = dielectric
         self.max_miller = max_miller
         self.query = query if query else {}
-        self.query.update({"dielectric": {"$exists": 1}, "bandstructure.band_gap" : {"$gt": 0.0}})
+        self.query.update({"dielectric": {"$exists": 1}})
 
         super().__init__(
             source=materials,
@@ -36,7 +36,8 @@ class DielectricBuilder(MapBuilder):
             query=self.query,
             ufn=self.calc,
             projection=["dielectric", "piezo", "structure", "bandstructure.band_gap"],
-            **kwargs)
+            **kwargs
+        )
 
     def calc(self, item):
         """
@@ -51,11 +52,15 @@ class DielectricBuilder(MapBuilder):
 
         def poly(matrix):
             diags = np.diagonal(matrix)
-            return np.prod(diags) / np.sum(np.prod(comb) for comb in combinations(diags, 2))
+            return np.prod(diags) / np.sum(
+                np.prod(comb) for comb in combinations(diags, 2)
+            )
 
         if item["bandstructure"]["band_gap"] > 0:
 
-            structure = Structure.from_dict(item.get("dielectric", {}).get("structure", None))
+            structure = Structure.from_dict(
+                item.get("dielectric", {}).get("structure", None)
+            )
 
             ionic = Tensor(item["dielectric"]["ionic"]).convert_to_ieee(structure)
             static = Tensor(item["dielectric"]["static"]).convert_to_ieee(structure)
@@ -76,8 +81,8 @@ class DielectricBuilder(MapBuilder):
             sga = SpacegroupAnalyzer(structure)
             # Update piezo if non_centrosymmetric
             if item.get("piezo", False) and not sga.is_laue():
-                static = PiezoTensor.from_voigt(np.array(item['piezo']["static"]))
-                ionic = PiezoTensor.from_voigt(np.array(item['piezo']["ionic"]))
+                static = PiezoTensor.from_voigt(np.array(item["piezo"]["static"]))
+                ionic = PiezoTensor.from_voigt(np.array(item["piezo"]["ionic"]))
                 total = ionic + static
 
                 # Symmeterize Convert to IEEE orientation
@@ -85,7 +90,9 @@ class DielectricBuilder(MapBuilder):
                 ionic = ionic.convert_to_ieee(structure)
                 static = static.convert_to_ieee(structure)
 
-                directions, charges, strains = np.linalg.svd(total.voigt, full_matrices=False)
+                directions, charges, strains = np.linalg.svd(
+                    total.voigt, full_matrices=False
+                )
 
                 max_index = np.argmax(np.abs(charges))
 
@@ -102,13 +109,21 @@ class DielectricBuilder(MapBuilder):
                     "static": static.zeroed().voigt,
                     "e_ij_max": charges[max_index],
                     "max_direction": np.round(max_direction / min_val),
-                    "strain_for_max": strains[max_index]
+                    "strain_for_max": strains[max_index],
                 }
         else:
             d = {
-                "diel": {
-                    "warngings": ["Dielectric calculated for likely metal. Values are unlikely to be converged"]
+                "dielectric": {
+                    "warngings": [
+                        "Dielectric calculated for likely metal. Values are unlikely to be converged"
+                    ]
                 }
             }
+            if item.get("piezo", False):
+                d["piezo"] = {
+                    "warngings": [
+                        "Piezoelectric calculated for likely metal. Values are unlikely to be converged"
+                    ]
+                }
 
         return d
