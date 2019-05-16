@@ -113,17 +113,20 @@ class DielectricBuilder(MapBuilder):
                 }
         else:
             d = {
-                "dielectric": {
-                    "warngings": [
-                        "Dielectric calculated for likely metal. Values are unlikely to be converged"
-                    ]
-                }
+                "dielectric": {},
+                "_warngings": [
+                    "Dielectric calculated for likely metal. Values are unlikely to be converged"
+                ],
             }
+
             if item.get("piezo", False):
-                d["piezo"] = {
-                    "warngings": [
-                        "Piezoelectric calculated for likely metal. Values are unlikely to be converged"
-                    ]
-                }
+                d.update(
+                    {
+                        "piezo": {},
+                        "warngings": [
+                            "Piezoelectric calculated for likely metal. Values are unlikely to be converged"
+                        ],
+                    }
+                )
 
         return d
