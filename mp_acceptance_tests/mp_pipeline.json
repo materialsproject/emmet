@@ -348,6 +348,13 @@
       "collection_name": "materials_dev",
       "mgclient_config_path": null
     },
+    "thermo": {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "thermo",
+        "mgclient_config_path": null
+    },
     "aux": [
       {
         "@module": "maggma.advanced_stores",
@@ -403,13 +410,6 @@
         "@class": "MongograntStore",
         "mongogrant_spec": "ro:staging/mp_core",
         "collection_name": "snls",
-        "mgclient_config_path": null
-      },
-      {
-        "@module": "maggma.advanced_stores",
-        "@class": "MongograntStore",
-        "mongogrant_spec": "ro:staging/mp_core",
-        "collection_name": "thermo",
         "mgclient_config_path": null
       },
       {
