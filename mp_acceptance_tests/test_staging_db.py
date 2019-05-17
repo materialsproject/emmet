@@ -99,7 +99,7 @@ class TestMaterialsDb(unittest.TestCase):
         depr_mids = self.mats_stag.distinct("task_id", {"deprecated": True})
         for prop in filter(None, self.mats_prod.distinct("has")):
             prod_mids = set(self.mats_prod.distinct("task_id", {"has": prop, "deprecated": {"$ne": True}}))
-            stag_mids = set(self.mats_stag.distinct("task_id", {"has": prop, "deprecated": False}))
+            stag_tids = set(self.mats_stag.distinct("task_ids", {"has": prop, "deprecated": False}))
             if prop == "bandstructure":
                 prod_mids = set(self.db_prod.electronic_structure.distinct(
                     "task_id", {"task_id": {"$in": list(prod_mids)}, "bs_plot": {"$exists": True}}))
@@ -114,7 +114,7 @@ class TestMaterialsDb(unittest.TestCase):
                 prod_mids = set(self.db_phonons.phonon_bs_img.distinct(
                     "mp-id", {"mp-id": {"$in": list(prod_mids)}}))
             for mid in sorted(prod_mids):
-                self.assertTrue(mid in depr_mids or mid in stag_mids, f'non-deprecated {mid} missing {prop}')
+                self.assertTrue(mid in depr_mids or mid in stag_tids, f'non-deprecated {mid} missing {prop}')
 
     @unittest.skip("Many of these calculations need to be redone.")
     def test_piezo_og_formulae_present(self):
@@ -151,7 +151,12 @@ class TestMaterialsDb(unittest.TestCase):
 
     def test_has_bandstructure(self):
         mids = self.mats_stag.distinct("task_id", {"has": "bandstructure"})
-        self.assertEqual(len(mids), self.db_stag.electronic_structure.count_documents({"task_id": {"$in": mids}}))
+        n_esdocs = self.db_stag.electronic_structure.count_documents({"task_id": {"$in": mids}})
+        self.assertEqual(
+            len(mids),
+            n_esdocs,
+            f'There are {"fewer" if len(mids) > n_esdocs else "more"} electronic_structure docs than expected'
+        )
 
 
     @classmethod
