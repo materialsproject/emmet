@@ -45,6 +45,7 @@ class TestMaterialsDb(unittest.TestCase):
         cls.client = Client()
         cls.db_stag = cls.client.db("ro:staging/mp_core")
         cls.db_prod = cls.client.db("ro:prod/mp_emmet_prod")
+        cls.db_phonons = cls.client.db("ro:prod/phonondb")
         cls.mats_stag = cls.db_stag.materials
         cls.mats_prod = cls.db_prod.materials
 
@@ -99,9 +100,21 @@ class TestMaterialsDb(unittest.TestCase):
         for prop in filter(None, self.mats_prod.distinct("has")):
             prod_mids = set(self.mats_prod.distinct("task_id", {"has": prop, "deprecated": {"$ne": True}}))
             stag_mids = set(self.mats_stag.distinct("task_id", {"has": prop, "deprecated": False}))
-            for mid in prod_mids:
+            if prop == "bandstructure":
+                prod_mids = set(self.db_prod.electronic_structure.distinct(
+                    "task_id", {"task_id": {"$in": list(prod_mids)}, "bs_plot": {"$exists": True}}))
+            elif prop in ("diel", "piezo"):
+                # A stag mid may lose diel relative to prod if stag band gap is zero.
+                stag_mids_nogap = set(self.mats_stag.distinct(
+                    "task_id", {"task_id": {"$in": list(prod_mids)}, "band_gap.search_gap.band_gap": 0}))
+                prod_mids -= stag_mids_nogap
+            elif prop == "phonons":
+                # XXX Some prod mids incorrectly {"has": "phonons"}!
+                # This filter can be removed after a 2019.05 release.
+                prod_mids = set(self.db_phonons.phonon_bs_img.distinct(
+                    "mp-id", {"mp-id": {"$in": list(prod_mids)}}))
+            for mid in sorted(prod_mids):
                 self.assertTrue(mid in depr_mids or mid in stag_mids, f'non-deprecated {mid} missing {prop}')
-
 
     @unittest.skip("Many of these calculations need to be redone.")
     def test_piezo_og_formulae_present(self):
@@ -117,7 +130,7 @@ class TestMaterialsDb(unittest.TestCase):
         self.assertEqual(count, 0)
 
     def test_mid_in_task_ids(self):
-        self.assertEqual(self.mats_stag.count_documents({"task_ids": {"$exists": False}}, 0))
+        self.assertEqual(self.mats_stag.count_documents({"task_ids": {"$exists": False}}), 0)
         missing = list(self.mats_stag.find({}, ["task_id"]).where("this.task_ids.indexOf(this.task_id) == -1"))
         self.assertEqual(len(missing), 0)
 
@@ -145,3 +158,4 @@ class TestMaterialsDb(unittest.TestCase):
     def tearDownClass(cls):
         cls.db_stag.client.close()
         cls.db_prod.client.close()
+        cls.db_phonons.client.close()
