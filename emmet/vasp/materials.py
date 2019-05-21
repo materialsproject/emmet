@@ -209,8 +209,8 @@ class MaterialsBuilder(Builder):
         mat_id = find_mat_id(all_props)
 
         # Sort and group based on property
-        sorted_props = sorted(all_props, key=lambda x: x["materials_key"])
-        grouped_props = groupby(sorted_props, key=lambda x: x["materials_key"])
+        sorted_props = sorted(all_props, key=lambda prop: prop["materials_key"])
+        grouped_props = groupby(sorted_props, key=lambda prop: prop["materials_key"])
 
         # Choose the best prop for each materials key: highest quality score and lowest energy calculation
         best_props = [find_best_prop(props) for _, props in grouped_props]
@@ -391,7 +391,7 @@ def find_mat_id(props):
     # Sort task_ids by ID
     possible_mat_ids = [
         prop["task_id"]
-        for prop in sorted(possible_mat_ids, key=lambda x: ID_to_int(x["task_id"]))
+        for prop in sorted(possible_mat_ids, key=lambda doc: ID_to_int(doc["task_id"]))
     ]
 
     if len(possible_mat_ids) == 0:
