@@ -52,6 +52,17 @@ class VisualizationBuilder(MapBuilder):
 
         self.materials = materials
         self.visualization = visualization
+        self.projection = projection
+        self.bonding_strategy = bonding_strategy
+        self.bonding_strategy_kwargs = bonding_strategy_kwargs
+        self.color_scheme = color_scheme
+        self.color_scale = color_scale
+        self.radius_strategy = radius_strategy
+        self.draw_image_atoms = draw_image_atoms
+        self.bonded_sites_outside_unit_cell = bonded_sites_outside_unit_cell
+        self.hide_incomplete_bonds = hide_incomplete_bonds
+        self.kwargs = kwargs
+
         self.projected_object_name = projection[0]
 
         # stored as a dict so settings can be stored in the visualization
@@ -72,7 +83,7 @@ class VisualizationBuilder(MapBuilder):
             source=materials,
             target=visualization,
             ufn=self.calc,
-            projection=projection,
+            projection=list(projection),
             **kwargs
         )
 
