@@ -131,6 +131,7 @@ class ElectrodesBuilder(Builder):
         }
         self.logger.info("chemsys list: {}".format(chemsys_w_wo_ion))
         q = {"chemsys": {"$in": list(chemsys_w_wo_ion)}, "deprecated": False}
+        q.update(self.query)
         docs = self.materials.query(q, mat_props)
         entries = self._mat_doc2comp_entry(docs)
         self.logger.info("Found {} entries in the database".format(len(entries)))
