@@ -209,8 +209,8 @@ class MaterialsBuilder(Builder):
         mat_id = find_mat_id(all_props)
 
         # Sort and group based on property
-        sorted_props = sorted(all_props, key=lambda x: x["materials_key"])
-        grouped_props = groupby(sorted_props, key=lambda x: x["materials_key"])
+        sorted_props = sorted(all_props, key=lambda prop: prop["materials_key"])
+        grouped_props = groupby(sorted_props, key=lambda prop: prop["materials_key"])
 
         # Choose the best prop for each materials key: highest quality score and lowest energy calculation
         best_props = [find_best_prop(props) for _, props in grouped_props]
@@ -226,7 +226,9 @@ class MaterialsBuilder(Builder):
         ]
 
         # Store any bad props
-        invalid_props = [prop["materials_key"] for prop in best_props if not prop["is_valid"]]
+        invalid_props = [
+            prop["materials_key"] for prop in best_props if not prop["is_valid"]
+        ]
 
         # Store all the task_ids
         task_ids = list(set([t["task_id"] for t in task_group]))
@@ -238,7 +240,7 @@ class MaterialsBuilder(Builder):
         task_types = {t["task_id"]: t["task_type"] for t in all_props}
 
         # Store sandboxes
-        sandboxes = list(set(chain.from_iterable([k["sbxn"] for k in  best_props])))
+        sandboxes = list(set(chain.from_iterable([k["sbxn"] for k in best_props])))
 
         mat = {
             self.materials.lu_field: max([prop["last_updated"] for prop in all_props]),
@@ -249,7 +251,7 @@ class MaterialsBuilder(Builder):
             "origins": origins,
             "task_types": task_types,
             "invalid_props": invalid_props,
-            "_sbxn": sandboxes
+            "_sbxn": sandboxes,
         }
 
         for prop in best_props:
@@ -320,7 +322,7 @@ class MaterialsBuilder(Builder):
                             "energy": get(task, "output.energy_per_atom", 0.0),
                             "materials_key": prop["materials_key"],
                             "is_valid": task.get("is_valid", True),
-                            "sbxn": task.get("sbxn",[])
+                            "sbxn": task.get("sbxn", []),
                         }
                     )
                 elif not prop.get("optional", False):
@@ -360,7 +362,6 @@ class MaterialsBuilder(Builder):
         else:
             mat.update({"deprecated": False})
 
-
     def ensure_indexes(self):
         """
         Ensures indicies on the tasks and materials collections
@@ -385,14 +386,12 @@ class MaterialsBuilder(Builder):
 def find_mat_id(props):
 
     # Only consider structure optimization task_ids for material task_id
-    possible_mat_ids = [
-        prop for prop in props if "structure" in prop["materials_key"]
-    ]
+    possible_mat_ids = [prop for prop in props if "structure" in prop["materials_key"]]
 
     # Sort task_ids by ID
     possible_mat_ids = [
         prop["task_id"]
-        for prop in sorted(possible_mat_ids, key=lambda x: ID_to_int(x["task_id"]))
+        for prop in sorted(possible_mat_ids, key=lambda doc: ID_to_int(doc["task_id"]))
     ]
 
     if len(possible_mat_ids) == 0:
@@ -411,7 +410,12 @@ def find_best_prop(props):
 
     # Sort for highest quality score and lowest energy
     sorted_props = sorted(
-        props, key=lambda x: (-1 * ["is_valid"], -1 * x["quality_score"], x["energy"])
+        props,
+        key=lambda doc: (
+            -1 * doc["is_valid"],
+            -1 * doc["quality_score"],
+            doc["energy"],
+        ),
     )
     if sorted_props[0].get("aggregate", False):
         # Make this a list of lists and then flatten to deal with mixed value typing

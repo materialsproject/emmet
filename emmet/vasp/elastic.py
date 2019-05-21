@@ -299,8 +299,8 @@ class ElasticAggregateBuilder(Builder):
                 final_doc = toec_docs[-1]
             structure = Structure.from_dict(final_doc['optimized_structure'])
             formula = structure.composition.reduced_formula
-            elements = [s.symbol for s in structure.composition.elements]
-            chemsys = '-'.join(sorted(elements))
+            elements = sorted(set([e.symbol for e in structure.composition.elements]))
+            chemsys = '-'.join(elements)
 
             # Issue warning if relaxed structure differs
             warnings = final_doc.get('warnings') or []
