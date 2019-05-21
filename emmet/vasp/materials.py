@@ -411,7 +411,7 @@ def find_best_prop(props):
 
     # Sort for highest quality score and lowest energy
     sorted_props = sorted(
-        props, key=lambda x: (-1 * ["is_valid"], -1 * x["quality_score"], x["energy"])
+        props, key=lambda doc: (-1 * doc["is_valid"], -1 * doc["quality_score"], doc["energy"])
     )
     if sorted_props[0].get("aggregate", False):
         # Make this a list of lists and then flatten to deal with mixed value typing
