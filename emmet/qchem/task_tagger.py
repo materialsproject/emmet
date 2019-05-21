@@ -1,7 +1,6 @@
 from maggma.builders import MapBuilder
 
-__author__ = "Shyam Dwaraknath"
-__email__ = "shyamd@lbl.gov"
+__author__ = "Sam Blau, Shyam Dwaraknath"
 
 
 class TaskTagger(MapBuilder):
@@ -17,7 +16,7 @@ class TaskTagger(MapBuilder):
         self.task_types = task_types
         self.kwargs = kwargs
 
-        super().__init__(source=tasks, target=task_types, ufn=self.calc, projection=["orig_inputs"], **kwargs)
+        super().__init__(source=tasks, target=task_types, ufn=self.calc, projection=["orig"], **kwargs)
 
     def calc(self, item):
         """

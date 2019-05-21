@@ -4,6 +4,8 @@ from itertools import chain, groupby
 import numpy as np
 
 from pymatgen import Molecule
+from pymatgen.analysis.graphs import MoleculeGraph, isomorphic
+from pymatgen.analysis.local_env import OpenBabelNN
 
 from maggma.builders import Builder
 
@@ -11,14 +13,20 @@ from emmet.qchem.task_tagger import task_type
 from emmet.common.utils import load_settings
 from pydash.objects import get, set_, has
 
-__author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
+__author__ = "Sam Blau, Shyam Dwaraknath"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-default_mat_settings = os.path.join(module_dir, "settings", "molecule_settings.json")
+default_mol_settings = os.path.join(module_dir, "settings", "molecule_settings.json")
 
 
 class MoleculesBuilder(Builder):
-    def __init__(self, tasks, molecules, mol_prefix="eg-", molecules_settings=None, query=None, **kwargs):
+    def __init__(self,
+                 tasks,
+                 molecules,
+                 mol_prefix="eg-",
+                 molecules_settings=None,
+                 query=None,
+                 **kwargs):
         """
         Creates a molecules collection from tasks and tags
 
@@ -36,7 +44,7 @@ class MoleculesBuilder(Builder):
         self.mol_prefix = mol_prefix
         self.query = query if query else {}
 
-        self.__settings = load_settings(self.molecules_settings, default_mat_settings)
+        self.__settings = load_settings(self.molecules_settings, default_mol_settings)
 
         self.allowed_tasks = {t_type for d in self.__settings for t_type in d["quality_score"]}
 
@@ -75,7 +83,7 @@ class MoleculesBuilder(Builder):
         update_q = dict(q)
         update_q.update(self.tasks.lu_filter(self.molecules))
         updated_forms = self.tasks.distinct("formula_pretty", update_q)
-        self.logger.info("Found {} updated systems to proces".format(len(updated_forms)))
+        self.logger.info("Found {} updated systems to process".format(len(updated_forms)))
 
         forms_to_update = set(updated_forms) | set(to_process_forms)
         self.logger.info("Processing {} total systems".format(len(forms_to_update)))
@@ -186,33 +194,33 @@ class MoleculesBuilder(Builder):
             set_(mol, prop["molecules_key"], prop["value"])
 
         # Add metadata back into document and convert back to conventional standard
-        if "structure" in mol:
-            mol.update(structure_metadata(structure))
+        if "molecule" in mol:
+            mol.update(molecule_metadata(molecule))
 
         return mol
 
     def filter_and_group_tasks(self, tasks):
         """
-        Groups tasks by structure matching
+        Groups tasks by molecule matching
         """
 
         filtered_tasks = [t for t in tasks if task_type(t["orig"]) in self.allowed_tasks]
 
-        structures = []
+        molecules = []
 
         for idx, t in enumerate(filtered_tasks):
             s = Molecule.from_dict(t["output"]["initial_molecule"])
             s.index = idx
-            structures.append(s)
+            molecules.append(s)
 
-        grouped_structures = group_structures(structures)
+        grouped_molecules = group_molecules(molecules)
 
-        for group in grouped_structures:
-            yield [filtered_tasks[struc.index] for struc in group]
+        for group in grouped_molecules:
+            yield [filtered_tasks[mol.index] for mol in group]
 
     def task_to_prop_list(self, task):
         """
-        Converts a task into an list of properties with associated metadata
+        Converts a task into a list of properties with associated metadata
         """
         t_type = task_type(task["orig"])
         t_id = task["task_id"]
@@ -231,7 +239,7 @@ class MoleculesBuilder(Builder):
                         "track": prop.get("track", False),
                         "aggregate": prop.get("aggregate", False),
                         "last_updated": task[self.tasks.lu_field],
-                        "energy": get(task, "output.energy", 0.0),
+                        "energy": get(task, "output.final_energy", 0.0),
                         "molecules_key": prop["molecules_key"]
                     })
                 elif not prop.get("optional", False):
@@ -240,9 +248,9 @@ class MoleculesBuilder(Builder):
 
     def valid(self, doc):
         """
-        Determines if the resulting material document is valid
+        Determines if the resulting molecule document is valid
         """
-        return "structure" in doc
+        return "molecule" in doc
 
     def ensure_indexes(self):
         """
@@ -261,14 +269,14 @@ class MoleculesBuilder(Builder):
         self.molecules.ensure_index(self.molecules.lu_field)
 
 
-def structure_metadata(structure):
+def molecule_metadata(molecule):
     """
-    Generates metadata based on a structure
+    Generates metadata based on a molecule
     """
-    comp = structure.composition
+    comp = molecule.composition
     elsyms = sorted(set([e.symbol for e in comp.elements]))
     meta = {
-        "nsites": structure.num_sites,
+        "nsites": molecule.num_sites,
         "elements": elsyms,
         "nelements": len(elsyms),
         "composition": comp.as_dict(),
@@ -281,11 +289,31 @@ def structure_metadata(structure):
     return meta
 
 
-def group_structures(structures):
+def group_molecules(molecules):
     """
-    Groups structures for molecules
+    Groups molecules according to composition, charge, and connectivity
     """
-    raise NotImplemented("Still need to figure out how to group molecules")
+
+    def get_mol_key(mol):
+        return mol.composition.alphabetical_formula+" "+str(mol.charge)
+
+    for mol_key, pregroup in groupby(sorted(molecules,key=get_mol_key),key=get_mol_key):
+        subgroups = []
+        for mol in pregroup:
+            mol_graph = MoleculeGraph.with_local_env_strategy(mol,
+                                                              OpenBabelNN(),
+                                                              reorder=False,
+                                                              extend_structure=False)
+            matched = False
+            for subgroup in subgroups:
+                if isomorphic(mol_graph.graph,subgroup["mol_graph"].graph,True):
+                    subgroup["mol_list"].append(mol)
+                    matched = True
+                    break
+            if not matched:
+                subgroups.append({"mol_graph":mol_graph,"mol_list":[mol]})
+        for group in subgroups:
+            yield group
 
 
 def ID_to_int(s_id):

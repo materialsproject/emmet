@@ -4,7 +4,8 @@ import os
 from emmet.vasp.task_tagger import TaskTagger
 from maggma.stores import JSONStore, MemoryStore
 
-__author__ = "Sam Blau, Shyam Dwaraknath"
+__author__ = "Shyam Dwaraknath"
+__email__ = "shyamd@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 test_tasks = os.path.join(module_dir, "..", "..", "..", "test_files", "test_tasktagger_tasks.json")
