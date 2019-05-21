@@ -209,7 +209,6 @@
   },
   "required": [
     "task_id",
-    "e_above_hull",
     "structure"
   ]
 }
