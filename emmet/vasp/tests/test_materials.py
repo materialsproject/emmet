@@ -20,7 +20,7 @@ class TestMaterials(unittest.TestCase):
         tasks = MongoStore("emmet_test", "tasks")
         materials = MongoStore("emmet_test", "materials")
 
-        self.mbuilder = MaterialsBuilder(tasks, materials, mat_prefix="", chunk_size=1)
+        self.mbuilder = MaterialsBuilder(tasks, materials, chunk_size=1)
 
     def test_make_mat(self):
         struc1 = self.structure.copy()
@@ -64,8 +64,7 @@ class TestMaterials(unittest.TestCase):
         self.assertEqual(set(mat["task_ids"]), {"mp-1", "mp-2"})
 
         for k in [
-                "task_ids", "task_id", "origins", "task_types", "formula_anonymous", "bandstructure", "inputs",
-                "formula_pretty", "structure"
+                "task_ids", "task_id", "origins", "task_types",  "bandstructure", "inputs", "structure"
         ]:
             self.assertIn(k, mat)
         self.assertIn(self.mbuilder.materials.lu_field, mat)
