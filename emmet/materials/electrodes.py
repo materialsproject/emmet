@@ -54,7 +54,8 @@ class ElectrodesBuilder(Builder):
         Args:
             materials (Store): Store of materials documents that contains the structures
             electro (Store): Store of insertion electrodes data such as voltage and capacity
-            query (dict): dictionary to limit materials to be analyzed --- not supported yet
+            query (dict): dictionary to limit materials to be analyzed --- only applied to the materials when we need to group structures
+                            the phase diagram is still constructed with the entire set
             compatibility (PymatgenCompatability): Compatability module
                 to ensure energies are compatible
         """
@@ -115,7 +116,7 @@ class ElectrodesBuilder(Builder):
 
     def get_hashed_entries_from_chemsys(self, chemsys):
         """
-        Read the entries from the thermo database and group them based on the reduced composition
+        Read the entries from the materials database and group them based on the reduced composition
         of the framework material (without working ion).
         Args:
             chemsys(string): the chemical system string to be queried
@@ -177,7 +178,11 @@ class ElectrodesBuilder(Builder):
         assert self.working_ion_entry != None
 
         grouped_entries = list(self.get_sorted_subgroups(all_entries))
+<<<<<<< HEAD
         docs = []  # results
+=======
+        docs = [] # results
+>>>>>>> master
 
         for group in grouped_entries:
             self.logger.debug(
@@ -206,6 +211,7 @@ class ElectrodesBuilder(Builder):
             self.logger.debug(f"All sandboxes {', '.join(list(all_sbx))}")
 
             for isbx in all_sbx:
+<<<<<<< HEAD
                 group_sbx = list(
                     filter(
                         lambda ent: (isbx in ent.data["_sbxn"])
@@ -216,6 +222,10 @@ class ElectrodesBuilder(Builder):
                 self.logger.debug(
                     f"Grouped entries in sandbox {', '.join([en.name for en in group_sbx])}"
                 )
+=======
+                group_sbx = list(filter(lambda ent : (isbx in ent.data['_sbxn']) or (ent.data['_sbxn']==['core']), group))
+                self.logger.debug(f"Grouped entries in sandbox {isbx} -- {', '.join([en.name for en in group_sbx])}")
+>>>>>>> master
                 result = InsertionElectrode(group_sbx, self.working_ion_entry)
 
                 spacegroup = SpacegroupAnalyzer(
@@ -240,10 +250,19 @@ class ElectrodesBuilder(Builder):
                     k: spacegroup._space_group_data[k] for k in sg_fields
                 }
 
+<<<<<<< HEAD
                 d["battid"] = lowest_id + "_" + self.working_ion
                 # Only allow one sandbox value for each electrode
                 if isbx != "core":
                     d["_sbxn"] = isbx
+=======
+                if isbx == 'core':
+                    d['battid'] = lowest_id+'_'+self.working_ion
+                else:
+                    d['battid'] = lowest_id+'_'+self.working_ion+'_'+isbx
+                # Only allow one sandbox value for each electrode
+                d['_sbxn'] = [isbx]
+>>>>>>> master
 
                 docs.append(d)
 
@@ -253,7 +272,11 @@ class ElectrodesBuilder(Builder):
         items = list(filter(None, chain.from_iterable(items)))
         if len(items) > 0:
             self.logger.info("Updating {} electro documents".format(len(items)))
+<<<<<<< HEAD
             self.electro.update(docs=items, key="battid")
+=======
+            self.electro.update(docs=items, key=['battid'])
+>>>>>>> master
         else:
             self.logger.info("No items to update")
 
@@ -335,6 +358,7 @@ class ElectrodesBuilder(Builder):
 
         entries = []
         for d in docs:
+<<<<<<< HEAD
             struct = Structure.from_dict(d["structure"])
             en = ComputedStructureEntry(
                 structure=struct,
@@ -346,6 +370,15 @@ class ElectrodesBuilder(Builder):
                 en.data["_sbxn"] = d["_sbxn"]
             else:
                 en.data["_sbxn"] = ["core"]
+=======
+            struct = Structure.from_dict(d['structure'])
+            en = ComputedStructureEntry(structure=struct,
+                                        energy=d['thermo']['energy'],
+                                        parameters=d['calc_settings'],
+                                        entry_id=d['task_id'],
+                                        )
+            en.data['_sbxn'] = d['_sbxn']
+>>>>>>> master
 
             if store_struct:
                 struct_delith = get_prim_host(struct)

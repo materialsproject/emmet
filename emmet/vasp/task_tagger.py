@@ -113,7 +113,20 @@ def task_type(inputs, include_calc_type=True):
 
     elif incar.get("LEFG", False):
         return calc_type + "NMR Electric Field Gradient"
-
+    
+    # these criteria for detecting magnetic ordering calculations are slightly
+    # arbitrary and may need to be revisited in future, they are included for
+    # now to make building cleaner and to better declare the intent of these
+    # calculations on the Materials Project website - @mkhorton
+    elif (incar.get("ISPIN", 1) == 2 and incar.get("LASPH", False) and 
+          incar.get("ISYM", False) and incar.get("NSW", 1) == 0):
+        return calc_type + "Magnetic Ordering Static"
+    
+    elif (incar.get("ISPIN", 1) == 2  incar.get("LASPH", False) and 
+          incar.get("ISYM", False) and incar.get("ISIF", 2) == 3 and 
+          incar.get("IBRION", 0) > 0):
+        return calc_type + "Magnetic Ordering Structure Optimization"
+        
     elif incar.get("NSW", 1) == 0:
         return calc_type + "Static"
 
