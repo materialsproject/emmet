@@ -1,0 +1,14 @@
+#!/bin/bash -l
+#SBATCH --qos=xfer
+#SBATCH --time=48:00:00
+#SBATCH --job-name=garden_to_hpss
+#SBATCH --licenses=SCRATCH
+#SBATCH --mail-user=phuck@lbl.gov
+#SBATCH --mail-type=ALL
+#SBATCH --output=garden_to_hpss-%j.out
+#SBATCH --error=garden_to_hpss-%j.error
+#SBATCH --mem=10GB
+
+script=$HOME/mp_prod/codes/emmet/emmet/scripts/garden_to_hpss.sh
+indir=/project/projectdirs/matgen/garden/hpss_to_mpdrive/raw/
+$script $indir
