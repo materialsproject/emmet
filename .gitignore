@@ -106,4 +106,9 @@ ENV/
 
 # PyCharm
 .idea
+<<<<<<< HEAD
+
+# GDrive
+emmet/scripts/credentials.json
+emmet/scripts/token.json
 .vscode

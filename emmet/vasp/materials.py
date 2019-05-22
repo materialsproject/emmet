@@ -383,6 +383,10 @@ class MaterialsBuilder(Builder):
             self.task_types.ensure_index("is_valid")
 
 
+def get_sg(struc):
+    # helper function to get spacegroup with a loose tolerance
+    return struc.get_space_group_info(symprec=0.1)[1]
+
 def find_mat_id(props):
 
     # Only consider structure optimization task_ids for material task_id
@@ -432,7 +436,6 @@ def find_best_prop(props):
         prop = sorted_props[0]
 
     return prop
-
 
 def structure_metadata(structure):
     """
