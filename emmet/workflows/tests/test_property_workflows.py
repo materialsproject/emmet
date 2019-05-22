@@ -62,9 +62,9 @@ class TestPropertyWorkflowBuilder(unittest.TestCase):
         new = PropertyWorkflowBuilder.from_dict(serialized)
         self.assertEqual(new._wf_function_string, "emmet.workflows.property_workflows.generate_elastic_workflow")
         with ScratchDir('.'):
-            dumpfn(builder, "builder.yaml")
-            new = loadfn("builder.yaml")
-        self.assertTrue(isinstance(new, Builder))
+            dumpfn(builder, "builder.json")
+            new_builder = loadfn("builder.json")
+        self.assertTrue(isinstance(new_builder, Builder))
 
     def test_get_items(self):
         # No filter
