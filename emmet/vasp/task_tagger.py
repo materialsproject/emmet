@@ -118,6 +118,7 @@ def task_type(inputs, include_calc_type=True):
     # arbitrary and may need to be revisited in future, they are included for
     # now to make building cleaner and to better declare the intent of these
     # calculations on the Materials Project website - @mkhorton
+
     elif (
         incar.get("ISPIN", 1) == 2
         and incar.get("LASPH", False)
