@@ -114,6 +114,9 @@ class TestMaterialsDb(unittest.TestCase):
                 # This filter can be removed after a 2019.05 release.
                 prod_mids = set(self.db_phonons.phonon_bs_img.distinct(
                     "mp-id", {"mp-id": {"$in": list(prod_mids)}}))
+            elif prop == "elasticity":
+                prod_mids = set(self.mats_prod.distinct(
+                    "task_id", {"task_id": {"$in": list(prod_mids)}, "elasticity.poisson_ratio": {"$exists": True}}))
             for mid in sorted(prod_mids):
                 if not (mid in depr_mids or mid in stag_tids):
                     issues.append(f'non-deprecated {mid} missing {prop}')
