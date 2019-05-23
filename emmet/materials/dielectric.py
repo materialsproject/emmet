@@ -114,7 +114,7 @@ class DielectricBuilder(MapBuilder):
         else:
             d = {
                 "dielectric": {},
-                "_warngings": [
+                "_warnings": [
                     "Dielectric calculated for likely metal. Values are unlikely to be converged"
                 ],
             }
@@ -123,7 +123,7 @@ class DielectricBuilder(MapBuilder):
                 d.update(
                     {
                         "piezo": {},
-                        "warngings": [
+                        "_warnings": [
                             "Piezoelectric calculated for likely metal. Values are unlikely to be converged"
                         ],
                     }
