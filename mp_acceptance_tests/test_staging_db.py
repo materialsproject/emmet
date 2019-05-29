@@ -165,6 +165,10 @@ class TestMaterialsDb(unittest.TestCase):
             f'There are {"fewer" if len(mids) > n_esdocs else "more"} electronic_structure docs than expected'
         )
 
+    def test_worrisome_deprecation(self):
+        nmatching_icsd = self.mats_stag.count_documents({'icsd_ids.0': {'$exists': True}, 'deprecated': True})
+        self.assertEqual(nmatching_icsd, 0)
+
 
     @classmethod
     def tearDownClass(cls):
