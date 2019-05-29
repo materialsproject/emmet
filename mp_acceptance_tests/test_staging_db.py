@@ -96,6 +96,7 @@ class TestMaterialsDb(unittest.TestCase):
         self.assertEqual(len(unfaithful_taskids), 0)
 
     def test_nprops_nondecreasing(self):
+        issues = []
         depr_mids = self.mats_stag.distinct("task_id", {"deprecated": True})
         for prop in filter(None, self.mats_prod.distinct("has")):
             prod_mids = set(self.mats_prod.distinct("task_id", {"has": prop, "deprecated": {"$ne": True}}))
@@ -113,8 +114,14 @@ class TestMaterialsDb(unittest.TestCase):
                 # This filter can be removed after a 2019.05 release.
                 prod_mids = set(self.db_phonons.phonon_bs_img.distinct(
                     "mp-id", {"mp-id": {"$in": list(prod_mids)}}))
+            elif prop == "elasticity":
+                prod_mids = set(self.mats_prod.distinct(
+                    "task_id", {"task_id": {"$in": list(prod_mids)}, "elasticity.poisson_ratio": {"$exists": True}}))
             for mid in sorted(prod_mids):
-                self.assertTrue(mid in depr_mids or mid in stag_tids, f'non-deprecated {mid} missing {prop}')
+                if not (mid in depr_mids or mid in stag_tids):
+                    issues.append(f'non-deprecated {mid} missing {prop}')
+        if issues:
+            self.fail('\n'.join(issues))
 
     @unittest.skip("Many of these calculations need to be redone.")
     def test_piezo_og_formulae_present(self):
