@@ -102,8 +102,12 @@ def task_type(inputs, include_calc_type=True):
             calc_type += " "
         elif incar.get("LDAU", False):
             calc_type += "GGA+U "
-        else:
+        elif potcar.get("functional","PBE") == "PBE":
             calc_type += "GGA "
+        elif potcar.get("functional","PBE") == "PW91":
+            calc_type += "PW91 "
+        else:
+            calc_type += "LDA "
 
     if incar.get("ICHARG", 0) > 10:
         num_kpt_labels = len(
