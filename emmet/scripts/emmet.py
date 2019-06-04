@@ -176,7 +176,7 @@ def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
     name = multiprocessing.current_process().name
     print(name, 'starting')
     lpad = get_lpad()
-    target = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
+    target = calcdb_from_mgrant(f'{lpad.host}/{lpad.name}')
     print(name, 'connected to target db with', target.collection.count(), 'tasks')
 
     for vaspdir in vaspdirs:
@@ -268,7 +268,11 @@ def calcdb_from_mgrant(spec):
     auth = client.get_auth(host, dbname_or_alias, role)
     if auth is None:
         raise Exception("No valid auth credentials available!")
-    return VaspCalcDb(auth['host'], 27017, auth['db'], 'tasks', auth['username'], auth['password'])
+    return VaspCalcDb(
+        auth['host'], 27017, auth['db'],
+        'tasks', auth['username'], auth['password'],
+        authSource=auth['db']
+    )
 
 @cli.command()
 @click.argument('target_spec')
@@ -288,7 +292,7 @@ def copy(target_spec, tag, insert, copy_snls, sbxn, src, force):
         source = calcdb_from_mgrant(src)
     else:
         lpad = get_lpad()
-        source = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
+        target = calcdb_from_mgrant(f'{lpad.host}/{lpad.name}')
     print('connected to source db', source.collection.full_name, 'with', source.collection.count(), 'tasks')
 
     target = calcdb_from_mgrant(target_spec)
@@ -570,7 +574,7 @@ def find(email, add_snlcolls, add_tasks_db):
 def bandstructure(target_db_file, insert):
     """add workflows for bandstructure based on materials collection"""
     lpad = get_lpad()
-    source = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
+    source = calcdb_from_mgrant(f'{lpad.host}/{lpad.name}')
     print('connected to source db with', source.collection.count(), 'tasks')
     target = VaspCalcDb.from_db_file(target_db_file, admin=True)
     print('connected to target db with', target.collection.count(), 'tasks')
@@ -1305,7 +1309,7 @@ def parse(base_path, insert, nproc, max_dirs, force):#, add_snlcolls, make_snls)
         print('DRY RUN: add --insert flag to actually insert tasks')
 
     lpad = get_lpad()
-    target = VaspCalcDb(lpad.host, lpad.port, lpad.name, 'tasks', lpad.username, lpad.password)
+    target = calcdb_from_mgrant(f'{lpad.host}/{lpad.name}')
     print('connected to target db with', target.collection.count(), 'tasks')
     base_path = os.path.join(base_path, '')
     base_path_split = base_path.split(os.sep)
