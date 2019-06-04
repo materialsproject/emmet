@@ -91,6 +91,7 @@ def task_type(inputs, include_calc_type=True):
     calc_type = ""
 
     incar = inputs.get("incar", {})
+    potcar = inputs.get("potcar", {})
 
     METAGGA_TYPES = {"TPSS", "RTPSS", "M06L", "MBJL", "SCAN", "MS0", "MS1", "MS2"}
 
@@ -102,9 +103,9 @@ def task_type(inputs, include_calc_type=True):
             calc_type += " "
         elif incar.get("LDAU", False):
             calc_type += "GGA+U "
-        elif potcar.get("functional","PBE") == "PBE":
+        elif potcar.get("functional", "PBE") == "PBE":
             calc_type += "GGA "
-        elif potcar.get("functional","PBE") == "PW91":
+        elif potcar.get("functional", "PBE") == "PW91":
             calc_type += "PW91 "
         else:
             calc_type += "LDA "
