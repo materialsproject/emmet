@@ -50,7 +50,7 @@ class BondValenceBuilder(MapBuilder):
             }
 
             d["successful"] = True
-            s = s.add_oxidation_state_by_site(valences)
+            s.add_oxidation_state_by_site(valences)
 
             d["bond_valence"] = {
                 "possible_species": list(possible_species),
@@ -73,7 +73,7 @@ class BondValenceBuilder(MapBuilder):
                 }
 
                 d["successful"] = True
-                s = s.add_oxidation_state_by_site(valences)
+                s.add_oxidation_state_by_site(valences)
 
                 d["bond_valence"] = {
                     "possible_species": list(possible_species),

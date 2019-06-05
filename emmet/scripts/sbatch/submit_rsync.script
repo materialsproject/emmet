@@ -1,0 +1,13 @@
+#!/bin/bash -l
+#SBATCH --qos=xfer
+#SBATCH --time=48:00:00
+#SBATCH --job-name=rsync
+#SBATCH --licenses=SCRATCH
+#SBATCH --mail-user=phuck@lbl.gov
+#SBATCH --mail-type=ALL
+#SBATCH --output=rsync-%j.out
+#SBATCH --error=rsync-%j.error
+
+indir=/project/projectdirs/matgen/garden/control_blocks
+outdir=/project/projectdirs/matgen/garden/hpss_to_mpdrive/raw/
+rsync --remove-source-files -av $indir/block_* $outdir

@@ -45,6 +45,7 @@ class TestMaterialsDb(unittest.TestCase):
         cls.client = Client()
         cls.db_stag = cls.client.db("ro:staging/mp_core")
         cls.db_prod = cls.client.db("ro:prod/mp_emmet_prod")
+        cls.db_phonons = cls.client.db("ro:prod/phonondb")
         cls.mats_stag = cls.db_stag.materials
         cls.mats_prod = cls.db_prod.materials
 
@@ -77,10 +78,10 @@ class TestMaterialsDb(unittest.TestCase):
         self.assertTrue(True)
 
     def test_presence_of_required_fields(self):
-        nmats_stag = self.mats_stag.estimated_document_count()
+        nmats_stag = self.mats_stag.count_documents({"deprecated": False})
         for field in required_fields:
             self.assertEqual(
-                self.mats_stag.count_documents({field: {"$exists": True}}),
+                self.mats_stag.count_documents({field: {"$exists": True}, "deprecated": False}),
                 nmats_stag,
                 msg="{}".format(field)
             )
@@ -95,12 +96,32 @@ class TestMaterialsDb(unittest.TestCase):
         self.assertEqual(len(unfaithful_taskids), 0)
 
     def test_nprops_nondecreasing(self):
-        for prop in self.mats_prod.distinct("has"):
-            n_prod = self.mats_prod.count_documents({"has": prop})
-            n_stag = self.mats_stag.count_documents({"has": prop})
-            self.assertGreaterEqual(
-                n_stag, n_prod, "{}: {} in prod but {} in staging".format(
-                    prop, n_prod, n_stag))
+        issues = []
+        depr_mids = self.mats_stag.distinct("task_id", {"deprecated": True})
+        for prop in filter(None, self.mats_prod.distinct("has")):
+            prod_mids = set(self.mats_prod.distinct("task_id", {"has": prop, "deprecated": {"$ne": True}}))
+            stag_tids = set(self.mats_stag.distinct("task_ids", {"has": prop, "deprecated": False}))
+            if prop == "bandstructure":
+                prod_mids = set(self.db_prod.electronic_structure.distinct(
+                    "task_id", {"task_id": {"$in": list(prod_mids)}, "bs_plot": {"$exists": True}}))
+            elif prop in ("diel", "piezo"):
+                # A stag mid may lose diel relative to prod if stag band gap is zero.
+                stag_mids_nogap = set(self.mats_stag.distinct(
+                    "task_id", {"task_id": {"$in": list(prod_mids)}, "band_gap.search_gap.band_gap": 0}))
+                prod_mids -= stag_mids_nogap
+            elif prop == "phonons":
+                # XXX Some prod mids incorrectly {"has": "phonons"}!
+                # This filter can be removed after a 2019.05 release.
+                prod_mids = set(self.db_phonons.phonon_bs_img.distinct(
+                    "mp-id", {"mp-id": {"$in": list(prod_mids)}}))
+            elif prop == "elasticity":
+                prod_mids = set(self.mats_prod.distinct(
+                    "task_id", {"task_id": {"$in": list(prod_mids)}, "elasticity.poisson_ratio": {"$exists": True}}))
+            for mid in sorted(prod_mids):
+                if not (mid in depr_mids or mid in stag_tids):
+                    issues.append(f'non-deprecated {mid} missing {prop}')
+        if issues:
+            self.fail('\n'.join(issues))
 
     @unittest.skip("Many of these calculations need to be redone.")
     def test_piezo_og_formulae_present(self):
@@ -116,6 +137,7 @@ class TestMaterialsDb(unittest.TestCase):
         self.assertEqual(count, 0)
 
     def test_mid_in_task_ids(self):
+        self.assertEqual(self.mats_stag.count_documents({"task_ids": {"$exists": False}}), 0)
         missing = list(self.mats_stag.find({}, ["task_id"]).where("this.task_ids.indexOf(this.task_id) == -1"))
         self.assertEqual(len(missing), 0)
 
@@ -134,8 +156,18 @@ class TestMaterialsDb(unittest.TestCase):
         for doc in cursor:
             self.assertIn("doi_bibtex", doc)
 
+    def test_has_bandstructure(self):
+        mids = self.mats_stag.distinct("task_id", {"has": "bandstructure"})
+        n_esdocs = self.db_stag.electronic_structure.count_documents({"task_id": {"$in": mids}})
+        self.assertEqual(
+            len(mids),
+            n_esdocs,
+            f'There are {"fewer" if len(mids) > n_esdocs else "more"} electronic_structure docs than expected'
+        )
+
 
     @classmethod
     def tearDownClass(cls):
         cls.db_stag.client.close()
         cls.db_prod.client.close()
+        cls.db_phonons.client.close()

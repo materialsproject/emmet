@@ -1,0 +1,16 @@
+#!/bin/bash -l
+#SBATCH --qos=xfer
+#SBATCH --time=48:00:00
+#SBATCH --job-name=restore_matproj
+#SBATCH --licenses=SCRATCH
+#SBATCH --mail-user=phuck@lbl.gov
+#SBATCH --mail-type=ALL
+#SBATCH --output=restore_matproj-%j.out
+#SBATCH --error=restore_matproj-%j.error
+
+outdir=/project/projectdirs/matgen/garden/hpss_to_mpdrive/raw/
+archive=/home/projects/MatProj/GARDEN/2012-Jul-Aug.tar
+
+cd $outdir && pwd
+htar -xvf $archive
+echo DONE

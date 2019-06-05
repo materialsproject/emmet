@@ -6,41 +6,52 @@
       "type": "string"
     },
     "bonding": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "strategy": {
-            "type": "string"
-          },
-          "successful": {
-            "type": "boolean"
-          },
-          "summary": {
-            "type": "object",
-            "properties": {
-              "bond_types": {
-                "type": "object"
-              },
-              "bond_length_stats": {
-                "type": "object"
-              },
-              "coordination_envs": {
-                "type": "array"
-              },
-              "coordination_envs_anonymous": {
-                "type": "array"
-              }
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "type": "string"
+        },
+        "successful": {
+          "type": "boolean"
+        },
+        "summary": {
+          "type": "object",
+          "properties": {
+            "bond_types": {
+              "type": "object"
+            },
+            "bond_length_stats": {
+              "type": "object"
+            },
+            "coordination_envs": {
+              "type": "array"
+            },
+            "coordination_envs_anonymous": {
+              "type": "array"
             }
-          },
-          "graph": {
-            "type": "object",
-            "required": [
-              "@class",
-              "@module"
-            ]
           }
+        },
+        "graph": {
+          "type": "object",
+          "required": [
+            "@class",
+            "@module"
+          ]
         }
+      }
+    },
+    "failed_bonding": {
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "type": "string"
+        },
+        "successful": {
+          "type": "boolean"
+        },
+        "error_message": {
+          "type": "string"
+        }       
       }
     }
   },
