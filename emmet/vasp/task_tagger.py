@@ -4,7 +4,6 @@ from maggma.builders import MapBuilder
 from pymatgen import Structure
 from atomate.utils.utils import load_class
 
-
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
 
@@ -224,7 +223,7 @@ def is_valid(
             # of differing order of elements
             structure_set_symbol_set = structure.symbol_set
             inputs_ldau_fields = [structure_set_symbol_set] + [
-                inputs.get("incar", {}).get(k) for k in LDAU_fields
+                inputs.get("incar", {}).get(k, []) for k in LDAU_fields
             ]
             input_ldau_params = {d[0]: d[1:] for d in zip(*inputs_ldau_fields)}
 
