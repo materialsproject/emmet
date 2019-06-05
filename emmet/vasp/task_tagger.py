@@ -114,9 +114,15 @@ def task_type(inputs, include_calc_type=True):
             calc_type += "LDA "
 
     if incar.get("ICHARG", 0) > 10:
-        num_kpt_labels = len(
-            list(filter(None.__ne__, inputs.get("kpoints", {}).get("labels", []) or []))
-        )
+        try:
+            kpts = inputs.get("kpoints") or {}
+            kpt_labels = kpts.get("labels") or []
+            num_kpt_labels = len(list(filter(None.__ne__, kpt_labels)))
+        except Exception as e:
+            raise Exception(
+                "Couldn't identify total number of kpt labels: {}".format(e)
+            )
+
         if num_kpt_labels > 0:
             return calc_type + "NSCF Line"
         else:
