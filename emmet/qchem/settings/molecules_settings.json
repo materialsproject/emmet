@@ -2,17 +2,217 @@
   {
     "molecules_key": "molecule",
     "quality_score": {
-      "": 1,
-      "": 2
+      "SMD Frequency Flattening Optimization": 6,
+      "SMD Optimization": 5,
+      "SMD Frequency": 0,
+      "SMD Single Point": 0,
+      "PCM Frequency Flattening Optimization": 4,
+      "PCM Optimization": 3,
+      "PCM Frequency": 0,
+      "PCM Single Point": 0,
+      "Vacuum Frequency Flattening Optimization": 2,
+      "Vacuum Optimization": 1,
+      "Vacuum Frequency": 0,
+      "Vacuum Single Point": 0
     },
     "tasks_key": "output.initial_molecule"
   },
   {
     "molecules_key": "optimized_molecule",
     "quality_score": {
-      "": 1,
-      "": 2
+      "SMD Frequency Flattening Optimization": 5,
+      "SMD Optimization": 4,
+      "PCM Frequency Flattening Optimization": 3,
+      "PCM Optimization": 2,
+      "Vacuum Frequency Flattening Optimization": 1,
+      "Vacuum Optimization": 0
     },
     "tasks_key": "output.optimized_molecule"
+  },
+  {
+    "molecules_key": "energy",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 6,
+      "SMD Optimization": 5,
+      "SMD Single Point": 4,
+      "PCM Frequency Flattening Optimization": 5,
+      "PCM Optimization": 4,
+      "PCM Single Point": 3,
+      "Vacuum Frequency Flattening Optimization": 2,
+      "Vacuum Optimization": 1,
+      "Vacuum Single Point": 0
+    },
+    "tasks_key": "output.final_energy"
+  },
+  {
+    "molecules_key": "mulliken",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 6,
+      "SMD Optimization": 5,
+      "SMD Frequency": 4,
+      "SMD Single Point": 4,
+      "PCM Frequency Flattening Optimization": 5,
+      "PCM Optimization": 4,
+      "PCM Frequency": 3,
+      "PCM Single Point": 3,
+      "Vacuum Frequency Flattening Optimization": 2,
+      "Vacuum Optimization": 1,
+      "Vacuum Frequency": 0,
+      "Vacuum Single Point": 0
+    },
+    "tasks_key": "output.mulliken"
+  },
+  {
+    "molecules_key": "vibrational_frequencies",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 5,
+      "SMD Frequency": 4,
+      "PCM Frequency Flattening Optimization": 3,
+      "PCM Frequency": 2,
+      "Vacuum Frequency Flattening Optimization": 1,
+      "Vacuum Frequency": 0
+    },
+    "tasks_key": "output.frequencies"
+  },
+  {
+    "molecules_key": "enthalpy",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 5,
+      "SMD Frequency": 4,
+      "PCM Frequency Flattening Optimization": 3,
+      "PCM Frequency": 2,
+      "Vacuum Frequency Flattening Optimization": 1,
+      "Vacuum Frequency": 0
+    },
+    "tasks_key": "output.enthalpy"
+  },
+  {
+    "molecules_key": "entropy",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 5,
+      "SMD Frequency": 4,
+      "PCM Frequency Flattening Optimization": 3,
+      "PCM Frequency": 2,
+      "Vacuum Frequency Flattening Optimization": 1,
+      "Vacuum Frequency": 0
+    },
+    "tasks_key": "output.entropy"
+  },
+  {
+    "molecules_key": "vacuum_optimized_molecule",
+    "quality_score": {
+      "Vacuum Frequency Flattening Optimization": 1,
+      "Vacuum Optimization": 0
+    },
+    "tasks_key": "output.optimized_molecule"
+  },
+  {
+    "molecules_key": "vacuum_energy",
+    "quality_score": {
+      "Vacuum Frequency Flattening Optimization": 2,
+      "Vacuum Optimization": 1,
+      "Vacuum Single Point": 0
+    },
+    "tasks_key": "output.final_energy"
+  },
+  {
+    "molecules_key": "vacuum_mulliken",
+    "quality_score": {
+      "Vacuum Frequency Flattening Optimization": 2,
+      "Vacuum Optimization": 1,
+      "Vacuum Frequency": 0,
+      "Vacuum Single Point": 0
+    },
+    "tasks_key": "output.mulliken"
+  },
+  {
+    "molecules_key": "vacuum_vibrational_frequencies",
+    "quality_score": {
+      "Vacuum Frequency Flattening Optimization": 1,
+      "Vacuum Frequency": 0
+    },
+    "tasks_key": "output.frequencies"
+  },
+  {
+    "molecules_key": "vacuum_enthalpy",
+    "quality_score": {
+      "Vacuum Frequency Flattening Optimization": 1,
+      "Vacuum Frequency": 0
+    },
+    "tasks_key": "output.enthalpy"
+  },
+  {
+    "molecules_key": "vacuum_entropy",
+    "quality_score": {
+      "Vacuum Frequency Flattening Optimization": 1,
+      "Vacuum Frequency": 0
+    },
+    "tasks_key": "output.entropy"
+  },
+  {
+    "molecules_key": "solvated_optimized_molecule",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 5,
+      "SMD Optimization": 4,
+      "PCM Frequency Flattening Optimization": 3,
+      "PCM Optimization": 2
+    },
+    "tasks_key": "output.optimized_molecule"
+  },
+  {
+    "molecules_key": "solvated_energy",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 6,
+      "SMD Optimization": 5,
+      "SMD Single Point": 4,
+      "PCM Frequency Flattening Optimization": 5,
+      "PCM Optimization": 4,
+      "PCM Single Point": 3
+    },
+    "tasks_key": "output.final_energy"
+  },
+  {
+    "molecules_key": "solvated_mulliken",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 6,
+      "SMD Optimization": 5,
+      "SMD Frequency": 4,
+      "SMD Single Point": 4,
+      "PCM Frequency Flattening Optimization": 5,
+      "PCM Optimization": 4,
+      "PCM Frequency": 3,
+      "PCM Single Point": 3
+    },
+    "tasks_key": "output.mulliken"
+  },
+  {
+    "molecules_key": "solvated_vibrational_frequencies",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 5,
+      "SMD Frequency": 4,
+      "PCM Frequency Flattening Optimization": 3,
+      "PCM Frequency": 2
+    },
+    "tasks_key": "output.frequencies"
+  },
+  {
+    "molecules_key": "solvated_enthalpy",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 5,
+      "SMD Frequency": 4,
+      "PCM Frequency Flattening Optimization": 3,
+      "PCM Frequency": 2
+    },
+    "tasks_key": "output.enthalpy"
+  },
+  {
+    "molecules_key": "solvated_entropy",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 5,
+      "SMD Frequency": 4,
+      "PCM Frequency Flattening Optimization": 3,
+      "PCM Frequency": 2
+    },
+    "tasks_key": "output.entropy"
   }
 ]

@@ -16,14 +16,14 @@ from pydash.objects import get, set_, has
 __author__ = "Sam Blau, Shyam Dwaraknath"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-default_mol_settings = os.path.join(module_dir, "settings", "molecule_settings.json")
+default_mol_settings = os.path.join(module_dir, "settings", "molecules_settings.json")
 
 
 class MoleculesBuilder(Builder):
     def __init__(self,
                  tasks,
                  molecules,
-                 mol_prefix="eg-",
+                 mol_prefix="",
                  molecules_settings=None,
                  query=None,
                  **kwargs):
@@ -107,6 +107,7 @@ class MoleculesBuilder(Builder):
         """
 
         formula = tasks[0]["formula_pretty"]
+        # print(formula)
         t_ids = [t["task_id"] for t in tasks]
         self.logger.debug("Processing {} : {}".format(formula, t_ids))
 
@@ -159,7 +160,7 @@ class MoleculesBuilder(Builder):
         best_props = []
         for _, props in grouped_props:
             # Sort for highest quality score and lowest energy
-            sorted_props = sorted(props, key=lambda x: (x["quality_score"], -1.0 * x["energy"]), reverse=True)
+            sorted_props = sorted(props, key=lambda x: (x["quality_score"], x["accuracy_score"], -1.0 * x["energy"]), reverse=True)
             if sorted_props[0].get("aggregate", False):
                 vals = [prop["value"] for prop in sorted_props]
                 prop = sorted_props[0]
@@ -193,10 +194,6 @@ class MoleculesBuilder(Builder):
         for prop in best_props:
             set_(mol, prop["molecules_key"], prop["value"])
 
-        # Add metadata back into document and convert back to conventional standard
-        if "molecule" in mol:
-            mol.update(molecule_metadata(molecule))
-
         return mol
 
     def filter_and_group_tasks(self, tasks):
@@ -204,28 +201,28 @@ class MoleculesBuilder(Builder):
         Groups tasks by molecule matching
         """
 
-        filtered_tasks = [t for t in tasks if task_type(t["orig"]) in self.allowed_tasks]
+        filtered_tasks = [t for t in tasks if task_type(t["orig"],t["output"]) in self.allowed_tasks]
 
         molecules = []
 
         for idx, t in enumerate(filtered_tasks):
             s = Molecule.from_dict(t["output"]["initial_molecule"])
-            s.index = idx
+            s.myindex = idx
             molecules.append(s)
 
         grouped_molecules = group_molecules(molecules)
 
         for group in grouped_molecules:
-            yield [filtered_tasks[mol.index] for mol in group]
+            yield [filtered_tasks[mol.myindex] for mol in group]
 
     def task_to_prop_list(self, task):
         """
         Converts a task into a list of properties with associated metadata
         """
-        t_type = task_type(task["orig"])
+        t_type = task_type(task["orig"],task["output"])
         t_id = task["task_id"]
 
-        # Convert the task doc into a serious of properties in the molecules
+        # Convert the task doc into a series of properties in the molecules
         # doc with the right document structure
         props = []
         for prop in self.__settings:
@@ -236,6 +233,7 @@ class MoleculesBuilder(Builder):
                         "task_type": t_type,
                         "task_id": t_id,
                         "quality_score": prop["quality_score"][t_type],
+                        "accuracy_score": calc_accuracy_score(task["orig"]),
                         "track": prop.get("track", False),
                         "aggregate": prop.get("aggregate", False),
                         "last_updated": task[self.tasks.lu_field],
@@ -313,7 +311,7 @@ def group_molecules(molecules):
             if not matched:
                 subgroups.append({"mol_graph":mol_graph,"mol_list":[mol]})
         for group in subgroups:
-            yield group
+            yield group["mol_list"]
 
 
 def ID_to_int(s_id):
@@ -328,3 +326,44 @@ def ID_to_int(s_id):
         return s_id
     else:
         raise Exception("Could not parse {} into a number".format(s_id))
+
+def calc_accuracy_score(inputs):
+    accuracy_score = 0
+
+    # Basis:
+    if "6-31" in inputs["rem"]["basis"]:
+        accuracy_score += inputs["rem"]["basis"].count("1")
+        accuracy_score += inputs["rem"]["basis"].count("+")
+        accuracy_score += inputs["rem"]["basis"].count("*")
+        accuracy_score += inputs["rem"]["basis"].count("d")
+        accuracy_score += inputs["rem"]["basis"].count("p")
+    elif "def2-tzv" in inputs["rem"]["basis"]:
+        accuracy_score += 3
+        accuracy_score += inputs["rem"]["basis"].count("p")
+        accuracy_score += inputs["rem"]["basis"].count("d")
+    else:
+        raise Exception("Basis " + inputs["rem"]["basis"] + " cannot be assigned an accuracy score")
+
+    # Method:
+    score4_functionals = ["wb97xd","wb97x-d","cam-b3lyp","lrc-wpbe"]
+    if inputs["rem"]["method"] == "pbe":
+        accuracy_score += 1
+    elif inputs["rem"]["method"] == "b3lyp" or inputs["rem"]["method"] == "pbe0":
+        accuracy_score += 2
+    elif inputs["rem"]["method"] == "m06-2x":
+        accuracy_score += 3
+    elif inputs["rem"]["method"] in score4_functionals:
+        accuracy_score += 4
+    elif inputs["rem"]["method"] == "wb97xv" or inputs["rem"]["method"] == "wb97x-v":
+        accuracy_score += 5
+    elif inputs["rem"]["method"] == "wb97mv" or inputs["rem"]["method"] == "wb97m-v":
+        accuracy_score += 6
+    elif inputs["rem"]["method"] == "mp2":
+        accuracy_score += 7
+    elif "ccsd" in inputs["rem"]["method"]:
+        accuracy_score += 8
+    else:
+        raise Exception("Method " + inputs["rem"]["method"] + " cannot be assigned an accuracy score")
+
+    return accuracy_score
+
