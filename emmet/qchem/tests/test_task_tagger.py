@@ -1,25 +1,23 @@
 import unittest
 import os
 
-from emmet.vasp.task_tagger import TaskTagger
+from emmet.qchem.task_tagger import TaskTagger
 from maggma.stores import JSONStore, MemoryStore
 
-__author__ = "Shyam Dwaraknath"
-__email__ = "shyamd@lbl.gov"
+__author__ = "Sam Blau, Shyam Dwaraknath"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-test_tasks = os.path.join(module_dir, "..", "..", "..", "test_files", "test_tasktagger_tasks.json")
+test_tasks = os.path.join(module_dir, "..", "..", "..", "test_files", "sample_qchem_tasks.json")
 
 
 class TaskTaggerTest(unittest.TestCase):
     def setUp(self):
-        # Set up test db, set up mpsft, etc.
         self.test_tasks = JSONStore(test_tasks)
         self.task_types = MemoryStore("task_types")
         self.test_tasks.connect()
         self.task_types.connect()
 
-    def test_mp_defs(self):
+    def test_qchem_defs(self):
         task_tagger = TaskTagger(tasks=self.test_tasks, task_types=self.task_types)
 
         for t in task_tagger.get_items():

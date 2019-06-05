@@ -23,7 +23,7 @@ class MoleculesBuilder(Builder):
     def __init__(self,
                  tasks,
                  molecules,
-                 mol_prefix="",
+                 task_types=None,
                  molecules_settings=None,
                  query=None,
                  **kwargs):
@@ -41,13 +41,18 @@ class MoleculesBuilder(Builder):
         self.tasks = tasks
         self.molecules_settings = molecules_settings
         self.molecules = molecules
-        self.mol_prefix = mol_prefix
+        self.task_types = task_types
         self.query = query if query else {}
 
         self.__settings = load_settings(self.molecules_settings, default_mol_settings)
 
-        self.allowed_tasks = {t_type for d in self.__settings for t_type in d["quality_score"]}
+        self.allowed_tasks = {
+            t_type for d in self.__settings for t_type in d["quality_score"]
+        }
 
+        sources = [tasks]
+        if self.task_types:
+            sources.append(self.task_types)
         super().__init__(sources=[tasks], targets=[molecules], **kwargs)
 
     def get_items(self):
@@ -75,7 +80,9 @@ class MoleculesBuilder(Builder):
         all_tasks = set(self.tasks.distinct("task_id", q))
         processed_tasks = set(self.molecules.distinct("task_ids"))
         to_process_tasks = all_tasks - processed_tasks
-        to_process_forms = self.tasks.distinct("formula_pretty", {"task_id": {"$in": list(to_process_tasks)}})
+        to_process_forms = self.tasks.distinct(
+            "formula_pretty", {"task_id": {"$in": list(to_process_tasks)}}
+        )
         self.logger.info("Found {} unprocessed tasks".format(len(to_process_tasks)))
         self.logger.info("Found {} unprocessed formulas".format(len(to_process_forms)))
 
@@ -83,16 +90,31 @@ class MoleculesBuilder(Builder):
         update_q = dict(q)
         update_q.update(self.tasks.lu_filter(self.molecules))
         updated_forms = self.tasks.distinct("formula_pretty", update_q)
-        self.logger.info("Found {} updated systems to process".format(len(updated_forms)))
+        self.logger.info(
+            "Found {} updated systems to process".format(len(updated_forms))
+        )
 
         forms_to_update = set(updated_forms) | set(to_process_forms)
         self.logger.info("Processing {} total systems".format(len(forms_to_update)))
         self.total = len(forms_to_update)
 
+        if self.task_types:
+            invalid_ids = set(
+                self.task_types.distinct(self.task_types.key, {"is_valid": False})
+            )
+        else:
+            invalid_ids = set()
+
         for formula in forms_to_update:
             tasks_q = dict(q)
             tasks_q["formula_pretty"] = formula
             tasks = list(self.tasks.query(criteria=tasks_q))
+            for t in tasks:
+                if t[self.tasks.key] in invalid_ids:
+                    t["is_valid"] = False
+                else:
+                    t["is_valid"] = True
+
             yield tasks
 
     def process_item(self, tasks):
@@ -115,10 +137,16 @@ class MoleculesBuilder(Builder):
         grouped_tasks = self.filter_and_group_tasks(tasks)
 
         for group in grouped_tasks:
-            molecules.append(self.make_mol(group))
+            mol = self.make_mol(group)
+            if mol and self.valid(mol):
+                self.post_process(mol)
+                molecules.append(mol)
 
-        self.logger.debug("Produced {} molecules for {}".format(len(molecules), tasks[0]["formula_pretty"]))
-
+        self.logger.debug(
+            "Produced {} molecules for {}".format(
+                len(molecules), tasks[0]["formula_pretty"]
+            )
+        )
         return molecules
 
     def update_targets(self, items):
@@ -129,7 +157,8 @@ class MoleculesBuilder(Builder):
             items ([([dict],[int])]): A list of tuples of molecules to update and the corresponding processed task_ids
         """
 
-        items = [i for i in filter(None, chain.from_iterable(items)) if self.valid(i)]
+        items = [i for i in filter(None, chain.from_iterable(items))]
+        items = [i for i in items if self.valid(i)]
 
         for item in items:
             item.update({"_bt": self.timestamp})
@@ -146,49 +175,56 @@ class MoleculesBuilder(Builder):
         """
 
         # Convert the task to properties and flatten
-        all_props = list(chain.from_iterable([self.task_to_prop_list(t) for t in task_group]))
+        all_props = list(
+            chain.from_iterable([self.task_to_prop_list(t) for t in task_group])
+        )
 
-        # Figure out molecule ID
-        possible_mol_ids = [prop[self.tasks.key] for prop in sorted(all_props, key=lambda x: ID_to_int(x["task_id"]))]
-        mol_id = possible_mol_ids[0]
+        mol_id = find_mol_id(all_props)
 
         # Sort and group based on molecules key
-        sorted_props = sorted(all_props, key=lambda x: x["molecules_key"])
-        grouped_props = groupby(sorted_props, lambda x: x["molecules_key"])
+        sorted_props = sorted(all_props, key=lambda prop: prop["molecules_key"])
+        grouped_props = groupby(sorted_props, lambda prop: prop["molecules_key"])
 
-        # Choose the best prop for each molecules key: highest quality score and lowest energy calculation
-        best_props = []
-        for _, props in grouped_props:
-            # Sort for highest quality score and lowest energy
-            sorted_props = sorted(props, key=lambda x: (x["quality_score"], x["accuracy_score"], -1.0 * x["energy"]), reverse=True)
-            if sorted_props[0].get("aggregate", False):
-                vals = [prop["value"] for prop in sorted_props]
-                prop = sorted_props[0]
-                prop["value"] = vals
-                # Can"t track an aggregated property
-                prop["track"] = False
-                best_props.append(prop)
-            else:
-                best_props.append(sorted_props[0])
+        # Choose the best prop for each materials key: highest quality score and lowest energy calculation
+        best_props = [find_best_prop(props) for _, props in grouped_props]
 
         # Add in the provenance for the properties
-        origins = [{k: prop[k]
-                    for k in ["molecules_key", "task_type", "task_id", "last_updated"]} for prop in best_props
-                   if prop.get("track", False)]
+        origins = [
+            {
+                k: prop[k]
+                for k in ["molecules_key", "task_type", "task_id", "last_updated"]
+            }
+            for prop in best_props
+            if prop.get("track", False)
+        ]
+
+        # Store any bad props
+        invalid_props = [
+            prop["molecules_key"] for prop in best_props if not prop["is_valid"]
+        ]
 
         # Store all the task_ids
         task_ids = list(set([t["task_id"] for t in task_group]))
+        deprecated_tasks = list(
+            set([t["task_id"] for t in task_group if not t.get("is_valid", True)])
+        )
 
         # Store task_types
         task_types = {t["task_id"]: t["task_type"] for t in all_props}
+
+        # Store sandboxes
+        sandboxes = list(set(chain.from_iterable([k["sbxn"] for k in best_props])))
 
         mol = {
             self.molecules.lu_field: max([prop["last_updated"] for prop in all_props]),
             "created_at": min([prop["last_updated"] for prop in all_props]),
             "task_ids": task_ids,
+            "deprecated_tasks": deprecated_tasks,
             self.molecules.key: mol_id,
             "origins": origins,
-            "task_types": task_types
+            "task_types": task_types,
+            "invalid_props": invalid_props,
+            "_sbxn": sandboxes
         }
 
         for prop in best_props:
@@ -201,7 +237,9 @@ class MoleculesBuilder(Builder):
         Groups tasks by molecule matching
         """
 
-        filtered_tasks = [t for t in tasks if task_type(t["orig"],t["output"]) in self.allowed_tasks]
+        filtered_tasks = [
+            t for t in tasks if task_type(t["orig"],t["output"]) in self.allowed_tasks
+        ]
 
         molecules = []
 
@@ -228,27 +266,44 @@ class MoleculesBuilder(Builder):
         for prop in self.__settings:
             if t_type in prop["quality_score"].keys():
                 if has(task, prop["tasks_key"]):
-                    props.append({
-                        "value": get(task, prop["tasks_key"]),
-                        "task_type": t_type,
-                        "task_id": t_id,
-                        "quality_score": prop["quality_score"][t_type],
-                        "accuracy_score": calc_accuracy_score(task["orig"]),
-                        "track": prop.get("track", False),
-                        "aggregate": prop.get("aggregate", False),
-                        "last_updated": task[self.tasks.lu_field],
-                        "energy": get(task, "output.final_energy", 0.0),
-                        "molecules_key": prop["molecules_key"]
-                    })
+                    props.append(
+                        {
+                            "value": get(task, prop["tasks_key"]),
+                            "task_type": t_type,
+                            "task_id": t_id,
+                            "quality_score": prop["quality_score"][t_type],
+                            "accuracy_score": calc_accuracy_score(task["orig"]),
+                            "track": prop.get("track", False),
+                            "aggregate": prop.get("aggregate", False),
+                            "last_updated": task[self.tasks.lu_field],
+                            "energy": get(task, "output.final_energy", 0.0),
+                            "molecules_key": prop["molecules_key"],
+                            "is_valid": task.get("is_valid", True),
+                            "sbxn": task.get("sbxn", [])
+                        }
+                    )
                 elif not prop.get("optional", False):
-                    self.logger.error("Failed getting {} for task: {}".format(prop["tasks_key"], t_id))
+                    self.logger.error(
+                        "Failed getting {} for task: {}".format(prop["tasks_key"], t_id)
+                    )
         return props
 
     def valid(self, doc):
         """
         Determines if the resulting molecule document is valid
         """
-        return "molecule" in doc
+        if doc["task_id"] == None:
+            return False
+        elif "molecule" not in doc:
+            return False
+
+        return True
+
+    def post_process(self, mol):
+        """
+        Any extra post-processing on a material doc
+        """
+        pass
 
     def ensure_indexes(self):
         """
@@ -266,6 +321,60 @@ class MoleculesBuilder(Builder):
         self.molecules.ensure_index("task_ids")
         self.molecules.ensure_index(self.molecules.lu_field)
 
+        if self.task_types:
+            self.task_types.ensure_index(self.task_types.key)
+            self.task_types.ensure_index("is_valid")
+
+def find_mol_id(props):
+
+    # Only consider structure optimization task_ids for material task_id
+    possible_mol_ids = [prop for prop in props if "molecule" in prop["molecules_key"]]
+
+    # Sort task_ids by ID
+    possible_mol_ids = [
+        prop["task_id"]
+        for prop in sorted(possible_mol_ids, key=lambda doc: ID_to_int(doc["task_id"]))
+    ]
+
+    if len(possible_mol_ids) == 0:
+        return None
+    else:
+        return possible_mol_ids[0]
+
+
+def find_best_prop(props):
+    """
+    Takes a list of property docs all for the same property
+    1.) Sorts according to valid tasks, highest quality score and lowest energy
+    2.) Checks if this is an aggregation prop and aggregates
+    3.) Returns best property
+    """
+
+    # Sort for highest quality score and lowest energy
+    sorted_props = sorted(
+        props,
+        key=lambda doc: (
+            -1 * doc["is_valid"],
+            -1 * doc["quality_score"],
+            -1 * doc["accuracy_score"],
+            doc["energy"]
+        ),
+    )
+    if sorted_props[0].get("aggregate", False):
+        # Make this a list of lists and then flatten to deal with mixed value typing
+        vals = [
+            prop["value"] if isinstance(prop["value"], list) else [prop["value"]]
+            for prop in sorted_props
+        ]
+        vals = list(chain.from_iterable(vals))
+        prop = sorted_props[0]
+        prop["value"] = vals
+        # Can"t track an aggregated property
+        prop["track"] = False
+    else:
+        prop = sorted_props[0]
+
+    return prop
 
 def molecule_metadata(molecule):
     """
