@@ -292,7 +292,7 @@ def copy(target_spec, tag, insert, copy_snls, sbxn, src, force):
         source = calcdb_from_mgrant(src)
     else:
         lpad = get_lpad()
-        target = calcdb_from_mgrant(f'{lpad.host}/{lpad.name}')
+        source = calcdb_from_mgrant(f'{lpad.host}/{lpad.name}')
     print('connected to source db', source.collection.full_name, 'with', source.collection.count(), 'tasks')
 
     target = calcdb_from_mgrant(target_spec)
