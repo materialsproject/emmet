@@ -1,6 +1,6 @@
 [
   {
-    "molecules_key": "molecule",
+    "molecules_key": "initial_molecule",
     "quality_score": {
       "SMD Frequency Flattening Optimization": 6,
       "SMD Optimization": 5,
@@ -18,7 +18,26 @@
     "tasks_key": "output.initial_molecule"
   },
   {
-    "molecules_key": "optimized_molecule",
+    "aggregate": true,
+    "molecules_key": "initial_molecules",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 6,
+      "SMD Optimization": 5,
+      "SMD Frequency": 0,
+      "SMD Single Point": 0,
+      "PCM Frequency Flattening Optimization": 4,
+      "PCM Optimization": 3,
+      "PCM Frequency": 0,
+      "PCM Single Point": 0,
+      "Vacuum Frequency Flattening Optimization": 2,
+      "Vacuum Optimization": 1,
+      "Vacuum Frequency": 0,
+      "Vacuum Single Point": 0
+    },
+    "tasks_key": "output.initial_molecule"
+  },
+  {
+    "molecules_key": "molecule",
     "quality_score": {
       "SMD Frequency Flattening Optimization": 5,
       "SMD Optimization": 4,
@@ -99,7 +118,28 @@
     "tasks_key": "output.entropy"
   },
   {
-    "molecules_key": "vacuum_optimized_molecule",
+    "molecules_key": "vacuum_initial_molecule",
+    "quality_score": {
+      "Vacuum Frequency Flattening Optimization": 2,
+      "Vacuum Optimization": 1,
+      "Vacuum Frequency": 0,
+      "Vacuum Single Point": 0
+    },
+    "tasks_key": "output.initial_molecule"
+  },
+  {
+    "aggregate": true,
+    "molecules_key": "vacuum_initial_molecules",
+    "quality_score": {
+      "Vacuum Frequency Flattening Optimization": 2,
+      "Vacuum Optimization": 1,
+      "Vacuum Frequency": 0,
+      "Vacuum Single Point": 0
+    },
+    "tasks_key": "output.initial_molecule"
+  },
+  {
+    "molecules_key": "vacuum_molecule",
     "quality_score": {
       "Vacuum Frequency Flattening Optimization": 1,
       "Vacuum Optimization": 0
@@ -150,7 +190,36 @@
     "tasks_key": "output.entropy"
   },
   {
-    "molecules_key": "solvated_optimized_molecule",
+    "molecules_key": "solvated_initial_molecule",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 6,
+      "SMD Optimization": 5,
+      "SMD Frequency": 0,
+      "SMD Single Point": 0,
+      "PCM Frequency Flattening Optimization": 4,
+      "PCM Optimization": 3,
+      "PCM Frequency": 0,
+      "PCM Single Point": 0
+    },
+    "tasks_key": "output.initial_molecule"
+  },
+  {
+    "aggregate": true,
+    "molecules_key": "solvated_initial_molecules",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 6,
+      "SMD Optimization": 5,
+      "SMD Frequency": 0,
+      "SMD Single Point": 0,
+      "PCM Frequency Flattening Optimization": 4,
+      "PCM Optimization": 3,
+      "PCM Frequency": 0,
+      "PCM Single Point": 0
+    },
+    "tasks_key": "output.initial_molecule"
+  },
+  {
+    "molecules_key": "solvated_molecule",
     "quality_score": {
       "SMD Frequency Flattening Optimization": 5,
       "SMD Optimization": 4,

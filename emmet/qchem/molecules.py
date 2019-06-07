@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from itertools import chain, groupby
 import numpy as np
+import networkx as nx
 
 from pymatgen import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph, isomorphic
@@ -33,7 +34,7 @@ class MoleculesBuilder(Builder):
         Args:
             tasks (Store): Store of task documents
             molecules (Store): Store of molecules documents to generate
-            mol_prefix (str): prefix for all molecules ids
+            task_types
             molecules_settings (Path): Path to settings files
             query (dict): dictionary to limit tasks to be analyzed
         """
@@ -212,9 +213,6 @@ class MoleculesBuilder(Builder):
         # Store task_types
         task_types = {t["task_id"]: t["task_type"] for t in all_props}
 
-        # Store sandboxes
-        sandboxes = list(set(chain.from_iterable([k["sbxn"] for k in best_props])))
-
         mol = {
             self.molecules.lu_field: max([prop["last_updated"] for prop in all_props]),
             "created_at": min([prop["last_updated"] for prop in all_props]),
@@ -223,8 +221,7 @@ class MoleculesBuilder(Builder):
             self.molecules.key: mol_id,
             "origins": origins,
             "task_types": task_types,
-            "invalid_props": invalid_props,
-            "_sbxn": sandboxes
+            "invalid_props": invalid_props
         }
 
         for prop in best_props:
@@ -244,7 +241,10 @@ class MoleculesBuilder(Builder):
         molecules = []
 
         for idx, t in enumerate(filtered_tasks):
-            s = Molecule.from_dict(t["output"]["initial_molecule"])
+            if "optimized_molecule" in t["output"]:
+                s = Molecule.from_dict(t["output"]["optimized_molecule"])
+            else:
+                s = Molecule.from_dict(t["output"]["initial_molecule"])
             s.myindex = idx
             molecules.append(s)
 
@@ -278,8 +278,7 @@ class MoleculesBuilder(Builder):
                             "last_updated": task[self.tasks.lu_field],
                             "energy": get(task, "output.final_energy", 0.0),
                             "molecules_key": prop["molecules_key"],
-                            "is_valid": task.get("is_valid", True),
-                            "sbxn": task.get("sbxn", [])
+                            "is_valid": task.get("is_valid", True)
                         }
                     )
                 elif not prop.get("optional", False):
@@ -303,7 +302,10 @@ class MoleculesBuilder(Builder):
         """
         Any extra post-processing on a material doc
         """
-        pass
+        if "molecule" in mol:
+            molecule = Molecule.from_dict(mol["molecule"])
+            mol.update(molecule_metadata(molecule))
+        mol.update({"deprecated": False})
 
     def ensure_indexes(self):
         """
@@ -319,11 +321,13 @@ class MoleculesBuilder(Builder):
         # Search index for molecules
         self.molecules.ensure_index(self.molecules.key, unique=True)
         self.molecules.ensure_index("task_ids")
+        self.molecules.ensure_index("formula_alphabetical")
         self.molecules.ensure_index(self.molecules.lu_field)
 
         if self.task_types:
             self.task_types.ensure_index(self.task_types.key)
             self.task_types.ensure_index("is_valid")
+
 
 def find_mol_id(props):
 
@@ -376,6 +380,7 @@ def find_best_prop(props):
 
     return prop
 
+
 def molecule_metadata(molecule):
     """
     Generates metadata based on a molecule
@@ -390,9 +395,9 @@ def molecule_metadata(molecule):
         "composition_reduced": comp.reduced_composition.as_dict(),
         "formula_pretty": comp.reduced_formula,
         "formula_anonymous": comp.anonymized_formula,
+        "formula_alphabetical": comp.alphabetical_formula,
         "chemsys": "-".join(elsyms)
     }
-
     return meta
 
 
@@ -411,14 +416,15 @@ def group_molecules(molecules):
                                                               OpenBabelNN(),
                                                               reorder=False,
                                                               extend_structure=False)
-            matched = False
-            for subgroup in subgroups:
-                if isomorphic(mol_graph.graph,subgroup["mol_graph"].graph,True):
-                    subgroup["mol_list"].append(mol)
-                    matched = True
-                    break
-            if not matched:
-                subgroups.append({"mol_graph":mol_graph,"mol_list":[mol]})
+            if nx.is_connected(mol_graph.graph.to_undirected()):
+                matched = False
+                for subgroup in subgroups:
+                    if isomorphic(mol_graph.graph,subgroup["mol_graph"].graph,True):
+                        subgroup["mol_list"].append(mol)
+                        matched = True
+                        break
+                if not matched:
+                    subgroups.append({"mol_graph":mol_graph,"mol_list":[mol]})
         for group in subgroups:
             yield group["mol_list"]
 
@@ -435,6 +441,7 @@ def ID_to_int(s_id):
         return s_id
     else:
         raise Exception("Could not parse {} into a number".format(s_id))
+
 
 def calc_accuracy_score(inputs):
     accuracy_score = 0
