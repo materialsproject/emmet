@@ -130,21 +130,30 @@ class RedoxBuilder(Builder):
                             for key in doc["gibbs"]:
                                 if key in group_docs[ii+1]["gibbs"]:
                                     redox["IE"][key] = group_docs[ii+1]["gibbs"][key] - doc["gibbs"][key]
-                            reduction = {}
+                            # Calculating oxidation potentials if IE present
+                            oxidation = {}
+                            for key in redox["IE"]:
+                                oxidation[key] = {}
+                                for ref_key in REDOX_REFS:
+                                    oxidation[key][ref_key] = redox["IE"][key]-REDOX_REFS[ref_key]
+                            redox["oxidation"] = oxidation
                     if ii != 0:
                         if abs(doc["charge"]-group_docs[ii-1]["charge"]) == 1:
                             redox["EA"] = {}
                             for key in doc["gibbs"]:
                                 if key in group_docs[ii-1]["gibbs"]:
                                     redox["EA"][key] = doc["gibbs"][key] - group_docs[ii-1]["gibbs"][key]
-                            oxidation = {}
+                            # Calculating reduction potentials if IE present
+                            reduction = {}
+                            for key in redox["EA"]:
+                                reduction[key] = {}
+                                for ref_key in REDOX_REFS:
+                                    reduction[key][ref_key] = redox["EA"][key]-REDOX_REFS[ref_key]
+                            redox["reduction"] = reduction
                     doc["redox"] = redox
-            # Calculating redox potentials if IE and / or EA present
-
-
 
             docs.extend(group_docs)
-        print(docs)
+
         return docs
 
     def update_targets(self, items):
