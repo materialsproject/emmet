@@ -17,6 +17,7 @@ install:
   - conda create -q -n testenv python=$TRAVIS_PYTHON_VERSION numpy
   - source activate testenv
   - conda install -q -c openbabel openbabel
+  - conda install -q -c conda-forge python-igraph
   - pip install -r requirements.txt
   - pip install -r requirements-optional.txt
   - pip install nose
