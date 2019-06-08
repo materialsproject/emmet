@@ -283,5 +283,89 @@
       "PCM Frequency": 2
     },
     "tasks_key": "output.entropy"
+  },
+  {
+    "molecules_key": "basis",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 8,
+      "SMD Optimization": 7,
+      "SMD Frequency": 6,
+      "SMD Single Point": 6,
+      "PCM Frequency Flattening Optimization": 5,
+      "PCM Optimization": 4,
+      "PCM Frequency": 3,
+      "PCM Single Point": 3,
+      "Vacuum Frequency Flattening Optimization": 2,
+      "Vacuum Optimization": 1,
+      "Vacuum Frequency": 0,
+      "Vacuum Single Point": 0
+    },
+    "tasks_key": "orig.rem.basis"
+  },
+  {
+    "molecules_key": "method",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 8,
+      "SMD Optimization": 7,
+      "SMD Frequency": 6,
+      "SMD Single Point": 6,
+      "PCM Frequency Flattening Optimization": 5,
+      "PCM Optimization": 4,
+      "PCM Frequency": 3,
+      "PCM Single Point": 3,
+      "Vacuum Frequency Flattening Optimization": 2,
+      "Vacuum Optimization": 1,
+      "Vacuum Frequency": 0,
+      "Vacuum Single Point": 0
+    },
+    "tasks_key": "orig.rem.method"
+  },
+  {
+    "molecules_key": "vacuum_basis",
+    "quality_score": {
+      "Vacuum Frequency Flattening Optimization": 2,
+      "Vacuum Optimization": 1,
+      "Vacuum Frequency": 0,
+      "Vacuum Single Point": 0
+    },
+    "tasks_key": "orig.rem.basis"
+  },
+  {
+    "molecules_key": "vacuum_method",
+    "quality_score": {
+      "Vacuum Frequency Flattening Optimization": 2,
+      "Vacuum Optimization": 1,
+      "Vacuum Frequency": 0,
+      "Vacuum Single Point": 0
+    },
+    "tasks_key": "orig.rem.method"
+  },
+  {
+    "molecules_key": "solvated_basis",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 8,
+      "SMD Optimization": 7,
+      "SMD Frequency": 6,
+      "SMD Single Point": 6,
+      "PCM Frequency Flattening Optimization": 5,
+      "PCM Optimization": 4,
+      "PCM Frequency": 3,
+      "PCM Single Point": 3
+    },
+    "tasks_key": "orig.rem.basis"
+  },
+  {
+    "molecules_key": "solvated_method",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 8,
+      "SMD Optimization": 7,
+      "SMD Frequency": 6,
+      "SMD Single Point": 6,
+      "PCM Frequency Flattening Optimization": 5,
+      "PCM Optimization": 4,
+      "PCM Frequency": 3,
+      "PCM Single Point": 3
+    },
+    "tasks_key": "orig.rem.method"
   }
 ]
