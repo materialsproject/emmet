@@ -53,24 +53,37 @@ class ThermoBuilder(Builder):
 
         self.logger.info("Setting indexes")
         self.ensure_indicies()
-        # All relevant materials that have been updated since thermo props were
+                # All relevant materials that have been updated since thermo props were
         # last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.thermo))
         updated_comps = set(self.materials.distinct("chemsys", q))
+        self.logger.debug("Found {} updated chemsys".format(len(updated_comps)))
 
         # All materials that are not present in the thermo collection
-        thermo_mat_ids = self.thermo.distinct("task_id")
+        thermo_mat_ids = self.thermo.distinct(self.thermo.key)
+        mat_ids = self.materials.distinct(self.materials.key)
+        dif_task_ids = list(set(mat_ids) - set(thermo_mat_ids))
         q = dict(self.query)
-        q.update({"task_id": {"$nin": thermo_mat_ids}})
+        q.update({"task_id": {"$in": dif_task_ids}})
         new_mat_comps = set(self.materials.distinct("chemsys", q))
+        self.logger.debug("Found {} new materials".format(len(new_mat_comps)))
 
-        # All chemsys not present in thermo collection
-        new_comps = set(self.materials.distinct("chemsys", self.query)) - set(
-            self.thermo.distinct("chemsys")
+        # All comps affected by changing these chemical systems
+        # IE if we update Li-O, we need to update Li-Mn-O, Li-Mn-P-O, etc.
+        affected_comps = {}
+        for comp in updated_comps | new_mat_comps:
+            els = comp.split("-")
+            affected |= set(
+                self.materials.distinct("chemsys", {"elements": {"$all": els}})
+            )
+        self.logger.debug(
+            "Found {} chemical systems affected by this build".format(
+                len(affected_comps)
+            )
         )
 
-        comps = updated_comps | new_comps | new_mat_comps
+        comps = updated_comps | new_comps | affected_comps
 
         # Only process maximal super sets: e.g. if ["A","B"] and ["A"]
         # are both in the list, will only yield ["A","B"] as this will
