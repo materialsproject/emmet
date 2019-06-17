@@ -71,10 +71,10 @@ class ThermoBuilder(Builder):
 
         # All comps affected by changing these chemical systems
         # IE if we update Li-O, we need to update Li-Mn-O, Li-Mn-P-O, etc.
-        affected_comps = {}
+        affected_comps = set()
         for comp in updated_comps | new_mat_comps:
             els = comp.split("-")
-            affected |= set(
+            affected_comps |= set(
                 self.materials.distinct("chemsys", {"elements": {"$all": els}})
             )
         self.logger.debug(
@@ -83,7 +83,7 @@ class ThermoBuilder(Builder):
             )
         )
 
-        comps = updated_comps | new_comps | affected_comps
+        comps = updated_comps | new_mat_comps | affected_comps
 
         # Only process maximal super sets: e.g. if ["A","B"] and ["A"]
         # are both in the list, will only yield ["A","B"] as this will
