@@ -405,7 +405,7 @@ def add_elastic(mat, new_style_mat):
         else:
             mat["elasticity"]["nsites"] = len(get(mat, "structure.sites"))
 
-        if get("elasticity.warnings", None) is None:
+        if get("elasticity.warnings", new_style_mat) is None:
             mat["elasticity"]["warnings"] = []
 
 
