@@ -28,10 +28,7 @@ class StructurePredictionBuilder(Builder):
         Args:
             structure_templates (Store): store of template structures to predict from
             requests (Store): store of structure prediction requests
-            crystals (Store): predicted crystal structures and other info about them
-            threshold (float): probability threshold for ion substitution (see structure_prediction module)
-            max_num_subs (int): maximum allowed number of ionic substitutions per specie to
-                further decrease number of possible structures
+            crystals (Store): predicted crystal structures and their info (XRD, spacegroup, etc.)
         """
 
         self.structure_templates = structure_templates
@@ -52,7 +49,7 @@ class StructurePredictionBuilder(Builder):
         Gets all structure predictions ready to run
 
         Returns:
-            Generator of item and oxidized structure templates to run structure prediction tasks
+            Generator of request and relevant structure templates to run structure prediction tasks
         """
         self.logger.info("Structure Prediction Builder started")
 
