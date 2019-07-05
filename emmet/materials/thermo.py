@@ -53,7 +53,8 @@ class ThermoBuilder(Builder):
 
         self.logger.info("Setting indexes")
         self.ensure_indicies()
-                # All relevant materials that have been updated since thermo props were
+        
+        # All relevant materials that have been updated since thermo props were
         # last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.thermo))
@@ -62,7 +63,7 @@ class ThermoBuilder(Builder):
 
         # All materials that are not present in the thermo collection
         thermo_mat_ids = self.thermo.distinct(self.thermo.key)
-        mat_ids = self.materials.distinct(self.materials.key)
+        mat_ids = self.materials.distinct(self.materials.key,self.query)
         dif_task_ids = list(set(mat_ids) - set(thermo_mat_ids))
         q = dict(self.query)
         q.update({"task_id": {"$in": dif_task_ids}})
