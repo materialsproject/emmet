@@ -1,0 +1,4 @@
+# for validating input sets
+input_sets:
+  GGA Structure Optimization: MPRelaxSet
+  GGA+U Structure Optimization: MPRelaxSet

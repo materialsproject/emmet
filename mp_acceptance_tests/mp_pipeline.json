@@ -1,0 +1,425 @@
+
+[
+ {
+    "@module": "emmet.vasp.task_tagger",
+    "@class": "TaskTagger",
+    "tasks": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "ro:staging/mp_core",
+      "collection_name": "tasks",
+      "mgclient_config_path": null
+    },
+    "task_types": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "rw:staging/mp_core",
+      "collection_name": "task_types",
+      "mgclient_config_path": null
+    },
+    "query": {},
+    "kpts_tolerance" : 0.9
+  },
+  {
+    "@module": "emmet.vasp.materials",
+    "@class": "MaterialsBuilder",
+    "tasks": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "ro:staging/mp_core",
+      "collection_name": "tasks",
+      "mgclient_config_path": null
+    },
+    "materials": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "rw:staging/mp_core",
+      "collection_name": "materials.core",
+      "mgclient_config_path": null
+    },
+    "task_types": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "ro:staging/mp_core",
+      "collection_name": "task_types",
+      "mgclient_config_path": null
+    },
+    "query": {"tags": {"$nin": ["mp_scan"]}},
+    "ltol": 0.2,
+    "stol": 0.3,
+    "angle_tol": 5,
+    "separate_mag_orderings": false
+  },
+  {
+    "@module": "emmet.materials.magnetism",
+    "@class": "MagneticBuilder",
+    "materials": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "ro:staging/mp_core",
+      "collection_name": "materials.core",
+      "mgclient_config_path": null
+    },
+    "magnetism": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "rw:staging/mp_core",
+      "collection_name": "magnetism",
+      "mgclient_config_path": null
+    },
+    "query": {}
+  },
+  {
+    "@module": "emmet.materials.diffraction",
+    "@class": "DiffractionBuilder",
+    "materials": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "ro:staging/mp_core",
+      "collection_name": "materials.core",
+      "mgclient_config_path": null
+    },
+    "diffraction": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "rw:staging/mp_core",
+      "collection_name": "diffraction",
+      "mgclient_config_path": null
+    },
+    "query": {}
+  },
+  {
+    "@module": "emmet.materials.dielectric",
+    "@class": "DielectricBuilder",
+    "materials": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "ro:staging/mp_core",
+      "collection_name": "materials.core",
+      "mgclient_config_path": null
+    },
+    "dielectric": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "rw:staging/mp_core",
+      "collection_name": "dielectric",
+      "mgclient_config_path": null
+    },
+    "query": {}
+  },
+  {
+    "@module": "emmet.materials.thermo",
+    "@class": "ThermoBuilder",
+    "materials": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "ro:staging/mp_core",
+      "collection_name": "materials.core",
+      "mgclient_config_path": null
+    },
+    "thermo": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "rw:staging/mp_core",
+      "collection_name": "thermo",
+      "mgclient_config_path": null
+    },
+    "query": {},
+    "compatibility": {
+      "@module": "pymatgen.entries.compatibility",
+      "@class": "MaterialsProjectCompatibility",
+      "compat_type": "Advanced",
+      "correct_peroxide": true,
+      "check_potcar_hash": false
+    }
+  },
+  {
+    "@module": "emmet.materials.snls",
+    "@class": "SNLBuilder",
+    "materials": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "ro:staging/mp_core",
+      "collection_name": "materials.core",
+      "mgclient_config_path": null
+    },
+    "snls": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "rw:staging/mp_core",
+      "collection_name": "snls",
+      "mgclient_config_path": null
+    },
+    "source_snls": [
+      {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "snls_user",
+        "mgclient_config_path": null
+      },
+      {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "snls_icsd",
+        "mgclient_config_path": null
+      },
+      {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "snls_pauling",
+        "mgclient_config_path": null
+      }
+    ],
+    "query": {},
+    "ltol": 0.2,
+    "stol": 0.3,
+    "angle_tol": 5,
+    "default_snl_fields": {
+      "references": "@article{Jain2013,\nauthor = {Jain, Anubhav and Ong, Shyue Ping and Hautier, Geoffroy and Chen, Wei and Richards, William Davidson and Dacek, Stephen and Cholia, Shreyas and Gunter, Dan and Skinner, David and Ceder, Gerbrand and Persson, Kristin a.},\ndoi = {10.1063/1.4812323},\nissn = {2166532X},\njournal = {APL Materials},\nnumber = {1},\npages = {011002},\ntitle = {{The Materials Project: A materials genome approach to accelerating materials innovation}},\nurl = {http://link.aip.org/link/AMPADS/v1/i1/p011002/s1\\&Agg=doi},\nvolume = {1},\nyear = {2013}\n}\n\n@misc{MaterialsProject,\ntitle = {{Materials Project}},\nurl = {http://www.materialsproject.org}\n}",
+      "authors": [
+        {
+          "name": "Materials Project",
+          "email": "feedback@materialsproject.org"
+        }
+      ],
+      "history": {
+        "name": "Materials Project Optimized Structure",
+        "url": "http://www.materialsproject.org",
+        "description": {}
+      }
+    }
+  },
+  {
+    "@module": "emmet.materials.bonds",
+    "@class": "BondBuilder",
+    "materials": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "ro:staging/mp_core",
+      "collection_name": "materials.core",
+      "mgclient_config_path": null
+    },
+    "bonding": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "rw:staging/mp_core",
+      "collection_name": "bonds",
+      "mgclient_config_path": null
+    },
+    "query": {}
+  },
+  {
+    "@module": "emmet.materials.bond_valence",
+    "@class": "BondValenceBuilder",
+    "materials": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "ro:staging/mp_core",
+      "collection_name": "materials.core",
+      "mgclient_config_path": null
+    },
+    "bond_valence": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "rw:staging/mp_core",
+      "collection_name": "bond_valence",
+      "mgclient_config_path": null
+    },
+    "query": {}
+  },
+  {
+    "@module": "emmet.materials.substrates",
+    "@class": "SubstrateBuilder",
+    "materials": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "ro:staging/mp_core",
+      "collection_name": "materials.core",
+      "mgclient_config_path": null
+    },
+    "elasticity": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "ro:staging/mp_core",
+      "collection_name": "elasticity",
+      "mgclient_config_path": null
+    },
+    "substrates": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "rw:staging/mp_core",
+      "collection_name": "substrates",
+      "mgclient_config_path": null
+    }
+  },
+  {
+    "@module": "emmet.materials.has_properties",
+    "@class": "HasProps",
+    "materials": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "ro:staging/mp_core",
+      "collection_name": "materials.core",
+      "mgclient_config_path": null
+    },
+    "prop_stores": {
+      "elasticity": {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "elasticity",
+        "mgclient_config_path": null
+      },
+      "piezo": {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "dielectric",
+        "mgclient_config_path": null
+      },
+      "diel": {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "dielectric",
+        "mgclient_config_path": null
+      },
+      "phonons": {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:production/phonondb",
+        "collection_name": "phonon_bs_img",
+        "mgclient_config_path": null
+      },
+      "eos": {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:production/mg_core_prod",
+        "collection_name": "eos",
+        "mgclient_config_path": null
+      },
+      "xas": {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:production/mg_core_prod",
+        "collection_name": "xas.avg.mson",
+        "mgclient_config_path": null
+      },
+      "bandstructure": {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "electronic_structure",
+        "mgclient_config_path": null
+      },
+      "surfaces": {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:production/mg_core_prod",
+        "collection_name": "surface_properties",
+        "mgclient_config_path": null
+      }
+    },
+    "hasprops": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "rw:staging/mp_core",
+      "collection_name": "hasprops",
+      "mgclient_config_path": null
+    }
+  },
+  {
+    "@module": "emmet.materials.mp_website",
+    "@class": "MPBuilder",
+    "materials": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "rw:staging/mp_core",
+      "collection_name": "materials.core",
+      "mgclient_config_path": null
+    },
+    "website": {
+      "@module": "maggma.advanced_stores",
+      "@class": "MongograntStore",
+      "mongogrant_spec": "rw:staging/mp_core",
+      "collection_name": "materials_dev",
+      "mgclient_config_path": null
+    },
+    "thermo": {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "thermo",
+        "mgclient_config_path": null
+    },
+    "aux": [
+      {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "bonds",
+        "mgclient_config_path": null
+      },
+      {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "bond_valence",
+        "mgclient_config_path": null
+      },
+      {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "diffraction",
+        "mgclient_config_path": null
+      },
+      {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "dielectric",
+        "mgclient_config_path": null
+      },
+      {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "dois_next_gen",
+        "mgclient_config_path": null
+      },
+      {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "elasticity",
+        "mgclient_config_path": null
+      },
+      {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "magnetism",
+        "mgclient_config_path": null
+      },
+      {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "ro:staging/mp_core",
+        "collection_name": "snls",
+        "mgclient_config_path": null
+      },
+      {
+        "@module": "maggma.advanced_stores",
+        "@class": "MongograntStore",
+        "mongogrant_spec": "rw:staging/mp_core",
+        "collection_name": "hasprops",
+        "mgclient_config_path": null
+      }
+    ],
+    "query": {}
+  }
+]
