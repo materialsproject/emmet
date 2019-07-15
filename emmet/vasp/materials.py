@@ -6,6 +6,7 @@ import numpy as np
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.analysis.piezo import PiezoTensor
 
 from maggma.builders import Builder
 from emmet.vasp.task_tagger import task_type
@@ -363,6 +364,16 @@ class MaterialsBuilder(Builder):
         else:
             mat.update({"deprecated": False})
 
+        # Reorder voigt output from VASP to standard voigt notation
+        if has(mat, "piezo.ionic"):
+            mat["piezo"]["ionic"] = PiezoTensor.from_vasp_voigt(
+                mat["piezo"]["ionic"]
+            ).voigt
+        if has(mat, "piezo.static"):
+            mat["piezo"]["static"] = PiezoTensor.from_vasp_voigt(
+                mat["piezo"]["static"]
+            ).voigt
+
     def ensure_indexes(self):
         """
         Ensures indicies on the tasks and materials collections
@@ -387,6 +398,7 @@ class MaterialsBuilder(Builder):
 def get_sg(struc):
     # helper function to get spacegroup with a loose tolerance
     return struc.get_space_group_info(symprec=0.1)[1]
+
 
 def find_mat_id(props):
 
@@ -437,6 +449,7 @@ def find_best_prop(props):
         prop = sorted_props[0]
 
     return prop
+
 
 def structure_metadata(structure):
     """
