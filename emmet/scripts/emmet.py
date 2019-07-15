@@ -809,7 +809,7 @@ def wflows(add_snlcolls, add_taskdbs, tag, insert, clear_logs, max_structures, s
                             continue
                         mongo_handler.collection.remove(q) # avoid dups
                         counter['structures'] += 1
-                        s = Structure.from_dict(dct)
+                        s = Structure.from_dict(dct).get_primitive_structure()
                         s.snl_id = dct['snl_id']
                         s.task_id = dct.get('task_id')
                         try:
