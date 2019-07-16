@@ -534,7 +534,7 @@ def add_thermo(mat, new_style_mat):
     """
     Add's the thermo values in with sandboxing
     """
-    if "thermo_docs" not in mat:
+    if "thermo_docs" not in new_style_mat:
         mat["deprecated"] = True
         
     if not mat["deprecated"]:
