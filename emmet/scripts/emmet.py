@@ -29,6 +29,7 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from tqdm import tqdm
 from pprint import pprint
 from mongogrant.client import Client
+from zipfile import ZipFile
 
 def get_lpad():
     if 'FW_CONFIG_FILE' not in os.environ:
@@ -1118,6 +1119,13 @@ def report(tag, in_progress, to_csv):
             for row in table._get_rows(options):
                 writer.writerow(row)
 
+def get_format(fname):
+    if fnmatch(fname, "*.cif*") or fnmatch(fname, "*.mcif*"):
+        return 'cif'
+    elif fnmatch(fname, "*.json*") or fnmatch(fname, "*.mson*"):
+        return 'json'
+    else:
+        raise ValueError('reading', fname, 'not supported (yet)')
 
 @cli.command()
 @click.argument('archive', type=click.Path(exists=True))
@@ -1134,7 +1142,7 @@ def load(archive, add_snlcolls, insert):
     tag, sec_ext = fname.rsplit('.', 1) if '.' in fname else [fname, '']
     if sec_ext:
         ext = ''.join([sec_ext, ext])
-    exts = ['tar.gz', '.tgz', 'bson.gz']
+    exts = ['tar.gz', '.tgz', 'bson.gz', '.zip']
     if ext not in exts:
         print(ext, 'not supported (yet)! Please use one of', exts)
         return
@@ -1148,6 +1156,16 @@ def load(archive, add_snlcolls, insert):
             if any([bool(l in elements) for l in skip_labels]):
                 continue
             input_structures.append(TransformedStructure.from_dict(doc['structure']))
+    elif ext == '.zip':
+        input_zip = ZipFile(archive)
+        for fname in input_zip.namelist():
+            contents = input_zip.read(fname)
+            fmt = get_format(fname)
+            try:
+                input_structures.append(Structure.from_str(contents, fmt=fmt))
+            except Exception as ex:
+                print(ex)
+                break #continue
     else:
         tar = tarfile.open(archive, 'r:gz')
         for member in tar.getmembers():
@@ -1157,13 +1175,7 @@ def load(archive, add_snlcolls, insert):
             if f:
                 contents = f.read().decode('utf-8')
                 fname = member.name.lower()
-                if fnmatch(fname, "*.cif*") or fnmatch(fname, "*.mcif*"):
-                    fmt = 'cif'
-                elif fnmatch(fname, "*.json*") or fnmatch(fname, "*.mson*"):
-                    fmt = 'json'
-                else:
-                    print('reading', fname, 'not supported (yet)')
-                    continue
+                fmt = get_format(fname)
                 try:
                     input_structures.append(Structure.from_str(contents, fmt=fmt))
                 except Exception as ex:
