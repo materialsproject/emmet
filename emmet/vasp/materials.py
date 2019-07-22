@@ -368,11 +368,11 @@ class MaterialsBuilder(Builder):
         if has(mat, "piezo.ionic"):
             mat["piezo"]["ionic"] = PiezoTensor.from_vasp_voigt(
                 mat["piezo"]["ionic"]
-            ).voigt
+            ).voigt.tolist()
         if has(mat, "piezo.static"):
             mat["piezo"]["static"] = PiezoTensor.from_vasp_voigt(
                 mat["piezo"]["static"]
-            ).voigt
+            ).voigt.tolist()
 
     def ensure_indexes(self):
         """
