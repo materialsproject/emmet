@@ -7,7 +7,6 @@ coverage==4.4.1
 tqdm>=4.19.5
 prettyplotlib==0.1.7
 pybtex==0.21
-networkx==2.1
 sumo==1.0.8
 nltk==3.3
 crystal_toolkit>=0.0.1
