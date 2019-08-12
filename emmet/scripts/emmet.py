@@ -302,6 +302,8 @@ def copy(target_spec, tag, insert, copy_snls, sbxn, src, force):
     target = calcdb_from_mgrant(target_spec)
     print('connected to target db with', target.collection.count(), 'tasks')
 
+    sbxn = list(sbxn) if sbxn else target.collection.distinct('sbxn')
+
     ensure_indexes(['task_id', 'tags', 'dir_name', 'retired_task_id'], [source.collection, target.collection])
 
     tags = [tag]
@@ -501,8 +503,7 @@ def copy(target_spec, tag, insert, copy_snls, sbxn, src, force):
                         print('ERROR: not a SO task!')
                         continue
 
-            if sbxn:
-                task_doc['sbxn'] = list(sbxn)
+            task_doc['sbxn'] = sbxn
 
             if insert:
                 target.insert_task(task_doc, use_gridfs=True)
