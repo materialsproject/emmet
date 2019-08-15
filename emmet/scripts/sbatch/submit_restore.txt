@@ -1,0 +1,24 @@
+#!/bin/bash -l
+#SBATCH --qos=xfer
+#SBATCH --time=48:00:00
+#SBATCH --job-name=restore
+#SBATCH --licenses=SCRATCH
+#SBATCH --mail-user=phuck@lbl.gov
+#SBATCH --mail-type=ALL
+#SBATCH --output=restore-%j.out
+#SBATCH --error=restore-%j.error
+
+cwd=$PWD
+outdir=/project/projectdirs/matgen/garden/tasks_from_old_prod/
+dirlist=/global/homes/h/huck/mp_prod/workdir/hpss/GGA+U_band_structure_v2.txt
+
+cd $outdir && pwd
+
+for block in `cut -d/ -f1 $dirlist | sort -u`; do
+  echo $block
+  htar -xvf garden/${block}.tar `grep $block $dirlist`
+  #break
+done
+
+cd $cwd
+echo DONE
