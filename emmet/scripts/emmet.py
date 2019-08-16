@@ -151,13 +151,13 @@ def get_vasp_dirs(scan_path, base_path, max_dirs, insert):
     counter = 0
 
     # NOTE os.walk followlinks=False by default, as intended here
-    for root, dirs, files in os.walk(scan_path):
-        # TODO ignore relax1/2 subdirs if INCAR.orig found
+    for root, dirs, files in os.walk(scan_path, topdown=True):
         if contains_vasp_dirs(files):
             yield get_symlinked_path(root, base_path_index, insert)
             counter += 1
             if counter >= max_dirs:
                 break
+            dirs[:] = [] # don't descend further (i.e. ignore relax1/2)
         else:
             for f in files:
                 if f.endswith('.tar.gz'):
