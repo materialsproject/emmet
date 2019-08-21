@@ -144,7 +144,7 @@ class icsdDrone(AbstractDrone):
             return []
         return []
 
-    def bibtex_from_cif(cif_string):
+    def bibtex_from_cif(self, cif_string):
 	    # if input is a cif filename read from file, else assume input is cif string
     	if cif_string.endswith(".cif"):
     		cif_dict = CifParser(cif_string).as_dict()
