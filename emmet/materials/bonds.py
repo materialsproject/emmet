@@ -58,7 +58,7 @@ class BondBuilder(MapBuilder):
         Calculates StructureGraphs (bonding information) for a material
         """
 
-        bonding_docs = {}
+        bonding_docs = []
         structure = Structure.from_dict(item["structure"])
         task_id = item[self.materials.key]
 
@@ -80,7 +80,7 @@ class BondBuilder(MapBuilder):
                 for u, v, to_jimage, dist in edge_weights:
                     sg.alter_edge(u, v, to_jimage=to_jimage, new_weight=dist)
 
-                bonding_docs[strategy_name] = {
+                bonding_docs.append({
                     "strategy": strategy_name,
                     "graph": sg.as_dict(),
                     "summary": {
@@ -90,16 +90,16 @@ class BondBuilder(MapBuilder):
                         "coordination_envs_anonymous": sg.types_of_coordination_environments(anonymous=True)
                     },
                     "successful": True
-                }
+                })
 
             except Exception as e:
 
                 self.logger.warning("Failed to calculate bonding: {} {} {}".format(task_id, strategy_name, e))
 
-                bonding_docs[strategy_name] = {"strategy": strategy_name, "successful": False, "error_message": str(e)}
+                bonding_docs.append({"strategy": strategy_name, "successful": False, "error_message": str(e)})
 
         return {
             "pymatgen_version": str(pymatgen_version),
-            "bonding": [b for b in bonding_docs if b["successful"]],
-            "failed_bonding": [b["strategy"] for b in bonding_docs if not b["successful"]]
+            "bonding": {b["strategy"]: b for b in bonding_docs if b["successful"]},
+            "failed_bonding": {b["strategy"]: b for b in bonding_docs if not b["successful"]},
         }

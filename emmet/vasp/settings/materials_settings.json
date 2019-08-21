@@ -269,7 +269,8 @@
       "GGA Structure Optimization": 7,
       "GGA+U Structure Optimization": 8
     },
-    "tasks_key": "output.structure"
+    "tasks_key": "output.structure",
+    "track": true
   },
   {
     "aggregate": true,
@@ -306,7 +307,8 @@
       "GGA+U Static": 6,
       "GGA+U Structure Optimization": 5
     },
-    "tasks_key": "calcs_reversed.0.output.outcar.magmom"
+    "tasks_key": "calcs_reversed.0.output.outcar.magmom",
+    "optional": true
   },
   {
     "materials_key": "dielectric.structure",
@@ -371,15 +373,5 @@
       "GGA+U Static Dielectric": 6
     },
     "tasks_key": "calcs_reversed.0.output.outcar.internal_strain_tensor"
-  },
-  {
-    "materials_key": "_sbxn",
-    "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
-    },
-    "tasks_key": "_sbxn",
-    "optional": true,
-    "aggregate": true
   }
 ]

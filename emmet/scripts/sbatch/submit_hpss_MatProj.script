@@ -1,0 +1,16 @@
+#!/bin/bash -l
+#SBATCH --qos=xfer
+#SBATCH --time=48:00:00
+#SBATCH --job-name=hpss_MatProj
+#SBATCH --licenses=SCRATCH
+#SBATCH --mail-user=phuck@lbl.gov
+#SBATCH --mail-type=ALL
+#SBATCH --output=hpss_MatProj-%j.out
+#SBATCH --error=hpss_MatProj-%j.error
+#SBATCH --mem=10GB
+
+while read line; do
+  echo $line
+  hsi -q -l matcomp ls -1 ${line}.idx
+  [[ $? -ne 0 ]] && htar -Xvf $line
+done < hpss_MatProj_2014.txt

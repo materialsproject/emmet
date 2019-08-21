@@ -1,0 +1,11 @@
+#!/bin/bash -l
+#SBATCH --qos=xfer
+#SBATCH --time=06:30:00
+#SBATCH --job-name=update_hpss_archive
+#SBATCH --licenses=SCRATCH
+#SBATCH --mail-user=phuck@lbl.gov
+#SBATCH --mail-type=ALL
+#SBATCH --output=update_hpss_archive-%j.out
+#SBATCH --error=update_hpss_archive-%j.error
+
+~/mp_prod/codes/emmet/emmet/scripts/update_hpss_archive.sh

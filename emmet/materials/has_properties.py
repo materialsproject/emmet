@@ -7,12 +7,12 @@ from pymongo import UpdateOne
 IDGetter = namedtuple("IDGetter", ["filter", "idfield"])
 getters = {
     "elasticity": IDGetter({"elasticity": {"$exists": True}}, "task_id"),
-    "piezo": IDGetter({"piezo": {"$exists": True}}, "task_id"),
-    "diel": IDGetter({"diel": {"$exists": True}}, "task_id"),
+    "piezo": IDGetter({"piezo.e_ij_max": {"$exists": True}}, "task_id"),
+    "diel": IDGetter({"dielectric.n": {"$exists": True}}, "task_id"),
     "phonons": IDGetter({}, "mp-id"),
     "eos": IDGetter({}, "mp_id"),
     "xas": IDGetter({"valid": True}, "mp_id"),
-    "bandstructure": IDGetter({"has_bandstructure": True}, "task_id"),
+    "bandstructure": IDGetter({"bs_plot_small": {"$exists": True}}, "task_id"),
     "surfaces": IDGetter({}, "material_id"),
 }
 
@@ -20,37 +20,58 @@ getters = {
 class HasProps(Builder):
     def __init__(self, materials, prop_stores, hasprops, **kwargs):
         self.materials = materials
-        sources = [self.materials]
-        for key in (set(prop_stores) - set(getters)):
-            del prop_stores[key]
         self.prop_stores = prop_stores
-        sources.extend(list(self.prop_stores.values()))
         self.hasprops = hasprops
         self.kwargs = kwargs
+
+        sources = [self.materials] + [
+            store for name, store in prop_stores.items() if name in getters
+        ]
+
         super().__init__(sources=sources, targets=[self.hasprops], **kwargs)
 
     def get_items(self):
-        self.materials.ensure_index("has")
-        self.hasprops.ensure_index("task_id")
+        self.ensure_indexes()
+
+        # Get mapping from task_ids
+        task_map = self.materials.query({}, [self.materials.key, "task_ids"])
+        task_map = {
+            t_id: d[self.materials.key] for d in task_map for t_id in d["task_ids"]
+        }
+
+        # Get list of properties for has list from various stores
         hasmap = defaultdict(set)
         for prop, getter in getters.items():
-            self.logger.info(f"{prop}: getting mids to update...")
-            store = self.prop_stores[prop]
-            mids_to_update = store.distinct(getter.idfield, getter.filter)
-            if store.collection.full_name != self.materials.collection.full_name:
-                # Resolve to canonical mids
-                mids_to_update = self.materials.distinct("task_id", {"task_ids": {"$in": mids_to_update}})
-            for mid in mids_to_update:
-                hasmap[mid].add(prop)
-        upstream = {d["task_id"]: set(d["has"]) for d in self.hasprops.query({}, ["task_id", "has"])}
-        todo = [({"task_id": mid}, {"$set": {"has": list(props)}})
-                for mid, props in hasmap.items() if props != upstream.get(mid)]
-        return todo
+            if prop in self.prop_stores:
+                self.logger.info(f"Getting updated material IDs for: {prop}")
+                store = self.prop_stores[prop]
+                mids_to_update = [task_map[tid] for tid in store.distinct(getter.idfield, getter.filter) if tid in task_map]
+                for mid in mids_to_update:
+                    hasmap[mid].add(prop)
+
+        all_mids = self.materials.distinct(self.materials.key)
+        for mid in all_mids:
+            if mid not in hasmap:
+                hasmap[mid] = {}
+
+        docs = [
+            {self.hasprops.key: mid, "has": list(has)} for mid, has in hasmap.items()
+        ]
+
+        return docs
 
     def update_targets(self, items):
         now = datetime.utcnow()
         for item in items:
-            item[1]["$set"][self.hasprops.lu_field] = now
-        requests = [UpdateOne(*item, upsert=True) for item in items]
-        if requests:
-            self.hasprops.collection.bulk_write(requests, ordered=False)
+            item[self.hasprops.lu_field] = now
+
+        if items:
+            self.logger.debug(f"Updating {len(items)} items")
+            self.hasprops.update(items)
+        else:
+            self.logger.debug("No items to update")
+
+    def ensure_indexes(self):
+        self.materials.ensure_index("has")
+        self.materials.ensure_index(self.materials.key)
+        self.hasprops.ensure_index(self.hasprops.key)
