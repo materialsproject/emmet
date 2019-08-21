@@ -1,4 +1,4 @@
-import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, itertools, multiprocessing, math, io, requests
+import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, itertools, multiprocessing, math, io, requests, json
 from shutil import copyfile, rmtree
 from glob import glob
 from fnmatch import fnmatch
@@ -1366,6 +1366,15 @@ def parse(base_path, insert, nproc, max_dirs, force, add_snlcolls, make_snls):
 
     pool.close()
     print('DONE:', len(input_structures), 'structures')
+
+    fn = os.path.join(base_path, 'launchdir_to_taskid.json')
+    if os.path.exists(fn):
+        print('updating task ids...')
+        with open(fn, 'r') as f:
+            launchdir_to_taskid = json.load(f)
+        for doc in target.collection.find({'tags': tag}, {'dir_name': 1, 'task_id': 1, '_id': 0}):
+            task_id = launchdir_to_taskid[get_subdir(doc['dir_name'])]
+            target.collection.update({'task_id': doc['task_id']}, {'$set': {'task_id': task_id}})
 
     if insert and make_snls:
         print('add SNLs for', len(input_structures), 'structures')
