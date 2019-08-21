@@ -13,7 +13,7 @@ from monty.json import MontyDecoder, MontyEncoder
 from pymatgen.apps.borg.hive import AbstractDrone
 from pymatgen.apps.borg.queen import BorgQueen
 from pymatgen.io.cif import CifParser
-from pymatgen.matproj.snl import StructureNL
+from pymatgen.util.provenance import StructureNL
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='icsd_to_mongo.log',level=logging.DEBUG)
