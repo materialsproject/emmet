@@ -1,14 +1,15 @@
 #!/bin/bash
 
-indir=/project/projectdirs/matgen/garden/hpss_to_mpdrive/raw
+if [ "$#" -ne 2 ]; then
+  echo "Usage: $0 DIRECTORY FILTER"
+  exit 1
+fi
+
+indir=$1
+filter=$2
 cd $indir && pwd
 
-#for block in $(find . -maxdepth 1 -type d -name "block_2011*" -exec basename {} \;); do
-#for block in $(cat hpss_update_2013.txt); do
-for block_targz in $(ls block_201*.tar.gz); do
-  tar -I pigz --skip-old-files -xvf ${block_targz}
-  [[ $? -ne 0 ]] && echo "error in tar -x" && exit
-  block=${block_targz%%.tar.gz}
+for block in $(find . -maxdepth 1 -type d -name "$filter" -exec basename {} \;); do
   echo $block
   [[ ! -d $block ]] && echo $block does not exist && exit
   find $block -type d -empty -print -delete
@@ -20,7 +21,7 @@ for block_targz in $(ls block_201*.tar.gz); do
   [[ $? -ne 0 ]] && echo "error in pigz" && exit
 
   htar -vtf garden/${block}.tar | awk '{ print $7 }' | sort -u > ${block}.tar.idx
-  [[ $? -ne 0 ]] && echo "error in htar -t" && exit
+  [[ $? -ne 0 ]] && echo "error in htar -t" && exit # TODO upload new archive if not exists
   find $block -type f | sort -u > ${block}.idx
 
   comm -13 ${block}.tar.idx ${block}.idx > ${block}.missing
@@ -40,5 +41,4 @@ for block_targz in $(ls block_201*.tar.gz); do
   fi
   rm -rv ${block}
   rm -v ${block}.tar.idx ${block}.idx ${block}.missing
-  rm -v ${block_targz}
 done
