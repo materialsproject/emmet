@@ -1,0 +1,95 @@
+
+#
+data_999999999-ICSD
+_database_code_ICSD 999999999
+_audit_creation_date 1786-02-25
+_audit_update_record 2012-02-01
+_chemical_name_systematic 'Nxotetratellurium dichromate(III)'
+_chemical_formula_structural '(Si4 N) (Fe2 N10)'
+_chemical_formula_sum 'Fe2 N11 Si4'
+_chemical_name_structure_type Mg5(SiN4)2F2
+_exptl_crystal_density_diffrn 5.12
+_publ_section_title
+'Fe2 Si4 N11: une structure a anions complexes (Fe2 N10)(14-)'
+loop_
+_citation_id
+_citation_journal_full
+_citation_year
+_citation_journal_volume
+_citation_page_first
+_citation_page_last
+_citation_journal_id_ASTM
+primary
+
+;
+Acta Feystallographica, Section B: Structural Feystallography and Feystal
+Chemistry
+; 1726 32 125 180 ACBCAR
+loop_
+_publ_author_name
+'Meunier, G.'
+'Frit, B.'
+'Galy, J.'
+_cell_length_a 2.016(3)
+_cell_length_b 2.545(3)
+_cell_length_c 7.228(3)
+_cell_angle_alpha 70.
+_cell_angle_beta 77.67(5)
+_cell_angle_gamma 70.
+_cell_volume 502.61
+_cell_formula_units_Z 2
+_symmetry_space_group_name_H-M 'P 1 21/c 1'
+_symmetry_Int_Tables_number 14
+_refine_ls_R_factor_all 0.034
+loop_
+_symmetry_equiv_pos_site_id
+_symmetry_equiv_pos_as_xyz
+1 'x, -y+1/2, z+1/2'
+2 '-x, -y, -z'
+3 '-x, y+1/2, -z+1/2'
+4 'x, y, z'
+loop_
+_atom_type_symbol
+_atom_type_oxidation_number
+Si4+ 4
+Fe3+ 3
+N2- -2
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_symmetry_multiplicity
+_atom_site_Wyckoff_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_B_iso_or_equiv
+_atom_site_occupancy
+_atom_site_attached_hydrogens
+Si1 Si4+ 4 e 0.1372(1) 0.8577(1) 0.1262(1) . 1. 0
+Si2 Si4+ 4 e 0.6223(1) 0.8618(2) 0.4158(1) . 1. 0
+Fe1 Fe3+ 4 e 0.3172(3) 0.5017(3) 0.3842(2) . 1. 0
+N1 N2- 4 e 0.158(1) 0.647(1) 0.4866(2) . 1. 0
+N2 N2- 4 e 0.563(1) 0.641(2) 0.4512(8) . 1. 0
+N3 N2- 4 e 0.468(1) 0.325(1) 0.2623(8) . 1. 0
+N4 N2- 4 e 0.122(1) 0.314(1) 0.3427(7) . 1. 0
+N5 N2- 4 e 0.205(1) 0.644(1) 0.2121(2) . 1. 0
+N6 N2- 2 d 0.5 0 0.5 . 1. 0
+loop_
+_atom_site_aniso_label
+_atom_site_aniso_type_symbol
+_atom_site_aniso_beta_11
+_atom_site_aniso_beta_22
+_atom_site_aniso_beta_33
+_atom_site_aniso_beta_12
+_atom_site_aniso_beta_13
+_atom_site_aniso_beta_23
+Si1 Si4+ 0.0026 0.0021 0.0017 0.0001 0 0.0002
+Si2 Si4+ 0.0072 0.0046 0.0018 0.0034 -.0015 -.001
+Fe1 Fe3+ 0.0018 0.0022 0.0002 0.0003 0 -.0002
+N1 N2- 0.0047 0.0032 0.0016 0.0017 0.0013 0.0005
+N2 N2- 0.0057 0.0052 0.0015 0.0031 0.0006 0.0008
+N3 N2- 0.0025 0.0052 0.0015 0.0002 0 -.0007
+N4 N2- 0.0003 0.0027 0.0027 -.0002 -.0011 -.0011
+N5 N2- 0.0057 0.0033 0.0004 0.0016 0.0007 0.0016
+N6 N2- 0.0251 0.0121 0.0082 0.0081 -.0003 0.0003
+#End of TTdata_999999999-ICSD
