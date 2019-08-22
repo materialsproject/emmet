@@ -13,7 +13,7 @@ from monty.json import MontyDecoder, MontyEncoder
 from pymatgen.apps.borg.hive import AbstractDrone
 from pymatgen.apps.borg.queen import BorgQueen
 from pymatgen.io.cif import CifParser
-from pymatgen.matproj.snl import StructureNL
+from pymatgen.util.provenance import StructureNL
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='icsd_to_mongo.log',level=logging.DEBUG)
@@ -31,7 +31,7 @@ class icsdDrone(AbstractDrone):
         #filler
         self.field = 1
 
-    def assimilate(self, path, dbhost='localhost', dbport = 27017, dbname='ICSD',collection_name='ICSD_files'):
+    def assimilate(self, path, dbhost='localhost', dbport = 27017, dbname='ICSD', collection_name='ICSD_files', store_mongo=True):
         """
         Assimilate data in a directory path into a pymatgen object. Because of
         the quirky nature of Python"s multiprocessing, the object must support
@@ -41,9 +41,11 @@ class icsdDrone(AbstractDrone):
         Returns:
             An assimilated object
         """
-        client = MongoClient(dbhost,dbport)
-        db = client[dbname]
-        col = db[collection_name]
+        if store_mongo:
+            client = MongoClient(dbhost,dbport)
+            db = client[dbname]
+            col = db[collection_name]
+
         data ={}
 
         files = os.listdir(path)
@@ -101,7 +103,7 @@ class icsdDrone(AbstractDrone):
                 data['elements'] = meta['elements']
                 data['nelements'] = meta['nelements']
                 data['formula'] = meta['formula']
-                data['formula_reduced'] = meta['formula_reduced']
+                data['formula_reduced'] = meta['formula_pretty']
                 data['formula_reduced_abc'] = meta['formula_reduced_abc']
                 data['formula_anonymous'] = meta['formula_anonymous']
                 data['chemsys'] = meta['chemsys']
@@ -117,9 +119,10 @@ class icsdDrone(AbstractDrone):
                 logger.warning('{}: {}'.format(file_ID,warn.message))
 
         if 'snl' in data:
-            col.update_one({'icsd_id': int(file_ID)},{'$set': data},upsert=True)
+            if store_mongo:
+                col.update_one({'icsd_id': int(file_ID)},{'$set': data},upsert=True)
 
-        return
+        return data
 
     def get_valid_paths(self, path):
         """
@@ -144,7 +147,7 @@ class icsdDrone(AbstractDrone):
             return []
         return []
 
-    def bibtex_from_cif(cif_string):
+    def bibtex_from_cif(self, cif_string):
 	    # if input is a cif filename read from file, else assume input is cif string
     	if cif_string.endswith(".cif"):
     		cif_dict = CifParser(cif_string).as_dict()

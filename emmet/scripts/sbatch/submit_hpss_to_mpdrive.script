@@ -1,0 +1,13 @@
+#!/bin/bash -l
+#SBATCH --qos=xfer
+#SBATCH --time=19:00:00
+#SBATCH --job-name=hpss_to_mpdrive
+#SBATCH --licenses=SCRATCH
+#SBATCH --mail-user=phuck@lbl.gov
+#SBATCH --mail-type=ALL
+#SBATCH --output=hpss_to_mpdrive-%j.out
+#SBATCH --error=hpss_to_mpdrive-%j.error
+
+indir=/project/projectdirs/matgen/garden/hpss_to_mpdrive
+input=/global/homes/h/huck/mp_prod/workdir/emmet_gdrive/launcher_paths_block_2019.txt
+~/mp_prod/codes/emmet/emmet/scripts/hpss_to_mpdrive.sh $indir $input

@@ -6,6 +6,7 @@ from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymongo import UpdateOne
 
+from emmet.magic_numbers import LTOL, STOL, ANGLE_TOL
 
 class StructureWorkflowStatus(Builder):
     def __init__(self, jobs_src, wflow_logs, wflows, jobs_tgt, **kwargs):
@@ -85,7 +86,7 @@ class StructureReleaseStatus(Builder):
     def get_items(self):
         materials, jobs = self.sources
         matcher = StructureMatcher(
-            ltol=0.2, stol=0.3, angle_tol=5, primitive_cell=True, scale=True,
+            ltol=LTOL, stol=STOL, angle_tol=ANGLE_TOL, primitive_cell=True, scale=True,
             attempt_supercell=False, comparator=ElementComparator())
         jobs = list(jobs.query({"wflow.status": "release-ready"}))
         self.total = len(jobs)
