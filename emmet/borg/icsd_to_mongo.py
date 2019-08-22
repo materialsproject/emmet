@@ -101,7 +101,7 @@ class icsdDrone(AbstractDrone):
                 data['elements'] = meta['elements']
                 data['nelements'] = meta['nelements']
                 data['formula'] = meta['formula']
-                data['formula_reduced'] = meta['formula_reduced']
+                data['formula_pretty'] = meta['formula_reduced']
                 data['formula_reduced_abc'] = meta['formula_reduced_abc']
                 data['formula_anonymous'] = meta['formula_anonymous']
                 data['chemsys'] = meta['chemsys']
