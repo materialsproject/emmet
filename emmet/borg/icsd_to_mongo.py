@@ -70,13 +70,12 @@ class IcsdDrone(AbstractDrone):
                     err_rec.write(str(file_ID)+': {}\n'.format(err))
                     err_rec.close()
             else:
-                authors = 'Donny Winston<dwinston@lbl.gov>, Joseph Palakapilly<jpalakapilly@lbl.gov>'
                 references = self.bibtex_from_cif(cif_path)
                 history = [{'name': 'ICSD', 'url': 'https://icsd.fiz-karlsruhe.de/',
-                            'description': {'icsd_id': file_ID}}]
-                snl = StructureNL(struc, authors=authors,
-                                  references=references, history=history)
-                data['snl'] = snl.as_dict()
+                            'description': {'id': file_ID}}]
+
+                data['references'] = references
+                data['history'] = history
 
                 meta = get_meta_from_structure(struc)
                 data['nsites'] = meta['nsites']
