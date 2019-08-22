@@ -5,7 +5,7 @@ import numpy as np
 import networkx as nx
 
 from pymatgen import Molecule
-from pymatgen.analysis.graphs import MoleculeGraph, isomorphic
+from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN
 
 from maggma.builders import Builder
@@ -419,7 +419,7 @@ def group_molecules(molecules):
             if nx.is_connected(mol_graph.graph.to_undirected()):
                 matched = False
                 for subgroup in subgroups:
-                    if isomorphic(mol_graph.graph,subgroup["mol_graph"].graph,True):
+                    if mol_graph.isomorphic_to(subgroup["mol_graph"]):
                         subgroup["mol_list"].append(mol)
                         matched = True
                         break

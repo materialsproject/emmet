@@ -5,7 +5,7 @@ import numpy as np
 import networkx as nx
 
 from pymatgen import Molecule
-from pymatgen.analysis.graphs import MoleculeGraph, isomorphic
+from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN
 
 from maggma.builders import Builder
@@ -244,7 +244,7 @@ def group_molecules_and_sort_by_charge(molecules):
         if nx.is_connected(mol_graph.graph.to_undirected()):
             matched = False
             for group in groups:
-                if isomorphic(mol_graph.graph,group["mol_graph"].graph,True):
+                if mol_graph.isomorphic_to(group["mol_graph"]):
                     group["mol_dict_list"].append(mol_dict)
                     matched = True
                     break
