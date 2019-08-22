@@ -130,7 +130,7 @@ class IcsdDrone(AbstractDrone):
         json_path = os.path.join(path, file_ID + '.json')
         metadata = self._assimilate_from_crawling(json_path)
 
-        metadata = self._does_match_composition(
+        metadata['consistent_composition'] = self._does_match_composition(
             cifmetadata['formula_reduced'], metadata['chemical_formula'])
 
         data = {
