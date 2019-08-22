@@ -5,15 +5,13 @@ import unicodedata
 import warnings
 from multiprocessing import Manager, Pool
 
-from pymongo import MongoClient
-
 from atomate.utils.utils import get_meta_from_structure
 from monty.io import zopen
 from monty.json import MontyDecoder, MontyEncoder
 from pymatgen.apps.borg.hive import AbstractDrone
 from pymatgen.apps.borg.queen import BorgQueen
 from pymatgen.io.cif import CifParser
-from pymatgen.util.provenance import StructureNL
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='icsd_to_mongo.log', level=logging.DEBUG)
