@@ -31,7 +31,7 @@ class icsdDrone(AbstractDrone):
         #filler
         self.field = 1
 
-    def assimilate(self, path, dbhost='localhost', dbport = 27017, dbname='ICSD',collection_name='ICSD_files'):
+    def assimilate(self, path, dbhost='localhost', dbport = 27017, dbname='ICSD', collection_name='ICSD_files', store_mongo=True):
         """
         Assimilate data in a directory path into a pymatgen object. Because of
         the quirky nature of Python"s multiprocessing, the object must support
@@ -41,9 +41,11 @@ class icsdDrone(AbstractDrone):
         Returns:
             An assimilated object
         """
-        client = MongoClient(dbhost,dbport)
-        db = client[dbname]
-        col = db[collection_name]
+        if store_mongo:
+            client = MongoClient(dbhost,dbport)
+            db = client[dbname]
+            col = db[collection_name]
+
         data ={}
 
         files = os.listdir(path)
@@ -117,9 +119,10 @@ class icsdDrone(AbstractDrone):
                 logger.warning('{}: {}'.format(file_ID,warn.message))
 
         if 'snl' in data:
-            col.update_one({'icsd_id': int(file_ID)},{'$set': data},upsert=True)
+            if store_mongo:
+                col.update_one({'icsd_id': int(file_ID)},{'$set': data},upsert=True)
 
-        return
+        return data
 
     def get_valid_paths(self, path):
         """
