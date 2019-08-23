@@ -37,14 +37,14 @@ class IcsdDrone(AbstractDrone):
 
         file_ID = cif_path.split('/')[-1].split(".")[0]
 
-        data = {}
+        cif_meta = {}
         with warnings.catch_warnings(record=True) as w:
             cif_parser = CifParser(cif_path)
             for warn in w:
-                if 'cifwarnings' in data:
-                    data['cifwarnings'].append(str(warn.message))
+                if 'cifwarnings' in cif_meta:
+                    cif_meta['cifwarnings'].append(str(warn.message))
                 else:
-                    data['cifwarnings'] = [str(warn.message)]
+                    cif_meta['cifwarnings'] = [str(warn.message)]
                 logger.warning('{}: {}'.format(file_ID, warn.message))
 
         cif_dict = cif_parser.as_dict()
@@ -52,14 +52,14 @@ class IcsdDrone(AbstractDrone):
         easy_dict = cif_dict[orig_id]
 
         if '_chemical_name_mineral' in easy_dict:
-            data['min_name'] = easy_dict['_chemical_name_mineral']
+            cif_meta['min_name'] = easy_dict['_chemical_name_mineral']
         if '_chemical_name_systematic' in easy_dict:
-            data['chem_name'] = easy_dict['_chemical_name_systematic']
+            cif_meta['chem_name'] = easy_dict['_chemical_name_systematic']
         if '_cell_measurement_pressure' in easy_dict:
-            data['pressure'] = float(
+            cif_meta['pressure'] = float(
                 easy_dict['_cell_measurement_pressure'])/1000
         else:
-            data['pressure'] = .101325
+            cif_meta['pressure'] = .101325
 
         with warnings.catch_warnings(record=True) as w:
             try:
@@ -76,30 +76,30 @@ class IcsdDrone(AbstractDrone):
                 history = [{'name': 'ICSD', 'url': 'https://icsd.fiz-karlsruhe.de/',
                             'description': {'id': file_ID}}]
 
-                data['references'] = references
-                data['history'] = history
+                cif_meta['references'] = references
+                cif_meta['history'] = history
 
-                meta = get_meta_from_structure(struc)
-                data['nsites'] = meta['nsites']
-                data['elements'] = meta['elements']
-                data['nelements'] = meta['nelements']
-                data['formula'] = meta['formula']
-                data['formula_reduced'] = meta['formula_pretty']
-                data['formula_reduced_abc'] = meta['formula_reduced_abc']
-                data['formula_anonymous'] = meta['formula_anonymous']
-                data['chemsys'] = meta['chemsys']
-                data['is_valid'] = meta['is_valid']
-                data['is_ordered'] = meta['is_ordered']
+                atomate_meta = get_meta_from_structure(struc)
+                # data['nsites'] = meta['nsites']
+                # data['elements'] = meta['elements']
+                # data['nelements'] = meta['nelements']
+                # data['formula'] = meta['formula']
+                # data['formula_reduced'] = meta['formula_pretty']
+                # data['formula_reduced_abc'] = meta['formula_reduced_abc']
+                # data['formula_anonymous'] = meta['formula_anonymous']
+                # data['chemsys'] = meta['chemsys']
+                # data['is_valid'] = meta['is_valid']
+                # data['is_ordered'] = meta['is_ordered']
 
             # unfortunately any warnings are logged after any errors. Not too big of an issue
             for warn in w:
-                if 'cifwarnings' in data:
-                    data['cifwarnings'].append(str(warn.message))
+                if 'cifwarnings' in cif_meta:
+                    cif_meta['cifwarnings'].append(str(warn.message))
                 else:
-                    data['cifwarnings'] = [str(warn.message)]
+                    cif_meta['cifwarnings'] = [str(warn.message)]
                 logger.warning('{}: {}'.format(file_ID, warn.message))
 
-        return(struc, data)
+        return(struc, cif_meta, atomate_meta)
 
     def assimilate(self, path):
         """
@@ -118,7 +118,7 @@ class IcsdDrone(AbstractDrone):
 
         cif_path = os.path.join(path, file_ID + '.cif')
 
-        struc, cifmetadata = self._assimilate_from_cif(cif_path)
+        struc, cifmetadata, atomate_meta = self._assimilate_from_cif(cif_path)
 
         json_path = os.path.join(path, file_ID + '.json')
 
@@ -147,6 +147,9 @@ class IcsdDrone(AbstractDrone):
             'metadata': metadata,
             "cifmetadata": cifmetadata
         }
+
+        for key, val in atomate_meta.items():
+            data[key] = val
 
         return(data)
 

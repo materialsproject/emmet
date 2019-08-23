@@ -10,22 +10,31 @@ class TestIcsdToMongo(unittest.TestCase):
             'test_files/icsd/999999999')
         expected = loadfn('test_files/icsd/999999999_expected.json')
 
-        keys = [
-            "chem_name",
+        dumpfn(obtained, 'tmp.json')
+
+        rootkeys = [
             "chemsys",
             "elements",
             "formula",
             "formula_anonymous",
-            "formula_reduced",
+            "formula_pretty",
             "formula_reduced_abc",
             "is_ordered",
             "is_valid",
             "nelements",
-            "nsites",
-            "pressure"]
+            "nsites"
+        ]
 
-        for key in keys:
-            self.assertAlmostEqual(obtained['cifmetadata'][key], expected[key])
+        for key in rootkeys:
+            self.assertAlmostEqual(obtained[key], expected[key])
+
+        cifkeys = [
+            "chem_name",
+            "pressure"
+        ]
+
+        for key in cifkeys:
+            self.assertAlmostEqual(obtained['cifmetadata'][key], expected['cifmetadata'][key])
 
     def test_composition(self):
         drone = IcsdDrone()

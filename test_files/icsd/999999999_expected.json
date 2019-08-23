@@ -1,6 +1,19 @@
 {
-  "chem_name": "Nxotetratellurium dichromate(III)",
   "chemsys": "Fe-N-Si",
+  "cifmetadata": {
+    "chem_name": "Nxotetratellurium dichromate(III)",
+    "history": [
+      {
+        "description": {
+          "id": "999999999"
+        },
+        "name": "ICSD",
+        "url": "https://icsd.fiz-karlsruhe.de/"
+      }
+    ],
+    "pressure": 0.101325,
+    "references": "@article{Meunier1726,\ntitle = {Fe2 Si4 N11: une structure a anions complexes (Fe2 N10)(14-)},\nauthor = {Meunier, G. and Frit, B. and Galy, J.},\njournal = {Acta Feystallographica, Section B: Structural Feystallography and Feystal Chemistry},\nyear = {1726},\nvolume = {32},\npages = {125-180},\nASTM_id = {ACBCAR},\n}"
+  },
   "elements": [
     "Fe",
     "N",
@@ -8,46 +21,84 @@
   ],
   "formula": "Fe4 Si8 N22",
   "formula_anonymous": "A2B4C11",
-  "formula_reduced": "Fe2Si4N11",
+  "formula_pretty": "Fe2Si4N11",
   "formula_reduced_abc": "Fe2 N11 Si4",
-  "icsd_id": 999999999,
   "is_ordered": true,
   "is_valid": true,
+  "metadata": {
+    "AB_formula": "AB2",
+    "ICSD_version": "Version 4.2.9 (build 29199513-1424) - Data Release 2919.1",
+    "NMR_data_available": false,
+    "PDF_number": "91-971-9991",
+    "R_value": 9.934,
+    "absolute_config_determined": false,
+    "abstract": "",
+    "anharmonic_temperature_factors_given": false,
+    "authors": "Nobody, G.; Somebody, B.; Anybody, J.",
+    "calculated_PDF_number": false,
+    "cell_constants_without_sd": false,
+    "cell_parameters": {
+      "a": 13.675,
+      "alpha": 90.0,
+      "b": 13.675,
+      "beta": 90.0,
+      "c": 14.767,
+      "gamma": 120.0
+    },
+    "chemical_formula": "Cr2 O11 Te4",
+    "collection_code": 999999999,
+    "comments": [],
+    "consistent_composition": false,
+    "correction_of_previous": false,
+    "crawler_version": "9.9.3",
+    "crystal_class": "2/m",
+    "crystal_system": "monoclinic",
+    "data_quality": "High quality",
+    "defect": false,
+    "deuterium_indices": [],
+    "disordered": false,
+    "doi": "10.1107/S0365110X63000074",
+    "electron_diffraction": false,
+    "experimental_PDF_number": false,
+    "formula_units_per_cell": 2,
+    "is_prototype_structure": false,
+    "is_structure_prototype": false,
+    "magnetic_structure_available": false,
+    "mineral": false,
+    "modulated_structure": false,
+    "neutron_diffraction": false,
+    "only_cell_and_structure_type": false,
+    "order_disorder": false,
+    "pearson": "mP34",
+    "polytype": false,
+    "powder": false,
+    "pressure": "atmospheric",
+    "publication_title": "Crystal structures with a chabazite framework.",
+    "references": [
+      "Acta Crystallographica, Section B: Structural Crystallography and Crystal Chemistry (2090) 129, (*) p175002-p175004"
+    ],
+    "rietveld_employed": false,
+    "single_crystal": true,
+    "space_group": "P 1 21/c 1(14)",
+    "structural_formula": "(Te4 O) (Cr2 O19)",
+    "structural_prototype": "SiO2",
+    "synchrotron": false,
+    "temperature": "room temperature",
+    "temperature_factors_available": true,
+    "theoretical_calculation": false,
+    "tritium_indices": [],
+    "twinned_crystal_data": false,
+    "volume": 2391.54,
+    "warnings": [],
+    "wyckoff_sequence": "e8 d",
+    "x_ray": true
+  },
   "nelements": 3,
   "nsites": 34,
-  "pressure": 0.101325,
-  "snl": {
-    "@class": "StructureNL",
-    "@module": "pymatgen.util.provenance",
-    "about": {
-      "authors": [
-        {
-          "email": "dwinston@lbl.gov",
-          "name": "Donny Winston"
-        },
-        {
-          "email": "jpalakapilly@lbl.gov",
-          "name": "Joseph Palakapilly"
-        }
-      ],
-      "created_at": {
-        "@class": "datetime",
-        "@module": "datetime",
-        "string": "2019-08-22 17:50:35.630554"
-      },
-      "history": [
-        {
-          "description": {
-            "icsd_id": "999999999"
-          },
-          "name": "ICSD",
-          "url": "https://icsd.fiz-karlsruhe.de/"
-        }
-      ],
-      "projects": [],
-      "references": "@article{Meunier1726,\ntitle = {Fe2 Si4 N11: une structure a anions complexes (Fe2 N10)(14-)},\nauthor = {Meunier, G. and Frit, B. and Galy, J.},\njournal = {Acta Feystallographica, Section B: Structural Feystallography and Feystal Chemistry},\nyear = {1726},\nvolume = {32},\npages = {125-180},\nASTM_id = {ACBCAR},\n}",
-      "remarks": []
-    },
+  "structure": {
+    "@class": "Structure",
+    "@module": "pymatgen.core.structure",
+    "@version": "2019.8.23",
     "charge": null,
     "lattice": {
       "a": 2.016,
