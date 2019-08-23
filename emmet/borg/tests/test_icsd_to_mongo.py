@@ -29,3 +29,10 @@ class TestIcsdToMongo(unittest.TestCase):
 
 
         dumpfn(obtained, "tmp.json")
+
+    def test_composition(self):
+        drone = IcsdDrone()
+        obtained = drone.assimilate(
+            'test_files/icsd/5656565656')
+
+        dumpfn(obtained, "D.json")
