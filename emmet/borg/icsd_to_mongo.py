@@ -121,23 +121,26 @@ class IcsdDrone(AbstractDrone):
         struc, cifmetadata = self._assimilate_from_cif(cif_path)
 
         json_path = os.path.join(path, file_ID + '.json')
-        metadata = self._assimilate_from_crawling(json_path)
 
-        icsd_c = Composition(metadata['chemical_formula']).remove_charges().reduced_composition
-        cif_c = struc.composition.remove_charges().reduced_composition
+        metadata = {}
+        if os.path.exists(json_path):
+            metadata = self._assimilate_from_crawling(json_path)
 
-        metadata['consistent_composition'] = cif_c.almost_equals(icsd_c)
+            icsd_c = Composition(metadata['chemical_formula']).remove_charges().reduced_composition
+            cif_c = struc.composition.remove_charges().reduced_composition
 
-        deuterium_indices = [ind for ind, s in enumerate(
-            struc.sites) if re.findall(r'[A-z]+', s.species_string)[0] == "D"]
-        tritium_indices = [ind for ind, s in enumerate(
-            struc.sites) if re.findall(r'[A-z]+', s.species_string)[0] == "T"]
+            metadata['consistent_composition'] = cif_c.almost_equals(icsd_c)
 
-        for i_H in deuterium_indices + tritium_indices:
-            struc.replace(i_H, "H")
+            deuterium_indices = [ind for ind, s in enumerate(
+                struc.sites) if re.findall(r'[A-z]+', s.species_string)[0] == "D"]
+            tritium_indices = [ind for ind, s in enumerate(
+                struc.sites) if re.findall(r'[A-z]+', s.species_string)[0] == "T"]
 
-        metadata['deuterium_indices'] = deuterium_indices
-        metadata['tritium_indices'] = tritium_indices
+            for i_H in deuterium_indices + tritium_indices:
+                struc.replace(i_H, "H")
+
+            metadata['deuterium_indices'] = deuterium_indices
+            metadata['tritium_indices'] = tritium_indices
 
         data = {
             'structure': struc,
