@@ -131,6 +131,8 @@ class IcsdDrone(AbstractDrone):
 
             metadata['consistent_composition'] = cif_c.almost_equals(icsd_c)
 
+            metadata['implicit_hydrogen'] = self._has_implicit_H(icsd_c, cif_c)
+
             deuterium_indices = [ind for ind, s in enumerate(
                 struc.sites) if re.findall(r'[A-z]+', s.species_string)[0] == "D"]
             tritium_indices = [ind for ind, s in enumerate(
@@ -152,6 +154,22 @@ class IcsdDrone(AbstractDrone):
             data[key] = val
 
         return(data)
+
+    def _has_implicit_H(self, icsd_comp, cif_comp):
+        icsd = icsd_comp.as_dict()
+        cif = cif_comp.as_dict()
+
+        if 'H' in icsd:
+            if 'H' in cif:
+                # Tolerance of 0.1 is derived from
+                # almost_equals in pymatgen's Composition
+                if abs(icsd['H'] - cif['H']) > 0.1:
+                    return(True)
+
+            else:
+                return(True)
+
+        return(False)
 
     def _assimilate_from_crawling(self, json_path):
         with open(json_path) as f:

@@ -1,9 +1,22 @@
 import unittest
 from monty.serialization import loadfn
 from emmet.borg.icsd_to_mongo import IcsdDrone
-
+from pymatgen import Composition
 
 class TestIcsdToMongo(unittest.TestCase):
+
+    def test_has_implicit_H(self):
+        methane = Composition({'C': 1, 'H': 4})
+        methylium = Composition({'C': 1, 'H': 3})
+        carbon = Composition({'C': 1})
+
+        drone = IcsdDrone()
+
+        self.assertTrue(drone._has_implicit_H(icsd_comp=methane, cif_comp=carbon))
+        self.assertFalse(drone._has_implicit_H(icsd_comp=methane, cif_comp=methane))
+        self.assertFalse(drone._has_implicit_H(icsd_comp=carbon, cif_comp=carbon))
+        self.assertTrue(drone._has_implicit_H(icsd_comp=methane, cif_comp=methylium))
+
     def test_icsd_drone(self):
         drone = IcsdDrone()
         obtained = drone.assimilate(
