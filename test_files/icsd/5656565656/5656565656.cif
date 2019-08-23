@@ -1,5 +1,7 @@
 
-data
+#
+data_5656565656-ICSD
+_database_code_ICSD 5656565656
 _audit_creation_date 1980-01-01
 _chemical_name_systematic 'Aluminum oxide deuteriohydroxide - alpha'
 _chemical_formula_structural 'Al O (O D)'
