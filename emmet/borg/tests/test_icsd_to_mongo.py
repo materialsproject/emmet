@@ -10,8 +10,6 @@ class TestIcsdToMongo(unittest.TestCase):
             'test_files/icsd/999999999')
         expected = loadfn('test_files/icsd/999999999_expected.json')
 
-        dumpfn(obtained, 'tmp.json')
-
         rootkeys = [
             "chemsys",
             "elements",
