@@ -4,8 +4,8 @@
   "authors": "Nobody, G.; Somebody, B.; Anybody, J.",
   "publication_title": "Crystal structures with a chabazite framework.",
   "reference": "Acta Crystallographica, Section B: Structural Crystallography and Crystal Chemistry (2090) 129, (*) p175002-p175004",
-  "chemical_formula": "Cr2 O11 Te4",
-  "structural_formula": "(Te4 O) (Cr2 O19)",
+  "chemical_formula": "Fe2 N11 Si4",
+  "structural_formula": "(Si4 N) (Fe2 N10)",
   "AB_formula": "AB2",
   "cell_parameters": {
     "a": 13.675,
