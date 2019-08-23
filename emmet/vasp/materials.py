@@ -6,6 +6,7 @@ import numpy as np
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 
 from maggma.builders import Builder
 from emmet.vasp.task_tagger import task_type
@@ -54,6 +55,7 @@ class MaterialsBuilder(Builder):
         Args:
             tasks (Store): Store of task documents
             materials (Store): Store of materials documents to generate
+            task_types (Store): Store of processed task documents giving task type
             materials_settings (Path): Path to settings files
             query (dict): dictionary to limit tasks to be analyzed
             ltol (float): StructureMatcher tuning parameter for matching tasks to materials
@@ -167,6 +169,7 @@ class MaterialsBuilder(Builder):
             mat = self.make_mat(group)
             if mat and self.valid(mat):
                 self.post_process(mat)
+                self.add_magnetism_information(mat, group)
                 materials.append(mat)
 
         self.logger.debug(
@@ -336,7 +339,7 @@ class MaterialsBuilder(Builder):
         """
         Determines if the resulting material document is valid
         """
-        if doc["task_id"] == None:
+        if doc["task_id"] is None:
             return False
         elif "structure" not in doc:
             return False
@@ -363,6 +366,60 @@ class MaterialsBuilder(Builder):
         else:
             mat.update({"deprecated": False})
 
+    def get_magnetism_information(self, mat, task_group):
+        """
+        Adds magnetism information from the task doc corresponding
+        to the blessed structure, ensuring consistency between
+        structure magmoms and other material doc information (e.g.
+        total magnetization).
+
+        :param mat: material doc
+        :param task_group: list of task docs associated with mat
+        :return:
+        """
+
+        origin_task_id = None
+        for origin in mat["origins"]:
+            if origin["materials_key"] == "structure":
+                origin_task_id = origin["task_id"]
+                break
+
+        if origin_task_id is None:
+            raise ValueError("Structure origin is not provided in materials doc?")
+
+        taskdoc = None
+        for task in task_group:
+            if task["task_id"] == origin_task_id:
+                taskdoc = task
+
+        if taskdoc is None:
+            raise ValueError("Task doc for structure is not present in task group?")
+
+        struct = Structure.from_dict(get(taskdoc, "output.structure"))
+        struct_has_magmoms = "magmom" in struct.site_properties
+        total_magnetization = abs(
+            get(taskdoc, "calcs_reversed.0.output.outcar.total_magnetization", 0)
+        )
+        msa = CollinearMagneticStructureAnalyzer(struct)
+        magmoms = msa.magmoms
+
+        magnetism = {
+            "ordering": msa.ordering.value if struct_has_magmoms else "Unknown",
+            "is_magnetic": msa.is_magnetic,
+            "exchange_symmetry": msa.get_exchange_group_info()[1],
+            "num_magnetic_sites": msa.number_of_magnetic_sites,
+            "num_unique_magnetic_sites": msa.number_of_unique_magnetic_sites(),
+            "types_of_magnetic_species": [str(t) for t in msa.types_of_magnetic_specie],
+            "magmoms": magmoms,
+            "total_magnetization": total_magnetization,
+            "total_magnetization_normalized_vol": total_magnetization / struct.volume,
+            "total_magnetization_normalized_formula_units": total_magnetization
+            / (struct.composition.get_reduced_composition_and_factor()[1]),
+        }
+
+        mat["magnetism"] = magnetism
+
+
     def ensure_indexes(self):
         """
         Ensures indicies on the tasks and materials collections
@@ -387,6 +444,7 @@ class MaterialsBuilder(Builder):
 def get_sg(struc):
     # helper function to get spacegroup with a loose tolerance
     return struc.get_space_group_info(symprec=SYMPREC)[1]
+
 
 def find_mat_id(props):
 
@@ -437,6 +495,7 @@ def find_best_prop(props):
         prop = sorted_props[0]
 
     return prop
+
 
 def structure_metadata(structure):
     """
