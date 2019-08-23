@@ -116,7 +116,6 @@ class IcsdDrone(AbstractDrone):
         file_ID = path.split('/')[-1]
         print(file_ID)
 
-        #data['cifwarnings'] = []
         cif_path = os.path.join(path, file_ID + '.cif')
 
         struc, cifmetadata = self._assimilate_from_cif(cif_path)
@@ -124,8 +123,9 @@ class IcsdDrone(AbstractDrone):
         json_path = os.path.join(path, file_ID + '.json')
         metadata = self._assimilate_from_crawling(json_path)
 
-        icsd_c = Composition(metadata['chemical_formula']).remove_charges()
-        cif_c = struc.composition.remove_charges()
+        icsd_c = Composition(metadata['chemical_formula']).remove_charges().reduced_composition
+        cif_c = struc.composition.remove_charges().reduced_composition
+
         metadata['consistent_composition'] = cif_c.almost_equals(icsd_c)
 
         deuterium_indices = [ind for ind, s in enumerate(

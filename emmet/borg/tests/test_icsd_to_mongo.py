@@ -1,5 +1,5 @@
 import unittest
-from monty.serialization import loadfn, dumpfn
+from monty.serialization import loadfn
 from emmet.borg.icsd_to_mongo import IcsdDrone
 
 
@@ -27,12 +27,11 @@ class TestIcsdToMongo(unittest.TestCase):
         for key in keys:
             self.assertAlmostEqual(obtained['cifmetadata'][key], expected[key])
 
-
-        dumpfn(obtained, "tmp.json")
-
     def test_composition(self):
         drone = IcsdDrone()
         obtained = drone.assimilate(
             'test_files/icsd/5656565656')
 
-        dumpfn(obtained, "D.json")
+        self.assertTrue(obtained['metadata']['consistent_composition'])
+        self.assertTrue(
+            len(obtained['metadata']['deuterium_indices']) > 0)
