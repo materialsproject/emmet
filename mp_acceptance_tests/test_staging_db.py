@@ -171,3 +171,7 @@ class TestMaterialsDb(unittest.TestCase):
         cls.db_stag.client.close()
         cls.db_prod.client.close()
         cls.db_phonons.client.close()
+
+
+if __name__ == "__main__":
+    unittest.main()
