@@ -418,16 +418,17 @@ def add_cifs(doc):
         primitive = sym_finder.get_primitive_standard_structure()
         conventional = sym_finder.get_conventional_standard_structure()
         refined = sym_finder.get_refined_structure()
-        doc["cifs"]["primitive"] = str(CifWriter(primitive))
-        doc["cifs"]["refined"] = str(CifWriter(refined, symprec=symprec))
+        doc["cifs"]["primitive"] = str(CifWriter(primitive,symprec=None))
+        doc["cifs"]["refined"] = str(CifWriter(refined, symprec=None))
         doc["cifs"]["conventional_standard"] = str(
-            CifWriter(conventional, symprec=symprec)
+            CifWriter(conventional, symprec=None)
         )
-        doc["cifs"]["computed"] = str(CifWriter(struc, symprec=symprec))
+        doc["cifs"]["computed"] = str(CifWriter(struc, symprec=None))
     except:
         doc["cifs"]["primitive"] = None
         doc["cifs"]["refined"] = None
         doc["cifs"]["conventional_standard"] = None
+        doc["cifs"]["computed"] = None
 
 
 def add_xrd(mat, new_style_mat):
