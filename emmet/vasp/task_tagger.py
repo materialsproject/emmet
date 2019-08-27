@@ -4,7 +4,6 @@ from maggma.builders import MapBuilder
 from pymatgen import Structure
 from atomate.utils.utils import load_class
 
-
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
 
@@ -16,7 +15,13 @@ default_validation_settings = os.path.join(
 
 class TaskTagger(MapBuilder):
     def __init__(
-        self, tasks, task_types, input_sets=None, kpts_tolerance=0.9, **kwargs
+        self,
+        tasks,
+        task_types,
+        input_sets=None,
+        kpts_tolerance=0.9,
+        LDAU_fields=["LDAUU", "LDAUJ", "LDAUL"],
+        **kwargs,
     ):
         """
         Creates task_types from tasks and type definitions
@@ -26,6 +31,7 @@ class TaskTagger(MapBuilder):
             task_types (Store): Store of task_types for tasks
             input_sets (Dict): dictionary of task_type and pymatgen input set to validate against
             kpts_tolerance (float): the minimum kpt density as dictated by the InputSet to require
+            LDAU_fields (list(String)): LDAU fields to check for consistency
         """
         self.tasks = tasks
         self.task_types = task_types
@@ -34,6 +40,7 @@ class TaskTagger(MapBuilder):
             "GGA+U Structure Optimization": "MPRelaxSet",
         }
         self.kpts_tolerance = kpts_tolerance
+        self.LDAU_fields = LDAU_fields
 
         self._input_sets = {
             name: load_class("pymatgen.io.vasp.sets", inp_set)
@@ -63,6 +70,7 @@ class TaskTagger(MapBuilder):
             item["orig_inputs"],
             self._input_sets,
             self.kpts_tolerance,
+            self.LDAU_fields,
         )
 
         d = {"task_type": tt, **iv}
@@ -82,6 +90,10 @@ def task_type(inputs, include_calc_type=True):
     calc_type = ""
 
     incar = inputs.get("incar", {})
+    try:
+        functional = inputs.get("potcar", {}).get("functional", "PBE")
+    except:
+        functional = "PBE"
 
     METAGGA_TYPES = {"TPSS", "RTPSS", "M06L", "MBJL", "SCAN", "MS0", "MS1", "MS2"}
 
@@ -93,13 +105,23 @@ def task_type(inputs, include_calc_type=True):
             calc_type += " "
         elif incar.get("LDAU", False):
             calc_type += "GGA+U "
-        else:
+        elif functional == "PBE":
             calc_type += "GGA "
+        elif functional == "PW91":
+            calc_type += "PW91 "
+        elif functional == "Perdew-Zunger81":
+            calc_type += "LDA "
 
     if incar.get("ICHARG", 0) > 10:
-        num_kpt_labels = len(
-            list(filter(None.__ne__, inputs.get("kpoints", {}).get("labels", []) or []))
-        )
+        try:
+            kpts = inputs.get("kpoints") or {}
+            kpt_labels = kpts.get("labels") or []
+            num_kpt_labels = len(list(filter(None.__ne__, kpt_labels)))
+        except Exception as e:
+            raise Exception(
+                "Couldn't identify total number of kpt labels: {}".format(e)
+            )
+
         if num_kpt_labels > 0:
             return calc_type + "NSCF Line"
         else:
@@ -148,7 +170,13 @@ def task_type(inputs, include_calc_type=True):
     return ""
 
 
-def is_valid(structure, inputs, input_sets, kpts_tolerance=0.9):
+def is_valid(
+    structure,
+    inputs,
+    input_sets,
+    kpts_tolerance=0.9,
+    LDAU_fields=["LDAUU", "LDAUJ", "LDAUL"],
+):
     """
     Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
 
@@ -157,6 +185,7 @@ def is_valid(structure, inputs, input_sets, kpts_tolerance=0.9):
         inputs (dict): a dict representation of the inputs in traditional pymatgen inputset form
         input_sets (dict): a dictionary of task_types -> pymatgen input set for validation
         kpts_tolerance (float): the tolerance to allow kpts to lag behind the input set settings
+        LDAU_fields (list(String)): LDAU fields to check for consistency
     """
 
     if isinstance(structure, dict):
@@ -190,20 +219,18 @@ def is_valid(structure, inputs, input_sets, kpts_tolerance=0.9):
 
         # Checking U-values
         if valid_input_set.incar.get("LDAU"):
-            ldau_fields = ["LDAUU", "LDAUJ", "LDAUL"]
-
             # Assemble actual input LDAU params into dictionary to account for possibility
             # of differing order of elements
             structure_set_symbol_set = structure.symbol_set
             inputs_ldau_fields = [structure_set_symbol_set] + [
-                inputs.get("incar", {}).get(k) for k in ldau_fields
+                inputs.get("incar", {}).get(k, []) for k in LDAU_fields
             ]
             input_ldau_params = {d[0]: d[1:] for d in zip(*inputs_ldau_fields)}
 
             # Assemble required input_set LDAU params into dictionary
             input_set_symbol_set = valid_input_set.poscar.structure.symbol_set
             input_set_ldau_fields = [input_set_symbol_set] + [
-                valid_input_set.incar.get(k) for k in ldau_fields
+                valid_input_set.incar.get(k) for k in LDAU_fields
             ]
             input_set_ldau_params = {d[0]: d[1:] for d in zip(*input_set_ldau_fields)}
 

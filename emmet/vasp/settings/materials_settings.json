@@ -292,9 +292,7 @@
   {
     "materials_key": "magnetism.total_magnetization",
     "quality_score": {
-      "GGA Static": 2,
       "GGA Structure Optimization": 1,
-      "GGA+U Static": 6,
       "GGA+U Structure Optimization": 5
     },
     "tasks_key": "calcs_reversed.0.output.outcar.total_magnetization"
@@ -302,9 +300,7 @@
   {
     "materials_key": "magnetism.magmoms",
     "quality_score": {
-      "GGA Static": 2,
       "GGA Structure Optimization": 1,
-      "GGA+U Static": 6,
       "GGA+U Structure Optimization": 5
     },
     "tasks_key": "calcs_reversed.0.output.outcar.magmom",
