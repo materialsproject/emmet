@@ -167,36 +167,30 @@ class ElectrodesBuilder(Builder):
             self.logger.debug(f"All sandboxes {', '.join(list(all_sbx))}")
 
             for isbx in all_sbx:
-                group_sbx = list(filter(lambda ent : (isbx in ent.data['_sbxn']) or (ent.data['_sbxn']==['core']), group))
+                group_sbx = list(filter(lambda ent : (isbx in ent.data['sbxn']) or (ent.data['sbxn']==['core']), group))
                 # Need more than one level of lithiation to define a electrode material
                 if len(group_sbx)==1:
                     continue
                 self.logger.debug(f"Grouped entries in sandbox {isbx} -- {', '.join([en.name for en in group_sbx])}")
                 try:
                     result = InsertionElectrode(group_sbx, self.working_ion_entry)
-                    spacegroup = SpacegroupAnalyzer(result.get_stable_entries(charge_to_discharge=True)[0].structure)
-                    d = result.as_dict_summary()
-                    # d['stable_material_ids'] = [entry.entry_id
-                    #                        for entry in result.get_stable_entries()]
-                    # d['unstable_material_ids'] = [entry.entry_id
-                    #                             for entry in result.get_unstable_entries()]
-                    # d['stability_data'] = {entry.entry_id : entry.data['decomposition_energy']
-                    #                               for entry in result.get_all_entries()}
-                    # d['muO2_data'] = {entry.entry_id : entry.data['muO2']
-                    #                        for entry in result.get_all_entries()}
-                    # sort the ids based on value
-                    ids = [entry.entry_id for entry in result.get_all_entries()]
-                    lowest_id = sorted(ids, key=lambda x : x.split('-')[-1])[0]
-                    d['spacegroup'] = {k: spacegroup._space_group_data[k] for k in sg_fields}
-
-                    if isbx == 'core':
-                        d['battid'] = lowest_id+'_'+self.working_ion
-                    else:
-                        d['battid'] = lowest_id+'_'+self.working_ion+'_'+isbx
-                    # Only allow one sandbox value for each electrode
-                    d['_sbxn'] = [isbx]
+                    assert(len(results._stable_entries > 1))
                 except:
-                    d = None
+                    self.logger.warn(f"Not able to generate a  entries in sandbox {isbx} using the following entires-- {', '.join([en.entry_id for en in group_sbx])}")
+                    continue
+
+                spacegroup = SpacegroupAnalyzer(result.get_stable_entries(charge_to_discharge=True)[0].structure)
+                d = result.as_dict_summary()
+                ids = [entry.entry_id for entry in result.get_all_entries()]
+                lowest_id = sorted(ids, key=lambda x : x.split('-')[-1])[0]
+                d['spacegroup'] = {k: spacegroup._space_group_data[k] for k in sg_fields}
+
+                if isbx == 'core':
+                    d['battid'] = lowest_id+'_'+self.working_ion
+                else:
+                    d['battid'] = lowest_id+'_'+self.working_ion+'_'+isbx
+                # Only allow one sandbox value for each electrode
+                d['sbxn'] = [isbx]
 
                 docs.append(d)
 
@@ -289,7 +283,13 @@ class ElectrodesBuilder(Builder):
                                         parameters=d['calc_settings'],
                                         entry_id=d['task_id'],
                                         )
-            en.data['_sbxn'] = d['_sbxn']
+            en.data['sbxn']=['core']
+            if 'sbxn' in d:
+                en.data['sbxn'].extend(d['sbxn'])
+            elif '_sbxn' in d:
+                en.data['sbxn'].extend(d['_sbxn'])
+            else:
+                en.data['sbxn']=['core']
 
             if store_struct:
                 struct_delith = get_prim_host(struct)
