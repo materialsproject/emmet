@@ -337,7 +337,6 @@ def old_style_mat(new_style_mat):
         string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))
     }
     mat["initial_structure"] = new_style_mat.get("initial_structure", None)
-    mat["nsites"] = struc.get_primitive_structure().num_sites
 
     set_(mat, "pseudo_potential.functional", "PBE")
 
@@ -405,7 +404,7 @@ def add_elastic(mat, new_style_mat):
         else:
             mat["elasticity"]["nsites"] = len(get(mat, "structure.sites"))
 
-        if get("elasticity.warnings", None) is None:
+        if get(new_style_mat,"elasticity.warnings") is None:
             mat["elasticity"]["warnings"] = []
 
 
@@ -535,6 +534,9 @@ def add_thermo(mat, new_style_mat):
     """
     Add's the thermo values in with sandboxing
     """
+    if "thermo_docs" not in new_style_mat:
+        mat["deprecated"] = True
+        
     if not mat["deprecated"]:
         thermo = new_style_mat["thermo_docs"]
 

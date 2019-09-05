@@ -6,11 +6,12 @@ import numpy as np
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.analysis.piezo import PiezoTensor
 
 from maggma.builders import Builder
 from emmet.vasp.task_tagger import task_type
 from emmet.common.utils import load_settings
-from emmet.magic_numbers import LTOL, STOL, ANGLE_TOL
+from emmet.magic_numbers import LTOL, STOL, ANGLE_TOL, SYMPREC
 from pydash.objects import get, set_, has
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
@@ -351,7 +352,7 @@ class MaterialsBuilder(Builder):
         # Add structure metadata back into document and convert back to conventional standard
         if "structure" in mat:
             structure = Structure.from_dict(mat["structure"])
-            sga = SpacegroupAnalyzer(structure, symprec=0.1)
+            sga = SpacegroupAnalyzer(structure, symprec=SYMPREC)
             mat["structure"] = structure.as_dict()
             mat.update(structure_metadata(structure))
 
@@ -362,6 +363,16 @@ class MaterialsBuilder(Builder):
             mat.update({"deprecated": True})
         else:
             mat.update({"deprecated": False})
+
+        # Reorder voigt output from VASP to standard voigt notation
+        if has(mat, "piezo.ionic"):
+            mat["piezo"]["ionic"] = PiezoTensor.from_vasp_voigt(
+                mat["piezo"]["ionic"]
+            ).voigt.tolist()
+        if has(mat, "piezo.static"):
+            mat["piezo"]["static"] = PiezoTensor.from_vasp_voigt(
+                mat["piezo"]["static"]
+            ).voigt.tolist()
 
     def ensure_indexes(self):
         """
@@ -386,7 +397,8 @@ class MaterialsBuilder(Builder):
 
 def get_sg(struc):
     # helper function to get spacegroup with a loose tolerance
-    return struc.get_space_group_info(symprec=0.1)[1]
+    return struc.get_space_group_info(symprec=SYMPREC)[1]
+
 
 def find_mat_id(props):
 
@@ -438,6 +450,7 @@ def find_best_prop(props):
 
     return prop
 
+
 def structure_metadata(structure):
     """
     Generates metadata based on a structure
@@ -462,10 +475,10 @@ def structure_metadata(structure):
 
 def group_structures(
     structures,
-    ltol=0.2,
-    stol=0.3,
-    angle_tol=5,
-    symprec=0.1,
+    ltol=LTOL,
+    stol=STOL,
+    angle_tol=ANGLE_TOL,
+    symprec=SYMPREC,
     separate_mag_orderings=False,
 ):
     """
@@ -494,7 +507,7 @@ def group_structures(
     def get_sg(struc):
         # helper function to get spacegroup with a loose tolerance
         try:
-            sg = struc.get_space_group_info(symprec=symprec)[1]
+            sg = struc.get_space_group_info(symprec=SYMPREC)[1]
         except:
             sg = -1
 

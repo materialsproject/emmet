@@ -11,5 +11,8 @@ LTOL = 0.2
 # of the average free length per atom = ( V / Nsites ) ** (1/3)
 STOL = 0.3
 
+# Symmetry precision for spglib symmetry finding
+SYMPREC = 0.1
+
 # Angle tolerance for structure matching in degrees.
 ANGLE_TOL = 5
