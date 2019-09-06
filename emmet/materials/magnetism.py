@@ -9,14 +9,14 @@ from maggma.builders import MapBuilder
 
 import numpy as np
 
+from pydash import get
+
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>, Matthew Horton <mkhorton@lbl.gov>"
 
 MODULE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-MAGNETISM_SCHEMA = os.path.join(MODULE_DIR, "schema", "magnetism.json")
-
 
 class MagneticBuilder(MapBuilder):
-    def __init__(self, materials, magnetism, **kwargs):
+    def __init__(self, tasks, magnetism, **kwargs):
         """
         Creates a magnetism collection for materials
 
@@ -26,13 +26,14 @@ class MagneticBuilder(MapBuilder):
 
         """
 
-        self.materials = materials
+        self.tasks = tasks
         self.magnetism = magnetism
 
-        self.magnetism.validator = JSONSchemaValidator(loadfn(MAGNETISM_SCHEMA))
-
         super().__init__(
-            source=materials, target=magnetism, projection=["structure", "magnetism"], ufn=self.calc, **kwargs)
+            source=tasks, target=magnetism, projection=[
+                "output.structure", "calcs_reversed.output.outcar.total_magnetization",
+                "calcs_reversed.input.incar.ISPIN"
+            ], ufn=self.calc, **kwargs)
 
     def calc(self, item):
         """
@@ -45,9 +46,9 @@ class MagneticBuilder(MapBuilder):
             dict: a magnetism dictionary
         """
 
-        struct = Structure.from_dict(item["structure"])
+        struct = Structure.from_dict(get(item, "output.structure"))
         struct_has_magmoms = 'magmom' in struct.site_properties
-        total_magnetization = abs(item["magnetism"].get("total_magnetization", 0))  # not necessarily == sum(magmoms)
+        total_magnetization = abs(get(item, "calcs_reversed.0.output.outcar.total_magnetization", 0))
         msa = CollinearMagneticStructureAnalyzer(struct)
         magmoms = msa.magmoms
 

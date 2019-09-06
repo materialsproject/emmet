@@ -404,7 +404,7 @@ def add_elastic(mat, new_style_mat):
         else:
             mat["elasticity"]["nsites"] = len(get(mat, "structure.sites"))
 
-        if get("elasticity.warnings", new_style_mat) is None:
+        if get(new_style_mat,"elasticity.warnings") is None:
             mat["elasticity"]["warnings"] = []
 
 
@@ -534,7 +534,7 @@ def add_thermo(mat, new_style_mat):
     """
     Add's the thermo values in with sandboxing
     """
-    if "thermo_docs" not in mat:
+    if "thermo_docs" not in new_style_mat:
         mat["deprecated"] = True
         
     if not mat["deprecated"]:

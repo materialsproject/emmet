@@ -38,7 +38,7 @@ def get_lpad():
     return LaunchPad.auto_load()
 
 exclude = {'about.remarks': {'$nin': ['DEPRECATED', 'deprecated']}}
-skip_labels = ['He', 'He0+', 'Ar', 'Ar0+', 'Ne', 'Ne0+', 'D', 'D+']
+skip_labels = ['He', 'He0+', 'Ar', 'Ar0+', 'Ne', 'Ne0+', 'D', 'D+', 'T', 'M']
 base_query = {'is_ordered': True, 'is_valid': True, 'nsites': {'$lt': 200}, 'sites.label': {'$nin': skip_labels}}
 task_base_query = {'tags': {'$nin': ['DEPRECATED', 'deprecated']}, '_mpworks_meta': {'$exists': 0}}
 structure_keys = ['snl_id', 'lattice', 'sites', 'charge', 'about._materialsproject.task_id']
@@ -1036,7 +1036,7 @@ def wflows(add_snlcolls, add_taskdbs, tag, insert, clear_logs, max_structures, s
                 print(len(canonical_structures_list), 'canonical structure(s) for', formula, sites_elements)
                 if tag is not None:
                     print('trying again ...')
-                    wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, True)
+                    wflows(add_snlcolls, add_taskdbs, tag, insert, clear_logs, max_structures, True, force_new)
 
             print(counter)
 
