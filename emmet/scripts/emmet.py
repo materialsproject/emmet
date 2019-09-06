@@ -173,7 +173,7 @@ def get_vasp_dirs(scan_path, base_path, max_dirs, insert):
                             break
 
 
-def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
+def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs, delete):
     name = multiprocessing.current_process().name
     print(name, 'starting')
     lpad = get_lpad()
@@ -237,6 +237,11 @@ def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
                         print(name, 'also remove force_constants and retry ...')
                         task_doc['calcs_reversed'][0]['output'].pop('force_constants')
                         target.insert_task(task_doc, use_gridfs=True)
+
+                if delete and target.collection.count(q):
+                    print(name, 'successfully parsed', vaspdir)
+                    rmtree(vaspdir)
+                    print(name, 'removed', vaspdir)
 
     print(name, 'processed', len(vaspdirs), 'VASP directories -', len(input_structures), 'structures')
     return input_structures
@@ -1321,7 +1326,8 @@ def add_snls(tag, input_structures, add_snlcolls, insert):
 @click.option('--force/--no-force', default=False, help='force re-parsing of task')
 @click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
 @click.option('--make-snls/--no-make-snls', default=False, help='also create SNLs for parsed tasks')
-def parse(base_path, insert, nproc, max_dirs, force, add_snlcolls, make_snls):
+@click.option('--delete/--no-delete', default=False, help='delete directory after successful parse')
+def parse(base_path, insert, nproc, max_dirs, force, add_snlcolls, make_snls, delete):
     """parse VASP output directories in base_path into tasks and tag"""
     if not insert:
         print('DRY RUN: add --insert flag to actually insert tasks')
@@ -1352,7 +1358,7 @@ def parse(base_path, insert, nproc, max_dirs, force, add_snlcolls, make_snls):
 
     while iterator or queue:
         try:
-            args = [next(iterator), insert, drone, already_inserted_subdirs]
+            args = [next(iterator), insert, drone, already_inserted_subdirs, delete]
             queue.append(pool.apply_async(parse_vasp_dirs, args))
         except (StopIteration, TypeError):
             iterator = None
@@ -1374,7 +1380,9 @@ def parse(base_path, insert, nproc, max_dirs, force, add_snlcolls, make_snls):
             launchdir_to_taskid = json.load(f)
         for doc in target.collection.find({'tags': tag}, {'dir_name': 1, 'task_id': 1, '_id': 0}):
             task_id = launchdir_to_taskid[get_subdir(doc['dir_name'])]
-            target.collection.update({'task_id': doc['task_id']}, {'$set': {'task_id': task_id}})
+            if doc['task_id'] != task_id:
+                target.collection.update_one({'task_id': doc['task_id']}, {'$set': {'task_id': task_id}})
+                print(doc['dir_name'], doc['task_id'], task_id)
 
     if insert and make_snls:
         print('add SNLs for', len(input_structures), 'structures')
