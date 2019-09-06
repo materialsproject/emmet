@@ -239,6 +239,7 @@ class ThermoBuilder(Builder):
         self.materials.ensure_index(self.materials.key, unique=True)
         self.materials.ensure_index(self.materials.lu_field)
         self.materials.ensure_index("chemsys")
+        self.materials.ensure_index("elements")
         self.materials.ensure_index("_sbxn")
 
         # Search indicies for thermo
