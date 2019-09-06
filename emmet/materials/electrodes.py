@@ -16,7 +16,7 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 s_hash = lambda el: el.data['comp_delith']
 redox_els = ['Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Nb', 'Mo',
              'Sn', 'Sb', 'W', 'Re', 'Bi', 'C']
-mat_props = ['structure', 'thermo.energy', 'calc_settings', 'task_id', '_sbxn']
+mat_props = ['structure', 'thermo.energy', 'calc_settings', 'task_id', '_sbxn', 'sbxn']
 
 sg_fields = ["number",
              "hall_number",
@@ -74,16 +74,20 @@ class ElectrodesBuilder(Builder):
             {"elements": {'$in': [self.working_ion]}},
             {"elements": {'$in': redox_els}}
         ]})
+        q.update(self.query)
         chemsys_names = self.materials.distinct('chemsys', q)
         for chemsys in chemsys_names:
             self.logger.debug(f"Calculating the phase diagram for: {chemsys}")
             # get the phase diagram from using the chemsys
             pd_q = {'chemsys':{"$in": list(chemsys_permutations(chemsys))}, 'deprecated' : False}
+            self.logger.debug(f"pd_q: {pd_q}")
             pd_docs = list(self.materials.query(properties=mat_props, criteria=pd_q))
             pd_ents = self._mat_doc2comp_entry(pd_docs, store_struct=False)
             pd_ents = list(filter(None.__ne__, pd_ents))
             for item in self.get_hashed_entries_from_chemsys(chemsys):
                 item.update({'pd_ents':pd_ents})
+                self.logger.debug(f"all_ents [{[ient.composition.reduced_formula for ient in item['all_entries']]}]")
+                self.logger.debug(f"pd_ents [{[ient.composition.reduced_formula for ient in item['pd_ents']]}]")
                 yield item
 
     def get_hashed_entries_from_chemsys(self, chemsys):
@@ -102,9 +106,11 @@ class ElectrodesBuilder(Builder):
                 for c in [elements, elements-{self.working_ion}]}
         self.logger.info("chemsys list: {}".format(chemsys_w_wo_ion))
         q = {'chemsys' : {"$in" : list(chemsys_w_wo_ion)}}
-        q.update(self.query)
+        self.logger.debug(f"q: {q}")
         docs = self.materials.query(q, mat_props)
         entries = self._mat_doc2comp_entry(docs)
+        entries = list(filter(lambda x: x is not None, entries))
+        self.logger.debug(f"entries found using q [{[ient.composition.reduced_formula for ient in entries]}]")
         self.logger.info("Found {} entries in the database".format(len(entries)))
         entries = list(filter(None.__ne__, entries))
 
@@ -134,7 +140,6 @@ class ElectrodesBuilder(Builder):
         pd_ents = item['pd_ents']
         phdi = PhaseDiagram(pd_ents)
 
-
         # The working ion entries
         ents_wion = list(filter(lambda x: x.composition.get_integer_formula_and_factor()[0] == self.working_ion, pd_ents))
         self.working_ion_entry = min(ents_wion, key=lambda e: e.energy_per_atom)
@@ -162,7 +167,7 @@ class ElectrodesBuilder(Builder):
 
             # sort out the sandboxes
             # for each sandbox core+sandbox will both contribute entries
-            all_sbx = [ent.data['_sbxn'] for ent in group]
+            all_sbx = [ent.data['sbxn'] for ent in group]
             all_sbx = set(chain.from_iterable(all_sbx))
             self.logger.debug(f"All sandboxes {', '.join(list(all_sbx))}")
 
@@ -174,7 +179,7 @@ class ElectrodesBuilder(Builder):
                 self.logger.debug(f"Grouped entries in sandbox {isbx} -- {', '.join([en.name for en in group_sbx])}")
                 try:
                     result = InsertionElectrode(group_sbx, self.working_ion_entry)
-                    assert(len(results._stable_entries > 1))
+                    assert(len(result._stable_entries) > 1)
                 except:
                     self.logger.warn(f"Not able to generate a  entries in sandbox {isbx} using the following entires-- {', '.join([en.entry_id for en in group_sbx])}")
                     continue
