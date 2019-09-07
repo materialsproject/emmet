@@ -72,7 +72,7 @@ class ElectrodesBuilder(Builder):
 
         self.logger.info(
             "Grabbing the relavant chemical systems containing the current \
-                working ion and a single redox element.")
+                working ion and a single redox element."                                                        )
         q = dict()
         q.update({
             '$and': [{
@@ -103,6 +103,10 @@ class ElectrodesBuilder(Builder):
             pd_ents = list(filter(None.__ne__, pd_ents))
             for item in self.get_hashed_entries_from_chemsys(chemsys):
                 item.update({'pd_ents': pd_ents})
+
+                ids_all_ents = {ient.composition.entry_id for ient in item['all_entries']}
+                ids_pd = {ient.composition.entry_id for ient in item['pd_ents']}
+                assert(ids_all_ents.issubset(ids_pd))
                 self.logger.debug(
                     f"all_ents [{[ient.composition.reduced_formula for ient in item['all_entries']]}]"
                 )
@@ -128,7 +132,7 @@ class ElectrodesBuilder(Builder):
             for c in [elements, elements - {self.working_ion}]
         }
         self.logger.info("chemsys list: {}".format(chemsys_w_wo_ion))
-        q = {'chemsys': {"$in": list(chemsys_w_wo_ion)}}
+        q = {'chemsys': {"$in": list(chemsys_w_wo_ion)}, 'deprecated': False}
         self.logger.debug(f"q: {q}")
         docs = self.materials.query(q, mat_props)
         entries = self._mat_doc2comp_entry(docs)
