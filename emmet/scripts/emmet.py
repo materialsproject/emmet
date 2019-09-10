@@ -1,4 +1,4 @@
-import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, itertools, multiprocessing, math, io, requests, json
+import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, itertools, multiprocessing, math, io, requests, json, time
 from shutil import copyfile, rmtree
 from glob import glob
 from fnmatch import fnmatch
@@ -30,6 +30,9 @@ from tqdm import tqdm
 from pprint import pprint
 from mongogrant.client import Client
 from zipfile import ZipFile
+from bravado.requests_client import RequestsClient
+from bravado.client import SwaggerClient
+from urllib.parse import urlparse
 
 def get_lpad():
     if 'FW_CONFIG_FILE' not in os.environ:
@@ -46,8 +49,11 @@ aggregation_keys = ['formula_pretty', 'reduced_cell_formula']
 SCOPES = 'https://www.googleapis.com/auth/drive'
 current_year = int(datetime.today().year)
 year_tags = ['mp_{}'.format(y) for y in range(2018, current_year+1)]
-NOMAD_OUTDIR = '/nomad/nomadlab/mpraw'
-NOMAD_REPO = 'http://backend-repository-nomad.esc:8111/repo/search/calculations_oldformat?query={}'
+
+nomad_outdir = '/project/projectdirs/matgen/garden/nomad'
+nomad_url = 'https://labdev-nomad.esc.rzg.mpg.de/fairdi/nomad/testing/api'
+user = 'leonard.hofstadter@nomad-fairdi.tests.de'
+password = 'password'
 
 def aggregate_by_formula(coll, q, key=None):
     query = {'$and': [q, exclude]}
@@ -1416,6 +1422,11 @@ def download_file(service, file_id):
 @click.option('--sync-nomad/--no-sync-nomad', default=False, help='sync to NoMaD repository')
 def gdrive(target_spec, block_filter, sync_nomad):
     """sync launch directories for target task DB to Google Drive"""
+    host = urlparse(nomad_url).netloc.split(':')[0]
+    http_client = RequestsClient()
+    http_client.set_basic_auth(host, user, password)
+    client = SwaggerClient.from_url('%s/swagger.json' % nomad_url, http_client=http_client)
+
     target = calcdb_from_mgrant(target_spec)
     print('connected to target db with', target.collection.count(), 'tasks')
     print(target.db.materials.count(), 'materials')
@@ -1453,32 +1464,66 @@ def gdrive(target_spec, block_filter, sync_nomad):
                         full_launcher_path.append(launcher_name)
                         launcher_paths.append(os.path.join(*full_launcher_path))
                         if sync_nomad:
-                            #nomad_query='alltarget repository_filepaths.split="{}"'.format(','.join(full_launcher_path))
-                            nomad_query='alltarget repository_filepaths.split="{}"'.format(full_launcher_path[-1])
-                            print(nomad_query)
-                            resp = requests.get(NOMAD_REPO.format(nomad_query)).json()
-                            if 'meta' in resp:
-                                path = launcher_paths[-1] + '.tar.gz'
-                                if resp['meta']['total_hits'] < 1: # calculation not found in NoMaD repo
-                                    print('Retrieve', path, '...')
-                                    if not os.path.exists(path):
-                                        outdir = os.path.join(*full_launcher_path[:-1])
-                                        if not os.path.exists(outdir):
-                                            os.makedirs(outdir)
-                                        content = download_file(service, launcher['id'])
-                                        with open(path, 'wb') as f:
-                                            f.write(content)
-                                        print('... DONE.')
-                                    else:
-                                        print('... ALREADY DOWNLOADED.')
+                            result = client.repo.search(paths=[full_launcher_path[-1]]).response().result
+                            if result.pagination.total == 0:
+                                print(f'{full_launcher_path[-1]} not found')
+                                path = os.path.join(nomad_outdir, launcher_paths[-1] + '.tar.gz')
+                                if not os.path.exists(path):
+                                    print('Retrieve', path, 'from GDrive ...')
+                                    outdir_list = [nomad_outdir] + full_launcher_path[:-1]
+                                    outdir = os.path.join(*outdir_list)
+                                    if not os.path.exists(outdir):
+                                        os.makedirs(outdir)
+                                    content = download_file(service, launcher['id'])
+                                    with open(path, 'wb') as f:
+                                        f.write(content)
+                                    print('... DONE.')
                                 else:
-                                    print(path, 'found in NoMaD repo:')
-                                    #pprint(resp)
-                                    for d in resp['data']:
-                                        print('\t', d['attributes']['repository_archive_gid'])
-                                    sys.exit(0)
+                                    print('\t-> already retrieved from GDrive.')
+
+                                # upload to NoMaD
+                                print(f'uploading {path} to NoMaD ...')
+                                with open(path, 'rb') as f:
+                                    upload = client.uploads.upload(file=f).response().result
+
+                                print('processing ...')
+                                while upload.tasks_running:
+                                    upload = client.uploads.get_upload(upload_id=upload.upload_id).response().result
+                                    time.sleep(5)
+                                    print('processed: %d, failures: %d' % (upload.processed_calcs, upload.failed_calcs))
+
+                                # check if processing was a success
+                                if upload.tasks_status != 'SUCCESS':
+                                    print('something went wrong')
+                                    print('errors: %s' % str(upload.errors))
+                                    # delete the unsuccessful upload
+                                    client.uploads.delete_upload(upload_id=upload.upload_id).response().result
+                                    sys.exit(1)
+
+                                print('publishing ...')
+                                client.uploads.exec_upload_operation(upload_id=upload.upload_id, payload={
+                                    'operation': 'publish', 'metadata': {
+                                        'comment': 'Materials Project',
+                                        'references': ['https://materialsproject.org'],
+                                    }
+                                }).response().result
+
+                                while upload.process_running:
+                                    upload = client.uploads.get_upload(upload_id=upload.upload_id).response().result
+                                    time.sleep(1)
+                                if upload.tasks_status != 'SUCCESS' or len(upload.errors) > 0:
+                                    print('something went wrong')
+                                    print('errors: %s' % str(upload.errors))
+                                    # delete the unsuccessful upload
+                                    client.uploads.delete_upload(upload_id=upload.upload_id).response().result
+                                    sys.exit(1)
+
+                            elif result.pagination.total > 1:
+                                print(f'{full_launcher_path[-1]}is not specific enough ... uploaded multiple times?')
                             else:
-                                raise Exception(resp['errors'][0]['detail'])
+                                # The results key holds an array with the current page data
+                                print(f'Found the following calcs for {full_launcher_path[-1]}')
+                                print(', '.join(calc['calc_id'] for calc in result.results))
                     else:
                         full_launcher_path.append(launcher['name'])
                         recurse(service, launcher['id'])
