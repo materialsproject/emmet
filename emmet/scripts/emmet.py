@@ -1,4 +1,7 @@
-import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, itertools, multiprocessing, math, io, requests, json, time
+import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile
+import itertools, multiprocessing, math, io, requests, json, time, zipfile, zlib
+from oauth2client import client as oauth2_client
+from oauth2client import file, tools
 from shutil import copyfile, rmtree
 from glob import glob
 from fnmatch import fnmatch
@@ -24,7 +27,6 @@ from log4mongo.handlers import MongoHandler, MongoFormatter
 from prettytable import PrettyTable
 from googleapiclient.discovery import build
 from httplib2 import Http
-from oauth2client import file, client, tools
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from tqdm import tqdm
 from pprint import pprint
@@ -50,8 +52,9 @@ SCOPES = 'https://www.googleapis.com/auth/drive'
 current_year = int(datetime.today().year)
 year_tags = ['mp_{}'.format(y) for y in range(2018, current_year+1)]
 
-nomad_outdir = '/project/projectdirs/matgen/garden/nomad'
-nomad_url = 'https://labdev-nomad.esc.rzg.mpg.de/fairdi/nomad/testing/api'
+#nomad_outdir = '/project/projectdirs/matgen/garden/nomad'
+nomad_outdir = '/clusterfs/mp/mp_prod/nomad'
+nomad_url = 'http://labdev-nomad.esc.rzg.mpg.de/fairdi/nomad/testing/api'
 user = 'leonard.hofstadter@nomad-fairdi.tests.de'
 password = 'password'
 
@@ -1436,9 +1439,11 @@ def gdrive(target_spec, block_filter, sync_nomad):
         store = file.Storage('token.json')
         creds = store.get()
     if not creds or creds.invalid:
-        flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
+        flow = oauth2_client.flow_from_clientsecrets('credentials.json', SCOPES)
         store = file.Storage('token.json')
-        creds = tools.run_flow(flow, store)
+        args = tools.argparser.parse_args()
+        args.noauth_local_webserver = True
+        creds = tools.run_flow(flow, store, args) # will need to run this in interactive session the first time
     service = build('drive', 'v3', http=creds.authorize(Http()))
     garden_id = os.environ.get('MPDRIVE_GARDEN_ID')
     if not garden_id:
@@ -1456,8 +1461,9 @@ def gdrive(target_spec, block_filter, sync_nomad):
                 q=query, spaces='drive', pageToken=page_token,
                 fields='nextPageToken, files(id, name, modifiedTime, size)',
             ).execute()
+            print('#launchers:', len(response['files']))
 
-            for launcher in response['files']:
+            for idx, launcher in enumerate(response['files']):
                 if '.json' not in launcher['name']:
                     if '.tar.gz' in launcher['name']:
                         launcher_name = launcher['name'].replace('.tar.gz', '')
@@ -1466,57 +1472,19 @@ def gdrive(target_spec, block_filter, sync_nomad):
                         if sync_nomad:
                             result = client.repo.search(paths=[full_launcher_path[-1]]).response().result
                             if result.pagination.total == 0:
-                                print(f'{full_launcher_path[-1]} not found')
+                                print(f'{idx} {full_launcher_path[-1]} not found')
                                 path = os.path.join(nomad_outdir, launcher_paths[-1] + '.tar.gz')
                                 if not os.path.exists(path):
                                     print('Retrieve', path, 'from GDrive ...')
                                     outdir_list = [nomad_outdir] + full_launcher_path[:-1]
                                     outdir = os.path.join(*outdir_list)
                                     if not os.path.exists(outdir):
-                                        os.makedirs(outdir)
+                                        os.makedirs(outdir, exist_ok=True)
                                     content = download_file(service, launcher['id'])
                                     with open(path, 'wb') as f:
                                         f.write(content)
-                                    print('... DONE.')
                                 else:
                                     print('\t-> already retrieved from GDrive.')
-
-                                # upload to NoMaD
-                                print(f'uploading {path} to NoMaD ...')
-                                with open(path, 'rb') as f:
-                                    upload = client.uploads.upload(file=f).response().result
-
-                                print('processing ...')
-                                while upload.tasks_running:
-                                    upload = client.uploads.get_upload(upload_id=upload.upload_id).response().result
-                                    time.sleep(5)
-                                    print('processed: %d, failures: %d' % (upload.processed_calcs, upload.failed_calcs))
-
-                                # check if processing was a success
-                                if upload.tasks_status != 'SUCCESS':
-                                    print('something went wrong')
-                                    print('errors: %s' % str(upload.errors))
-                                    # delete the unsuccessful upload
-                                    client.uploads.delete_upload(upload_id=upload.upload_id).response().result
-                                    sys.exit(1)
-
-                                print('publishing ...')
-                                client.uploads.exec_upload_operation(upload_id=upload.upload_id, payload={
-                                    'operation': 'publish', 'metadata': {
-                                        'comment': 'Materials Project',
-                                        'references': ['https://materialsproject.org'],
-                                    }
-                                }).response().result
-
-                                while upload.process_running:
-                                    upload = client.uploads.get_upload(upload_id=upload.upload_id).response().result
-                                    time.sleep(1)
-                                if upload.tasks_status != 'SUCCESS' or len(upload.errors) > 0:
-                                    print('something went wrong')
-                                    print('errors: %s' % str(upload.errors))
-                                    # delete the unsuccessful upload
-                                    client.uploads.delete_upload(upload_id=upload.upload_id).response().result
-                                    sys.exit(1)
 
                             elif result.pagination.total > 1:
                                 print(f'{full_launcher_path[-1]}is not specific enough ... uploaded multiple times?')
@@ -1546,12 +1514,45 @@ def gdrive(target_spec, block_filter, sync_nomad):
             q=block_query, spaces='drive', pageToken=block_page_token,
             fields='nextPageToken, files(id, name)'
         ).execute()
+        print('#blocks:', len(block_response['files']))
 
         for block in block_response['files']:
             print(block['name'])
-            full_launcher_path.clear()
-            full_launcher_path.append(block['name'])
-            recurse(service, block['id'])
+            #full_launcher_path.clear()
+            #full_launcher_path.append(block['name'])
+            #recurse(service, block['id'])
+
+            ## zip block
+            fn = os.path.join(nomad_outdir, block['name'] + '.zip')
+            ##if not os.path.exists(fn):
+            #with zipfile.ZipFile(fn, mode='w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+            #    print(fn)
+            #    block_dir = os.path.join(nomad_outdir, block['name'])
+            #    for dirpath, dnames, fnames in os.walk(block_dir):
+            #        for f in fnames:
+            #            if f.endswith('.tar.gz'):
+            #                ff = os.path.join(dirpath, f)
+            #                zf.write(ff)
+            #                print(ff)
+
+            # upload to NoMaD
+            print(f'uploading {block["name"]} to NoMaD ...')
+            with open(fn, 'rb') as f:
+                upload = client.uploads.upload(file=f).response().result
+
+            print('processing ...')
+            while upload.tasks_running:
+                upload = client.uploads.get_upload(upload_id=upload.upload_id).response().result
+                time.sleep(5)
+                print('processed: %d, failures: %d' % (upload.processed_calcs, upload.failed_calcs))
+
+            # check if processing was a success
+            if upload.tasks_status != 'SUCCESS':
+                print('something went wrong')
+                print('errors: %s' % str(upload.errors))
+                # delete the unsuccessful upload
+                client.uploads.delete_upload(upload_id=upload.upload_id).response().result
+                sys.exit(1)
 
         block_page_token = block_response.get('nextPageToken', None)
         if block_page_token is None:
