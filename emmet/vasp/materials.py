@@ -22,7 +22,8 @@ default_mat_settings = os.path.join(module_dir, "settings", "materials_settings.
 
 class MaterialsBuilder(Builder):
     """
-    The Materials Builder aggregates VASP task documents by structure similarity into materials properties documents.
+    The Materials Builder aggregates VASP task documents by structure similarity into materials
+    properties documents.
     The process is as follows:
 
         1.) Find all documents with the same formula
@@ -47,7 +48,7 @@ class MaterialsBuilder(Builder):
         stol=STOL,
         angle_tol=ANGLE_TOL,
         separate_mag_orderings=False,
-        **kwargs
+        **kwargs,
     ):
         """
         Creates a materials collection from tasks and tags
@@ -93,7 +94,7 @@ class MaterialsBuilder(Builder):
         """
 
         self.logger.info("Materials builder started")
-        self.logger.info("Allowed task types: {}".format(self.allowed_tasks))
+        self.logger.info(f"Allowed task types: {self.allowed_tasks}")
 
         self.logger.info("Setting indexes")
         self.ensure_indexes()
@@ -112,19 +113,17 @@ class MaterialsBuilder(Builder):
         to_process_forms = self.tasks.distinct(
             "formula_pretty", {"task_id": {"$in": list(to_process_tasks)}}
         )
-        self.logger.info("Found {} unprocessed tasks".format(len(to_process_tasks)))
-        self.logger.info("Found {} unprocessed formulas".format(len(to_process_forms)))
+        self.logger.info(f"Found {len(to_process_tasks)} unprocessed tasks")
+        self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
 
         # Tasks that have been updated since we last viewed them
         update_q = dict(q)
         update_q.update(self.tasks.lu_filter(self.materials))
         updated_forms = self.tasks.distinct("formula_pretty", update_q)
-        self.logger.info(
-            "Found {} updated systems to proces".format(len(updated_forms))
-        )
+        self.logger.info(f"Found {len(updated_forms)} updated systems to proces")
 
         forms_to_update = set(updated_forms) | set(to_process_forms)
-        self.logger.info("Processing {} total systems".format(len(forms_to_update)))
+        self.logger.info(f"Processing {len(forms_to_update)} total systems")
         self.total = len(forms_to_update)
 
         if self.task_types:
@@ -159,7 +158,7 @@ class MaterialsBuilder(Builder):
 
         formula = tasks[0]["formula_pretty"]
         t_ids = [t[self.tasks.key] for t in tasks]
-        self.logger.debug("Processing {} : {}".format(formula, t_ids))
+        self.logger.debug(f"Processing {formula} : {t_ids}")
 
         materials = []
         grouped_tasks = self.filter_and_group_tasks(tasks)
@@ -171,9 +170,7 @@ class MaterialsBuilder(Builder):
                 materials.append(mat)
 
         self.logger.debug(
-            "Produced {} materials for {}".format(
-                len(materials), tasks[0]["formula_pretty"]
-            )
+            f"Produced {len(materials)} materials for {tasks[0]['formula_pretty']}"
         )
 
         return materials
@@ -183,7 +180,8 @@ class MaterialsBuilder(Builder):
         Inserts the new task_types into the task_types collection
 
         Args:
-            items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
+            items ([([dict],[int])]): A list of tuples of materials to update and the corresponding
+                processed task_ids
         """
 
         items = [i for i in filter(None, chain.from_iterable(items))]
@@ -193,7 +191,7 @@ class MaterialsBuilder(Builder):
             item.update({"_bt": self.timestamp})
 
         if len(items) > 0:
-            self.logger.info("Updating {} materials".format(len(items)))
+            self.logger.info(f"Updating {len(items)} materials")
             self.materials.update(docs=items, update_lu=False)
         else:
             self.logger.info("No items to update")
@@ -329,7 +327,7 @@ class MaterialsBuilder(Builder):
                     )
                 elif not prop.get("optional", False):
                     self.logger.error(
-                        "Failed getting {} for task: {}".format(prop["tasks_key"], t_id)
+                        f"Failed getting {prop['tasks_key']} for task: {t_id}"
                     )
         return props
 
@@ -542,4 +540,4 @@ def ID_to_int(s_id):
     elif isinstance(s_id, (int, float)):
         return s_id
     else:
-        raise Exception("Could not parse {} into a number".format(s_id))
+        raise Exception(f"Could not parse {s_id} into a number")

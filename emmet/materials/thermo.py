@@ -53,22 +53,22 @@ class ThermoBuilder(Builder):
 
         self.logger.info("Setting indexes")
         self.ensure_indicies()
-        
+
         # All relevant materials that have been updated since thermo props were
         # last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.thermo))
         updated_comps = set(self.materials.distinct("chemsys", q))
-        self.logger.debug("Found {} updated chemsys".format(len(updated_comps)))
+        self.logger.debug(f"Found {len(updated_comps)} updated chemsys")
 
         # All materials that are not present in the thermo collection
         thermo_mat_ids = self.thermo.distinct(self.thermo.key)
-        mat_ids = self.materials.distinct(self.materials.key,self.query)
+        mat_ids = self.materials.distinct(self.materials.key, self.query)
         dif_task_ids = list(set(mat_ids) - set(thermo_mat_ids))
         q = dict(self.query)
         q.update({"task_id": {"$in": dif_task_ids}})
         new_mat_comps = set(self.materials.distinct("chemsys", q))
-        self.logger.debug("Found {} new materials".format(len(new_mat_comps)))
+        self.logger.debug(f"Found {len(new_mat_comps)} new materials")
 
         # All comps affected by changing these chemical systems
         # IE if we update Li-O, we need to update Li-Mn-O, Li-Mn-P-O, etc.
@@ -79,9 +79,7 @@ class ThermoBuilder(Builder):
                 self.materials.distinct("chemsys", {"elements": {"$all": els}})
             )
         self.logger.debug(
-            "Found {} chemical systems affected by this build".format(
-                len(affected_comps)
-            )
+            f"Found {len(affected_comps)} chemical systems affected by this build"
         )
 
         comps = updated_comps | new_mat_comps | affected_comps
@@ -99,7 +97,7 @@ class ThermoBuilder(Builder):
                 to_process.append(chemsys)
 
         self.logger.info(
-            "Found {} compositions with new/updated materials".format(len(to_process))
+            f"Found {len(to_process)} compositions with new/updated materials"
         )
         self.total = len(to_process)
 
@@ -198,10 +196,11 @@ class ThermoBuilder(Builder):
                 elsyms.extend([el.symbol for el in e.composition.elements])
 
             self.logger.warning(
-                "Phase diagram errorin chemsys {}: {}".format(
-                    "-".join(sorted(set(elsyms))), p
-                )
+                f"Phase diagram errorin chemsys {'-'.join(sorted(set(elsyms)))}: {p}"
             )
+            return []
+        except Exception as e:
+            self.logger.error(f"Got unexpected error: {e}")
             return []
 
         return docs
@@ -225,7 +224,7 @@ class ThermoBuilder(Builder):
         self.completed_tasks |= {i[self.thermo.key] for i in items}
 
         if len(items) > 0:
-            self.logger.info("Updating {} thermo documents".format(len(items)))
+            self.logger.info(f"Updating {len(items)} thermo documents")
             self.thermo.update(docs=items, key=[self.thermo.key, "_sbxn"])
         else:
             self.logger.info("No items to update")
@@ -259,7 +258,7 @@ class ThermoBuilder(Builder):
             set(ComputedEntry): a set of entries for this system
         """
 
-        self.logger.info("Getting entries for: {}".format(chemsys))
+        self.logger.info(f"Getting entries for: {chemsys}")
 
         # First check the cache
         all_chemsys = chemsys_permutations(chemsys)
@@ -267,11 +266,15 @@ class ThermoBuilder(Builder):
         query_chemsys = all_chemsys - cached_chemsys
 
         self.logger.debug(
-            "Getting {} entries from cache for {}".format(len(cached_chemsys), chemsys)
+            f"Getting {len(cached_chemsys)} sub-chemsys from cache for {chemsys}"
+        )
+        self.logger.debug(
+            f"Getting {len(query_chemsys)} sub-chemsys from DB for {chemsys}"
         )
 
         # Query for any chemsys we don't have
         new_q = dict(self.query)
+
         new_q["chemsys"] = {"$in": list(query_chemsys)}
         new_q["deprecated"] = False
 
@@ -285,6 +288,9 @@ class ThermoBuilder(Builder):
         ]
         data = list(self.materials.query(properties=fields, criteria=new_q))
 
+        self.logger.debug(
+            f"Got {len(data)} entries from DB for {len(query_chemsys)} sub-chemsys for {chemsys}"
+        )
         # Start with entries from cache
         all_entries = list(
             chain.from_iterable(self.entries_cache[c] for c in cached_chemsys)
@@ -310,7 +316,7 @@ class ThermoBuilder(Builder):
 
             all_entries.append(entry)
 
-        self.logger.info("Total entries in {} : {}".format(chemsys, len(all_entries)))
+        self.logger.info(f"Total entries in {chemsys} : {len(all_entries)}")
 
         return all_entries
 

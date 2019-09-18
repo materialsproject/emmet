@@ -86,7 +86,7 @@ class MPBuilder(Builder):
         self.ensure_indexes()
 
         keys = self.get_keys()
-        self.logger.info("Processing {} items".format(len(keys)))
+        self.logger.info(f"Processing {len(keys)} items")
         self.total = len(keys)
 
         # Chunk keys by chunk size for good data IO
@@ -107,7 +107,7 @@ class MPBuilder(Builder):
 
     def process_item(self, item):
 
-        self.logger.debug("Processing: {}".format(item[self.materials.key]))
+        self.logger.debug(f"Processing: {item[self.materials.key]}")
 
         try:
             mat = old_style_mat(item)
@@ -383,14 +383,14 @@ def add_es(mat, new_style_mat):
 
         if bs_origin:
             u_type = "GGA+U" if "+U" in bs_origin["task_type"] else "GGA"
-            set_(mat, "band_structure.{}.task_id".format(u_type), bs_origin["task_id"])
+            set_(mat, f"band_structure.{u_type}.task_id", bs_origin["task_id"])
 
         if dos_origin:
             u_type = "GGA+U" if "+U" in dos_origin["task_type"] else "GGA"
-            set_(mat, "dos.{}.task_id".format(u_type), dos_origin["task_id"])
+            set_(mat, f"dos.{u_type}.task_id", dos_origin["task_id"])
 
     except Exception as e:
-        print("Error in adding electronic structure: {}".format(e))
+        print(f"Error in adding electronic structure: {e}")
 
     mat["has_bandstructure"] = "bandstructure" in new_style_mat.get("has",[])
 
@@ -522,10 +522,8 @@ def check_relaxation(mat, new_style_mat):
     except Exception as ex:
         # print icsd_crystal.formula
         # print final_structure.formula
-        print(
-            "Relaxation analyzer failed for Material:{} due to {}".format(
-                mat["task_id"], traceback.print_exc()
-            )
+        self.logger.debug(
+            f"Relaxation analyzer failed for Material:{mat['task_id']} due to {traceback.print_exc()}"
         )
 
     mat["warnings"] = list(set(warnings))

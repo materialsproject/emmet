@@ -46,7 +46,7 @@ class DiffractionBuilder(MapBuilder):
         Returns:
             dict: a diffraction dict
         """
-        self.logger.debug("Calculating diffraction for {}".format(item[self.materials.key]))
+        self.logger.debug(f"Calculating diffraction for {item[self.materials.key]}")
 
         struct = Structure.from_dict(item['structure'])
         xrd_doc = {"xrd": self.get_xrd_from_struct(struct)}
