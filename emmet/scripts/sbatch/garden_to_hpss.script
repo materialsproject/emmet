@@ -9,8 +9,12 @@
 #SBATCH --error=garden_to_hpss-%j.error
 
 script=$HOME/mp_prod/codes/emmet/emmet/scripts/garden_to_hpss.sh
-#indir=/project/projectdirs/matgen/garden/hpss_to_mpdrive/raw
-indir=/project/projectdirs/matgen/garden/MatProj
-filter="block_2011-*"
+#indir=/project/projectdirs/matgen/garden/MatProj
+#indir=/project/projectdirs/matgen/garden/garden_to_hpss
+
+#indir=/project/projectdirs/matgen/basf/original # TODO
+indir=/global/projecta/projectdirs/matgen/hling/nmr_old/Si
+#indir=/global/projecta/projectdirs/matgen/hling/nmr_old/Al
+filter="block_*"
 
 $script $indir $filter

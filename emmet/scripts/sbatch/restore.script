@@ -9,14 +9,25 @@
 #SBATCH --error=restore-%j.error
 
 cwd=$PWD
-outdir=/project/projectdirs/matgen/garden/tasks_from_old_prod/
-dirlist=/global/homes/h/huck/mp_prod/workdir/hpss/GGA+U_band_structure_v2.txt
+
+#outdir=/global/cscratch1/sd/huck/tasks_from_old_prod_2019/
+#dirlist="/global/homes/h/huck/mp_prod/workdir/tasks_from_old_prod_2019/restore.txt"
+
+#outdir=/project/projectdirs/matgen/garden/jmunro/
+#dirlist="/global/homes/h/huck/mp_prod/workdir/hpss/max_estep_dir.txt"
+
+outdir=/project/projectdirs/matgen/garden/rkingsbury/
+dirlist="/global/homes/h/huck/mp_prod/workdir/hpss/scan_dirs_2.txt"
 
 cd $outdir && pwd
 
 for block in `cut -d/ -f1 $dirlist | sort -u`; do
   echo $block
-  htar -xvf garden/${block}.tar `grep $block $dirlist`
+  list=""
+  for l in `grep $block $dirlist`; do
+    [[ ! -e $l ]] && echo "$l does not exist" && list="$list $l"
+  done
+  [[ ! -z "$list" ]] && echo "htar -x ..." && htar -xvf garden/${block}.tar $list
   #break
 done
 
