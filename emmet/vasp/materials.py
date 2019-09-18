@@ -372,6 +372,24 @@ class MaterialsBuilder(Builder):
                 mat["piezo"]["static"]
             ).voigt.tolist()
 
+        if "initial_structures" in mat:
+            # Reduce unique structures using tight tolerancees
+            init_strucs = [Structure.from_dict(d) for d in mat["initial_structures"]]
+            num_init_strucs = len(init_structs)
+            sm = StructureMatcher(
+                primitive_cell=True,
+                scale=True,
+                attempt_supercell=False,
+                allow_subset=False,
+                comparator=ElementComparator(),
+            )
+            init_strucs = [g[0] for g in sm.group_structures(init_strucs)]
+            mat["initial_structures"] = init_strucs
+            self.logger.debug(
+                "Reducing initial structures based on structure matching from"
+                f" {num_init_strucs} to {len(init_structs)}"
+            )
+
     def ensure_indexes(self):
         """
         Ensures indicies on the tasks and materials collections
