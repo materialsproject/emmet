@@ -1,4 +1,4 @@
-import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile
+import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, zipstream
 import itertools, multiprocessing, math, io, requests, json, time, zipfile, zlib
 from oauth2client import client as oauth2_client
 from oauth2client import file, tools
@@ -34,7 +34,8 @@ from mongogrant.client import Client
 from zipfile import ZipFile
 from bravado.requests_client import RequestsClient
 from bravado.client import SwaggerClient
-from urllib.parse import urlparse
+from typing import Iterator, Iterable, Union, Tuple
+from urllib.parse import urlparse, urlencode
 
 def get_lpad():
     if 'FW_CONFIG_FILE' not in os.environ:
@@ -57,6 +58,108 @@ nomad_outdir = '/clusterfs/mp/mp_prod/nomad'
 nomad_url = 'http://labdev-nomad.esc.rzg.mpg.de/fairdi/nomad/testing/api'
 user = 'leonard.hofstadter@nomad-fairdi.tests.de'
 password = 'password'
+approx_upload_size = 32 * 1024 * 1024 * 1024  # you can make it really small for testing
+max_parallel_uploads = 9
+nomad_host = urlparse(nomad_url).netloc.split(':')[0]
+http_client = RequestsClient()
+http_client.set_basic_auth(nomad_host, user, password)
+nomad_client = SwaggerClient.from_url('%s/swagger.json' % nomad_url, http_client=http_client)
+
+
+# https://gitlab.mpcdf.mpg.de/nomad-lab/nomad-FAIR/blob/v0.6.0/examples/external_project_parallel_upload/upload.py
+def upload_next_data(sources: Iterator[Tuple[str, str]], upload_name='next upload'):
+    """
+    Reads data from the given sources iterator. Creates and uploads a .zip-stream of
+    approx. size. Returns the upload, or raises StopIteration if the sources iterator
+    was empty. Should be used repeatedly on the same iterator until it is empty.
+    """
+
+    # potentially raises StopIteration before being streamed
+    first_source = next(sources)
+
+    def iterator():
+        """
+        Yields dicts with keys arcname, iterable, as required for the zipstream
+        library. Will read from generator until the zip-stream has the desired size.
+        """
+        size = 0
+        first = True
+        while(True):
+            if first:
+                source_file, prefix = first_source
+                first = False
+            else:
+                try:
+                    source_file, prefix = next(sources)
+                except StopIteration:
+                    break
+
+            source_tar = tarfile.open(source_file)
+            source = source_tar.fileobj
+            bufsize = source_tar.copybufsize
+            for source_member in source_tar.getmembers():
+                if not source_member.isfile():
+                    continue
+
+                target = io.BytesIO()
+                source.seek(source_member.offset_data)
+                tarfile.copyfileobj(  # type: ignore
+                    source, target, source_member.size, tarfile.ReadError, bufsize)
+
+                size += source_member.size
+                target.seek(0)
+
+                def iter_content():
+                    while True:
+                        data = target.read(io.DEFAULT_BUFFER_SIZE)
+                        if not data:
+                            break
+                        yield data
+
+                name = source_member.name
+                if prefix is not None:
+                    name = os.path.join(prefix, name)
+
+                yield dict(arcname=source_member.name, iterable=iter_content())
+
+            if size > approx_upload_size:
+                break
+
+    # create the zip-stream from the iterator above
+    zip_stream = zipstream.ZipFile(mode='w', compression=zipfile.ZIP_STORED, allowZip64=True)
+    zip_stream.paths_to_write = iterator()
+
+    zip_stream
+
+    user = nomad_client.auth.get_user().response().result
+    token = user.token
+    url = nomad_url + '/uploads/?%s' % urlencode(dict(name=upload_name))
+
+    def content():
+        for chunk in zip_stream:
+            if len(chunk) != 0:
+                yield chunk
+
+    print('stream .zip to nomad ...')
+    response = requests.put(url=url, headers={'X-Token': token}, data=content())
+
+    if response.status_code != 200:
+        raise Exception('nomad return status %d' % response.status_code)
+
+    upload_id = response.json()['upload_id']
+
+    print(upload_id)
+    return nomad_client.uploads.get_upload(upload_id=upload_id).response().result
+
+def publish_upload(upload):
+    nomad_client.uploads.exec_upload_operation(upload_id=upload.upload_id, payload={
+        'operation': 'publish',
+        'metadata': {
+            # these metadata are applied to all calcs in the upload
+            'comment': 'Materials Project VASP Calculations',
+            'references': ['https://materialsproject.org']
+        }
+    }).response()
 
 def aggregate_by_formula(coll, q, key=None):
     query = {'$and': [q, exclude]}
@@ -1425,11 +1528,6 @@ def download_file(service, file_id):
 @click.option('--sync-nomad/--no-sync-nomad', default=False, help='sync to NoMaD repository')
 def gdrive(target_spec, block_filter, sync_nomad):
     """sync launch directories for target task DB to Google Drive"""
-    host = urlparse(nomad_url).netloc.split(':')[0]
-    http_client = RequestsClient()
-    http_client.set_basic_auth(host, user, password)
-    client = SwaggerClient.from_url('%s/swagger.json' % nomad_url, http_client=http_client)
-
     target = calcdb_from_mgrant(target_spec)
     print('connected to target db with', target.collection.count(), 'tasks')
     print(target.db.materials.count(), 'materials')
@@ -1469,29 +1567,38 @@ def gdrive(target_spec, block_filter, sync_nomad):
                         launcher_name = launcher['name'].replace('.tar.gz', '')
                         full_launcher_path.append(launcher_name)
                         launcher_paths.append(os.path.join(*full_launcher_path))
-                        if sync_nomad:
-                            result = client.repo.search(paths=[full_launcher_path[-1]]).response().result
-                            if result.pagination.total == 0:
-                                print(f'{idx} {full_launcher_path[-1]} not found')
-                                path = os.path.join(nomad_outdir, launcher_paths[-1] + '.tar.gz')
-                                if not os.path.exists(path):
-                                    print('Retrieve', path, 'from GDrive ...')
-                                    outdir_list = [nomad_outdir] + full_launcher_path[:-1]
-                                    outdir = os.path.join(*outdir_list)
-                                    if not os.path.exists(outdir):
-                                        os.makedirs(outdir, exist_ok=True)
-                                    content = download_file(service, launcher['id'])
-                                    with open(path, 'wb') as f:
-                                        f.write(content)
-                                else:
-                                    print('\t-> already retrieved from GDrive.')
 
-                            elif result.pagination.total > 1:
-                                print(f'{full_launcher_path[-1]}is not specific enough ... uploaded multiple times?')
-                            else:
-                                # The results key holds an array with the current page data
-                                print(f'Found the following calcs for {full_launcher_path[-1]}')
-                                print(', '.join(calc['calc_id'] for calc in result.results))
+                        if sync_nomad:
+                            mainfiles = [
+                                os.path.join(full_launcher_path[-1], 'vasprun.xml.gz'),
+                                os.path.join(full_launcher_path[-1], 'relax2', 'vasprun.xml.gz')
+                            ]
+
+                            for idx, mainfile in enumerate(mainfiles):
+                                result = nomad_client.repo.search(mainfile=mainfile).response().result
+
+                                if result.pagination.total == 0 and idx < len(mainfiles)-1:
+                                    continue
+                                elif result.pagination.total == 0:
+                                    print(f'{idx} {full_launcher_path[-1]} not found')
+                                    path = os.path.join(nomad_outdir, launcher_paths[-1] + '.tar.gz')
+                                    if not os.path.exists(path):
+                                        print('Retrieve', path, 'from GDrive ...')
+                                        outdir_list = [nomad_outdir] + full_launcher_path[:-1]
+                                        outdir = os.path.join(*outdir_list)
+                                        if not os.path.exists(outdir):
+                                            os.makedirs(outdir, exist_ok=True)
+                                        content = download_file(service, launcher['id'])
+                                        with open(path, 'wb') as f:
+                                            f.write(content)
+                                    else:
+                                        print('\t-> already retrieved from GDrive.')
+                                elif result.pagination.total == 1:
+                                    print(f'Found calc {result.results[0]["calc_id"]} for {full_launcher_path[-1]}')
+                                    break
+                                else:
+                                    print(f'{full_launcher_path[-1]} is not specific enough ... uploaded multiple times?')
+
                     else:
                         full_launcher_path.append(launcher['name'])
                         recurse(service, launcher['id'])
@@ -1518,41 +1625,62 @@ def gdrive(target_spec, block_filter, sync_nomad):
 
         for block in block_response['files']:
             print(block['name'])
-            #full_launcher_path.clear()
-            #full_launcher_path.append(block['name'])
-            #recurse(service, block['id'])
+            full_launcher_path.clear()
+            full_launcher_path.append(block['name'])
+            recurse(service, block['id'])
 
-            ## zip block
-            fn = os.path.join(nomad_outdir, block['name'] + '.zip')
-            ##if not os.path.exists(fn):
-            #with zipfile.ZipFile(fn, mode='w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
-            #    print(fn)
-            #    block_dir = os.path.join(nomad_outdir, block['name'])
-            #    for dirpath, dnames, fnames in os.walk(block_dir):
-            #        for f in fnames:
-            #            if f.endswith('.tar.gz'):
-            #                ff = os.path.join(dirpath, f)
-            #                zf.write(ff)
-            #                print(ff)
+            if sync_nomad:
+                block_dir = os.path.join(nomad_outdir, block['name'])
 
-            # upload to NoMaD
-            print(f'uploading {block["name"]} to NoMaD ...')
-            with open(fn, 'rb') as f:
-                upload = client.uploads.upload(file=f).response().result
+                def source_generator():
+                    for dirpath, dnames, fnames in os.walk(block_dir):
+                        for f in fnames:
+                            if f.endswith('.tar.gz'):
+                                print(f)
+                                ff = os.path.join(dirpath, f)
+                                nroot = len(nomad_outdir.split(os.sep))
+                                prefix = os.sep.join(dirpath.split(os.sep)[nroot:])
+                                yield ff, os.path.join(prefix, f.replace('.tar.gz', ''))
 
-            print('processing ...')
-            while upload.tasks_running:
-                upload = client.uploads.get_upload(upload_id=upload.upload_id).response().result
-                time.sleep(5)
-                print('processed: %d, failures: %d' % (upload.processed_calcs, upload.failed_calcs))
+                # upload to NoMaD
+                print(f'uploading {block["name"]} to NoMaD ...')
+                source_iter = iter(source_generator())
+                all_uploaded = False
+                processing_completed = False
 
-            # check if processing was a success
-            if upload.tasks_status != 'SUCCESS':
-                print('something went wrong')
-                print('errors: %s' % str(upload.errors))
-                # delete the unsuccessful upload
-                client.uploads.delete_upload(upload_id=upload.upload_id).response().result
-                sys.exit(1)
+                # run until there are no more uploads and everything is processed (and published)
+                while not (all_uploaded and processing_completed):
+                    # process existing uploads
+                    while True:
+                        uploads = nomad_client.uploads.get_uploads().response().result
+                        for upload in uploads.results:
+                            if not upload.process_running:
+                                if upload.tasks_status == 'SUCCESS':
+                                    print('publish %s(%s)' % (upload.name, upload.upload_id))
+                                    publish_upload(upload)
+                                elif upload.tasks_status == 'FAILURE':
+                                    print('could not process %s(%s)' % (upload.name, upload.upload_id))
+                                    nomad_client.uploads.delete_upload(upload_id=upload.upload_id).response().result
+
+                        if uploads.pagination.total < max_parallel_uploads:
+                            # still processing some, but there is room for more uploads
+                            break
+                        else:
+                            print('wait for processing ...')
+                            time.sleep(10)
+
+                    # add a new upload
+                    if all_uploaded:
+                        processing_completed = uploads.pagination.total == 0
+
+                    try:
+                        upload = upload_next_data(source_iter, upload_name=block['name'])
+                        processing_completed = False
+                        print('uploaded %s(%s)' % (upload.name, upload.upload_id))
+                    except StopIteration:
+                        all_uploaded = True
+                    except Exception as e:
+                        print('could not upload next upload: %s' % str(e))
 
         block_page_token = block_response.get('nextPageToken', None)
         if block_page_token is None:
