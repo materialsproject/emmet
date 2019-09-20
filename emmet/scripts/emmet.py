@@ -1,4 +1,4 @@
-import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, zipstream
+import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, zipstream, re
 import itertools, multiprocessing, math, io, requests, json, time, zipfile, zlib
 from oauth2client import client as oauth2_client
 from oauth2client import file, tools
@@ -34,7 +34,7 @@ from mongogrant.client import Client
 from zipfile import ZipFile
 from bravado.requests_client import RequestsClient
 from bravado.client import SwaggerClient
-from typing import Iterator, Iterable, Union, Tuple
+from typing import Iterator, Iterable, Union, Tuple, Dict, Any
 from urllib.parse import urlparse, urlencode
 
 def get_lpad():
@@ -53,9 +53,9 @@ SCOPES = 'https://www.googleapis.com/auth/drive'
 current_year = int(datetime.today().year)
 year_tags = ['mp_{}'.format(y) for y in range(2018, current_year+1)]
 
-#nomad_outdir = '/project/projectdirs/matgen/garden/nomad'
-nomad_outdir = '/clusterfs/mp/mp_prod/nomad'
-nomad_url = 'http://labdev-nomad.esc.rzg.mpg.de/fairdi/nomad/testing/api'
+nomad_outdir = '/project/projectdirs/matgen/garden/nomad'
+#nomad_outdir = '/clusterfs/mp/mp_prod/nomad'
+nomad_url = 'http://labdev-nomad.esc.rzg.mpg.de/fairdi/nomad/mp/api'
 user = 'leonard.hofstadter@nomad-fairdi.tests.de'
 password = 'password'
 approx_upload_size = 32 * 1024 * 1024 * 1024  # you can make it really small for testing
@@ -67,7 +67,7 @@ nomad_client = SwaggerClient.from_url('%s/swagger.json' % nomad_url, http_client
 
 
 # https://gitlab.mpcdf.mpg.de/nomad-lab/nomad-FAIR/blob/v0.6.0/examples/external_project_parallel_upload/upload.py
-def upload_next_data(sources: Iterator[Tuple[str, str]], upload_name='next upload'):
+def upload_next_data(sources: Iterator[Tuple[str, str, str]], upload_name='next upload'):
     """
     Reads data from the given sources iterator. Creates and uploads a .zip-stream of
     approx. size. Returns the upload, or raises StopIteration if the sources iterator
@@ -76,6 +76,7 @@ def upload_next_data(sources: Iterator[Tuple[str, str]], upload_name='next uploa
 
     # potentially raises StopIteration before being streamed
     first_source = next(sources)
+    calc_metadata = []
 
     def iterator():
         """
@@ -86,11 +87,11 @@ def upload_next_data(sources: Iterator[Tuple[str, str]], upload_name='next uploa
         first = True
         while(True):
             if first:
-                source_file, prefix = first_source
+                source_file, prefix, external_id = first_source
                 first = False
             else:
                 try:
-                    source_file, prefix = next(sources)
+                    source_file, prefix, external_id = next(sources)
                 except StopIteration:
                     break
 
@@ -120,7 +121,14 @@ def upload_next_data(sources: Iterator[Tuple[str, str]], upload_name='next uploa
                 if prefix is not None:
                     name = os.path.join(prefix, name)
 
-                yield dict(arcname=source_member.name, iterable=iter_content())
+                if re.search(r'vasp(run)?\.xml(.gz)?$', name):
+                    calc_metadata.append(dict(
+                        mainfile=name,
+                        external_id=external_id,
+                        references=[f'https://materialsproject.org/tasks/{external_id}']
+                    ))
+
+                yield dict(arcname=name, iterable=iter_content())
 
             if size > approx_upload_size:
                 break
@@ -148,17 +156,22 @@ def upload_next_data(sources: Iterator[Tuple[str, str]], upload_name='next uploa
 
     upload_id = response.json()['upload_id']
 
-    print(upload_id)
-    return nomad_client.uploads.get_upload(upload_id=upload_id).response().result
+    print('upload_id:', upload_id)
+    return nomad_client.uploads.get_upload(upload_id=upload_id).response().result, calc_metadata
 
-def publish_upload(upload):
+def publish_upload(upload, calc_metadata):
+    metadata = {
+        # these metadata are applied to all calcs in the upload
+        'comment': 'Materials Project VASP Calculations',
+        'references': ['https://materialsproject.org'],
+        # '_uploader': <nomad_user_id>,  # only works if the admin user is publishing
+        # 'co_authors': [<nomad_user_id>, <nomad_user_id>, <nomad_user_id>]
+        # these are calc specific metadata that supercede any upload metadata
+        'calculations': calc_metadata
+    }
     nomad_client.uploads.exec_upload_operation(upload_id=upload.upload_id, payload={
         'operation': 'publish',
-        'metadata': {
-            # these metadata are applied to all calcs in the upload
-            'comment': 'Materials Project VASP Calculations',
-            'references': ['https://materialsproject.org']
-        }
+        'metadata': metadata
     }).response()
 
 def aggregate_by_formula(coll, q, key=None):
@@ -1532,6 +1545,13 @@ def gdrive(target_spec, block_filter, sync_nomad):
     print('connected to target db with', target.collection.count(), 'tasks')
     print(target.db.materials.count(), 'materials')
 
+    q = {} if block_filter is None else {'dir_name': {'$regex': block_filter}}
+    tasks = dict(
+        (get_subdir(doc['dir_name']), doc['task_id'])
+        for doc in target.collection.find(q, {'task_id': 1, 'dir_name': 1})
+    )
+    print(len(tasks), 'tasks for block_filter', block_filter)
+
     creds, store = None, None
     if os.path.exists('token.json'):
         store = file.Storage('token.json')
@@ -1574,7 +1594,7 @@ def gdrive(target_spec, block_filter, sync_nomad):
                                 os.path.join(full_launcher_path[-1], 'relax2', 'vasprun.xml.gz')
                             ]
 
-                            for idx, mainfile in enumerate(mainfiles):
+                            for mainfile in mainfiles:
                                 result = nomad_client.repo.search(mainfile=mainfile).response().result
 
                                 if result.pagination.total == 0 and idx < len(mainfiles)-1:
@@ -1640,24 +1660,31 @@ def gdrive(target_spec, block_filter, sync_nomad):
                                 ff = os.path.join(dirpath, f)
                                 nroot = len(nomad_outdir.split(os.sep))
                                 prefix = os.sep.join(dirpath.split(os.sep)[nroot:])
-                                yield ff, os.path.join(prefix, f.replace('.tar.gz', ''))
+                                task_id = tasks[get_subdir(f.replace('.tar.gz', ''))]
+                                yield ff, prefix, task_id
 
                 # upload to NoMaD
                 print(f'uploading {block["name"]} to NoMaD ...')
                 source_iter = iter(source_generator())
                 all_uploaded = False
                 processing_completed = False
+                all_calc_metadata: Dict[str, Any] = {}
 
                 # run until there are no more uploads and everything is processed (and published)
                 while not (all_uploaded and processing_completed):
                     # process existing uploads
                     while True:
                         uploads = nomad_client.uploads.get_uploads().response().result
+
                         for upload in uploads.results:
+                            calc_metadata = all_calc_metadata.get(upload.upload_id, None)
+                            if calc_metadata is None:
+                                continue
+
                             if not upload.process_running:
                                 if upload.tasks_status == 'SUCCESS':
                                     print('publish %s(%s)' % (upload.name, upload.upload_id))
-                                    publish_upload(upload)
+                                    #publish_upload(upload, calc_metadata)
                                 elif upload.tasks_status == 'FAILURE':
                                     print('could not process %s(%s)' % (upload.name, upload.upload_id))
                                     nomad_client.uploads.delete_upload(upload_id=upload.upload_id).response().result
@@ -1674,7 +1701,8 @@ def gdrive(target_spec, block_filter, sync_nomad):
                         processing_completed = uploads.pagination.total == 0
 
                     try:
-                        upload = upload_next_data(source_iter, upload_name=block['name'])
+                        upload, calc_metadata = upload_next_data(source_iter, upload_name=block['name'])
+                        all_calc_metadata[upload.upload_id] = calc_metadata
                         processing_completed = False
                         print('uploaded %s(%s)' % (upload.name, upload.upload_id))
                     except StopIteration:
