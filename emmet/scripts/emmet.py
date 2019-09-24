@@ -1588,15 +1588,16 @@ def gdrive(target_spec, block_filter, sync_nomad):
                         launcher_paths.append(os.path.join(*full_launcher_path))
 
                         if sync_nomad:
+                            full_launcher = os.path.join(*full_launcher_path)
                             mainfiles = [
-                                os.path.join(full_launcher_path[-1], 'vasprun.xml.gz'),
-                                os.path.join(full_launcher_path[-1], 'relax2', 'vasprun.xml.gz')
+                                os.path.join(full_launcher, 'vasprun.xml.gz'),
+                                os.path.join(full_launcher, 'relax2', 'vasprun.xml.gz')
                             ]
 
-                            for mainfile in mainfiles:
+                            for j, mainfile in enumerate(mainfiles):
                                 result = nomad_client.repo.search(mainfile=mainfile).response().result
 
-                                if result.pagination.total == 0 and idx < len(mainfiles)-1:
+                                if result.pagination.total == 0 and j < len(mainfiles)-1:
                                     continue
                                 elif result.pagination.total == 0:
                                     print(f'{idx} {full_launcher_path[-1]} not found')
