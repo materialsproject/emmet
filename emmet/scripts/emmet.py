@@ -164,8 +164,7 @@ def publish_upload(upload, calc_metadata):
         # these metadata are applied to all calcs in the upload
         'comment': 'Materials Project VASP Calculations',
         'references': ['https://materialsproject.org'],
-        # '_uploader': <nomad_user_id>,  # only works if the admin user is publishing
-        # 'co_authors': [<nomad_user_id>, <nomad_user_id>, <nomad_user_id>]
+        'co_authors': [928],
         # these are calc specific metadata that supercede any upload metadata
         'calculations': calc_metadata
     }
@@ -1660,8 +1659,12 @@ def gdrive(target_spec, block_filter, sync_nomad):
                                 ff = os.path.join(dirpath, f)
                                 nroot = len(nomad_outdir.split(os.sep))
                                 prefix = os.sep.join(dirpath.split(os.sep)[nroot:])
-                                task_id = tasks[get_subdir(f.replace('.tar.gz', ''))]
-                                yield ff, prefix, task_id
+                                subdir = get_subdir(f.replace('.tar.gz', ''))
+                                task_id = tasks.get(subdir)
+                                if task_id:
+                                    yield ff, prefix, task_id
+                                else:
+                                    print('skipped - no task_id available:', f)
 
                 # upload to NoMaD
                 print(f'uploading {block["name"]} to NoMaD ...')
@@ -1684,7 +1687,7 @@ def gdrive(target_spec, block_filter, sync_nomad):
                             if not upload.process_running:
                                 if upload.tasks_status == 'SUCCESS':
                                     print('publish %s(%s)' % (upload.name, upload.upload_id))
-                                    #publish_upload(upload, calc_metadata)
+                                    publish_upload(upload, calc_metadata)
                                 elif upload.tasks_status == 'FAILURE':
                                     print('could not process %s(%s)' % (upload.name, upload.upload_id))
                                     nomad_client.uploads.delete_upload(upload_id=upload.upload_id).response().result
@@ -1707,8 +1710,8 @@ def gdrive(target_spec, block_filter, sync_nomad):
                         print('uploaded %s(%s)' % (upload.name, upload.upload_id))
                     except StopIteration:
                         all_uploaded = True
-                    except Exception as e:
-                        print('could not upload next upload: %s' % str(e))
+                    #except Exception as e:
+                    #    print('could not upload next upload: %s' % str(e))
 
         block_page_token = block_response.get('nextPageToken', None)
         if block_page_token is None:
