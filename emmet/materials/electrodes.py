@@ -162,7 +162,7 @@ class ElectrodesBuilder(Builder):
 
             # sort out the sandboxes
             # for each sandbox core+sandbox will both contribute entries
-            all_sbx = [ent.data['_sbxn'] for ent in group]
+            all_sbx = [ent.data['sbxn'] for ent in group]
             all_sbx = set(chain.from_iterable(all_sbx))
             self.logger.debug(f"All sandboxes {', '.join(list(all_sbx))}")
 
