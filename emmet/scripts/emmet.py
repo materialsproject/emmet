@@ -308,6 +308,9 @@ def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs, delete):
     for vaspdir in vaspdirs:
         if get_subdir(vaspdir) in already_inserted_subdirs:
             print(name, vaspdir, 'already parsed')
+            if delete:
+                rmtree(vaspdir)
+                print(name, 'removed', vaspdir)
             continue
         print(name, 'vaspdir:', vaspdir)
 
