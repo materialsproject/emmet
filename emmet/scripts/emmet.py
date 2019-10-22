@@ -59,7 +59,7 @@ nomad_url = 'http://labdev-nomad.esc.rzg.mpg.de/fairdi/nomad/mp/api'
 user = 'leonard.hofstadter@nomad-fairdi.tests.de'
 password = 'password'
 approx_upload_size = 32 * 1024 * 1024 * 1024  # you can make it really small for testing
-max_parallel_uploads = 9
+max_parallel_uploads = 6
 nomad_host = urlparse(nomad_url).netloc.split(':')[0]
 http_client = RequestsClient()
 http_client.set_basic_auth(nomad_host, user, password)
@@ -87,11 +87,11 @@ def upload_next_data(sources: Iterator[Tuple[str, str, str]], upload_name='next 
         first = True
         while(True):
             if first:
-                source_file, prefix, external_id = first_source
+                source_file, prefix, material_id, external_id = first_source
                 first = False
             else:
                 try:
-                    source_file, prefix, external_id = next(sources)
+                    source_file, prefix, material_id, external_id = next(sources)
                 except StopIteration:
                     break
 
@@ -125,7 +125,7 @@ def upload_next_data(sources: Iterator[Tuple[str, str, str]], upload_name='next 
                     calc_metadata.append(dict(
                         mainfile=name,
                         external_id=external_id,
-                        references=[f'https://materialsproject.org/tasks/{external_id}']
+                        references=[f'https://materialsproject.org/tasks/{material_id}#{external_id}']
                     ))
 
                 yield dict(arcname=name, iterable=iter_content())
@@ -1548,10 +1548,14 @@ def gdrive(target_spec, block_filter, sync_nomad):
     print(target.db.materials.count(), 'materials')
 
     q = {} if block_filter is None else {'dir_name': {'$regex': block_filter}}
-    tasks = dict(
-        (get_subdir(doc['dir_name']), doc['task_id'])
-        for doc in target.collection.find(q, {'task_id': 1, 'dir_name': 1})
-    )
+    tasks = {}
+    for doc in target.collection.find(q, {'task_id': 1, 'dir_name': 1}):
+        material = target.db.materials.find_one({'task_ids': doc['task_id']}, {'task_id': 1})
+        if material is None:
+            print(doc['task_id'], 'not in materials collection!')
+            continue
+        subdir = get_subdir(doc['dir_name'])
+        tasks[subdir] = {'material_id': material['task_id'], 'task_id': doc['task_id']}
     print(len(tasks), 'tasks for block_filter', block_filter)
 
     creds, store = None, None
@@ -1616,11 +1620,9 @@ def gdrive(target_spec, block_filter, sync_nomad):
                                             f.write(content)
                                     else:
                                         print('\t-> already retrieved from GDrive.')
-                                elif result.pagination.total == 1:
+                                elif result.pagination.total >= 1:
                                     print(f'Found calc {result.results[0]["calc_id"]} for {full_launcher_path[-1]}')
                                     break
-                                else:
-                                    print(f'{full_launcher_path[-1]} is not specific enough ... uploaded multiple times?')
 
                     else:
                         full_launcher_path.append(launcher['name'])
@@ -1664,11 +1666,11 @@ def gdrive(target_spec, block_filter, sync_nomad):
                                 nroot = len(nomad_outdir.split(os.sep))
                                 prefix = os.sep.join(dirpath.split(os.sep)[nroot:])
                                 subdir = get_subdir(f.replace('.tar.gz', ''))
-                                task_id = tasks.get(subdir)
-                                if task_id:
-                                    yield ff, prefix, task_id
+                                task_info = tasks.get(subdir)
+                                if task_info:
+                                    yield ff, prefix, task_info['material_id'], task_info['task_id']
                                 else:
-                                    print('skipped - no task_id available:', f)
+                                    print('skipped - no task_info available:', f)
 
                 # upload to NoMaD
                 print(f'uploading {block["name"]} to NoMaD ...')
