@@ -47,7 +47,6 @@ class MaterialsBuilder(Builder):
         ltol=LTOL,
         stol=STOL,
         angle_tol=ANGLE_TOL,
-        separate_mag_orderings=False,
         **kwargs,
     ):
         """
@@ -61,7 +60,6 @@ class MaterialsBuilder(Builder):
             ltol (float): StructureMatcher tuning parameter for matching tasks to materials
             stol (float): StructureMatcher tuning parameter for matching tasks to materials
             angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
-            separate_mag_orderings (bool): Separate magnetic orderings into different materials
         """
 
         self.tasks = tasks
@@ -72,7 +70,6 @@ class MaterialsBuilder(Builder):
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol
-        self.separate_mag_orderings = separate_mag_orderings
 
         self.__settings = load_settings(self.materials_settings, default_mat_settings)
 
@@ -287,11 +284,7 @@ class MaterialsBuilder(Builder):
             structures.append(s)
 
         grouped_structures = group_structures(
-            structures,
-            ltol=self.ltol,
-            stol=self.stol,
-            angle_tol=self.angle_tol,
-            separate_mag_orderings=self.separate_mag_orderings,
+            structures, ltol=self.ltol, stol=self.stol, angle_tol=self.angle_tol
         )
 
         for group in grouped_structures:
@@ -490,12 +483,7 @@ def structure_metadata(structure):
 
 
 def group_structures(
-    structures,
-    ltol=LTOL,
-    stol=STOL,
-    angle_tol=ANGLE_TOL,
-    symprec=SYMPREC,
-    separate_mag_orderings=False,
+    structures, ltol=LTOL, stol=STOL, angle_tol=ANGLE_TOL, symprec=SYMPREC
 ):
     """
     Groups structures according to space group and structure matching
@@ -506,7 +494,6 @@ def group_structures(
         stol (float): StructureMatcher tuning parameter for matching tasks to materials
         angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
         symprec (float): symmetry tolerance for space group finding
-        separate_mag_orderings (bool): Separate magnetic orderings into different materials
     """
 
     sm = StructureMatcher(
@@ -529,22 +516,10 @@ def group_structures(
 
         return sg
 
-    def get_mag_ordering(struc):
-        # helperd function to get a label of the magnetic ordering type
-        return np.around(np.abs(struc.total_magnetization) / struc.volume, decimals=1)
-
     # First group by spacegroup number then by structure matching
     for sg, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
         for group in sm.group_structures(list(pregroup)):
-
-            # Match magnetic orderings here
-            if separate_mag_orderings:
-                for _, mag_group in groupby(
-                    sorted(group, key=get_mag_ordering), key=get_mag_ordering
-                ):
-                    yield list(mag_group)
-            else:
-                yield group
+            yield group
 
 
 def ID_to_int(s_id):
