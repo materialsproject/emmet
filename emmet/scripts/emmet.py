@@ -36,6 +36,9 @@ from bravado.requests_client import RequestsClient
 from bravado.client import SwaggerClient
 from typing import Iterator, Iterable, Union, Tuple, Dict, Any
 from urllib.parse import urlparse, urlencode
+import functools
+
+print = functools.partial(print, flush=True)
 
 def get_lpad():
     if 'FW_CONFIG_FILE' not in os.environ:
@@ -58,7 +61,7 @@ nomad_outdir = '/project/projectdirs/matgen/garden/nomad'
 nomad_url = 'http://labdev-nomad.esc.rzg.mpg.de/fairdi/nomad/mp/api'
 user = 'leonard.hofstadter@nomad-fairdi.tests.de'
 password = 'password'
-approx_upload_size = 32 * 1024 * 1024 * 1024  # you can make it really small for testing
+approx_upload_size = 16 * 1024 * 1024 * 1024  # you can make it really small for testing
 max_parallel_uploads = 6
 nomad_host = urlparse(nomad_url).netloc.split(':')[0]
 http_client = RequestsClient()
@@ -283,18 +286,19 @@ def get_vasp_dirs(scan_path, base_path, max_dirs, insert):
                 break
             dirs[:] = [] # don't descend further (i.e. ignore relax1/2)
         else:
-            for f in files:
-                if f.endswith('.tar.gz'):
-                    cwd = os.path.realpath(root)
-                    path = os.path.join(cwd, f)
-                    with tarfile.open(path, 'r:gz') as tf:
-                        tf.extractall(cwd)
-                    os.remove(path)
-                    for vaspdir in get_vasp_dirs(path.replace('.tar.gz', ''), base_path, max_dirs, insert):
-                        yield vaspdir
-                        counter += 1
-                        if counter >= max_dirs:
-                            break
+            print(root, 'does not contain INCAR!')
+            #for f in files:
+            #    if f.endswith('.tar.gz'):
+            #        cwd = os.path.realpath(root)
+            #        path = os.path.join(cwd, f)
+            #        with tarfile.open(path, 'r:gz') as tf:
+            #            tf.extractall(cwd)
+            #        os.remove(path)
+            #        for vaspdir in get_vasp_dirs(path.replace('.tar.gz', ''), base_path, max_dirs, insert):
+            #            yield vaspdir
+            #            counter += 1
+            #            if counter >= max_dirs:
+            #                break
 
 
 def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs, delete):
@@ -1552,7 +1556,7 @@ def gdrive(target_spec, block_filter, sync_nomad):
     for doc in target.collection.find(q, {'task_id': 1, 'dir_name': 1}):
         material = target.db.materials.find_one({'task_ids': doc['task_id']}, {'task_id': 1})
         if material is None:
-            print(doc['task_id'], 'not in materials collection!')
+            print(doc['task_id'], 'not in materials collection!', doc['dir_name'])
             continue
         subdir = get_subdir(doc['dir_name'])
         tasks[subdir] = {'material_id': material['task_id'], 'task_id': doc['task_id']}
@@ -1592,13 +1596,19 @@ def gdrive(target_spec, block_filter, sync_nomad):
                     if '.tar.gz' in launcher['name']:
                         launcher_name = launcher['name'].replace('.tar.gz', '')
                         full_launcher_path.append(launcher_name)
-                        launcher_paths.append(os.path.join(*full_launcher_path))
+                        launcher_paths.append({
+                            'path': os.path.join(*full_launcher_path),
+                            'size': launcher['size']
+                        })
 
                         if sync_nomad:
                             full_launcher = os.path.join(*full_launcher_path)
                             mainfiles = [
                                 os.path.join(full_launcher, 'vasprun.xml.gz'),
-                                os.path.join(full_launcher, 'relax2', 'vasprun.xml.gz')
+                                os.path.join(full_launcher, 'vasprun.xml'),
+                                os.path.join(full_launcher, 'relax2', 'vasprun.xml.gz'),
+                                os.path.join(full_launcher, 'vasprun.xml.relax2.gz'),
+                                os.path.join(full_launcher, 'vasprun.xml.relax2')
                             ]
 
                             for j, mainfile in enumerate(mainfiles):
@@ -1608,16 +1618,20 @@ def gdrive(target_spec, block_filter, sync_nomad):
                                     continue
                                 elif result.pagination.total == 0:
                                     print(f'{idx} {full_launcher_path[-1]} not found')
-                                    path = os.path.join(nomad_outdir, launcher_paths[-1] + '.tar.gz')
+                                    path = os.path.join(nomad_outdir, launcher_paths[-1]['path'] + '.tar.gz')
                                     if not os.path.exists(path):
-                                        print('Retrieve', path, 'from GDrive ...')
-                                        outdir_list = [nomad_outdir] + full_launcher_path[:-1]
-                                        outdir = os.path.join(*outdir_list)
-                                        if not os.path.exists(outdir):
-                                            os.makedirs(outdir, exist_ok=True)
-                                        content = download_file(service, launcher['id'])
-                                        with open(path, 'wb') as f:
-                                            f.write(content)
+                                        subdir = get_subdir(path.replace('.tar.gz', ''))
+                                        if tasks.get(subdir):
+                                            print('Retrieve', path, 'from GDrive ...')
+                                            outdir_list = [nomad_outdir] + full_launcher_path[:-1]
+                                            outdir = os.path.join(*outdir_list)
+                                            if not os.path.exists(outdir):
+                                                os.makedirs(outdir, exist_ok=True)
+                                            content = download_file(service, launcher['id'])
+                                            with open(path, 'wb') as f:
+                                                f.write(content)
+                                        else:
+                                            print('skip download - no task_info available:', launcher_paths[-1]['path'])
                                     else:
                                         print('\t-> already retrieved from GDrive.')
                                 elif result.pagination.total >= 1:
@@ -1656,6 +1670,9 @@ def gdrive(target_spec, block_filter, sync_nomad):
 
             if sync_nomad:
                 block_dir = os.path.join(nomad_outdir, block['name'])
+                if not os.path.exists(block_dir):
+                    print('nothing to upload for', block['name'])
+                    continue
 
                 def source_generator():
                     for dirpath, dnames, fnames in os.walk(block_dir):
@@ -1719,12 +1736,16 @@ def gdrive(target_spec, block_filter, sync_nomad):
                     #except Exception as e:
                     #    print('could not upload next upload: %s' % str(e))
 
+                # cleanup to avoid duplicate uploads
+                rmtree(block_dir)
+                print('removed', block_dir)
+
         block_page_token = block_response.get('nextPageToken', None)
         if block_page_token is None:
             break # done with blocks
 
-    launcher_paths.sort()
-    print(len(launcher_paths), 'launcher directories in GDrive')
+    launcher_paths_sort = sorted([d['path'] for d in launcher_paths])
+    print(len(launcher_paths_sort), 'launcher directories in GDrive')
 
     if sync_nomad:
         return
@@ -1737,6 +1758,7 @@ def gdrive(target_spec, block_filter, sync_nomad):
     print(len(blessed_task_ids), 'blessed tasks.')
 
     nr_launchers_sync = 0
+    block_launchers = []
     outfile = open('launcher_paths_{}.txt'.format(block_filter), 'w')
     splits = ['block_', 'res_1_aflow_engines-', 'aflow_engines-']
     for task in target.collection.find({'task_id': {'$in': blessed_task_ids}}, {'dir_name': 1}):
@@ -1745,12 +1767,13 @@ def gdrive(target_spec, block_filter, sync_nomad):
             ds = dir_name.split(s)
             if len(ds) == 2:
                 block_launcher = s + ds[-1]
-                if block_launcher not in launcher_paths and (
+                if block_launcher not in launcher_paths_sort and (
                     block_filter is None or \
                     (block_filter is not None and block_launcher.startswith(block_filter))
                 ):
                     nr_launchers_sync += 1
                     outfile.write(block_launcher + '\n')
+                block_launchers.append(block_launcher)
                 break
         else:
             print('could not split', dir_name)
@@ -1758,6 +1781,12 @@ def gdrive(target_spec, block_filter, sync_nomad):
 
     outfile.close()
     print(nr_launchers_sync, 'launchers to sync')
+
+    outfile_sizes = open('launcher_paths_{}_sizes.txt'.format(block_filter), 'w')
+    for d in launcher_paths:
+        if d['path'] in block_launchers:
+            outfile_sizes.write(f"{d['path']} {d['size']}\n")
+    outfile_sizes.close()
     return
 
     nr_tasks_processed = 0
