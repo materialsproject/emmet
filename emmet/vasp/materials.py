@@ -271,17 +271,6 @@ class MaterialsBuilder(Builder):
         for idx, t in enumerate(filtered_tasks):
             s = Structure.from_dict(t["output"]["structure"])
             s.index = idx
-            total_mag = get(t, "calcs_reversed.0.output.outcar.total_magnetization", 0)
-            s.total_magnetization = total_mag if total_mag else 0
-            # a fix for very old tasks that did not report site-projected magnetic moments
-            # so that we can group them appropriately
-            if (
-                ("magmom" not in s.site_properties)
-                and (get(t, "input.parameters.ISPIN", 1) == 2)
-                and has(t, "input.parameters.MAGMOM")
-            ):
-                # TODO: map input structure sites to output structure sites
-                s.add_site_property("magmom", t["input"]["parameters"]["MAGMOM"])
             structures.append(s)
 
         grouped_structures = group_structures(
