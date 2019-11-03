@@ -500,7 +500,7 @@ def group_structures(
     def get_sg(struc):
         # helper function to get spacegroup with a loose tolerance
         try:
-            sg = struc.get_space_group_info(symprec=SYMPREC)[1]
+            sg = struc.get_space_group_info(symprec=symprec)[1]
         except:
             sg = -1
 
