@@ -87,7 +87,7 @@ def task_type(inputs, include_calc_type=True):
             in task_type such as HSE, GGA, SCAN, etc.
     """
 
-    calc_type = ""
+    calc_type = []
 
     incar = inputs.get("incar", {})
     try:
@@ -99,18 +99,17 @@ def task_type(inputs, include_calc_type=True):
 
     if include_calc_type:
         if incar.get("LHFCALC", False):
-            calc_type += "HSE "
+            calc_type.append("HSE")
         elif incar.get("METAGGA", "").strip().upper() in METAGGA_TYPES:
-            calc_type += incar["METAGGA"].strip().upper()
-            calc_type += " "
+            calc_type.append(incar["METAGGA"].strip().upper())
         elif incar.get("LDAU", False):
-            calc_type += "GGA+U "
+            calc_type.append("GGA+U")
         elif functional == "PBE":
-            calc_type += "GGA "
+            calc_type.append("GGA")
         elif functional == "PW91":
-            calc_type += "PW91 "
+            calc_type.append("PW91")
         elif functional == "Perdew-Zunger81":
-            calc_type += "LDA "
+            calc_type.append("LDA")
 
     if incar.get("ICHARG", 0) > 10:
         try:
@@ -123,51 +122,34 @@ def task_type(inputs, include_calc_type=True):
             )
 
         if num_kpt_labels > 0:
-            return calc_type + "NSCF Line"
+            calc_type.append("NSCF Line")
         else:
-            return calc_type + "NSCF Uniform"
+            calc_type.append("NSCF Uniform")
 
     elif incar.get("LEPSILON", False):
-        return calc_type + "Static Dielectric"
+        if incar.get("IBRION", 0) > 6:
+            calc_type.append("DFPT")
+        calc_type.append("Dielectric")
+
+    elif incar.get("IBION", 0) > 6:
+        calc_type.append("DFPT")
 
     elif incar.get("LCHIMAG", False):
-        return calc_type + "NMR Chemical Shielding"
+        calc_type.append("NMR Nuclear Shielding")
 
     elif incar.get("LEFG", False):
-        return calc_type + "NMR Electric Field Gradient"
-
-    # these criteria for detecting magnetic ordering calculations are slightly
-    # arbitrary and may need to be revisited in future, they are included for
-    # now to make building cleaner and to better declare the intent of these
-    # calculations on the Materials Project website - @mkhorton
-
-    elif (
-        incar.get("ISPIN", 1) == 2
-        and incar.get("LASPH", False)
-        and incar.get("ISYM", False)
-        and incar.get("NSW", 1) == 0
-    ):
-        return calc_type + "Magnetic Ordering Static"
-
-    elif (
-        incar.get("ISPIN", 1) == 2
-        and incar.get("LASPH", False)
-        and incar.get("ISYM", False)
-        and incar.get("ISIF", 2) == 3
-        and incar.get("IBRION", 0) > 0
-    ):
-        return calc_type + "Magnetic Ordering Structure Optimization"
+        calc_type.append("NMR Electric Field Gradient")
 
     elif incar.get("NSW", 1) == 0:
-        return calc_type + "Static"
+        calc_type.apppend("Static")
 
     elif incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
-        return calc_type + "Structure Optimization"
+        calc_type.apppend("Structure Optimization")
 
     elif incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
-        return calc_type + "Deformation"
+        calc_type.apppend("Deformation")
 
-    return ""
+    return " ".join(calc_type)
 
 
 def is_valid(
