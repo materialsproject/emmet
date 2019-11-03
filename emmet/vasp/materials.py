@@ -70,6 +70,7 @@ class MaterialsBuilder(Builder):
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol
+        self.kwargs = kwargs
 
         self.__settings = load_settings(self.materials_settings, default_mat_settings)
 
