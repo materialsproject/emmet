@@ -1,0 +1,76 @@
+
+#
+data_5656565656-ICSD
+_database_code_ICSD 5656565656
+_audit_creation_date 1980-01-01
+_chemical_name_systematic 'Aluminum oxide deuteriohydroxide - alpha'
+_chemical_formula_structural 'Al O (O D)'
+_chemical_formula_sum 'D1 Al1 O2'
+_chemical_name_structure_type AlOOH(Diaspore)
+_exptl_crystal_density_diffrn 7.26
+_publ_section_title
+
+;
+Commentary: The Materials Project: A materials genome approach to accelerating materials innovation.
+;
+loop_
+_citation_id
+_citation_journal_full
+_citation_year
+_citation_journal_volume
+_citation_page_first
+_citation_page_last
+_citation_journal_id_ASTM
+primary
+
+;
+APL Materials
+; 2013 1 1 1 ACBCAR
+loop_
+_publ_author_name
+'Pye, M.F.'
+'Birtill, J.J.'
+'Dickens, P.G.'
+_cell_length_a 4.716(7)
+_cell_length_b 9.779(7)
+_cell_length_c 2.966(3)
+_cell_angle_alpha 90.
+_cell_angle_beta 90.
+_cell_angle_gamma 90.
+_cell_volume 130.98
+_cell_formula_units_Z 4
+_symmetry_space_group_name_H-M 'P b n m'
+_symmetry_Int_Tables_number 62
+_refine_ls_R_factor_all 0.0716
+loop_
+_symmetry_equiv_pos_site_id
+_symmetry_equiv_pos_as_xyz
+1 '-x+1/2, y+1/2, z'
+2 'x, y, -z+1/2'
+3 'x+1/2, -y+1/2, z+1/2'
+4 '-x, -y, -z'
+5 'x+1/2, -y+1/2, -z'
+6 '-x, -y, z+1/2'
+7 '-x+1/2, y+1/2, -z+1/2'
+8 'x, y, z'
+loop_
+_atom_type_symbol
+_atom_type_oxidation_number
+Al3+ 3
+O2- -2
+D1+ 1
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_symmetry_multiplicity
+_atom_site_Wyckoff_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_B_iso_or_equiv
+_atom_site_occupancy
+_atom_site_attached_hydrogens
+Al1 Al3+ 4 c 0.0712(6) -.1447(2) 0.27 0.38 1. 0
+O1 O2- 4 c 0.7020(7) 0.1973(3) 0.27 0.77 1. 0
+O2 O2- 4 c 0.1947(8) 0.0746(3) 0.27 0.41 1. 0
+D1 D1+ 4 c 0.4037(7) 0.0869(3) 0.27 1.7 1. 0

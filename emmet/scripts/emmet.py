@@ -1,4 +1,4 @@
-import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, itertools, multiprocessing, math, io, requests
+import click, os, yaml, sys, logging, tarfile, bson, gzip, csv, tarfile, itertools, multiprocessing, math, io, requests, json
 from shutil import copyfile, rmtree
 from glob import glob
 from fnmatch import fnmatch
@@ -29,6 +29,7 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from tqdm import tqdm
 from pprint import pprint
 from mongogrant.client import Client
+from zipfile import ZipFile
 
 def get_lpad():
     if 'FW_CONFIG_FILE' not in os.environ:
@@ -37,7 +38,7 @@ def get_lpad():
     return LaunchPad.auto_load()
 
 exclude = {'about.remarks': {'$nin': ['DEPRECATED', 'deprecated']}}
-skip_labels = ['He', 'He0+', 'Ar', 'Ar0+', 'Ne', 'Ne0+', 'D', 'D+']
+skip_labels = ['He', 'He0+', 'Ar', 'Ar0+', 'Ne', 'Ne0+', 'D', 'D+', 'T', 'M']
 base_query = {'is_ordered': True, 'is_valid': True, 'nsites': {'$lt': 200}, 'sites.label': {'$nin': skip_labels}}
 task_base_query = {'tags': {'$nin': ['DEPRECATED', 'deprecated']}, '_mpworks_meta': {'$exists': 0}}
 structure_keys = ['snl_id', 'lattice', 'sites', 'charge', 'about._materialsproject.task_id']
@@ -150,13 +151,13 @@ def get_vasp_dirs(scan_path, base_path, max_dirs, insert):
     counter = 0
 
     # NOTE os.walk followlinks=False by default, as intended here
-    for root, dirs, files in os.walk(scan_path):
-        # TODO ignore relax1/2 subdirs if INCAR.orig found
+    for root, dirs, files in os.walk(scan_path, topdown=True):
         if contains_vasp_dirs(files):
             yield get_symlinked_path(root, base_path_index, insert)
             counter += 1
             if counter >= max_dirs:
                 break
+            dirs[:] = [] # don't descend further (i.e. ignore relax1/2)
         else:
             for f in files:
                 if f.endswith('.tar.gz'):
@@ -178,6 +179,7 @@ def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
     lpad = get_lpad()
     target = calcdb_from_mgrant(f'{lpad.host}/{lpad.name}')
     print(name, 'connected to target db with', target.collection.count(), 'tasks')
+    input_structures = []
 
     for vaspdir in vaspdirs:
         if get_subdir(vaspdir) in already_inserted_subdirs:
@@ -207,6 +209,9 @@ def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
                     print(name, 'removed', vaspdir)
                 continue
 
+            s = Structure.from_dict(task_doc['input']['structure'])
+            input_structures.append(s)
+
             q = {'dir_name': {'$regex': get_subdir(vaspdir)}}
             # check completed_at timestamp to decide on re-parse (only relevant for --force)
             docs = list(target.collection.find(q, {'completed_at': 1}).sort([('_id', -1)]).limit(1))
@@ -233,9 +238,8 @@ def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs):
                         task_doc['calcs_reversed'][0]['output'].pop('force_constants')
                         target.insert_task(task_doc, use_gridfs=True)
 
-    nr_vaspdirs = len(vaspdirs)
-    print(name, 'processed', nr_vaspdirs, 'VASP directories')
-    return nr_vaspdirs
+    print(name, 'processed', len(vaspdirs), 'VASP directories -', len(input_structures), 'structures')
+    return input_structures
 
 @click.group()
 def cli():
@@ -298,6 +302,8 @@ def copy(target_spec, tag, insert, copy_snls, sbxn, src, force):
     target = calcdb_from_mgrant(target_spec)
     print('connected to target db with', target.collection.count(), 'tasks')
 
+    sbxn = list(sbxn) if sbxn else target.collection.distinct('sbxn')
+
     ensure_indexes(['task_id', 'tags', 'dir_name', 'retired_task_id'], [source.collection, target.collection])
 
     tags = [tag]
@@ -326,11 +332,13 @@ def copy(target_spec, tag, insert, copy_snls, sbxn, src, force):
     if counter:
         print(counter, 'year tags fixed.')
 
+    target_snls = target.db.snls_user
+
     def insert_snls(snls_list):
         if snls_list:
             print('copy', len(snls_list), 'SNLs')
             if insert:
-                result = target.db.snls.insert_many(snls_list)
+                result = target_snls.insert_many(snls_list)
                 print('#SNLs inserted:', len(result.inserted_ids))
             snls_list.clear()
         else:
@@ -363,7 +371,7 @@ def copy(target_spec, tag, insert, copy_snls, sbxn, src, force):
                     snl_copied = False
                     try:
                         q = {'about.projects': t, '$or': [{k: formula} for k in aggregation_keys]}
-                        group = aggregate_by_formula(target.db.snls, q).next() # only one formula
+                        group = aggregate_by_formula(target_snls, q).next() # only one formula
                         for dct in group['structures']:
                             existing_structure = Structure.from_dict(dct)
                             if structures_match(snl.structure, existing_structure):
@@ -376,7 +384,7 @@ def copy(target_spec, tag, insert, copy_snls, sbxn, src, force):
                         continue
                     snl_dct = snl.as_dict()
                     if index is None:
-                        index = max([int(snl_id[len(prefix)+1:]) for snl_id in target.db.snls.distinct('snl_id')]) + 1
+                        index = max([int(snl_id[len(prefix)+1:]) for snl_id in target_snls.distinct('snl_id')]) + 1
                     else:
                         index += 1
                     snl_id = '{}-{}'.format(prefix, index)
@@ -495,8 +503,7 @@ def copy(target_spec, tag, insert, copy_snls, sbxn, src, force):
                         print('ERROR: not a SO task!')
                         continue
 
-            if sbxn:
-                task_doc['sbxn'] = list(sbxn)
+            task_doc['sbxn'] = sbxn
 
             if insert:
                 target.insert_task(task_doc, use_gridfs=True)
@@ -809,7 +816,7 @@ def wflows(add_snlcolls, add_taskdbs, tag, insert, clear_logs, max_structures, s
                             continue
                         mongo_handler.collection.remove(q) # avoid dups
                         counter['structures'] += 1
-                        s = Structure.from_dict(dct)
+                        s = Structure.from_dict(dct).get_primitive_structure()
                         s.snl_id = dct['snl_id']
                         s.task_id = dct.get('task_id')
                         try:
@@ -1024,7 +1031,7 @@ def wflows(add_snlcolls, add_taskdbs, tag, insert, clear_logs, max_structures, s
                 print(len(canonical_structures_list), 'canonical structure(s) for', formula, sites_elements)
                 if tag is not None:
                     print('trying again ...')
-                    wflows(add_snlcolls, add_tasks_db, tag, insert, clear_logs, max_structures, True)
+                    wflows(add_snlcolls, add_taskdbs, tag, insert, clear_logs, max_structures, True, force_new)
 
             print(counter)
 
@@ -1118,6 +1125,13 @@ def report(tag, in_progress, to_csv):
             for row in table._get_rows(options):
                 writer.writerow(row)
 
+def get_format(fname):
+    if fnmatch(fname, "*.cif*") or fnmatch(fname, "*.mcif*"):
+        return 'cif'
+    elif fnmatch(fname, "*.json*") or fnmatch(fname, "*.mson*"):
+        return 'json'
+    else:
+        raise ValueError('reading', fname, 'not supported (yet)')
 
 @cli.command()
 @click.argument('archive', type=click.Path(exists=True))
@@ -1134,7 +1148,7 @@ def load(archive, add_snlcolls, insert):
     tag, sec_ext = fname.rsplit('.', 1) if '.' in fname else [fname, '']
     if sec_ext:
         ext = ''.join([sec_ext, ext])
-    exts = ['tar.gz', '.tgz', 'bson.gz']
+    exts = ['tar.gz', '.tgz', 'bson.gz', '.zip']
     if ext not in exts:
         print(ext, 'not supported (yet)! Please use one of', exts)
         return
@@ -1148,6 +1162,16 @@ def load(archive, add_snlcolls, insert):
             if any([bool(l in elements) for l in skip_labels]):
                 continue
             input_structures.append(TransformedStructure.from_dict(doc['structure']))
+    elif ext == '.zip':
+        input_zip = ZipFile(archive)
+        for fname in input_zip.namelist():
+            contents = input_zip.read(fname)
+            fmt = get_format(fname)
+            try:
+                input_structures.append(Structure.from_str(contents, fmt=fmt))
+            except Exception as ex:
+                print(ex)
+                break #continue
     else:
         tar = tarfile.open(archive, 'r:gz')
         for member in tar.getmembers():
@@ -1157,13 +1181,7 @@ def load(archive, add_snlcolls, insert):
             if f:
                 contents = f.read().decode('utf-8')
                 fname = member.name.lower()
-                if fnmatch(fname, "*.cif*") or fnmatch(fname, "*.mcif*"):
-                    fmt = 'cif'
-                elif fnmatch(fname, "*.json*") or fnmatch(fname, "*.mson*"):
-                    fmt = 'json'
-                else:
-                    print('reading', fname, 'not supported (yet)')
-                    continue
+                fmt = get_format(fname)
                 try:
                     input_structures.append(Structure.from_str(contents, fmt=fmt))
                 except Exception as ex:
@@ -1301,9 +1319,9 @@ def add_snls(tag, input_structures, add_snlcolls, insert):
 @click.option('--nproc', '-n', type=int, default=1, help='number of processes for parallel parsing')
 @click.option('--max-dirs', '-m', type=int, default=10, help='maximum number of directories to parse')
 @click.option('--force/--no-force', default=False, help='force re-parsing of task')
-#@click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
-#@click.option('--make-snls/--no-make-snls', default=False, help='also create SNLs for parsed tasks')
-def parse(base_path, insert, nproc, max_dirs, force):#, add_snlcolls, make_snls):
+@click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
+@click.option('--make-snls/--no-make-snls', default=False, help='also create SNLs for parsed tasks')
+def parse(base_path, insert, nproc, max_dirs, force, add_snlcolls, make_snls):
     """parse VASP output directories in base_path into tasks and tag"""
     if not insert:
         print('DRY RUN: add --insert flag to actually insert tasks')
@@ -1330,7 +1348,7 @@ def parse(base_path, insert, nproc, max_dirs, force):#, add_snlcolls, make_snls)
     iterator_vaspdirs = get_vasp_dirs(base_path, base_path, max_dirs, insert)
     iterator = iterator_slice(iterator_vaspdirs, chunk_size) # process in chunks
     queue = deque()
-    total_nr_vaspdirs_parsed = 0
+    input_structures = []
 
     while iterator or queue:
         try:
@@ -1344,19 +1362,23 @@ def parse(base_path, insert, nproc, max_dirs, force):#, add_snlcolls, make_snls)
             if not process.ready():
                 queue.append(process)
             else:
-                total_nr_vaspdirs_parsed += process.get()
+                input_structures += process.get()
 
     pool.close()
-    print('DONE:', total_nr_vaspdirs_parsed, 'parsed')
+    print('DONE:', len(input_structures), 'structures')
 
-    #input_structures = []
-    #                if make_snls:
-    #                    s = Structure.from_dict(task_doc['input']['structure'])
-    #                    input_structures.append(s)
+    fn = os.path.join(base_path, 'launchdir_to_taskid.json')
+    if os.path.exists(fn):
+        print('updating task ids...')
+        with open(fn, 'r') as f:
+            launchdir_to_taskid = json.load(f)
+        for doc in target.collection.find({'tags': tag}, {'dir_name': 1, 'task_id': 1, '_id': 0}):
+            task_id = launchdir_to_taskid[get_subdir(doc['dir_name'])]
+            target.collection.update({'task_id': doc['task_id']}, {'$set': {'task_id': task_id}})
 
-    #if insert and make_snls:
-    #    print('add SNLs for', len(input_structures), 'structures')
-    #    add_snls(tag, input_structures, add_snlcolls, insert)
+    if insert and make_snls:
+        print('add SNLs for', len(input_structures), 'structures')
+        add_snls(tag, input_structures, add_snlcolls, insert)
 
 def upload_archive(path, name, service, parent=None):
     media = MediaFileUpload(path, mimetype='application/gzip', resumable=True)

@@ -1,0 +1,846 @@
+{
+  "chemsys": "Fe-N-Si",
+  "cifmetadata": {
+    "chem_name": "Nxotetratellurium dichromate(III)",
+    "history": [
+      {
+        "description": {
+          "id": "999999999"
+        },
+        "name": "ICSD",
+        "url": "https://icsd.fiz-karlsruhe.de/"
+      }
+    ],
+    "pressure": 0.101325,
+    "references": "@article{Meunier1726,\ntitle = {Fe2 Si4 N11: une structure a anions complexes (Fe2 N10)(14-)},\nauthor = {Meunier, G. and Frit, B. and Galy, J.},\njournal = {Acta Feystallographica, Section B: Structural Feystallography and Feystal Chemistry},\nyear = {1726},\nvolume = {32},\npages = {125-180},\nASTM_id = {ACBCAR},\n}"
+  },
+  "elements": [
+    "Fe",
+    "N",
+    "Si"
+  ],
+  "formula": "Fe4 Si8 N22",
+  "formula_anonymous": "A2B4C11",
+  "formula_pretty": "Fe2Si4N11",
+  "formula_reduced_abc": "Fe2 N11 Si4",
+  "is_ordered": true,
+  "is_valid": true,
+  "metadata": {
+    "AB_formula": "AB2",
+    "ICSD_version": "Version 4.2.9 (build 29199513-1424) - Data Release 2919.1",
+    "NMR_data_available": false,
+    "PDF_number": "91-971-9991",
+    "R_value": 9.934,
+    "absolute_config_determined": false,
+    "abstract": "",
+    "anharmonic_temperature_factors_given": false,
+    "authors": "Nobody, G.; Somebody, B.; Anybody, J.",
+    "calculated_PDF_number": false,
+    "cell_constants_without_sd": false,
+    "cell_parameters": {
+      "a": 13.675,
+      "alpha": 90.0,
+      "b": 13.675,
+      "beta": 90.0,
+      "c": 14.767,
+      "gamma": 120.0
+    },
+    "chemical_formula": "Cr2 O11 Te4",
+    "collection_code": 999999999,
+    "comments": [],
+    "consistent_composition": false,
+    "correction_of_previous": false,
+    "crawler_version": "9.9.3",
+    "crystal_class": "2/m",
+    "crystal_system": "monoclinic",
+    "data_quality": "High quality",
+    "defect": false,
+    "deuterium_indices": [],
+    "disordered": false,
+    "doi": "10.1107/S0365110X63000074",
+    "electron_diffraction": false,
+    "experimental_PDF_number": false,
+    "formula_units_per_cell": 2,
+    "is_prototype_structure": false,
+    "is_structure_prototype": false,
+    "magnetic_structure_available": false,
+    "mineral": false,
+    "modulated_structure": false,
+    "neutron_diffraction": false,
+    "only_cell_and_structure_type": false,
+    "order_disorder": false,
+    "pearson": "mP34",
+    "polytype": false,
+    "powder": false,
+    "pressure": "atmospheric",
+    "publication_title": "Crystal structures with a chabazite framework.",
+    "references": [
+      "Acta Crystallographica, Section B: Structural Crystallography and Crystal Chemistry (2090) 129, (*) p175002-p175004"
+    ],
+    "rietveld_employed": false,
+    "single_crystal": true,
+    "space_group": "P 1 21/c 1(14)",
+    "structural_formula": "(Te4 O) (Cr2 O19)",
+    "structural_prototype": "SiO2",
+    "synchrotron": false,
+    "temperature": "room temperature",
+    "temperature_factors_available": true,
+    "theoretical_calculation": false,
+    "tritium_indices": [],
+    "twinned_crystal_data": false,
+    "volume": 2391.54,
+    "warnings": [],
+    "wyckoff_sequence": "e8 d",
+    "x_ray": true
+  },
+  "nelements": 3,
+  "nsites": 34,
+  "structure": {
+    "@class": "Structure",
+    "@module": "pymatgen.core.structure",
+    "@version": "2019.8.23",
+    "charge": null,
+    "lattice": {
+      "a": 2.016,
+      "alpha": 90.61475328706723,
+      "b": 2.545,
+      "beta": 95.68653451628948,
+      "c": 6.792489240077905,
+      "gamma": 110.0,
+      "matrix": [
+        [
+          1.9694987384882519,
+          -0.0,
+          0.4305005448233311
+        ],
+        [
+          -0.7007286291057305,
+          -2.286555573990703,
+          -0.8704412647638271
+        ],
+        [
+          0.7007286291057305,
+          2.286555573990703,
+          -6.357558735236172
+        ]
+      ],
+      "volume": 32.55034620581421
+    },
+    "sites": [
+      {
+        "abc": [
+          0.3172,
+          0.11750000000000016,
+          0.1157999999999999
+        ],
+        "label": "Fe3+",
+        "properties": {},
+        "species": [
+          {
+            "element": "Fe",
+            "occu": 1.0,
+            "oxidation_state": 3.0
+          }
+        ],
+        "xyz": [
+          0.6235337611789935,
+          -0.0038871444757848095,
+          -0.7019273773321374
+        ]
+      },
+      {
+        "abc": [
+          0.6828,
+          0.8858999999999999,
+          0.3842
+        ],
+        "label": "Fe3+",
+        "properties": {},
+        "species": [
+          {
+            "element": "Fe",
+            "occu": 1.0,
+            "oxidation_state": 3.0
+          }
+        ],
+        "xyz": [
+          0.9932181854174333,
+          -1.1471649314711354,
+          -2.9197522105266414
+        ]
+      },
+      {
+        "abc": [
+          0.6828,
+          0.8825,
+          0.8842
+        ],
+        "label": "Fe3+",
+        "properties": {},
+        "species": [
+          {
+            "element": "Fe",
+            "occu": 1.0,
+            "oxidation_state": 3.0
+          }
+        ],
+        "xyz": [
+          1.345964977309258,
+          0.003887144475784421,
+          -6.095572077844531
+        ]
+      },
+      {
+        "abc": [
+          0.31720000000000004,
+          0.11410000000000009,
+          0.6158000000000001
+        ],
+        "label": "Fe3+",
+        "properties": {},
+        "species": [
+          {
+            "element": "Fe",
+            "occu": 1.0,
+            "oxidation_state": 3.0
+          }
+        ],
+        "xyz": [
+          0.9762805530708185,
+          1.1471649314711356,
+          -3.877747244650028
+        ]
+      },
+      {
+        "abc": [
+          0.1372,
+          0.7315,
+          0.3737999999999999
+        ],
+        "label": "Si4+",
+        "properties": {},
+        "species": [
+          {
+            "element": "Si",
+            "occu": 1.0,
+            "oxidation_state": 4.0
+          }
+        ],
+        "xyz": [
+          0.019564596289468217,
+          -0.8179009288164747,
+          -2.954118565656259
+        ]
+      },
+      {
+        "abc": [
+          0.8627999999999998,
+          0.9839,
+          0.12619999999999998
+        ],
+        "label": "Si4+",
+        "properties": {},
+        "species": [
+          {
+            "element": "Si",
+            "occu": 1.0,
+            "oxidation_state": 4.0
+          }
+        ],
+        "xyz": [
+          1.0982685663836782,
+          -1.961178715811826,
+          -1.2873152027143644
+        ]
+      },
+      {
+        "abc": [
+          0.8627999999999999,
+          0.2685000000000002,
+          0.6262
+        ],
+        "label": "Si4+",
+        "properties": {},
+        "species": [
+          {
+            "element": "Si",
+            "occu": 1.0,
+            "oxidation_state": 4.0
+          }
+        ],
+        "xyz": [
+          1.949934142198783,
+          0.8179009288164739,
+          -3.8433808895204087
+        ]
+      },
+      {
+        "abc": [
+          0.1372,
+          0.016100000000000003,
+          0.8738
+        ],
+        "label": "Si4+",
+        "properties": {},
+        "species": [
+          {
+            "element": "Si",
+            "occu": 1.0,
+            "oxidation_state": 4.0
+          }
+        ],
+        "xyz": [
+          0.8712301721045732,
+          1.961178715811826,
+          -5.510184252462304
+        ]
+      },
+      {
+        "abc": [
+          0.6223,
+          0.44599999999999995,
+          0.08419999999999994
+        ],
+        "label": "Si4+",
+        "properties": {},
+        "species": [
+          {
+            "element": "Si",
+            "occu": 1.0,
+            "oxidation_state": 4.0
+          }
+        ],
+        "xyz": [
+          0.9720954469507858,
+          -0.8272758066698364,
+          -0.6556227605479932
+        ]
+      },
+      {
+        "abc": [
+          0.37770000000000004,
+          0.27759999999999996,
+          0.41579999999999995
+        ],
+        "label": "Si4+",
+        "properties": {},
+        "species": [
+          {
+            "element": "Si",
+            "occu": 1.0,
+            "oxidation_state": 4.0
+          }
+        ],
+        "xyz": [
+          0.8407203700694248,
+          0.3160019803255151,
+          -2.7225073614298667
+        ]
+      },
+      {
+        "abc": [
+          0.37770000000000004,
+          0.5539999999999998,
+          0.9158
+        ],
+        "label": "Si4+",
+        "properties": {},
+        "species": [
+          {
+            "element": "Si",
+            "occu": 1.0,
+            "oxidation_state": 4.0
+          }
+        ],
+        "xyz": [
+          0.9974032915374662,
+          0.8272758066698367,
+          -6.1418766946286745
+        ]
+      },
+      {
+        "abc": [
+          0.6223,
+          0.7223999999999999,
+          0.5842
+        ],
+        "label": "Si4+",
+        "properties": {},
+        "species": [
+          {
+            "element": "Si",
+            "occu": 1.0,
+            "oxidation_state": 4.0
+          }
+        ],
+        "xyz": [
+          1.1287783684188273,
+          -0.31600198032551496,
+          -4.074992093746801
+        ]
+      },
+      {
+        "abc": [
+          0.15799999999999997,
+          0.1604000000000001,
+          0.013399999999999967
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          0.20817369220260123,
+          -0.3361236693766336,
+          -0.15679097983819618
+        ]
+      },
+      {
+        "abc": [
+          0.8419999999999999,
+          0.13359999999999994,
+          0.4865999999999998
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          1.9056751438814306,
+          0.8071541176187177,
+          -2.8473975747971227
+        ]
+      },
+      {
+        "abc": [
+          0.842,
+          0.8395999999999999,
+          0.9865999999999999
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          1.7613250462856502,
+          0.3361236693766332,
+          -6.640708475338472
+        ]
+      },
+      {
+        "abc": [
+          0.15800000000000003,
+          0.8664000000000001,
+          0.5134000000000001
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          0.06382359460682102,
+          -0.8071541176187182,
+          -3.950101880379545
+        ]
+      },
+      {
+        "abc": [
+          0.5629999999999998,
+          0.18979999999999997,
+          0.048799999999999844
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          1.0100250530649773,
+          -0.32240433593268936,
+          -0.2330868115961632
+        ]
+      },
+      {
+        "abc": [
+          0.43699999999999994,
+          0.09220000000000017,
+          0.45120000000000005
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          1.1122325265683233,
+          0.820873451062662,
+          -2.7606564478619906
+        ]
+      },
+      {
+        "abc": [
+          0.437,
+          0.8102,
+          0.9512
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          0.9594736854232742,
+          0.32240433593268936,
+          -6.564412643580504
+        ]
+      },
+      {
+        "abc": [
+          0.5629999999999997,
+          0.9077999999999999,
+          0.5488
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          0.8572662119199279,
+          -0.8208734510626623,
+          -4.036843007314678
+        ]
+      },
+      {
+        "abc": [
+          0.468,
+          0.06269999999999998,
+          0.2376999999999999
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          1.0443529197060046,
+          0.4001472254483728,
+          -1.3642941236890107
+        ]
+      },
+      {
+        "abc": [
+          0.5319999999999999,
+          0.5872999999999999,
+          0.2623
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          0.8200365244163874,
+          -0.7431305615469783,
+          -1.9497715212022313
+        ]
+      },
+      {
+        "abc": [
+          0.532,
+          0.9373000000000002,
+          0.7623
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          0.925145818782247,
+          -0.4001472254483738,
+          -5.433205331487657
+        ]
+      },
+      {
+        "abc": [
+          0.468,
+          0.41270000000000007,
+          0.7377
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          1.1494622140718644,
+          0.7431305615469784,
+          -4.847727933974437
+        ]
+      },
+      {
+        "abc": [
+          0.12199999999999998,
+          0.9712999999999998,
+          0.15729999999999988
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          -0.33011425799649785,
+          -1.8612562372284318,
+          -1.792982523049308
+        ]
+      },
+      {
+        "abc": [
+          0.8779999999999999,
+          0.6566999999999998,
+          0.3426999999999999
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          1.5091911028534857,
+          -0.7179784502330807,
+          -2.372374678780956
+        ]
+      },
+      {
+        "abc": [
+          0.8779999999999999,
+          0.02870000000000006,
+          0.8427
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          2.2996129964847496,
+          1.861256237228432,
+          -5.004516932127359
+        ]
+      },
+      {
+        "abc": [
+          0.12199999999999997,
+          0.34330000000000005,
+          0.6573
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          0.46030763563476595,
+          0.7179784502330806,
+          -4.425124776395712
+        ]
+      },
+      {
+        "abc": [
+          0.2049999999999999,
+          0.4319000000000002,
+          0.28789999999999993
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          0.3028423187988661,
+          -0.3292640026546618,
+          -2.118032130437208
+        ]
+      },
+      {
+        "abc": [
+          0.795,
+          0.8561000000000001,
+          0.21209999999999996
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          1.1144822599540698,
+          -1.4725417896500128,
+          -1.7513750413733562
+        ]
+      },
+      {
+        "abc": [
+          0.795,
+          0.5680999999999998,
+          0.7121
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          1.6666564196893856,
+          0.3292640026546616,
+          -4.679467324739459
+        ]
+      },
+      {
+        "abc": [
+          0.205,
+          0.14390000000000014,
+          0.7879
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          0.855016478534182,
+          1.4725417896500124,
+          -5.046124413803312
+        ]
+      },
+      {
+        "abc": [
+          0.5,
+          0.5,
+          0.0
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          0.6343850546912606,
+          -1.1432777869953514,
+          -0.219970359970248
+        ]
+      },
+      {
+        "abc": [
+          0.49999999999999994,
+          0.5,
+          0.5
+        ],
+        "label": "N2-",
+        "properties": {},
+        "species": [
+          {
+            "element": "N",
+            "occu": 1.0,
+            "oxidation_state": -2.0
+          }
+        ],
+        "xyz": [
+          0.9847493692441258,
+          0.0,
+          -3.398749727588334
+        ]
+      }
+    ]
+  }
+}

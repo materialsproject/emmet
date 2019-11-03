@@ -112,3 +112,5 @@ ENV/
 emmet/scripts/credentials.json
 emmet/scripts/token.json
 .vscode
+
+Error_Record
