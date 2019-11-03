@@ -119,6 +119,7 @@ class MaterialsBuilder(Builder):
         update_q.update(self.tasks.lu_filter(self.materials))
         updated_forms = self.tasks.distinct("formula_pretty", update_q)
         self.logger.info(f"Found {len(updated_forms)} updated systems to proces")
+        
 
         forms_to_update = set(updated_forms) | set(to_process_forms)
         self.logger.info(f"Processing {len(forms_to_update)} total systems")
@@ -358,7 +359,7 @@ class MaterialsBuilder(Builder):
         if "initial_structures" in mat:
             # Reduce unique structures using tight tolerancees
             init_strucs = [Structure.from_dict(d) for d in mat["initial_structures"]]
-            num_init_strucs = len(init_structs)
+            num_init_strucs = len(init_strucs)
             sm = StructureMatcher(
                 primitive_cell=True,
                 scale=True,
@@ -370,7 +371,7 @@ class MaterialsBuilder(Builder):
             mat["initial_structures"] = init_strucs
             self.logger.debug(
                 "Reducing initial structures based on structure matching from"
-                f" {num_init_strucs} to {len(init_structs)}"
+                f" {num_init_strucs} to {len(init_strucs)}"
             )
 
     def ensure_indexes(self):
