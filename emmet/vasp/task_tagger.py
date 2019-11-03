@@ -141,13 +141,13 @@ def task_type(inputs, include_calc_type=True):
         calc_type.append("NMR Electric Field Gradient")
 
     elif incar.get("NSW", 1) == 0:
-        calc_type.apppend("Static")
+        calc_type.append("Static")
 
     elif incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
-        calc_type.apppend("Structure Optimization")
+        calc_type.append("Structure Optimization")
 
     elif incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
-        calc_type.apppend("Deformation")
+        calc_type.append("Deformation")
 
     return " ".join(calc_type)
 
