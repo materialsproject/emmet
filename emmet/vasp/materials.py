@@ -347,6 +347,7 @@ class MaterialsBuilder(Builder):
             mat.update({"deprecated": False})
 
         # Reorder voigt output from VASP to standard voigt notation
+        # TODO: Update this in the drone or in pymatgen
         if has(mat, "piezo.ionic"):
             mat["piezo"]["ionic"] = PiezoTensor.from_vasp_voigt(
                 mat["piezo"]["ionic"]
