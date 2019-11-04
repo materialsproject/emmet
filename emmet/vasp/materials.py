@@ -120,7 +120,6 @@ class MaterialsBuilder(Builder):
         update_q.update(self.tasks.lu_filter(self.materials))
         updated_forms = self.tasks.distinct("formula_pretty", update_q)
         self.logger.info(f"Found {len(updated_forms)} updated systems to proces")
-        
 
         forms_to_update = set(updated_forms) | set(to_process_forms)
         self.logger.info(f"Processing {len(forms_to_update)} total systems")
@@ -184,8 +183,7 @@ class MaterialsBuilder(Builder):
                 processed task_ids
         """
 
-        items = [i for i in filter(None, chain.from_iterable(items))]
-        items = [i for i in items if self.valid(i)]
+        items = list(filter(None, chain.from_iterable(items)))
 
         for item in items:
             item.update({"_bt": self.timestamp})
@@ -369,7 +367,7 @@ class MaterialsBuilder(Builder):
                 allow_subset=False,
                 comparator=ElementComparator(),
             )
-            init_strucs = [g[0] for g in sm.group_structures(init_strucs)]
+            init_strucs = [g[0].as_dict() for g in sm.group_structures(init_strucs)]
             mat["initial_structures"] = jsanitize(init_strucs)
             self.logger.debug(
                 "Reducing initial structures based on structure matching from"
