@@ -330,7 +330,7 @@ def aggregate_snls(snls):
             db_ids[db_id_key].append(
                 snl["about"]["history"][0]["description"].get("id", None)
             )
-            if get(snl,"about.history.0.experimental",False):
+            if get(snl, "about.history.0.experimental", False):
                 experimental = True
 
     # remove Nones and empty lists
@@ -344,8 +344,7 @@ def aggregate_snls(snls):
         "remarks": remarks,
         "projects": projects,
         "authors": authors,
-        "experimental": experimental,
-        "data": {"_db_ids": db_ids, "_tags": tags},
+        "data": {"_db_ids": db_ids, "_tags": tags, "_experimental": experimental},
     }
 
     return snl_fields
