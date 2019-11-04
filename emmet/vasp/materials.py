@@ -3,6 +3,7 @@ from datetime import datetime
 from itertools import chain, groupby
 import numpy as np
 
+from monty.json import jsanitize
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
@@ -369,7 +370,7 @@ class MaterialsBuilder(Builder):
                 comparator=ElementComparator(),
             )
             init_strucs = [g[0] for g in sm.group_structures(init_strucs)]
-            mat["initial_structures"] = init_strucs
+            mat["initial_structures"] = jsanitize(init_strucs)
             self.logger.debug(
                 "Reducing initial structures based on structure matching from"
                 f" {num_init_strucs} to {len(init_strucs)}"
