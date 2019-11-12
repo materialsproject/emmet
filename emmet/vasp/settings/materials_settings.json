@@ -243,8 +243,8 @@
   {
     "materials_key": "inputs.dielectric",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA DFPT Dielectric": 2,
+      "GGA+U DFPT Dielectric": 6
     },
     "tasks_key": "orig_inputs"
   },
@@ -310,64 +310,64 @@
   {
     "materials_key": "dielectric.structure",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA DFPT Dielectric": 2,
+      "GGA+U DFPT Dielectric": 6
     },
     "tasks_key": "output.structure"
   },
   {
     "materials_key": "dielectric.static",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA DFPT Dielectric": 2,
+      "GGA+U DFPT Dielectric": 6
     },
     "tasks_key": "calcs_reversed.0.output.outcar.dielectric_tensor"
   },
   {
     "materials_key": "dielectric.ionic",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA DFPT Dielectric": 2,
+      "GGA+U DFPT Dielectric": 6
     },
     "tasks_key": "calcs_reversed.0.output.outcar.dielectric_ionic_tensor"
   },
   {
     "materials_key": "piezo.static",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA DFPT Dielectric": 2,
+      "GGA+U DFPT Dielectric": 6
     },
     "tasks_key": "calcs_reversed.0.output.outcar.piezo_tensor"
   },
   {
     "materials_key": "piezo.ionic",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA DFPT Dielectric": 2,
+      "GGA+U DFPT Dielectric": 6
     },
     "tasks_key": "calcs_reversed.0.output.outcar.piezo_ionic_tensor"
   },
   {
     "materials_key": "born",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA DFPT Dielectric": 2,
+      "GGA+U DFPT Dielectric": 6
     },
     "tasks_key": "calcs_reversed.0.output.outcar.born"
   },
   {
     "materials_key": "force_constants",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA DFPT Dielectric": 2,
+      "GGA+U DFPT Dielectric": 6
     },
     "tasks_key": "calcs_reversed.0.output.force_constants"
   },
   {
     "materials_key": "internal_strain_tensor",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA DFPT Dielectric": 2,
+      "GGA+U DFPT Dielectric": 6
     },
     "tasks_key": "calcs_reversed.0.output.outcar.internal_strain_tensor"
   }
