@@ -380,6 +380,9 @@ class MaterialsBuilder(Builder):
                 f" {num_init_strucs} to {len(init_strucs)}"
             )
 
+        for entry in mat.get("entries", {}).values():
+            entry["entry_id"] = mat[self.materials.key]
+
     def ensure_indexes(self):
         """
         Ensures indicies on the tasks and materials collections
