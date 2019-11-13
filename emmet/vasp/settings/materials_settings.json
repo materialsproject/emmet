@@ -305,32 +305,32 @@
   {
     "materials_key": "inputs.structure_optimization",
     "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "orig_inputs"
   },
   {
     "materials_key": "inputs.static",
     "quality_score": {
-      "GGA Static": 2,
-      "GGA+U Static": 6
+      "GGA+U Static": 6,
+      "GGA Static": 2
     },
     "tasks_key": "orig_inputs"
   },
   {
     "materials_key": "inputs.nscf_line",
     "quality_score": {
-      "GGA NSCF Line": 3,
-      "GGA+U NSCF Line": 7
+      "GGA+U NSCF Line": 7,
+      "GGA NSCF Line": 3
     },
     "tasks_key": "orig_inputs"
   },
   {
     "materials_key": "inputs.nscf_uniform",
     "quality_score": {
-      "GGA NSCF Uniform": 4,
-      "GGA+U NSCF Uniform": 8
+      "GGA+U NSCF Uniform": 8,
+      "GGA NSCF Uniform": 4
     },
     "tasks_key": "orig_inputs"
   },
@@ -344,8 +344,8 @@
   {
     "materials_key": "inputs.dielectric",
     "quality_score": {
-      "GGA DFPT Dielectric": 2,
-      "GGA+U DFPT Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "orig_inputs"
   },
@@ -383,16 +383,16 @@
     "aggregate": true,
     "materials_key": "initial_structures",
     "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "input.structure"
   },
   {
     "materials_key": "initial_structure",
     "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "input.structure",
     "track": true
@@ -400,16 +400,16 @@
   {
     "materials_key": "magnetism.total_magnetization",
     "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "calcs_reversed.0.output.outcar.total_magnetization"
   },
   {
     "materials_key": "magnetism.magmoms",
     "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "calcs_reversed.0.output.outcar.magmom",
     "optional": true
@@ -417,64 +417,64 @@
   {
     "materials_key": "dielectric.structure",
     "quality_score": {
-      "GGA DFPT Dielectric": 2,
-      "GGA+U DFPT Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "output.structure"
   },
   {
     "materials_key": "dielectric.static",
     "quality_score": {
-      "GGA DFPT Dielectric": 2,
-      "GGA+U DFPT Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "calcs_reversed.0.output.outcar.dielectric_tensor"
   },
   {
     "materials_key": "dielectric.ionic",
     "quality_score": {
-      "GGA DFPT Dielectric": 2,
-      "GGA+U DFPT Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "calcs_reversed.0.output.outcar.dielectric_ionic_tensor"
   },
   {
     "materials_key": "piezo.static",
     "quality_score": {
-      "GGA DFPT Dielectric": 2,
-      "GGA+U DFPT Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "calcs_reversed.0.output.outcar.piezo_tensor"
   },
   {
     "materials_key": "piezo.ionic",
     "quality_score": {
-      "GGA DFPT Dielectric": 2,
-      "GGA+U DFPT Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "calcs_reversed.0.output.outcar.piezo_ionic_tensor"
   },
   {
     "materials_key": "born",
     "quality_score": {
-      "GGA DFPT Dielectric": 2,
-      "GGA+U DFPT Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "calcs_reversed.0.output.outcar.born"
   },
   {
     "materials_key": "force_constants",
     "quality_score": {
-      "GGA DFPT Dielectric": 2,
-      "GGA+U DFPT Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "calcs_reversed.0.output.force_constants"
   },
   {
     "materials_key": "internal_strain_tensor",
     "quality_score": {
-      "GGA DFPT Dielectric": 2,
-      "GGA+U DFPT Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "calcs_reversed.0.output.outcar.internal_strain_tensor"
   }
