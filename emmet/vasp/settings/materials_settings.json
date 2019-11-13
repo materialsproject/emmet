@@ -2,14 +2,14 @@
   {
     "materials_key": "bandstructure.band_gap",
     "quality_score": {
-      "GGA NSCF Line": 7,
-      "GGA NSCF Uniform": 5,
-      "GGA Static": 3,
-      "GGA Structure Optimization": 1,
-      "GGA+U NSCF Line": 8,
-      "GGA+U NSCF Uniform": 6,
-      "GGA+U Static": 4,
-      "GGA+U Structure Optimization": 2
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
+      "GGA+U Static": 6,
+      "GGA+U Structure Optimization": 5,
+      "GGA NSCF Line": 3,
+      "GGA NSCF Uniform": 4,
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "output.bandgap",
     "track": true
@@ -17,66 +17,70 @@
   {
     "materials_key": "bandstructure.cbm",
     "quality_score": {
-      "GGA NSCF Line": 4,
-      "GGA NSCF Uniform": 3,
-      "GGA Static": 2,
-      "GGA Structure Optimization": 1,
-      "GGA+U NSCF Line": 8,
-      "GGA+U NSCF Uniform": 7,
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
       "GGA+U Static": 6,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "GGA NSCF Line": 3,
+      "GGA NSCF Uniform": 4,
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "output.cbm"
   },
   {
     "materials_key": "bandstructure.vbm",
     "quality_score": {
-      "GGA NSCF Line": 4,
-      "GGA NSCF Uniform": 3,
-      "GGA Static": 2,
-      "GGA Structure Optimization": 1,
-      "GGA+U NSCF Line": 8,
-      "GGA+U NSCF Uniform": 7,
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
       "GGA+U Static": 6,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "GGA NSCF Line": 3,
+      "GGA NSCF Uniform": 4,
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "output.vbm"
   },
   {
     "materials_key": "bandstructure.is_gap_direct",
     "quality_score": {
-      "GGA NSCF Line": 4,
-      "GGA NSCF Uniform": 3,
-      "GGA Static": 2,
-      "GGA Structure Optimization": 1,
-      "GGA+U NSCF Line": 8,
-      "GGA+U NSCF Uniform": 7,
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
       "GGA+U Static": 6,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "GGA NSCF Line": 3,
+      "GGA NSCF Uniform": 4,
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "output.is_gap_direct"
   },
   {
     "materials_key": "bandstructure.is_metal",
     "quality_score": {
-      "GGA NSCF Line": 4,
-      "GGA NSCF Uniform": 3,
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
+      "GGA+U Static": 6,
+      "GGA+U Structure Optimization": 5,
+      "GGA NSCF Line": 3,
+      "GGA NSCF Uniform": 4,
       "GGA Static": 2,
-      "GGA+U NSCF Line": 8,
-      "GGA+U NSCF Uniform": 7,
-      "GGA+U Static": 6
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "output.is_metal"
   },
   {
     "materials_key": "bandstructure.efermi",
     "quality_score": {
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
+      "GGA+U Static": 6,
+      "GGA+U Structure Optimization": 5,
       "GGA NSCF Line": 3,
       "GGA NSCF Uniform": 4,
       "GGA Static": 2,
-      "GGA+U NSCF Line": 7,
-      "GGA+U NSCF Uniform": 8,
-      "GGA+U Static": 6
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "calcs_reversed.0.output.efermi",
     "track": true
@@ -93,8 +97,8 @@
     "materials_key": "bandstructure.bs_task",
     "optional": true,
     "quality_score": {
-      "GGA NSCF Line": 3,
-      "GGA+U NSCF Line": 7
+      "GGA+U NSCF Line": 7,
+      "GGA NSCF Line": 3
     },
     "tasks_key": "task_id"
   },
@@ -102,8 +106,8 @@
     "materials_key": "bandstructure.dos_task",
     "optional": true,
     "quality_score": {
-      "GGA NSCF Uniform": 4,
-      "GGA+U NSCF Uniform": 8
+      "GGA+U NSCF Uniform": 8,
+      "GGA NSCF Uniform": 4
     },
     "tasks_key": "task_id"
   },
@@ -111,8 +115,8 @@
     "materials_key": "bandstructure.uniform_task",
     "optional": true,
     "quality_score": {
-      "GGA NSCF Uniform": 4,
-      "GGA+U NSCF Uniform": 8
+      "GGA+U NSCF Uniform": 8,
+      "GGA NSCF Uniform": 4
     },
     "tasks_key": "task_id"
   },
