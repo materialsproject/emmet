@@ -121,81 +121,186 @@
     "tasks_key": "task_id"
   },
   {
-    "materials_key": "thermo.energy",
+    "materials_key": "entries.gga.composition",
+    "tasks_key": "composition_unit_cell",
     "quality_score": {
-      "GGA Static": 1,
-      "GGA Structure Optimization": 2,
-      "GGA+U Static": 5,
-      "GGA+U Structure Optimization": 6,
-      "SCAN Structure Optimization": 7
-    },
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.gga.energy",
     "tasks_key": "output.energy",
-    "track": true
+    "quality_score": {
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
   },
   {
-    "materials_key": "thermo.energy_per_atom",
+    "materials_key": "entries.gga.parameters.hubbards",
+    "tasks_key": "input.hubbards",
     "quality_score": {
-      "GGA Static": 1,
-      "GGA Structure Optimization": 2,
-      "GGA+U Static": 5,
-      "GGA+U Structure Optimization": 6,
-      "SCAN Structure Optimization": 7
-    },
-    "tasks_key": "output.energy_per_atom",
-    "track": true
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
   },
   {
-    "materials_key": "calc_settings.nelect",
-    "optional": true,
+    "materials_key": "entries.gga.parameters.potcar_spec",
+    "tasks_key": "input.potcar_spec",
     "quality_score": {
-      "GGA NSCF Uniform": 4,
-      "GGA+U NSCF Uniform": 8
-    },
-    "tasks_key": "input.parameters.NELECT"
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
   },
   {
-    "materials_key": "calc_settings.hubbards",
+    "materials_key": "entries.gga.parametes.run_type",
+    "tasks_key": "calcs_reversed.0.run_type",
     "quality_score": {
-      "GGA Static": 1,
-      "GGA Structure Optimization": 2,
-      "GGA+U Static": 5,
-      "GGA+U Structure Optimization": 6,
-      "SCAN Structure Optimization": 7
-    },
-    "tasks_key": "input.hubbards"
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
   },
   {
-    "materials_key": "calc_settings.potcar_spec",
+    "materials_key": "entries.gga.parameters.is_hubbard",
+    "tasks_key": "input.is_hubbard",
     "quality_score": {
-      "GGA Static": 1,
-      "GGA Structure Optimization": 2,
-      "GGA+U Static": 5,
-      "GGA+U Structure Optimization": 6,
-      "SCAN Structure Optimization": 7
-    },
-    "tasks_key": "input.potcar_spec"
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
   },
   {
-    "materials_key": "calc_settings.run_type",
+    "materials_key": "entries.gga.parameters.nelect",
+    "tasks_key": "input.parameters.NELECT",
     "quality_score": {
-      "GGA Static": 1,
-      "GGA Structure Optimization": 2,
-      "GGA+U Static": 5,
-      "GGA+U Structure Optimization": 6,
-      "SCAN Structure Optimization": 7
-    },
-    "tasks_key": "calcs_reversed.0.run_type"
+      "GGA NSCF Uniform": 2
+    }
   },
   {
-    "materials_key": "calc_settings.is_hubbard",
+    "materials_key": "entries.gga.parameters.task_id",
+    "tasks_key": "task_id",
     "quality_score": {
-      "GGA Static": 1,
-      "GGA Structure Optimization": 2,
-      "GGA+U Static": 5,
-      "GGA+U Structure Optimization": 6,
-      "SCAN Structure Optimization": 7
-    },
-    "tasks_key": "input.is_hubbard"
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.gga_u.composition",
+    "tasks_key": "composition_unit_cell",
+    "quality_score": {
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.gga_u.energy",
+    "tasks_key": "output.energy",
+    "quality_score": {
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.gga_u.parameters.hubbards",
+    "tasks_key": "input.hubbards",
+    "quality_score": {
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.gga_u.parameters.potcar_spec",
+    "tasks_key": "input.potcar_spec",
+    "quality_score": {
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.gga_u.parametes.run_type",
+    "tasks_key": "calcs_reversed.0.run_type",
+    "quality_score": {
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.gga_u.parameters.is_hubbard",
+    "tasks_key": "input.is_hubbard",
+    "quality_score": {
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.gga_u.parameters.nelect",
+    "tasks_key": "input.parameters.NELECT",
+    "quality_score": {
+      "GGA+U NSCF Uniform": 2
+    }
+  },
+  {
+    "materials_key": "entries.gga_u.parameters.task_id",
+    "tasks_key": "task_id",
+    "quality_score": {
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.scan.composition",
+    "tasks_key": "composition_unit_cell",
+    "quality_score": {
+      "Scan Static": 2,
+      "Scan Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.scan.energy",
+    "tasks_key": "output.energy",
+    "quality_score": {
+      "Scan Static": 2,
+      "Scan Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.scan.parameters.hubbards",
+    "tasks_key": "input.hubbards",
+    "quality_score": {
+      "Scan Static": 2,
+      "Scan Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.scan.parameters.potcar_spec",
+    "tasks_key": "input.potcar_spec",
+    "quality_score": {
+      "Scan Static": 2,
+      "Scan Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.scan.parametes.run_type",
+    "tasks_key": "calcs_reversed.0.run_type",
+    "quality_score": {
+      "Scan Static": 2,
+      "Scan Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.scan.parameters.is_hubbard",
+    "tasks_key": "input.is_hubbard",
+    "quality_score": {
+      "Scan Static": 2,
+      "Scan Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.scan.parameters.task_id",
+    "tasks_key": "task_id",
+    "quality_score": {
+      "Scan Static": 2,
+      "Scan Structure Optimization": 1
+    }
   },
   {
     "materials_key": "inputs.structure_optimization",
