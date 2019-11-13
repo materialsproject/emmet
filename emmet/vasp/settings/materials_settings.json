@@ -145,7 +145,7 @@
     }
   },
   {
-    "materials_key": "entries.gga.parametes.run_type",
+    "materials_key": "entries.gga.parameters.run_type",
     "tasks_key": "calcs_reversed.0.run_type",
     "quality_score": {
       "GGA Static": 2,
@@ -200,7 +200,7 @@
     }
   },
   {
-    "materials_key": "entries.gga_u.parametes.run_type",
+    "materials_key": "entries.gga_u.parameters.run_type",
     "tasks_key": "calcs_reversed.0.run_type",
     "quality_score": {
       "GGA+U Static": 2,
@@ -247,7 +247,7 @@
     }
   },
   {
-    "materials_key": "entries.scan.parametes.run_type",
+    "materials_key": "entries.scan.parameters.run_type",
     "tasks_key": "calcs_reversed.0.run_type",
     "quality_score": {
       "SCAN Static": 2,
