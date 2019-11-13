@@ -7,7 +7,7 @@ from datetime import datetime
 from timestring import Date
 
 from atomate.utils.utils import get_meta_from_structure
-from monty.json import MSONable
+from monty.json import MSONable, MontyDecoder
 from monty.serialization import loadfn
 
 from pymatgen import Composition, Structure
@@ -39,7 +39,7 @@ class CIFDrone(MSONable):
             convert_H_isotopes: Converts Hydrogen Isotopes to Hydrogen
             read_meta_json: reads corresponding JSON files with the same name as additional metadata
             default_user_meta: Path to a JSON file of user metadata to apply to all entries
-            store_raw_cif: stores the data in "raw"
+            store_raw_data: stores the data in "raw"
         """
         self.logger = logging.getLogger(__name__)
         self.convert_H_isotopes = convert_H_isotopes
@@ -62,7 +62,7 @@ class CIFDrone(MSONable):
         structures = cif_dict["structures"]
         cif_data = cif_dict["cif_data"]
 
-        if self.store_raw_cif:
+        if self.store_raw_data:
             with open(cif_path, "r") as f:
                 cif_string = f.read()
 
@@ -94,7 +94,7 @@ class CIFDrone(MSONable):
                 "created_at": self._get_created_date(data),
             }
 
-            if self.store_raw_cif:
+            if self.store_raw_data:
                 doc.update(
                     {
                         "raw": {
@@ -279,3 +279,11 @@ class CIFDrone(MSONable):
                 user_meta.get("experimental_PDF_number", False),  # ICSD Crawler
             ]
         )
+
+    def __getstate__(self):
+        return self.as_dict()
+
+    def __setstate__(self, d):
+        d = {k: v for k, v in d.items() if not k.startswith("@")}
+        d = MontyDecoder().process_decoded(d)
+        self.__init__(**d)
