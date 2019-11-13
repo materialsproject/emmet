@@ -250,56 +250,56 @@
     "materials_key": "entries.scan.composition",
     "tasks_key": "composition_unit_cell",
     "quality_score": {
-      "Scan Static": 2,
-      "Scan Structure Optimization": 1
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
     }
   },
   {
     "materials_key": "entries.scan.energy",
     "tasks_key": "output.energy",
     "quality_score": {
-      "Scan Static": 2,
-      "Scan Structure Optimization": 1
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
     }
   },
   {
     "materials_key": "entries.scan.parameters.hubbards",
     "tasks_key": "input.hubbards",
     "quality_score": {
-      "Scan Static": 2,
-      "Scan Structure Optimization": 1
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
     }
   },
   {
     "materials_key": "entries.scan.parameters.potcar_spec",
     "tasks_key": "input.potcar_spec",
     "quality_score": {
-      "Scan Static": 2,
-      "Scan Structure Optimization": 1
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
     }
   },
   {
     "materials_key": "entries.scan.parametes.run_type",
     "tasks_key": "calcs_reversed.0.run_type",
     "quality_score": {
-      "Scan Static": 2,
-      "Scan Structure Optimization": 1
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
     }
   },
   {
     "materials_key": "entries.scan.parameters.is_hubbard",
     "tasks_key": "input.is_hubbard",
     "quality_score": {
-      "Scan Static": 2,
-      "Scan Structure Optimization": 1
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
     }
   },
   {
     "materials_key": "entries.scan.parameters.task_id",
     "tasks_key": "task_id",
     "quality_score": {
-      "Scan Static": 2,
-      "Scan Structure Optimization": 1
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
     }
   },
   {
