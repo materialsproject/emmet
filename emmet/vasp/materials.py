@@ -1,13 +1,15 @@
-import os
+from pathlib import Path
 from datetime import datetime
 from itertools import chain, groupby
 from operator import itemgetter
+from typing import Optional, Dict, Iter, List
 
 from monty.json import jsanitize
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.analysis.piezo import PiezoTensor
 
+from maggma.stores import Store
 from maggma.builders import Builder
 from emmet.vasp.task_tagger import task_type
 from emmet.common.utils import load_settings
@@ -16,8 +18,8 @@ from pydash.objects import get, set_, has
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
-module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-default_mat_settings = os.path.join(module_dir, "settings", "materials_settings.json")
+module_dir = Path(__file__).parent
+default_mat_settings = module_dir // "settings" // "materials_settings.json"
 
 
 class MaterialsBuilder(Builder):
@@ -39,14 +41,14 @@ class MaterialsBuilder(Builder):
 
     def __init__(
         self,
-        tasks,
-        materials,
-        task_types=None,
-        materials_settings=None,
-        query=None,
-        ltol=LTOL,
-        stol=STOL,
-        angle_tol=ANGLE_TOL,
+        tasks: Store,
+        materials: Store,
+        task_types: Optional[Store] = None,
+        materials_settings: Path = None,
+        query: Optional[Dict] = None,
+        ltol: float = LTOL,
+        stol: float = STOL,
+        angle_tol: float = ANGLE_TOL,
         **kwargs,
     ):
         """
@@ -73,7 +75,7 @@ class MaterialsBuilder(Builder):
         self.kwargs = kwargs
 
         self.__settings = load_settings(self.materials_settings, default_mat_settings)
-        # Project only the fields we need to build the materials doc
+        # Projection for only the fields we need to build the materials doc
         projected_from_tasks = [d["tasks_key"] for d in self.__settings]
         projected_from_tasks += [
             "formula_pretty",
@@ -98,7 +100,7 @@ class MaterialsBuilder(Builder):
             sources.append(self.task_types)
         super().__init__(sources=sources, targets=[materials], **kwargs)
 
-    def get_items(self):
+    def get_items(self) -> Iter[List[Dict]]:
         """
         Gets all items to process into materials documents
 
@@ -153,7 +155,7 @@ class MaterialsBuilder(Builder):
 
             yield tasks
 
-    def process_item(self, tasks):
+    def process_item(self, tasks: List[Dict]) -> List[Dict]:
         """
         Process the tasks into a list of materials
 
@@ -181,7 +183,7 @@ class MaterialsBuilder(Builder):
 
         return materials
 
-    def update_targets(self, items):
+    def update_targets(self, items: List[List[Dict]]):
         """
         Inserts the new task_types into the task_types collection
 
@@ -201,7 +203,7 @@ class MaterialsBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
-    def make_mat(self, task_group):
+    def make_mat(self, task_group: List[Dict]) -> Dict:
         """
         Converts a group of tasks into one material
         """
@@ -264,7 +266,7 @@ class MaterialsBuilder(Builder):
 
         return mat
 
-    def filter_and_group_tasks(self, tasks):
+    def filter_and_group_tasks(self, tasks: List[Dict]) -> Iter[List[Dict]]:
         """
         Groups tasks by structure matching
         """
@@ -287,7 +289,7 @@ class MaterialsBuilder(Builder):
         for group in grouped_structures:
             yield [filtered_tasks[struc.index] for struc in group]
 
-    def task_to_prop_list(self, task):
+    def task_to_prop_list(self, task: Dict) -> List[Dict]:
         """
         Converts a task into an list of properties with associated metadata
         """
@@ -321,7 +323,7 @@ class MaterialsBuilder(Builder):
                     )
         return props
 
-    def valid(self, doc):
+    def valid(self, doc: Dict) -> bool:
         """
         Determines if the resulting material document is valid
         """
@@ -332,7 +334,7 @@ class MaterialsBuilder(Builder):
 
         return True
 
-    def post_process(self, mat):
+    def post_process(self, mat: Dict):
         """
         Any extra post-processing on a material doc
         """
@@ -404,7 +406,7 @@ class MaterialsBuilder(Builder):
             self.task_types.ensure_index("is_valid")
 
 
-def find_mat_id(props):
+def find_mat_id(props: List[Dict]):
 
     # Only consider structure optimization task_ids for material task_id
     possible_mat_ids = [
@@ -421,7 +423,7 @@ def find_mat_id(props):
         return possible_mat_ids[0][1]
 
 
-def find_best_prop(props):
+def find_best_prop(props: List[Dict]) -> Dict:
     """
     Takes a list of property docs all for the same property
     1.) Sorts according to valid tasks, highest quality score and lowest energy
@@ -455,7 +457,7 @@ def find_best_prop(props):
     return prop
 
 
-def structure_metadata(structure):
+def structure_metadata(structure: Structure) -> Dict:
     """
     Generates metadata based on a structure
     """
@@ -478,8 +480,12 @@ def structure_metadata(structure):
 
 
 def group_structures(
-    structures, ltol=LTOL, stol=STOL, angle_tol=ANGLE_TOL, symprec=SYMPREC
-):
+    structures: List[Structure],
+    ltol: float = LTOL,
+    stol: float = STOL,
+    angle_tol: float = ANGLE_TOL,
+    symprec: float = SYMPREC,
+) -> Iter[List[Structure]]:
     """
     Groups structures according to space group and structure matching
 
@@ -517,7 +523,7 @@ def group_structures(
             yield group
 
 
-def ID_to_int(s_id):
+def ID_to_int(s_id: str) -> int:
     """
     Converts a string id to tuple
     falls back to assuming ID is an Int if it can't process
