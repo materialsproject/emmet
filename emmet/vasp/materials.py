@@ -1,12 +1,11 @@
 import os
 from datetime import datetime
 from itertools import chain, groupby
-import numpy as np
+from operator import itemgetter
 
 from monty.json import jsanitize
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.piezo import PiezoTensor
 
 from maggma.builders import Builder
@@ -140,10 +139,12 @@ class MaterialsBuilder(Builder):
         else:
             invalid_ids = set()
 
-        for formula in forms_to_update:
+        for formula in to_process_forms:
             tasks_q = dict(q)
             tasks_q["formula_pretty"] = formula
-            tasks = list(self.tasks.query(criteria=tasks_q))
+            tasks = list(
+                self.tasks.query(criteria=tasks_q, properties=self.projected_from_tasks)
+            )
             for t in tasks:
                 if t[self.tasks.key] in invalid_ids:
                     t["is_valid"] = False
@@ -176,9 +177,7 @@ class MaterialsBuilder(Builder):
                 self.post_process(mat)
                 materials.append(mat)
 
-        self.logger.debug(
-            f"Produced {len(materials)} materials for {tasks[0]['formula_pretty']}"
-        )
+        self.logger.debug(f"Produced {len(materials)} materials for {formula}")
 
         return materials
 
@@ -215,8 +214,8 @@ class MaterialsBuilder(Builder):
         mat_id = find_mat_id(all_props)
 
         # Sort and group based on property
-        sorted_props = sorted(all_props, key=lambda prop: prop["materials_key"])
-        grouped_props = groupby(sorted_props, key=lambda prop: prop["materials_key"])
+        sorted_props = sorted(all_props, key=itemgetter("materials_key"))
+        grouped_props = groupby(sorted_props, key=itemgetter("materials_key"))
 
         # Choose the best prop for each materials key: highest quality score and lowest energy calculation
         best_props = [find_best_prop(props) for _, props in grouped_props]
@@ -326,7 +325,7 @@ class MaterialsBuilder(Builder):
         """
         Determines if the resulting material document is valid
         """
-        if doc["task_id"] == None:
+        if doc["task_id"] is None:
             return False
         elif "structure" not in doc:
             return False
@@ -341,7 +340,6 @@ class MaterialsBuilder(Builder):
         # Add structure metadata back into document and convert back to conventional standard
         if "structure" in mat:
             structure = Structure.from_dict(mat["structure"])
-            sga = SpacegroupAnalyzer(structure, symprec=SYMPREC)
             mat["structure"] = structure.as_dict()
             mat.update(structure_metadata(structure))
 
@@ -401,11 +399,6 @@ class MaterialsBuilder(Builder):
         if self.task_types:
             self.task_types.ensure_index(self.task_types.key)
             self.task_types.ensure_index("is_valid")
-
-
-def get_sg(struc):
-    # helper function to get spacegroup with a loose tolerance
-    return struc.get_space_group_info(symprec=SYMPREC)[1]
 
 
 def find_mat_id(props):
@@ -510,7 +503,7 @@ def group_structures(
         # helper function to get spacegroup with a loose tolerance
         try:
             sg = struc.get_space_group_info(symprec=symprec)[1]
-        except:
+        except Exception:
             sg = -1
 
         return sg
