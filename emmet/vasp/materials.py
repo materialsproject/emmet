@@ -125,20 +125,13 @@ class MaterialsBuilder(Builder):
         processed_tasks = set(self.materials.distinct("task_ids"))
         to_process_tasks = all_tasks - processed_tasks
         to_process_forms = self.tasks.distinct(
-            "formula_pretty", {"task_id": {"$in": list(to_process_tasks)}}
+            "formula_pretty", {self.tasks.key: {"$in": list(to_process_tasks)}}
         )
         self.logger.info(f"Found {len(to_process_tasks)} unprocessed tasks")
         self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
 
-        # Tasks that have been updated since we last viewed them
-        update_q = dict(q)
-        update_q.update(self.tasks.lu_filter(self.materials))
-        updated_forms = self.tasks.distinct("formula_pretty", update_q)
-        self.logger.info(f"Found {len(updated_forms)} updated systems to proces")
-
-        forms_to_update = set(updated_forms) | set(to_process_forms)
-        self.logger.info(f"Processing {len(forms_to_update)} total systems")
-        self.total = len(forms_to_update)
+        # Set total for builder bars to have a total
+        self.total = len(to_process_forms)
 
         if self.task_types:
             invalid_ids = set(
