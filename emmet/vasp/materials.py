@@ -74,7 +74,22 @@ class MaterialsBuilder(Builder):
         self.kwargs = kwargs
 
         self.__settings = load_settings(self.materials_settings, default_mat_settings)
+        # Project only the fields we need to build the materials doc
+        projected_from_tasks = [d["tasks_key"] for d in self.__settings]
+        projected_from_tasks += [
+            "formula_pretty",
+            self.tasks.key,
+            self.tasks.lu_field,
+            "sbxn",
+        ]
 
+        projected_from_tasks = [p.split(".") for p in projected_from_tasks]
+        projected_from_tasks = [
+            [k for k in p if k != "0"] for p in projected_from_tasks
+        ]
+        projected_from_tasks = [".".join(p) for p in projected_from_tasks]
+
+        self.projected_from_tasks = projected_from_tasks
         self.allowed_tasks = {
             t_type for d in self.__settings for t_type in d["quality_score"]
         }
