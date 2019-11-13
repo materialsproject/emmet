@@ -403,18 +403,18 @@ def get_sg(struc):
 def find_mat_id(props):
 
     # Only consider structure optimization task_ids for material task_id
-    possible_mat_ids = [prop for prop in props if "structure" in prop["materials_key"]]
+    possible_mat_ids = [
+        prop["task_id"] for prop in props if "structure" in prop["materials_key"]
+    ]
 
     # Sort task_ids by ID
-    possible_mat_ids = [
-        prop["task_id"]
-        for prop in sorted(possible_mat_ids, key=lambda doc: ID_to_int(doc["task_id"]))
-    ]
+    mat_to_int = [ID_to_int(d) for d in possible_mat_ids]
+    possible_mat_ids = sorted(zip(mat_to_int, possible_mat_ids), key=itemgetter(0))
 
     if len(possible_mat_ids) == 0:
         return None
     else:
-        return possible_mat_ids[0]
+        return possible_mat_ids[0][1]
 
 
 def find_best_prop(props):
