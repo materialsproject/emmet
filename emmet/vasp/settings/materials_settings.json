@@ -366,12 +366,18 @@
   {
     "materials_key": "structure",
     "quality_score": {
-      "GGA Structure Optimization": 2,
       "GGA+U Structure Optimization": 6,
-      "SCAN Structure Optimization": 7
+      "GGA Structure Optimization": 2
     },
     "tasks_key": "output.structure",
     "track": true
+  },
+  {
+    "materials_key": "scan_structure",
+    "quality_score": {
+      "SCAN Structure Optimization": 6
+    },
+    "tasks_key": "output.structure"
   },
   {
     "aggregate": true,
