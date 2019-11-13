@@ -28,16 +28,23 @@ db_names = {
 
 
 class CIFDrone(MSONable):
-    def __init__(self, convert_H_isotopes: bool = True, default_user_meta: Path = None):
+    def __init__(
+        self,
+        convert_H_isotopes: bool = True,
+        default_user_meta: Path = None,
+        store_raw_data: bool = False,
+    ):
         """
         Args:
             convert_H_isotopes: Converts Hydrogen Isotopes to Hydrogen
             read_meta_json: reads corresponding JSON files with the same name as additional metadata
             default_user_meta: Path to a JSON file of user metadata to apply to all entries
+            store_raw_cif: stores the data in "raw"
         """
         self.logger = logging.getLogger(__name__)
         self.convert_H_isotopes = convert_H_isotopes
         self.default_user_meta = default_user_meta
+        self.store_raw_data = store_raw_data
 
         self._default_user_meta_dict = (
             loadfn(default_user_meta) if default_user_meta else {}
@@ -55,9 +62,13 @@ class CIFDrone(MSONable):
         structures = cif_dict["structures"]
         cif_data = cif_dict["cif_data"]
 
+        if self.store_raw_cif:
+            with open(cif_path, "r") as f:
+                cif_string = f.read()
+
         for struc, data in zip(structures, cif_data):
             struc.remove_oxidation_states()
-            metadata = self._analyze_cif_dict(data)
+            cif_metadata = self._analyze_cif_dict(data)
             authors = self._find_authors(data)
             history = self._get_db_history(data)
             composition = data["_chemical_formula_sum"]
@@ -65,24 +76,37 @@ class CIFDrone(MSONable):
 
             doc_meta = dict(**self._default_user_meta_dict)
             doc_meta.update(user_meta)
-            doc_meta.update(metadata)
-            doc_meta.update(struc_metadata)
 
             if self.convert_H_isotopes and struc_metadata["contains_H_isotopes"]:
-                doc_meta["reaplced_H_isotopes"] = self._fix_H_isotopes(struc)
+                struc_metadata["reaplced_H_isotopes"] = self._fix_H_isotopes(struc)
 
             doc = {
                 "structure": struc,
-                "authors": authors,
-                "reference": cif_dict["reference"],
-                "history": history,
-                "meta": doc_meta,
+                "about": {
+                    "authors": authors,
+                    "reference": cif_dict["reference"],
+                    "history": history,
+                    "experimental": self._determine_experimental(user_meta),
+                    "data": {**struc_metadata, **cif_metadata},
+                },
                 "warnings": cif_dict["warnings"],
-                "experimental": self._determine_experimental(user_meta),
+                "source_type": "CIF",
                 "created_at": self._get_created_date(data),
             }
 
+            if self.store_raw_cif:
+                doc.update(
+                    {
+                        "raw": {
+                            "cif": cif_string,
+                            "user_meta": user_meta,
+                            "default_user_meta": self.default_user_meta,
+                        }
+                    }
+                )
+
             doc.update(get_meta_from_structure(struc))
+
             yield doc
 
     def _read_cif(self, cif_path: Path) -> Dict:
@@ -221,7 +245,10 @@ class CIFDrone(MSONable):
         Gets authors from cif_data
         making this a function since this could be much better
         """
-        return [{"name": name, "email": ""} for name in cif_data.get("_publ_author_name",[])]
+        return [
+            {"name": name, "email": ""}
+            for name in cif_data.get("_publ_author_name", [])
+        ]
 
     def _get_created_date(self, cif_data: Dict) -> datetime:
         """
