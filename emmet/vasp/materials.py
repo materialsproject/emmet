@@ -2,7 +2,7 @@ from pathlib import Path
 from datetime import datetime
 from itertools import chain, groupby
 from operator import itemgetter
-from typing import Optional, Dict, Iter, List
+from typing import Optional, Dict, List, Iterator
 
 from monty.json import jsanitize
 from pymatgen import Structure
@@ -19,7 +19,7 @@ from pydash.objects import get, set_, has
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 module_dir = Path(__file__).parent
-default_mat_settings = module_dir // "settings" // "materials_settings.json"
+default_mat_settings = module_dir / "settings" / "materials_settings.json"
 
 
 class MaterialsBuilder(Builder):
@@ -100,7 +100,7 @@ class MaterialsBuilder(Builder):
             sources.append(self.task_types)
         super().__init__(sources=sources, targets=[materials], **kwargs)
 
-    def get_items(self) -> Iter[List[Dict]]:
+    def get_items(self) -> Iterator[List[Dict]]:
         """
         Gets all items to process into materials documents
 
@@ -266,7 +266,7 @@ class MaterialsBuilder(Builder):
 
         return mat
 
-    def filter_and_group_tasks(self, tasks: List[Dict]) -> Iter[List[Dict]]:
+    def filter_and_group_tasks(self, tasks: List[Dict]) -> Iterator[List[Dict]]:
         """
         Groups tasks by structure matching
         """
@@ -485,7 +485,7 @@ def group_structures(
     stol: float = STOL,
     angle_tol: float = ANGLE_TOL,
     symprec: float = SYMPREC,
-) -> Iter[List[Structure]]:
+) -> Iterator[List[Structure]]:
     """
     Groups structures according to space group and structure matching
 
