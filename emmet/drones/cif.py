@@ -67,7 +67,6 @@ class CIFDrone(MSONable):
                 cif_string = f.read()
 
         for struc, data in zip(structures, cif_data):
-            struc.remove_oxidation_states()
             cif_metadata = self._analyze_cif_dict(data)
             authors = self._find_authors(data)
             history = self._get_db_history(data)
@@ -80,6 +79,7 @@ class CIFDrone(MSONable):
             if self.convert_H_isotopes and struc_metadata["contains_H_isotopes"]:
                 struc_metadata["reaplced_H_isotopes"] = self._fix_H_isotopes(struc)
 
+            struc.remove_oxidation_states()
             doc = {
                 "structure": struc,
                 "about": {
