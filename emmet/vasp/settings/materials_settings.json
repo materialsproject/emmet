@@ -1,13 +1,5 @@
 [
   {
-    "materials_key": "analysis.delta_volume",
-    "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
-    },
-    "tasks_key": "analysis.delta_volume"
-  },
-  {
     "materials_key": "bandstructure.band_gap",
     "quality_score": {
       "GGA NSCF Line": 7,
