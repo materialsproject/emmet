@@ -389,15 +389,6 @@
     "tasks_key": "input.structure"
   },
   {
-    "materials_key": "initial_structure",
-    "quality_score": {
-      "GGA+U Structure Optimization": 5,
-      "GGA Structure Optimization": 1
-    },
-    "tasks_key": "input.structure",
-    "track": true
-  },
-  {
     "materials_key": "magnetism.total_magnetization",
     "quality_score": {
       "GGA+U Structure Optimization": 5,
