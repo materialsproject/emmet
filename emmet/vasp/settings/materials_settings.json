@@ -137,14 +137,6 @@
     }
   },
   {
-    "materials_key": "entries.gga.parameters.hubbards",
-    "tasks_key": "input.hubbards",
-    "quality_score": {
-      "GGA Static": 2,
-      "GGA Structure Optimization": 1
-    }
-  },
-  {
     "materials_key": "entries.gga.parameters.potcar_spec",
     "tasks_key": "input.potcar_spec",
     "quality_score": {
@@ -155,14 +147,6 @@
   {
     "materials_key": "entries.gga.parametes.run_type",
     "tasks_key": "calcs_reversed.0.run_type",
-    "quality_score": {
-      "GGA Static": 2,
-      "GGA Structure Optimization": 1
-    }
-  },
-  {
-    "materials_key": "entries.gga.parameters.is_hubbard",
-    "tasks_key": "input.is_hubbard",
     "quality_score": {
       "GGA Static": 2,
       "GGA Structure Optimization": 1
@@ -224,14 +208,6 @@
     }
   },
   {
-    "materials_key": "entries.gga_u.parameters.is_hubbard",
-    "tasks_key": "input.is_hubbard",
-    "quality_score": {
-      "GGA+U Static": 2,
-      "GGA+U Structure Optimization": 1
-    }
-  },
-  {
     "materials_key": "entries.gga_u.parameters.nelect",
     "tasks_key": "input.parameters.NELECT",
     "quality_score": {
@@ -263,14 +239,6 @@
     }
   },
   {
-    "materials_key": "entries.scan.parameters.hubbards",
-    "tasks_key": "input.hubbards",
-    "quality_score": {
-      "SCAN Static": 2,
-      "SCAN Structure Optimization": 1
-    }
-  },
-  {
     "materials_key": "entries.scan.parameters.potcar_spec",
     "tasks_key": "input.potcar_spec",
     "quality_score": {
@@ -281,14 +249,6 @@
   {
     "materials_key": "entries.scan.parametes.run_type",
     "tasks_key": "calcs_reversed.0.run_type",
-    "quality_score": {
-      "SCAN Static": 2,
-      "SCAN Structure Optimization": 1
-    }
-  },
-  {
-    "materials_key": "entries.scan.parameters.is_hubbard",
-    "tasks_key": "input.is_hubbard",
     "quality_score": {
       "SCAN Static": 2,
       "SCAN Structure Optimization": 1
