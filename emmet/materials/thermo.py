@@ -1,14 +1,11 @@
-import logging
-from datetime import datetime
 from itertools import chain, combinations
-from functools import reduce
 from collections import defaultdict
 
 from pymatgen import Structure, Composition
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility
 from pymatgen.entries.computed_entries import ComputedEntry
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
-from pymatgen.analysis.structure_analyzer import oxide_type, sulfide_type
+from pymatgen.analysis.structure_analyzer import oxide_type
 
 from maggma.builders import Builder
 
