@@ -17,6 +17,13 @@ from pymatgen.io.cif import CifParser
 db_urls = {
     "icsd": "https://icsd.fiz-karlsruhe.de/",
     "cod": "http://www.crystallography.net/cod/",
+    "pf": "https://paulingfile.com/",
+}
+
+db_names = {
+    "icsd": "ICSD",
+    "cod": "Crystallography Open Database",
+    "pf": "Pauling File",
 }
 
 
@@ -71,7 +78,7 @@ class CIFDrone(MSONable):
                 "history": history,
                 "meta": doc_meta,
                 "warnings": cif_dict["warnings"],
-                "experimental": self._determine_experimental(user_meta, data),
+                "experimental": self._determine_experimental(user_meta),
                 "created_at": self._get_created_date(data),
             }
 
@@ -82,7 +89,7 @@ class CIFDrone(MSONable):
         """
         Internal function to convert CIF into a structure + metadata
         """
-
+        cif_path = Path(cif_path)
         file_ID = cif_path.stem
         cif_dict = {"warnings": []}
         with warnings.catch_warnings(record=True) as w:
@@ -126,18 +133,18 @@ class CIFDrone(MSONable):
         Gets the database history from the CIF
         """
 
-        db_keys = [k for k in cif_data.keys() if "_database_code" in k]
-        db_regex = r"_?(.*)_database_code_?(.*)"
-        db_matches = [re.match(db_regex, k) for k in db_keys]
-        db_names = [match[1] if match[1] else match[2] for match in db_matches]
+        keys = [k for k in cif_data.keys() if "_database_code" in k]
+        regex = r"_?(.*)_database_code_?(.*)"
+        matches = [re.match(regex, k) for k in keys]
+        names = [match[1] if match[1] else match[2] for match in matches]
 
         history = []
 
-        for name, key in zip(db_names, db_keys):
+        for name, key in zip(names, keys):
 
             history.append(
                 {
-                    "name": name,
+                    "name": db_names[name.lower()],
                     "url": db_urls[name.lower()],
                     "description": {"id": cif_data[key]},
                 }
@@ -169,13 +176,11 @@ class CIFDrone(MSONable):
                 actual_composition
             )
             metadata["implicit_hydrogen"] = (
-                abs(
-                    sum(
-                        [
-                            structure_composition[el] - actual_composition[el]
-                            for el in ["H", "D", "T"]
-                        ]
-                    )
+                sum(
+                    [
+                        abs(structure_composition[el] - actual_composition[el])
+                        for el in ["H", "D", "T"]
+                    ]
                 )
                 > 0.1
             )
@@ -185,7 +190,7 @@ class CIFDrone(MSONable):
     def _get_user_meta(self, cif_path: Path) -> Dict:
         file_ID = cif_path.stem
         meta_paths = [
-            path for path in cif_path.parent.glob(f"{file_ID}*") if path != cif_path
+            path for path in cif_path.parent.glob(f"{file_ID}.json") if path != cif_path
         ]
         meta_doc = {}
         for path in meta_paths:
@@ -216,7 +221,7 @@ class CIFDrone(MSONable):
         Gets authors from cif_data
         making this a function since this could be much better
         """
-        return [{"name": name, "email": ""} for name in cif_data["_publ_author_name"]]
+        return [{"name": name, "email": ""} for name in cif_data.get("_publ_author_name",[])]
 
     def _get_created_date(self, cif_data: Dict) -> datetime:
         """
@@ -236,7 +241,7 @@ class CIFDrone(MSONable):
         else:
             return datetime.now()
 
-    def _determine_experimental(self, user_meta: Dict, cif_data: Dict) -> bool:
+    def _determine_experimental(self, user_meta: Dict) -> bool:
         """
         Determines if the CIF is experimental from user tags and data from
         the CIF
