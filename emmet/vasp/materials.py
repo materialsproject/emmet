@@ -472,10 +472,10 @@ def structure_metadata(structure: Structure, symprec=SYMPREC) -> Dict:
     comp = structure.composition
     elsyms = sorted(set([e.symbol for e in comp.elements]))
 
-    sg = SpacegroupAnalyzer(Structure.from_dict(structure), 0.1)
+    sg = SpacegroupAnalyzer(structure, 0.1)
     symmetry = {"symprec": 0.1}
     if not sg.get_symmetry_dataset():
-        sg = SpacegroupAnalyzer(Structure.from_dict(structure), 1e-3, 1)
+        sg = SpacegroupAnalyzer(structure, 1e-3, 1)
         symmetry["symprec"] = 1e-3
 
     symmetry.update(
