@@ -8,6 +8,7 @@ from monty.json import jsanitize
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.analysis.piezo import PiezoTensor
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from maggma.stores import Store
 from maggma.builders import Builder
@@ -470,6 +471,19 @@ def structure_metadata(structure: Structure, symprec=SYMPREC) -> Dict:
     """
     comp = structure.composition
     elsyms = sorted(set([e.symbol for e in comp.elements]))
+
+    sg = SpacegroupAnalyzer(Structure.from_dict(structure), 0.1)
+    if not sg.get_symmetry_dataset():
+        sg = SpacegroupAnalyzer(Structure.from_dict(structure), 1e-3, 1)
+    symmetry = {
+        "source": "spglib",
+        "symbol": sg.get_space_group_symbol(),
+        "number": sg.get_space_group_number(),
+        "point_group": sg.get_point_group_symbol(),
+        "crystal_system": sg.get_crystal_system(),
+        "hall": sg.get_hall(),
+    }
+
     meta = {
         "nsites": structure.num_sites,
         "elements": elsyms,
@@ -481,7 +495,7 @@ def structure_metadata(structure: Structure, symprec=SYMPREC) -> Dict:
         "chemsys": "-".join(elsyms),
         "volume": structure.volume,
         "density": structure.density,
-        "symmetry": structure.get_space_group_info(symprec=symprec)
+        "symmetry": symmetry,
     }
 
     return meta
