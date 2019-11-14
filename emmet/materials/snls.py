@@ -152,27 +152,38 @@ class SNLBuilder(Builder):
 
             snls = []
             for source in self.source_snls:
-                snls.extend(source.query(criteria={"formula_pretty": {"$in": formulas}}))
+                snls.extend(
+                    source.query(criteria={"formula_pretty": {"$in": formulas}})
+                )
+
+            mats = list(
+                self.materials.query(
+                    properties=[
+                        self.materials.key,
+                        "structure",
+                        "initial_structures",
+                        "formula_pretty",
+                    ],
+                    criteria={"formula_pretty": {"$in": formulas}},
+                )
+            )
 
             form_groups = defaultdict(list)
             for snl in snls:
                 form_groups[snl["formula_pretty"]].append(snl)
-            
-            for formula, snl_group in form_groups.items():
-                mats = list(
-                    self.materials.query(
-                        properties=[
-                            self.materials.key,
-                            "structure",
-                            "initial_structures",
-                            "formula_pretty",
-                        ],
-                        criteria={"formula_pretty": formula},
-                    )
-                )
 
-                self.logger.debug(f"Found {len(snls)} snls and {len(mats)} mats")
-                yield mats, snls
+            mat_groups = defaultdict(list)
+            for mat in mats:
+                mat_groups[mat["formula_pretty"]].append(mat)
+
+            for formula, snl_group in form_groups.items():
+
+                mat_group = mat_groups[formula]
+
+                self.logger.debug(
+                    f"Found {len(snl_group)} snls and {len(mat_group)} mats"
+                )
+                yield mat_group, snl_group
 
     def process_item(self, item):
         """
@@ -186,7 +197,7 @@ class SNLBuilder(Builder):
         """
         mats = item[0]
         source_snls = item[1]
-        formula_pretty = mats[0]['formula_pretty']
+        formula_pretty = mats[0]["formula_pretty"]
 
         snl_docs = list()
         self.logger.debug(f"Tagging SNLs for {formula_pretty}")
@@ -344,8 +355,8 @@ def aggregate_snls(snls):
     db_ids = {k: v for k, v in db_ids.items() if len(v) > 0}
 
     # Get experimental bool
-    experimental = any(snl.get("experimental",False) for snl in snls)
-    
+    experimental = any(snl.get("experimental", False) for snl in snls)
+
     snl_fields = {
         "created_at": created_at,
         "history": history,
