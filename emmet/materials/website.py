@@ -4,8 +4,6 @@ import string
 import traceback
 import copy
 import nltk
-import numpy as np
-from ast import literal_eval
 from datetime import datetime
 from itertools import groupby
 
@@ -14,7 +12,6 @@ from monty.serialization import loadfn
 
 from maggma.builders import Builder
 from maggma.utils import grouper, source_keys_updated
-from maggma.validator import JSONSchemaValidator, msonable_schema
 from pydash.objects import get, set_, has
 
 from emmet.materials.snls import mp_default_snl_fields
@@ -316,7 +313,6 @@ def old_style_mat(new_style_mat):
 
     mat = {}
     mp_conversion_dict = _settings["conversion_dict"]
-    mag_types = _settings["mag_types"]
 
     # Uses the conversion dict to copy over values which handles the bulk of the work.
     for mp, new_key in mp_conversion_dict.items():
@@ -340,12 +336,23 @@ def old_style_mat(new_style_mat):
 
     set_(mat, "pseudo_potential.functional", "PBE")
 
+    entry_type = "gga_u" if "gga_u" in mat["entries"] else "gga"
+
+    calc_settings = {
+        "hubbards": "hubbards",
+        "input.potcar_spec": "potcar_spec",
+        "is_hubbard": "is_hubbard",
+        "run_type": "run_type",
+    }
+    for k, v in calc_settings.items():
+        set_(mat, k, get(new_style_mat, f"entries.{entry_type}.parameters.{v}"))
+
     set_(
         mat,
         "pseudo_potential.labels",
         [
             p["titel"].split()[1]
-            for p in get(new_style_mat, "calc_settings.potcar_spec")
+            for p in get(new_style_mat, f"entries.{entry_type}.parameters.potcar_spec")
         ],
     )
     set_(mat, "pseudo_potential.pot_type", "paw")
@@ -392,7 +399,7 @@ def add_es(mat, new_style_mat):
     except Exception as e:
         print(f"Error in adding electronic structure: {e}")
 
-    mat["has_bandstructure"] = "bandstructure" in new_style_mat.get("has",[])
+    mat["has_bandstructure"] = "bandstructure" in new_style_mat.get("has", [])
 
 
 def add_elastic(mat, new_style_mat):
@@ -404,7 +411,7 @@ def add_elastic(mat, new_style_mat):
         else:
             mat["elasticity"]["nsites"] = len(get(mat, "structure.sites"))
 
-        if get(new_style_mat,"elasticity.warnings") is None:
+        if get(new_style_mat, "elasticity.warnings") is None:
             mat["elasticity"]["warnings"] = []
 
 
@@ -418,13 +425,13 @@ def add_cifs(doc):
         primitive = sym_finder.get_primitive_standard_structure()
         conventional = sym_finder.get_conventional_standard_structure()
         refined = sym_finder.get_refined_structure()
-        doc["cifs"]["primitive"] = str(CifWriter(primitive,symprec=None))
+        doc["cifs"]["primitive"] = str(CifWriter(primitive, symprec=None))
         doc["cifs"]["refined"] = str(CifWriter(refined, symprec=None))
         doc["cifs"]["conventional_standard"] = str(
             CifWriter(conventional, symprec=None)
         )
         doc["cifs"]["computed"] = str(CifWriter(struc, symprec=None))
-    except:
+    except Exception:
         doc["cifs"]["primitive"] = None
         doc["cifs"]["refined"] = None
         doc["cifs"]["conventional_standard"] = None
@@ -519,7 +526,7 @@ def check_relaxation(mat, new_style_mat):
         change = analyzer.get_percentage_volume_change() * 100
         if change < vol_interval[0] or change > vol_interval[1]:
             warnings.append("Large change in volume during relaxation.")
-    except Exception as ex:
+    except Exception:
         # print icsd_crystal.formula
         # print final_structure.formula
         self.logger.debug(
@@ -535,7 +542,7 @@ def add_thermo(mat, new_style_mat):
     """
     if "thermo_docs" not in new_style_mat:
         mat["deprecated"] = True
-        
+
     if not mat["deprecated"]:
         thermo = new_style_mat["thermo_docs"]
 
