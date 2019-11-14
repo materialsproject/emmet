@@ -10,7 +10,7 @@ from maggma.builders import Builder
 from pybtex.database import parse_string
 from pybtex.database import BibliographyData
 
-from emmet.magic_numbers import LTOL, STOL, ANGLE_TOL
+from emmet.magic_numbers import LTOL, STOL, ANGLE_TOL, SYMPREC
 
 # Silly fix to keep pybtex from spamming warnings
 import os, pybtex
@@ -56,6 +56,7 @@ class SNLBuilder(Builder):
         snls,
         source_snls,
         query=None,
+        symprec=SYMPREC,
         ltol=0.2,
         stol=0.3,
         angle_tol=5,
@@ -181,8 +182,10 @@ class SNLBuilder(Builder):
         """
         mats = item[0]
         source_snls = item[1]
+        formula_pretty = mats[0]['formula_pretty']
+
         snl_docs = list()
-        self.logger.debug(f"Tagging SNLs for {mats[0]['formula_pretty']}")
+        self.logger.debug(f"Tagging SNLs for {formula_pretty}")
 
         # Match up SNLS with materials
         for mat in mats:
@@ -319,7 +322,6 @@ def aggregate_snls(snls):
 
     # Aggregate all the database IDs
     db_ids = defaultdict(list)
-    experimental = False
     for snl in snls:
         if (
             len(snl["about"]["history"]) == 1
@@ -337,6 +339,9 @@ def aggregate_snls(snls):
     db_ids = {k: list(filter(None, v)) for k, v in db_ids.items()}
     db_ids = {k: v for k, v in db_ids.items() if len(v) > 0}
 
+    # Get experimental bool
+    experimental = any(snl.get("experimental",False) for snl in snls)
+    
     snl_fields = {
         "created_at": created_at,
         "history": history,
