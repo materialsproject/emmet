@@ -1,9 +1,6 @@
-import logging
 import os
-from datetime import datetime
 
 from monty.json import jsanitize
-from monty.serialization import loadfn
 
 from pymatgen.core.structure import Structure
 from pymatgen.analysis.diffraction.xrd import XRDCalculator, WAVELENGTHS
