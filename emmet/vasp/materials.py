@@ -481,7 +481,7 @@ def structure_metadata(structure: Structure, symprec=SYMPREC) -> Dict:
         "chemsys": "-".join(elsyms),
         "volume": structure.volume,
         "density": structure.density,
-        "symmetry": structure.get_space_group_info(symprec=symprec),
+        "symmetry": structure.get_space_group_info(symprec=symprec)
     }
 
     return meta

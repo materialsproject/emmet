@@ -6,7 +6,7 @@ from typing import Dict, List, Union, Optional
 from datetime import datetime
 from timestring import Date
 
-from atomate.utils.utils import get_meta_from_structure
+from emmet.vasp.materials import structure_metadata
 from monty.json import MSONable, MontyDecoder
 from monty.serialization import loadfn
 
@@ -105,7 +105,7 @@ class CIFDrone(MSONable):
                     }
                 )
 
-            doc.update(get_meta_from_structure(struc))
+            doc.update(structure_metadata(struc))
 
             yield doc
 
