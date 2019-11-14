@@ -2,7 +2,7 @@ import logging
 import warnings
 import re
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 from datetime import datetime
 from timestring import Date
 
@@ -31,7 +31,7 @@ class CIFDrone(MSONable):
     def __init__(
         self,
         convert_H_isotopes: bool = True,
-        default_user_meta: Path = None,
+        default_user_meta: Optional[Path] = None,
         store_raw_data: bool = False,
     ):
         """
