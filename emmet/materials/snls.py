@@ -11,6 +11,7 @@ from pybtex.database import parse_string
 from pybtex.database import BibliographyData
 
 from emmet.magic_numbers import LTOL, STOL, ANGLE_TOL, SYMPREC
+from maggma.utils import grouper
 
 # Silly fix to keep pybtex from spamming warnings
 import os, pybtex
@@ -81,6 +82,7 @@ class SNLBuilder(Builder):
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol
+        self.symprec = symprec
         self.query = query if query else {}
         self.default_snl_fields = (
             default_snl_fields if default_snl_fields else mp_default_snl_fields
@@ -146,15 +148,17 @@ class SNLBuilder(Builder):
 
         self.total = len(forms_to_update)
 
-        for formula in forms_to_update:
+        for formulas in grouper(forms_to_update, self.chunk_size, fillvalue=None):
 
             snls = []
-
             for source in self.source_snls:
-                snls.extend(source.query(criteria={"formula_pretty": formula}))
+                snls.extend(source.query(criteria={"formula_pretty": {"$in": formulas}}))
 
-            # Guaranteed to be mat per above reduction so just check for SNLS
-            if len(snls) > 0:
+            form_groups = defaultdict(list)
+            for snl in snls:
+                form_groups[snl["formula_pretty"]].append(snl)
+            
+            for formula, snl_group in form_groups.items():
                 mats = list(
                     self.materials.query(
                         properties=[
@@ -248,7 +252,7 @@ class SNLBuilder(Builder):
                         yield snl
                         break
             except:
-                self.logger.warning("Bad SNL found : {snl.get('task_id')}")
+                self.logger.warning(f"Bad SNL found : {snl.get('task_id')}")
 
     def add_defaults(self, snl):
 
