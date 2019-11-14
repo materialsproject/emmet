@@ -46,6 +46,7 @@ class MaterialsBuilder(Builder):
         task_types: Optional[Store] = None,
         materials_settings: Path = None,
         query: Optional[Dict] = None,
+        symprec: float = 0.1,
         ltol: float = LTOL,
         stol: float = STOL,
         angle_tol: float = ANGLE_TOL,
@@ -59,6 +60,7 @@ class MaterialsBuilder(Builder):
             materials (Store): Store of materials documents to generate
             materials_settings (Path): Path to settings files
             query (dict): dictionary to limit tasks to be analyzed
+            symprec (float): tolerance for SPGLib spacegroup finding
             ltol (float): StructureMatcher tuning parameter for matching tasks to materials
             stol (float): StructureMatcher tuning parameter for matching tasks to materials
             angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
@@ -69,6 +71,7 @@ class MaterialsBuilder(Builder):
         self.materials = materials
         self.task_types = task_types
         self.query = query if query else {}
+        self.symprec = symprec
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol
@@ -283,7 +286,11 @@ class MaterialsBuilder(Builder):
             structures.append(s)
 
         grouped_structures = group_structures(
-            structures, ltol=self.ltol, stol=self.stol, angle_tol=self.angle_tol
+            structures,
+            ltol=self.ltol,
+            stol=self.stol,
+            angle_tol=self.angle_tol,
+            symprec=self.symprec,
         )
 
         for group in grouped_structures:
@@ -343,7 +350,7 @@ class MaterialsBuilder(Builder):
         if "structure" in mat:
             structure = Structure.from_dict(mat["structure"])
             mat["structure"] = structure.as_dict()
-            mat.update(structure_metadata(structure))
+            mat.update(structure_metadata(structure, symprec=self.symprec))
 
         # Deprecate materials with bad structures or energies
         if "structure" in mat["invalid_props"]:
@@ -457,7 +464,7 @@ def find_best_prop(props: List[Dict]) -> Dict:
     return prop
 
 
-def structure_metadata(structure: Structure) -> Dict:
+def structure_metadata(structure: Structure, symprec=SYMPREC) -> Dict:
     """
     Generates metadata based on a structure
     """
@@ -474,6 +481,7 @@ def structure_metadata(structure: Structure) -> Dict:
         "chemsys": "-".join(elsyms),
         "volume": structure.volume,
         "density": structure.density,
+        "symmetry": structure.get_space_group_info(symprec=symprec),
     }
 
     return meta
