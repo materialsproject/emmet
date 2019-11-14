@@ -473,16 +473,21 @@ def structure_metadata(structure: Structure, symprec=SYMPREC) -> Dict:
     elsyms = sorted(set([e.symbol for e in comp.elements]))
 
     sg = SpacegroupAnalyzer(Structure.from_dict(structure), 0.1)
+    symmetry = {"symprec": 0.1}
     if not sg.get_symmetry_dataset():
         sg = SpacegroupAnalyzer(Structure.from_dict(structure), 1e-3, 1)
-    symmetry = {
-        "source": "spglib",
-        "symbol": sg.get_space_group_symbol(),
-        "number": sg.get_space_group_number(),
-        "point_group": sg.get_point_group_symbol(),
-        "crystal_system": sg.get_crystal_system(),
-        "hall": sg.get_hall(),
-    }
+        symmetry["symprec"] = 1e-3
+
+    symmetry.update(
+        {
+            "source": "spglib",
+            "symbol": sg.get_space_group_symbol(),
+            "number": sg.get_space_group_number(),
+            "point_group": sg.get_point_group_symbol(),
+            "crystal_system": sg.get_crystal_system(),
+            "hall": sg.get_hall(),
+        }
+    )
 
     meta = {
         "nsites": structure.num_sites,
