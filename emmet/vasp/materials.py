@@ -46,7 +46,7 @@ class MaterialsBuilder(Builder):
         task_types: Optional[Store] = None,
         materials_settings: Path = None,
         query: Optional[Dict] = None,
-        symprec: float = 0.1,
+        symprec: float = SYMPREC,
         ltol: float = LTOL,
         stol: float = STOL,
         angle_tol: float = ANGLE_TOL,
