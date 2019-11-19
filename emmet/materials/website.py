@@ -7,6 +7,7 @@ import nltk
 from datetime import datetime
 from itertools import groupby
 
+
 from monty.json import jsanitize
 from monty.serialization import loadfn
 
@@ -336,17 +337,20 @@ def old_style_mat(new_style_mat):
 
     set_(mat, "pseudo_potential.functional", "PBE")
 
-    entry_type = "gga_u" if "gga_u" in mat["entries"] else "gga"
+    entry_type = "gga_u" if "gga_u" in new_style_mat["entries"] else "gga"
 
     calc_settings = {
         "hubbards": "hubbards",
         "input.potcar_spec": "potcar_spec",
-        "is_hubbard": "is_hubbard",
         "run_type": "run_type",
     }
     for k, v in calc_settings.items():
         set_(mat, k, get(new_style_mat, f"entries.{entry_type}.parameters.{v}"))
 
+    if mat["hubbards"] is None:
+        mat["hubbards"] = {}
+
+    mat["is_hubbard"] = len(mat["hubbards"]) > 0
     set_(
         mat,
         "pseudo_potential.labels",
@@ -358,10 +362,16 @@ def old_style_mat(new_style_mat):
     set_(mat, "pseudo_potential.pot_type", "paw")
 
     mat["blessed_tasks"] = {
-        d["task_type"]: d["task_id"] for d in new_style_mat["origins"]
+        d["task_type"]: d["task_id"]
+        for d in new_style_mat["origins"]
+        if d["task_type"] in _settings["task_types"]
     }
-    mat["deprecated_tasks"] = new_style_mat.get("deprecated_tasks", [])
     mat["ntask_ids"] = len(mat["task_ids"])
+    mat["task_ids"] = [
+        k
+        for k, v in new_style_mat["task_types"].items()
+        if v in _settings["task_types"]
+    ]
 
     return mat
 
@@ -469,6 +479,7 @@ def add_snl(mat, new_style_mat):
     mat["snl_final"] = mat["snl"]
     mat["icsd_ids"] = [int(i) for i in get(mat["snl"], "about._db_ids.icsd_ids", [])]
     mat["pf_ids"] = get(mat["snl"], "about._db_ids.pf_ids", [])
+    mat["theoretical"] = not get(mat["snl.about._experimental"], False)
 
     # Extract tags from remarks by looking for just nounds and adjectives
     mat["exp"] = {"tags": []}
