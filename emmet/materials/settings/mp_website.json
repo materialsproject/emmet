@@ -67,7 +67,8 @@
     "bond_valence": "bond_valence",
     "has": "has",
     "sbxn": "_sbxn",
-    "deprecated": "deprecated"
+    "deprecated": "deprecated",
+    "deprecated_tasks": "deprecated_tasks"
   },
   "task_types": [
     "GGA NSCF Line",
