@@ -448,5 +448,29 @@
       "GGA DFPT Dielectric": 2
     },
     "tasks_key": "calcs_reversed.0.output.outcar.internal_strain_tensor"
+  },
+  {
+    "materials_key": "nmr.chem_shielding.raw",
+    "quality_score": {
+      "GGA+U NMR Nuclear Shielding": 2,
+      "GGA NMR Nuclear Shielding": 1
+    },
+    "tasks_key": "calcs_reversed.output.outcar.nmr_cs.raw"
+  },
+  {
+    "materials_key": "nmr.chem_shielding.g0",
+    "quality_score": {
+      "GGA+U NMR Nuclear Shielding": 2,
+      "GGA NMR Nuclear Shielding": 1
+    },
+    "tasks_key": "calcs_reversed.output.outcar.nmr_cs.g0"
+  },
+  {
+    "materials_key": "nmr.chem_shielding.raw",
+    "quality_score": {
+      "GGA+U NMR Nuclear Shielding": 2,
+      "GGA NMR Nuclear Shielding": 1
+    },
+    "tasks_key": "calcs_reversed.output.outcar.nmr_efg.raw"
   }
 ]
