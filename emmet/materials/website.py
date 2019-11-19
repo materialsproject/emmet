@@ -332,7 +332,7 @@ def old_style_mat(new_style_mat):
     mat["anonymous_formula"] = {
         string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))
     }
-    mat["initial_structure"] = new_style_mat.get("initial_structure", None)
+    mat["initial_structure"] = get("initial_structures.0", new_style_mat, None)
 
     set_(mat, "pseudo_potential.functional", "PBE")
 
@@ -508,7 +508,7 @@ def check_relaxation(mat, new_style_mat):
 
     warnings = []
     # Check relaxation for just the initial structure to optimized structure
-    init_struc = new_style_mat["initial_structure"]
+    init_struc = new_style_mat["initial_structures"][0]
 
     orig_crystal = Structure.from_dict(init_struc)
 
