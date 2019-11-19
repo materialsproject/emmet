@@ -121,6 +121,26 @@
     "tasks_key": "task_id"
   },
   {
+    "materials_key": "energy_per_atom",
+    "tasks_key": "output.energy_per_atom",
+    "quality_score": {
+      "GGA+U Static": 4,
+      "GGA+U Structure Optimization": 3,
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "energy",
+    "tasks_key": "output.energy",
+    "quality_score": {
+      "GGA+U Static": 4,
+      "GGA+U Structure Optimization": 3,
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
+  },
+  {
     "materials_key": "entries.gga.composition",
     "tasks_key": "composition_unit_cell",
     "quality_score": {
