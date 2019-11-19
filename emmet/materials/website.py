@@ -457,11 +457,6 @@ def add_xrd(mat, new_style_mat):
         mat["xrd"][el] = el_doc
 
 
-def add_bonds(mat, new_style_mat):
-    if get("bonds.successful", new_style_mat, False):
-        mat["bonds"] = get("bonds.summary", new_style_mat)
-
-
 def add_snl(mat, new_style_mat):
     snl = new_style_mat.get("snl", None)
     mat["snl"] = copy.deepcopy(mat["structure"])
