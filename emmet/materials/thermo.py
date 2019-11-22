@@ -282,6 +282,7 @@ class ThermoBuilder(Builder):
                     entry_type = "gga_u" if "gga_u" in d["entries"] else "gga"
                     d["entries"][entry_type]["correction"] = 0.0
                     entry = ComputedEntry.from_dict(d["entries"][entry_type])
+                    d["entry"]["entry_id"] = d['task_id']
                     entry.data["oxide_type"] = oxide_type(
                         Structure.from_dict(d["structure"])
                     )
