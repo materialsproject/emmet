@@ -167,7 +167,7 @@ class ThermoBuilder(Builder):
                             for de, amt in decomp.items()
                         ]
 
-                    d["thermo"]["entry"] = e
+                    d["thermo"]["entry"] = e.as_dict()
                     d["thermo"][
                         "explanation"
                     ] = self.compatibility.get_explanation_dict(e)
@@ -176,7 +176,7 @@ class ThermoBuilder(Builder):
                     d["chemsys"] = "-".join(elsyms)
                     d["nelements"] = len(elsyms)
                     d["elements"] = list(elsyms)
-                    d["_sbxn"] = list(sandboxes)
+                    d["_sbxn"] = sorted(sandboxes)
 
                     docs.append(d)
             except PhaseDiagramError as p:
@@ -214,7 +214,7 @@ class ThermoBuilder(Builder):
         # Add stable entries to my entries cache
         for entry in items:
             if entry["thermo"]["is_stable"]:
-                self._entries_cache[entry["chemsys"]].append(entry["thermo"]["entry"])
+                self._entries_cache[entry["chemsys"]].append(ComputedEntry.from_dict(entry["thermo"]["entry"]))
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(items)} thermo documents")
