@@ -26,7 +26,7 @@ if __name__ == "__main__":
             'six', 'pydash', 'tqdm', 'matminer', 'log4mongo', 'prettytable',
             'prettyplotlib', 'pybtex', 'Click', 'networkx', 'sumo',
             'robocrys', 'urllib3<1.25', 'oauth2client', 'google-api-python-client',
-            'bravado', 'zipstream'
+            'bravado', 'zipstream-new==1.1.5', 'jsonschema'
         ],
         classifiers=["Programming Language :: Python :: 3",
                      "Programming Language :: Python :: 3.6",

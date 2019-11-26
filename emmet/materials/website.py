@@ -4,17 +4,15 @@ import string
 import traceback
 import copy
 import nltk
-import numpy as np
-from ast import literal_eval
 from datetime import datetime
 from itertools import groupby
+
 
 from monty.json import jsanitize
 from monty.serialization import loadfn
 
 from maggma.builders import Builder
 from maggma.utils import grouper, source_keys_updated
-from maggma.validator import JSONSchemaValidator, msonable_schema
 from pydash.objects import get, set_, has
 
 from emmet.materials.snls import mp_default_snl_fields
@@ -86,7 +84,7 @@ class MPBuilder(Builder):
         self.ensure_indexes()
 
         keys = self.get_keys()
-        self.logger.info("Processing {} items".format(len(keys)))
+        self.logger.info(f"Processing {len(keys)} items")
         self.total = len(keys)
 
         # Chunk keys by chunk size for good data IO
@@ -107,7 +105,7 @@ class MPBuilder(Builder):
 
     def process_item(self, item):
 
-        self.logger.debug("Processing: {}".format(item[self.materials.key]))
+        self.logger.debug(f"Processing: {item[self.materials.key]}")
 
         try:
             mat = old_style_mat(item)
@@ -316,7 +314,6 @@ def old_style_mat(new_style_mat):
 
     mat = {}
     mp_conversion_dict = _settings["conversion_dict"]
-    mag_types = _settings["mag_types"]
 
     # Uses the conversion dict to copy over values which handles the bulk of the work.
     for mp, new_key in mp_conversion_dict.items():
@@ -336,25 +333,47 @@ def old_style_mat(new_style_mat):
     mat["anonymous_formula"] = {
         string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))
     }
-    mat["initial_structure"] = new_style_mat.get("initial_structure", None)
+    mat["initial_structure"] = get("initial_structures.0", new_style_mat, None)
 
     set_(mat, "pseudo_potential.functional", "PBE")
 
+    entry_type = "gga_u" if "gga_u" in new_style_mat["entries"] else "gga"
+
+    calc_settings = {
+        "hubbards": "hubbards",
+        "input.potcar_spec": "potcar_spec",
+        "run_type": "run_type",
+    }
+    for k, v in calc_settings.items():
+        set_(mat, k, get(new_style_mat, f"entries.{entry_type}.parameters.{v}"))
+
+    if mat["hubbards"] is None:
+        mat["hubbards"] = {}
+
+    mat["is_hubbard"] = len(mat["hubbards"]) > 0
     set_(
         mat,
         "pseudo_potential.labels",
         [
             p["titel"].split()[1]
-            for p in get(new_style_mat, "calc_settings.potcar_spec")
+            for p in get(new_style_mat, f"entries.{entry_type}.parameters.potcar_spec")
         ],
     )
     set_(mat, "pseudo_potential.pot_type", "paw")
 
     mat["blessed_tasks"] = {
-        d["task_type"]: d["task_id"] for d in new_style_mat["origins"]
+        d["task_type"]: d["task_id"]
+        for d in new_style_mat["origins"]
+        if d["task_type"] in _settings["task_types"]
     }
-    mat["deprecated_tasks"] = new_style_mat.get("deprecated_tasks", [])
+    
+    mat["task_ids"] = [
+        k
+        for k, v in new_style_mat["task_types"].items()
+        if v in _settings["task_types"]
+    ]
     mat["ntask_ids"] = len(mat["task_ids"])
+    
 
     return mat
 
@@ -383,16 +402,16 @@ def add_es(mat, new_style_mat):
 
         if bs_origin:
             u_type = "GGA+U" if "+U" in bs_origin["task_type"] else "GGA"
-            set_(mat, "band_structure.{}.task_id".format(u_type), bs_origin["task_id"])
+            set_(mat, f"band_structure.{u_type}.task_id", bs_origin["task_id"])
 
         if dos_origin:
             u_type = "GGA+U" if "+U" in dos_origin["task_type"] else "GGA"
-            set_(mat, "dos.{}.task_id".format(u_type), dos_origin["task_id"])
+            set_(mat, f"dos.{u_type}.task_id", dos_origin["task_id"])
 
     except Exception as e:
-        print("Error in adding electronic structure: {}".format(e))
+        print(f"Error in adding electronic structure: {e}")
 
-    mat["has_bandstructure"] = "bandstructure" in new_style_mat.get("has",[])
+    mat["has_bandstructure"] = "bandstructure" in new_style_mat.get("has", [])
 
 
 def add_elastic(mat, new_style_mat):
@@ -404,7 +423,7 @@ def add_elastic(mat, new_style_mat):
         else:
             mat["elasticity"]["nsites"] = len(get(mat, "structure.sites"))
 
-        if get(new_style_mat,"elasticity.warnings") is None:
+        if get(new_style_mat, "elasticity.warnings") is None:
             mat["elasticity"]["warnings"] = []
 
 
@@ -418,13 +437,13 @@ def add_cifs(doc):
         primitive = sym_finder.get_primitive_standard_structure()
         conventional = sym_finder.get_conventional_standard_structure()
         refined = sym_finder.get_refined_structure()
-        doc["cifs"]["primitive"] = str(CifWriter(primitive,symprec=None))
+        doc["cifs"]["primitive"] = str(CifWriter(primitive, symprec=None))
         doc["cifs"]["refined"] = str(CifWriter(refined, symprec=None))
         doc["cifs"]["conventional_standard"] = str(
             CifWriter(conventional, symprec=None)
         )
         doc["cifs"]["computed"] = str(CifWriter(struc, symprec=None))
-    except:
+    except Exception:
         doc["cifs"]["primitive"] = None
         doc["cifs"]["refined"] = None
         doc["cifs"]["conventional_standard"] = None
@@ -450,11 +469,6 @@ def add_xrd(mat, new_style_mat):
         mat["xrd"][el] = el_doc
 
 
-def add_bonds(mat, new_style_mat):
-    if get("bonds.successful", new_style_mat, False):
-        mat["bonds"] = get("bonds.summary", new_style_mat)
-
-
 def add_snl(mat, new_style_mat):
     snl = new_style_mat.get("snl", None)
     mat["snl"] = copy.deepcopy(mat["structure"])
@@ -467,6 +481,7 @@ def add_snl(mat, new_style_mat):
     mat["snl_final"] = mat["snl"]
     mat["icsd_ids"] = [int(i) for i in get(mat["snl"], "about._db_ids.icsd_ids", [])]
     mat["pf_ids"] = get(mat["snl"], "about._db_ids.pf_ids", [])
+    mat["theoretical"] = not get(mat["snl.about._experimental"], False)
 
     # Extract tags from remarks by looking for just nounds and adjectives
     mat["exp"] = {"tags": []}
@@ -501,7 +516,7 @@ def check_relaxation(mat, new_style_mat):
 
     warnings = []
     # Check relaxation for just the initial structure to optimized structure
-    init_struc = new_style_mat["initial_structure"]
+    init_struc = new_style_mat["initial_structures"][0]
 
     orig_crystal = Structure.from_dict(init_struc)
 
@@ -519,13 +534,11 @@ def check_relaxation(mat, new_style_mat):
         change = analyzer.get_percentage_volume_change() * 100
         if change < vol_interval[0] or change > vol_interval[1]:
             warnings.append("Large change in volume during relaxation.")
-    except Exception as ex:
+    except Exception:
         # print icsd_crystal.formula
         # print final_structure.formula
-        print(
-            "Relaxation analyzer failed for Material:{} due to {}".format(
-                mat["task_id"], traceback.print_exc()
-            )
+        self.logger.debug(
+            f"Relaxation analyzer failed for Material:{mat['task_id']} due to {traceback.print_exc()}"
         )
 
     mat["warnings"] = list(set(warnings))
@@ -537,7 +550,7 @@ def add_thermo(mat, new_style_mat):
     """
     if "thermo_docs" not in new_style_mat:
         mat["deprecated"] = True
-        
+
     if not mat["deprecated"]:
         thermo = new_style_mat["thermo_docs"]
 
