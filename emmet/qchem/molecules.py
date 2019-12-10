@@ -7,6 +7,10 @@ import networkx as nx
 from pymatgen import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN
+from pymatgen.analysis.fragmenter import metal_edge_extender
+from ase import Atoms
+from pymatgen.io.ase import AseAtomsMoleculeAdaptor
+from graphdot.experimental.metric.m3 import M3
 
 from maggma.builders import Builder
 
@@ -82,7 +86,7 @@ class MoleculesBuilder(Builder):
         processed_tasks = set(self.molecules.distinct("task_ids"))
         to_process_tasks = all_tasks - processed_tasks
         to_process_forms = self.tasks.distinct(
-            "formula_pretty", {"task_id": {"$in": list(to_process_tasks)}}
+            "formula_alphabetical", {"task_id": {"$in": list(to_process_tasks)}}
         )
         self.logger.info("Found {} unprocessed tasks".format(len(to_process_tasks)))
         self.logger.info("Found {} unprocessed formulas".format(len(to_process_forms)))
@@ -90,7 +94,7 @@ class MoleculesBuilder(Builder):
         # Tasks that have been updated since we last viewed them
         update_q = dict(q)
         update_q.update(self.tasks.lu_filter(self.molecules))
-        updated_forms = self.tasks.distinct("formula_pretty", update_q)
+        updated_forms = self.tasks.distinct("formula_alphabetical", update_q)
         self.logger.info(
             "Found {} updated systems to process".format(len(updated_forms))
         )
@@ -108,7 +112,7 @@ class MoleculesBuilder(Builder):
 
         for formula in forms_to_update:
             tasks_q = dict(q)
-            tasks_q["formula_pretty"] = formula
+            tasks_q["formula_alphabetical"] = formula
             tasks = list(self.tasks.query(criteria=tasks_q))
             for t in tasks:
                 if t[self.tasks.key] in invalid_ids:
@@ -129,7 +133,7 @@ class MoleculesBuilder(Builder):
             ([dict],list) : a list of new molecules docs and a list of task_ids that were processsed
         """
 
-        formula = tasks[0]["formula_pretty"]
+        formula = tasks[0]["formula_alphabetical"]
         # print(formula)
         t_ids = [t["task_id"] for t in tasks]
         self.logger.debug("Processing {} : {}".format(formula, t_ids))
@@ -145,7 +149,7 @@ class MoleculesBuilder(Builder):
 
         self.logger.debug(
             "Produced {} molecules for {}".format(
-                len(molecules), tasks[0]["formula_pretty"]
+                len(molecules), tasks[0]["formula_alphabetical"]
             )
         )
         return molecules
@@ -242,16 +246,23 @@ class MoleculesBuilder(Builder):
 
         for idx, t in enumerate(filtered_tasks):
             if "optimized_molecule" in t["output"]:
-                s = Molecule.from_dict(t["output"]["optimized_molecule"])
+                mol = Molecule.from_dict(t["output"]["optimized_molecule"])
             else:
-                s = Molecule.from_dict(t["output"]["initial_molecule"])
-            s.myindex = idx
-            molecules.append(s)
+                mol = Molecule.from_dict(t["output"]["initial_molecule"])
+            mol.myindex = idx
+            mol_dict = {"molecule": mol,
+                        "energy": t["output"]["final_energy"],
+                        "mulliken": t["output"]["mulliken"]}
+            if "resp" in t["output"]:
+                mol_dict["resp"] = t["output"]["resp"]
+            if "critic2" in t:
+                mol_dict["critic2"] = t["critic2"]
+            molecules.append(mol_dict)
 
         grouped_molecules = group_molecules(molecules)
 
         for group in grouped_molecules:
-            yield [filtered_tasks[mol.myindex] for mol in group]
+            yield [filtered_tasks[mol_dict["molecule"].myindex] for mol_dict in group]
 
     def task_to_prop_list(self, task):
         """
@@ -315,7 +326,7 @@ class MoleculesBuilder(Builder):
         # Basic search index for tasks
         self.tasks.ensure_index(self.tasks.key, unique=True)
         self.tasks.ensure_index("state")
-        self.tasks.ensure_index("formula_pretty")
+        self.tasks.ensure_index("formula_alphabetical")
         self.tasks.ensure_index(self.tasks.lu_field)
 
         # Search index for molecules
@@ -406,17 +417,40 @@ def group_molecules(molecules):
     Groups molecules according to composition, charge, and connectivity
     """
 
-    def get_mol_key(mol):
+    # atoms54 = get_atoms(mol54)
+    # atoms89 = get_atoms(mol89)
+    # m3 = M3()
+    # print(m3(atoms54,atoms89))
+
+    energy_cutoff = 0.0
+    charge_cutoff = 0.0
+    m3_cutoff = 0.0
+
+    def get_mol_key(mol_dict):
+        mol = mol_dict["molecule"]
         return mol.composition.alphabetical_formula+" "+str(mol.charge)
 
     for mol_key, pregroup in groupby(sorted(molecules,key=get_mol_key),key=get_mol_key):
         subgroups = []
-        for mol in pregroup:
-            mol_graph = MoleculeGraph.with_local_env_strategy(mol,
-                                                              OpenBabelNN(),
-                                                              reorder=False,
-                                                              extend_structure=False)
+        for mol_dict in pregroup:
+            mol = mol_dict["molecule"]
+            if "critic2" in mol_dict:
+                edges = {(e[0], e[1]): None for e in mol_dict["critic2"]["processed"]["bonds"]}
+                mol_graph = MoleculeGraph.with_edges(mol, edges)
+            else:
+                mol_graph = MoleculeGraph.with_local_env_strategy(mol,
+                                                                  OpenBabelNN(),
+                                                                  reorder=False,
+                                                                  extend_structure=False)
+                mol_graph = metal_edge_extender(mol_graph)
             if nx.is_connected(mol_graph.graph.to_undirected()):
+
+                # We've already separated by formula, charge
+                # Now separate by isomorphism
+                # Then we need to separate into individual wells
+                # Energy/charge/m3 cutoffs all about distinguishing between conformers
+                # Will need to try this out on structures with many isomorphs to define the cutoffs
+
                 matched = False
                 for subgroup in subgroups:
                     if mol_graph.isomorphic_to(subgroup["mol_graph"]):
@@ -425,6 +459,10 @@ def group_molecules(molecules):
                         break
                 if not matched:
                     subgroups.append({"mol_graph":mol_graph,"mol_list":[mol]})
+
+        # for group in subgroups:
+        #     print(len(group["mol_list"]))
+
         for group in subgroups:
             yield group["mol_list"]
 

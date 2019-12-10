@@ -37,6 +37,25 @@
     "tasks_key": "output.initial_molecule"
   },
   {
+    "aggregate": true,
+    "molecules_key": "opt_trajectories",
+    "quality_score": {
+      "SMD Frequency Flattening Optimization": 6,
+      "SMD Optimization": 5,
+      "SMD Frequency": 0,
+      "SMD Single Point": 0,
+      "PCM Frequency Flattening Optimization": 4,
+      "PCM Optimization": 3,
+      "PCM Frequency": 0,
+      "PCM Single Point": 0,
+      "Vacuum Frequency Flattening Optimization": 2,
+      "Vacuum Optimization": 1,
+      "Vacuum Frequency": 0,
+      "Vacuum Single Point": 0
+    },
+    "tasks_key": "output.opt_trajectory"
+  },
+  {
     "molecules_key": "molecule",
     "quality_score": {
       "SMD Frequency Flattening Optimization": 5,
