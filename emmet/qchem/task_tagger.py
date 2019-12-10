@@ -50,7 +50,11 @@ def task_type(inputs,output):
     elif job_type == "force":
         job_type = "Force"
     elif job_type == "sp":
-        job_type = "Single Point"
+        if "make_cube_files" in inputs["rem"]:
+            if inputs["rem"]["make_cube_files"] == "true":
+                job_type = "Critic"
+        else:
+            job_type = "Single Point"
 
     env = "Vacuum"
     if "solvent_method" in inputs["rem"]:
