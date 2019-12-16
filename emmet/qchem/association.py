@@ -67,6 +67,7 @@ class AssociationBuilder(Builder):
 
         # Save timestamp for update operation
         self.timestamp = datetime.utcnow()
+        # print(len(self.input_tasks),"input tasks")
 
         # Get all processed tasks:
         q = dict(self.query)
@@ -78,6 +79,7 @@ class AssociationBuilder(Builder):
             "formula_alphabetical", {"task_id": {"$in": list(to_process_tasks)}}
         )
         self.logger.info("Found {} tasks".format(len(to_process_tasks)))
+        print(len(to_process_tasks),"tasks to process")
         self.logger.info("Found {} formulas".format(len(to_process_forms)))
 
         if self.task_types:
@@ -195,7 +197,34 @@ class AssociationBuilder(Builder):
         grouped_molecules = group_molecules(molecules)
 
         for group in grouped_molecules:
-            yield [filtered_tasks[mol.myindex] for mol in group]
+            group_list = [filtered_tasks[mol.myindex] for mol in group]
+            FF_found = False
+            C_found = False
+            new_list = []
+            num_extra_FF = 0
+            num_extra_C = 0
+            for task in group_list:
+                if "special_run_type" in task:
+                    if task["special_run_type"] == "frequency_flattener":
+                        if not FF_found:
+                            new_list.append(task)
+                            FF_found = True
+                        else:
+                            num_extra_FF += 1
+                if "critic2" in task:
+                    if not C_found:
+                        new_list.append(task)
+                        C_found = True
+                    else:
+                        num_extra_C += 1
+            #             print([t["task_id"] for t in new_list])
+            #             print(task["task_id"])
+            # print(num_extra_FF+1,num_extra_C+1)
+            # if num_extra_C > 0:
+            #     print(num_extra_C,"extra Critic task(s) found")
+            # if num_extra_FF > 0:
+            #     print(num_extra_FF,"extra FF task(s) found")
+            yield new_list
 
 
     def ensure_indexes(self):
@@ -233,7 +262,7 @@ def group_molecules(molecules):
         for mol in pregroup:
             matched = False
             for subgroup in subgroups:
-                if mol == subgroup["mol"]:
+                if mol == subgroup["mol"]: # This is going to need to be extended with m3 for inexact matches
                     subgroup["mol_list"].append(mol)
                     matched = True
                     break

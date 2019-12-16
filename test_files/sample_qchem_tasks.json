@@ -1026,34 +1026,6 @@
         "pointgroup" : "C1",
         "smiles" : "[BH4]",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -2183,34 +2155,6 @@
         "pointgroup" : "C2v",
         "smiles" : "C=C",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -3781,34 +3725,6 @@
         "pointgroup" : "Cs",
         "smiles" : "C(C)Cl",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -5836,34 +5752,6 @@
         "pointgroup" : "C1",
         "smiles" : "FC1=[N]=CN=N[N]1",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -9176,34 +9064,6 @@
         "pointgroup" : "C1",
         "smiles" : "C1[C@H]2O[C@@H]3CO[C@H]2[C@H]13",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -11634,60 +11494,6 @@
             }
         },
         "num_frequencies_flattened" : 0,
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".opt_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-15-08-543036/launcher_2019-05-13-21-39-36-138144",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".freq_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-15-08-543036/launcher_2019-05-13-21-39-36-138144",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -18231,164 +18037,6 @@
             }
         },
         "num_frequencies_flattened" : 0,
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".opt_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-13-38-468539/launcher_2019-05-13-21-39-36-154040",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".freq_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-13-38-468539/launcher_2019-05-13-21-39-36-154040",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".opt_1",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-13-38-468539/launcher_2019-05-13-21-39-36-154040",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".freq_1",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-13-38-468539/launcher_2019-05-13-21-39-36-154040",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".opt_2",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-13-38-468539/launcher_2019-05-13-21-39-36-154040",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".freq_2",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-13-38-468539/launcher_2019-05-13-21-39-36-154040",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -34702,60 +34350,6 @@
             }
         },
         "num_frequencies_flattened" : 0,
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".opt_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-17-07-319590/launcher_2019-05-13-21-39-49-594501",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".freq_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-17-07-319590/launcher_2019-05-13-21-39-49-594501",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -39424,60 +39018,6 @@
             }
         },
         "num_frequencies_flattened" : 0,
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".opt_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-21-24-982022/launcher_2019-05-13-22-21-45-429386",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".freq_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-21-24-982022/launcher_2019-05-13-22-21-45-429386",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -48574,60 +48114,6 @@
             }
         },
         "num_frequencies_flattened" : 0,
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".opt_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-36-17-886471/launcher_2019-05-14-03-05-21-322409",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".freq_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-36-17-886471/launcher_2019-05-14-03-05-21-322409",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -53104,112 +52590,6 @@
             }
         },
         "num_frequencies_flattened" : 0,
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".opt_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-41-37-298667/launcher_2019-05-14-04-56-04-192704",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".freq_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-41-37-298667/launcher_2019-05-14-04-56-04-192704",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".opt_1",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-41-37-298667/launcher_2019-05-14-04-56-04-192704",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".freq_1",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-41-37-298667/launcher_2019-05-14-04-56-04-192704",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -57867,60 +57247,6 @@
             }
         },
         "num_frequencies_flattened" : 0,
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".opt_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-08-42-09-185651/launcher_2019-05-12-08-42-25-185485/launcher_2019-05-14-04-55-55-434242",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".freq_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-08-42-09-185651/launcher_2019-05-12-08-42-25-185485/launcher_2019-05-14-04-55-55-434242",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -62137,60 +61463,6 @@
             }
         },
         "num_frequencies_flattened" : 0,
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".opt_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-41-20-293096/launcher_2019-05-14-04-58-54-270119",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".freq_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-07-32-51-274489/launcher_2019-05-12-08-41-20-293096/launcher_2019-05-14-04-58-54-270119",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -66675,60 +65947,6 @@
             }
         },
         "num_frequencies_flattened" : 0,
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".opt_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-08-42-09-185651/launcher_2019-05-12-08-43-30-359675/launcher_2019-05-14-05-27-25-977496",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".freq_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-08-42-09-185651/launcher_2019-05-12-08-43-30-359675/launcher_2019-05-14-05-27-25-977496",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -79931,60 +79149,6 @@
             }
         },
         "num_frequencies_flattened" : 0,
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".opt_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-08-42-09-185651/launcher_2019-05-12-09-06-18-188327/launcher_2019-05-15-17-16-14-423385",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }, 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : ".freq_0",
-                    "scratch_dir" : "/global/cscratch1/sd/sblau/dumbprod/production/block_2019-05-12-08-42-09-185651/launcher_2019-05-12-09-06-18-188327/launcher_2019-05-15-17-16-14-423385",
-                    "save_scratch" : true,
-                    "save_name" : "chain_scratch",
-                    "backup" : false
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -80614,34 +79778,6 @@
         "pointgroup" : "C2v",
         "smiles" : "[BH4]",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -81321,34 +80457,6 @@
         "pointgroup" : "D2h",
         "smiles" : "C=C",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -82194,34 +81302,6 @@
         "pointgroup" : "Cs",
         "smiles" : "C(C)Cl",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -83067,34 +82147,6 @@
         "pointgroup" : "Cs",
         "smiles" : "FC1=[N]=CN=N[N]1",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -84604,34 +83656,6 @@
         "pointgroup" : "C1",
         "smiles" : "C1[C@H]2O[C@@H]3CO[C@H]2[C@H]13",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -85532,34 +84556,6 @@
         "pointgroup" : "Cs",
         "smiles" : "FC1=[N]=C[N]N=N1",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -86156,34 +85152,6 @@
         "pointgroup" : "Td",
         "smiles" : "[BH4]",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -86902,34 +85870,6 @@
         "pointgroup" : "D2h",
         "smiles" : "C=C",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -87826,34 +86766,6 @@
         "pointgroup" : "Cs",
         "smiles" : "[CH2]C.[Cl]",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -89462,34 +88374,6 @@
         "pointgroup" : "C1",
         "smiles" : "C1[C@H]2O[C@@H]3CO[C@H]2[C@H]13",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -90208,34 +89092,6 @@
         "pointgroup" : "D2h",
         "smiles" : "C=C",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -90832,34 +89688,6 @@
         "pointgroup" : "C2v",
         "smiles" : "B.[H]",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -91756,34 +90584,6 @@
         "pointgroup" : "Cs",
         "smiles" : "C(C)Cl",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -92680,34 +91480,6 @@
         "pointgroup" : "Cs",
         "smiles" : "FC1=[N]=CN=N[N]1",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },
@@ -94316,34 +93088,6 @@
         "pointgroup" : "C1",
         "smiles" : "C1[CH]O[C@@H]2CO[CH][C@H]12",
         "state" : "successful",
-        "custodian" : [ 
-            {
-                "job" : {
-                    "@module" : "custodian.qchem.jobs",
-                    "@class" : "QCJob",
-                    "qchem_command" : [ 
-                        "qchem"
-                    ],
-                    "max_cores" : 32,
-                    "multimode" : "openmp",
-                    "input_file" : "mol.qin",
-                    "output_file" : "mol.qout",
-                    "qclog_file" : "mol.qclog",
-                    "suffix" : "",
-                    "scratch_dir" : "/dev/shm/qcscratch/",
-                    "save_scratch" : false,
-                    "save_name" : "default_save_name",
-                    "backup" : true
-                },
-                "corrections" : [],
-                "handler" : null,
-                "validator" : null,
-                "max_errors" : false,
-                "max_errors_per_job" : false,
-                "max_errors_per_handler" : false,
-                "nonzero_return_code" : false
-            }
-        ],
         "tags" : {
             "class" : "dumbprod"
         },

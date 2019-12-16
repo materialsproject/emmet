@@ -1,4 +1,5 @@
 import os
+import copy
 from datetime import datetime
 from itertools import chain, groupby
 import numpy as np
@@ -134,7 +135,7 @@ class MoleculesBuilder(Builder):
         """
 
         formula = tasks[0]["formula_alphabetical"]
-        # print(formula)
+        print(formula,"processing",len(tasks))
         t_ids = [t["task_id"] for t in tasks]
         self.logger.debug("Processing {} : {}".format(formula, t_ids))
 
@@ -241,6 +242,7 @@ class MoleculesBuilder(Builder):
         filtered_tasks = [
             t for t in tasks if task_type(t["orig"],t["output"]) in self.allowed_tasks
         ]
+        print("filtered",len(filtered_tasks))
 
         molecules = []
 
@@ -252,16 +254,18 @@ class MoleculesBuilder(Builder):
             mol.myindex = idx
             mol_dict = {"molecule": mol,
                         "energy": t["output"]["final_energy"],
-                        "mulliken": t["output"]["mulliken"]}
+                        "mulliken": t["output"]["mulliken"],
+                        "dir_name": t["dir_name"]}
             if "resp" in t["output"]:
                 mol_dict["resp"] = t["output"]["resp"]
             if "critic2" in t:
                 mol_dict["critic2"] = t["critic2"]
             molecules.append(mol_dict)
-
+        print("pregroup",len(molecules))
         grouped_molecules = group_molecules(molecules)
 
         for group in grouped_molecules:
+            print("grouped",len(group))
             yield [filtered_tasks[mol_dict["molecule"].myindex] for mol_dict in group]
 
     def task_to_prop_list(self, task):
@@ -427,22 +431,50 @@ def group_molecules(molecules):
     m3_cutoff = 0.0
 
     def get_mol_key(mol_dict):
-        mol = mol_dict["molecule"]
-        return mol.composition.alphabetical_formula+" "+str(mol.charge)
+        return mol_dict["molecule"].composition.alphabetical_formula+" "+str(mol_dict["molecule"].charge)
 
     for mol_key, pregroup in groupby(sorted(molecules,key=get_mol_key),key=get_mol_key):
+        print("pregroup",mol_key)
         subgroups = []
         for mol_dict in pregroup:
             mol = mol_dict["molecule"]
+            # if "critic2" in mol_dict:
+            #     edges = {(e[0], e[1]): None for e in mol_dict["critic2"]["processed"]["bonds"]}
+            #     mol_graph = MoleculeGraph.with_edges(mol, edges)
+            #     print("have critic")
+            # else:
+            #     mol_graph = MoleculeGraph.with_local_env_strategy(mol,
+            #                                                       OpenBabelNN(),
+            #                                                       reorder=False,
+            #                                                       extend_structure=False)
+            #     mol_graph = metal_edge_extender(mol_graph)
+            #     print("using OBNN")
+            mol_graph = MoleculeGraph.with_local_env_strategy(mol,
+                                                              OpenBabelNN(),
+                                                              reorder=False,
+                                                              extend_structure=False)
+            mol_graph = metal_edge_extender(mol_graph)
             if "critic2" in mol_dict:
                 edges = {(e[0], e[1]): None for e in mol_dict["critic2"]["processed"]["bonds"]}
-                mol_graph = MoleculeGraph.with_edges(mol, edges)
-            else:
-                mol_graph = MoleculeGraph.with_local_env_strategy(mol,
-                                                                  OpenBabelNN(),
-                                                                  reorder=False,
-                                                                  extend_structure=False)
-                mol_graph = metal_edge_extender(mol_graph)
+                to_pop = []
+                for key in edges:
+                    if key[0] == key[1]:
+                        to_pop.append(key)
+                for key in to_pop:
+                    edges.pop(key)
+                cmol_graph = MoleculeGraph.with_edges(mol, edges)
+                if not mol_graph.isomorphic_to(cmol_graph):
+                    # print("not isomorphic!")
+                    # print(mol_dict["dir_name"])
+                    # print(mol_graph)
+                    # print(len(mol_graph.graph.edges()))
+                    # print(cmol_graph)
+                    # print()
+                    # print()
+                    # print(len(cmol_graph.graph.edges()))
+                    if len(cmol_graph.graph.edges()) > len(mol_graph.graph.edges()):
+                        # print("C more!")
+                        mol_graph = copy.deepcopy(cmol_graph)
             if nx.is_connected(mol_graph.graph.to_undirected()):
 
                 # We've already separated by formula, charge
@@ -454,17 +486,20 @@ def group_molecules(molecules):
                 matched = False
                 for subgroup in subgroups:
                     if mol_graph.isomorphic_to(subgroup["mol_graph"]):
-                        subgroup["mol_list"].append(mol)
+                        subgroup["mol_dict_list"].append(mol_dict)
                         matched = True
                         break
                 if not matched:
-                    subgroups.append({"mol_graph":mol_graph,"mol_list":[mol]})
+                    subgroups.append({"mol_graph":mol_graph,"mol_dict_list":[mol_dict]})
+            # else:
+            #     print("not connected!")
+            #     print(mol)
 
         # for group in subgroups:
-        #     print(len(group["mol_list"]))
+        #     print(len(group["mol_dict_list"]))
 
         for group in subgroups:
-            yield group["mol_list"]
+            yield group["mol_dict_list"]
 
 
 def ID_to_int(s_id):
