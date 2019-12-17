@@ -1,24 +1,15 @@
 [
   {
-    "materials_key": "analysis.delta_volume",
-    "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
-    },
-    "tasks_key": "analysis.delta_volume",
-    "track": true
-  },
-  {
     "materials_key": "bandstructure.band_gap",
     "quality_score": {
-      "GGA NSCF Line": 7,
-      "GGA NSCF Uniform": 5,
-      "GGA Static": 3,
-      "GGA Structure Optimization": 1,
-      "GGA+U NSCF Line": 8,
-      "GGA+U NSCF Uniform": 6,
-      "GGA+U Static": 4,
-      "GGA+U Structure Optimization": 2
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
+      "GGA+U Static": 6,
+      "GGA+U Structure Optimization": 5,
+      "GGA NSCF Line": 3,
+      "GGA NSCF Uniform": 4,
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "output.bandgap",
     "track": true
@@ -26,66 +17,70 @@
   {
     "materials_key": "bandstructure.cbm",
     "quality_score": {
-      "GGA NSCF Line": 4,
-      "GGA NSCF Uniform": 3,
-      "GGA Static": 2,
-      "GGA Structure Optimization": 1,
-      "GGA+U NSCF Line": 8,
-      "GGA+U NSCF Uniform": 7,
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
       "GGA+U Static": 6,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "GGA NSCF Line": 3,
+      "GGA NSCF Uniform": 4,
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "output.cbm"
   },
   {
     "materials_key": "bandstructure.vbm",
     "quality_score": {
-      "GGA NSCF Line": 4,
-      "GGA NSCF Uniform": 3,
-      "GGA Static": 2,
-      "GGA Structure Optimization": 1,
-      "GGA+U NSCF Line": 8,
-      "GGA+U NSCF Uniform": 7,
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
       "GGA+U Static": 6,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "GGA NSCF Line": 3,
+      "GGA NSCF Uniform": 4,
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "output.vbm"
   },
   {
     "materials_key": "bandstructure.is_gap_direct",
     "quality_score": {
-      "GGA NSCF Line": 4,
-      "GGA NSCF Uniform": 3,
-      "GGA Static": 2,
-      "GGA Structure Optimization": 1,
-      "GGA+U NSCF Line": 8,
-      "GGA+U NSCF Uniform": 7,
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
       "GGA+U Static": 6,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "GGA NSCF Line": 3,
+      "GGA NSCF Uniform": 4,
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "output.is_gap_direct"
   },
   {
     "materials_key": "bandstructure.is_metal",
     "quality_score": {
-      "GGA NSCF Line": 4,
-      "GGA NSCF Uniform": 3,
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
+      "GGA+U Static": 6,
+      "GGA+U Structure Optimization": 5,
+      "GGA NSCF Line": 3,
+      "GGA NSCF Uniform": 4,
       "GGA Static": 2,
-      "GGA+U NSCF Line": 8,
-      "GGA+U NSCF Uniform": 7,
-      "GGA+U Static": 6
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "output.is_metal"
   },
   {
     "materials_key": "bandstructure.efermi",
     "quality_score": {
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
+      "GGA+U Static": 6,
+      "GGA+U Structure Optimization": 5,
       "GGA NSCF Line": 3,
       "GGA NSCF Uniform": 4,
       "GGA Static": 2,
-      "GGA+U NSCF Line": 7,
-      "GGA+U NSCF Uniform": 8,
-      "GGA+U Static": 6
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "calcs_reversed.0.output.efermi",
     "track": true
@@ -102,8 +97,8 @@
     "materials_key": "bandstructure.bs_task",
     "optional": true,
     "quality_score": {
-      "GGA NSCF Line": 3,
-      "GGA+U NSCF Line": 7
+      "GGA+U NSCF Line": 7,
+      "GGA NSCF Line": 3
     },
     "tasks_key": "task_id"
   },
@@ -111,8 +106,8 @@
     "materials_key": "bandstructure.dos_task",
     "optional": true,
     "quality_score": {
-      "GGA NSCF Uniform": 4,
-      "GGA+U NSCF Uniform": 8
+      "GGA+U NSCF Uniform": 8,
+      "GGA NSCF Uniform": 4
     },
     "tasks_key": "task_id"
   },
@@ -120,109 +115,202 @@
     "materials_key": "bandstructure.uniform_task",
     "optional": true,
     "quality_score": {
-      "GGA NSCF Uniform": 4,
-      "GGA+U NSCF Uniform": 8
+      "GGA+U NSCF Uniform": 8,
+      "GGA NSCF Uniform": 4
     },
     "tasks_key": "task_id"
   },
   {
-    "materials_key": "thermo.energy",
-    "quality_score": {
-      "GGA Static": 1,
-      "GGA Structure Optimization": 2,
-      "GGA+U Static": 5,
-      "GGA+U Structure Optimization": 6,
-      "SCAN Structure Optimization": 7
-    },
-    "tasks_key": "output.energy",
-    "track": true
-  },
-  {
-    "materials_key": "thermo.energy_per_atom",
-    "quality_score": {
-      "GGA Static": 1,
-      "GGA Structure Optimization": 2,
-      "GGA+U Static": 5,
-      "GGA+U Structure Optimization": 6,
-      "SCAN Structure Optimization": 7
-    },
+    "materials_key": "energy_per_atom",
     "tasks_key": "output.energy_per_atom",
-    "track": true
+    "quality_score": {
+      "GGA+U Static": 4,
+      "GGA+U Structure Optimization": 3,
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
   },
   {
-    "materials_key": "calc_settings.nelect",
-    "optional": true,
+    "materials_key": "energy",
+    "tasks_key": "output.energy",
     "quality_score": {
-      "GGA NSCF Uniform": 4,
-      "GGA+U NSCF Uniform": 8
-    },
-    "tasks_key": "input.parameters.NELECT"
+      "GGA+U Static": 4,
+      "GGA+U Structure Optimization": 3,
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
   },
   {
-    "materials_key": "calc_settings.hubbards",
+    "materials_key": "entries.gga.composition",
+    "tasks_key": "composition_unit_cell",
     "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5,
-      "SCAN Structure Optimization": 7
-    },
-    "tasks_key": "input.hubbards"
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
   },
   {
-    "materials_key": "calc_settings.potcar_spec",
+    "materials_key": "entries.gga.energy",
+    "tasks_key": "output.energy",
     "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5,
-      "SCAN Structure Optimization": 7
-    },
-    "tasks_key": "input.potcar_spec"
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
   },
   {
-    "materials_key": "calc_settings.run_type",
+    "materials_key": "entries.gga.parameters.potcar_spec",
+    "tasks_key": "input.potcar_spec",
     "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5,
-      "SCAN Structure Optimization": 7
-    },
-    "tasks_key": "calcs_reversed.0.run_type"
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
   },
   {
-    "materials_key": "calc_settings.is_hubbard",
+    "materials_key": "entries.gga.parameters.run_type",
+    "tasks_key": "calcs_reversed.0.run_type",
     "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5,
-      "SCAN Structure Optimization": 7
-    },
-    "tasks_key": "input.is_hubbard"
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.gga.parameters.nelect",
+    "tasks_key": "input.parameters.NELECT",
+    "quality_score": {
+      "GGA NSCF Uniform": 2
+    }
+  },
+  {
+    "materials_key": "entries.gga.parameters.task_id",
+    "tasks_key": "task_id",
+    "quality_score": {
+      "GGA Static": 2,
+      "GGA Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.gga_u.composition",
+    "tasks_key": "composition_unit_cell",
+    "quality_score": {
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.gga_u.energy",
+    "tasks_key": "output.energy",
+    "quality_score": {
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.gga_u.parameters.hubbards",
+    "tasks_key": "input.hubbards",
+    "quality_score": {
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.gga_u.parameters.potcar_spec",
+    "tasks_key": "input.potcar_spec",
+    "quality_score": {
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.gga_u.parameters.run_type",
+    "tasks_key": "calcs_reversed.0.run_type",
+    "quality_score": {
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.gga_u.parameters.nelect",
+    "tasks_key": "input.parameters.NELECT",
+    "quality_score": {
+      "GGA+U NSCF Uniform": 2
+    }
+  },
+  {
+    "materials_key": "entries.gga_u.parameters.task_id",
+    "tasks_key": "task_id",
+    "quality_score": {
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.scan.composition",
+    "tasks_key": "composition_unit_cell",
+    "quality_score": {
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.scan.energy",
+    "tasks_key": "output.energy",
+    "quality_score": {
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.scan.parameters.potcar_spec",
+    "tasks_key": "input.potcar_spec",
+    "quality_score": {
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.scan.parameters.run_type",
+    "tasks_key": "calcs_reversed.0.run_type",
+    "quality_score": {
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.scan.parameters.task_id",
+    "tasks_key": "task_id",
+    "quality_score": {
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
+    }
   },
   {
     "materials_key": "inputs.structure_optimization",
     "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "orig_inputs"
   },
   {
     "materials_key": "inputs.static",
     "quality_score": {
-      "GGA Static": 2,
-      "GGA+U Static": 6
+      "GGA+U Static": 6,
+      "GGA Static": 2
     },
     "tasks_key": "orig_inputs"
   },
   {
     "materials_key": "inputs.nscf_line",
     "quality_score": {
-      "GGA NSCF Line": 3,
-      "GGA+U NSCF Line": 7
+      "GGA+U NSCF Line": 7,
+      "GGA NSCF Line": 3
     },
     "tasks_key": "orig_inputs"
   },
   {
     "materials_key": "inputs.nscf_uniform",
     "quality_score": {
-      "GGA NSCF Uniform": 4,
-      "GGA+U NSCF Uniform": 8
+      "GGA+U NSCF Uniform": 8,
+      "GGA NSCF Uniform": 4
     },
     "tasks_key": "orig_inputs"
   },
@@ -236,8 +324,8 @@
   {
     "materials_key": "inputs.dielectric",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "orig_inputs"
   },
@@ -256,52 +344,43 @@
     "tasks_key": "orig_inputs"
   },
   {
-    "materials_key": "symmetry",
-    "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
-    },
-    "tasks_key": "output.spacegroup"
-  },
-  {
     "materials_key": "structure",
     "quality_score": {
-      "GGA Structure Optimization": 7,
-      "GGA+U Structure Optimization": 8
+      "GGA+U Structure Optimization": 6,
+      "GGA Structure Optimization": 2
     },
     "tasks_key": "output.structure",
     "track": true
   },
   {
+    "materials_key": "scan_structure",
+    "quality_score": {
+      "SCAN Structure Optimization": 6
+    },
+    "tasks_key": "output.structure"
+  },
+  {
     "aggregate": true,
     "materials_key": "initial_structures",
     "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
-    },
-    "tasks_key": "input.structure"
-  },
-  {
-    "materials_key": "initial_structure",
-    "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "input.structure"
   },
   {
     "materials_key": "magnetism.total_magnetization",
     "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "calcs_reversed.0.output.outcar.total_magnetization"
   },
   {
     "materials_key": "magnetism.magmoms",
     "quality_score": {
-      "GGA Structure Optimization": 1,
-      "GGA+U Structure Optimization": 5
+      "GGA+U Structure Optimization": 5,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "calcs_reversed.0.output.outcar.magmom",
     "optional": true
@@ -309,65 +388,89 @@
   {
     "materials_key": "dielectric.structure",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "output.structure"
   },
   {
     "materials_key": "dielectric.static",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "calcs_reversed.0.output.outcar.dielectric_tensor"
   },
   {
     "materials_key": "dielectric.ionic",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "calcs_reversed.0.output.outcar.dielectric_ionic_tensor"
   },
   {
     "materials_key": "piezo.static",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "calcs_reversed.0.output.outcar.piezo_tensor"
   },
   {
     "materials_key": "piezo.ionic",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "calcs_reversed.0.output.outcar.piezo_ionic_tensor"
   },
   {
     "materials_key": "born",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "calcs_reversed.0.output.outcar.born"
   },
   {
     "materials_key": "force_constants",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "calcs_reversed.0.output.force_constants"
   },
   {
     "materials_key": "internal_strain_tensor",
     "quality_score": {
-      "GGA Static Dielectric": 2,
-      "GGA+U Static Dielectric": 6
+      "GGA+U DFPT Dielectric": 6,
+      "GGA DFPT Dielectric": 2
     },
     "tasks_key": "calcs_reversed.0.output.outcar.internal_strain_tensor"
+  },
+  {
+    "materials_key": "nmr.chem_shielding.raw",
+    "quality_score": {
+      "GGA+U NMR Nuclear Shielding": 2,
+      "GGA NMR Nuclear Shielding": 1
+    },
+    "tasks_key": "calcs_reversed.output.outcar.nmr_cs.raw"
+  },
+  {
+    "materials_key": "nmr.chem_shielding.g0",
+    "quality_score": {
+      "GGA+U NMR Nuclear Shielding": 2,
+      "GGA NMR Nuclear Shielding": 1
+    },
+    "tasks_key": "calcs_reversed.output.outcar.nmr_cs.g0"
+  },
+  {
+    "materials_key": "nmr.chem_shielding.raw",
+    "quality_score": {
+      "GGA+U NMR Nuclear Shielding": 2,
+      "GGA NMR Nuclear Shielding": 1
+    },
+    "tasks_key": "calcs_reversed.output.outcar.nmr_efg.raw"
   }
 ]
