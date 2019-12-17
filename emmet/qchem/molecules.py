@@ -252,8 +252,10 @@ class MoleculesBuilder(Builder):
             else:
                 mol = Molecule.from_dict(t["output"]["initial_molecule"])
             mol.myindex = idx
+            free_energy = t["output"]["final_energy"]*27.21139+0.0433641*t["output"]["enthalpy"]-298*t["output"]["entropy"]*0.0000433641
             mol_dict = {"molecule": mol,
                         "energy": t["output"]["final_energy"],
+                        "free_energy": free_energy,
                         "mulliken": t["output"]["mulliken"],
                         "dir_name": t["dir_name"]}
             if "resp" in t["output"]:
@@ -264,8 +266,27 @@ class MoleculesBuilder(Builder):
         print("pregroup",len(molecules))
         grouped_molecules = group_molecules(molecules)
 
+        m3 = M3()
+        group_ind = 0
         for group in grouped_molecules:
             print("grouped",len(group))
+            if len(group) > 1:
+                # print()
+                for ii,mol_dict in enumerate(group):
+                    # print(mol_dict["molecule"])
+                    # mol_dict["molecule"].to(fmt="xyz",filename="/Users/samuelblau/Desktop/"+str(group_ind)+"."+str(ii)+".xyz")
+                    print(group_ind,ii,mol_dict["energy"],mol_dict["free_energy"])
+                for ii,mol_dict in enumerate(group):
+                    IIatoms = AseAtomsMoleculeAdaptor.get_atoms(mol_dict["molecule"])
+                    # IIatoms.set_initial_charges(mol_dict["resp"])
+                    # print("   ",ii,mol_dict["resp"])
+                    for jj in range(ii+1,len(group)):
+                        JJatoms = AseAtomsMoleculeAdaptor.get_atoms(group[jj]["molecule"])
+                        # JJatoms.set_initial_charges(group[jj]["resp"])
+                        # m3 = M3(use_charge=True)
+                        print("   ",ii,jj,m3(IIatoms,JJatoms),abs(mol_dict["energy"]-group[jj]["energy"]),abs(mol_dict["free_energy"]-group[jj]["free_energy"]))
+                # print()
+            group_ind += 1
             yield [filtered_tasks[mol_dict["molecule"].myindex] for mol_dict in group]
 
     def task_to_prop_list(self, task):
@@ -421,15 +442,6 @@ def group_molecules(molecules):
     Groups molecules according to composition, charge, and connectivity
     """
 
-    # atoms54 = get_atoms(mol54)
-    # atoms89 = get_atoms(mol89)
-    # m3 = M3()
-    # print(m3(atoms54,atoms89))
-
-    energy_cutoff = 0.0
-    charge_cutoff = 0.0
-    m3_cutoff = 0.0
-
     def get_mol_key(mol_dict):
         return mol_dict["molecule"].composition.alphabetical_formula+" "+str(mol_dict["molecule"].charge)
 
@@ -438,51 +450,19 @@ def group_molecules(molecules):
         subgroups = []
         for mol_dict in pregroup:
             mol = mol_dict["molecule"]
-            # if "critic2" in mol_dict:
-            #     edges = {(e[0], e[1]): None for e in mol_dict["critic2"]["processed"]["bonds"]}
-            #     mol_graph = MoleculeGraph.with_edges(mol, edges)
-            #     print("have critic")
-            # else:
-            #     mol_graph = MoleculeGraph.with_local_env_strategy(mol,
-            #                                                       OpenBabelNN(),
-            #                                                       reorder=False,
-            #                                                       extend_structure=False)
-            #     mol_graph = metal_edge_extender(mol_graph)
-            #     print("using OBNN")
             mol_graph = MoleculeGraph.with_local_env_strategy(mol,
                                                               OpenBabelNN(),
                                                               reorder=False,
                                                               extend_structure=False)
             mol_graph = metal_edge_extender(mol_graph)
             if "critic2" in mol_dict:
-                edges = {(e[0], e[1]): None for e in mol_dict["critic2"]["processed"]["bonds"]}
-                to_pop = []
-                for key in edges:
-                    if key[0] == key[1]:
-                        to_pop.append(key)
-                for key in to_pop:
-                    edges.pop(key)
-                cmol_graph = MoleculeGraph.with_edges(mol, edges)
-                if not mol_graph.isomorphic_to(cmol_graph):
-                    # print("not isomorphic!")
-                    # print(mol_dict["dir_name"])
-                    # print(mol_graph)
-                    # print(len(mol_graph.graph.edges()))
-                    # print(cmol_graph)
-                    # print()
-                    # print()
-                    # print(len(cmol_graph.graph.edges()))
-                    if len(cmol_graph.graph.edges()) > len(mol_graph.graph.edges()):
-                        # print("C more!")
-                        mol_graph = copy.deepcopy(cmol_graph)
+                mg_edges = mol_graph.graph.edges()
+                for bond in mol_dict["critic2"]["processed"]["bonds"]:
+                    bond.sort()
+                    bond = (bond[0],bond[1])
+                    if bond not in mg_edges:
+                        mol_graph.add_edge(bond[0],bond[1])
             if nx.is_connected(mol_graph.graph.to_undirected()):
-
-                # We've already separated by formula, charge
-                # Now separate by isomorphism
-                # Then we need to separate into individual wells
-                # Energy/charge/m3 cutoffs all about distinguishing between conformers
-                # Will need to try this out on structures with many isomorphs to define the cutoffs
-
                 matched = False
                 for subgroup in subgroups:
                     if mol_graph.isomorphic_to(subgroup["mol_graph"]):
@@ -491,12 +471,6 @@ def group_molecules(molecules):
                         break
                 if not matched:
                     subgroups.append({"mol_graph":mol_graph,"mol_dict_list":[mol_dict]})
-            # else:
-            #     print("not connected!")
-            #     print(mol)
-
-        # for group in subgroups:
-        #     print(len(group["mol_dict_list"]))
 
         for group in subgroups:
             yield group["mol_dict_list"]
