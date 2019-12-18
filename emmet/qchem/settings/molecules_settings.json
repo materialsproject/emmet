@@ -56,7 +56,7 @@
       "Vacuum Frequency": 0,
       "Vacuum Single Point": 0
     },
-    "tasks_key": "output.opt_trajectory"
+    "tasks_key": "opt_trajectory"
   },
   {
     "molecules_key": "molecule",

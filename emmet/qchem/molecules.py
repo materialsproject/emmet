@@ -1,7 +1,7 @@
 import os
 import copy
 from datetime import datetime
-from itertools import chain, groupby
+from itertools import chain, groupby, combinations
 import numpy as np
 import networkx as nx
 
@@ -12,7 +12,7 @@ from pymatgen.analysis.fragmenter import metal_edge_extender
 from ase import Atoms
 from pymatgen.io.ase import AseAtomsMoleculeAdaptor
 from graphdot.experimental.metric.m3 import M3
-
+import networkx as nx
 from maggma.builders import Builder
 
 from emmet.qchem.task_tagger import task_type
@@ -135,7 +135,6 @@ class MoleculesBuilder(Builder):
         """
 
         formula = tasks[0]["formula_alphabetical"]
-        print(formula,"processing",len(tasks))
         t_ids = [t["task_id"] for t in tasks]
         self.logger.debug("Processing {} : {}".format(formula, t_ids))
 
@@ -242,7 +241,6 @@ class MoleculesBuilder(Builder):
         filtered_tasks = [
             t for t in tasks if task_type(t["orig"],t["output"]) in self.allowed_tasks
         ]
-        print("filtered",len(filtered_tasks))
 
         molecules = []
 
@@ -252,41 +250,23 @@ class MoleculesBuilder(Builder):
             else:
                 mol = Molecule.from_dict(t["output"]["initial_molecule"])
             mol.myindex = idx
-            free_energy = t["output"]["final_energy"]*27.21139+0.0433641*t["output"]["enthalpy"]-298*t["output"]["entropy"]*0.0000433641
             mol_dict = {"molecule": mol,
                         "energy": t["output"]["final_energy"],
-                        "free_energy": free_energy,
                         "mulliken": t["output"]["mulliken"],
                         "dir_name": t["dir_name"]}
             if "resp" in t["output"]:
                 mol_dict["resp"] = t["output"]["resp"]
             if "critic2" in t:
                 mol_dict["critic2"] = t["critic2"]
+                metal_charges = set()
+                for ii,site in enumerate(mol):
+                    if str(site.specie) == "Li":
+                        metal_charges.add(round(t["critic2"]["processed"]["charges"][ii]))
+                mol_dict["metal_charges"] = metal_charges
             molecules.append(mol_dict)
-        print("pregroup",len(molecules))
         grouped_molecules = group_molecules(molecules)
 
-        m3 = M3()
-        group_ind = 0
         for group in grouped_molecules:
-            print("grouped",len(group))
-            if len(group) > 1:
-                # print()
-                for ii,mol_dict in enumerate(group):
-                    # print(mol_dict["molecule"])
-                    # mol_dict["molecule"].to(fmt="xyz",filename="/Users/samuelblau/Desktop/"+str(group_ind)+"."+str(ii)+".xyz")
-                    print(group_ind,ii,mol_dict["energy"],mol_dict["free_energy"])
-                for ii,mol_dict in enumerate(group):
-                    IIatoms = AseAtomsMoleculeAdaptor.get_atoms(mol_dict["molecule"])
-                    # IIatoms.set_initial_charges(mol_dict["resp"])
-                    # print("   ",ii,mol_dict["resp"])
-                    for jj in range(ii+1,len(group)):
-                        JJatoms = AseAtomsMoleculeAdaptor.get_atoms(group[jj]["molecule"])
-                        # JJatoms.set_initial_charges(group[jj]["resp"])
-                        # m3 = M3(use_charge=True)
-                        print("   ",ii,jj,m3(IIatoms,JJatoms),abs(mol_dict["energy"]-group[jj]["energy"]),abs(mol_dict["free_energy"]-group[jj]["free_energy"]))
-                # print()
-            group_ind += 1
             yield [filtered_tasks[mol_dict["molecule"].myindex] for mol_dict in group]
 
     def task_to_prop_list(self, task):
@@ -446,7 +426,7 @@ def group_molecules(molecules):
         return mol_dict["molecule"].composition.alphabetical_formula+" "+str(mol_dict["molecule"].charge)
 
     for mol_key, pregroup in groupby(sorted(molecules,key=get_mol_key),key=get_mol_key):
-        print("pregroup",mol_key)
+        # print("pregroup",mol_key)
         subgroups = []
         for mol_dict in pregroup:
             mol = mol_dict["molecule"]
@@ -465,15 +445,58 @@ def group_molecules(molecules):
             if nx.is_connected(mol_graph.graph.to_undirected()):
                 matched = False
                 for subgroup in subgroups:
-                    if mol_graph.isomorphic_to(subgroup["mol_graph"]):
-                        subgroup["mol_dict_list"].append(mol_dict)
-                        matched = True
-                        break
+                    # Separate by metal charges:
+                    if "metal_charges" in mol_dict and "metal_charges" in subgroup:
+                        if mol_dict["metal_charges"] == subgroup["metal_charges"]:
+                            # Separate by isomorphism:
+                            if mol_graph.isomorphic_to(subgroup["mol_graph"]):
+                                subgroup["mol_dict_list"].append(mol_dict)
+                                matched = True
+                                break
+                    else:
+                        # Separate by isomorphism:
+                        if mol_graph.isomorphic_to(subgroup["mol_graph"]):
+                            subgroup["mol_dict_list"].append(mol_dict)
+                            matched = True
+                            break
                 if not matched:
-                    subgroups.append({"mol_graph":mol_graph,"mol_dict_list":[mol_dict]})
+                    if "metal_charges" in mol_dict:
+                        subgroups.append({"mol_graph":mol_graph,
+                                          "metal_charges":mol_dict["metal_charges"],
+                                          "mol_dict_list":[mol_dict]})
+                    else:
+                        subgroups.append({"mol_graph":mol_graph,
+                                          "mol_dict_list":[mol_dict]})
 
-        for group in subgroups:
-            yield group["mol_dict_list"]
+        # Separate by M3:
+        final_subgroups = []
+        m3 = M3()
+        for subgroup in subgroups:
+            if len(subgroup["mol_dict_list"]) == 1:
+                final_subgroups.append(subgroup)
+            else:
+                adj = nx.Graph()
+                tmp_ids = list(range(len(subgroup["mol_dict_list"])))
+                adj.add_nodes_from(tmp_ids)
+                pairs = combinations(tmp_ids,2)
+                for pair in pairs:
+                    atoms1 = AseAtomsMoleculeAdaptor.get_atoms(subgroup["mol_dict_list"][pair[0]]["molecule"])
+                    atoms2 = AseAtomsMoleculeAdaptor.get_atoms(subgroup["mol_dict_list"][pair[1]]["molecule"])
+                    if m3(atoms1,atoms2) < 0.1:
+                        adj.add_edge(pair[0],pair[1])
+                subgraphs = list(nx.connected_components(adj))
+                if len(subgraphs) == 1:
+                    final_subgroups.append(subgroup)
+                else:
+                    for subgraph in subgraphs:
+                        new_subgroup = {}
+                        new_subgroup["mol_graph"] = subgroup["mol_graph"]
+                        new_subgroup["metal_charges"] = subgroup["metal_charges"]
+                        new_subgroup["mol_dict_list"] = [subgroup["mol_dict_list"][ind] for ind in subgraph]
+                        final_subgroups.append(new_subgroup)
+
+        for subgroup in final_subgroups:
+            yield subgroup["mol_dict_list"]
 
 
 def ID_to_int(s_id):

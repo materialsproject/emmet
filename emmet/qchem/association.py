@@ -79,7 +79,6 @@ class AssociationBuilder(Builder):
             "formula_alphabetical", {"task_id": {"$in": list(to_process_tasks)}}
         )
         self.logger.info("Found {} tasks".format(len(to_process_tasks)))
-        print(len(to_process_tasks),"tasks to process")
         self.logger.info("Found {} formulas".format(len(to_process_forms)))
 
         if self.task_types:
