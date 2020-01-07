@@ -88,6 +88,7 @@ class AssociationBuilder(Builder):
         else:
             invalid_ids = set()
 
+        self.total = len(to_process_forms)
         for formula in to_process_forms:
             tasks_q = dict(q)
             tasks_q["formula_alphabetical"] = formula
@@ -167,6 +168,12 @@ class AssociationBuilder(Builder):
             opt_task = task_group[0]
         else:
             raise RuntimeError("ERROR: There has to be a critic task! Exiting...")
+
+        num_critic_scf_iters = len(critic_task["calcs_reversed"][0]["SCF"][0])
+        last_critic_scf = critic_task["calcs_reversed"][0]["SCF"][0][-1][0]
+        comparable_scf = opt_task["calcs_reversed"][0]["SCF"][0][num_critic_scf_iters][0]
+        if abs(last_critic_scf - comparable_scf) > 0.0001:
+            raise RuntimeError("Inconsistent energies!",critic_task["dir_name"],opt_task["dir_name"])
 
         associated_task = copy.deepcopy(opt_task)
         associated_task["critic2"] = critic_task["critic2"]
