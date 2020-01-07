@@ -217,6 +217,18 @@ class MoleculesBuilder(Builder):
         # Store task_types
         task_types = {t["task_id"]: t["task_type"] for t in all_props}
 
+        # Store environment
+        if "solvent_method" in task_group[0]["orig"]["rem"]:
+            if task_group[0]["orig"]["rem"]["solvent_method"] == "smd":
+                if task_group[0]["orig"]["smx"] == "other" or task_group[0]["orig"]["smx"] == "custom":
+                    environment = "smd_" + task_group[0]["custom_smd"]
+                else:
+                    environment = "smd_" + task_group[0]["orig"]["smx"]["solvent"]
+            elif task_group[0]["orig"]["rem"]["solvent_method"] == "pcm":
+                environment = "pcm_" + task_group[0]["orig"]["solvent"]["dielectric"]
+        else:
+            environment = "vac"
+
         mol = {
             self.molecules.lu_field: max([prop["last_updated"] for prop in all_props]),
             "created_at": min([prop["last_updated"] for prop in all_props]),
@@ -225,7 +237,8 @@ class MoleculesBuilder(Builder):
             self.molecules.key: mol_id,
             "origins": origins,
             "task_types": task_types,
-            "invalid_props": invalid_props
+            "invalid_props": invalid_props,
+            "environment": environment
         }
 
         for prop in best_props:
@@ -263,6 +276,18 @@ class MoleculesBuilder(Builder):
                     if str(site.specie) == "Li":
                         metal_charges.add(round(t["critic2"]["processed"]["charges"][ii]))
                 mol_dict["metal_charges"] = metal_charges
+            if "solvent_method" in t["orig"]["rem"]:
+                if t["orig"]["rem"]["solvent_method"] == "smd":
+                    mol_dict["env"] = "smd"
+                    if t["orig"]["smx"] == "other" or t["orig"]["smx"] == "custom":
+                        mol_dict["smd"] = t["custom_smd"]
+                    else:
+                        mol_dict["smd"] = t["orig"]["smx"]["solvent"]
+                elif t["orig"]["rem"]["solvent_method"] == "pcm":
+                    mol_dict["env"] = "pcm"
+                    mol_dict["pcm"] = t["orig"]["solvent"]["dielectric"]
+            else:
+                mol_dict["env"] = "vac"
             molecules.append(mol_dict)
         grouped_molecules = group_molecules(molecules)
 
@@ -311,6 +336,10 @@ class MoleculesBuilder(Builder):
             return False
         elif "molecule" not in doc:
             return False
+        elif "environment" not in doc:
+            return False
+        elif doc["environment"][0:3] not in ["vac","pcm","smd"]:
+            return False
 
         return True
 
@@ -338,6 +367,7 @@ class MoleculesBuilder(Builder):
         self.molecules.ensure_index(self.molecules.key, unique=True)
         self.molecules.ensure_index("task_ids")
         self.molecules.ensure_index("formula_alphabetical")
+        self.molecules.ensure_index("environment")
         self.molecules.ensure_index(self.molecules.lu_field)
 
         if self.task_types:
@@ -419,11 +449,16 @@ def molecule_metadata(molecule):
 
 def group_molecules(molecules):
     """
-    Groups molecules according to composition, charge, and connectivity
+    Groups molecules according to composition, charge, environment, connectivity, and conformation
     """
 
     def get_mol_key(mol_dict):
-        return mol_dict["molecule"].composition.alphabetical_formula+" "+str(mol_dict["molecule"].charge)
+        key = mol_dict["molecule"].composition.alphabetical_formula
+        key += " " + str(mol_dict["molecule"].charge)
+        key += " " + mol_dict["env"]
+        if mol_dict["env"] != "vac":
+            key += " " + mol_dict[mol_dict["env"]]
+        return key
 
     for mol_key, pregroup in groupby(sorted(molecules,key=get_mol_key),key=get_mol_key):
         # print("pregroup",mol_key)
