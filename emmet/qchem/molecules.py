@@ -190,7 +190,7 @@ class MoleculesBuilder(Builder):
         sorted_props = sorted(all_props, key=lambda prop: prop["molecules_key"])
         grouped_props = groupby(sorted_props, lambda prop: prop["molecules_key"])
 
-        # Choose the best prop for each materials key: highest quality score and lowest energy calculation
+        # Choose the best prop for each molecules key: highest quality score and lowest energy calculation
         best_props = [find_best_prop(props) for _, props in grouped_props]
 
         # Add in the provenance for the properties
@@ -220,7 +220,7 @@ class MoleculesBuilder(Builder):
         # Store environment
         if "solvent_method" in task_group[0]["orig"]["rem"]:
             if task_group[0]["orig"]["rem"]["solvent_method"] == "smd":
-                if task_group[0]["orig"]["smx"] == "other" or task_group[0]["orig"]["smx"] == "custom":
+                if task_group[0]["orig"]["smx"]["solvent"] == "other" or task_group[0]["orig"]["smx"]["solvent"] == "custom":
                     environment = "smd_" + task_group[0]["custom_smd"]
                 else:
                     environment = "smd_" + task_group[0]["orig"]["smx"]["solvent"]
@@ -244,6 +244,33 @@ class MoleculesBuilder(Builder):
         for prop in best_props:
             set_(mol, prop["molecules_key"], prop["value"])
 
+        # Store molecule graph and a list of bonds
+        if "molecule" in mol:
+            tmp_mol = Molecule.from_dict(mol["molecule"])
+            critic_bonds = mol["critic"]["processed"]["bonds"] if "critic" in mol else None
+            mol_graph = make_mol_graph(tmp_mol,critic_bonds)
+            mol["mol_graph"] = mol_graph
+            bonds = []
+            for bond in mol_graph.graph.edges():
+                bonds.append([bond[0],bond[1]])
+            edges = {(b[0], b[1]): None for b in bonds}
+            assert mol_graph == MoleculeGraph.with_edges(tmp_mol,edges)
+            mol["bonds"] = bonds
+            mol["edges"] = edges
+        else:
+            mol["molecule"] = mol["initial_molecule"]
+
+        # Store energy and enthalpy in eV and entropy in eV/K
+        mol["energy"] = mol["energy_Ha"]*27.21139
+        if "enthalpy_kcal/mol" in mol:
+            mol["enthalpy"] = mol["enthalpy_kcal/mol"]*0.0433641
+        if "entropy_cal/molK" in mol:
+            mol["entropy"] = mol["entropy_cal/molK"]*0.0000433641
+
+        # Store free energy in eV at 298 K
+        if "entropy" in mol and "enthalpy" in mol:
+            mol["free_energy"] = mol["energy"]+mol["enthalpy"]-298*mol["entropy"]
+
         return mol
 
     def filter_and_group_tasks(self, tasks):
@@ -263,12 +290,7 @@ class MoleculesBuilder(Builder):
             else:
                 mol = Molecule.from_dict(t["output"]["initial_molecule"])
             mol.myindex = idx
-            mol_dict = {"molecule": mol,
-                        "energy": t["output"]["final_energy"],
-                        "mulliken": t["output"]["mulliken"],
-                        "dir_name": t["dir_name"]}
-            if "resp" in t["output"]:
-                mol_dict["resp"] = t["output"]["resp"]
+            mol_dict = {"molecule": mol}
             if "critic2" in t:
                 mol_dict["critic2"] = t["critic2"]
                 metal_charges = set()
@@ -334,6 +356,8 @@ class MoleculesBuilder(Builder):
         """
         if doc["task_id"] == None:
             return False
+        elif "energy" not in doc:
+            return False
         elif "molecule" not in doc:
             return False
         elif "environment" not in doc:
@@ -345,7 +369,7 @@ class MoleculesBuilder(Builder):
 
     def post_process(self, mol):
         """
-        Any extra post-processing on a material doc
+        Any extra post-processing on a molecule doc
         """
         if "molecule" in mol:
             molecule = Molecule.from_dict(mol["molecule"])
@@ -377,7 +401,7 @@ class MoleculesBuilder(Builder):
 
 def find_mol_id(props):
 
-    # Only consider structure optimization task_ids for material task_id
+    # Only consider structure optimization task_ids for molecule task_id
     possible_mol_ids = [prop for prop in props if "molecule" in prop["molecules_key"]]
 
     # Sort task_ids by ID
@@ -461,22 +485,10 @@ def group_molecules(molecules):
         return key
 
     for mol_key, pregroup in groupby(sorted(molecules,key=get_mol_key),key=get_mol_key):
-        # print("pregroup",mol_key)
         subgroups = []
         for mol_dict in pregroup:
-            mol = mol_dict["molecule"]
-            mol_graph = MoleculeGraph.with_local_env_strategy(mol,
-                                                              OpenBabelNN(),
-                                                              reorder=False,
-                                                              extend_structure=False)
-            mol_graph = metal_edge_extender(mol_graph)
-            if "critic2" in mol_dict:
-                mg_edges = mol_graph.graph.edges()
-                for bond in mol_dict["critic2"]["processed"]["bonds"]:
-                    bond.sort()
-                    bond = (bond[0],bond[1])
-                    if bond not in mg_edges:
-                        mol_graph.add_edge(bond[0],bond[1])
+            critic_bonds = mol_dict["critic2"]["processed"]["bonds"] if "critic2" in mol_dict else None
+            mol_graph = make_mol_graph(mol_dict["molecule"], critic_bonds)
             if nx.is_connected(mol_graph.graph.to_undirected()):
                 matched = False
                 for subgroup in subgroups:
@@ -587,4 +599,19 @@ def calc_accuracy_score(inputs):
         raise Exception("Method " + inputs["rem"]["method"] + " cannot be assigned an accuracy score")
 
     return accuracy_score
+
+def make_mol_graph(mol, critic_bonds=None):
+    mol_graph = MoleculeGraph.with_local_env_strategy(mol,
+                                                      OpenBabelNN(),
+                                                      reorder=False,
+                                                      extend_structure=False)
+    mol_graph = metal_edge_extender(mol_graph)
+    if critic_bonds:
+        mg_edges = mol_graph.graph.edges()
+        for bond in critic_bonds:
+            bond.sort()
+            bond = (bond[0],bond[1])
+            if bond not in mg_edges:
+                mol_graph.add_edge(bond[0],bond[1])
+    return mol_graph
 

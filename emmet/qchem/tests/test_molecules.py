@@ -25,16 +25,16 @@ class TestMolecules(unittest.TestCase):
         for group in grouped_tasks:
             mols = self.mbuilder.process_item(group)
             if group[0]["formula_pretty"] == "H2C":
-                self.assertEqual(len(mols),1)
+                self.assertEqual(len(mols),4)
             elif group[0]["formula_pretty"] == "H5C2Cl" or group[0]["formula_pretty"] == "BH4":
-                self.assertEqual(len(mols),2)
+                self.assertEqual(len(mols),4)
             else:
-                self.assertEqual(len(mols),3)
+                self.assertEqual(len(mols),6)
 
     def test_update(self):
         for group in list(self.mbuilder.get_items()):
             self.mbuilder.update_targets([self.mbuilder.process_item(group)])
-        self.assertEqual(len(self.molecules.distinct("task_id")),11)
+        self.assertEqual(len(self.molecules.distinct("task_id")),24)
 
 
 class TestAssocMolecules(unittest.TestCase):
@@ -57,6 +57,7 @@ class TestAssocMolecules(unittest.TestCase):
         self.assertEqual(len(grouped_tasks),1)
         self.assertEqual(len(grouped_tasks[0]),58)
         mols = self.mbuilder.process_item(grouped_tasks[0])
+        self.assertEqual(mols[0]["environment"],"smd_18.5,1.415,0.00,0.735,20.2,0.00,0.00")
         self.assertEqual(len(mols),49)
         group_lengths = {}
         for mol in mols:

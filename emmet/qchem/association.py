@@ -67,14 +67,16 @@ class AssociationBuilder(Builder):
 
         # Save timestamp for update operation
         self.timestamp = datetime.utcnow()
-        # print(len(self.input_tasks),"input tasks")
 
         # Get all processed tasks:
         q = dict(self.query)
         q["state"] = "successful"
 
         self.logger.info("Finding tasks to process")
-        to_process_tasks = set(self.input_tasks.distinct("task_id", q))
+        all_tasks = set(self.input_tasks.distinct("task_id", q))
+        processed_tasks = set(self.output_tasks.distinct("task_ids"))
+        to_process_tasks = all_tasks - processed_tasks
+        # to_process_tasks = set(self.input_tasks.distinct("task_id", q))
         to_process_forms = self.input_tasks.distinct(
             "formula_alphabetical", {"task_id": {"$in": list(to_process_tasks)}}
         )
@@ -113,7 +115,6 @@ class AssociationBuilder(Builder):
         """
 
         formula = tasks[0]["formula_pretty"]
-        # print(formula)
         t_ids = [t["task_id"] for t in tasks]
         self.logger.debug("Processing {} : {}".format(formula, t_ids))
 
@@ -125,9 +126,10 @@ class AssociationBuilder(Builder):
                 output_tasks.append(group[0])
             elif len(group) == 2:
                 associated_task = self.associate_tasks(group)
-                output_tasks.append(associated_task)
+                if associated_task != None:
+                    output_tasks.append(associated_task)
             else:
-                raise RuntimeError("ERROR: shouldn't ever have groups of more than two tasks! Exiting...")
+                raise RuntimeError("ERROR: groups must contain one or two tasks! Invalid group length:", len(group))
 
         self.logger.debug(
             "Produced {} output tasks for {}".format(
@@ -169,17 +171,33 @@ class AssociationBuilder(Builder):
         else:
             raise RuntimeError("ERROR: There has to be a critic task! Exiting...")
 
+        assert "special_run_type" in opt_task
+        assert opt_task["special_run_type"] == "frequency_flattener"
+
         num_critic_scf_iters = len(critic_task["calcs_reversed"][0]["SCF"][0])
         last_critic_scf = critic_task["calcs_reversed"][0]["SCF"][0][-1][0]
-        comparable_scf = opt_task["calcs_reversed"][0]["SCF"][0][num_critic_scf_iters][0]
-        if abs(last_critic_scf - comparable_scf) > 0.0001:
-            raise RuntimeError("Inconsistent energies!",critic_task["dir_name"],opt_task["dir_name"])
+        if num_critic_scf_iters > len(opt_task["calcs_reversed"][0]["SCF"][0]):
+            comparable_scf = opt_task["calcs_reversed"][0]["SCF"][0][-1][0]
+        else:
+            comparable_scf = opt_task["calcs_reversed"][0]["SCF"][0][num_critic_scf_iters-1][0]
+        if abs(last_critic_scf - comparable_scf) > 0.001:
+            # Tag inconsistent tasks to be dealt with later
+            critic_task["inconsistent"] = True
+            opt_task["inconsistent"] = True
+            critic_task["incon_pair"] = {"opt":opt_task["task_id"], "critic":critic_task["task_id"]}
+            opt_task["incon_pair"] = {"opt":opt_task["task_id"], "critic":critic_task["task_id"]}
+            critic_task.pop("is_valid",None)
+            opt_task.pop("is_valid",None)
+            self.input_tasks.connect()
+            self.input_tasks.update(docs=[critic_task,opt_task], update_lu=False)
+        else:
+            associated_task = copy.deepcopy(opt_task)
+            associated_task["critic2"] = critic_task["critic2"]
+            associated_task["task_ids"] = list(set([t["task_id"] for t in task_group]))
+            if "resp" not in associated_task["output"]:
+                associated_task["output"]["resp"] = critic_task["output"]["resp"]
 
-        associated_task = copy.deepcopy(opt_task)
-        associated_task["critic2"] = critic_task["critic2"]
-        associated_task["task_ids"] = list(set([t["task_id"] for t in task_group]))
-
-        return associated_task
+            return associated_task
 
     def filter_and_group_tasks(self, tasks):
         """
@@ -204,27 +222,26 @@ class AssociationBuilder(Builder):
 
         for group in grouped_molecules:
             group_list = [filtered_tasks[mol.myindex] for mol in group]
-            FF_found = False
-            C_found = False
-            new_list = []
-            num_extra_FF = 0
-            num_extra_C = 0
+            found = {"SP": None, "C": None, "FF": None}
             for task in group_list:
                 if "special_run_type" in task:
                     if task["special_run_type"] == "frequency_flattener":
-                        if not FF_found:
-                            new_list.append(task)
-                            FF_found = True
-                        else:
-                            num_extra_FF += 1
+                        if not found["FF"]:
+                            found["FF"] = task
+                        elif task["output"]["final_energy"] < found["FF"]["output"]["final_energy"]:
+                            found["FF"] = task
                 if "critic2" in task:
-                    if not C_found:
-                        new_list.append(task)
-                        C_found = True
-                    else:
-                        num_extra_C += 1
-            yield new_list
-
+                    if not found["C"]:
+                        found["C"] = task
+                    elif task["output"]["final_energy"] < found["C"]["output"]["final_energy"]:
+                        found["C"] = task
+                elif task["orig"]["rem"]["job_type"] == "sp":
+                    if not found["SP"]:
+                        found["SP"] = task
+                    elif task["output"]["final_energy"] < found["SP"]["output"]["final_energy"]:
+                        found["SP"] = task
+            else:
+                yield [found[key] for key in found if found[key]]
 
     def ensure_indexes(self):
         """
