@@ -538,8 +538,9 @@ def group_molecules(molecules):
                     for subgraph in subgraphs:
                         new_subgroup = {}
                         new_subgroup["mol_graph"] = subgroup["mol_graph"]
-                        new_subgroup["metal_charges"] = subgroup["metal_charges"]
                         new_subgroup["mol_dict_list"] = [subgroup["mol_dict_list"][ind] for ind in subgraph]
+                        if "metal_charges" in subgroup:
+                            new_subgroup["metal_charges"] = subgroup["metal_charges"]
                         final_subgroups.append(new_subgroup)
 
         for subgroup in final_subgroups:
