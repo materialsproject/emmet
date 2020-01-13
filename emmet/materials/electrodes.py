@@ -71,7 +71,6 @@ class ElectrodesBuilder(Builder):
             compatibility (PymatgenCompatability): Compatability module
                 to ensure energies are compatible
         """
-        self.sm = StructureMatcher(comparator=ElementComparator(),primitive_cell=True, ignored_species=[self.working_ion])
         self.materials = materials
         self.electro = electro
         self.working_ion = working_ion
@@ -83,6 +82,7 @@ class ElectrodesBuilder(Builder):
         )
         self.completed_tasks = set()
         self.working_ion_entry = None
+        self.sm = StructureMatcher(comparator=ElementComparator(),primitive_cell=True, ignored_species=[self.working_ion])
         super().__init__(sources=[materials], targets=[electro], **kwargs)
 
     def get_items(self):
