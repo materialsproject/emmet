@@ -249,7 +249,7 @@ class MoleculesBuilder(Builder):
             tmp_mol = Molecule.from_dict(mol["molecule"])
             critic_bonds = mol["critic"]["processed"]["bonds"] if "critic" in mol else None
             mol_graph = make_mol_graph(tmp_mol,critic_bonds)
-            mol["mol_graph"] = mol_graph
+            mol["mol_graph"] = mol_graph.as_dict()
             bonds = []
             for bond in mol_graph.graph.edges():
                 bonds.append([bond[0],bond[1]])

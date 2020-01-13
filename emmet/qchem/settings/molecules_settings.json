@@ -163,7 +163,7 @@
       "Vacuum Frequency Flattening Optimization": 1,
       "Vacuum Frequency": 0
     },
-    "tasks_key": "output.calcs_reversed.0.trans_enthalpy"
+    "tasks_key": "calcs_reversed.0.trans_enthalpy"
   },
   {
     "molecules_key": "rot_enthalpy_kcal/mol",
@@ -175,7 +175,7 @@
       "Vacuum Frequency Flattening Optimization": 1,
       "Vacuum Frequency": 0
     },
-    "tasks_key": "output.calcs_reversed.0.rot_enthalpy"
+    "tasks_key": "calcs_reversed.0.rot_enthalpy"
   },
   {
     "molecules_key": "vib_enthalpy_kcal/mol",
@@ -187,7 +187,7 @@
       "Vacuum Frequency Flattening Optimization": 1,
       "Vacuum Frequency": 0
     },
-    "tasks_key": "output.calcs_reversed.0.vib_enthalpy"
+    "tasks_key": "calcs_reversed.0.vib_enthalpy"
   },
   {
     "molecules_key": "trans_entropy_cal/molK",
@@ -199,7 +199,7 @@
       "Vacuum Frequency Flattening Optimization": 1,
       "Vacuum Frequency": 0
     },
-    "tasks_key": "output.calcs_reversed.0.trans_entropy"
+    "tasks_key": "calcs_reversed.0.trans_entropy"
   },
   {
     "molecules_key": "rot_entropy_cal/molK",
@@ -211,7 +211,7 @@
       "Vacuum Frequency Flattening Optimization": 1,
       "Vacuum Frequency": 0
     },
-    "tasks_key": "output.calcs_reversed.0.rot_entropy"
+    "tasks_key": "calcs_reversed.0.rot_entropy"
   },
   {
     "molecules_key": "vib_entropy_cal/molK",
@@ -223,7 +223,7 @@
       "Vacuum Frequency Flattening Optimization": 1,
       "Vacuum Frequency": 0
     },
-    "tasks_key": "output.calcs_reversed.0.vib_entropy"
+    "tasks_key": "calcs_reversed.0.vib_entropy"
   },
   {
     "molecules_key": "critic",
