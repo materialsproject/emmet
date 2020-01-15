@@ -134,6 +134,7 @@
     "quality_score": {
       "SMD Frequency Flattening Optimization": 5,
       "SMD Frequency": 4,
+      "SMD Single Point": 0,
       "PCM Frequency Flattening Optimization": 3,
       "PCM Frequency": 2,
       "Vacuum Frequency Flattening Optimization": 1,
@@ -146,6 +147,7 @@
     "quality_score": {
       "SMD Frequency Flattening Optimization": 5,
       "SMD Frequency": 4,
+      "SMD Single Point": 0,
       "PCM Frequency Flattening Optimization": 3,
       "PCM Frequency": 2,
       "Vacuum Frequency Flattening Optimization": 1,
