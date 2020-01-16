@@ -255,20 +255,14 @@ class ElectrodesBuilder(Builder):
                 self.logger.debug(
                     f"Grouped entries in sandbox {isbx} -- {', '.join([en.name for en in group_sbx])}"
                 )
-                return group_sbx, working_ion_entry
 
                 try:
                     result = InsertionElectrode(group_sbx,
                                                 working_ion_entry)
-                    print(result)
                     assert (len(result._stable_entries) > 1)
                 except:
-                    print(result.as_dict_summary())
                     self.logger.warn(
                         f"Not able to generate a  entries in sandbox {isbx} using the following entires-- {', '.join([en.entry_id for en in group_sbx])}"
-                    )
-                    self.logger.warn(
-                        f"Current wion entry is{working_ion_entry.entry_id}"
                     )
                     continue
 
