@@ -22,7 +22,7 @@ redox_els = [
     'Re', 'Bi', 'C', 'Hf'
 ]
 mat_props = [
-    'structure', 'thermo.energy', 'calc_settings', 'task_id', '_sbxn', 'sbxn', 'entries', 'energy', 'formula_pretty'
+    'structure', 'thermo.energy', 'calc_settings', 'task_id', '_sbxn', 'entries', 'energy', 'formula_pretty'
 ]
 
 sg_fields = ["number", "hall_number", "international", "hall", "choice"]
@@ -245,13 +245,14 @@ class ElectrodesBuilder(Builder):
                 group_sbx = list(
                     filter(
                         lambda ent: (isbx in ent.data['_sbxn']) or (ent.data[
-                            'sbxn'] == ['core']), group))
+                            '_sbxn'] == ['core']), group))
                 # Need more than one level of lithiation to define a electrode material
                 if len(group_sbx) == 1:
                     continue
                 self.logger.debug(
                     f"Grouped entries in sandbox {isbx} -- {', '.join([en.name for en in group_sbx])}"
                 )
+
                 try:
                     result = InsertionElectrode(group_sbx,
                                                 self.working_ion_entry)
@@ -351,7 +352,7 @@ class ElectrodesBuilder(Builder):
         for d in docs:
             struct = Structure.from_dict(d['structure'])
             # get the calc settings
-            entry_energies = [(k, v['energy']) for k,v in d['entries'].items()]
+            entry_energies = [(k, v['energy']) for k,v in d['entries'].items() if 'energy' in v]
             entry_name = min(entry_energies, key=lambda x: abs(x[1]-d['energy']))[0]
             d["entries"][entry_name]["correction"] = 0.0
             if is_structure_entry:
