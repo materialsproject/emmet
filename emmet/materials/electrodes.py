@@ -81,7 +81,7 @@ class ElectrodesBuilder(Builder):
             else MaterialsProjectCompatibility("Advanced")
         )
         self.completed_tasks = set()
-        self.working_ion_entry = None
+        #self.working_ion_entry = None
         self.sm = StructureMatcher(comparator=ElementComparator(),primitive_cell=True, ignored_species=[self.working_ion])
         super().__init__(sources=[materials], targets=[electro], **kwargs)
 
@@ -167,7 +167,10 @@ class ElectrodesBuilder(Builder):
             for c in [elements, elements - {self.working_ion}]
         }
         self.logger.info("chemsys list: {}".format(chemsys_w_wo_ion))
-        q = {'chemsys': {"$in": list(chemsys_w_wo_ion)}, 'formula_pretty': {'$ne': self.working_ion}, 'deprecated': False}
+        q = {"$and": [
+            {'chemsys': {"$in": list(chemsys_w_wo_ion)}, 'formula_pretty': {'$ne': self.working_ion}, 'deprecated': False},
+            self.query
+            ]}
         self.logger.debug(f"q: {q}")
         docs = self.materials.query(q, mat_props)
         entries = self._mat_doc2comp_entry(docs)
@@ -211,9 +214,9 @@ class ElectrodesBuilder(Builder):
             filter(
                 lambda x: x.composition.get_integer_formula_and_factor()[0] ==
                 self.working_ion, pd_ents))
-        self.working_ion_entry = min(ents_wion,
+        working_ion_entry = min(ents_wion,
                                      key=lambda e: e.energy_per_atom)
-        assert (self.working_ion_entry != None)
+        assert (working_ion_entry != None)
 
         grouped_entries = list(self.get_sorted_subgroups(elec_entries))
         docs = []  # results
@@ -255,11 +258,16 @@ class ElectrodesBuilder(Builder):
 
                 try:
                     result = InsertionElectrode(group_sbx,
-                                                self.working_ion_entry)
+                                                working_ion_entry)
+                    print(result)
                     assert (len(result._stable_entries) > 1)
                 except:
+                    print(result.as_dict_summary())
                     self.logger.warn(
                         f"Not able to generate a  entries in sandbox {isbx} using the following entires-- {', '.join([en.entry_id for en in group_sbx])}"
+                    )
+                    self.logger.warn(
+                        f"Current wion entry is{working_ion_entry.entry_id}"
                     )
                     continue
 
