@@ -1,7 +1,10 @@
 from pymatgen.core import Structure, Element
 from maggma.builders import Builder
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility
-from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
+from pymatgen.analysis.structure_matcher import (
+    StructureMatcher, ElementComparator
+)
+
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.transformations.standard_transformations import \
     PrimitiveCellTransformation
@@ -16,16 +19,25 @@ from pymatgen.analysis.structure_analyzer import oxide_type
 from numpy import unique
 import operator
 
-s_hash = lambda el: el.data['comp_delith']
+
+def s_hash(el):
+    return el.data['comp_delith']
+
+
 redox_els = [
     'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Nb', 'Mo', 'Sn', 'Sb', 'W',
     'Re', 'Bi', 'C', 'Hf'
 ]
 mat_props = [
-    'structure', 'thermo.energy', 'calc_settings', 'task_id', '_sbxn', 'entries', 'energy', 'formula_pretty'
-]
+    'structure',
+    'calc_settings',
+    'task_id',
+    '_sbxn',
+    'entries',
+    'formula_pretty']
 
 sg_fields = ["number", "hall_number", "international", "hall", "choice"]
+
 
 def generic_groupby(list_in, comp=operator.eq):
     """
@@ -42,7 +54,7 @@ def generic_groupby(list_in, comp=operator.eq):
         if ls1 is not None:
             continue
         list_out[i1] = label_num
-        for i2, ls2 in list(enumerate(list_out))[i1 + 1 :]:
+        for i2, ls2 in list(enumerate(list_out))[i1 + 1:]:
             if comp(list_in[i1], list_in[i2]):
                 if list_out[i2] is None:
                     list_out[i2] = list_out[i1]
@@ -51,6 +63,7 @@ def generic_groupby(list_in, comp=operator.eq):
                     label_num -= 1
         label_num += 1
     return list_out
+
 
 class ElectrodesBuilder(Builder):
     def __init__(self,
@@ -66,7 +79,8 @@ class ElectrodesBuilder(Builder):
         Args:
             materials (Store): Store of materials documents that contains the structures
             electro (Store): Store of insertion electrodes data such as voltage and capacity
-            query (dict): dictionary to limit materials to be analyzed --- only applied to the materials when we need to group structures
+            query (dict): dictionary to limit materials to be analyzed ---
+                            only applied to the materials when we need to group structures
                             the phase diagram is still constructed with the entire set
             compatibility (PymatgenCompatability): Compatability module
                 to ensure energies are compatible
@@ -81,8 +95,12 @@ class ElectrodesBuilder(Builder):
             else MaterialsProjectCompatibility("Advanced")
         )
         self.completed_tasks = set()
-        #self.working_ion_entry = None
-        self.sm = StructureMatcher(comparator=ElementComparator(),primitive_cell=True, ignored_species=[self.working_ion])
+
+        self.sm = StructureMatcher(
+            comparator=ElementComparator(),
+            primitive_cell=True,
+            ignored_species=[
+                self.working_ion])
         super().__init__(sources=[materials], targets=[electro], **kwargs)
 
     def get_items(self):
@@ -104,7 +122,7 @@ class ElectrodesBuilder(Builder):
         #     self.working_ion_entry = min(working_ion_entries, key=lambda e: e.energy_per_atom)
 
         self.logger.info(
-            "Grabbing the relavant chemical systems containing the current working ion and a single redox element."                                                        )
+            "Grabbing the relavant chemical systems containing the current working ion and a single redox element.")
         q = dict()
         q.update({
             '$and': [{
@@ -133,7 +151,8 @@ class ElectrodesBuilder(Builder):
             self.logger.debug(f"pd_q: {pd_q}")
             pd_docs = list(
                 self.materials.query(properties=mat_props, criteria=pd_q))
-            pd_ents = self._mat_doc2comp_entry(pd_docs, is_structure_entry=False)
+            pd_ents = self._mat_doc2comp_entry(
+                pd_docs, is_structure_entry=False)
             pd_ents = list(filter(None.__ne__, pd_ents))
 
             for item in self.get_hashed_entries_from_chemsys(chemsys):
@@ -167,10 +186,8 @@ class ElectrodesBuilder(Builder):
             for c in [elements, elements - {self.working_ion}]
         }
         self.logger.info("chemsys list: {}".format(chemsys_w_wo_ion))
-        q = {"$and": [
-            {'chemsys': {"$in": list(chemsys_w_wo_ion)}, 'formula_pretty': {'$ne': self.working_ion}, 'deprecated': False},
-            self.query
-            ]}
+        q = {"$and": [{'chemsys': {"$in": list(chemsys_w_wo_ion)}, 'formula_pretty': {
+            '$ne': self.working_ion}, 'deprecated': False}, self.query]}
         self.logger.debug(f"q: {q}")
         docs = self.materials.query(q, mat_props)
         entries = self._mat_doc2comp_entry(docs)
@@ -212,11 +229,10 @@ class ElectrodesBuilder(Builder):
         # The working ion entries
         ents_wion = list(
             filter(
-                lambda x: x.composition.get_integer_formula_and_factor()[0] ==
-                self.working_ion, pd_ents))
+                lambda x: x.composition.get_integer_formula_and_factor()[0] == self.working_ion, pd_ents))
         working_ion_entry = min(ents_wion,
-                                     key=lambda e: e.energy_per_atom)
-        assert (working_ion_entry != None)
+                                key=lambda e: e.energy_per_atom)
+        assert (working_ion_entry is not None)
 
         grouped_entries = list(self.get_sorted_subgroups(elec_entries))
         docs = []  # results
@@ -249,7 +265,8 @@ class ElectrodesBuilder(Builder):
                     filter(
                         lambda ent: (isbx in ent.data['_sbxn']) or (ent.data[
                             '_sbxn'] == ['core']), group))
-                # Need more than one level of lithiation to define a electrode material
+                # Need more than one level of lithiation to define a electrode
+                # material
                 if len(group_sbx) == 1:
                     continue
                 self.logger.debug(
@@ -260,9 +277,11 @@ class ElectrodesBuilder(Builder):
                     result = InsertionElectrode(group_sbx,
                                                 working_ion_entry)
                     assert (len(result._stable_entries) > 1)
-                except:
+                except AssertionError:
+                    # The stable entries did not form a hull with the Li entry
                     self.logger.warn(
-                        f"Not able to generate a  entries in sandbox {isbx} using the following entires-- {', '.join([en.entry_id for en in group_sbx])}"
+                        f"Not able to generate a  entries in sandbox {isbx} using the following entires-- \
+                            {', '.join([en.entry_id for en in group_sbx])}"
                     )
                     continue
 
@@ -280,7 +299,8 @@ class ElectrodesBuilder(Builder):
                 if isbx == 'core':
                     d['battid'] = lowest_id + '_' + self.working_ion
                 else:
-                    d['battid'] = lowest_id + '_' + self.working_ion + '_' + isbx
+                    d['battid'] = lowest_id + '_' + \
+                        self.working_ion + '_' + isbx
                 # Only allow one sandbox value for each electrode
                 d['_sbxn'] = [isbx]
 
@@ -369,13 +389,14 @@ class ElectrodesBuilder(Builder):
                 dd = en.composition.as_dict()
                 if "Li" in dd:
                     dd.pop('Li')
-                en.data['comp_delith'] = Composition.from_dict(dd).reduced_formula
+                en.data['comp_delith'] = Composition.from_dict(
+                    dd).reduced_formula
 
             en.data["oxide_type"] = oxide_type(struct)
 
             try:
                 entries.append(self.compatibility.process_entry(en))
-            except:
+            except BaseException:
                 self.logger.warn(
                     'unable to process material with task_id: {}'.format(
                         en.entry_id))
