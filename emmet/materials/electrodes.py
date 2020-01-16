@@ -255,6 +255,7 @@ class ElectrodesBuilder(Builder):
                 self.logger.debug(
                     f"Grouped entries in sandbox {isbx} -- {', '.join([en.name for en in group_sbx])}"
                 )
+                return group_sbx, working_ion_entry
 
                 try:
                     result = InsertionElectrode(group_sbx,
@@ -360,14 +361,13 @@ class ElectrodesBuilder(Builder):
         for d in docs:
             struct = Structure.from_dict(d['structure'])
             # get the calc settings
-            entry_energies = [(k, v['energy']) for k,v in d['entries'].items() if 'energy' in v]
-            entry_name = min(entry_energies, key=lambda x: abs(x[1]-d['energy']))[0]
-            d["entries"][entry_name]["correction"] = 0.0
+            entry_type = "gga_u" if "gga_u" in d["entries"] else "gga"
+            d["entries"][entry_type]["correction"] = 0.0
             if is_structure_entry:
-                d["entries"][entry_name]["structure"] = struct
-                en = ComputedStructureEntry.from_dict(d["entries"][entry_name])
+                d["entries"][entry_type]["structure"] = struct
+                en = ComputedStructureEntry.from_dict(d["entries"][entry_type])
             else:
-                en = ComputedEntry.from_dict(d["entries"][entry_name])
+                en = ComputedEntry.from_dict(d["entries"][entry_type])
 
             en.data["_sbxn"] = d.get("_sbxn", [])
 
