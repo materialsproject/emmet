@@ -387,8 +387,8 @@ class ElectrodesBuilder(Builder):
 
             if en.composition.reduced_formula != self.working_ion:
                 dd = en.composition.as_dict()
-                if "Li" in dd:
-                    dd.pop('Li')
+                if self.working_ion in dd:
+                    dd.pop(self.working_ion)
                 en.data['comp_delith'] = Composition.from_dict(
                     dd).reduced_formula
 
