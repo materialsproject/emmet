@@ -281,7 +281,7 @@ class ElectrodesBuilder(Builder):
                     # The stable entries did not form a hull with the Li entry
                     self.logger.warn(
                         f"Not able to generate a  entries in sandbox {isbx} using the following entires-- \
-                            {', '.join([en.entry_id for en in group_sbx])}"
+                            {', '.join([str(en.entry_id) for en in group_sbx])}"
                     )
                     continue
 
