@@ -88,5 +88,12 @@ class TestElectroInsert(unittest.TestCase):
         tbuilder.update_targets(items)
         self.assertEqual(len(self.insert_electrode.distinct("battid")), 3)
 
+    def test_run(self):
+        self.builder.run()
+        all_elec_docs = [*self.builder.electro.query()]
+        self.assertEqual(len(all_elec_docs), 12)
+        for cc in self.builder.electro.query():
+            print(cc['battid'])
+
 if __name__ == "__main__":
     unittest.main()
