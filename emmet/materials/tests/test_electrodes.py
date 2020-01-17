@@ -3,7 +3,6 @@ import unittest
 from maggma.stores import JSONStore, MemoryStore
 from pymatgen import Composition
 from numpy import unique
-from maggma.runner import Runner
 from emmet.materials.electrodes import ElectrodesBuilder, mat_props, generic_groupby
 from emmet.materials.thermo import chemsys_permutations
 
