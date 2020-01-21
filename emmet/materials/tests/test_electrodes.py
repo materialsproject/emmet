@@ -5,20 +5,23 @@ from pymatgen import Composition
 from numpy import unique
 from emmet.materials.electrodes import ElectrodesBuilder, mat_props, generic_groupby
 from emmet.materials.thermo import chemsys_permutations
-
-__author__ = "Shyam Dwaraknath"
-__email__ = "shyamd@lbl.gov"
+from pymatgen.analysis.phase_diagram import PhaseDiagram
+__author__ = "Jimmy Shen"
+__email__ = "jmmshn@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 test_mats = os.path.join(module_dir, "..", "..", "..", "test_files", "insert_electrode.json")
 
 
-def get_no_li_comp(comp):
+def get_no_li_comp(comp, return_str=True):
     # get the reduced composition without Li
     dd = comp.as_dict()
     if "Li" in dd:
         dd.pop('Li')
-    return Composition(dd).get_reduced_formula_and_factor()[0]
+    if return_str:
+        return Composition(dd).reduced_formula
+    else:
+        return Composition(dd)
 
 
 class TestElectroInsert(unittest.TestCase):
@@ -70,6 +73,16 @@ class TestElectroInsert(unittest.TestCase):
             for ichemsys in all_chemsys:
                 self.assertEqual(ichemsys in pd_chemsys, True)
 
+
+    def test_get_competing_conversion_electrode(self):
+        for item in self.builder.get_items():
+            ents = sorted(item['elec_entries'], key=lambda x : x.composition.get_atomic_fraction(self.builder.working_ion))
+            pd = PhaseDiagram(item['pd_entries'])
+            comp = ents[-1].composition
+            f, v = self.builder.get_competing_conversion_electrode_profile(comp, pd)
+            self.assertEqual(len(f), len(v))
+            self.assertGreaterEqual(f[-1][1], comp.get_atomic_fraction(self.builder.working_ion))
+
     def test_process_items(self):
         items = [*self.builder.get_items()]
         sbxn_set = {'shyamd', 'mkhorton', 'vw', 'basf', 'core', 'jcesr'}
@@ -92,8 +105,6 @@ class TestElectroInsert(unittest.TestCase):
         self.builder.run()
         all_elec_docs = [*self.builder.electro.query()]
         self.assertEqual(len(all_elec_docs), 12)
-        for cc in self.builder.electro.query():
-            print(cc['battid'])
 
 if __name__ == "__main__":
     unittest.main()

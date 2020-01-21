@@ -12,6 +12,7 @@ from itertools import chain, combinations
 from itertools import groupby
 from pymatgen.entries.computed_entries import ComputedStructureEntry, ComputedEntry
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
+from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen import Composition
 from emmet.materials.thermo import chemsys_permutations
@@ -19,6 +20,8 @@ from pymatgen.analysis.structure_analyzer import oxide_type
 from numpy import unique
 import operator
 
+__author__ = "Jimmy Shen"
+__email__ = "jmmshn@lbl.gov"
 
 def s_hash(el):
     return el.data['comp_delith']
@@ -152,7 +155,7 @@ class ElectrodesBuilder(Builder):
             pd_docs = list(
                 self.materials.query(properties=mat_props, criteria=pd_q))
             pd_ents = self._mat_doc2comp_entry(
-                pd_docs, is_structure_entry=False)
+                pd_docs, is_structure_entry=True)
             pd_ents = list(filter(None.__ne__, pd_ents))
 
             for item in self.get_hashed_entries_from_chemsys(chemsys):
@@ -304,6 +307,10 @@ class ElectrodesBuilder(Builder):
                 # Only allow one sandbox value for each electrode
                 d['_sbxn'] = [isbx]
 
+                # store the conversion profile up to the discharged compositions
+                f, v = self.get_competing_conversion_electrode_profile(Composition(d['formula_discharge']), phase_diagram=phdi)
+                d['conversion_data'] = {'fracA_charge_discharge': f,
+                                        'conversion_voltage' : v}
                 docs.append(d)
 
         return docs
@@ -401,3 +408,32 @@ class ElectrodesBuilder(Builder):
                     'unable to process material with task_id: {}'.format(
                         en.entry_id))
         return entries
+
+    def get_competing_conversion_electrode_profile(self, comp, phase_diagram):
+        """
+        Take the composition and draw the conversion electrode profile
+        Stop drawing the profile once the working ion content of the conversion electrode reaches the maximum content of the specificed composition
+
+
+        Returns:
+
+        """
+
+        ce = ConversionElectrode.from_composition_and_pd(comp=comp,
+                                                         pd=phase_diagram,
+                                                         working_ion_symbol=self.working_ion,
+                                                         allow_unstable=True,
+                                                         )
+
+        max_frac = comp.get_atomic_fraction(self.working_ion)
+        frac_woin = []
+        avg_voltage = []
+        for itr in ce.get_summary_dict()['adj_pairs']:
+            if itr['fracA_charge'] > max_frac:
+                break
+            frac_woin.append([itr['fracA_charge'], itr['fracA_discharge']])
+            avg_voltage.append(itr['average_voltage'])
+
+        return frac_woin, avg_voltage
+
+
