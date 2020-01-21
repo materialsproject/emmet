@@ -81,7 +81,6 @@ class TestElectroInsert(unittest.TestCase):
             comp = ents[-1].composition
             f, v = self.builder.get_competing_conversion_electrode_profile(comp, pd)
             self.assertEqual(len(f), len(v))
-            self.assertGreaterEqual(f[-1][1], comp.get_atomic_fraction(self.builder.working_ion))
 
     def test_process_items(self):
         items = [*self.builder.get_items()]

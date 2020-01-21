@@ -429,8 +429,6 @@ class ElectrodesBuilder(Builder):
         frac_woin = []
         avg_voltage = []
         for itr in ce.get_summary_dict()['adj_pairs']:
-            if itr['fracA_charge'] > max_frac:
-                break
             frac_woin.append([itr['fracA_charge'], itr['fracA_discharge']])
             avg_voltage.append(itr['average_voltage'])
 
