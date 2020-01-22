@@ -435,12 +435,7 @@ def find_best_prop(props):
         ),
     )
     if sorted_props[0].get("aggregate", False):
-        # Make this a list of lists and then flatten to deal with mixed value typing
-        vals = [
-            prop["value"] if isinstance(prop["value"], list) else [prop["value"]]
-            for prop in sorted_props
-        ]
-        vals = list(chain.from_iterable(vals))
+        vals = [prop["value"] for prop in sorted_props]
         prop = sorted_props[0]
         prop["value"] = vals
         # Can"t track an aggregated property
@@ -611,8 +606,9 @@ def make_mol_graph(mol, critic_bonds=None):
         mg_edges = mol_graph.graph.edges()
         for bond in critic_bonds:
             bond.sort()
-            bond = (bond[0],bond[1])
-            if bond not in mg_edges:
-                mol_graph.add_edge(bond[0],bond[1])
+            if bond[0] != bond[1]:
+                bond = (bond[0],bond[1])
+                if bond not in mg_edges:
+                    mol_graph.add_edge(bond[0],bond[1])
     return mol_graph
 
