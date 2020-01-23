@@ -301,7 +301,7 @@ class MoleculesBuilder(Builder):
             if "solvent_method" in t["orig"]["rem"]:
                 if t["orig"]["rem"]["solvent_method"] == "smd":
                     mol_dict["env"] = "smd"
-                    if t["orig"]["smx"] == "other" or t["orig"]["smx"] == "custom":
+                    if t["orig"]["smx"]["solvent"] == "other" or t["orig"]["smx"]["solvent"] == "custom":
                         mol_dict["smd"] = t["custom_smd"]
                     else:
                         mol_dict["smd"] = t["orig"]["smx"]["solvent"]

@@ -100,7 +100,6 @@ class AssociationBuilder(Builder):
                     t["is_valid"] = False
                 else:
                     t["is_valid"] = True
-
             yield tasks
 
     def process_item(self, tasks):
@@ -114,7 +113,7 @@ class AssociationBuilder(Builder):
             ([dict],list) : a list of output task docs and a list of task_ids that were processsed
         """
 
-        formula = tasks[0]["formula_pretty"]
+        formula = tasks[0]["formula_alphabetical"]
         t_ids = [t["task_id"] for t in tasks]
         self.logger.debug("Processing {} : {}".format(formula, t_ids))
 
@@ -133,7 +132,7 @@ class AssociationBuilder(Builder):
 
         self.logger.debug(
             "Produced {} output tasks for {}".format(
-                len(output_tasks), tasks[0]["formula_pretty"]
+                len(output_tasks), tasks[0]["formula_alphabetical"]
             )
         )
         return output_tasks
@@ -212,12 +211,24 @@ class AssociationBuilder(Builder):
 
         for idx, t in enumerate(filtered_tasks):
             if "optimized_molecule" in t["output"]:
-                s = Molecule.from_dict(t["output"]["optimized_molecule"])
+                mol = Molecule.from_dict(t["output"]["optimized_molecule"])
             else:
-                s = Molecule.from_dict(t["output"]["initial_molecule"])
-            s.myindex = idx
-            molecules.append(s)
-
+                mol = Molecule.from_dict(t["output"]["initial_molecule"])
+            mol.myindex = idx
+            mol_dict = {"molecule": mol}
+            if "solvent_method" in t["orig"]["rem"]:
+                if t["orig"]["rem"]["solvent_method"] == "smd":
+                    mol_dict["env"] = "smd"
+                    if t["orig"]["smx"]["solvent"] == "other" or t["orig"]["smx"]["solvent"] == "custom":
+                        mol_dict["smd"] = t["custom_smd"]
+                    else:
+                        mol_dict["smd"] = t["orig"]["smx"]["solvent"]
+                elif t["orig"]["rem"]["solvent_method"] == "pcm":
+                    mol_dict["env"] = "pcm"
+                    mol_dict["pcm"] = t["orig"]["solvent"]["dielectric"]
+            else:
+                mol_dict["env"] = "vac"
+            molecules.append(mol_dict)
         grouped_molecules = group_molecules(molecules)
 
         for group in grouped_molecules:
@@ -267,15 +278,21 @@ class AssociationBuilder(Builder):
 
 def group_molecules(molecules):
     """
-    Groups molecules according to composition, charge, and equality
+    Groups molecules according to composition, charge, environment, and equality
     """
 
-    def get_mol_key(mol):
-        return mol.composition.alphabetical_formula+" "+str(mol.charge)
+    def get_mol_key(mol_dict):
+        key = mol_dict["molecule"].composition.alphabetical_formula
+        key += " " + str(mol_dict["molecule"].charge)
+        key += " " + mol_dict["env"]
+        if mol_dict["env"] != "vac":
+            key += " " + mol_dict[mol_dict["env"]]
+        return key
 
     for mol_key, pregroup in groupby(sorted(molecules,key=get_mol_key),key=get_mol_key):
         subgroups = []
-        for mol in pregroup:
+        for mol_dict in pregroup:
+            mol = mol_dict["molecule"]
             matched = False
             for subgroup in subgroups:
                 if mol == subgroup["mol"]:
