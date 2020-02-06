@@ -9,8 +9,12 @@ indir=$1
 filter=$2
 cd $indir && pwd
 
-for block in $(find . -maxdepth 1 -type d -name "$filter" -exec basename {} \;); do
+for block in $(find . -maxdepth 1 -type d -group matgen -name "$filter" -exec basename {} \;); do
   echo $block
+
+  hsi -q -l matcomp ls -1 garden/${block}.tar
+  if [ $? -eq 0 ]; then echo "$block.tar exists"; continue; fi
+
   [[ ! -d $block ]] && echo $block does not exist && exit
   find $block -type d -empty -print -delete
   [[ ! -d $block ]] && echo $block only contained empty directories && exit

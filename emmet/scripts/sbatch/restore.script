@@ -21,13 +21,22 @@ dirlist="/global/homes/h/huck/mp_prod/workdir/hpss/scan_dirs_2.txt"
 
 cd $outdir && pwd
 
-for block in `cut -d/ -f1 $dirlist | sort -u`; do
+blocks=`cut -d/ -f1 $dirlist | sort -u`
+echo $blocks | wc -w
+for block in $blocks; do
   echo $block
   list=""
   for l in `grep $block $dirlist`; do
     [[ ! -e $l ]] && echo "$l does not exist" && list="$list $l"
+    length=`echo $list | wc -w`
+    [[ $length -gt 500 ]] && htar -xvf garden/${block}.tar $list && list=""
   done
+  echo $list | wc -w
   [[ ! -z "$list" ]] && echo "htar -x ..." && htar -xvf garden/${block}.tar $list
+  parallel -0m 'chmod -v g+rw {}' :::: <(find $block -not -perm -660 -print0)
+  [[ $? -ne 0 ]] && echo 'error in chmod' && exit
+  parallel -0m 'chown -v huck:matgen {}' :::: <(find $block -not -group matgen -print0)
+  [[ $? -ne 0 ]] && echo 'error in chown' && exit
   #break
 done
 
