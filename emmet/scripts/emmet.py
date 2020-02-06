@@ -37,6 +37,7 @@ from bravado.client import SwaggerClient
 from typing import Iterator, Iterable, Union, Tuple, Dict, Any
 from urllib.parse import urlparse, urlencode
 import functools
+from uuid import uuid4
 
 print = functools.partial(print, flush=True)
 
@@ -61,12 +62,13 @@ nomad_outdir = '/project/projectdirs/matgen/garden/nomad'
 nomad_url = 'http://labdev-nomad.esc.rzg.mpg.de/fairdi/nomad/mp/api'
 user = 'leonard.hofstadter@nomad-fairdi.tests.de'
 password = 'password'
-approx_upload_size = 16 * 1024 * 1024 * 1024  # you can make it really small for testing
+approx_upload_size = 24 * 1024 * 1024 * 1024  # you can make it really small for testing
 max_parallel_uploads = 6
 nomad_host = urlparse(nomad_url).netloc.split(':')[0]
 http_client = RequestsClient()
 http_client.set_basic_auth(nomad_host, user, password)
 nomad_client = SwaggerClient.from_url('%s/swagger.json' % nomad_url, http_client=http_client)
+direct_stream = False
 
 
 # https://gitlab.mpcdf.mpg.de/nomad-lab/nomad-FAIR/blob/v0.6.0/examples/external_project_parallel_upload/upload.py
@@ -131,7 +133,7 @@ def upload_next_data(sources: Iterator[Tuple[str, str, str]], upload_name='next 
                         references=[f'https://materialsproject.org/tasks/{material_id}#{external_id}']
                     ))
 
-                yield dict(arcname=name, iterable=iter_content())
+                yield dict(arcname=name, iterable=iter_content(), buffer_size=source_member.size)
 
             if size > approx_upload_size:
                 break
@@ -139,8 +141,6 @@ def upload_next_data(sources: Iterator[Tuple[str, str, str]], upload_name='next 
     # create the zip-stream from the iterator above
     zip_stream = zipstream.ZipFile(mode='w', compression=zipfile.ZIP_STORED, allowZip64=True)
     zip_stream.paths_to_write = iterator()
-
-    zip_stream
 
     user = nomad_client.auth.get_user().response().result
     token = user.token
@@ -151,8 +151,20 @@ def upload_next_data(sources: Iterator[Tuple[str, str, str]], upload_name='next 
             if len(chunk) != 0:
                 yield chunk
 
-    print('stream .zip to nomad ...')
-    response = requests.put(url=url, headers={'X-Token': token}, data=content())
+    if direct_stream:
+        print('stream .zip to nomad ...')
+        response = requests.put(url=url, headers={'X-Token': token, 'Content-type': 'application/octet-stream'}, data=content())
+    else:
+        print('save .zip and upload file to nomad ...')
+        zipfile_name = os.path.join(nomad_outdir, str(uuid4()) + '.zip') 
+        with open(zipfile_name, 'wb') as f:
+            for c in content():
+                f.write(c)
+        try:
+            with open(zipfile_name, 'rb') as f:
+                response = requests.put(url=url, headers={'X-Token': token, 'Content-type': 'application/octet-stream'}, data=f)
+        finally:
+            os.remove(zipfile_name)
 
     if response.status_code != 200:
         raise Exception('nomad return status %d' % response.status_code)
@@ -1544,7 +1556,7 @@ def download_file(service, file_id):
 @cli.command()
 @click.argument('target_spec')
 @click.option('--block-filter', '-f', help='block filter substring (e.g. block_2017-)')
-@click.option('--sync-nomad/--no-sync-nomad', default=False, help='sync to NoMaD repository')
+@click.option('--sync-nomad/--no-sync-nomad', default=False, help='sync to NOMAD repository')
 def gdrive(target_spec, block_filter, sync_nomad):
     """sync launch directories for target task DB to Google Drive"""
     target = calcdb_from_mgrant(target_spec)
@@ -1613,12 +1625,12 @@ def gdrive(target_spec, block_filter, sync_nomad):
 
                             for j, mainfile in enumerate(mainfiles):
                                 result = nomad_client.repo.search(mainfile=mainfile).response().result
+                                path = os.path.join(nomad_outdir, launcher_paths[-1]['path'] + '.tar.gz')
 
                                 if result.pagination.total == 0 and j < len(mainfiles)-1:
                                     continue
                                 elif result.pagination.total == 0:
                                     print(f'{idx} {full_launcher_path[-1]} not found')
-                                    path = os.path.join(nomad_outdir, launcher_paths[-1]['path'] + '.tar.gz')
                                     if not os.path.exists(path):
                                         subdir = get_subdir(path.replace('.tar.gz', ''))
                                         if tasks.get(subdir):
@@ -1636,6 +1648,9 @@ def gdrive(target_spec, block_filter, sync_nomad):
                                         print('\t-> already retrieved from GDrive.')
                                 elif result.pagination.total >= 1:
                                     print(f'Found calc {result.results[0]["calc_id"]} for {full_launcher_path[-1]}')
+                                    if os.path.exists(path):
+                                        os.remove(path)
+                                        print(path, 'removed.')
                                     break
 
                     else:
