@@ -263,13 +263,13 @@ class AssociationBuilder(Builder):
         self.input_tasks.ensure_index(self.input_tasks.key, unique=True)
         self.input_tasks.ensure_index("state")
         self.input_tasks.ensure_index("formula_alphabetical")
-        self.input_tasks.ensure_index(self.input_tasks.lu_field)
+        self.input_tasks.ensure_index(self.input_tasks.last_updated_field)
 
         # Search index for molecules
         self.output_tasks.ensure_index(self.output_tasks.key, unique=True)
         self.output_tasks.ensure_index("state")
         self.output_tasks.ensure_index("formula_alphabetical")
-        self.output_tasks.ensure_index(self.output_tasks.lu_field)
+        self.output_tasks.ensure_index(self.output_tasks.last_updated_field)
 
         if self.task_types:
             self.task_types.ensure_index(self.task_types.key)
