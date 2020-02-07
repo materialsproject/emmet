@@ -152,7 +152,8 @@ class AssociationBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info("Updating {} output_tasks".format(len(items)))
-            self.output_tasks.update(docs=items, update_lu=False)
+            # self.output_tasks.update(docs=items, update_lu=False)
+            self.output_tasks.update(docs=items)
         else:
             self.logger.info("No items to update")
 
@@ -188,7 +189,8 @@ class AssociationBuilder(Builder):
             critic_task.pop("is_valid",None)
             opt_task.pop("is_valid",None)
             self.input_tasks.connect()
-            self.input_tasks.update(docs=[critic_task,opt_task], update_lu=False)
+            # self.input_tasks.update(docs=[critic_task,opt_task], update_lu=False)
+            self.input_tasks.update(docs=[critic_task,opt_task])
         else:
             associated_task = copy.deepcopy(opt_task)
             associated_task["critic2"] = critic_task["critic2"]

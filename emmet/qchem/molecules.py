@@ -170,7 +170,8 @@ class MoleculesBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info("Updating {} molecules".format(len(items)))
-            self.molecules.update(docs=items, update_lu=False)
+            # self.molecules.update(docs=items, update_lu=False)
+            self.molecules.update(docs=items)
         else:
             self.logger.info("No items to update")
 
