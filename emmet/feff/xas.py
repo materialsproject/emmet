@@ -1,8 +1,10 @@
 from maggma.core import Store
 from maggma.builders import GroupBuilder
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
-from itertools import groupby, product
+import traceback
+from datetime import datetime
+from itertools import groupby, product, chain
 from pydash import py_
 from pymatgen import Structure
 import numpy as np
@@ -27,98 +29,117 @@ class XASBuilder(GroupBuilder):
         self.sampling_density = 200
         self.kwargs = kwargs
 
-        super().__init__(source=tasks, target=xas, grouping_keys=["mp_id"])
+        super().__init__(source=tasks, target=xas, grouping_keys=["mp_id"], **kwargs)
 
-        # TODO stich spectra together
+    def process_item(self, items: List[Dict]) -> Dict[Tuple, Dict]:  # type: ignore
 
-    def unary_function(self, items: List[Dict]) -> Dict:
+        keys = list(d[self.source.key] for d in items)
 
-        all_spectra = [feff_task_to_spectrum(task) for task in items]
+        self.logger.debug("Processing: {}".format(keys))
 
-        # Dictionary of all site to spectra mapping
-        sites_to_spectra = {
-            index: list(group)
-            for index, group in groupby(
-                sorted(all_spectra, key=lambda x: x.absorbing_atom),
-                key=lambda x: x.absorbing_atom,
-            )
-        }
+        try:
+            all_spectra = [feff_task_to_spectrum(task) for task in items]
 
-        # perform spectra merging
-        for site, spectra in sites_to_spectra.items():
-            type_to_spectra = {
+            # Dictionary of all site to spectra mapping
+            sites_to_spectra = {
                 index: list(group)
                 for index, group in groupby(
-                    sorted(
-                        spectra, key=lambda x: (x.edge, x.spectrum_type, x.last_updated)
-                    ),
-                    key=lambda x: (x.edge, x.spectrum_type),
+                    sorted(all_spectra, key=lambda x: x.absorbing_atom),
+                    key=lambda x: x.absorbing_atom,
                 )
             }
-            # Make K-Total
-            if ("K", "XANES") in type_to_spectra and ("K", "EXAFS") in type_to_spectra:
-                xanes = type_to_spectra[("K", "XANES")][-1]
-                exafs = type_to_spectra[("K", "EXAFS")][-1]
-                total_spectrum = xanes.stitch(exafs, mode="XAFS")
-                total_spectrum.absorbing_atom = site
-                all_spectra.append(total_spectrum)
 
-            # Make L23
-            if ("L2", "XANES") in type_to_spectra and (
-                "L3",
-                "XANES",
-            ) in type_to_spectra:
-                l2 = type_to_spectra[("L2", "XANES")][-1]
-                l3 = type_to_spectra[("L3", "XANES")][-1]
-                total_spectrum = l2.stitch(l3, mode="L23")
-                total_spectrum.absorbing_atom = site
-                all_spectra.append(total_spectrum)
+            # perform spectra merging
+            for site, spectra in sites_to_spectra.items():
+                type_to_spectra = {
+                    index: list(group)
+                    for index, group in groupby(
+                        sorted(
+                            spectra,
+                            key=lambda x: (x.edge, x.spectrum_type, x.last_updated),
+                        ),
+                        key=lambda x: (x.edge, x.spectrum_type),
+                    )
+                }
+                # Make K-Total
+                if ("K", "XANES") in type_to_spectra and (
+                    "K",
+                    "EXAFS",
+                ) in type_to_spectra:
+                    xanes = type_to_spectra[("K", "XANES")][-1]
+                    exafs = type_to_spectra[("K", "EXAFS")][-1]
+                    total_spectrum = xanes.stitch(exafs, mode="XAFS")
+                    total_spectrum.absorbing_atom = site
+                    all_spectra.append(total_spectrum)
 
-        # Site-weighted averaging
-        elements = {spectrum.absorbing_element for spectrum in all_spectra}
-        edges = {spectrum.edge for spectrum in all_spectra}
-        types = {spectrum.spectrum_type for spectrum in all_spectra}
+                # Make L23
+                if ("L2", "XANES") in type_to_spectra and (
+                    "L3",
+                    "XANES",
+                ) in type_to_spectra:
+                    l2 = type_to_spectra[("L2", "XANES")][-1]
+                    l3 = type_to_spectra[("L3", "XANES")][-1]
+                    total_spectrum = l2.stitch(l3, mode="L23")
+                    total_spectrum.absorbing_atom = site
+                    all_spectra.append(total_spectrum)
 
-        averaged_spectra = []
+            # Site-weighted averaging
+            elements = {spectrum.absorbing_element for spectrum in all_spectra}
+            edges = {spectrum.edge for spectrum in all_spectra}
+            types = {spectrum.spectrum_type for spectrum in all_spectra}
 
-        for element, edge, spectrum_type in product(elements, edges, types):
-            relevant_spectra = [
-                spectrum
-                for spectrum in all_spectra
-                if spectrum.absorbing_element == element
-                and spectrum.edge == edge
-                and spectrum.spectrum_type == spectrum_type
-            ]
+            averaged_spectra = []
 
-            avg_spectrum = site_weighted_spectrum(
-                relevant_spectra, num_samples=self.sampling_density
+            for element, edge, spectrum_type in product(elements, edges, types):
+                relevant_spectra = [
+                    spectrum
+                    for spectrum in all_spectra
+                    if spectrum.absorbing_element == element
+                    and spectrum.edge == edge
+                    and spectrum.spectrum_type == spectrum_type
+                ]
+
+                if not is_missing_sites(relevant_spectra, element):
+                    avg_spectrum = site_weighted_spectrum(
+                        relevant_spectra, num_samples=self.sampling_density
+                    )
+                    averaged_spectra.append(avg_spectrum)
+
+            spectra_docs = [spectra_to_doc(doc) for doc in averaged_spectra]
+
+        except Exception as e:
+            self.logger.error(traceback.format_exc())
+            spectra_docs = [{"error": str(e), "state": "failed"}]
+
+        last_updated = [
+            self.source._lu_func[0](d[self.source.last_updated_field]) for d in items
+        ]
+
+        for d in spectra_docs:
+            d.update(
+                {
+                    self.target.key: items[0]["mp_id"],
+                    f"{self.source.key}s": keys,
+                    self.target.last_updated_field: max(last_updated),
+                    "_bt": datetime.utcnow(),
+                }
             )
-            averaged_spectra.append(avg_spectrum)
 
-        spectra_docs = [spectra_to_doc(doc) for doc in averaged_spectra]
-        return {"spectra_docs": spectra_docs}
+        return spectra_docs
 
     def update_targets(self, items):
         """
         Group buidler isn't deisgned for many-to-many so we unwrap that here
         """
-        new_items = []
-        for d in items:
-            if "spectra_docs" in d:
-                averages = list(d["spectra_docs"])
-                del d["spectra_docs"]
-                for new_doc in averages:
-                    new_doc.update({k: v for k, v in d.items() if k not in new_doc})
-                    new_items.append(new_doc)
-            elif "error" in d:
-                new_items.append(d)
-            else:
-                self.logger.error(
-                    f"Found Odd document without any averaged spectra: {d[self.target.key]}"
-                )
+        items = list(chain.from_iterable(items))
+        if len(items) > 0:
+            print(items)
+            self.target.update(
+                items, key=["task_id", "edge", "absorbing_element", "spectrum_type"]
+            )
 
-        super().update_targets(new_items, key=["task_id", "edge", "absorbing_element"])
-
+    def unary_function(self):
+        pass
 
 
 def is_missing_sites(spectra, element):
@@ -129,9 +150,7 @@ def is_missing_sites(spectra, element):
 
     # Find missing symmeterically inequivalent sites
     symm_sites = SymmSites(structure)
-    absorption_indicies = {
-        absorbing_atom_from_structure(spectrum.structure) for spectrum in spectra
-    }
+    absorption_indicies = {spectrum.absorbing_atom for spectrum in spectra}
 
     missing_site_spectra_indicies = (
         set(structure.indices_from_symbol(element)) - absorption_indicies
@@ -141,7 +160,7 @@ def is_missing_sites(spectra, element):
             symm_sites.get_equivalent_site_indices(site_index)
         )
 
-    return len(missing_site_spectra_indicies) > 0
+    return len(missing_site_spectra_indicies) != 0
 
 
 class SymmSites:
@@ -166,7 +185,6 @@ class SymmSites:
         if isinstance(rv, int):
             rv = [rv]
         return rv
-
 
 
 def feff_task_to_spectrum(doc):
@@ -210,12 +228,12 @@ def site_weighted_spectrum(spectra, num_samples=200):
     symm_sites = SymmSites(structure)
 
     spectra = [spectrum for spectrum in spectra if len(spectrum.energy) > 0]
-    
+
     for spectrum in spectra:
         # Checking the multiplicities of sites
         structure = spectrum.structure
         absorbing_atom = spectrum.absorbing_atom
-        multiplicity = len(symm_sites.find_equivalent_sites(structure[absorbing_atom]))
+        multiplicity = len(symm_sites.get_equivalent_site_indices(absorbing_atom))
         multiplicities.append(multiplicity)
 
         # Getting axis limits for each spectrum for the sites corresponding to
