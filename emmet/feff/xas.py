@@ -66,22 +66,28 @@ class XASBuilder(GroupBuilder):
                     "K",
                     "EXAFS",
                 ) in type_to_spectra:
-                    xanes = type_to_spectra[("K", "XANES")][-1]
-                    exafs = type_to_spectra[("K", "EXAFS")][-1]
-                    total_spectrum = xanes.stitch(exafs, mode="XAFS")
-                    total_spectrum.absorbing_atom = site
-                    all_spectra.append(total_spectrum)
+                    try:
+                        xanes = type_to_spectra[("K", "XANES")][-1]
+                        exafs = type_to_spectra[("K", "EXAFS")][-1]
+                        total_spectrum = xanes.stitch(exafs, mode="XAFS")
+                        total_spectrum.absorbing_atom = site
+                        all_spectra.append(total_spectrum)
+                    except Exception:
+                        pass
 
                 # Make L23
                 if ("L2", "XANES") in type_to_spectra and (
                     "L3",
                     "XANES",
                 ) in type_to_spectra:
-                    l2 = type_to_spectra[("L2", "XANES")][-1]
-                    l3 = type_to_spectra[("L3", "XANES")][-1]
-                    total_spectrum = l2.stitch(l3, mode="L23")
-                    total_spectrum.absorbing_atom = site
-                    all_spectra.append(total_spectrum)
+                    try:
+                        l2 = type_to_spectra[("L2", "XANES")][-1]
+                        l3 = type_to_spectra[("L3", "XANES")][-1]
+                        total_spectrum = l2.stitch(l3, mode="L23")
+                        total_spectrum.absorbing_atom = site
+                        all_spectra.append(total_spectrum)
+                    except Exception:
+                        pass
 
             # Site-weighted averaging
             elements = {spectrum.absorbing_element for spectrum in all_spectra}
