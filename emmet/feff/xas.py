@@ -197,7 +197,7 @@ def feff_task_to_spectrum(doc):
     energy = py_.pluck(doc["spectrum"], 0)  # (eV)
     intensity = py_.pluck(doc["spectrum"], 3)  # (mu)
     structure = Structure.from_dict(doc["structure"])
-    absorbing_element = structure[doc["absorbing_atom"]].species_string
+    absorbing_element = structure[doc["absorbing_atom"]].specie
     edge = doc["edge"]
     spectrum_type = doc["spectrum_type"]
 
