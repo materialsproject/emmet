@@ -22,11 +22,16 @@ class XASBuilder(GroupBuilder):
     """
 
     def __init__(
-        self, tasks: Store, xas: Store, sampling_density: int = 200.0, **kwargs
-    ):
+    def __init__(self, tasks: Store, xas: Store, sampling_density: float = 4, **kwargs):
+        """
+        Args:
+            tasks: source store of FEFF tasks to process
+            xas: target store to put processed XAS Tasks into
+            sampling_density: the sampling density in number of points per eV 
+        """
         self.tasks = tasks
         self.xas = xas
-        self.sampling_density = 200
+        self.sampling_density = sampling_density
         self.kwargs = kwargs
 
         super().__init__(source=tasks, target=xas, grouping_keys=["mp_id"], **kwargs)
