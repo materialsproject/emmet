@@ -68,17 +68,29 @@ class ThermoBuilder(Builder):
 
         # All comps affected by changing these chemical systems
         # IE if we update Li-O, we need to update Li-Mn-O, Li-Mn-P-O, etc.
-        affected_comps = set()
-        # for comp in updated_comps | new_mat_comps:
-        #     els = comp.split("-")
-        #     affected_comps |= set(
-        #         self.materials.distinct("chemsys", {"elements": {"$all": els}})
-        #     )
-        # self.logger.debug(
-        #     f"Found {len(affected_comps)} chemical systems affected by this build"
-        # )
+        affected_chemsys = set()
+        affected_els = list(
+            {el for c in updated_chemsys | new_mat_chemsys for el in c.split("-")}
+        )
+        possible_affected_chemsys = self.materials.distinct(
+            "chemsys", {"elements": {"$in": affected_els}}
+        )
 
-        comps = updated_comps | new_mat_comps | affected_comps
+        sub_chemsys = defaultdict(list)
+        # Build a dictionary mapping sub_chemsys to all super_chemsys
+        for chemsys in possible_affected_chemsys:
+            for permutation in chemsys_permutations(chemsys):
+                sub_chemsys[permutation].append(chemsys)
+
+        # Select and merge distinct super chemsys from sub_chemsys
+        for chemsys in updated_chemsys | new_mat_chemsys:
+            affected_chemsys |= set(sub_chemsys[chemsys])
+
+        self.logger.debug(
+            f"Found {len(affected_chemsys)} chemical systems affected by this build"
+        )
+
+        comps = updated_chemsys | new_mat_chemsys | affected_chemsys
         self.logger.info(f"Found {len(comps)} compositions with new/updated materials")
         self.total = len(comps)
 
