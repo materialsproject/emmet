@@ -414,6 +414,11 @@ class MaterialsBuilder(Builder):
             self.task_types.ensure_index("is_valid")
 
 
+def get_sg(struc):
+    # helper function to get spacegroup with a loose tolerance
+    return struc.get_space_group_info(symprec=SYMPREC)[1]
+
+
 def find_mat_id(props: List[Dict]):
 
     # Only consider structure optimization task_ids for material task_id
