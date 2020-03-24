@@ -13,18 +13,13 @@ cwd=$PWD
 #outdir=/global/cscratch1/sd/huck/tasks_from_old_prod_2019/
 #dirlist="/global/homes/h/huck/mp_prod/workdir/tasks_from_old_prod_2019/restore.txt"
 
-#outdir=/project/projectdirs/matgen/garden/jmunro/
-#dirlist="/global/homes/h/huck/mp_prod/workdir/hpss/max_estep_dir.txt"
-
-outdir=/project/projectdirs/matgen/garden/rkingsbury/
-dirlist="/global/homes/h/huck/mp_prod/workdir/hpss/scan_dirs_2.txt"
-
+[[ ! -d $outdir ]] && mkdir -pv $outdir
+chown -v huck:matgen $outdir
 cd $outdir && pwd
 files="INCAR CONTCAR KPOINTS POSCAR POTCAR vasprun.xml OUTCAR"
-chown -v huck:matgen $outdir
-
 blocks=`cut -d/ -f1 $dirlist | sort -u`
 echo $blocks | wc -w
+
 for block in $blocks; do
   echo $block
 

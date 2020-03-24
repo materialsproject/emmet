@@ -24,9 +24,9 @@ for block in $blocks; do
   nlaunchers=`echo $launchers | wc -w`
   list=""
   for l in $launchers; do
-    [[ ! -e $indir/tmp/$l ]] && list="$list $l/REPORT.gz"
+    [[ ! -e $indir/tmp/$l ]] && list="$list $l/std_err.txt.gz $l/FW_job.error.gz"
     length=`echo $list | wc -w`
-    [[ $length -gt 100 ]] && cd $indir/tmp && htar -xvf garden/${block}.tar $list && list="" && cd -
+    [[ $length -gt 500 ]] && cd $indir/tmp && htar -xvf garden/${block}.tar $list && list="" && cd -
   done
   [[ ! -z "$list" ]] && cd $indir/tmp && htar -xvf garden/${block}.tar $list && cd -
   nrestored=`ls -1 $indir/tmp/$block | wc -l`

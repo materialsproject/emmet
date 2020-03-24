@@ -60,7 +60,7 @@ year_tags = ['mp_{}'.format(y) for y in range(2018, current_year+1)]
 nomad_outdir = '/project/projectdirs/matgen/garden/nomad'
 #nomad_outdir = '/clusterfs/mp/mp_prod/nomad'
 nomad_url = 'http://labdev-nomad.esc.rzg.mpg.de/fairdi/nomad/mp/api'
-user = 'leonard.hofstadter@nomad-fairdi.tests.de'
+user = 'phuck@lbl.gov'
 password = 'password'
 approx_upload_size = 24 * 1024 * 1024 * 1024  # you can make it really small for testing
 max_parallel_uploads = 6
@@ -248,6 +248,7 @@ def make_block(base_path):
     print('created', block_dir)
     return block_dir
 
+# TODO move fake-block creation to separate command
 def get_symlinked_path(root, base_path_index, insert):
     """organize directory in block_*/launcher_* via symbolic links"""
     root_split = root.split(os.sep)
@@ -426,38 +427,8 @@ def calcdb_from_mgrant(spec):
         authSource=auth['db']
     )
 
-@cli.command()
-@click.argument('target_spec')
-@click.option('--tag', default=None, help='only insert tasks with specific tag')
-@click.option('--insert/--no-insert', default=False, help='actually execute task addition')
-@click.option('--copy-snls/--no-copy-snls', default=False, help='also copy SNLs')
-@click.option('--sbxn', multiple=True, help='add task to sandbox')
-@click.option('--src', help='mongogrant string for source task db (overwrite default lpad)')
-@click.option('--force/--no-force', default=False, help='force overwrite existing target task')
+
 def copy(target_spec, tag, insert, copy_snls, sbxn, src, force):
-    """Retrieve tasks from source and copy to target task collection (incl. SNLs if available)"""
-
-    if not insert:
-        print('DRY RUN: add --insert flag to actually add tasks to production')
-
-    if src:
-        source = calcdb_from_mgrant(src)
-    else:
-        lpad = get_lpad()
-        source = calcdb_from_mgrant(f'{lpad.host}/{lpad.name}')
-    print('connected to source db', source.collection.full_name, 'with', source.collection.count(), 'tasks')
-
-    target = calcdb_from_mgrant(target_spec)
-    print('connected to target db with', target.collection.count(), 'tasks')
-
-    sbxn = list(sbxn) if sbxn else target.collection.distinct('sbxn')
-
-    ensure_indexes(['task_id', 'tags', 'dir_name', 'retired_task_id'], [source.collection, target.collection])
-
-    tags = [tag]
-    if tag is None:
-        tags = [t for t in source.collection.find(task_base_query).distinct('tags') if t is not None and t not in year_tags]
-        print(len(tags), 'tags in source collection')
 
     # fix year tags before copying tasks
     counter = Counter()
@@ -1463,6 +1434,7 @@ def add_snls(tag, input_structures, add_snlcolls, insert):
 
 @cli.command()
 @click.argument('base_path', type=click.Path(exists=True))
+#@click.argument('target_spec')
 @click.option('--insert/--no-insert', default=False, help='actually execute task insertion')
 @click.option('--nproc', '-n', type=int, default=1, help='number of processes for parallel parsing')
 @click.option('--max-dirs', '-m', type=int, default=10, help='maximum number of directories to parse')
@@ -1470,12 +1442,16 @@ def add_snls(tag, input_structures, add_snlcolls, insert):
 @click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
 @click.option('--make-snls/--no-make-snls', default=False, help='also create SNLs for parsed tasks')
 @click.option('--delete/--no-delete', default=False, help='delete directory after successful parse')
-def parse(base_path, insert, nproc, max_dirs, force, add_snlcolls, make_snls, delete):
-    """parse VASP output directories in base_path into tasks and tag"""
+@click.option('--copy-snls/--no-copy-snls', default=False, help='also copy SNLs')  # TODO
+@click.option('--sbxn', multiple=True, help='add task to sandbox')
+def parse(base_path, insert, nproc, max_dirs, force, add_snlcolls, make_snls, delete, copy_snls, sbxn):
+    """parse VASP output directories in base_path into tasks and tag (incl. SNLs if available)"""
+
     if not insert:
         print('DRY RUN: add --insert flag to actually insert tasks')
 
     lpad = get_lpad()
+    #target = calcdb_from_mgrant(target_spec)
     target = calcdb_from_mgrant(f'{lpad.host}/{lpad.name}')
     print('connected to target db with', target.collection.count(), 'tasks')
     base_path = os.path.join(base_path, '')
@@ -1487,6 +1463,9 @@ def parse(base_path, insert, nproc, max_dirs, force, add_snlcolls, make_snls, de
     if force:
         already_inserted_subdirs = []
         print('FORCING directory re-parse and overriding tasks!')
+
+    #sbxn = list(sbxn) if sbxn else target.collection.distinct('sbxn')
+    #ensure_indexes(['task_id', 'tags', 'dir_name', 'retired_task_id'], [target.collection])
 
     chunk_size = math.ceil(max_dirs/nproc)
     if nproc > 1 and max_dirs <= chunk_size:
