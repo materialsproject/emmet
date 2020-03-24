@@ -23,10 +23,8 @@ if __name__ == "__main__":
         zip_safe=False,
         install_requires=[
             'atomate', 'pymatgen>=2018.4.20','maggma','monty',
-            'six', 'pydash', 'tqdm', 'matminer', 'log4mongo', 'prettytable',
-            'prettyplotlib', 'pybtex', 'Click', 'networkx', 'sumo',
-            'robocrys', 'urllib3<1.25', 'oauth2client', 'google-api-python-client',
-            'bravado', 'zipstream-new==1.1.5', 'jsonschema'
+            'six', 'pydash', 'tqdm', 'matminer', 'prettyplotlib', 'pybtex',
+            'networkx', 'sumo', 'robocrys', 'jsonschema'
         ],
         classifiers=["Programming Language :: Python :: 3",
                      "Programming Language :: Python :: 3.6",
@@ -39,9 +37,5 @@ if __name__ == "__main__":
                      'Topic :: Scientific/Engineering'],
         test_suite='nose.collector',
         tests_require=['nose'],
-        entry_points='''
-        [console_scripts]
-        emmet=emmet.scripts.emmet:cli
-        ''',
         python_requires='>=3.6',
     )
