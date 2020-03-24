@@ -4,7 +4,8 @@ database building and in the website code, to ensure consistency between
 different modules and packages.
 """
 import json
-from pydantic import BaseSettings, Field, Path, root_validator
+from pydantic import BaseSettings, Field, root_validator
+from pydantic.types import Path
 
 
 class EmmetSettings(BaseSettings):
@@ -48,3 +49,6 @@ class EmmetSettings(BaseSettings):
         new_values.update(values)
 
         return new_values
+
+
+SETTINGS = EmmetSettings()
