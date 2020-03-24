@@ -18,7 +18,8 @@ class EmmetSettings(BaseSettings):
     )
     STOL: float = Field(
         0.3,
-        description="Site tolerance for structure matching. Defined as the fraction of the average free length per atom = ( V / Nsites ) ** (1/3)",
+        description="Site tolerance for structure matching. Defined as the fraction of the"
+        " average free length per atom = ( V / Nsites ) ** (1/3)",
     )
     SYMPREC: float = Field(
         0.1, description="Symmetry precision for spglib symmetry finding"
@@ -26,7 +27,6 @@ class EmmetSettings(BaseSettings):
     ANGLE_TOL: float = Field(
         5, description="Angle tolerance for structure matching in degrees."
     )
-
 
     class Config:
         env_prefix = "emmet_"
@@ -37,7 +37,7 @@ class EmmetSettings(BaseSettings):
         Loads settings from a root file if available and uses that as defaults in
         place of built in defaults
         """
-        config_file_path = Path(values.get("config_file", "~/.optimade.json"))
+        config_file_path = Path(values.get("config_file", "~/.emmet.json"))
 
         new_values = {}
 
