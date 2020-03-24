@@ -35,7 +35,6 @@ class ThermoBuilder(Builder):
             if compatibility
             else MaterialsProjectCompatibility("Advanced")
         )
-        self._completed_tasks = set()
         self._entries_cache = defaultdict(list)
         super().__init__(sources=[materials], targets=[thermo], **kwargs)
 
@@ -55,8 +54,8 @@ class ThermoBuilder(Builder):
         # last calculated
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.thermo))
-        updated_comps = set(self.materials.distinct("chemsys", q))
-        self.logger.debug(f"Found {len(updated_comps)} updated chemical systems")
+        updated_chemsys = set(self.materials.distinct("chemsys", q))
+        self.logger.debug(f"Found {len(updated_chemsys)} updated chemical systems")
 
         # All materials that are not present in the thermo collection
         thermo_mat_ids = self.thermo.distinct(self.thermo.key)
@@ -64,8 +63,8 @@ class ThermoBuilder(Builder):
         dif_task_ids = list(set(mat_ids) - set(thermo_mat_ids))
         q = dict(self.query)
         q.update({"task_id": {"$in": dif_task_ids}})
-        new_mat_comps = set(self.materials.distinct("chemsys", q))
-        self.logger.debug(f"Found {len(new_mat_comps)} new chemical systems")
+        new_mat_chemsys = set(self.materials.distinct("chemsys", q))
+        self.logger.debug(f"Found {len(new_mat_chemsys)} new chemical systems")
 
         # All comps affected by changing these chemical systems
         # IE if we update Li-O, we need to update Li-Mn-O, Li-Mn-P-O, etc.
@@ -108,87 +107,31 @@ class ThermoBuilder(Builder):
         self.logger.debug(f"Found {len(sandbox_sets)}: {sandbox_sets}")
 
         for sandboxes in sandbox_sets:
+
             # only yield maximal subsets so that we can process a equivalent sandbox combinations at a time
-            sandbox_entries = [
+            entries = [
                 entry
                 for entry in entries
                 if all(sandbox in entry.data.get("_sbxn", []) for sandbox in sandboxes)
             ]
 
-            sandbox_entries = self.compatibility.process_entries(sandbox_entries)
+            entries = self.compatibility.process_entries(entries)
 
             # determine chemsys
             chemsys = "-".join(
                 sorted(
-                    set(
-                        [
-                            el.symbol
-                            for e in sandbox_entries
-                            for el in e.composition.elements
-                        ]
-                    )
+                    set([el.symbol for e in entries for el in e.composition.elements])
                 )
             )
+
+            processed_docs = self.process_pd(entries)
+            for d in processed_docs:
+                d["_sbxn"] = sorted(sandboxes)
 
             self.logger.debug(
-                f"Procesing {len(sandbox_entries)} entries for {chemsys} - {sandboxes}"
+                f"Processed {len(entries)} entries for {chemsys} - {sandboxes}"
             )
-
-            try:
-                pd = PhaseDiagram(sandbox_entries)
-
-                for e in sandbox_entries:
-                    (decomp, ehull) = pd.get_decomp_and_e_above_hull(e)
-
-                    d = {
-                        self.thermo.key: e.entry_id,
-                        "thermo": {
-                            "energy": e.uncorrected_energy,
-                            "energy_per_atom": e.uncorrected_energy
-                            / e.composition.num_atoms,
-                            "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
-                            "e_above_hull": ehull,
-                            "is_stable": e in pd.stable_entries,
-                        },
-                    }
-
-                    # Store different info if stable vs decomposes
-                    if d["thermo"]["is_stable"]:
-                        d["thermo"][
-                            "eq_reaction_e"
-                        ] = pd.get_equilibrium_reaction_energy(e)
-                    else:
-                        d["thermo"]["decomposes_to"] = [
-                            {
-                                "task_id": de.entry_id,
-                                "formula": de.composition.formula,
-                                "amount": amt,
-                            }
-                            for de, amt in decomp.items()
-                        ]
-
-                    d["thermo"]["entry"] = e.as_dict()
-                    d["thermo"][
-                        "explanation"
-                    ] = self.compatibility.get_explanation_dict(e)
-
-                    elsyms = sorted(set([el.symbol for el in e.composition.elements]))
-                    d["chemsys"] = "-".join(elsyms)
-                    d["nelements"] = len(elsyms)
-                    d["elements"] = list(elsyms)
-                    d["_sbxn"] = sorted(sandboxes)
-
-                    docs.append(d)
-            except PhaseDiagramError as p:
-                elsyms = []
-                for e in sandbox_entries:
-                    elsyms.extend([el.symbol for el in e.composition.elements])
-
-                self.logger.warning(
-                    f"Phase diagram errorin chemsys {'-'.join(sorted(set(elsyms)))}: {p}"
-                )
-            except Exception as e:
-                self.logger.error(f"Got unexpected error: {e}")
+            docs.extend(processed_docs)
 
         return docs
 
@@ -206,15 +149,14 @@ class ThermoBuilder(Builder):
             {(v[self.thermo.key], frozenset(v["_sbxn"])): v for v in items}.values()
         )
         # Check if already updated this run
-        items = [i for i in items if i[self.thermo.key] not in self._completed_tasks]
-
-        # Update my list of completed tasks
-        self._completed_tasks |= {i[self.thermo.key] for i in items}
+        items = [i for i in items if i["chemsys"] not in self._entries_cache]
 
         # Add stable entries to my entries cache
         for entry in items:
             if entry["thermo"]["is_stable"]:
-                self._entries_cache[entry["chemsys"]].append(ComputedEntry.from_dict(entry["thermo"]["entry"]))
+                self._entries_cache[entry["chemsys"]].append(
+                    ComputedEntry.from_dict(entry["thermo"]["entry"])
+                )
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(items)} thermo documents")
@@ -251,7 +193,7 @@ class ThermoBuilder(Builder):
             set(ComputedEntry): a set of entries for this system
         """
 
-        self.logger.info(f"Getting entries for: {chemsys}")
+        self.logger.debug(f"Getting entries for: {chemsys}")
 
         entries = []
         for query_chemsys in chemsys_permutations(chemsys):
@@ -271,7 +213,7 @@ class ThermoBuilder(Builder):
                 new_q["chemsys"] = query_chemsys
                 new_q["deprecated"] = False
 
-                fields = ["structure", "entries", "_sbxn"]
+                fields = ["structure", "entries", "_sbxn", "task_id"]
                 data = list(self.materials.query(properties=fields, criteria=new_q))
 
                 self.logger.debug(
@@ -280,9 +222,10 @@ class ThermoBuilder(Builder):
                 )
                 for d in data:
                     entry_type = "gga_u" if "gga_u" in d["entries"] else "gga"
-                    d["entries"][entry_type]["correction"] = 0.0
-                    entry = ComputedEntry.from_dict(d["entries"][entry_type])
-                    d["entry"]["entry_id"] = d['task_id']
+                    entry = d["entries"][entry_type]
+                    entry["correction"] = 0.0
+                    entry["entry_id"] = d["task_id"]
+                    entry = ComputedEntry.from_dict(entry)
                     entry.data["oxide_type"] = oxide_type(
                         Structure.from_dict(d["structure"])
                     )
@@ -292,6 +235,61 @@ class ThermoBuilder(Builder):
         self.logger.info(f"Total entries in {chemsys} : {len(entries)}")
 
         return entries
+
+    def process_pd(self, entries):
+        docs = []
+        try:
+            pd = PhaseDiagram(entries)
+
+            for e in entries:
+                (decomp, ehull) = pd.get_decomp_and_e_above_hull(e)
+
+                d = {
+                    self.thermo.key: e.entry_id,
+                    "thermo": {
+                        "energy": e.uncorrected_energy,
+                        "energy_per_atom": e.uncorrected_energy
+                        / e.composition.num_atoms,
+                        "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
+                        "e_above_hull": ehull,
+                        "is_stable": e in pd.stable_entries,
+                    },
+                }
+
+                # Store different info if stable vs decomposes
+                if d["thermo"]["is_stable"]:
+                    d["thermo"]["eq_reaction_e"] = pd.get_equilibrium_reaction_energy(e)
+                else:
+                    d["thermo"]["decomposes_to"] = [
+                        {
+                            "task_id": de.entry_id,
+                            "formula": de.composition.formula,
+                            "amount": amt,
+                        }
+                        for de, amt in decomp.items()
+                    ]
+
+                d["thermo"]["entry"] = e.as_dict()
+                d["thermo"]["explanation"] = self.compatibility.get_explanation_dict(e)
+
+                elsyms = sorted(set([el.symbol for el in e.composition.elements]))
+                d["chemsys"] = "-".join(elsyms)
+                d["nelements"] = len(elsyms)
+                d["elements"] = list(elsyms)
+                docs.append(d)
+
+        except PhaseDiagramError as p:
+            elsyms = []
+            for e in entries:
+                elsyms.extend([el.symbol for el in e.composition.elements])
+
+            self.logger.warning(
+                f"Phase diagram errorin chemsys {'-'.join(sorted(set(elsyms)))}: {p}"
+            )
+        except Exception as e:
+            self.logger.error(f"Got unexpected error: {e}")
+
+        return docs
 
 
 def chemsys_permutations(chemsys):
