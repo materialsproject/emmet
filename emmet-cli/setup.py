@@ -20,6 +20,6 @@ setup(
     zip_safe=False,
     entry_points='''
     [console_scripts]
-    emmet=emmet.scripts.emmet:cli
+    emmet=emmet.cli:cli
     ''',
 )
