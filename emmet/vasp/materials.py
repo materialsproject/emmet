@@ -1,13 +1,16 @@
-import os
+from pathlib import Path
 from datetime import datetime
 from itertools import chain, groupby
-import numpy as np
+from operator import itemgetter
+from typing import Optional, Dict, List, Iterator
 
+from monty.json import jsanitize
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.piezo import PiezoTensor
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
+from maggma.stores import Store
 from maggma.builders import Builder
 from emmet.vasp.task_tagger import task_type
 from emmet.common.utils import load_settings
@@ -16,13 +19,14 @@ from pydash.objects import get, set_, has
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
-module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-default_mat_settings = os.path.join(module_dir, "settings", "materials_settings.json")
+module_dir = Path(__file__).parent
+default_mat_settings = module_dir / "settings" / "materials_settings.json"
 
 
 class MaterialsBuilder(Builder):
     """
-    The Materials Builder aggregates VASP task documents by structure similarity into materials properties documents.
+    The Materials Builder aggregates VASP task documents by structure similarity into materials
+    properties documents.
     The process is as follows:
 
         1.) Find all documents with the same formula
@@ -38,16 +42,16 @@ class MaterialsBuilder(Builder):
 
     def __init__(
         self,
-        tasks,
-        materials,
-        task_types=None,
-        materials_settings=None,
-        query=None,
-        ltol=LTOL,
-        stol=STOL,
-        angle_tol=ANGLE_TOL,
-        separate_mag_orderings=False,
-        **kwargs
+        tasks: Store,
+        materials: Store,
+        task_types: Optional[Store] = None,
+        materials_settings: Path = None,
+        query: Optional[Dict] = None,
+        symprec: float = SYMPREC,
+        ltol: float = LTOL,
+        stol: float = STOL,
+        angle_tol: float = ANGLE_TOL,
+        **kwargs,
     ):
         """
         Creates a materials collection from tasks and tags
@@ -57,10 +61,10 @@ class MaterialsBuilder(Builder):
             materials (Store): Store of materials documents to generate
             materials_settings (Path): Path to settings files
             query (dict): dictionary to limit tasks to be analyzed
+            symprec (float): tolerance for SPGLib spacegroup finding
             ltol (float): StructureMatcher tuning parameter for matching tasks to materials
             stol (float): StructureMatcher tuning parameter for matching tasks to materials
             angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
-            separate_mag_orderings (bool): Separate magnetic orderings into different materials
         """
 
         self.tasks = tasks
@@ -68,13 +72,29 @@ class MaterialsBuilder(Builder):
         self.materials = materials
         self.task_types = task_types
         self.query = query if query else {}
+        self.symprec = symprec
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol
-        self.separate_mag_orderings = separate_mag_orderings
+        self.kwargs = kwargs
 
         self.__settings = load_settings(self.materials_settings, default_mat_settings)
+        # Projection for only the fields we need to build the materials doc
+        projected_from_tasks = [d["tasks_key"] for d in self.__settings]
+        projected_from_tasks += [
+            "formula_pretty",
+            self.tasks.key,
+            self.tasks.lu_field,
+            "sbxn",
+        ]
 
+        projected_from_tasks = [p.split(".") for p in projected_from_tasks]
+        projected_from_tasks = [
+            [k for k in p if k != "0"] for p in projected_from_tasks
+        ]
+        projected_from_tasks = [".".join(p) for p in projected_from_tasks]
+
+        self.projected_from_tasks = projected_from_tasks
         self.allowed_tasks = {
             t_type for d in self.__settings for t_type in d["quality_score"]
         }
@@ -84,7 +104,7 @@ class MaterialsBuilder(Builder):
             sources.append(self.task_types)
         super().__init__(sources=sources, targets=[materials], **kwargs)
 
-    def get_items(self):
+    def get_items(self) -> Iterator[List[Dict]]:
         """
         Gets all items to process into materials documents
 
@@ -93,7 +113,7 @@ class MaterialsBuilder(Builder):
         """
 
         self.logger.info("Materials builder started")
-        self.logger.info("Allowed task types: {}".format(self.allowed_tasks))
+        self.logger.info(f"Allowed task types: {self.allowed_tasks}")
 
         self.logger.info("Setting indexes")
         self.ensure_indexes()
@@ -110,22 +130,13 @@ class MaterialsBuilder(Builder):
         processed_tasks = set(self.materials.distinct("task_ids"))
         to_process_tasks = all_tasks - processed_tasks
         to_process_forms = self.tasks.distinct(
-            "formula_pretty", {"task_id": {"$in": list(to_process_tasks)}}
+            "formula_pretty", {self.tasks.key: {"$in": list(to_process_tasks)}}
         )
-        self.logger.info("Found {} unprocessed tasks".format(len(to_process_tasks)))
-        self.logger.info("Found {} unprocessed formulas".format(len(to_process_forms)))
+        self.logger.info(f"Found {len(to_process_tasks)} unprocessed tasks")
+        self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
 
-        # Tasks that have been updated since we last viewed them
-        update_q = dict(q)
-        update_q.update(self.tasks.lu_filter(self.materials))
-        updated_forms = self.tasks.distinct("formula_pretty", update_q)
-        self.logger.info(
-            "Found {} updated systems to proces".format(len(updated_forms))
-        )
-
-        forms_to_update = set(updated_forms) | set(to_process_forms)
-        self.logger.info("Processing {} total systems".format(len(forms_to_update)))
-        self.total = len(forms_to_update)
+        # Set total for builder bars to have a total
+        self.total = len(to_process_forms)
 
         if self.task_types:
             invalid_ids = set(
@@ -134,10 +145,12 @@ class MaterialsBuilder(Builder):
         else:
             invalid_ids = set()
 
-        for formula in forms_to_update:
+        for formula in to_process_forms:
             tasks_q = dict(q)
             tasks_q["formula_pretty"] = formula
-            tasks = list(self.tasks.query(criteria=tasks_q))
+            tasks = list(
+                self.tasks.query(criteria=tasks_q, properties=self.projected_from_tasks)
+            )
             for t in tasks:
                 if t[self.tasks.key] in invalid_ids:
                     t["is_valid"] = False
@@ -146,7 +159,7 @@ class MaterialsBuilder(Builder):
 
             yield tasks
 
-    def process_item(self, tasks):
+    def process_item(self, tasks: List[Dict]) -> List[Dict]:
         """
         Process the tasks into a list of materials
 
@@ -159,7 +172,7 @@ class MaterialsBuilder(Builder):
 
         formula = tasks[0]["formula_pretty"]
         t_ids = [t[self.tasks.key] for t in tasks]
-        self.logger.debug("Processing {} : {}".format(formula, t_ids))
+        self.logger.debug(f"Processing {formula} : {t_ids}")
 
         materials = []
         grouped_tasks = self.filter_and_group_tasks(tasks)
@@ -170,35 +183,31 @@ class MaterialsBuilder(Builder):
                 self.post_process(mat)
                 materials.append(mat)
 
-        self.logger.debug(
-            "Produced {} materials for {}".format(
-                len(materials), tasks[0]["formula_pretty"]
-            )
-        )
+        self.logger.debug(f"Produced {len(materials)} materials for {formula}")
 
         return materials
 
-    def update_targets(self, items):
+    def update_targets(self, items: List[List[Dict]]):
         """
         Inserts the new task_types into the task_types collection
 
         Args:
-            items ([([dict],[int])]): A list of tuples of materials to update and the corresponding processed task_ids
+            items ([([dict],[int])]): A list of tuples of materials to update and the corresponding
+                processed task_ids
         """
 
-        items = [i for i in filter(None, chain.from_iterable(items))]
-        items = [i for i in items if self.valid(i)]
+        items = list(filter(None, chain.from_iterable(items)))
 
         for item in items:
             item.update({"_bt": self.timestamp})
 
         if len(items) > 0:
-            self.logger.info("Updating {} materials".format(len(items)))
+            self.logger.info(f"Updating {len(items)} materials")
             self.materials.update(docs=items, update_lu=False)
         else:
             self.logger.info("No items to update")
 
-    def make_mat(self, task_group):
+    def make_mat(self, task_group: List[Dict]) -> Dict:
         """
         Converts a group of tasks into one material
         """
@@ -211,8 +220,8 @@ class MaterialsBuilder(Builder):
         mat_id = find_mat_id(all_props)
 
         # Sort and group based on property
-        sorted_props = sorted(all_props, key=lambda prop: prop["materials_key"])
-        grouped_props = groupby(sorted_props, key=lambda prop: prop["materials_key"])
+        sorted_props = sorted(all_props, key=itemgetter("materials_key"))
+        grouped_props = groupby(sorted_props, key=itemgetter("materials_key"))
 
         # Choose the best prop for each materials key: highest quality score and lowest energy calculation
         best_props = [find_best_prop(props) for _, props in grouped_props]
@@ -261,7 +270,7 @@ class MaterialsBuilder(Builder):
 
         return mat
 
-    def filter_and_group_tasks(self, tasks):
+    def filter_and_group_tasks(self, tasks: List[Dict]) -> Iterator[List[Dict]]:
         """
         Groups tasks by structure matching
         """
@@ -275,17 +284,6 @@ class MaterialsBuilder(Builder):
         for idx, t in enumerate(filtered_tasks):
             s = Structure.from_dict(t["output"]["structure"])
             s.index = idx
-            total_mag = get(t, "calcs_reversed.0.output.outcar.total_magnetization", 0)
-            s.total_magnetization = total_mag if total_mag else 0
-            # a fix for very old tasks that did not report site-projected magnetic moments
-            # so that we can group them appropriately
-            if (
-                ("magmom" not in s.site_properties)
-                and (get(t, "input.parameters.ISPIN", 1) == 2)
-                and has(t, "input.parameters.MAGMOM")
-            ):
-                # TODO: map input structure sites to output structure sites
-                s.add_site_property("magmom", t["input"]["parameters"]["MAGMOM"])
             structures.append(s)
 
         grouped_structures = group_structures(
@@ -293,13 +291,13 @@ class MaterialsBuilder(Builder):
             ltol=self.ltol,
             stol=self.stol,
             angle_tol=self.angle_tol,
-            separate_mag_orderings=self.separate_mag_orderings,
+            symprec=self.symprec,
         )
 
         for group in grouped_structures:
             yield [filtered_tasks[struc.index] for struc in group]
 
-    def task_to_prop_list(self, task):
+    def task_to_prop_list(self, task: Dict) -> List[Dict]:
         """
         Converts a task into an list of properties with associated metadata
         """
@@ -329,22 +327,22 @@ class MaterialsBuilder(Builder):
                     )
                 elif not prop.get("optional", False):
                     self.logger.error(
-                        "Failed getting {} for task: {}".format(prop["tasks_key"], t_id)
+                        f"Failed getting {prop['tasks_key']} for task: {t_id}"
                     )
         return props
 
-    def valid(self, doc):
+    def valid(self, doc: Dict) -> bool:
         """
         Determines if the resulting material document is valid
         """
-        if doc["task_id"] == None:
+        if doc["task_id"] is None:
             return False
         elif "structure" not in doc:
             return False
 
         return True
 
-    def post_process(self, mat):
+    def post_process(self, mat: Dict):
         """
         Any extra post-processing on a material doc
         """
@@ -352,9 +350,8 @@ class MaterialsBuilder(Builder):
         # Add structure metadata back into document and convert back to conventional standard
         if "structure" in mat:
             structure = Structure.from_dict(mat["structure"])
-            sga = SpacegroupAnalyzer(structure, symprec=SYMPREC)
             mat["structure"] = structure.as_dict()
-            mat.update(structure_metadata(structure))
+            mat.update(structure_metadata(structure, symprec=self.symprec))
 
         # Deprecate materials with bad structures or energies
         if "structure" in mat["invalid_props"]:
@@ -365,6 +362,7 @@ class MaterialsBuilder(Builder):
             mat.update({"deprecated": False})
 
         # Reorder voigt output from VASP to standard voigt notation
+        # TODO: Update this in the drone or in pymatgen
         if has(mat, "piezo.ionic"):
             mat["piezo"]["ionic"] = PiezoTensor.from_vasp_voigt(
                 mat["piezo"]["ionic"]
@@ -373,6 +371,27 @@ class MaterialsBuilder(Builder):
             mat["piezo"]["static"] = PiezoTensor.from_vasp_voigt(
                 mat["piezo"]["static"]
             ).voigt.tolist()
+
+        if "initial_structures" in mat:
+            # Reduce unique structures using tight tolerancees
+            init_strucs = [Structure.from_dict(d) for d in mat["initial_structures"]]
+            num_init_strucs = len(init_strucs)
+            sm = StructureMatcher(
+                primitive_cell=True,
+                scale=True,
+                attempt_supercell=False,
+                allow_subset=False,
+                comparator=ElementComparator(),
+            )
+            init_strucs = [g[0].as_dict() for g in sm.group_structures(init_strucs)]
+            mat["initial_structures"] = jsanitize(init_strucs)
+            self.logger.debug(
+                "Reducing initial structures based on structure matching from"
+                f" {num_init_strucs} to {len(init_strucs)}"
+            )
+
+        for entry in mat.get("entries", {}).values():
+            entry["entry_id"] = mat[self.materials.key]
 
     def ensure_indexes(self):
         """
@@ -395,29 +414,24 @@ class MaterialsBuilder(Builder):
             self.task_types.ensure_index("is_valid")
 
 
-def get_sg(struc):
-    # helper function to get spacegroup with a loose tolerance
-    return struc.get_space_group_info(symprec=SYMPREC)[1]
-
-
-def find_mat_id(props):
+def find_mat_id(props: List[Dict]):
 
     # Only consider structure optimization task_ids for material task_id
-    possible_mat_ids = [prop for prop in props if "structure" in prop["materials_key"]]
+    possible_mat_ids = [
+        prop["task_id"] for prop in props if prop["materials_key"] == "structure"
+    ]
 
     # Sort task_ids by ID
-    possible_mat_ids = [
-        prop["task_id"]
-        for prop in sorted(possible_mat_ids, key=lambda doc: ID_to_int(doc["task_id"]))
-    ]
+    mat_to_int = [ID_to_int(d) for d in possible_mat_ids]
+    possible_mat_ids = sorted(zip(mat_to_int, possible_mat_ids), key=itemgetter(0))
 
     if len(possible_mat_ids) == 0:
         return None
     else:
-        return possible_mat_ids[0]
+        return possible_mat_ids[0][1]
 
 
-def find_best_prop(props):
+def find_best_prop(props: List[Dict]) -> Dict:
     """
     Takes a list of property docs all for the same property
     1.) Sorts according to valid tasks, highest quality score and lowest energy
@@ -451,12 +465,30 @@ def find_best_prop(props):
     return prop
 
 
-def structure_metadata(structure):
+def structure_metadata(structure: Structure, symprec=SYMPREC) -> Dict:
     """
     Generates metadata based on a structure
     """
     comp = structure.composition
     elsyms = sorted(set([e.symbol for e in comp.elements]))
+
+    sg = SpacegroupAnalyzer(structure, 0.1)
+    symmetry = {"symprec": 0.1}
+    if not sg.get_symmetry_dataset():
+        sg = SpacegroupAnalyzer(structure, 1e-3, 1)
+        symmetry["symprec"] = 1e-3
+
+    symmetry.update(
+        {
+            "source": "spglib",
+            "symbol": sg.get_space_group_symbol(),
+            "number": sg.get_space_group_number(),
+            "point_group": sg.get_point_group_symbol(),
+            "crystal_system": sg.get_crystal_system(),
+            "hall": sg.get_hall(),
+        }
+    )
+
     meta = {
         "nsites": structure.num_sites,
         "elements": elsyms,
@@ -468,19 +500,19 @@ def structure_metadata(structure):
         "chemsys": "-".join(elsyms),
         "volume": structure.volume,
         "density": structure.density,
+        "symmetry": symmetry,
     }
 
     return meta
 
 
 def group_structures(
-    structures,
-    ltol=LTOL,
-    stol=STOL,
-    angle_tol=ANGLE_TOL,
-    symprec=SYMPREC,
-    separate_mag_orderings=False,
-):
+    structures: List[Structure],
+    ltol: float = LTOL,
+    stol: float = STOL,
+    angle_tol: float = ANGLE_TOL,
+    symprec: float = SYMPREC,
+) -> Iterator[List[Structure]]:
     """
     Groups structures according to space group and structure matching
 
@@ -490,7 +522,6 @@ def group_structures(
         stol (float): StructureMatcher tuning parameter for matching tasks to materials
         angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
         symprec (float): symmetry tolerance for space group finding
-        separate_mag_orderings (bool): Separate magnetic orderings into different materials
     """
 
     sm = StructureMatcher(
@@ -507,31 +538,19 @@ def group_structures(
     def get_sg(struc):
         # helper function to get spacegroup with a loose tolerance
         try:
-            sg = struc.get_space_group_info(symprec=SYMPREC)[1]
-        except:
+            sg = struc.get_space_group_info(symprec=symprec)[1]
+        except Exception:
             sg = -1
 
         return sg
 
-    def get_mag_ordering(struc):
-        # helperd function to get a label of the magnetic ordering type
-        return np.around(np.abs(struc.total_magnetization) / struc.volume, decimals=1)
-
     # First group by spacegroup number then by structure matching
     for sg, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
         for group in sm.group_structures(list(pregroup)):
-
-            # Match magnetic orderings here
-            if separate_mag_orderings:
-                for _, mag_group in groupby(
-                    sorted(group, key=get_mag_ordering), key=get_mag_ordering
-                ):
-                    yield list(mag_group)
-            else:
-                yield group
+            yield group
 
 
-def ID_to_int(s_id):
+def ID_to_int(s_id: str) -> int:
     """
     Converts a string id to tuple
     falls back to assuming ID is an Int if it can't process
@@ -542,4 +561,4 @@ def ID_to_int(s_id):
     elif isinstance(s_id, (int, float)):
         return s_id
     else:
-        raise Exception("Could not parse {} into a number".format(s_id))
+        raise Exception(f"Could not parse {s_id} into a number")

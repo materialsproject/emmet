@@ -10,16 +10,17 @@ from maggma.builders import Builder
 from pybtex.database import parse_string
 from pybtex.database import BibliographyData
 
-from emmet.magic_numbers import LTOL, STOL, ANGLE_TOL
+from emmet.magic_numbers import LTOL, STOL, ANGLE_TOL, SYMPREC
+from maggma.utils import grouper
 
 # Silly fix to keep pybtex from spamming warnings
 import os, pybtex
-devnull = open(os.devnull, 'w')
+
+devnull = open(os.devnull, "w")
 pybtex.io.stderr = devnull
 
 mp_default_snl_fields = {
-    "references":
-    "@article{Jain2013,\nauthor = {Jain, Anubhav and Ong, Shyue Ping and "
+    "references": "@article{Jain2013,\nauthor = {Jain, Anubhav and Ong, Shyue Ping and "
     "Hautier, Geoffroy and Chen, Wei and Richards, William Davidson and "
     "Dacek, Stephen and Cholia, Shreyas and Gunter, Dan and Skinner, David "
     "and Ceder, Gerbrand and Persson, Kristin a.},\n"
@@ -30,15 +31,16 @@ mp_default_snl_fields = {
     "url = {http://link.aip.org/link/AMPADS/v1/i1/p011002/s1\\&Agg=doi},\n"
     "volume = {1},\nyear = {2013}\n}\n\n@misc{MaterialsProject,\n"
     "title = {{Materials Project}},\nurl = {http://www.materialsproject.org}\n}",
-    "authors": [{
-        "name": "Materials Project",
-        "email": "feedback@materialsproject.org"
-    }],
-    "history": [{
-        "name": "Materials Project Optimized Structure",
-        "url": "http://www.materialsproject.org",
-        "description": {}
-    }]
+    "authors": [
+        {"name": "Materials Project", "email": "feedback@materialsproject.org"}
+    ],
+    "history": [
+        {
+            "name": "Materials Project Optimized Structure",
+            "url": "http://www.materialsproject.org",
+            "description": {},
+        }
+    ],
 }
 
 DB_indexes = {"ICSD": "icsd_ids", "Pauling": "pf_ids"}
@@ -49,16 +51,19 @@ class SNLBuilder(Builder):
     Builds a collection of materials with their corresponding SNL list
     """
 
-    def __init__(self,
-                 materials,
-                 snls,
-                 source_snls,
-                 query=None,
-                 ltol=0.2,
-                 stol=0.3,
-                 angle_tol=5,
-                 default_snl_fields=None,
-                 **kwargs):
+    def __init__(
+        self,
+        materials,
+        snls,
+        source_snls,
+        query=None,
+        symprec=SYMPREC,
+        ltol=0.2,
+        stol=0.3,
+        angle_tol=5,
+        default_snl_fields=None,
+        **kwargs,
+    ):
         """
         Args:
             materials (Store): Store of materials docs to tag with SNLs
@@ -77,12 +82,16 @@ class SNLBuilder(Builder):
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol
+        self.symprec = symprec
         self.query = query if query else {}
-        self.default_snl_fields = default_snl_fields if default_snl_fields\
-            else mp_default_snl_fields
+        self.default_snl_fields = (
+            default_snl_fields if default_snl_fields else mp_default_snl_fields
+        )
         self.kwargs = kwargs
 
-        super(SNLBuilder, self).__init__(sources=[materials, *self.source_snls], targets=[snls], **kwargs)
+        super(SNLBuilder, self).__init__(
+            sources=[materials, *self.source_snls], targets=[snls], **kwargs
+        )
 
     def ensure_indicies(self):
 
@@ -119,7 +128,11 @@ class SNLBuilder(Builder):
         mat_ids = self.materials.distinct("task_id", q)
         snl_t_ids = self.snls.distinct("task_id")
         to_update_t_ids = list(set(mat_ids) - set(snl_t_ids))
-        forms_to_update |= set(self.materials.distinct("formula_pretty", {"task_id": {"$in": to_update_t_ids}}))
+        forms_to_update |= set(
+            self.materials.distinct(
+                "formula_pretty", {"task_id": {"$in": to_update_t_ids}}
+            )
+        )
 
         # Find all new SNL formulas since the builder was last run
         for source in self.source_snls:
@@ -131,26 +144,46 @@ class SNLBuilder(Builder):
         forms_avail = set(self.materials.distinct("formula_pretty", q))
         forms_to_update = forms_to_update & forms_avail
 
-        self.logger.info("Found {} new/updated systems to proces".format(len(forms_to_update)))
+        self.logger.info(f"Found {len(forms_to_update)} new/updated systems to proces")
 
         self.total = len(forms_to_update)
 
-        for formula in forms_to_update:
+        for formulas in grouper(forms_to_update, self.chunk_size, fillvalue=None):
 
             snls = []
-
             for source in self.source_snls:
-                snls.extend(source.query(criteria={"formula_pretty": formula}))
+                snls.extend(
+                    source.query(criteria={"formula_pretty": {"$in": formulas}})
+                )
 
-            # Guaranteed to be mat per above reduction so just check for SNLS
-            if len(snls) > 0:
-                mats = list(
-                    self.materials.query(
-                        properties=[self.materials.key, "structure", "initial_structures", "formula_pretty"],
-                        criteria={"formula_pretty": formula}))
+            mats = list(
+                self.materials.query(
+                    properties=[
+                        self.materials.key,
+                        "structure",
+                        "initial_structures",
+                        "formula_pretty",
+                    ],
+                    criteria={"formula_pretty": {"$in": formulas}},
+                )
+            )
 
-                self.logger.debug("Found {} snls and {} mats".format(len(snls), len(mats)))
-                yield mats, snls
+            form_groups = defaultdict(list)
+            for snl in snls:
+                form_groups[snl["formula_pretty"]].append(snl)
+
+            mat_groups = defaultdict(list)
+            for mat in mats:
+                mat_groups[mat["formula_pretty"]].append(mat)
+
+            for formula, snl_group in form_groups.items():
+
+                mat_group = mat_groups[formula]
+
+                self.logger.debug(
+                    f"Found {len(snl_group)} snls and {len(mat_group)} mats"
+                )
+                yield mat_group, snl_group
 
     def process_item(self, item):
         """
@@ -164,8 +197,10 @@ class SNLBuilder(Builder):
         """
         mats = item[0]
         source_snls = item[1]
+        formula_pretty = mats[0]["formula_pretty"]
+
         snl_docs = list()
-        self.logger.debug("Tagging SNLs for {}".format(mats[0]["formula_pretty"]))
+        self.logger.debug(f"Tagging SNLs for {formula_pretty}")
 
         # Match up SNLS with materials
         for mat in mats:
@@ -174,7 +209,9 @@ class SNLBuilder(Builder):
                 snl_doc = {self.snls.key: mat[self.materials.key]}
                 snl_fields = aggregate_snls(matched_snls)
                 self.add_defaults(snl_fields)
-                snl_doc["snl"] = StructureNL(Structure.from_dict(mat["structure"]), **snl_fields).as_dict()
+                snl_doc["snl"] = StructureNL(
+                    Structure.from_dict(mat["structure"]), **snl_fields
+                ).as_dict()
                 snl_docs.append(snl_doc)
 
         return snl_docs
@@ -198,10 +235,12 @@ class SNLBuilder(Builder):
             scale=True,
             attempt_supercell=False,
             allow_subset=False,
-            comparator=ElementComparator())
+            comparator=ElementComparator(),
+        )
 
-        m_strucs = [Structure.from_dict(mat["structure"])
-                    ] + [Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]]
+        m_strucs = [Structure.from_dict(mat["structure"])] + [
+            Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]
+        ]
         for snl in snls:
             try:
                 snl_struc = StructureNL.from_dict(snl).structure
@@ -224,7 +263,7 @@ class SNLBuilder(Builder):
                         yield snl
                         break
             except:
-                self.logger.warning("Bad SNL found : {}".format(snl.get("task_id")))
+                self.logger.warning(f"Bad SNL found : {snl.get('task_id')}")
 
     def add_defaults(self, snl):
 
@@ -244,7 +283,7 @@ class SNLBuilder(Builder):
         snls = list(filter(None, chain.from_iterable(items)))
 
         if len(snls) > 0:
-            self.logger.info("Found {} SNLs to update".format(len(snls)))
+            self.logger.info(f"Found {len(snls)} SNLs to update")
             self.snls.update(snls)
         else:
             self.logger.info("No items to update")
@@ -258,8 +297,9 @@ def aggregate_snls(snls):
     created_at = sorted([snl["about"]["created_at"]["string"] for snl in snls])[0]
 
     # Choose earliest history
-    history = sorted(snls, key=lambda snl: snl["about"]["created_at"]["string"])\
-        [0]["about"]["history"]
+    history = sorted(snls, key=lambda snl: snl["about"]["created_at"]["string"])[0][
+        "about"
+    ]["history"]
 
     # Aggregate all references into one dict to remove duplicates
     refs = {}
@@ -268,7 +308,7 @@ def aggregate_snls(snls):
             entries = parse_string(snl["about"]["references"], bib_format="bibtex")
             refs.update(entries.entries)
         except:
-            logger.debug("Failed parsing bibtex: {}".format(snl["about"]["references"]))
+            logger.debug(f"Failed parsing bibtex: {snl['about']['references']}")
 
     entries = BibliographyData(entries=refs)
     references = entries.to_string("bibtex")
@@ -280,25 +320,42 @@ def aggregate_snls(snls):
     tags = list(set([remark for snl in snls for remark in snl["about"]["remarks"]]))
 
     # Aggregate all projects
-    projects = list(set([projects for snl in snls for projects in snl["about"]["projects"]]))
+    projects = list(
+        set([projects for snl in snls for projects in snl["about"]["projects"]])
+    )
 
     # Aggregate all authors - Converting a single dictionary first
     # performs duplicate checking
-    authors = {entry["name"].lower(): entry["email"] for snl in snls for entry in snl["about"]["authors"]}
-    authors = [{"name": name.title(), "email": email} for name, email in authors.items()]
+    authors = {
+        entry["name"].lower(): entry["email"]
+        for snl in snls
+        for entry in snl["about"]["authors"]
+    }
+    authors = [
+        {"name": name.title(), "email": email} for name, email in authors.items()
+    ]
 
     # Aggregate all the database IDs
     db_ids = defaultdict(list)
     for snl in snls:
-        if len(snl["about"]["history"]) == 1 \
-                and get(snl, "about.history.0.name", "") in DB_indexes:
+        if (
+            len(snl["about"]["history"]) == 1
+            and get(snl, "about.history.0.name", "") in DB_indexes
+        ):
             db_name = get(snl, "about.history.0.name", "")
             db_id_key = DB_indexes[db_name]
-            db_ids[db_id_key].append(snl["about"]["history"][0]["description"].get("id", None))
+            db_ids[db_id_key].append(
+                snl["about"]["history"][0]["description"].get("id", None)
+            )
+            if get(snl, "about.history.0.experimental", False):
+                experimental = True
 
     # remove Nones and empty lists
     db_ids = {k: list(filter(None, v)) for k, v in db_ids.items()}
     db_ids = {k: v for k, v in db_ids.items() if len(v) > 0}
+
+    # Get experimental bool
+    experimental = any(snl.get("experimental", False) for snl in snls)
 
     snl_fields = {
         "created_at": created_at,
@@ -307,10 +364,7 @@ def aggregate_snls(snls):
         "remarks": remarks,
         "projects": projects,
         "authors": authors,
-        "data": {
-            "_db_ids": db_ids,
-            "_tags": tags,
-        }
+        "data": {"_db_ids": db_ids, "_tags": tags, "_experimental": experimental},
     }
 
     return snl_fields
