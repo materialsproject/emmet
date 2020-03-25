@@ -51,4 +51,4 @@ class EmmetSettings(BaseSettings):
         return new_values
 
 
-SETTINGS = EmmetSettings()
+
