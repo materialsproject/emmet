@@ -2,6 +2,7 @@ import os
 import logging
 import itertools
 
+from collections import defaultdict
 from log4mongo.handlers import MongoFormatter
 from fireworks import LaunchPad
 from atomate.vasp.database import VaspCalcDb
@@ -28,12 +29,14 @@ def get_lpad():
 
 
 def ensure_indexes(indexes, colls):
+    created = defaultdict(list)
     for index in indexes:
         for coll in colls:
            keys = [k.rsplit('_', 1)[0] for k in coll.index_information().keys()]
            if index not in keys:
                coll.ensure_index(index)
-               print('ensured index', index, 'on', coll.full_name)
+               created[index].append(coll.full_name)
+    return created
 
 
 class MyMongoFormatter(logging.Formatter):

@@ -63,8 +63,17 @@
 import click
 from emmet.cli.admin import admin
 
+
 @click.group()
-def cli():
+def entry_point():
     pass
 
-cli.add_command(admin)
+
+def safe_entry_point():
+    try:
+        entry_point()
+    except Exception as e:
+        click.echo(e)
+
+
+entry_point.add_command(admin)
