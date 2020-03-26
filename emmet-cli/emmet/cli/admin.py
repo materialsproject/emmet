@@ -1,30 +1,21 @@
 import click
 
-from emmet.cli.utils import get_lpad, ensure_indexes, calcdb_from_mgrant
+from emmet.cli.utils import ensure_indexes
 
 
 @click.group()
-def admin():
+@click.pass_context
+def admin(ctx):
     """administrative and utility commands"""
     pass
 
 
 @admin.command()
-def lpad():
-    """check LaunchPad configuration"""
-    click.echo(get_lpad())
-
-
-@admin.command()
 @click.argument('fields', nargs=-1)
 @click.argument('collection', nargs=1)
-@click.option('-s', '--spec', help='mongogrant string for database')
-def index(fields, collection, spec):
+@click.pass_context
+def index(ctx, fields, collection):
     """generate/ensure indexes on a collection"""
-    if not spec:
-        lpad = get_lpad()
-        spec = f'{lpad.host}/{lpad.name}'
-
-    target = calcdb_from_mgrant(spec)
-    created = ensure_indexes(fields, [target.db[collection]])
-    click.echo('ensured indexes for', fields, 'on', collection.full_name)
+    coll = ctx.obj['CLIENT'].db[collection]
+    created = ensure_indexes(fields, [coll])
+    click.echo(f'ensured index(es) for {", ".join(fields)} on {coll.full_name}')

@@ -62,11 +62,26 @@
 
 import click
 from emmet.cli.admin import admin
+from emmet.cli.utils import get_lpad, calcdb_from_mgrant
 
 
 @click.group()
-def entry_point():
-    pass
+@click.option('--debug/--no-debug', default=False)
+@click.option('-s', '--spec', help='mongogrant string for DB (default: FW_CONFIG_FILE)')
+@click.pass_context
+def entry_point(ctx, debug, spec):
+    """command line interface for emmet"""
+    ctx.ensure_object(dict)
+    ctx.obj['DEBUG'] = debug
+
+    if not spec:
+        lpad = get_lpad()
+        spec = f'{lpad.host}/{lpad.name}'
+
+    ctx.obj['SPEC'] = spec
+    ctx.obj['CLIENT'] = calcdb_from_mgrant(spec)
+    if debug:
+        click.echo(f'Spec: {spec}')
 
 
 def safe_entry_point():
