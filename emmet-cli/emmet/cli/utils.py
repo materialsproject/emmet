@@ -10,12 +10,7 @@ from pymatgen import Structure
 #from emmet.vasp.materials import group_structures
 from mongogrant.client import Client
 
-
-exclude = {'about.remarks': {'$nin': ['DEPRECATED', 'deprecated']}}
-skip_labels = ['He', 'He0+', 'Ar', 'Ar0+', 'Ne', 'Ne0+', 'D', 'D+', 'T', 'M']
-base_query = {'is_ordered': True, 'is_valid': True, 'nsites': {'$lt': 200}, 'sites.label': {'$nin': skip_labels}}
-aggregation_keys = ['formula_pretty', 'reduced_cell_formula']
-structure_keys = ['snl_id', 'lattice', 'sites', 'charge', 'about._materialsproject.task_id']
+from emmet.cli.config import exclude, base_query, aggregation_keys, structure_keys
 
 
 def get_lpad():
@@ -72,27 +67,6 @@ def get_meta_from_structure(struct):
     d['is_ordered'] = struct.is_ordered
     d['is_valid'] = struct.is_valid()
     return d
-
-
-def ensure_meta(snl_coll):
-    """ensure meta-data fields and index are set in SNL collection"""
-
-    meta_keys = ['formula_pretty', 'nelements', 'nsites', 'is_ordered', 'is_valid']
-    q = {'$or': [{k: {'$exists': 0}} for k in meta_keys]}
-    docs = snl_coll.find(q, structure_keys)
-
-    if docs.count() > 0:
-      print('fix meta for', docs.count(), 'SNLs ...')
-      for idx, doc in enumerate(docs):
-          if idx and not idx%1000:
-              print(idx, '...')
-          struct = Structure.from_dict(doc)
-          snl_coll.update({'snl_id': doc['snl_id']}, {'$set': get_meta_from_structure(struct)})
-
-    ensure_indexes([
-      'snl_id', 'reduced_cell_formula', 'formula_pretty', 'about.remarks', 'about.projects',
-      'sites.label', 'nsites', 'nelements', 'is_ordered', 'is_valid'
-    ], [snl_coll])
 
 
 def aggregate_by_formula(coll, q, key=None):
