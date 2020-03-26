@@ -62,26 +62,31 @@
 
 import click
 from emmet.cli.admin import admin
-from emmet.cli.utils import get_lpad, calcdb_from_mgrant
+from emmet.cli.calc import calc
+from emmet.cli.utils import calcdb_from_mgrant
 
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
-@click.group()
-@click.option('--debug/--no-debug', default=False)
-@click.option('-s', '--spec', help='mongogrant string for DB (default: FW_CONFIG_FILE)')
+@click.group(context_settings=CONTEXT_SETTINGS)
+@click.option('--spec', required=True,
+              help='mongogrant specification string for user database.')
+@click.option('--dry-run/--no-dry-run', default=True, show_default=True,
+              help='dry run (no DB interactions or filesystem changes).')
+@click.option('--dupe-check/--no-dupe-check', default=True, show_default=True,
+              help='check duplicate structures in SNL or task collections.')
+@click.option('--debug/--no-debug', default=False, show_default=True,
+              help='switch debug mode on/off.')
 @click.pass_context
-def entry_point(ctx, debug, spec):
+def entry_point(ctx, spec, dry_run, dupe_check, debug):
     """command line interface for emmet"""
     ctx.ensure_object(dict)
     ctx.obj['DEBUG'] = debug
-
-    if not spec:
-        lpad = get_lpad()
-        spec = f'{lpad.host}/{lpad.name}'
-
+    ctx.obj['DRY_RUN'] = dry_run
+    ctx.obj['DUPE_CHECK'] = dupe_check
     ctx.obj['SPEC'] = spec
     ctx.obj['CLIENT'] = calcdb_from_mgrant(spec)
-    if debug:
-        click.echo(f'Spec: {spec}')
+    if dry_run:
+        click.echo('DRY RUN! Add --no-dry-run flag to execute changes')
 
 
 def safe_entry_point():
@@ -92,3 +97,4 @@ def safe_entry_point():
 
 
 entry_point.add_command(admin)
+entry_point.add_command(calc)

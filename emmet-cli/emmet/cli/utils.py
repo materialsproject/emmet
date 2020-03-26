@@ -4,19 +4,11 @@ import itertools
 
 from collections import defaultdict
 from log4mongo.handlers import MongoFormatter
-from fireworks import LaunchPad
 from atomate.vasp.database import VaspCalcDb
-from pymatgen import Structure
 #from emmet.vasp.materials import group_structures
 from mongogrant.client import Client
 
 from emmet.cli.config import exclude, base_query, aggregation_keys, structure_keys
-
-
-def get_lpad():
-    if 'FW_CONFIG_FILE' not in os.environ:
-        raise ValueError('FW_CONFIG_FILE not set!')
-    return LaunchPad.auto_load()
 
 
 #def structures_match(s1, s2):
@@ -27,15 +19,18 @@ def ensure_indexes(indexes, colls):
     created = defaultdict(list)
     for index in indexes:
         for coll in colls:
-           keys = [k.rsplit('_', 1)[0] for k in coll.index_information().keys()]
-           if index not in keys:
-               coll.ensure_index(index)
-               created[index].append(coll.full_name)
+            keys = [k.rsplit('_', 1)[0] for k in coll.index_information().keys()]
+            if index not in keys:
+                coll.ensure_index(index)
+                created[coll.full_name].append(index)
     return created
 
 
 class MyMongoFormatter(logging.Formatter):
-    KEEP_KEYS = ['timestamp', 'level', 'message', 'formula', 'snl_id', 'tags', 'error', 'canonical_snl_id', 'fw_id', 'task_id', 'task_id(s)']
+    KEEP_KEYS = [
+        'timestamp', 'level', 'message', 'formula', 'snl_id', 'tags',
+        'error', 'canonical_snl_id', 'fw_id', 'task_id', 'task_id(s)'
+    ]
     mongoformatter = MongoFormatter()
 
     def format(self, record):
