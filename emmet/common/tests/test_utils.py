@@ -14,9 +14,11 @@ class TestUtils(TestCase):
         for new_doc in new:
             self.assertEqual(new_doc, {"this": 5})
 
-        nested_dict = {"this": {"that": {"@class": 1, "@module": 2, "those": 3}},
-                       "these": list_of_docs}
+        nested_dict = {
+            "this": {"that": {"@class": 1, "@module": 2, "those": 3}},
+            "these": list_of_docs,
+        }
         new = scrub_class_and_module(nested_dict)
-        self.assertEqual(new['this'], {"that": {"those": 3}})
-        for new_doc in new['these']:
+        self.assertEqual(new["this"], {"that": {"those": 3}})
+        for new_doc in new["these"]:
             self.assertEqual(new_doc, {"this": 5})

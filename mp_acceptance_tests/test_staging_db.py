@@ -13,8 +13,8 @@ import pymongo
 TESTFILES_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def get_aliases(namespace='mg_core_materials'):
-    config_file = os.path.join(TESTFILES_DIR, 'field_aliases.cfg')
+def get_aliases(namespace="mg_core_materials"):
+    config_file = os.path.join(TESTFILES_DIR, "field_aliases.cfg")
     config = ConfigParser()
     with open(config_file) as f:
         config.read_file(f)
@@ -23,8 +23,7 @@ def get_aliases(namespace='mg_core_materials'):
 
 aliases = get_aliases()
 supported_fields = {
-    aliases.get(field, field)
-    for field in MPRester.supported_properties
+    aliases.get(field, field) for field in MPRester.supported_properties
 }
 supported_fields.discard("icsd_id")
 
@@ -81,71 +80,122 @@ class TestMaterialsDb(unittest.TestCase):
         nmats_stag = self.mats_stag.count_documents({"deprecated": False})
         for field in required_fields:
             self.assertEqual(
-                self.mats_stag.count_documents({field: {"$exists": True}, "deprecated": False}),
+                self.mats_stag.count_documents(
+                    {field: {"$exists": True}, "deprecated": False}
+                ),
                 nmats_stag,
-                msg="{}".format(field)
+                msg="{}".format(field),
             )
 
     def test_one_mat_per_taskid(self):
-        unfaithful_taskids = list(self.mats_stag.aggregate([
-            {"$project": {"task_ids": 1}},
-            {"$unwind": "$task_ids"},
-            {"$sortByCount": "$task_ids"},
-            {"$match": {"count": {"$gt": 1}}},
-        ]))
+        unfaithful_taskids = list(
+            self.mats_stag.aggregate(
+                [
+                    {"$project": {"task_ids": 1}},
+                    {"$unwind": "$task_ids"},
+                    {"$sortByCount": "$task_ids"},
+                    {"$match": {"count": {"$gt": 1}}},
+                ]
+            )
+        )
         self.assertEqual(len(unfaithful_taskids), 0)
 
     def test_nprops_nondecreasing(self):
         issues = []
         depr_mids = self.mats_stag.distinct("task_id", {"deprecated": True})
         for prop in filter(None, self.mats_prod.distinct("has")):
-            prod_mids = set(self.mats_prod.distinct("task_id", {"has": prop, "deprecated": {"$ne": True}}))
-            stag_tids = set(self.mats_stag.distinct("task_ids", {"has": prop, "deprecated": False}))
+            prod_mids = set(
+                self.mats_prod.distinct(
+                    "task_id", {"has": prop, "deprecated": {"$ne": True}}
+                )
+            )
+            stag_tids = set(
+                self.mats_stag.distinct("task_ids", {"has": prop, "deprecated": False})
+            )
             if prop == "bandstructure":
-                prod_mids = set(self.db_prod.electronic_structure.distinct(
-                    "task_id", {"task_id": {"$in": list(prod_mids)}, "bs_plot": {"$exists": True}}))
+                prod_mids = set(
+                    self.db_prod.electronic_structure.distinct(
+                        "task_id",
+                        {
+                            "task_id": {"$in": list(prod_mids)},
+                            "bs_plot": {"$exists": True},
+                        },
+                    )
+                )
             elif prop in ("diel", "piezo"):
                 # A stag mid may lose diel relative to prod if stag band gap is zero.
-                stag_mids_nogap = set(self.mats_stag.distinct(
-                    "task_id", {"task_id": {"$in": list(prod_mids)}, "band_gap.search_gap.band_gap": 0}))
+                stag_mids_nogap = set(
+                    self.mats_stag.distinct(
+                        "task_id",
+                        {
+                            "task_id": {"$in": list(prod_mids)},
+                            "band_gap.search_gap.band_gap": 0,
+                        },
+                    )
+                )
                 prod_mids -= stag_mids_nogap
             elif prop == "phonons":
                 # XXX Some prod mids incorrectly {"has": "phonons"}!
                 # This filter can be removed after a 2019.05 release.
-                prod_mids = set(self.db_phonons.phonon_bs_img.distinct(
-                    "mp-id", {"mp-id": {"$in": list(prod_mids)}}))
+                prod_mids = set(
+                    self.db_phonons.phonon_bs_img.distinct(
+                        "mp-id", {"mp-id": {"$in": list(prod_mids)}}
+                    )
+                )
             elif prop == "elasticity":
-                prod_mids = set(self.mats_prod.distinct(
-                    "task_id", {"task_id": {"$in": list(prod_mids)}, "elasticity.poisson_ratio": {"$exists": True}}))
+                prod_mids = set(
+                    self.mats_prod.distinct(
+                        "task_id",
+                        {
+                            "task_id": {"$in": list(prod_mids)},
+                            "elasticity.poisson_ratio": {"$exists": True},
+                        },
+                    )
+                )
             for mid in sorted(prod_mids):
                 if not (mid in depr_mids or mid in stag_tids):
-                    issues.append(f'non-deprecated {mid} missing {prop}')
+                    issues.append(f"non-deprecated {mid} missing {prop}")
         if issues:
-            self.fail('\n'.join(issues))
+            self.fail("\n".join(issues))
 
     @unittest.skip("Many of these calculations need to be redone.")
     def test_piezo_og_formulae_present(self):
         base = loadfn(
-            os.path.join(TESTFILES_DIR, 'piezo_formulae_dryad-2015-09-29.json'))
+            os.path.join(TESTFILES_DIR, "piezo_formulae_dryad-2015-09-29.json")
+        )
         upstream = self.mats_stag.distinct("pretty_formula", {"has": "piezo"})
         diff = set(base) - set(upstream)
         print(sorted(diff))
         self.assertEqual(len(diff), 0)
 
     def test_kpoints_serialization(self):
-        count = self.mats_stag.count_documents({'input.kpoints.@module': {'$regex': '^pymatgen.io.vaspio'}})
+        count = self.mats_stag.count_documents(
+            {"input.kpoints.@module": {"$regex": "^pymatgen.io.vaspio"}}
+        )
         self.assertEqual(count, 0)
 
     def test_mid_in_task_ids(self):
-        self.assertEqual(self.mats_stag.count_documents({"task_ids": {"$exists": False}}), 0)
-        missing = list(self.mats_stag.find({}, ["task_id"]).where("this.task_ids.indexOf(this.task_id) == -1"))
+        self.assertEqual(
+            self.mats_stag.count_documents({"task_ids": {"$exists": False}}), 0
+        )
+        missing = list(
+            self.mats_stag.find({}, ["task_id"]).where(
+                "this.task_ids.indexOf(this.task_id) == -1"
+            )
+        )
         self.assertEqual(len(missing), 0)
 
-    @unittest.skip("Not just due to tags:mp_scan tasks. Some old MPWorks tasks have structures that don't match.")
+    @unittest.skip(
+        "Not just due to tags:mp_scan tasks. Some old MPWorks tasks have structures that don't match."
+    )
     def test_taskcoll_tid_in_task_ids(self):
         taskcoll_tids = set(self.db_stag.tasks.distinct("task_id"))
-        matcoll_tids = set(itertools.chain.from_iterable(
-            d["task_ids"] for d in self.db_stag.materials.find({}, {"task_ids": 1, "_id": 0})))
+        matcoll_tids = set(
+            itertools.chain.from_iterable(
+                d["task_ids"]
+                for d in self.db_stag.materials.find({}, {"task_ids": 1, "_id": 0})
+            )
+        )
         diff = taskcoll_tids - matcoll_tids
         if diff:
             print(list(diff)[:10])
@@ -158,17 +208,20 @@ class TestMaterialsDb(unittest.TestCase):
 
     def test_has_bandstructure(self):
         mids = self.mats_stag.distinct("task_id", {"has": "bandstructure"})
-        n_esdocs = self.db_stag.electronic_structure.count_documents({"task_id": {"$in": mids}})
+        n_esdocs = self.db_stag.electronic_structure.count_documents(
+            {"task_id": {"$in": mids}}
+        )
         self.assertEqual(
             len(mids),
             n_esdocs,
-            f'There are {"fewer" if len(mids) > n_esdocs else "more"} electronic_structure docs than expected'
+            f'There are {"fewer" if len(mids) > n_esdocs else "more"} electronic_structure docs than expected',
         )
 
     def test_worrisome_deprecation(self):
-        nmatching_icsd = self.mats_stag.count_documents({'icsd_ids.0': {'$exists': True}, 'deprecated': True})
+        nmatching_icsd = self.mats_stag.count_documents(
+            {"icsd_ids.0": {"$exists": True}, "deprecated": True}
+        )
         self.assertEqual(nmatching_icsd, 0)
-
 
     @classmethod
     def tearDownClass(cls):

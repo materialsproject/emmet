@@ -6,9 +6,7 @@ __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
 
 
 class StructureSimilarityBuilder(Builder):
-
-    def __init__(self, site_descriptors, structure_similarity,
-                 fp_type='csf', **kwargs):
+    def __init__(self, site_descriptors, structure_similarity, fp_type="csf", **kwargs):
         """
         Calculates similarity metrics between structures on the basis
         of site descriptors.
@@ -31,9 +29,9 @@ class StructureSimilarityBuilder(Builder):
         self.structure_similarity = structure_similarity
         self.fp_type = fp_type
 
-        super().__init__(sources=[site_descriptors],
-                         targets=[structure_similarity],
-                         **kwargs)
+        super().__init__(
+            sources=[site_descriptors], targets=[structure_similarity], **kwargs
+        )
 
     def get_items(self):
         """
@@ -47,18 +45,19 @@ class StructureSimilarityBuilder(Builder):
 
         self.logger.info("Setting indexes")
 
-        #TODO: re-introduce last-updated filtering.
+        # TODO: re-introduce last-updated filtering.
         task_ids = list(self.site_descriptors.distinct(self.site_descriptors.key))
         n_task_ids = len(task_ids)
-        for i in range(n_task_ids-1):
+        for i in range(n_task_ids - 1):
             d1 = self.site_descriptors.query(
-                    properties=[self.site_descriptors.key, "statistics"],
-                    criteria={self.site_descriptors.key: task_ids[i]}).limit(1)[0]
-            for j in range(i+1, n_task_ids):
+                properties=[self.site_descriptors.key, "statistics"],
+                criteria={self.site_descriptors.key: task_ids[i]},
+            ).limit(1)[0]
+            for j in range(i + 1, n_task_ids):
                 d2 = self.site_descriptors.query(
-                        properties=[
-                        self.site_descriptors.key, "statistics"],
-                        criteria={self.site_descriptors.key: task_ids[j]}).limit(1)[0]
+                    properties=[self.site_descriptors.key, "statistics"],
+                    criteria={self.site_descriptors.key: task_ids[j]},
+                ).limit(1)[0]
                 yield list([d1, d2])
 
     def process_item(self, item):
@@ -74,16 +73,19 @@ class StructureSimilarityBuilder(Builder):
         Returns:
             dict: similarity measures.
         """
-        self.logger.debug("Similarities for {} and {}".format(
-            item[0][self.site_descriptors.key],
-            item[1][self.site_descriptors.key]))
+        self.logger.debug(
+            "Similarities for {} and {}".format(
+                item[0][self.site_descriptors.key], item[1][self.site_descriptors.key]
+            )
+        )
 
         sim_doc = {}
-        sim_doc = self.get_similarities(
-            item[0], item[1])
+        sim_doc = self.get_similarities(item[0], item[1])
         sim_doc[self.structure_similarity.key] = tuple(
-            sorted([item[0][self.site_descriptors.key],
-            item[1][self.site_descriptors.key]]))
+            sorted(
+                [item[0][self.site_descriptors.key], item[1][self.site_descriptors.key]]
+            )
+        )
 
         return sim_doc
 
@@ -108,34 +110,38 @@ class StructureSimilarityBuilder(Builder):
             dout = {}
             l = {}
             v = {}
-            for i, li in enumerate([d1['statistics'][self.fp_type],
-                                  d2['statistics'][self.fp_type]]):
+            for i, li in enumerate(
+                [d1["statistics"][self.fp_type], d2["statistics"][self.fp_type]]
+            ):
                 v[i] = []
                 l[i] = []
-                #for optype, stats in d.items():
+                # for optype, stats in d.items():
                 for opdict in li:
                     for stattype, val in opdict.items():
-                        if stattype != 'name':
+                        if stattype != "name":
                             v[i].append(val)
-                            l[i].append('{} {}'.format(opdict['name'], stattype))
+                            l[i].append("{} {}".format(opdict["name"], stattype))
             if len(l[0]) != len(l[1]):
-                raise RuntimeError('Site-fingerprint statistics dictionaries'
-                                   ' have different sizes ({}, {})'.format(
-                                   len(l[0]), len(l[1])))
+                raise RuntimeError(
+                    "Site-fingerprint statistics dictionaries"
+                    " have different sizes ({}, {})".format(len(l[0]), len(l[1]))
+                )
             for k in l[0]:
                 if k not in l[1]:
-                    raise RuntimeError('Label "{}" not found in second site-'
-                                       'fingerprint statistics '
-                                       'dictionary'.format(k))
+                    raise RuntimeError(
+                        'Label "{}" not found in second site-'
+                        "fingerprint statistics "
+                        "dictionary".format(k)
+                    )
             v1 = np.array([v[0][k] for k in range(len(l[0]))])
             v2 = np.array([v[1][l[1].index(k)] for k in l[0]])
-            dout['cos'] = np.dot(v1, v2) / (
-                    np.linalg.norm(v1) * np.linalg.norm(v2))
-            dout['dist'] = np.linalg.norm(v1 - v2)
+            dout["cos"] = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+            dout["dist"] = np.linalg.norm(v1 - v2)
             doc = dout
 
         except Exception as e:
-             self.logger.error("Failed calculating structure similarity"
-                              "metrics: {}".format(e))
+            self.logger.error(
+                "Failed calculating structure similarity" "metrics: {}".format(e)
+            )
 
         return doc

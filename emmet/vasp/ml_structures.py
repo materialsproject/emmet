@@ -9,8 +9,14 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class MLStructuresBuilder(Builder):
-
-    def __init__(self, tasks, ml_strucs, task_types= ("Structure Optimization",),query=None, **kwargs):
+    def __init__(
+        self,
+        tasks,
+        ml_strucs,
+        task_types=("Structure Optimization",),
+        query=None,
+        **kwargs
+    ):
         """
         Creates a collection of structures, energies, forces, and stresses for machine learning efforts
         Args:
@@ -23,9 +29,7 @@ class MLStructuresBuilder(Builder):
         self.ml_strucs = ml_strucs
         self.task_types = task_types
         self.query = query if query else None
-        super().__init__(sources=[tasks],
-                         targets=[ml_strucs],
-                         **kwargs)
+        super().__init__(sources=[tasks], targets=[ml_strucs], **kwargs)
 
     def get_items(self):
         """
@@ -48,11 +52,15 @@ class MLStructuresBuilder(Builder):
         to_process_tasks = all_tasks - processed_tasks
 
         self.logger.info(
-            "Found {} tasks to extract information from".format(len(to_process_tasks)))
+            "Found {} tasks to extract information from".format(len(to_process_tasks))
+        )
         self.total = len(to_process_tasks)
 
         for t_id in to_process_tasks:
-            task = self.tasks.query_one(properties=["task_id","orig_inputs","calcs_reversed"],criteria={"task_id": t_id})
+            task = self.tasks.query_one(
+                properties=["task_id", "orig_inputs", "calcs_reversed"],
+                criteria={"task_id": t_id},
+            )
             yield task
 
     def process_item(self, task):
@@ -64,7 +72,7 @@ class MLStructuresBuilder(Builder):
             list of C
         """
 
-        t_type = task_type(get(task, 'orig_inputs'))
+        t_type = task_type(get(task, "orig_inputs"))
         entries = []
 
         if not any([t in t_type for t in self.task_types]):
@@ -76,11 +84,12 @@ class MLStructuresBuilder(Builder):
 
         for calc in task.get("calcs_reversed", []):
 
-            parameters = {"is_hubbard": is_hubbard,
-                          "hubbards": hubbards,
-                          "potcar_spec": get(calc, "input.potcar_spec", []),
-                          "run_type": calc.get("run_type", "GGA")
-                          }
+            parameters = {
+                "is_hubbard": is_hubbard,
+                "hubbards": hubbards,
+                "potcar_spec": get(calc, "input.potcar_spec", []),
+                "run_type": calc.get("run_type", "GGA"),
+            }
 
             for step_num, step in enumerate(get(calc, "output.ionic_steps")):
                 struc = Structure.from_dict(step.get("structure"))
@@ -89,19 +98,22 @@ class MLStructuresBuilder(Builder):
                     struc.add_site_property("forces", forces)
                 stress = calc.get("stress", None)
                 data = {"stress": stress} if stress else {}
-                data["step"] =step_num
-                c = ComputedStructureEntry(structure=struc,
-                                           correction=0,
-                                           energy=step.get("e_wo_entrp"),
-                                           parameters=parameters,
-                                           entry_id="{}-{}".format(task[self.tasks.key],i),
-                                           data=data)
+                data["step"] = step_num
+                c = ComputedStructureEntry(
+                    structure=struc,
+                    correction=0,
+                    energy=step.get("e_wo_entrp"),
+                    parameters=parameters,
+                    entry_id="{}-{}".format(task[self.tasks.key], i),
+                    data=data,
+                )
                 i += 1
 
                 d = c.as_dict()
-                d["chemsys"] = '-'.join(
-                    sorted(set([e.symbol for e in struc.composition.elements])))
-                d["task_type"] = task_type(get(calc, 'input'))
+                d["chemsys"] = "-".join(
+                    sorted(set([e.symbol for e in struc.composition.elements]))
+                )
+                d["task_type"] = task_type(get(calc, "input"))
                 d["calc_name"] = get(calc, "task.name")
                 d["task_id"] = task[self.tasks.key]
 

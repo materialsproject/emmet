@@ -31,7 +31,12 @@ class DiffractionBuilder(MapBuilder):
         self.__settings = load_settings(self.xrd_settings, DEFAULT_XRD_SETTINGS)
 
         super().__init__(
-            source=materials, target=diffraction, ufn=self.calc, projection=["structure"], **kwargs)
+            source=materials,
+            target=diffraction,
+            ufn=self.calc,
+            projection=["structure"],
+            **kwargs,
+        )
 
     def calc(self, item):
         """
@@ -45,7 +50,7 @@ class DiffractionBuilder(MapBuilder):
         """
         self.logger.debug(f"Calculating diffraction for {item[self.materials.key]}")
 
-        struct = Structure.from_dict(item['structure'])
+        struct = Structure.from_dict(item["structure"])
         xrd_doc = {"xrd": self.get_xrd_from_struct(struct)}
         return xrd_doc
 
@@ -53,15 +58,22 @@ class DiffractionBuilder(MapBuilder):
         doc = {}
 
         for xs in self.__settings:
-            xrdcalc = XRDCalculator(wavelength="".join([xs['target'], xs['edge']]), symprec=xs.get('symprec', 0))
+            xrdcalc = XRDCalculator(
+                wavelength="".join([xs["target"], xs["edge"]]),
+                symprec=xs.get("symprec", 0),
+            )
 
-            pattern = jsanitize(xrdcalc.get_pattern(structure, two_theta_range=xs['two_theta']).as_dict())
+            pattern = jsanitize(
+                xrdcalc.get_pattern(
+                    structure, two_theta_range=xs["two_theta"]
+                ).as_dict()
+            )
             d = {
-                'wavelength': {
-                    'element': xs['target'],
-                    'in_angstroms': WAVELENGTHS["".join([xs['target'], xs['edge']])]
+                "wavelength": {
+                    "element": xs["target"],
+                    "in_angstroms": WAVELENGTHS["".join([xs["target"], xs["edge"]])],
                 },
-                'pattern': pattern
+                "pattern": pattern,
             }
-            doc[xs['target']] = d
+            doc[xs["target"]] = d
         return doc

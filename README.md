@@ -4,7 +4,7 @@ The purpose of Emmet is to 'build' collections of materials properties from the 
 
 Emmet uses [Maggma](https://github.com/materialsproject/maggma), our more general aggregation framework which abstracts away the behind-the-scenes machinery: Maggma provides our `Builder` class and a general interface to `Stores`, which can be MongoDB collections or plain JSON files.
 
-The `Builder` takes `source` Store(s), processes items in that store, and then builds results to `target` Store(s). 
+The `Builder` takes `source` Store(s), processes items in that store, and then builds results to `target` Store(s).
 
 To ease debugging, in Emmet data flows in *one direction* only: this means that each Store is only built by a specific builder, and will not then be modified by successive builders.
 
@@ -76,7 +76,7 @@ thermo_store = MongoStore(database="test",
                           collection="thermo",
                           host="localhost",
                           port=27017)
-                          
+
 thermo_builder = ThermoBuilder(materials_store,
                                thermo_store)
 ```
@@ -115,11 +115,11 @@ The VASP builders all operate on a `tasks` Store which is parsed from *any* VASP
 2. Groups tasks into those for the same structure.
 
 	Structure matching first only selects materials that have the same chemical formula, and then uses pymatgen's `StructureMatcher` to perform symmetry analysis.
-	
+
 3. For each property, ranks tasks for a given structure according to those that are expected to predict the property more accurately (for example, a band gap from a band structure calculation is ranked higher than a band gap from a generic calculation). This value is then picked as the canonical value for that property.
 
 	The `task_type` is already determined and comes from the tasks store, and the rankings are specified in [`mat.json`](vasp/builders/mat.json). No attempt is made to rank which task of the same `task_type` is best; in this case it is assumed that the most recent calculation takes precendence.
-	
+
 4. *(Optional)* The [Structure Notation Language](http://pymatgen.org/pymatgen.matproj.snl.html#pymatgen.matproj.snl.StructureNL) (or 'SNLs') provide a way to bundle a structure and its metadata (such as bibtex references for where the structure came from) within the Materials Project. This will lookup if there are existing SNL(s) for the structure, and assign an SNL accordingly.
 
 ### ThermoBuilder
@@ -135,8 +135,8 @@ The VASP builders all operate on a `tasks` Store which is parsed from *any* VASP
 2. Filters out materials that can not be directly compared to each other, e.g. they've been calculated by different methods such that their total energies are on different scales.
 
 	By default, this is done by using [`MaterialsProjectCompatibility('Advanced')`](http://pymatgen.org/pymatgen.entries.compatibility.html#pymatgen.entries.compatibility.MaterialsProjectCompatibility) in pymatgen, which intelligently mixes GGA and GGA+U calculations depending on the elements present, and performs corrections to the total energy as appropriate.
-	
-3. Uses pymatgen's [`phasediagram`](http://pymatgen.org/pymatgen.phasediagram.html) package to calculate the [energy above hull](https://materialsproject.org/wiki/index.php/Glossary_of_Terms#Energetics) for each material and, if the material is unstable, its decomposition pathway. 
+
+3. Uses pymatgen's [`phasediagram`](http://pymatgen.org/pymatgen.phasediagram.html) package to calculate the [energy above hull](https://materialsproject.org/wiki/index.php/Glossary_of_Terms#Energetics) for each material and, if the material is unstable, its decomposition pathway.
 
 ### ElasticBuilder
 
@@ -172,5 +172,5 @@ The VASP builders all operate on a `tasks` Store which is parsed from *any* VASP
 1. For each structure in materials, calculates bonding from the material's crystal structure using a variety of methods (pymatgen's local_env and critic2's sum of atomic charge densities).
 
 2. It then finds the task corresponding to a static calculation.
- 
+
 3. If `AECCAR0`, `AECCAR2`, `CHGCAR` are present, performs attempts to find bonding information using critic2 and also performs a bader analysis that is stored separately.

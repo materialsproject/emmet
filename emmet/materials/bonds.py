@@ -20,7 +20,7 @@ BOND_SCHEMA = os.path.join(MODULE_DIR, "schema", "bond.json")
 
 
 class BondBuilder(MapBuilder):
-    def __init__(self, materials, bonding, strategies=("CrystalNN", ), **kwargs):
+    def __init__(self, materials, bonding, strategies=("CrystalNN",), **kwargs):
         """
         Builder to calculate bonding in a crystallographic
         structure via near neighbor strategies, including those
@@ -39,19 +39,33 @@ class BondBuilder(MapBuilder):
         self.bonding = bonding
         self.bonding.validator = JSONSchemaValidator(loadfn(BOND_SCHEMA))
 
-        available_strategies = {nn.__name__: nn for nn in NearNeighbors.__subclasses__()}
+        available_strategies = {
+            nn.__name__: nn for nn in NearNeighbors.__subclasses__()
+        }
 
         # use the class if passed directly (e.g. with custom kwargs),
         # otherwise instantiate class with default options
         self.strategies = [
-            strategy if isinstance(strategy, NearNeighbors) else available_strategies[strategy]()
+            strategy
+            if isinstance(strategy, NearNeighbors)
+            else available_strategies[strategy]()
             for strategy in strategies
         ]
-        self.strategy_names = [strategy.__class__.__name__ for strategy in self.strategies]
+        self.strategy_names = [
+            strategy.__class__.__name__ for strategy in self.strategies
+        ]
 
-        self.bad_task_ids = []  # Voronoi-based strategies can cause some structures to cause crash
+        self.bad_task_ids = (
+            []
+        )  # Voronoi-based strategies can cause some structures to cause crash
 
-        super().__init__(source=materials, target=bonding, ufn=self.calc, projection=["structure"], **kwargs)
+        super().__init__(
+            source=materials,
+            target=bonding,
+            ufn=self.calc,
+            projection=["structure"],
+            **kwargs
+        )
 
     def calc(self, item):
         """
@@ -64,7 +78,9 @@ class BondBuilder(MapBuilder):
 
         # try all local_env strategies
         for strategy, strategy_name in zip(self.strategies, self.strategy_names):
-            self.logger.debug("Calculating bonding for {} {}".format(task_id, strategy_name))
+            self.logger.debug(
+                "Calculating bonding for {} {}".format(task_id, strategy_name)
+            )
 
             # failure statistics are interesting
             try:
@@ -80,26 +96,42 @@ class BondBuilder(MapBuilder):
                 for u, v, to_jimage, dist in edge_weights:
                     sg.alter_edge(u, v, to_jimage=to_jimage, new_weight=dist)
 
-                bonding_docs.append({
-                    "strategy": strategy_name,
-                    "graph": sg.as_dict(),
-                    "summary": {
-                        "bond_types": sg.types_and_weights_of_connections,
-                        "bond_length_stats": sg.weight_statistics,
-                        "coordination_envs": sg.types_of_coordination_environments(),
-                        "coordination_envs_anonymous": sg.types_of_coordination_environments(anonymous=True)
-                    },
-                    "successful": True
-                })
+                bonding_docs.append(
+                    {
+                        "strategy": strategy_name,
+                        "graph": sg.as_dict(),
+                        "summary": {
+                            "bond_types": sg.types_and_weights_of_connections,
+                            "bond_length_stats": sg.weight_statistics,
+                            "coordination_envs": sg.types_of_coordination_environments(),
+                            "coordination_envs_anonymous": sg.types_of_coordination_environments(
+                                anonymous=True
+                            ),
+                        },
+                        "successful": True,
+                    }
+                )
 
             except Exception as e:
 
-                self.logger.warning("Failed to calculate bonding: {} {} {}".format(task_id, strategy_name, e))
+                self.logger.warning(
+                    "Failed to calculate bonding: {} {} {}".format(
+                        task_id, strategy_name, e
+                    )
+                )
 
-                bonding_docs.append({"strategy": strategy_name, "successful": False, "error_message": str(e)})
+                bonding_docs.append(
+                    {
+                        "strategy": strategy_name,
+                        "successful": False,
+                        "error_message": str(e),
+                    }
+                )
 
         return {
             "pymatgen_version": str(pymatgen_version),
             "bonding": {b["strategy"]: b for b in bonding_docs if b["successful"]},
-            "failed_bonding": {b["strategy"]: b for b in bonding_docs if not b["successful"]},
+            "failed_bonding": {
+                b["strategy"]: b for b in bonding_docs if not b["successful"]
+            },
         }

@@ -12,8 +12,7 @@ from maggma.builders import Builder
 from atomate.vasp.workflows.presets.core import wf_elastic_constant
 from atomate.vasp.powerups import add_tags, add_modify_incar, add_priority
 from atomate.utils.utils import get_fws_and_tasks, load_class
-from pymatgen.core.tensors import Tensor, SquareTensor,\
-        get_tkd_value, symmetry_reduce
+from pymatgen.core.tensors import Tensor, SquareTensor, get_tkd_value, symmetry_reduce
 from pymatgen.analysis.elasticity.strain import Strain
 from pymatgen.core.operations import SymmOp
 from pymatgen import Structure
@@ -32,8 +31,9 @@ __email__ = "montoyjh@lbl.gov"
 # TODO: I'm a bit wary to implement an incremental strategy here,
 #       but I think it can be done
 class PropertyWorkflowBuilder(Builder):
-    def __init__(self, source, materials, wf_function,
-                 material_filter=None, lpad=None, **kwargs):
+    def __init__(
+        self, source, materials, wf_function, material_filter=None, lpad=None, **kwargs
+    ):
         """
         Adds workflows to a launchpad based on material inputs.
         This is primarily to be used for derivative property
@@ -60,14 +60,16 @@ class PropertyWorkflowBuilder(Builder):
         # Will this be pickled properly for multiprocessing? could just put
         # it into the processor if that's the case
         if isinstance(wf_function, six.string_types):
-            self.wf_function = load_class(*wf_function.rsplit('.', 1))
+            self.wf_function = load_class(*wf_function.rsplit(".", 1))
             self._wf_function_string = wf_function
         elif callable(wf_function):
             self.wf_function = wf_function
             self._wf_function_string = None
         else:
-            raise ValueError("wf_function must be callable or a string "
-                             "corresponding to a loadable method")
+            raise ValueError(
+                "wf_function must be callable or a string "
+                "corresponding to a loadable method"
+            )
         self.material_filter = material_filter
         if lpad is None:
             self.lpad = LaunchPad.auto_load()
@@ -76,8 +78,7 @@ class PropertyWorkflowBuilder(Builder):
         else:
             self.lpad = lpad
 
-        super().__init__(sources=[source, materials],
-                         targets=[], **kwargs)
+        super().__init__(sources=[source, materials], targets=[], **kwargs)
 
     def get_items(self):
         """
@@ -86,9 +87,11 @@ class PropertyWorkflowBuilder(Builder):
         Returns:
              generator for items
         """
-        wf_inputs = self.materials.query(properties=["structure", "task_id"],
-                                         criteria=self.material_filter,
-                                         no_cursor_timeout=True)
+        wf_inputs = self.materials.query(
+            properties=["structure", "task_id"],
+            criteria=self.material_filter,
+            no_cursor_timeout=True,
+        )
         # find existing tags in workflows
         current_prop_ids = self.source.distinct("task_id")
         current_wf_tags = self.lpad.workflows.distinct("metadata.tags")
@@ -112,7 +115,7 @@ class PropertyWorkflowBuilder(Builder):
         if mat_id in ids_to_filter:
             return None
         else:
-            structure = Structure.from_dict(wf_input.get('structure'))
+            structure = Structure.from_dict(wf_input.get("structure"))
             wf = self.wf_function(structure)
             wf = add_tags(wf, [mat_id])
             return wf
@@ -130,7 +133,7 @@ class PropertyWorkflowBuilder(Builder):
     def as_dict(self):
         d = super().as_dict()
         if self._wf_function_string:
-            d['wf_function'] = self._wf_function_string
+            d["wf_function"] = self._wf_function_string
         return d
 
 
@@ -163,18 +166,21 @@ def generate_elastic_workflow(structure, tags=None):
 
     # Set categories, starting with optimization
     opt_fws = get_fws_and_tasks(wf, fw_name_constraint="optimization")
-    wf.fws[opt_fws[0][0]].spec['elastic_category'] = "minimal"
+    wf.fws[opt_fws[0][0]].spec["elastic_category"] = "minimal"
 
     # find minimal set of fireworks using symmetry reduction
-    fws_by_strain = {Strain(fw.tasks[-1]['pass_dict']['strain']): n
-                     for n, fw in enumerate(wf.fws) if 'deformation' in fw.name}
+    fws_by_strain = {
+        Strain(fw.tasks[-1]["pass_dict"]["strain"]): n
+        for n, fw in enumerate(wf.fws)
+        if "deformation" in fw.name
+    }
     unique_tensors = symmetry_reduce(list(fws_by_strain.keys()), ieee_structure)
     for unique_tensor in unique_tensors:
         fw_index = get_tkd_value(fws_by_strain, unique_tensor)
         if np.isclose(unique_tensor, 0.005).any():
-            wf.fws[fw_index].spec['elastic_category'] = "minimal"
+            wf.fws[fw_index].spec["elastic_category"] = "minimal"
         else:
-            wf.fws[fw_index].spec['elastic_category'] = "minimal_full_stencil"
+            wf.fws[fw_index].spec["elastic_category"] = "minimal_full_stencil"
 
     # Add tags
     if tags:
@@ -184,10 +190,10 @@ def generate_elastic_workflow(structure, tags=None):
     priority = 500 - structure.num_sites
     wf = add_priority(wf, priority)
     for fw in wf.fws:
-        if fw.spec.get('elastic_category') == 'minimal':
-            fw.spec['_priority'] += 2000
-        elif fw.spec.get('elastic_category') == 'minimal_full_stencil':
-            fw.spec['_priority'] += 1000
+        if fw.spec.get("elastic_category") == "minimal":
+            fw.spec["_priority"] += 2000
+        elif fw.spec.get("elastic_category") == "minimal_full_stencil":
+            fw.spec["_priority"] += 1000
     return wf
 
 
@@ -202,5 +208,6 @@ def get_elastic_wf_builder(elasticity, materials, lpad=None, material_filter=Non
         PropertyWorkflowBuilder for elastic workflow
     """
     wf_method = "emmet.workflows.property_workflows.generate_elastic_workflow"
-    return PropertyWorkflowBuilder(elasticity, materials, wf_method,
-                                   material_filter, lpad)
+    return PropertyWorkflowBuilder(
+        elasticity, materials, wf_method, material_filter, lpad
+    )

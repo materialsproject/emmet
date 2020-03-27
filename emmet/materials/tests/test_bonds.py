@@ -24,10 +24,12 @@ class TestBondBuilder(unittest.TestCase):
         runner = Runner([builder])
         runner.run()
 
-        doc = self.bonding.query_one(criteria={'task_id': 'mp-779001'})["bonding"]["CrystalNN"]
-        sg = StructureGraph.from_dict(doc['graph'])
+        doc = self.bonding.query_one(criteria={"task_id": "mp-779001"})["bonding"][
+            "CrystalNN"
+        ]
+        sg = StructureGraph.from_dict(doc["graph"])
         self.assertIsInstance(sg, StructureGraph)
-        self.assertIn('Hf-O(6)', doc['summary']['coordination_envs'])
+        self.assertIn("Hf-O(6)", doc["summary"]["coordination_envs"])
 
 
 if __name__ == "__main__":

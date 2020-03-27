@@ -14,14 +14,21 @@ from maggma.builders import MapBuilder
 
 __author__ = "Nils E. R. Zimmermann <nerz@lbl.gov>"
 
-nn_target_classes = ["MinimumDistanceNN", "VoronoiNN",
-    "CrystalNN", "JmolNN", "MinimumOKeeffeNN", "MinimumVIRENN",
-    "BrunnerNN_reciprocal", "BrunnerNN_relative", "BrunnerNN_real",
-    "EconNN"]
+nn_target_classes = [
+    "MinimumDistanceNN",
+    "VoronoiNN",
+    "CrystalNN",
+    "JmolNN",
+    "MinimumOKeeffeNN",
+    "MinimumVIRENN",
+    "BrunnerNN_reciprocal",
+    "BrunnerNN_relative",
+    "BrunnerNN_real",
+    "EconNN",
+]
 
 
 class BasicDescriptorsBuilder(MapBuilder):
-
     def __init__(self, materials, descriptors, **kwargs):
         """
         Calculates site-based descriptors (e.g., coordination numbers
@@ -54,9 +61,9 @@ class BasicDescriptorsBuilder(MapBuilder):
             k = "cn_wt_{}".format(nn)
             self.sds[k] = CoordinationNumber(nn_(), use_weights="sum")
         self.all_output_pieces = {"site_descriptors": [k for k in self.sds.keys()]}
-        self.sds["csf"] = CrystalNNFingerprint.from_preset("ops",
-                                                           distance_cutoffs=None,
-                                                           x_diff_weight=None)
+        self.sds["csf"] = CrystalNNFingerprint.from_preset(
+            "ops", distance_cutoffs=None, x_diff_weight=None
+        )
         self.all_output_pieces["statistics"] = ["csf"]
 
         # Set up all targeted composition descriptors.
@@ -66,11 +73,13 @@ class BasicDescriptorsBuilder(MapBuilder):
 
         self.all_output_pieces["meta"] = ["atomate"]
 
-        super().__init__(source=materials,
-                         target=descriptors,
-                         ufn=self.calc,
-                         projection=["structure"],
-                         **kwargs)
+        super().__init__(
+            source=materials,
+            target=descriptors,
+            ufn=self.calc,
+            projection=["structure"],
+            **kwargs
+        )
 
     def calc(self, item):
         """
@@ -83,8 +92,9 @@ class BasicDescriptorsBuilder(MapBuilder):
         Returns:
             dict: a basic-descriptors dict
         """
-        self.logger.debug("Calculating basic descriptors for {}".format(
-            item[self.materials.key]))
+        self.logger.debug(
+            "Calculating basic descriptors for {}".format(item[self.materials.key])
+        )
 
         struct = Structure.from_dict(item["structure"])
 
@@ -98,14 +108,11 @@ class BasicDescriptorsBuilder(MapBuilder):
                 comp_descr[0][label] = value
             descr_doc["composition_descriptors"] = comp_descr
         except Exception as e:
-            self.logger.error("Failed getting Magpie descriptors: "
-                              "{}".format(e))
-        descr_doc["site_descriptors"] = \
-                self.get_site_descriptors_from_struct(
-                descr_doc["structure"])
-        descr_doc["statistics"] = \
-                self.get_statistics(
-                descr_doc["site_descriptors"])
+            self.logger.error("Failed getting Magpie descriptors: " "{}".format(e))
+        descr_doc["site_descriptors"] = self.get_site_descriptors_from_struct(
+            descr_doc["structure"]
+        )
+        descr_doc["statistics"] = self.get_statistics(descr_doc["site_descriptors"])
         descr_doc[self.descriptors.key] = item[self.materials.key]
 
         return descr_doc
@@ -125,12 +132,13 @@ class BasicDescriptorsBuilder(MapBuilder):
                 doc[k] = d
 
             except Exception as e:
-                self.logger.error("Failed calculating {} site-descriptors: "
-                                  "{}".format(k, e))
+                self.logger.error(
+                    "Failed calculating {} site-descriptors: " "{}".format(k, e)
+                )
 
         return doc
 
-    def get_statistics(self, site_descr, fps=("csf", )):
+    def get_statistics(self, site_descr, fps=("csf",)):
         doc = {}
 
         # Compute site-descriptor statistics.
@@ -153,7 +161,8 @@ class BasicDescriptorsBuilder(MapBuilder):
                 doc[fp] = d
 
             except Exception as e:
-                self.logger.error("Failed calculating statistics of site "
-                                  "descriptors: {}".format(e))
+                self.logger.error(
+                    "Failed calculating statistics of site " "descriptors: {}".format(e)
+                )
 
         return doc

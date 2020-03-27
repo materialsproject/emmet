@@ -6,6 +6,7 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from emmet.settings import SETTINGS
 from emmet.stubs.pymatgen import Structure
 
+
 class CrystalSystem(Enum):
     """
     The crystal system of the lattice

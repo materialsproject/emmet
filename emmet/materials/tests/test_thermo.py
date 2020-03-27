@@ -13,7 +13,7 @@ test_mats = os.path.join(module_dir, "..", "..", "..", "test_files", "thermo_tes
 
 class TestThermo(unittest.TestCase):
     def setUp(self):
-        self.materials = JSONStore(test_mats,lu_type='isoformat')
+        self.materials = JSONStore(test_mats, lu_type="isoformat")
         self.materials.connect()
         self.thermo = MemoryStore("thermo")
         self.thermo.connect()
@@ -38,40 +38,44 @@ class TestThermo(unittest.TestCase):
         # Ensure only one doc gets a 0 e_above_hull
         entries = tbuilder.get_entries("Sr")
         t_docs = tbuilder.process_item(("core", entries))
-        e_above_hulls = [t['thermo']['e_above_hull'] for t in t_docs]
+        e_above_hulls = [t["thermo"]["e_above_hull"] for t in t_docs]
         self.assertEqual(len([e for e in e_above_hulls if e == 0.0]), 1)
 
         entries = tbuilder.get_entries("Hf")
         t_docs = tbuilder.process_item(("core", entries))
-        e_above_hulls = [t['thermo']['e_above_hull'] for t in t_docs]
+        e_above_hulls = [t["thermo"]["e_above_hull"] for t in t_docs]
         self.assertEqual(len([e for e in e_above_hulls if e == 0.0]), 1)
 
         entries = tbuilder.get_entries("O")
         t_docs = tbuilder.process_item(("core", entries))
-        e_above_hulls = [t['thermo']['e_above_hull'] for t in t_docs]
+        e_above_hulls = [t["thermo"]["e_above_hull"] for t in t_docs]
         self.assertEqual(len([e for e in e_above_hulls if e == 0.0]), 1)
 
         # Ensure 4 docs iwth 0 e_above hull for convex hull for Sr-O
         entries = tbuilder.get_entries("Sr-O")
         t_docs = tbuilder.process_item(("core", entries))
-        e_above_hulls = [t['thermo']['e_above_hull'] for t in t_docs]
+        e_above_hulls = [t["thermo"]["e_above_hull"] for t in t_docs]
         self.assertEqual(len([e for e in e_above_hulls if e == 0.0]), 4)
 
         # Ensure 4 docs iwth 0 e_above hull for convex hull Hf-O
         entries = tbuilder.get_entries("Hf-O")
         t_docs = tbuilder.process_item(("core", entries))
-        e_above_hulls = [t['thermo']['e_above_hull'] for t in t_docs]
+        e_above_hulls = [t["thermo"]["e_above_hull"] for t in t_docs]
         self.assertEqual(len([e for e in e_above_hulls if e == 0.0]), 3)
 
         # Ensure 4 docs iwth 0 e_above hull for convex hull
         entries = tbuilder.get_entries("Sr-Hf-O")
         t_docs = tbuilder.process_item(("core", entries))
-        e_above_hulls = [t['thermo']['e_above_hull'] for t in t_docs]
+        e_above_hulls = [t["thermo"]["e_above_hull"] for t in t_docs]
         self.assertEqual(len(e_above_hulls), 44)
         self.assertEqual(len([e for e in e_above_hulls if e == 0.0]), 7)
 
     def test_update_targets(self):
-        items = [[{"task_id": 1, "_sbxn": ["core"]}] * 3, [{"task_id": 2, "_sbxn": ["core"]}] * 4, [{"task_id": 3 ,"_sbxn": ["core"]}] * 4]
+        items = [
+            [{"task_id": 1, "_sbxn": ["core"]}] * 3,
+            [{"task_id": 2, "_sbxn": ["core"]}] * 4,
+            [{"task_id": 3, "_sbxn": ["core"]}] * 4,
+        ]
         tbuilder = ThermoBuilder(self.materials, self.thermo)
         tbuilder.update_targets(items)
 
@@ -80,7 +84,7 @@ class TestThermo(unittest.TestCase):
 
     def test_get_items(self):
         tbuilder = ThermoBuilder(self.materials, self.thermo)
-        self.assertEqual(len(list(tbuilder.get_items())),1)
+        self.assertEqual(len(list(tbuilder.get_items())), 1)
 
 
 if __name__ == "__main__":

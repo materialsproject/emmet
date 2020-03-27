@@ -2,7 +2,10 @@ import io
 import traceback
 from maggma.builders import Builder
 from pydash.objects import get
-from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine, BandStructure
+from pymatgen.electronic_structure.bandstructure import (
+    BandStructureSymmLine,
+    BandStructure,
+)
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.electronic_structure.dos import CompleteDos
 from sumo.plotting.dos_plotter import SDOSPlotter
@@ -13,7 +16,16 @@ __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class ElectronicStructureImageBuilder(Builder):
-    def __init__(self, materials, electronic_structure, bandstructures, dos, query=None, plot_options=None, **kwargs):
+    def __init__(
+        self,
+        materials,
+        electronic_structure,
+        bandstructures,
+        dos,
+        query=None,
+        plot_options=None,
+        **kwargs
+    ):
         """
         Creates an electronic structure from a tasks collection, the associated band structures and density of states, and the materials structure
 
@@ -34,7 +46,11 @@ class ElectronicStructureImageBuilder(Builder):
         self.query = query if query else {}
         self.plot_options = plot_options if plot_options else {}
 
-        super().__init__(sources=[materials, bandstructures, dos], targets=[electronic_structure], **kwargs)
+        super().__init__(
+            sources=[materials, bandstructures, dos],
+            targets=[electronic_structure],
+            **kwargs
+        )
 
     def get_items(self):
         """
@@ -49,7 +65,10 @@ class ElectronicStructureImageBuilder(Builder):
         # get all materials without an electronic_structure document but bandstructure and dos fields
         # and there is either a dos or bandstructure
         q = dict(self.query)
-        q["$and"] = [{"bandstructure.bs_task": {"$exists": 1}}, {"bandstructure.dos_task": {"$exists": 1}}]
+        q["$and"] = [
+            {"bandstructure.bs_task": {"$exists": 1}},
+            {"bandstructure.dos_task": {"$exists": 1}},
+        ]
         mat_ids = list(self.materials.distinct(self.materials.key, criteria=q))
         es_ids = self.electronic_structure.distinct("task_id")
 
@@ -57,20 +76,32 @@ class ElectronicStructureImageBuilder(Builder):
         # and there is either a dos or bandstructure
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.electronic_structure))
-        q["$and"] = [{"bandstructure.bs_task": {"$exists": 1}}, {"bandstructure.dos_task": {"$exists": 1}}]
-        mats = set(self.materials.distinct(self.materials.key, criteria=q)) | (set(mat_ids) - set(es_ids))
+        q["$and"] = [
+            {"bandstructure.bs_task": {"$exists": 1}},
+            {"bandstructure.dos_task": {"$exists": 1}},
+        ]
+        mats = set(self.materials.distinct(self.materials.key, criteria=q)) | (
+            set(mat_ids) - set(es_ids)
+        )
 
-        self.logger.debug("Processing {} materials for electronic structure".format(len(mats)))
+        self.logger.debug(
+            "Processing {} materials for electronic structure".format(len(mats))
+        )
 
         self.total = len(mats)
 
         for m in mats:
-            mat = self.materials.query_one([self.materials.key, "structure", "bandstructure", "inputs"],
-                                           {self.materials.key: m})
+            mat = self.materials.query_one(
+                [self.materials.key, "structure", "bandstructure", "inputs"],
+                {self.materials.key: m},
+            )
             mat["bandstructure"]["bs"] = self.bandstructures.query_one(
-                criteria={"task_id": get(mat, "bandstructure.bs_task")})
+                criteria={"task_id": get(mat, "bandstructure.bs_task")}
+            )
 
-            mat["bandstructure"]["dos"] = self.dos.query_one(criteria={"task_id": get(mat, "bandstructure.dos_task")})
+            mat["bandstructure"]["dos"] = self.dos.query_one(
+                criteria={"task_id": get(mat, "bandstructure.dos_task")}
+            )
             yield mat
 
     def process_item(self, mat):
@@ -99,8 +130,11 @@ class ElectronicStructureImageBuilder(Builder):
                 plt.close()
             except Exception:
                 traceback.print_exc()
-                self.logger.warning("Caught error in bandstructure plotting for {}: {}".format(
-                    mat[self.materials.key], traceback.format_exc()))
+                self.logger.warning(
+                    "Caught error in bandstructure plotting for {}: {}".format(
+                        mat[self.materials.key], traceback.format_exc()
+                    )
+                )
 
         # Reduced Band structure plot
         try:
@@ -108,8 +142,11 @@ class ElectronicStructureImageBuilder(Builder):
             plot_data = bs_plotter.bs_plot_data()
             d["bs_plot_small"] = get_small_plot(plot_data, gap)
         except Exception:
-            self.logger.warning("Caught error in generating reduced bandstructure plot for {}: {}".format(
-                mat[self.materials.key], traceback.format_exc()))
+            self.logger.warning(
+                "Caught error in generating reduced bandstructure plot for {}: {}".format(
+                    mat[self.materials.key], traceback.format_exc()
+                )
+            )
 
         # Store task_ids
         for k in ["bs_task", "dos_task", "uniform_task"]:
@@ -135,7 +172,7 @@ class ElectronicStructureImageBuilder(Builder):
 
 
 def get_small_plot(plot_data, gap):
-    for branch in plot_data['energy']:
+    for branch in plot_data["energy"]:
         for spin, v in branch.items():
             new_bands = []
             for band in v:

@@ -45,7 +45,11 @@ class HasProps(Builder):
             if prop in self.prop_stores:
                 self.logger.info(f"Getting updated material IDs for: {prop}")
                 store = self.prop_stores[prop]
-                mids_to_update = [task_map[tid] for tid in store.distinct(getter.idfield, getter.filter) if tid in task_map]
+                mids_to_update = [
+                    task_map[tid]
+                    for tid in store.distinct(getter.idfield, getter.filter)
+                    if tid in task_map
+                ]
                 for mid in mids_to_update:
                     hasmap[mid].add(prop)
 

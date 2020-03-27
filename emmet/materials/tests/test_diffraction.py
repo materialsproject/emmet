@@ -43,5 +43,6 @@ class TestDiffractionBuilder(TestCase):
         builder = DiffractionBuilder(self.source, self.target)
         self.assertIsNone(builder.as_dict()["xrd_settings"])
 
+
 if __name__ == "__main__":
     unittest.main()

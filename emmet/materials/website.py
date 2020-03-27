@@ -366,14 +366,13 @@ def old_style_mat(new_style_mat):
         for d in new_style_mat["origins"]
         if d["task_type"] in _settings["task_types"]
     }
-    
+
     mat["task_ids"] = [
         k
         for k, v in new_style_mat["task_types"].items()
         if v in _settings["task_types"]
     ]
     mat["ntask_ids"] = len(mat["task_ids"])
-    
 
     return mat
 

@@ -49,6 +49,3 @@ class EmmetSettings(BaseSettings):
         new_values.update(values)
 
         return new_values
-
-
-

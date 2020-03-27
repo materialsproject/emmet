@@ -23,8 +23,10 @@ class TestBondValence(unittest.TestCase):
         runner = Runner([builder])
         runner.run()
 
-        doc = list(self.bond_valence.query(criteria={'task_id': 'mp-779001'}))[0]
-        self.assertSetEqual(set(doc["bond_valence"]['possible_species']), {'Hf4+', 'Sr2+', 'O2-'})
+        doc = list(self.bond_valence.query(criteria={"task_id": "mp-779001"}))[0]
+        self.assertSetEqual(
+            set(doc["bond_valence"]["possible_species"]), {"Hf4+", "Sr2+", "O2-"}
+        )
 
 
 if __name__ == "__main__":

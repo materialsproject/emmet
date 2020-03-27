@@ -11,6 +11,7 @@ from maggma.builders import Builder
 from maggma.utils import source_keys_updated
 
 from emmet.common.utils import load_settings
+
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 MODULE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
@@ -18,7 +19,15 @@ DEFAULT_SUBSTRATES = os.path.join(MODULE_DIR, "settings", "substrates.json")
 
 
 class SubstrateBuilder(Builder):
-    def __init__(self, materials, substrates, elasticity=None, substrates_file=None, query=None, **kwargs):
+    def __init__(
+        self,
+        materials,
+        substrates,
+        elasticity=None,
+        substrates_file=None,
+        query=None,
+        **kwargs
+    ):
         """
         Calculates matching substrates
 
@@ -37,7 +46,9 @@ class SubstrateBuilder(Builder):
         self.query = query if query else {}
         self.__settings = load_settings(self.substrates_file, DEFAULT_SUBSTRATES)
 
-        super().__init__(sources=[materials, elasticity], targets=[substrates], **kwargs)
+        super().__init__(
+            sources=[materials, elasticity], targets=[substrates], **kwargs
+        )
 
     def get_items(self):
         """
@@ -52,23 +63,38 @@ class SubstrateBuilder(Builder):
         self.logger.info("Setting up indicies")
         self.ensure_indicies()
 
-
         mat_keys = set(self.materials.distinct(self.materials.key, criteria=self.query))
-        updated_mats = source_keys_updated(source=self.materials, target=self.substrates, query=self.query)
-        e_tensor_updated_mats = source_keys_updated(source=self.elasticity, target=self.substrates)
+        updated_mats = source_keys_updated(
+            source=self.materials, target=self.substrates, query=self.query
+        )
+        e_tensor_updated_mats = source_keys_updated(
+            source=self.elasticity, target=self.substrates
+        )
 
         # To ensure all mats are within our scope
         mats = set(e_tensor_updated_mats + updated_mats) & mat_keys
 
-        self.logger.info("Updating all substrate calculations for {} materials".format(len(mats)))
+        self.logger.info(
+            "Updating all substrate calculations for {} materials".format(len(mats))
+        )
 
         for m in mats:
             e_tensor = self.elasticity.query_one(criteria={self.elasticity.key: m})
-            e_tensor = e_tensor.get("elasticity", {}).get("elastic_tensor", None) if e_tensor else None
+            e_tensor = (
+                e_tensor.get("elasticity", {}).get("elastic_tensor", None)
+                if e_tensor
+                else None
+            )
             mat = self.materials.query_one(
-                criteria={self.materials.key: m}, properties=["structure", self.materials.key])
+                criteria={self.materials.key: m},
+                properties=["structure", self.materials.key],
+            )
 
-            yield {"structure": mat["structure"], "task_id": mat[self.materials.key], "elastic_tensor": e_tensor}
+            yield {
+                "structure": mat["structure"],
+                "task_id": mat[self.materials.key],
+                "elastic_tensor": e_tensor,
+            }
 
     def process_item(self, item):
         """
@@ -83,7 +109,9 @@ class SubstrateBuilder(Builder):
         substrates = self.__settings
 
         elastic_tensor = item.get("elastic_tensor", None)
-        elastic_tensor = ElasticTensor.from_voigt(elastic_tensor) if elastic_tensor else None
+        elastic_tensor = (
+            ElasticTensor.from_voigt(elastic_tensor) if elastic_tensor else None
+        )
 
         self.logger.debug("Calculating substrates for {}".format(item["task_id"]))
 
@@ -99,10 +127,13 @@ class SubstrateBuilder(Builder):
 
             # Calculate lowest matches and group by substrate orientation
             matches_by_orient = groupby_itemkey(
-                sa.calculate(film, substrate, elastic_tensor, lowest=True), "sub_miller")
+                sa.calculate(film, substrate, elastic_tensor, lowest=True), "sub_miller"
+            )
 
             # Find the lowest area match for each substrate orientation
-            lowest_matches = [min(g, key=itemgetter("match_area")) for k, g in matches_by_orient]
+            lowest_matches = [
+                min(g, key=itemgetter("match_area")) for k, g in matches_by_orient
+            ]
 
             for match in lowest_matches:
                 db_entry = {
@@ -159,7 +190,9 @@ class SubstrateBuilder(Builder):
             # substrate builder was last run and rerun all substrates for
             # analysis
             q = self.elasticity.lu_filter(self.substrates)
-            e_tensor_updated_mats = self.elasticity.distinct(self.elasticity.key, criteria=q)
+            e_tensor_updated_mats = self.elasticity.distinct(
+                self.elasticity.key, criteria=q
+            )
 
             # Ensure these materials are within our materials query
             # Account for when we want to constrain the materials key with the query already
@@ -168,11 +201,24 @@ class SubstrateBuilder(Builder):
                 q.update({self.materials.key: {"$in": e_tensor_updated_mats}})
             else:
                 temp_q = q[self.materials.key]
-                q.update({"$and": [temp_q, {self.materials.key: {"$in": e_tensor_updated_mats}}]})
+                q.update(
+                    {
+                        "$and": [
+                            temp_q,
+                            {self.materials.key: {"$in": e_tensor_updated_mats}},
+                        ]
+                    }
+                )
 
-            e_tensor_updated_mats = self.materials.distinct(self.materials.key, criteria=q)
+            e_tensor_updated_mats = self.materials.distinct(
+                self.materials.key, criteria=q
+            )
 
-            self.logger.info("Found {} new/updated elastic tensors".format(len(e_tensor_updated_mats)))
+            self.logger.info(
+                "Found {} new/updated elastic tensors".format(
+                    len(e_tensor_updated_mats)
+                )
+            )
 
         return e_tensor_updated_mats
 
@@ -184,7 +230,9 @@ class SubstrateBuilder(Builder):
         q = dict(self.query)
         q.update(self.materials.lu_filter(self.substrates))
         updated_mats = self.materials.distinct(self.materials.key, q)
-        self.logger.info("Found {} new materials for substrate processing".format(len(updated_mats)))
+        self.logger.info(
+            "Found {} new materials for substrate processing".format(len(updated_mats))
+        )
         return updated_mats
 
     def ensure_indicies(self):

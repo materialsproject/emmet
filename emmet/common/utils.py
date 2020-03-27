@@ -27,8 +27,11 @@ def scrub_class_and_module(doc):
         removed from all subdocuments
     """
     if isinstance(doc, dict):
-        return {k: scrub_class_and_module(v) for k, v in doc.items()
-                if not k in ['@class', '@module']}
+        return {
+            k: scrub_class_and_module(v)
+            for k, v in doc.items()
+            if not k in ["@class", "@module"]
+        }
     elif isinstance(doc, list):
         return [scrub_class_and_module(k) for k in doc]
     else:
@@ -37,5 +40,7 @@ def scrub_class_and_module(doc):
 
 def get_chemsys_space(chemsys):
     elements = chemsys.split("-")
-    combos = itertools.chain.from_iterable(itertools.combinations(elements, i) for i in range(1, len(elements) + 1))
+    combos = itertools.chain.from_iterable(
+        itertools.combinations(elements, i) for i in range(1, len(elements) + 1)
+    )
     return list("-".join(sorted(combo)) for combo in combos)

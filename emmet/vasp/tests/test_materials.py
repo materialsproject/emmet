@@ -13,8 +13,13 @@ class TestMaterials(unittest.TestCase):
         coords = list()
         coords.append([0, 0, 0])
         coords.append([0.75, 0.5, 0.75])
-        lattice = Lattice([[3.8401979337, 0.00, 0.00], [1.9200989668, 3.3257101909, 0.00],
-                           [0.00, -2.2171384943, 3.1355090603]])
+        lattice = Lattice(
+            [
+                [3.8401979337, 0.00, 0.00],
+                [1.9200989668, 3.3257101909, 0.00],
+                [0.00, -2.2171384943, 3.1355090603],
+            ]
+        )
         self.structure = Structure(lattice, ["Si", "Si"], coords)
 
         tasks = MongoStore("emmet_test", "tasks")
@@ -26,45 +31,36 @@ class TestMaterials(unittest.TestCase):
         struc1 = self.structure.copy()
         struc2 = self.structure.copy()
         struc2.translate_sites(1, [0.5, 0, 0])
-        tasks = [{
-            "task_id": "mp-1",
-            "orig_inputs": {
-                "incar": {
-                    "LDAU": True,
-                    "ISIF": 3,
-                    "IBRION": 1
-                }
+        tasks = [
+            {
+                "task_id": "mp-1",
+                "orig_inputs": {"incar": {"LDAU": True, "ISIF": 3, "IBRION": 1}},
+                "output": {"structure": struc1.as_dict(), "bandgap": 1.3},
+                "formula_anonymous": "A",
+                "formula_pretty": "Cl",
+                "last_updated": "Never",
             },
-            "output": {
-                "structure": struc1.as_dict(),
-                "bandgap": 1.3
+            {
+                "task_id": "mp-2",
+                "orig_inputs": {"incar": {"LDAU": True, "ICHARG": 11, "IBRION": 1}},
+                "output": {"structure": struc2.as_dict(), "bandgap": 2},
+                "formula_anonymous": "A",
+                "formula_pretty": "Cl",
+                "last_updated": "Never",
             },
-            "formula_anonymous": "A",
-            "formula_pretty": "Cl",
-            "last_updated": "Never"
-        }, {
-            "task_id": "mp-2",
-            "orig_inputs": {
-                "incar": {
-                    "LDAU": True,
-                    "ICHARG": 11,
-                    "IBRION": 1
-                }
-            },
-            "output": {
-                "structure": struc2.as_dict(),
-                "bandgap": 2
-            },
-            "formula_anonymous": "A",
-            "formula_pretty": "Cl",
-            "last_updated": "Never"
-        }]
+        ]
 
         mat = self.mbuilder.make_mat(tasks)
         self.assertEqual(set(mat["task_ids"]), {"mp-1", "mp-2"})
 
         for k in [
-                "task_ids", "task_id", "origins", "task_types",  "bandstructure", "inputs", "structure"
+            "task_ids",
+            "task_id",
+            "origins",
+            "task_types",
+            "bandstructure",
+            "inputs",
+            "structure",
         ]:
             self.assertIn(k, mat)
         self.assertIn(self.mbuilder.materials.lu_field, mat)
@@ -81,12 +77,30 @@ class TestMaterials(unittest.TestCase):
 
         incar = {"incar": {"LDAU": True, "ISIF": 3, "IBRION": 1}}
 
-        task1 = {"output": {"structure": si.as_dict()}, "task_id": "mp-1", "orig_inputs": incar}
-        task2 = {"output": {"structure": si2.as_dict()}, "task_id": "mp-2", "orig_inputs": incar}
-        task3 = {"output": {"structure": si3.as_dict()}, "task_id": "mp-3", "orig_inputs": incar}
-        task4 = {"output": {"structure": si4.as_dict()}, "task_id": "mp-4", "orig_inputs": incar}
+        task1 = {
+            "output": {"structure": si.as_dict()},
+            "task_id": "mp-1",
+            "orig_inputs": incar,
+        }
+        task2 = {
+            "output": {"structure": si2.as_dict()},
+            "task_id": "mp-2",
+            "orig_inputs": incar,
+        }
+        task3 = {
+            "output": {"structure": si3.as_dict()},
+            "task_id": "mp-3",
+            "orig_inputs": incar,
+        }
+        task4 = {
+            "output": {"structure": si4.as_dict()},
+            "task_id": "mp-4",
+            "orig_inputs": incar,
+        }
 
-        grouped_tasks = list(self.mbuilder.filter_and_group_tasks([task1, task2, task3, task4]))
+        grouped_tasks = list(
+            self.mbuilder.filter_and_group_tasks([task1, task2, task3, task4])
+        )
 
         self.assertEqual(len(grouped_tasks), 3)
 
@@ -96,20 +110,11 @@ class TestMaterials(unittest.TestCase):
     def test_task_to_prop_list(self):
         task = {
             "task_id": "mp-3",
-            "orig_inputs": {
-                "incar": {
-                    "LDAU": True,
-                    "ISIF": 3,
-                    "IBRION": 1
-                }
-            },
-            "output": {
-                "bandgap": 1.3,
-                "structure": "What structure"
-            },
+            "orig_inputs": {"incar": {"LDAU": True, "ISIF": 3, "IBRION": 1}},
+            "output": {"bandgap": 1.3, "structure": "What structure"},
             "formula_anonymous": "A",
             "formula_pretty": "Cl",
-            "last_updated": "Never"
+            "last_updated": "Never",
         }
 
         prop_list = self.mbuilder.task_to_prop_list(task)
@@ -123,10 +128,19 @@ class TestMaterials(unittest.TestCase):
             self.assertIn("materials_key", p)
 
         prop_names = [p["materials_key"] for p in prop_list]
-        props_in = ['structure', 'inputs.structure_optimization', 'bandstructure.band_gap']
+        props_in = [
+            "structure",
+            "inputs.structure_optimization",
+            "bandstructure.band_gap",
+        ]
         props_not_in = [
-            'formula_anonymous', 'formula_pretty', 'bandstructure.cbm', 'bandstructure.vbm',
-            'chemsys', 'analysis.delta_volume', 'thermo.energy'
+            "formula_anonymous",
+            "formula_pretty",
+            "bandstructure.cbm",
+            "bandstructure.vbm",
+            "chemsys",
+            "analysis.delta_volume",
+            "thermo.energy",
         ]
 
         for p in props_in:

@@ -26,7 +26,7 @@ class XASBuilder(GroupBuilder):
         Args:
             tasks: source store of FEFF tasks to process
             xas: target store to put processed XAS Tasks into
-            sampling_density: the sampling density in number of points per eV 
+            sampling_density: the sampling density in number of points per eV
         """
         self.tasks = tasks
         self.xas = xas
@@ -266,7 +266,7 @@ def site_weighted_averaged_spectrum(spectra: List[XAS], sampling_density: float 
     Equivalent-site-weighted spectrum for a specie in a structure.
     Args:
         spectra: XAS spectra to average
-        sampling_density: 
+        sampling_density:
         num_samples (int): Number of samples for interpolation.
             Original data has 100 data points.
     Returns:

@@ -32,7 +32,12 @@ class MagneticBuilder(MapBuilder):
         self.magnetism.validator = JSONSchemaValidator(loadfn(MAGNETISM_SCHEMA))
 
         super().__init__(
-            source=materials, target=magnetism, projection=["structure", "magnetism"], ufn=self.calc, **kwargs)
+            source=materials,
+            target=magnetism,
+            projection=["structure", "magnetism"],
+            ufn=self.calc,
+            **kwargs
+        )
 
     def calc(self, item):
         """
@@ -46,33 +51,30 @@ class MagneticBuilder(MapBuilder):
         """
 
         struct = Structure.from_dict(item["structure"])
-        struct_has_magmoms = 'magmom' in struct.site_properties
-        total_magnetization = abs(item["magnetism"].get("total_magnetization", 0))  # not necessarily == sum(magmoms)
+        struct_has_magmoms = "magmom" in struct.site_properties
+        total_magnetization = abs(
+            item["magnetism"].get("total_magnetization", 0)
+        )  # not necessarily == sum(magmoms)
         msa = CollinearMagneticStructureAnalyzer(struct)
         magmoms = msa.magmoms
 
         magnetism = {
             "magnetism": {
-                'ordering': msa.ordering.value if struct_has_magmoms else "Unknown",
-                'is_magnetic':
-                msa.is_magnetic,
-                'exchange_symmetry':
-                msa.get_exchange_group_info()[1],
-                'num_magnetic_sites':
-                msa.number_of_magnetic_sites,
-                'num_unique_magnetic_sites':
-                msa.number_of_unique_magnetic_sites(),
-                'types_of_magnetic_species': 
-                [str(t) for t in msa.types_of_magnetic_specie],
-                'magmoms':
-                magmoms,
-                'total_magnetization':
-                total_magnetization,
-                'total_magnetization_normalized_vol':
-                total_magnetization / struct.volume,
-                'total_magnetization_normalized_formula_units':
-                total_magnetization / (struct.composition.get_reduced_composition_and_factor()[1])
+                "ordering": msa.ordering.value if struct_has_magmoms else "Unknown",
+                "is_magnetic": msa.is_magnetic,
+                "exchange_symmetry": msa.get_exchange_group_info()[1],
+                "num_magnetic_sites": msa.number_of_magnetic_sites,
+                "num_unique_magnetic_sites": msa.number_of_unique_magnetic_sites(),
+                "types_of_magnetic_species": [
+                    str(t) for t in msa.types_of_magnetic_specie
+                ],
+                "magmoms": magmoms,
+                "total_magnetization": total_magnetization,
+                "total_magnetization_normalized_vol": total_magnetization
+                / struct.volume,
+                "total_magnetization_normalized_formula_units": total_magnetization
+                / (struct.composition.get_reduced_composition_and_factor()[1]),
             },
-            "pymatgen_version": pymatgen_version
+            "pymatgen_version": pymatgen_version,
         }
         return magnetism

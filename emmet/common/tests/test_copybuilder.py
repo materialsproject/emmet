@@ -23,10 +23,8 @@ class TestCopyBuilder(TestCase):
         tic = datetime.now()
         toc = tic + timedelta(seconds=1)
         keys = list(range(20))
-        self.old_docs = [{"lu": tic, "k": k, "v": "old"}
-                         for k in keys]
-        self.new_docs = [{"lu": toc, "k": k, "v": "new"}
-                         for k in keys[:10]]
+        self.old_docs = [{"lu": tic, "k": k, "v": "old"} for k in keys]
+        self.new_docs = [{"lu": toc, "k": k, "v": "new"} for k in keys[:10]]
         kwargs = dict(key="k", lu_field="lu")
         self.source = MongoStore(self.dbname, "source", **kwargs)
         self.target = MongoStore(self.dbname, "target", **kwargs)
@@ -43,13 +41,11 @@ class TestCopyBuilder(TestCase):
 
     def test_get_items(self):
         self.source.collection.insert_many(self.old_docs)
-        self.assertEqual(len(list(self.builder.get_items())),
-                         len(self.old_docs))
+        self.assertEqual(len(list(self.builder.get_items())), len(self.old_docs))
         self.target.collection.insert_many(self.old_docs)
         self.assertEqual(len(list(self.builder.get_items())), 0)
         self.source.update(self.new_docs, update_lu=False)
-        self.assertEqual(len(list(self.builder.get_items())),
-                         len(self.new_docs))
+        self.assertEqual(len(list(self.builder.get_items())), len(self.new_docs))
 
     def test_process_item(self):
         self.source.collection.insert_many(self.old_docs)
@@ -89,4 +85,4 @@ class TestCopyBuilder(TestCase):
         runner.run()
         all_docs = list(self.target.query(criteria={}))
         self.assertEqual(len(all_docs), 14)
-        self.assertTrue(min([d['k'] for d in all_docs]), 6)
+        self.assertTrue(min([d["k"] for d in all_docs]), 6)

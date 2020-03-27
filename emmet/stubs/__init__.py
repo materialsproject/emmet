@@ -5,4 +5,3 @@ from pymatgen import Structure, Composition
 
 use_model(Structure, StubStructure)
 use_model(Composition, StubComposition)
-

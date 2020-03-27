@@ -8,6 +8,7 @@ from pymongo import UpdateOne
 
 from emmet.magic_numbers import LTOL, STOL, ANGLE_TOL
 
+
 class StructureWorkflowStatus(Builder):
     def __init__(self, jobs_src, wflow_logs, wflows, jobs_tgt, **kwargs):
         self.jobs_src = jobs_src
@@ -17,17 +18,25 @@ class StructureWorkflowStatus(Builder):
         self.kwargs = kwargs
         self.total = None
         super().__init__(
-            sources=[jobs_src, wflow_logs, wflows],
-            targets=[jobs_tgt],
-            **kwargs
+            sources=[jobs_src, wflow_logs, wflows], targets=[jobs_tgt], **kwargs
         )
 
     def get_items(self):
         # NOTE if not already done, SNL should first be checked against publicly released materials
         jobs, wflow_logs, wflows = self.sources
-        snl_ids = jobs.distinct("snl_id", {"wflow.status": {"$nin": ["error", "release-ready", "released"]}})
+        snl_ids = jobs.distinct(
+            "snl_id", {"wflow.status": {"$nin": ["error", "release-ready", "released"]}}
+        )
         criteria = {"snl_id": {"$in": snl_ids}}
-        projection = ["snl_id", "level", "message", "canonical_snl_id", "fw_id", "task_id", "task_id(s)"]
+        projection = [
+            "snl_id",
+            "level",
+            "message",
+            "canonical_snl_id",
+            "fw_id",
+            "task_id",
+            "task_id(s)",
+        ]
         docs = list(wflow_logs.query(criteria, projection))
         self.total = len(docs)
         queue = deque(docs)
@@ -35,13 +44,17 @@ class StructureWorkflowStatus(Builder):
             doc = queue.popleft()
             if doc.get("canonical_snl_id"):
                 job_snl_id = doc["snl_id"]
-                doc = wflow_logs.query_one({"snl_id": doc["canonical_snl_id"]}, projection)
+                doc = wflow_logs.query_one(
+                    {"snl_id": doc["canonical_snl_id"]}, projection
+                )
                 doc.update({"snl_id": job_snl_id})
                 queue.append(doc)
             elif doc["level"] == "ERROR":
-                yield ("error", doc) # NOTE see doc["message"] for error details
+                yield ("error", doc)  # NOTE see doc["message"] for error details
             elif doc.get("fw_id"):
-                doc.update(wflows.query_one({"nodes": doc["fw_id"]}, {"_id": 0, "state": 1}))
+                doc.update(
+                    wflows.query_one({"nodes": doc["fw_id"]}, {"_id": 0, "state": 1})
+                )
                 if doc["state"] == "COMPLETED":
                     yield ("release-ready", doc)
                 elif doc["state"] in ("ARCHIVED", "FIZZLED", "PAUSED", "DEFUSED"):
@@ -77,29 +90,36 @@ class StructureReleaseStatus(Builder):
         self.jobs_tgt = jobs_tgt
         self.kwargs = kwargs
         self.total = None
-        super().__init__(
-            sources=[materials, jobs_src],
-            targets=[jobs_tgt],
-            **kwargs
-        )
+        super().__init__(sources=[materials, jobs_src], targets=[jobs_tgt], **kwargs)
 
     def get_items(self):
         materials, jobs = self.sources
         matcher = StructureMatcher(
-            ltol=LTOL, stol=STOL, angle_tol=ANGLE_TOL, primitive_cell=True, scale=True,
-            attempt_supercell=False, comparator=ElementComparator())
+            ltol=LTOL,
+            stol=STOL,
+            angle_tol=ANGLE_TOL,
+            primitive_cell=True,
+            scale=True,
+            attempt_supercell=False,
+            comparator=ElementComparator(),
+        )
         jobs = list(jobs.query({"wflow.status": "release-ready"}))
         self.total = len(jobs)
         for job in jobs:
             structure = Structure.from_dict(job)
             criteria = {"pretty_formula": structure.composition.reduced_formula}
-            material_id = next((
-                r['task_id'] for r in materials.query(criteria, ['structure', 'task_id'])
-                if matcher.fit(structure, Structure.from_dict(r['structure']))), None)
+            material_id = next(
+                (
+                    r["task_id"]
+                    for r in materials.query(criteria, ["structure", "task_id"])
+                    if matcher.fit(structure, Structure.from_dict(r["structure"]))
+                ),
+                None,
+            )
             if material_id:
                 yield (
                     {"snl_id": job["snl_id"]},
-                    {"wflow.status": "released", "wflow.material_id": material_id}
+                    {"wflow.status": "released", "wflow.material_id": material_id},
                 )
 
     def update_targets(self, items):
@@ -108,5 +128,3 @@ class StructureReleaseStatus(Builder):
             requests.append(UpdateOne(criteria, {"$set": to_set}))
         if requests:
             self.targets[0].collection.bulk_write(requests, ordered=False)
-
-

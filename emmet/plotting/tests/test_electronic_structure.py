@@ -14,15 +14,22 @@ class TestElectronicStructureImageBuilder(unittest.TestCase):
         coords = list()
         coords.append([0, 0, 0])
         coords.append([0.75, 0.5, 0.75])
-        lattice = Lattice([[3.8401979337, 0.00, 0.00], [1.9200989668, 3.3257101909, 0.00],
-                           [0.00, -2.2171384943, 3.1355090603]])
+        lattice = Lattice(
+            [
+                [3.8401979337, 0.00, 0.00],
+                [1.9200989668, 3.3257101909, 0.00],
+                [0.00, -2.2171384943, 3.1355090603],
+            ]
+        )
         self.structure = Structure(lattice, ["Si", "Si"], coords)
 
         materials = MemoryStore("materials")
         electronic_structure = MemoryStore("electronic_structure")
         bandstructures = MemoryStore("bandstructure")
         dos = MemoryStore("dos")
-        self.builder = ElectronicStructureImageBuilder(materials, electronic_structure,bandstructures,dos)
+        self.builder = ElectronicStructureImageBuilder(
+            materials, electronic_structure, bandstructures, dos
+        )
 
     def test_serialization(self):
 

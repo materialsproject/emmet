@@ -24,9 +24,17 @@ __email__ = "montoyjh@lbl.gov"
 # TODO: incremental building doesn't currently work, but needs to be,
 #       fixed on the propjockey side
 class ElasticPropjockeyPrioritizer(Builder):
-    def __init__(self, pj_store, lpad, incremental=True,
-                 query=None, base_priority=2500, site_penalty=10,
-                 vote_weight=10, **kwargs):
+    def __init__(
+        self,
+        pj_store,
+        lpad,
+        incremental=True,
+        query=None,
+        base_priority=2500,
+        site_penalty=10,
+        vote_weight=10,
+        **kwargs
+    ):
         """
         Takes a propjockey collection and sets the priority
         of a fireworks in a fireworks collection from a LaunchPad
@@ -54,8 +62,7 @@ class ElasticPropjockeyPrioritizer(Builder):
         self.site_penalty = site_penalty
         self.vote_weight = vote_weight
 
-        super().__init__(sources=[self.pj_store],
-                         targets=[self.fws_store], **kwargs)
+        super().__init__(sources=[self.pj_store], targets=[self.fws_store], **kwargs)
 
     def get_items(self):
         """
@@ -74,18 +81,20 @@ class ElasticPropjockeyPrioritizer(Builder):
             pj_filter = self.query
 
         pj_filter.update({"state": {"$ne": "COMPLETED"}})
-        pj_cursor = self.pj_store.query(['nrequesters', 'material_id'],
-                                        pj_filter)
+        pj_cursor = self.pj_store.query(["nrequesters", "material_id"], pj_filter)
         self.total = pj_cursor.count()
         self.fws_store.ensure_index("spec.tags")
         self.fws_store.ensure_index("name")
         for doc in pj_cursor:
             logger.debug("Processing {}".format(doc["material_id"]))
             fw = self.fws_store.query_one(
-                criteria={"spec.tags": doc['material_id'],
-                          "name": {"$regex": "structure optimization"}})
+                criteria={
+                    "spec.tags": doc["material_id"],
+                    "name": {"$regex": "structure optimization"},
+                }
+            )
             if not fw:
-                logger.info("No fw found for {}".format(doc['material_id']))
+                logger.info("No fw found for {}".format(doc["material_id"]))
             else:
                 yield doc, fw
 
@@ -100,10 +109,13 @@ class ElasticPropjockeyPrioritizer(Builder):
             Workflow
         """
         doc, fw = item
-        nsites = len(fw['spec']['_tasks'][1]['structure']['sites'])
-        priority = self.base_priority - nsites * self.site_penalty + \
-            self.vote_weight * doc['nrequesters']
-        return (doc['material_id'], priority)
+        nsites = len(fw["spec"]["_tasks"][1]["structure"]["sites"])
+        priority = (
+            self.base_priority
+            - nsites * self.site_penalty
+            + self.vote_weight * doc["nrequesters"]
+        )
+        return (doc["material_id"], priority)
 
     def update_targets(self, items):
         """
@@ -115,5 +127,5 @@ class ElasticPropjockeyPrioritizer(Builder):
         for material_id, priority in tqdm.tqdm(items, desc="updating fws"):
             self.fws_store.collection.update_many(
                 {"spec.tags": material_id, "spec.elastic_category": "minimal"},
-                {"$set": {"spec._priority": priority,
-                          "spec._pj_lu": self.start_date}})
+                {"$set": {"spec._priority": priority, "spec._pj_lu": self.start_date}},
+            )

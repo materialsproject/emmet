@@ -10,7 +10,9 @@ __author__ = "Nils E. R. Zimmermann"
 __email__ = "nerz@lbl.gov"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-test_site_fp_stats = os.path.join(module_dir, "..", "..", "..", "test_files", "site_fingerprint_stats.json")
+test_site_fp_stats = os.path.join(
+    module_dir, "..", "..", "..", "test_files", "site_fingerprint_stats.json"
+)
 
 
 class StructureSimilarityBuilderTest(unittest.TestCase):
@@ -25,9 +27,9 @@ class StructureSimilarityBuilderTest(unittest.TestCase):
     def test_get_items(self):
         test_structure_similarity = MemoryStore("struct_sim")
         test_structure_similarity.connect()
-        sim_builder = StructureSimilarityBuilder(self.test_site_descriptors,
-                                                 test_structure_similarity,
-                                                 fp_type='opsf')
+        sim_builder = StructureSimilarityBuilder(
+            self.test_site_descriptors, test_structure_similarity, fp_type="opsf"
+        )
 
         items = list(sim_builder.get_items())
         self.assertEqual(len(items), 3)
@@ -45,32 +47,33 @@ class StructureSimilarityBuilderTest(unittest.TestCase):
                 pass
             else:
                 import nose
+
                 nose.tools.set_trace()
 
     def test_get_all_site_descriptors(self):
         test_structure_similarity = MemoryStore("struct_sim")
         test_structure_similarity.connect()
-        sim_builder = StructureSimilarityBuilder(self.test_site_descriptors,
-                                                 test_structure_similarity,
-                                                 fp_type='opsf')
+        sim_builder = StructureSimilarityBuilder(
+            self.test_site_descriptors, test_structure_similarity, fp_type="opsf"
+        )
         for d in self.test_site_descriptors.query():
             dsim = sim_builder.get_similarities(d, d)
-            self.assertAlmostEqual(dsim['cos'], 1)
-            self.assertAlmostEqual(dsim['dist'], 0)
+            self.assertAlmostEqual(dsim["cos"], 1)
+            self.assertAlmostEqual(dsim["dist"], 0)
 
         C = self.test_site_descriptors.query_one(criteria={"task_id": "mp-66"})
         NaCl = self.test_site_descriptors.query_one(criteria={"task_id": "mp-22862"})
         Fe = self.test_site_descriptors.query_one(criteria={"task_id": "mp-13"})
 
         d = sim_builder.get_similarities(C, NaCl)
-        self.assertAlmostEqual(d['cos'], 0.0013649)
-        self.assertAlmostEqual(d['dist'], 2.6866749)
+        self.assertAlmostEqual(d["cos"], 0.0013649)
+        self.assertAlmostEqual(d["dist"], 2.6866749)
         d = sim_builder.get_similarities(C, Fe)
-        self.assertAlmostEqual(d['cos'], 0.0013069)
-        self.assertAlmostEqual(d['dist'], 2.6293889)
+        self.assertAlmostEqual(d["cos"], 0.0013069)
+        self.assertAlmostEqual(d["dist"], 2.6293889)
         d = sim_builder.get_similarities(NaCl, Fe)
-        self.assertAlmostEqual(d['cos'], 0.0012729)
-        self.assertAlmostEqual(d['dist'], 2.7235044)
+        self.assertAlmostEqual(d["cos"], 0.0012729)
+        self.assertAlmostEqual(d["dist"], 2.7235044)
 
 
 if __name__ == "__main__":

@@ -20,12 +20,13 @@ from abipy.core.abinit_units import eV_to_THz
 from maggma.builders import Builder
 
 
-#TODO - handle possible other sources for the anaddb netcdf files?
+# TODO - handle possible other sources for the anaddb netcdf files?
 #     - add input more parameters to tune anaddb calculation?
 #     - identify the warning for the materials? (e.g. large ASR and CNSR breaking)
 #     - add a second collection with the phononwebsite format?
 #     - store the anaddb netcdf output to speedup possible rerunning of the builder?
 #     - store the PhononBandStructureSymmLine in gridfs
+
 
 class PhononBuilder(Builder):
     def __init__(self, materials, phonon, query=None, **kwargs):
@@ -45,9 +46,7 @@ class PhononBuilder(Builder):
             query = {}
         self.query = query
 
-        super().__init__(sources=[materials],
-                         targets=[phonon],
-                         **kwargs)
+        super().__init__(sources=[materials], targets=[phonon], **kwargs)
 
     def get_items(self):
         """
@@ -70,10 +69,17 @@ class PhononBuilder(Builder):
 
         # list of properties queried from the results DB
         # basic informations
-        projection = {"mp_id": 1, "spacegroup.number":1}
+        projection = {"mp_id": 1, "spacegroup.number": 1}
         # input data
-        projection.update({"abinit_input.structure": 1, "abinit_input.ngkpt": 1, "abinit_input.shiftk": 1,
-                           "abinit_input.ecut": 1, "abinit_input.ngqpt": 1})
+        projection.update(
+            {
+                "abinit_input.structure": 1,
+                "abinit_input.ngkpt": 1,
+                "abinit_input.shiftk": 1,
+                "abinit_input.ecut": 1,
+                "abinit_input.ngqpt": 1,
+            }
+        )
         # file ids to be fetched
         projection["abinit_output.ddb_id"] = 1
 
@@ -101,7 +107,7 @@ class PhononBuilder(Builder):
         Returns:
             dict: a diffraction dict
         """
-        self.logger.debug("Processing phonon item for {}".format(item['mp_id']))
+        self.logger.debug("Processing phonon item for {}".format(item["mp_id"]))
 
         try:
 
@@ -114,7 +120,10 @@ class PhononBuilder(Builder):
             return ph_doc
         except Exception as e:
             self.logger.warning(
-                "Error generating the phonon properties for {}: {}".format(item["mp_id"], e))
+                "Error generating the phonon properties for {}: {}".format(
+                    item["mp_id"], e
+                )
+            )
             return None
 
     def get_phonon_properties(self, item):
@@ -124,7 +133,9 @@ class PhononBuilder(Builder):
 
         # the temp dir should still exist when using the objects as some readings are done lazily
         with tempfile.TemporaryDirectory() as workdir:
-            phbst_file, phdos_file, ananc_file, labels_list = self.run_anaddb(item, workdir=workdir)
+            phbst_file, phdos_file, ananc_file, labels_list = self.run_anaddb(
+                item, workdir=workdir
+            )
 
             phbands = phbst_file.phbands
             phbands.read_non_anal_from_file(phbst_file.filepath)
@@ -137,16 +148,19 @@ class PhononBuilder(Builder):
             tstart, tstop, nt = 5, 800, 160
             temp = np.linspace(tstart, tstop, nt)
 
-            thermo = {"temperature": temp.tolist(),
-                      "entropy": phdos.get_entropy(tstart, tstop, nt).values.tolist(),
-                      "cv": phdos.get_cv(tstart, tstop, nt).values.tolist(),
-                      "free_energy": phdos.get_free_energy(tstart, tstop, nt).values.tolist(),
-                      }
+            thermo = {
+                "temperature": temp.tolist(),
+                "entropy": phdos.get_entropy(tstart, tstop, nt).values.tolist(),
+                "cv": phdos.get_cv(tstart, tstop, nt).values.tolist(),
+                "free_energy": phdos.get_free_energy(tstart, tstop, nt).values.tolist(),
+            }
 
-            data = {"dos": complete_dos.as_dict(),
-                    "bs": symm_line_bands.as_dict(),
-                    "thermodynamic": thermo,
-                    "becs": ananc_file.becs.values.tolist()}
+            data = {
+                "dos": complete_dos.as_dict(),
+                "bs": symm_line_bands.as_dict(),
+                "thermodynamic": thermo,
+                "becs": ananc_file.becs.values.tolist(),
+            }
 
             return jsanitize(data)
 
@@ -157,12 +171,14 @@ class PhononBuilder(Builder):
 
         anaddb_inp, labels_list = self.get_anaddb_input(item)
 
-        #TODO should this be an input?
+        # TODO should this be an input?
         tm = TaskManager.from_user_config()
 
         ddb_path = item["ddb_path"]
 
-        task = AnaddbTask.temp_shell_task(anaddb_inp, ddb_node=ddb_path, workdir=workdir, manager=tm)
+        task = AnaddbTask.temp_shell_task(
+            anaddb_inp, ddb_node=ddb_path, workdir=workdir, manager=tm
+        )
 
         # Run the task here.
         task.start_and_wait(autoparal=False)
@@ -176,8 +192,6 @@ class PhononBuilder(Builder):
         ananc_file = AnaddbNcFile.from_file(os.path.join(workdir, "anaddb.nc"))
 
         return phbst_file, phdos_file, ananc_file, labels_list
-
-
 
     def get_anaddb_input(self, item):
         """
@@ -194,8 +208,10 @@ class PhononBuilder(Builder):
 
         spgn = hs._sym.get_space_group_number()
         if spgn != item["spacegroup.number"]:
-            raise RuntimeError("Parsed specegroup number {} does not match "
-                               "calculation spacegroup {}".format(spgn, item["spacegroup.number"]))
+            raise RuntimeError(
+                "Parsed specegroup number {} does not match "
+                "calculation spacegroup {}".format(spgn, item["spacegroup.number"])
+            )
 
         # for the moment use gaussian smearing
         prtdos = 1
@@ -231,33 +247,35 @@ class PhononBuilder(Builder):
         qph1l[:, :-1] = qpts
         qph1l[:, -1] = 1
 
-        inp['qph1l'] = qph1l.tolist()
-        inp['nph1l'] = n_qpoints
-
+        inp["qph1l"] = qph1l.tolist()
+        inp["nph1l"] = n_qpoints
 
         if lo_to_splitting:
             kpath = hs.kpath
             directions = []
-            for qptbounds in kpath['path']:
+            for qptbounds in kpath["path"]:
                 for i, qpt in enumerate(qptbounds):
-                    if np.array_equal(kpath['kpoints'][qpt], (0, 0, 0)):
+                    if np.array_equal(kpath["kpoints"][qpt], (0, 0, 0)):
                         # anaddb expects cartesian coordinates for the qph2l list
                         if i > 0:
-                            directions.extend(structure.lattice.reciprocal_lattice_crystallographic.get_cartesian_coords(
-                                kpath['kpoints'][qptbounds[i - 1]]))
+                            directions.extend(
+                                structure.lattice.reciprocal_lattice_crystallographic.get_cartesian_coords(
+                                    kpath["kpoints"][qptbounds[i - 1]]
+                                )
+                            )
                             directions.append(0)
 
                         if i < len(qptbounds) - 1:
-                            directions.extend(structure.lattice.reciprocal_lattice_crystallographic.get_cartesian_coords(
-                                kpath['kpoints'][qptbounds[i + 1]]))
+                            directions.extend(
+                                structure.lattice.reciprocal_lattice_crystallographic.get_cartesian_coords(
+                                    kpath["kpoints"][qptbounds[i + 1]]
+                                )
+                            )
                             directions.append(0)
 
             if directions:
                 directions = np.reshape(directions, (-1, 4))
-                inp.set_vars(
-                    nph2l=len(directions),
-                    qph2l=directions
-                )
+                inp.set_vars(nph2l=len(directions), qph2l=directions)
 
         return inp, labels_list
 
@@ -287,27 +305,36 @@ class PhononBuilder(Builder):
                 labels_dict[l] = q
                 # set LO-TO at gamma
                 if "Gamma" in l:
-                    if i > 0 and not labels_list[i-1]:
-                        ph_freqs[i] = phbands._get_non_anal_freqs(qpts[i-1])
-                        displ[i] = phbands._get_non_anal_phdispl(qpts[i-1])
-                    if i < len(qpts)-1 and not labels_list[i+1]:
-                        ph_freqs[i] = phbands._get_non_anal_freqs(qpts[i+1])
-                        displ[i] = phbands._get_non_anal_phdispl(qpts[i+1])
+                    if i > 0 and not labels_list[i - 1]:
+                        ph_freqs[i] = phbands._get_non_anal_freqs(qpts[i - 1])
+                        displ[i] = phbands._get_non_anal_phdispl(qpts[i - 1])
+                    if i < len(qpts) - 1 and not labels_list[i + 1]:
+                        ph_freqs[i] = phbands._get_non_anal_freqs(qpts[i + 1])
+                        displ[i] = phbands._get_non_anal_phdispl(qpts[i + 1])
 
         ind = self.match_bands(displ, phbands.structure, phbands.amu)
 
         ph_freqs = ph_freqs[np.arange(len(ph_freqs))[:, None], ind]
-        displ = displ[np.arange(displ.shape[0])[:, None, None],
-                      ind[..., None],
-                      np.arange(displ.shape[2])[None, None, :]]
+        displ = displ[
+            np.arange(displ.shape[0])[:, None, None],
+            ind[..., None],
+            np.arange(displ.shape[2])[None, None, :],
+        ]
 
         ph_freqs = np.transpose(ph_freqs) * eV_to_THz
-        displ = np.transpose(np.reshape(displ, (len(qpts), 3*n_at, n_at, 3)), (1, 0, 2, 3))
+        displ = np.transpose(
+            np.reshape(displ, (len(qpts), 3 * n_at, n_at, 3)), (1, 0, 2, 3)
+        )
 
-        return PhononBandStructureSymmLine(qpoints=qpts, frequencies=ph_freqs,
-                                           lattice=structure.reciprocal_lattice,
-                                           has_nac=phbands.non_anal_ph is not None, eigendisplacements=displ,
-                                           labels_dict=labels_dict, structure=structure)
+        return PhononBandStructureSymmLine(
+            qpoints=qpts,
+            frequencies=ph_freqs,
+            lattice=structure.reciprocal_lattice,
+            has_nac=phbands.non_anal_ph is not None,
+            eigendisplacements=displ,
+            labels_dict=labels_dict,
+            structure=structure,
+        )
 
     def match_bands(self, displ, structure, amu):
         """
@@ -338,7 +365,6 @@ class PhononBuilder(Builder):
             self.phonon.update(docs=items)
         else:
             self.logger.info("No items to update")
-
 
     def ensure_indexes(self):
         """

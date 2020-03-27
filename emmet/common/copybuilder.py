@@ -10,8 +10,9 @@ class CopyBuilder(Builder):
     Can override `target.key` field to filter for target document to update.
     """
 
-    def __init__(self, source, target, key=None, query=None,
-                 incremental=True, **kwargs):
+    def __init__(
+        self, source, target, key=None, query=None, incremental=True, **kwargs
+    ):
         self.source = source
         self.target = target
         self.key = key if key else target.key
@@ -29,8 +30,7 @@ class CopyBuilder(Builder):
         confirm_field_index(source, source.lu_field)
         confirm_field_index(target, target.lu_field)
         confirm_field_index(target, self.key)
-        cursor = source.query(criteria=self.query,
-                              sort=[(source.lu_field, 1)])
+        cursor = source.query(criteria=self.query, sort=[(source.lu_field, 1)])
         self.logger.info("Will copy {} items".format(cursor.count()))
 
         return cursor
@@ -65,9 +65,8 @@ def confirm_field_index(store, fields):
     if not isinstance(fields, list):
         fields = [fields]
     info = store.collection.index_information().values()
-    for spec in (index['key'] for index in info):
+    for spec in (index["key"] for index in info):
         for field in fields:
             if spec[0][0] == field:
                 return
-    raise Exception("Need index on one of '{}' for {}".format(
-        fields, store.collection))
+    raise Exception("Need index on one of '{}' for {}".format(fields, store.collection))

@@ -1,5 +1,10 @@
 from pymatgen.electronic_structure.bandstructure import BandStructure
-from pymatgen.electronic_structure.boltztrap2 import BandstructureLoader, BztInterpolator, units, merge_up_down_doses
+from pymatgen.electronic_structure.boltztrap2 import (
+    BandstructureLoader,
+    BztInterpolator,
+    units,
+    merge_up_down_doses,
+)
 
 from maggma.builders import Builder
 from maggma.utils import source_keys_updated
@@ -10,14 +15,16 @@ __author__ = "Francesco Ricci <francesco.ricci@uclouvain.be>"
 
 
 class Boltztrap4DosBuilder(Builder):
-    def __init__(self,
-                 materials,
-                 bandstructures,
-                 boltztrap_dos,
-                 query=None,
-                 energy_grid=0.005,
-                 avoid_projections=False,
-                 **kwargs):
+    def __init__(
+        self,
+        materials,
+        bandstructures,
+        boltztrap_dos,
+        query=None,
+        energy_grid=0.005,
+        avoid_projections=False,
+        **kwargs
+    ):
         """
         Calculates Density of States (DOS) using BoltzTrap2
 
@@ -37,7 +44,9 @@ class Boltztrap4DosBuilder(Builder):
         self.energy_grid = energy_grid
         self.avoid_projections = avoid_projections
 
-        super().__init__(sources=[materials, bandstructures], targets=[boltztrap_dos], **kwargs)
+        super().__init__(
+            sources=[materials, bandstructures], targets=[boltztrap_dos], **kwargs
+        )
 
     def get_items(self):
         """
@@ -53,18 +62,28 @@ class Boltztrap4DosBuilder(Builder):
         # and a uniform bandstructure exists
         q = dict(self.query)
         q.update({"bandstructure.uniform_task": {"$exists": 1}})
-        mats = set(source_keys_updated(source=self.materials, target=self.boltztrap_dos, query=self.query))
+        mats = set(
+            source_keys_updated(
+                source=self.materials, target=self.boltztrap_dos, query=self.query
+            )
+        )
 
-        self.logger.info("Found {} new materials for calculating boltztrap dos".format(len(mats)))
+        self.logger.info(
+            "Found {} new materials for calculating boltztrap dos".format(len(mats))
+        )
 
         for m in mats:
-            mat = self.materials.query([self.materials.key, "structure", "bandstructure"],
-                                       criteria={self.materials.key: m})
+            mat = self.materials.query(
+                [self.materials.key, "structure", "bandstructure"],
+                criteria={self.materials.key: m},
+            )
 
             # If a bandstructure uniform task exists
             bs_task_id = mat.get("bandstructure", {}).get("uniform_task", None)
             if bs_task_id:
-                bs_dict = self.bandstructures.query_one({self.bandstructures.key: bs_task_id})
+                bs_dict = self.bandstructures.query_one(
+                    {self.bandstructures.key: bs_task_id}
+                )
                 mat["bandstructure_uniform"] = bs_dict
 
             yield mat
@@ -80,20 +99,29 @@ class Boltztrap4DosBuilder(Builder):
         Returns:
             cdos: a complete dos object
         """
-        self.logger.debug("Calculating Boltztrap for {}".format(item[self.materials.key]))
+        self.logger.debug(
+            "Calculating Boltztrap for {}".format(item[self.materials.key])
+        )
 
         bs_dict = item["bandstructure_uniform"]
-        bs_dict['structure'] = item['structure']
+        bs_dict["structure"] = item["structure"]
 
         try:
             btz_dos = dos_from_boltztrap(
-                bs_dict, energy_grid=self.energy_grid, avoid_projections=self.avoid_projections)
+                bs_dict,
+                energy_grid=self.energy_grid,
+                avoid_projections=self.avoid_projections,
+            )
 
             btz_dos.update({self.boltztrap_dos.key: item[self.materials.key]})
             return btz_dos
         except Exception as e:
-            self.logger.error("Error generating the DOS for {}: \
-                            {}".format(item[self.materials.key], e))
+            self.logger.error(
+                "Error generating the DOS for {}: \
+                            {}".format(
+                    item[self.materials.key], e
+                )
+            )
 
         return None
 

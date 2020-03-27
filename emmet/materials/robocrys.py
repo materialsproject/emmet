@@ -10,7 +10,6 @@ __author__ = "Alex Ganose"
 
 
 class RobocrysBuilder(MapBuilder):
-
     def __init__(self, materials, robocrys, **kwargs):
         """Runs robocrystallographer to get the condensed structure and
         structure description.
@@ -28,8 +27,13 @@ class RobocrysBuilder(MapBuilder):
         self.condenser = StructureCondenser()
         self.describer = StructureDescriber(describe_symmetry_labels=False)
 
-        super().__init__(source=materials, target=robocrys, ufn=self.calc,
-                         projection=["structure"], **kwargs)
+        super().__init__(
+            source=materials,
+            target=robocrys,
+            ufn=self.calc,
+            projection=["structure"],
+            **kwargs
+        )
 
     def calc(self, item):
         """Calculates robocrystallographer on an item.
@@ -43,25 +47,27 @@ class RobocrysBuilder(MapBuilder):
             - ``"condensed_structure"``: The condensed structure dictionary.
             - ``"description"``: The text description.
         """
-        self.logger.debug("Running robocrys on {}".format(
-            item[self.materials.key]))
+        self.logger.debug("Running robocrys on {}".format(item[self.materials.key]))
 
         structure = Structure.from_dict(item["structure"])
         doc = {"_robocrys_version": robocrys_version}
 
         try:
-            self.logger.debug("Adding oxidation states for {}".format(
-                item[self.materials.key]))
+            self.logger.debug(
+                "Adding oxidation states for {}".format(item[self.materials.key])
+            )
             structure.add_oxidation_state_by_guess(max_sites=-80)
         except ValueError:
-            self.logger.warning("Could not add oxidation states for {}".format(
-                item[self.materials.key]))
+            self.logger.warning(
+                "Could not add oxidation states for {}".format(item[self.materials.key])
+            )
 
         condensed_structure = self.condenser.condense_structure(structure)
         description = self.describer.describe(condensed_structure)
-        doc.update({"condensed_structure": condensed_structure,
-                    "description": description})
-        
+        doc.update(
+            {"condensed_structure": condensed_structure, "description": description}
+        )
+
         return doc
 
 
@@ -83,8 +89,13 @@ class TextToSpeech(MapBuilder):
         self.service_keyfile_path = service_keyfile_path
         self.kwargs = kwargs
 
-        super().__init__(source=self.robocrys, target=self.robocrys_audio, ufn=self.get_audio,
-                         projection=["description"], **kwargs)
+        super().__init__(
+            source=self.robocrys,
+            target=self.robocrys_audio,
+            ufn=self.get_audio,
+            projection=["description"],
+            **kwargs
+        )
 
     def get_audio(self, item):
         """Fetches audio for robocrystallographer text description.
@@ -101,11 +112,16 @@ class TextToSpeech(MapBuilder):
         Returns:
             dict: {material_id, last_updated, audio}
         """
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = self.service_keyfile_path
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self.service_keyfile_path
         from google.cloud import texttospeech
+
         client = texttospeech.TextToSpeechClient()
-        voice = texttospeech.types.VoiceSelectionParams(language_code='en-US', name='en-US-Standard-E')
-        audio_config = texttospeech.types.AudioConfig(audio_encoding=texttospeech.enums.AudioEncoding.MP3)
+        voice = texttospeech.types.VoiceSelectionParams(
+            language_code="en-US", name="en-US-Standard-E"
+        )
+        audio_config = texttospeech.types.AudioConfig(
+            audio_encoding=texttospeech.enums.AudioEncoding.MP3
+        )
         synthesis_input = texttospeech.types.SynthesisInput
         inp = synthesis_input(text=item["description"][:1000])
         response = client.synthesize_speech(inp, voice, audio_config)
