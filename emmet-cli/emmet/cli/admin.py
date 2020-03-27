@@ -43,7 +43,7 @@ def meta(ctx, collection):
     coll = ctx.obj['CLIENT'].db[collection]
     meta_keys = ['formula_pretty', 'nelements', 'nsites', 'is_ordered', 'is_valid']
     q = {'$or': [{k: {'$exists': 0}} for k in meta_keys]}
-    docs = coll.find(q, structure_keys)
+    docs = coll.find(q, structure_keys)  # TODO structure_keys nested in `snl` for mpcore.snls
 
     ndocs = docs.count()
     if ndocs > 0:
@@ -62,3 +62,41 @@ def meta(ctx, collection):
         'sites.label', 'nsites', 'nelements', 'is_ordered', 'is_valid'
     ]
     clean_ensure_indexes(ctx.obj['DRY_RUN'], fields, coll)
+
+# TODO clear logs command
+#@click.option('--clear-logs/--no-clear-logs', default=False, help='clear MongoDB logs collection for specific tag')
+#    if clear_logs and tag is not None:
+#        mongo_handler.collection.remove({'tags': tag})
+
+# TODO tags overview
+#    TODO move collecting tags to admin?
+#    tags = OrderedDict()
+#    if tag is None:
+#        all_tags = OrderedDict()
+#        query = dict(exclude)
+#        query.update(base_query)
+#        for snl_coll in snl_collections:
+#            print('collecting tags from', snl_coll.full_name, '...')
+#            projects = snl_coll.distinct('about.projects', query)
+#            remarks = snl_coll.distinct('about.remarks', query)
+#            projects_remarks = projects
+#            if len(remarks) < 100:
+#                projects_remarks += remarks
+#            else:
+#                print('too many remarks in', snl_coll.full_name, '({})'.format(len(remarks)))
+#            for t in set(projects_remarks):
+#                q = {'$and': [{'$or': [{'about.remarks': t}, {'about.projects': t}]}, exclude]}
+#                q.update(base_query)
+#                if t not in all_tags:
+#                    all_tags[t] = []
+#                all_tags[t].append([snl_coll.count(q), snl_coll])
+#        print('sort and analyze tags ...')
+#        sorted_tags = sorted(all_tags.items(), key=lambda x: x[1][0][0])
+#        for item in sorted_tags:
+#            total = sum([x[0] for x in item[1]])
+#            q = {'tags': item[0]}
+#            if not skip_all_scanned:
+#                q['level'] = 'WARNING'
+#            to_scan = total - lpad.db.add_wflows_logs.count(q)
+#            if total < max_structures and to_scan:
+#                tags[item[0]] = [total, to_scan, [x[-1] for x in item[1]]]

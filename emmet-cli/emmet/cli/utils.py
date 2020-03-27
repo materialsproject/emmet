@@ -4,6 +4,7 @@ import itertools
 
 from collections import defaultdict
 from log4mongo.handlers import MongoFormatter
+from pymatgen import Structure
 from atomate.vasp.database import VaspCalcDb
 from mongogrant.client import Client
 
@@ -83,6 +84,12 @@ def aggregate_by_formula(coll, q, key=None):
             'structures': {'$push': dict((k.split('.')[-1], f'${k}') for k in structure_keys)}
         }}
     ], allowDiskUse=True, batchSize=1)
+
+
+def load_structure(dct):
+    s = Structure.from_dict(dct)
+    s.remove_oxidation_states()
+    return s.get_primitive_structure()
 
 
 # a utility function to get us a slice of an iterator, as an iterator

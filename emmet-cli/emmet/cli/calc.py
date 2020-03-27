@@ -4,16 +4,21 @@ import bson
 import gzip
 import tarfile
 
+from collections import defaultdict
 from zipfile import ZipFile
 from fnmatch import fnmatch
-from pymatgen.alchemy.materials import TransformedStructure
 from pymatgen import Structure
+from pymatgen.alchemy.materials import TransformedStructure
 from pymatgen.util.provenance import StructureNL, Author
 
 from emmet.core.utils import group_structures, get_sg, task_type
-from emmet.cli.config import skip_labels, aggregation_keys
+from emmet.cli.config import skip_labels, aggregation_keys, task_base_query
+from emmet.cli.config import base_query, exclude
 from emmet.cli.utils import calcdb_from_mgrant, aggregate_by_formula, structures_match
-from emmet.cli.utils import get_meta_from_structure
+from emmet.cli.utils import get_meta_from_structure, load_structure
+
+
+canonical_structures = defaultdict(dict)
 
 
 def get_format(fname):
@@ -25,22 +30,80 @@ def get_format(fname):
         raise ValueError('reading', fname, 'not supported (yet)')
 
 
+def load_canonical_structures(ctx, full_name, formula):
+    collection = ctx.obj['COLLECTIONS'][full_name]
+
+    if formula not in canonical_structures[full_name]:
+        canonical_structures[full_name][formula] = {}
+        structures = defaultdict(list)
+
+        if 'tasks' in full_name:
+            query = {'formula_pretty': formula}
+            query.update(task_base_query)
+            projection = {'input.structure': 1, 'task_id': 1, 'orig_inputs': 1}
+            tasks = collection.find(query, projection)
+
+            for task in tasks:
+                task_label = task_type(task['orig_inputs'], include_calc_type=False)
+                if task_label == "Structure Optimization":
+                    s = load_structure(task['input']['structure'])
+                    s.id = task['task_id']
+                    structures[get_sg(s)].append(s)
+
+        elif 'snl' in full_name:
+            query = {'$or': [{k: formula} for k in aggregation_keys]}
+            query.update(exclude)
+            query.update(base_query)
+
+            for group in aggregate_by_formula(collection, query):
+                for dct in group['structures']:
+                    s = load_structure(dct)
+                    s.id = dct['snl_id']
+                    structures[get_sg(s)].append(s)
+
+        if structures:
+            for sg, slist in structures.items():
+                canonical_structures[full_name][formula][sg] = [g[0] for g in group_structures(slist)]
+
+        total = sum([len(x) for x in canonical_structures[full_name][formula].values()])
+        click.echo(f'{total} canonical structure(s) for {formula} in {full_name}')
+
+
+
 @click.group()
+@click.option('-s', 'specs', multiple=True, metavar='SPEC',
+              help='Additional DB with SNL/task collection(s) to dupe-check.')
+@click.option('-m', 'nmax', default=1000, show_default=True, help='Maximum #structures to scan.')
+@click.option('--skip/--no-skip', default=False, show_default=True,
+              help='Skip all already scanned structures.')
 @click.pass_context
-def calc(ctx):
+def calc(ctx, specs, nmax, skip):
     """set up calculations to optimize structures via VASP"""
-    pass
+    collections = {}
+    for coll in [ctx.obj['CLIENT'].db.snls, ctx.obj['CLIENT'].db.tasks]:
+        collections[coll.full_name] = coll  # user collections
+
+    for spec in specs:
+        client = calcdb_from_mgrant(spec)
+        names = client.db.list_collection_names(filter={"name": {"$regex": r"(snl|tasks)"}})
+        for name in names:
+            collections[client.db[name].full_name] = client.db[name]
+
+    for full_name, coll in collections.items():
+        click.echo(f'{coll.count()} docs in {full_name}')
+
+    ctx.obj['COLLECTIONS'] = collections
+    ctx.obj['NMAX'] = nmax
+    ctx.obj['SKIP'] = skip
 
 
 @calc.command()
 @click.argument('archive', type=click.Path(exists=True))
-@click.option('-a', 'authors', multiple=True, show_default=True,
+@click.option('-a', 'authors', multiple=True, show_default=True, metavar='AUTHOR',
               default=['Materials Project <feedback@materialsproject.org>'],
               help='Author to assign to all structures.')
-@click.option('-s', 'specs', multiple=True,
-              help='Spec for additional database with SNL collection(s) to dupe-check against.')
 @click.pass_context
-def prep(ctx, archive, authors, specs):
+def prep(ctx, archive, authors):
     """prep structures from an archive for submission"""
     fname, ext = os.path.splitext(os.path.basename(archive))
     tag, sec_ext = fname.rsplit('.', 1) if '.' in fname else [fname, '']
@@ -53,14 +116,6 @@ def prep(ctx, archive, authors, specs):
 
     meta = {'authors': [Author.parse_author(a) for a in authors]}
     references = meta.get('references', '').strip()
-    snl_collections = [ctx.obj['CLIENT'].db.snls]
-    for spec in specs:
-        client = calcdb_from_mgrant(spec)
-        names = client.db.list_collection_names(filter={"name": {"$regex": r"(snl)"}})
-        for name in names:
-            snl_collections.append(client.db[name])
-    for snl_coll in snl_collections:
-        click.echo(f'{snl_coll.count()} SNLs in {snl_coll.full_name}')
 
     # TODO add archive of StructureNL files
     input_structures = []
@@ -103,43 +158,29 @@ def prep(ctx, archive, authors, specs):
 
         formula = struct.composition.reduced_formula
         sg = get_sg(struct)
+        collections = ctx.obj['COLLECTIONS']
+        snl_collection = ctx.obj['CLIENT'].db.snls
 
-        for snl_coll in snl_collections:
-            # get all structures in SNL collection for current formula
-            try:
-                q = {'$or': [{k: formula} for k in aggregation_keys]}
-                group = aggregate_by_formula(snl_coll, q).next() # only one formula
-            except StopIteration:
-                # formula doesn't exist in SNL collection
-                continue
-
-            # filter structures in SNL collection with current space group
-            structures = []
-            for dct in group['structures']:
-                s = Structure.from_dict(dct)
-                s.snl_id = dct['snl_id']
-                s.remove_oxidation_states()
-                if get_sg(s) == sg:
-                    structures.append(s)
-
-            # group structures in SNL collection via StructureMatcher and
-            # duplicate-check canonical structure against current structure
-            for g in group_structures(structures):
-                if structures_match(struct, g[0]):
-                    click.echo(f'Duplicate for {idx} ({formula}/{sg}): {g[0].snl_id}')
+        for full_name, coll in collections.items():
+            # load canonical structures in collection for current formula and
+            # duplicate-check them against current structure
+            load_canonical_structures(ctx, full_name, formula)
+            for canonical_structure in canonical_structures[full_name][formula].get(sg, []):
+                if structures_match(struct, canonical_structure):
+                    click.echo(f'Duplicate for #{idx} ({formula}/{sg}): {canonical_structure.id}')
                     break
             else:
-                # no duplicate found -> continue to next SNL collection
+                # no duplicate found -> continue to next collection
                 continue
 
             # duplicate found
             break
         else:
-            # no duplicates in any SNL collection
-            prefix = snl_collections[0].database.name
+            # no duplicates in any collection
+            prefix = snl_collection.database.name
             if index is None:
                 # get start index for SNL id
-                snl_ids = snl_collections[0].distinct('snl_id')
+                snl_ids = snl_collection.distinct('snl_id')
                 index = max([int(snl_id[len(prefix)+1:]) for snl_id in snl_ids]) + 1
             else:
                 index += 1
@@ -159,91 +200,19 @@ def prep(ctx, archive, authors, specs):
             if snls:
                 click.echo(f'add {len(snls)} SNLs')
                 if not ctx.obj['DRY_RUN']:
-                    result = snl_collections[0].insert_many(snls)
+                    result = snl_collection.insert_many(snls)
                     click.echo(f'#SNLs inserted: {len(result.inserted_ids)}')
                 snls.clear()
             else:
                 click.echo('no SNLs to insert')
 
 
-#@cli.command()
-#@click.option('--add_snlcolls', '-a', multiple=True, help='mongogrant string for additional SNL collection to scan')
-#@click.option('--add_taskdbs', '-t', multiple=True, help='mongogrant string for additional tasks collection to scan')
-#@click.option('--tag', default=None, help='only include structures with specific tag')
-#@click.option('--clear-logs/--no-clear-logs', default=False, help='clear MongoDB logs collection for specific tag')
-#@click.option('--max-structures', '-m', default=1000, help='set max structures for tags to scan')
-#@click.option('--skip-all-scanned/--no-skip-all-scanned', default=False, help='skip all already scanned structures incl. WFs2Add/Errors')
-#@click.option('--force-new/--no-force-new', default=False, help='force generation of new workflow')
-#def wflows(add_snlcolls, add_taskdbs, tag, clear_logs, max_structures, skip_all_scanned, force_new):
-#    """add workflows based on tags in SNL collection"""
+@calc.command()
+@click.argument('tag')
+def add(tag):
+    """Add workflows for structures with tag in SNL collection"""
+    pass
 #
-#    lpad = get_lpad()
-#
-#    client = Client()
-#    snl_collections = [lpad.db.snls]
-#    if add_snlcolls is not None:
-#        for snl_db_config in add_snlcolls:
-#            snl_db = client.db(snl_db_config)
-#            #snl_collections.append(snl_db['snls_underconverged']) # TODO get all snls_* in db?
-#            snl_collections.append(snl_db['valid_user_snls'])
-#
-#    for snl_coll in snl_collections:
-#        ensure_meta(snl_coll)
-#        print(snl_coll.count(exclude), 'SNLs in', snl_coll.full_name)
-#
-#    logger = logging.getLogger('add_wflows')
-#    mongo_handler = MongoHandler(
-#        host=lpad.host, port=lpad.port, database_name=lpad.name, collection='add_wflows_logs',
-#        username=lpad.username, password=lpad.password, authentication_db=lpad.name, formatter=MyMongoFormatter()
-#    )
-#    logger.addHandler(mongo_handler)
-#    if clear_logs and tag is not None:
-#        mongo_handler.collection.remove({'tags': tag})
-#    ensure_indexes(['level', 'message', 'snl_id', 'formula', 'tags'], [mongo_handler.collection])
-#
-#    tasks_collections = OrderedDict()
-#    tasks_collections[lpad.db.tasks.full_name] = lpad.db.tasks
-#    if add_taskdbs is not None:
-#        for add_taskdb in add_taskdbs:
-#            target = calcdb_from_mgrant(add_taskdb)
-#            tasks_collections[target.collection.full_name] = target.collection
-#    for full_name, tasks_coll in tasks_collections.items():
-#        print(tasks_coll.count(), 'tasks in', full_name)
-#
-#    NO_POTCARS = ['Po', 'At', 'Rn', 'Fr', 'Ra', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr']
-#    #vp = DLSVolumePredictor()
-#
-#    tags = OrderedDict()
-#    if tag is None:
-#        all_tags = OrderedDict()
-#        query = dict(exclude)
-#        query.update(base_query)
-#        for snl_coll in snl_collections:
-#            print('collecting tags from', snl_coll.full_name, '...')
-#            projects = snl_coll.distinct('about.projects', query)
-#            remarks = snl_coll.distinct('about.remarks', query)
-#            projects_remarks = projects
-#            if len(remarks) < 100:
-#                projects_remarks += remarks
-#            else:
-#                print('too many remarks in', snl_coll.full_name, '({})'.format(len(remarks)))
-#            for t in set(projects_remarks):
-#                q = {'$and': [{'$or': [{'about.remarks': t}, {'about.projects': t}]}, exclude]}
-#                q.update(base_query)
-#                if t not in all_tags:
-#                    all_tags[t] = []
-#                all_tags[t].append([snl_coll.count(q), snl_coll])
-#        print('sort and analyze tags ...')
-#        sorted_tags = sorted(all_tags.items(), key=lambda x: x[1][0][0])
-#        for item in sorted_tags:
-#            total = sum([x[0] for x in item[1]])
-#            q = {'tags': item[0]}
-#            if not skip_all_scanned:
-#                q['level'] = 'WARNING'
-#            to_scan = total - lpad.db.add_wflows_logs.count(q)
-#            if total < max_structures and to_scan:
-#                tags[item[0]] = [total, to_scan, [x[-1] for x in item[1]]]
-#    else:
 #        query = {'$and': [{'$or': [{'about.remarks': tag}, {'about.projects': tag}]}, exclude]}
 #        query.update(base_query)
 #        cnts = [snl_coll.count(query) for snl_coll in snl_collections]
@@ -255,49 +224,10 @@ def prep(ctx, archive, authors, specs):
 #            to_scan = total - lpad.db.add_wflows_logs.count(q)
 #            tags[tag] = [total, to_scan, [snl_coll for idx, snl_coll in enumerate(snl_collections) if cnts[idx]]]
 #
-#    if not tags:
-#        print('nothing to scan')
-#        return
-#    print(len(tags), 'tags to scan in source SNL collections:')
-#    if tag is None:
-#        print('[with < {} structures to scan]'.format(max_structures))
 #    print('\n'.join(['{} ({}) --> {} TO SCAN'.format(k, v[0], v[1]) for k, v in tags.items()]))
 #
-#    canonical_task_structures = {}
 #    grouped_workflow_structures = {}
 #    canonical_workflow_structures = {}
-#
-#    def load_canonical_task_structures(formula, full_name):
-#        if full_name not in canonical_task_structures:
-#            canonical_task_structures[full_name] = {}
-#        if formula not in canonical_task_structures[full_name]:
-#            canonical_task_structures[full_name][formula] = {}
-#            task_query = {'formula_pretty': formula}
-#            task_query.update(task_base_query)
-#            tasks = tasks_collections[full_name].find(task_query, {'input.structure': 1, 'task_id': 1, 'orig_inputs': 1})
-#            if tasks.count() > 0:
-#                task_structures = {}
-#                for task in tasks:
-#                    task_label = task_type(task['orig_inputs'], include_calc_type=False)
-#                    if task_label == "Structure Optimization":
-#                        s = Structure.from_dict(task['input']['structure'])
-#                        try:
-#                            sg = get_sg(s)
-#                        except Exception as ex:
-#                            s.to(fmt='json', filename='sgnum_{}.json'.format(task['task_id']))
-#                            msg = 'SNL {}: {}'.format(task['task_id'], ex)
-#                            print(msg)
-#                            logger.error(msg, extra={'formula': formula, 'task_id': task['task_id'], 'tags': [tag], 'error': str(ex)})
-#                            continue
-#                        if sg in canonical_structures[formula]:
-#                            if sg not in task_structures:
-#                                task_structures[sg] = []
-#                            s.task_id = task['task_id']
-#                            task_structures[sg].append(s)
-#                if task_structures:
-#                    for sg, slist in task_structures.items():
-#                        canonical_task_structures[full_name][formula][sg] = [g[0] for g in group_structures(slist)]
-#                    #print(sum([len(x) for x in canonical_task_structures[full_name][formula].values()]), 'canonical task structure(s) for', formula)
 #
 #    def find_matching_canonical_task_structures(formula, struct, full_name):
 #        matched_task_ids = []

@@ -23,7 +23,6 @@
 #from atomate.vasp.powerups import add_trackers, add_tags, add_additional_fields_to_taskdocs, add_wf_metadata
 #from emmet.vasp.materials import group_structures, get_sg
 #from emmet.vasp.task_tagger import task_type
-#from log4mongo.handlers import MongoHandler, MongoFormatter
 #from prettytable import PrettyTable
 #from googleapiclient.discovery import build
 #from httplib2 import Http
@@ -41,7 +40,6 @@
 #
 #print = functools.partial(print, flush=True)
 #
-#task_base_query = {'tags': {'$nin': ['DEPRECATED', 'deprecated']}, '_mpworks_meta': {'$exists': 0}}
 #SCOPES = 'https://www.googleapis.com/auth/drive'
 #current_year = int(datetime.today().year)
 #year_tags = ['mp_{}'.format(y) for y in range(2018, current_year+1)]
@@ -61,9 +59,12 @@
 
 
 import click
+import logging
+
+from log4mongo.handlers import MongoHandler
 from emmet.cli.admin import admin
 from emmet.cli.calc import calc
-from emmet.cli.utils import calcdb_from_mgrant
+from emmet.cli.utils import calcdb_from_mgrant, MyMongoFormatter, ensure_indexes
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -84,7 +85,22 @@ def entry_point(ctx, spec, dry_run, dupe_check, debug):
     ctx.obj['DRY_RUN'] = dry_run
     ctx.obj['DUPE_CHECK'] = dupe_check
     ctx.obj['SPEC'] = spec
-    ctx.obj['CLIENT'] = calcdb_from_mgrant(spec)
+    client = calcdb_from_mgrant(spec)
+    ctx.obj['CLIENT'] = client
+    ctx.obj['LOGGER'] = logging.getLogger('emmet')
+    ctx.obj['MONGO_HANDLER'] = MongoHandler(
+        host=client.host, port=client.port, database_name=client.db_name,
+        username=client.user, password=client.password,
+        authentication_db=client.db_name, collection='emmet_logs',
+        formatter=MyMongoFormatter()
+    )
+    ctx.obj['LOGGER'].addHandler(ctx.obj['MONGO_HANDLER'])
+    #fields = ['level', 'message', 'snl_id', 'formula', 'tags']  # TODO generalize
+    #coll = ctx.obj['MONGO_HANDLER'].collection
+    #created = ensure_indexes(fields, [coll])
+    #if created:
+    #    click.echo(f'Created the following index(es) on {coll.full_name}:')
+    #    click.echo(', '.join(created[coll.full_name]))
     if dry_run:
         click.echo('DRY RUN! Add --no-dry-run flag to execute changes')
 
