@@ -13,6 +13,7 @@ from pymatgen.util.provenance import StructureNL, Author
 from emmet.core.utils import group_structures, get_sg
 from emmet.cli.config import skip_labels, aggregation_keys
 from emmet.cli.utils import calcdb_from_mgrant, aggregate_by_formula, structures_match
+from emmet.cli.utils import get_meta_from_structure
 
 
 def get_format(fname):
@@ -51,6 +52,7 @@ def prep(ctx, archive, authors, specs):
         raise ValueError(f'{ext} not supported (yet)! Please use one of {exts}.')
 
     meta = {'authors': [Author.parse_author(a) for a in authors]}
+    references = meta.get('references', '').strip()
     snl_collections = [ctx.obj['CLIENT'].db.snls]
     for spec in specs:
         client = calcdb_from_mgrant(spec)
@@ -101,76 +103,67 @@ def prep(ctx, archive, authors, specs):
 
         formula = struct.composition.reduced_formula
         sg = get_sg(struct)
-        struct_added = False
+
         for snl_coll in snl_collections:
+            # get all structures in SNL collection for current formula
             try:
                 q = {'$or': [{k: formula} for k in aggregation_keys]}
                 group = aggregate_by_formula(snl_coll, q).next() # only one formula
             except StopIteration:
+                # formula doesn't exist in SNL collection
                 continue
 
+            # filter structures in SNL collection with current space group
             structures = []
             for dct in group['structures']:
                 s = Structure.from_dict(dct)
                 s.snl_id = dct['snl_id']
                 s.remove_oxidation_states()
-                try:
-                    sgnum = get_sg(s)
-                except Exception as ex:
-                    s.to(fmt='json', filename='sgnum_{}.json'.format(s.snl_id))
-                    print('SNL {}: {}'.format(s.snl_id, ex))
-                    continue
-                if sgnum == sg:
+                if get_sg(s) == sg:
                     structures.append(s)
 
-            if not structures:
-                continue
-
-            canonical_structures = []
+            # group structures in SNL collection via StructureMatcher and
+            # duplicate-check canonical structure against current structure
             for g in group_structures(structures):
-                canonical_structures.append(g[0])
-
-            if not canonical_structures:
+                if structures_match(struct, g[0]):
+                    click.echo(f'Duplicate for {idx} ({formula}/{sg}): {g[0].snl_id}')
+                    break
+            else:
+                # no duplicate found -> continue to next SNL collection
                 continue
 
-            for s in canonical_structures:
-                if structures_match(struct, s):
-                    print('Structure for', formula, sg, 'already added as SNL', s.snl_id, 'in', snl_coll.full_name)
-                    struct_added = True
-                    break
-
-            if struct_added:
-                break
-
-        if struct_added:
-            continue
-
-        prefix = snl_collections[0].database.name
-        if index is None:
-            index = max([int(snl_id[len(prefix)+1:]) for snl_id in snl_collections[0].distinct('snl_id')]) + 1
+            # duplicate found
+            break
         else:
-            index += 1
-        snl_id = '{}-{}'.format(prefix, index)
-        print('append SNL for structure with', formula, sg, 'as', snl_id)
-        references = meta.get('references', '').strip()
-        if isinstance(istruct, TransformedStructure):
-            snl = istruct.to_snl(meta['authors'], references=references, projects=[tag])
-        else:
-            snl = StructureNL(istruct, meta['authors'], references=references, projects=[tag])
-        snl_dct = snl.as_dict()
-        snl_dct.update(get_meta_from_structure(struct))
-        snl_dct['snl_id'] = snl_id
-        snls.append(snl_dct)
+            # no duplicates in any SNL collection
+            prefix = snl_collections[0].database.name
+            if index is None:
+                # get start index for SNL id
+                snl_ids = snl_collections[0].distinct('snl_id')
+                index = max([int(snl_id[len(prefix)+1:]) for snl_id in snl_ids]) + 1
+            else:
+                index += 1
+            snl_id = '{}-{}'.format(prefix, index)
+            click.echo(f'append SNL for structure {idx} with {formula}/{sg} as {snl_id}')
+            kwargs = {'references': references, 'projects': [tag]}
+            if isinstance(istruct, TransformedStructure):
+                snl = istruct.to_snl(meta['authors'], **kwargs)
+            else:
+                snl = StructureNL(istruct, meta['authors'], **kwargs)
+            snl_dct = snl.as_dict()
+            snl_dct.update(get_meta_from_structure(struct))
+            snl_dct['snl_id'] = snl_id
+            snls.append(snl_dct)
 
         if idx and not idx%100 or idx == len(input_structures)-1:
-            if snls_list:
-                print('add', len(snls_list), 'SNLs')
-                if insert:
-                    result = snl_collections[0].insert_many(snls_list)
-                    print('#SNLs inserted:', len(result.inserted_ids))
-                snls_list.clear()
+            if snls:
+                click.echo(f'add {len(snls)} SNLs')
+                if not ctx.obj['DRY_RUN']:
+                    result = snl_collections[0].insert_many(snls)
+                    click.echo(f'#SNLs inserted: {len(result.inserted_ids)}')
+                snls.clear()
             else:
-                print('no SNLs to insert')
+                click.echo('no SNLs to insert')
 
 
 #@cli.command()
