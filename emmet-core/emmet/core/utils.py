@@ -4,10 +4,10 @@ from itertools import groupby
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 
-from emmet.core import LTOL, STOL, ANGLE_TOL, SYMPREC
+from emmet.core.settings import SETTINGS
 
 
-def get_sg(struc, symprec=SYMPREC):
+def get_sg(struc, symprec=SETTINGS.SYMPREC):
     """helper function to get spacegroup with a loose tolerance"""
     try:
         return struc.get_space_group_info(symprec=symprec)[1]
@@ -17,10 +17,10 @@ def get_sg(struc, symprec=SYMPREC):
 
 def group_structures(
     structures: List[Structure],
-    ltol: float = LTOL,
-    stol: float = STOL,
-    angle_tol: float = ANGLE_TOL,
-    symprec: float = SYMPREC,
+    ltol: float = SETTINGS.LTOL,
+    stol: float = SETTINGS.STOL,
+    angle_tol: float = SETTINGS.ANGLE_TOL,
+    symprec: float = SETTINGS.SYMPREC,
 ) -> Iterator[List[Structure]]:
     """
     Groups structures according to space group and structure matching
