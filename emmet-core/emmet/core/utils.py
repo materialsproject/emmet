@@ -4,7 +4,7 @@ from itertools import groupby
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 
-from emmet.core.settings import SETTINGS
+from emmet.core import SETTINGS
 
 
 def get_sg(struc, symprec=SETTINGS.SYMPREC):
