@@ -414,11 +414,6 @@ class MaterialsBuilder(Builder):
             self.task_types.ensure_index("is_valid")
 
 
-def get_sg(struc):
-    # helper function to get spacegroup with a loose tolerance
-    return struc.get_space_group_info(symprec=SYMPREC)[1]
-
-
 def find_mat_id(props: List[Dict]):
 
     # Only consider structure optimization task_ids for material task_id
@@ -509,50 +504,6 @@ def structure_metadata(structure: Structure, symprec=SYMPREC) -> Dict:
     }
 
     return meta
-
-
-def group_structures(
-    structures: List[Structure],
-    ltol: float = LTOL,
-    stol: float = STOL,
-    angle_tol: float = ANGLE_TOL,
-    symprec: float = SYMPREC,
-) -> Iterator[List[Structure]]:
-    """
-    Groups structures according to space group and structure matching
-
-    Args:
-        structures ([Structure]): list of structures to group
-        ltol (float): StructureMatcher tuning parameter for matching tasks to materials
-        stol (float): StructureMatcher tuning parameter for matching tasks to materials
-        angle_tol (float): StructureMatcher tuning parameter for matching tasks to materials
-        symprec (float): symmetry tolerance for space group finding
-    """
-
-    sm = StructureMatcher(
-        ltol=ltol,
-        stol=stol,
-        angle_tol=angle_tol,
-        primitive_cell=True,
-        scale=True,
-        attempt_supercell=False,
-        allow_subset=False,
-        comparator=ElementComparator(),
-    )
-
-    def get_sg(struc):
-        # helper function to get spacegroup with a loose tolerance
-        try:
-            sg = struc.get_space_group_info(symprec=symprec)[1]
-        except Exception:
-            sg = -1
-
-        return sg
-
-    # First group by spacegroup number then by structure matching
-    for sg, pregroup in groupby(sorted(structures, key=get_sg), key=get_sg):
-        for group in sm.group_structures(list(pregroup)):
-            yield group
 
 
 def ID_to_int(s_id: str) -> int:

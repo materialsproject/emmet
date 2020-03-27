@@ -10,8 +10,9 @@ from pymatgen.alchemy.materials import TransformedStructure
 from pymatgen import Structure
 from pymatgen.util.provenance import StructureNL, Author
 
-from emmet.cli.config import skip_labels
-from emmet.cli.utils import calcdb_from_mgrant
+from emmet.core.utils import group_structures, get_sg
+from emmet.cli.config import skip_labels, aggregation_keys
+from emmet.cli.utils import calcdb_from_mgrant, aggregate_by_formula, structures_match
 
 
 def get_format(fname):
@@ -99,9 +100,7 @@ def prep(ctx, archive, authors, specs):
             continue
 
         formula = struct.composition.reduced_formula
-        sg = get_sg(struct)  # TODO check spacegroup == -1 ERROR?
-        continue
-
+        sg = get_sg(struct)
         struct_added = False
         for snl_coll in snl_collections:
             try:

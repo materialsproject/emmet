@@ -5,14 +5,14 @@ import itertools
 from collections import defaultdict
 from log4mongo.handlers import MongoFormatter
 from atomate.vasp.database import VaspCalcDb
-#from emmet.vasp.materials import group_structures
 from mongogrant.client import Client
 
+from emmet.core.utils import group_structures
 from emmet.cli.config import exclude, base_query, aggregation_keys, structure_keys
 
 
-#def structures_match(s1, s2):
-#    return bool(len(list(group_structures([s1, s2]))) == 1)
+def structures_match(s1, s2):
+    return bool(len(list(group_structures([s1, s2]))) == 1)
 
 
 def ensure_indexes(indexes, colls):
