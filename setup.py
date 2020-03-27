@@ -1,46 +1,48 @@
 #!/usr/bin/env python
 
-import os
-
 from setuptools import setup, find_packages
+from pathlib import Path
 
-module_dir = os.path.dirname(os.path.abspath(__file__))
+module_dir = Path(__file__).resolve().parent
 
-if __name__ == "__main__":
-    setup(
-        name='emmet',
-        version="2018.06.07",
-        description='Emmet is a builder framework for the Materials Project',
-        long_description=open(os.path.join(module_dir, 'README.md'),encoding='utf-8').read(),
-        long_description_content_type="text/markdown",
-        url='https://github.com/materialsproject/emmet',
-        author='MP team',
-        author_email='matproj-develop@googlegroups.com',
-        license='modified BSD',
-        packages=find_packages(),
-        include_package_data=True,
-        package_data={},
-        zip_safe=False,
-        install_requires=[
-            'atomate', 'pymatgen>=2018.4.20','maggma','monty',
-            'six', 'pydash', 'tqdm', 'matminer', 'log4mongo', 'prettytable',
-            'prettyplotlib', 'pybtex', 'Click', 'networkx', 'sumo',
-            'robocrys', 'urllib3<1.25', 'jsonschema'
-        ],
-        classifiers=["Programming Language :: Python :: 3",
-                     "Programming Language :: Python :: 3.6",
-                     'Development Status :: 2 - Pre-Alpha',
-                     'Intended Audience :: Science/Research',
-                     'Intended Audience :: System Administrators',
-                     'Intended Audience :: Information Technology',
-                     'Operating System :: OS Independent',
-                     'Topic :: Other/Nonlisted Topic',
-                     'Topic :: Scientific/Engineering'],
-        test_suite='nose.collector',
-        tests_require=['nose'],
-        entry_points='''
-        [console_scripts]
-        emmet=emmet.scripts.emmet:cli
-        ''',
-        python_requires='>=3.6',
-    )
+
+with open(module_dir / "README.md") as f:
+    long_desc = f.read()
+
+
+setup(
+    name='emmet',
+    version="2018.06.07",
+    description='Emmet is a builder framework for the Materials Project',
+    long_description=long_desc,
+    long_description_content_type="text/markdown",
+    url='https://github.com/materialsproject/emmet',
+    author="The Materials Project",
+    author_email="feedback@materialsproject.org",
+    license='modified BSD',
+    packages=find_packages(),
+    include_package_data=True,
+    package_data={},
+    zip_safe=False,
+    install_requires=[
+        'atomate', 'pymatgen>=2018.4.20','maggma','monty',
+        'six', 'pydash', 'tqdm', 'matminer', 'log4mongo', 'prettytable',
+        'prettyplotlib', 'pybtex', 'Click', 'networkx', 'sumo',
+        'robocrys', 'urllib3<1.25', 'jsonschema'
+    ],
+    classifiers=["Programming Language :: Python :: 3",
+                    "Programming Language :: Python :: 3.6",
+                    'Development Status :: 2 - Pre-Alpha',
+                    'Intended Audience :: Science/Research',
+                    'Intended Audience :: System Administrators',
+                    'Intended Audience :: Information Technology',
+                    'Operating System :: OS Independent',
+                    'Topic :: Other/Nonlisted Topic',
+                    'Topic :: Scientific/Engineering'],
+    tests_require=["pytest"],
+    entry_points='''
+    [console_scripts]
+    emmet=emmet.scripts.emmet:cli
+    ''',
+    python_requires='>=3.6',
+)
