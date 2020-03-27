@@ -32,7 +32,7 @@ def clean_ensure_indexes(dry_run, fields, coll):
 def index(ctx, fields, collection):
     """create index(es) for fields of a collection"""
     coll = ctx.obj['CLIENT'].db[collection]
-    clean_ensure_indexes(ctx.obj['DEBUG'], fields, coll)
+    clean_ensure_indexes(ctx.obj['DRY_RUN'], fields, coll)
 
 
 @admin.command()
@@ -61,4 +61,4 @@ def meta(ctx, collection):
         'snl_id', 'reduced_cell_formula', 'formula_pretty', 'about.remarks', 'about.projects',
         'sites.label', 'nsites', 'nelements', 'is_ordered', 'is_valid'
     ]
-    clean_ensure_indexes(ctx.obj['DEBUG'], fields, coll)
+    clean_ensure_indexes(ctx.obj['DRY_RUN'], fields, coll)

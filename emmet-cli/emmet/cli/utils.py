@@ -75,7 +75,7 @@ def aggregate_by_formula(coll, q, key=None):
                 key = k
                 break
         else:
-            raise ValueError('could not find aggregation keys', aggregation_keys, 'in', coll.full_name)
+            raise ValueError(f'could not find one of the aggregation keys {aggregation_keys} in {coll.full_name}!')
     return coll.aggregate([
         {'$match': query}, {'$sort': {'nelements': 1, 'nsites': 1}},
         {'$group': {
