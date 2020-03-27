@@ -10,7 +10,7 @@ from pymatgen.alchemy.materials import TransformedStructure
 from pymatgen import Structure
 from pymatgen.util.provenance import StructureNL, Author
 
-from emmet.core.utils import group_structures, get_sg
+from emmet.core.utils import group_structures, get_sg, task_type
 from emmet.cli.config import skip_labels, aggregation_keys
 from emmet.cli.utils import calcdb_from_mgrant, aggregate_by_formula, structures_match
 from emmet.cli.utils import get_meta_from_structure
