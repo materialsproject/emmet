@@ -91,8 +91,8 @@ def insert_snls(ctx, snls):
               help='Add DB(s) with SNL/task collection(s) to dupe-check.')
 @click.option('-m', 'nmax', default=1000, show_default=True,
               help='Maximum #structures to scan.')
-@click.option('--skip/--no-skip', default=False, show_default=True,
-              help='Skip all already scanned structures.')
+@click.option('--skip/--no-skip', default=True, show_default=True,
+              help='Skip already scanned structures.')
 @click.pass_context
 def calc(ctx, specs, nmax, skip):
     """set up calculations to optimize structures using VASP"""
@@ -127,7 +127,7 @@ def prep(ctx, archive, authors):
     snl_collection = ctx.obj['CLIENT'].db.snls
     handler = ctx.obj['MONGO_HANDLER']
     nmax = ctx.obj['NMAX']
-    # TODO skip flag
+    skip = ctx.obj['SKIP']
     # TODO dupe flag
 
     fname, ext = os.path.splitext(os.path.basename(archive))
@@ -141,10 +141,12 @@ def prep(ctx, archive, authors):
 
     meta = {'authors': [Author.parse_author(a) for a in authors]}
     references = meta.get('references', '').strip()
+    source_ids_scanned = handler.collection.distinct('source_id', {'tags': tag})
 
     # TODO add archive of StructureNL files
-    input_structures = []
+    input_structures, source_total = [], None
     if ext == 'bson.gz':
+        # TODO source_total
         for idx, doc in enumerate(bson.decode_file_iter(gzip.open(archive))):
             if len(input_structures) >= nmax:
                 break
@@ -156,12 +158,17 @@ def prep(ctx, archive, authors):
                 continue
             s = TransformedStructure.from_dict(doc['structure'])
             # TODO add s.source_id
+            # TODO skip scanned
             input_structures.append(s)
     elif ext == '.zip':
         input_zip = ZipFile(archive)
-        for fname in input_zip.namelist():
+        namelist = input_zip.namelist()
+        source_total = len(namelist)
+        for fname in namelist:
             if len(input_structures) >= nmax:
                 break
+            if skip and fname in source_ids_scanned:
+                continue
             contents = input_zip.read(fname)
             fmt = get_format(fname)
             s = Structure.from_str(contents, fmt=fmt)
@@ -169,22 +176,27 @@ def prep(ctx, archive, authors):
             input_structures.append(s)
     else:
         tar = tarfile.open(archive, 'r:gz')
-        for member in tar.getmembers():
+        members = tar.getmembers()
+        source_total = len(members)
+        for member in members:
             if os.path.basename(member.name).startswith('.'):
                 continue
             if len(input_structures) >= nmax:
                 break
+            fname = member.name.lower()
+            if skip and fname in source_ids_scanned:
+                continue
             f = tar.extractfile(member)
             if f:
                 contents = f.read().decode('utf-8')
-                fname = member.name.lower()
                 fmt = get_format(fname)
                 s = Structure.from_str(contents, fmt=fmt)
                 s.source_id = fname
                 input_structures.append(s)
 
     total = len(input_structures)
-    logger.info(f'{total} structure(s) loaded.')
+    logger.info(f'{total} of {source_total} structure(s) loaded '
+                f'({len(source_ids_scanned)} unique structures already scanned).')
 
     snls, index = [], None
     for idx, istruct in enumerate(input_structures):
