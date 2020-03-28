@@ -68,21 +68,23 @@ def get_meta_from_structure(struct):
 def aggregate_by_formula(coll, q, key=None):
     query = {'$and': [q, exclude]}
     query.update(base_query)
+    nested = False
     if key is None:
         for k in aggregation_keys:
             q = {k: {'$exists': 1}}
             q.update(base_query)
-            if coll.count(q):
+            doc = coll.find_one(q)
+            if doc:
                 key = k
+                nested = int('snl' in doc)
                 break
         else:
             raise ValueError(f'could not find one of the aggregation keys {aggregation_keys} in {coll.full_name}!')
+
+    push = {k.split('.')[-1]: f'${k}' for k in structure_keys[nested]}
     return coll.aggregate([
         {'$match': query}, {'$sort': {'nelements': 1, 'nsites': 1}},
-        {'$group': {
-            '_id': f'${key}',
-            'structures': {'$push': dict((k.split('.')[-1], f'${k}') for k in structure_keys)}
-        }}
+        {'$group': {'_id': f'${key}', 'structures': {'$push': push}}}
     ], allowDiskUse=True, batchSize=1)
 
 

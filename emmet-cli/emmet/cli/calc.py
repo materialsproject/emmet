@@ -58,7 +58,7 @@ def load_canonical_structures(ctx, full_name, formula):
             for group in aggregate_by_formula(collection, query):
                 for dct in group['structures']:
                     s = load_structure(dct)
-                    s.id = dct['snl_id']
+                    s.id = dct['snl_id'] if 'snl_id' in dct else dct['task_id']
                     structures[get_sg(s)].append(s)
 
         if structures:
@@ -67,7 +67,6 @@ def load_canonical_structures(ctx, full_name, formula):
 
         total = sum([len(x) for x in canonical_structures[full_name][formula].values()])
         click.echo(f'{total} canonical structure(s) for {formula} in {full_name}')
-
 
 
 @click.group()
@@ -121,6 +120,8 @@ def prep(ctx, archive, authors):
     input_structures = []
     if ext == 'bson.gz':
         for idx, doc in enumerate(bson.decode_file_iter(gzip.open(archive))):
+            if len(input_structures) >= ctx.obj['NMAX']:
+                break
             if idx and not idx%1000:
                 click.echo(f'{idx} ...')
             elements = set([specie['element'] for site in doc['structure']['sites'] for specie in site['species']])
@@ -130,6 +131,8 @@ def prep(ctx, archive, authors):
     elif ext == '.zip':
         input_zip = ZipFile(archive)
         for fname in input_zip.namelist():
+            if len(input_structures) >= ctx.obj['NMAX']:
+                break
             contents = input_zip.read(fname)
             fmt = get_format(fname)
             input_structures.append(Structure.from_str(contents, fmt=fmt))
@@ -138,6 +141,8 @@ def prep(ctx, archive, authors):
         for member in tar.getmembers():
             if os.path.basename(member.name).startswith('.'):
                 continue
+            if len(input_structures) >= ctx.obj['NMAX']:
+                break
             f = tar.extractfile(member)
             if f:
                 contents = f.read().decode('utf-8')

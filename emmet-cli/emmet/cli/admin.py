@@ -2,7 +2,7 @@ import click
 
 from pymatgen import Structure
 
-from emmet.cli.config import structure_keys, meta_keys, snl_indexes
+from emmet.cli.config import meta_keys, snl_indexes
 from emmet.cli.utils import ensure_indexes, get_meta_from_structure
 
 
@@ -42,7 +42,7 @@ def meta(ctx, collection):
     """create meta-data fields and indexes for SNL collection"""
     coll = ctx.obj['CLIENT'].db[collection]
     q = {'$or': [{k: {'$exists': 0}} for k in meta_keys]}
-    docs = coll.find(q, structure_keys)
+    docs = coll.find(q)
 
     ndocs = docs.count()
     if ndocs > 0:
@@ -53,8 +53,9 @@ def meta(ctx, collection):
             for idx, doc in enumerate(docs):
                 if idx and not idx%1000:
                     click.echo(f'{idx} ...')
-                struct = Structure.from_dict(doc.get('snl', doc))
-                key = 'task_id' if 'task_id' in doc else 'snl_id'
+                nested = 'snl' in doc
+                struct = Structure.from_dict(doc['snl'] if nested else doc)
+                key = 'task_id' if nested else 'snl_id'
                 coll.update({key: doc[key]}, {'$set': get_meta_from_structure(struct)})
 
     clean_ensure_indexes(ctx.obj['DRY_RUN'], snl_indexes, coll)
