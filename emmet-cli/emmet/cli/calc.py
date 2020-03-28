@@ -69,6 +69,19 @@ def load_canonical_structures(ctx, full_name, formula):
         click.echo(f'{total} canonical structure(s) for {formula} in {full_name}')
 
 
+def insert_snls(ctx, snls):
+    if snls:
+        click.echo(f'add {len(snls)} SNLs ...')
+        result = ctx.obj['CLIENT'].db.snls.insert_many(snls)
+        click.echo(f'#SNLs inserted: {len(result.inserted_ids)}')
+        snls.clear()
+
+    handler = ctx.obj['MONGO_HANDLER']
+    cnt = len(handler.buffer)
+    handler.flush_to_mongo()
+    click.echo(f'{cnt} log messages saved')
+
+
 @click.group()
 @click.option('-s', 'specs', multiple=True, metavar='SPEC',
               help='Additional DB with SNL/task collection(s) to dupe-check.')
@@ -105,6 +118,13 @@ def calc(ctx, specs, nmax, skip):
 def prep(ctx, archive, authors):
     """prep structures from an archive for submission"""
     logger = ctx.obj['LOGGER']
+    dry_run = ctx.obj['DRY_RUN']
+    collections = ctx.obj['COLLECTIONS']
+    snl_collection = ctx.obj['CLIENT'].db.snls
+    handler = ctx.obj['MONGO_HANDLER']
+    nmax = ctx.obj['NMAX']
+    # TODO skip flag
+
     fname, ext = os.path.splitext(os.path.basename(archive))
     tag, sec_ext = fname.rsplit('.', 1) if '.' in fname else [fname, '']
     click.echo(f'tag: {tag}')
@@ -121,7 +141,7 @@ def prep(ctx, archive, authors):
     input_structures = []
     if ext == 'bson.gz':
         for idx, doc in enumerate(bson.decode_file_iter(gzip.open(archive))):
-            if len(input_structures) >= ctx.obj['NMAX']:
+            if len(input_structures) >= nmax:
                 break
             if idx and not idx%1000:
                 click.echo(f'{idx} ...')
@@ -135,7 +155,7 @@ def prep(ctx, archive, authors):
     elif ext == '.zip':
         input_zip = ZipFile(archive)
         for fname in input_zip.namelist():
-            if len(input_structures) >= ctx.obj['NMAX']:
+            if len(input_structures) >= nmax:
                 break
             contents = input_zip.read(fname)
             fmt = get_format(fname)
@@ -147,7 +167,7 @@ def prep(ctx, archive, authors):
         for member in tar.getmembers():
             if os.path.basename(member.name).startswith('.'):
                 continue
-            if len(input_structures) >= ctx.obj['NMAX']:
+            if len(input_structures) >= nmax:
                 break
             f = tar.extractfile(member)
             if f:
@@ -158,10 +178,15 @@ def prep(ctx, archive, authors):
                 s.source_id = fname
                 input_structures.append(s)
 
-    click.echo(f'{len(input_structures)} structure(s) loaded.')
+    total = len(input_structures)
+    click.echo(f'{total} structure(s) loaded.')
 
     snls, index = [], None
     for idx, istruct in enumerate(input_structures):
+        # number of log messages equals number of structures processed if not dry run
+        if not dry_run and len(handler.buffer) >= handler.buffer_size:
+            insert_snls(ctx, snls)
+
         struct = istruct.final_structure if isinstance(istruct, TransformedStructure) else istruct
         struct.remove_oxidation_states()
         struct = struct.get_primitive_structure()
@@ -171,14 +196,12 @@ def prep(ctx, archive, authors):
         if not (struct.is_ordered and struct.is_valid()):
             msg = f'Skip structure {istruct.source_id}: disordered or invalid!'
             click.echo(msg)
-            logger.warning(msg, extra={
-                'formula': formula, 'spacegroup': sg, 'tags': [tag],
-                'source_id': istruct.source_id
-            })
+            if not dry_run:
+                logger.warning(msg, extra={
+                    'formula': formula, 'spacegroup': sg, 'tags': [tag],
+                    'source_id': istruct.source_id
+                })
             continue
-
-        collections = ctx.obj['COLLECTIONS']
-        snl_collection = ctx.obj['CLIENT'].db.snls
 
         for full_name, coll in collections.items():
             # load canonical structures in collection for current formula and
@@ -188,10 +211,12 @@ def prep(ctx, archive, authors):
                 if structures_match(struct, canonical_structure):
                     msg = f'Duplicate for {istruct.source_id} ({formula}/{sg}): {canonical_structure.id}'
                     click.echo(msg)
-                    logger.warning(msg, extra={
-                        'formula': formula, 'spacegroup': sg, 'tags': [tag], 'source_id': istruct.source_id,
-                        'duplicate_dbname': full_name, 'duplicate_id': canonical_structure.id,
-                    })
+                    if not dry_run:
+                        logger.warning(msg, extra={
+                            'formula': formula, 'spacegroup': sg, 'tags': [tag],
+                            'source_id': istruct.source_id, 'duplicate_dbname': full_name,
+                            'duplicate_id': canonical_structure.id,
+                        })
                     break
             else:
                 continue  # no duplicate found -> continue to next collection
@@ -203,31 +228,31 @@ def prep(ctx, archive, authors):
             if index is None:
                 # get start index for SNL id
                 snl_ids = snl_collection.distinct('snl_id')
-                index = max([int(snl_id[len(prefix)+1:]) for snl_id in snl_ids]) + 1
-            else:
-                index += 1
+                index = max([int(snl_id[len(prefix)+1:]) for snl_id in snl_ids])
+
+            index += 1
             snl_id = '{}-{}'.format(prefix, index)
-            click.echo(f'append SNL for structure {istruct.source_id} with {formula}/{sg} as {snl_id}')
-            # TODO logger entry (level based on dry-run flag?)
             kwargs = {'references': references, 'projects': [tag]}
             if isinstance(istruct, TransformedStructure):
                 snl = istruct.to_snl(meta['authors'], **kwargs)
             else:
                 snl = StructureNL(istruct, meta['authors'], **kwargs)
+
             snl_dct = snl.as_dict()
             snl_dct.update(get_meta_from_structure(struct))
             snl_dct['snl_id'] = snl_id
-            snls.append(snl_dct)
+            msg = f'SNL {snl_id} created for {istruct.source_id} ({formula}/{sg})'
+            click.echo(msg)
+            if not dry_run:
+                snls.append(snl_dct)
+                logger.info(msg, extra={
+                    'formula': formula, 'spacegroup': sg, 'tags': [tag],
+                    'source_id': istruct.source_id,
+                })
 
-        if idx and not idx%100 or idx == len(input_structures)-1:
-            if snls:
-                click.echo(f'add {len(snls)} SNLs')
-                if not ctx.obj['DRY_RUN']:
-                    result = snl_collection.insert_many(snls)
-                    click.echo(f'#SNLs inserted: {len(result.inserted_ids)}')
-                snls.clear()
-            else:
-                click.echo('no SNLs to insert')
+    # final save
+    if not dry_run:
+        insert_snls(ctx, snls)
 
 
 @calc.command()

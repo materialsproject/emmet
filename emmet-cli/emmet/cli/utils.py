@@ -3,7 +3,6 @@ import logging
 import itertools
 
 from collections import defaultdict
-from log4mongo.handlers import MongoFormatter
 from pymatgen import Structure
 from atomate.vasp.database import VaspCalcDb
 from mongogrant.client import Client
@@ -26,18 +25,6 @@ def ensure_indexes(indexes, colls):
                 coll.ensure_index(index)
                 created[coll.full_name].append(index)
     return created
-
-
-class MyMongoFormatter(logging.Formatter):
-    KEEP_KEYS = ['timestamp', 'error'] + log_fields
-    mongoformatter = MongoFormatter()
-
-    def format(self, record):
-        document = self.mongoformatter.format(record)
-        for k in list(document.keys()):
-            if k not in self.KEEP_KEYS:
-                document.pop(k)
-        return document
 
 
 def calcdb_from_mgrant(spec):

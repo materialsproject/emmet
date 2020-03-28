@@ -60,10 +60,20 @@ def meta(ctx, collection):
 
     clean_ensure_indexes(ctx.obj['DRY_RUN'], snl_indexes, coll)
 
-# TODO clear logs command
-#@click.option('--clear-logs/--no-clear-logs', default=False, help='clear MongoDB logs collection for specific tag')
-#    if clear_logs and tag is not None:
-#        mongo_handler.collection.remove({'tags': tag})
+
+@admin.command()
+@click.argument('tag')
+@click.pass_context
+def reset(ctx, tag):
+    """reset collections for tag"""
+    # TODO workflows, tasks?
+    if ctx.obj['DRY_RUN']:
+        cnt = ctx.obj['MONGO_HANDLER'].collection.count({'tags': tag})
+        click.echo(f'Would remove {cnt} log entries.')
+    else:
+        r = ctx.obj['MONGO_HANDLER'].collection.remove({'tags': tag})
+        click.echo(f'{r["n"]} log entries removed.')
+
 
 # TODO tags overview
 #    TODO move collecting tags to admin?

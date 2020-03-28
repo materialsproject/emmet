@@ -61,11 +61,11 @@
 import click
 import logging
 
-from log4mongo.handlers import MongoHandler
+from log4mongo.handlers import BufferedMongoHandler
 from emmet.cli.config import log_fields
 from emmet.cli.admin import admin
 from emmet.cli.calc import calc
-from emmet.cli.utils import calcdb_from_mgrant, MyMongoFormatter, ensure_indexes
+from emmet.cli.utils import calcdb_from_mgrant, ensure_indexes
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -89,11 +89,11 @@ def entry_point(ctx, spec, dry_run, dupe_check, debug):
     client = calcdb_from_mgrant(spec)
     ctx.obj['CLIENT'] = client
     ctx.obj['LOGGER'] = logging.getLogger('emmet')
-    ctx.obj['MONGO_HANDLER'] = MongoHandler(
+    ctx.obj['MONGO_HANDLER'] = BufferedMongoHandler(
         host=client.host, port=client.port, database_name=client.db_name,
         username=client.user, password=client.password,
         authentication_db=client.db_name, collection='emmet_logs',
-        formatter=MyMongoFormatter()
+        buffer_periodical_flush_timing=False  # flush manually
     )
     ctx.obj['LOGGER'].addHandler(ctx.obj['MONGO_HANDLER'])
     coll = ctx.obj['MONGO_HANDLER'].collection
