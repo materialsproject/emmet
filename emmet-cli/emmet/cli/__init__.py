@@ -58,8 +58,9 @@
 #direct_stream = False
 
 
-import click
 import logging
+import click
+import click_log
 
 from log4mongo.handlers import BufferedMongoHandler
 from emmet.cli.config import log_fields
@@ -67,49 +68,50 @@ from emmet.cli.admin import admin
 from emmet.cli.calc import calc
 from emmet.cli.utils import calcdb_from_mgrant, ensure_indexes
 
+
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+logger = logging.getLogger('emmet')
+click_log.basic_config(logger)
+
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.option('--spec', required=True,
-              help='mongogrant specification string for user database.')
-@click.option('--dry-run/--no-dry-run', default=True, show_default=True,
-              help='dry run (no DB interactions or filesystem changes).')
-@click.option('--dupe-check/--no-dupe-check', default=True, show_default=True,
-              help='check duplicate structures in SNL or task collections.')
-@click.option('--debug/--no-debug', default=False, show_default=True,
-              help='switch debug mode on/off.')
+@click_log.simple_verbosity_option(logger)
+@click.option('--spec', required=True, metavar='HOST/DB',
+              help='MongoGrant spec for user database.')
+@click.option('--run/--no-run', default=False, show_default=True,
+              help='Run DB/filesystem write operations.')
+@click.option('--dupe/--no-dupe', default=True, show_default=True,
+              help='Check duplicates SNL/task collections.')
 @click.pass_context
-def entry_point(ctx, spec, dry_run, dupe_check, debug):
+def entry_point(ctx, spec, run, dupe):
     """command line interface for emmet"""
     ctx.ensure_object(dict)
-    ctx.obj['DEBUG'] = debug
-    ctx.obj['DRY_RUN'] = dry_run
-    ctx.obj['DUPE_CHECK'] = dupe_check
+    ctx.obj['RUN'] = run
+    ctx.obj['DUPE'] = dupe
     ctx.obj['SPEC'] = spec
     client = calcdb_from_mgrant(spec)
     ctx.obj['CLIENT'] = client
-    ctx.obj['LOGGER'] = logging.getLogger('emmet')
     ctx.obj['MONGO_HANDLER'] = BufferedMongoHandler(
         host=client.host, port=client.port, database_name=client.db_name,
-        username=client.user, password=client.password,
+        username=client.user, password=client.password, level=logging.WARNING,
         authentication_db=client.db_name, collection='emmet_logs',
         buffer_periodical_flush_timing=False  # flush manually
     )
-    ctx.obj['LOGGER'].addHandler(ctx.obj['MONGO_HANDLER'])
+    logger.addHandler(ctx.obj['MONGO_HANDLER'])
     coll = ctx.obj['MONGO_HANDLER'].collection
     created = ensure_indexes(log_fields, [coll])
     if created:
-        click.echo(f'Created the following index(es) on {coll.full_name}:')
-        click.echo(', '.join(created[coll.full_name]))
-    if dry_run:
-        click.echo('DRY RUN! Add --no-dry-run flag to execute changes')
+        indexes = ', '.join(created[coll.full_name])
+        logger.debug(f'Created the following index(es) on {coll.full_name}:\n{indexes}')
+    if not run:
+        logger.info(click.style('DRY RUN! Add --run flag to execute changes.', fg='green'))
 
 
 def safe_entry_point():
     try:
         entry_point()
     except Exception as e:
-        click.echo(e)
+        logger.error(e)  # TODO exception? log4mongo?
 
 
 entry_point.add_command(admin)

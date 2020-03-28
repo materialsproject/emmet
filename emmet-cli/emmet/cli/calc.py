@@ -1,3 +1,4 @@
+import logging
 import os
 import click
 import bson
@@ -18,6 +19,7 @@ from emmet.cli.utils import calcdb_from_mgrant, aggregate_by_formula, structures
 from emmet.cli.utils import get_meta_from_structure, load_structure
 
 
+logger = logging.getLogger('emmet')
 canonical_structures = defaultdict(dict)
 
 
@@ -66,31 +68,34 @@ def load_canonical_structures(ctx, full_name, formula):
                 canonical_structures[full_name][formula][sg] = [g[0] for g in group_structures(slist)]
 
         total = sum([len(x) for x in canonical_structures[full_name][formula].values()])
-        click.echo(f'{total} canonical structure(s) for {formula} in {full_name}')
+        logger.info(f'{total} canonical structure(s) for {formula} in {full_name}')
 
 
 def insert_snls(ctx, snls):
-    if snls:
-        click.echo(f'add {len(snls)} SNLs ...')
+    if ctx.obj['RUN'] and snls:
+        logger.info(f'add {len(snls)} SNLs ...')
         result = ctx.obj['CLIENT'].db.snls.insert_many(snls)
-        click.echo(f'#SNLs inserted: {len(result.inserted_ids)}')
-        snls.clear()
+        logger.info(click.style(
+            f'#SNLs inserted: {len(result.inserted_ids)}', fg='green'
+        ))
 
+    snls.clear()
     handler = ctx.obj['MONGO_HANDLER']
     cnt = len(handler.buffer)
     handler.flush_to_mongo()
-    click.echo(f'{cnt} log messages saved')
+    logger.info(f'{cnt} log messages saved.')
 
 
 @click.group()
 @click.option('-s', 'specs', multiple=True, metavar='SPEC',
-              help='Additional DB with SNL/task collection(s) to dupe-check.')
-@click.option('-m', 'nmax', default=1000, show_default=True, help='Maximum #structures to scan.')
+              help='Add DB(s) with SNL/task collection(s) to dupe-check.')
+@click.option('-m', 'nmax', default=1000, show_default=True,
+              help='Maximum #structures to scan.')
 @click.option('--skip/--no-skip', default=False, show_default=True,
               help='Skip all already scanned structures.')
 @click.pass_context
 def calc(ctx, specs, nmax, skip):
-    """set up calculations to optimize structures via VASP"""
+    """set up calculations to optimize structures using VASP"""
     collections = {}
     for coll in [ctx.obj['CLIENT'].db.snls, ctx.obj['CLIENT'].db.tasks]:
         collections[coll.full_name] = coll  # user collections
@@ -102,7 +107,7 @@ def calc(ctx, specs, nmax, skip):
             collections[client.db[name].full_name] = client.db[name]
 
     for full_name, coll in collections.items():
-        click.echo(f'{coll.count()} docs in {full_name}')
+        logger.info(f'{coll.count()} docs in {full_name}')
 
     ctx.obj['COLLECTIONS'] = collections
     ctx.obj['NMAX'] = nmax
@@ -117,17 +122,17 @@ def calc(ctx, specs, nmax, skip):
 @click.pass_context
 def prep(ctx, archive, authors):
     """prep structures from an archive for submission"""
-    logger = ctx.obj['LOGGER']
-    dry_run = ctx.obj['DRY_RUN']
+    run = ctx.obj['RUN']
     collections = ctx.obj['COLLECTIONS']
     snl_collection = ctx.obj['CLIENT'].db.snls
     handler = ctx.obj['MONGO_HANDLER']
     nmax = ctx.obj['NMAX']
     # TODO skip flag
+    # TODO dupe flag
 
     fname, ext = os.path.splitext(os.path.basename(archive))
     tag, sec_ext = fname.rsplit('.', 1) if '.' in fname else [fname, '']
-    click.echo(f'tag: {tag}')
+    logger.info(f'tag: {tag}')
     if sec_ext:
         ext = ''.join([sec_ext, ext])
     exts = ['tar.gz', '.tgz', 'bson.gz', '.zip']
@@ -144,10 +149,10 @@ def prep(ctx, archive, authors):
             if len(input_structures) >= nmax:
                 break
             if idx and not idx%1000:
-                click.echo(f'{idx} ...')
+                logger.debug(f'{idx} ...')
             elements = set([specie['element'] for site in doc['structure']['sites'] for specie in site['species']])
             if any([bool(l in elements) for l in skip_labels]):
-                click.echo(f'Skip structure {idx}: unsupported element(s)!')
+                logger.info(f'Skip structure {idx}: unsupported element(s)!')
                 continue
             s = TransformedStructure.from_dict(doc['structure'])
             # TODO add s.source_id
@@ -179,12 +184,13 @@ def prep(ctx, archive, authors):
                 input_structures.append(s)
 
     total = len(input_structures)
-    click.echo(f'{total} structure(s) loaded.')
+    logger.info(f'{total} structure(s) loaded.')
 
     snls, index = [], None
     for idx, istruct in enumerate(input_structures):
-        # number of log messages equals number of structures processed if not dry run
-        if not dry_run and len(handler.buffer) >= handler.buffer_size:
+        # number of log messages equals number of structures processed if --run
+        # only logger.warning goes to DB if --run
+        if run and len(handler.buffer) >= handler.buffer_size:
             insert_snls(ctx, snls)
 
         struct = istruct.final_structure if isinstance(istruct, TransformedStructure) else istruct
@@ -194,13 +200,14 @@ def prep(ctx, archive, authors):
         sg = get_sg(struct)
 
         if not (struct.is_ordered and struct.is_valid()):
-            msg = f'Skip structure {istruct.source_id}: disordered or invalid!'
-            click.echo(msg)
-            if not dry_run:
-                logger.warning(msg, extra={
+            logger.log(
+                logging.WARNING if run else logging.INFO,
+                f'Skip structure {istruct.source_id}: disordered or invalid!',
+                extra={
                     'formula': formula, 'spacegroup': sg, 'tags': [tag],
                     'source_id': istruct.source_id
-                })
+                }
+            )
             continue
 
         for full_name, coll in collections.items():
@@ -209,14 +216,15 @@ def prep(ctx, archive, authors):
             load_canonical_structures(ctx, full_name, formula)
             for canonical_structure in canonical_structures[full_name][formula].get(sg, []):
                 if structures_match(struct, canonical_structure):
-                    msg = f'Duplicate for {istruct.source_id} ({formula}/{sg}): {canonical_structure.id}'
-                    click.echo(msg)
-                    if not dry_run:
-                        logger.warning(msg, extra={
+                    logger.log(
+                        logging.WARNING if run else logging.INFO,
+                        f'Duplicate for {istruct.source_id} ({formula}/{sg}): {canonical_structure.id}',
+                        extra={
                             'formula': formula, 'spacegroup': sg, 'tags': [tag],
                             'source_id': istruct.source_id, 'duplicate_dbname': full_name,
                             'duplicate_id': canonical_structure.id,
-                        })
+                        }
+                    )
                     break
             else:
                 continue  # no duplicate found -> continue to next collection
@@ -241,17 +249,18 @@ def prep(ctx, archive, authors):
             snl_dct = snl.as_dict()
             snl_dct.update(get_meta_from_structure(struct))
             snl_dct['snl_id'] = snl_id
-            msg = f'SNL {snl_id} created for {istruct.source_id} ({formula}/{sg})'
-            click.echo(msg)
-            if not dry_run:
-                snls.append(snl_dct)
-                logger.info(msg, extra={
+            snls.append(snl_dct)
+            logger.log(
+                logging.WARNING if run else logging.INFO,
+                f'SNL {snl_id} created for {istruct.source_id} ({formula}/{sg})',
+                extra={
                     'formula': formula, 'spacegroup': sg, 'tags': [tag],
                     'source_id': istruct.source_id,
-                })
+                }
+            )
 
     # final save
-    if not dry_run:
+    if run:
         insert_snls(ctx, snls)
 
 

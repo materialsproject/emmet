@@ -1,7 +1,9 @@
+import logging
 import click
 
 from pymatgen import Structure
 
+logger = logging.getLogger('emmet')
 from emmet.cli.config import meta_keys, snl_indexes
 from emmet.cli.utils import ensure_indexes, get_meta_from_structure
 
@@ -13,16 +15,19 @@ def admin(ctx):
     pass
 
 
-def clean_ensure_indexes(dry_run, fields, coll):
-    if dry_run:
-        click.echo(f'Would create/ensure index(es) for {", ".join(fields)} on {coll.full_name}')
-    else:
+def clean_ensure_indexes(run, fields, coll):
+    if run:
         created = ensure_indexes(fields, [coll])
         if created:
-            click.echo(f'Created the following index(es) on {coll.full_name}:')
-            click.echo(', '.join(created[coll.full_name]))
+            indexes = ', '.join(created[coll.full_name])
+            logger.info(f'Created the following index(es) on '
+                        f'{coll.full_name}:\n{indexes}')
         else:
-            click.echo('All indexes already created.')
+            logger.info('All indexes already created.')
+    else:
+        fields_list = ", ".join(fields)
+        logger.info(f'Would create/ensure the following index(es) on '
+                    f'{coll.full_name}:\n{fields_list}')
 
 
 @admin.command()
@@ -32,7 +37,7 @@ def clean_ensure_indexes(dry_run, fields, coll):
 def index(ctx, fields, collection):
     """create index(es) for fields of a collection"""
     coll = ctx.obj['CLIENT'].db[collection]
-    clean_ensure_indexes(ctx.obj['DRY_RUN'], fields, coll)
+    clean_ensure_indexes(ctx.obj['RUN'], fields, coll)
 
 
 @admin.command()
@@ -46,33 +51,35 @@ def meta(ctx, collection):
 
     ndocs = docs.count()
     if ndocs > 0:
-        if ctx.obj['DRY_RUN']:
-            click.echo(f'Would fix meta for {ndocs} SNLs.')
-        else:
-            click.echo(f'Fix meta for {ndocs} SNLs ...')
+        if ctx.obj['RUN']:
+            logger.info(f'Fix meta for {ndocs} SNLs ...')
             for idx, doc in enumerate(docs):
                 if idx and not idx%1000:
-                    click.echo(f'{idx} ...')
+                    logger.debug(f'{idx} ...')
                 nested = 'snl' in doc
                 struct = Structure.from_dict(doc['snl'] if nested else doc)
                 key = 'task_id' if nested else 'snl_id'
                 coll.update({key: doc[key]}, {'$set': get_meta_from_structure(struct)})
+        else:
+            logger.info(f'Would fix meta for {ndocs} SNLs.')
 
-    clean_ensure_indexes(ctx.obj['DRY_RUN'], snl_indexes, coll)
+    clean_ensure_indexes(ctx.obj['RUN'], snl_indexes, coll)
 
 
 @admin.command()
-@click.argument('tag')
+@click.argument('tags', nargs=-1)
 @click.pass_context
-def reset(ctx, tag):
-    """reset collections for tag"""
+def reset(ctx, tags):
+    """reset collections for tag(s)"""
     # TODO workflows, tasks?
-    if ctx.obj['DRY_RUN']:
-        cnt = ctx.obj['MONGO_HANDLER'].collection.count({'tags': tag})
-        click.echo(f'Would remove {cnt} log entries.')
+    q = {'tags': {'$in': tags}}
+    total = ctx.obj['MONGO_HANDLER'].collection.count()
+    if ctx.obj['RUN']:
+        r = ctx.obj['MONGO_HANDLER'].collection.remove(q)
+        logger.info(f'{r["n"]} of {total} log entries removed.')
     else:
-        r = ctx.obj['MONGO_HANDLER'].collection.remove({'tags': tag})
-        click.echo(f'{r["n"]} log entries removed.')
+        cnt = ctx.obj['MONGO_HANDLER'].collection.count(q)
+        logger.info(f'Would remove {cnt} of {total} log entries.')
 
 
 # TODO tags overview
