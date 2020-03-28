@@ -62,6 +62,7 @@ import click
 import logging
 
 from log4mongo.handlers import MongoHandler
+from emmet.cli.config import log_fields
 from emmet.cli.admin import admin
 from emmet.cli.calc import calc
 from emmet.cli.utils import calcdb_from_mgrant, MyMongoFormatter, ensure_indexes
@@ -95,12 +96,11 @@ def entry_point(ctx, spec, dry_run, dupe_check, debug):
         formatter=MyMongoFormatter()
     )
     ctx.obj['LOGGER'].addHandler(ctx.obj['MONGO_HANDLER'])
-    #fields = ['level', 'message', 'snl_id', 'formula', 'tags']  # TODO generalize
-    #coll = ctx.obj['MONGO_HANDLER'].collection
-    #created = ensure_indexes(fields, [coll])
-    #if created:
-    #    click.echo(f'Created the following index(es) on {coll.full_name}:')
-    #    click.echo(', '.join(created[coll.full_name]))
+    coll = ctx.obj['MONGO_HANDLER'].collection
+    created = ensure_indexes(log_fields, [coll])
+    if created:
+        click.echo(f'Created the following index(es) on {coll.full_name}:')
+        click.echo(', '.join(created[coll.full_name]))
     if dry_run:
         click.echo('DRY RUN! Add --no-dry-run flag to execute changes')
 

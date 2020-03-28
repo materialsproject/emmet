@@ -104,6 +104,7 @@ def calc(ctx, specs, nmax, skip):
 @click.pass_context
 def prep(ctx, archive, authors):
     """prep structures from an archive for submission"""
+    logger = ctx.obj['LOGGER']
     fname, ext = os.path.splitext(os.path.basename(archive))
     tag, sec_ext = fname.rsplit('.', 1) if '.' in fname else [fname, '']
     click.echo(f'tag: {tag}')
@@ -126,8 +127,11 @@ def prep(ctx, archive, authors):
                 click.echo(f'{idx} ...')
             elements = set([specie['element'] for site in doc['structure']['sites'] for specie in site['species']])
             if any([bool(l in elements) for l in skip_labels]):
+                click.echo(f'Skip structure {idx}: unsupported element(s)!')
                 continue
-            input_structures.append(TransformedStructure.from_dict(doc['structure']))
+            s = TransformedStructure.from_dict(doc['structure'])
+            # TODO add s.source_id
+            input_structures.append(s)
     elif ext == '.zip':
         input_zip = ZipFile(archive)
         for fname in input_zip.namelist():
@@ -135,7 +139,9 @@ def prep(ctx, archive, authors):
                 break
             contents = input_zip.read(fname)
             fmt = get_format(fname)
-            input_structures.append(Structure.from_str(contents, fmt=fmt))
+            s = Structure.from_str(contents, fmt=fmt)
+            s.source_id = fname
+            input_structures.append(s)
     else:
         tar = tarfile.open(archive, 'r:gz')
         for member in tar.getmembers():
@@ -148,7 +154,9 @@ def prep(ctx, archive, authors):
                 contents = f.read().decode('utf-8')
                 fname = member.name.lower()
                 fmt = get_format(fname)
-                input_structures.append(Structure.from_str(contents, fmt=fmt))
+                s = Structure.from_str(contents, fmt=fmt)
+                s.source_id = fname
+                input_structures.append(s)
 
     click.echo(f'{len(input_structures)} structure(s) loaded.')
 
@@ -157,12 +165,18 @@ def prep(ctx, archive, authors):
         struct = istruct.final_structure if isinstance(istruct, TransformedStructure) else istruct
         struct.remove_oxidation_states()
         struct = struct.get_primitive_structure()
-        if not (struct.is_ordered and struct.is_valid()):
-            click.echo(f'Skip structure {idx}: disordered or invalid!')
-            continue
-
         formula = struct.composition.reduced_formula
         sg = get_sg(struct)
+
+        if not (struct.is_ordered and struct.is_valid()):
+            msg = f'Skip structure {istruct.source_id}: disordered or invalid!'
+            click.echo(msg)
+            logger.warning(msg, extra={
+                'formula': formula, 'spacegroup': sg, 'tags': [tag],
+                'source_id': istruct.source_id
+            })
+            continue
+
         collections = ctx.obj['COLLECTIONS']
         snl_collection = ctx.obj['CLIENT'].db.snls
 
@@ -172,14 +186,17 @@ def prep(ctx, archive, authors):
             load_canonical_structures(ctx, full_name, formula)
             for canonical_structure in canonical_structures[full_name][formula].get(sg, []):
                 if structures_match(struct, canonical_structure):
-                    click.echo(f'Duplicate for #{idx} ({formula}/{sg}): {canonical_structure.id}')
+                    msg = f'Duplicate for {istruct.source_id} ({formula}/{sg}): {canonical_structure.id}'
+                    click.echo(msg)
+                    logger.warning(msg, extra={
+                        'formula': formula, 'spacegroup': sg, 'tags': [tag], 'source_id': istruct.source_id,
+                        'duplicate_dbname': full_name, 'duplicate_id': canonical_structure.id,
+                    })
                     break
             else:
-                # no duplicate found -> continue to next collection
-                continue
+                continue  # no duplicate found -> continue to next collection
 
-            # duplicate found
-            break
+            break  # duplicate found
         else:
             # no duplicates in any collection
             prefix = snl_collection.database.name
@@ -190,7 +207,8 @@ def prep(ctx, archive, authors):
             else:
                 index += 1
             snl_id = '{}-{}'.format(prefix, index)
-            click.echo(f'append SNL for structure {idx} with {formula}/{sg} as {snl_id}')
+            click.echo(f'append SNL for structure {istruct.source_id} with {formula}/{sg} as {snl_id}')
+            # TODO logger entry (level based on dry-run flag?)
             kwargs = {'references': references, 'projects': [tag]}
             if isinstance(istruct, TransformedStructure):
                 snl = istruct.to_snl(meta['authors'], **kwargs)

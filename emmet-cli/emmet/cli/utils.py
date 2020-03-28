@@ -9,7 +9,8 @@ from atomate.vasp.database import VaspCalcDb
 from mongogrant.client import Client
 
 from emmet.core.utils import group_structures
-from emmet.cli.config import exclude, base_query, aggregation_keys, structure_keys
+from emmet.cli.config import exclude, base_query, aggregation_keys
+from emmet.cli.config import structure_keys, log_fields
 
 
 def structures_match(s1, s2):
@@ -28,10 +29,7 @@ def ensure_indexes(indexes, colls):
 
 
 class MyMongoFormatter(logging.Formatter):
-    KEEP_KEYS = [
-        'timestamp', 'level', 'message', 'formula', 'snl_id', 'tags',
-        'error', 'canonical_snl_id', 'fw_id', 'task_id', 'task_id(s)'
-    ]
+    KEEP_KEYS = ['timestamp', 'error'] + log_fields
     mongoformatter = MongoFormatter()
 
     def format(self, record):

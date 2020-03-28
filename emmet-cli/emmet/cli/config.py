@@ -27,3 +27,7 @@ snl_indexes = [
     'about.remarks', 'about.projects', 'sites.label',
     'snl.about.remarks', 'snl.about.projects', 'snl.sites.label'
 ]
+log_fields = [
+    'level', 'message', 'snl_id', 'formula', 'tags', 'spacegroup',
+    'task_id', 'duplicate_id', 'source_id', 'fw_id', 'duplicate_dbname'
+]
