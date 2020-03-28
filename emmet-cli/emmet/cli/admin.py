@@ -2,7 +2,7 @@ import click
 
 from pymatgen import Structure
 
-from emmet.cli.config import structure_keys
+from emmet.cli.config import structure_keys, meta_keys, snl_indexes
 from emmet.cli.utils import ensure_indexes, get_meta_from_structure
 
 
@@ -41,9 +41,8 @@ def index(ctx, fields, collection):
 def meta(ctx, collection):
     """create meta-data fields and indexes for SNL collection"""
     coll = ctx.obj['CLIENT'].db[collection]
-    meta_keys = ['formula_pretty', 'nelements', 'nsites', 'is_ordered', 'is_valid']
     q = {'$or': [{k: {'$exists': 0}} for k in meta_keys]}
-    docs = coll.find(q, structure_keys)  # TODO structure_keys nested in `snl` for mpcore.snls
+    docs = coll.find(q, structure_keys)
 
     ndocs = docs.count()
     if ndocs > 0:
@@ -54,14 +53,11 @@ def meta(ctx, collection):
             for idx, doc in enumerate(docs):
                 if idx and not idx%1000:
                     click.echo(f'{idx} ...')
-                struct = Structure.from_dict(doc)
-                coll.update({'snl_id': doc['snl_id']}, {'$set': get_meta_from_structure(struct)})
+                struct = Structure.from_dict(doc.get('snl', doc))
+                key = 'task_id' if 'task_id' in doc else 'snl_id'
+                coll.update({key: doc[key]}, {'$set': get_meta_from_structure(struct)})
 
-    fields = [
-        'snl_id', 'reduced_cell_formula', 'formula_pretty', 'about.remarks', 'about.projects',
-        'sites.label', 'nsites', 'nelements', 'is_ordered', 'is_valid'
-    ]
-    clean_ensure_indexes(ctx.obj['DRY_RUN'], fields, coll)
+    clean_ensure_indexes(ctx.obj['DRY_RUN'], snl_indexes, coll)
 
 # TODO clear logs command
 #@click.option('--clear-logs/--no-clear-logs', default=False, help='clear MongoDB logs collection for specific tag')
