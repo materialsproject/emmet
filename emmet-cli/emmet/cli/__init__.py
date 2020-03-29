@@ -78,12 +78,12 @@ logger = logging.getLogger('emmet')
               help='MongoGrant spec for user database.')
 @click.option('--run', is_flag=True, help='Run DB/filesystem write operations.')
 @click.option('--no-dupe-check', is_flag=True, help='Skip duplicate check(s).')
-@click.option('--debug', is_flag=True, help='Show debug messages.')
+@click.option('--verbose', is_flag=True, help='Show debug messages.')
 @click.version_option()
 @click.pass_context
-def entry_point(ctx, spec, run, no_dupe_check, debug):
-    """command line interface for emmet"""
-    if debug:
+def emmet(ctx, spec, run, no_dupe_check, verbose):
+    """Command line interface for emmet"""
+    if verbose:
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
@@ -111,12 +111,12 @@ def entry_point(ctx, spec, run, no_dupe_check, debug):
 
 def safe_entry_point():
     try:
-        entry_point()
+        emmet()
     except EmmetCliError as e:
         click.secho(str(e), fg='red')
     except Exception as e:
         logger.info(e, exc_info=True)
 
 
-entry_point.add_command(admin)
-entry_point.add_command(calc)
+emmet.add_command(admin)
+emmet.add_command(calc)
