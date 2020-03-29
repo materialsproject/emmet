@@ -67,6 +67,7 @@ from emmet.cli.config import log_fields
 from emmet.cli.admin import admin
 from emmet.cli.calc import calc
 from emmet.cli.utils import calcdb_from_mgrant, ensure_indexes
+from emmet.cli.utils import EmmetCliError
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -110,8 +111,10 @@ def entry_point(ctx, spec, run, dupe):
 def safe_entry_point():
     try:
         entry_point()
+    except EmmetCliError as e:
+        click.secho(str(e), fg='red')
     except Exception as e:
-        logger.error(e)  # TODO exception? log4mongo?
+        logger.info(e, exc_info=True)
 
 
 entry_point.add_command(admin)

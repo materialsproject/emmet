@@ -12,6 +12,10 @@ from emmet.cli.config import exclude, base_query, aggregation_keys
 from emmet.cli.config import structure_keys, log_fields
 
 
+class EmmetCliError(Exception):
+    pass
+
+
 def structures_match(s1, s2):
     return bool(len(list(group_structures([s1, s2]))) == 1)
 

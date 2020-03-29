@@ -4,7 +4,9 @@ import click
 import bson
 import gzip
 import tarfile
+import struct
 
+from bson.errors import InvalidBSON
 from collections import defaultdict
 from zipfile import ZipFile
 from fnmatch import fnmatch
@@ -17,8 +19,10 @@ from emmet.cli.config import skip_labels, aggregation_keys, task_base_query
 from emmet.cli.config import base_query, exclude
 from emmet.cli.utils import calcdb_from_mgrant, aggregate_by_formula, structures_match
 from emmet.cli.utils import get_meta_from_structure, load_structure
+from emmet.cli.utils import EmmetCliError
 
 
+_UNPACK_INT = struct.Struct("<i").unpack
 logger = logging.getLogger('emmet')
 canonical_structures = defaultdict(dict)
 
@@ -29,7 +33,7 @@ def get_format(fname):
     elif fnmatch(fname, "*.json*") or fnmatch(fname, "*.mson*"):
         return 'json'
     else:
-        raise ValueError('reading', fname, 'not supported (yet)')
+        raise EmmetCliError(f'reading {fname} not supported (yet)')
 
 
 def load_canonical_structures(ctx, full_name, formula):
@@ -68,7 +72,14 @@ def load_canonical_structures(ctx, full_name, formula):
                 canonical_structures[full_name][formula][sg] = [g[0] for g in group_structures(slist)]
 
         total = sum([len(x) for x in canonical_structures[full_name][formula].values()])
-        logger.info(f'{total} canonical structure(s) for {formula} in {full_name}')
+        logger.debug(f'{total} canonical structure(s) for {formula} in {full_name}')
+
+
+def save_logs(ctx):
+    handler = ctx.obj['MONGO_HANDLER']
+    cnt = len(handler.buffer)
+    handler.flush_to_mongo()
+    logger.debug(f'{cnt} log messages saved.')
 
 
 def insert_snls(ctx, snls):
@@ -80,10 +91,25 @@ def insert_snls(ctx, snls):
         ))
 
     snls.clear()
-    handler = ctx.obj['MONGO_HANDLER']
-    cnt = len(handler.buffer)
-    handler.flush_to_mongo()
-    logger.info(f'{cnt} log messages saved.')
+    save_logs(ctx)
+
+
+# https://stackoverflow.com/a/39279826
+def count_file_documents(file_obj):
+    """Counts how many documents provided BSON file contains"""
+    cnt = 0
+    while True:
+        # Read size of next object.
+        size_data = file_obj.read(4)
+        if len(size_data) == 0:
+            break  # Finished with file normally.
+        elif len(size_data) != 4:
+            raise EmmetCliError("Invalid BSON: cut off in middle of objsize")
+        obj_size = _UNPACK_INT(size_data)[0] - 4
+        file_obj.seek(obj_size, os.SEEK_CUR)
+        cnt += 1
+    file_obj.seek(0)
+    return cnt
 
 
 @click.group()
@@ -107,7 +133,7 @@ def calc(ctx, specs, nmax, skip):
             collections[client.db[name].full_name] = client.db[name]
 
     for full_name, coll in collections.items():
-        logger.info(f'{coll.count()} docs in {full_name}')
+        logger.debug(f'{coll.count()} docs in {full_name}')
 
     ctx.obj['COLLECTIONS'] = collections
     ctx.obj['NMAX'] = nmax
@@ -132,12 +158,12 @@ def prep(ctx, archive, authors):
 
     fname, ext = os.path.splitext(os.path.basename(archive))
     tag, sec_ext = fname.rsplit('.', 1) if '.' in fname else [fname, '']
-    logger.info(f'tag: {tag}')
+    logger.info(click.style(f'tag: {tag}', fg='cyan'))
     if sec_ext:
         ext = ''.join([sec_ext, ext])
     exts = ['tar.gz', '.tgz', 'bson.gz', '.zip']
     if ext not in exts:
-        raise ValueError(f'{ext} not supported (yet)! Please use one of {exts}.')
+        raise EmmetCliError(f'{ext} not supported (yet)! Please use one of {exts}.')
 
     meta = {'authors': [Author.parse_author(a) for a in authors]}
     references = meta.get('references', '').strip()
