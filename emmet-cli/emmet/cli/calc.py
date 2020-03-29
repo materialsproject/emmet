@@ -172,20 +172,30 @@ def prep(ctx, archive, authors):
     # TODO add archive of StructureNL files
     input_structures, source_total = [], None
     if ext == 'bson.gz':
-        # TODO source_total
-        for idx, doc in enumerate(bson.decode_file_iter(gzip.open(archive))):
+        input_bson = gzip.open(archive)
+        source_total = count_file_documents(input_bson)
+        for doc in bson.decode_file_iter(input_bson):
             if len(input_structures) >= nmax:
                 break
-            if idx and not idx%1000:
-                logger.debug(f'{idx} ...')
-            elements = set([specie['element'] for site in doc['structure']['sites'] for specie in site['species']])
-            if any([bool(l in elements) for l in skip_labels]):
-                logger.info(f'Skip structure {idx}: unsupported element(s)!')
+            if skip and doc['db_id'] in source_ids_scanned:
                 continue
-            s = TransformedStructure.from_dict(doc['structure'])
-            # TODO add s.source_id
-            # TODO skip scanned
-            input_structures.append(s)
+            elements = set([
+                specie['element']
+                for site in doc['structure']['sites']
+                for specie in site['species']
+            ])
+            for l in skip_labels:
+                if l in elements:
+                    logger.log(
+                        logging.ERROR if run else logging.INFO,
+                        f'Skip structure {doc["db_id"]}: unsupported element {l}!',
+                        extra={'tags': [tag], 'source_id': doc['db_id']}
+                    )
+                    break
+            else:
+                s = TransformedStructure.from_dict(doc['structure'])
+                s.source_id = doc["db_id"]
+                input_structures.append(s)
     elif ext == '.zip':
         input_zip = ZipFile(archive)
         namelist = input_zip.namelist()
