@@ -1,5 +1,6 @@
 """
-Core module exposes the interfaces that will be used and built by the builders
+Core module exposes the document interfaces
+These will be ingested via Drones, built by Builders, and served via the API
 """
 from emmet.core.settings import EmmetSettings
 
