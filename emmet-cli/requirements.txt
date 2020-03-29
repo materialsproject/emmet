@@ -10,5 +10,4 @@ FireWorks>=1.9.5
 atomate>=0.9.4
 pymatgen>=2020.3.13
 mongogrant>=0.3.0
-click-log>=0.3.2
 colorama>=0.4.3

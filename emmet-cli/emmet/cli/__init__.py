@@ -60,7 +60,6 @@
 
 import logging
 import click
-import click_log
 
 from log4mongo.handlers import BufferedMongoHandler
 from emmet.cli.config import log_fields
@@ -72,23 +71,25 @@ from emmet.cli.utils import EmmetCliError
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 logger = logging.getLogger('emmet')
-click_log.basic_config(logger)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click_log.simple_verbosity_option(logger)
 @click.option('--spec', required=True, metavar='HOST/DB',
               help='MongoGrant spec for user database.')
-@click.option('--run/--no-run', default=False, show_default=True,
-              help='Run DB/filesystem write operations.')
-@click.option('--dupe/--no-dupe', default=True, show_default=True,
-              help='Check duplicates SNL/task collections.')
+@click.option('--run', is_flag=True, help='Run DB/filesystem write operations.')
+@click.option('--no-dupe-check', is_flag=True, help='Skip duplicate check(s).')
+@click.option('--debug', is_flag=True, help='Show debug messages.')
+@click.version_option()
 @click.pass_context
-def entry_point(ctx, spec, run, dupe):
+def entry_point(ctx, spec, run, no_dupe_check, debug):
     """command line interface for emmet"""
+    if debug:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
     ctx.ensure_object(dict)
     ctx.obj['RUN'] = run
-    ctx.obj['DUPE'] = dupe
+    ctx.obj['NO_DUPE_CHECK'] = no_dupe_check
     ctx.obj['SPEC'] = spec
     client = calcdb_from_mgrant(spec)
     ctx.obj['CLIENT'] = client

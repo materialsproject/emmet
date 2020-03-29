@@ -121,7 +121,7 @@ def count_file_documents(file_obj):
               help='Skip already scanned structures.')
 @click.pass_context
 def calc(ctx, specs, nmax, skip):
-    """set up calculations to optimize structures using VASP"""
+    """Set up calculations to optimize structures using VASP"""
     collections = {}
     for coll in [ctx.obj['CLIENT'].db.snls, ctx.obj['CLIENT'].db.tasks]:
         collections[coll.full_name] = coll  # user collections
@@ -154,7 +154,7 @@ def prep(ctx, archive, authors):
     handler = ctx.obj['MONGO_HANDLER']
     nmax = ctx.obj['NMAX']
     skip = ctx.obj['SKIP']
-    # TODO dupe flag
+    # TODO no_dupe_check flag
 
     fname, ext = os.path.splitext(os.path.basename(archive))
     tag, sec_ext = fname.rsplit('.', 1) if '.' in fname else [fname, '']
@@ -224,8 +224,9 @@ def prep(ctx, archive, authors):
     logger.info(f'{total} of {source_total} structure(s) loaded '
                 f'({len(source_ids_scanned)} unique structures already scanned).')
 
+    save_logs(ctx)
     snls, index = [], None
-    for idx, istruct in enumerate(input_structures):
+    for istruct in input_structures:
         # number of log messages equals number of structures processed if --run
         # only logger.warning goes to DB if --run
         if run and len(handler.buffer) >= handler.buffer_size:

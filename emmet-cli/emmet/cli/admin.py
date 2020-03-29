@@ -11,7 +11,7 @@ from emmet.cli.utils import ensure_indexes, get_meta_from_structure
 @click.group()
 @click.pass_context
 def admin(ctx):
-    """administrative and utility commands"""
+    """Administrative and utility commands"""
     pass
 
 
@@ -35,7 +35,7 @@ def clean_ensure_indexes(run, fields, coll):
 @click.argument('collection', nargs=1)
 @click.pass_context
 def index(ctx, fields, collection):
-    """create index(es) for fields of a collection"""
+    """Create index(es) for fields of a collection"""
     coll = ctx.obj['CLIENT'].db[collection]
     clean_ensure_indexes(ctx.obj['RUN'], fields, coll)
 
@@ -44,7 +44,7 @@ def index(ctx, fields, collection):
 @click.argument('collection')
 @click.pass_context
 def meta(ctx, collection):
-    """create meta-data fields and indexes for SNL collection"""
+    """Create meta-data fields and indexes for SNL collection"""
     coll = ctx.obj['CLIENT'].db[collection]
     q = {'$or': [{k: {'$exists': 0}} for k in meta_keys]}
     docs = coll.find(q)
@@ -70,7 +70,7 @@ def meta(ctx, collection):
 @click.argument('tags', nargs=-1)
 @click.pass_context
 def reset(ctx, tags):
-    """reset collections for tag(s)"""
+    """Reset collections for tag(s)"""
     # TODO workflows, tasks?
     q = {'tags': {'$in': tags}}
     total = ctx.obj['MONGO_HANDLER'].collection.count()
