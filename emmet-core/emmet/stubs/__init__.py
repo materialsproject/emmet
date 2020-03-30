@@ -11,6 +11,12 @@ from emmet.stubs.misc import ComputedEntry as StubComputedEntry
 from pymatgen import Structure, Composition
 from pymatgen.entries.computed_entries import ComputedEntry
 
+"""
+The stub names are kept in sync with the actual classes so they 
+show up correctly in the JSON Schema. They are imported here
+in as Stubbed classes to prevent name clashing
+"""
+
 use_model(Structure, StubStructure)
 use_model(Composition, StubComposition, add_monty=False)
 use_model(ComputedEntry, StubComputedEntry)
