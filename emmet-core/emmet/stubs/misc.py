@@ -1,13 +1,17 @@
 from typing import Dict, List, Optional, Union, Tuple
 from pydantic import BaseModel, Field
 from pymatgen import Element
-Composition = Dict[Element, float]
-Composition.__doc__ = """A dictionary mapping element to total quantity"""
+
+
+class Composition(BaseModel):
+    """A dictionary mapping element to total quantity"""
+
+    __root__: Dict[Element, float]
 
 
 class ComputedEntry(BaseModel):
     """
-    A Thermo Entry
+    A entry of thermodynamic information for a particular composition
     """
 
     composition: Composition = Field(
