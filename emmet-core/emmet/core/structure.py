@@ -1,10 +1,10 @@
 """ Core definition of Structure metadata """
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
 from pymatgen import Element
-from emmet.stubs.pymatgen import Structure, Composition
+from emmet.stubs import Structure, Composition
 from emmet.core.symmetry import SymmetryData
 
 
@@ -61,8 +61,28 @@ class StructureMetadata(BaseModel):
     symmetry: SymmetryData = Field(None, description="Symmetry data for this material")
 
     @classmethod
-    def from_structure(cls, structure: Structure) -> "StructureMetadata":
+    def from_structure(
+        cls, structure: Structure, fields: Optional[List[str]]
+    ) -> "StructureMetadata":
 
+        fields = (
+            [
+                "nsites",
+                "elements",
+                "nelements",
+                "composition",
+                "composition_reduced",
+                "formula_pretty",
+                "formula_anonymous",
+                "chemsys",
+                "volume",
+                "density",
+                "density_atomic",
+                "symmetry",
+            ]
+            if fields is None
+            else fields
+        )
         comp = structure.composition
         elsyms = sorted(set([e.symbol for e in comp.elements]))
         symmetry = SymmetryData.from_structure(structure)
@@ -82,4 +102,4 @@ class StructureMetadata(BaseModel):
             "symmetry": symmetry,
         }
 
-        return StructureMetadata(**data)
+        return StructureMetadata(**{k: v for k, v in data.items() if k in fields})
