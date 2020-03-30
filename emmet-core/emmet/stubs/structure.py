@@ -38,9 +38,6 @@ class Specie(BaseModel):
     properties: Optional[Dict] = Field(..., title="Species Properties")
 
 
-
-
-
 class SiteSpecie(Specie):
     """
     Adds site occupation to Species
@@ -91,6 +88,3 @@ class Structure(BaseModel):
     charge: Optional[float] = Field(None, title="Total charge")
     lattice: Lattice = Field(..., title="Lattice for this structure")
     sites: List[PeriodicSite] = Field(..., title="List of sites in this structure")
-
-
-
