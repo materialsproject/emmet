@@ -46,21 +46,22 @@ def patch_msonable(monty_cls):
     setattr(monty_cls, "__pydantic_model__", STUBS[monty_cls])
 
 
-def use_model(monty_cls, pydantic_model):
+def use_model(monty_cls, pydantic_model, add_monty=True):
     """
     Use a provided pydantic model to describe a Monty MSONable class
     """
 
-    monty_props = {
-        "@class": Field(
-            monty_cls.__name__,
-            description="The formal class name for serialization lookup",
-        ),
-        "@module": Field(
-            monty_cls.__module__, description="The module this class is defined in"
-        ),
-    }
-    pydantic_model.__fields__.update(monty_props)
+    if add_monty:
+        monty_props = {
+            "@class": Field(
+                monty_cls.__name__,
+                description="The formal class name for serialization lookup",
+            ),
+            "@module": Field(
+                monty_cls.__module__, description="The module this class is defined in"
+            ),
+        }
+        pydantic_model.__fields__.update(monty_props)
     STUBS[monty_cls] = pydantic_model
     patch_msonable(monty_cls)
 
