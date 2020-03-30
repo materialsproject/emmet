@@ -66,10 +66,7 @@ def task_type(inputs, include_calc_type=True):
     calc_type = []
 
     incar = inputs.get("incar", {})
-    try:
-        functional = inputs.get("potcar", {}).get("functional", "PBE")
-    except:
-        functional = "PBE"
+    functional = inputs.get("potcar", {}).get("functional", "PBE")
 
     METAGGA_TYPES = {"TPSS", "RTPSS", "M06L", "MBJL", "SCAN", "MS0", "MS1", "MS2"}
 
