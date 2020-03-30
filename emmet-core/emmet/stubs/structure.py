@@ -38,8 +38,7 @@ class Specie(BaseModel):
     properties: Optional[Dict] = Field(..., title="Species Properties")
 
 
-Composition = Dict[Element, float]
-Composition.__doc__ = """A dictionary mapping element to total quantity"""
+
 
 
 class SiteSpecie(Specie):
@@ -92,3 +91,6 @@ class Structure(BaseModel):
     charge: Optional[float] = Field(None, title="Total charge")
     lattice: Lattice = Field(..., title="Lattice for this structure")
     sites: List[PeriodicSite] = Field(..., title="List of sites in this structure")
+
+
+
