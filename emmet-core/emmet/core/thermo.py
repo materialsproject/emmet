@@ -33,7 +33,7 @@ class Thermo(PropertyDoc):
     """
 
     property_name: ClassVar[str] = Field(
-        None, description="The subfield name for this property"
+        "thermo", description="The subfield name for this property"
     )
 
     energy_per_atom: float = Field(
@@ -70,3 +70,6 @@ class Thermo(PropertyDoc):
         None,
         description="List of all entries that are valid for this material. The keys for this dictionary are names of various calculation types",
     )
+
+
+
