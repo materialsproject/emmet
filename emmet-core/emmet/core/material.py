@@ -100,7 +100,9 @@ class PropertyDoc(BaseModel):
     Prototype document structure for any materials property document
     """
 
-    name: ClassVar[Union[str, List[str]]] = "property"
+    property_name: ClassVar[str] = Field(
+        None, description="The subfield name for this property"
+    )
 
 
 class MaterialsProperty(StructureMetadata):
@@ -146,8 +148,8 @@ class MaterialsProperty(StructureMetadata):
 
         if not isinstance(parameters, tuple):
             if issubclass(parameters, PropertyDoc):
-                model_name = f"{parameters.name.title()}Doc"
-                subdocs = {parameters.name: (parameters, None)}
+                model_name = f"{parameters.property_name.title()}Doc"
+                subdocs = {parameters.property_name: (parameters, None)}
             else:
                 raise ValueError("Must provide PropertyDocs")
 
@@ -161,7 +163,7 @@ class MaterialsProperty(StructureMetadata):
                 parameters = parameters[1:]
                 if not all(issubclass(s, PropertyDoc) for s in parameters):
                     raise ValueError("Must provide PropertyDocs")
-                subdocs = {s.name: (s, None) for s in parameters}
+                subdocs = {s.property_name: (s, None) for s in parameters}
         else:
             raise ValueError(
                 "Must provide at minimum one string for the name and one PropertyDoc subtype"
