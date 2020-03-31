@@ -3,7 +3,8 @@ from typing import Dict, Any, TypeVar, Union, Optional, Tuple, List, Set, Sequen
 from typing import get_type_hints
 from numpy import ndarray
 from monty.json import MSONable, MontyDecoder
-from pydantic import create_model, Field
+from pydantic import create_model, Field, BaseModel
+from pydantic.fields import ModelField
 
 built_in_primitives = (bool, int, float, complex, range, str, bytes, None)
 prim_to_type_hint = {list: List, tuple: Tuple, dict: Dict, set: Set}
@@ -52,17 +53,11 @@ def use_model(monty_cls, pydantic_model, add_monty=True):
     """
 
     if add_monty:
-        monty_props = {
-            "@class": Field(
-                monty_cls.__name__,
-                description="The formal class name for serialization lookup",
-            ),
-            "@module": Field(
-                monty_cls.__module__, description="The module this class is defined in"
-            ),
-        }
-        pydantic_model.__fields__.update(monty_props)
-    STUBS[monty_cls] = pydantic_model
+        STUBS[monty_cls] = MSONable_to_pydantic(
+            monty_cls, pydantic_model=pydantic_model
+        )
+    else:
+        STUBS[monty_cls] = pydantic_model
     patch_msonable(monty_cls)
 
 
@@ -107,25 +102,42 @@ def __make_pydantic(cls):
 
     if issubclass(cls, MSONable):
         if cls.__name__ not in STUBS:
-
-            monty_props = {
-                "@class": Field(
-                    cls.__name__,
-                    description="The formal class name for serialization lookup",
-                ),
-                "@module": Field(
-                    cls.__module__, description="The module this class is defined in"
-                ),
-            }
-            props = {
-                field_name: (__make_pydantic(field_type), ...)
-                for field_name, field_type in get_type_hints(cls.__init__).items()
-            }
-
-            STUBS[cls] = create_model(cls.__name__, **monty_props, **props)
+            STUBS[cls] = MSONable_to_pydantic(cls)
         return STUBS[cls]
 
     if cls == ndarray:
         return List[Any]
 
     return cls
+
+
+def MSONable_to_pydantic(monty_cls, pydantic_model: Optional[BaseModel] = None):
+    monty_props = {
+        "@class": (
+            str,
+            Field(
+                default=monty_cls.__name__,
+                title="MSONable Class",
+                description="The formal class name for serialization lookup",
+            ),
+        ),
+        "@module": (
+            str,
+            Field(
+                default=monty_cls.__module__,
+                title="Python Module",
+                description="The module this class is defined in",
+            ),
+        ),
+    }
+    if pydantic_model:
+        props = {
+            name: (field.type_, field.field_info)
+            for name, field in pydantic_model.__fields__.items()
+        }
+    else:
+        props = {
+            field_name: (__make_pydantic(field_type), ...)
+            for field_name, field_type in get_type_hints(monty_cls.__init__).items()
+        }
+    return create_model(monty_cls.__name__, **monty_props, **props)
