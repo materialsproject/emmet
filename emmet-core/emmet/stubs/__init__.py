@@ -12,7 +12,7 @@ from pymatgen import Structure, Composition
 from pymatgen.entries.computed_entries import ComputedEntry
 
 """
-The stub names are kept in sync with the actual classes so they 
+The stub names are kept in sync with the actual classes so they
 show up correctly in the JSON Schema. They are imported here
 in as Stubbed classes to prevent name clashing
 """
