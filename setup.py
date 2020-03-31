@@ -12,38 +12,16 @@ with open(module_dir / "README.md") as f:
 
 setup(
     name="emmet",
-    version="2018.06.07",
-    description="Emmet is a builder framework for the Materials Project",
+    use_scm_version=True,
+    setup_requires=["setuptools_scm"],
+    description="Emmet is the builder framework for the Materials Project",
     long_description=long_desc,
     long_description_content_type="text/markdown",
     url="https://github.com/materialsproject/emmet",
     author="The Materials Project",
     author_email="feedback@materialsproject.org",
     license="modified BSD",
-    packages=find_packages(),
-    include_package_data=True,
-    package_data={},
-    zip_safe=False,
-    install_requires=[
-        "atomate",
-        "pymatgen>=2018.4.20",
-        "maggma",
-        "monty",
-        "six",
-        "pydash",
-        "tqdm",
-        "matminer",
-        "log4mongo",
-        "prettytable",
-        "prettyplotlib",
-        "pybtex",
-        "Click",
-        "networkx",
-        "sumo",
-        "robocrys",
-        "urllib3<1.25",
-        "jsonschema",
-    ],
+    install_requires=["ememt-core", "emmet-cli", "emmet-builders"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
@@ -55,10 +33,5 @@ setup(
         "Topic :: Other/Nonlisted Topic",
         "Topic :: Scientific/Engineering",
     ],
-    tests_require=["pytest"],
-    entry_points="""
-    [console_scripts]
-    emmet=emmet.scripts.emmet:cli
-    """,
     python_requires=">=3.6",
 )
