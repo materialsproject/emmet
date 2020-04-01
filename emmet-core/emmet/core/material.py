@@ -76,7 +76,7 @@ class MaterialsDoc(StructureMetadata):
         [], description="Dictionary for tracking the provenance of properties"
     )
 
-    warngings: List[str] = Field(
+    warnings: List[str] = Field(
         None, description="Any warnings related to this material"
     )
 
@@ -131,7 +131,7 @@ class MaterialsProperty(StructureMetadata):
         [], description="Dictionary for tracking the provenance of properties"
     )
 
-    warngings: List[str] = Field(
+    warnings: List[str] = Field(
         None, description="Any warnings related to this property"
     )
 
