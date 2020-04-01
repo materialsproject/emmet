@@ -1,11 +1,14 @@
 """ Core definition of Structure metadata """
-from typing import List, Optional
+from typing import List, Optional, Type, TypeVar
 
 from pydantic import BaseModel, Field
 
 from pymatgen import Element
 from emmet.stubs import Structure, Composition
 from emmet.core.symmetry import SymmetryData
+
+
+T = TypeVar("T", bound="StructureMetadata")
 
 
 class StructureMetadata(BaseModel):
@@ -62,8 +65,8 @@ class StructureMetadata(BaseModel):
 
     @classmethod
     def from_structure(
-        cls, structure: Structure, fields: Optional[List[str]]
-    ) -> "StructureMetadata":
+        cls: Type[T], structure: Structure, fields: Optional[List[str]], **kwargs
+    ) -> T:
 
         fields = (
             [
@@ -102,4 +105,4 @@ class StructureMetadata(BaseModel):
             "symmetry": symmetry,
         }
 
-        return StructureMetadata(**{k: v for k, v in data.items() if k in fields})
+        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
