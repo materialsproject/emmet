@@ -127,6 +127,10 @@ class MaterialsProperty(StructureMetadata):
         description="Timestamp for the most recent calculation update for this property",
     )
 
+    origins: List[PropertyOrigin] = Field(
+        [], description="Dictionary for tracking the provenance of properties"
+    )
+
     warngings: List[str] = Field(
         None, description="Any warnings related to this property"
     )
