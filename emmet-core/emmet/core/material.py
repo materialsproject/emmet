@@ -76,6 +76,10 @@ class MaterialsDoc(StructureMetadata):
         [], description="Dictionary for tracking the provenance of properties"
     )
 
+    warngings: List[str] = Field(
+        None, description="Any warnings related to this material"
+    )
+
     @classmethod
     def build_from_structure(
         cls, structure: Structure, material_id: str, **kwargs
@@ -121,6 +125,10 @@ class MaterialsProperty(StructureMetadata):
     last_updated: datetime = Field(
         None,
         description="Timestamp for the most recent calculation update for this property",
+    )
+
+    warngings: List[str] = Field(
+        None, description="Any warnings related to this property"
     )
 
     @staticmethod
