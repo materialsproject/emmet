@@ -1,4 +1,4 @@
-""" Core definition of a Thermo Document """
+""" Core definition of a Provenance Document """
 from typing import List, Dict, ClassVar
 from datetime import datetime
 

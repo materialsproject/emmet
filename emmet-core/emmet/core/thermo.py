@@ -70,6 +70,3 @@ class Thermo(PropertyDoc):
         None,
         description="List of all entries that are valid for this material. The keys for this dictionary are names of various calculation types",
     )
-
-
-
