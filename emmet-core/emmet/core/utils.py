@@ -1,13 +1,17 @@
-from typing import List, Iterator
+from typing import List, Iterator, Dict
+from typing_extensions import Literal
 from itertools import groupby
 
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
+from monty.serialization import loadfn
 
 from emmet.core import SETTINGS
 
+_RUN_TYPE_DATA = loadfn("run_types.yaml")
 
-def get_sg(struc, symprec=SETTINGS.SYMPREC):
+
+def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:
     """helper function to get spacegroup with a loose tolerance"""
     try:
         return struc.get_space_group_info(symprec=symprec)[1]
@@ -53,36 +57,53 @@ def group_structures(
             yield group
 
 
-def task_type(inputs, include_calc_type=True):
+def run_tye(parameters: Dict) -> str:
     """
-    Determines the task_type
+    Determines the run_type from the VASP parameters dict
+    This is adapted from pymatgen to be far less unstable
+    """
+
+    if parameters.get("LDAU", False):
+        is_hubbard = "+U"
+    else:
+        is_hubbard = ""
+
+    def _variant_equal(v1, v2) -> bool:
+        """
+        helper function to deal with strings
+        """
+        if isinstance(v1, str) and isinstance(v2, str):
+            return v1.strip().upper() == v2.strip().upper()
+        else:
+            return v1 == v2
+
+    # This is to force an order of evaluation
+    for functional_class in ["HF", "VDW", "METAGGA", "GGA"]:
+        for special_type, params in _RUN_TYPE_DATA[functional_class]:
+            if all(
+                [
+                    _variant_equal(parameters.get(param, None), value)
+                    for param, value in params.items()
+                ]
+            ):
+                return f"{special_type}{is_hubbard}"
+
+    return f"LDA{is_hubbard}"
+
+
+def task_type(
+    inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict]
+) -> str:
+    """
+    Determines the calculation type
 
     Args:
         inputs (dict): inputs dict with an incar, kpoints, potcar, and poscar dictionaries
-        include_calc_type (bool): whether to include calculation type
-            in task_type such as HSE, GGA, SCAN, etc.
     """
 
     calc_type = []
 
     incar = inputs.get("incar", {})
-    functional = inputs.get("potcar", {}).get("functional", "PBE")
-
-    METAGGA_TYPES = {"TPSS", "RTPSS", "M06L", "MBJL", "SCAN", "MS0", "MS1", "MS2"}
-
-    if include_calc_type:
-        if incar.get("LHFCALC", False):
-            calc_type.append("HSE")
-        elif incar.get("METAGGA", "").strip().upper() in METAGGA_TYPES:
-            calc_type.append(incar["METAGGA"].strip().upper())
-        elif incar.get("LDAU", False):
-            calc_type.append("GGA+U")
-        elif functional == "PBE":
-            calc_type.append("GGA")
-        elif functional == "PW91":
-            calc_type.append("PW91")
-        elif functional == "Perdew-Zunger81":
-            calc_type.append("LDA")
 
     if incar.get("ICHARG", 0) > 10:
         try:
