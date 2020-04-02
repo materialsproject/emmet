@@ -14,6 +14,7 @@ class ElementEvolution(BaseModel):
     composition space and return the reaction, chemical potential, and the remaining
     amount of the element
     """
+
     reaction: str = Field(
         ...,
         description="Evolution reaction determined by a facet of the phase diagram",
@@ -25,9 +26,9 @@ class ElementEvolution(BaseModel):
     )
 
     evolution: float = Field(
-        ...,
-        description="Remaining amount of element .. TODO get better description",
+        ..., description="Remaining amount of element .. TODO get better description",
     )
+
 
 class VoltagePair(BaseModel):
     """
@@ -35,47 +36,39 @@ class VoltagePair(BaseModel):
     """
 
     voltage: float = Field(
-        ...,
-        description="Voltage of voltage pair",
+        ..., description="Voltage of voltage pair",
     )
 
     mAh: float = Field(
-        ...,
-        description="Energy in mAh",
+        ..., description="Energy in mAh",
     )
 
     mass_charge: float = Field(
-        ...,
-        description= "Mass of charged pair.",
+        ..., description="Mass of charged pair.",
     )
 
     mass_discharge: float = Field(
-        ...,
-        description= "Mass of discharged pair.",
+        ..., description="Mass of discharged pair.",
     )
 
     vol_charge: float = Field(
-        ...,
-        description= "Volume of charged pair.",
+        ..., description="Volume of charged pair.",
     )
 
     vol_discharge: float = Field(
-        ...,
-        description= "Volume of discharged pair.",)
+        ..., description="Volume of discharged pair.",
+    )
 
     frac_charge: float = Field(
-        ...,
-        description= "Atomic Fraction of working ion in charged pair.",
+        ..., description="Atomic Fraction of working ion in charged pair.",
     )
 
     frac_discharge: float = Field(
-        ...,
-        description= "Atomic Fraction of working ion in discharged pair.",
+        ..., description="Atomic Fraction of working ion in discharged pair.",
     )
 
     working_ion_entry: float = Field(
-        ...,
-        description= "Working ion as an entry.",
+        ..., description="Working ion as an entry.",
     )
 
 
@@ -88,68 +81,56 @@ class Electrode(BaseModel):
 
     framework: StructureMetadata = Field(
         ...,
-        description="Framework structure (taken from the delithiated form of the most "
-                    "lithiated structure)"
+        description="Framework structure (take the structure with the most working ion"
+        "Then remove the working ions to get a host structure)",
     )
 
     entries: Dict[str, ComputedEntry] = Field(
-        ...,
-        description="List of all entries used to construct this electrode",
+        ..., description="List of all entries used to construct this electrode",
     )
 
     voltage_pairs: List[VoltagePair] = Field(
-        ...,
-        description="Returns all the VoltagePairs",
+        ..., description="Returns all the VoltagePairs",
     )
 
     working_ion: str = Field(
-        ...,
-        description="The working ion as an Element object",
+        ..., description="The working ion as an Element object",
     )
 
     working_ion_entry: ComputedEntry = Field(
-        ...,
-        description = "The working ion as an Entry object",
+        ..., description="The working ion as an Entry object",
     )
 
     max_delta_volume: float = Field(
-        ...,
-        description = "Maximum volume change along insertion",
+        ..., description="Maximum volume change along insertion",
     )
 
     num_steps: float = Field(
         ...,
         description="The number of distinct voltage steps in from fully charge to "
-                    "dischargebased on the stable intermediate states")
-
-    max_voltage: float = Field(
-        ...,
-        description = "Highest voltage along insertion"
+        "dischargebased on the stable intermediate states",
     )
 
-    min_voltage: float = Field(
-        ...,
-        description = "Lowest voltage along insertion"
-    )
+    max_voltage: float = Field(..., description="Highest voltage along insertion")
+
+    min_voltage: float = Field(..., description="Lowest voltage along insertion")
 
     max_voltage_step: float = Field(
-        ...,
-        description="Maximum absolute difference in adjacent voltage steps"
+        ..., description="Maximum absolute difference in adjacent voltage steps"
     )
 
     normalization_mass: float = Field(
         ...,
-        description = "Returns: Mass used for normalization. This is the mass of the  " \
-                      "discharged electrode of the last voltage pair.
+        description="Returns: Mass used for normalization. This is the mass of the "
+        "discharged electrode of the last voltage pair.",
     )
 
     normalization_volume: float = Field(
         ...,
-        description = "Returns: Mass used for normalization. This is the vol of the "
-                      "discharged electrode of the last voltage pair"
+        description="Returns: Mass used for normalization. This is the vol of the "
+        "discharged electrode of the last voltage pair",
     )
 
     last_updated: datetime = Field(
         ..., description="The timestamp when this document was last updated"
     )
-
