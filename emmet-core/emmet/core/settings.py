@@ -9,6 +9,11 @@ from pydantic.types import Path
 
 
 class EmmetSettings(BaseSettings):
+    """
+    Settings for the emmet- packages
+    The default way to modify these is to modify ~/.emmet.json or set the environment variable
+    EMMET_CONFIG_FILE to point to the json with emmet settings
+    """
 
     config_file: Path = Field(
         "~/.emmet.json", description="File to load alternative defaults from"

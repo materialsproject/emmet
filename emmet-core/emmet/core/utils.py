@@ -57,7 +57,7 @@ def group_structures(
             yield group
 
 
-def run_tye(parameters: Dict) -> str:
+def run_type(parameters: Dict) -> str:
     """
     Determines the run_type from the VASP parameters dict
     This is adapted from pymatgen to be far less unstable
