@@ -5,6 +5,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, create_model
 
+from pymatgen.analysis.magnetism import Ordering, CollinearMagneticStructureAnalyzer
+
 from emmet.stubs import Structure
 from emmet.core.structure import StructureMetadata
 
@@ -34,18 +36,20 @@ class MaterialsDoc(StructureMetadata):
         None, description="The best structure for this material"
     )
 
+    ordering: Ordering = Field(None, description="Magnetic Ordering for this structure")
+
     initial_structures: List[Structure] = Field(
-        list(),
+        None,
         description="Initial structures used in the DFT optimizations corresponding to this material",
     )
 
     task_ids: List[str] = Field(
-        [],
+        None,
         title="Calculation IDs",
         description="List of Calculations IDs used to make this Materials Document",
     )
 
-    deprecated_tasks: List[str] = Field([], title="Deprecated Tasks")
+    deprecated_tasks: List[str] = Field(None, title="Deprecated Tasks")
 
     deprecated: bool = Field(
         None,
@@ -68,12 +72,12 @@ class MaterialsDoc(StructureMetadata):
         description="Timestamp for the first calculation for this Material document",
     )
     task_types: Dict[str, str] = Field(
-        {},
+        None,
         description="Calculation types for all the calculations that make up this material",
     )
 
     origins: List[PropertyOrigin] = Field(
-        [], description="Dictionary for tracking the provenance of properties"
+        None, description="Dictionary for tracking the provenance of properties"
     )
 
     warnings: List[str] = Field(
@@ -88,6 +92,7 @@ class MaterialsDoc(StructureMetadata):
         Builds a materials document using the minimal amount of information
         """
         meta = StructureMetadata.from_structure(structure)
+        ordering = CollinearMagneticStructureAnalyzer(structure).ordering
         kwargs.update(**meta.dict())
 
         if "last_updated" not in kwargs:
@@ -96,7 +101,9 @@ class MaterialsDoc(StructureMetadata):
         if "created_at" not in kwargs:
             kwargs["created_at"] = datetime.utcnow()
 
-        return cls(material_id=material_id, **kwargs)
+        return cls(
+            structure=structure, material_id=material_id, ordering=ordering, **kwargs
+        )
 
 
 class PropertyDoc(BaseModel):
