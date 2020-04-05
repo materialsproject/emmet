@@ -64,7 +64,7 @@ class StructureWorkflowStatus(Builder):
         jobs = self.targets[0]
         key, now = jobs.key, datetime.utcnow()
         for d in items:
-            d[jobs.lu_field] = now
+            d[jobs.last_updated_field] = now
         requests = [UpdateOne({key: d[key]}, {"$set": {"wflow": d}}) for d in items]
         if requests:
             jobs.collection.bulk_write(requests, ordered=False)

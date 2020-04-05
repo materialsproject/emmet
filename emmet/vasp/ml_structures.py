@@ -132,4 +132,4 @@ class MLStructuresBuilder(Builder):
         # Basic search index for tasks
         self.ml_strucs.ensure_index("entry_id")
         self.ml_strucs.ensure_index("chemsys")
-        self.ml_strucs.ensure_index(self.ml_strucs.lu_field)
+        self.ml_strucs.ensure_index(self.ml_strucs.last_updated_field)

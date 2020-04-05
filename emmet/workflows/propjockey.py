@@ -46,7 +46,7 @@ class ElasticPropjockeyPrioritizer(Builder):
         else:
             self.lpad = lpad
         self.fws_store = MongoStore.from_collection(self.lpad.fireworks)
-        self.fws_store.lu_field = "_pj_lu"
+        self.fws_store.last_updated_field = "_pj_lu"
         self.incremental = incremental
         self.start_date = datetime.utcnow()
         self.query = query or {}
@@ -65,9 +65,9 @@ class ElasticPropjockeyPrioritizer(Builder):
              generator for items
         """
         if self.incremental:
-            self.logger.info("Ensuring indices on lu_field for sources/targets")
-            self.pj_store.ensure_index(self.pj_store.lu_field)
-            self.fws_store.ensure_index(self.fws_store.lu_field)
+            self.logger.info("Ensuring indices on last_updated_field for sources/targets")
+            self.pj_store.ensure_index(self.pj_store.last_updated_field)
+            self.fws_store.ensure_index(self.fws_store.last_updated_field)
             pj_filter = self.query.copy()
             pj_filter.update(self.pj_store.lu_filter(self.fws_store))
         else:

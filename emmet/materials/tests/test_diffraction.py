@@ -20,7 +20,7 @@ class TestDiffractionBuilder(TestCase):
         cls.client.drop_database(cls.dbname)
 
     def setUp(self):
-        kwargs = dict(key="k", lu_field="lu")
+        kwargs = dict(key="k", last_updated_field="lu")
         self.source = MongoStore(self.dbname, "source", **kwargs)
         self.target = MongoStore(self.dbname, "target", **kwargs)
         self.source.connect()

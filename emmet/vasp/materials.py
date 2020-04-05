@@ -84,7 +84,7 @@ class MaterialsBuilder(Builder):
         projected_from_tasks += [
             "formula_pretty",
             self.tasks.key,
-            self.tasks.lu_field,
+            self.tasks.last_updated_field,
             "sbxn",
         ]
 
@@ -254,7 +254,7 @@ class MaterialsBuilder(Builder):
         sandboxes = list(set(chain.from_iterable([k["sbxn"] for k in best_props])))
 
         mat = {
-            self.materials.lu_field: max([prop["last_updated"] for prop in all_props]),
+            self.materials.last_updated_field: max([prop["last_updated"] for prop in all_props]),
             "created_at": min([prop["last_updated"] for prop in all_props]),
             "task_ids": task_ids,
             "deprecated_tasks": deprecated_tasks,
@@ -331,7 +331,7 @@ class MaterialsBuilder(Builder):
                             or 10000,
                             "track": prop.get("track", False),
                             "aggregate": prop.get("aggregate", False),
-                            "last_updated": task[self.tasks.lu_field],
+                            "last_updated": task[self.tasks.last_updated_field],
                             "energy": get(task, "output.energy_per_atom", 0.0),
                             "materials_key": prop["materials_key"],
                             "is_valid": task.get("is_valid", True),
@@ -415,12 +415,12 @@ class MaterialsBuilder(Builder):
         self.tasks.ensure_index(self.tasks.key, unique=True)
         self.tasks.ensure_index("state")
         self.tasks.ensure_index("formula_pretty")
-        self.tasks.ensure_index(self.tasks.lu_field)
+        self.tasks.ensure_index(self.tasks.last_updated_field)
 
         # Search index for materials
         self.materials.ensure_index(self.materials.key, unique=True)
         self.materials.ensure_index("task_ids")
-        self.materials.ensure_index(self.materials.lu_field)
+        self.materials.ensure_index(self.materials.last_updated_field)
 
         if self.task_types:
             self.task_types.ensure_index(self.task_types.key)

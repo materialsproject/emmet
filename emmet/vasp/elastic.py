@@ -120,9 +120,9 @@ class ElasticAnalysisBuilder(Builder):
         # Note that this makes the builder a bit slower if run for a complete
         # build in non-incremental
         if self.incremental:
-            self.logger.info("Ensuring indices on lu_field for sources/targets")
-            self.tasks.ensure_index(self.tasks.lu_field)
-            self.elasticity.ensure_index(self.elasticity.lu_field)
+            self.logger.info("Ensuring indices on last_updated_field for sources/targets")
+            self.tasks.ensure_index(self.tasks.last_updated_field)
+            self.elasticity.ensure_index(self.elasticity.last_updated_field)
             incr_filter = q.copy()
             incr_filter.update(self.tasks.lu_filter(self.elasticity))
             formulas = self.tasks.distinct("formula_pretty", incr_filter)
@@ -241,11 +241,11 @@ class ElasticAggregateBuilder(Builder):
             generator of elasticity documents aggregated by formula
             with relevant data projection to process into elasticity documents
         """
-        self.logger.info("Ensuring indices on lu_field for sources/targets")
+        self.logger.info("Ensuring indices on last_updated_field for sources/targets")
         q = self.query
         if self.incremental:
-            self.materials.ensure_index(self.elasticity.lu_field)
-            self.elasticity_aggregated.ensure_index(self.elasticity.lu_field)
+            self.materials.ensure_index(self.elasticity.last_updated_field)
+            self.elasticity_aggregated.ensure_index(self.elasticity.last_updated_field)
             incr_filter = self.query
             incr_filter.update(self.elasticity.lu_filter(self.elasticity_aggregated))
             formulas = self.elasticity.distinct("pretty_formula", incr_filter)
@@ -333,7 +333,7 @@ class ElasticAggregateBuilder(Builder):
                                'pretty_formula': formula,
                                'chemsys': chemsys,
                                'elements': elements,
-                               'last_updated': self.elasticity.lu_field,
+                               'last_updated': self.elasticity.last_updated_field,
                                'state': state}
             if toec_docs:
                 # TODO: this should be a bit more refined

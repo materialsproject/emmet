@@ -193,15 +193,15 @@ class SubstrateBuilder(Builder):
         """
         # Search indicies for materials
         self.materials.ensure_index(self.materials.key, unique=True)
-        self.materials.ensure_index(self.materials.lu_field)
+        self.materials.ensure_index(self.materials.last_updated_field)
 
         # Search indicies for elasticity
         self.elasticity.ensure_index(self.elasticity.key, unique=True)
-        self.elasticity.ensure_index(self.elasticity.lu_field)
+        self.elasticity.ensure_index(self.elasticity.last_updated_field)
 
         # Search indicies for substrates
         self.substrates.ensure_index(self.substrates.key, unique=True)
-        self.substrates.ensure_index(self.substrates.lu_field)
+        self.substrates.ensure_index(self.substrates.last_updated_field)
 
 
 def conventional_standard_structure(doc):

@@ -128,11 +128,11 @@ class MPBuilder(Builder):
             self.logger.error(traceback.format_exc())
             processed = {"error": str(e)}
 
-        key, lu_field = self.materials.key, self.materials.lu_field
+        key, last_updated_field = self.materials.key, self.materials.last_updated_field
         out = {
             self.website.key: item[key],
-            self.website.lu_field: self.website.lu_func[1](
-                self.materials.lu_func[0](item[lu_field])
+            self.website.last_updated_field: self.website.lu_func[1](
+                self.materials.lu_func[0](item[last_updated_field])
             ),
         }
         out.update(processed)
@@ -155,14 +155,14 @@ class MPBuilder(Builder):
         """
 
         self.materials.ensure_index(self.materials.key)
-        self.materials.ensure_index(self.materials.lu_field)
+        self.materials.ensure_index(self.materials.last_updated_field)
 
         self.website.ensure_index(self.website.key)
-        self.website.ensure_index(self.website.lu_field)
+        self.website.ensure_index(self.website.last_updated_field)
 
         for source in self.aux:
             source.ensure_index(source.key)
-            source.ensure_index(source.lu_field)
+            source.ensure_index(source.last_updated_field)
 
         # Indexes for website
 
@@ -270,11 +270,11 @@ class MPBuilder(Builder):
                     d[self.materials.key] = d[source.key]
                     del d[source.key]
 
-            # Ensure same lu_field for all docs
-            if source.lu_field != self.materials.lu_field:
+            # Ensure same last_updated_field for all docs
+            if source.last_updated_field != self.materials.last_updated_field:
                 for d in temp_docs:
-                    d[self.materials.lu_field] = d[source.lu_field]
-                    del d[source.lu_field]
+                    d[self.materials.last_updated_field] = d[source.last_updated_field]
+                    del d[source.last_updated_field]
 
             # Add to our giant pile of docs
             aux_docs.extend(temp_docs)
@@ -286,15 +286,15 @@ class MPBuilder(Builder):
         # get docs all for the same materials key
         for task_id, sub_docs in aux_docs:
             # sort and group docs by last_updated
-            sub_docs = list(sorted(sub_docs, key=lambda x: x[self.materials.lu_field]))
+            sub_docs = list(sorted(sub_docs, key=lambda x: x[self.materials.last_updated_field]))
             self.logger.debug("Merging {} docs for {}".format(len(sub_docs), task_id))
             # merge all docs in this group together
             d = docs[task_id]
             d.update({k: v for doc in sub_docs for k, v in doc.items()})
             # d = {k: v for k, v in d.items() if not k.startswith("_")}
-            # Set to most recent lu_field
-            d[self.materials.lu_field] = max(
-                doc[self.materials.lu_field] for doc in sub_docs
+            # Set to most recent last_updated_field
+            d[self.materials.last_updated_field] = max(
+                doc[self.materials.last_updated_field] for doc in sub_docs
             )
 
 

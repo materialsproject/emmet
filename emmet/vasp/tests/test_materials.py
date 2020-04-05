@@ -67,7 +67,7 @@ class TestMaterials(unittest.TestCase):
                 "task_ids", "task_id", "origins", "task_types",  "bandstructure", "inputs", "structure"
         ]:
             self.assertIn(k, mat)
-        self.assertIn(self.mbuilder.materials.lu_field, mat)
+        self.assertIn(self.mbuilder.materials.last_updated_field, mat)
 
     def test_filter_and_group_tasks(self):
         si = self.structure

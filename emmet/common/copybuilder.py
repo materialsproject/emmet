@@ -6,7 +6,7 @@ from maggma.builders import Builder
 class CopyBuilder(Builder):
     """Sync a source with a target.
 
-    Uses `lu_field` of source and target Store to get new/updated documents.
+    Uses `last_updated_field` of source and target Store to get new/updated documents.
     Can override `target.key` field to filter for target document to update.
     """
 
@@ -26,11 +26,11 @@ class CopyBuilder(Builder):
             self.query.update(lu_filter)
 
         self.logger.debug("lu_filter: {}".format(lu_filter))
-        confirm_field_index(source, source.lu_field)
-        confirm_field_index(target, target.lu_field)
+        confirm_field_index(source, source.last_updated_field)
+        confirm_field_index(target, target.last_updated_field)
         confirm_field_index(target, self.key)
         cursor = source.query(criteria=self.query,
-                              sort=[(source.lu_field, 1)])
+                              sort=[(source.last_updated_field, 1)])
         self.logger.info("Will copy {} items".format(cursor.count()))
 
         return cursor
@@ -42,9 +42,9 @@ class CopyBuilder(Builder):
         source, target = self.source, self.target
         for item in items:
             # Use source last-updated value, ensuring `datetime` type.
-            item[target.lu_field] = source.lu_func[0](item[source.lu_field])
-            if source.lu_field != target.lu_field:
-                del item[source.lu_field]
+            item[target.last_updated_field] = source.lu_func[0](item[source.last_updated_field])
+            if source.last_updated_field != target.last_updated_field:
+                del item[source.last_updated_field]
             item["_bt"] = datetime.utcnow()
             del item["_id"]
         target.update(items, update_lu=False, key=self.key)

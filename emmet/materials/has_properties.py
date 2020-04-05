@@ -63,7 +63,7 @@ class HasProps(Builder):
     def update_targets(self, items):
         now = datetime.utcnow()
         for item in items:
-            item[self.hasprops.lu_field] = now
+            item[self.hasprops.last_updated_field] = now
 
         if items:
             self.logger.debug(f"Updating {len(items)} items")

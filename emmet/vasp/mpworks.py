@@ -73,9 +73,9 @@ class MPWorksCompatibilityBuilder(Builder):
 
         # only consider tasks that have been updated since tasks was last updated
         if self.incremental:
-            logger.info("Ensuring indices on lu_field")
-            self.mpworks_tasks.ensure_index(self.mpworks_tasks.lu_field)
-            self.atomate_tasks.ensure_index(self.atomate_tasks.lu_field)
+            logger.info("Ensuring indices on last_updated_field")
+            self.mpworks_tasks.ensure_index(self.mpworks_tasks.last_updated_field)
+            self.atomate_tasks.ensure_index(self.atomate_tasks.last_updated_field)
             q.update(self.mpworks_tasks.lu_filter(self.atomate_tasks))
 
         # No cursor timeout should probably be fixed with smaller batch sizes

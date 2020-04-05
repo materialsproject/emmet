@@ -7,7 +7,7 @@ class AggregateBuilder(Builder):
     """
     Concats multiple collections together
 
-    Uses `lu_field` to get new/updated documents,
+    Uses `last_updated_field` to get new/updated documents,
     and uses a `key` field to determine which documents to merge together
 
     """
@@ -41,7 +41,7 @@ class AggregateBuilder(Builder):
                             d[k] = v
                     else:
                         recursive_update(d, doc)
-                    d.pop(source.lu_field)
+                    d.pop(source.last_updated_field)
             yield d
 
     def update_targets(self, items):
@@ -51,6 +51,6 @@ class AggregateBuilder(Builder):
             # Don't alter immutable field _id in target.
             item.pop("_id",None)
             # set a new updated field
-            item[self.target.lu_field] = datetime.utcnow()
+            item[self.target.last_updated_field] = datetime.utcnow()
             bulk.find({self.key_field:item[self.key_field]}).upsert().replace_one(item)
         bulk.execute()

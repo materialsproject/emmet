@@ -27,7 +27,7 @@ class TestCopyBuilder(TestCase):
                          for k in keys]
         self.new_docs = [{"lu": toc, "k": k, "v": "new"}
                          for k in keys[:10]]
-        kwargs = dict(key="k", lu_field="lu")
+        kwargs = dict(key="k", last_updated_field="lu")
         self.source = MongoStore(self.dbname, "source", **kwargs)
         self.target = MongoStore(self.dbname, "target", **kwargs)
         self.builder = CopyBuilder(self.source, self.target)
@@ -65,7 +65,7 @@ class TestCopyBuilder(TestCase):
         self.assertEqual(self.target.query_one(criteria={"k": 0})["v"], "new")
         self.assertEqual(self.target.query_one(criteria={"k": 10})["v"], "old")
 
-    def test_confirm_lu_field_index(self):
+    def test_confirm_last_updated_field_index(self):
         self.source.collection.drop_index("lu_1")
         with self.assertRaises(Exception) as cm:
             self.builder.get_items()

@@ -118,13 +118,13 @@ class Boltztrap4DosBuilder(Builder):
         Ensure basic indexes for all stores to build BoltzTrap DOS collection
         """
         self.materials.ensure_index(self.materials.key)
-        self.materials.ensure_index(self.materials.lu_field)
+        self.materials.ensure_index(self.materials.last_updated_field)
 
         self.bandstructures.ensure_index(self.bandstructures.key)
-        self.bandstructures.ensure_index(self.bandstructures.lu_field)
+        self.bandstructures.ensure_index(self.bandstructures.last_updated_field)
 
         self.boltztrap_dos.ensure_index(self.boltztrap_dos.key)
-        self.boltztrap_dos.ensure_index(self.boltztrap_dos.lu_field)
+        self.boltztrap_dos.ensure_index(self.boltztrap_dos.last_updated_field)
 
 
 def dos_from_boltztrap(bs_dict, energy_grid=0.005, avoid_projections=False):
