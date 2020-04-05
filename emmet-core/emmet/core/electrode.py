@@ -92,3 +92,8 @@ class Electrode(BaseModel):
     last_updated: datetime = Field(
         ..., description="The timestamp when this document was last updated"
     )
+
+    oxygen_evolution: [ElementEvolution] = Field(
+        None,
+        description="Oxygen evolution information represented as a series of reactions",
+    )
