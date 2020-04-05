@@ -1,6 +1,7 @@
 from typing import List, Iterator, Dict
 from typing_extensions import Literal
 from itertools import groupby
+from pathlib import Path
 
 import datetime
 import bson
@@ -14,7 +15,18 @@ from pydantic import BaseModel
 
 from emmet.core import SETTINGS
 
-_RUN_TYPE_DATA = loadfn("run_types.yaml")
+_RUN_TYPE_DATA = loadfn(Path(__file__).parent / "run_types.yaml")
+_TASK_TYPES = [
+    "NSCF Line",
+    "NSCF Uniform",
+    "Dielectric",
+    "DFPT",
+    "NMR Nuclear Shielding",
+    "NMR Electric Field Gradient",
+    "Static",
+    "Structure Optimization",
+    "Deformation",
+]
 
 
 def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:
@@ -85,7 +97,7 @@ def run_type(parameters: Dict) -> str:
 
     # This is to force an order of evaluation
     for functional_class in ["HF", "VDW", "METAGGA", "GGA"]:
-        for special_type, params in _RUN_TYPE_DATA[functional_class]:
+        for special_type, params in _RUN_TYPE_DATA[functional_class].items():
             if all(
                 [
                     _variant_equal(parameters.get(param, None), value)
