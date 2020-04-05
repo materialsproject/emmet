@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from emmet.stubs import ComputedEntry
+from emmet.stubs import ComputedEntry, Structure, AbstractVoltagePair
 from emmet.core.structure import StructureMetadata
 
 
@@ -30,48 +30,6 @@ class ElementEvolution(BaseModel):
     )
 
 
-class VoltagePair(BaseModel):
-    """
-    Based on AbstractVoltagePair from pymatgen
-    """
-
-    voltage: float = Field(
-        ..., description="Voltage of voltage pair",
-    )
-
-    mAh: float = Field(
-        ..., description="Energy in mAh",
-    )
-
-    mass_charge: float = Field(
-        ..., description="Mass of charged pair.",
-    )
-
-    mass_discharge: float = Field(
-        ..., description="Mass of discharged pair.",
-    )
-
-    vol_charge: float = Field(
-        ..., description="Volume of charged pair.",
-    )
-
-    vol_discharge: float = Field(
-        ..., description="Volume of discharged pair.",
-    )
-
-    frac_charge: float = Field(
-        ..., description="Atomic Fraction of working ion in charged pair.",
-    )
-
-    frac_discharge: float = Field(
-        ..., description="Atomic Fraction of working ion in discharged pair.",
-    )
-
-    working_ion_entry: float = Field(
-        ..., description="Working ion as an entry.",
-    )
-
-
 class Electrode(BaseModel):
     """
     Based on AbstractElectrode from pymatgen
@@ -79,7 +37,7 @@ class Electrode(BaseModel):
 
     battery_id: str = Field(..., description="The id for this battery document.")
 
-    framework: StructureMetadata = Field(
+    framework: Structure = Field(
         ...,
         description="Framework structure (take the structure with the most working ion"
         "Then remove the working ions to get a host structure)",
@@ -89,7 +47,7 @@ class Electrode(BaseModel):
         ..., description="List of all entries used to construct this electrode",
     )
 
-    voltage_pairs: List[VoltagePair] = Field(
+    voltage_pairs: List[AbstractVoltagePair] = Field(
         ..., description="Returns all the VoltagePairs",
     )
 

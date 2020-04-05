@@ -28,3 +28,49 @@ class ComputedEntry(BaseModel):
     )
     data: Dict = Field(None, description="Dictionary of extra data")
     entry_id: str = Field(None, description="Entry ID")
+
+
+class AbstractVoltagePair(BaseModel):
+    """
+    Based on AbstractVoltagePair from pymatgen
+    """
+
+    voltage: float = Field(
+        ..., description="Voltage of voltage pair",
+    )
+
+    mAh: float = Field(
+        ..., description="Energy in mAh",
+    )
+
+    mass_charge: float = Field(
+        ...,
+        description="Mass of charged material, normalized to one formula unit of "
+        "the framework material.",
+    )
+
+    mass_discharge: float = Field(
+        ...,
+        description="Mass of discharged material, normalized to one formula "
+        "unit of the framework material.",
+    )
+
+    vol_charge: float = Field(
+        ..., description="Volume of charged pair.",
+    )
+
+    vol_discharge: float = Field(
+        ..., description="Volume of discharged pair.",
+    )
+
+    frac_charge: float = Field(
+        ..., description="Atomic Fraction of working ion in charged pair.",
+    )
+
+    frac_discharge: float = Field(
+        ..., description="Atomic Fraction of working ion in discharged pair.",
+    )
+
+    working_ion_entry: float = Field(
+        ..., description="Working ion as an entry.",
+    )
