@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
-import os
 import datetime
+from pathlib import Path
 from setuptools import setup, find_namespace_packages
 
-SETUP_PTH = os.path.dirname(os.path.abspath(__file__))
-with open(os.path.join(SETUP_PTH, 'requirements.txt')) as f:
+with open(Path(__file__).parent / "requirements.txt") as f:
     required = f.read().splitlines()
 
 setup(
     name='emmet-builders',
-    use_scm_version=True,
+    use_scm_version={"relative_to": Path(__file__).parent},
     setup_requires=["setuptools_scm"],
     description='Builders for the Emmet Library',
     author="The Materials Project",
