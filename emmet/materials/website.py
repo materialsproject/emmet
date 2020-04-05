@@ -12,7 +12,7 @@ from monty.json import jsanitize
 from monty.serialization import loadfn
 
 from maggma.builders import Builder
-from maggma.utils import grouper, source_keys_updated
+from maggma.utils import grouper
 from pydash.objects import get, set_, has
 
 from emmet.materials.snls import mp_default_snl_fields
@@ -114,7 +114,7 @@ class MPBuilder(Builder):
             add_es(mat, item)
             add_xrd(mat, item)
             add_elastic(mat, item)
-            add_bonds(mat, item)
+            #add_bonds(mat, item)
             add_propnet(mat, item)
             add_snl(mat, item)
             check_relaxation(mat, item)
@@ -218,16 +218,12 @@ class MPBuilder(Builder):
         Gets the doc keys to process
         """
         mat_keys = set(self.materials.distinct(self.materials.key, criteria=self.query))
-        keys = set(
-            source_keys_updated(
-                source=self.materials, target=self.website, query=self.query
-            )
-        )
-        keys |= set(source_keys_updated(source=self.thermo, target=self.website))
+        keys = set(self.materials.newer_in(target=self.website, criteria=self.query))
+        keys |= set(self.thermo.newer_in(target=self.website))
 
         # Get keys for aux docs that have been updated since last processed.
         for source in self.aux:
-            new_keys = source_keys_updated(source=source, target=self.website)
+            new_keys = source.newer_in(target=self.website)
             self.logger.info(
                 "Only considering {} new keys for {}".format(
                     len(new_keys), source.collection_name
@@ -286,7 +282,9 @@ class MPBuilder(Builder):
         # get docs all for the same materials key
         for task_id, sub_docs in aux_docs:
             # sort and group docs by last_updated
-            sub_docs = list(sorted(sub_docs, key=lambda x: x[self.materials.last_updated_field]))
+            sub_docs = list(
+                sorted(sub_docs, key=lambda x: x[self.materials.last_updated_field])
+            )
             self.logger.debug("Merging {} docs for {}".format(len(sub_docs), task_id))
             # merge all docs in this group together
             d = docs[task_id]
@@ -366,14 +364,13 @@ def old_style_mat(new_style_mat):
         for d in new_style_mat["origins"]
         if d["task_type"] in _settings["task_types"]
     }
-    
+
     mat["task_ids"] = [
         k
         for k, v in new_style_mat["task_types"].items()
         if v in _settings["task_types"]
     ]
     mat["ntask_ids"] = len(mat["task_ids"])
-    
 
     return mat
 
@@ -537,7 +534,7 @@ def check_relaxation(mat, new_style_mat):
     except Exception:
         # print icsd_crystal.formula
         # print final_structure.formula
-        self.logger.debug(
+        print(
             f"Relaxation analyzer failed for Material:{mat['task_id']} due to {traceback.print_exc()}"
         )
 
