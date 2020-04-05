@@ -85,7 +85,7 @@ class MaterialsDoc(StructureMetadata):
     )
 
     @classmethod
-    def build_from_structure(
+    def from_structure(
         cls, structure: Structure, material_id: str, **kwargs
     ) -> "MaterialsDoc":
         """
