@@ -304,6 +304,7 @@ class MaterialsBuilder(Builder):
         t_type = task_type(task["orig_inputs"])
         t_id = task[self.tasks.key]
 
+        _SPECIAL_TAGS = ["LASPH", "ADDGRID", "ISPIN"]
         # Convert the task doc into a serious of properties in the materials
         # doc with the right document structure
         props = []
@@ -316,6 +317,18 @@ class MaterialsBuilder(Builder):
                             "task_type": t_type,
                             "task_id": t_id,
                             "quality_score": prop["quality_score"][t_type],
+                            "special_tags": sum(
+                                [
+                                    task.get("input", {})
+                                    .get("parameters", {})
+                                    .get(tag, False)
+                                    for tag in _SPECIAL_TAGS
+                                ]
+                            ),
+                            "max_forces": task.get("analysis", {}).get(
+                                "max_force", 10000
+                            )
+                            or 10000,
                             "track": prop.get("track", False),
                             "aggregate": prop.get("aggregate", False),
                             "last_updated": task[self.tasks.lu_field],
