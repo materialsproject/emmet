@@ -5,10 +5,10 @@ Use pymatgen classes in pydantic models by importing them from there when you ne
 """
 
 from emmet.stubs.utils import patch_msonable, use_model
+from emmet.stubs.math import Vector3D, Matrix3D
 from emmet.stubs.structure import Structure as StubStructure
 from emmet.stubs.misc import Composition as StubComposition
 from emmet.stubs.misc import ComputedEntry as StubComputedEntry
-from emmet.stubs.math import Vector3D, Matrix3D
 from pymatgen import Structure, Composition
 from pymatgen.entries.computed_entries import ComputedEntry
 
