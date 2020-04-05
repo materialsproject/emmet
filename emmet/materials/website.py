@@ -114,7 +114,7 @@ class MPBuilder(Builder):
             add_es(mat, item)
             add_xrd(mat, item)
             add_elastic(mat, item)
-            #add_bonds(mat, item)
+            # add_bonds(mat, item)
             add_propnet(mat, item)
             add_snl(mat, item)
             check_relaxation(mat, item)
@@ -129,10 +129,11 @@ class MPBuilder(Builder):
             processed = {"error": str(e)}
 
         key, last_updated_field = self.materials.key, self.materials.last_updated_field
+
         out = {
             self.website.key: item[key],
-            self.website.last_updated_field: self.website.lu_func[1](
-                self.materials.lu_func[0](item[last_updated_field])
+            self.website.last_updated_field: self.website._lu_func[1](
+                self.materials._lu_func[0](item[last_updated_field])
             ),
         }
         out.update(processed)

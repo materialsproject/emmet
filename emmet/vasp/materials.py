@@ -458,6 +458,7 @@ def find_best_prop(props: List[Dict]) -> Dict:
         key=lambda doc: (
             -1 * doc["is_valid"],
             -1 * doc["quality_score"],
+            -1 * doc["special_tags"],
             doc["energy"],
         ),
     )
