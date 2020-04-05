@@ -16,7 +16,7 @@ class CrystalSystem(Enum):
     mono = "Monoclinic"
     ortho = "Orthorhombic"
     tet = "Tetragonal"
-    trig = "Triganol"
+    trig = "Trigonal"
     hex_ = "Hexagonal"
     cubic = "Cubic"
 
@@ -69,7 +69,7 @@ class SymmetryData(BaseModel):
                 "symbol": sg.get_space_group_symbol(),
                 "number": sg.get_space_group_number(),
                 "point_group": sg.get_point_group_symbol(),
-                "crystal_system": sg.get_crystal_system(),
+                "crystal_system": CrystalSystem(sg.get_crystal_system().title()),
                 "hall": sg.get_hall(),
             }
         )

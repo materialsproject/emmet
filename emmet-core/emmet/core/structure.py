@@ -63,9 +63,12 @@ class StructureMetadata(BaseModel):
 
     symmetry: SymmetryData = Field(None, description="Symmetry data for this material")
 
+    class Config:
+        use_enum_values = True
+
     @classmethod
     def from_structure(
-        cls: Type[T], structure: Structure, fields: Optional[List[str]], **kwargs
+        cls: Type[T], structure: Structure, fields: Optional[List[str]] = None, **kwargs
     ) -> T:
 
         fields = (
@@ -94,8 +97,8 @@ class StructureMetadata(BaseModel):
             "nsites": structure.num_sites,
             "elements": elsyms,
             "nelements": len(elsyms),
-            "composition": comp.as_dict(),
-            "composition_reduced": comp.reduced_composition.as_dict(),
+            "composition": comp,
+            "composition_reduced": comp.reduced_composition,
             "formula_pretty": comp.reduced_formula,
             "formula_anonymous": comp.anonymized_formula,
             "chemsys": "-".join(elsyms),
