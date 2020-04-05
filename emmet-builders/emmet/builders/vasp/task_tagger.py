@@ -57,7 +57,7 @@ class TaskTagger(MapBuilder):
         iv = is_valid(
             item["output"]["structure"],
             item["orig_inputs"],
-            SETTINGS.input_sets,
+            SETTINGS.default_input_sets,
             self.kpts_tolerance,
             SETTINGS.ldau_fields,
         )
