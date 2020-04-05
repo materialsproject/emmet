@@ -11,7 +11,7 @@ from pymatgen.analysis.graphs import StructureGraph
 from pymatgen import __version__ as pymatgen_version
 
 from maggma.builders import MapBuilder
-from maggma.validator import JSONSchemaValidator, msonable_schema
+from maggma.validators import JSONSchemaValidator, msonable_schema
 
 __author__ = "Matthew Horton <mkhorton@lbl.gov>"
 
