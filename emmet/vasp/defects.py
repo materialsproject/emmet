@@ -255,7 +255,7 @@ class DefectBuilder(Builder):
         items = [item for item in items if item]
         self.logger.info("Updating {} defect documents".format(len(items)))
 
-        self.defects.update(items, update_lu=True, key='entry_id')
+        self.defects.update(items, key='entry_id')
 
     def ensure_indicies(self):
         """
@@ -933,5 +933,5 @@ class DefectThermoBuilder(Builder):
 
         self.logger.info("Updating {} DefectThermo documents".format(len(items)))
 
-        self.defectthermo.update(items, update_lu=True, key='entry_id')
+        self.defectthermo.update(items, key='entry_id')
 

@@ -147,7 +147,7 @@ class MPBuilder(Builder):
 
         if len(items) > 0:
             self.logger.debug(f"Updating {len(items)} items")
-            self.website.update(items, update_lu=False)
+            self.website.update(items)
 
     def ensure_indexes(self):
         """

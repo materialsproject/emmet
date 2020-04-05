@@ -164,7 +164,7 @@ class ElasticAggregateBuilderTest(unittest.TestCase):
             "task_id": "mp-{}".format(n),
             "structure": structure.as_dict(),
             "pretty_formula": formula})
-        self.test_materials.update(mat_docs, update_lu=False)
+        self.test_materials.update(mat_docs)
 
         # Create elasticity collection and add docs
         self.test_elasticity = MongoStore("test_emmet", "elasticity",

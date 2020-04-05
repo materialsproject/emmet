@@ -47,7 +47,7 @@ class CopyBuilder(Builder):
                 del item[source.last_updated_field]
             item["_bt"] = datetime.utcnow()
             del item["_id"]
-        target.update(items, update_lu=False, key=self.key)
+        target.update(items, key=self.key)
 
 
 def confirm_field_index(store, fields):

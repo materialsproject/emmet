@@ -203,7 +203,7 @@ class MaterialsBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(items)} materials")
-            self.materials.update(docs=items, update_lu=False)
+            self.materials.update(docs=items)
         else:
             self.logger.info("No items to update")
 
