@@ -1,3 +1,4 @@
+from datetime import datetime
 from itertools import chain, combinations
 from collections import defaultdict
 
@@ -7,13 +8,16 @@ from pymatgen.entries.computed_entries import ComputedEntry
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.analysis.structure_analyzer import oxide_type
 
+from maggma.stores import Store
 from maggma.builders import Builder
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
 class ThermoBuilder(Builder):
-    def __init__(self, materials, thermo, query=None, compatibility=None, **kwargs):
+    def __init__(
+        self, materials: Store, thermo: Store, query=None, compatibility=None, **kwargs
+    ):
         """
         Calculates thermodynamic quantities for materials from phase
         diagram constructions
@@ -53,7 +57,9 @@ class ThermoBuilder(Builder):
         # All relevant materials that have been updated since thermo props were
         # last calculated
         q = dict(self.query)
-        q.update(self.materials.lu_filter(self.thermo))
+        q.update(
+            {self.materials.key: {"$in": list(self.materials.newer_in(self.thermo))}}
+        )
         updated_chemsys = set(self.materials.distinct("chemsys", q))
         self.logger.debug(f"Found {len(updated_chemsys)} updated chemical systems")
 
@@ -225,7 +231,7 @@ class ThermoBuilder(Builder):
                 new_q["chemsys"] = query_chemsys
                 new_q["deprecated"] = False
 
-                fields = ["structure", "entries", "_sbxn", "task_id"]
+                fields = ["structure", "entries", "_sbxn", "task_id","last_updated"]
                 data = list(self.materials.query(properties=fields, criteria=new_q))
 
                 self.logger.debug(
@@ -242,6 +248,7 @@ class ThermoBuilder(Builder):
                         Structure.from_dict(d["structure"])
                     )
                     entry.data["_sbxn"] = d.get("_sbxn", [])
+                    entry.data["last_updated"] = d.get("last_updated",datetime.utcnow())
                     entries.append(entry)
 
         self.logger.info(f"Total entries in {chemsys} : {len(entries)}")
