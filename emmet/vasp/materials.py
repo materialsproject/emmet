@@ -94,7 +94,7 @@ class MaterialsBuilder(Builder):
         ]
         projected_from_tasks = [".".join(p) for p in projected_from_tasks]
 
-        self.projected_from_tasks = projected_from_tasks
+        self.projected_from_tasks = list(set(projected_from_tasks +["input.parameters"]))
         self.allowed_tasks = {
             t_type for d in self.__settings for t_type in d["quality_score"]
         }
@@ -169,23 +169,27 @@ class MaterialsBuilder(Builder):
         Returns:
             ([dict],list) : a list of new materials docs and a list of task_ids that were processsed
         """
+        try:
 
-        formula = tasks[0]["formula_pretty"]
-        t_ids = [t[self.tasks.key] for t in tasks]
-        self.logger.debug(f"Processing {formula} : {t_ids}")
+            formula = tasks[0]["formula_pretty"]
+            t_ids = [t[self.tasks.key] for t in tasks]
+            self.logger.debug(f"Processing {formula} : {t_ids}")
 
-        materials = []
-        grouped_tasks = self.filter_and_group_tasks(tasks)
+            materials = []
+            grouped_tasks = self.filter_and_group_tasks(tasks)
 
-        for group in grouped_tasks:
-            mat = self.make_mat(group)
-            if mat and self.valid(mat):
-                self.post_process(mat)
-                materials.append(mat)
+            for group in grouped_tasks:
+                mat = self.make_mat(group)
+                if mat and self.valid(mat):
+                    self.post_process(mat)
+                    materials.append(mat)
 
-        self.logger.debug(f"Produced {len(materials)} materials for {formula}")
+            self.logger.debug(f"Produced {len(materials)} materials for {formula}")
 
-        return materials
+            return materials
+        except Exception as e:
+            self.logger.error(e)
+            return [None]
 
     def update_targets(self, items: List[List[Dict]]):
         """
@@ -254,7 +258,9 @@ class MaterialsBuilder(Builder):
         sandboxes = list(set(chain.from_iterable([k["sbxn"] for k in best_props])))
 
         mat = {
-            self.materials.last_updated_field: max([prop["last_updated"] for prop in all_props]),
+            self.materials.last_updated_field: max(
+                [prop["last_updated"] for prop in all_props]
+            ),
             "created_at": min([prop["last_updated"] for prop in all_props]),
             "task_ids": task_ids,
             "deprecated_tasks": deprecated_tasks,
