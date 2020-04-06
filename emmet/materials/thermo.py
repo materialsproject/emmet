@@ -11,6 +11,8 @@ from pymatgen.analysis.structure_analyzer import oxide_type
 from maggma.stores import Store
 from maggma.builders import Builder
 
+from emmet.common.utils import jsanitize
+
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 
@@ -169,6 +171,10 @@ class ThermoBuilder(Builder):
         # Check if already updated this run
         items = [i for i in items if i["chemsys"] not in self._entries_cache]
 
+        # Update last_updated
+        for item in items:
+            item["last_updated"] = item["thermo"]["entry"]["data"]["last_updated"]
+
         # Add stable entries to my entries cache
         for entry in items:
             if entry["thermo"]["is_stable"]:
@@ -178,7 +184,7 @@ class ThermoBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(items)} thermo documents")
-            self.thermo.update(docs=items, key=[self.thermo.key, "_sbxn"])
+            self.thermo.update(docs=jsanitize(items,allow_bson=True), key=[self.thermo.key, "_sbxn"])
         else:
             self.logger.info("No items to update")
 
@@ -231,7 +237,7 @@ class ThermoBuilder(Builder):
                 new_q["chemsys"] = query_chemsys
                 new_q["deprecated"] = False
 
-                fields = ["structure", "entries", "_sbxn", "task_id","last_updated"]
+                fields = ["structure", "entries", "_sbxn", "task_id", "last_updated"]
                 data = list(self.materials.query(properties=fields, criteria=new_q))
 
                 self.logger.debug(
@@ -248,7 +254,9 @@ class ThermoBuilder(Builder):
                         Structure.from_dict(d["structure"])
                     )
                     entry.data["_sbxn"] = d.get("_sbxn", [])
-                    entry.data["last_updated"] = d.get("last_updated",datetime.utcnow())
+                    entry.data["last_updated"] = d.get(
+                        "last_updated", datetime.utcnow()
+                    )
                     entries.append(entry)
 
         self.logger.info(f"Total entries in {chemsys} : {len(entries)}")
