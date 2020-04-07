@@ -88,7 +88,7 @@ class MPBuilder(Builder):
         self.total = len(keys)
 
         # Chunk keys by chunk size for good data IO
-        for chunked_keys in grouper(keys, self.chunk_size, None):
+        for chunked_keys in grouper(keys, self.chunk_size):
             chunked_keys = list(filter(None.__ne__, chunked_keys))
 
             docs = {
@@ -219,12 +219,12 @@ class MPBuilder(Builder):
         Gets the doc keys to process
         """
         mat_keys = set(self.materials.distinct(self.materials.key, criteria=self.query))
-        keys = set(self.materials.newer_in(target=self.website, criteria=self.query))
-        keys |= set(self.thermo.newer_in(target=self.website))
+        keys = set(self.website.newer_in(target=self.materials, criteria=self.query))
+        keys |= set(self.website.newer_in(target=self.thermo))
 
         # Get keys for aux docs that have been updated since last processed.
         for source in self.aux:
-            new_keys = source.newer_in(target=self.website)
+            new_keys = self.website.newer_in(target=source)
             self.logger.info(
                 "Only considering {} new keys for {}".format(
                     len(new_keys), source.collection_name
@@ -332,7 +332,7 @@ def old_style_mat(new_style_mat):
     mat["anonymous_formula"] = {
         string.ascii_uppercase[i]: float(vals[i]) for i in range(len(vals))
     }
-    mat["initial_structure"] = get("initial_structures.0", new_style_mat, None)
+    mat["initial_structure"] = get(new_style_mat, "initial_structures.0", None)
 
     set_(mat, "pseudo_potential.functional", "PBE")
 
@@ -477,9 +477,9 @@ def add_snl(mat, new_style_mat):
         mat["snl"]["about"].update(mp_default_snl_fields)
 
     mat["snl_final"] = mat["snl"]
-    mat["icsd_ids"] = [int(i) for i in get(mat["snl"], "about._db_ids.icsd_ids", [])]
-    mat["pf_ids"] = get(mat["snl"], "about._db_ids.pf_ids", [])
-    mat["theoretical"] = not get(mat["snl.about._experimental"], False)
+    mat["icsd_ids"] = [int(i) for i in get(mat, "snl.about._db_ids.icsd_ids", [])]
+    mat["pf_ids"] = get(mat, "snl.about._db_ids.pf_ids", [])
+    mat["theoretical"] = not get(mat, "snl.about._experimental", False)
 
     # Extract tags from remarks by looking for just nounds and adjectives
     mat["exp"] = {"tags": []}
@@ -586,3 +586,4 @@ def add_thermo(mat, new_style_mat):
 def add_meta(mat):
     meta = {"emmet_version": emmet_version, "pymatgen_version": pymatgen_version}
     mat["_meta"] = meta
+

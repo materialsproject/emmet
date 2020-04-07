@@ -148,7 +148,7 @@ class SNLBuilder(Builder):
 
         self.total = len(forms_to_update)
 
-        for formulas in grouper(forms_to_update, self.chunk_size, fillvalue=None):
+        for formulas in grouper(forms_to_update, self.chunk_size):
 
             snls = []
             for source in self.source_snls:
@@ -160,6 +160,7 @@ class SNLBuilder(Builder):
                 self.materials.query(
                     properties=[
                         self.materials.key,
+                        self.materials.last_updated_field,
                         "structure",
                         "initial_structures",
                         "formula_pretty",
@@ -206,7 +207,10 @@ class SNLBuilder(Builder):
         for mat in mats:
             matched_snls = list(self.match(source_snls, mat))
             if len(matched_snls) > 0:
-                snl_doc = {self.snls.key: mat[self.materials.key]}
+                snl_doc = {
+                    self.snls.key: mat[self.materials.key],
+                    self.snls.last_updated_field: mat[self.materials.last_updated_field],
+                }
                 snl_fields = aggregate_snls(matched_snls)
                 self.add_defaults(snl_fields)
                 snl_doc["snl"] = StructureNL(
@@ -368,3 +372,4 @@ def aggregate_snls(snls):
     }
 
     return snl_fields
+
