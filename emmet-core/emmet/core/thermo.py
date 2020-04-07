@@ -54,7 +54,8 @@ class Thermo(PropertyDoc):
     )
     eq_reaction_e: float = Field(
         None,
-        description="The reaction energy of a stable entry from the neighboring equilibrium stable materials in eV. Also known as the inverse distance to hull.",
+        description="The reaction energy of a stable entry from the neighboring equilibrium stable materials in eV."
+        " Also known as the inverse distance to hull.",
     )
 
     decomposes_to: List[Decomposition] = Field(
@@ -68,5 +69,6 @@ class Thermo(PropertyDoc):
     )
     entries: Dict[str, ComputedEntry] = Field(
         None,
-        description="List of all entries that are valid for this material. The keys for this dictionary are names of various calculation types",
+        description="List of all entries that are valid for this material."
+        " The keys for this dictionary are names of various calculation types",
     )
