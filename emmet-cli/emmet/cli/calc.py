@@ -23,72 +23,74 @@ from emmet.cli.utils import EmmetCliError
 
 
 _UNPACK_INT = struct.Struct("<i").unpack
-logger = logging.getLogger('emmet')
+logger = logging.getLogger("emmet")
 canonical_structures = defaultdict(dict)
 
 
 def get_format(fname):
     if fnmatch(fname, "*.cif*") or fnmatch(fname, "*.mcif*"):
-        return 'cif'
+        return "cif"
     elif fnmatch(fname, "*.json*") or fnmatch(fname, "*.mson*"):
-        return 'json'
+        return "json"
     else:
-        raise EmmetCliError(f'reading {fname} not supported (yet)')
+        raise EmmetCliError(f"reading {fname} not supported (yet)")
 
 
 def load_canonical_structures(ctx, full_name, formula):
-    collection = ctx.obj['COLLECTIONS'][full_name]
+    collection = ctx.obj["COLLECTIONS"][full_name]
 
     if formula not in canonical_structures[full_name]:
         canonical_structures[full_name][formula] = {}
         structures = defaultdict(list)
 
-        if 'tasks' in full_name:
-            query = {'formula_pretty': formula}
+        if "tasks" in full_name:
+            query = {"formula_pretty": formula}
             query.update(task_base_query)
-            projection = {'input.structure': 1, 'task_id': 1, 'orig_inputs': 1}
+            projection = {"input.structure": 1, "task_id": 1, "orig_inputs": 1}
             tasks = collection.find(query, projection)
 
             for task in tasks:
-                task_label = task_type(task['orig_inputs'], include_calc_type=False)
+                task_label = task_type(task["orig_inputs"], include_calc_type=False)
                 if task_label == "Structure Optimization":
-                    s = load_structure(task['input']['structure'])
-                    s.id = task['task_id']
+                    s = load_structure(task["input"]["structure"])
+                    s.id = task["task_id"]
                     structures[get_sg(s)].append(s)
 
-        elif 'snl' in full_name:
-            query = {'$or': [{k: formula} for k in aggregation_keys]}
+        elif "snl" in full_name:
+            query = {"$or": [{k: formula} for k in aggregation_keys]}
             query.update(exclude)
             query.update(base_query)
 
             for group in aggregate_by_formula(collection, query):
-                for dct in group['structures']:
+                for dct in group["structures"]:
                     s = load_structure(dct)
-                    s.id = dct['snl_id'] if 'snl_id' in dct else dct['task_id']
+                    s.id = dct["snl_id"] if "snl_id" in dct else dct["task_id"]
                     structures[get_sg(s)].append(s)
 
         if structures:
             for sg, slist in structures.items():
-                canonical_structures[full_name][formula][sg] = [g[0] for g in group_structures(slist)]
+                canonical_structures[full_name][formula][sg] = [
+                    g[0] for g in group_structures(slist)
+                ]
 
         total = sum([len(x) for x in canonical_structures[full_name][formula].values()])
-        logger.debug(f'{total} canonical structure(s) for {formula} in {full_name}')
+        logger.debug(f"{total} canonical structure(s) for {formula} in {full_name}")
 
 
 def save_logs(ctx):
-    handler = ctx.obj['MONGO_HANDLER']
+    handler = ctx.obj["MONGO_HANDLER"]
     cnt = len(handler.buffer)
     handler.flush_to_mongo()
-    logger.debug(f'{cnt} log messages saved.')
+    logger.debug(f"{cnt} log messages saved.")
 
 
 def insert_snls(ctx, snls):
-    if ctx.obj['RUN'] and snls:
-        logger.info(f'add {len(snls)} SNLs ...')
-        result = ctx.obj['CLIENT'].db.snls.insert_many(snls)
-        logger.info(click.style(
-            f'#SNLs inserted: {len(result.inserted_ids)}', fg='green'
-        ))
+    if ctx.obj["RUN"] and snls:
+        logger.info(f"add {len(snls)} SNLs ...")
+        result = ctx.obj["CLIENT"].db.snls.insert_many(snls)
+        logger.info(
+            click.style(f"#SNLs inserted: {len(result.inserted_ids)}", fg="green")
+        )
 
     snls.clear()
     save_logs(ctx)
@@ -113,90 +115,110 @@ def count_file_documents(file_obj):
 
 
 @click.group()
-@click.option('-s', 'specs', multiple=True, metavar='SPEC',
-              help='Add DB(s) with SNL/task collection(s) to dupe-check.')
-@click.option('-m', 'nmax', default=1000, show_default=True,
-              help='Maximum #structures to scan.')
-@click.option('--skip/--no-skip', default=True, show_default=True,
-              help='Skip already scanned structures.')
+@click.option(
+    "-s",
+    "specs",
+    multiple=True,
+    metavar="SPEC",
+    help="Add DB(s) with SNL/task collection(s) to dupe-check.",
+)
+@click.option(
+    "-m", "nmax", default=1000, show_default=True, help="Maximum #structures to scan."
+)
+@click.option(
+    "--skip/--no-skip",
+    default=True,
+    show_default=True,
+    help="Skip already scanned structures.",
+)
 @click.pass_context
 def calc(ctx, specs, nmax, skip):
     """Set up calculations to optimize structures using VASP"""
     collections = {}
-    for coll in [ctx.obj['CLIENT'].db.snls, ctx.obj['CLIENT'].db.tasks]:
+    for coll in [ctx.obj["CLIENT"].db.snls, ctx.obj["CLIENT"].db.tasks]:
         collections[coll.full_name] = coll  # user collections
 
     for spec in specs:
         client = calcdb_from_mgrant(spec)
-        names = client.db.list_collection_names(filter={"name": {"$regex": r"(snl|tasks)"}})
+        names = client.db.list_collection_names(
+            filter={"name": {"$regex": r"(snl|tasks)"}}
+        )
         for name in names:
             collections[client.db[name].full_name] = client.db[name]
 
     for full_name, coll in collections.items():
-        logger.debug(f'{coll.count()} docs in {full_name}')
+        logger.debug(f"{coll.count()} docs in {full_name}")
 
-    ctx.obj['COLLECTIONS'] = collections
-    ctx.obj['NMAX'] = nmax
-    ctx.obj['SKIP'] = skip
+    ctx.obj["COLLECTIONS"] = collections
+    ctx.obj["NMAX"] = nmax
+    ctx.obj["SKIP"] = skip
 
 
 @calc.command()
-@click.argument('archive', type=click.Path(exists=True))
-@click.option('-a', 'authors', multiple=True, show_default=True, metavar='AUTHOR',
-              default=['Materials Project <feedback@materialsproject.org>'],
-              help='Author to assign to all structures.')
+@click.argument("archive", type=click.Path(exists=True))
+@click.option(
+    "-a",
+    "authors",
+    multiple=True,
+    show_default=True,
+    metavar="AUTHOR",
+    default=["Materials Project <feedback@materialsproject.org>"],
+    help="Author to assign to all structures.",
+)
 @click.pass_context
 def prep(ctx, archive, authors):
     """prep structures from an archive for submission"""
-    run = ctx.obj['RUN']
-    collections = ctx.obj['COLLECTIONS']
-    snl_collection = ctx.obj['CLIENT'].db.snls
-    handler = ctx.obj['MONGO_HANDLER']
-    nmax = ctx.obj['NMAX']
-    skip = ctx.obj['SKIP']
+    run = ctx.obj["RUN"]
+    collections = ctx.obj["COLLECTIONS"]
+    snl_collection = ctx.obj["CLIENT"].db.snls
+    handler = ctx.obj["MONGO_HANDLER"]
+    nmax = ctx.obj["NMAX"]
+    skip = ctx.obj["SKIP"]
     # TODO no_dupe_check flag
 
     fname, ext = os.path.splitext(os.path.basename(archive))
-    tag, sec_ext = fname.rsplit('.', 1) if '.' in fname else [fname, '']
-    logger.info(click.style(f'tag: {tag}', fg='cyan'))
+    tag, sec_ext = fname.rsplit(".", 1) if "." in fname else [fname, ""]
+    logger.info(click.style(f"tag: {tag}", fg="cyan"))
     if sec_ext:
-        ext = ''.join([sec_ext, ext])
-    exts = ['tar.gz', '.tgz', 'bson.gz', '.zip']
+        ext = "".join([sec_ext, ext])
+    exts = ["tar.gz", ".tgz", "bson.gz", ".zip"]
     if ext not in exts:
-        raise EmmetCliError(f'{ext} not supported (yet)! Please use one of {exts}.')
+        raise EmmetCliError(f"{ext} not supported (yet)! Please use one of {exts}.")
 
-    meta = {'authors': [Author.parse_author(a) for a in authors]}
-    references = meta.get('references', '').strip()
-    source_ids_scanned = handler.collection.distinct('source_id', {'tags': tag})
+    meta = {"authors": [Author.parse_author(a) for a in authors]}
+    references = meta.get("references", "").strip()
+    source_ids_scanned = handler.collection.distinct("source_id", {"tags": tag})
 
     # TODO add archive of StructureNL files
     input_structures, source_total = [], None
-    if ext == 'bson.gz':
+    if ext == "bson.gz":
         input_bson = gzip.open(archive)
         source_total = count_file_documents(input_bson)
         for doc in bson.decode_file_iter(input_bson):
             if len(input_structures) >= nmax:
                 break
-            if skip and doc['db_id'] in source_ids_scanned:
+            if skip and doc["db_id"] in source_ids_scanned:
                 continue
-            elements = set([
-                specie['element']
-                for site in doc['structure']['sites']
-                for specie in site['species']
-            ])
+            elements = set(
+                [
+                    specie["element"]
+                    for site in doc["structure"]["sites"]
+                    for specie in site["species"]
+                ]
+            )
             for l in skip_labels:
                 if l in elements:
                     logger.log(
                         logging.ERROR if run else logging.INFO,
                         f'Skip structure {doc["db_id"]}: unsupported element {l}!',
-                        extra={'tags': [tag], 'source_id': doc['db_id']}
+                        extra={"tags": [tag], "source_id": doc["db_id"]},
                     )
                     break
             else:
-                s = TransformedStructure.from_dict(doc['structure'])
+                s = TransformedStructure.from_dict(doc["structure"])
                 s.source_id = doc["db_id"]
                 input_structures.append(s)
-    elif ext == '.zip':
+    elif ext == ".zip":
         input_zip = ZipFile(archive)
         namelist = input_zip.namelist()
         source_total = len(namelist)
@@ -211,11 +233,11 @@ def prep(ctx, archive, authors):
             s.source_id = fname
             input_structures.append(s)
     else:
-        tar = tarfile.open(archive, 'r:gz')
+        tar = tarfile.open(archive, "r:gz")
         members = tar.getmembers()
         source_total = len(members)
         for member in members:
-            if os.path.basename(member.name).startswith('.'):
+            if os.path.basename(member.name).startswith("."):
                 continue
             if len(input_structures) >= nmax:
                 break
@@ -224,15 +246,17 @@ def prep(ctx, archive, authors):
                 continue
             f = tar.extractfile(member)
             if f:
-                contents = f.read().decode('utf-8')
+                contents = f.read().decode("utf-8")
                 fmt = get_format(fname)
                 s = Structure.from_str(contents, fmt=fmt)
                 s.source_id = fname
                 input_structures.append(s)
 
     total = len(input_structures)
-    logger.info(f'{total} of {source_total} structure(s) loaded '
-                f'({len(source_ids_scanned)} unique structures already scanned).')
+    logger.info(
+        f"{total} of {source_total} structure(s) loaded "
+        f"({len(source_ids_scanned)} unique structures already scanned)."
+    )
 
     save_logs(ctx)
     snls, index = [], None
@@ -242,7 +266,11 @@ def prep(ctx, archive, authors):
         if run and len(handler.buffer) >= handler.buffer_size:
             insert_snls(ctx, snls)
 
-        struct = istruct.final_structure if isinstance(istruct, TransformedStructure) else istruct
+        struct = (
+            istruct.final_structure
+            if isinstance(istruct, TransformedStructure)
+            else istruct
+        )
         struct.remove_oxidation_states()
         struct = struct.get_primitive_structure()
         formula = struct.composition.reduced_formula
@@ -251,11 +279,13 @@ def prep(ctx, archive, authors):
         if not (struct.is_ordered and struct.is_valid()):
             logger.log(
                 logging.WARNING if run else logging.INFO,
-                f'Skip structure {istruct.source_id}: disordered or invalid!',
+                f"Skip structure {istruct.source_id}: disordered or invalid!",
                 extra={
-                    'formula': formula, 'spacegroup': sg, 'tags': [tag],
-                    'source_id': istruct.source_id
-                }
+                    "formula": formula,
+                    "spacegroup": sg,
+                    "tags": [tag],
+                    "source_id": istruct.source_id,
+                },
             )
             continue
 
@@ -263,16 +293,21 @@ def prep(ctx, archive, authors):
             # load canonical structures in collection for current formula and
             # duplicate-check them against current structure
             load_canonical_structures(ctx, full_name, formula)
-            for canonical_structure in canonical_structures[full_name][formula].get(sg, []):
+            for canonical_structure in canonical_structures[full_name][formula].get(
+                sg, []
+            ):
                 if structures_match(struct, canonical_structure):
                     logger.log(
                         logging.WARNING if run else logging.INFO,
-                        f'Duplicate for {istruct.source_id} ({formula}/{sg}): {canonical_structure.id}',
+                        f"Duplicate for {istruct.source_id} ({formula}/{sg}): {canonical_structure.id}",
                         extra={
-                            'formula': formula, 'spacegroup': sg, 'tags': [tag],
-                            'source_id': istruct.source_id, 'duplicate_dbname': full_name,
-                            'duplicate_id': canonical_structure.id,
-                        }
+                            "formula": formula,
+                            "spacegroup": sg,
+                            "tags": [tag],
+                            "source_id": istruct.source_id,
+                            "duplicate_dbname": full_name,
+                            "duplicate_id": canonical_structure.id,
+                        },
                     )
                     break
             else:
@@ -284,28 +319,30 @@ def prep(ctx, archive, authors):
             prefix = snl_collection.database.name
             if index is None:
                 # get start index for SNL id
-                snl_ids = snl_collection.distinct('snl_id')
-                index = max([int(snl_id[len(prefix)+1:]) for snl_id in snl_ids])
+                snl_ids = snl_collection.distinct("snl_id")
+                index = max([int(snl_id[len(prefix) + 1 :]) for snl_id in snl_ids])
 
             index += 1
-            snl_id = '{}-{}'.format(prefix, index)
-            kwargs = {'references': references, 'projects': [tag]}
+            snl_id = "{}-{}".format(prefix, index)
+            kwargs = {"references": references, "projects": [tag]}
             if isinstance(istruct, TransformedStructure):
-                snl = istruct.to_snl(meta['authors'], **kwargs)
+                snl = istruct.to_snl(meta["authors"], **kwargs)
             else:
-                snl = StructureNL(istruct, meta['authors'], **kwargs)
+                snl = StructureNL(istruct, meta["authors"], **kwargs)
 
             snl_dct = snl.as_dict()
             snl_dct.update(get_meta_from_structure(struct))
-            snl_dct['snl_id'] = snl_id
+            snl_dct["snl_id"] = snl_id
             snls.append(snl_dct)
             logger.log(
                 logging.WARNING if run else logging.INFO,
-                f'SNL {snl_id} created for {istruct.source_id} ({formula}/{sg})',
+                f"SNL {snl_id} created for {istruct.source_id} ({formula}/{sg})",
                 extra={
-                    'formula': formula, 'spacegroup': sg, 'tags': [tag],
-                    'source_id': istruct.source_id,
-                }
+                    "formula": formula,
+                    "spacegroup": sg,
+                    "tags": [tag],
+                    "source_id": istruct.source_id,
+                },
             )
 
     # final save
@@ -314,10 +351,12 @@ def prep(ctx, archive, authors):
 
 
 @calc.command()
-@click.argument('tag')
+@click.argument("tag")
 def add(tag):
     """Add workflows for structures with tag in SNL collection"""
     pass
+
+
 #
 #        query = {'$and': [{'$or': [{'about.remarks': tag}, {'about.projects': tag}]}, exclude]}
 #        query.update(base_query)
@@ -609,11 +648,11 @@ def add(tag):
 #
 #            print(counter)
 #
-#@cli.command()
-#@click.argument('email')
-#@click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
-#@click.option('--add_tasks_db', type=click.Path(exists=True), help='config file for additional tasks collection to scan')
-#def find(email, add_snlcolls, add_tasks_db):
+# @cli.command()
+# @click.argument('email')
+# @click.option('--add_snlcolls', '-a', type=click.Path(exists=True), help='YAML config file with multiple documents defining additional SNLs collections to scan')
+# @click.option('--add_tasks_db', type=click.Path(exists=True), help='config file for additional tasks collection to scan')
+# def find(email, add_snlcolls, add_tasks_db):
 #    """checks status of calculations by submitter or author email in SNLs"""
 #    lpad = get_lpad()
 #
@@ -671,11 +710,11 @@ def add(tag):
 #
 #
 #
-#@cli.command()
-#@click.option('--tag', default=None, help='only include structures with specific tag')
-#@click.option('--in-progress/--no-in-progress', default=False, help='show in-progress only')
-#@click.option('--to-csv/--no-to-csv', default=False, help='save report as CSV')
-#def report(tag, in_progress, to_csv):
+# @cli.command()
+# @click.option('--tag', default=None, help='only include structures with specific tag')
+# @click.option('--in-progress/--no-in-progress', default=False, help='show in-progress only')
+# @click.option('--to-csv/--no-to-csv', default=False, help='save report as CSV')
+# def report(tag, in_progress, to_csv):
 #    """generate a report of calculations status"""
 #
 #    lpad = get_lpad()
@@ -736,5 +775,3 @@ def add(tag):
 #            options = table._get_options({})
 #            for row in table._get_rows(options):
 #                writer.writerow(row)
-
-

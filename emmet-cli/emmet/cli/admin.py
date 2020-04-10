@@ -3,9 +3,11 @@ import click
 
 from pymatgen import Structure
 
-logger = logging.getLogger('emmet')
 from emmet.cli.config import meta_keys, snl_indexes
 from emmet.cli.utils import ensure_indexes, get_meta_from_structure
+
+
+logger = logging.getLogger("emmet")
 
 
 @click.group()
@@ -19,67 +21,70 @@ def clean_ensure_indexes(run, fields, coll):
     if run:
         created = ensure_indexes(fields, [coll])
         if created:
-            indexes = ', '.join(created[coll.full_name])
-            logger.info(f'Created the following index(es) on '
-                        f'{coll.full_name}:\n{indexes}')
+            indexes = ", ".join(created[coll.full_name])
+            logger.info(
+                f"Created the following index(es) on {coll.full_name}:\n{indexes}"
+            )
         else:
-            logger.info('All indexes already created.')
+            logger.info("All indexes already created.")
     else:
         fields_list = ", ".join(fields)
-        logger.info(f'Would create/ensure the following index(es) on '
-                    f'{coll.full_name}:\n{fields_list}')
+        logger.info(
+            f"Would create/ensure the following index(es) on "
+            f"{coll.full_name}:\n{fields_list}"
+        )
 
 
 @admin.command()
-@click.argument('fields', nargs=-1)
-@click.argument('collection', nargs=1)
+@click.argument("fields", nargs=-1)
+@click.argument("collection", nargs=1)
 @click.pass_context
 def index(ctx, fields, collection):
     """Create index(es) for fields of a collection"""
-    coll = ctx.obj['CLIENT'].db[collection]
-    clean_ensure_indexes(ctx.obj['RUN'], fields, coll)
+    coll = ctx.obj["CLIENT"].db[collection]
+    clean_ensure_indexes(ctx.obj["RUN"], fields, coll)
 
 
 @admin.command()
-@click.argument('collection')
+@click.argument("collection")
 @click.pass_context
 def meta(ctx, collection):
     """Create meta-data fields and indexes for SNL collection"""
-    coll = ctx.obj['CLIENT'].db[collection]
-    q = {'$or': [{k: {'$exists': 0}} for k in meta_keys]}
+    coll = ctx.obj["CLIENT"].db[collection]
+    q = {"$or": [{k: {"$exists": 0}} for k in meta_keys]}
     docs = coll.find(q)
 
     ndocs = docs.count()
     if ndocs > 0:
-        if ctx.obj['RUN']:
-            logger.info(f'Fix meta for {ndocs} SNLs ...')
+        if ctx.obj["RUN"]:
+            logger.info(f"Fix meta for {ndocs} SNLs ...")
             for idx, doc in enumerate(docs):
-                if idx and not idx%1000:
-                    logger.debug(f'{idx} ...')
-                nested = 'snl' in doc
-                struct = Structure.from_dict(doc['snl'] if nested else doc)
-                key = 'task_id' if nested else 'snl_id'
-                coll.update({key: doc[key]}, {'$set': get_meta_from_structure(struct)})
+                if idx and not idx % 1000:
+                    logger.debug(f"{idx} ...")
+                nested = "snl" in doc
+                struct = Structure.from_dict(doc["snl"] if nested else doc)
+                key = "task_id" if nested else "snl_id"
+                coll.update({key: doc[key]}, {"$set": get_meta_from_structure(struct)})
         else:
-            logger.info(f'Would fix meta for {ndocs} SNLs.')
+            logger.info(f"Would fix meta for {ndocs} SNLs.")
 
-    clean_ensure_indexes(ctx.obj['RUN'], snl_indexes, coll)
+    clean_ensure_indexes(ctx.obj["RUN"], snl_indexes, coll)
 
 
 @admin.command()
-@click.argument('tags', nargs=-1)
+@click.argument("tags", nargs=-1)
 @click.pass_context
 def reset(ctx, tags):
     """Reset collections for tag(s)"""
     # TODO workflows, tasks?
-    q = {'tags': {'$in': tags}}
-    total = ctx.obj['MONGO_HANDLER'].collection.count()
-    if ctx.obj['RUN']:
-        r = ctx.obj['MONGO_HANDLER'].collection.remove(q)
+    q = {"tags": {"$in": tags}}
+    total = ctx.obj["MONGO_HANDLER"].collection.count()
+    if ctx.obj["RUN"]:
+        r = ctx.obj["MONGO_HANDLER"].collection.remove(q)
         logger.info(f'{r["n"]} of {total} log entries removed.')
     else:
-        cnt = ctx.obj['MONGO_HANDLER'].collection.count(q)
-        logger.info(f'Would remove {cnt} of {total} log entries.')
+        cnt = ctx.obj["MONGO_HANDLER"].collection.count(q)
+        logger.info(f"Would remove {cnt} of {total} log entries.")
 
 
 # TODO tags overview

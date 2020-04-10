@@ -24,7 +24,7 @@ def ensure_indexes(indexes, colls):
     created = defaultdict(list)
     for index in indexes:
         for coll in colls:
-            keys = [k.rsplit('_', 1)[0] for k in coll.index_information().keys()]
+            keys = [k.rsplit("_", 1)[0] for k in coll.index_information().keys()]
             if index not in keys:
                 coll.ensure_index(index)
                 created[coll.full_name].append(index)
@@ -33,48 +33,59 @@ def ensure_indexes(indexes, colls):
 
 def calcdb_from_mgrant(spec):
     client = Client()
-    role = 'rw' # NOTE need write access to source to ensure indexes
-    host, dbname_or_alias = spec.split('/', 1)
+    role = "rw"  # NOTE need write access to source to ensure indexes
+    host, dbname_or_alias = spec.split("/", 1)
     auth = client.get_auth(host, dbname_or_alias, role)
     if auth is None:
         raise Exception("No valid auth credentials available!")
     return VaspCalcDb(
-        auth['host'], 27017, auth['db'],
-        'tasks', auth['username'], auth['password'],
-        authSource=auth['db']
+        auth["host"],
+        27017,
+        auth["db"],
+        "tasks",
+        auth["username"],
+        auth["password"],
+        authSource=auth["db"],
     )
 
 
 def get_meta_from_structure(struct):
-    d = {'formula_pretty': struct.composition.reduced_formula}
-    d['nelements'] = len(set(struct.composition.elements))
-    d['nsites'] = len(struct)
-    d['is_ordered'] = struct.is_ordered
-    d['is_valid'] = struct.is_valid()
+    d = {"formula_pretty": struct.composition.reduced_formula}
+    d["nelements"] = len(set(struct.composition.elements))
+    d["nsites"] = len(struct)
+    d["is_ordered"] = struct.is_ordered
+    d["is_valid"] = struct.is_valid()
     return d
 
 
 def aggregate_by_formula(coll, q, key=None):
-    query = {'$and': [q, exclude]}
+    query = {"$and": [q, exclude]}
     query.update(base_query)
     nested = False
     if key is None:
         for k in aggregation_keys:
-            q = {k: {'$exists': 1}}
+            q = {k: {"$exists": 1}}
             q.update(base_query)
             doc = coll.find_one(q)
             if doc:
                 key = k
-                nested = int('snl' in doc)
+                nested = int("snl" in doc)
                 break
         else:
-            raise ValueError(f'could not find one of the aggregation keys {aggregation_keys} in {coll.full_name}!')
+            raise ValueError(
+                f"could not find one of the aggregation keys {aggregation_keys} in {coll.full_name}!"
+            )
 
-    push = {k.split('.')[-1]: f'${k}' for k in structure_keys[nested]}
-    return coll.aggregate([
-        {'$match': query}, {'$sort': {'nelements': 1, 'nsites': 1}},
-        {'$group': {'_id': f'${key}', 'structures': {'$push': push}}}
-    ], allowDiskUse=True, batchSize=1)
+    push = {k.split(".")[-1]: f"${k}" for k in structure_keys[nested]}
+    return coll.aggregate(
+        [
+            {"$match": query},
+            {"$sort": {"nelements": 1, "nsites": 1}},
+            {"$group": {"_id": f"${key}", "structures": {"$push": push}}},
+        ],
+        allowDiskUse=True,
+        batchSize=1,
+    )
 
 
 def load_structure(dct):

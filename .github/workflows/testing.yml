@@ -39,5 +39,3 @@ jobs:
         flake8 --count --show-source --statistics emmet-core
         # exit-zero treats all errors as warnings.
         flake8 --count --exit-zero --max-complexity=20 --statistics emmet-core
-
-  

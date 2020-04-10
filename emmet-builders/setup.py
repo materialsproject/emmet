@@ -6,15 +6,15 @@ with open(Path(__file__).parent / "requirements.txt") as f:
     required = f.read().splitlines()
 
 setup(
-    name='emmet-builders',
+    name="emmet-builders",
     use_scm_version={"relative_to": Path(__file__).parent},
     setup_requires=["setuptools_scm"],
-    description='Builders for the Emmet Library',
+    description="Builders for the Emmet Library",
     author="The Materials Project",
     author_email="feedback@materialsproject.org",
-    url='https://github.com/materialsproject/emmet',
-    packages=find_namespace_packages(include=['emmet.*']),
+    url="https://github.com/materialsproject/emmet",
+    packages=find_namespace_packages(include=["emmet.*"]),
     install_requires=required,
-    license='modified BSD',
+    license="modified BSD",
     zip_safe=False,
 )
