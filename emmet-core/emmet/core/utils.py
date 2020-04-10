@@ -1,13 +1,35 @@
-from typing import List, Iterator
+from typing import List, Iterator, Dict
+from typing_extensions import Literal
 from itertools import groupby
+from pathlib import Path
+
+import datetime
+import bson
+import numpy as np
 
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
+from monty.serialization import loadfn
+from monty.json import MSONable
+from pydantic import BaseModel
 
 from emmet.core import SETTINGS
 
+_RUN_TYPE_DATA = loadfn(Path(__file__).parent / "run_types.yaml")
+_TASK_TYPES = [
+    "NSCF Line",
+    "NSCF Uniform",
+    "Dielectric",
+    "DFPT",
+    "NMR Nuclear Shielding",
+    "NMR Electric Field Gradient",
+    "Static",
+    "Structure Optimization",
+    "Deformation",
+]
 
-def get_sg(struc, symprec=SETTINGS.SYMPREC):
+
+def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:
     """helper function to get spacegroup with a loose tolerance"""
     try:
         return struc.get_space_group_info(symprec=symprec)[1]
@@ -53,39 +75,53 @@ def group_structures(
             yield group
 
 
-def task_type(inputs, include_calc_type=True):
+def run_type(parameters: Dict) -> str:
     """
-    Determines the task_type
+    Determines the run_type from the VASP parameters dict
+    This is adapted from pymatgen to be far less unstable
+    """
+
+    if parameters.get("LDAU", False):
+        is_hubbard = "+U"
+    else:
+        is_hubbard = ""
+
+    def _variant_equal(v1, v2) -> bool:
+        """
+        helper function to deal with strings
+        """
+        if isinstance(v1, str) and isinstance(v2, str):
+            return v1.strip().upper() == v2.strip().upper()
+        else:
+            return v1 == v2
+
+    # This is to force an order of evaluation
+    for functional_class in ["HF", "VDW", "METAGGA", "GGA"]:
+        for special_type, params in _RUN_TYPE_DATA[functional_class].items():
+            if all(
+                [
+                    _variant_equal(parameters.get(param, None), value)
+                    for param, value in params.items()
+                ]
+            ):
+                return f"{special_type}{is_hubbard}"
+
+    return f"LDA{is_hubbard}"
+
+
+def task_type(
+    inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict]
+) -> str:
+    """
+    Determines the calculation type
 
     Args:
         inputs (dict): inputs dict with an incar, kpoints, potcar, and poscar dictionaries
-        include_calc_type (bool): whether to include calculation type
-            in task_type such as HSE, GGA, SCAN, etc.
     """
 
     calc_type = []
 
     incar = inputs.get("incar", {})
-    try:
-        functional = inputs.get("potcar", {}).get("functional", "PBE")
-    except:
-        functional = "PBE"
-
-    METAGGA_TYPES = {"TPSS", "RTPSS", "M06L", "MBJL", "SCAN", "MS0", "MS1", "MS2"}
-
-    if include_calc_type:
-        if incar.get("LHFCALC", False):
-            calc_type.append("HSE")
-        elif incar.get("METAGGA", "").strip().upper() in METAGGA_TYPES:
-            calc_type.append(incar["METAGGA"].strip().upper())
-        elif incar.get("LDAU", False):
-            calc_type.append("GGA+U")
-        elif functional == "PBE":
-            calc_type.append("GGA")
-        elif functional == "PW91":
-            calc_type.append("PW91")
-        elif functional == "Perdew-Zunger81":
-            calc_type.append("LDA")
 
     if incar.get("ICHARG", 0) > 10:
         try:
@@ -126,3 +162,71 @@ def task_type(inputs, include_calc_type=True):
         calc_type.append("Deformation")
 
     return " ".join(calc_type)
+
+
+def jsanitize(obj, strict=False, allow_bson=False):
+    """
+    This method cleans an input json-like object, either a list or a dict or
+    some sequence, nested or otherwise, by converting all non-string
+    dictionary keys (such as int and float) to strings, and also recursively
+    encodes all objects using Monty's as_dict() protocol.
+    Args:
+        obj: input json-like object.
+        strict (bool): This parameters sets the behavior when jsanitize
+            encounters an object it does not understand. If strict is True,
+            jsanitize will try to get the as_dict() attribute of the object. If
+            no such attribute is found, an attribute error will be thrown. If
+            strict is False, jsanitize will simply call str(object) to convert
+            the object to a string representation.
+        allow_bson (bool): This parameters sets the behavior when jsanitize
+            encounters an bson supported type such as objectid and datetime. If
+            True, such bson types will be ignored, allowing for proper
+            insertion into MongoDb databases.
+    Returns:
+        Sanitized dict that can be json serialized.
+    """
+    if allow_bson and (
+        isinstance(obj, (datetime.datetime, bytes))
+        or (bson is not None and isinstance(obj, bson.objectid.ObjectId))
+    ):
+        return obj
+    if isinstance(obj, (list, tuple)):
+        return [jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj]
+    if np is not None and isinstance(obj, np.ndarray):
+        return [
+            jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj.tolist()
+        ]
+    if isinstance(obj, dict):
+        return {
+            k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
+            for k, v in obj.items()
+        }
+    if isinstance(obj, MSONable):
+        return {
+            k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
+            for k, v in obj.as_dict().items()
+        }
+
+    if isinstance(obj, BaseModel):
+        return {
+            k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
+            for k, v in obj.dict().items()
+        }
+    if isinstance(obj, (int, float)):
+        return obj
+    if obj is None:
+        return None
+
+    if isinstance(obj, MSONable):
+        return {
+            k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
+            for k, v in obj.as_dict().items()
+        }
+
+    if not strict:
+        return obj.__str__()
+
+    if isinstance(obj, str):
+        return obj.__str__()
+
+    return jsanitize(obj.as_dict(), strict=strict, allow_bson=allow_bson)

@@ -1,1 +1,4 @@
+pymatgen>=2018.11.30
+monty>=1.0.1
 pydantic>=1.4
+pybtex==0.21

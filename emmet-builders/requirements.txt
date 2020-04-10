@@ -1,0 +1,2 @@
+pymatgen>=2018.11.30
+emmet-core

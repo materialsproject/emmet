@@ -3,8 +3,8 @@ from pydantic import BaseModel, Field
 
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-from emmet.settings import SETTINGS
-from emmet.stubs.pymatgen import Structure
+from emmet.core import SETTINGS
+from emmet.stubs import Structure
 
 
 class CrystalSystem(Enum):
@@ -16,7 +16,7 @@ class CrystalSystem(Enum):
     mono = "Monoclinic"
     ortho = "Orthorhombic"
     tet = "Tetragonal"
-    trig = "Triganol"
+    trig = "Trigonal"
     hex_ = "Hexagonal"
     cubic = "Cubic"
 
@@ -56,7 +56,7 @@ class SymmetryData(BaseModel):
 
     @classmethod
     def from_structure(cls, structure: Structure) -> "SymmetryData":
-        symprec = SETTINGS.symprec
+        symprec = SETTINGS.SYMPREC
         sg = SpacegroupAnalyzer(structure, symprec=symprec)
         symmetry = {"symprec": symprec}
         if not sg.get_symmetry_dataset():
@@ -69,7 +69,7 @@ class SymmetryData(BaseModel):
                 "symbol": sg.get_space_group_symbol(),
                 "number": sg.get_space_group_number(),
                 "point_group": sg.get_point_group_symbol(),
-                "crystal_system": sg.get_crystal_system(),
+                "crystal_system": CrystalSystem(sg.get_crystal_system().title()),
                 "hall": sg.get_hall(),
             }
         )

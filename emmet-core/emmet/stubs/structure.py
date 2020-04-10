@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Union, Tuple
 from pydantic import BaseModel, Field
 from pymatgen import Element
 
-Vector3D = Tuple[float, float, float]
+from emmet.stubs import Vector3D
 
 
 class Lattice(BaseModel):
