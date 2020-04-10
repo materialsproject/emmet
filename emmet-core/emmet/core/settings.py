@@ -7,6 +7,8 @@ import json
 from pydantic import BaseSettings, Field, root_validator
 from pydantic.types import Path
 
+DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
+
 
 class EmmetSettings(BaseSettings):
     """
@@ -16,7 +18,7 @@ class EmmetSettings(BaseSettings):
     """
 
     config_file: Path = Field(
-        "~/.emmet.json", description="File to load alternative defaults from"
+        DEFAULT_CONFIG_FILE_PATH, description="File to load alternative defaults from"
     )
 
     LTOL: float = Field(
@@ -36,6 +38,7 @@ class EmmetSettings(BaseSettings):
 
     class Config:
         env_prefix = "emmet_"
+        extra = "ignore"
 
     @root_validator(pre=True)
     def load_default_settings(cls, values):
@@ -43,7 +46,7 @@ class EmmetSettings(BaseSettings):
         Loads settings from a root file if available and uses that as defaults in
         place of built in defaults
         """
-        config_file_path = Path(values.get("config_file", "~/.emmet.json"))
+        config_file_path = Path(values.get("config_file", DEFAULT_CONFIG_FILE_PATH))
 
         new_values = {}
 
