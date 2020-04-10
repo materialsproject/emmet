@@ -3,5 +3,9 @@ version: 1
 update_configs:
 
   - package_manager: "python"
-    directory: "/"
-    update_schedule: "monthly"
+    directory: "emmet-core"
+    update_schedule: "weekly"
+    automerged_updates:
+        - match:
+            dependency_type: "all"
+            update_type: "all"
