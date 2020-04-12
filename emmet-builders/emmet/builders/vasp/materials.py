@@ -105,7 +105,9 @@ class MaterialsBuilder(Builder):
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
-        Gets all items to process into materials documents
+        Gets all items to process into materials documents.
+        This does no datetime checking; relying on on whether 
+        task_ids are included in the Materials Colection
 
         Returns:
             generator or list relevant tasks and materials to process into materials documents
