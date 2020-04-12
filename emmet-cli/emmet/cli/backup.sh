@@ -134,5 +134,3 @@ for block in $(find . -maxdepth 1 -type d -group matgen -name "$filter" -exec ba
 done
 
 echo DONE
-
-
