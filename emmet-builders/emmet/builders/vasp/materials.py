@@ -150,7 +150,7 @@ class MaterialsBuilder(Builder):
             "formula_pretty",
             "output.energy_per_atom",
             "output.structure",
-            "input.parameters",
+            "output.parameters",
             "orig_inputs",
             "input.structure",
         ]
@@ -258,7 +258,7 @@ class MaterialsBuilder(Builder):
             {t[self.tasks.key] for t in task_group if not t["is_valid"]}
         )
         task_types = {
-            t[self.tasks.key]: run_type(t["input"]["parameters"])
+            t[self.tasks.key]: run_type(t["output"]["parameters"])
             + " "
             + task_type(t["orig_inputs"])
             for t in task_group
@@ -287,11 +287,11 @@ class MaterialsBuilder(Builder):
             - Special Tags
             - Forces
             """
-            ispin = task.get("input", {}).get("parameters", {}).get("ISPIN", 1)
+            ispin = task.get("output", {}).get("parameters", {}).get("ISPIN", 1)
             max_force = task.get("analysis", {}).get("max_force", 10000) or 10000
 
             special_tags = [
-                task.get("input", {}).get("parameters", {}).get(tag, False)
+                task.get("output", {}).get("parameters", {}).get(tag, False)
                 for tag in ["LASPH", "ADDGRID"]
             ]
 
@@ -317,7 +317,7 @@ class MaterialsBuilder(Builder):
         )
 
         # Origins
-        _run_type = run_type(best_structure_opt["input"]["parameters"])
+        _run_type = run_type(best_structure_opt["output"]["parameters"])
         _task_type = task_type(best_structure_opt["orig_inputs"])
         origins = [
             PropertyOrigin(
