@@ -62,8 +62,13 @@ import logging
 import click
 
 from log4mongo.handlers import BufferedMongoHandler
+
+logging.basicConfig(level=logging.NOTSET)
+logger = logging.getLogger("emmet")
+
 from emmet.cli.config import log_fields
 from emmet.cli.admin import admin
+from emmet.cli.hpss import hpss
 from emmet.cli.calc import calc
 from emmet.cli.utils import calcdb_from_mgrant, ensure_indexes
 from emmet.cli.utils import EmmetCliError
@@ -73,12 +78,7 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.option(
-    "--spec",
-    required=True,
-    metavar="HOST/DB",
-    help="MongoGrant spec for user database.",
-)
+@click.option("--spec", metavar="HOST/DB", help="MongoGrant spec for user DB.")
 @click.option("--run", is_flag=True, help="Run DB/filesystem write operations.")
 @click.option("--no-dupe-check", is_flag=True, help="Skip duplicate check(s).")
 @click.option("--verbose", is_flag=True, help="Show debug messages.")
@@ -86,33 +86,38 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 @click.pass_context
 def emmet(ctx, spec, run, no_dupe_check, verbose):
     """Command line interface for emmet"""
-    if verbose:
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.INFO)
+    # if verbose:
+    #    logger.setLevel(logging.DEBUG)
+    # else:
+    #    logger.setLevel(logging.INFO)
+    # logger.info("hello world")
+    # logger.debug("hello debug")
     ctx.ensure_object(dict)
     ctx.obj["RUN"] = run
     ctx.obj["NO_DUPE_CHECK"] = no_dupe_check
     ctx.obj["SPEC"] = spec
-    client = calcdb_from_mgrant(spec)
-    ctx.obj["CLIENT"] = client
-    ctx.obj["MONGO_HANDLER"] = BufferedMongoHandler(
-        host=client.host,
-        port=client.port,
-        database_name=client.db_name,
-        username=client.user,
-        password=client.password,
-        level=logging.WARNING,
-        authentication_db=client.db_name,
-        collection="emmet_logs",
-        buffer_periodical_flush_timing=False,  # flush manually
-    )
-    logger.addHandler(ctx.obj["MONGO_HANDLER"])
-    coll = ctx.obj["MONGO_HANDLER"].collection
-    created = ensure_indexes(log_fields, [coll])
-    if created:
-        indexes = ", ".join(created[coll.full_name])
-        logger.debug(f"Created the following index(es) on {coll.full_name}:\n{indexes}")
+    if spec:
+        client = calcdb_from_mgrant(spec)
+        ctx.obj["CLIENT"] = client
+        ctx.obj["MONGO_HANDLER"] = BufferedMongoHandler(
+            host=client.host,
+            port=client.port,
+            database_name=client.db_name,
+            username=client.user,
+            password=client.password,
+            level=logging.WARNING,
+            authentication_db=client.db_name,
+            collection="emmet_logs",
+            buffer_periodical_flush_timing=False,  # flush manually
+        )
+        logger.addHandler(ctx.obj["MONGO_HANDLER"])
+        coll = ctx.obj["MONGO_HANDLER"].collection
+        created = ensure_indexes(log_fields, [coll])
+        if created:
+            indexes = ", ".join(created[coll.full_name])
+            logger.debug(
+                f"Created the following index(es) on {coll.full_name}:\n{indexes}"
+            )
     if not run:
         click.secho("DRY RUN! Add --run flag to execute changes.", fg="green")
 
@@ -128,3 +133,4 @@ def safe_entry_point():
 
 emmet.add_command(admin)
 emmet.add_command(calc)
+emmet.add_command(hpss)
