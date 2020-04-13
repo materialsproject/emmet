@@ -143,7 +143,7 @@ def task_type(
             calc_type.append("DFPT")
         calc_type.append("Dielectric")
 
-    elif incar.get("IBION", 0) > 6:
+    elif incar.get("IBRION", 0) > 6:
         calc_type.append("DFPT")
 
     elif incar.get("LCHIMAG", False):
