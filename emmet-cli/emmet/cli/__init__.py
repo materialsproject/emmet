@@ -61,10 +61,9 @@
 import logging
 import click
 
-from log4mongo.handlers import BufferedMongoHandler
+logging.basicConfig(level=logging.INFO)
 
-logging.basicConfig(level=logging.NOTSET)
-logger = logging.getLogger("emmet")
+from log4mongo.handlers import BufferedMongoHandler
 
 from emmet.cli.config import log_fields
 from emmet.cli.admin import admin
@@ -74,6 +73,7 @@ from emmet.cli.utils import calcdb_from_mgrant, ensure_indexes
 from emmet.cli.utils import EmmetCliError
 
 
+logger = logging.getLogger("emmet")
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
 
@@ -86,12 +86,7 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 @click.pass_context
 def emmet(ctx, spec, run, no_dupe_check, verbose):
     """Command line interface for emmet"""
-    # if verbose:
-    #    logger.setLevel(logging.DEBUG)
-    # else:
-    #    logger.setLevel(logging.INFO)
-    # logger.info("hello world")
-    # logger.debug("hello debug")
+    logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     ctx.ensure_object(dict)
     ctx.obj["RUN"] = run
     ctx.obj["NO_DUPE_CHECK"] = no_dupe_check
