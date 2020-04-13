@@ -271,6 +271,7 @@ class MaterialsBuilder(Builder):
             for t in task_group
             if task_type(t["orig_inputs"]) == "Structure Optimization"
         ]
+        statics = [t for t in task_group if task_type(t["orig_inputs"]) == "Static"]
 
         # Material ID
         possible_mat_ids = [t[self.tasks.key] for t in structure_optimizations]
@@ -289,6 +290,10 @@ class MaterialsBuilder(Builder):
             - Special Tags
             - Forces
             """
+            _run_type = run_type(task["output"]["parameters"])
+
+            qual_score = {"SCAN": 3, "GGA+U": 2, "GGA": 1}
+
             ispin = task.get("output", {}).get("parameters", {}).get("ISPIN", 1)
             max_force = task.get("analysis", {}).get("max_force", 10000) or 10000
 
@@ -297,17 +302,24 @@ class MaterialsBuilder(Builder):
                 for tag in ["LASPH", "ADDGRID"]
             ]
 
-            return (-1 * ispin, -1 * sum(special_tags), max_force)
+            return (
+                -1 * qual_score.get(run_type, 0),
+                -1 * ispin,
+                -1 * sum(special_tags),
+                max_force,
+            )
 
-        best_structure_opt = sorted(structure_optimizations, key=_structure_eval)[0]
-        structure = Structure.from_dict(best_structure_opt["output"]["structure"])
+        best_structure_calc = sorted(
+            structure_optimizations + statics, key=_structure_eval
+        )[0]
+        structure = Structure.from_dict(best_structure_calc["output"]["structure"])
 
         # Initial Structures
         initial_structures = [
             Structure.from_dict(t["input"]["structure"]) for t in task_group
         ]
         sm = StructureMatcher(
-            ltol=0.1, stol=0.3, angle_tol=0.1, scale=False, attempt_supercell=False
+            ltol=0.1, stol=0.1, angle_tol=0.1, scale=False, attempt_supercell=False
         )
         initial_structures = [
             group[0] for group in sm.group_structures(initial_structures)
@@ -319,14 +331,14 @@ class MaterialsBuilder(Builder):
         )
 
         # Origins
-        _run_type = run_type(best_structure_opt["output"]["parameters"])
-        _task_type = task_type(best_structure_opt["orig_inputs"])
+        _run_type = run_type(best_structure_calc["output"]["parameters"])
+        _task_type = task_type(best_structure_calc["orig_inputs"])
         origins = [
             PropertyOrigin(
                 name="structure",
                 task_type=f"{_run_type} {_task_type}",
-                task_id=best_structure_opt[self.tasks.key],
-                last_updated=best_structure_opt[self.tasks.last_updated_field],
+                task_id=best_structure_calc[self.tasks.key],
+                last_updated=best_structure_calc[self.tasks.last_updated_field],
             )
         ]
 
