@@ -1,7 +1,7 @@
 from enum import Enum
 from pydantic import BaseModel, Field
 
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer, spglib
 
 from emmet.core import SETTINGS
 from emmet.stubs import Structure
@@ -71,6 +71,7 @@ class SymmetryData(BaseModel):
                 "point_group": sg.get_point_group_symbol(),
                 "crystal_system": CrystalSystem(sg.get_crystal_system().title()),
                 "hall": sg.get_hall(),
+                "version": spglib.__version__,
             }
         )
 
