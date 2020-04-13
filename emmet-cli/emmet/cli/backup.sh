@@ -23,17 +23,6 @@ cd $indir && pwd
 for block in $(find . -maxdepth 1 -type d -group matgen -name "$filter" -exec basename {} \;); do
   echo $block
 
-  hsi -q -l matcomp ls -1 garden/${block}.tar
-  if [ $? -eq 0 ]; then echo "$block.tar exists"; continue; fi
-
-  [[ ! -d $block ]] && echo $block does not exist && exit
-  find $block -type d -empty -print -delete
-  [[ ! -d $block ]] && echo $block only contained empty directories && exit
-
-  parallel -0m 'chmod -v g+rw {}' :::: <(find $block -not -perm -660 -print0)
-  [[ $? -ne 0 ]] && echo 'error in chmod' && exit
-  find $block -type f -not -name "*.gz" -exec pigz -9v {} \;
-  [[ $? -ne 0 ]] && echo "error in pigz" && exit
 
   hsi -q -l matcomp ls -1 garden/${block}.tar
   if [ $? -ne 0 ]; then

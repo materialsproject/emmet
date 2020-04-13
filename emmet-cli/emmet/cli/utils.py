@@ -1,4 +1,6 @@
 import os
+import stat
+import mgzip
 import click
 import logging
 import itertools
@@ -18,6 +20,7 @@ from emmet.cli.config import exclude, base_query, aggregation_keys
 from emmet.cli.config import structure_keys, log_fields
 
 logger = logging.getLogger("emmet")
+perms = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP
 
 
 class EmmetCliError(Exception):
@@ -196,7 +199,28 @@ def get_vasp_dirs(base_path, pattern, run):
             p = pattern_split[level]
             dirs[:] = [d for d in dirs if fnmatch(d, p)]
 
+        for d in dirs:
+            dn = os.path.join(root, d)
+            st = os.stat(dn)
+            if not bool(st.st_mode & perms):
+                raise EmmetCliError(f"Insufficient permissions {st.st_mode} for {dn}.")
+
         if is_vasp_dir(files):
+            with click.progressbar(files, label="Check permissions & gzip") as bar:
+                for f in bar:
+                    fn = os.path.join(root, f)
+                    st = os.stat(fn)
+                    if not bool(st.st_mode & perms):
+                        raise EmmetCliError(
+                            f"Insufficient permissions {st.st_mode} for {fn}."
+                        )
+                    if run and not f.endswith(".gz") and not os.path.exists(fn + ".gz"):
+                        with open(fn, "rb") as fo, mgzip.open(
+                            fn + ".gz", "wb", thread=0
+                        ) as fw:
+                            fw.write(fo.read())
+                        os.remove(fo)
+
             vasp_dir = get_symlinked_path(root, base_path_index, run)
             create_orig_inputs(vasp_dir, run)
             dirs[:] = []  # don't descend further (i.e. ignore relax1/2)
