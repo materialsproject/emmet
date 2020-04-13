@@ -4,6 +4,7 @@ repos:
       hooks:
       -   id: check-yaml
       -   id: end-of-file-fixer
+          exclude: ^test_files
       -   id: trailing-whitespace
       -   id: flake8
     - repo: https://github.com/ambv/black
