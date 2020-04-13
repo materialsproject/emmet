@@ -121,9 +121,34 @@
     "tasks_key": "task_id"
   },
   {
+    "materials_key": "energy",
+    "trace": true,
+    "tasks_key": "output.energy",
+    "quality_score": {
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 2,
+      "GGA Static": 1,
+      "GGA Structure Optimization": 1
+    },
+    "track": true
+  },
+  {
+    "materials_key": "energy_per_atom",
+    "trace": true,
+    "tasks_key": "output.energy_per_atom",
+    "quality_score": {
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 2,
+      "GGA Static": 1,
+      "GGA Structure Optimization": 1
+    },
+    "track": true
+  },
+  {
     "materials_key": "entries.gga.composition",
     "tasks_key": "composition_unit_cell",
     "quality_score": {
+      "GGA Static": 1,
       "GGA Structure Optimization": 1
     }
   },
@@ -132,6 +157,7 @@
     "trace": true,
     "tasks_key": "output.energy",
     "quality_score": {
+      "GGA Static": 1,
       "GGA Structure Optimization": 1
     }
   },
@@ -139,6 +165,7 @@
     "materials_key": "entries.gga.parameters.potcar_spec",
     "tasks_key": "input.potcar_spec",
     "quality_score": {
+      "GGA Static": 1,
       "GGA Structure Optimization": 1
     }
   },
@@ -146,6 +173,7 @@
     "materials_key": "entries.gga.parameters.run_type",
     "tasks_key": "calcs_reversed.0.run_type",
     "quality_score": {
+      "GGA Static": 1,
       "GGA Structure Optimization": 1
     }
   },
@@ -153,6 +181,7 @@
     "materials_key": "entries.gga.parameters.task_id",
     "tasks_key": "task_id",
     "quality_score": {
+      "GGA Static": 1,
       "GGA Structure Optimization": 1
     }
   },
@@ -160,7 +189,8 @@
     "materials_key": "entries.gga_u.composition",
     "tasks_key": "composition_unit_cell",
     "quality_score": {
-      "GGA+U Structure Optimization": 1
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 2
     }
   },
   {
@@ -168,35 +198,40 @@
     "tasks_key": "output.energy",
     "trace": true,
     "quality_score": {
-      "GGA+U Structure Optimization": 1
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 2
     }
   },
   {
     "materials_key": "entries.gga_u.parameters.hubbards",
     "tasks_key": "input.hubbards",
     "quality_score": {
-      "GGA+U Structure Optimization": 1
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 2
     }
   },
   {
     "materials_key": "entries.gga_u.parameters.potcar_spec",
     "tasks_key": "input.potcar_spec",
     "quality_score": {
-      "GGA+U Structure Optimization": 1
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 2
     }
   },
   {
     "materials_key": "entries.gga_u.parameters.run_type",
     "tasks_key": "calcs_reversed.0.run_type",
     "quality_score": {
-      "GGA+U Structure Optimization": 1
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 2
     }
   },
   {
     "materials_key": "entries.gga_u.parameters.task_id",
     "tasks_key": "task_id",
     "quality_score": {
-      "GGA+U Structure Optimization": 1
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 2
     }
   },
   {
@@ -303,8 +338,10 @@
   {
     "materials_key": "structure",
     "quality_score": {
-      "GGA+U Structure Optimization": 6,
-      "GGA Structure Optimization": 2
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 2,
+      "GGA Static": 1,
+      "GGA Structure Optimization": 1
     },
     "tasks_key": "output.structure",
     "track": true
@@ -328,7 +365,9 @@
   {
     "materials_key": "magnetism.total_magnetization",
     "quality_score": {
-      "GGA+U Structure Optimization": 5,
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 2,
+      "GGA Static": 1,
       "GGA Structure Optimization": 1
     },
     "tasks_key": "calcs_reversed.0.output.outcar.total_magnetization"
