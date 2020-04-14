@@ -84,6 +84,13 @@ class MaterialsDoc(StructureMetadata):
         None, description="Any warnings related to this material"
     )
 
+    sandboxes: List[str] = Field(
+        None,
+        description="List of sandboxes this material belongs to."
+        " Sandboxes provide a way of controlling access to materials."
+        " No sandbox means this materials is openly visible",
+    )
+
     @classmethod
     def from_structure(
         cls, structure: Structure, material_id: str, **kwargs

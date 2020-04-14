@@ -48,6 +48,13 @@ class MaterialsProperty(StructureMetadata):
         None, description="Any warnings related to this property"
     )
 
+    sandboxes: List[str] = Field(
+        None,
+        description="List of sandboxes this material belongs to."
+        " Sandboxes provide a way of controlling access to materials."
+        " No sandbox means this materials is openly visible",
+    )
+
     @staticmethod
     def to_subdoc(data: Union["MaterialsProperty", Dict]):
         """
