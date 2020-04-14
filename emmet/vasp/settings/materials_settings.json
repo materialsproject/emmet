@@ -357,7 +357,9 @@
     "aggregate": true,
     "materials_key": "initial_structures",
     "quality_score": {
-      "GGA+U Structure Optimization": 5,
+      "GGA+U Static": 2,
+      "GGA+U Structure Optimization": 2,
+      "GGA Static": 1,
       "GGA Structure Optimization": 1
     },
     "tasks_key": "input.structure"
