@@ -15,7 +15,9 @@ logger = logging.getLogger("emmet")
     required=True,
     help="Directory with VASP launchers.",
 )
-@click.option("-m", "--nmax", default=10, help="Maximum #directories to walk.")
+@click.option(
+    "-m", "--nmax", show_default=True, default=10, help="Maximum #directories to walk."
+)
 @click.option(
     "-p", "--pattern", help="Only include sub-paths matching pattern."
 )
@@ -35,6 +37,10 @@ def prep():
             break
 
     if counter is not None:
-        logger.info(f"Prepared {counter+1} VASP calculation(s).")
+        msg = f"Prepared {counter+1} VASP calculation(s)."
+        logger.info(msg)
     else:
-        logger.error("No VASP calculations found.")
+        msg = "No VASP calculations found."
+        logger.error(msg)
+
+    return msg

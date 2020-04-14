@@ -5,6 +5,7 @@ import click
 import logging
 import itertools
 
+from datetime import datetime
 from functools import update_wrapper
 from slurmpy import Slurm
 from glob import glob
@@ -19,7 +20,7 @@ from mongogrant.client import Client
 
 from emmet.core.utils import group_structures
 from emmet.cli.config import exclude, base_query, aggregation_keys
-from emmet.cli.config import structure_keys, log_fields
+from emmet.cli.config import structure_keys, log_fields, tracker
 
 logger = logging.getLogger("emmet")
 perms = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP
@@ -230,17 +231,65 @@ def get_vasp_dirs():
                             fn + ".gz", "wb", thread=0
                         ) as fw:
                             fw.write(fo.read())
-                        os.remove(fo)
+                        os.remove(fn)
 
             vasp_dir = get_symlinked_path(root, base_path_index)
             create_orig_inputs(vasp_dir)
             dirs[:] = []  # don't descend further (i.e. ignore relax1/2)
-            logger.debug(vasp_dir)
+            logger.info(vasp_dir)
             yield vasp_dir
+
+
+def reconstruct_command(sbatch=False):
+    ctx = click.get_current_context()
+    command = []
+    for cmd, params in zip(ctx.command_path.split(), [
+        ctx.grand_parent.params, ctx.parent.params, ctx.params
+    ]):
+        command.append(cmd)
+        for k, v in params.items():
+            if v:
+                if isinstance(v, bool):
+                    if (sbatch and k != 'sbatch') or not sbatch:
+                        command.append(f"--{k}")
+                elif isinstance(v, str):
+                    command.append(f"--{k}=\"{v}\"")
+                else:
+                    command.append(f"--{k}={v}")
+
+    return " ".join(command)
+
+
+def track(func):
+    """decorator to track command in GH issue / gists"""
+    def wrapper(*args, **kwargs):
+        ret = func(*args, **kwargs)
+        ctx = click.get_current_context()
+        run = ctx.grand_parent.params["run"]
+
+        if run and ret:
+            logger.info(ret)
+            command = reconstruct_command()
+            gh = ctx.grand_parent.obj["GH"]
+            now = str(datetime.now()).replace(" ", "-")
+            fn = ctx.command_path.replace(" ", "-") + f"_{now}.log"
+            logs = ctx.grand_parent.obj["LOG_STREAM"]
+            files = {fn: {"content": logs.getvalue()}}
+            gist = gh.create_gist(command, files, public=False)
+            logger.info(gist.html_url)
+            issue_number = ctx.grand_parent.params["issue"]
+            issue = gh.issue(tracker["org"], tracker["repo"], issue_number)
+            txt = f"*{ctx.command_path}* returned \"{ret}\" "
+            txt += f"([logs]({gist.html_url})):\n\n```\n{command}\n```"
+            comment = issue.create_comment(txt)
+            logger.info(comment.html_url)
+
+    return update_wrapper(wrapper, func)
 
 
 def sbatch(func):
     """decorator to enable SLURM mode on command"""
+    @track
     def wrapper(*args, **kwargs):
         ctx = click.get_current_context()
         ctx.grand_parent = ctx.parent.parent
@@ -260,10 +309,8 @@ def sbatch(func):
             os.mkdir(track_dir)
             logger.debug(f"{track_dir} created")
 
-        job_name = ctx.command_path.replace(" ", "-")
-        print(job_name)
         s = Slurm(
-            job_name,
+            ctx.command_path.replace(" ", "-"),
             slurm_kwargs={
                 "qos": "xfer",
                 "time": "48:00:00",
@@ -275,22 +322,7 @@ def sbatch(func):
             bash_strict=False,
         )
 
-        # reconstruct command
-        command = []
-        for cmd, params in zip(ctx.command_path.split(), [
-            ctx.grand_parent.params, ctx.parent.params, ctx.params
-        ]):
-            command.append(cmd)
-            for k, v in params.items():
-                if v and k != 'sbatch':
-                    if isinstance(v, bool):
-                        command.append(f"--{k}")
-                    elif isinstance(v, str):
-                        command.append(f"--{k}=\"{v}\"")
-                    else:
-                        command.append(f"--{k}={v}")
-
-        jobid = s.run(" ".join(command), _cmd="sbatch" if run else "ls")
-        # TODO gist and issue comment, print(jobid)
+        command = reconstruct_command(sbatch=True)
+        return s.run(command, _cmd="sbatch" if run else "ls")
 
     return update_wrapper(wrapper, func)

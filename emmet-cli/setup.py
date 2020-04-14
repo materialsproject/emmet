@@ -17,7 +17,8 @@ setup(
         "mongogrant",
         "atomate",
         "mgzip",
-        "slurmpy"
+        "slurmpy",
+        "github3.py"
     ],
     license="modified BSD",
     zip_safe=False,
