@@ -219,24 +219,9 @@ class MPBuilder(Builder):
         Gets the doc keys to process
         """
         mat_keys = set(self.materials.distinct(self.materials.key, criteria=self.query))
-        keys = set(self.website.newer_in(target=self.materials, criteria=self.query))
-        keys |= set(self.website.newer_in(target=self.thermo))
+        keys = set(self.website.distinct(self.website.key, criteria=self.query))
 
-        # Get keys for aux docs that have been updated since last processed.
-        for source in self.aux:
-            new_keys = self.website.newer_in(target=source)
-            self.logger.info(
-                "Only considering {} new keys for {}".format(
-                    len(new_keys), source.collection_name
-                )
-            )
-            keys |= set(new_keys)
-
-        keys = (
-            keys & mat_keys
-        )  # Ensure all keys are present in main materials collection
-
-        return keys
+        return mat_keys - keys
 
     def add_thermo_docs(self, docs):
         # Add in thermo
