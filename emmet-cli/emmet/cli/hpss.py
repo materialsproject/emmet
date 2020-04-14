@@ -2,7 +2,8 @@ import os
 import logging
 import click
 
-from emmet.cli.utils import get_vasp_dirs, sbatch
+from emmet.cli.utils import get_vasp_dirs
+from emmet.cli.decorators import sbatch
 
 
 logger = logging.getLogger("emmet")
