@@ -2,7 +2,7 @@ import os
 import logging
 import click
 
-from emmet.cli.utils import get_vasp_dirs
+from emmet.cli.utils import get_vasp_dirs, sbatch
 
 
 logger = logging.getLogger("emmet")
@@ -12,33 +12,26 @@ logger = logging.getLogger("emmet")
 @click.option(
     "-d",
     "--directory",
-    metavar="DIR",
     required=True,
     help="Directory with VASP launchers.",
 )
+@click.option("-m", "--nmax", default=10, help="Maximum #directories to walk.")
 @click.option(
-    "-m", "nmax", default=10, show_default=True, help="Maximum #directories to walk."
+    "-p", "--pattern", help="Only include sub-paths matching pattern."
 )
-@click.option(
-    "-p", "pattern", metavar="PATTERN", help="Only include sub-paths matching pattern."
-)
-@click.pass_context
-def hpss(ctx, directory, nmax, pattern):
+def hpss(directory, nmax, pattern):
     """Long-term HPSS storage"""
-    ctx.obj["DIRECTORY"] = os.path.abspath(os.path.realpath(directory))
-    ctx.obj["NMAX"] = nmax
-    ctx.obj["PATTERN"] = pattern
+    pass
 
 
 @hpss.command()
-@click.pass_context
-def prep(ctx):
+@sbatch
+def prep():
     """Prepare directory for HPSS"""
+    ctx = click.get_current_context()
     counter = None  # catch empty iterator
-    for counter, _ in enumerate(
-        get_vasp_dirs(ctx.obj["DIRECTORY"], ctx.obj["PATTERN"], ctx.obj["RUN"])
-    ):
-        if counter == ctx.obj["NMAX"] - 1:
+    for counter, _ in enumerate(get_vasp_dirs()):
+        if counter == ctx.parent.params["nmax"] - 1:
             break
 
     if counter is not None:

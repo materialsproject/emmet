@@ -74,23 +74,22 @@ from emmet.cli.utils import EmmetCliError
 
 
 logger = logging.getLogger("emmet")
-CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"], show_default=True)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.option("--spec", metavar="HOST/DB", help="MongoGrant spec for user DB.")
 @click.option("--run", is_flag=True, help="Run DB/filesystem write operations.")
+@click.option("--sbatch", is_flag=True, help="Switch to sbatch mode.")
 @click.option("--no-dupe-check", is_flag=True, help="Skip duplicate check(s).")
 @click.option("--verbose", is_flag=True, help="Show debug messages.")
 @click.version_option()
-@click.pass_context
-def emmet(ctx, spec, run, no_dupe_check, verbose):
+def emmet(spec, run, sbatch, no_dupe_check, verbose):
     """Command line interface for emmet"""
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    ctx = click.get_current_context()
     ctx.ensure_object(dict)
-    ctx.obj["RUN"] = run
-    ctx.obj["NO_DUPE_CHECK"] = no_dupe_check
-    ctx.obj["SPEC"] = spec
+
     if spec:
         client = calcdb_from_mgrant(spec)
         ctx.obj["CLIENT"] = client
@@ -113,6 +112,7 @@ def emmet(ctx, spec, run, no_dupe_check, verbose):
             logger.debug(
                 f"Created the following index(es) on {coll.full_name}:\n{indexes}"
             )
+
     if not run:
         click.secho("DRY RUN! Add --run flag to execute changes.", fg="green")
 

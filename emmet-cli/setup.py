@@ -17,6 +17,7 @@ setup(
         "mongogrant",
         "atomate",
         "mgzip",
+        "slurmpy"
     ],
     license="modified BSD",
     zip_safe=False,

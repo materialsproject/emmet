@@ -5,6 +5,8 @@ import click
 import logging
 import itertools
 
+from functools import update_wrapper
+from slurmpy import Slurm
 from glob import glob
 from shutil import copyfile, rmtree
 from fnmatch import fnmatch
@@ -131,7 +133,9 @@ def is_vasp_dir(list_of_files):
             return True
 
 
-def make_block(base_path, run):
+def make_block(base_path):
+    ctx = click.get_current_context()
+    run = ctx.parent.parent.params["run"]
     block = get_timestamp_dir(prefix="block")
     block_dir = os.path.join(base_path, block)
     if run:
@@ -139,8 +143,10 @@ def make_block(base_path, run):
     return block_dir
 
 
-def get_symlinked_path(root, base_path_index, run):
+def get_symlinked_path(root, base_path_index):
     """organize directory in block_*/launcher_* via symbolic links"""
+    ctx = click.get_current_context()
+    run = ctx.parent.parent.params["run"]
     root_split = root.split(os.sep)
     base_path = os.sep.join(root_split[:base_path_index])
 
@@ -173,7 +179,9 @@ def get_symlinked_path(root, base_path_index, run):
     return launch_dir
 
 
-def create_orig_inputs(vaspdir, run):
+def create_orig_inputs(vaspdir):
+    ctx = click.get_current_context()
+    run = ctx.parent.parent.params["run"]
     for inp in ["INCAR", "KPOINTS", "POTCAR", "POSCAR"]:
         input_path = os.path.join(vaspdir, inp)
         if not glob(input_path + ".orig*"):
@@ -186,8 +194,11 @@ def create_orig_inputs(vaspdir, run):
                 logger.debug(f"{input_path} -> {orig_path}")
 
 
-def get_vasp_dirs(base_path, pattern, run):
-    base_path = base_path.rstrip(os.sep)
+def get_vasp_dirs():
+    ctx = click.get_current_context()
+    run = ctx.parent.parent.params["run"]
+    pattern = ctx.parent.params["pattern"]
+    base_path = ctx.parent.params["directory"].rstrip(os.sep)
     base_path_index = len(base_path.split(os.sep))
     if pattern:
         pattern_split = pattern.split(os.sep)
@@ -221,8 +232,65 @@ def get_vasp_dirs(base_path, pattern, run):
                             fw.write(fo.read())
                         os.remove(fo)
 
-            vasp_dir = get_symlinked_path(root, base_path_index, run)
-            create_orig_inputs(vasp_dir, run)
+            vasp_dir = get_symlinked_path(root, base_path_index)
+            create_orig_inputs(vasp_dir)
             dirs[:] = []  # don't descend further (i.e. ignore relax1/2)
             logger.debug(vasp_dir)
             yield vasp_dir
+
+
+def sbatch(func):
+    """decorator to enable SLURM mode on command"""
+    def wrapper(*args, **kwargs):
+        ctx = click.get_current_context()
+        ctx.grand_parent = ctx.parent.parent
+        if not ctx.grand_parent.params["sbatch"]:
+            return ctx.invoke(func, *args, **kwargs)
+
+        run = ctx.grand_parent.params["run"]
+        if run:
+            click.secho(f"SBATCH MODE! Submitting to SLURM queue.", fg="green")
+
+        directory = ctx.parent.params.get("directory")
+        if not directory:
+            raise EmmetCliError(f"{ctx.parent.command_path} needs --directory option!")
+
+        track_dir = os.path.join(directory, '.emmet')
+        if run and not os.path.exists(track_dir):
+            os.mkdir(track_dir)
+            logger.debug(f"{track_dir} created")
+
+        job_name = ctx.command_path.replace(" ", "-")
+        print(job_name)
+        s = Slurm(
+            job_name,
+            slurm_kwargs={
+                "qos": "xfer",
+                "time": "48:00:00",
+                "licenses": "SCRATCH"
+            },
+            date_in_name=False,
+            scripts_dir=track_dir,
+            log_dir=track_dir,
+            bash_strict=False,
+        )
+
+        # reconstruct command
+        command = []
+        for cmd, params in zip(ctx.command_path.split(), [
+            ctx.grand_parent.params, ctx.parent.params, ctx.params
+        ]):
+            command.append(cmd)
+            for k, v in params.items():
+                if v and k != 'sbatch':
+                    if isinstance(v, bool):
+                        command.append(f"--{k}")
+                    elif isinstance(v, str):
+                        command.append(f"--{k}=\"{v}\"")
+                    else:
+                        command.append(f"--{k}={v}")
+
+        jobid = s.run(" ".join(command), _cmd="sbatch" if run else "ls")
+        # TODO gist and issue comment, print(jobid)
+
+    return update_wrapper(wrapper, func)
