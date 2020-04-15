@@ -34,6 +34,7 @@ def track(func):
         if run and ret:
             logger.info(ret)
             gh = ctx.grand_parent.obj["GH"]
+            user = gh.me().login
             issue_number = ctx.grand_parent.params["issue"]
             issue = gh.issue(tracker["org"], tracker["repo"], issue_number)
 
@@ -58,7 +59,6 @@ def track(func):
                 description = f"Logs for {tracker['repo']}#{issue_number}"
                 files = {gist_name: {"content": issue.html_url}}
                 gist = gh.create_gist(description, files, public=False)
-                user = gh.me().login
                 zip_base = gist.html_url.replace(gist.id, user + "/" + gist.id)
                 txt = GIST_COMMENT_TEMPLATE.format(
                     gist.html_url, zip_base + "/archive/master.zip"
@@ -73,17 +73,9 @@ def track(func):
             logs = ctx.grand_parent.obj["LOG_STREAM"]
             gist.edit(files={filename: {"content": logs.getvalue()}})
 
-            # get raw url to log file
-            gist = gh.gist(gist.id)
-            for fn, gfile in gist.files.items():
-                if fn == filename:
-                    raw_url = gfile.raw_url
-                    break
-            else:
-                raise EmmetCliError(f"{filename} not found in Gist {gist.id}!")
-
             # add comment for new command
             command = reconstruct_command()
+            raw_url = f"https://gist.githubusercontent.com/{user}/{gist.id}/raw/{filename}"
             txt = COMMENT_TEMPLATE.format(ctx.command_path, ret, command, raw_url)
             comment = issue.create_comment(txt)
             logger.info(comment.html_url)
