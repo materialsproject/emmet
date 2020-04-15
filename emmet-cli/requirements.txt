@@ -12,3 +12,4 @@ colorama==0.4.3
 mgzip==0.2.1
 slurmpy==0.0.8
 github3.py==1.3.0
+hpsspy==0.5.1

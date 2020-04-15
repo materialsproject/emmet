@@ -18,7 +18,8 @@ setup(
         "atomate",
         "mgzip",
         "slurmpy",
-        "github3.py"
+        "github3.py",
+        "hpsspy"
     ],
     license="modified BSD",
     zip_safe=False,
