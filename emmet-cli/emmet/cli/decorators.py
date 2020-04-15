@@ -1,5 +1,6 @@
 import os
 import click
+import logging
 
 from datetime import datetime
 from functools import update_wrapper
@@ -20,10 +21,7 @@ COMMENT_TEMPLATE = """
 
 </p></details>
 """
-GIST_COMMENT_TEMPLATE = """
-**[Gist]({url}) created** to collect command logs for this issue. The current set of
-log files can be downloaded [here]({url}/archive/master.zip).
-"""
+GIST_COMMENT_TEMPLATE = "**[Gist]({}) created** to collect command logs for this issue. Download latest set of log files [here]({})."
 
 
 def track(func):
@@ -35,7 +33,6 @@ def track(func):
 
         if run and ret:
             logger.info(ret)
-            command = reconstruct_command()
             gh = ctx.grand_parent.obj["GH"]
             issue_number = ctx.grand_parent.params["issue"]
             issue = gh.issue(tracker["org"], tracker["repo"], issue_number)
@@ -55,31 +52,38 @@ def track(func):
             # create or retrieve gist for log files
             gist_name = f"#{issue_number}-{tracker['repo']}.md"
             for gist in gists_iterator:
-                if gist.files[0].filename == gist_name:
+                if gist.files and gist_name in gist.files:
                     break
             else:
                 description = f"Logs for {tracker['repo']}#{issue_number}"
                 files = {gist_name: {"content": issue.html_url}}
                 gist = gh.create_gist(description, files, public=False)
-                txt = GIST_COMMENT_TEMPLATE.format(url=gist.html_url)
+                user = gh.me().login
+                zip_base = gist.html_url.replace(gist.id, user + "/" + gist.id)
+                txt = GIST_COMMENT_TEMPLATE.format(
+                    gist.html_url, zip_base + "/archive/master.zip"
+                )
                 comment = issue.create_comment(txt)
                 logger.info(f"Gist Comment: {comment.html_url}")
 
+            # update gist with logs for new command
             logger.info(f"Log Gist: {gist.html_url}")
-
-
-                # TODO update
             now = str(datetime.now()).replace(" ", "-")
-            fn = ctx.command_path.replace(" ", "-") + f"_{now}"
+            filename = ctx.command_path.replace(" ", "-") + f"_{now}"
             logs = ctx.grand_parent.obj["LOG_STREAM"]
-            files = {fn: {"content": logs.getvalue()}}
+            gist.edit(files={filename: {"content": logs.getvalue()}})
 
+            # get raw url to log file
+            gist = gh.gist(gist.id)
+            for fn, gfile in gist.files.items():
+                if fn == filename:
+                    raw_url = gfile.raw_url
+                    break
+            else:
+                raise EmmetCliError(f"{filename} not found in Gist {gist.id}!")
 
-
-            # TODO hide previous comments?
-            # TODO link to raw log file
-            raw_url =
-            # https://gist.githubusercontent.com/tschaume/43ee0a71e74eb68d23368f6fcd56b04f/raw/ecf10823056fe07fe8f83acf9d5bb169090a9af9/emmet-hpss-prep_2020-04-14-01:51:29.944896
+            # add comment for new command
+            command = reconstruct_command()
             txt = COMMENT_TEMPLATE.format(ctx.command_path, ret, command, raw_url)
             comment = issue.create_comment(txt)
             logger.info(comment.html_url)
