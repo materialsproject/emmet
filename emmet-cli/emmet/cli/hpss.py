@@ -1,9 +1,12 @@
 import os
 import logging
 import click
+import shlex
+import subprocess
 
 from collections import defaultdict
-from hpsspy.util import hsi, htar
+from hpsspy import HpssOSError
+from hpsspy.os.path import isfile
 from emmet.cli.utils import get_vasp_dirs, EmmetCliError
 from emmet.cli.decorators import sbatch
 
@@ -54,24 +57,16 @@ def prep():
 def backup():
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
-    if run and not "HPSS_DIR" in os.environ:
-        raise EmmetCliError("Set HPSS_DIR envvar to directory with hsi/htar binaries!")
-
-    TMPDIR = os.path.join(os.path.expanduser("~"), '.emmet_tmp')
-    if not os.path.exists(TMPDIR):
-        os.mkdir(TMPDIR)
-    TMPFILE = os.path.join(TMPDIR, "hsi.txt")
-    if not os.path.exists(TMPFILE):
-        open(TMPFILE, 'a').close()
-
+    nmax = ctx.parent.params["nmax"]
+    directory = ctx.parent.params["directory"]
     pattern = ctx.parent.params["pattern"]
     prefix = "block_"
+
     if os.sep in pattern:
         raise EmmetCliError(f"Nested pattern ({pattern}) not allowed!")
     elif not pattern.startswith(prefix):
         raise EmmetCliError(f"Pattern ({pattern}) only allowed to start with {prefix}!")
 
-    nmax = ctx.parent.params["nmax"]
     block_launchers = defaultdict(list)
     with click.progressbar(get_vasp_dirs(), label="Load blocks") as bar:
         for vasp_dir in bar:
@@ -86,12 +81,25 @@ def backup():
 
     for block, launchers in block_launchers.items():
         logger.info(f"{block} with {len(launchers)} launcher(s)")
-
-    # TODO get_vasp_dirs: ensure correct permissions and group ownership after gzip
-    logger.info(hsi("ls", "-1", tmpdir=TMPDIR))
-
-
-    #hsi -q -l matcomp ls -1 garden/${block}.tar
-    #if [ $? -ne 0 ]; then
-    #echo "upload new archive for ${block}"
-    #htar -M 5000000 -cvf garden/${block}.tar ${block}
+        try:
+            isfile(f"garden/{block}.tar")
+        except HpssOSError:
+            # back up block if not in HPSS
+            if run:
+                os.chdir(directory)
+                filelist = [os.path.join(block, l) for l in launchers]
+                args = shlex.split(f"htar -M 5000000 -Phcvf garden/{block}.tar")
+                nargs, nfiles = len(args), len(filelist)
+                args += filelist
+                args_short = args[:nargs+1] + [f"({nfiles-1} more ...)"] if nfiles > 1 else args
+                logger.info(" ".join(args_short))
+                process = subprocess.run(
+                    args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+                )
+                ret = process.returncode
+                logger.log(
+                    logging.ERROR if ret else logging.INFO,
+                    process.stderr if ret else "\n" + process.stdout
+                )
+        else:
+            logger.warning(f"Skipping {block} - already in HPSS")
