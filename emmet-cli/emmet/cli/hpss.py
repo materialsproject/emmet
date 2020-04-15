@@ -79,6 +79,7 @@ def backup():
 
     logger.info(f"Backing up {len(block_launchers)} block(s) ...")
 
+    counter = 0
     for block, launchers in block_launchers.items():
         logger.info(f"{block} with {len(launchers)} launcher(s)")
         try:
@@ -101,5 +102,10 @@ def backup():
                     logging.ERROR if ret else logging.INFO,
                     process.stderr if ret else "\n" + process.stdout
                 )
+                counter += 1
         else:
             logger.warning(f"Skipping {block} - already in HPSS")
+
+    msg = f"{counter}/{len(block_launchers)} blocks backed up to HPSS."
+    logger.info(msg)
+    return msg
