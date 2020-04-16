@@ -132,7 +132,8 @@ def backup():
 @click.argument("inputfile", type=click.Path(exists=True))
 @click.option(
     "-f",
-    "patterns",
+    "--file-filter",
+    "file_filters",
     multiple=True,
     show_default=True,
     default=[
@@ -144,9 +145,9 @@ def backup():
         "vasprun.xml*",
         "OUTCAR*",
     ],
-    help="Set the pattern(s) to match files against in each launcher.",
+    help="Set the file filter(s) to match files against in each launcher.",
 )
-def restore(inputfile, patterns):
+def restore(inputfile, file_filters):
     """Restore launchers from HPSS"""
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
@@ -168,14 +169,16 @@ def restore(inputfile, patterns):
                 if len(block_launchers) == nmax and block not in block_launchers:
                     # already found nmax blocks. Order of launchers not guaranteed
                     continue
-                for pattern in patterns:
+                for file_filter in file_filters:
                     block_launchers[block].append(
-                        os.path.join(launcher.strip(), pattern)
+                        os.path.join(launcher.strip(), file_filter)
                     )
 
     nblocks = len(block_launchers)
     nfiles = sum(len(v) for v in block_launchers.values())
-    logger.info(f"Restore {nblocks} block(s) with {nfiles} patterns to {directory} ...")
+    logger.info(
+        f"Restore {nblocks} block(s) with {nfiles} file filters to {directory} ..."
+    )
 
     for block, files in block_launchers.items():
         # get full list of matching files in archive and check against existing files
