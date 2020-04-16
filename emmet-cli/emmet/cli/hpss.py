@@ -131,11 +131,16 @@ def backup():
 
 @hpss.command()
 @sbatch
-@click.argument("inputfile", type=click.Path(exists=True))
+@click.option(
+    "-l",
+    "--inputfile",
+    required=True,
+    type=click.Path(exists=True),
+    help="Text file with list of launchers to restore (relative to `directory`).",
+)
 @click.option(
     "-f",
     "--file-filter",
-    "file_filters",
     multiple=True,
     show_default=True,
     default=[
@@ -149,7 +154,7 @@ def backup():
     ],
     help="Set the file filter(s) to match files against in each launcher.",
 )
-def restore(inputfile, file_filters):
+def restore(inputfile, file_filter):
     """Restore launchers from HPSS"""
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
@@ -171,10 +176,8 @@ def restore(inputfile, file_filters):
                 if len(block_launchers) == nmax and block not in block_launchers:
                     # already found nmax blocks. Order of launchers not guaranteed
                     continue
-                for file_filter in file_filters:
-                    block_launchers[block].append(
-                        os.path.join(launcher.strip(), file_filter)
-                    )
+                for ff in file_filter:
+                    block_launchers[block].append(os.path.join(launcher.strip(), ff))
 
     nblocks = len(block_launchers)
     nfiles = sum(len(v) for v in block_launchers.values())

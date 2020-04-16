@@ -263,12 +263,16 @@ def reconstruct_command(sbatch=False):
         if level:
             command.append("\\\n")
         for k, v in params.items():
+            k = k.replace("_", "-")
             if v:
                 if isinstance(v, bool):
                     if (sbatch and k != "sbatch") or not sbatch:
                         command.append(f"--{k}")
                 elif isinstance(v, str):
                     command.append(f'--{k}="{v}"')
+                elif isinstance(v, tuple) or isinstance(v, list):
+                    for x in v:
+                        command.append(f'--{k}="{x}"')
                 else:
                     command.append(f"--{k}={v}")
                 if level:
