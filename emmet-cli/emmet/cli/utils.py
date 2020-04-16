@@ -224,6 +224,7 @@ def get_vasp_dirs():
             if not bool(st.st_mode & perms):
                 raise EmmetCliError(f"Insufficient permissions {st.st_mode} for {dn}.")
 
+        files[:] = [f for f in files if not os.path.islink(os.path.join(root, f))]
         if is_vasp_dir(files):
             with click.progressbar(files, label="Check permissions & gzip") as bar:
                 for f in bar:
