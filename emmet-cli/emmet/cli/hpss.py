@@ -22,7 +22,13 @@ logger = logging.getLogger("emmet")
 @click.option(
     "-m", "--nmax", show_default=True, default=10, help="Maximum number of directories."
 )
-@click.option("-p", "--pattern", help="Only include sub-paths matching pattern.")
+@click.option(
+    "-p",
+    "--pattern",
+    show_default=True,
+    default="block_*",
+    help="Pattern for sub-paths to include.",
+)
 def hpss(directory, nmax, pattern):
     """Long-term HPSS storage"""
     pass
@@ -90,14 +96,13 @@ def backup():
         raise EmmetCliError(f"Pattern ({pattern}) only allowed to start with {prefix}!")
 
     block_launchers = defaultdict(list)
-    with click.progressbar(get_vasp_dirs(), label="Load blocks") as bar:
-        for vasp_dir in bar:
-            launch_dir = prefix + vasp_dir.split(prefix, 1)[-1]
-            block, launcher = launch_dir.split(os.sep, 1)
-            if len(block_launchers) == nmax and block not in block_launchers:
-                # already found nmax blocks. Order of launchers not guaranteed
-                continue
-            block_launchers[block].append(launcher)
+    for vasp_dir in get_vasp_dirs():
+        launch_dir = prefix + vasp_dir.split(prefix, 1)[-1]
+        block, launcher = launch_dir.split(os.sep, 1)
+        if len(block_launchers) == nmax and block not in block_launchers:
+            # already found nmax blocks. Order of launchers not guaranteed
+            continue
+        block_launchers[block].append(launcher)
 
     logger.info(f"Backing up {len(block_launchers)} block(s) ...")
 
