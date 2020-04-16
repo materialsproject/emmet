@@ -270,6 +270,7 @@ def reconstruct_command(sbatch=False):
                 elif isinstance(v, tuple) or isinstance(v, list):
                     for x in v:
                         command.append(f'--{k}="{x}"')
+                        command.append("\\\n")
                 else:
                     command.append(f"--{k}={v}")
                 if level:
