@@ -31,9 +31,10 @@ def track(func):
     def wrapper(*args, **kwargs):
         ret = func(*args, **kwargs)
         ctx = click.get_current_context()
-        run = ctx.grand_parent.params["run"]
+        if not ret:
+            raise EmmetCliError(f"Tracking `{ctx.command_path}` requires ReturnCode!")
 
-        if run and ret:
+        if ctx.grand_parent.params["run"]:
             logger.info(ret)
             gh = ctx.grand_parent.obj["GH"]
             user = gh.me().login

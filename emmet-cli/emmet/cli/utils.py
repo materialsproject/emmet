@@ -5,6 +5,7 @@ import click
 import logging
 import itertools
 
+from enum import Enum
 from glob import glob
 from shutil import copyfile, rmtree
 from fnmatch import fnmatch
@@ -25,6 +26,19 @@ perms = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP
 
 class EmmetCliError(Exception):
     pass
+
+
+class EnumNoValue(Enum):
+    def __repr__(self):
+        return self.name
+
+
+class ReturnCodes(EnumNoValue):
+    """Use these codes to indicate command exit status in github issue comments"""
+
+    SUCCESS = "Command exited successfully"
+    ERROR = "Encountered error during command execution"
+    WARNING = "Technically no error encountered but also not expected result"
 
 
 def structures_match(s1, s2):

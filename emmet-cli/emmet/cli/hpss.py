@@ -8,7 +8,7 @@ import subprocess
 from collections import defaultdict
 from hpsspy import HpssOSError
 from hpsspy.os.path import isfile
-from emmet.cli.utils import get_vasp_dirs, EmmetCliError
+from emmet.cli.utils import get_vasp_dirs, EmmetCliError, ReturnCodes
 from emmet.cli.decorators import sbatch
 
 
@@ -39,12 +39,12 @@ def prep():
         if counter == ctx.parent.params["nmax"] - 1:
             break
 
-    if counter is not None:
-        logger.info(f"Prepared {counter+1} VASP calculation(s).")
-    else:
-        logger.error("No VASP calculations found.")
+    if counter is None:
+        logger.error(f"No VASP calculations found in {directory}.")
+        return ReturnCodes.ERROR
 
-    return f"Done preparing {directory} for HPSS backup."
+    logger.info(f"Prepared {counter+1} VASP calculation(s) in {directory}.")
+    return ReturnCodes.SUCCESS
 
 
 def run_command(args, filelist):
@@ -110,14 +110,18 @@ def backup():
                 os.chdir(directory)
                 filelist = [os.path.join(block, l) for l in launchers]
                 args = shlex.split(f"htar -M 5000000 -Phcvf garden/{block}.tar")
-                for line in run_command(args, filelist):
-                    logger.info(line)
+                try:
+                    for line in run_command(args, filelist):
+                        logger.info(line)
+                except subprocess.CalledProcessError as e:
+                    logger.error(str(e))
+                    return ReturnCodes.ERROR
                 counter += 1
         else:
             logger.warning(f"Skipping {block} - already in HPSS")
 
     logger.info(f"{counter}/{len(block_launchers)} blocks backed up to HPSS.")
-    return f"Done backing up {directory}."
+    return ReturnCodes.SUCCESS
 
 
 # TODO cleanup command to double-check HPSS backup and remove source
@@ -178,15 +182,19 @@ def restore(inputfile, patterns):
         args = shlex.split(f"htar -tf garden/{block}.tar")
         filelist = [os.path.join(block, f) for f in files]
         filelist_restore, cnt = [], 0
-        for line in run_command(args, filelist):
-            ls = line.split()
-            if len(ls) == 7:
-                fn = ls[-1]
-                cnt += 1
-                if os.path.exists(fn):
-                    logger.debug(f"Skipping {fn} - already exists on disk.")
-                else:
-                    filelist_restore.append(fn)
+        try:
+            for line in run_command(args, filelist):
+                ls = line.split()
+                if len(ls) == 7:
+                    fn = ls[-1]
+                    cnt += 1
+                    if os.path.exists(fn):
+                        logger.debug(f"Skipping {fn} - already exists on disk.")
+                    else:
+                        filelist_restore.append(fn)
+        except subprocess.CalledProcessError as e:
+            logger.error(str(e))
+            return ReturnCodes.ERROR
 
         # restore what's missing
         if filelist_restore:
@@ -196,7 +204,11 @@ def restore(inputfile, patterns):
                     f"Restoring {nfiles_restore}/{cnt} files for {block} to {directory} ..."
                 )
                 args = shlex.split(f"htar -xvf garden/{block}.tar")
-                run_command(args, filelist_restore)
+                try:
+                    run_command(args, filelist_restore)
+                except subprocess.CalledProcessError as e:
+                    logger.error(str(e))
+                    return ReturnCodes.ERROR
             else:
                 logger.info(
                     f"Would restore {nfiles_restore}/{cnt} files for {block} to {directory}."
@@ -208,4 +220,4 @@ def restore(inputfile, patterns):
             logger.info(f"Setting group of {block} to matgen recursively ...")
             recursive_chown(block, "matgen")
 
-    return f"Done restoring launchers from {inputfile}"
+    return ReturnCodes.SUCCESS
