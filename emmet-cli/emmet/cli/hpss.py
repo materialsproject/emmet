@@ -16,17 +16,12 @@ logger = logging.getLogger("emmet")
 
 @click.group()
 @click.option(
-    "-d",
-    "--directory",
-    required=True,
-    help="Directory with VASP launchers.",
+    "-d", "--directory", required=True, help="Directory with VASP launchers.",
 )
 @click.option(
     "-m", "--nmax", show_default=True, default=10, help="Maximum #directories to walk."
 )
-@click.option(
-    "-p", "--pattern", help="Only include sub-paths matching pattern."
-)
+@click.option("-p", "--pattern", help="Only include sub-paths matching pattern.")
 def hpss(directory, nmax, pattern):
     """Long-term HPSS storage"""
     pass
@@ -92,15 +87,22 @@ def backup():
                 args = shlex.split(f"htar -M 5000000 -Phcvf garden/{block}.tar")
                 nargs, nfiles = len(args), len(filelist)
                 args += filelist
-                args_short = args[:nargs+1] + [f"({nfiles-1} more ...)"] if nfiles > 1 else args
+                args_short = (
+                    args[: nargs + 1] + [f"({nfiles-1} more ...)"]
+                    if nfiles > 1
+                    else args
+                )
                 logger.info(" ".join(args_short))
                 process = subprocess.run(
-                    args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+                    args,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    universal_newlines=True,
                 )
                 ret = process.returncode
                 logger.log(
                     logging.ERROR if ret else logging.INFO,
-                    process.stderr if ret else "\n" + process.stdout
+                    process.stderr if ret else "\n" + process.stdout,
                 )
                 counter += 1
         else:

@@ -62,7 +62,9 @@ import os
 import logging
 import click
 
-logging.basicConfig(level=logging.INFO, format='%(name)-12s: %(levelname)-8s %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(name)-12s: %(levelname)-8s %(message)s"
+)
 
 from log4mongo.handlers import BufferedMongoHandler
 from github3 import authorize, login
@@ -128,22 +130,27 @@ def emmet(spec, run, issue, sbatch, no_dupe_check, verbose):
 
         ctx.obj["LOG_STREAM"] = StringIO()
         memory_handler = logging.StreamHandler(ctx.obj["LOG_STREAM"])
-        formatter = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+        formatter = logging.Formatter(
+            "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
+        )
         memory_handler.setFormatter(formatter)
         logger.addHandler(memory_handler)
 
-        CREDENTIALS = os.path.join(os.path.expanduser("~"), '.emmet_credentials')
+        CREDENTIALS = os.path.join(os.path.expanduser("~"), ".emmet_credentials")
         if not os.path.exists(CREDENTIALS):
             user = click.prompt("GitHub Username")
             password = click.prompt("GitHub Password", hide_input=True)
             auth = authorize(
-                user, password, ["user", "repo", "gist"], "emmet CLI",
-                two_factor_callback=opt_prompt
+                user,
+                password,
+                ["user", "repo", "gist"],
+                "emmet CLI",
+                two_factor_callback=opt_prompt,
             )
-            with open(CREDENTIALS, 'w') as fd:
+            with open(CREDENTIALS, "w") as fd:
                 fd.write(auth.token)
 
-        with open(CREDENTIALS, 'r') as fd:
+        with open(CREDENTIALS, "r") as fd:
             token = fd.readline().strip()
             ctx.obj["GH"] = login(token=token)
     else:

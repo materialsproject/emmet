@@ -22,10 +22,12 @@ COMMENT_TEMPLATE = """
 </p></details>
 """
 GIST_COMMENT_TEMPLATE = "**[Gist]({}) created** to collect command logs for this issue. Download latest set of log files [here]({})."
+GIST_RAW_URL = "https://gist.githubusercontent.com"
 
 
 def track(func):
     """decorator to track command in GH issue / gists"""
+
     def wrapper(*args, **kwargs):
         ret = func(*args, **kwargs)
         ctx = click.get_current_context()
@@ -39,15 +41,15 @@ def track(func):
             issue = gh.issue(tracker["org"], tracker["repo"], issue_number)
 
             # gists iterator/resource based on latest etag
-            ETAG = os.path.join(os.path.expanduser("~"), '.emmet_etag')
+            ETAG = os.path.join(os.path.expanduser("~"), ".emmet_etag")
             etag = None
             if os.path.exists(ETAG):
-                with open(ETAG, 'r') as fd:
+                with open(ETAG, "r") as fd:
                     etag = fd.readline().strip()
 
             gists_iterator = gh.gists(etag=etag)
             if gists_iterator.etag != etag:
-                with open(ETAG, 'w') as fd:
+                with open(ETAG, "w") as fd:
                     fd.write(gists_iterator.etag)
 
             # create or retrieve gist for log files
@@ -75,7 +77,7 @@ def track(func):
 
             # add comment for new command
             command = reconstruct_command()
-            raw_url = f"https://gist.githubusercontent.com/{user}/{gist.id}/raw/{filename}"
+            raw_url = f"{GIST_RAW_URL}/{user}/{gist.id}/raw/{filename}"
             txt = COMMENT_TEMPLATE.format(ctx.command_path, ret, command, raw_url)
             comment = issue.create_comment(txt)
             logger.info(comment.html_url)
@@ -85,6 +87,7 @@ def track(func):
 
 def sbatch(func):
     """decorator to enable SLURM mode on command"""
+
     @track
     def wrapper(*args, **kwargs):
         ctx = click.get_current_context()
@@ -100,18 +103,14 @@ def sbatch(func):
         if not directory:
             raise EmmetCliError(f"{ctx.parent.command_path} needs --directory option!")
 
-        track_dir = os.path.join(directory, '.emmet')
+        track_dir = os.path.join(directory, ".emmet")
         if run and not os.path.exists(track_dir):
             os.mkdir(track_dir)
             logger.debug(f"{track_dir} created")
 
         s = Slurm(
             ctx.command_path.replace(" ", "-"),
-            slurm_kwargs={
-                "qos": "xfer",
-                "time": "48:00:00",
-                "licenses": "SCRATCH"
-            },
+            slurm_kwargs={"qos": "xfer", "time": "48:00:00", "licenses": "SCRATCH"},
             date_in_name=False,
             scripts_dir=track_dir,
             log_dir=track_dir,

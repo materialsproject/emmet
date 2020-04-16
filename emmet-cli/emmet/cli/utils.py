@@ -240,19 +240,22 @@ def get_vasp_dirs():
 def reconstruct_command(sbatch=False):
     ctx = click.get_current_context()
     command = []
-    for level, (cmd, params) in enumerate(zip(ctx.command_path.split(), [
-        ctx.grand_parent.params, ctx.parent.params, ctx.params
-    ])):
+    for level, (cmd, params) in enumerate(
+        zip(
+            ctx.command_path.split(),
+            [ctx.grand_parent.params, ctx.parent.params, ctx.params],
+        )
+    ):
         command.append(cmd)
         if level:
             command.append("\\\n")
         for k, v in params.items():
             if v:
                 if isinstance(v, bool):
-                    if (sbatch and k != 'sbatch') or not sbatch:
+                    if (sbatch and k != "sbatch") or not sbatch:
                         command.append(f"--{k}")
                 elif isinstance(v, str):
-                    command.append(f"--{k}=\"{v}\"")
+                    command.append(f'--{k}="{v}"')
                 else:
                     command.append(f"--{k}={v}")
                 if level:

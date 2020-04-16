@@ -77,7 +77,4 @@ log_fields = [
     "duplicate_dbname",
 ]
 
-tracker = dict(
-    org = 'materialsproject',
-    repo = 'production-tracker'
-)
+tracker = dict(org="materialsproject", repo="production-tracker")

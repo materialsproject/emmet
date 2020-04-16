@@ -106,7 +106,7 @@ class MaterialsBuilder(Builder):
     def get_items(self) -> Iterator[List[Dict]]:
         """
         Gets all items to process into materials documents.
-        This does no datetime checking; relying on on whether 
+        This does no datetime checking; relying on on whether
         task_ids are included in the Materials Colection
 
         Returns:
@@ -290,8 +290,6 @@ class MaterialsBuilder(Builder):
             - Special Tags
             - Forces
             """
-            _run_type = run_type(task["output"]["parameters"])
-
             qual_score = {"SCAN": 3, "GGA+U": 2, "GGA": 1}
 
             ispin = task.get("output", {}).get("parameters", {}).get("ISPIN", 1)

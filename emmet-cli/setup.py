@@ -19,7 +19,7 @@ setup(
         "mgzip",
         "slurmpy",
         "github3.py",
-        "hpsspy"
+        "hpsspy",
     ],
     license="modified BSD",
     zip_safe=False,
