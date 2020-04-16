@@ -114,7 +114,7 @@ def backup():
                 args = shlex.split(f"htar -M 5000000 -Phcvf garden/{block}.tar")
                 try:
                     for line in run_command(args, filelist):
-                        logger.info(line)
+                        logger.info(line.strip())
                 except subprocess.CalledProcessError as e:
                     logger.error(str(e))
                     return ReturnCodes.ERROR
@@ -192,7 +192,7 @@ def restore(inputfile, file_filter):
         filelist_restore, cnt = [], 0
         try:
             for line in run_command(args, filelist):
-                ls = line.split()
+                ls = line.strip().split()
                 if len(ls) == 7:
                     fn = ls[-1]
                     cnt += 1
@@ -213,7 +213,8 @@ def restore(inputfile, file_filter):
                 )
                 args = shlex.split(f"htar -xvf garden/{block}.tar")
                 try:
-                    run_command(args, filelist_restore)
+                    for line in run_command(args, filelist_restore):
+                        logger.info(line.strip())
                 except subprocess.CalledProcessError as e:
                     logger.error(str(e))
                     return ReturnCodes.ERROR
