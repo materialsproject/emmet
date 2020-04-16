@@ -1,17 +1,19 @@
 import os
+import io
 import click
 import logging
+import contextlib
 
 from datetime import datetime
 from functools import update_wrapper
 from slurmpy import Slurm
 
 from emmet.cli.config import tracker
-from emmet.cli.utils import reconstruct_command, EmmetCliError
+from emmet.cli.utils import reconstruct_command, EmmetCliError, ReturnCodes
 
 logger = logging.getLogger("emmet")
 COMMENT_TEMPLATE = """
-<details><summary><b>{}</b> returned "{}"</summary><p>
+<details><summary><b>{}</b> {}.</summary><p>
 
 ```
 {}
@@ -31,7 +33,7 @@ def track(func):
     def wrapper(*args, **kwargs):
         ret = func(*args, **kwargs)
         ctx = click.get_current_context()
-        if not ret:
+        if not isinstance(ret, ReturnCodes):
             raise EmmetCliError(f"Tracking `{ctx.command_path}` requires ReturnCode!")
 
         if ctx.grand_parent.params["run"]:
@@ -119,7 +121,11 @@ def sbatch(func):
         )
 
         command = reconstruct_command(sbatch=True)
-        ret = s.run(command, _cmd="sbatch" if run else "ls")
-        return f"SBatch JobId: {ret}" if run else ret
+        slurmpy_stderr = io.StringIO()
+        with contextlib.redirect_stderr(slurmpy_stderr):
+            s.run(command, _cmd="sbatch" if run else "cat")
+        ret = slurmpy_stderr.getvalue()[2:-1]
+        logger.info("\n" + ret.encode("utf-8").decode("unicode_escape"))
+        return ReturnCodes.SUBMITTED if run else ReturnCodes.SUCCESS
 
     return update_wrapper(wrapper, func)

@@ -55,7 +55,9 @@ def run_command(args, filelist):
         args[: nargs + nshow] + [f"({nfiles-1} more ...)"] if nfiles > nshow else args
     )
     logger.info(" ".join(args_short))
-    popen = subprocess.Popen(args, stdout=subprocess.PIPE, universal_newlines=True)
+    popen = subprocess.Popen(
+        args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
+    )
     for stdout_line in iter(popen.stdout.readline, ""):
         yield stdout_line
     popen.stdout.close()

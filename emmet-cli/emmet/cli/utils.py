@@ -28,17 +28,16 @@ class EmmetCliError(Exception):
     pass
 
 
-class EnumNoValue(Enum):
+class ReturnCodes(Enum):
+    """codes to print command exit message in github issue comments"""
+
+    SUCCESS = "COMPLETED"
+    ERROR = "encountered ERROR"
+    WARNING = "exited with WARNING"
+    SUBMITTED = "submitted to SLURM"
+
     def __repr__(self):
-        return self.name
-
-
-class ReturnCodes(EnumNoValue):
-    """Use these codes to indicate command exit status in github issue comments"""
-
-    SUCCESS = "Command exited successfully"
-    ERROR = "Encountered error during command execution"
-    WARNING = "Technically no error encountered but also not expected result"
+        return self.value
 
 
 def structures_match(s1, s2):
