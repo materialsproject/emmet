@@ -36,9 +36,6 @@ class ReturnCodes(Enum):
     WARNING = "exited with WARNING"
     SUBMITTED = "submitted to SLURM"
 
-    def __repr__(self):
-        return self.value
-
 
 def structures_match(s1, s2):
     return bool(len(list(group_structures([s1, s2]))) == 1)

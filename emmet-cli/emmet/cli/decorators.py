@@ -37,7 +37,7 @@ def track(func):
             raise EmmetCliError(f"Tracking `{ctx.command_path}` requires ReturnCode!")
 
         if ctx.grand_parent.params["run"]:
-            logger.info(ret)
+            logger.info(ret.value)
             gh = ctx.grand_parent.obj["GH"]
             user = gh.me().login
             issue_number = ctx.grand_parent.params["issue"]
@@ -81,7 +81,7 @@ def track(func):
             # add comment for new command
             command = reconstruct_command()
             raw_url = f"{GIST_RAW_URL}/{user}/{gist.id}/raw/{filename}"
-            txt = COMMENT_TEMPLATE.format(ctx.command_path, ret, command, raw_url)
+            txt = COMMENT_TEMPLATE.format(ctx.command_path, ret.value, command, raw_url)
             comment = issue.create_comment(txt)
             logger.info(comment.html_url)
 
