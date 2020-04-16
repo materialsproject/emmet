@@ -50,6 +50,7 @@ def prep():
 @hpss.command()
 @sbatch
 def backup():
+    """Backup directory to HPSS using htar"""
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
     nmax = ctx.parent.params["nmax"]
