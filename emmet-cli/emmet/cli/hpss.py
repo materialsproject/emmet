@@ -224,7 +224,7 @@ def restore(inputfile, file_filter):
     nmax = ctx.parent.params["nmax"]
     directory = ctx.parent.params["directory"]
 
-    if ctx.parent.params["pattern"]:
+    if ctx.parent.params["pattern"] != f"{PREFIX}*":
         raise EmmetCliError(f"--pattern not supported for HPSS restoral!")
     if not os.path.exists(directory):
         os.mkdirs(directory)
