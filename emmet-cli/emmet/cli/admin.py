@@ -5,6 +5,7 @@ from pymatgen import Structure
 
 from emmet.cli.config import meta_keys, snl_indexes
 from emmet.cli.utils import ensure_indexes, get_meta_from_structure
+from emmet.cli.utils import EmmetCliError
 
 
 logger = logging.getLogger("emmet")
@@ -14,7 +15,8 @@ logger = logging.getLogger("emmet")
 @click.pass_context
 def admin(ctx):
     """Administrative and utility commands"""
-    pass
+    if "CLIENT" not in ctx.obj:
+        raise EmmetCliError("--spec option required with admin sub-command!")
 
 
 def clean_ensure_indexes(run, fields, coll):

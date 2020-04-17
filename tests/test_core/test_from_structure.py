@@ -45,4 +45,3 @@ def test_structure_metadata_fewer_fields(structure):
     assert meta_doc.nsites == 1
     assert meta_doc.nelements == 1
     assert meta_doc.volume == 27.0
-

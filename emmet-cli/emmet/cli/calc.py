@@ -134,6 +134,9 @@ def count_file_documents(file_obj):
 @click.pass_context
 def calc(ctx, specs, nmax, skip):
     """Set up calculations to optimize structures using VASP"""
+    if "CLIENT" not in ctx.obj:
+        raise EmmetCliError("--spec option required with calc sub-command!")
+
     collections = {}
     for coll in [ctx.obj["CLIENT"].db.snls, ctx.obj["CLIENT"].db.tasks]:
         collections[coll.full_name] = coll  # user collections

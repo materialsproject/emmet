@@ -1,10 +1,16 @@
 from maggma.builders import MapBuilder
 
 from monty.json import MontyDecoder
-from crystal_toolkit.components.structure import StructureMoleculeComponent
+from crystal_toolkit.renderables.structuregraph import StructureGraph
+from crystal_toolkit.core.legend import Legend
+from pymatgen.analysis.local_env import CrystalNN
 
+import numpy as np
 
 class VisualizationBuilder(MapBuilder):
+
+    version = "2020.04.16"
+
     def __init__(
         self,
         materials,
@@ -82,34 +88,36 @@ class VisualizationBuilder(MapBuilder):
         super().__init__(
             source=materials,
             target=visualization,
-            ufn=self.calc,
             projection=list(projection),
             **kwargs
         )
 
-    def calc(self, item):
+    def unary_function(self, item):
 
-        struct_or_mol = MontyDecoder().process_decoded(item[self.projected_object_name])
+        struct = MontyDecoder().process_decoded(item[self.projected_object_name])
 
-        # TODO: will combine these two functions into something more intuitive
+        graph = StructureGraph.with_local_env_strategy(struct, CrystalNN())
 
-        graph = StructureMoleculeComponent._preprocess_input_to_graph(
-            struct_or_mol,
-            bonding_strategy=self.settings["bonding_strategy"],
-            bonding_strategy_kwargs=self.settings["bonding_strategy_kwargs"],
-        )
+        legend = Legend(struct).get_legend()
 
-        scene, legend = StructureMoleculeComponent.get_scene_and_legend(
-            graph,
-            color_scheme=self.settings["color_scheme"],
-            color_scale=self.settings["color_scale"],
-            radius_strategy=self.settings["radius_strategy"],
-            draw_image_atoms=self.settings["draw_image_atoms"],
-            bonded_sites_outside_unit_cell=self.settings[
-                "bonded_sites_outside_unit_cell"
-            ],
-            hide_incomplete_bonds=self.settings["hide_incomplete_bonds"],
-        )
+        scene = graph.get_scene()
+
+        # only necessary for materials_django (out-of-date viewer code)
+        global_origin = scene.origin
+        def _shift_origin(scene):
+            scene.origin = (0, 0, 0)
+            for item in scene.contents:
+                if hasattr(item, "contents"):
+                    _shift_origin(item)
+                if hasattr(item, "positions"):
+                    item.positions = np.add(global_origin, item.positions).tolist()
+                elif hasattr(item, "positionPairs"):
+                    item.positionPairs = [np.add(global_origin, pair).tolist() for pair in item.positionPairs]
+                # also reset default cylinder (bond) radius
+                if hasattr(item, "type") and item.type == "cylinders":
+                    item.radius = None
+
+        _shift_origin(scene)
 
         return {
             "scene": scene.to_json(),
@@ -117,3 +125,4 @@ class VisualizationBuilder(MapBuilder):
             "settings": self.settings,
             "source": item[self.projected_object_name],
         }
+    

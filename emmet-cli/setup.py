@@ -10,7 +10,17 @@ setup(
     author_email="feedback@materialsproject.org",
     url="https://github.com/materialsproject/emmet",
     packages=["emmet.cli"],
-    install_requires=["log4mongo", "click", "colorama", "mongogrant", "atomate"],
+    install_requires=[
+        "log4mongo",
+        "click",
+        "colorama",
+        "mongogrant",
+        "atomate",
+        "mgzip",
+        "slurmpy",
+        "github3.py",
+        "hpsspy",
+    ],
     license="modified BSD",
     zip_safe=False,
     entry_points="""

@@ -76,3 +76,5 @@ log_fields = [
     "fw_id",
     "duplicate_dbname",
 ]
+
+tracker = dict(org="materialsproject", repo="production-tracker")
