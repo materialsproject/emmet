@@ -1,7 +1,10 @@
 import os
+import grp
+import pwd
 import stat
 import mgzip
 import click
+import shutil
 import logging
 import itertools
 
@@ -226,25 +229,39 @@ def get_vasp_dirs():
 
         files[:] = [f for f in files if not os.path.islink(os.path.join(root, f))]
         if is_vasp_dir(files):
-            with click.progressbar(files, label="Check permissions & gzip") as bar:
-                for f in bar:
-                    fn = os.path.join(root, f)
+            gzipped = False
+            for f in files:
+                fn = os.path.join(root, f)
+                st = os.stat(fn)
+                if not bool(st.st_mode & perms):
+                    raise EmmetCliError(
+                        f"Insufficient permissions {st.st_mode} for {fn}."
+                    )
+
+                if run and not f.endswith(".gz"):
+                    fn_gz = fn + ".gz"
+                    if os.path.exists(fn_gz):
+                        os.remove(fn_gz)  # remove left-over gz (cancelled job)
+
+                    with open(fn, "rb") as fo, mgzip.open(fn_gz, "wb", thread=0) as fw:
+                        fw.write(fo.read())
+
+                    os.remove(fn)  # remove original
+                    shutil.chown(fn_gz, group="matgen")
+                    gzipped = True
+
+                # TODO remove
+                if run and os.path.exists(fn):
                     st = os.stat(fn)
-                    if not bool(st.st_mode & perms):
-                        raise EmmetCliError(
-                            f"Insufficient permissions {st.st_mode} for {fn}."
-                        )
-                    if run and not f.endswith(".gz") and not os.path.exists(fn + ".gz"):
-                        with open(fn, "rb") as fo, mgzip.open(
-                            fn + ".gz", "wb", thread=0
-                        ) as fw:
-                            fw.write(fo.read())
-                        os.remove(fn)
+                    user = pwd.getpwuid(st.st_uid)[0]
+                    group = grp.getgrgid(st.st_gid)[0]
+                    if user == "huck" and group == "huck":
+                        shutil.chown(fn, group="matgen")
 
             vasp_dir = get_symlinked_path(root, base_path_index)
             create_orig_inputs(vasp_dir)
             dirs[:] = []  # don't descend further (i.e. ignore relax1/2)
-            logger.info(vasp_dir)
+            logger.log(logging.INFO if gzipped else logging.DEBUG, vasp_dir)
             yield vasp_dir
 
 
