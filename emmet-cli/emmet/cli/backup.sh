@@ -1,44 +1,3 @@
-#!/bin/bash -l
-#SBATCH --qos=xfer
-#SBATCH --time=48:00:00
-#SBATCH --job-name=garden_to_hpss
-#SBATCH --licenses=SCRATCH
-#SBATCH --mail-user=phuck@lbl.gov
-#SBATCH --mail-type=ALL
-#SBATCH --output=garden_to_hpss-%j.out
-#SBATCH --error=garden_to_hpss-%j.error
-
-if [ "$#" -ne 2 ]; then
-  echo "Usage: $0 DIRECTORY FILTER"
-  exit 1
-fi
-
-indir=$1
-filter=$2
-stage_dir=$indir/tmp
-
-cd $indir && pwd
-[[ ! -d $stage_dir ]] && mkdir -pv $stage_dir
-
-for block in $(find . -maxdepth 1 -type d -group matgen -name "$filter" -exec basename {} \;); do
-  echo $block
-
-  # TODO get list of launchers for current block from $indir
-  launchers=`grep $block $all_launchers`
-  nlaunchers=`echo $launchers | wc -w`
-  list=""
-  for l in $launchers; do
-    [[ ! -e $stage_dir/$l ]] && list="$list $l/std_err.txt.gz $l/FW_job.error.gz"
-    length=`echo $list | wc -w`
-    [[ $length -gt 500 ]] && cd $stage_dir && htar -xvf garden/${block}.tar $list && list="" && cd -
-  done
-  [[ ! -z "$list" ]] && cd $stage_dir && htar -xvf garden/${block}.tar $list && cd -
-  nrestored=`ls -1 $stage_dir/$block | wc -l`
-  echo $nlaunchers $nrestored
-  [[ ! $nlaunchers -eq $nrestored ]] && echo 'missing launchers!' && exit;
-  rm -rv $indir/$block && rm -rv $indir/$stage_dir/$block
-
-  # TODO get full list of files for current block
   files=`grep "^$dir" $input`
 
   echo $files | tr ' ' '\n' | sort -u > ${dir}.files
@@ -89,7 +48,3 @@ for block in $(find . -maxdepth 1 -type d -group matgen -name "$filter" -exec ba
 
   rclone -v copy $stage_dir/$dir mp-drive:calculations/garden/$dir
   find $dir -type d -empty -print -delete
-
-done
-
-echo DONE
