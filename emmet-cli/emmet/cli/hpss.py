@@ -248,6 +248,7 @@ def restore(inputfile, file_filter):
         f"Restore {nblocks} block(s) with {nfiles} file filters to {directory} ..."
     )
 
+    nfiles_restore_total = 0
     for block, files in block_launchers.items():
         # get full list of matching files in archive and check against existing files
         args = shlex.split(f"htar -tf garden/{block}.tar")
@@ -269,6 +270,7 @@ def restore(inputfile, file_filter):
         # restore what's missing
         if filelist_restore:
             nfiles_restore = len(filelist_restore)
+            nfiles_restore_total += nfiles_restore
             if run:
                 logger.info(
                     f"Restore {nfiles_restore}/{cnt} files for {block} to {directory} ..."
@@ -291,4 +293,8 @@ def restore(inputfile, file_filter):
             logger.info(f"Set group of {block} to matgen recursively ...")
             recursive_chown(block, "matgen")
 
+    if run:
+        logger.info(f"Restored {nfiles_restore_total} files to {directory}.")
+    else:
+        logger.info(f"Would restore {nfiles_restore_total} files to {directory}.")
     return ReturnCodes.SUCCESS
