@@ -71,7 +71,7 @@ class MaterialsDoc(StructureMetadata):
         None,
         description="Timestamp for the first calculation for this Material document",
     )
-    task_types: Dict[str, str] = Field(
+    calc_types: Dict[str, str] = Field(
         None,
         description="Calculation types for all the calculations that make up this material",
     )

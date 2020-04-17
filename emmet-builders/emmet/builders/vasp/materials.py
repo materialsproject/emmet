@@ -259,7 +259,7 @@ class MaterialsBuilder(Builder):
         deprecated_tasks = list(
             {t[self.tasks.key] for t in task_group if not t["is_valid"]}
         )
-        task_types = {
+        calc_types = {
             t[self.tasks.key]: run_type(t["output"]["parameters"])
             + " "
             + task_type(t["orig_inputs"])
@@ -351,7 +351,7 @@ class MaterialsBuilder(Builder):
             last_updated=last_updated,
             created_at=created_at,
             task_ids=task_ids,
-            task_types=task_types,
+            calc_types=calc_types,
             initial_structures=initial_structures,
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,
