@@ -1,18 +1,18 @@
 """ Utilities to enable stubbing in JSON schema into pydantic for Monty """
-from typing import Dict, Any, TypeVar, Union, Optional, Tuple, List, Set, Sequence
+from typing import Dict, Any, TypeVar, Union, Optional, Tuple, List, Set, Sequence, Type
 from typing import get_type_hints
 from numpy import ndarray
 from monty.json import MSONable, MontyDecoder
 from pydantic import create_model, Field, BaseModel
-from pydantic.fields import ModelField
+from pydantic.fields import ModelField, FieldInfo
 
 built_in_primitives = (bool, int, float, complex, range, str, bytes, None)
-prim_to_type_hint = {list: List, tuple: Tuple, dict: Dict, set: Set}
+prim_to_type_hint: Dict[type, Any] = {list: List, tuple: Tuple, dict: Dict, set: Set}
 
-STUBS = {}  # Central location for Pydantic Stub classes
+STUBS: Dict[type, type] = {}  # Central location for Pydantic Stub classes
 
 
-def patch_msonable(monty_cls):
+def patch_msonable(monty_cls: type):
     """
     Patch's an MSONable class so it can be used in pydantic models
 
@@ -22,11 +22,9 @@ def patch_msonable(monty_cls):
     if not issubclass(monty_cls, MSONable):
         raise ValueError("Must provide an MSONable class to wrap")
 
-    @classmethod
     def __get_validators__(cls):
         yield cls.validate_monty
 
-    @classmethod
     def validate_monty(cls, v):
         """
         Stub validator for MSONable
@@ -42,12 +40,12 @@ def patch_msonable(monty_cls):
         else:
             raise ValueError(f"Must provide {cls.__name__} or Dict version")
 
-    setattr(monty_cls, "validate_monty", validate_monty)
-    setattr(monty_cls, "__get_validators__", __get_validators__)
+    setattr(monty_cls, "validate_monty", classmethod(validate_monty))
+    setattr(monty_cls, "__get_validators__", classmethod(__get_validators__))
     setattr(monty_cls, "__pydantic_model__", STUBS[monty_cls])
 
 
-def use_model(monty_cls, pydantic_model, add_monty=True):
+def use_model(monty_cls: type, pydantic_model: type, add_monty: bool = True):
     """
     Use a provided pydantic model to describe a Monty MSONable class
     """
@@ -111,7 +109,7 @@ def __make_pydantic(cls):
     return cls
 
 
-def MSONable_to_pydantic(monty_cls, pydantic_model: Optional[BaseModel] = None):
+def MSONable_to_pydantic(monty_cls: type, pydantic_model=None):
     monty_props = {
         "@class": (
             str,
@@ -136,8 +134,10 @@ def MSONable_to_pydantic(monty_cls, pydantic_model: Optional[BaseModel] = None):
             for name, field in pydantic_model.__fields__.items()
         }
     else:
+        _type_hints = get_type_hints(monty_cls.__init__).items()  # type: ignore
         props = {
-            field_name: (__make_pydantic(field_type), ...)
-            for field_name, field_type in get_type_hints(monty_cls.__init__).items()
+            field_name: (__make_pydantic(field_type), FieldInfo(...))
+            for field_name, field_type in _type_hints
         }
-    return create_model(monty_cls.__name__, **monty_props, **props)
+
+    return create_model(monty_cls.__name__, field_definitions={**monty_props, **props})

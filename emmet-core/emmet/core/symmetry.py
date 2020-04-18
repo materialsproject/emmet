@@ -1,3 +1,4 @@
+from typing import Dict, Any
 from enum import Enum
 from pydantic import BaseModel, Field
 
@@ -58,7 +59,7 @@ class SymmetryData(BaseModel):
     def from_structure(cls, structure: Structure) -> "SymmetryData":
         symprec = SETTINGS.SYMPREC
         sg = SpacegroupAnalyzer(structure, symprec=symprec)
-        symmetry = {"symprec": symprec}
+        symmetry: Dict[str, Any] = {"symprec": symprec}
         if not sg.get_symmetry_dataset():
             sg = SpacegroupAnalyzer(structure, 1e-3, 1)
             symmetry["symprec"] = 1e-3
