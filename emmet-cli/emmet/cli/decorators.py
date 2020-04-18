@@ -41,7 +41,9 @@ def track(func):
             gh = ctx.grand_parent.obj["GH"]
             user = gh.me().login
             issue_number = ctx.grand_parent.params["issue"]
-            issue = gh.issue(SETTINGS.tracker["org"], SETTINGS.tracker["repo"], issue_number)
+            issue = gh.issue(
+                SETTINGS.tracker["org"], SETTINGS.tracker["repo"], issue_number
+            )
 
             # gists iterator/resource based on latest etag
             ETAG = os.path.join(os.path.expanduser("~"), ".emmet_etag")
