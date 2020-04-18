@@ -256,6 +256,8 @@ class MaterialsBuilder(Builder):
         last_updated = max(t[self.tasks.last_updated_field] for t in task_group)
         created_at = min(t[self.tasks.last_updated_field] for t in task_group)
         task_ids = list({t[self.tasks.key] for t in task_group})
+        sandboxes = list({sbxn for t in task_group for sbxn in t.get("sbxn", [])})
+
         deprecated_tasks = list(
             {t[self.tasks.key] for t in task_group if not t["is_valid"]}
         )
@@ -358,6 +360,7 @@ class MaterialsBuilder(Builder):
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,
             origins=origins,
+            sandboxes=sandboxes if sandboxes else None,
         )
 
 
