@@ -291,12 +291,12 @@ class MaterialsBuilder(Builder):
             - Functional Type
             - Spin polarization
             - Special Tags
-            - Forces
+            - Energy
             """
             qual_score = {"SCAN": 3, "GGA+U": 2, "GGA": 1}
 
             ispin = task.get("output", {}).get("parameters", {}).get("ISPIN", 1)
-            max_force = task.get("analysis", {}).get("max_force", 10000) or 10000
+            energy = task.get("output", {}).get("energy_per_atom", 0.0)
 
             special_tags = [
                 task.get("output", {}).get("parameters", {}).get(tag, False)
@@ -310,7 +310,7 @@ class MaterialsBuilder(Builder):
                 -1 * qual_score.get(run_type, 0),
                 -1 * ispin,
                 -1 * sum(special_tags),
-                max_force,
+                energy,
             )
 
         best_structure_calc = sorted(
