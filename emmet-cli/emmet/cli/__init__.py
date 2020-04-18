@@ -70,6 +70,7 @@ from log4mongo.handlers import BufferedMongoHandler
 from github3 import authorize, login
 from io import StringIO
 
+from emmet.cli.settings import EmmetCLISettings()
 from emmet.cli.config import log_fields, tracker
 from emmet.cli.admin import admin
 from emmet.cli.hpss import hpss
