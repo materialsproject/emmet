@@ -1,8 +1,5 @@
 name: testing
 
-defaults:
-  packages: ["emmet-core"]
-
 on:
   push:
     branches:
@@ -18,7 +15,7 @@ jobs:
     strategy:
       max-parallel: 6
       matrix:
-        package: ${{ packages }}
+        package: ["emmet-core"]
 
     steps:
       - uses: actions/checkout@v1
@@ -49,7 +46,7 @@ jobs:
     strategy:
       max-parallel: 6
       matrix:
-        package: ${{ packages }}
+        package: ["emmet-core"]
 
     steps:
       - uses: actions/checkout@v1
