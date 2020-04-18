@@ -15,7 +15,7 @@ from pydantic import BaseModel
 
 from emmet.core import SETTINGS
 
-_RUN_TYPE_DATA = loadfn(Path(__file__).parent / "run_types.yaml")
+_RUN_TYPE_DATA = loadfn(str(Path(__file__).parent.joinpath("run_types.yaml").resolve()))
 _TASK_TYPES = [
     "NSCF Line",
     "NSCF Uniform",
