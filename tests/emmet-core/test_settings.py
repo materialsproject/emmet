@@ -28,7 +28,7 @@ def test_allow_extra_fields(tmp_path: PosixPath):
 
     os.environ["EMMET_CONFIG_FILE"] = str(tmp_path.resolve() / "temp_config.json")
 
-    test_config = EmmetSettings()
+    EmmetSettings()
 
 
 def test_from_url():

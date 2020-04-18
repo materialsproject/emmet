@@ -71,7 +71,7 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pytest --cov=emmet --cov-report=xml tests/
+          pytest --cov=emmet --cov-report=xml tests/${{ matrix.package }}
 
       - uses: codecov/codecov-action@v1
         with:
