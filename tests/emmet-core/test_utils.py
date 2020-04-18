@@ -7,7 +7,6 @@ from bson.objectid import ObjectId
 from enum import Enum
 
 from monty.json import MSONable
-from monty.json import _load_redirect
 
 import pytest
 from emmet.core.utils import get_sg, group_structures, run_type, task_type, jsanitize
