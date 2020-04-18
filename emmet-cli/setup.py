@@ -20,6 +20,7 @@ setup(
         "slurmpy",
         "github3.py",
         "hpsspy",
+        "emmet-core",
     ],
     license="modified BSD",
     zip_safe=False,
