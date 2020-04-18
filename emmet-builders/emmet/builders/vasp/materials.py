@@ -285,7 +285,8 @@ class MaterialsBuilder(Builder):
 
         def _structure_eval(task: Dict):
             """
-            Helper function to order structures by
+            Helper function to order structures optimziation and statics calcs by
+            - Functional Type
             - Spin polarization
             - Special Tags
             - Forces
@@ -300,7 +301,10 @@ class MaterialsBuilder(Builder):
                 for tag in ["LASPH", "ADDGRID"]
             ]
 
+            is_valid = task[self.tasks.key] in deprecated_tasks
+
             return (
+                -1 * is_valid,
                 -1 * qual_score.get(run_type, 0),
                 -1 * ispin,
                 -1 * sum(special_tags),
