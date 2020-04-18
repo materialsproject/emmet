@@ -35,7 +35,7 @@ jobs:
         run: pycodestyle ${{ matrix.package }}
 
       - name: Lint with mypy
-        run: mypy --namespace-package ${{ matrix.package }}
+        run: mypy --namespace-package ${{ matrix.package }}/emmet
 
       - name: Lint with flake8
         run: |
