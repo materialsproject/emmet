@@ -18,7 +18,7 @@ setup(
         "pydantic",
         "pybtex",
         "typing-extensions",
-        "pymongo",
+        "bson",
     ],
     license="modified BSD",
     zip_safe=False,
