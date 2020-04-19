@@ -1,5 +1,6 @@
 import pytest
-from emmet.stubs import Structure, Lattice
+from pymatgen import Lattice
+from emmet.stubs import Structure
 from emmet.core.symmetry import SymmetryData, CrystalSystem
 from emmet.core.structure import StructureMetadata
 

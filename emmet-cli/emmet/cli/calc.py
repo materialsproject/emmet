@@ -15,8 +15,7 @@ from pymatgen.alchemy.materials import TransformedStructure
 from pymatgen.util.provenance import StructureNL, Author
 
 from emmet.core.utils import group_structures, get_sg, task_type
-from emmet.cli.config import skip_labels, aggregation_keys, task_base_query
-from emmet.cli.config import base_query, exclude
+from emmet.cli import SETTINGS
 from emmet.cli.utils import calcdb_from_mgrant, aggregate_by_formula, structures_match
 from emmet.cli.utils import get_meta_from_structure, load_structure
 from emmet.cli.utils import EmmetCliError
@@ -45,7 +44,7 @@ def load_canonical_structures(ctx, full_name, formula):
 
         if "tasks" in full_name:
             query = {"formula_pretty": formula}
-            query.update(task_base_query)
+            query.update(SETTINGS.task_base_query)
             projection = {"input.structure": 1, "task_id": 1, "orig_inputs": 1}
             tasks = collection.find(query, projection)
 
@@ -57,9 +56,9 @@ def load_canonical_structures(ctx, full_name, formula):
                     structures[get_sg(s)].append(s)
 
         elif "snl" in full_name:
-            query = {"$or": [{k: formula} for k in aggregation_keys]}
-            query.update(exclude)
-            query.update(base_query)
+            query = {"$or": [{k: formula} for k in SETTINGS.aggregation_keys]}
+            query.update(SETTINGS.exclude)
+            query.update(SETTINGS.base_query)
 
             for group in aggregate_by_formula(collection, query):
                 for dct in group["structures"]:
@@ -209,7 +208,7 @@ def prep(ctx, archive, authors):
                     for specie in site["species"]
                 ]
             )
-            for l in skip_labels:
+            for l in SETTINGS.skip_labels:
                 if l in elements:
                     logger.log(
                         logging.ERROR if run else logging.INFO,

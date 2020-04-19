@@ -4,6 +4,7 @@ database building and in the website code, to ensure consistency between
 different modules and packages.
 """
 import json
+import requests
 from pydantic import BaseSettings, Field, root_validator
 from pydantic.types import Path
 
@@ -17,7 +18,7 @@ class EmmetSettings(BaseSettings):
     EMMET_CONFIG_FILE to point to the json with emmet settings
     """
 
-    config_file: Path = Field(
+    config_file: str = Field(
         DEFAULT_CONFIG_FILE_PATH, description="File to load alternative defaults from"
     )
 
@@ -46,11 +47,13 @@ class EmmetSettings(BaseSettings):
         Loads settings from a root file if available and uses that as defaults in
         place of built in defaults
         """
-        config_file_path = Path(values.get("config_file", DEFAULT_CONFIG_FILE_PATH))
+        config_file_path: str = values.get("config_file", DEFAULT_CONFIG_FILE_PATH)
 
         new_values = {}
 
-        if config_file_path.exists():
+        if config_file_path.startswith("http"):
+            new_values = requests.get(config_file_path).json()
+        elif Path(config_file_path).exists():
             with open(config_file_path) as f:
                 new_values = json.load(f)
 

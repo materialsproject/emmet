@@ -8,7 +8,7 @@ from datetime import datetime
 from functools import update_wrapper
 from slurmpy import Slurm
 
-from emmet.cli.config import tracker
+from emmet.cli import SETTINGS
 from emmet.cli.utils import reconstruct_command, EmmetCliError, ReturnCodes
 
 logger = logging.getLogger("emmet")
@@ -41,7 +41,9 @@ def track(func):
             gh = ctx.grand_parent.obj["GH"]
             user = gh.me().login
             issue_number = ctx.grand_parent.params["issue"]
-            issue = gh.issue(tracker["org"], tracker["repo"], issue_number)
+            issue = gh.issue(
+                SETTINGS.tracker["org"], SETTINGS.tracker["repo"], issue_number
+            )
 
             # gists iterator/resource based on latest etag
             ETAG = os.path.join(os.path.expanduser("~"), ".emmet_etag")
@@ -56,12 +58,12 @@ def track(func):
                     fd.write(gists_iterator.etag)
 
             # create or retrieve gist for log files
-            gist_name = f"#{issue_number}-{tracker['repo']}.md"
+            gist_name = f"#{issue_number}-{SETTINGS.tracker['repo']}.md"
             for gist in gists_iterator:
                 if gist.files and gist_name in gist.files:
                     break
             else:
-                description = f"Logs for {tracker['repo']}#{issue_number}"
+                description = f"Logs for {SETTINGS.tracker['repo']}#{issue_number}"
                 files = {gist_name: {"content": issue.html_url}}
                 gist = gh.create_gist(description, files, public=False)
                 zip_base = gist.html_url.replace(gist.id, user + "/" + gist.id)

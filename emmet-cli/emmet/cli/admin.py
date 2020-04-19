@@ -3,7 +3,7 @@ import click
 
 from pymatgen import Structure
 
-from emmet.cli.config import meta_keys, snl_indexes
+from emmet.cli import SETTINGS
 from emmet.cli.utils import ensure_indexes, get_meta_from_structure
 from emmet.cli.utils import EmmetCliError
 
@@ -53,7 +53,7 @@ def index(ctx, fields, collection):
 def meta(ctx, collection):
     """Create meta-data fields and indexes for SNL collection"""
     coll = ctx.obj["CLIENT"].db[collection]
-    q = {"$or": [{k: {"$exists": 0}} for k in meta_keys]}
+    q = {"$or": [{k: {"$exists": 0}} for k in SETTINGS.meta_keys]}
     docs = coll.find(q)
 
     ndocs = docs.count()
@@ -70,7 +70,7 @@ def meta(ctx, collection):
         else:
             logger.info(f"Would fix meta for {ndocs} SNLs.")
 
-    clean_ensure_indexes(ctx.obj["RUN"], snl_indexes, coll)
+    clean_ensure_indexes(ctx.obj["RUN"], SETTINGS.snl_indexes, coll)
 
 
 @admin.command()

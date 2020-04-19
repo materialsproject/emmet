@@ -256,10 +256,12 @@ class MaterialsBuilder(Builder):
         last_updated = max(t[self.tasks.last_updated_field] for t in task_group)
         created_at = min(t[self.tasks.last_updated_field] for t in task_group)
         task_ids = list({t[self.tasks.key] for t in task_group})
+        sandboxes = list({sbxn for t in task_group for sbxn in t.get("sbxn", [])})
+
         deprecated_tasks = list(
             {t[self.tasks.key] for t in task_group if not t["is_valid"]}
         )
-        task_types = {
+        calc_types = {
             t[self.tasks.key]: run_type(t["output"]["parameters"])
             + " "
             + task_type(t["orig_inputs"])
@@ -285,26 +287,30 @@ class MaterialsBuilder(Builder):
 
         def _structure_eval(task: Dict):
             """
-            Helper function to order structures by
+            Helper function to order structures optimziation and statics calcs by
+            - Functional Type
             - Spin polarization
             - Special Tags
-            - Forces
+            - Energy
             """
             qual_score = {"SCAN": 3, "GGA+U": 2, "GGA": 1}
 
             ispin = task.get("output", {}).get("parameters", {}).get("ISPIN", 1)
-            max_force = task.get("analysis", {}).get("max_force", 10000) or 10000
+            energy = task.get("output", {}).get("energy_per_atom", 0.0)
 
             special_tags = [
                 task.get("output", {}).get("parameters", {}).get(tag, False)
                 for tag in ["LASPH", "ADDGRID"]
             ]
 
+            is_valid = task[self.tasks.key] in deprecated_tasks
+
             return (
+                -1 * is_valid,
                 -1 * qual_score.get(run_type, 0),
                 -1 * ispin,
                 -1 * sum(special_tags),
-                max_force,
+                energy,
             )
 
         best_structure_calc = sorted(
@@ -349,11 +355,12 @@ class MaterialsBuilder(Builder):
             last_updated=last_updated,
             created_at=created_at,
             task_ids=task_ids,
-            task_types=task_types,
+            calc_types=calc_types,
             initial_structures=initial_structures,
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,
             origins=origins,
+            sandboxes=sandboxes if sandboxes else None,
         )
 
 

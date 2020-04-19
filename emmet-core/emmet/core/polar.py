@@ -41,7 +41,7 @@ class Deielectric(PropertyDoc):
 
 VoigtVector = Tuple[float, float, float, float, float, float]
 PiezoTensor = Tuple[VoigtVector, VoigtVector, VoigtVector]
-PiezoTensor.__doc__ = "Rank 3 real space tensor in Voigt notation"
+PiezoTensor.__doc__ = "Rank 3 real space tensor in Voigt notation"  # type: ignore
 
 
 class Piezoelectric(PropertyDoc):

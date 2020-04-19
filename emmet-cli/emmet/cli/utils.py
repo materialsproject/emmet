@@ -18,8 +18,7 @@ from fireworks.fw_config import FW_BLOCK_FORMAT
 from mongogrant.client import Client
 
 from emmet.core.utils import group_structures
-from emmet.cli.config import exclude, base_query, aggregation_keys
-from emmet.cli.config import structure_keys, log_fields
+from emmet.cli import SETTINGS
 
 logger = logging.getLogger("emmet")
 perms = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP
@@ -81,13 +80,13 @@ def get_meta_from_structure(struct):
 
 
 def aggregate_by_formula(coll, q, key=None):
-    query = {"$and": [q, exclude]}
-    query.update(base_query)
+    query = {"$and": [q, SETTINGS.exclude]}
+    query.update(SETTINGS.base_query)
     nested = False
     if key is None:
-        for k in aggregation_keys:
+        for k in SETTINGS.aggregation_keys:
             q = {k: {"$exists": 1}}
-            q.update(base_query)
+            q.update(SETTINGS.base_query)
             doc = coll.find_one(q)
             if doc:
                 key = k
@@ -95,7 +94,7 @@ def aggregate_by_formula(coll, q, key=None):
                 break
         else:
             raise ValueError(
-                f"could not find one of the aggregation keys {aggregation_keys} in {coll.full_name}!"
+                f"could not find one of the aggregation keys {SETTINGS.aggregation_keys} in {coll.full_name}!"
             )
 
     push = {k.split(".")[-1]: f"${k}" for k in structure_keys[nested]}

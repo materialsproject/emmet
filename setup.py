@@ -21,7 +21,7 @@ setup(
     author="The Materials Project",
     author_email="feedback@materialsproject.org",
     license="modified BSD",
-    install_requires=["ememt-core", "emmet-cli", "emmet-builders"],
+    install_requires=["emmet-core", "emmet-cli", "emmet-builders"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",

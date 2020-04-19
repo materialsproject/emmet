@@ -1,5 +1,5 @@
 """ Core definition of a Materials Document """
-from typing import List, Dict, ClassVar, Union
+from typing import List, Dict, ClassVar, Union, Optional
 from functools import partial
 from datetime import datetime
 
@@ -71,7 +71,7 @@ class MaterialsDoc(StructureMetadata):
         None,
         description="Timestamp for the first calculation for this Material document",
     )
-    task_types: Dict[str, str] = Field(
+    calc_types: Dict[str, str] = Field(
         None,
         description="Calculation types for all the calculations that make up this material",
     )
@@ -84,14 +84,24 @@ class MaterialsDoc(StructureMetadata):
         None, description="Any warnings related to this material"
     )
 
-    @classmethod
-    def from_structure(
-        cls, structure: Structure, material_id: str, **kwargs
+    sandboxes: List[str] = Field(
+        None,
+        description="List of sandboxes this material belongs to."
+        " Sandboxes provide a way of controlling access to materials."
+        " No sandbox means this materials is openly visible",
+    )
+
+    @staticmethod
+    def from_structure(  # type: ignore[override]
+        structure: Structure,
+        material_id: str,
+        fields: Optional[List[str]] = None,
+        **kwargs
     ) -> "MaterialsDoc":
         """
         Builds a materials document using the minimal amount of information
         """
-        meta = StructureMetadata.from_structure(structure)
+        meta = StructureMetadata.from_structure(structure, fields=fields)
         ordering = CollinearMagneticStructureAnalyzer(structure).ordering
         kwargs.update(**meta.dict())
 
@@ -101,6 +111,6 @@ class MaterialsDoc(StructureMetadata):
         if "created_at" not in kwargs:
             kwargs["created_at"] = datetime.utcnow()
 
-        return cls(
+        return MaterialsDoc(
             structure=structure, material_id=material_id, ordering=ordering, **kwargs
         )
