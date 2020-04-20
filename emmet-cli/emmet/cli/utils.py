@@ -224,11 +224,18 @@ def get_vasp_dirs():
             if not bool(st.st_mode & perms):
                 raise EmmetCliError(f"Insufficient permissions {st.st_mode} for {dn}.")
 
-        files[:] = [f for f in files if not os.path.islink(os.path.join(root, f))]
         if is_vasp_dir(files):
             gzipped = False
             for f in files:
                 fn = os.path.join(root, f)
+                if os.path.islink(fn):
+                    if run:
+                        os.unlink(fn)
+                        logger.warning(f"Unlinked {fn}.")
+                    else:
+                        logger.warning(f"Would unlink {fn}.")
+                    continue
+
                 st = os.stat(fn)
                 if not bool(st.st_mode & perms):
                     raise EmmetCliError(
