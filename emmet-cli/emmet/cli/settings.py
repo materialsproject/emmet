@@ -1,4 +1,4 @@
-from typings import Dict, List
+from typing import Dict, List
 from pydantic import Field
 from emmet.core.settings import EmmetSettings
 
