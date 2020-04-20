@@ -1,4 +1,4 @@
-# <img src="docs/images/logo_w_text.svg" height="250px">
+# ![Emmet](docs/images/logo_w_text.svg)
 
 
 [![Pytest Status](https://github.com/materialsproject/emmet/workflows/testing/badge.svg)](https://github.com/materialsproject/emmet/actions?query=workflow%3Atesting)
