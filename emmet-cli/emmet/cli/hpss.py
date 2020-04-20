@@ -225,6 +225,7 @@ def restore(inputfile, file_filter):
     directory = ctx.parent.params["directory"]
 
     if ctx.parent.params["pattern"] != f"{PREFIX}*":
+        # TODO respect both pattern and inputfile for restoral
         raise EmmetCliError(f"--pattern not supported for HPSS restoral!")
     if not os.path.exists(directory):
         os.mkdirs(directory)

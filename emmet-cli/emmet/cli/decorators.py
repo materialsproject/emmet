@@ -128,6 +128,7 @@ def sbatch(func):
             s.run(command, _cmd="sbatch" if run else "cat")
         ret = slurmpy_stderr.getvalue()[2:-1]
         logger.info("\n" + ret.encode("utf-8").decode("unicode_escape"))
+        # TODO add jobid to SUBMITTED.value
         return ReturnCodes.SUBMITTED if run else ReturnCodes.SUCCESS
 
     return update_wrapper(wrapper, func)
