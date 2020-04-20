@@ -3,4 +3,4 @@ monty==1.0.1
 pydantic==1.4
 pybtex==0.21
 typing-extensions==3.7.4.2
-bson==0.5.9
+pymongo==3.10.1
