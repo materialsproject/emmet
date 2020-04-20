@@ -18,7 +18,7 @@ PREFIX = "block_"
 
 @click.group()
 @click.option(
-    "-d", "--directory", required=True, help="Source or target directory for HPSS.",
+    "-d", "--directory", required=True, help="Directory to use for HPSS or parsing.",
 )
 @click.option(
     "-m", "--nmax", show_default=True, default=10, help="Maximum number of directories."
@@ -30,15 +30,15 @@ PREFIX = "block_"
     default=f"{PREFIX}*",
     help="Pattern for sub-paths to include.",
 )
-def hpss(directory, nmax, pattern):
-    """Long-term HPSS storage"""
+def tasks(directory, nmax, pattern):
+    """TODO"""
     pass
 
 
-@hpss.command()
+@tasks.command()
 @sbatch
 def prep():
-    """Prepare directory for HPSS"""
+    """Prepare directory for HPSS backup"""
     ctx = click.get_current_context()
     directory = ctx.parent.params["directory"]
     counter = None  # catch empty iterator
@@ -110,7 +110,7 @@ def extract_filename(line):
     return ls[-1] if len(ls) == 7 else None
 
 
-@hpss.command()
+@tasks.command()
 @sbatch
 @click.option("--clean", is_flag=True, help="Remove original launchers.")
 @click.option("--check", is_flag=True, help="Check backup consistency.")
@@ -192,7 +192,7 @@ def backup(clean, check):
     return ReturnCodes.SUCCESS
 
 
-@hpss.command()
+@tasks.command()
 @sbatch
 @click.option(
     "-l",

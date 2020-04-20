@@ -7,7 +7,7 @@ from github3 import authorize, login
 from io import StringIO
 
 from emmet.cli.admin import admin
-from emmet.cli.hpss import hpss
+from emmet.cli.tasks import tasks
 from emmet.cli.calc import calc
 from emmet.cli.utils import calcdb_from_mgrant, ensure_indexes
 from emmet.cli.utils import EmmetCliError
@@ -104,4 +104,4 @@ def safe_entry_point():
 
 emmet.add_command(admin)
 emmet.add_command(calc)
-emmet.add_command(hpss)
+emmet.add_command(tasks)
