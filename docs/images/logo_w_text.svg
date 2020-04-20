@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 3100 597" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+    <g transform="matrix(1,0,0,1,-781.209,-1271.19)">
+        <g transform="matrix(1.19602,0,0,1.04704,-285.127,-81.6968)">
+            <path d="M1511.06,1844.57L934.242,1844.57L1017.16,1308.85L1428.14,1308.85L1511.06,1844.57Z" style="fill:rgb(255,105,0);stroke:rgb(255,134,49);stroke-width:29.66px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-1.17834,0)">
+            <g transform="matrix(0.884881,0,0,1,135.239,10.8534)">
+                <path d="M850.872,1761.97L1506.79,1761.97" style="fill:none;stroke:rgb(229,229,229);stroke-width:75.02px;stroke-linecap:butt;"/>
+            </g>
+            <path d="M949.032,1476.69L1414.95,1476.69" style="fill:none;stroke:rgb(229,229,229);stroke-width:70.83px;stroke-linecap:butt;"/>
+            <g transform="matrix(6.12323e-17,-1,1,6.12323e-17,-469.69,2719.93)">
+                <path d="M949.032,1476.69L1414.95,1476.69" style="fill:none;stroke:rgb(229,229,229);stroke-width:70.83px;stroke-linecap:butt;"/>
+            </g>
+            <g transform="matrix(6.12323e-17,-1,1,6.12323e-17,-127.1,2720.41)">
+                <path d="M949.032,1476.69L1414.95,1476.69" style="fill:none;stroke:rgb(229,229,229);stroke-width:70.83px;stroke-linecap:butt;"/>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,1,-6.80791,0)">
+            <g transform="matrix(-1.24384,-2.04697e-16,2.17457e-16,-1.30578,3210.52,2702.93)">
+                <path d="M1629.25,860.383L1723.95,1067.31L1534.55,1067.31L1629.25,860.383Z" style="fill:rgb(0,11,255);stroke:black;stroke-width:11.44px;stroke-linecap:butt;"/>
+            </g>
+            <g transform="matrix(1,0,0,0.963673,1,57.2429)">
+                <path d="M1183.48,1575.78L1183.48,1842.9" style="fill:none;stroke:black;stroke-width:14.85px;stroke-linecap:butt;"/>
+            </g>
+        </g>
+        <g transform="matrix(-1,1.249e-16,-1.95672e-16,-1.56663,2360.08,3439.62)">
+            <path d="M1182.9,1304.3L1250.21,1355.22L1115.59,1355.22L1182.9,1304.3Z" style="fill:white;"/>
+        </g>
+    </g>
+    <g transform="matrix(1,0,0,1,-551.023,225.19)">
+        <text x="1337.72px" y="306.46px" style="font-family:'HelveticaNeue-Bold', 'Helvetica Neue';font-weight:700;font-size:666.667px;">Emmet</text>
+    </g>
+</svg>
