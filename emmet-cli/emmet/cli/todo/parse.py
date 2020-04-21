@@ -183,7 +183,6 @@
 #                         print("ERROR: not a SO task!")
 #                         continue
 #
-#             task_doc["sbxn"] = sbxn
 #
 #             if insert:
 #                 target.insert_task(task_doc, use_gridfs=True)

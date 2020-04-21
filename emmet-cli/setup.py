@@ -20,6 +20,7 @@ setup(
         "slurmpy",
         "github3.py",
         "hpsspy",
+        "multiprocessing-logging",
         "emmet-core",
     ],
     license="modified BSD",

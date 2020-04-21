@@ -362,7 +362,6 @@ def parse(task_ids, nproc):
             if not process.ready():
                 queue.append(process)
             else:
-                # TODO get vasp_dir and task_id to forward to logger
                 count += process.get()
 
     pool.close()
@@ -372,4 +371,4 @@ def parse(task_ids, nproc):
         )
     else:
         logger.info(f"Would parse and insert {count}/{gen.value} tasks in {directory}.")
-    return ReturnCodes.SUCCESS if count and gen.value else ReturnCodes.ERROR
+    return ReturnCodes.SUCCESS if count and gen.value else ReturnCodes.WARNING

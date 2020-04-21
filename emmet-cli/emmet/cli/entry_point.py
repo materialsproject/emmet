@@ -2,6 +2,7 @@ import os
 import logging
 import click
 
+from multiprocessing_logging import install_mp_handler
 from log4mongo.handlers import BufferedMongoHandler
 from github3 import authorize, login
 from io import StringIO
@@ -84,6 +85,8 @@ def emmet(spec, run, issue, sbatch, no_dupe_check, verbose):
             ctx.obj["GH"] = login(token=token)
     else:
         click.secho("DRY RUN! Add --run flag to execute changes.", fg="green")
+
+    install_mp_handler(logger=logger)
 
 
 def safe_entry_point():

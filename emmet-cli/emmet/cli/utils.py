@@ -328,6 +328,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
     ctx = click.get_current_context()
     spec = ctx.parent.parent.params["spec"]
     target = calcdb_from_mgrant(spec)
+    sbxn = target.collection.distinct("sbxn")
     no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
     projection = {"completed_at": 1, "tags": 1, "task_id": 1}
     count = 0
@@ -342,22 +343,28 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
 
         if docs:
             if no_dupe_check:
-                logger.warning(f"FORCING re-parse of {vaspdir}!")
+                logger.warning(f"FORCING re-parse of {launcher}!")
             else:
-                logger.warning(f"{name} {vaspdir} already parsed.")
+                logger.warning(f"{name} {launcher} already parsed.")
+                shutil.rmtree(vaspdir)
+                logger.info(f"{name} Removed {launcher}.")
                 continue
 
         task_doc = drone.assimilate(vaspdir)
+        task_doc["sbxn"] = sbxn
+        logger.info(f"Using sandboxes {sbxn} for {launcher}.")
         if isinstance(task_ids, dict):
             task_doc["task_id"] = task_ids[launcher]
         else:
             task_doc["task_id"] = task_ids[chunk_idx][count]
-        logger.info(f"Using {task_doc['task_id']} for {vaspdir}.")
+        logger.info(f"Using {task_doc['task_id']} for {launcher}.")
 
         if docs:
             # check completed_at timestamp to decide on re-parse
             if docs[0]["completed_at"] == task_doc["completed_at"]:
-                logger.warning(f"Not inserting {vaspdir} due to matching completed_at.")
+                logger.warning(
+                    f"Not inserting {launcher} due to matching completed_at."
+                )
                 continue
 
             # make sure that task gets the same tags as the previously parsed task
@@ -382,9 +389,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
                         target.insert_task(task_doc, use_gridfs=True)
 
                 if target.collection.count(query):
-                    logger.info(f"{name} Successfully parsed {vaspdir}.")
+                    logger.info(f"{name} Successfully parsed {launcher}.")
                     shutil.rmtree(vaspdir)
-                    logger.info(f"{name} Removed {vaspdir}.")
+                    logger.info(f"{name} Removed {launcher}.")
                     count += 1
         else:
             count += 1
