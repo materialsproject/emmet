@@ -5,10 +5,10 @@ import click
 import shutil
 import logging
 import itertools
+import multiprocessing
 
 from enum import Enum
 from glob import glob
-from shutil import copyfile, rmtree
 from fnmatch import fnmatch
 from datetime import datetime
 from collections import defaultdict
@@ -16,6 +16,7 @@ from pymatgen import Structure
 from atomate.vasp.database import VaspCalcDb
 from fireworks.fw_config import FW_BLOCK_FORMAT
 from mongogrant.client import Client
+from atomate.vasp.drones import VaspDrone
 
 from emmet.core.utils import group_structures
 from emmet.cli import SETTINGS
@@ -49,7 +50,10 @@ def ensure_indexes(indexes, colls):
             if index not in keys:
                 coll.ensure_index(index)
                 created[coll.full_name].append(index)
-    return created
+
+    if created:
+        indexes = ", ".join(created[coll.full_name])
+        logger.debug(f"Created the following index(es) on {coll.full_name}:\n{indexes}")
 
 
 def calcdb_from_mgrant(spec):
@@ -126,8 +130,12 @@ def iterator_slice(iterator, length):
         yield res
 
 
+def chunks(lst, n):
+    return [lst[i : i + n] for i in range(0, len(lst), n)]
+
+
 def get_subdir(dn):
-    return dn.rsplit(os.sep, 1)[-1]
+    return dn.rstrip(os.sep).rsplit(os.sep, 1)[-1]
 
 
 def get_timestamp_dir(prefix="launcher"):
@@ -198,13 +206,23 @@ def create_orig_inputs(vaspdir):
                 input_path = matches[0]
                 orig_path = input_path.replace(inp, inp + ".orig")
                 if run:
-                    copyfile(input_path, orig_path)
+                    shutil.copyfile(input_path, orig_path)
                 logger.debug(f"{input_path} -> {orig_path}")
+
+
+# https://stackoverflow.com/a/34073559
+class VaspDirsGenerator:
+    def __init__(self):
+        self.gen = get_vasp_dirs()
+
+    def __iter__(self):
+        self.value = yield from self.gen
 
 
 def get_vasp_dirs():
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
+    nmax = ctx.parent.params["nmax"]
     pattern = ctx.parent.params["pattern"]
     base_path = ctx.parent.params["directory"].rstrip(os.sep)
     base_path_index = len(base_path.split(os.sep))
@@ -212,7 +230,11 @@ def get_vasp_dirs():
         pattern_split = pattern.split(os.sep)
         pattern_split_len = len(pattern_split)
 
+    counter = 0
     for root, dirs, files in os.walk(base_path, topdown=True):
+        if counter == nmax:
+            break
+
         level = len(root.split(os.sep)) - base_path_index
         if pattern and dirs and pattern_split_len > level:
             p = pattern_split[level]
@@ -259,6 +281,9 @@ def get_vasp_dirs():
             dirs[:] = []  # don't descend further (i.e. ignore relax1/2)
             logger.log(logging.INFO if gzipped else logging.DEBUG, vasp_dir)
             yield vasp_dir
+            counter += 1
+
+    return counter
 
 
 def reconstruct_command(sbatch=False):
@@ -291,3 +316,77 @@ def reconstruct_command(sbatch=False):
                     command.append("\\\n")
 
     return " ".join(command).strip().strip("\\")
+
+
+def parse_vasp_dirs(vaspdirs, tag, task_ids):
+    process = multiprocessing.current_process()
+    name = process.name
+    chunk_idx = int(name.rsplit("-")[1]) - 1
+    logger.info(f"{name} starting.")
+    tags = [tag, SETTINGS.year_tags[-1]]
+    drone = VaspDrone(parse_dos="auto", additional_fields={"tags": tags})
+    ctx = click.get_current_context()
+    spec = ctx.parent.parent.params["spec"]
+    target = calcdb_from_mgrant(spec)
+    no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
+    projection = {"completed_at": 1, "tags": 1, "task_id": 1}
+    count = 0
+
+    for vaspdir in vaspdirs:
+        logger.info(f"{name} VaspDir: {vaspdir}")
+        launcher = get_subdir(vaspdir)
+        query = {"dir_name": {"$regex": launcher}}
+        docs = list(
+            target.collection.find(query, projection).sort([("_id", -1)]).limit(1)
+        )
+
+        if docs:
+            if no_dupe_check:
+                logger.warning(f"FORCING re-parse of {vaspdir}!")
+            else:
+                logger.warning(f"{name} {vaspdir} already parsed.")
+                continue
+
+        task_doc = drone.assimilate(vaspdir)
+        if isinstance(task_ids, dict):
+            task_doc["task_id"] = task_ids[launcher]
+        else:
+            task_doc["task_id"] = task_ids[chunk_idx][count]
+        logger.info(f"Using {task_doc['task_id']} for {vaspdir}.")
+
+        if docs:
+            # check completed_at timestamp to decide on re-parse
+            if docs[0]["completed_at"] == task_doc["completed_at"]:
+                logger.warning(f"Not inserting {vaspdir} due to matching completed_at.")
+                continue
+
+            # make sure that task gets the same tags as the previously parsed task
+            if docs[0]["tags"]:
+                task_doc["tags"] = docs[0]["tags"]
+                logger.info(f"Using existing tags: {docs[0]['tags']}")
+
+        if ctx.parent.parent.params["run"]:
+            if task_doc["state"] == "successful":
+                try:
+                    target.insert_task(task_doc, use_gridfs=True)
+                except DocumentTooLarge:
+                    logger.warning(f"{name} Remove normalmode_eigenvecs and retry ...")
+                    task_doc["calcs_reversed"][0]["output"].pop("normalmode_eigenvecs")
+                    try:
+                        target.insert_task(task_doc, use_gridfs=True)
+                    except DocumentTooLarge:
+                        logger.warning(
+                            f"{name} Also remove force_constants and retry ..."
+                        )
+                        task_doc["calcs_reversed"][0]["output"].pop("force_constants")
+                        target.insert_task(task_doc, use_gridfs=True)
+
+                if target.collection.count(query):
+                    logger.info(f"{name} Successfully parsed {vaspdir}.")
+                    shutil.rmtree(vaspdir)
+                    logger.info(f"{name} Removed {vaspdir}.")
+                    count += 1
+        else:
+            count += 1
+
+    return count

@@ -1,5 +1,6 @@
 from typing import Dict, List
 from pydantic import Field
+from datetime import datetime
 from emmet.core.settings import EmmetSettings
 
 
@@ -115,4 +116,9 @@ class EmmetCLISettings(EmmetSettings):
 
     tracker: Dict[str, str] = Field(
         {"org": "materialsproject", "repo": "production-tracker"}, description=""
+    )
+
+    year_tags: List[str] = Field(
+        ["mp_{}".format(y) for y in range(2018, int(datetime.today().year) + 1)],
+        description="list of years to tag tasks",
     )

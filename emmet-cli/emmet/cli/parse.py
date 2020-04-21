@@ -1,85 +1,3 @@
-# def parse_vasp_dirs(vaspdirs, insert, drone, already_inserted_subdirs, delete):
-#     name = multiprocessing.current_process().name
-#     print(name, "starting")
-#     lpad = get_lpad()
-#     target = calcdb_from_mgrant(f"{lpad.host}/{lpad.name}")
-#     print(name, "connected to target db with", target.collection.count(), "tasks")
-#     input_structures = []
-#
-#     for vaspdir in vaspdirs:
-#         if get_subdir(vaspdir) in already_inserted_subdirs:
-#             print(name, vaspdir, "already parsed")
-#             if delete:
-#                 rmtree(vaspdir)
-#                 print(name, "removed", vaspdir)
-#             continue
-#         print(name, "vaspdir:", vaspdir)
-#
-#         if insert:
-#             try:
-#                 task_doc = drone.assimilate(vaspdir)
-#             except Exception as ex:
-#                 err = str(ex)
-#                 if err == "No VASP files found!":
-#                     rmtree(vaspdir)
-#                     print(name, "removed", vaspdir)
-#                 continue
-#
-#             s = Structure.from_dict(task_doc["input"]["structure"])
-#             input_structures.append(s)
-#
-#             q = {"dir_name": {"$regex": get_subdir(vaspdir)}}
-#             # check completed_at timestamp to decide on re-parse (only relevant for --force)
-#             docs = list(
-#                 target.collection.find(q, {"completed_at": 1})
-#                 .sort([("_id", -1)])
-#                 .limit(1)
-#             )
-#             if docs and docs[0]["completed_at"] == task_doc["completed_at"]:
-#                 print(
-#                     "not forcing insertion of",
-#                     vaspdir,
-#                     "(matching completed_at timestamp)",
-#                 )
-#                 continue
-#
-#             # make sure that task gets the same tags as the previously parsed task (only relevant for --force)
-#             tags = target.collection.distinct("tags", q)
-#             if tags:
-#                 print("use existing tags:", tags)
-#                 task_doc["tags"] = tags
-#
-#             if task_doc["state"] == "successful":
-#                 try:
-#                     target.insert_task(task_doc, use_gridfs=True)
-#                 except DocumentTooLarge as ex:
-#                     print(name, "remove normalmode_eigenvecs and retry ...")
-#                     task_doc["calcs_reversed"][0]["output"].pop("normalmode_eigenvecs")
-#                     try:
-#                         target.insert_task(task_doc, use_gridfs=True)
-#                     except DocumentTooLarge as ex:
-#                         print(name, "also remove force_constants and retry ...")
-#                         task_doc["calcs_reversed"][0]["output"].pop("force_constants")
-#                         target.insert_task(task_doc, use_gridfs=True)
-#
-#                 if delete and target.collection.count(q):
-#                     print(name, "successfully parsed", vaspdir)
-#                     rmtree(vaspdir)
-#                     print(name, "removed", vaspdir)
-#
-#     print(
-#         name,
-#         "processed",
-#         len(vaspdirs),
-#         "VASP directories -",
-#         len(input_structures),
-#         "structures",
-#     )
-#     return input_structures
-#
-#
-# def copy(target_spec, tag, insert, copy_snls, sbxn, src, force):
-#
 #     # fix year tags before copying tasks
 #     counter = Counter()
 #     source_tasks = source.collection.find(
@@ -105,84 +23,13 @@
 #         counter[year_tag] += r["nModified"]
 #     if counter:
 #         print(counter, "year tags fixed.")
-#
-#     target_snls = target.db.snls_user
-#
-#     def insert_snls(snls_list):
-#         if snls_list:
-#             print("copy", len(snls_list), "SNLs")
-#             if insert:
-#                 result = target_snls.insert_many(snls_list)
-#                 print("#SNLs inserted:", len(result.inserted_ids))
-#             snls_list.clear()
-#         else:
-#             print("no SNLs to insert")
-#
-#     table = PrettyTable()
-#     table.field_names = ["Tag", "Source", "Target", "Skipped", "Insert"]
-#     sums = ["total"] + [0] * (len(table.field_names) - 1)
-#
-#     for t in tags:
-#
-#         print("- {}".format(t))
-#         row = [t]
+
+
 #         query = {"$and": [{"tags": t}, task_base_query]}
 #         source_count = source.collection.count(query)
 #         row += [source_count, target.collection.count(query)]
 #
-#         # get list of SNLs to copy over
-#         # only need to check tagged SNLs in source and target; dup-check across SNL collections already done in add_snls
-#         # also only need to check about.projects; add_snls adds tag to about.projects and not remarks
-#         # TODO only need to copy if author not Materials Project!?
-#         if copy_snls:
-#             snls = lpad.db.snls.find({"about.projects": t})
-#             nr_snls = snls.count()
-#             if nr_snls:
-#                 snls_to_copy, index, prefix = [], None, "snl"
-#                 for idx, doc in enumerate(snls):
-#                     snl = StructureNL.from_dict(doc)
-#                     formula = snl.structure.composition.reduced_formula
-#                     snl_copied = False
-#                     try:
-#                         q = {
-#                             "about.projects": t,
-#                             "$or": [{k: formula} for k in aggregation_keys],
-#                         }
-#                         group = aggregate_by_formula(
-#                             target_snls, q
-#                         ).next()  # only one formula
-#                         for dct in group["structures"]:
-#                             existing_structure = Structure.from_dict(dct)
-#                             if structures_match(snl.structure, existing_structure):
-#                                 snl_copied = True
-#                                 print("SNL", doc["snl_id"], "already added.")
-#                                 break
-#                     except StopIteration:
-#                         pass
-#                     if snl_copied:
-#                         continue
-#                     snl_dct = snl.as_dict()
-#                     if index is None:
-#                         index = (
-#                             max(
-#                                 [
-#                                     int(snl_id[len(prefix) + 1 :])
-#                                     for snl_id in target_snls.distinct("snl_id")
-#                                 ]
-#                             )
-#                             + 1
-#                         )
-#                     else:
-#                         index += 1
-#                     snl_id = "{}-{}".format(prefix, index)
-#                     snl_dct["snl_id"] = snl_id
-#                     snl_dct.update(get_meta_from_structure(snl.structure))
-#                     snls_to_copy.append(snl_dct)
-#                     if idx and not idx % 100 or idx == nr_snls - 1:
-#                         insert_snls(snls_to_copy)
-#             else:
-#                 print("No SNLs available for", t)
-#
+
 #         # skip tasks with task_id existing in target and with matching dir_name (have to be a string [mp-*, mvc-*])
 #         nr_source_mp_tasks, skip_task_ids = 0, []
 #         for doc in source.collection.find(query, ["task_id", "dir_name"]):
@@ -199,12 +46,12 @@
 #                     skip_task_ids.append(doc["task_id"])
 #         # if len(skip_task_ids):
 #         #    print('skip', len(skip_task_ids), 'existing MP task ids out of', nr_source_mp_tasks)
-#         row.append(len(skip_task_ids))
-#
+
 #         query.update({"task_id": {"$nin": skip_task_ids}})
 #         already_inserted_subdirs = [
 #             get_subdir(dn) for dn in target.collection.find(query).distinct("dir_name")
 #         ]
+
 #         subdirs = []
 #         # NOTE make sure it's latest task if re-parse forced
 #         fields = ["task_id", "retired_task_id"]
@@ -223,6 +70,7 @@
 #             pipeline.append(
 #                 {"$match": {"count": {"$gt": 1}}}
 #             )  # only re-insert if duplicate parse exists
+
 #         for doc in source.collection.aggregate(pipeline):
 #             subdir = doc["_id"]
 #             if (
@@ -236,15 +84,7 @@
 #         if len(subdirs) < 1:
 #             print("no tasks to copy.")
 #             continue
-#
-#         row.append(len(subdirs))
-#         table.add_row(row)
-#         for idx, e in enumerate(row):
-#             if isinstance(e, int):
-#                 sums[idx] += e
-#         # if not insert: # avoid uncessary looping
-#         #    continue
-#
+
 #         for subdir_doc in subdirs:
 #             subdir_query = {"dir_name": {"$regex": "/{}$".format(subdir_doc["subdir"])}}
 #             doc = target.collection.find_one(
@@ -278,11 +118,11 @@
 #                     "replace(d) task_id", doc["task_id"], "with", subdir_doc["task_id"]
 #                 )
 #                 continue
-#
+
 #             if not force and doc:
 #                 print(subdir_doc["subdir"], "already inserted as", doc["task_id"])
 #                 continue
-#
+
 #             # NOTE make sure it's latest task if re-parse forced
 #             source_task_id = (
 #                 subdir_doc["task_id"]
@@ -291,7 +131,7 @@
 #             )
 #             print("retrieve", source_task_id, "for", subdir_doc["subdir"])
 #             task_doc = source.retrieve_task(source_task_id)
-#
+
 #             if doc:  # NOTE: existing dir_name (re-parse forced)
 #                 if task_doc["completed_at"] == doc["completed_at"]:
 #                     print(
@@ -300,7 +140,6 @@
 #                         "already re-inserted into",
 #                         target.collection.full_name,
 #                     )
-#                     table._rows[-1][-1] -= 1  # update Insert count in table
 #                     continue
 #                 task_doc["task_id"] = doc["task_id"]
 #                 if insert:
@@ -348,148 +187,3 @@
 #
 #             if insert:
 #                 target.insert_task(task_doc, use_gridfs=True)
-#
-#     table.align["Tag"] = "r"
-#     if tag is None:
-#         sfmt = "\033[1;32m{}\033[0m"
-#         table.add_row([sfmt.format(s if s else "-") for s in sums])
-#     if table._rows:
-#         print(table)
-#
-#
-# @cli.command()
-# @click.argument("base_path", type=click.Path(exists=True))
-# # @click.argument('target_spec')
-# @click.option(
-#     "--insert/--no-insert", default=False, help="actually execute task insertion"
-# )
-# @click.option(
-#     "--nproc",
-#     "-n",
-#     type=int,
-#     default=1,
-#     help="number of processes for parallel parsing",
-# )
-# @click.option(
-#     "--max-dirs",
-#     "-m",
-#     type=int,
-#     default=10,
-#     help="maximum number of directories to parse",
-# )
-# @click.option("--force/--no-force", default=False, help="force re-parsing of task")
-# @click.option(
-#     "--add_snlcolls",
-#     "-a",
-#     type=click.Path(exists=True),
-#     help="YAML config file with multiple documents defining additional SNLs collections to scan",
-# )
-# @click.option(
-#     "--make-snls/--no-make-snls",
-#     default=False,
-#     help="also create SNLs for parsed tasks",
-# )
-# @click.option(
-#     "--delete/--no-delete",
-#     default=False,
-#     help="delete directory after successful parse",
-# )
-# @click.option(
-#     "--copy-snls/--no-copy-snls", default=False, help="also copy SNLs"
-# )  # TODO
-# @click.option("--sbxn", multiple=True, help="add task to sandbox")
-# def parse(
-#     base_path,
-#     insert,
-#     nproc,
-#     max_dirs,
-#     force,
-#     add_snlcolls,
-#     make_snls,
-#     delete,
-#     copy_snls,
-#     sbxn,
-# ):
-#     """parse VASP output directories in base_path into tasks and tag (incl. SNLs if available)"""
-#
-#     if not insert:
-#         print("DRY RUN: add --insert flag to actually insert tasks")
-#
-#     lpad = get_lpad()
-#     # target = calcdb_from_mgrant(target_spec)
-#     target = calcdb_from_mgrant(f"{lpad.host}/{lpad.name}")
-#     print("connected to target db with", target.collection.count(), "tasks")
-#     base_path = os.path.join(base_path, "")
-#     base_path_split = base_path.split(os.sep)
-#     tag = base_path_split[-1] if base_path_split[-1] else base_path_split[-2]
-#     drone = VaspDrone(
-#         parse_dos="auto", additional_fields={"tags": [tag, year_tags[-1]]}
-#     )
-#     already_inserted_subdirs = [
-#         get_subdir(dn)
-#         for dn in target.collection.find({"tags": tag}).distinct("dir_name")
-#     ]
-#     print(
-#         len(already_inserted_subdirs),
-#         "unique VASP directories already inserted for",
-#         tag,
-#     )
-#     if force:
-#         already_inserted_subdirs = []
-#         print("FORCING directory re-parse and overriding tasks!")
-#
-#     # sbxn = list(sbxn) if sbxn else target.collection.distinct('sbxn')
-#     # ensure_indexes(['task_id', 'tags', 'dir_name', 'retired_task_id'], [target.collection])
-#
-#     chunk_size = math.ceil(max_dirs / nproc)
-#     if nproc > 1 and max_dirs <= chunk_size:
-#         nproc = 1
-#         print(
-#             "max_dirs =",
-#             max_dirs,
-#             "but chunk size =",
-#             chunk_size,
-#             "-> parsing sequentially",
-#         )
-#
-#     pool = multiprocessing.Pool(processes=nproc)
-#     iterator_vaspdirs = get_vasp_dirs(base_path, base_path, max_dirs, insert)
-#     iterator = iterator_slice(iterator_vaspdirs, chunk_size)  # process in chunks
-#     queue = deque()
-#     input_structures = []
-#
-#     while iterator or queue:
-#         try:
-#             args = [next(iterator), insert, drone, already_inserted_subdirs, delete]
-#             queue.append(pool.apply_async(parse_vasp_dirs, args))
-#         except (StopIteration, TypeError):
-#             iterator = None
-#         while queue and (len(queue) >= pool._processes or not iterator):
-#             process = queue.pop()
-#             process.wait(1)
-#             if not process.ready():
-#                 queue.append(process)
-#             else:
-#                 input_structures += process.get()
-#
-#     pool.close()
-#     print("DONE:", len(input_structures), "structures")
-#
-#     fn = os.path.join(base_path, "launchdir_to_taskid.json")
-#     if os.path.exists(fn):
-#         print("updating task ids...")
-#         with open(fn, "r") as f:
-#             launchdir_to_taskid = json.load(f)
-#         for doc in target.collection.find(
-#             {"tags": tag}, {"dir_name": 1, "task_id": 1, "_id": 0}
-#         ):
-#             task_id = launchdir_to_taskid[get_subdir(doc["dir_name"])]
-#             if doc["task_id"] != task_id:
-#                 target.collection.update_one(
-#                     {"task_id": doc["task_id"]}, {"$set": {"task_id": task_id}}
-#                 )
-#                 print(doc["dir_name"], doc["task_id"], task_id)
-#
-#     if insert and make_snls:
-#         print("add SNLs for", len(input_structures), "structures")
-#         add_snls(tag, input_structures, add_snlcolls, insert)

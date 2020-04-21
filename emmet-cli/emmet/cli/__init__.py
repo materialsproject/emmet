@@ -2,7 +2,6 @@
 # import itertools, multiprocessing, math, io, requests, json, time, zipfile, zlib
 # from oauth2client import client as oauth2_client
 # from oauth2client import file, tools
-# from shutil import copyfile, rmtree
 # from glob import glob
 # from fnmatch import fnmatch
 # from datetime import datetime
@@ -18,7 +17,6 @@
 # from fireworks import LaunchPad, Firework
 # from fireworks.fw_config import FW_BLOCK_FORMAT
 # from atomate.vasp.database import VaspCalcDb
-# from atomate.vasp.drones import VaspDrone
 # from atomate.vasp.workflows.presets.core import wf_structure_optimization, wf_bandstructure
 # from atomate.vasp.powerups import add_trackers, add_tags, add_additional_fields_to_taskdocs, add_wf_metadata
 # from emmet.vasp.materials import group_structures, get_sg
@@ -41,8 +39,6 @@
 # print = functools.partial(print, flush=True)
 #
 # SCOPES = 'https://www.googleapis.com/auth/drive'
-# current_year = int(datetime.today().year)
-# year_tags = ['mp_{}'.format(y) for y in range(2018, current_year+1)]
 #
 # nomad_outdir = '/project/projectdirs/matgen/garden/nomad'
 ##nomad_outdir = '/clusterfs/mp/mp_prod/nomad'

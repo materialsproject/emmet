@@ -1,14 +1,20 @@
 import os
-import shutil
+import sys
+import json
+import math
 import shlex
-import logging
 import click
+import shutil
+import logging
 import subprocess
+import multiprocessing
 
-from collections import defaultdict
+from collections import defaultdict, deque
 from hpsspy import HpssOSError
 from hpsspy.os.path import isfile
-from emmet.cli.utils import get_vasp_dirs, EmmetCliError, ReturnCodes
+from emmet.cli.utils import VaspDirsGenerator, EmmetCliError, ReturnCodes
+from emmet.cli.utils import ensure_indexes, get_subdir, parse_vasp_dirs
+from emmet.cli.utils import chunks, iterator_slice
 from emmet.cli.decorators import sbatch
 
 
@@ -31,7 +37,7 @@ PREFIX = "block_"
     help="Pattern for sub-paths to include.",
 )
 def tasks(directory, nmax, pattern):
-    """TODO"""
+    """Backup, restore, and parse VASP calculations."""
     pass
 
 
@@ -41,17 +47,10 @@ def prep():
     """Prepare directory for HPSS backup"""
     ctx = click.get_current_context()
     directory = ctx.parent.params["directory"]
-    counter = None  # catch empty iterator
-    for counter, _ in enumerate(get_vasp_dirs()):
-        if counter == ctx.parent.params["nmax"] - 1:
-            break
-
-    if counter is None:
-        logger.error(f"No VASP calculations found in {directory}.")
-        return ReturnCodes.ERROR
-
-    logger.info(f"Prepared {counter+1} VASP calculation(s) in {directory}.")
-    return ReturnCodes.SUCCESS
+    gen = VaspDirsGenerator()
+    list(x for x in gen)
+    logger.info(f"Prepared {gen.value} VASP calculation(s) in {directory}.")
+    return ReturnCodes.SUCCESS if gen.value else ReturnCodes.ERROR
 
 
 def run_command(args, filelist):
@@ -90,18 +89,15 @@ def check_pattern():
 
 
 def load_block_launchers():
-    ctx = click.get_current_context()
-    nmax = ctx.parent.params["nmax"]
     block_launchers = defaultdict(list)
-    for idx, vasp_dir in enumerate(get_vasp_dirs()):
+    gen = VaspDirsGenerator()
+    for idx, vasp_dir in enumerate(gen):
         if idx and not idx % 500:
             logger.info(f"{idx} launchers found ...")
         launch_dir = PREFIX + vasp_dir.split(PREFIX, 1)[-1]
         block, launcher = launch_dir.split(os.sep, 1)
-        if len(block_launchers) == nmax and block not in block_launchers:
-            # already found nmax blocks. Order of launchers not guaranteed
-            continue
         block_launchers[block].append(launcher)
+    logger.info(f"Loaded {len(block_launchers)} block(s) with {gen.value} launchers.")
     return block_launchers
 
 
@@ -118,6 +114,8 @@ def backup(clean, check):
     """Backup directory to HPSS"""
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
+    ctx.parent.params["nmax"] = sys.maxsize  # disable maximum launchers for backup
+    logger.warning("--nmax ignored for HPSS backup!")
     directory = ctx.parent.params["directory"]
     if not check and clean:
         logger.error("Not running --clean without --check enabled.")
@@ -127,7 +125,6 @@ def backup(clean, check):
 
     logger.info("Discover launch directories ...")
     block_launchers = load_block_launchers()
-    logger.info(f"Back up {len(block_launchers)} block(s) ...")
 
     counter, nremove_total = 0, 0
     os.chdir(directory)
@@ -221,7 +218,6 @@ def restore(inputfile, file_filter):
     """Restore launchers from HPSS"""
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
-    nmax = ctx.parent.params["nmax"]
     directory = ctx.parent.params["directory"]
 
     if ctx.parent.params["pattern"] != f"{PREFIX}*":
@@ -237,9 +233,6 @@ def restore(inputfile, file_filter):
         with click.progressbar(infile, label="Load blocks") as bar:
             for line in bar:
                 block, launcher = line.split(os.sep, 1)
-                if len(block_launchers) == nmax and block not in block_launchers:
-                    # already found nmax blocks. Order of launchers not guaranteed
-                    continue
                 for ff in file_filter:
                     block_launchers[block].append(os.path.join(launcher.strip(), ff))
 
@@ -299,3 +292,84 @@ def restore(inputfile, file_filter):
     else:
         logger.info(f"Would restore {nfiles_restore_total} files to {directory}.")
     return ReturnCodes.SUCCESS
+
+
+@tasks.command()
+@sbatch
+@click.option(
+    "--task-ids",
+    type=click.Path(exists=True),
+    help="JSON file mapping launcher name to task ID.",
+)
+@click.option(
+    "--nproc",
+    type=int,
+    default=1,
+    show_default=True,
+    help="Number of processes for parallel parsing.",
+)
+def parse(task_ids, nproc):
+    """Parse VASP launchers into tasks"""
+    ctx = click.get_current_context()
+    if "CLIENT" not in ctx.obj:
+        raise EmmetCliError(f"Use --spec to set target DB for tasks!")
+
+    nmax = ctx.parent.params["nmax"]
+    directory = ctx.parent.params["directory"].rstrip(os.sep)
+    tag = os.path.basename(directory)
+    target = ctx.obj["CLIENT"]
+    logger.info(
+        f"Connected to {target.collection.full_name} with {target.collection.count()} tasks."
+    )
+    ensure_indexes(
+        ["task_id", "tags", "dir_name", "retired_task_id"], [target.collection]
+    )
+
+    chunk_size = math.ceil(nmax / nproc)
+    if nproc > 1 and nmax <= chunk_size:
+        nproc = 1
+        logger.warning(
+            f"nmax = {nmax} but chunk size = {chunk_size} -> sequential parsing."
+        )
+
+    pool = multiprocessing.Pool(processes=nproc)
+    gen = VaspDirsGenerator()
+    iterator = iterator_slice(gen, chunk_size)  # process in chunks
+    queue = deque()
+    count = 0
+
+    if task_ids:
+        with open(task_ids, "r") as f:
+            task_ids = json.load(f)
+    else:
+        # reserve list of task_ids to avoid collisions during multiprocessing
+        all_task_ids = target.collection.distinct("task_id")
+        next_tid = max(int(tid.split("-")[-1]) for tid in all_task_ids) + 1
+        lst = [f"mp-{next_tid + n}" for n in range(nmax)]
+        task_ids = chunks(lst, chunk_size)
+        logger.info(f"Reserved {len(lst)} task ID(s).")
+
+    while iterator or queue:
+        try:
+            args = [next(iterator), tag, task_ids]
+            queue.append(pool.apply_async(parse_vasp_dirs, args))
+        except (StopIteration, TypeError):
+            iterator = None
+
+        while queue and (len(queue) >= pool._processes or not iterator):
+            process = queue.pop()
+            process.wait(1)
+            if not process.ready():
+                queue.append(process)
+            else:
+                # TODO get vasp_dir and task_id to forward to logger
+                count += process.get()
+
+    pool.close()
+    if ctx.parent.parent.params["run"]:
+        logger.info(
+            f"Successfully parsed and inserted {count}/{gen.value} tasks in {directory}."
+        )
+    else:
+        logger.info(f"Would parse and insert {count}/{gen.value} tasks in {directory}.")
+    return ReturnCodes.SUCCESS if count and gen.value else ReturnCodes.ERROR

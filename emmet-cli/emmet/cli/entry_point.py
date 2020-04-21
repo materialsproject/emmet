@@ -22,7 +22,7 @@ def opt_prompt():
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.option("--spec", metavar="HOST/DB", help="MongoGrant spec for user DB.")
+@click.option("--spec", metavar="HOST/DB", help="MongoGrant spec for DB to use.")
 @click.option("--run", is_flag=True, help="Run DB/filesystem write operations.")
 @click.option("--issue", type=int, help="Production tracker issue (required if --run).")
 @click.option("--sbatch", is_flag=True, help="Switch to sbatch mode.")
@@ -38,31 +38,24 @@ def emmet(spec, run, issue, sbatch, no_dupe_check, verbose):
     if spec:
         client = calcdb_from_mgrant(spec)
         ctx.obj["CLIENT"] = client
-        ctx.obj["MONGO_HANDLER"] = BufferedMongoHandler(
-            host=client.host,
-            port=client.port,
-            database_name=client.db_name,
-            username=client.user,
-            password=client.password,
-            level=logging.WARNING,
-            authentication_db=client.db_name,
-            collection="emmet_logs",
-            buffer_periodical_flush_timing=False,  # flush manually
-        )
-        logger.addHandler(ctx.obj["MONGO_HANDLER"])
-        coll = ctx.obj["MONGO_HANDLER"].collection
-        created = ensure_indexes(SETTINGS.log_fields, [coll])
-        if created:
-            indexes = ", ".join(created[coll.full_name])
-            logger.debug(
-                f"Created the following index(es) on {coll.full_name}:\n{indexes}"
-            )
+        # ctx.obj["MONGO_HANDLER"] = BufferedMongoHandler(
+        #    host=client.host,
+        #    port=client.port,
+        #    database_name=client.db_name,
+        #    username=client.user,
+        #    password=client.password,
+        #    level=logging.WARNING,
+        #    authentication_db=client.db_name,
+        #    collection="emmet_logs",
+        #    buffer_periodical_flush_timing=False,  # flush manually
+        # )
+        # logger.addHandler(ctx.obj["MONGO_HANDLER"])
+        # coll = ctx.obj["MONGO_HANDLER"].collection
+        # ensure_indexes(SETTINGS.log_fields, [coll])
 
     if run:
         if not issue:
-            org, repo = SETTINGS.tracker["org"], SETTINGS.tracker["repo"]
-            url = f"https://github.com/{org}/{repo}/issues"
-            raise EmmetCliError(f"Link to issue number at {url} via --issue!")
+            raise EmmetCliError(f"Need issue number via --issue!")
 
         ctx.obj["LOG_STREAM"] = StringIO()
         memory_handler = logging.StreamHandler(ctx.obj["LOG_STREAM"])
