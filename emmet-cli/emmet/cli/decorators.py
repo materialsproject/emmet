@@ -115,7 +115,12 @@ def sbatch(func):
 
         s = Slurm(
             ctx.command_path.replace(" ", "-"),
-            slurm_kwargs={"qos": "xfer", "time": "48:00:00", "licenses": "SCRATCH"},
+            slurm_kwargs={
+                "qos": "xfer",
+                "time": "07:00:00",
+                "licenses": "SCRATCH",
+                "mem": "10GB",
+            },
             date_in_name=False,
             scripts_dir=track_dir,
             log_dir=track_dir,

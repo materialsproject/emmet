@@ -314,6 +314,7 @@ def parse(task_ids, nproc):
     if "CLIENT" not in ctx.obj:
         raise EmmetCliError(f"Use --spec to set target DB for tasks!")
 
+    run = ctx.parent.parent.params["run"]
     nmax = ctx.parent.params["nmax"]
     directory = ctx.parent.params["directory"].rstrip(os.sep)
     tag = os.path.basename(directory)
@@ -343,11 +344,17 @@ def parse(task_ids, nproc):
             task_ids = json.load(f)
     else:
         # reserve list of task_ids to avoid collisions during multiprocessing
+        # insert empty doc with max ID + 1 into target collection for parallel SLURM jobs
         all_task_ids = target.collection.distinct("task_id")
         next_tid = max(int(tid.split("-")[-1]) for tid in all_task_ids) + 1
         lst = [f"mp-{next_tid + n}" for n in range(nmax)]
+        if run:
+            sep_tid = f"mp-{next_tid + nmax}"
+            target.collection.insert({"task_id": sep_tid})
+            logger.info(f"Inserted separator task with task_id {sep_tid}.")
         task_ids = chunks(lst, chunk_size)
         logger.info(f"Reserved {len(lst)} task ID(s).")
+        # TODO remove separator task after parse completion?
 
     while iterator or queue:
         try:
@@ -365,7 +372,7 @@ def parse(task_ids, nproc):
                 count += process.get()
 
     pool.close()
-    if ctx.parent.parent.params["run"]:
+    if run:
         logger.info(
             f"Successfully parsed and inserted {count}/{gen.value} tasks in {directory}."
         )
