@@ -9,6 +9,7 @@ import logging
 import subprocess
 import multiprocessing
 
+from fnmatch import fnmatch
 from collections import defaultdict, deque
 from hpsspy import HpssOSError
 from hpsspy.os.path import isfile
@@ -218,14 +219,12 @@ def restore(inputfile, file_filter):
     """Restore launchers from HPSS"""
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
+    pattern = ctx.parent.params["pattern"]
     directory = ctx.parent.params["directory"]
-
-    if ctx.parent.params["pattern"] != f"{PREFIX}*":
-        # TODO respect both pattern and inputfile for restoral
-        raise EmmetCliError(f"--pattern not supported for HPSS restoral!")
     if not os.path.exists(directory):
-        os.mkdirs(directory)
+        os.makedirs(directory)
 
+    check_pattern()
     shutil.chown(directory, group="matgen")
     block_launchers = defaultdict(list)
     with open(inputfile, "r") as infile:
@@ -233,8 +232,11 @@ def restore(inputfile, file_filter):
         with click.progressbar(infile, label="Load blocks") as bar:
             for line in bar:
                 block, launcher = line.split(os.sep, 1)
-                for ff in file_filter:
-                    block_launchers[block].append(os.path.join(launcher.strip(), ff))
+                if fnmatch(block, pattern):
+                    for ff in file_filter:
+                        block_launchers[block].append(
+                            os.path.join(launcher.strip(), ff)
+                        )
 
     nblocks = len(block_launchers)
     nfiles = sum(len(v) for v in block_launchers.values())
