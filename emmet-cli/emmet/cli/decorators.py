@@ -117,7 +117,7 @@ def sbatch(func):
             ctx.command_path.replace(" ", "-"),
             slurm_kwargs={
                 "qos": "xfer",
-                "time": "07:00:00",
+                "time": "48:00:00",
                 "licenses": "SCRATCH",
                 "mem": "10GB",
             },

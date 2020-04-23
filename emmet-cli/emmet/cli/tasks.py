@@ -21,6 +21,20 @@ from emmet.cli.decorators import sbatch
 
 logger = logging.getLogger("emmet")
 PREFIX = "block_"
+FILE_FILTERS = [
+    "INCAR*",
+    "CONTCAR*",
+    "KPOINTS*",
+    "POSCAR*",
+    "POTCAR*",
+    "vasprun.xml*",
+    "OUTCAR*",
+]
+FILE_FILTERS_DEFAULT = [
+    f"{d}{os.sep}{f}" if d else f
+    for f in FILE_FILTERS
+    for d in ["", "relax1", "relax2"]
+]
 
 
 @click.group()
@@ -204,15 +218,7 @@ def backup(clean, check):
     "--file-filter",
     multiple=True,
     show_default=True,
-    default=[
-        "INCAR*",
-        "CONTCAR*",
-        "KPOINTS*",
-        "POSCAR*",
-        "POTCAR*",
-        "vasprun.xml*",
-        "OUTCAR*",
-    ],
+    default=FILE_FILTERS_DEFAULT,
     help="Set the file filter(s) to match files against in each launcher.",
 )
 def restore(inputfile, file_filter):
