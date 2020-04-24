@@ -362,7 +362,6 @@ def parse(task_ids, nproc):
             logger.info(f"Inserted separator task with task_id {sep_tid}.")
         task_ids = chunks(lst, chunk_size)
         logger.info(f"Reserved {len(lst)} task ID(s).")
-        # TODO remove separator task after parse completion?
 
     while iterator or queue:
         try:
@@ -384,6 +383,8 @@ def parse(task_ids, nproc):
         logger.info(
             f"Successfully parsed and inserted {count}/{gen.value} tasks in {directory}."
         )
+        target.collection.remove({"task_id": sep_tid})
+        logger.info(f"Removed separator task {sep_tid}.")
     else:
         logger.info(f"Would parse and insert {count}/{gen.value} tasks in {directory}.")
     return ReturnCodes.SUCCESS if count and gen.value else ReturnCodes.WARNING
