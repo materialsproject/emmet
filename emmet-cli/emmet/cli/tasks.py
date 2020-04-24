@@ -9,6 +9,7 @@ import logging
 import subprocess
 import multiprocessing
 
+from fnmatch import fnmatch
 from collections import defaultdict, deque
 from hpsspy import HpssOSError
 from hpsspy.os.path import isfile
@@ -20,6 +21,20 @@ from emmet.cli.decorators import sbatch
 
 logger = logging.getLogger("emmet")
 PREFIX = "block_"
+FILE_FILTERS = [
+    "INCAR*",
+    "CONTCAR*",
+    "KPOINTS*",
+    "POSCAR*",
+    "POTCAR*",
+    "vasprun.xml*",
+    "OUTCAR*",
+]
+FILE_FILTERS_DEFAULT = [
+    f"{d}{os.sep}{f}" if d else f
+    for f in FILE_FILTERS
+    for d in ["", "relax1", "relax2"]
+]
 
 
 @click.group()
@@ -203,29 +218,19 @@ def backup(clean, check):
     "--file-filter",
     multiple=True,
     show_default=True,
-    default=[
-        "INCAR*",
-        "CONTCAR*",
-        "KPOINTS*",
-        "POSCAR*",
-        "POTCAR*",
-        "vasprun.xml*",
-        "OUTCAR*",
-    ],
+    default=FILE_FILTERS_DEFAULT,
     help="Set the file filter(s) to match files against in each launcher.",
 )
 def restore(inputfile, file_filter):
     """Restore launchers from HPSS"""
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
+    pattern = ctx.parent.params["pattern"]
     directory = ctx.parent.params["directory"]
-
-    if ctx.parent.params["pattern"] != f"{PREFIX}*":
-        # TODO respect both pattern and inputfile for restoral
-        raise EmmetCliError(f"--pattern not supported for HPSS restoral!")
     if not os.path.exists(directory):
-        os.mkdirs(directory)
+        os.makedirs(directory)
 
+    check_pattern()
     shutil.chown(directory, group="matgen")
     block_launchers = defaultdict(list)
     with open(inputfile, "r") as infile:
@@ -233,8 +238,11 @@ def restore(inputfile, file_filter):
         with click.progressbar(infile, label="Load blocks") as bar:
             for line in bar:
                 block, launcher = line.split(os.sep, 1)
-                for ff in file_filter:
-                    block_launchers[block].append(os.path.join(launcher.strip(), ff))
+                if fnmatch(block, pattern):
+                    for ff in file_filter:
+                        block_launchers[block].append(
+                            os.path.join(launcher.strip(), ff)
+                        )
 
     nblocks = len(block_launchers)
     nfiles = sum(len(v) for v in block_launchers.values())
@@ -339,6 +347,7 @@ def parse(task_ids, nproc):
     queue = deque()
     count = 0
 
+    sep_tid = None
     if task_ids:
         with open(task_ids, "r") as f:
             task_ids = json.load(f)
@@ -354,7 +363,6 @@ def parse(task_ids, nproc):
             logger.info(f"Inserted separator task with task_id {sep_tid}.")
         task_ids = chunks(lst, chunk_size)
         logger.info(f"Reserved {len(lst)} task ID(s).")
-        # TODO remove separator task after parse completion?
 
     while iterator or queue:
         try:
@@ -376,6 +384,9 @@ def parse(task_ids, nproc):
         logger.info(
             f"Successfully parsed and inserted {count}/{gen.value} tasks in {directory}."
         )
+        if sep_tid:
+            target.collection.remove({"task_id": sep_tid})
+            logger.info(f"Removed separator task {sep_tid}.")
     else:
         logger.info(f"Would parse and insert {count}/{gen.value} tasks in {directory}.")
     return ReturnCodes.SUCCESS if count and gen.value else ReturnCodes.WARNING

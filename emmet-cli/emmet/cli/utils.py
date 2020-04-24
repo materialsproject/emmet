@@ -176,7 +176,7 @@ def get_symlinked_path(root, base_path_index):
                 break
         else:
             # didn't find a block with < 300 launchers
-            block_dir = make_block(base_path, run)
+            block_dir = make_block(base_path)
 
     if root_split[-1].startswith("launcher_"):
         launch_dir = os.path.join(block_dir, root_split[-1])
@@ -328,10 +328,11 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
     ctx = click.get_current_context()
     spec = ctx.parent.parent.params["spec"]
     target = calcdb_from_mgrant(spec)
-    sbxn = filter(None, target.collection.distinct("sbxn"))
+    sbxn = list(filter(None, target.collection.distinct("sbxn")))
     logger.info(f"Using sandboxes {sbxn}.")
     no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
-    projection = {"completed_at": 1, "tags": 1, "task_id": 1}
+    run = ctx.parent.parent.params["run"]
+    projection = {"tags": 1, "task_id": 1}
     count = 0
 
     for vaspdir in vaspdirs:
@@ -346,33 +347,32 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
             if no_dupe_check:
                 logger.warning(f"FORCING re-parse of {launcher}!")
             else:
-                shutil.rmtree(vaspdir)
-                logger.warning(f"{name} {launcher} already parsed -> removed.")
+                if run:
+                    shutil.rmtree(vaspdir)
+                    logger.warning(f"{name} {launcher} already parsed -> removed.")
+                else:
+                    logger.warning(f"{name} {launcher} already parsed -> would remove.")
                 continue
 
         task_doc = drone.assimilate(vaspdir)
         task_doc["sbxn"] = sbxn
-        if isinstance(task_ids, dict):
-            task_doc["task_id"] = task_ids[launcher]
-        else:
-            task_doc["task_id"] = task_ids[chunk_idx][count]
-        logger.info(f"Using {task_doc['task_id']} for {launcher}.")
+        manual_taskid = isinstance(task_ids, dict)
+        task_id = task_ids[launcher] if manual_taskid else task_ids[chunk_idx][count]
+        task_doc["task_id"] = task_id
+        logger.info(f"Using {task_id} for {launcher}.")
 
         if docs:
-            # check completed_at timestamp to decide on re-parse
-            if docs[0]["completed_at"] == task_doc["completed_at"]:
-                logger.warning(
-                    f"Not inserting {launcher} due to matching completed_at."
-                )
-                continue
-
             # make sure that task gets the same tags as the previously parsed task
             if docs[0]["tags"]:
-                task_doc["tags"] = docs[0]["tags"]
-                logger.info(f"Using existing tags: {docs[0]['tags']}")
+                task_doc["tags"] += docs[0]["tags"]
+                logger.info(f"Adding existing tags {docs[0]['tags']} to {tags}.")
 
-        if ctx.parent.parent.params["run"]:
+        if run:
             if task_doc["state"] == "successful":
+                if docs and no_dupe_check:
+                    target.collection.remove({"task_id": task_id})
+                    logger.warning(f"Removed previously parsed task {task_id}!")
+
                 try:
                     target.insert_task(task_doc, use_gridfs=True)
                 except DocumentTooLarge:
