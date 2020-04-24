@@ -332,7 +332,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
     logger.info(f"Using sandboxes {sbxn}.")
     no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
     run = ctx.parent.parent.params["run"]
-    projection = {"completed_at": 1, "tags": 1, "task_id": 1}
+    projection = {"tags": 1, "task_id": 1}
     count = 0
 
     for vaspdir in vaspdirs:
@@ -362,13 +362,6 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
         logger.info(f"Using {task_id} for {launcher}.")
 
         if docs:
-            # check completed_at timestamp to decide on re-parse
-            if docs[0]["completed_at"] == task_doc["completed_at"]:
-                logger.warning(
-                    f"Not inserting {launcher} due to matching completed_at."
-                )
-                continue
-
             # make sure that task gets the same tags as the previously parsed task
             if docs[0]["tags"]:
                 task_doc["tags"] += docs[0]["tags"]

@@ -347,6 +347,7 @@ def parse(task_ids, nproc):
     queue = deque()
     count = 0
 
+    sep_tid = None
     if task_ids:
         with open(task_ids, "r") as f:
             task_ids = json.load(f)
@@ -383,8 +384,9 @@ def parse(task_ids, nproc):
         logger.info(
             f"Successfully parsed and inserted {count}/{gen.value} tasks in {directory}."
         )
-        target.collection.remove({"task_id": sep_tid})
-        logger.info(f"Removed separator task {sep_tid}.")
+        if sep_tid:
+            target.collection.remove({"task_id": sep_tid})
+            logger.info(f"Removed separator task {sep_tid}.")
     else:
         logger.info(f"Would parse and insert {count}/{gen.value} tasks in {directory}.")
     return ReturnCodes.SUCCESS if count and gen.value else ReturnCodes.WARNING
