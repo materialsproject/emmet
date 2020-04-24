@@ -176,7 +176,7 @@ def get_symlinked_path(root, base_path_index):
                 break
         else:
             # didn't find a block with < 300 launchers
-            block_dir = make_block(base_path, run)
+            block_dir = make_block(base_path)
 
     if root_split[-1].startswith("launcher_"):
         launch_dir = os.path.join(block_dir, root_split[-1])
