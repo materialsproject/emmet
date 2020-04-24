@@ -113,24 +113,50 @@ def sbatch(func):
             os.mkdir(track_dir)
             logger.debug(f"{track_dir} created")
 
-        s = Slurm(
-            ctx.command_path.replace(" ", "-"),
-            slurm_kwargs={
+        bb = ctx.grand_parent.params["bb"]
+        if bb:
+            click.confirm("Did you run `module unload esslurm`?", abort=True)
+            subdir = directory.rsplit(os.sep, 1)[1]
+            stage_in = f"#DW stage_in source={directory} "
+            stage_in += f"destination=$DW_JOB_STRIPED/{subdir} type=directory"
+            script = [
+                "#DW jobdw capacity=10TB access_mode=striped type=scratch",
+                stage_in,
+                "srun hostname",
+                "",
+            ]
+
+            command = "\n".join(script)
+            slurm_kwargs = {
+                "qos": "premium",
+                "nodes": 1,
+                "tasks-per-node": 1,
+                "constraint": "haswell",
+                "time": "48:00:00",
+            }
+        else:
+            click.confirm("Did you run `module load esslurm`?", abort=True)
+            slurm_kwargs = {
                 "qos": "xfer",
                 "time": "48:00:00",
                 "licenses": "SCRATCH",
-                "mem": "10GB",
-            },
+                "mem": "20GB",
+            }
+            command = ""
+
+        s = Slurm(
+            ctx.command_path.replace(" ", "-"),
+            slurm_kwargs=slurm_kwargs,
             date_in_name=False,
             scripts_dir=track_dir,
             log_dir=track_dir,
             bash_strict=False,
         )
 
-        command = reconstruct_command(sbatch=True)
+        command += reconstruct_command(sbatch=True)
         slurmpy_stderr = io.StringIO()
         with contextlib.redirect_stderr(slurmpy_stderr):
-            s.run(command, _cmd="sbatch" if run else "cat")
+            s.run(command, _cmd="sbatch" if run else "cat", tries=3)  # 6 days
         ret = slurmpy_stderr.getvalue()[2:-1]
         logger.info("\n" + ret.encode("utf-8").decode("unicode_escape"))
         # TODO add jobid to SUBMITTED.value

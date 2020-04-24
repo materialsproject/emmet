@@ -302,7 +302,7 @@ def reconstruct_command(sbatch=False):
             k = k.replace("_", "-")
             if v:
                 if isinstance(v, bool):
-                    if (sbatch and k != "sbatch") or not sbatch:
+                    if (sbatch and k != "sbatch" and k != "bb") or not sbatch:
                         command.append(f"--{k}")
                 elif isinstance(v, str):
                     command.append(f'--{k}="{v}"')
