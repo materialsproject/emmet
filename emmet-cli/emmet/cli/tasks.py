@@ -94,10 +94,10 @@ def recursive_chown(path, group):
             shutil.chown(os.path.join(dirpath, filename), group=group)
 
 
-def check_pattern():
+def check_pattern(nested_allowed=False):
     ctx = click.get_current_context()
     pattern = ctx.parent.params["pattern"]
-    if os.sep in pattern:
+    if not nested_allowed and os.sep in pattern:
         raise EmmetCliError(f"Nested pattern ({pattern}) not allowed!")
     elif not pattern.startswith(PREFIX):
         raise EmmetCliError(f"Pattern ({pattern}) only allowed to start with {PREFIX}!")
@@ -231,7 +231,7 @@ def restore(inputfile, file_filter):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    check_pattern()
+    check_pattern(nested_allowed=True)
     shutil.chown(directory, group="matgen")
     block_launchers = defaultdict(list)
     nlaunchers = 0
@@ -239,10 +239,10 @@ def restore(inputfile, file_filter):
         os.chdir(directory)
         with click.progressbar(infile, label="Load blocks") as bar:
             for line in bar:
-                block, launcher = line.split(os.sep, 1)
-                if fnmatch(block, pattern):
+                if fnmatch(line, pattern):
                     if nlaunchers == nmax:
                         break
+                    block, launcher = line.split(os.sep, 1)
                     for ff in file_filter:
                         block_launchers[block].append(
                             os.path.join(launcher.strip(), ff)
