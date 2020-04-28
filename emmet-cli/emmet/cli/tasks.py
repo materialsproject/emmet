@@ -225,6 +225,7 @@ def restore(inputfile, file_filter):
     """Restore launchers from HPSS"""
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
+    nmax = ctx.parent.params["nmax"]
     pattern = ctx.parent.params["pattern"]
     directory = ctx.parent.params["directory"]
     if not os.path.exists(directory):
@@ -233,21 +234,26 @@ def restore(inputfile, file_filter):
     check_pattern()
     shutil.chown(directory, group="matgen")
     block_launchers = defaultdict(list)
+    nlaunchers = 0
     with open(inputfile, "r") as infile:
         os.chdir(directory)
         with click.progressbar(infile, label="Load blocks") as bar:
             for line in bar:
                 block, launcher = line.split(os.sep, 1)
                 if fnmatch(block, pattern):
+                    if nlaunchers == nmax:
+                        break
                     for ff in file_filter:
                         block_launchers[block].append(
                             os.path.join(launcher.strip(), ff)
                         )
+                    nlaunchers += 1
 
     nblocks = len(block_launchers)
     nfiles = sum(len(v) for v in block_launchers.values())
     logger.info(
-        f"Restore {nblocks} block(s) with {nfiles} file filters to {directory} ..."
+        f"Restore {nblocks} block(s) with {nlaunchers} launchers"
+        f" and {nfiles} file filters to {directory} ..."
     )
 
     nfiles_restore_total = 0
