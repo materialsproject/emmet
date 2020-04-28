@@ -114,8 +114,10 @@ def sbatch(func):
             logger.debug(f"{track_dir} created")
 
         bb = ctx.grand_parent.params["bb"]
+        yes = ctx.grand_parent.params["yes"]
         if bb:
-            click.confirm("Did you run `module unload esslurm`?", abort=True)
+            if not yes:
+                click.confirm("Did you run `module unload esslurm`?", abort=True)
             subdir = directory.rsplit(os.sep, 1)[1]
             stage_in = f"#DW stage_in source={directory} "
             stage_in += f"destination=$DW_JOB_STRIPED/{subdir} type=directory"
@@ -135,7 +137,8 @@ def sbatch(func):
                 "time": "48:00:00",
             }
         else:
-            click.confirm("Did you run `module load esslurm`?", abort=True)
+            if not yes:
+                click.confirm("Did you run `module load esslurm`?", abort=True)
             slurm_kwargs = {
                 "qos": "xfer",
                 "time": "48:00:00",
