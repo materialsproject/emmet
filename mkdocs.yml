@@ -8,7 +8,10 @@ theme:
 nav:
   - Home: index.md
   - Packages: packages.md
-  - Core: core.md
+  - Settings: settings.md
+  - Stubs: stubs.md
+  - Reference:
+    - Core: core.md
 
 repo_url: https://github.com/materialsproject/emmet/
 markdown_extensions:
