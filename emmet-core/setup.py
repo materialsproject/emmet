@@ -15,7 +15,7 @@ setup(
     install_requires=[
         "pymatgen",
         "monty",
-        "pydantic",
+        "pydantic[email]",
         "pybtex",
         "typing-extensions",
         "pymongo",
