@@ -13,6 +13,7 @@ nav:
   - Reference:
     - Core: core.md
 
+site_url: https://materialsproject.github.io/emmet/
 repo_url: https://github.com/materialsproject/emmet/
 markdown_extensions:
   - admonition
