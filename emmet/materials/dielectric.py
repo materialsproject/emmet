@@ -34,12 +34,11 @@ class DielectricBuilder(MapBuilder):
             source=materials,
             target=dielectric,
             query=self.query,
-            ufn=self.calc,
             projection=["dielectric", "piezo", "structure", "bandstructure.band_gap"],
             **kwargs
         )
 
-    def calc(self, item):
+    def unary_function(self, item):
         """
         Process the tasks and materials into a dielectrics collection
 

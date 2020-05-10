@@ -52,12 +52,11 @@ class TaskTagger(MapBuilder):
         super().__init__(
             source=tasks,
             target=task_types,
-            ufn=self.calc,
             projection=["orig_inputs", "output.structure"],
             **kwargs,
         )
 
-    def calc(self, item):
+    def unary_function(self, item):
         """
         Find the task_type for the item
 

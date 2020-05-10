@@ -32,9 +32,9 @@ class MagneticBuilder(MapBuilder):
         self.magnetism.validator = JSONSchemaValidator(loadfn(MAGNETISM_SCHEMA))
 
         super().__init__(
-            source=materials, target=magnetism, projection=["structure", "magnetism"], ufn=self.calc, **kwargs)
+            source=materials, target=magnetism, projection=["structure", "magnetism"], **kwargs)
 
-    def calc(self, item):
+    def unary_function(self, item):
         """
         Process the tasks and materials into a magnetism collection
 
