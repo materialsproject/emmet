@@ -7,14 +7,13 @@ theme:
 
 nav:
   - Home: index.md
+  - Packages: packages.md
+  - Settings: settings.md
+  - Stubs: stubs.md
   - Reference:
-      Core:
-        Store: reference/core_store.md
-        Builder: reference/core_builder.md
-        Validator: reference/core_validator.md
-      Stores: reference/stores.md
-      Builders: reference/builders.md
+    - Core: core.md
 
+site_url: https://materialsproject.github.io/emmet/
 repo_url: https://github.com/materialsproject/emmet/
 markdown_extensions:
   - admonition
