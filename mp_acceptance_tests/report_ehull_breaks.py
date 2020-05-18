@@ -23,28 +23,30 @@ if html_out:
 
 print("Connecting to databases and retrieving on-hull materials...")
 client = Client()
-db_stag = client.db("ro:staging/mp_core")
-db_prod = client.db("ro:production/mp_emmet_prod")
+stag = client.db("ro:staging/mp_core").materials
+prod = client.db("ro:production/mp_emmet_prod").materials
 
-onhull_prod = db_prod.materials.distinct("task_id", {"e_above_hull": 0, "deprecated": {"$ne": True}})
-onhull_stag = db_stag.materials.distinct("task_id", {"e_above_hull": 0, "deprecated": False})
+
+
+onhull_prod = prod.distinct("task_id", {"e_above_hull": 0, "deprecated": {"$ne": True}})
+onhull_stag = stag.distinct("task_id", {"e_above_hull": 0, "deprecated": False})
 onhull_prod_but_not_stag = set(onhull_prod) - set(onhull_stag)
 print(f"{len(onhull_prod_but_not_stag)} on hull in production but not in staging")
 
 print(f"Retrieving provenance of hull breaks...")
 criteria = {"task_id": {"$in": list(onhull_prod_but_not_stag)}, "error": {"$exists": False}}
-cursor = db_stag.materials.find(criteria, ["task_id", "chemsys"])
+cursor = stag.find(criteria, ["task_id", "chemsys"])
 breaks_via_new_mats = []
 breaks_via_old_mats_lower_e = []
 breaks_via_old_mats_higher_e = []
-for i, doc in tqdm(enumerate(cursor), total=db_stag.materials.count_documents(criteria)):
+for i, doc in tqdm(enumerate(cursor), total=stag.count_documents(criteria)):
     broken = doc["task_id"]
     chemsys = doc["chemsys"]
     chemsys_space = get_chemsys_space(chemsys)
-    to_be_on_hull = list(db_stag.materials.find(
+    to_be_on_hull = list(stag.find(
         {'chemsys': {"$in": chemsys_space}, "e_above_hull": 0, "deprecated": False},
         ["task_id", "final_energy_per_atom"]))
-    existing_mats = list(db_prod.materials.find(
+    existing_mats = list(prod.find(
         {'task_id': {"$in": [d["task_id"] for d in to_be_on_hull]}},
         ["task_id", "final_energy_per_atom"]))
     new_materials = {d["task_id"] for d in to_be_on_hull} - {d["task_id"] for d in existing_mats}
@@ -66,10 +68,10 @@ for i, doc in tqdm(enumerate(cursor), total=db_stag.materials.count_documents(cr
         if len(lower_e) == 0:
             for m in existing_mats:
                 m.pop("_id")
-            broken_old_final_epa = db_prod.materials.find_one(
+            broken_old_final_epa = prod.find_one(
                 {"task_id": broken, "deprecated": {"$ne": True}}, ["final_energy_per_atom"]) ["final_energy_per_atom"]
             try:
-                broken_new_final_epa = db_stag.materials.find_one(
+                broken_new_final_epa = stag.find_one(
                     {"task_id": broken, "deprecated": False}, ["final_energy_per_atom"]) ["final_energy_per_atom"]
             except TypeError: # Newly deprecated
                 continue
@@ -88,7 +90,7 @@ for i, doc in tqdm(enumerate(cursor), total=db_stag.materials.count_documents(cr
             ))
     else:
         try:
-            new_hull_e = db_stag.materials.find_one({"task_id": broken, "deprecated": False}, ["e_above_hull"])["e_above_hull"]
+            new_hull_e = stag.find_one({"task_id": broken, "deprecated": False}, ["e_above_hull"])["e_above_hull"]
         except TypeError: # Newly deprecated
             continue
         breaks_via_new_mats.append(dict(
