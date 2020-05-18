@@ -125,8 +125,9 @@ class MPBuilder(Builder):
             processed = jsanitize(mat)
 
         except Exception as e:
-            self.logger.error(traceback.format_exc())
-            processed = {"error": str(e)}
+            tback = traceback.format_exc()
+            self.logger.error(tback)
+            processed = {"error": str(e),"traceback": str(tback)}
 
         key, last_updated_field = self.materials.key, self.materials.last_updated_field
 
@@ -521,7 +522,7 @@ def check_relaxation(mat, new_style_mat):
         # print icsd_crystal.formula
         # print final_structure.formula
         print(
-            f"Relaxation analyzer failed for Material:{mat['task_id']} due to {traceback.print_exc()}"
+            f"Relaxation analyzer failed for Material:{new_style_mat['task_id']} due to {traceback.print_exc()}"
         )
 
     mat["warnings"] = list(set(warnings))
@@ -534,7 +535,7 @@ def add_thermo(mat, new_style_mat):
     if "thermo_docs" not in new_style_mat:
         mat["deprecated"] = True
 
-    if not mat["deprecated"]:
+    if not mat["deprecated"] and len(new_style_mat["thermo_docs"]) > 0:
         thermo = new_style_mat["thermo_docs"]
 
         if "core" in mat["sbxn"]:
@@ -543,6 +544,7 @@ def add_thermo(mat, new_style_mat):
             main_sbx = mat["sbxn"][0]
 
         # Get the primary document and set in mat document
+        print(main_sbx, [d["_sbxn"] for d in thermo]) 
         core_thermo = next(d for d in thermo if main_sbx in d["_sbxn"])
 
         mat["e_above_hull"] = core_thermo["thermo"]["e_above_hull"]
@@ -558,7 +560,7 @@ def add_thermo(mat, new_style_mat):
             "decomposes_to": "thermo.decomposes_to",
         }
         for doc in thermo:
-            for sbx in doc["_sbxn"]:
+            for sbx in doc["sbxn"]:
                 sbx_d = {
                     k: get(doc, v) for k, v in sandbox_props.items() if has(doc, v)
                 }
