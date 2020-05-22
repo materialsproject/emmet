@@ -214,14 +214,9 @@ def jsanitize(obj, strict=False, allow_bson=False):
         }
     if isinstance(obj, (int, float)):
         return obj
+
     if obj is None:
         return None
-
-    if isinstance(obj, MSONable):
-        return {
-            k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
-            for k, v in obj.as_dict().items()
-        }
 
     if not strict:
         return obj.__str__()
