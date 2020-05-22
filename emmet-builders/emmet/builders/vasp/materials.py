@@ -13,6 +13,7 @@ from emmet.core import SETTINGS
 from emmet.core.utils import (
     task_type,
     run_type,
+    calc_type,
     group_structures,
     _TASK_TYPES,
     jsanitize,
@@ -261,10 +262,14 @@ class MaterialsBuilder(Builder):
         deprecated_tasks = list(
             {t[self.tasks.key] for t in task_group if not t["is_valid"]}
         )
+        run_types = {
+            t[self.tasks.key]: run_type(t["output"]["parameters"]) for t in task_group
+        }
+        task_types = {
+            t[self.tasks.key]: task_type(t["orig_inputs"]) for t in task_group
+        }
         calc_types = {
-            t[self.tasks.key]: run_type(t["output"]["parameters"])
-            + " "
-            + task_type(t["orig_inputs"])
+            t[self.tasks.key]: calc_type(t["orig_inputs"], t["output"]["parameters"])
             for t in task_group
         }
 
@@ -356,6 +361,8 @@ class MaterialsBuilder(Builder):
             created_at=created_at,
             task_ids=task_ids,
             calc_types=calc_types,
+            run_types=run_types,
+            task_types=task_types,
             initial_structures=initial_structures,
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,

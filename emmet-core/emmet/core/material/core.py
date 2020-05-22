@@ -10,6 +10,7 @@ from pymatgen.analysis.magnetism import Ordering, CollinearMagneticStructureAnal
 
 from emmet.stubs import Structure
 from emmet.core.structure import StructureMetadata
+from emmet.core.utils import TaskType, CalcType, RunType
 
 
 class PropertyOrigin(BaseModel):
@@ -18,7 +19,7 @@ class PropertyOrigin(BaseModel):
     """
 
     name: str = Field(..., description="The materials document property")
-    task_type: str = Field(
+    task_type: TaskType = Field(
         ..., description="The original calculation type this propeprty comes from"
     )
     task_id: str = Field(..., description="The calculation ID this property comes from")
@@ -72,9 +73,17 @@ class MaterialsDoc(StructureMetadata):
         None,
         description="Timestamp for the first calculation for this Material document",
     )
-    calc_types: Dict[str, str] = Field(
+    calc_types: Dict[str, CalcType] = Field(
         None,
         description="Calculation types for all the calculations that make up this material",
+    )
+    task_types: Dict[str, TaskType] = Field(
+        None,
+        description="Task types for all the calculations that make up this material",
+    )
+    run_types: Dict[str, RunType] = Field(
+        None,
+        description="Run types for all the calculations that make up this material",
     )
 
     origins: List[PropertyOrigin] = Field(
