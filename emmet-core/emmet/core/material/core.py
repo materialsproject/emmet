@@ -3,6 +3,7 @@ from typing import List, Dict, ClassVar, Union, Optional
 from functools import partial
 from datetime import datetime
 
+
 from pydantic import BaseModel, Field, create_model
 
 from pymatgen.analysis.magnetism import Ordering, CollinearMagneticStructureAnalyzer
@@ -91,19 +92,14 @@ class MaterialsDoc(StructureMetadata):
         " No sandbox means this materials is openly visible",
     )
 
-    @staticmethod
+    @classmethod
     def from_structure(  # type: ignore[override]
-        structure: Structure,
-        material_id: str,
-        fields: Optional[List[str]] = None,
-        **kwargs
+        cls, structure: Structure, material_id: str, **kwargs
     ) -> "MaterialsDoc":
         """
         Builds a materials document using the minimal amount of information
         """
-        meta = StructureMetadata.from_structure(structure, fields=fields)
         ordering = CollinearMagneticStructureAnalyzer(structure).ordering
-        kwargs.update(**meta.dict())
 
         if "last_updated" not in kwargs:
             kwargs["last_updated"] = datetime.utcnow()
@@ -111,6 +107,6 @@ class MaterialsDoc(StructureMetadata):
         if "created_at" not in kwargs:
             kwargs["created_at"] = datetime.utcnow()
 
-        return MaterialsDoc(
+        return super().from_structure(
             structure=structure, material_id=material_id, ordering=ordering, **kwargs
         )
