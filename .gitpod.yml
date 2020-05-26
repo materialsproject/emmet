@@ -1,0 +1,4 @@
+tasks:
+  - init: pip install -r requirements-testing.txt
+  - init: pip install -r emmet-core/requirements.txt
+  - init: pip install -r emmet-builders/requirements.txt
