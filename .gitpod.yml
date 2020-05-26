@@ -1,4 +1,9 @@
 tasks:
-  - init: pip install -r requirements-testing.txt
-  - init: pip install -r emmet-core/requirements.txt
-  - init: pip install -r emmet-builders/requirements.txt
+  - init: pip3 install -r requirements-testing.txt
+  - init: pip3 install -r emmet-core/requirements.txt
+  - init: pip3 install -e emmet-core/
+  - init: pip3 install -r emmet-builders/requirements.txt
+
+vscode:
+  extensions:
+    - littlefoxteam.vscode-python-test-adapter@0.3.16:tZ/6xOSSdKUaq6JCUVkD+A==
