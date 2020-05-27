@@ -34,8 +34,30 @@ class XASDoc(SpectrumDoc):
     )
 
     @classmethod
-    def from_spectrum(cls, xas_spectrum: XAS, **kwargs):
+    def from_spectrum(
+        cls,
+        xas_spectrum: XAS,
+        material_id: str,
+        last_updated: datetime,
+        warnings=None,
+        **kwargs,
+    ):
+        spectrum_type = xas_spectrum.spectrum_type
+        el = xas_spectrum.absorbing_element
+        edge = xas_spectrum.edge
+        xas_id = f"{material_id}-{spectrum_type}-{el}-{edge}"
+        if xas_spectrum.absorbing_index is not None:
+            xas_id += f"-{xas_spectrum.absorbing_index}"
 
         return super().from_structure(
-            structure=xas_spectrum.structure, spectrum=xas_spectrum, **kwargs
+            structure=xas_spectrum.structure,
+            material_id=material_id,
+            spectrum=xas_spectrum,
+            edge=edge,
+            spectrum_type=spectrum_type,
+            absorbing_element=xas_spectrum.absorbing_element,
+            xas_id=xas_id,
+            last_updated=last_updated,
+            warnings=warnings,
+            **kwargs,
         )
