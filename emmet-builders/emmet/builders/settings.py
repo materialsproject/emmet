@@ -1,7 +1,7 @@
 from typing import Dict, List
+import importlib
 from pydantic import Field, validator
 from emmet.core.settings import EmmetSettings
-from atomate.utils.utils import load_class
 
 
 class EmmetBuilderSettings(EmmetSettings):
@@ -27,6 +27,6 @@ class EmmetBuilderSettings(EmmetSettings):
             if isinstance(inp_set, str):
                 _module = ".".join(inp_set.split(".")[:-1])
                 _class = inp_set.split(".")[-1]
-                input_sets[name] = load_class(_module, _class)
+                input_sets[name] = getattr(importlib.import_module(_module), _class)
 
         return input_sets
