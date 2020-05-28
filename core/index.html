@@ -1,0 +1,3128 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="ie=edge" http-equiv="x-ua-compatible"/>
+<meta content="Documentation for Emmet, The Materials API Toolkit" name="description"/>
+<link href="https://materialsproject.github.io/emmet/core/" rel="canonical"/>
+<link href="../assets/images/favicon.png" rel="shortcut icon"/>
+<meta content="mkdocs-1.1, mkdocs-material-components-1.10.11" name="generator"/>
+<title>Core - Emmet Documentation</title>
+<script src="../assets/javascripts/modernizr-e826f8942a.js"></script>
+<link href="../assets/stylesheets/application-2cd7d9ab0f.css" rel="stylesheet"/>
+<link href="../assets/stylesheets/material-components-web.min.css" rel="stylesheet"/>
+<link href="../assets/stylesheets/mdc-web.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css?family=Open Sans:300,300i,400,400i,600,600i,700,700i,800,800i|Ubuntu+Mono" rel="stylesheet"/>
+<style>body,input{font-family:"Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Ubuntu Mono","Courier New",Courier,monospace}</style>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.1.20/jquery.fancybox.min.css" rel="stylesheet"/>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.1.20/jquery.fancybox.min.js"></script>
+</head>
+<body>
+<svg class="md-svg">
+<defs>
+<svg height="448" id="github" viewbox="0 0 416 448" width="416" xmlns="http://www.w3.org/2000/svg"><path d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z" fill="currentColor"></path></svg>
+</defs>
+</svg>
+<input class="md-toggle" data-md-toggle="drawer" id="drawer" type="checkbox"/>
+<input class="md-toggle" data-md-toggle="search" id="search" type="checkbox"/>
+<label class="md-overlay" data-md-component="overlay" for="drawer"></label>
+<header class="md-header" data-md-component="header">
+<nav class="md-header-nav md-grid">
+<div class="md-flex">
+<div class="md-flex__cell md-flex__cell--shrink md-flex__cell--vmiddle">
+<a class="md-header-nav__button md-logo" href="https://materialsproject.github.io/emmet/" title="Emmet Documentation">
+<img height="36" src="../assets/images/logo_white.png" width="36"/>
+</a>
+</div>
+<div class="md-flex__cell md-flex__cell--shrink">
+<label class="md-icon md-icon--menu md-header-nav__button" for="drawer"></label>
+</div>
+<div class="md-flex__cell md-flex__cell--stretch">
+<span class="md-flex__ellipsis md-header-nav__title">
+          
+            Emmet Documentation -
+            
+              
+                <span class="md-header-nav__parent">
+                  Reference
+                </span>
+              
+            
+            Core
+          
+        </span>
+</div>
+<div class="md-flex__cell md-flex__cell--shrink">
+<label class="md-icon md-icon--search md-header-nav__button" for="search"></label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="search"></label>
+<div class="md-search__inner">
+<form class="md-search__form" name="search">
+<input autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="query" name="query" placeholder="Search" required="" spellcheck="false" type="text"/>
+<label class="md-icon md-search__icon" for="search"></label>
+<button class="md-icon md-search__icon" data-md-component="reset" type="reset"></button>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="">
+<div class="md-search-result" data-md-component="result" data-md-lang-search="" data-md-lang-tokenizer="[\s\-]+">
+<div class="md-search-result__meta" data-md-lang-result-none="No matching documents" data-md-lang-result-one="1 matching document" data-md-lang-result-other="# matching documents">
+            Type to start searching
+          </div>
+<ol class="md-search-result__list"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="md-flex__cell md-flex__cell--shrink">
+<div class="md-header-nav__source">
+<a class="md-source" data-md-source="github" href="https://github.com/materialsproject/emmet/" title="Go to repository">
+<div class="md-source__icon">
+<svg height="24" viewbox="0 0 24 24" width="24">
+<use height="24" width="24" xlink:href="#github"></use>
+</svg>
+</div>
+<div class="md-source__repository">
+      GitHub
+    </div>
+</a>
+</div>
+</div>
+</div>
+</nav>
+</header>
+<div class="md-container">
+<main class="md-main">
+<div class="md-main__inner md-grid" data-md-component="container">
+<div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav class="md-nav md-nav--primary" data-md-level="0">
+<label class="md-nav__title md-nav__title--site" for="drawer">
+<div class="md-nav__button md-logo">
+<i class="md-icon md-icon--home"></i>
+</div>
+    Emmet Documentation
+  </label>
+<div class="md-nav__source">
+<a class="md-source" data-md-source="github" href="https://github.com/materialsproject/emmet/" title="Go to repository">
+<div class="md-source__icon">
+<svg height="24" viewbox="0 0 24 24" width="24">
+<use height="24" width="24" xlink:href="#github"></use>
+</svg>
+</div>
+<div class="md-source__repository">
+      GitHub
+    </div>
+</a>
+</div>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="" title="Home">
+      Home
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="packages/" title="Packages">
+      Packages
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="settings/" title="Settings">
+      Settings
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="stubs/" title="Stubs">
+      Stubs
+    </a>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-toggle md-nav__toggle" data-md-toggle="nav-5" id="nav-5" type="checkbox"/>
+<label class="md-nav__link" for="nav-5">
+      Reference
+    </label>
+<nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+<label class="md-nav__title" for="nav-5">
+        Reference
+      </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-toggle md-nav__toggle" data-md-toggle="toc" id="toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="toc">
+        Core
+      </label>
+<a class="md-nav__link md-nav__link--active" href="core/" title="Core">
+      Core
+    </a>
+<nav class="md-nav md-nav--secondary">
+<label class="md-nav__title md-nav__toc" for="toc">Table of contents</label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry" title="emmet.core.symmetry">
+    emmet.core.symmetry
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry.CrystalSystem" title="CrystalSystem">
+    CrystalSystem
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry.SymmetryData" title="SymmetryData">
+    SymmetryData
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry.SymmetryData.crystal_system" title="crystal_system">
+    crystal_system
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry.SymmetryData.number" title="number">
+    number
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry.SymmetryData.point_group" title="point_group">
+    point_group
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry.SymmetryData.symbol" title="symbol">
+    symbol
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry.SymmetryData.symprec" title="symprec">
+    symprec
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure" title="emmet.core.structure">
+    emmet.core.structure
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata" title="StructureMetadata">
+    StructureMetadata
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.chemsys" title="chemsys">
+    chemsys
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.composition" title="composition">
+    composition
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.composition_reduced" title="composition_reduced">
+    composition_reduced
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.density" title="density">
+    density
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.density_atomic" title="density_atomic">
+    density_atomic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.elements" title="elements">
+    elements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.formula_anonymous" title="formula_anonymous">
+    formula_anonymous
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.formula_pretty" title="formula_pretty">
+    formula_pretty
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.nsites" title="nsites">
+    nsites
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.symmetry" title="symmetry">
+    symmetry
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.volume" title="volume">
+    volume
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material" title="emmet.core.material">
+    emmet.core.material
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core" title="core">
+    core
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc" title="MaterialsDoc">
+    MaterialsDoc
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.calc_types" title="calc_types">
+    calc_types
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.chemsys" title="chemsys">
+    chemsys
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.composition" title="composition">
+    composition
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.composition_reduced" title="composition_reduced">
+    composition_reduced
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.created_at" title="created_at">
+    created_at
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.density" title="density">
+    density
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.density_atomic" title="density_atomic">
+    density_atomic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.deprecated" title="deprecated">
+    deprecated
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.elements" title="elements">
+    elements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.formula_anonymous" title="formula_anonymous">
+    formula_anonymous
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.formula_pretty" title="formula_pretty">
+    formula_pretty
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.initial_structures" title="initial_structures">
+    initial_structures
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.last_updated" title="last_updated">
+    last_updated
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.material_id" title="material_id">
+    material_id
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.nsites" title="nsites">
+    nsites
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.ordering" title="ordering">
+    ordering
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.origins" title="origins">
+    origins
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.sandboxes" title="sandboxes">
+    sandboxes
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.structure" title="structure">
+    structure
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.symmetry" title="symmetry">
+    symmetry
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.task_ids" title="task_ids">
+    task_ids
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.volume" title="volume">
+    volume
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.warnings" title="warnings">
+    warnings
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.from_structure" title="from_structure()">
+    from_structure()
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.PropertyOrigin" title="PropertyOrigin">
+    PropertyOrigin
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.PropertyOrigin.last_updated" title="last_updated">
+    last_updated
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.PropertyOrigin.name" title="name">
+    name
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.PropertyOrigin.task_id" title="task_id">
+    task_id
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.PropertyOrigin.task_type" title="task_type">
+    task_type
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property" title="property">
+    property
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty" title="MaterialsProperty">
+    MaterialsProperty
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.chemsys" title="chemsys">
+    chemsys
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.composition" title="composition">
+    composition
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.composition_reduced" title="composition_reduced">
+    composition_reduced
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.density" title="density">
+    density
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.density_atomic" title="density_atomic">
+    density_atomic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.elements" title="elements">
+    elements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.formula_anonymous" title="formula_anonymous">
+    formula_anonymous
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.formula_pretty" title="formula_pretty">
+    formula_pretty
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.last_updated" title="last_updated">
+    last_updated
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.material_id" title="material_id">
+    material_id
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.nsites" title="nsites">
+    nsites
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.origins" title="origins">
+    origins
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.sandboxes" title="sandboxes">
+    sandboxes
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.symmetry" title="symmetry">
+    symmetry
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.volume" title="volume">
+    volume
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.warnings" title="warnings">
+    warnings
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.__class_getitem__" title="__class_getitem__()">
+    __class_getitem__()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.to_subdoc" title="to_subdoc()">
+    to_subdoc()
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.PropertyDoc" title="PropertyDoc">
+    PropertyDoc
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo" title="emmet.core.thermo">
+    emmet.core.thermo
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Decomposition" title="Decomposition">
+    Decomposition
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Decomposition.amount" title="amount">
+    amount
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Decomposition.formula" title="formula">
+    formula
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Decomposition.material_id" title="material_id">
+    material_id
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo" title="Thermo">
+    Thermo
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.decomposes_to" title="decomposes_to">
+    decomposes_to
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.e_above_hull" title="e_above_hull">
+    e_above_hull
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.energy" title="energy">
+    energy
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.energy_per_atom" title="energy_per_atom">
+    energy_per_atom
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.energy_type" title="energy_type">
+    energy_type
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.entries" title="entries">
+    entries
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.eq_reaction_e" title="eq_reaction_e">
+    eq_reaction_e
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.formation_energy_per_atom" title="formation_energy_per_atom">
+    formation_energy_per_atom
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.is_stable" title="is_stable">
+    is_stable
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance" title="emmet.core.provenance">
+    emmet.core.provenance
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Author" title="Author">
+    Author
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Database" title="Database">
+    Database
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.History" title="History">
+    History
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.History.description" title="description">
+    description
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance" title="Provenance">
+    Provenance
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.authors" title="authors">
+    authors
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.bibtex_string" title="bibtex_string">
+    bibtex_string
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.created_at" title="created_at">
+    created_at
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.database_IDs" title="database_IDs">
+    database_IDs
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.history" title="history">
+    history
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.projects" title="projects">
+    projects
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.remarks" title="remarks">
+    remarks
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.theoretical" title="theoretical">
+    theoretical
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar" title="emmet.core.polar">
+    emmet.core.polar
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Deielectric" title="Deielectric">
+    Deielectric
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Deielectric.e_electronic" title="e_electronic">
+    e_electronic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Deielectric.e_ionic" title="e_ionic">
+    e_ionic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Deielectric.e_total" title="e_total">
+    e_total
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Deielectric.electronic" title="electronic">
+    electronic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Deielectric.ionic" title="ionic">
+    ionic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Deielectric.total" title="total">
+    total
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Piezoelectric" title="Piezoelectric">
+    Piezoelectric
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Piezoelectric.max_direction" title="max_direction">
+    max_direction
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Piezoelectric.strain_for_max" title="strain_for_max">
+    strain_for_max
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav class="md-nav md-nav--secondary">
+<label class="md-nav__title md-nav__toc" for="toc">Table of contents</label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry" title="emmet.core.symmetry">
+    emmet.core.symmetry
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry.CrystalSystem" title="CrystalSystem">
+    CrystalSystem
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry.SymmetryData" title="SymmetryData">
+    SymmetryData
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry.SymmetryData.crystal_system" title="crystal_system">
+    crystal_system
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry.SymmetryData.number" title="number">
+    number
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry.SymmetryData.point_group" title="point_group">
+    point_group
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry.SymmetryData.symbol" title="symbol">
+    symbol
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.symmetry.SymmetryData.symprec" title="symprec">
+    symprec
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure" title="emmet.core.structure">
+    emmet.core.structure
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata" title="StructureMetadata">
+    StructureMetadata
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.chemsys" title="chemsys">
+    chemsys
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.composition" title="composition">
+    composition
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.composition_reduced" title="composition_reduced">
+    composition_reduced
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.density" title="density">
+    density
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.density_atomic" title="density_atomic">
+    density_atomic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.elements" title="elements">
+    elements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.formula_anonymous" title="formula_anonymous">
+    formula_anonymous
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.formula_pretty" title="formula_pretty">
+    formula_pretty
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.nsites" title="nsites">
+    nsites
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.symmetry" title="symmetry">
+    symmetry
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.volume" title="volume">
+    volume
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material" title="emmet.core.material">
+    emmet.core.material
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core" title="core">
+    core
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc" title="MaterialsDoc">
+    MaterialsDoc
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.calc_types" title="calc_types">
+    calc_types
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.chemsys" title="chemsys">
+    chemsys
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.composition" title="composition">
+    composition
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.composition_reduced" title="composition_reduced">
+    composition_reduced
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.created_at" title="created_at">
+    created_at
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.density" title="density">
+    density
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.density_atomic" title="density_atomic">
+    density_atomic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.deprecated" title="deprecated">
+    deprecated
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.elements" title="elements">
+    elements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.formula_anonymous" title="formula_anonymous">
+    formula_anonymous
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.formula_pretty" title="formula_pretty">
+    formula_pretty
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.initial_structures" title="initial_structures">
+    initial_structures
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.last_updated" title="last_updated">
+    last_updated
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.material_id" title="material_id">
+    material_id
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.nsites" title="nsites">
+    nsites
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.ordering" title="ordering">
+    ordering
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.origins" title="origins">
+    origins
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.sandboxes" title="sandboxes">
+    sandboxes
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.structure" title="structure">
+    structure
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.symmetry" title="symmetry">
+    symmetry
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.task_ids" title="task_ids">
+    task_ids
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.volume" title="volume">
+    volume
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.warnings" title="warnings">
+    warnings
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.MaterialsDoc.from_structure" title="from_structure()">
+    from_structure()
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.PropertyOrigin" title="PropertyOrigin">
+    PropertyOrigin
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.PropertyOrigin.last_updated" title="last_updated">
+    last_updated
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.PropertyOrigin.name" title="name">
+    name
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.PropertyOrigin.task_id" title="task_id">
+    task_id
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.core.PropertyOrigin.task_type" title="task_type">
+    task_type
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property" title="property">
+    property
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty" title="MaterialsProperty">
+    MaterialsProperty
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.chemsys" title="chemsys">
+    chemsys
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.composition" title="composition">
+    composition
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.composition_reduced" title="composition_reduced">
+    composition_reduced
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.density" title="density">
+    density
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.density_atomic" title="density_atomic">
+    density_atomic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.elements" title="elements">
+    elements
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.formula_anonymous" title="formula_anonymous">
+    formula_anonymous
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.formula_pretty" title="formula_pretty">
+    formula_pretty
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.last_updated" title="last_updated">
+    last_updated
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.material_id" title="material_id">
+    material_id
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.nsites" title="nsites">
+    nsites
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.origins" title="origins">
+    origins
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.sandboxes" title="sandboxes">
+    sandboxes
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.symmetry" title="symmetry">
+    symmetry
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.volume" title="volume">
+    volume
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.warnings" title="warnings">
+    warnings
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.__class_getitem__" title="__class_getitem__()">
+    __class_getitem__()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.MaterialsProperty.to_subdoc" title="to_subdoc()">
+    to_subdoc()
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.material.property.PropertyDoc" title="PropertyDoc">
+    PropertyDoc
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo" title="emmet.core.thermo">
+    emmet.core.thermo
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Decomposition" title="Decomposition">
+    Decomposition
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Decomposition.amount" title="amount">
+    amount
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Decomposition.formula" title="formula">
+    formula
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Decomposition.material_id" title="material_id">
+    material_id
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo" title="Thermo">
+    Thermo
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.decomposes_to" title="decomposes_to">
+    decomposes_to
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.e_above_hull" title="e_above_hull">
+    e_above_hull
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.energy" title="energy">
+    energy
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.energy_per_atom" title="energy_per_atom">
+    energy_per_atom
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.energy_type" title="energy_type">
+    energy_type
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.entries" title="entries">
+    entries
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.eq_reaction_e" title="eq_reaction_e">
+    eq_reaction_e
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.formation_energy_per_atom" title="formation_energy_per_atom">
+    formation_energy_per_atom
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.thermo.Thermo.is_stable" title="is_stable">
+    is_stable
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance" title="emmet.core.provenance">
+    emmet.core.provenance
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Author" title="Author">
+    Author
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Database" title="Database">
+    Database
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.History" title="History">
+    History
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.History.description" title="description">
+    description
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance" title="Provenance">
+    Provenance
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.authors" title="authors">
+    authors
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.bibtex_string" title="bibtex_string">
+    bibtex_string
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.created_at" title="created_at">
+    created_at
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.database_IDs" title="database_IDs">
+    database_IDs
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.history" title="history">
+    history
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.projects" title="projects">
+    projects
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.remarks" title="remarks">
+    remarks
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.provenance.Provenance.theoretical" title="theoretical">
+    theoretical
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar" title="emmet.core.polar">
+    emmet.core.polar
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Deielectric" title="Deielectric">
+    Deielectric
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Deielectric.e_electronic" title="e_electronic">
+    e_electronic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Deielectric.e_ionic" title="e_ionic">
+    e_ionic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Deielectric.e_total" title="e_total">
+    e_total
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Deielectric.electronic" title="electronic">
+    electronic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Deielectric.ionic" title="ionic">
+    ionic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Deielectric.total" title="total">
+    total
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Piezoelectric" title="Piezoelectric">
+    Piezoelectric
+  </a>
+<nav class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Piezoelectric.max_direction" title="max_direction">
+    max_direction
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.Piezoelectric.strain_for_max" title="strain_for_max">
+    strain_for_max
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" id="article-content">
+<article class="md-content__inner md-typeset">
+<a class="md-icon md-content__icon" href="https://github.com/materialsproject/emmet/edit/master/docs/core.md" title="Edit this page"></a>
+<h1 id="emmet-core">Emmet-Core<a class="headerlink" href="#emmet-core" title="Permanent link">¶</a></h1>
+<p>The core module defines the data models for the Materials API (MAPI):</p>
+<div class="doc doc-object doc-module">
+<h2 class="hidden-toc" href="#emmet.core.symmetry" id="emmet.core.symmetry" style="visibility: hidden; width: 0; height: 0;">
+<a class="headerlink" href="#emmet.core.symmetry" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents first">
+<div class="doc doc-children">
+<div class="doc doc-object doc-class">
+<h2 class="doc doc-heading" id="emmet.core.symmetry.CrystalSystem">
+<code>CrystalSystem</code>
+<a class="headerlink" href="#emmet.core.symmetry.CrystalSystem" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents">
+<p>The crystal system of the lattice</p>
+<div class="doc doc-children">
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-class">
+<h2 class="doc doc-heading" id="emmet.core.symmetry.SymmetryData">
+<code>SymmetryData</code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.symmetry.SymmetryData" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents">
+<p>Defines a symmetry data set for materials documents</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.symmetry.SymmetryData.crystal_system">
+<code class="highlight">
+crystal_system: <span class="n">CrystalSystem</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.symmetry.SymmetryData.crystal_system" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The crystal system for this lattice</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.symmetry.SymmetryData.number">
+<code class="highlight">
+number: <span class="nb">int</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.symmetry.SymmetryData.number" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The spacegroup number for the lattice</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.symmetry.SymmetryData.point_group">
+<code class="highlight">
+point_group: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.symmetry.SymmetryData.point_group" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The point group for the lattice</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.symmetry.SymmetryData.symbol">
+<code class="highlight">
+symbol: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.symmetry.SymmetryData.symbol" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The spacegroup symbol for the lattice</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.symmetry.SymmetryData.symprec">
+<code class="highlight">
+symprec: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.symmetry.SymmetryData.symprec" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The precision given to spglib to determine the symmetry of this lattice</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-module">
+<h2 class="hidden-toc" href="#emmet.core.structure" id="emmet.core.structure" style="visibility: hidden; width: 0; height: 0;">
+<a class="headerlink" href="#emmet.core.structure" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents first">
+<p>Core definition of Structure metadata </p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-class">
+<h2 class="doc doc-heading" id="emmet.core.structure.StructureMetadata">
+<code>StructureMetadata</code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.structure.StructureMetadata" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents">
+<p>Mix-in class for structure metadata</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.structure.StructureMetadata.chemsys">
+<code class="highlight">
+chemsys: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.structure.StructureMetadata.chemsys" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>dash-delimited string of elements in the material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.structure.StructureMetadata.composition">
+<code class="highlight">
+composition: <span class="n">Composition</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.structure.StructureMetadata.composition" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Full composition for the material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.structure.StructureMetadata.composition_reduced">
+<code class="highlight">
+composition_reduced: <span class="n">Composition</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.structure.StructureMetadata.composition_reduced" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Simplified representation of the composition</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.structure.StructureMetadata.density">
+<code class="highlight">
+density: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.structure.StructureMetadata.density" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Density in grams per cm^3</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.structure.StructureMetadata.density_atomic">
+<code class="highlight">
+density_atomic: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.structure.StructureMetadata.density_atomic" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The atomic packing density in atoms per cm^3</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.structure.StructureMetadata.elements">
+<code class="highlight">
+elements: <span class="n">Element</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.structure.StructureMetadata.elements" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>List of elements in the material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.structure.StructureMetadata.formula_anonymous">
+<code class="highlight">
+formula_anonymous: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.structure.StructureMetadata.formula_anonymous" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Anonymized representation of the formula</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.structure.StructureMetadata.formula_pretty">
+<code class="highlight">
+formula_pretty: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.structure.StructureMetadata.formula_pretty" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Cleaned representation of the formula</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.structure.StructureMetadata.nsites">
+<code class="highlight">
+nsites: <span class="nb">int</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.structure.StructureMetadata.nsites" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Total number of sites in the structure</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.structure.StructureMetadata.symmetry">
+<code class="highlight">
+symmetry: <span class="n">SymmetryData</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.structure.StructureMetadata.symmetry" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Symmetry data for this material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.structure.StructureMetadata.volume">
+<code class="highlight">
+volume: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.structure.StructureMetadata.volume" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Total volume for this structure in Angstroms^3</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-module">
+<h2 class="hidden-toc" href="#emmet.core.material" id="emmet.core.material" style="visibility: hidden; width: 0; height: 0;">
+<a class="headerlink" href="#emmet.core.material" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents first">
+<div class="doc doc-children">
+<div class="doc doc-object doc-module">
+<h2 class="doc doc-heading" id="emmet.core.material.core">
+<code>core</code>
+<a class="headerlink" href="#emmet.core.material.core" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents">
+<p>Core definition of a Materials Document </p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-class">
+<h3 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc">
+<code>MaterialsDoc</code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Definition for a full Materials Document
+Subsections can be defined by other builders</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.calc_types">
+<code class="highlight">
+calc_types: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.calc_types" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Calculation types for all the calculations that make up this material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.chemsys">
+<code class="highlight">
+chemsys: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.chemsys" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>dash-delimited string of elements in the material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.composition">
+<code class="highlight">
+composition: <span class="n">Composition</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.composition" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Full composition for the material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.composition_reduced">
+<code class="highlight">
+composition_reduced: <span class="n">Composition</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.composition_reduced" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Simplified representation of the composition</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.created_at">
+<code class="highlight">
+created_at: <span class="n">datetime</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.created_at" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Timestamp for the first calculation for this Material document</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.density">
+<code class="highlight">
+density: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.density" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Density in grams per cm^3</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.density_atomic">
+<code class="highlight">
+density_atomic: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.density_atomic" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>The atomic packing density in atoms per cm^3</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.deprecated">
+<code class="highlight">
+deprecated: <span class="nb">bool</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.deprecated" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Whether this materials document is deprecated due to a lack of high enough quality calculation.</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.elements">
+<code class="highlight">
+elements: <span class="n">Element</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.elements" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>List of elements in the material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.formula_anonymous">
+<code class="highlight">
+formula_anonymous: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.formula_anonymous" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Anonymized representation of the formula</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.formula_pretty">
+<code class="highlight">
+formula_pretty: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.formula_pretty" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Cleaned representation of the formula</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.initial_structures">
+<code class="highlight">
+initial_structures: <span class="n">Structure</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.initial_structures" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Initial structures used in the DFT optimizations corresponding to this material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.last_updated">
+<code class="highlight">
+last_updated: <span class="n">datetime</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.last_updated" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Timestamp for the most recent calculation for this Material document</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.material_id">
+<code class="highlight">
+material_id: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+<small class="doc doc-property doc-property-required"><code>required</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.material_id" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>The ID of this material, used as a universal reference across proeprty documents.This comes in the form: mp-<strong>*</strong>*</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.nsites">
+<code class="highlight">
+nsites: <span class="nb">int</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.nsites" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Total number of sites in the structure</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.ordering">
+<code class="highlight">
+ordering: <span class="n">Ordering</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.ordering" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Magnetic Ordering for this structure</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.origins">
+<code class="highlight">
+origins: <span class="n">PropertyOrigin</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.origins" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Dictionary for tracking the provenance of properties</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.sandboxes">
+<code class="highlight">
+sandboxes: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.sandboxes" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>List of sandboxes this material belongs to. Sandboxes provide a way of controlling access to materials. No sandbox means this materials is openly visible</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.structure">
+<code class="highlight">
+structure: <span class="n">Structure</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.structure" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>The best structure for this material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.symmetry">
+<code class="highlight">
+symmetry: <span class="n">SymmetryData</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.symmetry" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Symmetry data for this material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.task_ids">
+<code class="highlight">
+task_ids: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.task_ids" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>List of Calculations IDs used to make this Materials Document</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.volume">
+<code class="highlight">
+volume: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.volume" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Total volume for this structure in Angstroms^3</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.warnings">
+<code class="highlight">
+warnings: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.warnings" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Any warnings related to this material</p>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h4 class="doc doc-heading" id="emmet.core.material.core.MaterialsDoc.from_structure">
+<code class="highlight language-python">
+from_structure<span class="p">(</span><span class="n">structure</span><span class="p">,</span> <span class="n">material_id</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-staticmethod"><code>staticmethod</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.MaterialsDoc.from_structure" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Builds a materials document using the minimal amount of information</p>
+<details class="quote">
+<summary>Source code in <code>core/material/core.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span> 94
+ 95
+ 96
+ 97
+ 98
+ 99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="k">def</span> <span class="nf">from_structure</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+    <span class="n">structure</span><span class="p">:</span> <span class="n">Structure</span><span class="p">,</span>
+    <span class="n">material_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"MaterialsDoc"</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Builds a materials document using the minimal amount of information</span>
+<span class="sd">    """</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="n">StructureMetadata</span><span class="o">.</span><span class="n">from_structure</span><span class="p">(</span><span class="n">structure</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="n">fields</span><span class="p">)</span>
+    <span class="n">ordering</span> <span class="o">=</span> <span class="n">CollinearMagneticStructureAnalyzer</span><span class="p">(</span><span class="n">structure</span><span class="p">)</span><span class="o">.</span><span class="n">ordering</span>
+    <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">meta</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="s2">"last_updated"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">"last_updated"</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="s2">"created_at"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">"created_at"</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">MaterialsDoc</span><span class="p">(</span>
+        <span class="n">structure</span><span class="o">=</span><span class="n">structure</span><span class="p">,</span> <span class="n">material_id</span><span class="o">=</span><span class="n">material_id</span><span class="p">,</span> <span class="n">ordering</span><span class="o">=</span><span class="n">ordering</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-class">
+<h3 class="doc doc-heading" id="emmet.core.material.core.PropertyOrigin">
+<code>PropertyOrigin</code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.PropertyOrigin" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Provenance document for the origin of properties in a material document</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.PropertyOrigin.last_updated">
+<code class="highlight">
+last_updated: <span class="n">datetime</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+<small class="doc doc-property doc-property-required"><code>required</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.PropertyOrigin.last_updated" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>The timestamp when this calculation was last updated</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.PropertyOrigin.name">
+<code class="highlight">
+name: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+<small class="doc doc-property doc-property-required"><code>required</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.PropertyOrigin.name" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>The materials document property</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.PropertyOrigin.task_id">
+<code class="highlight">
+task_id: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+<small class="doc doc-property doc-property-required"><code>required</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.PropertyOrigin.task_id" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>The calculation ID this property comes from</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.core.PropertyOrigin.task_type">
+<code class="highlight">
+task_type: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+<small class="doc doc-property doc-property-required"><code>required</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.core.PropertyOrigin.task_type" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>The original calculation type this propeprty comes from</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-module">
+<h2 class="doc doc-heading" id="emmet.core.material.property">
+<code>property</code>
+<a class="headerlink" href="#emmet.core.material.property" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents">
+<p>Core definition of a Materials Document </p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-class">
+<h3 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty">
+<code>MaterialsProperty</code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Base model definition for any singular materials property. This may contain any amount
+of structure metadata for the purpose of search
+This is intended to be inherited and extended not used directly</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.chemsys">
+<code class="highlight">
+chemsys: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.chemsys" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>dash-delimited string of elements in the material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.composition">
+<code class="highlight">
+composition: <span class="n">Composition</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.composition" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Full composition for the material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.composition_reduced">
+<code class="highlight">
+composition_reduced: <span class="n">Composition</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.composition_reduced" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Simplified representation of the composition</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.density">
+<code class="highlight">
+density: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.density" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Density in grams per cm^3</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.density_atomic">
+<code class="highlight">
+density_atomic: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.density_atomic" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>The atomic packing density in atoms per cm^3</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.elements">
+<code class="highlight">
+elements: <span class="n">Element</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.elements" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>List of elements in the material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.formula_anonymous">
+<code class="highlight">
+formula_anonymous: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.formula_anonymous" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Anonymized representation of the formula</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.formula_pretty">
+<code class="highlight">
+formula_pretty: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.formula_pretty" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Cleaned representation of the formula</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.last_updated">
+<code class="highlight">
+last_updated: <span class="n">datetime</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.last_updated" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Timestamp for the most recent calculation update for this property</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.material_id">
+<code class="highlight">
+material_id: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+<small class="doc doc-property doc-property-required"><code>required</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.material_id" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>The ID of the material, used as a universal reference across proeprty documents.This comes in the form: mp-<strong>*</strong>*</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.nsites">
+<code class="highlight">
+nsites: <span class="nb">int</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.nsites" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Total number of sites in the structure</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.origins">
+<code class="highlight">
+origins: <span class="n">PropertyOrigin</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.origins" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Dictionary for tracking the provenance of properties</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.sandboxes">
+<code class="highlight">
+sandboxes: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.sandboxes" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>List of sandboxes this material belongs to. Sandboxes provide a way of controlling access to materials. No sandbox means this materials is openly visible</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.symmetry">
+<code class="highlight">
+symmetry: <span class="n">SymmetryData</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.symmetry" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Symmetry data for this material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.volume">
+<code class="highlight">
+volume: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.volume" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Total volume for this structure in Angstroms^3</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.warnings">
+<code class="highlight">
+warnings: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.warnings" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Any warnings related to this property</p>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.__class_getitem__">
+<code class="highlight language-python">
+__class_getitem__<span class="p">(</span><span class="n">parameters</span><span class="p">)</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-classmethod"><code>classmethod</code></small>
+<small class="doc doc-property doc-property-special"><code>special</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.__class_getitem__" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Enables generating dynamic sub types of MaterialDocument
+Can provide either 1 BaseModel class or any number of BaseModel classes if proceeded by a string</p>
+<details class="quote">
+<summary>Source code in <code>core/material/property.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span> 70
+ 71
+ 72
+ 73
+ 74
+ 75
+ 76
+ 77
+ 78
+ 79
+ 80
+ 81
+ 82
+ 83
+ 84
+ 85
+ 86
+ 87
+ 88
+ 89
+ 90
+ 91
+ 92
+ 93
+ 94
+ 95
+ 96
+ 97
+ 98
+ 99
+100
+101
+102
+103
+104
+105
+106</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">__class_getitem__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Enables generating dynamic sub types of MaterialDocument</span>
+<span class="sd">    Can provide either 1 BaseModel class or any number of BaseModel classes if proceeded by a string</span>
+<span class="sd">    """</span>
+    <span class="n">model_name</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">subdocs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">parameters</span> <span class="o">==</span> <span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Cannot make a Material Property of no sub documents"</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">PropertyDoc</span><span class="p">):</span>
+            <span class="n">model_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">parameters</span><span class="o">.</span><span class="n">property_name</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">Doc"</span>
+            <span class="n">subdocs</span> <span class="o">=</span> <span class="p">{</span><span class="n">parameters</span><span class="o">.</span><span class="n">property_name</span><span class="p">:</span> <span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="kc">None</span><span class="p">)}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Must provide PropertyDocs"</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">parameters</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Must provide new document name as the first parameter when making a multi-property document"</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">model_name</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">parameters</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">issubclass</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">PropertyDoc</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Must provide PropertyDocs"</span><span class="p">)</span>
+            <span class="n">subdocs</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">property_name</span><span class="p">:</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Must provide at minimum one string for the name and one PropertyDoc subtype"</span>
+        <span class="p">)</span>
+
+    <span class="n">new_model</span> <span class="o">=</span> <span class="n">create_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span> <span class="n">__base__</span><span class="o">=</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">subdocs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_model</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h4 class="doc doc-heading" id="emmet.core.material.property.MaterialsProperty.to_subdoc">
+<code class="highlight language-python">
+to_subdoc<span class="p">(</span><span class="n">data</span><span class="p">)</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-staticmethod"><code>staticmethod</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.MaterialsProperty.to_subdoc" title="Permanent link">¶</a></h4>
+<div class="doc doc-contents">
+<p>Converts  to a property subdocument</p>
+<details class="quote">
+<summary>Source code in <code>core/material/property.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span>58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="k">def</span> <span class="nf">to_subdoc</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">"MaterialsProperty"</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Converts  to a property subdocument</span>
+<span class="sd">    """</span>
+    <span class="n">to_remove_fields</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">MaterialsProperty</span><span class="o">.</span><span class="n">__fields__</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="s2">"last_updated"</span><span class="p">)</span>
+
+    <span class="n">subdoc</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">MaterialsProperty</span><span class="p">)</span> <span class="k">else</span> <span class="n">data</span>
+    <span class="n">subdoc</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">subdoc</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">to_remove_fields</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">subdoc</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-class">
+<h3 class="doc doc-heading" id="emmet.core.material.property.PropertyDoc">
+<code>PropertyDoc</code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.material.property.PropertyDoc" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Prototype document structure for any materials property document</p>
+<div class="doc doc-children">
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-module">
+<h2 class="hidden-toc" href="#emmet.core.thermo" id="emmet.core.thermo" style="visibility: hidden; width: 0; height: 0;">
+<a class="headerlink" href="#emmet.core.thermo" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents first">
+<p>Core definition of a Thermo Document </p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-class">
+<h2 class="doc doc-heading" id="emmet.core.thermo.Decomposition">
+<code>Decomposition</code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.thermo.Decomposition" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents">
+<p>Entry metadata for a decomposition process</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.thermo.Decomposition.amount">
+<code class="highlight">
+amount: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.thermo.Decomposition.amount" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The amount of the decomposed material by formula units this this material decomposes to</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.thermo.Decomposition.formula">
+<code class="highlight">
+formula: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.thermo.Decomposition.formula" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The formula of the decomposed material this material decomposes to</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.thermo.Decomposition.material_id">
+<code class="highlight">
+material_id: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.thermo.Decomposition.material_id" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The material this decomposition points to</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-class">
+<h2 class="doc doc-heading" id="emmet.core.thermo.Thermo">
+<code>Thermo</code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.thermo.Thermo" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents">
+<p>A thermo package block</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.thermo.Thermo.decomposes_to">
+<code class="highlight">
+decomposes_to: <span class="n">Decomposition</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.thermo.Thermo.decomposes_to" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>List of decomposition data for this material. Only valid for metastable or unstable material.</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.thermo.Thermo.e_above_hull">
+<code class="highlight">
+e_above_hull: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.thermo.Thermo.e_above_hull" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The energy above the hull in eV/Atom</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.thermo.Thermo.energy">
+<code class="highlight">
+energy: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.thermo.Thermo.energy" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The total DFT energy of this material in eV</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.thermo.Thermo.energy_per_atom">
+<code class="highlight">
+energy_per_atom: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.thermo.Thermo.energy_per_atom" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The total DFT energy of this material per atom in eV/atom</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.thermo.Thermo.energy_type">
+<code class="highlight">
+energy_type: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.thermo.Thermo.energy_type" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The type of calculation this energy evaluation comes from. TODO: Convert to enum?</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.thermo.Thermo.entries">
+<code class="highlight">
+entries: <span class="n">ComputedEntry</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.thermo.Thermo.entries" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>List of all entries that are valid for this material. The keys for this dictionary are names of various calculation types</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.thermo.Thermo.eq_reaction_e">
+<code class="highlight">
+eq_reaction_e: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.thermo.Thermo.eq_reaction_e" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The reaction energy of a stable entry from the neighboring equilibrium stable materials in eV. Also known as the inverse distance to hull.</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.thermo.Thermo.formation_energy_per_atom">
+<code class="highlight">
+formation_energy_per_atom: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.thermo.Thermo.formation_energy_per_atom" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The formation energy per atom in eV/atom</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.thermo.Thermo.is_stable">
+<code class="highlight">
+is_stable: <span class="nb">bool</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.thermo.Thermo.is_stable" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Flag for whether this material is on the hull and therefore stable</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-module">
+<h2 class="hidden-toc" href="#emmet.core.provenance" id="emmet.core.provenance" style="visibility: hidden; width: 0; height: 0;">
+<a class="headerlink" href="#emmet.core.provenance" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents first">
+<p>Core definition of a Provenance Document </p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-class">
+<h2 class="doc doc-heading" id="emmet.core.provenance.Author">
+<code>Author</code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.provenance.Author" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents">
+<p>Author information</p>
+<div class="doc doc-children">
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-class">
+<h2 class="doc doc-heading" id="emmet.core.provenance.Database">
+<code>Database</code>
+<a class="headerlink" href="#emmet.core.provenance.Database" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents">
+<p>Database identifiers for provenance IDs</p>
+<div class="doc doc-children">
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-class">
+<h2 class="doc doc-heading" id="emmet.core.provenance.History">
+<code>History</code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.provenance.History" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents">
+<p>History of the material provenance</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.provenance.History.description">
+<code class="highlight">
+description: <span class="o">~</span><span class="n">VT</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.provenance.History.description" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Dictionary of exra data for this history node</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-class">
+<h2 class="doc doc-heading" id="emmet.core.provenance.Provenance">
+<code>Provenance</code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.provenance.Provenance" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents">
+<p>A provenance property block</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.provenance.Provenance.authors">
+<code class="highlight">
+authors: <span class="n">Author</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.provenance.Provenance.authors" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>List of authors for this material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.provenance.Provenance.bibtex_string">
+<code class="highlight">
+bibtex_string: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.provenance.Provenance.bibtex_string" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Bibtex reference string for this material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.provenance.Provenance.created_at">
+<code class="highlight">
+created_at: <span class="n">datetime</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.provenance.Provenance.created_at" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>creation date for the first structure corresponding to this material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.provenance.Provenance.database_IDs">
+<code class="highlight">
+database_IDs: <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.provenance.Provenance.database_IDs" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Database IDs corresponding to this material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.provenance.Provenance.history">
+<code class="highlight">
+history: <span class="n">History</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.provenance.Provenance.history" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>List of history nodes specifying the transformations or orignation of this material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.provenance.Provenance.projects">
+<code class="highlight">
+projects: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.provenance.Provenance.projects" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>List of projects this material belongs to</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.provenance.Provenance.remarks">
+<code class="highlight">
+remarks: <span class="nb">str</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.provenance.Provenance.remarks" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>List of remarks for the provenance of this material</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.provenance.Provenance.theoretical">
+<code class="highlight">
+theoretical: <span class="nb">bool</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.provenance.Provenance.theoretical" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>If this material has any experimental provenance or not</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-module">
+<h2 class="hidden-toc" href="#emmet.core.polar" id="emmet.core.polar" style="visibility: hidden; width: 0; height: 0;">
+<a class="headerlink" href="#emmet.core.polar" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents first">
+<p>Core definition for Polar property Document </p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-class">
+<h2 class="doc doc-heading" id="emmet.core.polar.Deielectric">
+<code>Deielectric</code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.polar.Deielectric" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents">
+<p>A dielectric property block</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.polar.Deielectric.e_electronic">
+<code class="highlight">
+e_electronic: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.polar.Deielectric.e_electronic" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Electric permittivity due to electrons rearrangement</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.polar.Deielectric.e_ionic">
+<code class="highlight">
+e_ionic: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.polar.Deielectric.e_ionic" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Electric permittivity from atomic rearrangement</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.polar.Deielectric.e_total">
+<code class="highlight">
+e_total: <span class="nb">float</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.polar.Deielectric.e_total" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Total electric permittivity</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.polar.Deielectric.electronic">
+<code class="highlight">
+electronic: <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.polar.Deielectric.electronic" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Dielectric response due to electron rearrangement</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.polar.Deielectric.ionic">
+<code class="highlight">
+ionic: <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.polar.Deielectric.ionic" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Dielectric response due to atomic rearrangement</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.polar.Deielectric.total">
+<code class="highlight">
+total: <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.polar.Deielectric.total" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Total dielectric response</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-class">
+<h2 class="doc doc-heading" id="emmet.core.polar.Piezoelectric">
+<code>Piezoelectric</code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.polar.Piezoelectric" title="Permanent link">¶</a></h2>
+<div class="doc doc-contents">
+<p>A dielectric package block</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.polar.Piezoelectric.max_direction">
+<code class="highlight">
+max_direction: <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.polar.Piezoelectric.max_direction" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Miller direction for maximum piezo response</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.polar.Piezoelectric.strain_for_max">
+<code class="highlight">
+strain_for_max: <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-field"><code>field</code></small>
+<small class="doc doc-property doc-property-pydantic"><code>pydantic</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.polar.Piezoelectric.strain_for_max" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Normalized strain direction for maximum piezo repsonse</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</article>
+</div>
+</div>
+</main>
+<footer class="md-footer">
+<div class="md-footer-nav">
+<nav class="md-footer-nav__inner md-grid">
+<a class="md-flex md-footer-nav__link md-footer-nav__link--prev" href="stubs/" rel="prev" title="Stubs">
+<div class="md-flex__cell md-flex__cell--shrink">
+<i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+</div>
+<div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+<span class="md-flex__ellipsis">
+<span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Stubs
+              </span>
+</div>
+</a>
+</nav>
+</div>
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-footer-copyright">
+<div class="md-footer-copyright__highlight">
+            Built by The Materials Project
+          </div>
+        
+        powered by
+        <a href="http://www.mkdocs.org" title="MkDocs">MkDocs</a>
+        and
+        <a href="http://yakworks.github.io/mkdocs-material-components/" title="Material Components for MkDocs">
+          Material Components for MkDocs</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<script src="../assets/javascripts/application-68832431b5.js"></script>
+<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+<script>window.mdc.autoInit()</script>
+<script src="../assets/javascripts/headroom.min.js"></script>
+<script src="../assets/javascripts/jQuery.headroom.min.js"></script>
+<script src="../assets/javascripts/jq-mdc-web.js"></script>
+<script src="https://cdn.jsdelivr.net/jquery.loadingoverlay/latest/loadingoverlay.min.js"></script>
+<script>app.initialize({version:"1.1",url:{base:".."}})</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url>
+     <loc>https://materialsproject.github.io/emmet/</loc>
+     <lastmod>2020-05-28</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://materialsproject.github.io/emmet/packages/</loc>
+     <lastmod>2020-05-28</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://materialsproject.github.io/emmet/settings/</loc>
+     <lastmod>2020-05-28</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://materialsproject.github.io/emmet/stubs/</loc>
+     <lastmod>2020-05-28</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://materialsproject.github.io/emmet/core/</loc>
+     <lastmod>2020-05-28</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+</urlset>
