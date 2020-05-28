@@ -1,6 +1,5 @@
-mkdocs==1.1
-mkdocs-material==5.1.0
-mkdocs-material-components==1.10.11
+mkdocs==1.1.2
+mkdocs-material==5.2.2
+mkdocs-material-components==1.10.14
 mkdocs-minify-plugin==0.3.0
-git+git://github.com/pawamoy/pytkdocs.git#egg=pytkdocs
-mkdocstrings==0.11.0
+mkdocstrings==0.11.2
