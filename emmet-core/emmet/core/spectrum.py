@@ -20,11 +20,22 @@ class SpectrumDoc(StructureMetadata):
         "This comes in the form: mp-******",
     )
 
+    spectrum_id: str = Field(
+        ...,
+        title="Spectrum Document ID",
+        description="The unique ID for this spectrum document",
+    )
+
     last_updated: datetime = Field(
-        None,
+        ...,
         description="Timestamp for the most recent calculation update for this property",
     )
 
-    warnings: List[str] = Field(
-        None, description="Any warnings related to this property"
+    warnings: List[str] = Field([], description="Any warnings related to this property")
+
+    sandboxes: List[str] = Field(
+        None,
+        description="List of sandboxes this spectrum belongs to."
+        " Sandboxes provide a way of controlling access to spectra."
+        " No sandbox means this spectrum is openly visible",
     )

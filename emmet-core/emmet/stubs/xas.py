@@ -39,10 +39,10 @@ class XASSpectrum(BaseModel):
     An XAS Spectrum
     """
 
-    x: List[float] = Field(None, title="X-ray energy")
-    y: List[float] = Field(None, title="Absorption (Arbitrary Units)")
-    structure: Optional[Structure] = Field(None, title="Structure")
-    absorbing_element: Optional[Element] = Field(None, title="Absoring Element")
+    x: List[float] = Field(..., title="X-ray energy")
+    y: List[float] = Field(..., title="Absorption (Arbitrary Units)")
+    structure: Structure = Field(..., title="Structure")
+    absorbing_element: Element = Field(..., title="Absoring Element")
     absorbing_index: Optional[int] = Field(
         None,
         title="Absoring Index",

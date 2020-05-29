@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Optional
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, root_validator
 
 from pymatgen import Element
 
@@ -15,32 +15,23 @@ class XASDoc(SpectrumDoc):
     Document describing a XAS Spectrum.
     """
 
-    spectrum: Optional[XAS] = None
-
-    xas_id: str = Field(
-        None, title="XAS Document ID", description="The unique ID for this XAS document"
-    )
+    spectrum: XAS
 
     xas_ids: List[str] = Field(
-        None,
+        ...,
         title="Calculation IDs",
         description="List of Calculations IDs used to make this XAS spectrum.",
     )
 
-    absorbing_element: Element = Field(None, title="Absoring Element")
-    spectrum_type: Type = Field(None, title="XAS Spectrum Type")
+    absorbing_element: Element = Field(..., title="Absoring Element")
+    spectrum_type: Type = Field(..., title="XAS Spectrum Type")
     edge: Edge = Field(
-        None, title="Absorption Edge", description="The interaction edge for XAS"
+        ..., title="Absorption Edge", description="The interaction edge for XAS"
     )
 
     @classmethod
     def from_spectrum(
-        cls,
-        xas_spectrum: XAS,
-        material_id: str,
-        last_updated: datetime,
-        warnings=None,
-        **kwargs,
+        cls, xas_spectrum: XAS, material_id: str, **kwargs,
     ):
         spectrum_type = xas_spectrum.spectrum_type
         el = xas_spectrum.absorbing_element
@@ -57,7 +48,5 @@ class XASDoc(SpectrumDoc):
             spectrum_type=spectrum_type,
             absorbing_element=xas_spectrum.absorbing_element,
             xas_id=xas_id,
-            last_updated=last_updated,
-            warnings=warnings,
             **kwargs,
         )
