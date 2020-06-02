@@ -544,7 +544,6 @@ def add_thermo(mat, new_style_mat):
             main_sbx = mat["sbxn"][0]
 
         # Get the primary document and set in mat document
-        print(main_sbx, [d["_sbxn"] for d in thermo]) 
         core_thermo = next(d for d in thermo if main_sbx in d["_sbxn"])
 
         mat["e_above_hull"] = core_thermo["thermo"]["e_above_hull"]
@@ -560,7 +559,7 @@ def add_thermo(mat, new_style_mat):
             "decomposes_to": "thermo.decomposes_to",
         }
         for doc in thermo:
-            for sbx in doc["sbxn"]:
+            for sbx in doc["_sbxn"]:
                 sbx_d = {
                     k: get(doc, v) for k, v in sandbox_props.items() if has(doc, v)
                 }
