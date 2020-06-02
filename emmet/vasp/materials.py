@@ -459,10 +459,10 @@ def find_best_prop(props: List[Dict]) -> Dict:
     """
 
     # Sort for highest quality score and lowest energy
+    valid_props = [prop for prop in props if prop.get("is_valid",False)]
     sorted_props = sorted(
-        props,
+        valid_props,
         key=lambda doc: (
-            -1 * doc["is_valid"],
             -1 * doc["quality_score"],
             -1 * doc["special_tags"],
             doc["energy"],
