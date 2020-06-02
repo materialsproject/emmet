@@ -94,7 +94,9 @@ class MaterialsBuilder(Builder):
         ]
         projected_from_tasks = [".".join(p) for p in projected_from_tasks]
 
-        self.projected_from_tasks = list(set(projected_from_tasks +["input.parameters"]))
+        self.projected_from_tasks = list(
+            set(projected_from_tasks + ["input.parameters"])
+        )
         self.allowed_tasks = {
             t_type for d in self.__settings for t_type in d["quality_score"]
         }
@@ -411,6 +413,13 @@ class MaterialsBuilder(Builder):
 
         for entry in mat.get("entries", {}).values():
             entry["entry_id"] = mat[self.materials.key]
+
+        for entry_type in mat.get("entries", {}).keys():
+            if any(
+                f"entries.{entry_type}" in invalid_prop
+                for invalid_prop in mat.get("invalid_props", [])
+            ):
+                del mat["entries"][entry_type]
 
     def ensure_indexes(self):
         """
