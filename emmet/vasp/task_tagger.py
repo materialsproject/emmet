@@ -183,7 +183,7 @@ def is_valid(
             valid_input_set.kpoints.kpts[0]
         )
         num_kpts = inputs.get("kpoints", {}).get("nkpoints", 0) or np.prod(
-            inputs.get("kpoints", {}).get("kpoints", [1, 1, 1])
+            inputs.get("kpoints", {}).get("kpoints", [0, 0, 0])
         )
         d["kpts_ratio"] = num_kpts / valid_num_kpts
         if d["kpts_ratio"] < kpts_tolerance:
@@ -199,7 +199,10 @@ def is_valid(
             d["_warnings"].append("ENCUT too low")
 
         # Checking U-values
-        if valid_input_set.incar.get("LDAU"):
+        U_checks = [len(valid_input_set.incar.get("LDAU", {})) > 0] + [
+            len(inputs.get("incar", {}).get(k, [])) > 0 for k in LDAU_fields
+        ]
+        if any(U_checks):
             # Assemble actual input LDAU params into dictionary to account for possibility
             # of differing order of elements
             structure_set_symbol_set = structure.symbol_set
@@ -211,12 +214,12 @@ def is_valid(
             # Assemble required input_set LDAU params into dictionary
             input_set_symbol_set = valid_input_set.poscar.structure.symbol_set
             input_set_ldau_fields = [input_set_symbol_set] + [
-                valid_input_set.incar.get(k) for k in LDAU_fields
+                valid_input_set.incar.get(k, {}) for k in LDAU_fields
             ]
             input_set_ldau_params = {d[0]: d[1:] for d in zip(*input_set_ldau_fields)}
 
             if any(
-                input_set_ldau_params[el] != input_params
+                input_set_ldau_params.get(el,tuple()) != input_params
                 for el, input_params in input_ldau_params.items()
             ):
                 d["is_valid"] = False
