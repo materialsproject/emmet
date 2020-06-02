@@ -199,7 +199,7 @@ def is_valid(
             d["_warnings"].append("ENCUT too low")
 
         # Checking U-values
-        U_checks = [len(valid_input_set.incar.get("LDAU", {})) > 0] + [
+        U_checks = [valid_input_set.incar.get("LDAU", False)] + [
             len(inputs.get("incar", {}).get(k, [])) > 0 for k in LDAU_fields
         ]
         if any(U_checks):
