@@ -106,8 +106,8 @@ time.sleep(2)
 
 
 def as_html(b):
-    mat_url = "http://web.mp-web.dev-cattle.stable.spin.nersc.org/materials/"
-    pd_url = "http://web.mp-web.dev-cattle.stable.spin.nersc.org/#apps/phasediagram/"
+    mat_url = "http://web.mp-web.dev-cattle.stable.spin.nersc.org:50042/materials/"
+    pd_url = "http://web.mp-web.dev-cattle.stable.spin.nersc.org:50042/#apps/phasediagram/"
 
     def mat_link(mid):
         return f"<a href='{mat_url}{mid}'>{mid}</a>"
