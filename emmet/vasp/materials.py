@@ -446,7 +446,7 @@ def find_mat_id(props: List[Dict]):
 
     # Only consider structure optimization task_ids for material task_id
     possible_mat_ids = [
-        prop["task_id"] for prop in props if prop["materials_key"] == "structure"
+        prop["task_id"] for prop in props if "Structure Optimzation" in prop["task_type"] 
     ]
 
     # Sort task_ids by ID
