@@ -416,7 +416,7 @@ class MaterialsBuilder(Builder):
 
         for entry_type in list(mat.get("entries", {}).keys()):
             if any(
-                f"entries.{entry_type}" in invalid_prop
+                f"entries.{entry_type}." in invalid_prop
                 for invalid_prop in mat.get("invalid_props", [])
             ):
                 del mat["entries"][entry_type]

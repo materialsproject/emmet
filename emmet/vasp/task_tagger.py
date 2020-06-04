@@ -38,6 +38,8 @@ class TaskTagger(MapBuilder):
         self.input_sets = input_sets or {
             "GGA Structure Optimization": "MPRelaxSet",
             "GGA+U Structure Optimization": "MPRelaxSet",
+            "GGA Static": "MPStaticSet",
+            "GGA+U Static": "MPStaticSet",
         }
         self.kpts_tolerance = kpts_tolerance
         self.LDAU_fields = LDAU_fields
@@ -52,7 +54,7 @@ class TaskTagger(MapBuilder):
         super().__init__(
             source=tasks,
             target=task_types,
-            projection=["orig_inputs", "output.structure"],
+            projection=["orig_inputs", "output.structure", "input.hubbards"],
             **kwargs,
         )
 
@@ -69,7 +71,7 @@ class TaskTagger(MapBuilder):
             item["orig_inputs"],
             self._input_sets,
             self.kpts_tolerance,
-            self.LDAU_fields,
+            item.get("input",{}).get("hubbards",{})
         )
 
         d = {"task_type": tt, **iv}
@@ -91,7 +93,7 @@ def task_type(inputs, include_calc_type=True):
     incar = inputs.get("incar", {})
     try:
         functional = inputs.get("potcar", {}).get("functional", "PBE")
-    except:
+    except Exception:
         functional = "PBE"
 
     METAGGA_TYPES = {"TPSS", "RTPSS", "M06L", "MBJL", "SCAN", "MS0", "MS1", "MS2"}
@@ -152,11 +154,7 @@ def task_type(inputs, include_calc_type=True):
 
 
 def is_valid(
-    structure,
-    inputs,
-    input_sets,
-    kpts_tolerance=0.9,
-    LDAU_fields=["LDAUU", "LDAUJ", "LDAUL"],
+    structure, inputs, input_sets, kpts_tolerance=0.9, hubbards={},
 ):
     """
     Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
@@ -199,31 +197,32 @@ def is_valid(
             d["_warnings"].append("ENCUT too low")
 
         # Checking U-values
-        U_checks = [valid_input_set.incar.get("LDAU", False)] + [
-            len(inputs.get("incar", {}).get(k, [])) > 0 for k in LDAU_fields
-        ]
-        if any(U_checks):
-            # Assemble actual input LDAU params into dictionary to account for possibility
-            # of differing order of elements
-            structure_set_symbol_set = structure.symbol_set
-            inputs_ldau_fields = [structure_set_symbol_set] + [
-                inputs.get("incar", {}).get(k, []) for k in LDAU_fields
-            ]
-            input_ldau_params = {d[0]: d[1:] for d in zip(*inputs_ldau_fields)}
-
+        if valid_input_set.incar.get("LDAU", False) or len(hubbards) > 0:
             # Assemble required input_set LDAU params into dictionary
-            input_set_symbol_set = valid_input_set.poscar.structure.symbol_set
-            input_set_ldau_fields = [input_set_symbol_set] + [
-                valid_input_set.incar.get(k, {}) for k in LDAU_fields
-            ]
-            input_set_ldau_params = {d[0]: d[1:] for d in zip(*input_set_ldau_fields)}
+            input_set_hubbards = dict(
+                zip(
+                    valid_input_set.poscar.site_symbols,
+                    valid_input_set.incar.get("LDAUU", []),
+                )
+            )
 
-            if any(
-                input_set_ldau_params.get(el,tuple()) != input_params
-                for el, input_params in input_ldau_params.items()
-            ):
+            all_els = list(set(input_set_hubbards.keys()) + set(hubbards.keys()))
+            diff = {
+                el: (input_set_hubbards.get(el, 0), hubbards.get(el, 0))
+                for el in all_els
+                if input_set_hubbards.get(el) != hubbards.get(el)
+            }
+
+            if any(v[0] != v[1] for v in diff.values()):
+
                 d["is_valid"] = False
                 d["_warnings"].append("LDAU parameters don't match")
+                d["_warnings"].extend(
+                    [
+                        f"U-value for {el} should be {good} but was {bad}"
+                        for el, (bad, good) in diff.items()
+                    ]
+                )
 
     if len(d["_warnings"]) == 0:
         del d["_warnings"]

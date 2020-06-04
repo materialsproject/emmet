@@ -324,27 +324,29 @@ def old_style_mat(new_style_mat):
 
     entry_type = "gga_u" if "gga_u" in new_style_mat["entries"] else "gga"
 
-    calc_settings = {
-        "hubbards": "hubbards",
-        "input.potcar_spec": "potcar_spec",
-        "run_type": "run_type",
-    }
-    for k, v in calc_settings.items():
-        set_(mat, k, get(new_style_mat, f"entries.{entry_type}.parameters.{v}"))
+
+    if not new_style_mat.get("deprecated",True):
+        calc_settings = {
+            "hubbards": "hubbards",
+            "input.potcar_spec": "potcar_spec",
+            "run_type": "run_type",
+        }
+        for k, v in calc_settings.items():
+            set_(mat, k, get(new_style_mat, f"entries.{entry_type}.parameters.{v}"))
 
     if mat["hubbards"] is None:
         mat["hubbards"] = {}
 
-    mat["is_hubbard"] = len(mat["hubbards"]) > 0
-    set_(
-        mat,
-        "pseudo_potential.labels",
-        [
-            p["titel"].split()[1]
-            for p in get(new_style_mat, f"entries.{entry_type}.parameters.potcar_spec")
-        ],
-    )
-    set_(mat, "pseudo_potential.pot_type", "paw")
+        mat["is_hubbard"] = len(mat["hubbards"]) > 0
+        set_(
+            mat,
+            "pseudo_potential.labels",
+            [
+                p["titel"].split()[1]
+                for p in get(new_style_mat, f"entries.{entry_type}.parameters.potcar_spec")
+            ],
+        )
+        set_(mat, "pseudo_potential.pot_type", "paw")
 
     mat["blessed_tasks"] = {
         d["task_type"]: d["task_id"]
