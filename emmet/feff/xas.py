@@ -112,6 +112,13 @@ class XASBuilder(GroupBuilder):
                     averaged_spectra.append(relevant_spectra[0])
 
         spectra_docs = [spectra_to_doc(doc) for doc in averaged_spectra]
+        task_id = items[0]["mp_id"]
+        for d in spectra_docs:
+            d["task_id"] = task_id
+            spectrum_type = d["spectrum_type"]
+            el = d["absorbing_element"]
+            edge = d["edge"]
+            d[self.xas.key] = f"{task_id}-{spectrum_type}-{el}-{edge}"
 
         return {"spectra_docs": spectra_docs}
 
@@ -123,14 +130,11 @@ class XASBuilder(GroupBuilder):
         for d in items:
             if "spectra_docs" in d:
                 averages = list(d["spectra_docs"])
-                del d["spectra_docs"]
                 for new_doc in averages:
-                    new_doc.update(d)
-                    task_id = d[self.xas.key]
-                    spectrum_type = new_doc["spectrum_type"]
-                    el = new_doc["absorbing_element"]
-                    edge = new_doc["edge"]
-                    new_doc[self.xas.key] = f"{task_id}-{spectrum_type}-{el}-{edge}"
+                    new_doc.update(
+                        {k: v for k, v in d.items() if k in {"last_updated", "_bt"}}
+                    )
+
                     new_items.append(new_doc)
 
         super().update_targets(new_items)
@@ -220,8 +224,7 @@ def spectra_to_doc(spectrum):
             "edge": spectrum.edge,
             "absorbing_element": str(spectrum.absorbing_element),
             "spectrum_type": spectrum.spectrum_type,
-            "task_ids": spectrum.task_ids,
+            "xas_ids": spectrum.task_ids,
         }
     )
     return doc
-
