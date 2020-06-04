@@ -206,7 +206,7 @@ def is_valid(
                 )
             )
 
-            all_els = list(set(input_set_hubbards.keys()) + set(hubbards.keys()))
+            all_els = list(set(input_set_hubbards.keys()) | set(hubbards.keys()))
             diff = {
                 el: (input_set_hubbards.get(el, 0), hubbards.get(el, 0))
                 for el in all_els
