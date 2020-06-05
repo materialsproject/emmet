@@ -334,7 +334,7 @@ def old_style_mat(new_style_mat):
         for k, v in calc_settings.items():
             set_(mat, k, get(new_style_mat, f"entries.{entry_type}.parameters.{v}"))
 
-    if mat["hubbards"] is None:
+    if mat.get("hubbards",None) is None:
         mat["hubbards"] = {}
 
         mat["is_hubbard"] = len(mat["hubbards"]) > 0
