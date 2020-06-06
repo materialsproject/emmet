@@ -127,7 +127,7 @@ class MPBuilder(Builder):
         except Exception as e:
             tback = traceback.format_exc()
             self.logger.error(tback)
-            processed = {"error": str(e),"traceback": str(tback)}
+            processed = {"error": str(e), "traceback": str(tback)}
 
         key, last_updated_field = self.materials.key, self.materials.last_updated_field
 
@@ -323,9 +323,7 @@ def old_style_mat(new_style_mat):
     set_(mat, "pseudo_potential.functional", "PBE")
 
     entry_type = "gga_u" if "gga_u" in new_style_mat["entries"] else "gga"
-
-
-    if not new_style_mat.get("deprecated",True):
+    if not new_style_mat.get("deprecated", True):
         calc_settings = {
             "hubbards": "hubbards",
             "input.potcar_spec": "potcar_spec",
@@ -334,19 +332,20 @@ def old_style_mat(new_style_mat):
         for k, v in calc_settings.items():
             set_(mat, k, get(new_style_mat, f"entries.{entry_type}.parameters.{v}"))
 
-        if mat.get("hubbards",None) is None:
-            mat["hubbards"] = {}
+        mat["hubbards"] = mat.get("hubbards", None) or []
 
-            mat["is_hubbard"] = len(mat["hubbards"]) > 0
-            set_(
-                mat,
-                "pseudo_potential.labels",
-                [
-                    p["titel"].split()[1]
-                    for p in get(new_style_mat, f"entries.{entry_type}.parameters.potcar_spec",None)
-                ],
-            )
-            set_(mat, "pseudo_potential.pot_type", "paw")
+        mat["is_hubbard"] = len(mat["hubbards"]) > 0
+        set_(
+            mat,
+            "pseudo_potential.labels",
+            [
+                p["titel"].split()[1]
+                for p in get(
+                    new_style_mat, f"entries.{entry_type}.parameters.potcar_spec", None
+                )
+            ],
+        )
+        set_(mat, "pseudo_potential.pot_type", "paw")
 
         mat["blessed_tasks"] = {
             d["task_type"]: d["task_id"]
@@ -574,4 +573,3 @@ def add_thermo(mat, new_style_mat):
 def add_meta(mat):
     meta = {"emmet_version": emmet_version, "pymatgen_version": pymatgen_version}
     mat["_meta"] = meta
-
