@@ -334,25 +334,25 @@ def old_style_mat(new_style_mat):
         for k, v in calc_settings.items():
             set_(mat, k, get(new_style_mat, f"entries.{entry_type}.parameters.{v}"))
 
-    if mat.get("hubbards",None) is None:
-        mat["hubbards"] = {}
+        if mat.get("hubbards",None) is None:
+            mat["hubbards"] = {}
 
-        mat["is_hubbard"] = len(mat["hubbards"]) > 0
-        set_(
-            mat,
-            "pseudo_potential.labels",
-            [
-                p["titel"].split()[1]
-                for p in get(new_style_mat, f"entries.{entry_type}.parameters.potcar_spec")
-            ],
-        )
-        set_(mat, "pseudo_potential.pot_type", "paw")
+            mat["is_hubbard"] = len(mat["hubbards"]) > 0
+            set_(
+                mat,
+                "pseudo_potential.labels",
+                [
+                    p["titel"].split()[1]
+                    for p in get(new_style_mat, f"entries.{entry_type}.parameters.potcar_spec",None)
+                ],
+            )
+            set_(mat, "pseudo_potential.pot_type", "paw")
 
-    mat["blessed_tasks"] = {
-        d["task_type"]: d["task_id"]
-        for d in new_style_mat["origins"]
-        if d["task_type"] in _settings["task_types"]
-    }
+        mat["blessed_tasks"] = {
+            d["task_type"]: d["task_id"]
+            for d in new_style_mat["origins"]
+            if d["task_type"] in _settings["task_types"]
+        }
 
     mat["task_ids"] = [
         k
