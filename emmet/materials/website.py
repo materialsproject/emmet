@@ -5,7 +5,7 @@ import traceback
 import copy
 import nltk
 from datetime import datetime
-from itertools import groupby
+from itertools import groupby, chain
 
 
 from monty.json import jsanitize
@@ -538,11 +538,12 @@ def add_thermo(mat, new_style_mat):
 
     if not mat["deprecated"] and len(new_style_mat["thermo_docs"]) > 0:
         thermo = new_style_mat["thermo_docs"]
-
-        if "core" in mat["sbxn"]:
+        sbxns = list(chain.from_iterable([d.get("_sbxn",[]) for d in thermo]))
+        
+        if "core" in sbxns:
             main_sbx = "core"
         else:
-            main_sbx = mat["sbxn"][0]
+            main_sbx = sbxns[0]
 
         # Get the primary document and set in mat document
         core_thermo = next(d for d in thermo if main_sbx in d["_sbxn"])
