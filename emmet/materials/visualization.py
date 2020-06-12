@@ -82,12 +82,11 @@ class VisualizationBuilder(MapBuilder):
         super().__init__(
             source=materials,
             target=visualization,
-            ufn=self.calc,
             projection=list(projection),
             **kwargs
         )
 
-    def calc(self, item):
+    def unary_function(self, item):
 
         struct_or_mol = MontyDecoder().process_decoded(item[self.projected_object_name])
 

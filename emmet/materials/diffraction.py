@@ -31,9 +31,9 @@ class DiffractionBuilder(MapBuilder):
         self.__settings = load_settings(self.xrd_settings, DEFAULT_XRD_SETTINGS)
 
         super().__init__(
-            source=materials, target=diffraction, ufn=self.calc, projection=["structure"], **kwargs)
+            source=materials, target=diffraction, projection=["structure"], **kwargs)
 
-    def calc(self, item):
+    def unary_function(self, item):
         """
         Calculates diffraction patterns for the structures
 
