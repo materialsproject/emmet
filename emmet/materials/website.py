@@ -332,7 +332,7 @@ def old_style_mat(new_style_mat):
         for k, v in calc_settings.items():
             set_(mat, k, get(new_style_mat, f"entries.{entry_type}.parameters.{v}"))
 
-        mat["hubbards"] = mat.get("hubbards", None) or []
+        mat["hubbards"] = mat.get("hubbards", None) or {}
 
         mat["is_hubbard"] = len(mat["hubbards"]) > 0
         set_(
