@@ -111,7 +111,7 @@ class ThermoBuilder(Builder):
                     )
                 ]
 
-                yield sandboxes, sandbox_entries
+                yield sorted(sandboxes), sandbox_entries
 
     def process_item(self, item):
         """
@@ -177,7 +177,7 @@ class ThermoBuilder(Builder):
                 d["chemsys"] = "-".join(elsyms)
                 d["nelements"] = len(elsyms)
                 d["elements"] = list(elsyms)
-                d["_sbxn"] = list(sandboxes)
+                d["_sbxn"] = sorted(sandboxes)
 
                 docs.append(d)
         except PhaseDiagramError as p:
@@ -290,9 +290,7 @@ class ThermoBuilder(Builder):
             entry["correction"] = 0.0
             entry["entry_id"] = d["task_id"]
             entry = ComputedEntry.from_dict(entry)
-            entry.data["oxide_type"] = oxide_type(
-                Structure.from_dict(d["structure"])
-            )
+            entry.data["oxide_type"] = oxide_type(Structure.from_dict(d["structure"]))
             entry.data["_sbxn"] = d.get("_sbxn", [])
 
             # Add to cache
