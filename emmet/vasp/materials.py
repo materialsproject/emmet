@@ -312,7 +312,7 @@ class MaterialsBuilder(Builder):
         t_type = task_type(task["orig_inputs"])
         t_id = task[self.tasks.key]
 
-        _SPECIAL_TAGS = ["LASPH", "ADDGRID", "ISPIN"]
+        _SPECIAL_TAGS = ["LASPH", "ISPIN"]
         # Convert the task doc into a serious of properties in the materials
         # doc with the right document structure
         props = []
@@ -446,7 +446,9 @@ def find_mat_id(props: List[Dict]):
 
     # Only consider structure optimization task_ids for material task_id
     possible_mat_ids = [
-        prop["task_id"] for prop in props if "Structure Optimization" in prop["task_type"] 
+        prop["task_id"]
+        for prop in props
+        if "Structure Optimization" in prop["task_type"]
     ]
 
     # Sort task_ids by ID

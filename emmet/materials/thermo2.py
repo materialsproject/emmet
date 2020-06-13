@@ -138,7 +138,7 @@ class ThermoBuilder(Builder):
         )
 
         try:
-            pd = PhaseDiagram(entries)
+            pd = build_pd(entries)
 
             docs = []
 
@@ -342,3 +342,18 @@ def maximal_spanning_non_intersecting_subsets(sets):
         to_return_subsets.extend(maximal_spanning_non_intersecting_subsets(sets))
 
     return set(to_return_subsets)
+
+
+def build_pd(entries):
+    """
+    Reduces the number of entries for PhaseDiagram to consider
+    To Speed it up
+    """
+
+    entries_by_comp = defaultdict(list)
+    for e in entries:
+        entries_by_comp[e.composition.reduced_formula].append(e)
+        
+    reduced_entries = [sorted(comp_entries,key=lambda e: e.energy_per_atom)[0] for comp_entries in entries_by_comp.values()]
+
+    return PhaseDiagram(reduced_entries)
