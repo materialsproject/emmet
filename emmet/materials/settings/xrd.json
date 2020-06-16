@@ -34,23 +34,5 @@
       180
     ],
     "symprec": 0.1
-  },
-  {
-    "target": "Cr",
-    "edge": "Ka",
-    "two_theta": [
-      0,
-      180
-    ],
-    "symprec": 0.1
-  },
-  {
-    "target": "Co",
-    "edge": "Ka",
-    "two_theta": [
-      0,
-      180
-    ],
-    "symprec": 0.1
   }
 ]
