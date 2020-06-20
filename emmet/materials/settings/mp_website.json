@@ -78,7 +78,7 @@
     "GGA+U NSCF Uniform",
     "GGA+U Static",
     "GGA+U Structure Optimization",
-    "GGA Static Dielectric",
-    "GGA+U Static Dielectric"
+    "GGA DFPT Dielectric",
+    "GGA+U DFPT Dielectric"
   ]
 }

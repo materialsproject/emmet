@@ -390,6 +390,7 @@
       "GGA+U DFPT Dielectric": 6,
       "GGA DFPT Dielectric": 2
     },
+    "track": true,
     "tasks_key": "output.structure"
   },
   {
