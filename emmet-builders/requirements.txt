@@ -1,2 +1,4 @@
 pymatgen>=2018.11.30
+abipy>=0.8.0
+abiflows>=0.6.0
 emmet-core

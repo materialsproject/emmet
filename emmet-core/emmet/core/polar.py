@@ -11,7 +11,7 @@ from emmet.core.material import PropertyDoc
 import numpy as np
 
 
-class Deielectric(PropertyDoc):
+class Dielectric(PropertyDoc):
     """
     A dielectric property block
     """
