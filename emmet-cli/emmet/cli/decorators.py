@@ -146,7 +146,7 @@ def sbatch(func):
                 "qos": "xfer",
                 "time": "48:00:00",
                 "licenses": "SCRATCH",
-                "mem": "20GB",
+                "mem": "30GB",
             }
             command = ""
 
@@ -162,7 +162,7 @@ def sbatch(func):
         command += reconstruct_command(sbatch=True)
         slurmpy_stderr = io.StringIO()
         with contextlib.redirect_stderr(slurmpy_stderr):
-            s.run(command, _cmd="sbatch" if run else "cat", tries=3)  # 6 days
+            s.run(command, _cmd="sbatch" if run else "cat", tries=1)  # 6 days
         ret = slurmpy_stderr.getvalue()[2:-1]
         logger.info("\n" + ret.encode("utf-8").decode("unicode_escape"))
         # TODO add jobid to SUBMITTED.value

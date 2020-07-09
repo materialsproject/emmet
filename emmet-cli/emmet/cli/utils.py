@@ -276,7 +276,9 @@ def get_vasp_dirs():
                     shutil.chown(fn_gz, group="matgen")
                     gzipped = True
 
+            # NOTE skip symlink'ing on MP calculations from the early days
             vasp_dir = get_symlinked_path(root, base_path_index)
+            # vasp_dir = root
             create_orig_inputs(vasp_dir)
             dirs[:] = []  # don't descend further (i.e. ignore relax1/2)
             logger.log(logging.INFO if gzipped else logging.DEBUG, vasp_dir)
@@ -354,7 +356,11 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
                     logger.warning(f"{name} {launcher} already parsed -> would remove.")
                 continue
 
-        task_doc = drone.assimilate(vaspdir)
+        try:
+            task_doc = drone.assimilate(vaspdir)
+        except Exception as ex:
+            logger.error(f"Failed to assimilate {vaspdir}: {ex}")
+            continue
         task_doc["sbxn"] = sbxn
         manual_taskid = isinstance(task_ids, dict)
         task_id = task_ids[launcher] if manual_taskid else task_ids[chunk_idx][count]
