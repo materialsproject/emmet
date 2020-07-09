@@ -80,12 +80,15 @@ def track(func):
             logs = ctx.grand_parent.obj["LOG_STREAM"]
             gist.edit(files={filename: {"content": logs.getvalue()}})
 
-            # add comment for new command
-            command = reconstruct_command()
-            raw_url = f"{GIST_RAW_URL}/{user}/{gist.id}/raw/{filename}"
-            txt = COMMENT_TEMPLATE.format(ctx.command_path, ret.value, command, raw_url)
-            comment = issue.create_comment(txt)
-            logger.info(comment.html_url)
+            if not ctx.grand_parent.params["sbatch"]:
+                # add comment for new command
+                command = reconstruct_command()
+                raw_url = f"{GIST_RAW_URL}/{user}/{gist.id}/raw/{filename}"
+                txt = COMMENT_TEMPLATE.format(
+                    ctx.command_path, ret.value, command, raw_url
+                )
+                comment = issue.create_comment(txt)
+                logger.info(comment.html_url)
 
     return update_wrapper(wrapper, func)
 
@@ -102,7 +105,7 @@ def sbatch(func):
 
         run = ctx.grand_parent.params["run"]
         if run:
-            click.secho(f"SBATCH MODE! Submitting to SLURM queue.", fg="green")
+            click.secho("SBATCH MODE! Submitting to SLURM queue.", fg="green")
 
         directory = ctx.parent.params.get("directory")
         if not directory:
