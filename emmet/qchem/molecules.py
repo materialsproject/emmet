@@ -616,7 +616,7 @@ def make_mol_graph(mol, critic_bonds=None):
 def fix_C_Li_bonds(critic):
     for key in critic["bonding"]:
         if critic["bonding"][key]["atoms"] == ["Li","C"] or critic["bonding"][key]["atoms"] == ["C","Li"]:
-            if critic["bonding"][key]["field"] <= 0.02 and critic["bonding"][key]["field"] > 0.12 and critic["bonding"][key]["distance"] < 2.5:
+            if critic["bonding"][key]["field"] <= 0.02 and critic["bonding"][key]["field"] > 0.012 and critic["bonding"][key]["distance"] < 2.5:
                 critic["processed"]["bonds"].append([int(entry)-1 for entry in critic["bonding"][key]["atom_ids"]])
     return critic
 
