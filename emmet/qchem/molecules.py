@@ -293,7 +293,7 @@ class MoleculesBuilder(Builder):
             mol.myindex = idx
             mol_dict = {"molecule": mol}
             if "critic2" in t:
-                mol_dict["critic2"] = t["critic2"]
+                mol_dict["critic2"] = fix_C_Li_bonds(t["critic2"])
                 metal_charges = set()
                 for ii,site in enumerate(mol):
                     if str(site.specie) == "Li":
@@ -612,4 +612,12 @@ def make_mol_graph(mol, critic_bonds=None):
                 if bond not in mg_edges:
                     mol_graph.add_edge(bond[0],bond[1])
     return mol_graph
+
+def fix_C_Li_bonds(critic):
+    for key in critic["bonding"]:
+        if critic["bonding"][key]["atoms"] == ["Li","C"] or critic["bonding"][key]["atoms"] == ["C","Li"]:
+            if critic["bonding"][key]["field"] <= 0.02 and critic["bonding"][key]["field"] > 0.12 and critic["bonding"][key]["distance"] < 2.5:
+                critic["processed"]["bonds"].append([int(entry)-1 for entry in critic["bonding"][key]["atom_ids"]])
+    return critic
+
 
