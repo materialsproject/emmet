@@ -69,22 +69,26 @@ def prep():
 
 
 def run_command(args, filelist):
-    # TODO deal with filelist too long
     nargs, nfiles, nshow = len(args), len(filelist), 1
-    args += filelist
+    full_args = args + filelist
     args_short = (
-        args[: nargs + nshow] + [f"({nfiles-1} more ...)"] if nfiles > nshow else args
+        full_args[: nargs + nshow] + [f"({nfiles-1} more ...)"]
+        if nfiles > nshow
+        else full_args
     )
     logger.info(" ".join(args_short))
     popen = subprocess.Popen(
-        args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
+        full_args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True,
     )
     for stdout_line in iter(popen.stdout.readline, ""):
         yield stdout_line
     popen.stdout.close()
     return_code = popen.wait()
     if return_code:
-        raise subprocess.CalledProcessError(return_code, args)
+        raise subprocess.CalledProcessError(return_code, full_args)
 
 
 def recursive_chown(path, group):
