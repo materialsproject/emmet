@@ -10,7 +10,7 @@ from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN
 from pymatgen.analysis.fragmenter import metal_edge_extender
 from ase import Atoms
-from pymatgen.io.ase import AseAtomsMoleculeAdaptor
+from pymatgen.io.ase import AseAtomsAdaptor
 from graphdot.experimental.metric.m3 import M3
 import networkx as nx
 from maggma.builders import Builder
@@ -523,8 +523,8 @@ def group_molecules(molecules):
                 adj.add_nodes_from(tmp_ids)
                 pairs = combinations(tmp_ids,2)
                 for pair in pairs:
-                    atoms1 = AseAtomsMoleculeAdaptor.get_atoms(subgroup["mol_dict_list"][pair[0]]["molecule"])
-                    atoms2 = AseAtomsMoleculeAdaptor.get_atoms(subgroup["mol_dict_list"][pair[1]]["molecule"])
+                    atoms1 = AseAtomsAdaptor.get_atoms(subgroup["mol_dict_list"][pair[0]]["molecule"])
+                    atoms2 = AseAtomsAdaptor.get_atoms(subgroup["mol_dict_list"][pair[1]]["molecule"])
                     if m3(atoms1,atoms2) < 0.1:
                         adj.add_edge(pair[0],pair[1])
                 subgraphs = list(nx.connected_components(adj))
@@ -599,9 +599,7 @@ def calc_accuracy_score(inputs):
 
 def make_mol_graph(mol, critic_bonds=None):
     mol_graph = MoleculeGraph.with_local_env_strategy(mol,
-                                                      OpenBabelNN(),
-                                                      reorder=False,
-                                                      extend_structure=False)
+                                                      OpenBabelNN())
     mol_graph = metal_edge_extender(mol_graph)
     if critic_bonds:
         mg_edges = mol_graph.graph.edges()

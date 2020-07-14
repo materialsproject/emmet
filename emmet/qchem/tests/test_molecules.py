@@ -14,7 +14,7 @@ assoc_tasks = os.path.join(module_dir, "..", "..", "..", "test_files", "LiEC_tas
 class TestMolecules(unittest.TestCase):
     def setUp(self):
         tasks = JSONStore(test_tasks)
-        self.molecules = MemoryStore(name="molecules")
+        self.molecules = MemoryStore()
         tasks.connect()
         self.molecules.connect()
         self.mbuilder = MoleculesBuilder(tasks, self.molecules)
@@ -40,7 +40,7 @@ class TestMolecules(unittest.TestCase):
 class TestAssocMolecules(unittest.TestCase):
     def setUp(self):
         input_tasks = JSONStore(assoc_tasks)
-        tasks = MemoryStore(name="tasks")
+        tasks = MemoryStore()
         input_tasks.connect()
         tasks.connect()
         abuilder = AssociationBuilder(input_tasks, tasks)
@@ -48,7 +48,7 @@ class TestAssocMolecules(unittest.TestCase):
             abuilder.update_targets([abuilder.process_item(group)])
         self.assertEqual(len(tasks.distinct("task_id")),58)
 
-        self.molecules = MemoryStore(name="molecules")
+        self.molecules = MemoryStore()
         self.molecules.connect()
         self.mbuilder = MoleculesBuilder(tasks, self.molecules)
 
