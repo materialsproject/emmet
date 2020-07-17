@@ -17,6 +17,7 @@ from atomate.vasp.database import VaspCalcDb
 from fireworks.fw_config import FW_BLOCK_FORMAT
 from mongogrant.client import Client
 from atomate.vasp.drones import VaspDrone
+from pymongo.errors import DocumentTooLarge
 
 from emmet.core.utils import group_structures
 from emmet.cli import SETTINGS
