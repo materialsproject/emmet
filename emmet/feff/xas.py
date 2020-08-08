@@ -216,7 +216,9 @@ def spectra_to_doc(spectrum):
     information
     """
     structure = spectrum.structure
-
+    
+    spectrum.asborbing_element = str(spectrum.absorbing_element)
+    
     doc = structure_metadata(structure)
     doc.update(
         {
