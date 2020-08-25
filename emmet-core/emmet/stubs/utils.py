@@ -6,6 +6,7 @@ from monty.json import MSONable, MontyDecoder
 from pydantic import create_model, Field, BaseModel
 from pydantic.fields import ModelField, FieldInfo
 
+
 built_in_primitives = (bool, int, float, complex, range, str, bytes, None)
 prim_to_type_hint: Dict[type, Any] = {list: List, tuple: Tuple, dict: Dict, set: Set}
 
@@ -140,4 +141,6 @@ def MSONable_to_pydantic(monty_cls: type, pydantic_model=None):
             for field_name, field_type in _type_hints
         }
 
-    return create_model(monty_cls.__name__, field_definitions={**monty_props, **props})
+    model = create_model(monty_cls.__name__, **monty_props, **props)
+    model.__doc__ = monty_cls.__doc__
+    return model

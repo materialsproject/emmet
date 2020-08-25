@@ -63,9 +63,9 @@ class StructureMetadata(BaseModel):
     class Config:
         use_enum_values = True
 
-    @staticmethod
+    @classmethod
     def from_structure(
-        structure: Structure, fields: Optional[List[str]] = None, **kwargs
+        cls, structure: Structure, fields: Optional[List[str]] = None, **kwargs
     ) -> "StructureMetadata":
 
         fields = (
@@ -105,6 +105,4 @@ class StructureMetadata(BaseModel):
             "symmetry": symmetry,
         }
 
-        return StructureMetadata(
-            **{k: v for k, v in data.items() if k in fields}, **kwargs
-        )
+        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)

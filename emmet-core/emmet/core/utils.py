@@ -1,7 +1,8 @@
 from typing import List, Iterator, Dict
 from typing_extensions import Literal
-from itertools import groupby
+from itertools import groupby, product
 from pathlib import Path
+from enum import Enum
 
 import datetime
 import bson
@@ -27,6 +28,37 @@ _TASK_TYPES = [
     "Structure Optimization",
     "Deformation",
 ]
+
+_RUN_TYPES = (
+    [
+        rt
+        for functional_class in _RUN_TYPE_DATA
+        for rt in _RUN_TYPE_DATA[functional_class]
+    ]
+    + [
+        f"{rt}+U"
+        for functional_class in _RUN_TYPE_DATA
+        for rt in _RUN_TYPE_DATA[functional_class]
+    ]
+    + ["LDA", "LDA+U"]
+)
+
+RunType = Enum(
+    "RunType", {"_".join(rt.split()).replace("+", "_"): rt for rt in _RUN_TYPES}
+)
+RunType.__doc__ = "VASP calculation run types"
+
+TaskType = Enum("TaskType", {"_".join(tt.split()): tt for tt in _TASK_TYPES})
+TaskType.__doc__ = "VASP calculation task types"
+
+CalcType = Enum(
+    "CalcType",
+    {
+        f"{'_'.join(rt.split()).replace('+','_')}_{'_'.join(tt.split())}": f"{rt} {tt}"
+        for rt, tt in product(_RUN_TYPES, _TASK_TYPES)
+    },
+)
+CalcType.__doc__ = "VASP calculation types"
 
 
 def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:
@@ -70,15 +102,18 @@ def group_structures(
         return get_sg(struc, symprec=symprec)
 
     # First group by spacegroup number then by structure matching
-    for sg, pregroup in groupby(sorted(structures, key=_get_sg), key=_get_sg):
+    for _, pregroup in groupby(sorted(structures, key=_get_sg), key=_get_sg):
         for group in sm.group_structures(list(pregroup)):
             yield group
 
 
-def run_type(parameters: Dict) -> str:
+def run_type(parameters: Dict) -> RunType:
     """
     Determines the run_type from the VASP parameters dict
     This is adapted from pymatgen to be far less unstable
+
+    Args:
+        parameters: Dictionary of VASP parameters from Vasprun.xml
     """
 
     if parameters.get("LDAU", False):
@@ -111,12 +146,12 @@ def run_type(parameters: Dict) -> str:
 
 def task_type(
     inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict]
-) -> str:
+) -> TaskType:
     """
-    Determines the calculation type
+    Determines the task type
 
     Args:
-        inputs (dict): inputs dict with an incar, kpoints, potcar, and poscar dictionaries
+        inputs: inputs dict with an incar, kpoints, potcar, and poscar dictionaries
     """
 
     calc_type = []
@@ -162,6 +197,22 @@ def task_type(
         calc_type.append("Deformation")
 
     return " ".join(calc_type)
+
+
+def calc_type(
+    inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict],
+    parameters: Dict,
+) -> CalcType:
+    """
+    Determines the calc type
+
+    Args:
+        inputs: inputs dict with an incar, kpoints, potcar, and poscar dictionaries
+        parameters: Dictionary of VASP parameters from Vasprun.xml
+    """
+    rt = run_type(parameters)
+    tt = task_type(inputs)
+    return f"{rt} {tt}"
 
 
 def jsanitize(obj, strict=False, allow_bson=False):
@@ -214,14 +265,9 @@ def jsanitize(obj, strict=False, allow_bson=False):
         }
     if isinstance(obj, (int, float)):
         return obj
+
     if obj is None:
         return None
-
-    if isinstance(obj, MSONable):
-        return {
-            k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
-            for k, v in obj.as_dict().items()
-        }
 
     if not strict:
         return obj.__str__()
