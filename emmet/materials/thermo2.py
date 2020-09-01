@@ -126,7 +126,7 @@ class ThermoBuilder(Builder):
         docs = []
 
         sandboxes, entries = item
-        entries = self.compatibility.process_entries(entries)
+        entries = self.compatibility.process_entries(entries,clean=True)
 
         # determine chemsys
         chemsys = "-".join(
