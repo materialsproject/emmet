@@ -55,7 +55,7 @@ class PropertyDoc(BaseModel):
     )
 
     sandboxes: List[str] = Field(
-        None,
+        ["core"],
         description="List of sandboxes this property belongs to."
         " Sandboxes provide a way of controlling access to materials."
         " No sandbox means this materials is openly visible",
@@ -75,11 +75,11 @@ class MaterialsDoc(StructureMetadata):
     )
 
     structure: Structure = Field(
-        None, description="The best structure for this material"
+        ..., description="The best structure for this material"
     )
 
     deprecated: bool = Field(
-        None, description="Whether this materials document is deprecated.",
+        True, description="Whether this materials document is deprecated.",
     )
 
     last_updated: datetime = Field(
@@ -100,10 +100,9 @@ class MaterialsDoc(StructureMetadata):
     )
 
     sandboxes: List[str] = Field(
-        None,
+        ["core"],
         description="List of sandboxes this material belongs to."
-        " Sandboxes provide a way of controlling access to materials."
-        " No sandbox means this materials is openly visible",
+        " Sandboxes provide a way of controlling access to materials.",
     )
 
     @classmethod
