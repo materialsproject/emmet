@@ -37,6 +37,11 @@ class EmmetSettings(BaseSettings):
         5, description="Angle tolerance for structure matching in degrees."
     )
 
+    MAX_PIEZO_MILLER: int = Field(
+        10,
+        description="Maximum miller allowed for computing strain direction for maximal piezo response",
+    )
+
     class Config:
         env_prefix = "emmet_"
         extra = "ignore"
