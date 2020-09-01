@@ -24,19 +24,6 @@ class PropertyOrigin(CorePropertyOrigin):
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
-    initial_structures: List[Structure] = Field(
-        None,
-        description="Initial structures used in the DFT optimizations corresponding to this material",
-    )
-
-    task_ids: List[str] = Field(
-        None,
-        title="Calculation IDs",
-        description="List of Calculations IDs used to make this Materials Document",
-    )
-
-    deprecated_tasks: List[str] = Field(None, title="Deprecated Tasks")
-
     calc_types: Dict[str, CalcType] = Field(
         None,
         description="Calculation types for all the calculations that make up this material",

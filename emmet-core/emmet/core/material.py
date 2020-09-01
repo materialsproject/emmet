@@ -82,6 +82,24 @@ class MaterialsDoc(StructureMetadata):
         True, description="Whether this materials document is deprecated.",
     )
 
+    initial_structures: List[Structure] = Field(
+        [],
+        description="Initial structures used in the DFT optimizations corresponding to this material",
+    )
+
+    task_ids: List[str] = Field(
+        [],
+        title="Calculation IDs",
+        description="List of Calculations IDs used to make this Materials Document",
+    )
+
+    deprecated_tasks: List[str] = Field([], title="Deprecated Tasks")
+
+    calc_types: Dict[str, str] = Field(
+        None,
+        description="Calculation types for all the calculations that make up this material",
+    )
+
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated",
         default_factory=datetime.utcnow,
