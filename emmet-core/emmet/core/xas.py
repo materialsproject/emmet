@@ -47,6 +47,6 @@ class XASDoc(SpectrumDoc):
             edge=edge,
             spectrum_type=spectrum_type,
             absorbing_element=xas_spectrum.absorbing_element,
-            xas_id=xas_id,
+            spectrum_id=xas_id,
             **kwargs,
         )

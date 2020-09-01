@@ -29,6 +29,7 @@ class SpectrumDoc(StructureMetadata):
     last_updated: datetime = Field(
         ...,
         description="Timestamp for the most recent calculation update for this property",
+        default_factory=datetime.utcnow,
     )
 
     warnings: List[str] = Field([], description="Any warnings related to this property")

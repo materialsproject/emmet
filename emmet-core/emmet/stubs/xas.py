@@ -54,3 +54,6 @@ class XASSpectrum(BaseModel):
     edge: Edge = Field(
         None, title="Absorption Edge", description="The interaction edge for XAS"
     )
+
+    class Config:
+        use_enum_values = True
