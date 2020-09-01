@@ -1,12 +1,12 @@
 """ Core definition of a Thermo Document """
-from typing import List, Dict, ClassVar
 from datetime import datetime
+from typing import ClassVar, Dict, List
 
 from pydantic import BaseModel, Field
 
-from emmet.stubs import ComputedEntry
-from emmet.core.structure import StructureMetadata
 from emmet.core.material import PropertyDoc
+from emmet.core.structure import StructureMetadata
+from emmet.stubs import ComputedEntry
 
 
 class Decomposition(BaseModel):

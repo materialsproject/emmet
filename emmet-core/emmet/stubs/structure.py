@@ -1,4 +1,5 @@
-from typing import Dict, List, Optional, Union, Tuple
+from typing import Dict, List, Optional, Tuple, Union
+
 from pydantic import BaseModel, Field
 from pymatgen import Element
 

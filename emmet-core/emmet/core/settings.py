@@ -4,6 +4,7 @@ database building and in the website code, to ensure consistency between
 different modules and packages.
 """
 import json
+
 import requests
 from pydantic import BaseSettings, Field, root_validator
 from pydantic.types import Path

@@ -2,10 +2,10 @@
 from typing import List, Optional, Type, TypeVar, overload
 
 from pydantic import BaseModel, Field
-
 from pymatgen import Element
-from emmet.stubs import Structure, Composition
+
 from emmet.core.symmetry import SymmetryData
+from emmet.stubs import Composition, Structure
 
 
 class StructureMetadata(BaseModel):

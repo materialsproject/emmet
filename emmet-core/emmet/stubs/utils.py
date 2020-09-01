@@ -1,11 +1,22 @@
 """ Utilities to enable stubbing in JSON schema into pydantic for Monty """
-from typing import Dict, Any, TypeVar, Union, Optional, Tuple, List, Set, Sequence, Type
-from typing import get_type_hints
-from numpy import ndarray
-from monty.json import MSONable, MontyDecoder
-from pydantic import create_model, Field, BaseModel
-from pydantic.fields import ModelField, FieldInfo
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    get_type_hints,
+)
 
+from monty.json import MontyDecoder, MSONable
+from numpy import ndarray
+from pydantic import BaseModel, Field, create_model
+from pydantic.fields import FieldInfo, ModelField
 
 built_in_primitives = (bool, int, float, complex, range, str, bytes, None)
 prim_to_type_hint: Dict[type, Any] = {list: List, tuple: Tuple, dict: Dict, set: Set}

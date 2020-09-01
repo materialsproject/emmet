@@ -1,16 +1,14 @@
 """ Core definition of a Materials Document """
-from typing import List, Dict, ClassVar, Union, Optional
-from functools import partial
 from datetime import datetime
-
+from functools import partial
+from typing import ClassVar, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, create_model
+from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
 
-from pymatgen.analysis.magnetism import Ordering, CollinearMagneticStructureAnalyzer
-
-from emmet.stubs import Structure
 from emmet.core.structure import StructureMetadata
-from emmet.core.utils import TaskType, CalcType, RunType
+from emmet.core.utils import CalcType, RunType, TaskType
+from emmet.stubs import Structure
 
 
 class PropertyOrigin(BaseModel):

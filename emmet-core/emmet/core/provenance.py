@@ -1,14 +1,12 @@
 """ Core definition of a Provenance Document """
-from typing import List, Dict, ClassVar
 from datetime import datetime
-
 from enum import Enum
+from typing import ClassVar, Dict, List
 
-from pydantic import BaseModel, Field, EmailStr, HttpUrl, validator
+from pybtex.database import BibliographyData, parse_string
+from pydantic import BaseModel, EmailStr, Field, HttpUrl, validator
 
 from emmet.core.material import PropertyDoc
-
-from pybtex.database import parse_string, BibliographyData
 
 
 class Database(Enum):

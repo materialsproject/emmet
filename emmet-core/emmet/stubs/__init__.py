@@ -4,15 +4,15 @@ Use pymatgen classes in pydantic models by importing them from there when you ne
 
 """
 
-from pymatgen import Structure, Composition
-from pymatgen.entries.computed_entries import ComputedEntry
+from pymatgen import Composition, Structure
 from pymatgen.analysis.xas.spectrum import XAS
+from pymatgen.entries.computed_entries import ComputedEntry
 
-from emmet.stubs.utils import patch_msonable, use_model
-from emmet.stubs.math import Vector3D, Matrix3D
-from emmet.stubs.structure import Structure as StubStructure
+from emmet.stubs.math import Matrix3D, Vector3D
 from emmet.stubs.misc import Composition as StubComposition
 from emmet.stubs.misc import ComputedEntry as StubComputedEntry
+from emmet.stubs.structure import Structure as StubStructure
+from emmet.stubs.utils import patch_msonable, use_model
 
 """
 The stub names are kept in sync with the actual classes so they

@@ -1,17 +1,15 @@
 """ Core definition of a Materials Document """
-from typing import List, Dict, ClassVar, Union, Optional
-from functools import partial
 from datetime import datetime
-
+from functools import partial
+from typing import ClassVar, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, create_model
 
-from emmet.stubs import Structure
-from emmet.core.structure import StructureMetadata
-from emmet.core.vasp.calc_types import TaskType, CalcType, RunType
-
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin as CorePropertyOrigin
+from emmet.core.structure import StructureMetadata
+from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
+from emmet.stubs import Structure
 
 
 class PropertyOrigin(CorePropertyOrigin):

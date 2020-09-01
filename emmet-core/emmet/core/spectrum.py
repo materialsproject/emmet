@@ -1,7 +1,7 @@
 """ Core definition of Spectrum document """
-from typing import List, Dict, ClassVar, Union
-from functools import partial
 from datetime import datetime
+from functools import partial
+from typing import ClassVar, Dict, List, Union
 
 from pydantic import Field
 
