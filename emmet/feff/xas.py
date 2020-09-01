@@ -28,7 +28,13 @@ class XASBuilder(GroupBuilder):
 
     def unary_function(self, items: List[Dict]) -> Dict:
 
-        all_spectra = [feff_task_to_spectrum(task) for task in items]
+        all_spectra = []
+        for task in items:
+            try:
+                spec_task = feff_task_to_spectrum(task)
+                all_spectra.append(spec_task)
+            except Exception:
+                pass
 
         # Dictionary of all site to spectra mapping
         sites_to_spectra = {
@@ -216,9 +222,9 @@ def spectra_to_doc(spectrum):
     information
     """
     structure = spectrum.structure
-    
+
     spectrum.asborbing_element = str(spectrum.absorbing_element)
-    
+
     doc = structure_metadata(structure)
     doc.update(
         {
