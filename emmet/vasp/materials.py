@@ -154,7 +154,7 @@ class MaterialsBuilder(Builder):
                 self.tasks.query(criteria=tasks_q, properties=self.projected_from_tasks)
             )
             for t in tasks:
-                if t[self.tasks.key] in invalid_ids:
+                if t[self.tasks.key] in invalid_ids or "deprecated" in t.get("tags",[]):
                     t["is_valid"] = False
                 else:
                     t["is_valid"] = True
