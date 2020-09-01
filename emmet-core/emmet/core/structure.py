@@ -65,7 +65,11 @@ class StructureMetadata(BaseModel):
 
     @classmethod
     def from_structure(
-        cls, structure: Structure, fields: Optional[List[str]] = None, **kwargs
+        cls,
+        structure: Structure,
+        fields: Optional[List[str]] = None,
+        include_structure: bool = False,
+        **kwargs
     ) -> "StructureMetadata":
 
         fields = (
@@ -104,5 +108,8 @@ class StructureMetadata(BaseModel):
             "density_atomic": structure.volume / structure.num_sites,
             "symmetry": symmetry,
         }
+
+        if include_structure:
+            kwargs.update({"structure": structure})
 
         return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
