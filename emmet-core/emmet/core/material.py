@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, create_model
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
 
 from emmet.core.structure import StructureMetadata
-from emmet.core.utils import CalcType, RunType, TaskType
+from emmet.core.vasp import CalcType, RunType, TaskType
 from emmet.stubs import Structure
 
 
