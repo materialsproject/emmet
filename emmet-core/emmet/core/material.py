@@ -113,14 +113,13 @@ class MaterialsDoc(StructureMetadata):
         None, description="Dictionary for tracking the provenance of properties"
     )
 
-    warnings: List[str] = Field(
-        None, description="Any warnings related to this material"
-    )
+    warnings: List[str] = Field([], description="Any warnings related to this material")
 
     sandboxes: List[str] = Field(
         ["core"],
         description="List of sandboxes this material belongs to."
-        " Sandboxes provide a way of controlling access to materials.",
+        " Sandboxes provide a way of controlling access to materials."
+        " Core is the primary sandbox for fully open documents",
     )
 
     @classmethod
