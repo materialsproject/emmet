@@ -40,4 +40,6 @@ class ValidationDoc(BaseModel):
         description="Last updated date for this document",
         default_factory=datetime.utcnow,
     )
-    reasons: Dict[DeprecationMessage, Dict]
+    reasons: List[DeprecationMessage] = Field(
+        {}, description="List of deprecation tags detailing why this task isn't valid"
+    )
