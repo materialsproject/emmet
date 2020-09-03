@@ -1,7 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Dict
-
+from typing import List, Union
 from pydantic import BaseModel, Field
 
 
@@ -40,6 +39,6 @@ class ValidationDoc(BaseModel):
         description="Last updated date for this document",
         default_factory=datetime.utcnow,
     )
-    reasons: List[DeprecationMessage] = Field(
-        {}, description="List of deprecation tags detailing why this task isn't valid"
+    reasons: List[Union[DeprecationMessage, str]] = Field(
+        [], description="List of deprecation tags detailing why this task isn't valid"
     )
