@@ -27,7 +27,7 @@ class PropertyOrigin(BaseModel):
     )
 
 
-class PropertyDoc(BaseModel):
+class PropertyDoc(StructureMetadata):
     """
     Base model definition for any singular materials property. This may contain any amount
     of structure metadata for the purpose of search
@@ -61,6 +61,21 @@ class PropertyDoc(BaseModel):
         " No sandbox means this materials is openly visible",
     )
 
+    @classmethod
+    def from_structure(  # type: ignore[override]
+        cls, structure: Structure, material_id: str, **kwargs
+    ) -> "MaterialsDoc":
+        """
+        Builds a materials document using the minimal amount of information
+        """
+
+        return super().from_structure(
+            structure=structure,
+            material_id=material_id,
+            include_structure=False,
+            **kwargs
+        )
+
 
 class MaterialsDoc(StructureMetadata):
     """
@@ -79,7 +94,8 @@ class MaterialsDoc(StructureMetadata):
     )
 
     deprecated: bool = Field(
-        True, description="Whether this materials document is deprecated.",
+        True,
+        description="Whether this materials document is deprecated.",
     )
 
     initial_structures: List[Structure] = Field(
@@ -104,6 +120,7 @@ class MaterialsDoc(StructureMetadata):
         description="Timestamp for when this document was last updated",
         default_factory=datetime.utcnow,
     )
+
     created_at: datetime = Field(
         description="Timestamp for when this material document was first created",
         default_factory=datetime.utcnow,
@@ -131,5 +148,8 @@ class MaterialsDoc(StructureMetadata):
         """
 
         return super().from_structure(
-            structure=structure, material_id=material_id, include_structure=True
+            structure=structure,
+            material_id=material_id,
+            include_structure=True,
+            **kwargs
         )

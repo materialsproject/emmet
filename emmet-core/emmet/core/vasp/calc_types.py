@@ -1,3 +1,4 @@
+""" Module to define various calculation types as Enums for VASP """
 import datetime
 from enum import Enum
 from itertools import groupby, product

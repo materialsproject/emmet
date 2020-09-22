@@ -7,8 +7,7 @@ from emmet.core.settings import EmmetSettings
 
 
 def test_default_config_path(tmp_path: PosixPath):
-    """Make sure the default config path works
-    """
+    """Make sure the default config path works"""
 
     rand_symprec = random()
     with open(tmp_path / "temp_config.json", "w") as f:
