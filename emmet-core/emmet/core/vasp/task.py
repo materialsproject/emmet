@@ -2,13 +2,16 @@
 from datetime import datetime
 from enum import Enum
 from functools import partial
-from typing import ClassVar, Dict, List, Optional, Union
+from typing import ClassVar, Dict, List, Optional, Union, Any
 
 from pydantic import BaseModel, Field, create_model
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
 
 from emmet.core.structure import StructureMetadata
 from emmet.stubs import Matrix3D, Structure
+
+
+### Computed Entry for each calculation
 
 
 class Status(Enum):
@@ -18,6 +21,23 @@ class Status(Enum):
 
     SUCESS = "sucess"
     FAILED = "failed"
+
+
+class VASPObjects(Enum):
+    """
+    Types of VASP data objects
+    """
+
+    BANDSTRUCTURE = "bandstructure"
+    DOS = "dos"
+    CHGCAR = "chg"
+    AECCAR0 = "aec0"
+    AECCAR1 = "aec1"
+    AECCAR2 = "aec2"
+    TRAJECTORY = "traj"
+    ELFCAR = "elf"
+    WAVECAR = "wave"
+    LOCPOT = "locpot"
 
 
 class InputSummary(BaseModel):
@@ -40,6 +60,10 @@ class OutputSummary(BaseModel):
     Summary of the outputs for a VASP calculation
     """
 
+    input_structure: Structure = Field(
+        None,
+        description="The input structure for the last calculation if more than one calculation is included",
+    )
     structure: Structure = Field(..., description="The output structure object")
     energy: float = Field(
         ..., description="The final total DFT energy for the last calculation"
@@ -88,16 +112,22 @@ class TaskDocument(StructureMetadata):
         ..., description="Timestamp for when this task was completed"
     )
     last_updated: datetime = Field(
-        ..., description="Timestamp for this task document was last updateed"
+        default_factory=datetime.utcnow,
+        description="Timestamp for this task document was last updateed",
     )
 
     input: InputSummary
     output: OutputSummary
 
-    state: State
+    state: Status
 
     orig_inputs: Dict[str, Dict] = Field(
         ..., description="Summary of the original VASP inputs"
     )
     task_id: str = Field(None, description="the Task ID For this document")
     tags: List[str] = Field(None, description="Metadata tags for this task document")
+
+    included_objects: List[VASPObjects] = Field(
+        None, description="List of VASP objects included with this Task Document"
+    )
+    vasp_objects: Dict[VASPObjects, Any]
