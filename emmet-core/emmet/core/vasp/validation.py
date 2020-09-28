@@ -42,3 +42,6 @@ class ValidationDoc(BaseModel):
     reasons: List[Union[DeprecationMessage, str]] = Field(
         [], description="List of deprecation tags detailing why this task isn't valid"
     )
+
+    class Config:
+        extra = "allow"

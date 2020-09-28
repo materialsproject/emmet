@@ -44,7 +44,7 @@ class MaterialsBuilder(Builder):
         self,
         tasks: Store,
         materials: Store,
-        task_types: Optional[Store] = None,
+        task_validation: Optional[Store] = None,
         query: Optional[Dict] = None,
         allowed_task_types: Optional[List[str]] = None,
         symprec: float = SETTINGS.SYMPREC,
@@ -67,7 +67,7 @@ class MaterialsBuilder(Builder):
 
         self.tasks = tasks
         self.materials = materials
-        self.task_types = task_types
+        self.task_validation = task_validation
         self.allowed_task_types = {TaskType(t) for t in allowed_task_types} or set(
             TaskType
         )
@@ -79,8 +79,8 @@ class MaterialsBuilder(Builder):
         self.kwargs = kwargs
 
         sources = [tasks]
-        if self.task_types:
-            sources.append(self.task_types)
+        if self.task_validation:
+            sources.append(self.task_validation)
         super().__init__(sources=sources, targets=[materials], **kwargs)
 
     def ensure_indexes(self):
@@ -100,9 +100,9 @@ class MaterialsBuilder(Builder):
         self.materials.ensure_index("sandboxes")
         self.materials.ensure_index("task_ids")
 
-        if self.task_types:
-            self.task_types.ensure_index(self.task_types.key)
-            self.task_types.ensure_index("is_valid")
+        if self.task_validation:
+            self.task_validation.ensure_index(self.task_validation.key)
+            self.task_validation.ensure_index("is_valid")
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
@@ -147,11 +147,11 @@ class MaterialsBuilder(Builder):
         # Set total for builder bars to have a total
         self.total = len(to_process_forms)
 
-        if self.task_types:
+        if self.task_validation:
             invalid_ids = {
                 doc[self.tasks.key]
-                for doc in self.task_types.query(
-                    {"is_valid": False}, [self.task_types.key]
+                for doc in self.task_validation.query(
+                    {"is_valid": False}, [self.task_validation.key]
                 )
             }
         else:
