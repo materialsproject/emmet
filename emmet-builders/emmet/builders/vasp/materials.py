@@ -220,8 +220,11 @@ class MaterialsBuilder(Builder):
         for item in items:
             item.update({"_bt": self.timestamp})
 
+        material_ids = {item[self.materials.key] for item in items}
+
         if len(items) > 0:
             self.logger.info(f"Updating {len(items)} materials")
+            self.materials.remove_docs({self.materials.key: {"$in": material_ids}})
             self.materials.update(
                 docs=jsanitize(items, allow_bson=True),
                 key=(self.materials.key, "sandboxes"),
