@@ -259,7 +259,18 @@ class MaterialsBuilder(Builder):
         )
 
         for group in grouped_structures:
-            yield [filtered_tasks[struc.index] for struc in group]
+            grouped_tasks = [filtered_tasks[struc.index] for struc in group]
+            sandboxes = [
+                task["sandboxes"] for task in grouped_tasks if "sandboxes" in task
+            ]
+
+            for sbx_set in maximal_spanning_non_intersecting_subsets(sandboxes):
+                yield [
+                    task
+                    for task in grouped_tasks
+                    if len(set(task.get("sandboxes", ["core"])).intersection(sbx_set))
+                    > 0
+                ]
 
     def make_mat(self, task_group: List[Dict]) -> Dict:
         """
