@@ -91,14 +91,15 @@ class MaterialsBuilder(Builder):
 
         # Basic search index for tasks
         self.tasks.ensure_index(self.tasks.key, unique=True)
+        self.tasks.ensure_index(self.tasks.last_updated_field)
         self.tasks.ensure_index("state")
         self.tasks.ensure_index("formula_pretty")
-        self.tasks.ensure_index(self.tasks.last_updated_field)
 
         # Search index for materials
-        self.materials.ensure_index(self.materials.key, unique=True)
-        self.materials.ensure_index("task_ids")
+        self.materials.ensure_index(self.materials.key)
         self.materials.ensure_index(self.materials.last_updated_field)
+        self.materials.ensure_index("sandboxes")
+        self.materials.ensure_index("task_ids")
 
         if self.task_types:
             self.task_types.ensure_index(self.task_types.key)
