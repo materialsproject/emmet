@@ -90,7 +90,7 @@ class MaterialsBuilder(Builder):
         """
 
         # Basic search index for tasks
-        self.tasks.ensure_index(self.tasks.key, unique=True)
+        self.tasks.ensure_index(self.tasks.key)
         self.tasks.ensure_index(self.tasks.last_updated_field)
         self.tasks.ensure_index("state")
         self.tasks.ensure_index("formula_pretty")
@@ -125,11 +125,11 @@ class MaterialsBuilder(Builder):
         self.timestamp = datetime.utcnow()
 
         # Get all processed tasks:
-        q = dict(self.query)
-        q["state"] = "successful"
+        temp_query = dict(self.query)
+        temp_query["state"] = "successful"
 
         self.logger.info("Finding tasks to process")
-        all_tasks = {d[self.tasks.key] for d in self.tasks.query(q, [self.tasks.key])}
+        all_tasks = {doc[self.tasks.key] for doc in self.tasks.query(temp_query, [self.tasks.key])}
         processed_tasks = {
             t_id
             for d in self.materials.query({}, ["task_ids"])
@@ -164,13 +164,14 @@ class MaterialsBuilder(Builder):
             "output.parameters",
             "orig_inputs",
             "input.structure",
+            "sandboxes",
         ]
 
         for formula in to_process_forms:
-            tasks_q = dict(q)
-            tasks_q["formula_pretty"] = formula
+            tasks_query = dict(temp_query)
+            tasks_query["formula_pretty"] = formula
             tasks = list(
-                self.tasks.query(criteria=tasks_q, properties=projected_fields)
+                self.tasks.query(criteria=tasks_query, properties=projected_fields)
             )
             for t in tasks:
                 if t[self.tasks.key] in invalid_ids:
@@ -192,8 +193,8 @@ class MaterialsBuilder(Builder):
         """
 
         formula = tasks[0]["formula_pretty"]
-        t_ids = [t[self.tasks.key] for t in tasks]
-        self.logger.debug(f"Processing {formula} : {t_ids}")
+        task_ids = [task[self.tasks.key] for task in tasks]
+        self.logger.debug(f"Processing {formula} : {task_ids}")
 
         materials = []
         grouped_tasks = self.filter_and_group_tasks(tasks)
@@ -219,7 +220,10 @@ class MaterialsBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(items)} materials")
-            self.materials.update(docs=jsanitize(items, allow_bson=True))
+            self.materials.update(
+                docs=jsanitize(items, allow_bson=True),
+                key=(self.materials.key, "sandboxes"),
+            )
         else:
             self.logger.info("No items to update")
 
