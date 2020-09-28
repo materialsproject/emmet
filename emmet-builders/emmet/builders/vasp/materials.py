@@ -9,16 +9,13 @@ from pymatgen.analysis.structure_matcher import StructureMatcher, ElementCompara
 from maggma.stores import Store
 from maggma.builders import Builder
 
-from emmet.core import SETTINGS
-from emmet.core.utils import (
-    task_type,
-    run_type,
-    calc_type,
-    group_structures,
-    _TASK_TYPES,
-    jsanitize,
-)
+from emmet.builders import SETTINGS
+from emmet.core.vasp.calc_types import task_type, run_type, calc_type, TaskType
+
+from emmet.core.utils import group_structures, jsanitize
+
 from emmet.core.material import MaterialsDoc, PropertyOrigin
+from emmet.builders.utils import maximal_spanning_non_intersecting_subsets
 
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
@@ -71,7 +68,9 @@ class MaterialsBuilder(Builder):
         self.tasks = tasks
         self.materials = materials
         self.task_types = task_types
-        self.allowed_task_types = allowed_task_types
+        self.allowed_task_types = {TaskType(t) for t in allowed_task_types} or set(
+            TaskType
+        )
         self.query = query if query else {}
         self.symprec = symprec
         self.ltol = ltol
@@ -129,7 +128,10 @@ class MaterialsBuilder(Builder):
         temp_query["state"] = "successful"
 
         self.logger.info("Finding tasks to process")
-        all_tasks = {doc[self.tasks.key] for doc in self.tasks.query(temp_query, [self.tasks.key])}
+        all_tasks = {
+            doc[self.tasks.key]
+            for doc in self.tasks.query(temp_query, [self.tasks.key])
+        }
         processed_tasks = {
             t_id
             for d in self.materials.query({}, ["task_ids"])
@@ -231,14 +233,13 @@ class MaterialsBuilder(Builder):
         """
         Groups tasks by structure matching
         """
-        allowed_task_types = self.allowed_task_types or _TASK_TYPES
 
         filtered_tasks = [
             task
             for task in tasks
             if any(
                 allowed_type in task_type(task.get("orig_inputs", {}))
-                for allowed_type in allowed_task_types
+                for allowed_type in self.allowed_task_types
             )
         ]
 
@@ -281,19 +282,23 @@ class MaterialsBuilder(Builder):
             t[self.tasks.key]: task_type(t["orig_inputs"]) for t in task_group
         }
         calc_types = {
-            t[self.tasks.key]: calc_type(t["orig_inputs"], t["output"]["parameters"])
-            for t in task_group
+            task[self.tasks.key]: f"{run_types[task[self.tasks.key]]}"
+            + " "
+            + f"{task_types[task[self.tasks.key]]}"
+            for task in task_group
         }
 
         structure_optimizations = [
-            t
-            for t in task_group
-            if task_type(t["orig_inputs"]) == "Structure Optimization"
+            task
+            for task in task_group
+            if task_types[task[self.tasks.key]] == "Structure Optimization"
         ]
-        statics = [t for t in task_group if task_type(t["orig_inputs"]) == "Static"]
+        statics = [
+            task for task in task_group if task_types[task[self.tasks.key]] == "Static"
+        ]
 
         # Material ID
-        possible_mat_ids = [t[self.tasks.key] for t in structure_optimizations]
+        possible_mat_ids = [task[self.tasks.key] for task in structure_optimizations]
         possible_mat_ids = sorted(possible_mat_ids, key=ID_to_int)
 
         if len(possible_mat_ids) == 0:
@@ -314,17 +319,17 @@ class MaterialsBuilder(Builder):
 
             ispin = task.get("output", {}).get("parameters", {}).get("ISPIN", 1)
             energy = task.get("output", {}).get("energy_per_atom", 0.0)
-
+            task_run_type = run_type(task["output"]["parameters"])
             special_tags = [
                 task.get("output", {}).get("parameters", {}).get(tag, False)
-                for tag in ["LASPH", "ADDGRID"]
+                for tag in ["LASPH"]
             ]
 
             is_valid = task[self.tasks.key] in deprecated_tasks
 
             return (
                 -1 * is_valid,
-                -1 * qual_score.get(run_type, 0),
+                -1 * qual_score.get(task_run_type, 0),
                 -1 * ispin,
                 -1 * sum(special_tags),
                 energy,
