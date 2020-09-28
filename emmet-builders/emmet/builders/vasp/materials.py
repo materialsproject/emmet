@@ -267,13 +267,19 @@ class MaterialsBuilder(Builder):
         """
 
         # Metadata
-        last_updated = max(t[self.tasks.last_updated_field] for t in task_group)
-        created_at = min(t[self.tasks.last_updated_field] for t in task_group)
-        task_ids = list({t[self.tasks.key] for t in task_group})
-        sandboxes = list({sbxn for t in task_group for sbxn in t.get("sbxn", [])})
+        last_updated = max(task[self.tasks.last_updated_field] for task in task_group)
+        created_at = min(task[self.tasks.last_updated_field] for task in task_group)
+        task_ids = list({task[self.tasks.key] for task in task_group})
+        sandboxes = list(
+            {sbxn for task in task_group for sbxn in task.get("sbxn", ["core"])}
+        )
 
         deprecated_tasks = list(
-            {t[self.tasks.key] for t in task_group if not t["is_valid"]}
+            {
+                task[self.tasks.key]
+                for task in task_group
+                if not task.get("is_valid", True)
+            }
         )
         run_types = {
             t[self.tasks.key]: run_type(t["output"]["parameters"]) for t in task_group
