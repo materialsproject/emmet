@@ -129,8 +129,12 @@ class MaterialsBuilder(Builder):
         q["state"] = "successful"
 
         self.logger.info("Finding tasks to process")
-        all_tasks = set(self.tasks.distinct(self.tasks.key, q))
-        processed_tasks = set(self.materials.distinct("task_ids"))
+        all_tasks = {d[self.tasks.key] for d in self.tasks.query(q, [self.tasks.key])}
+        processed_tasks = {
+            t_id
+            for d in self.materials.query({}, ["task_ids"])
+            for t_id in d.get("task_ids", [])
+        }
         to_process_tasks = all_tasks - processed_tasks
         to_process_forms = self.tasks.distinct(
             "formula_pretty", {self.tasks.key: {"$in": list(to_process_tasks)}}
@@ -142,9 +146,12 @@ class MaterialsBuilder(Builder):
         self.total = len(to_process_forms)
 
         if self.task_types:
-            invalid_ids = set(
-                self.task_types.distinct(self.task_types.key, {"is_valid": False})
-            )
+            invalid_ids = {
+                doc[self.tasks.key]
+                for doc in self.task_types.query(
+                    {"is_valid": False}, [self.task_types.key]
+                )
+            }
         else:
             invalid_ids = set()
 
