@@ -1,7 +1,8 @@
-from itertools import chain
+from typing import Set
+from itertools import chain, combinations
 
 
-def maximal_spanning_non_intersecting_subsets(sets):
+def maximal_spanning_non_intersecting_subsets(sets) -> Set[Set]:
     """
     Finds the maximal spanning non intersecting subsets of a group of sets
     This is usefull for parsing out the sandboxes and figuring out how to group
@@ -27,3 +28,15 @@ def maximal_spanning_non_intersecting_subsets(sets):
         to_return_subsets.extend(maximal_spanning_non_intersecting_subsets(sets))
 
     return set(to_return_subsets)
+
+
+def chemsys_permutations(chemsys) -> Set:
+    # Fancy way of getting every unique permutation of elements for all
+    # possible number of elements:
+    elements = chemsys.split("-")
+    return {
+        "-".join(sorted(c))
+        for c in chain(
+            *[combinations(elements, i) for i in range(1, len(elements) + 1)]
+        )
+    }
