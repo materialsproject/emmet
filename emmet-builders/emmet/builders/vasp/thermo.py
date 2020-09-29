@@ -89,8 +89,52 @@ class Thermo(Builder):
     ) -> Set:
         """ Gets updated chemical system as defined by the updating of an existing material """
 
+        updated_mats = self.thermo.newer_in(self.materials, criteria=self.query)
+        updated_chemsys = set(
+            self.materials.distinct(
+                "chemsys", {self.materials.key: {"$in": list(updated_mats)}}
+            )
+        )
+        self.logger.debug(f"Found {len(updated_chemsys)} updated chemical systems")
+
+        return updated_chemsys
+
     def get_new_chemsys(self) -> Set:
         """ Gets newer chemical system as defined by introduction of a new material """
 
+        # All materials that are not present in the thermo collection
+        thermo_mat_ids = self.thermo.distinct(self.thermo.key)
+        mat_ids = self.materials.distinct(self.materials.key, self.query)
+        dif_task_ids = list(set(mat_ids) - set(thermo_mat_ids))
+        q = {"task_id": {"$in": dif_task_ids}}
+        new_mat_chemsys = set(self.materials.distinct("chemsys", q))
+        self.logger.debug(f"Found {len(new_mat_chemsys)} new chemical systems")
+
+        return new_mat_chemsys
+
     def get_affected_chemsys(self, chemical_systems: Set) -> Set:
         """ Gets chemical systems affected by changes in the supplied chemical systems """
+        # First get all chemsys with any of the elements we've marked
+        affected_chemsys = set()
+        affected_els = list({el for c in chemical_systems for el in c.split("-")})
+        possible_affected_chemsys = self.materials.distinct(
+            "chemsys", {"elements": {"$in": affected_els}}
+        )
+
+        sub_chemsys = defaultdict(list)
+        # Build a dictionary mapping sub_chemsys to all super_chemsys
+        for chemsys in possible_affected_chemsys:
+            for permutation in chemsys_permutations(chemsys):
+                sub_chemsys[permutation].append(chemsys)
+
+        # Select and merge distinct super chemsys from sub_chemsys
+        for chemsys in chemical_systems:
+            affected_chemsys |= set(sub_chemsys[chemsys])
+
+        self.logger.debug(
+            f"Found {len(affected_chemsys)} chemical systems affected by this build"
+        )
+
+        return affected_chemsys
+
+
