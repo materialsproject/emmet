@@ -75,6 +75,32 @@ class Thermo(Builder):
         Gets whole chemical systems of entries to process
         """
 
+        self.logger.info("Thermo Builder Started")
+
+        self.logger.info("Setting indexes")
+        self.ensure_indexes()
+
+        updated_chemsys = self.get_updated_chemsys()
+        new_chemsys = self.get_new_chemsys()
+
+        affected_chemsys = self.get_affected_chemsys(updated_chemsys | new_chemsys)
+
+        # Remove overlapping chemical systems
+        to_process_chemsys = {}
+        for chemsys in updated_chemsys | new_chemsys | affected_chemsys:
+            if chemsys not in to_process_chemsys:
+                to_process_chemsys |= chemsys_permutations(chemsys)
+
+        self.logger.inf(
+            f"Found {len(to_process_chemsys)} chemical systems with new/updated materials to process"
+        )
+        self.total = len(to_process_chemsys)
+
+        # Yield the chemical systems in order of increasing size
+        # Will build them in a similar manner to fast Pourbaix
+        for chemsys in sorted(to_process_chemsys, key=lambda x: len(x.split("-"))):
+            yield self.get_entries(chemsys)
+
     def get_entries(self, chemsys: str) -> List[ComputedEntry]:
         """
         Gets a entries from the tasks collection for the corresponding chemical systems
