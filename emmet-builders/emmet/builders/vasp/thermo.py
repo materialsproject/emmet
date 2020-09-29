@@ -99,7 +99,26 @@ class Thermo(Builder):
         # Yield the chemical systems in order of increasing size
         # Will build them in a similar manner to fast Pourbaix
         for chemsys in sorted(to_process_chemsys, key=lambda x: len(x.split("-"))):
-            yield self.get_entries(chemsys)
+            entries = self.get_entries(chemsys)
+
+            # build sandbox sets: ["a"] , ["a","b"], ["core","a","b"]
+            sandbox_sets = set(
+                [frozenset(entry.data.get("sandboxes", {})) for entry in entries]
+            )
+            sandbox_sets = maximal_spanning_non_intersecting_subsets(sandbox_sets)
+            self.logger.debug(f"Found {len(sandbox_sets)}: {sandbox_sets}")
+
+            for sandboxes in sandbox_sets:
+                # only yield maximal subsets so that we can process a equivalent sandbox combinations at a time
+                sandbox_entries = [
+                    entry
+                    for entry in entries
+                    if all(
+                        sandbox in entry.data.get("_sbxn", []) for sandbox in sandboxes
+                    )
+                ]
+
+                yield sandboxes, sandbox_entries
 
     def get_entries(self, chemsys: str) -> List[ComputedEntry]:
         """
@@ -142,14 +161,13 @@ class Thermo(Builder):
         )
 
         # Convert the entries into ComputedEntries and store
-        new_entries = [
-            entry for doc in materials_docs for entry in doc.get("entries", {}).values()
-        ]
-        for entry in new_entries:
-            entry = ComputedEntry.from_dict(entry)
-            elsyms = sorted(set([el.symbol for el in entry.composition.elements]))
-            self._entries_cache["-".join(elsyms)].append(entry)
-            all_entries.append(entry)
+        for doc in materials_docs:
+            for entry in doc.get("entries", {}):
+                entry = ComputedEntry.from_dict(entry)
+                entry.data["sandboxes"] = doc["sandboxes"]
+                elsyms = sorted(set([el.symbol for el in entry.composition.elements]))
+                self._entries_cache["-".join(elsyms)].append(entry)
+                all_entries.append(entry)
 
         self.logger.info(f"Total entries in {chemsys} : {len(all_entries)}")
 
