@@ -6,16 +6,20 @@ from datetime import datetime
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 
+from pymatgen.analysis.structure_analyzer import oxide_type
+
+
 from maggma.stores import Store
 from maggma.builders import Builder
 
 from emmet.builders import SETTINGS
-from emmet.core.vasp.calc_types import task_type, run_type, calc_type, TaskType
+from emmet.core.vasp.calc_types import task_type, run_type, TaskType, CalcType
 
 from emmet.core.utils import group_structures, jsanitize
 
-from emmet.core.material import MaterialsDoc, PropertyOrigin
+from emmet.core.vasp.material import MaterialsDoc, PropertyOrigin
 from emmet.builders.utils import maximal_spanning_non_intersecting_subsets
+from emmet.stubs import ComputedEntry
 
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
@@ -357,9 +361,8 @@ class MaterialsBuilder(Builder):
                 energy,
             )
 
-        best_structure_calc = sorted(
-            structure_optimizations + statics, key=_structure_eval
-        )[0]
+        structure_calcs = structure_optimizations + statics
+        best_structure_calc = sorted(structure_calcs, key=_structure_eval)[0]
         structure = Structure.from_dict(best_structure_calc["output"]["structure"])
 
         # Initial Structures
@@ -389,6 +392,19 @@ class MaterialsBuilder(Builder):
                 last_updated=best_structure_calc[self.tasks.last_updated_field],
             )
         ]
+
+        # entries
+        entries = {}
+        all_run_types = set(run_types.keys())
+        for rt in all_run_types:
+            rt_tasks = {t_id for t_id in tasks if run_types[t_id] == rt}
+            relevant_calcs = [
+                doc for doc in structure_calcs if doc[self.tasks.key] in rt_tasks
+            ]
+            if len(relevant_calcs) > 0:
+                entries[rt] = task_doc_to_entry(
+                    sorted(relevant_calcs, key=_structure_eval)[0]
+                )
 
         # Warnings
         # TODO: What warning should we process?
@@ -422,3 +438,25 @@ def ID_to_int(s_id: str) -> int:
         return s_id
     else:
         return None
+
+
+def task_doc_to_entry(task_doc: Dict) -> ComputedEntry:
+    """ Turns a Task Doc into a ComputedEntry"""
+
+    struc = Structure.from_dict(task_doc["output"]["structure"])
+    entry_dict = {
+        "correction": 0.0,
+        "entry_id": task_doc["task_id"],
+        "composition": struc.composition,
+        "energy": task_doc["output"]["energy"],
+        "parameters": {
+            "potcar_spec": task_doc["potcar_spec"],
+            "run_type": run_type(task_doc["output"]["parameters"]),
+        },
+        "data": {
+            "oxide_type": oxide_type(struc),
+            "last_updated": task_doc["last_updated"],
+        },
+    }
+
+    return ComputedEntry.from_dict(entry_dict)
