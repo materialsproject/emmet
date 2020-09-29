@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 import importlib
 from pydantic import Field, validator
 from emmet.core.settings import EmmetSettings
@@ -24,6 +24,10 @@ class EmmetBuilderSettings(EmmetSettings):
     vasp_qual_scores: Dict[RunType, int] = Field(
         {"SCAN": 3, "GGA+U": 2, "GGA": 1},
         description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builders",
+    )
+
+    tags_to_sandboxes: Optional[Dict[str, List[str]]] = Field(
+        None, description="Mapping of calcuation tags to sandboxes. Any calculation without these tags will be kept as core."
     )
 
     @validator("default_input_sets", pre=True)

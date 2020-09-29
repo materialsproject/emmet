@@ -51,7 +51,7 @@ class MaterialsBuilder(Builder):
         task_validation: Optional[Store] = None,
         query: Optional[Dict] = None,
         allowed_task_types: Optional[List[str]] = None,
-        tags_to_sandoxes: Optional[Dict[str, List[str]]] = None,
+        tags_to_sandboxes: Optional[Dict[str, List[str]]] = None,
         symprec: float = SETTINGS.SYMPREC,
         ltol: float = SETTINGS.LTOL,
         stol: float = SETTINGS.STOL,
@@ -77,7 +77,7 @@ class MaterialsBuilder(Builder):
         self.allowed_task_types = {TaskType(t) for t in allowed_task_types} or set(
             TaskType
         )
-        self.tags_to_sandoxes = tags_to_sandoxes or SETTINGS.tags_to_sandboxes
+        self.tags_to_sandboxes = tags_to_sandboxes or SETTINGS.tags_to_sandboxes
         self.query = query if query else {}
         self.symprec = symprec
         self.ltol = ltol
@@ -176,6 +176,12 @@ class MaterialsBuilder(Builder):
             "tags",
         ]
 
+        sandboxed_tags = {
+            sandbox
+            for sandbox in self.tags_to_sandboxes.values()
+            if self.tags_to_sandboxes is not None
+        }
+
         for formula in to_process_forms:
             tasks_query = dict(temp_query)
             tasks_query["formula_pretty"] = formula
@@ -188,13 +194,17 @@ class MaterialsBuilder(Builder):
                 else:
                     t["is_valid"] = True
 
-                t["sandboxes"] = [
-                    sandbox
-                    for sandbox in self.tags_to_sandoxes
-                    if any(
-                        tag in t["tags"] for tag in set(self.tags_to_sandoxes[sandbox])
-                    )
-                ]
+                if any(tag in sandboxed_tags for tag in t.get("tags", [])):
+                    t["sandboxes"] = [
+                        sandbox
+                        for sandbox in self.tags_to_sandboxes
+                        if any(
+                            tag in t["tags"]
+                            for tag in set(self.tags_to_sandboxes[sandbox])
+                        )
+                    ]
+                else:
+                    t["sandboxes"] = ["core"]
 
             yield tasks
 
