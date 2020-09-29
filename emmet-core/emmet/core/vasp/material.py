@@ -17,7 +17,7 @@ class PropertyOrigin(CorePropertyOrigin):
     Provenance document for the origin of properties in a material document from VASP calculations
     """
 
-    task_type: TaskType = Field(
+    calc_type: CalcType = Field(
         ..., description="The original calculation type this propeprty comes from"
     )
 
@@ -39,4 +39,8 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
     origins: List[PropertyOrigin] = Field(
         None, description="Dictionary for tracking the provenance of properties"
+    )
+
+    entries: Dict[ComputedEntry] = Field(
+        None, description="Dictionary for tracking entries for VASP calculations"
     )
