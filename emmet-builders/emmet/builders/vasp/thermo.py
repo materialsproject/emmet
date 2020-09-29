@@ -110,6 +110,51 @@ class Thermo(Builder):
             set(ComputedEntry): a set of entries for this system
         """
 
+        self.logger.info(f"Getting entries for: {chemsys}")
+
+        # First check the cache
+        all_chemsys = chemsys_permutations(chemsys)
+        cached_chemsys = all_chemsys & set(self._entries_cache.keys())
+        query_chemsys = all_chemsys - cached_chemsys
+        all_entries = list(
+            chain.from_iterable(self._entries_cache[c] for c in cached_chemsys)
+        )
+
+        self.logger.debug(
+            f"Getting {len(cached_chemsys)} sub-chemsys from cache for {chemsys}"
+        )
+        self.logger.debug(
+            f"Getting {len(query_chemsys)} sub-chemsys from DB for {chemsys}"
+        )
+
+        # Second grab the materials docs
+        new_q = dict(self.query)
+        new_q["chemsys"] = {"$in": list(query_chemsys)}
+        new_q["deprecated"] = False
+        materials_docs = list(
+            self.materials.query(
+                criteria=new_q, properties=[self.materials.key, "entries", "sandboxes"]
+            )
+        )
+
+        self.logger.debug(
+            f"Got {len(materials_docs)} entries from DB for {len(query_chemsys)} sub-chemsys for {chemsys}"
+        )
+
+        # Convert the entries into ComputedEntries and store
+        new_entries = [
+            entry for doc in materials_docs for entry in doc.get("entries", {}).values()
+        ]
+        for entry in new_entries:
+            entry = ComputedEntry.from_dict(entry)
+            elsyms = sorted(set([el.symbol for el in entry.composition.elements]))
+            self._entries_cache["-".join(elsyms)].append(entry)
+            all_entries.append(entry)
+
+        self.logger.info(f"Total entries in {chemsys} : {len(all_entries)}")
+
+        return all_entries
+
     def get_updated_chemsys(
         self,
     ) -> Set:
@@ -162,5 +207,3 @@ class Thermo(Builder):
         )
 
         return affected_chemsys
-
-
