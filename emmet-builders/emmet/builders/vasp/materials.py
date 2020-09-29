@@ -302,9 +302,11 @@ class MaterialsBuilder(Builder):
             t[self.tasks.key]: task_type(t["orig_inputs"]) for t in task_group
         }
         calc_types = {
-            task[self.tasks.key]: f"{run_types[task[self.tasks.key]]}"
-            + " "
-            + f"{task_types[task[self.tasks.key]]}"
+            task[self.tasks.key]: CalcType(
+                f"{run_types[task[self.tasks.key]]}"
+                + " "
+                + f"{task_types[task[self.tasks.key]]}"
+            )
             for task in task_group
         }
 
