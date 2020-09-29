@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional, Dict, Iterator, List, Set
 from itertools import chain
 from collections import defaultdict
@@ -14,6 +15,7 @@ from emmet.builders.utils import (
     maximal_spanning_non_intersecting_subsets,
     chemsys_permutations,
 )
+from emmet.core.thermo import ThermoDoc
 
 
 class Thermo(Builder):
@@ -119,6 +121,54 @@ class Thermo(Builder):
                 ]
 
                 yield sandboxes, sandbox_entries
+
+    def process_item(item: Tuple[List[str], List[ComputedEntry]]):
+
+        sandboxes, entries = item
+        # determine chemsys
+        elements = sorted(
+            set([el.symbol for e in entries for el in e.composition.elements])
+        )
+        chemsys = "-".join(elements)
+
+        self.logger.debug(
+            f"Procesing {len(entries)} entries for {chemsys} - {sandboxes}"
+        )
+
+        material_entries = defaultdict(defaultdict(list))
+        pd_entries = []
+        for entry in entries:
+            material_entries[entry.entry_id][entry.data["run_type"]].append(entry)
+
+        # TODO: How to make this general and controllable via SETTINGS?
+        for material_id in material_entries:
+            if "GGA+U" in material_entries[material_id]:
+                pd_entries.append(material_entries[material_id]["GGA+U"])
+            elif "GGA" in material_entries[material_id]:
+                pd_entries.append(material_entries[material_id]["GGA"])
+
+        pd_entries = self.compatibility.process_entries(pd_entries)
+
+        try:
+            docs = ThermoDoc.from_entries(pd_entries, sandboxes=sandboxes)
+            for doc in docs:
+                doc.entries = material_entries[doc.material_id]
+                doc.entry_types = list(material_entries[doc.material_id].keys())
+
+        except PhaseDiagramError as p:
+            elsyms = []
+            for e in entries:
+                elsyms.extend([el.symbol for el in e.composition.elements])
+
+            self.logger.warning(
+                f"Phase diagram errorin chemsys {'-'.join(sorted(set(elsyms)))}: {p}"
+            )
+            return []
+        except Exception as e:
+            self.logger.error(f"Got unexpected error: {e}")
+            return []
+
+        return docs
 
     def get_entries(self, chemsys: str) -> List[ComputedEntry]:
         """
