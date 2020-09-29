@@ -51,6 +51,7 @@ class MaterialsBuilder(Builder):
         task_validation: Optional[Store] = None,
         query: Optional[Dict] = None,
         allowed_task_types: Optional[List[str]] = None,
+        tags_to_sandoxes: Optional[Dict[str, List[str]]] = None,
         symprec: float = SETTINGS.SYMPREC,
         ltol: float = SETTINGS.LTOL,
         stol: float = SETTINGS.STOL,
@@ -63,6 +64,7 @@ class MaterialsBuilder(Builder):
             materials: Store of materials documents to generate
             query: dictionary to limit tasks to be analyzed
             allowed_task_types: list of task_types that can be processed
+            tags_to_sandboxes: dictionary mapping sandboxes to a list of tags
             symprec: tolerance for SPGLib spacegroup finding
             ltol: StructureMatcher tuning parameter for matching tasks to materials
             stol: StructureMatcher tuning parameter for matching tasks to materials
@@ -75,6 +77,7 @@ class MaterialsBuilder(Builder):
         self.allowed_task_types = {TaskType(t) for t in allowed_task_types} or set(
             TaskType
         )
+        self.tags_to_sandoxes = tags_to_sandoxes or SETTINGS.tags_to_sandboxes
         self.query = query if query else {}
         self.symprec = symprec
         self.ltol = ltol
@@ -170,7 +173,7 @@ class MaterialsBuilder(Builder):
             "output.parameters",
             "orig_inputs",
             "input.structure",
-            "sandboxes",
+            "tags",
         ]
 
         for formula in to_process_forms:
@@ -184,6 +187,14 @@ class MaterialsBuilder(Builder):
                     t["is_valid"] = False
                 else:
                     t["is_valid"] = True
+
+                t["sandboxes"] = [
+                    sandbox
+                    for sandbox in self.tags_to_sandoxes
+                    if any(
+                        tag in t["tags"] for tag in set(self.tags_to_sandoxes[sandbox])
+                    )
+                ]
 
             yield tasks
 
