@@ -335,7 +335,7 @@ class MaterialsBuilder(Builder):
             - Special Tags
             - Energy
             """
-            qual_score = {"SCAN": 3, "GGA+U": 2, "GGA": 1}
+            qual_score = SETTINGS.vasp_qual_scores
 
             ispin = task.get("output", {}).get("parameters", {}).get("ISPIN", 1)
             energy = task.get("output", {}).get("energy_per_atom", 0.0)

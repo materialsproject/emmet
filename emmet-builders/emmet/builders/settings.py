@@ -20,6 +20,11 @@ class EmmetBuilderSettings(EmmetSettings):
         ["LDAUU", "LDAUJ", "LDAUL"], description="LDAU fields to validate for tasks"
     )
 
+    vasp_qual_scores: Dict[RunType, int] = Field(
+        {"SCAN": 3, "GGA+U": 2, "GGA": 1},
+        description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builders",
+    )
+
     @validator("default_input_sets", pre=True)
     def load_input_sets(cls, values):
         input_sets = {}
