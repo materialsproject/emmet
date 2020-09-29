@@ -422,6 +422,7 @@ class MaterialsBuilder(Builder):
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,
             origins=origins,
+            entries=entries,
             sandboxes=sandboxes if sandboxes else None,
         )
 
