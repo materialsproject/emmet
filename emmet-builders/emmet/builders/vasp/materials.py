@@ -423,9 +423,12 @@ class MaterialsBuilder(Builder):
                 doc for doc in structure_calcs if doc[self.tasks.key] in rt_tasks
             ]
             if len(relevant_calcs) > 0:
-                entries[rt] = task_doc_to_entry(
+                entry_dict = task_doc_to_entry(
                     sorted(relevant_calcs, key=_structure_eval)[0]
                 )
+                entry_dict["data"]["task_id"] = entry_dict["entry_id"]
+                entry_dict["entry_id"] = material_id
+                entries[rt] = ComputedEntry.from_dict(entry_dict)
 
         # Warnings
         # TODO: What warning should we process?
@@ -462,7 +465,7 @@ def ID_to_int(s_id: str) -> int:
         return None
 
 
-def task_doc_to_entry(task_doc: Dict) -> ComputedEntry:
+def task_doc_to_entry(task_doc: Dict) -> Dict:
     """ Turns a Task Doc into a ComputedEntry"""
 
     struc = Structure.from_dict(task_doc["output"]["structure"])
@@ -481,4 +484,4 @@ def task_doc_to_entry(task_doc: Dict) -> ComputedEntry:
         },
     }
 
-    return ComputedEntry.from_dict(entry_dict)
+    return entry_dict
