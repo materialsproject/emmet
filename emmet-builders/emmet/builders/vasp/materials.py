@@ -397,7 +397,7 @@ class MaterialsBuilder(Builder):
         entries = {}
         all_run_types = set(run_types.keys())
         for rt in all_run_types:
-            rt_tasks = {t_id for t_id in tasks if run_types[t_id] == rt}
+            rt_tasks = {t_id for t_id in task_ids if run_types[t_id] == rt}
             relevant_calcs = [
                 doc for doc in structure_calcs if doc[self.tasks.key] in rt_tasks
             ]

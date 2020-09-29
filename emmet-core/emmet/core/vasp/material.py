@@ -9,7 +9,7 @@ from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin as CorePropertyOrigin
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
-from emmet.stubs import Structure
+from emmet.stubs import Structure, ComputedEntry
 
 
 class PropertyOrigin(CorePropertyOrigin):

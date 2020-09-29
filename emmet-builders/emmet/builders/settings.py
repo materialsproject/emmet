@@ -2,6 +2,7 @@ from typing import Dict, List
 import importlib
 from pydantic import Field, validator
 from emmet.core.settings import EmmetSettings
+from emmet.core.vasp.calc_types import RunType
 
 
 class EmmetBuilderSettings(EmmetSettings):
