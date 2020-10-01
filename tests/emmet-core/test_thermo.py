@@ -71,4 +71,4 @@ def test_from_entries(entries):
     docs = ThermoDoc.from_entries(entries)
     assert len(docs) == len(entries)
 
-    assert all([d.energy_type == "Unknow" for d in docs])
+    assert all([d.energy_type == "Unknown" for d in docs])

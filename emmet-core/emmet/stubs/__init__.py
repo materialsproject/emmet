@@ -24,6 +24,6 @@ use_model(Composition, StubComposition, add_monty=False)
 use_model(ComputedEntry, StubComputedEntry)
 
 # This is after the main block since it depends on that
-from emmet.stubs.xas import XASSpectrum
+from emmet.stubs.xas import XASSpectrum  # noqa
 
 use_model(XAS, XASSpectrum)
