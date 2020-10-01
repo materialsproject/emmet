@@ -35,7 +35,7 @@ def test_from_url():
 
     os.environ[
         "EMMET_CONFIG_FILE"
-    ] = "https://raw.githubusercontent.com/materialsproject/emmet/refactor/tests/test_core/test_settings.json"
+    ] = "https://raw.githubusercontent.com/materialsproject/emmet/master/tests/emmet-core/test_settings.json"
 
     test_config = EmmetSettings()
 
