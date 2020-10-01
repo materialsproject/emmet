@@ -8,10 +8,7 @@ from pydantic import BaseModel, Field, create_model
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
 
 from emmet.core.structure import StructureMetadata
-from emmet.stubs import Matrix3D, Structure
-
-
-### Computed Entry for each calculation
+from emmet.stubs import Matrix3D, Structure, ComputedEntry
 
 
 class Status(Enum):
@@ -131,3 +128,6 @@ class TaskDocument(StructureMetadata):
         None, description="List of VASP objects included with this Task Document"
     )
     vasp_objects: Dict[VASPObjects, Any]
+    entry: ComputedEntry = Field(
+        None, description="The computed Entry for this calculation"
+    )
