@@ -64,6 +64,38 @@ class StructureMetadata(BaseModel):
         use_enum_values = True
 
     @classmethod
+    def from_composition(
+        cls, composition: Composition, fields: Optional[List[str]] = None, **kwargs
+    ) -> "StructureMetadata":
+
+        fields = (
+            [
+                "elements",
+                "nelements",
+                "composition",
+                "composition_reduced",
+                "formula_pretty",
+                "formula_anonymous",
+                "chemsys",
+            ]
+            if fields is None
+            else fields
+        )
+        elsyms = sorted(set([e.symbol for e in composition.elements]))
+
+        data = {
+            "elements": elsyms,
+            "nelements": len(elsyms),
+            "composition": composition,
+            "composition_reduced": composition.reduced_composition,
+            "formula_pretty": composition.reduced_formula,
+            "formula_anonymous": composition.anonymized_formula,
+            "chemsys": "-".join(elsyms),
+        }
+
+        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
+
+    @classmethod
     def from_structure(
         cls,
         structure: Structure,
