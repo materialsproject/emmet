@@ -41,6 +41,6 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         None, description="Dictionary for tracking the provenance of properties"
     )
 
-    entries: Dict[ComputedEntry] = Field(
+    entries: Dict[RunType, ComputedEntry] = Field(
         None, description="Dictionary for tracking entries for VASP calculations"
     )
