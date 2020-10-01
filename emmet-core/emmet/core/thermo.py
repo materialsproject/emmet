@@ -93,6 +93,7 @@ class ThermoDoc(PropertyDoc):
     def from_entries(cls, entries: List[ComputedEntry], sandboxes=None):
 
         pd = PhaseDiagram(entries)
+        sandboxes = sandboxes or ["core"]
 
         docs = []
 
@@ -128,14 +129,16 @@ class ThermoDoc(PropertyDoc):
                     for de, amt in decomp.items()
                 ]
 
-            d["energy_type"] = e.parameters["run_type"]
+            d["energy_type"] = e.parameters.get("run_type", "Unknown")
+            d["entry_types"] = [e.parameters.get("run_type", "Unknown")]
+            d["entries"] = {e.parameters.get("run_type", ""): e}
 
-            elsyms = sorted(set([el.symbol for el in e.composition.elements]))
-            d["chemsys"] = "-".join(elsyms)
-            d["nelements"] = len(elsyms)
-            d["elements"] = list(elsyms)
-            d["last_updated"] = e.data["last_updated"]
+            for k in ["last_updated"]:
+                if k in e.parameters:
+                    d[k] = e.parameters[k]
+                elif k in e.data:
+                    d[k] = e.data[k]
 
-            docs.append(ThermoDoc(**d))
+            docs.append(ThermoDoc.from_composition(composition=e.composition, **d))
 
         return docs
