@@ -2,7 +2,7 @@
 from typing import List, Optional, Type, TypeVar, overload
 
 from pydantic import BaseModel, Field
-from pymatgen import Element
+from pymatgen.core.periodic_table import Element
 
 from emmet.core.symmetry import SymmetryData
 from emmet.stubs import Composition, Structure

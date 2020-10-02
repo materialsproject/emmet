@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel, Field
-from pymatgen import Element
+from pymatgen.core.periodic_table import Element
 
 
 class Composition(BaseModel):

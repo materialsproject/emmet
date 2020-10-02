@@ -4,7 +4,7 @@ Use pymatgen classes in pydantic models by importing them from there when you ne
 
 """
 
-from pymatgen import Composition, Structure
+from pymatgen.core.structure import Composition, Structure
 from pymatgen.analysis.xas.spectrum import XAS
 from pymatgen.entries.computed_entries import ComputedEntry
 

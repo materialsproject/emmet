@@ -10,7 +10,7 @@ import numpy as np
 from monty.json import MSONable
 from monty.serialization import loadfn
 from pydantic import BaseModel
-from pymatgen import Structure
+from pymatgen.core.structure import Structure
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from typing_extensions import Literal
 
