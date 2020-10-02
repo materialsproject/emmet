@@ -1,4 +1,4 @@
-from emmet.core.vasp.calc_types import run_type, task_type
+from emmet.core.vasp.calc_types import run_type, task_type, RunType, TaskType
 
 
 def test_task_tye():
@@ -16,7 +16,7 @@ def test_task_tye():
     ]
 
     for _type, inputs in input_types:
-        assert task_type(inputs) == _type
+        assert task_type(inputs) == TaskType(_type)
 
 
 def test_run_type():
@@ -29,4 +29,4 @@ def test_run_type():
     ]
 
     for _type, params in params_sets:
-        assert run_type(params) == _type
+        assert run_type(params) == RunType(_type)
