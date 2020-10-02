@@ -1,7 +1,7 @@
 """ Core definition of a Materials Document """
 from datetime import datetime
 from functools import partial
-from typing import ClassVar, Dict, List, Optional, Union
+from typing import ClassVar, Optional, Union, Sequence, Mapping
 
 from pydantic import BaseModel, Field, create_model
 
@@ -24,23 +24,23 @@ class PropertyOrigin(CorePropertyOrigin):
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
-    calc_types: Dict[str, CalcType] = Field(
+    calc_types: Mapping[str, CalcType] = Field(
         None,
         description="Calculation types for all the calculations that make up this material",
     )
-    task_types: Dict[str, TaskType] = Field(
+    task_types: Mapping[str, TaskType] = Field(
         None,
         description="Task types for all the calculations that make up this material",
     )
-    run_types: Dict[str, RunType] = Field(
+    run_types: Mapping[str, RunType] = Field(
         None,
         description="Run types for all the calculations that make up this material",
     )
 
-    origins: List[PropertyOrigin] = Field(
-        None, description="Dictionary for tracking the provenance of properties"
+    origins: Sequence[PropertyOrigin] = Field(
+        None, description="Mappingionary for tracking the provenance of properties"
     )
 
-    entries: Dict[RunType, ComputedEntry] = Field(
+    entries: Mapping[RunType, ComputedEntry] = Field(
         None, description="Dictionary for tracking entries for VASP calculations"
     )

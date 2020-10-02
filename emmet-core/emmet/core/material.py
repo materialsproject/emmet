@@ -1,7 +1,7 @@
 """ Core definition of a Materials Document """
 from datetime import datetime
 from functools import partial
-from typing import ClassVar, Dict, List, Optional, Union
+from typing import ClassVar, Optional, Union, Sequence, Mapping
 
 from pydantic import BaseModel, Field, create_model
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
@@ -33,7 +33,7 @@ class PropertyDoc(StructureMetadata):
     This is intended to be inherited and extended not used directly
     """
 
-    property_name: ClassVar[str] = None
+    property_name: ClassVar[str]
     material_id: str = Field(
         ...,
         description="The ID of the material, used as a universal reference across proeprty documents."
@@ -45,15 +45,15 @@ class PropertyDoc(StructureMetadata):
         default_factory=datetime.utcnow,
     )
 
-    origins: List[PropertyOrigin] = Field(
+    origins: Sequence[PropertyOrigin] = Field(
         [], description="Dictionary for tracking the provenance of properties"
     )
 
-    warnings: List[str] = Field(
+    warnings: Sequence[str] = Field(
         None, description="Any warnings related to this property"
     )
 
-    sandboxes: List[str] = Field(
+    sandboxes: Sequence[str] = Field(
         ["core"],
         description="List of sandboxes this property belongs to."
         " Sandboxes provide a way of controlling access to materials."
@@ -68,7 +68,7 @@ class PropertyDoc(StructureMetadata):
         Builds a materials document using the minimal amount of information
         """
 
-        return super().from_structure(
+        return super().from_structure( # type: ignore
             structure=structure,
             material_id=material_id,
             include_structure=False,
@@ -97,20 +97,20 @@ class MaterialsDoc(StructureMetadata):
         description="Whether this materials document is deprecated.",
     )
 
-    initial_structures: List[Structure] = Field(
+    initial_structures: Sequence[Structure] = Field(
         [],
         description="Initial structures used in the DFT optimizations corresponding to this material",
     )
 
-    task_ids: List[str] = Field(
+    task_ids: Sequence[str] = Field(
         [],
         title="Calculation IDs",
         description="List of Calculations IDs used to make this Materials Document",
     )
 
-    deprecated_tasks: List[str] = Field([], title="Deprecated Tasks")
+    deprecated_tasks: Sequence[str] = Field([], title="Deprecated Tasks")
 
-    calc_types: Dict[str, str] = Field(
+    calc_types: Mapping[str, str] = Field(
         None,
         description="Calculation types for all the calculations that make up this material",
     )
@@ -125,13 +125,13 @@ class MaterialsDoc(StructureMetadata):
         default_factory=datetime.utcnow,
     )
 
-    origins: List[PropertyOrigin] = Field(
+    origins: Sequence[PropertyOrigin] = Field(
         None, description="Dictionary for tracking the provenance of properties"
     )
 
-    warnings: List[str] = Field([], description="Any warnings related to this material")
+    warnings: Sequence[str] = Field([], description="Any warnings related to this material")
 
-    sandboxes: List[str] = Field(
+    sandboxes: Sequence[str] = Field(
         ["core"],
         description="List of sandboxes this material belongs to."
         " Sandboxes provide a way of controlling access to materials."
@@ -146,7 +146,7 @@ class MaterialsDoc(StructureMetadata):
         Builds a materials document using the minimal amount of information
         """
 
-        return super().from_structure(
+        return super().from_structure( # type: ignore
             structure=structure,
             material_id=material_id,
             include_structure=True,

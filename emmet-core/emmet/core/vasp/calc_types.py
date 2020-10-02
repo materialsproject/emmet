@@ -22,6 +22,7 @@ _TASK_TYPES = [
     "NSCF Uniform",
     "Dielectric",
     "DFPT",
+    "DFPT Dielectric",
     "NMR Nuclear Shielding",
     "NMR Electric Field Gradient",
     "Static",
@@ -43,15 +44,15 @@ _RUN_TYPES = (
     + ["LDA", "LDA+U"]
 )
 
-RunType = Enum(
-    "RunType", {"_".join(rt.split()).replace("+", "_"): rt for rt in _RUN_TYPES}
+RunType = Enum(  # type: ignore
+    "RunType", dict({"_".join(rt.split()).replace("+", "_"): rt for rt in _RUN_TYPES})
 )
 RunType.__doc__ = "VASP calculation run types"
 
-TaskType = Enum("TaskType", {"_".join(tt.split()): tt for tt in _TASK_TYPES})
+TaskType = Enum("TaskType", {"_".join(tt.split()): tt for tt in _TASK_TYPES})  # type: ignore
 TaskType.__doc__ = "VASP calculation task types"
 
-CalcType = Enum(
+CalcType = Enum(  # type: ignore
     "CalcType",
     {
         f"{'_'.join(rt.split()).replace('+','_')}_{'_'.join(tt.split())}": f"{rt} {tt}"
@@ -93,9 +94,9 @@ def run_type(parameters: Dict) -> RunType:
                     for param, value in params.items()
                 ]
             ):
-                return f"{special_type}{is_hubbard}"
+                return RunType(f"{special_type}{is_hubbard}")
 
-    return f"LDA{is_hubbard}"
+    return RunType(f"LDA{is_hubbard}")
 
 
 def task_type(
@@ -150,7 +151,7 @@ def task_type(
     elif incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
         calc_type.append("Deformation")
 
-    return " ".join(calc_type)
+    return TaskType(" ".join(calc_type))
 
 
 def calc_type(
@@ -166,4 +167,4 @@ def calc_type(
     """
     rt = run_type(parameters)
     tt = task_type(inputs)
-    return f"{rt} {tt}"
+    return CalcType(f"{rt} {tt}")
