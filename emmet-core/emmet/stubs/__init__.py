@@ -4,8 +4,8 @@ Use pymatgen classes in pydantic models by importing them from there when you ne
 
 """
 
-from pymatgen.core.structure import Composition, Structure
 from pymatgen.analysis.xas.spectrum import XAS
+from pymatgen.core.structure import Composition, Structure
 from pymatgen.entries.computed_entries import ComputedEntry
 
 from emmet.stubs.math import Matrix3D, Vector3D

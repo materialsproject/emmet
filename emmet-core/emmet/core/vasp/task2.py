@@ -2,13 +2,13 @@
 from datetime import datetime
 from enum import Enum
 from functools import partial
-from typing import ClassVar, Dict, List, Optional, Union, Any
+from typing import Any, ClassVar, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, create_model
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
 
 from emmet.core.structure import StructureMetadata
-from emmet.stubs import Matrix3D, Structure, ComputedEntry
+from emmet.stubs import ComputedEntry, Matrix3D, Structure
 
 
 class Status(Enum):

@@ -1,7 +1,7 @@
 """ Core definition of a VASP Task Document """
 from datetime import datetime
 from enum import Enum
-from functools import partial, cached_property
+from functools import cached_property, partial
 from typing import ClassVar, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, create_model
@@ -9,17 +9,15 @@ from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Orde
 from pymatgen.analysis.structure_analyzer import oxide_type
 
 from emmet.core.structure import StructureMetadata
-from emmet.stubs import Matrix3D, Structure
 from emmet.core.vasp.calc_types import (
     CalcType,
-    TaskType,
     RunType,
+    TaskType,
+    calc_type,
     run_type,
     task_type,
-    calc_type,
 )
-
-from emmet.stubs import ComputedEntry
+from emmet.stubs import ComputedEntry, Matrix3D, Structure
 
 
 class Status(Enum):
