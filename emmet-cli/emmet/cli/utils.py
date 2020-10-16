@@ -57,7 +57,10 @@ def ensure_indexes(indexes, colls):
         logger.debug(f"Created the following index(es) on {coll.full_name}:\n{indexes}")
 
 
-def calcdb_from_mgrant(spec):
+def calcdb_from_mgrant(spec_or_dbfile):
+    if os.path.exists(spec_or_dbfile):
+        return VaspCalcDb.from_db_file(spec_or_dbfile)
+
     client = Client()
     role = "rw"  # NOTE need write access to source to ensure indexes
     host, dbname_or_alias = spec.split("/", 1)
@@ -329,8 +332,8 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
     tags = [tag, SETTINGS.year_tags[-1]]
     drone = VaspDrone(parse_dos="auto", additional_fields={"tags": tags})
     ctx = click.get_current_context()
-    spec = ctx.parent.parent.params["spec"]
-    target = calcdb_from_mgrant(spec)
+    spec_or_dbfile = ctx.parent.parent.params["spec_or_dbfile"]
+    target = calcdb_from_mgrant(spec_or_dbfile)
     sbxn = list(filter(None, target.collection.distinct("sbxn")))
     logger.info(f"Using sandboxes {sbxn}.")
     no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
