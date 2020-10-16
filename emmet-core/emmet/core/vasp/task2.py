@@ -1,25 +1,14 @@
 """ Core definition of a VASP Task Document """
 from datetime import datetime
 from enum import Enum
-from functools import partial, cached_property
-from typing import ClassVar, Dict, List, Optional, Union
+from functools import partial
+from typing import ClassVar, Dict, List, Optional, Union, Any
 
 from pydantic import BaseModel, Field, create_model
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
-from pymatgen.analysis.structure_analyzer import oxide_type
 
 from emmet.core.structure import StructureMetadata
-from emmet.stubs import Matrix3D, Structure
-from emmet.core.vasp.calc_types import (
-    CalcType,
-    TaskType,
-    RunType,
-    run_type,
-    task_type,
-    calc_type,
-)
-
-from emmet.stubs import ComputedEntry
+from emmet.stubs import Matrix3D, Structure, ComputedEntry
 
 
 class Status(Enum):
@@ -29,6 +18,23 @@ class Status(Enum):
 
     SUCESS = "sucess"
     FAILED = "failed"
+
+
+class VASPObjects(Enum):
+    """
+    Types of VASP data objects
+    """
+
+    BANDSTRUCTURE = "bandstructure"
+    DOS = "dos"
+    CHGCAR = "chg"
+    AECCAR0 = "aec0"
+    AECCAR1 = "aec1"
+    AECCAR2 = "aec2"
+    TRAJECTORY = "traj"
+    ELFCAR = "elf"
+    WAVECAR = "wave"
+    LOCPOT = "locpot"
 
 
 class InputSummary(BaseModel):
@@ -45,16 +51,16 @@ class InputSummary(BaseModel):
         ..., description="Summary of the pseudopotentials used in this calculation"
     )
 
-    potcar_spec: List[Dict] = Field(
-        ..., description="Potcar specification as a title and hash"
-    )
-
 
 class OutputSummary(BaseModel):
     """
     Summary of the outputs for a VASP calculation
     """
 
+    input_structure: Structure = Field(
+        None,
+        description="The input structure for the last calculation if more than one calculation is included",
+    )
     structure: Structure = Field(..., description="The output structure object")
     energy: float = Field(
         ..., description="The final total DFT energy for the last calculation"
@@ -69,7 +75,6 @@ class OutputSummary(BaseModel):
     stress: Matrix3D = Field(
         ..., description="Stress on the unitcell from the last calculation"
     )
-    parameters: Dict = Field(..., description="parameters for this VASP calculation")
 
 
 class RunStatistics(BaseModel):
@@ -104,11 +109,8 @@ class TaskDocument(StructureMetadata):
         ..., description="Timestamp for when this task was completed"
     )
     last_updated: datetime = Field(
-        ..., description="Timestamp for this task document was last updateed"
-    )
-
-    is_valid: bool = Field(
-        True, description="Whether this task document passed validation or not"
+        default_factory=datetime.utcnow,
+        description="Timestamp for this task document was last updateed",
     )
 
     input: InputSummary
@@ -122,38 +124,10 @@ class TaskDocument(StructureMetadata):
     task_id: str = Field(None, description="the Task ID For this document")
     tags: List[str] = Field(None, description="Metadata tags for this task document")
 
-    sandboxes: List[str] = Field(
-        ["core"], description="List of sandboxes this task document is allowed in"
+    included_objects: List[VASPObjects] = Field(
+        None, description="List of VASP objects included with this Task Document"
     )
-
-    @cached_property
-    def run_type(self) -> RunType:
-        return run_type(self.output.parameters)
-
-    @cached_property
-    def task_type(self):
-        return task_type(self.orig_inputs)
-
-    @cached_property
-    def calc_type(self):
-        return calc_type(self.orig_inputs, self.parameters)
-
-    @cached_property
-    def entry(self):
-        """ Turns a Task Doc into a ComputedEntry"""
-        entry_dict = {
-            "correction": 0.0,
-            "entry_id": self.task_id,
-            "composition": self.output.structure.composition,
-            "energy": self.output.energy,
-            "parameters": {
-                "potcar_spec": self.input.potcar_spec,
-                "run_type": self.run_type,
-            },
-            "data": {
-                "oxide_type": oxide_type(self.output.structure),
-                "last_updated": self.last_updated,
-            },
-        }
-
-        return ComputedEntry.from_dict(entry_dict)
+    vasp_objects: Dict[VASPObjects, Any]
+    entry: ComputedEntry = Field(
+        None, description="The computed Entry for this calculation"
+    )
