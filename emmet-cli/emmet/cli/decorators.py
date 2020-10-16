@@ -80,12 +80,15 @@ def track(func):
             logs = ctx.grand_parent.obj["LOG_STREAM"]
             gist.edit(files={filename: {"content": logs.getvalue()}})
 
-            # add comment for new command
-            command = reconstruct_command()
-            raw_url = f"{GIST_RAW_URL}/{user}/{gist.id}/raw/{filename}"
-            txt = COMMENT_TEMPLATE.format(ctx.command_path, ret.value, command, raw_url)
-            comment = issue.create_comment(txt)
-            logger.info(comment.html_url)
+            if not ctx.grand_parent.params["sbatch"]:
+                # add comment for new command
+                command = reconstruct_command()
+                raw_url = f"{GIST_RAW_URL}/{user}/{gist.id}/raw/{filename}"
+                txt = COMMENT_TEMPLATE.format(
+                    ctx.command_path, ret.value, command, raw_url
+                )
+                comment = issue.create_comment(txt)
+                logger.info(comment.html_url)
 
     return update_wrapper(wrapper, func)
 
@@ -102,7 +105,7 @@ def sbatch(func):
 
         run = ctx.grand_parent.params["run"]
         if run:
-            click.secho(f"SBATCH MODE! Submitting to SLURM queue.", fg="green")
+            click.secho("SBATCH MODE! Submitting to SLURM queue.", fg="green")
 
         directory = ctx.parent.params.get("directory")
         if not directory:
@@ -143,7 +146,7 @@ def sbatch(func):
                 "qos": "xfer",
                 "time": "48:00:00",
                 "licenses": "SCRATCH",
-                "mem": "20GB",
+                "mem": "30GB",
             }
             command = ""
 
@@ -159,7 +162,7 @@ def sbatch(func):
         command += reconstruct_command(sbatch=True)
         slurmpy_stderr = io.StringIO()
         with contextlib.redirect_stderr(slurmpy_stderr):
-            s.run(command, _cmd="sbatch" if run else "cat", tries=3)  # 6 days
+            s.run(command, _cmd="sbatch" if run else "cat", tries=1)  # 6 days
         ret = slurmpy_stderr.getvalue()[2:-1]
         logger.info("\n" + ret.encode("utf-8").decode("unicode_escape"))
         # TODO add jobid to SUBMITTED.value

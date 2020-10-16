@@ -23,7 +23,7 @@ def opt_prompt():
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.option("--spec", metavar="HOST/DB", help="MongoGrant spec for DB to use.")
+@click.option("--spec-or-dbfile", metavar="HOST/DB", help="MongoGrant spec or path to db.json for DB to use.")
 @click.option("--run", is_flag=True, help="Run DB/filesystem write operations.")
 @click.option("--issue", type=int, help="Production tracker issue (required if --run).")
 @click.option("--sbatch", is_flag=True, help="Switch to SBatch mode.")
@@ -32,7 +32,7 @@ def opt_prompt():
 @click.option("--no-dupe-check", is_flag=True, help="Skip duplicate check(s).")
 @click.option("--verbose", is_flag=True, help="Show debug messages.")
 @click.version_option()
-def emmet(spec, run, issue, sbatch, bb, yes, no_dupe_check, verbose):
+def emmet(spec_or_dbfile, run, issue, sbatch, bb, yes, no_dupe_check, verbose):
     """Command line interface for emmet"""
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     ctx = click.get_current_context()
@@ -41,8 +41,8 @@ def emmet(spec, run, issue, sbatch, bb, yes, no_dupe_check, verbose):
     if not sbatch and bb:
         raise EmmetCliError("Burst buffer only available in SBatch mode (--sbatch).")
 
-    if spec:
-        client = calcdb_from_mgrant(spec)
+    if spec_or_dbfile:
+        client = calcdb_from_mgrant(spec_or_dbfile)
         ctx.obj["CLIENT"] = client
         # ctx.obj["MONGO_HANDLER"] = BufferedMongoHandler(
         #    host=client.host,

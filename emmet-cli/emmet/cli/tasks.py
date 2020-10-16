@@ -69,22 +69,26 @@ def prep():
 
 
 def run_command(args, filelist):
-    # TODO deal with filelist too long
     nargs, nfiles, nshow = len(args), len(filelist), 1
-    args += filelist
+    full_args = args + filelist
     args_short = (
-        args[: nargs + nshow] + [f"({nfiles-1} more ...)"] if nfiles > nshow else args
+        full_args[: nargs + nshow] + [f"({nfiles-1} more ...)"]
+        if nfiles > nshow
+        else full_args
     )
     logger.info(" ".join(args_short))
     popen = subprocess.Popen(
-        args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
+        full_args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True,
     )
     for stdout_line in iter(popen.stdout.readline, ""):
         yield stdout_line
     popen.stdout.close()
     return_code = popen.wait()
     if return_code:
-        raise subprocess.CalledProcessError(return_code, args)
+        raise subprocess.CalledProcessError(return_code, full_args)
 
 
 def recursive_chown(path, group):
@@ -256,21 +260,25 @@ def restore(inputfile, file_filter):
         f" and {nfiles} file filters to {directory} ..."
     )
 
-    nfiles_restore_total = 0
+    nfiles_restore_total, max_args = 0, 15000
     for block, files in block_launchers.items():
         # get full list of matching files in archive and check against existing files
         args = shlex.split(f"htar -tf garden/{block}.tar")
         filelist = [os.path.join(block, f) for f in files]
+        filelist_chunks = [
+            filelist[i : i + max_args] for i in range(0, len(filelist), max_args)
+        ]
         filelist_restore, cnt = [], 0
         try:
-            for line in run_command(args, filelist):
-                fn = extract_filename(line)
-                if fn:
-                    cnt += 1
-                    if os.path.exists(fn):
-                        logger.debug(f"Skip {fn} - already exists on disk.")
-                    else:
-                        filelist_restore.append(fn)
+            for chunk in filelist_chunks:
+                for line in run_command(args, chunk):
+                    fn = extract_filename(line)
+                    if fn:
+                        cnt += 1
+                        if os.path.exists(fn):
+                            logger.debug(f"Skip {fn} - already exists on disk.")
+                        else:
+                            filelist_restore.append(fn)
         except subprocess.CalledProcessError as e:
             logger.error(str(e))
             return ReturnCodes.ERROR
@@ -284,9 +292,14 @@ def restore(inputfile, file_filter):
                     f"Restore {nfiles_restore}/{cnt} files for {block} to {directory} ..."
                 )
                 args = shlex.split(f"htar -xvf garden/{block}.tar")
+                filelist_restore_chunks = [
+                    filelist_restore[i : i + max_args]
+                    for i in range(0, len(filelist_restore), max_args)
+                ]
                 try:
-                    for line in run_command(args, filelist_restore):
-                        logger.info(line.strip())
+                    for chunk in filelist_restore_chunks:
+                        for line in run_command(args, chunk):
+                            logger.info(line.strip())
                 except subprocess.CalledProcessError as e:
                     logger.error(str(e))
                     return ReturnCodes.ERROR
@@ -326,7 +339,7 @@ def parse(task_ids, nproc):
     """Parse VASP launchers into tasks"""
     ctx = click.get_current_context()
     if "CLIENT" not in ctx.obj:
-        raise EmmetCliError(f"Use --spec to set target DB for tasks!")
+        raise EmmetCliError("Use --spec to set target DB for tasks!")
 
     run = ctx.parent.parent.params["run"]
     nmax = ctx.parent.params["nmax"]
@@ -360,7 +373,10 @@ def parse(task_ids, nproc):
     else:
         # reserve list of task_ids to avoid collisions during multiprocessing
         # insert empty doc with max ID + 1 into target collection for parallel SLURM jobs
-        all_task_ids = target.collection.distinct("task_id")
+        # NOTE use regex to reduce size of distinct below 16MB
+        all_task_ids = target.collection.distinct(
+            "task_id", {"task_id": {"$regex": r"^mp-\d{7,}$"}}
+        )
         next_tid = max(int(tid.split("-")[-1]) for tid in all_task_ids) + 1
         lst = [f"mp-{next_tid + n}" for n in range(nmax)]
         if run:
