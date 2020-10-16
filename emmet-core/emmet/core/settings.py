@@ -4,6 +4,7 @@ database building and in the website code, to ensure consistency between
 different modules and packages.
 """
 import json
+from typing import Dict, List, Optional
 
 import requests
 from pydantic import BaseSettings, Field, root_validator
@@ -41,6 +42,15 @@ class EmmetSettings(BaseSettings):
     MAX_PIEZO_MILLER: int = Field(
         10,
         description="Maximum miller allowed for computing strain direction for maximal piezo response",
+    )
+
+    TAGS_TO_SANDBOXES: Optional[Dict[str, List[str]]] = Field(
+        None,
+        description="Mapping of calcuation tags to sandboxes. Any calculation without these tags will be kept as core.",
+    )
+
+    VASP_SPECIAL_TAGS: List[str] = Field(
+        ["LASPH"], description="Special tags to prioritize for VASP Task Documents"
     )
 
     class Config:
