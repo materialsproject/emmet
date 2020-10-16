@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import datetime
 from pathlib import Path
-from setuptools import setup, find_namespace_packages
+
+from setuptools import find_namespace_packages, setup
 
 setup(
     name="emmet-core",

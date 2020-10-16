@@ -6,18 +6,20 @@ from datetime import datetime
 from pymatgen import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 
+from pymatgen.analysis.structure_analyzer import oxide_type
+
+
 from maggma.stores import Store
 from maggma.builders import Builder
 
-from emmet.core import SETTINGS
-from emmet.core.utils import (
-    task_type,
-    run_type,
-    group_structures,
-    _TASK_TYPES,
-    jsanitize,
-)
-from emmet.core.material import MaterialsDoc, PropertyOrigin
+from emmet.builders import SETTINGS
+from emmet.core.vasp.calc_types import task_type, run_type, TaskType, CalcType
+
+from emmet.core.utils import group_structures, jsanitize
+
+from emmet.core.vasp.material import MaterialsDoc, PropertyOrigin
+from emmet.builders.utils import maximal_spanning_non_intersecting_subsets
+from emmet.stubs import ComputedEntry
 
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
@@ -46,9 +48,10 @@ class MaterialsBuilder(Builder):
         self,
         tasks: Store,
         materials: Store,
-        task_types: Optional[Store] = None,
+        task_validation: Optional[Store] = None,
         query: Optional[Dict] = None,
         allowed_task_types: Optional[List[str]] = None,
+        tags_to_sandboxes: Optional[Dict[str, List[str]]] = None,
         symprec: float = SETTINGS.SYMPREC,
         ltol: float = SETTINGS.LTOL,
         stol: float = SETTINGS.STOL,
@@ -61,6 +64,7 @@ class MaterialsBuilder(Builder):
             materials: Store of materials documents to generate
             query: dictionary to limit tasks to be analyzed
             allowed_task_types: list of task_types that can be processed
+            tags_to_sandboxes: dictionary mapping sandboxes to a list of tags
             symprec: tolerance for SPGLib spacegroup finding
             ltol: StructureMatcher tuning parameter for matching tasks to materials
             stol: StructureMatcher tuning parameter for matching tasks to materials
@@ -69,8 +73,11 @@ class MaterialsBuilder(Builder):
 
         self.tasks = tasks
         self.materials = materials
-        self.task_types = task_types
-        self.allowed_task_types = allowed_task_types
+        self.task_validation = task_validation
+        self.allowed_task_types = {TaskType(t) for t in allowed_task_types} or set(
+            TaskType
+        )
+        self.tags_to_sandboxes = tags_to_sandboxes or SETTINGS.tags_to_sandboxes
         self.query = query if query else {}
         self.symprec = symprec
         self.ltol = ltol
@@ -79,8 +86,8 @@ class MaterialsBuilder(Builder):
         self.kwargs = kwargs
 
         sources = [tasks]
-        if self.task_types:
-            sources.append(self.task_types)
+        if self.task_validation:
+            sources.append(self.task_validation)
         super().__init__(sources=sources, targets=[materials], **kwargs)
 
     def ensure_indexes(self):
@@ -89,19 +96,20 @@ class MaterialsBuilder(Builder):
         """
 
         # Basic search index for tasks
-        self.tasks.ensure_index(self.tasks.key, unique=True)
+        self.tasks.ensure_index(self.tasks.key)
+        self.tasks.ensure_index(self.tasks.last_updated_field)
         self.tasks.ensure_index("state")
         self.tasks.ensure_index("formula_pretty")
-        self.tasks.ensure_index(self.tasks.last_updated_field)
 
         # Search index for materials
-        self.materials.ensure_index(self.materials.key, unique=True)
-        self.materials.ensure_index("task_ids")
+        self.materials.ensure_index(self.materials.key)
         self.materials.ensure_index(self.materials.last_updated_field)
+        self.materials.ensure_index("sandboxes")
+        self.materials.ensure_index("task_ids")
 
-        if self.task_types:
-            self.task_types.ensure_index(self.task_types.key)
-            self.task_types.ensure_index("is_valid")
+        if self.task_validation:
+            self.task_validation.ensure_index(self.task_validation.key)
+            self.task_validation.ensure_index("is_valid")
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
@@ -123,12 +131,19 @@ class MaterialsBuilder(Builder):
         self.timestamp = datetime.utcnow()
 
         # Get all processed tasks:
-        q = dict(self.query)
-        q["state"] = "successful"
+        temp_query = dict(self.query)
+        temp_query["state"] = "successful"
 
         self.logger.info("Finding tasks to process")
-        all_tasks = set(self.tasks.distinct(self.tasks.key, q))
-        processed_tasks = set(self.materials.distinct("task_ids"))
+        all_tasks = {
+            doc[self.tasks.key]
+            for doc in self.tasks.query(temp_query, [self.tasks.key])
+        }
+        processed_tasks = {
+            t_id
+            for d in self.materials.query({}, ["task_ids"])
+            for t_id in d.get("task_ids", [])
+        }
         to_process_tasks = all_tasks - processed_tasks
         to_process_forms = self.tasks.distinct(
             "formula_pretty", {self.tasks.key: {"$in": list(to_process_tasks)}}
@@ -139,10 +154,13 @@ class MaterialsBuilder(Builder):
         # Set total for builder bars to have a total
         self.total = len(to_process_forms)
 
-        if self.task_types:
-            invalid_ids = set(
-                self.task_types.distinct(self.task_types.key, {"is_valid": False})
-            )
+        if self.task_validation:
+            invalid_ids = {
+                doc[self.tasks.key]
+                for doc in self.task_validation.query(
+                    {"is_valid": False}, [self.task_validation.key]
+                )
+            }
         else:
             invalid_ids = set()
 
@@ -155,19 +173,38 @@ class MaterialsBuilder(Builder):
             "output.parameters",
             "orig_inputs",
             "input.structure",
+            "tags",
         ]
 
+        sandboxed_tags = {
+            sandbox
+            for sandbox in self.tags_to_sandboxes.values()
+            if self.tags_to_sandboxes is not None
+        }
+
         for formula in to_process_forms:
-            tasks_q = dict(q)
-            tasks_q["formula_pretty"] = formula
+            tasks_query = dict(temp_query)
+            tasks_query["formula_pretty"] = formula
             tasks = list(
-                self.tasks.query(criteria=tasks_q, properties=projected_fields)
+                self.tasks.query(criteria=tasks_query, properties=projected_fields)
             )
             for t in tasks:
                 if t[self.tasks.key] in invalid_ids:
                     t["is_valid"] = False
                 else:
                     t["is_valid"] = True
+
+                if any(tag in sandboxed_tags for tag in t.get("tags", [])):
+                    t["sandboxes"] = [
+                        sandbox
+                        for sandbox in self.tags_to_sandboxes
+                        if any(
+                            tag in t["tags"]
+                            for tag in set(self.tags_to_sandboxes[sandbox])
+                        )
+                    ]
+                else:
+                    t["sandboxes"] = ["core"]
 
             yield tasks
 
@@ -183,8 +220,8 @@ class MaterialsBuilder(Builder):
         """
 
         formula = tasks[0]["formula_pretty"]
-        t_ids = [t[self.tasks.key] for t in tasks]
-        self.logger.debug(f"Processing {formula} : {t_ids}")
+        task_ids = [task[self.tasks.key] for task in tasks]
+        self.logger.debug(f"Processing {formula} : {task_ids}")
 
         materials = []
         grouped_tasks = self.filter_and_group_tasks(tasks)
@@ -208,9 +245,15 @@ class MaterialsBuilder(Builder):
         for item in items:
             item.update({"_bt": self.timestamp})
 
+        material_ids = {item[self.materials.key] for item in items}
+
         if len(items) > 0:
             self.logger.info(f"Updating {len(items)} materials")
-            self.materials.update(docs=jsanitize(items, allow_bson=True))
+            self.materials.remove_docs({self.materials.key: {"$in": material_ids}})
+            self.materials.update(
+                docs=jsanitize(items, allow_bson=True),
+                key=(self.materials.key, "sandboxes"),
+            )
         else:
             self.logger.info("No items to update")
 
@@ -218,14 +261,13 @@ class MaterialsBuilder(Builder):
         """
         Groups tasks by structure matching
         """
-        allowed_task_types = self.allowed_task_types or _TASK_TYPES
 
         filtered_tasks = [
             task
             for task in tasks
             if any(
                 allowed_type in task_type(task.get("orig_inputs", {}))
-                for allowed_type in allowed_task_types
+                for allowed_type in self.allowed_task_types
             )
         ]
 
@@ -245,7 +287,18 @@ class MaterialsBuilder(Builder):
         )
 
         for group in grouped_structures:
-            yield [filtered_tasks[struc.index] for struc in group]
+            grouped_tasks = [filtered_tasks[struc.index] for struc in group]
+            sandboxes = [
+                task["sandboxes"] for task in grouped_tasks if "sandboxes" in task
+            ]
+
+            for sbx_set in maximal_spanning_non_intersecting_subsets(sandboxes):
+                yield [
+                    task
+                    for task in grouped_tasks
+                    if len(set(task.get("sandboxes", ["core"])).intersection(sbx_set))
+                    > 0
+                ]
 
     def make_mat(self, task_group: List[Dict]) -> Dict:
         """
@@ -253,30 +306,46 @@ class MaterialsBuilder(Builder):
         """
 
         # Metadata
-        last_updated = max(t[self.tasks.last_updated_field] for t in task_group)
-        created_at = min(t[self.tasks.last_updated_field] for t in task_group)
-        task_ids = list({t[self.tasks.key] for t in task_group})
-        sandboxes = list({sbxn for t in task_group for sbxn in t.get("sbxn", [])})
+        last_updated = max(task[self.tasks.last_updated_field] for task in task_group)
+        created_at = min(task[self.tasks.last_updated_field] for task in task_group)
+        task_ids = list({task[self.tasks.key] for task in task_group})
+        sandboxes = list(
+            {sbxn for task in task_group for sbxn in task.get("sbxn", ["core"])}
+        )
 
         deprecated_tasks = list(
-            {t[self.tasks.key] for t in task_group if not t["is_valid"]}
+            {
+                task[self.tasks.key]
+                for task in task_group
+                if not task.get("is_valid", True)
+            }
         )
+        run_types = {
+            t[self.tasks.key]: run_type(t["output"]["parameters"]) for t in task_group
+        }
+        task_types = {
+            t[self.tasks.key]: task_type(t["orig_inputs"]) for t in task_group
+        }
         calc_types = {
-            t[self.tasks.key]: run_type(t["output"]["parameters"])
-            + " "
-            + task_type(t["orig_inputs"])
-            for t in task_group
+            task[self.tasks.key]: CalcType(
+                f"{run_types[task[self.tasks.key]]}"
+                + " "
+                + f"{task_types[task[self.tasks.key]]}"
+            )
+            for task in task_group
         }
 
         structure_optimizations = [
-            t
-            for t in task_group
-            if task_type(t["orig_inputs"]) == "Structure Optimization"
+            task
+            for task in task_group
+            if task_types[task[self.tasks.key]] == "Structure Optimization"
         ]
-        statics = [t for t in task_group if task_type(t["orig_inputs"]) == "Static"]
+        statics = [
+            task for task in task_group if task_types[task[self.tasks.key]] == "Static"
+        ]
 
         # Material ID
-        possible_mat_ids = [t[self.tasks.key] for t in structure_optimizations]
+        possible_mat_ids = [task[self.tasks.key] for task in structure_optimizations]
         possible_mat_ids = sorted(possible_mat_ids, key=ID_to_int)
 
         if len(possible_mat_ids) == 0:
@@ -293,29 +362,28 @@ class MaterialsBuilder(Builder):
             - Special Tags
             - Energy
             """
-            qual_score = {"SCAN": 3, "GGA+U": 2, "GGA": 1}
+            qual_score = SETTINGS.vasp_qual_scores
 
             ispin = task.get("output", {}).get("parameters", {}).get("ISPIN", 1)
             energy = task.get("output", {}).get("energy_per_atom", 0.0)
-
+            task_run_type = run_type(task["output"]["parameters"])
             special_tags = [
                 task.get("output", {}).get("parameters", {}).get(tag, False)
-                for tag in ["LASPH", "ADDGRID"]
+                for tag in ["LASPH"]
             ]
 
             is_valid = task[self.tasks.key] in deprecated_tasks
 
             return (
                 -1 * is_valid,
-                -1 * qual_score.get(run_type, 0),
+                -1 * qual_score.get(task_run_type, 0),
                 -1 * ispin,
                 -1 * sum(special_tags),
                 energy,
             )
 
-        best_structure_calc = sorted(
-            structure_optimizations + statics, key=_structure_eval
-        )[0]
+        structure_calcs = structure_optimizations + statics
+        best_structure_calc = sorted(structure_calcs, key=_structure_eval)[0]
         structure = Structure.from_dict(best_structure_calc["output"]["structure"])
 
         # Initial Structures
@@ -346,6 +414,22 @@ class MaterialsBuilder(Builder):
             )
         ]
 
+        # entries
+        entries = {}
+        all_run_types = set(run_types.keys())
+        for rt in all_run_types:
+            rt_tasks = {t_id for t_id in task_ids if run_types[t_id] == rt}
+            relevant_calcs = [
+                doc for doc in structure_calcs if doc[self.tasks.key] in rt_tasks
+            ]
+            if len(relevant_calcs) > 0:
+                entry_dict = task_doc_to_entry(
+                    sorted(relevant_calcs, key=_structure_eval)[0]
+                )
+                entry_dict["data"]["task_id"] = entry_dict["entry_id"]
+                entry_dict["entry_id"] = material_id
+                entries[rt] = ComputedEntry.from_dict(entry_dict)
+
         # Warnings
         # TODO: What warning should we process?
 
@@ -356,10 +440,13 @@ class MaterialsBuilder(Builder):
             created_at=created_at,
             task_ids=task_ids,
             calc_types=calc_types,
+            run_types=run_types,
+            task_types=task_types,
             initial_structures=initial_structures,
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,
             origins=origins,
+            entries=entries,
             sandboxes=sandboxes if sandboxes else None,
         )
 
@@ -376,3 +463,25 @@ def ID_to_int(s_id: str) -> int:
         return s_id
     else:
         return None
+
+
+def task_doc_to_entry(task_doc: Dict) -> Dict:
+    """ Turns a Task Doc into a ComputedEntry"""
+
+    struc = Structure.from_dict(task_doc["output"]["structure"])
+    entry_dict = {
+        "correction": 0.0,
+        "entry_id": task_doc["task_id"],
+        "composition": struc.composition,
+        "energy": task_doc["output"]["energy"],
+        "parameters": {
+            "potcar_spec": task_doc["potcar_spec"],
+            "run_type": run_type(task_doc["output"]["parameters"]),
+        },
+        "data": {
+            "oxide_type": oxide_type(struc),
+            "last_updated": task_doc["last_updated"],
+        },
+    }
+
+    return entry_dict

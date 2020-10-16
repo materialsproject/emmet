@@ -1,32 +1,19 @@
-from typing import List, Iterator, Dict
-from typing_extensions import Literal
-from itertools import groupby
-from pathlib import Path
-
 import datetime
+from enum import Enum
+from itertools import groupby, product
+from pathlib import Path
+from typing import Dict, Iterator, List
+
 import bson
 import numpy as np
-
-from pymatgen import Structure
-from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
-from monty.serialization import loadfn
 from monty.json import MSONable
+from monty.serialization import loadfn
 from pydantic import BaseModel
+from pymatgen import Structure
+from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
+from typing_extensions import Literal
 
 from emmet.core import SETTINGS
-
-_RUN_TYPE_DATA = loadfn(str(Path(__file__).parent.joinpath("run_types.yaml").resolve()))
-_TASK_TYPES = [
-    "NSCF Line",
-    "NSCF Uniform",
-    "Dielectric",
-    "DFPT",
-    "NMR Nuclear Shielding",
-    "NMR Electric Field Gradient",
-    "Static",
-    "Structure Optimization",
-    "Deformation",
-]
 
 
 def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:
@@ -70,98 +57,9 @@ def group_structures(
         return get_sg(struc, symprec=symprec)
 
     # First group by spacegroup number then by structure matching
-    for sg, pregroup in groupby(sorted(structures, key=_get_sg), key=_get_sg):
+    for _, pregroup in groupby(sorted(structures, key=_get_sg), key=_get_sg):
         for group in sm.group_structures(list(pregroup)):
             yield group
-
-
-def run_type(parameters: Dict) -> str:
-    """
-    Determines the run_type from the VASP parameters dict
-    This is adapted from pymatgen to be far less unstable
-    """
-
-    if parameters.get("LDAU", False):
-        is_hubbard = "+U"
-    else:
-        is_hubbard = ""
-
-    def _variant_equal(v1, v2) -> bool:
-        """
-        helper function to deal with strings
-        """
-        if isinstance(v1, str) and isinstance(v2, str):
-            return v1.strip().upper() == v2.strip().upper()
-        else:
-            return v1 == v2
-
-    # This is to force an order of evaluation
-    for functional_class in ["HF", "VDW", "METAGGA", "GGA"]:
-        for special_type, params in _RUN_TYPE_DATA[functional_class].items():
-            if all(
-                [
-                    _variant_equal(parameters.get(param, None), value)
-                    for param, value in params.items()
-                ]
-            ):
-                return f"{special_type}{is_hubbard}"
-
-    return f"LDA{is_hubbard}"
-
-
-def task_type(
-    inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict]
-) -> str:
-    """
-    Determines the calculation type
-
-    Args:
-        inputs (dict): inputs dict with an incar, kpoints, potcar, and poscar dictionaries
-    """
-
-    calc_type = []
-
-    incar = inputs.get("incar", {})
-
-    if incar.get("ICHARG", 0) > 10:
-        try:
-            kpts = inputs.get("kpoints") or {}
-            kpt_labels = kpts.get("labels") or []
-            num_kpt_labels = len(list(filter(None.__ne__, kpt_labels)))
-        except Exception as e:
-            raise Exception(
-                "Couldn't identify total number of kpt labels: {}".format(e)
-            )
-
-        if num_kpt_labels > 0:
-            calc_type.append("NSCF Line")
-        else:
-            calc_type.append("NSCF Uniform")
-
-    elif incar.get("LEPSILON", False):
-        if incar.get("IBRION", 0) > 6:
-            calc_type.append("DFPT")
-        calc_type.append("Dielectric")
-
-    elif incar.get("IBRION", 0) > 6:
-        calc_type.append("DFPT")
-
-    elif incar.get("LCHIMAG", False):
-        calc_type.append("NMR Nuclear Shielding")
-
-    elif incar.get("LEFG", False):
-        calc_type.append("NMR Electric Field Gradient")
-
-    elif incar.get("NSW", 1) == 0:
-        calc_type.append("Static")
-
-    elif incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
-        calc_type.append("Structure Optimization")
-
-    elif incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
-        calc_type.append("Deformation")
-
-    return " ".join(calc_type)
 
 
 def jsanitize(obj, strict=False, allow_bson=False):
@@ -214,14 +112,9 @@ def jsanitize(obj, strict=False, allow_bson=False):
         }
     if isinstance(obj, (int, float)):
         return obj
+
     if obj is None:
         return None
-
-    if isinstance(obj, MSONable):
-        return {
-            k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
-            for k, v in obj.as_dict().items()
-        }
 
     if not strict:
         return obj.__str__()

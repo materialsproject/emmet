@@ -1,7 +1,7 @@
-from typing import Dict, Any
 from enum import Enum
-from pydantic import BaseModel, Field
+from typing import Any, Dict
 
+from pydantic import BaseModel, Field
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer, spglib
 
 from emmet.core import SETTINGS

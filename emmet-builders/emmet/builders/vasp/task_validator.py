@@ -6,14 +6,15 @@ from maggma.builders import MapBuilder
 
 from pymatgen import Structure
 
-from emmet.core.utils import run_type, task_type
+from emmet.core.vasp.calc_types import run_type, task_type
+from emmet.core.vasp.validation import ValidationDoc, DeprecationMessage
 from emmet.builders import SETTINGS
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
 
 
-class TaskTagger(MapBuilder):
+class TaskValidator(MapBuilder):
     def __init__(
         self,
         tasks: Store,
@@ -54,7 +55,7 @@ class TaskTagger(MapBuilder):
         _task_type = task_type(item.get("orig_inputs", {}))
         _run_type = run_type(item.get("input", {}).get("parameters", {}))
 
-        iv = is_valid(
+        validation_data = is_valid(
             item["output"]["structure"],
             item["orig_inputs"],
             SETTINGS.default_input_sets,
@@ -62,8 +63,13 @@ class TaskTagger(MapBuilder):
             SETTINGS.ldau_fields,
         )
 
-        d = {"task_type": _task_type, "run_type": _run_type, **iv}
-        return d
+        doc = ValidationDoc(
+            task_id=item[self.tasks.key],
+            task_type=_task_type,
+            run_type=_run_type,
+            **validation_data,
+        )
+        return doc.dict()
 
 
 def is_valid(
@@ -88,7 +94,9 @@ def is_valid(
         structure = Structure.from_dict(structure)
     tt = task_type(inputs)
 
-    d = {"is_valid": True, "warnings": []}
+    is_valid = True
+    reasons = []
+    d = {}
 
     if tt in input_sets:
         valid_input_set = input_sets[tt](structure)
@@ -102,16 +110,16 @@ def is_valid(
         )
         d["kpts_ratio"] = num_kpts / valid_num_kpts
         if d["kpts_ratio"] < kpts_tolerance:
-            d["is_valid"] = False
-            d["warnings"].append("Too few KPoints")
+            is_valid = False
+            reasons.append(DeprecationMessage.kpoints)
 
         # Checking ENCUT
         encut = inputs.get("incar", {}).get("ENCUT")
         valid_encut = valid_input_set.incar["ENCUT"]
         d["encut_ratio"] = float(encut) / valid_encut
         if d["encut_ratio"] < 1:
-            d["is_valid"] = False
-            d["warnings"].append("ENCUT too low")
+            is_valid = False
+            reasons.append(DeprecationMessage.encut)
 
         # Checking U-values
         if valid_input_set.incar.get("LDAU"):
@@ -134,10 +142,7 @@ def is_valid(
                 input_set_ldau_params[el] != input_params
                 for el, input_params in input_ldau_params.items()
             ):
-                d["is_valid"] = False
-                d["warnings"].append("LDAU parameters don't match")
+                is_valid = False
+                reasons.append("LDAU parameters don't match")
 
-    if len(d["warnings"]) == 0:
-        del d["warnings"]
-
-    return d
+    return {"is_valid": is_valid, "reasons": reasons, **d}

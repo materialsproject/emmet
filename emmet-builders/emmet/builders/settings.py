@@ -1,7 +1,8 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
+import importlib
 from pydantic import Field, validator
 from emmet.core.settings import EmmetSettings
-from atomate.utils.utils import load_class
+from emmet.core.vasp.calc_types import RunType
 
 
 class EmmetBuilderSettings(EmmetSettings):
@@ -20,6 +21,15 @@ class EmmetBuilderSettings(EmmetSettings):
         ["LDAUU", "LDAUJ", "LDAUL"], description="LDAU fields to validate for tasks"
     )
 
+    vasp_qual_scores: Dict[RunType, int] = Field(
+        {"SCAN": 3, "GGA+U": 2, "GGA": 1},
+        description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builders",
+    )
+
+    tags_to_sandboxes: Optional[Dict[str, List[str]]] = Field(
+        None, description="Mapping of calcuation tags to sandboxes. Any calculation without these tags will be kept as core."
+    )
+
     @validator("default_input_sets", pre=True)
     def load_input_sets(cls, values):
         input_sets = {}
@@ -27,6 +37,6 @@ class EmmetBuilderSettings(EmmetSettings):
             if isinstance(inp_set, str):
                 _module = ".".join(inp_set.split(".")[:-1])
                 _class = inp_set.split(".")[-1]
-                input_sets[name] = load_class(_module, _class)
+                input_sets[name] = getattr(importlib.import_module(_module), _class)
 
         return input_sets

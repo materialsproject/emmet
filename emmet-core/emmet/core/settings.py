@@ -4,6 +4,7 @@ database building and in the website code, to ensure consistency between
 different modules and packages.
 """
 import json
+
 import requests
 from pydantic import BaseSettings, Field, root_validator
 from pydantic.types import Path
@@ -35,6 +36,11 @@ class EmmetSettings(BaseSettings):
     )
     ANGLE_TOL: float = Field(
         5, description="Angle tolerance for structure matching in degrees."
+    )
+
+    MAX_PIEZO_MILLER: int = Field(
+        10,
+        description="Maximum miller allowed for computing strain direction for maximal piezo response",
     )
 
     class Config:

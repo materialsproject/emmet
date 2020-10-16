@@ -1,4 +1,5 @@
-from typing import Dict, List, Optional, Union, Tuple
+from typing import Dict, List, Optional, Tuple, Union
+
 from pydantic import BaseModel, Field
 from pymatgen import Element
 
@@ -17,11 +18,14 @@ class ComputedEntry(BaseModel):
     composition: Composition = Field(
         None, description="Full composition for this entry"
     )
-    energy_per_atom: float = Field(
-        None, description="DFT total energy per atom in eV/atom"
-    )
     energy: float = Field(None, description="DFT total energy in eV")
     correction: float = Field(None, description="Energy correction in eV")
+    energy_adjustments: List = Field(
+        None,
+        description="An optional list of EnergyAdjustment to be applied to the energy."
+        " This is used to modify the energy for certain analyses."
+        " Defaults to None.",
+    )
     parameters: Dict = Field(
         None,
         description="Dictionary of extra parameters for the underlying calculation",

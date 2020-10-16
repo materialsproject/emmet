@@ -46,3 +46,14 @@ def test_structure_metadata_fewer_fields(structure):
     assert meta_doc.nsites == 1
     assert meta_doc.nelements == 1
     assert meta_doc.volume == 27.0
+
+
+def test_composition(structure):
+    meta_doc = StructureMetadata.from_structure(structure)
+    comp_meta_doc = StructureMetadata.from_composition(structure.composition)
+
+    assert meta_doc.elements == comp_meta_doc.elements
+    assert meta_doc.nelements == comp_meta_doc.nelements
+    assert meta_doc.formula_pretty == comp_meta_doc.formula_pretty
+    assert meta_doc.formula_anonymous == comp_meta_doc.formula_anonymous
+    assert meta_doc.chemsys == comp_meta_doc.chemsys
