@@ -123,6 +123,3 @@ def jsanitize(obj, strict=False, allow_bson=False):
         return obj.__str__()
 
     return jsanitize(obj.as_dict(), strict=strict, allow_bson=allow_bson)
-
-
-

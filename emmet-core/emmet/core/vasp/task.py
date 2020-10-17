@@ -68,7 +68,6 @@ class OutputSummary(BaseModel):
     stress: Matrix3D = Field(
         None, description="Stress on the unitcell from the last calculation"
     )
-    
 
 
 class RunStatistics(BaseModel):

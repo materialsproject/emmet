@@ -69,8 +69,6 @@ def entries():
 
 def test_from_entries(entries):
 
- 
-
     docs = ThermoDoc.from_entries(entries)
 
     assert len(docs) == len(entries)

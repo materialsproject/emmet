@@ -68,7 +68,7 @@ class PropertyDoc(StructureMetadata):
         Builds a materials document using the minimal amount of information
         """
 
-        return super().from_structure( # type: ignore
+        return super().from_structure(  # type: ignore
             structure=structure,
             material_id=material_id,
             include_structure=False,
@@ -129,7 +129,9 @@ class MaterialsDoc(StructureMetadata):
         None, description="Dictionary for tracking the provenance of properties"
     )
 
-    warnings: Sequence[str] = Field([], description="Any warnings related to this material")
+    warnings: Sequence[str] = Field(
+        [], description="Any warnings related to this material"
+    )
 
     sandboxes: Sequence[str] = Field(
         ["core"],
@@ -146,7 +148,7 @@ class MaterialsDoc(StructureMetadata):
         Builds a materials document using the minimal amount of information
         """
 
-        return super().from_structure( # type: ignore
+        return super().from_structure(  # type: ignore
             structure=structure,
             material_id=material_id,
             include_structure=True,

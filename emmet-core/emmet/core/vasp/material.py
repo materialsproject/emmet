@@ -15,8 +15,6 @@ from emmet.core.vasp.task import TaskDocument
 from emmet.stubs import ComputedEntry, Structure
 
 
-
-
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
     calc_types: Mapping[str, CalcType] = Field(

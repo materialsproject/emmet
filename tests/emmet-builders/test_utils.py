@@ -1,5 +1,8 @@
 from itertools import combinations, chain
-from emmet.builders.utils import maximal_spanning_non_intersecting_subsets, chemsys_permutations
+from emmet.builders.utils import (
+    maximal_spanning_non_intersecting_subsets,
+    chemsys_permutations,
+)
 
 
 def test_maximal_spanning_non_intersecting_subsets():

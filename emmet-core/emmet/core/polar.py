@@ -80,7 +80,7 @@ class Piezoelectric(PropertyDoc):
     @classmethod
     def from_ionic_and_electronic(cls, ionic: Matrix3D, electronic: Matrix3D):
 
-        total = np.sum(ionic, electronic).tolist()
+        total = np.sum(ionic, electronic).tolist()  # type: np.array
 
         directions, charges, strains = np.linalg.svd(total, full_matrices=False)
         max_index = np.argmax(np.abs(charges))

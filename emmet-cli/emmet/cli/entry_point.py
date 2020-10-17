@@ -23,7 +23,11 @@ def opt_prompt():
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.option("--spec-or-dbfile", metavar="HOST/DB", help="MongoGrant spec or path to db.json for DB to use.")
+@click.option(
+    "--spec-or-dbfile",
+    metavar="HOST/DB",
+    help="MongoGrant spec or path to db.json for DB to use.",
+)
 @click.option("--run", is_flag=True, help="Run DB/filesystem write operations.")
 @click.option("--issue", type=int, help="Production tracker issue (required if --run).")
 @click.option("--sbatch", is_flag=True, help="Switch to SBatch mode.")

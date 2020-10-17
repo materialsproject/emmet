@@ -39,7 +39,10 @@ FILE_FILTERS_DEFAULT = [
 
 @click.group()
 @click.option(
-    "-d", "--directory", required=True, help="Directory to use for HPSS or parsing.",
+    "-d",
+    "--directory",
+    required=True,
+    help="Directory to use for HPSS or parsing.",
 )
 @click.option(
     "-m", "--nmax", show_default=True, default=10, help="Maximum number of directories."

@@ -52,6 +52,10 @@ class EmmetSettings(BaseSettings):
     VASP_SPECIAL_TAGS: List[str] = Field(
         ["LASPH"], description="Special tags to prioritize for VASP Task Documents"
     )
+    VASP_QUALITY_SCORES: Dict[str, int] = Field(
+        {"SCAN": 3, "GGA+U": 2, "GGA": 1},
+        description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builders",
+    )
 
     class Config:
         env_prefix = "emmet_"
