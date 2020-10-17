@@ -8,21 +8,13 @@ from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatc
 
 from emmet.core import SETTINGS
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
-from emmet.core.material import PropertyOrigin as CorePropertyOrigin
+from emmet.core.material import PropertyOrigin as PropertyOrigin
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 from emmet.core.vasp.task import TaskDocument
 from emmet.stubs import ComputedEntry, Structure
 
 
-class PropertyOrigin(CorePropertyOrigin):
-    """
-    Provenance document for the origin of properties in a material document from VASP calculations
-    """
-
-    calc_type: CalcType = Field(
-        ..., description="The original calculation type this propeprty comes from"
-    )
 
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
@@ -63,14 +55,16 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         deprecated_tasks = list(
             {task.task_id for task in task_group if not task.is_valid}
         )
-        run_types = {t.task_id: t.run_type for t in task_group}
-        task_types = {t.task_id: t.task_type for t in task_group}
-        calc_types = {t.task_id: t.calc_type for t in task_group}
+        run_types = {task.task_id: task.run_type for task in task_group}
+        task_types = {task.task_id: task.task_type for task in task_group}
+        calc_types = {task.task_id: task.calc_type for task in task_group}
 
         structure_optimizations = [
-            task for task in task_group if task.task_type == "Structure Optimization"
+            task
+            for task in task_group
+            if task.task_type == TaskType.Structure_Optimization
         ]
-        statics = [task for task in task_group if task.task_type == "Static"]
+        statics = [task for task in task_group if task.task_type == TaskType.Static]
 
         # Material ID
         possible_mat_ids = [task.task_id for task in structure_optimizations]
@@ -89,13 +83,13 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             - Special Tags
             - Energy
             """
-            qual_score = SETTINGS.vasp_qual_scores
+            qual_score = SETTINGS.VASP_QUALITY_SCORES
 
-            ispin = task.output.parameters.get("ISPIN", 1)
+            ispin = task.input.parameters.get("ISPIN", 1)
             energy = task.output.energy_per_atom
             task_run_type = task.run_type
             special_tags = [
-                task.output.parameters.get(tag, False)
+                task.input.parameters.get(tag, False)
                 for tag in SETTINGS.VASP_SPECIAL_TAGS
             ]
 
@@ -103,7 +97,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
             return (
                 -1 * is_valid,
-                -1 * qual_score.get(task_run_type, 0),
+                -1 * qual_score.get(task_run_type.value, 0),
                 -1 * ispin,
                 -1 * sum(special_tags),
                 energy,
@@ -114,7 +108,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         structure = best_structure_calc.output.structure
 
         # Initial Structures
-        initial_structures = [t.input.structure for t in task_group]
+        initial_structures = [task.input.structure for task in task_group]
         sm = StructureMatcher(
             ltol=0.1, stol=0.1, angle_tol=0.1, scale=False, attempt_supercell=False
         )
@@ -123,14 +117,14 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         ]
 
         # Deprecated
-        deprecated = all(t.task_id in deprecated_tasks for t in structure_optimizations)
+        deprecated = all(
+            task.task_id in deprecated_tasks for task in structure_optimizations
+        )
 
         # Origins
         origins = [
             PropertyOrigin(
                 name="structure",
-                task_type=best_structure_calc.task_type,
-                calc_type=best_structure_calc.calc_type,
                 task_id=best_structure_calc.task_id,
                 last_updated=best_structure_calc.last_updated,
             )
@@ -138,9 +132,8 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
         # entries
         entries = {}
-        all_run_types = set(run_types.keys())
+        all_run_types = set(run_types.values())
         for rt in all_run_types:
-
             relevant_calcs = sorted(
                 [doc for doc in structure_calcs if doc.run_type == rt],
                 key=_structure_eval,

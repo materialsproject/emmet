@@ -17,13 +17,13 @@ class PropertyOrigin(BaseModel):
 
     name: str = Field(..., description="The property name")
     task_id: str = Field(..., description="The calculation ID this property comes from")
-    task_type: str = Field(
-        ..., description="The original calculation type this propeprty comes from"
-    )
     last_updated: datetime = Field(
         description="The timestamp when this calculation was last updated",
         default_factory=datetime.utcnow,
     )
+
+    class Config:
+        use_enum_values = True
 
 
 class PropertyDoc(StructureMetadata):
