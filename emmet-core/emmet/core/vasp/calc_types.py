@@ -165,6 +165,6 @@ def calc_type(
         inputs: inputs dict with an incar, kpoints, potcar, and poscar dictionaries
         parameters: Dictionary of VASP parameters from Vasprun.xml
     """
-    rt = run_type(parameters)
-    tt = task_type(inputs)
+    rt = run_type(parameters).value
+    tt = task_type(inputs).value
     return CalcType(f"{rt} {tt}")
