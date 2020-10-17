@@ -13,7 +13,7 @@ def entries():
                 "@class": "ComputedEntry",
                 "correction": 0.0,
                 "entry_id": "test-1",
-                "energy": -6.824046313,
+                "energy": -382.146593528,
                 "composition": {"Fe": 24.0, "O": 32.0},
                 "name": "Fe3O4",
                 "attribute": None,
@@ -24,7 +24,7 @@ def entries():
                 "@class": "ComputedEntry",
                 "correction": 0.0,
                 "entry_id": "test-2",
-                "energy": -6.759691351,
+                "energy": -270.38765404,
                 "composition": {"Fe": 16.0, "O": 24.0},
                 "name": "Fe2O3",
                 "attribute": None,
@@ -35,7 +35,7 @@ def entries():
                 "@class": "ComputedEntry",
                 "correction": 0.0,
                 "entry_id": "test-3",
-                "energy": -3.844778857,
+                "energy": -92.274692568,
                 "composition": {"O": 24.0},
                 "name": "O",
                 "attribute": None,
@@ -46,7 +46,7 @@ def entries():
                 "@class": "ComputedEntry",
                 "correction": 0.0,
                 "entry_id": "test-4",
-                "energy": -6.502098305,
+                "energy": -13.00419661,
                 "composition": {"Fe": 2.0},
                 "name": "Fe",
                 "attribute": None,
@@ -57,7 +57,7 @@ def entries():
                 "@class": "ComputedEntry",
                 "correction": 0.0,
                 "entry_id": "test-5",
-                "energy": -6.755167412,
+                "energy": -1080.82678592,
                 "composition": {"Fe": 64.0, "O": 96.0},
                 "name": "Fe2O3",
                 "attribute": None,
@@ -68,7 +68,11 @@ def entries():
 
 
 def test_from_entries(entries):
+
+ 
+
     docs = ThermoDoc.from_entries(entries)
+
     assert len(docs) == len(entries)
 
     assert all([d.energy_type == "Unknown" for d in docs])
