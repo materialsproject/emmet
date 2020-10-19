@@ -1,6 +1,6 @@
 pymatgen==2020.4.29
 monty==3.0.2
-pydantic==1.4
+pydantic==1.6.1
 pybtex==0.21
 typing-extensions==3.7.4.2
 pymongo==3.10.1
