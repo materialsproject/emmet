@@ -77,6 +77,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
+
   docs:
     runs-on: ubuntu-latest
 
@@ -95,3 +96,16 @@ jobs:
 
     - name: Build
       run: mkdocs build
+
+  merge-deps:
+    needs:
+      - lint
+      - test
+      - docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge me!
+        uses: ridedott/merge-me-action@master
+        with:
+          GITHUB_LOGIN: dependabot[bot]
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
