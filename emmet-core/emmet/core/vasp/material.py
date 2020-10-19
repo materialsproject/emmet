@@ -1,7 +1,7 @@
 """ Core definition of a Materials Document """
 from datetime import datetime
 from functools import partial
-from typing import ClassVar, List, Mapping, Optional, Sequence, Union
+from typing import ClassVar, List, Mapping, Optional, Sequence, Union, Tuple, TypeVar
 
 from pydantic import BaseModel, Field, create_model
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
@@ -17,7 +17,7 @@ from emmet.stubs import ComputedEntry, Structure
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
-    calc_types: Mapping[str, CalcType] = Field(
+    calc_types: Mapping[str, CalcType] = Field(  # type: ignore
         None,
         description="Calculation types for all the calculations that make up this material",
     )
@@ -57,12 +57,13 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         task_types = {task.task_id: task.task_type for task in task_group}
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
+        # TODO: Fix the type checking by hardcoding the Enums?
         structure_optimizations = [
             task
             for task in task_group
-            if task.task_type == TaskType.Structure_Optimization
+            if task.task_type == TaskType.Structure_Optimization  # type: ignore
         ]
-        statics = [task for task in task_group if task.task_type == TaskType.Static]
+        statics = [task for task in task_group if task.task_type == TaskType.Static]  # type: ignore
 
         # Material ID
         possible_mat_ids = [task.task_id for task in structure_optimizations]
@@ -146,7 +147,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         # Warnings
         # TODO: What warning should we process?
 
-        return MaterialsDoc.from_structure(
+        return cls.from_structure(
             structure=structure,
             material_id=material_id,
             last_updated=last_updated,
@@ -164,7 +165,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         )
 
 
-def ID_to_int(s_id: str) -> int:
+def ID_to_int(s_id: str) -> Tuple[str, int]:
     """
     Converts a string id to tuple
     falls back to assuming ID is an Int if it can't process
@@ -173,6 +174,6 @@ def ID_to_int(s_id: str) -> int:
     if isinstance(s_id, str):
         return (s_id.split("-")[0], int(str(s_id).split("-")[-1]))
     elif isinstance(s_id, (int, float)):
-        return s_id
+        return ("", s_id)
     else:
         return None

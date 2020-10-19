@@ -1,4 +1,5 @@
 """ Core definition of Structure metadata """
+from __future__ import annotations
 from typing import List, Optional, Type, TypeVar, overload
 
 from pydantic import BaseModel, Field
@@ -6,6 +7,8 @@ from pymatgen.core.periodic_table import Element
 
 from emmet.core.symmetry import SymmetryData
 from emmet.stubs import Composition, Structure
+
+T = TypeVar("T", bound="StructureMetadata")
 
 
 class StructureMetadata(BaseModel):
@@ -65,8 +68,11 @@ class StructureMetadata(BaseModel):
 
     @classmethod
     def from_composition(
-        cls, composition: Composition, fields: Optional[List[str]] = None, **kwargs
-    ) -> "StructureMetadata":
+        cls: Type[T],
+        composition: Composition,
+        fields: Optional[List[str]] = None,
+        **kwargs
+    ) -> T:
 
         fields = (
             [
@@ -97,12 +103,12 @@ class StructureMetadata(BaseModel):
 
     @classmethod
     def from_structure(
-        cls,
+        cls: Type[T],
         structure: Structure,
         fields: Optional[List[str]] = None,
         include_structure: bool = False,
         **kwargs
-    ) -> "StructureMetadata":
+    ) -> T:
 
         fields = (
             [

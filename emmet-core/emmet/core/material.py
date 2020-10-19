@@ -1,7 +1,8 @@
 """ Core definition of a Materials Document """
+from __future__ import annotations
 from datetime import datetime
 from functools import partial
-from typing import ClassVar, Mapping, Optional, Sequence, Union
+from typing import ClassVar, Mapping, Optional, Sequence, Union, Type, TypeVar
 
 from pydantic import BaseModel, Field, create_model
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
@@ -24,6 +25,9 @@ class PropertyOrigin(BaseModel):
 
     class Config:
         use_enum_values = True
+
+
+S = TypeVar("S", bound="PropertyDoc")
 
 
 class PropertyDoc(StructureMetadata):
@@ -62,8 +66,8 @@ class PropertyDoc(StructureMetadata):
 
     @classmethod
     def from_structure(  # type: ignore[override]
-        cls, structure: Structure, material_id: str, **kwargs
-    ) -> "MaterialsDoc":
+        cls: Type[S], structure: Structure, material_id: str, **kwargs
+    ) -> S:
         """
         Builds a materials document using the minimal amount of information
         """
@@ -74,6 +78,9 @@ class PropertyDoc(StructureMetadata):
             include_structure=False,
             **kwargs
         )
+
+
+T = TypeVar("T", bound="MaterialsDoc")
 
 
 class MaterialsDoc(StructureMetadata):
@@ -142,8 +149,8 @@ class MaterialsDoc(StructureMetadata):
 
     @classmethod
     def from_structure(  # type: ignore[override]
-        cls, structure: Structure, material_id: str, **kwargs
-    ) -> "MaterialsDoc":
+        cls: Type[T], structure: Structure, material_id: str, **kwargs
+    ) -> T:
         """
         Builds a materials document using the minimal amount of information
         """

@@ -46,7 +46,6 @@ class InputSummary(BaseModel):
     potcar_spec: List[Dict] = Field(
         None, description="Potcar specification as a title and hash"
     )
-    parameters: Dict = Field(None, description="parameters for this VASP calculation")
 
 
 class OutputSummary(BaseModel):
