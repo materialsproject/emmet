@@ -63,7 +63,7 @@ def calcdb_from_mgrant(spec_or_dbfile):
 
     client = Client()
     role = "rw"  # NOTE need write access to source to ensure indexes
-    host, dbname_or_alias = spec.split("/", 1)
+    host, dbname_or_alias = spec_or_dbfile.split("/", 1)
     auth = client.get_auth(host, dbname_or_alias, role)
     if auth is None:
         raise Exception("No valid auth credentials available!")
