@@ -10,6 +10,8 @@ from emmet.core.material import PropertyDoc
 from emmet.core.structure import StructureMetadata
 from emmet.stubs import Matrix3D, Vector3D
 
+from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
+
 VoigtVector = Tuple[float, float, float, float, float, float]
 PiezoTensor = Tuple[VoigtVector, VoigtVector, VoigtVector]
 PiezoTensor.__doc__ = "Rank 3 real space tensor in Voigt notation"  # type: ignore
@@ -80,7 +82,7 @@ class Piezoelectric(PropertyDoc):
     @classmethod
     def from_ionic_and_electronic(cls, ionic: Matrix3D, electronic: Matrix3D):
 
-        total = np.sum(ionic, electronic).tolist()  # type: np.array
+        total = BasePiezoTensor.from_voigt(np.sum(ionic, electronic))
 
         directions, charges, strains = np.linalg.svd(total, full_matrices=False)
         max_index = np.argmax(np.abs(charges))
@@ -95,8 +97,8 @@ class Piezoelectric(PropertyDoc):
         return cls(
             **{
                 "total": total.zeroed().voigt,
-                "ionic": ionic.zeroed().voigt,
-                "static": static.zeroed().voigt,
+                "ionic": ionic,
+                "static": electronic,
                 "e_ij_max": charges[max_index],
                 "max_direction": np.round(max_direction / min_val),
                 "strain_for_max": strains[max_index],
