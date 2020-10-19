@@ -41,9 +41,6 @@ jobs:
           # exit-zero treats all errors as warnings.
           flake8 --count --exit-zero --max-complexity=20 --statistics ${{ matrix.package }}
 
-      - name: Lint with mypy
-        run: mypy --namespace-package ${{ matrix.package }}/emmet
-
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -68,6 +65,10 @@ jobs:
       - name: Install Packages
         run: |
           pip install -e ${{ matrix.package }}/
+
+
+      - name: Lint with mypy
+        run: mypy --namespace-package ${{ matrix.package }}/emmet
 
       - name: Test with pytest
         run: |
