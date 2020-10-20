@@ -123,3 +123,23 @@ def jsanitize(obj, strict=False, allow_bson=False):
         return obj.__str__()
 
     return jsanitize(obj.as_dict(), strict=strict, allow_bson=allow_bson)
+
+
+class DocEnum(Enum):
+    """
+    Enum with docstrings support
+    from: https://stackoverflow.com/a/50473952
+    """
+
+    def __new__(cls, value, doc=None):
+        """add docstring to the member of Enum if exists
+
+        Args:
+            value: Enum member value
+            doc: Enum member docstring, None if not exists
+        """
+        self = object.__new__(cls)  # calling super().__new__(value) here would fail
+        self._value_ = value
+        if doc is not None:
+            self.__doc__ = doc
+        return self
