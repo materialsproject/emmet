@@ -56,7 +56,7 @@ def entries():
                 "@module": "pymatgen.entries.computed_entries",
                 "@class": "ComputedEntry",
                 "correction": 0.0,
-                "entry_id": "test-5",
+                "entry_id": "unstable",
                 "energy": -1080.82678592,
                 "composition": {"Fe": 64.0, "O": 96.0},
                 "name": "Fe2O3",
@@ -68,9 +68,11 @@ def entries():
 
 
 def test_from_entries(entries):
-
     docs = ThermoDoc.from_entries(entries)
 
     assert len(docs) == len(entries)
 
     assert all([d.energy_type == "Unknown" for d in docs])
+    unstable_doc = next(d for d in docs if d.material_id == "unstable")
+    assert unstable_doc.is_stable is False
+    assert all([d.is_stable for d in docs if d != unstable_doc])
