@@ -39,7 +39,12 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
     )
 
     @classmethod
-    def from_tasks(cls, task_group: List[TaskDocument]) -> "MaterialsDoc":
+    def from_tasks(
+        cls,
+        task_group: List[TaskDocument],
+        quality_scores=SETTINGS.VASP_QUALITY_SCORES,
+        special_tags=SETTINGS.VASP_SPECIAL_TAGS,
+    ) -> "MaterialsDoc":
         """
         Converts a group of tasks into one material
         """
@@ -82,24 +87,17 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             - Special Tags
             - Energy
             """
-            qual_score = SETTINGS.VASP_QUALITY_SCORES
 
-            ispin = task.input.parameters.get("ISPIN", 1)
-            energy = task.output.energy_per_atom
             task_run_type = task.run_type
-            special_tags = [
-                task.input.parameters.get(tag, False)
-                for tag in SETTINGS.VASP_SPECIAL_TAGS
-            ]
 
             is_valid = task.task_id in deprecated_tasks
 
             return (
                 -1 * is_valid,
-                -1 * qual_score.get(task_run_type.value, 0),
-                -1 * ispin,
-                -1 * sum(special_tags),
-                energy,
+                -1 * quality_scores.get(task_run_type.value, 0),
+                -1 * task.input.parameters.get("ISPIN", 1),
+                -1 * sum(task.input.parameters.get(tag, False) for tag in special_tags),
+                task.output.energy_per_atom,
             )
 
         structure_calcs = structure_optimizations + statics
