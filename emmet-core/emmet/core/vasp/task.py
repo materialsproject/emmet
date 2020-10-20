@@ -111,7 +111,7 @@ class TaskDocument(BaseModel):
     input: InputSummary
     output: OutputSummary
 
-    state: Status
+    state: Status = Field(None, description="State of this calculation")
 
     orig_inputs: Dict[str, Dict] = Field(
         None, description="Summary of the original VASP inputs"
