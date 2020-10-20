@@ -47,7 +47,7 @@ class EmmetSettings(BaseSettings):
 
     TAGS_TO_SANDBOXES: Optional[Dict[str, List[str]]] = Field(
         None,
-        description="Mapping of calcuation tags to sandboxes. Any calculation without these tags will be kept as core.",
+        description="Mapping of calcuation tags to sandboxes: Dict[sandbox, list of tags]. Any calculation without these tags will be kept as core.",
     )
 
     VASP_SPECIAL_TAGS: List[str] = Field(
