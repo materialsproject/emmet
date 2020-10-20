@@ -1,5 +1,6 @@
 """ Core definition of Structure metadata """
 from __future__ import annotations
+
 from typing import List, Optional, Type, TypeVar, overload
 
 from pydantic import BaseModel, Field

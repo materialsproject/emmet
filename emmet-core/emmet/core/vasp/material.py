@@ -1,7 +1,7 @@
 """ Core definition of a Materials Document """
 from datetime import datetime
 from functools import partial
-from typing import ClassVar, List, Mapping, Optional, Sequence, Union, Tuple, TypeVar
+from typing import ClassVar, List, Mapping, Optional, Sequence, Tuple, TypeVar, Union
 
 from pydantic import BaseModel, Field, create_model
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher

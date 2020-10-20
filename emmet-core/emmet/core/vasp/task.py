@@ -17,7 +17,7 @@ from emmet.core.vasp.calc_types import (
     run_type,
     task_type,
 )
-from emmet.stubs import ComputedEntry, Matrix3D, Vector3D, Structure
+from emmet.stubs import ComputedEntry, Matrix3D, Structure, Vector3D
 
 
 class Status(Enum):

@@ -4,13 +4,12 @@ from typing import ClassVar, Dict, List, Tuple
 
 import numpy as np
 from pydantic import BaseModel, Field
+from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
 
 from emmet.core import SETTINGS
 from emmet.core.material import PropertyDoc
 from emmet.core.structure import StructureMetadata
 from emmet.stubs import Matrix3D, Vector3D
-
-from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
 
 VoigtVector = Tuple[float, float, float, float, float, float]
 PiezoTensor = Tuple[VoigtVector, VoigtVector, VoigtVector]

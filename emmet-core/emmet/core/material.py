@@ -1,8 +1,9 @@
 """ Core definition of a Materials Document """
 from __future__ import annotations
+
 from datetime import datetime
 from functools import partial
-from typing import ClassVar, Mapping, Optional, Sequence, Union, Type, TypeVar
+from typing import ClassVar, Mapping, Optional, Sequence, Type, TypeVar, Union
 
 from pydantic import BaseModel, Field, create_model
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering

@@ -5,11 +5,10 @@ from maggma.builders import MapBuilder
 from maggma.core import Store
 from pymatgen import Structure
 
-
 from emmet.core import SETTINGS
 from emmet.core.vasp.calc_types import run_type, task_type
-from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
 from emmet.core.vasp.task import TaskDocument
+from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"

@@ -1,14 +1,14 @@
-import numpy as np
 from datetime import datetime
 from enum import Enum
-from typing import List, Union, Dict
+from typing import Dict, List, Union
 
+import numpy as np
 from pydantic import BaseModel, Field
 
-from emmet.stubs import Structure
-from emmet.core.vasp.task import TaskDocument
 from emmet.core import SETTINGS
 from emmet.core.utils import DocEnum
+from emmet.core.vasp.task import TaskDocument
+from emmet.stubs import Structure
 
 
 class DeprecationMessage(DocEnum):

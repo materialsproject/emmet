@@ -1,5 +1,5 @@
-from typing import Set
 from itertools import chain, combinations
+from typing import Set
 
 
 def maximal_spanning_non_intersecting_subsets(sets) -> Set[Set]:
