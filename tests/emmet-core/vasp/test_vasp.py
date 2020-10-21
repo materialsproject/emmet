@@ -58,6 +58,12 @@ def test_validator(tasks):
 
 def test_sandboxing():
 
-    SETTINGS.TAGS_TO_SANDBOXES = {"test_sbx": ["test"]}
+    test_doc = TaskDocument(task_id="test")
+    assert test_doc.sandboxes == ["core"]
+
+    SETTINGS.TAGS_TO_SANDBOXES = {"test_sbxn": ["test"]}
     test_doc = TaskDocument(task_id="test", tags=["test"])
-    assert test_doc.sandboxes == ["test_sbx"]
+    assert test_doc.sandboxes == ["test_sbxn"]
+
+    test_doc = TaskDocument(task_id="test", tags=["test"], sandboxes=["test_selected"])
+    assert test_doc.sandboxes == ["test_selected"]
