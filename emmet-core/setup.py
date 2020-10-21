@@ -20,6 +20,7 @@ setup(
         "pybtex",
         "typing-extensions",
         "pymongo",
+        "maggma",
     ],
     license="modified BSD",
     zip_safe=False,

@@ -4,3 +4,4 @@ pydantic==1.6.1
 pybtex==0.23.0
 typing-extensions==3.7.4.3
 pymongo==3.11.0
+maggma==0.23.3
