@@ -4,10 +4,11 @@ from enum import Enum
 from functools import lru_cache, partial
 from typing import ClassVar, Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field, create_model
+from pydantic import BaseModel, Field, validator
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
 from pymatgen.analysis.structure_analyzer import oxide_type
 
+from emmet.core import SETTINGS
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import (
     CalcType,
@@ -108,8 +109,8 @@ class TaskDocument(BaseModel):
         True, description="Whether this task document passed validation or not"
     )
 
-    input: InputSummary
-    output: OutputSummary
+    input: InputSummary = Field(None)
+    output: OutputSummary = Field(None)
 
     state: Status = Field(None, description="State of this calculation")
 
@@ -117,10 +118,10 @@ class TaskDocument(BaseModel):
         None, description="Summary of the original VASP inputs"
     )
     task_id: str = Field(None, description="the Task ID For this document")
-    tags: List[str] = Field(None, description="Metadata tags for this task document")
+    tags: List[str] = Field([], description="Metadata tags for this task document")
 
     sandboxes: List[str] = Field(
-        ["core"], description="List of sandboxes this task document is allowed in"
+        None, description="List of sandboxes this task document is allowed in"
     )
 
     @property
@@ -154,3 +155,31 @@ class TaskDocument(BaseModel):
         }
 
         return ComputedEntry.from_dict(entry_dict)
+
+    @validator("sandboxes", always=True)
+    def tags_to_sandboxes(cls, v, values):
+        tag_mapping = SETTINGS.TAGS_TO_SANDBOXES
+
+        if v is None:
+
+            if tag_mapping is not None:
+
+                sandboxed_tags = {
+                    tag for tag_list in tag_mapping.values() for tag in tag_list
+                }
+
+                if any(tag in sandboxed_tags for tag in values.get("tags", [])):
+
+                    v = sorted(
+                        {
+                            sandbox
+                            for sandbox, tags in tag_mapping.items()
+                            if len(set(tags).intersection(values.get("tags", []))) > 0
+                        }
+                    )
+                else:
+                    v = ["core"]
+            else:
+                v = ["core"]
+
+        return v
