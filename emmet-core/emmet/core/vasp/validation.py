@@ -81,7 +81,7 @@ class ValidationDoc(BaseModel):
             # Checking ENCUT
             encut = inputs.get("incar", {}).get("ENCUT")
             valid_encut = valid_input_set.incar["ENCUT"]
-            data["encut_ratio"] = float(encut) / valid_encut
+            data["encut_ratio"] = float(encut) / valid_encut  # type: ignore
             if data["encut_ratio"] < 1:
                 is_valid = False
                 reasons.append(DeprecationMessage.encut)
@@ -110,7 +110,7 @@ class ValidationDoc(BaseModel):
                     for el, input_params in input_ldau_params.items()
                 ):
                     is_valid = False
-                    reasons.append("LDAU parameters don't match")
+                    reasons.append(DeprecationMessage.ldau)
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,
