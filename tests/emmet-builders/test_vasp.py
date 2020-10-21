@@ -1,7 +1,7 @@
 import pytest
 from maggma.stores import JSONStore, MemoryStore
-from emmet.builders.vasp.task_validator import TaskValidator
 
+from emmet.builders.vasp.task_validator import TaskValidator
 
 intermediate_stores = ["validation"]
 

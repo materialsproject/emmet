@@ -1,7 +1,7 @@
-import os
 import json
-from random import random
+import os
 from pathlib import PosixPath
+from random import random
 
 from emmet.core.settings import EmmetSettings
 

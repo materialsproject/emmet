@@ -1,14 +1,14 @@
+import datetime
+import json
 import os
 import unittest
-import numpy as np
-import json
-import datetime
-from bson.objectid import ObjectId
 from enum import Enum
 
+import numpy as np
+import pytest
+from bson.objectid import ObjectId
 from monty.json import MSONable
 
-import pytest
 from emmet.core.utils import get_sg, group_structures, jsanitize
 
 

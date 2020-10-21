@@ -1,9 +1,11 @@
-import pytest
 import json
+
+import pytest
 from monty.io import zopen
+
+from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.vasp.task import TaskDocument
-from emmet.core.vasp.calc_types import TaskType
 
 
 @pytest.fixture

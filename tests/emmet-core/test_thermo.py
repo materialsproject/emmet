@@ -1,6 +1,7 @@
 import pytest
 from monty.serialization import MontyDecoder
 from pymatgen.entries.entry_tools import EntrySet
+
 from emmet.core.thermo import ThermoDoc
 
 
