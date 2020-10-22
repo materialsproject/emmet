@@ -46,8 +46,10 @@ def patch_msonable(monty_cls: type):
         elif isinstance(v, dict):
             # Relegate to Monty
             new_obj = MontyDecoder().process_decoded(v)
-            if not isinstance(new_obj, cls):
-                raise ValueError(f"Wrong dict for {cls.__name__}")
+            if isinstance(new_obj, cls):
+                return new_obj
+            else:
+                new_obj = cls(**v)
             return new_obj
         else:
             raise ValueError(f"Must provide {cls.__name__} or Dict version")
