@@ -124,6 +124,9 @@ class TaskDocument(StructureMetadata):
         None, description="List of sandboxes this task document is allowed in"
     )
 
+    class Config:
+        use_enum_values = True
+
     @property
     def run_type(self) -> RunType:
         return run_type(self.input.parameters)

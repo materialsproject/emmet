@@ -29,6 +29,9 @@ class XASDoc(SpectrumDoc):
         ..., title="Absorption Edge", description="The interaction edge for XAS"
     )
 
+    class Config:
+        use_enum_values = True
+
     @classmethod
     def from_spectrum(
         cls,

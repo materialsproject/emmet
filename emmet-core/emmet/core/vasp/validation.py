@@ -36,6 +36,7 @@ class ValidationDoc(BaseModel):
 
     class Config:
         extra = "allow"
+        use_enum_values = True
 
     @classmethod
     def from_task_doc(

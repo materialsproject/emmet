@@ -55,6 +55,9 @@ class SymmetryData(BaseModel):
 
     version: str = Field(None, title="SPGLib version")
 
+    class Config:
+        use_enum_values = True
+
     @classmethod
     def from_structure(cls, structure: Structure) -> "SymmetryData":
         symprec = SETTINGS.SYMPREC
