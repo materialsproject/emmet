@@ -338,7 +338,9 @@ def restore(inputfile, file_filter):
     show_default=True,
     help="Number of processes for parallel parsing.",
 )
-def parse(task_ids, nproc):
+@click.option("--parse-chgcar", is_flag=True, help="Parse CHGCAR.")
+@click.option("--parse-aeccar", is_flag=True, help="Parse AECCAR.")
+def parse(task_ids, nproc, parse_chgcar, parse_aeccar):
     """Parse VASP launchers into tasks"""
     ctx = click.get_current_context()
     if "CLIENT" not in ctx.obj:

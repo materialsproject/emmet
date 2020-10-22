@@ -330,7 +330,6 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
     chunk_idx = int(name.rsplit("-")[1]) - 1
     logger.info(f"{name} starting.")
     tags = [tag, SETTINGS.year_tags[-1]]
-    drone = VaspDrone(parse_dos="auto", additional_fields={"tags": tags})
     ctx = click.get_current_context()
     spec_or_dbfile = ctx.parent.parent.params["spec_or_dbfile"]
     target = calcdb_from_mgrant(spec_or_dbfile)
@@ -340,6 +339,13 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
     run = ctx.parent.parent.params["run"]
     projection = {"tags": 1, "task_id": 1}
     count = 0
+    kwargs = {}
+
+    for p in ["chgcar", "aeccar"]:
+      par = f"parse_{p}"
+      kwargs[par] = ctx.params[par]
+
+    drone = VaspDrone(additional_fields={"tags": tags}, **kwargs)
 
     for vaspdir in vaspdirs:
         logger.info(f"{name} VaspDir: {vaspdir}")
