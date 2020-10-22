@@ -88,7 +88,7 @@ class RunStatistics(BaseModel):
     cores: int = Field(None, description="The number of cores used by VASP")
 
 
-class TaskDocument(BaseModel):
+class TaskDocument(StructureMetadata):
     """
     Definition of VASP Task Document
     """
@@ -146,7 +146,8 @@ class TaskDocument(BaseModel):
             "energy": self.output.energy,
             "parameters": {
                 "potcar_spec": self.input.potcar_spec,
-                "run_type": self.run_type,
+                # This is done to be compatible with MontyEncoder for the ComputedEntry
+                "run_type": str(self.run_type),
             },
             "data": {
                 "oxide_type": oxide_type(self.output.structure),
