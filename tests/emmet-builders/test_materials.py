@@ -30,5 +30,4 @@ def test_materials_builder(tasks_store, validation_store, materials_store):
     )
     builder.run()
     assert materials_store.count() == 1
-    print(materials_store.query_one())
     assert materials_store.count({"deprecated": False}) == 1
