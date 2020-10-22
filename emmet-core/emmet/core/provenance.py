@@ -76,9 +76,6 @@ class Provenance(PropertyDoc):
         description="List of history nodes specifying the transformations or orignation of this material",
     )
 
-    class Config:
-        use_enum_values = True
-
     @validator("authors")
     def remove_duplicate_authors(cls, authors):
         authors_dict = {entry.name.lower(): entry for entry in authors}
