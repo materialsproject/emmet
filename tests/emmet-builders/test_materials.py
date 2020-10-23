@@ -39,5 +39,5 @@ def test_materials_builder(tasks_store, validation_store, materials_store):
 def test_serialization(tmpdir):
     builder = MaterialsBuilder(MemoryStore(), MemoryStore(), MemoryStore())
 
-    dumpfn(jsanitize(builder.as_dict()), Path(tmpdir) / "test.json")
+    dumpfn(builder.as_dict(), Path(tmpdir) / "test.json")
     loadfn(Path(tmpdir) / "test.json")
