@@ -125,7 +125,16 @@ def jsanitize(obj, strict=False, allow_bson=False):
     return jsanitize(obj.as_dict(), strict=strict, allow_bson=allow_bson)
 
 
-class DocEnum(Enum):
+class ValueEnum(Enum):
+    """
+    Enum that serializes to string as the value
+    """
+
+    def __str__(self):
+        return str(self.value)
+
+
+class DocEnum(ValueEnum):
     """
     Enum with docstrings support
     from: https://stackoverflow.com/a/50473952

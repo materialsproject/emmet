@@ -2,14 +2,14 @@ import datetime
 import json
 import os
 import unittest
-from enum import Enum
+
 
 import numpy as np
 import pytest
 from bson.objectid import ObjectId
 from monty.json import MSONable
 
-from emmet.core.utils import get_sg, group_structures, jsanitize
+from emmet.core.utils import get_sg, group_structures, jsanitize, ValueEnum, DocEnum
 
 
 def test_jsanitize():
@@ -69,3 +69,21 @@ class GoodMSONClass(MSONable):
             and self._d == other._d
             and self.kwargs == other.kwargs
         )
+
+
+def test_value_enum():
+    class TempEnum(ValueEnum):
+        A = "A"
+        B = "B"
+
+    assert str(TempEnum.A) == "A"
+    assert str(TempEnum.B) == "B"
+
+
+def test_doc_enum():
+    class TestEnum(DocEnum):
+        A = "A", "Describes A"
+        B = "B", "Might describe B"
+
+    assert str(TestEnum.A) == "A"
+    assert TestEnum.B.__doc__ == "Might describe B"
