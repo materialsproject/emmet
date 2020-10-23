@@ -1,8 +1,11 @@
 import pytest
+from pathlib import Path
 from maggma.stores import JSONStore, MemoryStore
 
 from emmet.builders.vasp.task_validator import TaskValidator
 from emmet.builders.vasp.materials import MaterialsBuilder
+from monty.serialization import dumpfn, loadfn
+from emmet.core.utils import jsanitize
 
 
 @pytest.fixture(scope="session")
@@ -31,3 +34,10 @@ def test_materials_builder(tasks_store, validation_store, materials_store):
     builder.run()
     assert materials_store.count() == 1
     assert materials_store.count({"deprecated": False}) == 1
+
+
+def test_serialization(tmpdir):
+    builder = MaterialsBuilder(MemoryStore(), MemoryStore(), MemoryStore())
+
+    dumpfn(jsanitize(builder.as_dict()), Path(tmpdir) / "test.json")
+    loadfn(Path(tmpdir) / "test.json")

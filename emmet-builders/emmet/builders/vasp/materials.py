@@ -67,8 +67,9 @@ class MaterialsBuilder(Builder):
         self.tasks = tasks
         self.materials = materials
         self.task_validation = task_validation
-        if allowed_task_types is None:
-            self.allowed_task_types = list(TaskType)
+        self.allowed_task_types = (
+            list(TaskType) if allowed_task_types is None else allowed_task_types
+        )
 
         self._allowed_task_types = set(self.allowed_task_types)
 
