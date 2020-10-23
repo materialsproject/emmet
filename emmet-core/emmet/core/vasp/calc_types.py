@@ -1,6 +1,5 @@
 """ Module to define various calculation types as Enums for VASP """
 import datetime
-from enum import Enum
 from itertools import groupby, product
 from pathlib import Path
 from typing import Dict, Iterator, List
@@ -15,6 +14,7 @@ from pymatgen.core.structure import Structure
 from typing_extensions import Literal
 
 from emmet.core import SETTINGS
+from emmet.core.utils import ValueEnum
 
 _RUN_TYPE_DATA = loadfn(str(Path(__file__).parent.joinpath("run_types.yaml").resolve()))
 _TASK_TYPES = [
@@ -44,15 +44,15 @@ _RUN_TYPES = (
     + ["LDA", "LDA+U"]
 )
 
-RunType = Enum(  # type: ignore
+RunType = ValueEnum(  # type: ignore
     "RunType", dict({"_".join(rt.split()).replace("+", "_"): rt for rt in _RUN_TYPES})
 )
 RunType.__doc__ = "VASP calculation run types"
 
-TaskType = Enum("TaskType", {"_".join(tt.split()): tt for tt in _TASK_TYPES})  # type: ignore
+TaskType = ValueEnum("TaskType", {"_".join(tt.split()): tt for tt in _TASK_TYPES})  # type: ignore
 TaskType.__doc__ = "VASP calculation task types"
 
-CalcType = Enum(  # type: ignore
+CalcType = ValueEnum(  # type: ignore
     "CalcType",
     {
         f"{'_'.join(rt.split()).replace('+','_')}_{'_'.join(tt.split())}": f"{rt} {tt}"

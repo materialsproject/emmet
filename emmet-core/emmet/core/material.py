@@ -24,9 +24,6 @@ class PropertyOrigin(BaseModel):
         default_factory=datetime.utcnow,
     )
 
-    class Config:
-        use_enum_values = True
-
 
 S = TypeVar("S", bound="PropertyDoc")
 

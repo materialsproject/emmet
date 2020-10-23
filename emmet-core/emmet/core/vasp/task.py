@@ -1,6 +1,5 @@
 """ Core definition of a VASP Task Document """
 from datetime import datetime
-from enum import Enum
 from functools import lru_cache, partial
 from typing import ClassVar, Dict, List, Optional, Union
 
@@ -10,6 +9,7 @@ from pymatgen.analysis.structure_analyzer import oxide_type
 
 from emmet.core import SETTINGS
 from emmet.core.structure import StructureMetadata
+from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types import (
     CalcType,
     RunType,
@@ -21,7 +21,7 @@ from emmet.core.vasp.calc_types import (
 from emmet.stubs import ComputedEntry, Matrix3D, Structure, Vector3D
 
 
-class Status(Enum):
+class Status(ValueEnum):
     """
     VASP Calculation State
     """

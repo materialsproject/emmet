@@ -1,13 +1,13 @@
-from enum import Enum
 from typing import Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
 
+from emmet.core.utils import ValueEnum
 from emmet.stubs import Structure
 
 
-class Edge(Enum):
+class Edge(ValueEnum):
     """
     The interaction edge for XAS
     There are 2n-1 sub-components to each edge where
@@ -23,7 +23,7 @@ class Edge(Enum):
     L2_3 = "L2,3"
 
 
-class Type(Enum):
+class Type(ValueEnum):
     """
     The type of XAS Spectrum
     XANES - Just the near-edge region
@@ -54,6 +54,3 @@ class XASSpectrum(BaseModel):
     edge: Edge = Field(
         None, title="Absorption Edge", description="The interaction edge for XAS"
     )
-
-    class Config:
-        use_enum_values = True

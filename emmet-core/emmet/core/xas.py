@@ -1,11 +1,11 @@
 from datetime import datetime
-from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, root_validator
 from pymatgen.core.periodic_table import Element
 
 from emmet.core.spectrum import SpectrumDoc
+from emmet.core.utils import ValueEnum
 from emmet.stubs import XAS, Structure
 from emmet.stubs.xas import Edge, Type
 

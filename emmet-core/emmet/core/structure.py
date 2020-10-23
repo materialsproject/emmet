@@ -64,9 +64,6 @@ class StructureMetadata(BaseModel):
 
     symmetry: SymmetryData = Field(None, description="Symmetry data for this material")
 
-    class Config:
-        use_enum_values = True
-
     @classmethod
     def from_composition(
         cls: Type[T],
