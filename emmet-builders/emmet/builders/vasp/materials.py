@@ -9,15 +9,13 @@ from pymatgen import Structure
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 
-from emmet.core import SETTINGS
 from emmet.builders.utils import maximal_spanning_non_intersecting_subsets
+from emmet.core import SETTINGS
 from emmet.core.utils import group_structures, jsanitize
-
-from emmet.core.vasp.material import MaterialsDoc
-from emmet.stubs import ComputedEntry
-
 from emmet.core.vasp.calc_types import TaskType
+from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.vasp.task import TaskDocument
+from emmet.stubs import ComputedEntry
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -70,9 +68,9 @@ class MaterialsBuilder(Builder):
         self.materials = materials
         self.task_validation = task_validation
         if allowed_task_types is None:
-            self.allowed_task_types = set(TaskType)
-        else:
-            self.allowed_task_types = {TaskType(t) for t in allowed_task_types}
+            self.allowed_task_types = list(TaskType)
+
+        self._allowed_task_types = set(self.allowed_task_types)
 
         self.query = query if query else {}
         self.symprec = symprec
@@ -119,7 +117,7 @@ class MaterialsBuilder(Builder):
 
         self.logger.info("Materials builder started")
         self.logger.info(
-            f"Allowed task types: {[task_type.value for task_type in self.allowed_task_types]}"
+            f"Allowed task types: {[task_type.value for task_type in self._allowed_task_types]}"
         )
 
         self.logger.info("Setting indexes")
@@ -249,7 +247,7 @@ class MaterialsBuilder(Builder):
             for task in tasks
             if any(
                 allowed_type is task.task_type
-                for allowed_type in self.allowed_task_types
+                for allowed_type in self._allowed_task_types
             )
         ]
 
