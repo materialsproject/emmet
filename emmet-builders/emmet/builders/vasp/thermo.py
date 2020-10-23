@@ -1,28 +1,28 @@
-from datetime import datetime
-from typing import Optional, Dict, Iterator, List, Set
-from itertools import chain
 from collections import defaultdict
+from datetime import datetime
+from itertools import chain
+from typing import Dict, Iterator, List, Optional, Set, Tuple
 
+from maggma.core import Builder, Store
+from monty.json import MontyDecoder
 from pymatgen import Structure
-from pymatgen.entries.compatibility import MaterialsProjectCompatibility
-from pymatgen.entries.computed_entries import ComputedEntry
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.analysis.structure_analyzer import oxide_type
+from pymatgen.entries.compatibility import MaterialsProjectCompatibility
+from pymatgen.entries.computed_entries import ComputedEntry
 
-from maggma.core import Store, Builder
-from emmet.core.vasp.calc_types import run_type
 from emmet.builders.utils import (
-    maximal_spanning_non_intersecting_subsets,
     chemsys_permutations,
+    maximal_spanning_non_intersecting_subsets,
 )
 from emmet.core.thermo import ThermoDoc
+from emmet.core.vasp.calc_types import run_type
 
 
 class Thermo(Builder):
     def __init__(
         self,
         materials: Store,
-        tasks: Store,
         thermo: Store,
         query: Optional[Dict] = None,
         use_statics: bool = False,
@@ -44,7 +44,6 @@ class Thermo(Builder):
         """
 
         self.materials = materials
-        self.tasks = tasks
         self.thermo = thermo
         self.query = query if query else {}
         self.compatibility = (
@@ -52,25 +51,23 @@ class Thermo(Builder):
             if compatibility
             else MaterialsProjectCompatibility("Advanced")
         )
+        self._completed_tasks = {}
         self._entries_cache = defaultdict(list)
-        super().__init__(sources=[materials, tasks], targets=[thermo], **kwargs)
+        super().__init__(sources=[materials], targets=[thermo], **kwargs)
 
     def ensure_indexes(self):
         """
         Ensures indicies on the tasks and materials collections
         """
 
-        # Basic search index for tasks
-        self.tasks.ensure_index(self.tasks.key)
-
         # Search index for materials
-        self.materials.ensure_index(self.materials.key)
+        self.materials.ensure_index("material_id")
         self.materials.ensure_index("sandboxes")
-        self.materials.ensure_index(self.materials.last_updated_field)
+        self.materials.ensure_index("last_updated")
 
         # Search index for thermo
-        self.thermo.ensure_index(self.thermo.key)
-        self.thermo.ensure_index(self.thermo.last_updated_field)
+        self.thermo.ensure_index("material_id")
+        self.thermo.ensure_index("last_updated")
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
@@ -122,9 +119,11 @@ class Thermo(Builder):
 
                 yield sandboxes, sandbox_entries
 
-    def process_item(item: Tuple[List[str], List[ComputedEntry]]):
+    def process_item(self, item: Tuple[List[str], List[ComputedEntry]]):
 
         sandboxes, entries = item
+
+        entries = [ComputedEntry.from_dict(entry) for entry in entries]
         # determine chemsys
         elements = sorted(
             set([el.symbol for e in entries for el in e.composition.elements])
@@ -168,7 +167,36 @@ class Thermo(Builder):
             self.logger.error(f"Got unexpected error: {e}")
             return []
 
-        return docs
+        return [d.dict() for d in docs]
+
+    def update_targets(self, items):
+        """
+        Inserts the thermo docs into the thermo collection
+        Args:
+            items ([[dict]]): a list of list of thermo dictionaries to update
+        """
+        # flatten out lists
+        items = list(filter(None, chain.from_iterable(items)))
+        # check for duplicates within this set
+        items = list(
+            {(v[self.thermo.key], frozenset(v["sandboxes"])): v for v in items}.values()
+        )
+        # Check if already updated this run
+        items = [i for i in items if i[self.thermo.key] not in self._completed_tasks]
+
+        self._completed_tasks |= {i[self.thermo.key] for i in items}
+
+        for item in items:
+            if isinstance(item["last_updated"], dict):
+                item["last_updated"] = MontyDecoder().process_decoded(
+                    item["last_updated"]
+                )
+
+        if len(items) > 0:
+            self.logger.info(f"Updating {len(items)} thermo documents")
+            self.thermo.update(docs=items, key=[self.thermo.key, "sandboxes"])
+        else:
+            self.logger.info("No items to update")
 
     def get_entries(self, chemsys: str) -> List[ComputedEntry]:
         """
@@ -213,9 +241,8 @@ class Thermo(Builder):
         # Convert the entries into ComputedEntries and store
         for doc in materials_docs:
             for entry in doc.get("entries", {}):
-                entry = ComputedEntry.from_dict(entry)
-                entry.data["sandboxes"] = doc["sandboxes"]
-                elsyms = sorted(set([el.symbol for el in entry.composition.elements]))
+                entry["data"]["sandboxes"] = doc["sandboxes"]
+                elsyms = sorted(set([el for el in entry["composition"]]))
                 self._entries_cache["-".join(elsyms)].append(entry)
                 all_entries.append(entry)
 
