@@ -68,10 +68,12 @@ class MaterialsBuilder(Builder):
         self.materials = materials
         self.task_validation = task_validation
         self.allowed_task_types = (
-            list(TaskType) if allowed_task_types is None else allowed_task_types
+            [t.value for t in TaskType]
+            if allowed_task_types is None
+            else allowed_task_types
         )
 
-        self._allowed_task_types = set(self.allowed_task_types)
+        self._allowed_task_types = {TaskType(t) for t in self.allowed_task_types}
 
         self.query = query if query else {}
         self.symprec = symprec
