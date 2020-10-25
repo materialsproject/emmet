@@ -58,3 +58,7 @@ def test_composition(structure):
     assert meta_doc.formula_pretty == comp_meta_doc.formula_pretty
     assert meta_doc.formula_anonymous == comp_meta_doc.formula_anonymous
     assert meta_doc.chemsys == comp_meta_doc.chemsys
+
+
+def test_schema():
+    StructureMetadata.schema()
