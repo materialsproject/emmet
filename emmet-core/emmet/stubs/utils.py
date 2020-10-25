@@ -154,7 +154,7 @@ def MSONable_to_pydantic(monty_cls: type, pydantic_model=None):
             for field_name, field_type in _type_hints
         }
 
-    model = create_model(monty_cls.__name__, field_definitions={**monty_props, **props})
+    model = create_model(monty_cls.__name__, **monty_props, **props)
     if hasattr(monty_cls, "__doc__"):
         setattr(model, "__doc__", monty_cls.__doc__)
     return model
