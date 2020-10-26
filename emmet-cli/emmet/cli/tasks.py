@@ -20,6 +20,7 @@ from emmet.cli.decorators import sbatch
 
 
 logger = logging.getLogger("emmet")
+GARDEN = "/home/m/matcomp/garden"
 PREFIX = "block_"
 FILE_FILTERS = [
     "INCAR*",
@@ -153,11 +154,11 @@ def backup(clean, check):
     for block, launchers in block_launchers.items():
         logger.info(f"{block} with {len(launchers)} launcher(s)")
         try:
-            isfile(f"garden/{block}.tar")
+            isfile(f"{GARDEN}/{block}.tar")
         except HpssOSError:  # block not in HPSS
             if run:
                 filelist = [os.path.join(block, l) for l in launchers]
-                args = shlex.split(f"htar -M 5000000 -Phcvf garden/{block}.tar")
+                args = shlex.split(f"htar -M 5000000 -Phcvf {GARDEN}/{block}.tar")
                 try:
                     for line in run_command(args, filelist):
                         logger.info(line.strip())
@@ -172,7 +173,7 @@ def backup(clean, check):
         if check:
             logger.info(f"Verify {block}.tar ...")
             args = shlex.split(
-                f"htar -Kv -Hrelpaths -Hverify=all -f garden/{block}.tar"
+                f"htar -Kv -Hrelpaths -Hverify=all -f {GARDEN}/{block}.tar"
             )
             files_remove = []
             try:
@@ -266,7 +267,7 @@ def restore(inputfile, file_filter):
     nfiles_restore_total, max_args = 0, 15000
     for block, files in block_launchers.items():
         # get full list of matching files in archive and check against existing files
-        args = shlex.split(f"htar -tf garden/{block}.tar")
+        args = shlex.split(f"htar -tf {GARDEN}/{block}.tar")
         filelist = [os.path.join(block, f) for f in files]
         filelist_chunks = [
             filelist[i : i + max_args] for i in range(0, len(filelist), max_args)
@@ -294,7 +295,7 @@ def restore(inputfile, file_filter):
                 logger.info(
                     f"Restore {nfiles_restore}/{cnt} files for {block} to {directory} ..."
                 )
-                args = shlex.split(f"htar -xvf garden/{block}.tar")
+                args = shlex.split(f"htar -xvf {GARDEN}/{block}.tar")
                 filelist_restore_chunks = [
                     filelist_restore[i : i + max_args]
                     for i in range(0, len(filelist_restore), max_args)
