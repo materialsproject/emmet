@@ -96,7 +96,7 @@ def task_type(inputs, include_calc_type=True):
     except Exception:
         functional = "PBE"
 
-    METAGGA_TYPES = {"TPSS", "RTPSS", "M06L", "MBJL", "SCAN", "MS0", "MS1", "MS2"}
+    METAGGA_TYPES = {"TPSS", "RTPSS", "M06L", "MBJL", "SCAN", "r2SCAN" "MS0", "MS1", "MS2"}
 
     if include_calc_type:
         if incar.get("LHFCALC", False):
