@@ -379,10 +379,13 @@ def parse(task_ids, nproc, parse_chgcar, parse_aeccar):
     else:
         # reserve list of task_ids to avoid collisions during multiprocessing
         # insert empty doc with max ID + 1 into target collection for parallel SLURM jobs
-        # NOTE use regex to reduce size of distinct below 16MB
+        # NOTE use regex first to reduce size of distinct below 16MB
         all_task_ids = target.collection.distinct(
             "task_id", {"task_id": {"$regex": r"^mp-\d{7,}$"}}
         )
+        if not all_task_ids:
+            all_task_ids = target.collection.distinct("task_id")
+
         next_tid = max(int(tid.split("-")[-1]) for tid in all_task_ids) + 1
         lst = [f"mp-{next_tid + n}" for n in range(nmax)]
         if run:
