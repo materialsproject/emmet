@@ -339,13 +339,10 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
     run = ctx.parent.parent.params["run"]
     projection = {"tags": 1, "task_id": 1}
     count = 0
-    kwargs = {}
-
-    for p in ["chgcar", "aeccar"]:
-      par = f"parse_{p}"
-      kwargs[par] = ctx.params[par]
-
-    drone = VaspDrone(additional_fields={"tags": tags}, **kwargs)
+    drone = VaspDrone(
+        additional_fields={"tags": tags},
+        store_volumetric_data=ctx.params['store_volumetric_data']
+    )
 
     for vaspdir in vaspdirs:
         logger.info(f"{name} VaspDir: {vaspdir}")

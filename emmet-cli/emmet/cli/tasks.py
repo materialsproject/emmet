@@ -36,6 +36,7 @@ FILE_FILTERS_DEFAULT = [
     for f in FILE_FILTERS
     for d in ["", "relax1", "relax2"]
 ]
+STORE_VOLUMETRIC_DATA = []
 
 
 @click.group()
@@ -339,9 +340,14 @@ def restore(inputfile, file_filter):
     show_default=True,
     help="Number of processes for parallel parsing.",
 )
-@click.option("--parse-chgcar", is_flag=True, help="Parse CHGCAR.")
-@click.option("--parse-aeccar", is_flag=True, help="Parse AECCAR.")
-def parse(task_ids, nproc, parse_chgcar, parse_aeccar):
+@click.option(
+    "-s",
+    "--store-volumetric-data",
+    multiple=True,
+    default=STORE_VOLUMETRIC_DATA,
+    help="Store any of CHGCAR, LOCPOT, AECCAR0, AECCAR1, AECCAR2, ELFCAR.",
+)
+def parse(task_ids, nproc, store_volumetric_data):
     """Parse VASP launchers into tasks"""
     ctx = click.get_current_context()
     if "CLIENT" not in ctx.obj:
