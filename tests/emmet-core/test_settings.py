@@ -1,14 +1,13 @@
-import os
 import json
-from random import random
+import os
 from pathlib import PosixPath
+from random import random
 
 from emmet.core.settings import EmmetSettings
 
 
 def test_default_config_path(tmp_path: PosixPath):
-    """Make sure the default config path works
-    """
+    """Make sure the default config path works"""
 
     rand_symprec = random()
     with open(tmp_path / "temp_config.json", "w") as f:
@@ -36,7 +35,7 @@ def test_from_url():
 
     os.environ[
         "EMMET_CONFIG_FILE"
-    ] = "https://raw.githubusercontent.com/materialsproject/emmet/refactor/tests/test_core/test_settings.json"
+    ] = "https://raw.githubusercontent.com/materialsproject/emmet/master/tests/emmet-core/test_settings.json"
 
     test_config = EmmetSettings()
 

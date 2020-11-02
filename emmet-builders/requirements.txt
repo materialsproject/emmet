@@ -1,4 +1,5 @@
-pymatgen>=2018.11.30
+pymatgen==2020.4.29
+maggma==0.20.0
+emmet-core
 abipy>=0.8.0
 abiflows>=0.6.0
-emmet-core

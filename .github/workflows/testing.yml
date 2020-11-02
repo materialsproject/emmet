@@ -18,10 +18,10 @@ jobs:
         package: ["emmet-core"]
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2.3.3
 
       - name: Set up Python 3.7
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2.1.4
         with:
           python-version: 3.7
 
@@ -49,10 +49,10 @@ jobs:
         package: ["emmet-core"]
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2.3.3
 
       - name: Set up Python 3.7
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2.1.4
         with:
           python-version: 3.7
 
@@ -66,6 +66,7 @@ jobs:
         run: |
           pip install -e ${{ matrix.package }}/
 
+
       - name: Lint with mypy
         run: mypy --namespace-package ${{ matrix.package }}/emmet
 
@@ -77,13 +78,14 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
+
   docs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2.3.3
 
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@v2.1.4
       with:
         python-version: 3.8
 
@@ -95,3 +97,16 @@ jobs:
 
     - name: Build
       run: mkdocs build
+
+  merge-deps:
+    needs:
+      - lint
+      - test
+      - docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge me!
+        uses: ridedott/merge-me-action@master
+        with:
+          GITHUB_LOGIN: dependabot[bot]
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

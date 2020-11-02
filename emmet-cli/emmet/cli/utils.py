@@ -17,6 +17,7 @@ from atomate.vasp.database import VaspCalcDb
 from fireworks.fw_config import FW_BLOCK_FORMAT
 from mongogrant.client import Client
 from atomate.vasp.drones import VaspDrone
+from pymongo.errors import DocumentTooLarge
 
 from emmet.core.utils import group_structures
 from emmet.cli import SETTINGS
@@ -56,10 +57,13 @@ def ensure_indexes(indexes, colls):
         logger.debug(f"Created the following index(es) on {coll.full_name}:\n{indexes}")
 
 
-def calcdb_from_mgrant(spec):
+def calcdb_from_mgrant(spec_or_dbfile):
+    if os.path.exists(spec_or_dbfile):
+        return VaspCalcDb.from_db_file(spec_or_dbfile)
+
     client = Client()
     role = "rw"  # NOTE need write access to source to ensure indexes
-    host, dbname_or_alias = spec.split("/", 1)
+    host, dbname_or_alias = spec_or_dbfile.split("/", 1)
     auth = client.get_auth(host, dbname_or_alias, role)
     if auth is None:
         raise Exception("No valid auth credentials available!")
@@ -276,7 +280,9 @@ def get_vasp_dirs():
                     shutil.chown(fn_gz, group="matgen")
                     gzipped = True
 
+            # NOTE skip symlink'ing on MP calculations from the early days
             vasp_dir = get_symlinked_path(root, base_path_index)
+            # vasp_dir = root
             create_orig_inputs(vasp_dir)
             dirs[:] = []  # don't descend further (i.e. ignore relax1/2)
             logger.log(logging.INFO if gzipped else logging.DEBUG, vasp_dir)
@@ -324,16 +330,19 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
     chunk_idx = int(name.rsplit("-")[1]) - 1
     logger.info(f"{name} starting.")
     tags = [tag, SETTINGS.year_tags[-1]]
-    drone = VaspDrone(parse_dos="auto", additional_fields={"tags": tags})
     ctx = click.get_current_context()
-    spec = ctx.parent.parent.params["spec"]
-    target = calcdb_from_mgrant(spec)
+    spec_or_dbfile = ctx.parent.parent.params["spec_or_dbfile"]
+    target = calcdb_from_mgrant(spec_or_dbfile)
     sbxn = list(filter(None, target.collection.distinct("sbxn")))
     logger.info(f"Using sandboxes {sbxn}.")
     no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
     run = ctx.parent.parent.params["run"]
     projection = {"tags": 1, "task_id": 1}
     count = 0
+    drone = VaspDrone(
+        additional_fields={"tags": tags},
+        store_volumetric_data=ctx.params['store_volumetric_data']
+    )
 
     for vaspdir in vaspdirs:
         logger.info(f"{name} VaspDir: {vaspdir}")
@@ -354,7 +363,11 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
                     logger.warning(f"{name} {launcher} already parsed -> would remove.")
                 continue
 
-        task_doc = drone.assimilate(vaspdir)
+        try:
+            task_doc = drone.assimilate(vaspdir)
+        except Exception as ex:
+            logger.error(f"Failed to assimilate {vaspdir}: {ex}")
+            continue
         task_doc["sbxn"] = sbxn
         manual_taskid = isinstance(task_ids, dict)
         task_id = task_ids[launcher] if manual_taskid else task_ids[chunk_idx][count]

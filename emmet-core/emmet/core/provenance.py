@@ -1,17 +1,15 @@
 """ Core definition of a Provenance Document """
-from typing import List, Dict, ClassVar
 from datetime import datetime
+from typing import ClassVar, Dict, List
 
-from enum import Enum
-
-from pydantic import BaseModel, Field, EmailStr, HttpUrl, validator
+from pybtex.database import BibliographyData, parse_string
+from pydantic import BaseModel, EmailStr, Field, HttpUrl, validator
 
 from emmet.core.material import PropertyDoc
+from emmet.core.utils import ValueEnum
 
-from pybtex.database import parse_string, BibliographyData
 
-
-class Database(Enum):
+class Database(ValueEnum):
     """
     Database identifiers for provenance IDs
     """
@@ -47,9 +45,7 @@ class Provenance(PropertyDoc):
     A provenance property block
     """
 
-    property_name: ClassVar[str] = Field(
-        "provenance", description="The subfield name for this property"
-    )
+    property_name: ClassVar[str] = "provenance"
 
     created_at: datetime = Field(
         None,
@@ -81,6 +77,6 @@ class Provenance(PropertyDoc):
     )
 
     @validator("authors")
-    def remove_duplicates(cls, authors):
+    def remove_duplicate_authors(cls, authors):
         authors_dict = {entry.name.lower(): entry for entry in authors}
         return list(authors_dict.items())

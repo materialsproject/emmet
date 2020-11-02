@@ -1,15 +1,15 @@
+import datetime
+import json
 import os
 import unittest
-import numpy as np
-import json
-import datetime
-from bson.objectid import ObjectId
-from enum import Enum
 
+
+import numpy as np
+import pytest
+from bson.objectid import ObjectId
 from monty.json import MSONable
 
-import pytest
-from emmet.core.utils import get_sg, group_structures, run_type, task_type, jsanitize
+from emmet.core.utils import get_sg, group_structures, jsanitize, ValueEnum, DocEnum
 
 
 def test_jsanitize():
@@ -71,32 +71,19 @@ class GoodMSONClass(MSONable):
         )
 
 
-def test_task_tye():
+def test_value_enum():
+    class TempEnum(ValueEnum):
+        A = "A"
+        B = "B"
 
-    # TODO: Switch this to actual inputs?
-    input_types = [
-        ("NSCF Line", {"incar": {"ICHARG": 11}, "kpoints": {"labels": ["A"]}}),
-        ("NSCF Uniform", {"incar": {"ICHARG": 11}}),
-        ("Dielectric", {"incar": {"LEPSILON": True}}),
-        ("DFPT Dielectric", {"incar": {"LEPSILON": True, "IBRION": 7}}),
-        ("DFPT Dielectric", {"incar": {"LEPSILON": True, "IBRION": 8}}),
-        ("DFPT", {"incar": {"IBRION": 7}}),
-        ("DFPT", {"incar": {"IBRION": 8}}),
-        ("Static", {"incar": {"NSW": 0}}),
-    ]
-
-    for _type, inputs in input_types:
-        assert task_type(inputs) == _type
+    assert str(TempEnum.A) == "A"
+    assert str(TempEnum.B) == "B"
 
 
-def test_run_type():
+def test_doc_enum():
+    class TestEnum(DocEnum):
+        A = "A", "Describes A"
+        B = "B", "Might describe B"
 
-    params_sets = [
-        ("GGA", {"GGA": "--"}),
-        ("GGA+U", {"GGA": "--", "LDAU": True}),
-        ("SCAN", {"METAGGA": "Scan"}),
-        ("SCAN+U", {"METAGGA": "Scan", "LDAU": True}),
-    ]
-
-    for _type, params in params_sets:
-        assert run_type(params) == _type
+    assert str(TestEnum.A) == "A"
+    assert TestEnum.B.__doc__ == "Might describe B"
