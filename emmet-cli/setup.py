@@ -21,6 +21,7 @@ setup(
         "github3.py",
         "hpsspy",
         "multiprocessing-logging",
+        "dotty-dict",
         "emmet-core",
     ],
     license="modified BSD",
