@@ -1,0 +1,17 @@
+log4mongo==1.7.0
+PrettyTable==0.7.2
+click==7.1.1
+urllib3==1.25.8
+oauth2client==4.1.3
+google-api-python-client==1.8.0
+bravado==10.6.0
+zipstream-new==1.1.7
+atomate==0.9.4
+mongogrant==0.3.1
+colorama==0.4.3
+mgzip==0.2.1
+slurmpy==0.0.8
+github3.py==1.3.0
+hpsspy==0.5.1
+multiprocessing-logging==0.3.1
+dotty-dict==1.3.0

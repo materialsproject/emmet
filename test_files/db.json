@@ -1,6 +1,0 @@
-{
-    "aliases": {}, 
-    "database": "emmet_unittest",
-    "host": "localhost", 
-    "port": 27017
-}

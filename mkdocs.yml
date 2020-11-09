@@ -1,0 +1,31 @@
+site_name: Emmet Documentation
+site_description: Documentation for Emmet, The Materials API Toolkit
+copyright: Built by The Materials Project
+
+theme:
+  name: 'material'
+
+nav:
+  - Home: index.md
+  - Packages: packages.md
+  - Settings: settings.md
+  - Stubs: stubs.md
+  - Reference:
+    - Core: core.md
+
+site_url: https://materialsproject.github.io/emmet/
+repo_url: https://github.com/materialsproject/emmet/
+markdown_extensions:
+  - admonition
+  - codehilite
+  - attr_list
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - minify
+  - mkdocstrings

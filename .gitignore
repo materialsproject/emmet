@@ -108,7 +108,12 @@ ENV/
 .idea
 <<<<<<< HEAD
 
+# Pytest
+.pytest_cache
+
 # GDrive
 emmet/scripts/credentials.json
 emmet/scripts/token.json
 .vscode
+
+Error_Record
