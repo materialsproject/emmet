@@ -18,6 +18,7 @@ from fireworks.fw_config import FW_BLOCK_FORMAT
 from mongogrant.client import Client
 from atomate.vasp.drones import VaspDrone
 from pymongo.errors import DocumentTooLarge
+from dotty_dict import dotty
 
 from emmet.core.utils import group_structures
 from emmet.cli import SETTINGS
@@ -389,16 +390,23 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
                 try:
                     target.insert_task(task_doc, use_gridfs=True)
                 except DocumentTooLarge:
-                    logger.warning(f"{name} Remove normalmode_eigenvecs and retry ...")
-                    task_doc["calcs_reversed"][0]["output"].pop("normalmode_eigenvecs")
-                    try:
-                        target.insert_task(task_doc, use_gridfs=True)
-                    except DocumentTooLarge:
-                        logger.warning(
-                            f"{name} Also remove force_constants and retry ..."
-                        )
-                        task_doc["calcs_reversed"][0]["output"].pop("force_constants")
-                        target.insert_task(task_doc, use_gridfs=True)
+                    output = dotty(task_doc["calcs_reversed"][0]["output"])
+                    pop_keys = ["normalmode_eigenvecs", "force_constants", "outcar.onsite_density_matrices"]
+
+                    for k in pop_keys:
+                        if k not in output:
+                            continue
+
+                        logger.warning(f"{name} Remove {k} and retry ...")
+                        output.pop(k)
+                        try:
+                            target.insert_task(task_doc, use_gridfs=True)
+                            break
+                        except DocumentTooLarge:
+                            continue
+                    else:
+                        logger.warning(f"{name} failed to reduce document size")
+                        continue
 
                 if target.collection.count(query):
                     shutil.rmtree(vaspdir)

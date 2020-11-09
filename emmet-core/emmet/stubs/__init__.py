@@ -5,13 +5,15 @@ Use pymatgen classes in pydantic models by importing them from there when you ne
 """
 
 from pymatgen.analysis.xas.spectrum import XAS
-from pymatgen.core.structure import Composition, Structure
+from pymatgen.core.structure import Composition, Structure, Lattice
 from pymatgen.entries.computed_entries import ComputedEntry
 
 from emmet.stubs.math import Matrix3D, Vector3D, Tensor3R, Tensor4R
 from emmet.stubs.misc import Composition as StubComposition
 from emmet.stubs.misc import ComputedEntry as StubComputedEntry
 from emmet.stubs.structure import Structure as StubStructure
+from emmet.stubs.structure import Lattice as StubLattice
+
 from emmet.stubs.utils import patch_msonable, use_model
 
 """
@@ -20,6 +22,7 @@ show up correctly in the JSON Schema. They are imported here
 in as Stubbed classes to prevent name clashing
 """
 use_model(Structure, StubStructure)
+use_model(Lattice, StubLattice)
 use_model(Composition, StubComposition, add_monty=False)
 use_model(ComputedEntry, StubComputedEntry)
 
