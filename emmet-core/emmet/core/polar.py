@@ -42,9 +42,9 @@ class Dielectric(PropertyDoc):
     n: float = Field(title="Refractive index")
 
     @classmethod
-    def from_ionic_and_electronic(cls, ionic: Matrix3D, electronic: Matrix3D):
+    def from_ionic_and_electronic(cls, ionic: Matrix3D, electronic: Matrix3D, material_id: str):
 
-        total = np.sum(ionic, electronic).tolist()
+        total = (np.array(ionic) + np.array(electronic)).tolist()
 
         return cls(
             **{
@@ -55,6 +55,7 @@ class Dielectric(PropertyDoc):
                 "e_ionic": np.average(np.diagonal(ionic)),
                 "e_electronic": np.average(np.diagonal(electronic)),
                 "n": np.sqrt(np.average(np.diagonal(electronic))),
+                "material_id": material_id
             }
         )
 
@@ -103,3 +104,25 @@ class Piezoelectric(PropertyDoc):
                 "strain_for_max": strains[max_index],
             }
         )
+
+
+class BornEffectiveCharges(PropertyDoc):
+    """
+    A block for the Born effective charges
+    """
+
+    value: List[Matrix3D] = Field(
+        None,
+        description="Value of the Born effective charges."
+    )
+
+    symmetrized_value: List[Matrix3D] = Field(
+        None,
+        description="Value of the Born effective charges after symmetrization to obey the"
+                    "charge neutrality sum rule."
+    )
+
+    cnsr_break: float = Field(
+        None, description="The maximum breaking of the charge neutrality sum "
+                          "rule (CNSR) in the Born effective charges."
+    )

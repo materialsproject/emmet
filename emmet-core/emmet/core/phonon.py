@@ -1,8 +1,10 @@
+from datetime import datetime
 from pydantic import BaseModel, Field
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Literal
 from emmet.stubs import Structure
-from emmet.stubs import Matrix3D, Vector3D
-from emmet.core.polar import Dielectric
+from emmet.stubs import Vector3D, Tensor4R
+from emmet.core.polar import Dielectric, BornEffectiveCharges
+from emmet.core.structure import StructureMetadata
 
 
 class PhononWarnings(BaseModel):
@@ -29,6 +31,137 @@ class PhononWarnings(BaseModel):
         description="True if the phonon band structure has negative frequencies,"
                     " but these are small and very close to the Gamma point "
                     "(usually related to numerical errors)."
+    )
+
+
+class PhononBandStructure(BaseModel):
+    """
+    Document with a pymatgen serialized phonon band structure.
+    """
+
+    material_id: str = Field(
+        ...,
+        description="The ID of this material, used as a universal reference across property documents."
+                    "This comes in the form: mp-******",
+    )
+
+    doc_type: Literal["bs"] = Field(
+        "bs",
+        description="The type of the document: a phonon band structure."
+    )
+
+    band_structure: dict = Field(
+        None, description="Serialized version of a pymatgen "
+                          "PhononBandStructureSymmLine object."
+    )
+
+    last_updated: datetime = Field(
+        description="Timestamp for the most recent calculation update for this property",
+        default_factory=datetime.utcnow,
+    )
+
+    created_at: datetime = Field(
+        description="Timestamp for when this material document was first created",
+        default_factory=datetime.utcnow,
+    )
+
+
+class PhononDos(BaseModel):
+    """
+    Document with a pymatgen serialized phonon density of states (DOS).
+    """
+
+    material_id: str = Field(
+        ...,
+        description="The ID of this material, used as a universal reference across property documents."
+                    "This comes in the form: mp-******",
+    )
+
+    doc_type: Literal["dos"] = Field(
+        "dos",
+        description="The type of the document: a phonon density of states."
+    )
+
+    dos: dict = Field(
+        None, description="Serialized version of a pymatgen CompletePhononDos object."
+    )
+
+    dos_method: str = Field(
+        None, description="The method used to calculate the phonon DOS."
+    )
+
+    last_updated: datetime = Field(
+        description="Timestamp for the most recent calculation update for this property",
+        default_factory=datetime.utcnow,
+    )
+
+    created_at: datetime = Field(
+        description="Timestamp for when this material document was first created",
+        default_factory=datetime.utcnow,
+    )
+
+
+class PhononWebsiteBS(BaseModel):
+    """
+    Document with a serialized version of the phonon band structure suitable
+    for the phononwebsite (http://henriquemiranda.github.io/phononwebsite/).
+    """
+
+    material_id: str = Field(
+        ...,
+        description="The ID of this material, used as a universal reference across property documents."
+                    "This comes in the form: mp-******",
+    )
+
+    doc_type: Literal["phononwebsite"] = Field(
+        "phononwebsite",
+        description="The type of the document: a phonon band structure for the phononwebsite."
+    )
+
+    phononwebsite: dict = Field(
+        None, description="Phononwebsite dictionary to plot the animated "
+                          "phonon modes."
+    )
+
+    last_updated: datetime = Field(
+        description="Timestamp for the most recent calculation update for this property",
+        default_factory=datetime.utcnow,
+    )
+
+    created_at: datetime = Field(
+        description="Timestamp for when this material document was first created",
+        default_factory=datetime.utcnow,
+    )
+
+
+class Ddb(BaseModel):
+    """
+    Document with a the string version of the DDB file produced by abinit.
+    """
+
+    material_id: str = Field(
+        ...,
+        description="The ID of this material, used as a universal reference across property documents."
+                    "This comes in the form: mp-******",
+    )
+
+    doc_type: Literal["ddb"] = Field(
+        "ddb",
+        description="The type of the document: a DDB file."
+    )
+
+    ddb: str = Field(
+        None, description="The string of the DDB file."
+    )
+
+    last_updated: datetime = Field(
+        description="Timestamp for the most recent calculation update for this property",
+        default_factory=datetime.utcnow,
+    )
+
+    created_at: datetime = Field(
+        description="Timestamp for when this material document was first created",
+        default_factory=datetime.utcnow,
     )
 
 
@@ -64,23 +197,19 @@ class ThermodynamicProperties(BaseModel):
     )
 
 
-class Phonon(BaseModel):
+class Phonon(StructureMetadata):
     """
     Definition for a document with data produced by a phonon calculation.
     """
 
     material_id: str = Field(
         ...,
-        description="The ID of this material, in the form: mp-******",
+        description="The ID of this material, used as a universal reference across property documents."
+                    "This comes in the form: mp-******",
     )
 
     structure: Structure = Field(
         ..., description="The relaxed structure for the phonon calculation."
-    )
-
-    cnsr_break: float = Field(
-        None, description="The maximum breaking of the charge nutrality sum "
-                          "rule (CNSR) in the Born effective charges."
     )
 
     asr_break: float = Field(
@@ -97,24 +226,9 @@ class Phonon(BaseModel):
         description="Dielectric properties obtained during a phonon calculations."
     )
 
-    becs: List[Matrix3D] = Field(
+    becs: BornEffectiveCharges = Field(
         None,
-        description="Born effective charges calculated for a phonon calculation."
-    )
-
-    dos: dict = Field(
-        None,
-        description="Serialized version of a pymatgen CompletePhononDos object."
-    )
-
-    band_structure: dict = Field(
-        None, description="Serialized version of a pymatgen "
-                          "PhononBandStructureSymmLine object."
-    )
-
-    phonon_website: dict = Field(
-        None, description="Phononwebsite dictionary to plot the animated "
-                          "phonon modes."
+        description="Born effective charges obtained for a phonon calculation."
     )
 
     ir_spectra: dict = Field(
@@ -128,6 +242,16 @@ class Phonon(BaseModel):
                     "frequencies."
     )
 
+    last_updated: datetime = Field(
+        description="Timestamp for when this document was last updated",
+        default_factory=datetime.utcnow,
+    )
+
+    created_at: datetime = Field(
+        description="Timestamp for when this material document was first created",
+        default_factory=datetime.utcnow,
+    )
+
 
 class AbinitPhonon(Phonon):
     """
@@ -139,19 +263,6 @@ class AbinitPhonon(Phonon):
         description="Dict representation of the inputs used to obtain the phonon"
                     "properties and the main general options (e.g. number of "
                     "k-points, number of q-points)."
-    )
-
-    ddb_file: str = Field(
-        None, description="The string of the DDB file."
-    )
-
-    dos_method: str = Field(
-        None, description="The method used to calculate the phonon DOS."
-    )
-
-    msqd_dos: dict = Field(
-        None,
-        description="Data for the generalized DOS and thermal displacements."
     )
 
 
@@ -189,4 +300,87 @@ class SoundVelocity(BaseModel):
         ...,
         description="The types of the modes ('transversal', 'longitudinal'). "
                     "None if not correctly identified.",
+    )
+
+    last_updated: datetime = Field(
+        description="Timestamp for when this document was last updated",
+        default_factory=datetime.utcnow,
+    )
+
+    created_at: datetime = Field(
+        description="Timestamp for when this material document was first created",
+        default_factory=datetime.utcnow,
+    )
+
+
+class ThermalDisplacement(BaseModel):
+    """
+    Definition of a Document for the generalized density of states and
+    mean square displacements related to phonon oscillations.
+    """
+
+    material_id: str = Field(
+        ...,
+        description="The ID of this material, used as a universal reference across property documents."
+                    "This comes in the form: mp-******",
+    )
+
+    last_updated: datetime = Field(
+        description="Timestamp for the most recent calculation update for this property",
+        default_factory=datetime.utcnow,
+    )
+
+    created_at: datetime = Field(
+        description="Timestamp for when this material document was first created",
+        default_factory=datetime.utcnow,
+    )
+
+    nsites: int = Field(
+        ...,
+        description="The number of sites in the structure.",
+    )
+
+    nomega: int = Field(
+        ...,
+        description="The number of frequencies.",
+    )
+
+    ntemp: int = Field(
+        ...,
+        description="The number of temperatures for which the displacements are calculated",
+    )
+
+    temperatures: List[float] = Field(
+        ...,
+        description="The list of temperatures at which the thermodynamic properties "
+                    "are calculated"
+    )
+
+    frequencies: List[float] = Field(
+        ...,
+        description="The list of frequencies for the generalized DOS"
+    )
+
+    gdos_aijw: Tensor4R = Field(
+        ...,
+        description=" Generalized DOS in Cartesian coords, with shape (nsites, 3, 3, nomega)"
+    )
+
+    amu: dict = Field(
+        ...,
+        description="Dictionary of the atomic masses in atomic units."
+    )
+
+    structure: Structure = Field(
+        ..., description="The relaxed structure for the phonon calculation."
+    )
+
+    ucif_t: Tensor4R = Field(
+        ...,
+        description="Mean squared displacement U tensors as a function of T for T in tmesh in CIF format."
+                    "With shape (natom, 3, 3, ntemp) "
+    )
+    ucif_string_t300k: str = Field(
+        ...,
+        description="Mean squared displacement U tensors at T=300K in CIF string format."
     )

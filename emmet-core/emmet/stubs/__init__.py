@@ -8,7 +8,7 @@ from pymatgen.analysis.xas.spectrum import XAS
 from pymatgen.core.structure import Composition, Structure
 from pymatgen.entries.computed_entries import ComputedEntry
 
-from emmet.stubs.math import Matrix3D, Vector3D
+from emmet.stubs.math import Matrix3D, Vector3D, Tensor3R, Tensor4R
 from emmet.stubs.misc import Composition as StubComposition
 from emmet.stubs.misc import ComputedEntry as StubComputedEntry
 from emmet.stubs.structure import Structure as StubStructure
