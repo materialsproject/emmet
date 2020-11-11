@@ -11,7 +11,7 @@ from pymatgen.entries.computed_entries import ComputedEntry
 from emmet.stubs.math import Matrix3D, Vector3D
 from emmet.stubs.misc import Composition as StubComposition
 from emmet.stubs.misc import ComputedEntry as StubComputedEntry
-from emmet.stubs.structure import Structure as StubStructure, StubSite
+from emmet.stubs.structure import Structure as StubStructure
 from emmet.stubs.structure import Lattice as StubLattice
 from emmet.stubs.structure import Molecule as StubMolecule
 

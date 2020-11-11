@@ -18,7 +18,7 @@ from pymatgen.io.babel import BabelMolAdaptor
 from pymatgen.symmetry.analyzer import PointGroupAnalyzer
 from pymatgen.analysis.graphs import MoleculeGraph
 
-from emmet.stubs import Specie, Composition, Molecule
+from emmet.stubs import Composition, Molecule
 
 
 T = TypeVar("T", bound="MoleculeMetadata")

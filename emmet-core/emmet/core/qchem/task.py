@@ -80,7 +80,8 @@ class OutputSummary(BaseModel):
 
     mulliken: Union[List[float], List[Tuple[float, float]]] = Field(
         None,
-        description="Molecule partial charges and occupancies for each atom, as determined by Mulliken population analysis",
+        description="Molecule partial charges and occupancies for each atom, as"
+                    "determined by Mulliken population analysis",
     )
 
     resp: List[float] = Field(
