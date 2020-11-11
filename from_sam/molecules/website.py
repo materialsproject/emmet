@@ -16,8 +16,8 @@ from pymatgen.symmetry.analyzer import PointGroupAnalyzer
 
 from maggma.builders import Builder
 
-from emmet.qchem.task_tagger import task_type
-from emmet.common.utils import load_settings
+from from_sam.qchem.task_tagger import task_type
+from from_sam.common.utils import load_settings
 from pydash.objects import get, set_, has
 
 __author__ = "Sam Blau"

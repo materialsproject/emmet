@@ -15,8 +15,8 @@ from graphdot.experimental.metric.m3 import M3
 import networkx as nx
 from maggma.builders import Builder
 
-from emmet.qchem.task_tagger import task_type
-from emmet.common.utils import load_settings
+from from_sam.qchem.task_tagger import task_type
+from from_sam.common.utils import load_settings
 from pydash.objects import get, set_, has
 
 __author__ = "Sam Blau, Shyam Dwaraknath"
@@ -255,7 +255,7 @@ class MoleculesBuilder(Builder):
             for bond in mol_graph.graph.edges():
                 bonds.append([bond[0],bond[1]])
             edges = {(b[0], b[1]): None for b in bonds}
-            assert mol_graph == MoleculeGraph.with_edges(tmp_mol,edges)
+            assert mol_graph == MoleculeGraph.with_edges(tmp_mol, edges)
             mol["bonds"] = bonds
             mol["edges"] = edges
         else:

@@ -1,9 +1,9 @@
 import unittest
 import os
 from maggma.stores import JSONStore, MemoryStore, MongoStore
-from emmet.qchem.molecules import MoleculesBuilder
-from emmet.molecules.redox import RedoxBuilder
-from emmet.molecules.website import WebsiteMoleculesBuilder
+from from_sam.qchem.molecules import MoleculesBuilder
+from from_sam.molecules.redox import RedoxBuilder
+from from_sam.molecules.website import WebsiteMoleculesBuilder
 
 __author__ = "Sam Blau"
 

@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Sequence
 
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
@@ -89,3 +89,22 @@ class Structure(BaseModel):
     charge: Optional[float] = Field(None, title="Total charge")
     lattice: Lattice = Field(..., title="Lattice for this structure")
     sites: List[PeriodicSite] = Field(..., title="List of sites in this structure")
+
+
+class Molecule(BaseModel):
+    """
+    Basic Molecule object. Essentially a sequence of Sites having a total charge
+    and spin multiplicity.
+
+    Bonding has been added, to make Molecule compatible with
+    """
+
+    charge: float = Field(..., title="Total charge")
+    spin_multiplicity: float = Field(None, title="Molecular spin multiplicity")
+    sites: List[Site] = Field(..., title="List of sites in this molecule")
+    bonds: Sequence[Tuple[int, int]] = Field(
+        list(),
+        title="Molecule Bonds",
+        description="List of bonds in this molecule"
+    )
+

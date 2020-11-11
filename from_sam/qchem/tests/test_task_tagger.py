@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from emmet.qchem.task_tagger import TaskTagger
+from from_sam.qchem.task_tagger import TaskTagger
 from maggma.stores import JSONStore, MemoryStore
 
 __author__ = "Sam Blau, Shyam Dwaraknath"

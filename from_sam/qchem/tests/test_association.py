@@ -1,7 +1,7 @@
 import unittest
 import os
 from maggma.stores import JSONStore, MemoryStore, MongoStore
-from emmet.qchem.association import AssociationBuilder
+from from_sam.qchem.association import AssociationBuilder
 
 __author__ = "Sam Blau"
 
