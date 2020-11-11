@@ -7,7 +7,9 @@ from maggma.stores import JSONStore, MemoryStore
 __author__ = "Sam Blau, Shyam Dwaraknath"
 
 module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-test_tasks = os.path.join(module_dir, "..", "..", "..", "test_files", "sample_qchem_tasks.json")
+test_tasks = os.path.join(
+    module_dir, "..", "..", "..", "test_files", "sample_qchem_tasks.json"
+)
 
 
 class TaskTaggerTest(unittest.TestCase):
@@ -23,8 +25,7 @@ class TaskTaggerTest(unittest.TestCase):
         for t in task_tagger.get_items():
             processed = task_tagger.calc(t)
             true_type = self.test_tasks.query_one(
-                criteria={"task_id": t["task_id"]},
-                properties=["true_task_type"],
+                criteria={"task_id": t["task_id"]}, properties=["true_task_type"],
             )["true_task_type"]
             self.assertEqual(processed["task_type"], true_type)
 

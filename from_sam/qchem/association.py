@@ -21,12 +21,9 @@ module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 
 
 class AssociationBuilder(Builder):
-    def __init__(self,
-                 input_tasks,
-                 output_tasks,
-                 task_types=None,
-                 query=None,
-                 **kwargs):
+    def __init__(
+        self, input_tasks, output_tasks, task_types=None, query=None, **kwargs
+    ):
         """
         Creates an output_tasks collection from input_tasks and 
 
@@ -44,7 +41,11 @@ class AssociationBuilder(Builder):
         self.output_tasks = output_tasks
         self.task_types = task_types
         self.query = query if query else {}
-        self.allowed_tasks = {"SMD Frequency Flattening Optimization", "SMD Single Point", "SMD Critic"}
+        self.allowed_tasks = {
+            "SMD Frequency Flattening Optimization",
+            "SMD Single Point",
+            "SMD Critic",
+        }
 
         sources = [input_tasks]
         if self.task_types:
@@ -128,7 +129,10 @@ class AssociationBuilder(Builder):
                 if associated_task != None:
                     output_tasks.append(associated_task)
             else:
-                raise RuntimeError("ERROR: groups must contain one or two tasks! Invalid group length:", len(group))
+                raise RuntimeError(
+                    "ERROR: groups must contain one or two tasks! Invalid group length:",
+                    len(group),
+                )
 
         self.logger.debug(
             "Produced {} output tasks for {}".format(
@@ -179,18 +183,26 @@ class AssociationBuilder(Builder):
         if num_critic_scf_iters > len(opt_task["calcs_reversed"][0]["SCF"][0]):
             comparable_scf = opt_task["calcs_reversed"][0]["SCF"][0][-1][0]
         else:
-            comparable_scf = opt_task["calcs_reversed"][0]["SCF"][0][num_critic_scf_iters-1][0]
+            comparable_scf = opt_task["calcs_reversed"][0]["SCF"][0][
+                num_critic_scf_iters - 1
+            ][0]
         if abs(last_critic_scf - comparable_scf) > 0.001:
             # Tag inconsistent tasks to be dealt with later
             critic_task["inconsistent"] = True
             opt_task["inconsistent"] = True
-            critic_task["incon_pair"] = {"opt":opt_task["task_id"], "critic":critic_task["task_id"]}
-            opt_task["incon_pair"] = {"opt":opt_task["task_id"], "critic":critic_task["task_id"]}
-            critic_task.pop("is_valid",None)
-            opt_task.pop("is_valid",None)
+            critic_task["incon_pair"] = {
+                "opt": opt_task["task_id"],
+                "critic": critic_task["task_id"],
+            }
+            opt_task["incon_pair"] = {
+                "opt": opt_task["task_id"],
+                "critic": critic_task["task_id"],
+            }
+            critic_task.pop("is_valid", None)
+            opt_task.pop("is_valid", None)
             self.input_tasks.connect()
             # self.input_tasks.update(docs=[critic_task,opt_task], update_lu=False)
-            self.input_tasks.update(docs=[critic_task,opt_task])
+            self.input_tasks.update(docs=[critic_task, opt_task])
         else:
             associated_task = copy.deepcopy(opt_task)
             associated_task["critic2"] = critic_task["critic2"]
@@ -206,7 +218,7 @@ class AssociationBuilder(Builder):
         """
 
         filtered_tasks = [
-            t for t in tasks if task_type(t["orig"],t["output"]) in self.allowed_tasks
+            t for t in tasks if task_type(t["orig"], t["output"]) in self.allowed_tasks
         ]
 
         molecules = []
@@ -221,7 +233,10 @@ class AssociationBuilder(Builder):
             if "solvent_method" in t["orig"]["rem"]:
                 if t["orig"]["rem"]["solvent_method"] == "smd":
                     mol_dict["env"] = "smd"
-                    if t["orig"]["smx"]["solvent"] == "other" or t["orig"]["smx"]["solvent"] == "custom":
+                    if (
+                        t["orig"]["smx"]["solvent"] == "other"
+                        or t["orig"]["smx"]["solvent"] == "custom"
+                    ):
                         mol_dict["smd"] = t["custom_smd"]
                     else:
                         mol_dict["smd"] = t["orig"]["smx"]["solvent"]
@@ -241,17 +256,26 @@ class AssociationBuilder(Builder):
                     if task["special_run_type"] == "frequency_flattener":
                         if not found["FF"]:
                             found["FF"] = task
-                        elif task["output"]["final_energy"] < found["FF"]["output"]["final_energy"]:
+                        elif (
+                            task["output"]["final_energy"]
+                            < found["FF"]["output"]["final_energy"]
+                        ):
                             found["FF"] = task
                 if "critic2" in task:
                     if not found["C"]:
                         found["C"] = task
-                    elif task["output"]["final_energy"] < found["C"]["output"]["final_energy"]:
+                    elif (
+                        task["output"]["final_energy"]
+                        < found["C"]["output"]["final_energy"]
+                    ):
                         found["C"] = task
                 elif task["orig"]["rem"]["job_type"] == "sp":
                     if not found["SP"]:
                         found["SP"] = task
-                    elif task["output"]["final_energy"] < found["SP"]["output"]["final_energy"]:
+                    elif (
+                        task["output"]["final_energy"]
+                        < found["SP"]["output"]["final_energy"]
+                    ):
                         found["SP"] = task
             else:
                 yield [found[key] for key in found if found[key]]
@@ -291,7 +315,9 @@ def group_molecules(molecules):
             key += " " + mol_dict[mol_dict["env"]]
         return key
 
-    for mol_key, pregroup in groupby(sorted(molecules,key=get_mol_key),key=get_mol_key):
+    for mol_key, pregroup in groupby(
+        sorted(molecules, key=get_mol_key), key=get_mol_key
+    ):
         subgroups = []
         for mol_dict in pregroup:
             mol = mol_dict["molecule"]
@@ -302,6 +328,6 @@ def group_molecules(molecules):
                     matched = True
                     break
             if not matched:
-                subgroups.append({"mol":mol,"mol_list":[mol]})
+                subgroups.append({"mol": mol, "mol_list": [mol]})
         for group in subgroups:
             yield group["mol_list"]

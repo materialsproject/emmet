@@ -69,7 +69,7 @@ class MoleculeMetadata(BaseModel):
     molecular_weight: float = Field(
         None,
         title="Molecular Weight",
-        description="Molecular weight of this Molecule, in g/mol"
+        description="Molecular weight of this Molecule, in g/mol",
     )
 
     smiles: str = Field(
@@ -87,13 +87,11 @@ class MoleculeMetadata(BaseModel):
     inchi: str = Field(
         None,
         title="InChI",
-        description="IUPAC international chemical identifier string"
+        description="IUPAC international chemical identifier string",
     )
 
     point_group: str = Field(
-        None,
-        title="Point Group Symbol",
-        description="The point group for the lattice"
+        None, title="Point Group Symbol", description="The point group for the lattice"
     )
 
     @classmethod
@@ -113,7 +111,7 @@ class MoleculeMetadata(BaseModel):
                 "formula_pretty",
                 "formula_anonymous",
                 "chemsys",
-                "molecular_weight"
+                "molecular_weight",
             ]
             if fields is None
             else fields
@@ -155,8 +153,7 @@ class MoleculeMetadata(BaseModel):
                 "chemsys",
                 "molecular_weight",
                 "smiles",
-                "canonical_smiles"
-                "inchi",
+                "canonical_smiles" "inchi",
                 "point_group",
             ]
             if fields is None
@@ -181,7 +178,7 @@ class MoleculeMetadata(BaseModel):
             "smiles": pbmol.write(str("smi")).split()[0],
             "canonical_smiles": pbmol.write(str("can")).split()[0],
             "inchi": pbmol.write(str("inchi")).strip(),
-            "point_group": pga.sch_symbol
+            "point_group": pga.sch_symbol,
         }
 
         if include_molecule:
@@ -195,13 +192,15 @@ class MoleculeEntry(BaseModel):
     An entry of thermodynamic information for a particular composition
     """
 
-    #TODO: Add frequencies/frequency vectors/etc.?
+    # TODO: Add frequencies/frequency vectors/etc.?
 
     composition: Composition = Field(
         None, description="Full composition for this entry"
     )
     energy: float = Field(None, description="DFT total energy in eV")
-    enthalpy: float = Field(None, description="DFT-calculated total enthalpy correction in eV")
+    enthalpy: float = Field(
+        None, description="DFT-calculated total enthalpy correction in eV"
+    )
     entropy: float = Field(None, description="DFT-calculated total entropy in eV/K")
     parameters: Dict = Field(
         None,
@@ -222,18 +221,14 @@ class MoleculeDoc(MoleculeMetadata):
     molecule_id: str = Field(
         ...,
         description="The ID of this molecule, used as a universal reference across all related Documents."
-        "This comes in the form mpmol-*******"
+        "This comes in the form mpmol-*******",
     )
 
     molecule: Molecule = Field(
-        ...,
-        description="The lowest-energy optimized structure for this molecule"
+        ..., description="The lowest-energy optimized structure for this molecule"
     )
 
-    deprecated: bool = Field(
-        False,
-        description="Has this molecule been deprecated?"
-    )
+    deprecated: bool = Field(False, description="Has this molecule been deprecated?")
 
     task_ids: Sequence[str] = Field(
         [],
@@ -273,17 +268,15 @@ def mol_graph_to_molecule(mol_graph: MoleculeGraph) -> Molecule:
     for edge in mol_graph.graph.edges():
         edges.append(tuple(edge))
 
-    mol_dict = {"sites": mol_graph.molecule.sites,
-                "charge": mol_graph.molecule.charge,
-                "spin_multiplicity": mol_graph.molecule.spin_multiplicity,
-                "bonds": edges}
+    mol_dict = {
+        "sites": mol_graph.molecule.sites,
+        "charge": mol_graph.molecule.charge,
+        "spin_multiplicity": mol_graph.molecule.spin_multiplicity,
+        "bonds": edges,
+    }
 
     return Molecule(**mol_dict)
 
 
 def molecule_to_mol_graph(molecule: Molecule) -> MoleculeGraph:
-    return MoleculeGraph.with_edges(
-        molecule,
-        {b: None for b in molecule.bonds}
-    )
-
+    return MoleculeGraph.with_edges(molecule, {b: None for b in molecule.bonds})

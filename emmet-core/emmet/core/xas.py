@@ -31,10 +31,7 @@ class XASDoc(SpectrumDoc):
 
     @classmethod
     def from_spectrum(
-        cls,
-        xas_spectrum: XAS,
-        material_id: str,
-        **kwargs,
+        cls, xas_spectrum: XAS, material_id: str, **kwargs,
     ):
         spectrum_type = xas_spectrum.spectrum_type
         el = xas_spectrum.absorbing_element

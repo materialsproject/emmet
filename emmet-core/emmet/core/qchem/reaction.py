@@ -18,7 +18,7 @@ from emmet.stubs import Molecule
 from emmet.core.utils import ValueEnum
 
 
-#TODO: Where are transition states, vertical IP/EA calculations are going to factor into this?
+# TODO: Where are transition states, vertical IP/EA calculations are going to factor into this?
 
 
 class ReactionType(ValueEnum):
@@ -49,12 +49,12 @@ class Reaction(BaseModel):
 
     reactants_atom_mapping: List[Dict[int, int]] = Field(
         None,
-        description="A list of atom mapping number dicts, each dict for one reactant with the style {atom_index: atom_mapping_number}"
+        description="A list of atom mapping number dicts, each dict for one reactant with the style {atom_index: atom_mapping_number}",
     )
 
     products_atom_mapping: List[Dict[int, int]] = Field(
         None,
-        description="A list of atom mapping number dicts, each dict for one reactant with the style {atom_index: atom_mapping_number}"
+        description="A list of atom mapping number dicts, each dict for one reactant with the style {atom_index: atom_mapping_number}",
     )
 
     def free_energy(self, temperature=298.15):
@@ -88,24 +88,25 @@ class ReactionDoc(BaseModel):
     reaction_id: str = Field(
         ...,
         description="The ID of this reaction, used as a universal reference across all related Documents."
-        "This comes in the form mprxn-*******"
+        "This comes in the form mprxn-*******",
     )
 
     reaction: Reaction = Field(
         ...,
-        description="Reactant/product Molecules along with thermodynamic information for this Reaction."
+        description="Reactant/product Molecules along with thermodynamic information for this Reaction.",
     )
 
-    reactant_ids: List[str] = Field(..., description="Molecule IDs for each reactant molecule")
+    reactant_ids: List[str] = Field(
+        ..., description="Molecule IDs for each reactant molecule"
+    )
 
-    product_ids: List[str] = Field(..., description="Molecule IDs for each product molecule")
+    product_ids: List[str] = Field(
+        ..., description="Molecule IDs for each product molecule"
+    )
 
     reaction_type: ReactionType = Field(..., description="Type of this reaction")
 
-    deprecated: bool = Field(
-        False,
-        description="Has this molecule been deprecated?"
-    )
+    deprecated: bool = Field(False, description="Has this molecule been deprecated?")
 
     task_ids: Sequence[str] = Field(
         list(),

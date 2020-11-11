@@ -26,13 +26,15 @@ default_mol_settings = os.path.join(module_dir, "settings", "molecules_settings.
 
 
 class MoleculesBuilder(Builder):
-    def __init__(self,
-                 tasks,
-                 molecules,
-                 task_types=None,
-                 molecules_settings=None,
-                 query=None,
-                 **kwargs):
+    def __init__(
+        self,
+        tasks,
+        molecules,
+        task_types=None,
+        molecules_settings=None,
+        query=None,
+        **kwargs
+    ):
         """
         Creates a molecules collection from tasks and tags
 
@@ -221,7 +223,10 @@ class MoleculesBuilder(Builder):
         # Store environment
         if "solvent_method" in task_group[0]["orig"]["rem"]:
             if task_group[0]["orig"]["rem"]["solvent_method"] == "smd":
-                if task_group[0]["orig"]["smx"]["solvent"] == "other" or task_group[0]["orig"]["smx"]["solvent"] == "custom":
+                if (
+                    task_group[0]["orig"]["smx"]["solvent"] == "other"
+                    or task_group[0]["orig"]["smx"]["solvent"] == "custom"
+                ):
                     environment = "smd_" + task_group[0]["custom_smd"]
                 else:
                     environment = "smd_" + task_group[0]["orig"]["smx"]["solvent"]
@@ -231,7 +236,9 @@ class MoleculesBuilder(Builder):
             environment = "vac"
 
         mol = {
-            self.molecules.last_updated_field: max([prop["last_updated"] for prop in all_props]),
+            self.molecules.last_updated_field: max(
+                [prop["last_updated"] for prop in all_props]
+            ),
             "created_at": min([prop["last_updated"] for prop in all_props]),
             "task_ids": task_ids,
             "deprecated_tasks": deprecated_tasks,
@@ -239,7 +246,7 @@ class MoleculesBuilder(Builder):
             "origins": origins,
             "task_types": task_types,
             "invalid_props": invalid_props,
-            "environment": environment
+            "environment": environment,
         }
 
         for prop in best_props:
@@ -248,12 +255,14 @@ class MoleculesBuilder(Builder):
         # Store molecule graph and a list of bonds
         if "molecule" in mol:
             tmp_mol = Molecule.from_dict(mol["molecule"])
-            critic_bonds = mol["critic"]["processed"]["bonds"] if "critic" in mol else None
-            mol_graph = make_mol_graph(tmp_mol,critic_bonds)
+            critic_bonds = (
+                mol["critic"]["processed"]["bonds"] if "critic" in mol else None
+            )
+            mol_graph = make_mol_graph(tmp_mol, critic_bonds)
             mol["mol_graph"] = mol_graph.as_dict()
             bonds = []
             for bond in mol_graph.graph.edges():
-                bonds.append([bond[0],bond[1]])
+                bonds.append([bond[0], bond[1]])
             edges = {(b[0], b[1]): None for b in bonds}
             assert mol_graph == MoleculeGraph.with_edges(tmp_mol, edges)
             mol["bonds"] = bonds
@@ -262,15 +271,15 @@ class MoleculesBuilder(Builder):
             mol["molecule"] = mol["initial_molecule"]
 
         # Store energy and enthalpy in eV and entropy in eV/K
-        mol["energy"] = mol["energy_Ha"]*27.21139
+        mol["energy"] = mol["energy_Ha"] * 27.21139
         if "enthalpy_kcal/mol" in mol:
-            mol["enthalpy"] = mol["enthalpy_kcal/mol"]*0.0433641
+            mol["enthalpy"] = mol["enthalpy_kcal/mol"] * 0.0433641
         if "entropy_cal/molK" in mol:
-            mol["entropy"] = mol["entropy_cal/molK"]*0.0000433641
+            mol["entropy"] = mol["entropy_cal/molK"] * 0.0000433641
 
         # Store free energy in eV at 298 K
         if "entropy" in mol and "enthalpy" in mol:
-            mol["free_energy"] = mol["energy"]+mol["enthalpy"]-298*mol["entropy"]
+            mol["free_energy"] = mol["energy"] + mol["enthalpy"] - 298 * mol["entropy"]
 
         return mol
 
@@ -280,7 +289,7 @@ class MoleculesBuilder(Builder):
         """
 
         filtered_tasks = [
-            t for t in tasks if task_type(t["orig"],t["output"]) in self.allowed_tasks
+            t for t in tasks if task_type(t["orig"], t["output"]) in self.allowed_tasks
         ]
 
         molecules = []
@@ -295,14 +304,19 @@ class MoleculesBuilder(Builder):
             if "critic2" in t:
                 mol_dict["critic2"] = fix_C_Li_bonds(t["critic2"])
                 metal_charges = set()
-                for ii,site in enumerate(mol):
+                for ii, site in enumerate(mol):
                     if str(site.specie) == "Li":
-                        metal_charges.add(round(t["critic2"]["processed"]["charges"][ii]))
+                        metal_charges.add(
+                            round(t["critic2"]["processed"]["charges"][ii])
+                        )
                 mol_dict["metal_charges"] = metal_charges
             if "solvent_method" in t["orig"]["rem"]:
                 if t["orig"]["rem"]["solvent_method"] == "smd":
                     mol_dict["env"] = "smd"
-                    if t["orig"]["smx"]["solvent"] == "other" or t["orig"]["smx"]["solvent"] == "custom":
+                    if (
+                        t["orig"]["smx"]["solvent"] == "other"
+                        or t["orig"]["smx"]["solvent"] == "custom"
+                    ):
                         mol_dict["smd"] = t["custom_smd"]
                     else:
                         mol_dict["smd"] = t["orig"]["smx"]["solvent"]
@@ -321,7 +335,7 @@ class MoleculesBuilder(Builder):
         """
         Converts a task into a list of properties with associated metadata
         """
-        t_type = task_type(task["orig"],task["output"])
+        t_type = task_type(task["orig"], task["output"])
         t_id = task["task_id"]
 
         # Convert the task doc into a series of properties in the molecules
@@ -342,7 +356,7 @@ class MoleculesBuilder(Builder):
                             "last_updated": task[self.tasks.last_updated_field],
                             "energy": get(task, "output.final_energy", 0.0),
                             "molecules_key": prop["molecules_key"],
-                            "is_valid": task.get("is_valid", True)
+                            "is_valid": task.get("is_valid", True),
                         }
                     )
                 elif not prop.get("optional", False):
@@ -363,7 +377,7 @@ class MoleculesBuilder(Builder):
             return False
         elif "environment" not in doc:
             return False
-        elif doc["environment"][0:3] not in ["vac","pcm","smd"]:
+        elif doc["environment"][0:3] not in ["vac", "pcm", "smd"]:
             return False
 
         return True
@@ -432,7 +446,7 @@ def find_best_prop(props):
             -1 * doc["is_valid"],
             -1 * doc["quality_score"],
             -1 * doc["accuracy_score"],
-            doc["energy"]
+            doc["energy"],
         ),
     )
     if sorted_props[0].get("aggregate", False):
@@ -462,7 +476,7 @@ def molecule_metadata(molecule):
         "formula_pretty": comp.reduced_formula,
         "formula_anonymous": comp.anonymized_formula,
         "formula_alphabetical": comp.alphabetical_formula,
-        "chemsys": "-".join(elsyms)
+        "chemsys": "-".join(elsyms),
     }
     return meta
 
@@ -480,10 +494,16 @@ def group_molecules(molecules):
             key += " " + mol_dict[mol_dict["env"]]
         return key
 
-    for mol_key, pregroup in groupby(sorted(molecules,key=get_mol_key),key=get_mol_key):
+    for mol_key, pregroup in groupby(
+        sorted(molecules, key=get_mol_key), key=get_mol_key
+    ):
         subgroups = []
         for mol_dict in pregroup:
-            critic_bonds = mol_dict["critic2"]["processed"]["bonds"] if "critic2" in mol_dict else None
+            critic_bonds = (
+                mol_dict["critic2"]["processed"]["bonds"]
+                if "critic2" in mol_dict
+                else None
+            )
             mol_graph = make_mol_graph(mol_dict["molecule"], critic_bonds)
             if nx.is_connected(mol_graph.graph.to_undirected()):
                 matched = False
@@ -504,12 +524,17 @@ def group_molecules(molecules):
                             break
                 if not matched:
                     if "metal_charges" in mol_dict:
-                        subgroups.append({"mol_graph":mol_graph,
-                                          "metal_charges":mol_dict["metal_charges"],
-                                          "mol_dict_list":[mol_dict]})
+                        subgroups.append(
+                            {
+                                "mol_graph": mol_graph,
+                                "metal_charges": mol_dict["metal_charges"],
+                                "mol_dict_list": [mol_dict],
+                            }
+                        )
                     else:
-                        subgroups.append({"mol_graph":mol_graph,
-                                          "mol_dict_list":[mol_dict]})
+                        subgroups.append(
+                            {"mol_graph": mol_graph, "mol_dict_list": [mol_dict]}
+                        )
 
         # Separate by M3:
         final_subgroups = []
@@ -521,12 +546,16 @@ def group_molecules(molecules):
                 adj = nx.Graph()
                 tmp_ids = list(range(len(subgroup["mol_dict_list"])))
                 adj.add_nodes_from(tmp_ids)
-                pairs = combinations(tmp_ids,2)
+                pairs = combinations(tmp_ids, 2)
                 for pair in pairs:
-                    atoms1 = AseAtomsAdaptor.get_atoms(subgroup["mol_dict_list"][pair[0]]["molecule"])
-                    atoms2 = AseAtomsAdaptor.get_atoms(subgroup["mol_dict_list"][pair[1]]["molecule"])
-                    if m3(atoms1,atoms2) < 0.1:
-                        adj.add_edge(pair[0],pair[1])
+                    atoms1 = AseAtomsAdaptor.get_atoms(
+                        subgroup["mol_dict_list"][pair[0]]["molecule"]
+                    )
+                    atoms2 = AseAtomsAdaptor.get_atoms(
+                        subgroup["mol_dict_list"][pair[1]]["molecule"]
+                    )
+                    if m3(atoms1, atoms2) < 0.1:
+                        adj.add_edge(pair[0], pair[1])
                 subgraphs = list(nx.connected_components(adj))
                 if len(subgraphs) == 1:
                     final_subgroups.append(subgroup)
@@ -534,7 +563,9 @@ def group_molecules(molecules):
                     for subgraph in subgraphs:
                         new_subgroup = {}
                         new_subgroup["mol_graph"] = subgroup["mol_graph"]
-                        new_subgroup["mol_dict_list"] = [subgroup["mol_dict_list"][ind] for ind in subgraph]
+                        new_subgroup["mol_dict_list"] = [
+                            subgroup["mol_dict_list"][ind] for ind in subgraph
+                        ]
                         if "metal_charges" in subgroup:
                             new_subgroup["metal_charges"] = subgroup["metal_charges"]
                         final_subgroups.append(new_subgroup)
@@ -572,10 +603,12 @@ def calc_accuracy_score(inputs):
         accuracy_score += inputs["rem"]["basis"].count("p")
         accuracy_score += inputs["rem"]["basis"].count("d")
     else:
-        raise Exception("Basis " + inputs["rem"]["basis"] + " cannot be assigned an accuracy score")
+        raise Exception(
+            "Basis " + inputs["rem"]["basis"] + " cannot be assigned an accuracy score"
+        )
 
     # Method:
-    score4_functionals = ["wb97xd","wb97x-d","cam-b3lyp","lrc-wpbe"]
+    score4_functionals = ["wb97xd", "wb97x-d", "cam-b3lyp", "lrc-wpbe"]
     if inputs["rem"]["method"] == "pbe":
         accuracy_score += 1
     elif inputs["rem"]["method"] == "b3lyp" or inputs["rem"]["method"] == "pbe0":
@@ -593,29 +626,40 @@ def calc_accuracy_score(inputs):
     elif "ccsd" in inputs["rem"]["method"]:
         accuracy_score += 8
     else:
-        raise Exception("Method " + inputs["rem"]["method"] + " cannot be assigned an accuracy score")
+        raise Exception(
+            "Method "
+            + inputs["rem"]["method"]
+            + " cannot be assigned an accuracy score"
+        )
 
     return accuracy_score
 
+
 def make_mol_graph(mol, critic_bonds=None):
-    mol_graph = MoleculeGraph.with_local_env_strategy(mol,
-                                                      OpenBabelNN())
+    mol_graph = MoleculeGraph.with_local_env_strategy(mol, OpenBabelNN())
     mol_graph = metal_edge_extender(mol_graph)
     if critic_bonds:
         mg_edges = mol_graph.graph.edges()
         for bond in critic_bonds:
             bond.sort()
             if bond[0] != bond[1]:
-                bond = (bond[0],bond[1])
+                bond = (bond[0], bond[1])
                 if bond not in mg_edges:
-                    mol_graph.add_edge(bond[0],bond[1])
+                    mol_graph.add_edge(bond[0], bond[1])
     return mol_graph
+
 
 def fix_C_Li_bonds(critic):
     for key in critic["bonding"]:
-        if critic["bonding"][key]["atoms"] == ["Li","C"] or critic["bonding"][key]["atoms"] == ["C","Li"]:
-            if critic["bonding"][key]["field"] <= 0.02 and critic["bonding"][key]["field"] > 0.012 and critic["bonding"][key]["distance"] < 2.5:
-                critic["processed"]["bonds"].append([int(entry)-1 for entry in critic["bonding"][key]["atom_ids"]])
+        if critic["bonding"][key]["atoms"] == ["Li", "C"] or critic["bonding"][key][
+            "atoms"
+        ] == ["C", "Li"]:
+            if (
+                critic["bonding"][key]["field"] <= 0.02
+                and critic["bonding"][key]["field"] > 0.012
+                and critic["bonding"][key]["distance"] < 2.5
+            ):
+                critic["processed"]["bonds"].append(
+                    [int(entry) - 1 for entry in critic["bonding"][key]["atom_ids"]]
+                )
     return critic
-
-

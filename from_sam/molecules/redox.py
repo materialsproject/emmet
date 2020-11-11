@@ -16,14 +16,11 @@ from pydash.objects import get, set_, has
 
 __author__ = "Sam Blau"
 
-REDOX_REFS = {"Li": 4.4-3.0, "H": 4.4, "Mg": 4.4-2.4}
+REDOX_REFS = {"Li": 4.4 - 3.0, "H": 4.4, "Mg": 4.4 - 2.4}
+
 
 class RedoxBuilder(Builder):
-    def __init__(self,
-                 molecules,
-                 redox,
-                 query=None,
-                 **kwargs):
+    def __init__(self, molecules, redox, query=None, **kwargs):
         """
         Calculates electrochemical and redox properties for molecules
 
@@ -67,9 +64,9 @@ class RedoxBuilder(Builder):
         new_mol_forms = set(self.molecules.distinct("formula_alphabetical", q))
 
         # All formula_alphabetical not present in redox collection
-        new_forms = set(self.molecules.distinct("formula_alphabetical", self.query)) - set(
-            self.redox.distinct("formula_alphabetical")
-        )
+        new_forms = set(
+            self.molecules.distinct("formula_alphabetical", self.query)
+        ) - set(self.redox.distinct("formula_alphabetical"))
 
         forms = updated_forms | new_forms | new_mol_forms
 
@@ -109,46 +106,71 @@ class RedoxBuilder(Builder):
                     "charge": mol["molecule"]["charge"],
                     "last_updated": mol["last_updated"],
                     "formula_alphabetical": mol["formula_alphabetical"],
-                    "gibbs": {}
+                    "gibbs": {},
                 }
-                required_vals = ["vacuum_energy","vacuum_enthalpy","vacuum_entropy","solvated_energy","solvated_enthalpy","solvated_entropy"]
+                required_vals = [
+                    "vacuum_energy",
+                    "vacuum_enthalpy",
+                    "vacuum_entropy",
+                    "solvated_energy",
+                    "solvated_enthalpy",
+                    "solvated_entropy",
+                ]
                 missing_keys = [k for k in required_vals if k not in mol]
                 if len(missing_keys) > 0:
                     doc["_warnings"] = ["missing energy keys: {}".format(missing_keys)]
                 if "vacuum_energy" in mol:
-                    doc["gibbs"]["vacuum"] = mol["vacuum_energy"]*27.21139+0.0433641*mol.get("vacuum_enthalpy",0.0)-298*mol.get("vacuum_entropy",0.0)*0.0000433641
+                    doc["gibbs"]["vacuum"] = (
+                        mol["vacuum_energy"] * 27.21139
+                        + 0.0433641 * mol.get("vacuum_enthalpy", 0.0)
+                        - 298 * mol.get("vacuum_entropy", 0.0) * 0.0000433641
+                    )
                 if "solvated_energy" in mol:
-                    doc["gibbs"]["solvated"] = mol["solvated_energy"]*27.21139+0.0433641*mol.get("solvated_enthalpy",0.0)-298*mol.get("solvated_entropy",0.0)*0.0000433641
+                    doc["gibbs"]["solvated"] = (
+                        mol["solvated_energy"] * 27.21139
+                        + 0.0433641 * mol.get("solvated_enthalpy", 0.0)
+                        - 298 * mol.get("solvated_entropy", 0.0) * 0.0000433641
+                    )
                 group_docs.append(doc)
             # Calculating ionization energy and electron affinity if multiple charges present
             if len(group_docs) > 1:
-                for ii,doc in enumerate(group_docs):
+                for ii, doc in enumerate(group_docs):
                     redox = {}
-                    if ii != len(group_docs)-1:
-                        if abs(doc["charge"]-group_docs[ii+1]["charge"]) == 1:
+                    if ii != len(group_docs) - 1:
+                        if abs(doc["charge"] - group_docs[ii + 1]["charge"]) == 1:
                             redox["IE"] = {}
                             for key in doc["gibbs"]:
-                                if key in group_docs[ii+1]["gibbs"]:
-                                    redox["IE"][key] = group_docs[ii+1]["gibbs"][key] - doc["gibbs"][key]
+                                if key in group_docs[ii + 1]["gibbs"]:
+                                    redox["IE"][key] = (
+                                        group_docs[ii + 1]["gibbs"][key]
+                                        - doc["gibbs"][key]
+                                    )
                             # Calculating oxidation potentials if IE present
                             oxidation = {}
                             for key in redox["IE"]:
                                 oxidation[key] = {}
                                 for ref_key in REDOX_REFS:
-                                    oxidation[key][ref_key] = redox["IE"][key]-REDOX_REFS[ref_key]
+                                    oxidation[key][ref_key] = (
+                                        redox["IE"][key] - REDOX_REFS[ref_key]
+                                    )
                             redox["oxidation"] = oxidation
                     if ii != 0:
-                        if abs(doc["charge"]-group_docs[ii-1]["charge"]) == 1:
+                        if abs(doc["charge"] - group_docs[ii - 1]["charge"]) == 1:
                             redox["EA"] = {}
                             for key in doc["gibbs"]:
-                                if key in group_docs[ii-1]["gibbs"]:
-                                    redox["EA"][key] = doc["gibbs"][key] - group_docs[ii-1]["gibbs"][key]
+                                if key in group_docs[ii - 1]["gibbs"]:
+                                    redox["EA"][key] = (
+                                        doc["gibbs"][key]
+                                        - group_docs[ii - 1]["gibbs"][key]
+                                    )
                             # Calculating reduction potentials if IE present
                             reduction = {}
                             for key in redox["EA"]:
                                 reduction[key] = {}
                                 for ref_key in REDOX_REFS:
-                                    reduction[key][ref_key] = redox["EA"][key]-REDOX_REFS[ref_key]
+                                    reduction[key][ref_key] = (
+                                        redox["EA"][key] - REDOX_REFS[ref_key]
+                                    )
                             redox["reduction"] = reduction
                     doc["redox"] = redox
 
@@ -183,7 +205,7 @@ class RedoxBuilder(Builder):
         self.molecules.ensure_index(self.molecules.key, unique=True)
         self.molecules.ensure_index(self.molecules.lu_field)
         self.molecules.ensure_index("formula_alphabetical")
-        
+
         # Search index for molecules
         self.redox.ensure_index(self.redox.key, unique=True)
         self.redox.ensure_index(self.redox.lu_field)
@@ -220,11 +242,13 @@ class RedoxBuilder(Builder):
             "vacuum_entropy",
             "solvated_entropy",
             "formula_alphabetical",
-            "last_updated"
+            "last_updated",
         ]
         all_entries = list(self.molecules.query(properties=fields, criteria=new_q))
 
-        self.logger.info("Total entries in {} : {}".format(formula_alphabetical, len(all_entries)))
+        self.logger.info(
+            "Total entries in {} : {}".format(formula_alphabetical, len(all_entries))
+        )
 
         return all_entries
 
@@ -237,10 +261,9 @@ def group_molecules_and_sort_by_charge(molecules):
     groups = []
     for mol_dict in molecules:
         mol = Molecule.from_dict(mol_dict["molecule"])
-        mol_graph = MoleculeGraph.with_local_env_strategy(mol,
-                                                          OpenBabelNN(),
-                                                          reorder=False,
-                                                          extend_structure=False)
+        mol_graph = MoleculeGraph.with_local_env_strategy(
+            mol, OpenBabelNN(), reorder=False, extend_structure=False
+        )
         if nx.is_connected(mol_graph.graph.to_undirected()):
             matched = False
             for group in groups:
@@ -249,6 +272,6 @@ def group_molecules_and_sort_by_charge(molecules):
                     matched = True
                     break
             if not matched:
-                groups.append({"mol_graph":mol_graph,"mol_dict_list":[mol_dict]})
+                groups.append({"mol_graph": mol_graph, "mol_dict_list": [mol_dict]})
     for group in groups:
         yield sorted(group["mol_dict_list"], key=lambda mol: mol["molecule"]["charge"])

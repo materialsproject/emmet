@@ -250,9 +250,7 @@ class Thermo(Builder):
 
         return all_entries
 
-    def get_updated_chemsys(
-        self,
-    ) -> Set:
+    def get_updated_chemsys(self,) -> Set:
         """ Gets updated chemical system as defined by the updating of an existing material """
 
         updated_mats = self.thermo.newer_in(self.materials, criteria=self.query)

@@ -98,8 +98,7 @@ class MaterialsDoc(StructureMetadata):
     )
 
     deprecated: bool = Field(
-        True,
-        description="Whether this materials document is deprecated.",
+        True, description="Whether this materials document is deprecated.",
     )
 
     initial_structures: Sequence[Structure] = Field(

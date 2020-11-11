@@ -16,7 +16,13 @@ class TaskTagger(MapBuilder):
         self.task_types = task_types
         self.kwargs = kwargs
 
-        super().__init__(source=tasks, target=task_types, ufn=self.calc, projection=["orig","output"], **kwargs)
+        super().__init__(
+            source=tasks,
+            target=task_types,
+            ufn=self.calc,
+            projection=["orig", "output"],
+            **kwargs
+        )
 
     def calc(self, item):
         """
@@ -25,11 +31,11 @@ class TaskTagger(MapBuilder):
         Args:
             item (dict): a (projection of a) task doc
         """
-        tt = task_type(inputs=item["orig"],output=item["output"])
+        tt = task_type(inputs=item["orig"], output=item["output"])
         return {"task_type": tt}
 
 
-def task_type(inputs,output):
+def task_type(inputs, output):
     """
     Determines the task_type of a QChem task doc
 

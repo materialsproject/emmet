@@ -26,28 +26,21 @@ class InputSummary(BaseModel):
     """
 
     molecule: Molecule = Field(
-        None,
-        description="The input Molecule for this calculation"
+        None, description="The input Molecule for this calculation"
     )
 
     functional: str = Field(
-        None,
-        description="Density functional used for this calculation"
+        None, description="Density functional used for this calculation"
     )
 
-    basis: str = Field(
-        None,
-        description="Basis set used for this calculation"
-    )
+    basis: str = Field(None, description="Basis set used for this calculation")
 
     solvent_parameters: Dict = Field(
-        None,
-        description="Solvent model used for this calculations"
+        None, description="Solvent model used for this calculations"
     )
 
     parameters: Dict = Field(
-        None,
-        description="Q-Chem input parameters for this calculation"
+        None, description="Q-Chem input parameters for this calculation"
     )
 
 
@@ -56,59 +49,48 @@ class OutputSummary(BaseModel):
     Summary of the outputs for a Q-Chem calculation
     """
 
-    molecule: Molecule = Field(
-        None,
-        description="The output molecular structure"
-    )
+    molecule: Molecule = Field(None, description="The output molecular structure")
 
     energy: float = Field(
-        None,
-        description="Final DFT energy for this calculation in eV"
+        None, description="Final DFT energy for this calculation in eV"
     )
 
     enthalpy: float = Field(
-        None,
-        description="DFT-calculated total enthalpy correction in eV"
+        None, description="DFT-calculated total enthalpy correction in eV"
     )
 
-    entropy: float = Field(
-        None,
-        description="DFT-calculated total entropy in eV/K"
-    )
+    entropy: float = Field(None, description="DFT-calculated total entropy in eV/K")
 
     frequencies: List[float] = Field(
-        None,
-        description="Vibrational frequencies for this molecule"
+        None, description="Vibrational frequencies for this molecule"
     )
 
     vibrational_frequency_modes: List[List[Tuple[float, float, float]]] = Field(
-        None,
-        description="Frequency mode vectors for this molecule"
+        None, description="Frequency mode vectors for this molecule"
     )
 
     modes_ir_active: List[bool] = Field(
         None,
-        description="Determination of if each mode should be considered in IR spectra"
+        description="Determination of if each mode should be considered in IR spectra",
     )
 
     modes_ir_intensity: List[float] = Field(
-        None,
-        description="IR intensity of vibrational frequency modes"
+        None, description="IR intensity of vibrational frequency modes"
     )
 
     mulliken: Union[List[float], List[Tuple[float, float]]] = Field(
         None,
-        description="Molecule partial charges and occupancies for each atom, as determined by Mulliken population analysis"
+        description="Molecule partial charges and occupancies for each atom, as determined by Mulliken population analysis",
     )
 
     resp: List[float] = Field(
         None,
-        description="Molecule partial charges, as determined by the Restrained Electrostatic Potential (RESP) method"
+        description="Molecule partial charges, as determined by the Restrained Electrostatic Potential (RESP) method",
     )
 
     critic_bonding: List[Tuple[int, int]] = Field(
         None,
-        description="Bonding information, obtained by Critic2 analysis of electron density critical points"
+        description="Bonding information, obtained by Critic2 analysis of electron density critical points",
     )
 
     walltime: float = Field(None, description="The real time elapsed in seconds")
@@ -151,9 +133,7 @@ class TaskDocument(MoleculeMetadata):
         None, description="List of sandboxes this task document is allowed in"
     )
 
-    task_type: str = Field(
-        None, description="Type of calculation performed"
-    )
+    task_type: str = Field(None, description="Type of calculation performed")
 
     @property
     def entry(self):
@@ -168,20 +148,20 @@ class TaskDocument(MoleculeMetadata):
                 "functional": self.input.functional,
                 "basis": self.input.basis,
                 "solvent": self.input.solvent_parameters,
-                "other": self.input.parameters
+                "other": self.input.parameters,
             },
             "data": {
                 "last_updated": self.last_updated,
                 "frequencies": self.output.frequencies,
                 "vibrational_frequency_modes": self.output.vibrational_frequency_modes,
                 "ir_active": self.output.modes_ir_active,
-                "ir_intensity": self.output.modes_ir_intensity
+                "ir_intensity": self.output.modes_ir_intensity,
             },
         }
 
         return MoleculeEntry(**entry_dict)
 
-    #TODO: Figure out what this does and how/if I need to change it
+    # TODO: Figure out what this does and how/if I need to change it
     @validator("sandboxes", always=True)
     def tags_to_sandboxes(cls, v, values):
         tag_mapping = SETTINGS.TAGS_TO_SANDBOXES
