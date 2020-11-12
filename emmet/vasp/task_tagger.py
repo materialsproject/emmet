@@ -74,6 +74,7 @@ class TaskTagger(MapBuilder):
         tt = task_type(item["orig_inputs"])
         iv = is_valid(
             item["output"]["structure"],
+            item["output"]["bandgap"],
             item["orig_inputs"],
             self._input_sets,
             self.kpts_tolerance,
@@ -162,13 +163,20 @@ def task_type(inputs, include_calc_type=True):
 
 
 def is_valid(
-    structure, inputs, input_sets, kpts_tolerance=0.9, kspacing_tolerance=0.02, hubbards={},
+    structure,
+    bandgap,
+    inputs,
+    input_sets,
+    kpts_tolerance=0.9,
+    kspacing_tolerance=0.02,
+    hubbards={},
 ):
     """
     Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
 
     Args:
         structure (dict or Structure): the output Structure from the calculation
+        bandgap (float): The output bandgap of the calculation, in eV
         inputs (dict): a dict representation of the inputs in traditional pymatgen InputSet form
         input_sets (dict): a dictionary of task_types -> pymatgen InputSet for validation
         kpts_tolerance (float): relative tolerance to allow kpts to lag behind the InputSet settings
@@ -243,6 +251,14 @@ def is_valid(
                         for el, (bad, good) in diff.items()
                     ]
                 )
+
+        # check smearing settings
+        ismear = inputs["incar"].get("ISMEAR", 1)
+
+        # ISMEAR > 0 is only appropriate for metals, per VASP docs
+        if ismear > 0 and bandgap > 0:
+            d["is_valid"] = False
+            d["_warnings"].append("Inappropriate smearing settings")
 
     if len(d["_warnings"]) == 0:
         del d["_warnings"]
