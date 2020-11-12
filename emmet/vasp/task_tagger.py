@@ -20,6 +20,7 @@ class TaskTagger(MapBuilder):
         task_types,
         input_sets=None,
         kpts_tolerance=0.9,
+        kspacing_tolerance=0.22,  # TODO - this value should be much lower. Set high for now due to bandgap parsing bug.
         LDAU_fields=["LDAUU", "LDAUJ", "LDAUL"],
         **kwargs,
     ):
@@ -30,7 +31,10 @@ class TaskTagger(MapBuilder):
             tasks (Store): Store of task documents
             task_types (Store): Store of task_types for tasks
             input_sets (Dict): dictionary of task_type and pymatgen input set to validate against
-            kpts_tolerance (float): the minimum kpt density as dictated by the InputSet to require
+            kpts_tolerance (float): relative tolerance to allow kpts to lag behind the InputSet settings
+                (i.e., k-point density may be as low as kpts_tolerance times the InputSet value)
+            kspacing_tolerance (float): absolute tolerance to allow KSPACING to differ from the InputSet settings
+                (i.e., KSPACING may be as much as kspacing_tolerance smaller or larger than the InputSet value)
             LDAU_fields (list(String)): LDAU fields to check for consistency
         """
         self.tasks = tasks
@@ -48,6 +52,7 @@ class TaskTagger(MapBuilder):
             "PBEsol Static": "MPScanStaticSet",
         }
         self.kpts_tolerance = kpts_tolerance
+        self.kspacing_tolerance = kspacing_tolerance
         self.LDAU_fields = LDAU_fields
 
         self._input_sets = {
@@ -78,6 +83,7 @@ class TaskTagger(MapBuilder):
             item["orig_inputs"],
             self._input_sets,
             self.kpts_tolerance,
+            self.kspacing_tolerance,
             item.get("input",{}).get("hubbards",{})
         )
 
@@ -168,7 +174,7 @@ def is_valid(
     inputs,
     input_sets,
     kpts_tolerance=0.9,
-    kspacing_tolerance=0.02,
+    kspacing_tolerance=0.22,  # TODO - this value should be much lower. Set high for now due to bandgap parsing bug.
     hubbards={},
 ):
     """
