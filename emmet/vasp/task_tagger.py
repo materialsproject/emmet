@@ -40,6 +40,12 @@ class TaskTagger(MapBuilder):
             "GGA+U Structure Optimization": "MPRelaxSet",
             "GGA Static": "MPStaticSet",
             "GGA+U Static": "MPStaticSet",
+            "SCAN Structure Optimization": "MPScanRelaxSet",
+            "SCAN Static": "MPScanStaticSet",
+            "R2SCAN Structure Optimization": "MPScanRelaxSet",
+            "R2SCAN Static": "MPScanStaticSet",
+            "PBEsol Structure Optimization": "MPScanRelaxSet",
+            "PBEsol Static": "MPScanStaticSet",
         }
         self.kpts_tolerance = kpts_tolerance
         self.LDAU_fields = LDAU_fields
@@ -96,11 +102,13 @@ def task_type(inputs, include_calc_type=True):
     except Exception:
         functional = "PBE"
 
-    METAGGA_TYPES = {"TPSS", "RTPSS", "M06L", "MBJL", "SCAN", "r2SCAN" "MS0", "MS1", "MS2"}
+    METAGGA_TYPES = {"TPSS", "RTPSS", "M06L", "MBJL", "SCAN", "R2SCAN", "MS0", "MS1", "MS2"}
 
     if include_calc_type:
         if incar.get("LHFCALC", False):
             calc_type.append("HSE")
+        elif incar.get("GGA", "").strip().upper() == "PS":
+            calc_type.append("PBEsol")
         elif incar.get("METAGGA", "").strip().upper() in METAGGA_TYPES:
             calc_type.append(incar["METAGGA"].strip().upper())
         elif incar.get("LDAU", False):
@@ -154,16 +162,19 @@ def task_type(inputs, include_calc_type=True):
 
 
 def is_valid(
-    structure, inputs, input_sets, kpts_tolerance=0.9, hubbards={},
+    structure, inputs, input_sets, kpts_tolerance=0.9, kspacing_tolerance=0.02, hubbards={},
 ):
     """
     Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
 
     Args:
-        structure (dict or Structure): the output structure from the calculation
-        inputs (dict): a dict representation of the inputs in traditional pymatgen inputset form
-        input_sets (dict): a dictionary of task_types -> pymatgen input set for validation
-        kpts_tolerance (float): the tolerance to allow kpts to lag behind the input set settings
+        structure (dict or Structure): the output Structure from the calculation
+        inputs (dict): a dict representation of the inputs in traditional pymatgen InputSet form
+        input_sets (dict): a dictionary of task_types -> pymatgen InputSet for validation
+        kpts_tolerance (float): relative tolerance to allow kpts to lag behind the InputSet settings
+            (i.e., k-point density may be as low as kpts_tolerance times the InputSet value)
+        kspacing_tolerance (float): absolute tolerance to allow KSPACING to differ from the InputSet settings
+            (i.e., KSPACING may be as much as kspacing_tolerance smaller or larger than the InputSet value)
         LDAU_fields (list(String)): LDAU fields to check for consistency
     """
 
@@ -177,16 +188,25 @@ def is_valid(
         valid_input_set = input_sets[tt](structure)
 
         # Checking K-Points
-        valid_num_kpts = valid_input_set.kpoints.num_kpts or np.prod(
-            valid_input_set.kpoints.kpts[0]
-        )
-        num_kpts = inputs.get("kpoints", {}).get("nkpoints", 0) or np.prod(
-            inputs.get("kpoints", {}).get("kpoints", [0, 0, 0])
-        )
-        d["kpts_ratio"] = num_kpts / valid_num_kpts
-        if d["kpts_ratio"] < kpts_tolerance:
-            d["is_valid"] = False
-            d["_warnings"].append("Too few KPoints")
+        # Calculations that use KSPACING will not have a .kpoints attr
+        if valid_input_set.kpoints:
+            valid_num_kpts = valid_input_set.kpoints.num_kpts or np.prod(
+                valid_input_set.kpoints.kpts[0]
+            )
+            num_kpts = inputs.get("kpoints", {}).get("nkpoints", 0) or np.prod(
+                inputs.get("kpoints", {}).get("kpoints", [0, 0, 0])
+            )
+            d["kpts_ratio"] = num_kpts / valid_num_kpts
+            if d["kpts_ratio"] < kpts_tolerance:
+                d["is_valid"] = False
+                d["_warnings"].append("Too few KPoints")
+        else:
+            valid_kspacing = valid_input_set.incar.get("KSPACING", 0)
+            kspacing = inputs["incar"].get("KSPACING")
+            d["kspacing_delta"] = kspacing - valid_kspacing
+            if abs(d["kspacing_delta"]) > kspacing_tolerance:
+                d["is_valid"] = False
+                d["_warnings"].append("KSPACING differs")
 
         # Checking ENCUT
         encut = inputs.get("incar", {}).get("ENCUT")
