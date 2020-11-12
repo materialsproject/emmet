@@ -347,6 +347,46 @@
     }
   },
   {
+    "materials_key": "entries.pbesol.composition",
+    "tasks_key": "composition_unit_cell",
+    "quality_score": {
+      "PBEsol Static": 2,
+      "PBEsol Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.pbesol.energy",
+    "tasks_key": "output.energy",
+    "quality_score": {
+      "PBEsol Static": 2,
+      "PBEsol Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.pbesol.parameters.potcar_spec",
+    "tasks_key": "input.potcar_spec",
+    "quality_score": {
+      "PBEsol Static": 2,
+      "PBEsol Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.pbesol.parameters.run_type",
+    "tasks_key": "calcs_reversed.0.run_type",
+    "quality_score": {
+      "PBEsol Static": 2,
+      "PBEsol Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.pbesol.parameters.task_id",
+    "tasks_key": "task_id",
+    "quality_score": {
+      "PBEsol Static": 2,
+      "PBEsol Structure Optimization": 1
+    }
+  },
+  {
     "materials_key": "inputs.structure_optimization",
     "quality_score": {
       "R2SCAN Structure Optimization": 4,
