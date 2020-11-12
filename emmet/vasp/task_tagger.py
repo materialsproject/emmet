@@ -108,12 +108,12 @@ def task_type(inputs, include_calc_type=True):
     if include_calc_type:
         if incar.get("LHFCALC", False):
             calc_type.append("HSE")
-        elif incar.get("GGA", "").strip().upper() == "PS":
-            calc_type.append("PBEsol")
         elif incar.get("METAGGA", "").strip().upper() in METAGGA_TYPES:
             calc_type.append(incar["METAGGA"].strip().upper())
         elif incar.get("LDAU", False):
             calc_type.append("GGA+U")
+        elif incar.get("GGA", "").strip().upper() == "PS":
+            calc_type.append("PBEsol")
         elif functional == "PBE":
             calc_type.append("GGA")
         elif functional == "PW91":
@@ -193,7 +193,11 @@ def is_valid(
     d = {"is_valid": True, "_warnings": []}
 
     if tt in input_sets:
-        valid_input_set = input_sets[tt](structure)
+        if "SCAN" in tt or "PBEsol" in tt:
+            # MPScanRelaxSet takes bandgap as an additional kwarg
+            valid_input_set = input_sets[tt](structure, bandgap)
+        else:
+            valid_input_set = input_sets[tt](structure)
 
         # Checking K-Points
         # Calculations that use KSPACING will not have a .kpoints attr
