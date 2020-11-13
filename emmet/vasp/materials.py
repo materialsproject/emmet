@@ -590,6 +590,6 @@ def ID_to_int(s_id: str) -> int:
     if isinstance(s_id, str):
         return (s_id.split("-")[0], int(str(s_id).split("-")[-1]))
     elif isinstance(s_id, (int, float)):
-        return s_id
+        return ("", s_id)
     else:
         raise Exception(f"Could not parse {s_id} into a number")
