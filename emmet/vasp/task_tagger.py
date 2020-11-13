@@ -266,9 +266,9 @@ def is_valid(
         ismear = inputs["incar"].get("ISMEAR", 1)
 
         # ISMEAR > 0 is only appropriate for metals, per VASP docs
-        if ismear > 0 and bandgap > 0:
-            d["is_valid"] = False
-            d["_warnings"].append("Inappropriate smearing settings")
+        # if ismear > 0 and bandgap > 0:
+        #     d["is_valid"] = False
+        #     d["_warnings"].append("Inappropriate smearing settings")
 
     if len(d["_warnings"]) == 0:
         del d["_warnings"]
