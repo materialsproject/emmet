@@ -102,6 +102,3 @@ class Molecule(BaseModel):
     charge: float = Field(..., title="Total charge")
     spin_multiplicity: float = Field(None, title="Molecular spin multiplicity")
     sites: List[Site] = Field(..., title="List of sites in this molecule")
-    bonds: Sequence[Tuple[int, int]] = Field(
-        list(), title="Molecule Bonds", description="List of bonds in this molecule"
-    )

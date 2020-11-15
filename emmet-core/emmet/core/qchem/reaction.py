@@ -50,13 +50,13 @@ class Reaction(BaseModel):
     reactants_atom_mapping: List[Dict[int, int]] = Field(
         None,
         description="A list of atom mapping number dicts, each dict for one"
-                    "reactant with the style {atom_index: atom_mapping_number}",
+        "reactant with the style {atom_index: atom_mapping_number}",
     )
 
     products_atom_mapping: List[Dict[int, int]] = Field(
         None,
         description="A list of atom mapping number dicts, each dict for one reactant"
-                    "with the style {atom_index: atom_mapping_number}",
+        "with the style {atom_index: atom_mapping_number}",
     )
 
     def free_energy(self, temperature=298.15):

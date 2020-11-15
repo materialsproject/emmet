@@ -1,22 +1,16 @@
-""" Core definitions of Molecules-related documents """
-
-from datetime import datetime
+""" Core definitions of Molecules metadata """
 
 from typing import (
-    Mapping,
     Optional,
-    Sequence,
     Type,
     TypeVar,
     List,
-    Dict,
 )
 
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
 from pymatgen.io.babel import BabelMolAdaptor
 from pymatgen.symmetry.analyzer import PointGroupAnalyzer
-from pymatgen.analysis.graphs import MoleculeGraph
 
 from emmet.stubs import Composition, Molecule
 
@@ -185,98 +179,3 @@ class MoleculeMetadata(BaseModel):
             kwargs.update({"molecule": molecule})
 
         return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
-
-
-class MoleculeEntry(BaseModel):
-    """
-    An entry of thermodynamic information for a particular composition
-    """
-
-    # TODO: Add frequencies/frequency vectors/etc.?
-
-    composition: Composition = Field(
-        None, description="Full composition for this entry"
-    )
-    energy: float = Field(None, description="DFT total energy in eV")
-    enthalpy: float = Field(
-        None, description="DFT-calculated total enthalpy correction in eV"
-    )
-    entropy: float = Field(None, description="DFT-calculated total entropy in eV/K")
-    parameters: Dict = Field(
-        None,
-        description="Dictionary of extra parameters for the underlying calculation",
-    )
-    data: Dict = Field(None, description="Dictionary of extra data")
-    entry_id: str = Field(None, description="Entry ID")
-
-
-S = TypeVar("S", bound="MoleculeDoc")
-
-
-class MoleculeDoc(MoleculeMetadata):
-    """
-    Definition for a Molecule Document
-    """
-
-    molecule_id: str = Field(
-        ...,
-        description="The ID of this molecule, used as a universal reference across all related Documents."
-        "This comes in the form mpmol-*******",
-    )
-
-    molecule: Molecule = Field(
-        ..., description="The lowest-energy optimized structure for this molecule"
-    )
-
-    deprecated: bool = Field(False, description="Has this molecule been deprecated?")
-
-    task_ids: Sequence[str] = Field(
-        [],
-        title="Calculation IDs",
-        description="List of Calculations IDs used to make this Molecule Document",
-    )
-
-    calc_types: Mapping[str, str] = Field(
-        None,
-        description="Calculation types for all the calculations that make up this molecule",
-    )
-
-    last_updated: datetime = Field(
-        description="Timestamp for when this molecule document was last updated",
-        default_factory=datetime.utcnow,
-    )
-
-    created_at: datetime = Field(
-        description="Timestamp for when this molecule document was first created",
-        default_factory=datetime.utcnow,
-    )
-
-    warnings: Sequence[str] = Field(
-        [], description="Any warnings related to this molecule"
-    )
-
-    sandboxes: Sequence[str] = Field(
-        ["core"],
-        description="List of sandboxes this molecule belongs to."
-        " Sandboxes provide a way of controlling access to molecule."
-        " Core is the primary sandbox for fully open documents",
-    )
-
-
-def mol_graph_to_molecule(mol_graph: MoleculeGraph) -> Molecule:
-    edges = list()
-    for edge in mol_graph.graph.edges():
-        edges.append(tuple(edge))
-
-    mol_dict = {
-        "sites": mol_graph.molecule.sites,
-        "charge": mol_graph.molecule.charge,
-        "spin_multiplicity": mol_graph.molecule.spin_multiplicity,
-        "bonds": edges,
-    }
-
-    return Molecule(**mol_dict)
-
-
-def molecule_to_mol_graph(molecule: Molecule) -> MoleculeGraph:
-    return MoleculeGraph.with_edges(molecule, {b: None for b in molecule.bonds})

@@ -1,14 +1,15 @@
 """ Core definition of a Q-Chem Task Document """
 
 from datetime import datetime
-from typing import Dict, List, Union, Tuple
+from typing import List
 
-from pydantic import BaseModel, Field, validator
+from pydantic import Field, validator
 
 from emmet.core import SETTINGS
-from emmet.stubs import Matrix3D, Vector3D, Molecule
 from emmet.core.utils import ValueEnum
-from emmet.qchem.molecule import MoleculeMetadata, MoleculeEntry
+from emmet.core.qchem.molecule import MoleculeMetadata, MoleculeEntry
+from emmet.core.qchem.input import InputSummary
+from emmet.core.qchem.output import OutputSummary
 
 
 class Status(ValueEnum):
@@ -18,85 +19,6 @@ class Status(ValueEnum):
 
     SUCESS = "successful"
     FAILED = "failed"
-
-
-class InputSummary(BaseModel):
-    """
-    Summary of inputs for a Q-Chem calculation
-    """
-
-    molecule: Molecule = Field(
-        None, description="The input Molecule for this calculation"
-    )
-
-    functional: str = Field(
-        None, description="Density functional used for this calculation"
-    )
-
-    basis: str = Field(None, description="Basis set used for this calculation")
-
-    solvent_parameters: Dict = Field(
-        None, description="Solvent model used for this calculations"
-    )
-
-    parameters: Dict = Field(
-        None, description="Q-Chem input parameters for this calculation"
-    )
-
-
-class OutputSummary(BaseModel):
-    """
-    Summary of the outputs for a Q-Chem calculation
-    """
-
-    molecule: Molecule = Field(None, description="The output molecular structure")
-
-    energy: float = Field(
-        None, description="Final DFT energy for this calculation in eV"
-    )
-
-    enthalpy: float = Field(
-        None, description="DFT-calculated total enthalpy correction in eV"
-    )
-
-    entropy: float = Field(None, description="DFT-calculated total entropy in eV/K")
-
-    frequencies: List[float] = Field(
-        None, description="Vibrational frequencies for this molecule"
-    )
-
-    vibrational_frequency_modes: List[List[Tuple[float, float, float]]] = Field(
-        None, description="Frequency mode vectors for this molecule"
-    )
-
-    modes_ir_active: List[bool] = Field(
-        None,
-        description="Determination of if each mode should be considered in IR spectra",
-    )
-
-    modes_ir_intensity: List[float] = Field(
-        None, description="IR intensity of vibrational frequency modes"
-    )
-
-    mulliken: Union[List[float], List[Tuple[float, float]]] = Field(
-        None,
-        description="Molecule partial charges and occupancies for each atom, as"
-                    "determined by Mulliken population analysis",
-    )
-
-    resp: List[float] = Field(
-        None,
-        description="Molecule partial charges, as determined by the Restrained Electrostatic Potential (RESP) method",
-    )
-
-    critic_bonding: List[Tuple[int, int]] = Field(
-        None,
-        description="Bonding information, obtained by Critic2 analysis of electron density critical points",
-    )
-
-    walltime: float = Field(None, description="The real time elapsed in seconds")
-
-    cputime: float = Field(None, description="The system CPU time in seconds")
 
 
 class TaskDocument(MoleculeMetadata):
@@ -114,10 +36,6 @@ class TaskDocument(MoleculeMetadata):
         None, description="Timestamp for this task document was last updated"
     )
 
-    is_valid: bool = Field(
-        True, description="Whether this task document passed validation or not"
-    )
-
     input: InputSummary = Field(None)
     output: OutputSummary = Field(None)
 
@@ -129,10 +47,6 @@ class TaskDocument(MoleculeMetadata):
 
     task_id: str = Field(None, description="the Task ID For this document")
     tags: List[str] = Field([], description="Metadata tags for this task document")
-
-    sandboxes: List[str] = Field(
-        None, description="List of sandboxes this task document is allowed in"
-    )
 
     task_type: str = Field(None, description="Type of calculation performed")
 
