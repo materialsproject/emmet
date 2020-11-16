@@ -86,6 +86,7 @@ class MaterialsBuilder(Builder):
             self.tasks.key,
             self.tasks.last_updated_field,
             "sbxn",
+            "tags"
         ]
 
         projected_from_tasks = [p.split(".") for p in projected_from_tasks]
