@@ -7,7 +7,8 @@ from pydantic import Field, validator
 
 from emmet.core import SETTINGS
 from emmet.core.utils import ValueEnum
-from emmet.core.qchem.molecule import MoleculeMetadata, MoleculeEntry
+from emmet.core.qchem.mol_metadata import MoleculeMetadata
+from emmet.core.qchem.mol_entry import MoleculeEntry
 from emmet.core.qchem.input import InputSummary
 from emmet.core.qchem.output import OutputSummary
 
@@ -75,28 +76,3 @@ class TaskDocument(MoleculeMetadata):
         }
 
         return MoleculeEntry(**entry_dict)
-
-    # TODO: Figure out what this does and how/if I need to change it
-    @validator("sandboxes", always=True)
-    def tags_to_sandboxes(cls, v, values):
-        tag_mapping = SETTINGS.TAGS_TO_SANDBOXES
-
-        if v is None:
-            if tag_mapping is not None:
-                sandboxed_tags = {
-                    tag for tag_list in tag_mapping.values() for tag in tag_list
-                }
-
-                if any(tag in sandboxed_tags for tag in values.get("tags", [])):
-                    v = sorted(
-                        {
-                            sandbox
-                            for sandbox, tags in tag_mapping.items()
-                            if len(set(tags).intersection(values.get("tags", []))) > 0
-                        }
-                    )
-                else:
-                    v = ["core"]
-            else:
-                v = ["core"]
-        return v
