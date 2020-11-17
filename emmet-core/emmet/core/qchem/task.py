@@ -81,9 +81,7 @@ class TaskDocument(MoleculeMetadata):
             "enthalpy": self.output.enthalpy,
             "entropy": self.output.entropy,
             "parameters": {
-                "functional": self.input.functional,
-                "basis": self.input.basis,
-                "solvent": self.input.solvent_parameters,
+                "lot": self.input.level_of_theory.as_string,
                 "other": self.input.parameters,
             },
             "data": {
@@ -92,6 +90,10 @@ class TaskDocument(MoleculeMetadata):
                 "vibrational_frequency_modes": self.output.vibrational_frequency_modes,
                 "ir_active": self.output.modes_ir_active,
                 "ir_intensity": self.output.modes_ir_intensity,
+                "mulliken_charges": self.output.mulliken_charges,
+                "mulliken_spin": self.output.mulliken_spin,
+                "resp_charges": self.output.resp_charges,
+                "bonding": self.output.bonding.bonding,
             },
         }
 
