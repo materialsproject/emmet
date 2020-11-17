@@ -1,4 +1,4 @@
-""" Core definitions of molecular chargeinformation """
+""" Core definitions of molecular charge information """
 
 from datetime import datetime
 from typing import Dict, Sequence, List

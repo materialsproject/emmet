@@ -1,10 +1,11 @@
 """ Core definition of a Q-Chem calculation output """
 
-from typing import List, Union, Tuple
+from typing import List, Tuple
 
 from pydantic import BaseModel, Field
 
 from emmet.stubs import Vector3D, Molecule
+from emmet.core.qchem.bonding import Bonding
 
 
 class OutputSummary(BaseModel):
@@ -53,12 +54,14 @@ class OutputSummary(BaseModel):
 
     resp_charges: List[float] = Field(
         None,
-        description="Molecule partial charges, as determined by the Restrained Electrostatic Potential (RESP) method",
+        description="Molecule partial charges, as determined by the "
+                    "Restrained Electrostatic Potential (RESP) method",
     )
 
-    critic_bonding: List[Tuple[int, int]] = Field(
+    bonding: Bonding = Field(
         None,
-        description="Bonding information, obtained by Critic2 analysis of electron density critical points",
+        description="Bonding information, obtained via critical point analysis or "
+                    "heuristic algorithms."
     )
 
     walltime: float = Field(None, description="The real time elapsed in seconds")

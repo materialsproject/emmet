@@ -5,6 +5,7 @@ from typing import Dict
 from pydantic import BaseModel, Field
 
 from emmet.stubs import Molecule
+from emmet.core.qchem.calc_types import LevelOfTheory
 
 
 class InputSummary(BaseModel):
@@ -16,14 +17,9 @@ class InputSummary(BaseModel):
         None, description="The input Molecule for this calculation"
     )
 
-    functional: str = Field(
-        None, description="Density functional used for this calculation"
-    )
-
-    basis: str = Field(None, description="Basis set used for this calculation")
-
-    solvent_parameters: Dict = Field(
-        None, description="Solvent model used for this calculations"
+    level_of_theory: LevelOfTheory = Field(
+        None,
+        description="The level of theory for this calculation"
     )
 
     parameters: Dict = Field(

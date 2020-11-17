@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, create_model
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 
 from emmet.core import SETTINGS
+from emmet.core.utils import ID_to_int
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin as PropertyOrigin
 from emmet.core.structure import StructureMetadata
@@ -161,17 +162,3 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             entries=entries,
             sandboxes=sandboxes if sandboxes else None,
         )
-
-
-def ID_to_int(s_id: str) -> Tuple[str, int]:
-    """
-    Converts a string id to tuple
-    falls back to assuming ID is an Int if it can't process
-    Assumes string IDs are of form "[chars]-[int]" such as mp-234
-    """
-    if isinstance(s_id, str):
-        return (s_id.split("-")[0], int(str(s_id).split("-")[-1]))
-    elif isinstance(s_id, (int, float)):
-        return ("", s_id)
-    else:
-        return None

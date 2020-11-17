@@ -153,4 +153,4 @@ def calc_type(calc_inputs: List[Dict],
 
     tt = task_type(calc_inputs, metadata=metadata).value
     lot = LevelOfTheory.from_inputs(calc_inputs, metadata=metadata)
-    return "{} : {}".format(tt, lot.as_string())
+    return "{} : {}".format(tt, lot.as_string)

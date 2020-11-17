@@ -4,6 +4,7 @@ from typing import Dict
 
 from pydantic import BaseModel, Field
 from emmet.stubs import Composition, Molecule
+from emmet.core.qchem.bonding import Bonding
 
 
 class MoleculeEntry(BaseModel):
@@ -19,6 +20,10 @@ class MoleculeEntry(BaseModel):
 
     molecule: Molecule = Field(
         None, description="Molecular structure information for this entry"
+    )
+
+    bonding: Bonding = Field(
+        None, description="Bonding information for this entry"
     )
 
     energy: float = Field(None, description="DFT total energy in eV")

@@ -2,7 +2,7 @@ import datetime
 from enum import Enum
 from itertools import groupby, product
 from pathlib import Path
-from typing import Dict, Iterator, List
+from typing import Dict, Iterator, List, Tuple
 
 import bson
 import numpy as np
@@ -60,6 +60,20 @@ def group_structures(
     for _, pregroup in groupby(sorted(structures, key=_get_sg), key=_get_sg):
         for group in sm.group_structures(list(pregroup)):
             yield group
+
+
+def ID_to_int(s_id: str) -> Tuple[str, int]:
+    """
+    Converts a string id to tuple
+    falls back to assuming ID is an Int if it can't process
+    Assumes string IDs are of form "[chars]-[int]" such as mp-234
+    """
+    if isinstance(s_id, str):
+        return (s_id.split("-")[0], int(str(s_id).split("-")[-1]))
+    elif isinstance(s_id, (int, float)):
+        return ("", s_id)
+    else:
+        return None
 
 
 def jsanitize(obj, strict=False, allow_bson=False):
