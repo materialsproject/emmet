@@ -14,52 +14,9 @@ from pymatgen.core.structure import Structure
 from typing_extensions import Literal
 
 from emmet.core import SETTINGS
-from emmet.core.utils import ValueEnum
+from emmet.core.vasp.calc_types.enums import RunType, TaskType, CalcType
 
 _RUN_TYPE_DATA = loadfn(str(Path(__file__).parent.joinpath("run_types.yaml").resolve()))
-_TASK_TYPES = [
-    "NSCF Line",
-    "NSCF Uniform",
-    "Dielectric",
-    "DFPT",
-    "DFPT Dielectric",
-    "NMR Nuclear Shielding",
-    "NMR Electric Field Gradient",
-    "Static",
-    "Structure Optimization",
-    "Deformation",
-]
-
-_RUN_TYPES = (
-    [
-        rt
-        for functional_class in _RUN_TYPE_DATA
-        for rt in _RUN_TYPE_DATA[functional_class]
-    ]
-    + [
-        f"{rt}+U"
-        for functional_class in _RUN_TYPE_DATA
-        for rt in _RUN_TYPE_DATA[functional_class]
-    ]
-    + ["LDA", "LDA+U"]
-)
-
-RunType = ValueEnum(  # type: ignore
-    "RunType", dict({"_".join(rt.split()).replace("+", "_"): rt for rt in _RUN_TYPES})
-)
-RunType.__doc__ = "VASP calculation run types"
-
-TaskType = ValueEnum("TaskType", {"_".join(tt.split()): tt for tt in _TASK_TYPES})  # type: ignore
-TaskType.__doc__ = "VASP calculation task types"
-
-CalcType = ValueEnum(  # type: ignore
-    "CalcType",
-    {
-        f"{'_'.join(rt.split()).replace('+','_')}_{'_'.join(tt.split())}": f"{rt} {tt}"
-        for rt, tt in product(_RUN_TYPES, _TASK_TYPES)
-    },
-)
-CalcType.__doc__ = "VASP calculation types"
 
 
 def run_type(parameters: Dict) -> RunType:
