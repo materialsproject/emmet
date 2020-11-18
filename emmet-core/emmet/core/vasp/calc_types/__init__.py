@@ -1,6 +1,8 @@
 from pathlib import Path
 
-if not Path(__file__).parent.joinpath("enums.py").exists:
+try:
+    import emmet.core.vasp.calc_types.enums
+except ImportError:
     import emmet.core.vasp.calc_types.generate
 
 from emmet.core.vasp.calc_types.enums import RunType, TaskType, CalcType
