@@ -1,14 +1,18 @@
 """ Core definitions of molecular vibrational information """
 
 from datetime import datetime
-from typing import Dict, Sequence, List
+from typing import Dict, Sequence, List, Type, TypeVar
 
 from pydantic import BaseModel, Field
 from emmet.stubs import Composition, Molecule, Vector3D
 from emmet.core.qchem.mol_entry import MoleculeEntry
+from emmet.core.qchem.mol_metadata import MoleculeMetadata
 
 
-class VibrationDoc(BaseModel):
+T = TypeVar("T", bound="VibrationDoc")
+
+
+class VibrationDoc(MoleculeMetadata):
     """
     An entry of vibrational information for a particular molecule
     """
@@ -17,14 +21,6 @@ class VibrationDoc(BaseModel):
         ...,
         description="The ID of this molecule, used as a universal reference across all related Documents."
         "This comes in the form mpmol-*******",
-    )
-
-    composition: Composition = Field(
-        None, description="Full composition for this entry"
-    )
-
-    molecule: Molecule = Field(
-        None, description="Molecular structure information for this entry"
     )
 
     frequencies: List[float] = Field(
@@ -58,3 +54,18 @@ class VibrationDoc(BaseModel):
     warnings: Sequence[str] = Field(
         None, description="Any warnings related to this property"
     )
+
+    @classmethod
+    def from_molecule(  # type: ignore[override]
+        cls: Type[T], molecule: Molecule, molecule_id: str, **kwargs
+    ) -> T:
+        """
+        Builds a vibration document using the minimal amount of information
+        """
+
+        return super().from_molecule(  # type: ignore
+            molecule=molecule,
+            molecule_id=molecule_id,
+            include_structure=False,
+            **kwargs
+        )

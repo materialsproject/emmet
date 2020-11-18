@@ -19,6 +19,7 @@ from emmet.core.utils import ID_to_int
 from emmet.core.qchem.calc_types import TaskType, LevelOfTheory
 from emmet.core.qchem.mol_metadata import MoleculeMetadata
 from emmet.core.qchem.task import TaskDocument
+from emmet.core.qchem.solvent import SolventData
 
 
 S = TypeVar("S", bound="MoleculeDoc")
@@ -37,6 +38,10 @@ class MoleculeDoc(MoleculeMetadata):
 
     molecule: Molecule = Field(
         ..., description="The lowest-energy optimized structure for this molecule"
+    )
+
+    molecule_solvent_model: SolventData = Field(
+        ..., description="Solvent information for chosen structure for this molecule"
     )
 
     task_ids: Sequence[str] = Field(
@@ -122,6 +127,7 @@ class MoleculeDoc(MoleculeMetadata):
         best_geom_calc = sorted(geom_calcs, key=lambda x: x.output.energy)[0]
 
         molecule = best_geom_calc.output.molecule
+        mol_solvent = best_geom_calc.input.level_of_theory.solvent_data
 
         initial_molecules = [task.input.molecule for task in task_group]
 

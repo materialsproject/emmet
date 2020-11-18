@@ -1,14 +1,18 @@
 """ Core definitions of molecular thermodynamics """
 
 from datetime import datetime
-from typing import Dict, Sequence
+from typing import Dict, Sequence, Type, TypeVar
 
 from pydantic import BaseModel, Field
 from emmet.stubs import Composition, Molecule
 from emmet.core.qchem.mol_entry import MoleculeEntry
+from emmet.core.qchem.mol_metadata import MoleculeMetadata
 
 
-class ThermodynamicsDoc(BaseModel):
+T = TypeVar("T", bound="ThermodynamicsDoc")
+
+
+class ThermodynamicsDoc(MoleculeMetadata):
     """
     An entry of thermodynamic information for a particular molecule
     """
@@ -17,14 +21,6 @@ class ThermodynamicsDoc(BaseModel):
         ...,
         description="The ID of this molecule, used as a universal reference across all related Documents."
         "This comes in the form mpmol-*******",
-    )
-
-    composition: Composition = Field(
-        None, description="Full composition for this entry"
-    )
-
-    molecule: Molecule = Field(
-        None, description="Molecular structure information for this entry"
     )
 
     energy: float = Field(None, description="DFT total energy in eV")
@@ -52,3 +48,18 @@ class ThermodynamicsDoc(BaseModel):
 
     def free_energy(self, temperature=298.15):
         return self.energy + self.enthalpy - temperature * self.entropy
+
+    @classmethod
+    def from_molecule(  # type: ignore[override]
+        cls: Type[T], molecule: Molecule, molecule_id: str, **kwargs
+    ) -> T:
+        """
+        Builds a thermodynamics document using the minimal amount of information
+        """
+
+        return super().from_molecule(  # type: ignore
+            molecule=molecule,
+            molecule_id=molecule_id,
+            include_structure=False,
+            **kwargs
+        )

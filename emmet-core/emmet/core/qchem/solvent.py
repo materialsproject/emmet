@@ -132,7 +132,11 @@ class SolventData(BaseModel):
             if solvent_method.lower() in ["sm8", "sm12", "smd"]:
                 smx_params = calc_input.get('smx')
                 if smx_params is None:
-                    name = "Water"
+                    return cls(
+                        name="Water",
+                        model=SolventModel("SMX"),
+                        smx_params=smx_params
+                    )
                 else:
                     if "solvent" in smx_params:
                         if smx_params["solvent"] == "custom":

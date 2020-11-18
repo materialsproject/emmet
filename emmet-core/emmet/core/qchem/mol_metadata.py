@@ -32,6 +32,11 @@ class MoleculeMetadata(BaseModel):
 
     nelements: int = Field(None, title="Number of Elements")
 
+    molecule: Molecule = Field(
+        None,
+        description="Molecular structure"
+    )
+
     composition: Composition = Field(
         None, description="Full composition for the molecule"
     )

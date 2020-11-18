@@ -68,21 +68,6 @@ class LevelOfTheory(BaseModel):
 
     solvent_data: SolventData = Field(None, description="Implicit solvent model")
 
-    correction_functional: str = Field(
-        None,
-        description="Exchange-correlation density functional used for energy corrections"
-    )
-
-    correction_basis: str = Field(
-        None,
-        description="Basis set name used for energy corrections"
-    )
-
-    correction_solvent_data: SolventData = Field(
-        None,
-        description="Implicit solvent model used for energy corrections"
-    )
-
     @property
     def solvent_model(self) -> SolventModel:
         if self.solvent_data is None:
@@ -103,29 +88,9 @@ class LevelOfTheory(BaseModel):
         else:
             solv = "vacuum"
 
-        main_string = "/".join([func, basis, solv])
+        string = "/".join([func, basis, solv])
 
-        if self.correction_functional is not None and self.correction_basis is not None:
-            func_corr = self.correction_functional
-            basis_corr = self.correction_basis
-
-            if self.correction_solvent_data is not None:
-                if self.correction_solvent_data.name is None:
-                    name_corr = "Unknown"
-                else:
-                    name_corr = self.correction_solvent_data.name
-                solv_corr = "{}({})".format(
-                    str(self.correction_solvent_data.model),
-                    name_corr
-                )
-            else:
-                solv_corr = "vacuum"
-
-            corr_string = "/".join([func_corr, basis_corr, solv_corr])
-
-            return corr_string + "//" + main_string
-
-        return main_string
+        return string
 
     @classmethod
     def from_inputs(cls: Type[S], calc_input: Dict, metadata: Optional[Dict] = None) -> S:
