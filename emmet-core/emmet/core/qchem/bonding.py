@@ -5,7 +5,7 @@ from pydantic import Field, BaseModel
 
 from pymatgen.core.periodic_table import Element
 from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.anaysis.local_env import OpenBabelNN, CovalentBondNN
+from pymatgen.analysis.local_env import OpenBabelNN, CovalentBondNN
 from pymatgen.analysis.fragmenter import metal_edge_extender
 from emmet.stubs import Composition, Molecule
 
@@ -80,15 +80,21 @@ class Bonding(BaseModel):
             critic_bonds: Optional[Set[BondInd]] = None,
             other_bonding: Optional[Mapping[str, Set[BondInd]]] = None
     ) -> S:
-        mg_cov = MoleculeGraph.with_local_env_strategy(molecule, CovalentBondNN())
+
         mg_bab = MoleculeGraph.with_local_env_strategy(molecule, OpenBabelNN())
+        try:
+            mg_cov = MoleculeGraph.with_local_env_strategy(molecule, CovalentBondNN())
+        except ValueError:
+            mg_cov = None
 
         if use_metal_edge_extender:
-            mg_cov = metal_edge_extender(mg_cov)
             mg_bab = metal_edge_extender(mg_bab)
+            if mg_cov is not None:
+                mg_cov = metal_edge_extender(mg_cov)
 
-        cov_bonds = {tuple(sorted(b)) for b in mg_cov.graph.edges()}
         bab_bonds = {tuple(sorted(b)) for b in mg_bab.graph.edges()}
+        if mg_cov is not None:
+            cov_bonds = {tuple(sorted(b)) for b in mg_cov.graph.edges()}
 
         atom_types = dict()
         for ii, site in enumerate(molecule):
@@ -120,7 +126,7 @@ class Bonding(BaseModel):
             mol_id: str,
             mol_graph: MoleculeGraph,
             use_metal_edge_extender: bool = True,
-            critic_bonds: Optional[Dict] = None,
+            critic_bonds: Optional[Set[BondInd]] = None,
             other_bonding: Optional[Mapping[str, Set[BondInd]]] = None) -> S:
 
         mg_cov = MoleculeGraph.with_local_env_strategy(mol_graph.molecule, CovalentBondNN())

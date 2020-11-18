@@ -71,9 +71,9 @@ class LevelOfTheory(BaseModel):
     @property
     def solvent_model(self) -> SolventModel:
         if self.solvent_data is None:
-            return SolventData("vacuum")
+            return SolventModel("vacuum")
         else:
-            return self.solvent_data.solvent_model
+            return self.solvent_data.model
 
     @property
     def as_string(self) -> str:
@@ -102,13 +102,13 @@ class LevelOfTheory(BaseModel):
         func = calc_input["rem"]["method"]
         if calc_input["rem"].get("dft_d"):
             if "d3" in calc_input["rem"]["dft_d"]:
-                func += "-D3"
+                func += "-d3"
             elif calc_input["rem"]["dft_d"].lower() == "empirical_grimme":
-                func += "-D2"
+                func += "-d2"
 
         basis = calc_input["rem"]["basis"]
 
-        solvent = SolventData.from_input_dict(calc_input, metadata=metadata)
+        solvent = SolventData.from_inputs(calc_input, metadata=metadata)
 
         return cls(functional=func, basis=basis, solvent_data=solvent)
 

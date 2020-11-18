@@ -1,6 +1,6 @@
 """ Core definition of a Q-Chem calculation output """
 
-from typing import List, Tuple
+from typing import List
 
 from pydantic import BaseModel, Field
 

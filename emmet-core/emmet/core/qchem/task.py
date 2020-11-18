@@ -19,7 +19,7 @@ class Status(ValueEnum):
     """
 
     SUCESS = "successful"
-    FAILED = "failed"
+    FAILED = "unsuccessful"
 
 
 class TaskDocument(MoleculeMetadata):
@@ -48,7 +48,7 @@ class TaskDocument(MoleculeMetadata):
 
     state: Status = Field(None, description="State of this calculation")
 
-    orig_input: InputSummary = Field(
+    orig: InputSummary = Field(
         None, description="Summary of the original Q-Chem inputs"
     )
 

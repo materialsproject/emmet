@@ -31,10 +31,27 @@ def parse_custom_string(custom_smd):
 
     solvent_dict = {k: None for k in keys}
 
-    for ii, entry in entries:
+    for ii, entry in enumerate(entries):
         solvent_dict[keys[ii]] = float(entry)
 
     return solvent_dict
+
+
+def custom_string(solvent_params):
+    return "{},{},{},{},{},{},{}".format(
+                solvent_params["dielectric"],
+                solvent_params["refractive_index"],
+                solvent_params["abraham_acidity"],
+                solvent_params["abraham_basicity"],
+                solvent_params["surface_tension"],
+                solvent_params["aromaticity"],
+                solvent_params["halogenicity"]
+            )
+
+
+def clean_custom_string(custom_smd):
+    parsed = parse_custom_string(custom_smd)
+    return custom_string(parsed)
 
 
 class SolventModel(ValueEnum):
@@ -107,21 +124,23 @@ class SolventData(BaseModel):
                                         self.surface_tension,
                                         self.aromaticity,
                                         self.halogenicity]]):
-            return "{},{},{},{},{},{},{}".format(
-                self.dielectric,
-                self.refractive_index,
-                self.abraham_acidity,
-                self.abraham_basicity,
-                self.surface_tension,
-                self.aromaticity,
-                self.halogenicity
+            return custom_string(
+                {
+                    "dielectric": self.dielectric,
+                    "refractive_index": self.refractive_index,
+                    "abraham_acidity": self.abraham_acidity,
+                    "abraham_basicity": self.abraham_basicity,
+                    "surface_tension": self.surface_tension,
+                    "aromaticity": self.aromaticity,
+                    "halogenicity": self.halogenicity
+                }
             )
         else:
             raise NotImplementedError("All SMX input variables (dielectric, refractive index, Abraham acidity/basicity"
                                       ", surface tension, aromaticity, and halogenicity must be provided!")
 
     @classmethod
-    def from_input_dict(cls: Type[S], calc_input: Dict, metadata: Optional[Dict] = None) -> S:
+    def from_inputs(cls: Type[S], calc_input: Dict, metadata: Optional[Dict] = None) -> S:
         if "rem" not in calc_input:
             raise ValueError("No rem dict provided! calc_input is invalid!")
 
@@ -139,7 +158,7 @@ class SolventData(BaseModel):
                     )
                 else:
                     if "solvent" in smx_params:
-                        if smx_params["solvent"] == "custom":
+                        if smx_params["solvent"] in ["custom", "other"]:
                             if metadata is None:
                                 return cls(
                                     name="Unknown",
@@ -149,7 +168,8 @@ class SolventData(BaseModel):
                             else:
                                 custom_smd = metadata.get("custom_smd")
                                 if custom_smd in _SMX_IDENTITIES:
-                                    name = _SMX_IDENTITIES[metadata.get("custom_smd")]
+                                    cleaned = clean_custom_string(custom_smd)
+                                    name = _SMX_IDENTITIES[cleaned]
                                     solvent_params = parse_custom_string(custom_smd)
                                 else:
                                     name = "Unknown"

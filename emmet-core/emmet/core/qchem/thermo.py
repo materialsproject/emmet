@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Dict, Sequence, Type, TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 from emmet.stubs import Composition, Molecule
 from emmet.core.qchem.mol_entry import MoleculeEntry
 from emmet.core.qchem.mol_metadata import MoleculeMetadata
