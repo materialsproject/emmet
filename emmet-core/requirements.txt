@@ -1,5 +1,5 @@
 pymatgen==2020.4.29
-monty==3.0.2
+monty==4.0.2
 pydantic==1.6.1
 pybtex==0.23.0
 typing-extensions==3.7.4.3
