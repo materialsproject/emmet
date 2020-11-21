@@ -20,6 +20,7 @@ class TaskTagger(MapBuilder):
         task_types,
         input_sets=None,
         kpts_tolerance=0.9,
+        max_gradient=100,
         LDAU_fields=["LDAUU", "LDAUJ", "LDAUL"],
         **kwargs,
     ):
@@ -43,6 +44,7 @@ class TaskTagger(MapBuilder):
         }
         self.kpts_tolerance = kpts_tolerance
         self.LDAU_fields = LDAU_fields
+        self.max_gradient = max_gradient
 
         self._input_sets = {
             name: load_class("pymatgen.io.vasp.sets", inp_set)
@@ -54,7 +56,12 @@ class TaskTagger(MapBuilder):
         super().__init__(
             source=tasks,
             target=task_types,
-            projection=["orig_inputs", "output.structure", "input.hubbards"],
+            projection=[
+                "orig_inputs",
+                "output.structure",
+                "input.hubbards",
+                "calcs_reversed.output.ionic_steps.electronic_steps.e_fr_energy",
+            ],
             **kwargs,
         )
 
@@ -67,11 +74,13 @@ class TaskTagger(MapBuilder):
         """
         tt = task_type(item["orig_inputs"])
         iv = is_valid(
-            item["output"]["structure"],
-            item["orig_inputs"],
-            self._input_sets,
-            self.kpts_tolerance,
-            item.get("input",{}).get("hubbards",{})
+            structure=item["output"]["structure"],
+            inputs=item["orig_inputs"],
+            input_sets=self._input_sets,
+            kpts_tolerance=self.kpts_tolerance,
+            calcs=item["calcs_reversed"],
+            max_gradient=self.max_gradient,
+            hubbards=item.get("input", {}).get("hubbards", {}),
         )
 
         d = {"task_type": tt, **iv}
@@ -154,7 +163,13 @@ def task_type(inputs, include_calc_type=True):
 
 
 def is_valid(
-    structure, inputs, input_sets, kpts_tolerance=0.9, hubbards={},
+    structure,
+    inputs,
+    input_sets,
+    calcs,
+    max_gradient=100,
+    kpts_tolerance=0.9,
+    hubbards={},
 ):
     """
     Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
@@ -224,7 +239,22 @@ def is_valid(
                     ]
                 )
 
+        # Checking task convergence
+        if calc_max_gradient(calcs[0]) > max_gradient:
+            d["_warnings"].append(
+                f"Max gradient in electronic energy exceeded {max_gradient} at {calc_max_gradient(calcs[0])}"
+            )
+
     if len(d["_warnings"]) == 0:
         del d["_warnings"]
 
     return d
+
+
+def calc_max_gradient(calc):
+    energies = [
+        [d["e_fr_energy"] for d in step["electronic_steps"]]
+        for step in calc["output"]["ionic_steps"]
+    ]
+    gradients = [g for e in energies for g in np.gradient(e)]
+    return np.max(gradients)
