@@ -65,7 +65,11 @@ class TaskTagger(MapBuilder):
         super().__init__(
             source=tasks,
             target=task_types,
-            projection=["orig_inputs", "output.structure", "input.hubbards"],
+            projection=["orig_inputs",
+                        "output.structure",
+                        "output.bandgap",
+                        "input.hubbards"
+                        ],
             **kwargs,
         )
 
