@@ -18,7 +18,7 @@ from emmet.stubs import Composition, Molecule
 from emmet.core.utils import ID_to_int
 from emmet.core.qchem.calc_types import TaskType, LevelOfTheory
 from emmet.core.qchem.mol_metadata import MoleculeMetadata
-from emmet.core.qchem.task import TaskDocument
+from emmet.core.qchem.task import TaskDoc
 from emmet.core.qchem.solvent import SolventData
 
 
@@ -87,7 +87,7 @@ class MoleculeDoc(MoleculeMetadata):
     @classmethod
     def from_tasks(
             cls: Type[S],
-            task_group: List[TaskDocument]
+            task_group: List[TaskDoc]
     ) -> S:
 
         last_updated = max(task.last_updated for task in task_group)
@@ -152,6 +152,7 @@ class MoleculeDoc(MoleculeMetadata):
 
         return cls.from_molecule(
             molecule=molecule,
+            molecule_solvent_model=mol_solvent,
             molecule_id=molecule_id,
             include_molecule=True,
             last_updated=last_updated,

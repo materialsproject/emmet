@@ -13,8 +13,10 @@ from emmet.core.utils import ValueEnum
 # Taken from rubicon
 _PCM_IDENTITIES = loadfn(str(Path(__file__).parent.joinpath("pcm_data.json").resolve()))
 
-# Taken largely from rubicon, with some from our database
+# Taken largely from rubicon, with some from SEI database
 _SMX_IDENTITIES = loadfn(str(Path(__file__).parent.joinpath("smx_data.json").resolve()))
+
+# TODO: Add parameters from the Minnesota Solvent Database
 
 
 def parse_custom_string(custom_smd):
@@ -167,10 +169,10 @@ class SolventData(BaseModel):
                                 )
                             else:
                                 custom_smd = metadata.get("custom_smd")
-                                if custom_smd in _SMX_IDENTITIES:
-                                    cleaned = clean_custom_string(custom_smd)
+                                cleaned = clean_custom_string(custom_smd)
+                                if cleaned in _SMX_IDENTITIES:
                                     name = _SMX_IDENTITIES[cleaned]
-                                    solvent_params = parse_custom_string(custom_smd)
+                                    solvent_params = parse_custom_string(cleaned)
                                 else:
                                     name = "Unknown"
                                     solvent_params = parse_custom_string(custom_smd)
@@ -187,6 +189,12 @@ class SolventData(BaseModel):
                                     halogenicity=solvent_params.get("halogenicity"),
                                     smx_params=smx_params
                                 )
+                        else:
+                            name = _SMX_IDENTITIES[smx_params["solvent"]]
+                            return cls(
+                                name=name,
+                                model=SolventModel("SMX")
+                            )
 
                     else:
                         return cls(
@@ -215,7 +223,7 @@ class SolventData(BaseModel):
                     else:
                         if str(pcm_params["dielectric"]) in _PCM_IDENTITIES:
                             return cls(
-                                name=_PCM_IDENTITIES[pcm_params["dielectric"]],
+                                name=_PCM_IDENTITIES[str(pcm_params["dielectric"])],
                                 model=SolventModel("PCM"),
                                 dielectric=float(pcm_params["dielectric"]),
                                 pcm_params=pcm_params

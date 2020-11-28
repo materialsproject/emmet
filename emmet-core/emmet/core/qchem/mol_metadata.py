@@ -109,6 +109,7 @@ class MoleculeMetadata(BaseModel):
                 "composition_reduced",
                 "formula_pretty",
                 "formula_anonymous",
+                "formula_alphabetical",
                 "chemsys",
                 "molecular_weight",
             ]
@@ -142,6 +143,7 @@ class MoleculeMetadata(BaseModel):
 
         fields = (
             [
+                "molecule",
                 "nsites",
                 "elements",
                 "nelements",
@@ -152,7 +154,8 @@ class MoleculeMetadata(BaseModel):
                 "chemsys",
                 "molecular_weight",
                 "smiles",
-                "canonical_smiles" "inchi",
+                "canonical_smiles",
+                "inchi",
                 "point_group",
             ]
             if fields is None

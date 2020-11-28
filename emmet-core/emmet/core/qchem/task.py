@@ -1,7 +1,7 @@
 """ Core definition of a Q-Chem Task Document """
 
 from datetime import datetime
-from typing import List, Dict
+from typing import List, Dict, Type, TypeVar
 
 from pydantic import Field
 
@@ -22,7 +22,10 @@ class Status(ValueEnum):
     FAILED = "unsuccessful"
 
 
-class TaskDocument(MoleculeMetadata):
+S = TypeVar("S", bound="TaskDoc")
+
+
+class TaskDoc(MoleculeMetadata):
     """
     Definition of Q-Chem Task Document
     """
@@ -98,3 +101,7 @@ class TaskDocument(MoleculeMetadata):
         }
 
         return MoleculeEntry(**entry_dict)
+
+    @classmethod
+    def from_dict(cls: Type[S], task_dict: Dict) -> S:
+        pass

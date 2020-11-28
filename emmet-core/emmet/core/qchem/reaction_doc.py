@@ -6,7 +6,7 @@ from typing import List, Sequence, Mapping, Type, TypeVar
 from pydantic import BaseModel, Field
 
 from emmet.core.qchem.reaction import Reaction, ReactionType
-from emmet.core.qchem.task import TaskDocument
+from emmet.core.qchem.task import TaskDoc
 
 
 S = TypeVar("S", bound="ReactionDoc")
@@ -68,7 +68,7 @@ class ReactionDoc(BaseModel):
     @classmethod
     def from_tasks(
             cls: TypeVar[S],
-            reactants: Sequence[TaskDocument],
-            products: Sequence[TaskDocument]
+            reactants: Sequence[TaskDoc],
+            products: Sequence[TaskDoc]
     ) -> S:
         pass
