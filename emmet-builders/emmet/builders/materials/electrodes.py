@@ -86,7 +86,16 @@ def generic_groupby(list_in, comp=operator.eq):
 
 class ElectrodesBuilder(Builder):
     def __init__(
-        self, materials, electro, working_ion, query=None, compatibility=None, **kwargs
+        self,
+        materials,
+        electro,
+        working_ion,
+        query=None,
+        compatibility=None,
+        ltol=0.2,
+        stol=0.3,
+        angle_tol=5,
+        **kwargs,
     ):
         """
         Calculates physical parameters of battery materials the battery entries using
@@ -110,12 +119,9 @@ class ElectrodesBuilder(Builder):
             else MaterialsProjectCompatibility("Advanced")
         )
         self.completed_tasks = set()
-
-        self.sm = StructureMatcher(
-            comparator=ElementComparator(),
-            primitive_cell=True,
-            ignored_species=[self.working_ion],
-        )
+        self.ltol = ltol
+        self.stol = stol
+        self.angle_tol = angle_tol
         super().__init__(sources=[materials], targets=[electro], **kwargs)
 
     def get_items(self):
@@ -129,6 +135,14 @@ class ElectrodesBuilder(Builder):
             the entries in 'pd_entries' contain the information to generate the phase diagram
         """
 
+        self.sm = StructureMatcher(
+            comparator=ElementComparator(),
+            primitive_cell=True,
+            ignored_species=[self.working_ion],
+            ltol=self.ltol,
+            stol=self.stol,
+            angle_tol=self.angle_tol,
+        )
         # We only need the working_ion_entry once
         # working_ion_entries = self.materials.query(criteria={"chemsys": self.working_ion}, properties=mat_props)
         # working_ion_entries = self._mat_doc2comp_entry(working_ion_entries, store_struct=False)
