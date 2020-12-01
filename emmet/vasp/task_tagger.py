@@ -70,7 +70,7 @@ class TaskTagger(MapBuilder):
             projection=["orig_inputs",
                         "output.structure",
                         "output.bandgap",
-                        "input.hubbards"
+                        "input.hubbards",
                         "calcs_reversed.output.ionic_steps.electronic_steps.e_fr_energy",
                         ],
             **kwargs,
@@ -179,11 +179,13 @@ def task_type(inputs, include_calc_type=True):
 
 def is_valid(
     structure,
+    bandgap,
     inputs,
     input_sets,
     calcs,
     max_gradient=100,
     kpts_tolerance=0.9,
+    kspacing_tolerance=0.22,  # TODO - this value should be much lower. Set high for now due to bandgap parsing bug.
     hubbards={},
 ):
     """
@@ -229,11 +231,14 @@ def is_valid(
                 d["_warnings"].append("Too few KPoints")
         else:
             valid_kspacing = valid_input_set.incar.get("KSPACING", 0)
-            kspacing = inputs["incar"].get("KSPACING")
-            d["kspacing_delta"] = kspacing - valid_kspacing
-            if abs(d["kspacing_delta"]) > kspacing_tolerance:
+            if inputs["incar"].get("KSPACING"):
+                d["kspacing_delta"] = inputs["incar"].get("KSPACING") - valid_kspacing
+                if abs(d["kspacing_delta"]) > kspacing_tolerance:
+                    d["is_valid"] = False
+                    d["_warnings"].append("KSPACING differs")
+            else:
                 d["is_valid"] = False
-                d["_warnings"].append("KSPACING differs")
+                d["_warnings"].append("KSPACING not set")
 
         # Checking ENCUT
         encut = inputs.get("incar", {}).get("ENCUT")

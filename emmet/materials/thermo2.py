@@ -61,9 +61,10 @@ class ThermoBuilder(Builder):
         self.logger.debug(f"Found {len(updated_comps)} updated chemsys")
 
         # All materials that are not present in the thermo collection
-        thermo_mat_ids = self.thermo.distinct(self.thermo.key)
-        mat_ids = self.materials.distinct(self.materials.key, self.query)
-        dif_task_ids = list(set(mat_ids) - set(thermo_mat_ids))
+        # convert all mat_ids into str in case the underlying type is heterogeneous
+        thermo_mat_ids = {str(t) for t in self.thermo.distinct(self.thermo.key)}
+        mat_ids = {str(t) for t in self.materials.distinct(self.materials.key, self.query)}
+        dif_task_ids = list(mat_ids - thermo_mat_ids)
         q = dict(self.query)
         q.update({"task_id": {"$in": dif_task_ids}})
         new_mat_comps = set(self.materials.distinct("chemsys", q))
@@ -171,7 +172,7 @@ class ThermoBuilder(Builder):
                     ]
 
                 d["thermo"]["entry"] = e.as_dict()
-                d["thermo"]["explanation"] = self.compatibility.get_explanation_dict(e)
+                d["thermo"]["explanation"] = [repr(c) for c in e.energy_adjustments]
 
                 elsyms = sorted(set([el.symbol for el in e.composition.elements]))
                 d["chemsys"] = "-".join(elsyms)
