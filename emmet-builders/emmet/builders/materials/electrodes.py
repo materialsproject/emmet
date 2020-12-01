@@ -135,14 +135,6 @@ class ElectrodesBuilder(Builder):
             the entries in 'pd_entries' contain the information to generate the phase diagram
         """
 
-        self.sm = StructureMatcher(
-            comparator=ElementComparator(),
-            primitive_cell=True,
-            ignored_species=[self.working_ion],
-            ltol=self.ltol,
-            stol=self.stol,
-            angle_tol=self.angle_tol,
-        )
         # We only need the working_ion_entry once
         # working_ion_entries = self.materials.query(criteria={"chemsys": self.working_ion}, properties=mat_props)
         # working_ion_entries = self._mat_doc2comp_entry(working_ion_entries, store_struct=False)
@@ -251,6 +243,14 @@ class ElectrodesBuilder(Builder):
         returns:
             (chemsys, [group]): entry contains a list of entries the materials together by composition
         """
+        sm = StructureMatcher(
+            comparator=ElementComparator(),
+            primitive_cell=True,
+            ignored_species=[self.working_ion],
+            ltol=self.ltol,
+            stol=self.stol,
+            angle_tol=self.angle_tol,
+        )
         # sort the entries intro subgroups
         # then perform PD analysis
         elec_entries = item["elec_entries"]
@@ -268,7 +268,7 @@ class ElectrodesBuilder(Builder):
         working_ion_entry = min(ents_wion, key=lambda e: e.energy_per_atom)
         assert working_ion_entry is not None
 
-        grouped_entries = list(self.get_sorted_subgroups(elec_entries))
+        grouped_entries = list(self.get_sorted_subgroups(elec_entries, sm))
         docs = []  # results
 
         for group in grouped_entries:
@@ -337,8 +337,8 @@ class ElectrodesBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
-    def get_sorted_subgroups(self, group):
-        matching_subgroups = list(self.group_entries(group))
+    def get_sorted_subgroups(self, group, sm):
+        matching_subgroups = list(self.group_entries(group, sm))
         if matching_subgroups:
             for subg in matching_subgroups:
                 wion_conc = set()
@@ -351,7 +351,7 @@ class ElectrodesBuilder(Builder):
                 else:
                     del subg
 
-    def group_entries(self, g):
+    def group_entries(self, g, sm):
         """
         group the structures together based on similarity of the delithiated primitive cells
         Args:
@@ -362,10 +362,7 @@ class ElectrodesBuilder(Builder):
         labs = generic_groupby(
             g,
             comp=lambda x, y: any(
-                [
-                    self.sm.fit(x.structure, y.structure),
-                    self.sm.fit(y.structure, x.structure),
-                ]
+                [sm.fit(x.structure, y.structure), sm.fit(y.structure, x.structure)]
             ),
         )  # because fit is not commutitive
         for ilab in unique(labs):
