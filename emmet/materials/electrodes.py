@@ -383,7 +383,7 @@ class ElectrodesBuilder(Builder):
             struct = Structure.from_dict(d['structure'])
             # get the calc settings
             entry_type = "gga_u" if "gga_u" in d["entries"] else "gga"
-            d["entries"][entry_type]["correction"] = 0.0
+            #d["entries"][entry_type]["correction"] = 0.0
             if is_structure_entry:
                 d["entries"][entry_type]["structure"] = struct
                 en = ComputedStructureEntry.from_dict(d["entries"][entry_type])
