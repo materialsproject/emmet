@@ -457,14 +457,14 @@
   {
     "materials_key": "scan_structure",
     "quality_score": {
-      "SCAN Structure Optimization": 1,
+      "SCAN Structure Optimization": 1
     },
     "tasks_key": "output.structure"
   },
   {
-    "materials_key": "r2can_structure",
+    "materials_key": "r2scan_structure",
     "quality_score": {
-      "R2SCAN Structure Optimization": 1,
+      "R2SCAN Structure Optimization": 1
     },
     "tasks_key": "output.structure"
   },
