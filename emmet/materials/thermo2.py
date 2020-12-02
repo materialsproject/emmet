@@ -2,7 +2,7 @@ from itertools import chain, combinations
 from collections import defaultdict
 
 from pymatgen import Structure, Composition
-from pymatgen.entries.compatibility import MaterialsProjectCompatibility
+from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.entries.computed_entries import ComputedEntry
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.analysis.structure_analyzer import oxide_type
@@ -24,7 +24,8 @@ class ThermoBuilder(Builder):
                 energy and decomposition pathway
             query (dict): dictionary to limit materials to be analyzed
             compatibility (PymatgenCompatability): Compatability module
-                to ensure energies are compatible
+                to ensure energies are compatible. If not specified
+                (compatibility=None), defaults to MaterialsProject2020Compatibility.
         """
 
         self.materials = materials
@@ -33,7 +34,7 @@ class ThermoBuilder(Builder):
         self.compatibility = (
             compatibility
             if compatibility
-            else MaterialsProjectCompatibility("Advanced")
+            else MaterialsProject2020Compatibility()
         )
         self.completed_tasks = set()
         self.entries_cache = defaultdict(list)
@@ -127,7 +128,7 @@ class ThermoBuilder(Builder):
         docs = []
 
         sandboxes, entries = item
-        entries = self.compatibility.process_entries(entries,clean=True)
+        entries = self.compatibility.process_entries(entries, clean=True)
 
         # determine chemsys
         chemsys = "-".join(
@@ -172,7 +173,15 @@ class ThermoBuilder(Builder):
                     ]
 
                 d["thermo"]["entry"] = e.as_dict()
-                d["thermo"]["explanation"] = [repr(c) for c in e.energy_adjustments]
+                d["thermo"]["explanation"] = [
+                            {"Type": c.__class__.__name__,
+                             "Name": c.name,
+                             "Value": c.value,
+                             "Uncertainty": c.uncertainty,
+                             "Description": c.explain,
+                             }
+                            for c in e.energy_adjustments
+                ]
 
                 elsyms = sorted(set([el.symbol for el in e.composition.elements]))
                 d["chemsys"] = "-".join(elsyms)
@@ -288,7 +297,6 @@ class ThermoBuilder(Builder):
         for d in data:
             entry_type = "gga_u" if "gga_u" in d["entries"] else "gga"
             entry = d["entries"][entry_type]
-            entry["correction"] = 0.0
             entry["entry_id"] = d["task_id"]
             entry = ComputedEntry.from_dict(entry)
             entry.data["oxide_type"] = oxide_type(Structure.from_dict(d["structure"]))
