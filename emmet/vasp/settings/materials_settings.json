@@ -2,13 +2,9 @@
   {
     "materials_key": "bandstructure.band_gap",
     "quality_score": {
-      "GGA+U NSCF Line": 12,
-      "GGA+U NSCF Uniform": 11,
-      "GGA+U Static": 10,
-      "R2SCAN Static": 9,
-      "SCAN Static": 8,
-      "R2SCAN Structure Optimization": 7,
-      "SCAN Structure Optimization": 6,
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
+      "GGA+U Static": 6,
       "GGA+U Structure Optimization": 5,
       "GGA NSCF Line": 3,
       "GGA NSCF Uniform": 4,
@@ -21,13 +17,9 @@
   {
     "materials_key": "bandstructure.cbm",
     "quality_score": {
-      "GGA+U NSCF Line": 12,
-      "GGA+U NSCF Uniform": 11,
-      "GGA+U Static": 10,
-      "R2SCAN Static": 9,
-      "SCAN Static": 8,
-      "R2SCAN Structure Optimization": 7,
-      "SCAN Structure Optimization": 6,
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
+      "GGA+U Static": 6,
       "GGA+U Structure Optimization": 5,
       "GGA NSCF Line": 3,
       "GGA NSCF Uniform": 4,
@@ -39,13 +31,9 @@
   {
     "materials_key": "bandstructure.vbm",
     "quality_score": {
-      "GGA+U NSCF Line": 12,
-      "GGA+U NSCF Uniform": 11,
-      "GGA+U Static": 10,
-      "R2SCAN Static": 9,
-      "SCAN Static": 8,
-      "R2SCAN Structure Optimization": 7,
-      "SCAN Structure Optimization": 6,
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
+      "GGA+U Static": 6,
       "GGA+U Structure Optimization": 5,
       "GGA NSCF Line": 3,
       "GGA NSCF Uniform": 4,
@@ -57,13 +45,9 @@
   {
     "materials_key": "bandstructure.is_gap_direct",
     "quality_score": {
-      "GGA+U NSCF Line": 12,
-      "GGA+U NSCF Uniform": 11,
-      "GGA+U Static": 10,
-      "R2SCAN Static": 9,
-      "SCAN Static": 8,
-      "R2SCAN Structure Optimization": 7,
-      "SCAN Structure Optimization": 6,
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
+      "GGA+U Static": 6,
       "GGA+U Structure Optimization": 5,
       "GGA NSCF Line": 3,
       "GGA NSCF Uniform": 4,
@@ -75,13 +59,9 @@
   {
     "materials_key": "bandstructure.is_metal",
     "quality_score": {
-      "GGA+U NSCF Line": 12,
-      "GGA+U NSCF Uniform": 11,
-      "GGA+U Static": 10,
-      "R2SCAN Static": 9,
-      "SCAN Static": 8,
-      "R2SCAN Structure Optimization": 7,
-      "SCAN Structure Optimization": 6,
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
+      "GGA+U Static": 6,
       "GGA+U Structure Optimization": 5,
       "GGA NSCF Line": 3,
       "GGA NSCF Uniform": 4,
@@ -93,13 +73,9 @@
   {
     "materials_key": "bandstructure.efermi",
     "quality_score": {
-      "GGA+U NSCF Line": 12,
-      "GGA+U NSCF Uniform": 11,
-      "GGA+U Static": 10,
-      "R2SCAN Static": 9,
-      "SCAN Static": 8,
-      "R2SCAN Structure Optimization": 7,
-      "SCAN Structure Optimization": 6,
+      "GGA+U NSCF Line": 7,
+      "GGA+U NSCF Uniform": 8,
+      "GGA+U Static": 6,
       "GGA+U Structure Optimization": 5,
       "GGA NSCF Line": 3,
       "GGA NSCF Uniform": 4,
@@ -149,10 +125,6 @@
     "trace": true,
     "tasks_key": "output.energy",
     "quality_score": {
-      "R2SCAN Static": 8,
-      "R2SCAN Structure Optimization": 7,
-      "SCAN Static": 6,
-      "SCAN Structure Optimization": 5,
       "GGA+U Static": 4,
       "GGA+U Structure Optimization": 3,
       "GGA Static": 2,
@@ -165,10 +137,6 @@
     "trace": true,
     "tasks_key": "output.energy_per_atom",
     "quality_score": {
-      "R2SCAN Static": 8,
-      "R2SCAN Structure Optimization": 7,
-      "SCAN Static": 6,
-      "SCAN Structure Optimization": 5,
       "GGA+U Static": 4,
       "GGA+U Structure Optimization": 3,
       "GGA Static": 2,
@@ -389,9 +357,7 @@
   {
     "materials_key": "inputs.structure_optimization",
     "quality_score": {
-      "R2SCAN Structure Optimization": 4,
-      "SCAN Structure Optimization": 3,
-      "GGA+U Structure Optimization": 2,
+      "GGA+U Structure Optimization": 5,
       "GGA Structure Optimization": 1
     },
     "tasks_key": "orig_inputs"
@@ -399,10 +365,8 @@
   {
     "materials_key": "inputs.static",
     "quality_score": {
-      "R2SCAN Static": 4,
-      "SCAN Static": 3,
-      "GGA+U Static": 2,
-      "GGA Static": 1
+      "GGA+U Static": 6,
+      "GGA Static": 2
     },
     "tasks_key": "orig_inputs"
   },
@@ -440,24 +404,48 @@
   {
     "materials_key": "inputs.scan_opt",
     "quality_score": {
-      "R2SCAN Structure Optimization": 2,
-      "SCAN Structure Optimization": 1
+      "SCAN Structure Optimization": 2
     },
     "tasks_key": "orig_inputs"
   },
   {
     "materials_key": "inputs.scan_static",
     "quality_score": {
-      "R2SCAN Static": 2,
-      "SCAN Static": 1
+      "SCAN Static": 6
+    },
+    "tasks_key": "orig_inputs"
+  },
+  {
+    "materials_key": "inputs.r2scan_opt",
+    "quality_score": {
+      "R2SCAN Structure Optimization": 2
+    },
+    "tasks_key": "orig_inputs"
+  },
+  {
+    "materials_key": "inputs.r2scan_static",
+    "quality_score": {
+      "R2SCAN Static": 6
+    },
+    "tasks_key": "orig_inputs"
+  },
+  {
+    "materials_key": "inputs.pbesol_opt",
+    "quality_score": {
+      "PBEsol Structure Optimization": 2
+    },
+    "tasks_key": "orig_inputs"
+  },
+  {
+    "materials_key": "inputs.pbesol_static",
+    "quality_score": {
+      "PBEsol Static": 6
     },
     "tasks_key": "orig_inputs"
   },
   {
     "materials_key": "structure",
     "quality_score": {
-      "R2SCAN Structure Optimization": 6,
-      "SCAN Structure Optimization": 5,
       "GGA+U Static": 4,
       "GGA+U Structure Optimization": 3,
       "GGA Static": 2,
@@ -469,8 +457,21 @@
   {
     "materials_key": "scan_structure",
     "quality_score": {
-      "R2SCAN Structure Optimization": 2,
-      "SCAN Structure Optimization": 1
+      "SCAN Structure Optimization": 1,
+    },
+    "tasks_key": "output.structure"
+  },
+  {
+    "materials_key": "r2can_structure",
+    "quality_score": {
+      "R2SCAN Structure Optimization": 1,
+    },
+    "tasks_key": "output.structure"
+  },
+  {
+    "materials_key": "pbesol_structure",
+    "quality_score": {
+      "PBEsol Structure Optimization": 1
     },
     "tasks_key": "output.structure"
   },
@@ -488,10 +489,6 @@
   {
     "materials_key": "magnetism.total_magnetization",
     "quality_score": {
-      "R2SCAN Static": 8,
-      "R2SCAN Structure Optimization": 7,
-      "SCAN Static": 6,
-      "SCAN Structure Optimization": 5,
       "GGA+U Static": 4,
       "GGA+U Structure Optimization": 3,
       "GGA Static": 2,
@@ -502,10 +499,6 @@
   {
     "materials_key": "magnetism.magmoms",
     "quality_score": {
-      "R2SCAN Static": 8,
-      "R2SCAN Structure Optimization": 7,
-      "SCAN Static": 6,
-      "SCAN Structure Optimization": 5,
       "GGA+U Static": 4,
       "GGA+U Structure Optimization": 3,
       "GGA Static": 2,
