@@ -344,6 +344,45 @@ def restore(inputfile, file_filter):  # noqa: C901
 @tasks.command()
 @sbatch
 @click.option(
+    "-l",
+    "--input_dir",
+    required=True,
+    type=click.Path(exists=True),
+    help="Directory of blocks to upload to GDrive",
+)
+@click.option(
+    "-o",
+    "--output_dir",
+    required=False,
+    type=click.Path(exists=True),
+    help="Directory to move the data to after upload is done. Not moving if it is not supplied",
+)
+def upload(input_dir, output_dir):
+    print(input_dir, output_dir)
+
+@tasks.command()
+@sbatch
+@click.option(
+    "-l",
+    "--input_dir",
+    required=True,
+    type=click.Path(exists=True),
+    help="Directory of blocks to upload to zip",
+)
+@click.option(
+    "-o",
+    "--output_dir",
+    required=True,
+    type=click.Path(exists=True),
+    help="Directory of blocks to upload to zip",
+)
+def compress(input_dir, output_dir):
+    print(f"Zipping {input_dir}, putting data to {output_dir}")
+
+
+@tasks.command()
+@sbatch
+@click.option(
     "--task-ids",
     type=click.Path(exists=True),
     help="JSON file mapping launcher name to task ID.",
