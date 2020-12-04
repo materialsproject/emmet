@@ -348,14 +348,14 @@ def restore(inputfile, file_filter):  # noqa: C901
     "--input_dir",
     required=True,
     type=click.Path(exists=True),
-    help="Directory of blocks to upload to GDrive",
+    help="Directory of blocks to upload to GDrive, relative to `directory`",
 )
 @click.option(
     "-o",
     "--output_dir",
     required=False,
-    type=click.Path(exists=True),
-    help="Directory to move the data to after upload is done. Not moving if it is not supplied",
+    type=click.Path(exists=False),
+    help="Directory to move the data to after upload is done, relative to `directory`. Not moving if it is not supplied",
 )
 def upload(input_dir, output_dir):
     print(input_dir, output_dir)
@@ -367,14 +367,14 @@ def upload(input_dir, output_dir):
     "--input_dir",
     required=True,
     type=click.Path(exists=True),
-    help="Directory of blocks to upload to zip",
+    help="Directory of blocks to compress, relative to `directory`",
 )
 @click.option(
     "-o",
     "--output_dir",
     required=True,
-    type=click.Path(exists=True),
-    help="Directory of blocks to upload to zip",
+    type=click.Path(exists=False),
+    help="Directory of blocks to output the compressed blocks, relative to `directory`",
 )
 def compress(input_dir, output_dir):
     print(f"Zipping {input_dir}, putting data to {output_dir}")
