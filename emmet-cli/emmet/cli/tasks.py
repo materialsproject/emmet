@@ -13,7 +13,6 @@ from fnmatch import fnmatch
 import click
 from hpsspy import HpssOSError
 from hpsspy.os.path import isfile
-
 from emmet.cli.decorators import sbatch
 from emmet.cli.utils import (
     EmmetCliError,
@@ -23,8 +22,12 @@ from emmet.cli.utils import (
     ensure_indexes,
     iterator_slice,
     parse_vasp_dirs,
+    organize_path,
+    compress_launchers
 )
 
+from typing import List, Dict
+from pathlib import Path
 logger = logging.getLogger("emmet")
 GARDEN = "/home/m/matcomp/garden"
 PREFIXES = ["res_", "aflow_", "block_"]
@@ -43,6 +46,8 @@ FILE_FILTERS_DEFAULT = [
     for d in ["", "relax1", "relax2"]
 ]
 STORE_VOLUMETRIC_DATA = []
+
+TMP_STORAGE = f"{os.environ.get('SCRATCH', '/global/cscratch1/sd/mwu1011')}/projects/tmp_storage"
 
 
 @click.group()
@@ -84,7 +89,7 @@ def run_command(args, filelist):
     nargs, nfiles, nshow = len(args), len(filelist), 1
     full_args = args + filelist
     args_short = (
-        full_args[: nargs + nshow] + [f"({nfiles-1} more ...)"]
+        full_args[: nargs + nshow] + [f"({nfiles - 1} more ...)"]
         if nfiles > nshow
         else full_args
     )
@@ -286,7 +291,7 @@ def restore(inputfile, file_filter):  # noqa: C901
         args = shlex.split(f"htar -tf {GARDEN}/{block}.tar")
         filelist = [os.path.join(block, f) for f in files]
         filelist_chunks = [
-            filelist[i : i + max_args] for i in range(0, len(filelist), max_args)
+            filelist[i: i + max_args] for i in range(0, len(filelist), max_args)
         ]
         filelist_restore, cnt = [], 0
         try:
@@ -313,7 +318,7 @@ def restore(inputfile, file_filter):  # noqa: C901
                 )
                 args = shlex.split(f"htar -xvf {GARDEN}/{block}.tar")
                 filelist_restore_chunks = [
-                    filelist_restore[i : i + max_args]
+                    filelist_restore[i: i + max_args]
                     for i in range(0, len(filelist_restore), max_args)
                 ]
                 try:
@@ -347,18 +352,51 @@ def restore(inputfile, file_filter):  # noqa: C901
     "-l",
     "--input_dir",
     required=True,
-    type=click.Path(exists=True),
-    help="Directory of blocks to upload to GDrive, relative to `directory`",
+    type=click.Path(exists=False),
+    help="Directory of blocks to upload to GDrive, relative to ('directory') ex: compressed",
 )
 @click.option(
     "-o",
     "--output_dir",
     required=False,
+    default=TMP_STORAGE,
+    show_default=True,
     type=click.Path(exists=False),
-    help="Directory to move the data to after upload is done, relative to `directory`. Not moving if it is not supplied",
+    help="Directory to move the data to after upload is done, relative to ('directory'). ex: temp_storage"
+         "Not moving if it is not supplied",
 )
 def upload(input_dir, output_dir):
-    print(input_dir, output_dir)
+    ctx = click.get_current_context()
+    run = ctx.parent.parent.params["run"]
+    nmax = ctx.parent.params["nmax"]
+    pattern = ctx.parent.params["pattern"]
+    directory = ctx.parent.params["directory"]
+    full_input_dir: Path = (Path(directory) / input_dir)
+    full_output_dir: Path = (Path(directory) / output_dir)
+    if full_input_dir.exists() is False:
+        raise FileNotFoundError(f"input_dir {full_input_dir.as_posix()} not found")
+    block_count = 0
+    launcher_count = 0
+    for root, dirs, files in os.walk(full_input_dir.as_posix()):
+        for name in files:
+            launcher_count += 1
+        for name in dirs:
+            block_count += 1
+
+    base_msg = f"upload [{block_count}] blocks with [{launcher_count}] launchers"
+    if run:
+        if full_output_dir.exists() is False:
+            full_output_dir.mkdir(exist_ok=True, parents=True)
+
+        subprocess.call(shlex.split(f"rclone copy {full_input_dir.as_posix()} GDriveUpload:"))
+        # run_command(args=["rclone", "-P", "remote: "], filelist=[full_input_dir.as_posix()])
+        logger.info(msg=base_msg)
+    else:
+        subprocess.call(shlex.split(f"rclone -P copy {full_input_dir.as_posix()} GDriveUpload:"))
+        logger.info(msg="would have " + base_msg)
+
+    return ReturnCodes.SUCCESS
+
 
 @tasks.command()
 @sbatch
@@ -366,18 +404,43 @@ def upload(input_dir, output_dir):
     "-l",
     "--input_dir",
     required=True,
-    type=click.Path(exists=True),
-    help="Directory of blocks to compress, relative to `directory`",
+    type=click.Path(),
+    help="Directory of blocks to compress, relative to ('directory') ex: raw`",
 )
 @click.option(
     "-o",
     "--output_dir",
     required=True,
     type=click.Path(exists=False),
-    help="Directory of blocks to output the compressed blocks, relative to `directory`",
+    help="Directory of blocks to output the compressed blocks, relative to ('directory') ex: compressed",
 )
 def compress(input_dir, output_dir):
-    print(f"Zipping {input_dir}, putting data to {output_dir}")
+    ctx = click.get_current_context()
+    run = ctx.parent.parent.params["run"]
+    nmax = ctx.parent.params["nmax"]
+    pattern = ctx.parent.params["pattern"]
+    directory = ctx.parent.params["directory"]
+    root_dir: Path = (Path(directory) / input_dir)
+    if root_dir.exists() is False:
+        raise FileNotFoundError(f"input_dir {root_dir.as_posix()} not found")
+    paths: List[str] = []
+    for root, dirs, files in os.walk(root_dir.as_posix()):
+        for name in dirs:
+            if "launcher" in name:
+                dir_name = os.path.join(root, name)
+                start = dir_name.find("block_")
+                dir_name = dir_name[start:]
+                paths.append(dir_name)
+    paths_organized: Dict[str, List[str]] = organize_path(paths)
+    msg = f"compressed [{len(paths_organized)}] blocks with [{len(paths)}] launchers"
+    if run:
+        for block_name, launcher_paths in paths_organized.items():
+            compress_launchers(input_dir=Path(input_dir), output_dir=Path(output_dir),
+                               block_name=block_name, launcher_paths=launcher_paths)
+        logger.info(msg=msg)
+    else:
+        logger.info(msg="would have " + msg)
+    return ReturnCodes.SUCCESS
 
 
 @tasks.command()
