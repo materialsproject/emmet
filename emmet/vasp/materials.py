@@ -414,6 +414,7 @@ class MaterialsBuilder(Builder):
 
         for entry in mat.get("entries", {}).values():
             entry["entry_id"] = mat[self.materials.key]
+            entry["correction"] = 0
 
         for entry_type in list(mat.get("entries", {}).keys()):
             if any(
