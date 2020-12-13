@@ -22,12 +22,19 @@ from emmet.cli.utils import (
     ensure_indexes,
     iterator_slice,
     parse_vasp_dirs,
-    organize_path,
-    compress_launchers
+    compress_launchers,
+    log_to_mongodb,
+    GDriveLog,
+    nomad_upload_data,
+    nomad_find_not_uploaded,
+    find_unuploaded_launcher_paths,
+    find_all_launcher_paths
 )
 
 from typing import List, Dict
 from pathlib import Path
+from maggma.stores.advanced_stores import MongograntStore
+
 logger = logging.getLogger("emmet")
 GARDEN = "/home/m/matcomp/garden"
 PREFIXES = ["res_", "aflow_", "block_"]
@@ -48,6 +55,7 @@ FILE_FILTERS_DEFAULT = [
 STORE_VOLUMETRIC_DATA = []
 
 TMP_STORAGE = f"{os.environ.get('SCRATCH', '/global/cscratch1/sd/mwu1011')}/projects/tmp_storage"
+LOG_DIR = f"{os.environ.get('SCRATCH', '/global/cscratch1/sd/mwu1011')}/projects/logs"
 
 
 @click.group()
@@ -350,29 +358,27 @@ def restore(inputfile, file_filter):  # noqa: C901
 @sbatch
 @click.option(
     "-l",
-    "--input_dir",
+    "--input-dir",
     required=True,
     type=click.Path(exists=False),
     help="Directory of blocks to upload to GDrive, relative to ('directory') ex: compressed",
 )
-@click.option(
-    "-o",
-    "--output_dir",
-    required=False,
-    default=TMP_STORAGE,
-    show_default=True,
-    type=click.Path(exists=False),
-    help="Directory to move the data to after upload is done, relative to ('directory'). ex: temp_storage"
-         "Not moving if it is not supplied",
-)
-def upload(input_dir, output_dir):
+def upload(input_dir):
+    """
+    Use [rclone](https://rclone.org/drive/) to upload blocks to GDrive
+
+    NOTE: rclone makes sure that duplicate upload will overwrite each other instead of creating redundancy.
+
+    :param input_dir:  Directory of blocks to upload to GDrive
+    :return:
+        Success code
+    """
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
     nmax = ctx.parent.params["nmax"]
     pattern = ctx.parent.params["pattern"]
     directory = ctx.parent.params["directory"]
     full_input_dir: Path = (Path(directory) / input_dir)
-    full_output_dir: Path = (Path(directory) / output_dir)
     if full_input_dir.exists() is False:
         raise FileNotFoundError(f"input_dir {full_input_dir.as_posix()} not found")
     block_count = 0
@@ -384,16 +390,25 @@ def upload(input_dir, output_dir):
             block_count += 1
 
     base_msg = f"upload [{block_count}] blocks with [{launcher_count}] launchers"
-    if run:
-        if full_output_dir.exists() is False:
-            full_output_dir.mkdir(exist_ok=True, parents=True)
 
-        subprocess.call(shlex.split(f"rclone copy {full_input_dir.as_posix()} GDriveUpload:"))
-        # run_command(args=["rclone", "-P", "remote: "], filelist=[full_input_dir.as_posix()])
-        logger.info(msg=base_msg)
+    cmds = ["rclone",
+            "--log-level", "INFO",
+            "-c", "--auto-confirm",
+            "copy",
+            full_input_dir.as_posix(),
+            "GDriveUpload:"]
+    if run:
+        run_outputs = run_command(args=cmds, filelist=[])
+        for run_output in run_outputs:
+            logger.info(run_output.strip())
+
+        logger.info(msg=base_msg.strip())
     else:
-        subprocess.call(shlex.split(f"rclone -P copy {full_input_dir.as_posix()} GDriveUpload:"))
-        logger.info(msg="would have " + base_msg)
+        cmds.extend(["-n", "--dry-run"])
+        run_outputs = run_command(args=cmds, filelist=[])
+        for run_output in run_outputs:
+            logger.info(run_output)
+        logger.info(msg=("would have " + base_msg).strip())
 
     return ReturnCodes.SUCCESS
 
@@ -402,41 +417,61 @@ def upload(input_dir, output_dir):
 @sbatch
 @click.option(
     "-l",
-    "--input_dir",
+    "--input-dir",
     required=True,
     type=click.Path(),
-    help="Directory of blocks to compress, relative to ('directory') ex: raw`",
+    help="Directory of blocks to compress, relative to ('directory') ex: raw",
 )
 @click.option(
     "-o",
-    "--output_dir",
+    "--output-dir",
     required=True,
     type=click.Path(exists=False),
     help="Directory of blocks to output the compressed blocks, relative to ('directory') ex: compressed",
 )
-def compress(input_dir, output_dir):
+@click.option(
+    "--nproc",
+    type=int,
+    default=1,
+    show_default=True,
+    help="Number of processes for parallel parsing.",
+)
+def compress(input_dir, output_dir, nproc):
+    """
+    Find all blocks in the input_dir, compress them, put them in the ouput_dir
+
+    :param input_dir: Directory of blocks to compress
+    :param output_dir: Directory of blocks to output the compressed blocks
+    :param nproc: Number of processes for parallel parsing
+    :return:
+    """
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
-    nmax = ctx.parent.params["nmax"]
-    pattern = ctx.parent.params["pattern"]
     directory = ctx.parent.params["directory"]
-    root_dir: Path = (Path(directory) / input_dir)
-    if root_dir.exists() is False:
-        raise FileNotFoundError(f"input_dir {root_dir.as_posix()} not found")
-    paths: List[str] = []
-    for root, dirs, files in os.walk(root_dir.as_posix()):
-        for name in dirs:
-            if "launcher" in name:
-                dir_name = os.path.join(root, name)
-                start = dir_name.find("block_")
-                dir_name = dir_name[start:]
-                paths.append(dir_name)
-    paths_organized: Dict[str, List[str]] = organize_path(paths)
-    msg = f"compressed [{len(paths_organized)}] blocks with [{len(paths)}] launchers"
+    full_input_dir: Path = (Path(directory) / input_dir)
+    full_output_dir: Path = (Path(directory) / output_dir)
+    if full_input_dir.exists() is False:
+        raise FileNotFoundError(f"input_dir {full_input_dir.as_posix()} not found")
+
+    paths: List[str] = find_all_launcher_paths(full_input_dir)
+
+    path_organized_by_blocks: Dict[str, List[str]] = dict()
+    for path in paths:
+        block_name = path.split("/")[0]
+        if block_name in path_organized_by_blocks:
+            path_organized_by_blocks[block_name].append(path)
+        else:
+            path_organized_by_blocks[block_name] = [path]
+
+    msg = f"compressed [{len(path_organized_by_blocks)}] blocks"
     if run:
-        for block_name, launcher_paths in paths_organized.items():
-            compress_launchers(input_dir=Path(input_dir), output_dir=Path(output_dir),
-                               block_name=block_name, launcher_paths=launcher_paths)
+        if not full_output_dir.exists():
+            full_output_dir.mkdir(parents=True, exist_ok=True)
+
+        pool = multiprocessing.Pool(processes=nproc)
+        pool.starmap(func=compress_launchers, iterable=[(Path(full_input_dir), Path(full_output_dir),
+                                                         sorted(launcher_paths, key=len, reverse=True))
+                                                        for launcher_paths in path_organized_by_blocks.values()])
         logger.info(msg=msg)
     else:
         logger.info(msg="would have " + msg)
@@ -591,3 +626,271 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data):  # noqa: C901
     else:
         logger.info(f"Would parse and insert {count}/{gen.value} tasks in {directory}.")
     return ReturnCodes.SUCCESS if count and gen.value else ReturnCodes.WARNING
+
+
+@tasks.command()
+@sbatch
+@click.option(
+    "--mongo-configfile",
+    required=False,
+    default=Path("~/.mongogrant.json").expanduser().as_posix(),
+    type=click.Path(),
+    help="mongo db connections. Path should be full path."
+)
+@click.option(
+    "-n",
+    "--num-materials",
+    required=False,
+    default=1000,
+    type=click.IntRange(min=0, max=99999),
+    help="maximum number of materials to query"
+)
+def upload_latest(mongo_configfile, num_materials):
+    """
+    upload latest materials to GDrive following the below steps
+    1. Find task_ids that has not been uploaded. Find them in the order of newest material
+    2. Restore those launchers using the emmet/restore command
+    3. use rclone to move restored launchers to another folder for staging
+    4. zip the moved launchers
+    5. upload the zipped launchers
+    6. move the zipped launchers to tmp_storage for later upload to nomad
+    7. clean the restore, raw, compressed folders
+
+    :param mongo_configfile: mongo db connections. Path should be full path
+    :param num_materials: maximum number of materials to query
+    :return:
+        Success code
+    """
+    ctx = click.get_current_context()
+    run = ctx.parent.parent.params["run"]
+    directory = ctx.parent.params["directory"]
+    full_root_dir: Path = Path(directory)
+    full_mongo_config_path: Path = Path(mongo_configfile).expanduser()
+    full_emmet_input_file_path: Path = full_root_dir / "emmet_input_file.txt"
+
+    if run:
+        try:
+            base_cmds = ["emmet", "--run", "--yes", "--issue", "87", "tasks", "-d", full_root_dir.as_posix()]
+
+            # find all un-uploaded launchers
+            task_records: List[GDriveLog] = find_unuploaded_launcher_paths(
+                outputfile=full_emmet_input_file_path.as_posix(),
+                configfile=full_mongo_config_path.as_posix(),
+                num=num_materials)
+
+            # restore
+            restore_dir = (full_root_dir / "restore")
+            if restore_dir.exists() is False:
+                restore_dir.mkdir(parents=True, exist_ok=True)
+
+            restore_cmds = base_cmds[:-1] + [restore_dir.as_posix(), "-m", f"{len(task_records)}"] + \
+                           ["restore", "--inputfile", full_emmet_input_file_path.as_posix(), "-f", "*"]
+            run_and_log_info(args=restore_cmds)
+            logger.info(f"Restoring using command [{' '.join(restore_cmds)}]")
+            # logger.info("DBUGGING, NOT EXECUTING")
+
+            # move restored content to directory/raw
+            run_and_log_info(args=["rclone", "moveto", restore_dir.as_posix(), (full_root_dir / 'raw').as_posix()])
+
+            # run compressed cmd
+            compress_cmds = base_cmds + ["compress", "-l", "raw", "-o", "compressed", "--nproc", "4"]
+            logger.info(f"Compressing using command [{' '.join(compress_cmds)}]".strip())
+            run_and_log_info(args=compress_cmds)
+
+            # run upload cmd
+            upload_cmds = base_cmds + ["upload", "--input-dir", "compressed"]
+            logger.info(f"Uploading using command [{' '.join(upload_cmds)}]")
+            run_and_log_info(args=upload_cmds)
+
+            # log to mongodb
+            log_to_mongodb(mongo_configfile=mongo_configfile, task_records=task_records,
+                           raw_dir=full_root_dir / 'raw', compress_dir=full_root_dir / "compressed")
+
+            # move uploaded & compressed content to tmp long term storage
+            mv_cmds = ["rclone", "move",
+                       f"{(full_root_dir / 'compressed').as_posix()}",
+                       f"{(full_root_dir / 'tmp_storage').as_posix()}",
+                       "--delete-empty-src-dirs"]
+            run_and_log_info(args=mv_cmds)
+
+            # run clean up command
+            # DANGEROUS!!
+            remove_raw = ["rclone", "purge", f"{(full_root_dir / 'raw').as_posix()}"]
+            run_and_log_info(args=remove_raw)
+
+            # remove_restore = ["rclone", "purge", f"{restore_dir.as_posix()}"]
+            # run_and_log_info(args=remove_restore)
+        except Exception as e:
+            logger.error(f"Something bad happened: {e}")
+
+    else:
+        logger.info("Run flag not supplied...")
+    return ReturnCodes.SUCCESS
+
+@tasks.command()
+@click.option(
+    "--mongo-configfile",
+    required=False,
+    default=Path("~/.mongogrant.json").expanduser().as_posix(),
+    type=click.Path(),
+    help="mongo db connections. Path should be full path."
+)
+@sbatch
+def clear_uploaded(mongo_configfile):
+    """
+    Clear the uploaded files (to both Gdrive and NOMAD) from tmp_storage.
+
+    :param mongo_configfile: mongo db connections. Path should be full path
+    :return:
+        Success code
+    """
+    ctx = click.get_current_context()
+    run = ctx.parent.parent.params["run"]
+    directory = ctx.parent.params["directory"]
+    full_root_dir: Path = Path(directory)
+
+    storage_dir = full_root_dir / "tmp_storage"
+    if storage_dir.exists() is False:
+        raise FileNotFoundError(f"Storage Directory at [{storage_dir}] is not found")
+    configfile: Path = Path(mongo_configfile)
+    if configfile.exists() is False:
+        raise FileNotFoundError(f"Config file [{configfile}] is not found")
+
+    # connect to mongo necessary mongo stores
+    gdrive_mongo_store = MongograntStore(mongogrant_spec="rw:knowhere.lbl.gov/mp_core_mwu",
+                                         collection_name="gdrive",
+                                         mgclient_config_path=configfile.as_posix())
+    gdrive_mongo_store.connect()
+
+    # find all files in current directory
+    files = []
+    # r=root, d=directories, f = files
+    for r, d, f in os.walk(storage_dir.as_posix()):
+        for file in f:
+            if '.tar.gz' in file and "nomad" not in r:
+                files.append(os.path.join(r, file))
+    cleaned_files = [file[file.find("block"):][:-7] for file in files]
+    cursor = gdrive_mongo_store.query(criteria={"path": {"$in":cleaned_files}},
+                                      properties={"path":1, "nomad_updated":1})
+    log = dict()
+    for entry in cursor:
+        log[entry["path"]] = entry["nomad_updated"]
+
+    file_to_remove = []
+    for file in cleaned_files:
+        if log.get(file, None) is not None and log[file] is not None:
+            file_to_remove.append(file)
+    from tqdm import tqdm
+
+    if run:
+        logger.info(f"Removing {len(file_to_remove)} files that have been uploaded to NOMAD and GDrive")
+        for file in tqdm(file_to_remove):
+            path = (storage_dir / file).as_posix() + ".tar.gz"
+            if os.path.exists(path):
+                os.remove(path)
+            else:
+                logger.error(f"cannot find {path}")
+    else:
+        logger.info(f"DRY RUN! Removing {len(file_to_remove)} files that have been uploaded to NOMAD and GDrive")
+        for file in tqdm(file_to_remove):
+            path = (storage_dir / file).as_posix() + ".tar.gz"
+            if not os.path.exists(path):
+                logger.error(f"cannot find {path}")
+    return ReturnCodes.SUCCESS
+
+@tasks.command()
+@sbatch
+@click.option(
+    "--nomad-configfile",
+    required=True,
+    type=click.Path(),
+    help="nomad user name and password json file path. Path should be full path"
+)
+@click.option(
+    "-n",
+    "--num",
+    required=False,
+    default=-1,
+    type=click.IntRange(min=-9999, max=99999),
+    help="maximum number of materials to upload"
+)
+@click.option(
+    "--mongo-configfile",
+    required=False,
+    default=Path("~/.mongogrant.json").expanduser().as_posix(),
+    type=click.Path(),
+    help="mongo db connections. Path should be full path."
+)
+def upload_to_nomad(nomad_configfile, num, mongo_configfile):
+    """
+    upload n launchers to NOMAD using the following procedure
+    1. Find n launchers and split them into 10 threads
+    2. upload those n launchers and remove the generated .tar.gz file
+
+    :param nomad_configfile: nomad user name and password json file path.
+    :param num: maximum number of materials to upload
+    :param mongo_configfile: mongo db connections
+    :return:
+        Success code
+    """
+    configfile: Path = Path(mongo_configfile)
+    full_nomad_config_path: Path = Path(nomad_configfile).expanduser()
+    num: int = num
+    ctx = click.get_current_context()
+    run = ctx.parent.parent.params["run"]
+    directory = ctx.parent.params["directory"]
+    full_root_dir: Path = Path(directory)
+
+    configfile: Path = Path(configfile)
+    if configfile.exists() is False:
+        raise FileNotFoundError(f"Config file [{configfile}] is not found")
+
+    # connect to mongo necessary mongo stores
+    gdrive_mongo_store = MongograntStore(mongogrant_spec="rw:knowhere.lbl.gov/mp_core_mwu",
+                                         collection_name="gdrive",
+                                         mgclient_config_path=configfile.as_posix())
+
+    if run:
+        gdrive_mongo_store.connect()
+        if not full_nomad_config_path.exists():
+            raise FileNotFoundError(f"Nomad Config file not found in {full_nomad_config_path}")
+        cred: dict = json.load(full_nomad_config_path.open('r'))
+        username: str = cred["username"]
+        password: str = cred["password"]
+        # find the earliest n tasks that has not been uploaded
+        task_ids_not_uploaded: List[List[str]] = nomad_find_not_uploaded(num=num, gdrive_mongo_store=gdrive_mongo_store)
+        from threading import Thread
+        threads = []
+        for i in range(len(task_ids_not_uploaded)):
+            name = f"thread_{i}"
+            thread = Thread(target=nomad_upload_data, args=(task_ids_not_uploaded[i],
+                                                            username, password,
+                                                            gdrive_mongo_store,
+                                                            full_root_dir / "tmp_storage", name,))
+            threads.append(thread)
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+        gdrive_mongo_store.close()
+    else:
+        logger.info("Not running. Please supply the run flag. ")
+
+    return ReturnCodes.SUCCESS
+
+
+def run_and_log_info(args, filelist=None):
+    """
+    Run the run_command function and log it to logger.
+
+    :param args: arguments to execute
+    :param filelist: file list to pass in
+    :return:
+        none
+    """
+    if filelist is None:
+        filelist = []
+    run_outputs = run_command(args=args, filelist=filelist)
+    for run_output in run_outputs:
+        logger.info(run_output.strip())

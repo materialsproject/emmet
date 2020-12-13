@@ -1,33 +1,53 @@
+import hashlib
 import itertools
+import json
 import logging
 import multiprocessing
 import os
 import shutil
 import stat
-from collections import defaultdict
-from datetime import datetime
+
+import tarfile
+import time
+from _hashlib import HASH as Hash
 from enum import Enum
 from fnmatch import fnmatch
+
+from datetime import datetime
+from collections import defaultdict
 from glob import glob
+from pathlib import Path
+from typing import List, Dict, Any, Optional, Tuple
+from typing import Union
+from urllib.parse import urlparse
+from zipfile import ZipFile, ZIP_DEFLATED
 
 import click
 import mgzip
 from atomate.vasp.database import VaspCalcDb
 from atomate.vasp.drones import VaspDrone
+
+from bravado.client import SwaggerClient
+from bravado.requests_client import RequestsClient, Authenticator
+import requests
 from dotty_dict import dotty
+
 from fireworks.fw_config import FW_BLOCK_FORMAT
+from keycloak import KeycloakOpenID
+from maggma.core.store import Sort
+from maggma.stores.advanced_stores import MongograntStore
 from mongogrant.client import Client
-from pymatgen.core import Structure
 from pymatgen.util.provenance import StructureNL
+
+
+from pydantic import BaseModel, Field
+from pymatgen import Structure
 from pymongo.errors import DocumentTooLarge
+from tqdm import tqdm
+
 
 from emmet.cli import SETTINGS
 from emmet.core.utils import group_structures
-
-from pathlib import Path
-from typing import List, Dict
-import tarfile
-import subprocess, shlex
 
 logger = logging.getLogger("emmet")
 perms = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP
@@ -499,47 +519,569 @@ def make_tar_file(output_dir: Path, output_file_name: str, source_dir: Path):
             tar.add(source_dir.as_posix(), arcname=os.path.basename(source_dir.as_posix()))
 
 
-def organize_path(paths: List[str]) -> Dict[str, List[str]]:
-    result: Dict[str, List[str]] = dict()
-    for path in paths:
-        splitted: List[str] = path.split("/")
-        block_name, launcher_names = splitted[0], splitted[1:]
-        list_of_launchers = organize_launchers(block_name=block_name, launcher_names=launcher_names)
-        if block_name in result:
-            result[block_name].extend(list_of_launchers)
-        else:
-            result[block_name] = list_of_launchers
-    return result
-
-
-def organize_launchers(block_name: str, launcher_names: List[str]) -> List[str]:
+def compress_launchers(input_dir: Path, output_dir: Path, launcher_paths: List[str]):
     """
-    turn [launcher-xxx, launcher-yyy, launcher-ccc] into
-    [block_name/launcher-xxx, block_name/launcher-xxx/launcher-yyy, block_name/launcher-xxx/launcher-yyy/launcher-ccc]
 
-    :param block_name: used to prepend block name
-    :param launcher_names: list of launcher names
-    :return: list of launcher names
+    create directories & zip
 
+    :param input_dir:
+    :param output_dir:
+    :param block_name:
+    :param launcher_paths:
+    :return:
     """
-    result: List[str] = []
-    prev_name = block_name
-    for launcher_name in launcher_names:
-        curr_name = prev_name + "/" + launcher_name
-        result.append(curr_name)
-        prev_name = curr_name
-    return result
 
-
-def compress_launchers(input_dir: Path, output_dir: Path, block_name: str, launcher_paths: List[str]):
-    print(f"Compressing [{len(launcher_paths)}] launchers for [{block_name}]")
-    logger.info(f"Compressing [{len(launcher_paths)}] launchers for [{block_name}]")
     for launcher_path in launcher_paths:
-        source_dir = Path(input_dir) / launcher_path
-        make_tar_file(output_dir=Path(output_dir) / block_name,
-                      output_file_name=launcher_path.split("/")[-1],
-                      source_dir=source_dir)
+        out_dir = Path(output_dir) / Path(launcher_path).parent
+        output_file_name = launcher_path.split("/")[-1]
+        if (out_dir / output_file_name).exists():
+            continue
+        else:
+            logger.info(f"Compressing {launcher_path}".strip())
+            make_tar_file(output_dir=out_dir,
+                          output_file_name=output_file_name,
+                          source_dir=Path(input_dir) / launcher_path)
 
 
-def run_command(command):
-    subprocess.call(shlex.split(command))
+def find_un_uploaded_materials_task_id(gdrive_mongo_store: MongograntStore,
+                                       material_mongo_store: MongograntStore,
+                                       max_num: int = 1000) -> List[str]:
+    """
+    Given mongo stores, find the next max_num mp_ids that are not yet uploaded.
+
+    :param gdrive_mongo_store: gdrive mongo store
+    :param material_mongo_store: materials mongo store
+    :param max_num: int, maximum number of materials to return
+    :return:
+        list of materials that are not uploaded
+    """
+    # get a ALL task ids, sorted in earliest material order
+    # find which ones are not uploaded
+    task_ids: Dict[str, None] = find_task_ids_sorted(material_mongo_store)
+    gdrive_results = gdrive_mongo_store.query(criteria={"task_id": {"$in": list(task_ids)}},
+                                              properties={"task_id": 1})
+    uploaded_task_ids = set(gdrive_result["task_id"] for gdrive_result in gdrive_results)
+    for k in uploaded_task_ids:
+        task_ids.pop(k, None)
+    # task_ids at this point contain un-uploaded keys, sorted in order of materials update date
+    result: List[str] = list(task_ids.keys())[:max_num]
+    return result
+
+
+def find_task_ids_sorted(material_mongo_store: MongograntStore) -> Dict[str, None]:
+    result: Dict[str, None] = dict()
+    materials = material_mongo_store.query(
+        criteria={"deprecated": False},
+        properties={"task_id": 1, "blessed_tasks": 1, "last_updated": 1},
+        sort={"last_updated": Sort.Descending})
+    for material in materials:
+        if "blessed_tasks" in material:
+            blessed_tasks: dict = material["blessed_tasks"]
+            task_ids = list(blessed_tasks.values())
+            result.update(dict.fromkeys(task_ids))
+    return result
+
+
+def find_material_task_ids(material_mongo_store) -> Dict[str, List[str]]:
+    materials = material_mongo_store.query(
+        criteria={"deprecated": False},
+        properties={"task_id": 1, "blessed_tasks": 1, "last_updated": 1},
+        sort={"last_updated": Sort.Descending})
+    materials_task_id_dict: Dict[str, List[str]] = dict()
+    for material in materials:
+        if "blessed_tasks" in material:
+            blessed_tasks: dict = material["blessed_tasks"]
+            materials_task_id_dict[material["task_id"]] = list(blessed_tasks.values())
+    return materials_task_id_dict
+
+
+class GDriveLog(BaseModel):
+    path: str = Field(..., title="Path for the file",
+                      description="Should reflect both local disk space AND google drive path")
+    last_updated: datetime = Field(default=datetime.now())
+    task_id: str = Field(default="", title="Material ID in which this launcher belongs to")
+    file_size: int = Field(default=0, description="file size of the tar.gz")
+    md5hash: str = Field(default="", description="md5 hash of the content of the files inside this gzip")
+    files: List[Dict[str, Any]] = Field(default=[], description="meta data of the content of the gzip")
+    nomad_updated: Optional[datetime] = Field(default=None)
+    nomad_upload_id: Optional[str] = Field(default=None)
+    error: Optional[str] = Field(default=None)
+
+
+class File(BaseModel):
+    file_name: str = Field(default="")
+    size: int = Field(default=0)
+    md5hash: str = Field(default="")
+
+
+def move_dir(src: str, dst: str, pattern: str):
+    """
+    Move entire directory matching pattern from src to dst
+    :param src: src location
+    :param dst: dst location
+    :param pattern: folder patterns
+    :return:
+        none
+    """
+    for file_path in glob(f'{src}/{pattern}'):
+        logger.info(f"Moving [{file_path}] to [{dst}]")
+        try:
+            shutil.copy(src=file_path, dst=f"{dst}")
+        except Exception as e:
+            logger.warning(e)
+            logger.info("not moving this directory because it already existed for some reason.")
+
+
+def nomad_find_not_uploaded(gdrive_mongo_store: MongograntStore, num: int) -> List[List[str]]:
+    """
+    find a list of tasks that are not uploaded to nomad, sort ascending based on date created. limit by num.
+    chunk those list of tasks into 10 chunks for later multi processing.
+
+    if num < 0, return 32 GB worth of materials in each chunk
+
+    :param gdrive_mongo_store:
+    :param num: number of launchers to find
+    :return:
+        List of chunks with a total of n launchers or each with max 32 GB of launchers file path
+    """
+
+    # fetch meta data of un-uploaded launchers from GDrive
+    if num >= 0:
+        raw = gdrive_mongo_store.query(
+            criteria={"$and": [{"nomad_updated": None}, {"error": None}]},
+            properties={"task_id": 1, "file_size": 1},
+            sort={"last_updated": Sort.Ascending},
+            limit=num
+        )
+    else:
+        raw = gdrive_mongo_store.query(
+            criteria={"$and": [{"nomad_updated": None}, {"error": None}]},
+            properties={"task_id": 1, "file_size": 1},
+            sort={"last_updated": Sort.Ascending}
+        )
+
+    meta_datas = [r for r in raw]
+    single_max_nomad_upload_size = 32 * 1e9  # max is 32 gb doing debugging sessions now
+    tmp_results: Dict[int, List[str]] = dict()
+    total_size = 0
+    result_counter = 0
+    curr_size = 0
+    max_chunks = 10
+
+    # loop through all meta data, fill in each chunk with as much data as possible
+    for meta_data in meta_datas:
+        if result_counter >= max_chunks:
+            break
+        else:
+            file_size = meta_data["file_size"]
+            task_id = meta_data["task_id"]
+            if curr_size + file_size >= single_max_nomad_upload_size:
+                curr_size = 0
+                result_counter += 1
+            else:
+                l = tmp_results.get(result_counter, [])
+                l.append(task_id)
+                tmp_results[result_counter] = l
+                curr_size += file_size
+                total_size += file_size
+
+    # expand the dictionary to a list
+    results = [result for result in tmp_results.values()]
+
+    logger.info(f"Prepared [{len(results)}] chunks with [{sum([len(r) for r in results])}] items [{total_size}] bytes")
+    return results
+
+
+def nomad_upload_data(task_ids: List[str], username: str,
+                      password: str, gdrive_mongo_store: MongograntStore,
+                      root_dir: Path, name="thread_1"):
+    """
+    it is gaurenteed that sum of the file_size of the task_ids is less than 32 gb.
+
+    :param name: name of this upload
+    :param task_ids: task_ids to upload
+    :param username: username of nomad
+    :param password: password of nomad
+    :param gdrive_mongo_store: gdrive mongo store connection
+    :param root_dir: root dir to upload
+    :return:
+        True of upload success
+        None or False otherwise
+    """
+    logger.info(f"[{name}] start processing [{len(task_ids)}] tasks")
+    # create the bravado client and establish credential
+    nomad_url = 'http://nomad-lab.eu/prod/rae/api'
+    http_client = RequestsClient()
+    http_client.authenticator = KeycloakAuthenticator(user=username, password=password, nomad_url=nomad_url)
+    client: SwaggerClient = SwaggerClient.from_url('%s/swagger.json' % nomad_url, http_client=http_client)
+
+    raw = gdrive_mongo_store.query(criteria={"task_id": {"$in": task_ids}})
+    records: List[GDriveLog] = [GDriveLog.parse_obj(record) for record in raw]
+
+    # prepare upload data
+    upload_preparation_dir = root_dir / Path(f"nomad_upload_{name}_{datetime.now().strftime('%m_%d_%Y')}")
+    if not upload_preparation_dir.exists():
+        upload_preparation_dir.mkdir(parents=True, exist_ok=True)
+
+    # organize_data
+    nomad_json, untar_source_file_path_to_arcname_map = nomad_organize_data(task_ids=task_ids, records=records,
+                                                                            root_dir=root_dir,
+                                                                            upload_preparation_dir=
+                                                                            upload_preparation_dir,
+                                                                            name=name)
+
+    # write json data to file
+    write_json(upload_preparation_dir=upload_preparation_dir, nomad_json=nomad_json, name=name)
+
+    # un-tar.gz the files
+    zipped_upload_preparation_file_path = write_zip_from_targz(upload_preparation_dir=upload_preparation_dir,
+                                                               untar_source_file_path_to_arcname_map=
+                                                               untar_source_file_path_to_arcname_map,
+                                                               name=name)
+
+    # upload to nomad
+    logger.info(f"[{name}] Start Uploading [{zipped_upload_preparation_file_path}]"
+                f"[{os.path.getsize(zipped_upload_preparation_file_path)} bytes] to NOMAD")
+    user = client.auth.get_auth().response().result
+    token = user.access_token
+    url = nomad_url + '/uploads/?publish_directly=true'
+    with open(zipped_upload_preparation_file_path, 'rb') as f:
+        response = requests.put(url=url, headers={'Authorization': 'Bearer %s' % token}, data=f)
+    upload_id = response.json()['upload_id']
+    if response.status_code == 200:
+        logger.info(f"[{name}] is done uploading. Upload ID = [{upload_id}]")
+        upload_completed = True
+    else:
+        upload_completed = False
+        logger.error(f'Upload [{upload_id}] failed with code [{response.json()}]')
+
+    # update mongo store
+    if upload_completed:
+        for record in records:
+            record.nomad_updated = datetime.now()
+            record.nomad_upload_id = upload_id
+        gdrive_mongo_store.update(docs=[record.dict() for record in records], key="task_id")
+
+    # clean up
+    if upload_preparation_dir.exists():
+        shutil.rmtree(upload_preparation_dir.as_posix())
+    if Path(zipped_upload_preparation_file_path).exists():
+        os.remove(zipped_upload_preparation_file_path)
+
+    return upload_completed
+
+
+def nomad_organize_data(task_ids, records, root_dir: Path, upload_preparation_dir: Path, name):
+    # loop over records, generate json information
+    nomad_json: dict = {"comment": f"Materials Project Upload at {datetime.now()}",
+                        "external_db": "Materials Project",
+                        "entries": dict()}
+    # populate json
+    untar_source_file_path_to_arcname_map: List[
+        Tuple[str, str]] = list()  # list of (full_path/launcher-xyz.tar.gz launcher-xyz.tar.gz)
+    logger.info(f"[{name}] Organizing {len(task_ids)} launchers")
+
+    """
+    for every record, build a entry in our log later used to populate nomad.json
+    nomad.json will look like:
+    {
+    "comment": "Data from a cool external project",
+    "external_db": "Materials Project",
+    "entries": {
+        "block_2017-11-15-20-03-23-693030/launcher_2017-11-18-00-38-32-702369/launcher_2017-11-18-02-22-11-552158/vasprun.xml.gz" : {
+            "external_id" : "michael-2",
+            "references": ["https://materialsproject.org/tasks/michael-2/"]
+            },
+            ...
+        }
+    }
+    """
+    for record in tqdm(records):
+        full_path_without_suffix: Path = root_dir / record.path
+        full_file_path: Path = (root_dir / (record.path + ".tar.gz"))
+        if not full_file_path.exists():
+            record.error = f"Record can no longer be found in {full_file_path}"
+            logger.info(f"[{name}] File not found: Record can no longer be found in {full_file_path}")
+        else:
+            my_tar = tarfile.open(full_file_path.as_posix(), "r")
+            file_names = my_tar.getnames()
+            vasp_run_names = [name for name in file_names if "vasprun" in name]
+            vasp_run_name = Path(vasp_run_names[0]).name
+            external_id = record.task_id
+            references = [f"https://materialsproject.org/tasks/{external_id}"]
+            entries: dict = nomad_json.get("entries")
+            block_index = full_path_without_suffix.as_posix().rfind("block")
+            nomad_name = (Path(upload_preparation_dir.name) / Path(
+                (full_path_without_suffix.as_posix()[block_index:])) / vasp_run_name).as_posix()
+            first_launcher_index = full_path_without_suffix.as_posix().find("launcher")
+            # nomad_name = (upload_preparation_dir.name /
+            #               Path(full_path_without_suffix.as_posix()[last_launcher_index:]) / vasp_run_name).as_posix()
+            entries[nomad_name] = {"external_id": external_id, "references": references}
+            # last_launcher_index = full_file_path.as_posix().rfind("launcher")
+            untar_source_file_path_to_arcname_map.append(
+                (full_file_path.as_posix(), full_file_path.as_posix()[block_index:first_launcher_index - 1]))
+    return nomad_json, untar_source_file_path_to_arcname_map
+
+
+def write_zip_from_targz(untar_source_file_path_to_arcname_map, upload_preparation_dir: Path, name) -> str:
+    """
+
+    1. unzip the source_file_path (which is pointing to a .zip file) using  the arcname to the upload_prearation_dir
+    2. tar.gz  the entire upload_preparation_dir
+    :param untar_source_file_path_to_arcname_map: file_path -> arcname mapping
+    :param upload_preparation_dir: directoryt o unzip and tar.gz files
+    :param name: name of the thread used
+
+    :return:
+        zip the entire upload_preparation_dir
+    """
+    logger.info(f"[{name}] Extracting Files")
+    for full_file_path, block_name in tqdm(untar_source_file_path_to_arcname_map):
+        tar = tarfile.open(full_file_path, "r:gz")
+        tar.extractall(path=upload_preparation_dir / block_name)
+        tar.close()
+
+    # zip the file
+    zipped_upload_preparation_file_path = upload_preparation_dir.as_posix() + ".zip"
+    logger.info(f"[{name}] Zipping files to [{zipped_upload_preparation_file_path}] (This may take a while)")
+    zipf = ZipFile(zipped_upload_preparation_file_path, 'w', ZIP_DEFLATED)
+    zipdir(upload_preparation_dir.as_posix(), zipf)
+    zipf.write(filename=upload_preparation_dir / "nomad.json", arcname="nomad.json")
+    zipf.close()
+    return zipped_upload_preparation_file_path
+
+
+def zipdir(path, ziph):
+    # ziph is zipfile handle
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            ziph.write(os.path.join(root, file),
+                       os.path.relpath(os.path.join(root, file),
+                                       os.path.join(path, '..')))
+
+
+def write_json(upload_preparation_dir, nomad_json, name):
+    # json_file_name = f"nomad_{datetime.now().strftime('%m_%d_%Y_%H_%M_%S')}.json"
+    json_file_name = "nomad.json"
+    json_file_path = upload_preparation_dir / json_file_name
+    with open(json_file_path.as_posix(), 'w') as outfile:
+        json.dump(nomad_json, outfile, indent=4)
+    logger.info(f"[{name}] NOMAD JSON prepared")
+
+
+def md5_update_from_file(filename: Union[str, Path], hash: Hash) -> Hash:
+    """
+    Produce hash of the file
+    :param filename: name if file to hash
+    :param hash: previous hash
+    :return:
+        hash
+    """
+    assert Path(filename).is_file()
+    with open(str(filename), "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash.update(chunk)
+    return hash
+
+
+def md5_file(filename: Union[str, Path]) -> str:
+    return str(md5_update_from_file(filename, hashlib.md5()).hexdigest())
+
+
+def md5_update_from_dir(directory: Union[str, Path], hash: Hash) -> Hash:
+    """
+    Hash directory
+    :param directory: directory to hash
+    :param hash: previous hash
+    :return:
+        hash
+    """
+    assert Path(directory).is_dir()
+    for path in sorted(Path(directory).iterdir(), key=lambda p: str(p).lower()):
+        hash.update(path.name.encode())
+        if path.is_file():
+            hash = md5_update_from_file(path, hash)
+        elif path.is_dir():
+            hash = md5_update_from_dir(path, hash)
+    return hash
+
+
+def md5_dir(directory: Union[str, Path]) -> str:
+    """
+    :param directory: directory to compute md5 hash on
+    :return:
+        the hash in string
+    """
+    return str(md5_update_from_dir(directory, hashlib.md5()).hexdigest())
+
+
+def fill_record_data(record: GDriveLog, raw_dir: Path, compress_dir: Path):
+    compress_file_dir = (compress_dir / record.path).as_posix() + ".tar.gz"
+    record.file_size = os.path.getsize(compress_file_dir)
+    record.md5hash = md5_dir(raw_dir / record.path)
+    list_of_files = getListOfFiles(dirName=(raw_dir / record.path).as_posix())
+    record.files.extend([_make_file_dict(file_path=Path(file), start_at=record.path) for file in list_of_files])
+
+
+def getListOfFiles(dirName):
+    """
+        For the given path, get the List of all files in the directory tree
+    """
+    listOfFile = os.listdir(dirName)
+    allFiles = list()
+    for entry in listOfFile:
+        fullPath = os.path.join(dirName, entry)
+        if os.path.isdir(fullPath):
+            allFiles = allFiles + getListOfFiles(fullPath)
+        else:
+            allFiles.append(fullPath)
+    return allFiles
+
+
+def _make_file_dict(file_path: Path, start_at: str) -> dict:
+    start_index = file_path.as_posix().find(start_at) + len(start_at) + 1  # there is a slash after that
+    path = file_path.as_posix()[start_index:]
+    return {"path": path,
+            "size": os.path.getsize(file_path.as_posix()),
+            "md5hash": md5_file(file_path)}
+
+
+def find_all_launcher_paths(input_dir: Path) -> List[str]:
+    paths: List[str] = []
+    for root, dirs, files in os.walk(input_dir.as_posix()):
+        for name in dirs:
+            if "launcher" in name:
+                sub_paths = find_all_launcher_paths_helper(Path(root) / name)
+                paths.extend(sub_paths)
+    return paths
+
+
+def find_all_launcher_paths_helper(input_dir: Path) -> List[str]:
+    dir_name = input_dir.as_posix()
+    start = dir_name.find("block_")
+    dir_name = dir_name[start:]
+
+    paths: List[str] = [dir_name]  # since itself is a launcher path
+    for root, dirs, files in os.walk(input_dir.as_posix()):
+        for name in dirs:
+            if "launcher" in name:
+                sub_paths = find_all_launcher_paths_helper(Path(root) / name)
+                paths.extend(sub_paths)
+    return paths
+
+
+# an authenticator for NOMAD's keycloak user management
+class KeycloakAuthenticator(Authenticator):
+    def __init__(self, user, password, nomad_url):
+        super().__init__(host=urlparse(nomad_url).netloc)
+        self.user = user
+        self.password = password
+        self.token = None
+        self.__oidc = KeycloakOpenID(
+            server_url='https://nomad-lab.eu/fairdi/keycloak/auth/',
+            realm_name='fairdi_nomad_prod',
+            client_id='nomad_public')
+
+    def apply(self, request):
+        if self.token is None:
+            self.token = self.__oidc.token(username=self.user, password=self.password)
+            self.token['time'] = time.time()
+        elif self.token['expires_in'] < int(time.time()) - self.token['time'] + 10:
+            try:
+                self.token = self.__oidc.refresh_token(self.token['refresh_token'])
+                self.token['time'] = time.time()
+            except Exception:
+                self.token = self.__oidc.token(username=self.user, password=self.password)
+                self.token['time'] = time.time()
+
+        request.headers.setdefault('Authorization', 'Bearer %s' % self.token['access_token'])
+
+        return request
+
+
+def find_unuploaded_launcher_paths(outputfile, configfile, num) -> List[GDriveLog]:
+    """
+    Find launcher paths that has not been uploaded
+    Prioritize for blessed tasks and recent materials
+
+    :param outputfile: outputfile to write the launcher paths to
+    :param configfile: config file for mongodb
+    :param num: maximum number of materials to consider in this run
+    :return:
+        Success
+    """
+    outputfile: Path = Path(outputfile)
+    configfile: Path = Path(configfile)
+    if configfile.exists() is False:
+        raise FileNotFoundError(f"Config file [{configfile}] is not found")
+
+    # connect to mongo necessary mongo stores
+    gdrive_mongo_store = MongograntStore(mongogrant_spec="rw:knowhere.lbl.gov/mp_core_mwu",
+                                         collection_name="gdrive",
+                                         mgclient_config_path=configfile.as_posix())
+    material_mongo_store = MongograntStore(mongogrant_spec="ro:mongodb04.nersc.gov/mp_emmet_prod",
+                                           collection_name="materials_2020_09_08",
+                                           mgclient_config_path=configfile.as_posix())
+    tasks_mongo_store = MongograntStore(mongogrant_spec="ro:mongodb04.nersc.gov/mp_emmet_prod",
+                                        collection_name="tasks",
+                                        mgclient_config_path=configfile.as_posix())
+    gdrive_mongo_store.connect()
+    material_mongo_store.connect()
+    tasks_mongo_store.connect()
+    logger.info("gdrive, material, and tasks mongo store successfully connected")
+
+    # find un-uploaded materials task ids
+    task_ids: List[str] = find_un_uploaded_materials_task_id(gdrive_mongo_store, material_mongo_store, max_num=num)
+    logger.info(f"Found [{len(task_ids)}] task_ids for [{num}] materials")
+    logger.info(f"Task_ids = {task_ids}")
+    if outputfile.exists():
+        logger.info(f"Will be over writing {outputfile}")
+    else:
+        logger.info(f"[{outputfile}] does not exist, creating...")
+        outputfile.parent.mkdir(exist_ok=True, parents=True)
+    # find launcher paths
+    task_records = list(tasks_mongo_store.query(criteria={"task_id": {"$in": task_ids}},
+                                                properties={"task_id": 1, "dir_name": 1}))
+    gdrive_logs: List[GDriveLog] = []
+    logger.info(f"Writing [{len(task_records)}] launcher paths to [{outputfile.as_posix()}]")
+    output_file_stream = outputfile.open('w')
+    for task in task_records:
+        dir_name: str = task["dir_name"]
+        start = dir_name.find("block_")
+        dir_name = dir_name[start:]
+        gdrive_logs.append(GDriveLog(path=dir_name, task_id=task["task_id"]))
+        line = dir_name + "\n"
+        output_file_stream.write(line)
+
+    # epilogue
+    output_file_stream.close()
+    gdrive_mongo_store.close()
+    material_mongo_store.close()
+    tasks_mongo_store.close()
+    return gdrive_logs
+
+
+def log_to_mongodb(mongo_configfile: str, task_records: List[GDriveLog], raw_dir: Path, compress_dir: Path):
+    """
+    log task_records to mongodb. Filling in hash information each record
+
+    :param mongo_configfile: mongo connection file location
+    :param task_records: task_records to upload
+    :param raw_dir: raw_directory
+    :param compress_dir: compressed file directory
+    :return:
+    """
+    configfile: Path = Path(mongo_configfile)
+    gdrive_mongo_store = MongograntStore(mongogrant_spec="rw:knowhere.lbl.gov/mp_core_mwu",
+                                         collection_name="gdrive",
+                                         mgclient_config_path=configfile.as_posix())
+    gdrive_mongo_store.connect()
+    for record in task_records:
+        try:
+            fill_record_data(record, raw_dir, compress_dir)
+        except Exception as e:
+            logger.error(f"Something weird happened: {e}.")
+            record.error = e.__str__()
+
+    gdrive_mongo_store.update(docs=[record.dict() for record in task_records], key="path")
+    logger.info(f"[{gdrive_mongo_store.collection_name}] Collection Updated")
