@@ -8,6 +8,7 @@ from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.analysis.structure_analyzer import oxide_type
 
 from maggma.builders import Builder
+from emmet.vasp.materials import ID_to_int
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -63,11 +64,11 @@ class ThermoBuilder(Builder):
 
         # All materials that are not present in the thermo collection
         # convert all mat_ids into str in case the underlying type is heterogeneous
-        thermo_mat_ids = {str(t) for t in self.thermo.distinct(self.thermo.key)}
-        mat_ids = {str(t) for t in self.materials.distinct(self.materials.key, self.query)}
+        thermo_mat_ids = {ID_to_int(t) for t in self.thermo.distinct(self.thermo.key)}
+        mat_ids = {ID_to_int(t) for t in self.materials.distinct(self.materials.key, self.query)}
         dif_task_ids = list(mat_ids - thermo_mat_ids)
         q = dict(self.query)
-        q.update({"task_id": {"$in": dif_task_ids}})
+        q.update({"task_id": {"$in": ["{}-{}".format(t[0], t[1]) if t[0] != "" else str(t[1]) for t in dif_task_ids ]}})
         new_mat_comps = set(self.materials.distinct("chemsys", q))
         self.logger.debug(f"Found {len(new_mat_comps)} new materials")
 
