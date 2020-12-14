@@ -20,7 +20,7 @@ class TaskTagger(MapBuilder):
         task_types,
         input_sets=None,
         kpts_tolerance=0.9,
-        kspacing_tolerance=0.22,  # TODO - this value should be much lower. Set high for now due to bandgap parsing bug.
+        kspacing_tolerance=0.05,
         max_gradient=100,
         LDAU_fields=["LDAUU", "LDAUJ", "LDAUL"],
         **kwargs,
@@ -35,7 +35,7 @@ class TaskTagger(MapBuilder):
             kpts_tolerance (float): relative tolerance to allow kpts to lag behind the InputSet settings
                 (i.e., k-point density may be as low as kpts_tolerance times the InputSet value)
             kspacing_tolerance (float): absolute tolerance to allow KSPACING to differ from the InputSet settings
-                (i.e., KSPACING may be as much as kspacing_tolerance smaller or larger than the InputSet value)
+                (i.e., KSPACING may be as much as kspacing_tolerance larger than the InputSet value)
             LDAU_fields (list(String)): LDAU fields to check for consistency
         """
         self.tasks = tasks
@@ -185,7 +185,7 @@ def is_valid(
     calcs,
     max_gradient=100,
     kpts_tolerance=0.9,
-    kspacing_tolerance=0.22,  # TODO - this value should be much lower. Set high for now due to bandgap parsing bug.
+    kspacing_tolerance=0.05,
     hubbards={},
 ):
     """
@@ -199,7 +199,7 @@ def is_valid(
         kpts_tolerance (float): relative tolerance to allow kpts to lag behind the InputSet settings
             (i.e., k-point density may be as low as kpts_tolerance times the InputSet value)
         kspacing_tolerance (float): absolute tolerance to allow KSPACING to differ from the InputSet settings
-            (i.e., KSPACING may be as much as kspacing_tolerance smaller or larger than the InputSet value)
+            (i.e., KSPACING may be as much as kspacing_tolerance larger than the InputSet value)
         LDAU_fields (list(String)): LDAU fields to check for consistency
     """
 
@@ -218,7 +218,7 @@ def is_valid(
 
         # Checking K-Points
         # Calculations that use KSPACING will not have a .kpoints attr
-        if valid_input_set.kpoints:
+        if valid_input_set.kpoints is not None:
             valid_num_kpts = valid_input_set.kpoints.num_kpts or np.prod(
                 valid_input_set.kpoints.kpts[0]
             )
@@ -233,8 +233,9 @@ def is_valid(
             valid_kspacing = valid_input_set.incar.get("KSPACING", 0)
             if inputs["incar"].get("KSPACING"):
                 d["kspacing_delta"] = inputs["incar"].get("KSPACING") - valid_kspacing
-                if abs(d["kspacing_delta"]) > kspacing_tolerance:
-                    d["is_valid"] = False
+                # larger KSPACING means fewer k-points
+                if d["kspacing_delta"] > kspacing_tolerance:
+                    # warn, but don't invalidate
                     d["_warnings"].append("KSPACING differs")
             else:
                 d["is_valid"] = False
@@ -280,9 +281,9 @@ def is_valid(
         ismear = inputs["incar"].get("ISMEAR", 1)
 
         # ISMEAR > 0 is only appropriate for metals, per VASP docs
-        # if ismear > 0 and bandgap > 0:
-        #     d["is_valid"] = False
-        #     d["_warnings"].append("Inappropriate smearing settings")
+        if ismear > 0 and bandgap > 0:
+            # warn, but don't invalidate
+            d["_warnings"].append("Inappropriate smearing settings")
 
         # Checking task convergence
         if calc_max_gradient(calcs[0]) > max_gradient:
