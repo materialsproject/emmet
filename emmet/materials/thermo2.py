@@ -298,6 +298,9 @@ class ThermoBuilder(Builder):
         for d in data:
             entry_type = "gga_u" if "gga_u" in d["entries"] else "gga"
             entry = d["entries"][entry_type]
+            # after the materials collection is built with the corrections key populated,
+            # the line below can be deleted. Until then, it is necessary in order for
+            # .from_dict() to work
             entry["correction"] = 0.0
             entry["entry_id"] = d["task_id"]
             entry = ComputedEntry.from_dict(entry)
