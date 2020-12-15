@@ -7,13 +7,14 @@ Use pymatgen classes in pydantic models by importing them from there when you ne
 from pymatgen.analysis.xas.spectrum import XAS
 from pymatgen.core.structure import Composition, Structure, Lattice
 from pymatgen.entries.computed_entries import ComputedEntry
+from pymatgen.analysis.diffraction.xrd import DiffractionPattern
 
 from emmet.stubs.math import Matrix3D, Vector3D
 from emmet.stubs.misc import Composition as StubComposition
 from emmet.stubs.misc import ComputedEntry as StubComputedEntry
 from emmet.stubs.structure import Structure as StubStructure
 from emmet.stubs.structure import Lattice as StubLattice
-
+from emmet.stubs.xrd import XRDPattern
 from emmet.stubs.utils import patch_msonable, use_model
 
 """
@@ -25,7 +26,7 @@ use_model(Structure, StubStructure)
 use_model(Lattice, StubLattice)
 use_model(Composition, StubComposition, add_monty=False)
 use_model(ComputedEntry, StubComputedEntry)
-
+use_model(DiffractionPattern, XRDPattern)
 # This is after the main block since it depends on that
 from emmet.stubs.xas import XASSpectrum  # noqa
 
