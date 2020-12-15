@@ -96,7 +96,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
                 -1 * is_valid,
                 -1 * quality_scores.get(task_run_type.value, 0),
                 -1 * task.input.parameters.get("ISPIN", 1),
-                -1 * sum(task.input.parameters.get(tag, False) for tag in special_tags),
+                -1 * task.input.parameters.get("LASPH", False),
                 task.output.energy_per_atom,
             )
 
@@ -135,15 +135,13 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
                 [doc for doc in structure_calcs if doc.run_type == rt],
                 key=_structure_eval,
             )
+
             if len(relevant_calcs) > 0:
                 best_task_doc = relevant_calcs[0]
                 entry = best_task_doc.entry
                 entry.data["task_id"] = entry.entry_id
                 entry.entry_id = material_id
                 entries[rt] = entry
-
-        # Warnings
-        # TODO: What warning should we process?
 
         return cls.from_structure(
             structure=structure,
