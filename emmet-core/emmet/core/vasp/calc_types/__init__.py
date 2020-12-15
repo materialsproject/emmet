@@ -5,5 +5,5 @@ try:
 except ImportError:
     import emmet.core.vasp.calc_types.generate
 
-from emmet.core.vasp.calc_types.enums import RunType, TaskType, CalcType
-from emmet.core.vasp.calc_types.utils import run_type, task_type, calc_type
+from emmet.core.vasp.calc_types.enums import CalcType, RunType, TaskType
+from emmet.core.vasp.calc_types.utils import calc_type, run_type, task_type

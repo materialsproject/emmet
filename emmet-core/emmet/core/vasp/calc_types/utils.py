@@ -14,7 +14,7 @@ from pymatgen.core.structure import Structure
 from typing_extensions import Literal
 
 from emmet.core import SETTINGS
-from emmet.core.vasp.calc_types.enums import RunType, TaskType, CalcType
+from emmet.core.vasp.calc_types.enums import CalcType, RunType, TaskType
 
 _RUN_TYPE_DATA = loadfn(str(Path(__file__).parent.joinpath("run_types.yaml").resolve()))
 

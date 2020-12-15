@@ -8,10 +8,9 @@ from typing import ClassVar, Mapping, Optional, Sequence, Type, TypeVar, Union
 from pydantic import BaseModel, Field, create_model
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
 
-from emmet.core.structure import StructureMetadata
 from emmet.core.material import PropertyOrigin
+from emmet.core.structure import StructureMetadata
 from emmet.stubs import Structure
-
 
 S = TypeVar("S", bound="PropertyDoc")
 
