@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 
 import requests
 from pydantic import BaseSettings, Field, root_validator, validator
-from pydantic.types import Path
+from pydantic.types import Path, PyObject
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
 
@@ -64,7 +64,7 @@ class EmmetSettings(BaseSettings):
         description="Relative tolerance for kpt density to still be a valid task document",
     )
 
-    VASP_DEFAULT_INPUT_SETS: Dict = Field(
+    VASP_DEFAULT_INPUT_SETS: Dict[str, PyObject] = Field(
         {
             "GGA Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
             "GGA+U Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
@@ -99,16 +99,3 @@ class EmmetSettings(BaseSettings):
         new_values.update(values)
 
         return new_values
-
-    @validator("VASP_DEFAULT_INPUT_SETS", pre=True)
-    def load_input_sets(cls, values):
-        input_sets = {}
-        for name, inp_set in values.items():
-            if isinstance(inp_set, str):
-                _module = ".".join(inp_set.split(".")[:-1])
-                _class = inp_set.split(".")[-1]
-                input_sets[name] = getattr(importlib.import_module(_module), _class)
-            elif isinstance(inp_set, type):
-                input_sets[name] = inp_set
-
-        return input_sets
