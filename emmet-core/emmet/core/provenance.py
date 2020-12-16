@@ -5,7 +5,7 @@ from typing import ClassVar, Dict, List
 from pybtex.database import BibliographyData, parse_string
 from pydantic import BaseModel, EmailStr, Field, HttpUrl, validator
 
-from emmet.core.material import PropertyDoc
+from emmet.core.material_property import PropertyDoc
 from emmet.core.utils import ValueEnum
 
 

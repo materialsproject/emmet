@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.core.periodic_table import Element
 
-from emmet.core.material import PropertyDoc
+from emmet.core.material_property import PropertyDoc
 from emmet.core.structure import StructureMetadata
 from emmet.stubs import Composition, ComputedEntry
 
