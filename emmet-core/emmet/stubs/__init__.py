@@ -15,7 +15,7 @@ from emmet.stubs.misc import ComputedEntry as StubComputedEntry
 from emmet.stubs.structure import Lattice as StubLattice
 from emmet.stubs.structure import Structure as StubStructure
 from emmet.stubs.utils import patch_msonable, use_model
-from emmet.stubs.xrd import XRDPattern
+from emmet.stubs.xrd import XRDPattern as StubXRDPattern
 
 """
 The stub names are kept in sync with the actual classes so they
@@ -26,7 +26,7 @@ use_model(Structure, StubStructure)
 use_model(Lattice, StubLattice)
 use_model(Composition, StubComposition, add_monty=False)
 use_model(ComputedEntry, StubComputedEntry)
-use_model(DiffractionPattern, XRDPattern)
+use_model(DiffractionPattern, StubXRDPattern)
 
 # This is after the main block since it depends on that
 from emmet.stubs.xas import XASSpectrum  # noqa
