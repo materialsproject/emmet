@@ -43,7 +43,6 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         cls,
         task_group: List[TaskDocument],
         quality_scores=SETTINGS.VASP_QUALITY_SCORES,
-        special_tags=SETTINGS.VASP_SPECIAL_TAGS,
     ) -> "MaterialsDoc":
         """
         Converts a group of tasks into one material
