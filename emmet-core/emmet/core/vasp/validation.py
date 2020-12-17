@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Dict, List, Union
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PyObject
 
 from emmet.core import SETTINGS
 from emmet.core.utils import DocEnum
@@ -41,7 +41,7 @@ class ValidationDoc(BaseModel):
         cls,
         task_doc: TaskDocument,
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
-        input_sets: Dict[str, type] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
+        input_sets: Dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
     ) -> "ValidationDoc":
         """
