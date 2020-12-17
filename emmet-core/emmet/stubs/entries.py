@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Tuple, Union
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
 
-from emmet.stubs import Structure
+from emmet.stubs.structure import Structure
 
 
 class Composition(BaseModel):
