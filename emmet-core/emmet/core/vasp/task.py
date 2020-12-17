@@ -18,7 +18,13 @@ from emmet.core.vasp.calc_types import (
     run_type,
     task_type,
 )
-from emmet.stubs import ComputedEntry, Matrix3D, Structure, Vector3D
+from emmet.stubs import (
+    ComputedEntry,
+    ComputedStructureEntry,
+    Matrix3D,
+    Structure,
+    Vector3D,
+)
 
 
 class Status(ValueEnum):
@@ -153,3 +159,11 @@ class TaskDocument(StructureMetadata):
         }
 
         return ComputedEntry.from_dict(entry_dict)
+
+    @property
+    def structure_entry(self):
+        """ Turns a Task Doc into a ComputedStructureEntry"""
+        entry_dict = self.entry.as_dict()
+        entry_dict["structure"] = self.output.structure
+
+        return ComputedStructureEntry.from_dict(entry_dict)

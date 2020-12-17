@@ -12,7 +12,7 @@ from emmet.core.material import PropertyOrigin as PropertyOrigin
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 from emmet.core.vasp.task import TaskDocument
-from emmet.stubs import ComputedEntry, Structure
+from emmet.stubs import ComputedStructureEntry, Structure
 
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
@@ -34,7 +34,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         None, description="Mappingionary for tracking the provenance of properties"
     )
 
-    entries: Mapping[RunType, ComputedEntry] = Field(
+    entries: Mapping[RunType, ComputedStructureEntry] = Field(
         None, description="Dictionary for tracking entries for VASP calculations"
     )
 
@@ -136,7 +136,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
             if len(relevant_calcs) > 0:
                 best_task_doc = relevant_calcs[0]
-                entry = best_task_doc.entry
+                entry = best_task_doc.structure_entry
                 entry.data["task_id"] = entry.entry_id
                 entry.entry_id = material_id
                 entries[rt] = entry
