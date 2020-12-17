@@ -45,12 +45,6 @@ class EmmetSettings(BaseSettings):
         description="Maximum miller allowed for computing strain direction for maximal piezo response",
     )
 
-    TAGS_TO_SANDBOXES: Optional[Dict[str, List[str]]] = Field(
-        None,
-        description="Mapping of calcuation tags to sandboxes: Dict[sandbox, list of tags]."
-        " Any calculation without these tags will be kept as core.",
-    )
-
     VASP_QUALITY_SCORES: Dict[str, int] = Field(
         {"SCAN": 3, "GGA+U": 2, "GGA": 1},
         description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builders",

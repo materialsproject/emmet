@@ -85,13 +85,6 @@ class MaterialsDoc(StructureMetadata):
         [], description="Any warnings related to this material"
     )
 
-    sandboxes: Sequence[str] = Field(
-        ["core"],
-        description="List of sandboxes this material belongs to."
-        " Sandboxes provide a way of controlling access to materials."
-        " Core is the primary sandbox for fully open documents",
-    )
-
     @classmethod
     def from_structure(  # type: ignore[override]
         cls: Type[T], structure: Structure, material_id: str, **kwargs

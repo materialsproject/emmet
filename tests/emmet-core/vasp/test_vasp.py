@@ -56,19 +56,6 @@ def test_validator(tasks):
     assert all(doc.valid for doc in validation_docs)
 
 
-def test_sandboxing():
-
-    test_doc = TaskDocument(task_id="test")
-    assert test_doc.sandboxes == ["core"]
-
-    SETTINGS.TAGS_TO_SANDBOXES = {"test_sbxn": ["test"]}
-    test_doc = TaskDocument(task_id="test", tags=["test"])
-    assert test_doc.sandboxes == ["test_sbxn"]
-
-    test_doc = TaskDocument(task_id="test", tags=["test"], sandboxes=["test_selected"])
-    assert test_doc.sandboxes == ["test_selected"]
-
-
 def test_computed_entry(tasks):
     entries = [task.entry for task in tasks]
     ids = {e.entry_id for e in entries}

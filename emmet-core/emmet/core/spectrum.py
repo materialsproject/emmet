@@ -32,10 +32,3 @@ class SpectrumDoc(StructureMetadata):
     )
 
     warnings: List[str] = Field([], description="Any warnings related to this property")
-
-    sandboxes: List[str] = Field(
-        ["core"],
-        description="List of sandboxes this spectrum belongs to."
-        " Sandboxes provide a way of controlling access to spectra."
-        " No sandbox means this spectrum is openly visible",
-    )

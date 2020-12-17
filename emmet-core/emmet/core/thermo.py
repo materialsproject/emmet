@@ -48,9 +48,7 @@ class ThermoDoc(PropertyDoc):
         description="The total corrected DFT energy of this material per atom in eV/atom",
     )
 
-    energy_uncertainy_per_atom: float = Field(
-        None, description=""
-    )  # From correction_uncertainty / N
+    energy_uncertainy_per_atom: float = Field(None, description="")
 
     formation_energy_per_atom: float = Field(
         None, description="The formation energy per atom in eV/atom"
@@ -59,10 +57,12 @@ class ThermoDoc(PropertyDoc):
     energy_above_hull: float = Field(
         ..., description="The energy above the hull in eV/Atom"
     )
+
     is_stable: bool = Field(
         False,
         description="Flag for whether this material is on the hull and therefore stable",
     )
+
     equillibrium_reaction_energy_per_atom: float = Field(
         None,
         description="The reaction energy of a stable entry from the neighboring equilibrium stable materials in eV."
@@ -90,10 +90,9 @@ class ThermoDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_entries(cls, entries: List[ComputedEntry], sandboxes=None):
+    def from_entries(cls, entries: List[ComputedEntry]):
 
         pd = PhaseDiagram(entries)
-        sandboxes = sandboxes or ["core"]
 
         docs = []
 
@@ -108,7 +107,6 @@ class ThermoDoc(PropertyDoc):
                 "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
                 "energy_above_hull": ehull,
                 "is_stable": e in pd.stable_entries,
-                "sandboxes": sandboxes,
             }
 
             if "last_updated" in e.data:

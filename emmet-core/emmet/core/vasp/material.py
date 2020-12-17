@@ -52,7 +52,6 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         last_updated = max(task.last_updated for task in task_group)
         created_at = min(task.completed_at for task in task_group)
         task_ids = list({task.task_id for task in task_group})
-        sandboxes = list({sbxn for task in task_group for sbxn in task.sandboxes})
 
         deprecated_tasks = list(
             {task.task_id for task in task_group if not task.is_valid}
@@ -156,7 +155,6 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             deprecated_tasks=deprecated_tasks,
             origins=origins,
             entries=entries,
-            sandboxes=sandboxes if sandboxes else None,
         )
 
 
