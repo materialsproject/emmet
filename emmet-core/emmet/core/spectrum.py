@@ -27,16 +27,8 @@ class SpectrumDoc(StructureMetadata):
     )
 
     last_updated: datetime = Field(
-        ...,
         description="Timestamp for the most recent calculation update for this property",
         default_factory=datetime.utcnow,
     )
 
     warnings: List[str] = Field([], description="Any warnings related to this property")
-
-    sandboxes: List[str] = Field(
-        ["core"],
-        description="List of sandboxes this spectrum belongs to."
-        " Sandboxes provide a way of controlling access to spectra."
-        " No sandbox means this spectrum is openly visible",
-    )

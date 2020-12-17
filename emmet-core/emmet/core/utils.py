@@ -94,6 +94,8 @@ def jsanitize(obj, strict=False, allow_bson=False):
         return [
             jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj.tolist()
         ]
+    if isinstance(obj, Enum):
+        return obj.value
     if isinstance(obj, dict):
         return {
             k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)

@@ -18,7 +18,7 @@ jobs:
         package: ["emmet-core"]
 
     steps:
-      - uses: actions/checkout@v2.3.3
+      - uses: actions/checkout@v2.3.4
 
       - name: Set up Python 3.7
         uses: actions/setup-python@v2.1.4
@@ -49,7 +49,7 @@ jobs:
         package: ["emmet-core"]
 
     steps:
-      - uses: actions/checkout@v2.3.3
+      - uses: actions/checkout@v2.3.4
 
       - name: Set up Python 3.7
         uses: actions/setup-python@v2.1.4
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2.3.3
+    - uses: actions/checkout@v2.3.4
 
     - uses: actions/setup-python@v2.1.4
       with:
