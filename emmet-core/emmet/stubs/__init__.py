@@ -1,4 +1,3 @@
-# isort: skip_file
 """
 This module stubs in pydantic models for common MSONable classes, particularly those in Pymatgen
 Use pymatgen classes in pydantic models by importing them from there when you need schema
@@ -10,14 +9,14 @@ from pymatgen.analysis.xas.spectrum import XAS
 from pymatgen.core.structure import Composition, Lattice, Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
+from emmet.stubs.entries import Composition as StubComposition
+from emmet.stubs.entries import ComputedEntry as StubComputedEntry
+from emmet.stubs.entries import ComputedStructureEntry as StubComputedStructureEntry
 from emmet.stubs.math import Matrix3D, Vector3D
-from emmet.stubs.misc import Composition as StubComposition
 from emmet.stubs.structure import Lattice as StubLattice
 from emmet.stubs.structure import Structure as StubStructure
 from emmet.stubs.utils import patch_msonable, use_model
 from emmet.stubs.xrd import XRDPattern as StubXRDPattern
-from emmet.stubs.entries import ComputedEntry as StubComputedEntry
-from emmet.stubs.entries import ComputedStructureEntry as StubComputedStructureEntry
 
 """
 The stub names are kept in sync with the actual classes so they

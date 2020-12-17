@@ -3,7 +3,13 @@ from typing import Dict, List, Optional, Tuple, Union
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
 
-from emmet.stubs import Composition, Structure
+from emmet.stubs import Structure
+
+
+class Composition(BaseModel):
+    """A dictionary mapping element to total quantity"""
+
+    __root__: Dict[Element, float]
 
 
 class ComputedEntry(BaseModel):
