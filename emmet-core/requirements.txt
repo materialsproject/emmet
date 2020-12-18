@@ -1,4 +1,4 @@
-prmatgen>=2020.4.29
+pymatgen>=2020.4.29
 monty==4.0.2
 pydantic==1.7.3
 pybtex==0.23.0
