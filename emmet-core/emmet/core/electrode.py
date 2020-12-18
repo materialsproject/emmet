@@ -3,13 +3,13 @@ from typing import Dict, Iterable, List
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
-from pymatgen import Composition
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.core.periodic_table import ElementBase
 from pymatgen.entries.computed_entries import ComputedEntry
 
+from emmet.stubs import Composition
 from emmet.stubs.structure import Structure
 
 
@@ -51,6 +51,7 @@ class VoltagePairDoc(BaseModel):
     fracA_charge: float = Field(
         None, description="Atomic fraction of the working ion in the charged state."
     )
+
     fracA_discharge: float = Field(
         None, description="Atomic fraction of the working ion in the discharged state."
     )
@@ -115,6 +116,8 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         description="Timestamp for the most recent calculation for this Material document",
     )
 
+    framework: Composition
+
     # Make sure that the datetime field is properly formatted
     @validator("last_updated", pre=True)
     def last_updated_dict_ok(cls, v):
@@ -133,7 +136,13 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         )
         d = ie.get_summary_dict()
         d["num_steps"] = d.pop("nsteps", None)
-        return cls(task_id=task_id, host_structure=host_structure.as_dict(), **d)
+        d["last_updated"] = datetime.utcnow()
+        return cls(
+            task_id=task_id,
+            host_structure=host_structure.as_dict(),
+            framework=Composition(d["framework_formula"]),
+            **d
+        )
 
 
 class ConversionVoltagePairDoc(VoltagePairDoc):
@@ -186,7 +195,6 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
         working_ion_symbol: str,
         task_id: str,
     ):
-        print([ient.composition.reduced_formula for ient in entries])
         ce = ConversionElectrode.from_composition_and_entries(
             comp=composition,
             entries_in_chemsys=entries,
@@ -194,4 +202,5 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
         )
         d = ce.get_summary_dict()
         d["num_steps"] = d.pop("nsteps", None)
-        return cls(task_id=task_id, **d)
+        d["last_updated"] = datetime.utcnow()
+        return cls(task_id=task_id, framework=Composition(d["framework_formula"]), **d)
