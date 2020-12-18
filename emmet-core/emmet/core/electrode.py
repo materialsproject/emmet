@@ -9,8 +9,7 @@ from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.core.periodic_table import ElementBase
 from pymatgen.entries.computed_entries import ComputedEntry
 
-from emmet.stubs import Composition
-from emmet.stubs.structure import Structure
+from emmet.stubs import Composition, Structure
 
 
 class WorkingIon(ElementBase):
