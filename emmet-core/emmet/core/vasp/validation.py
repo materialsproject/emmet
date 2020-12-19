@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Dict, List, Union
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PyObject
 
 from emmet.core import SETTINGS
 from emmet.core.utils import DocEnum
@@ -11,11 +11,12 @@ from emmet.stubs import Structure
 
 
 class DeprecationMessage(DocEnum):
-
-    kpoints = "kpoints", "Too few Kpoints"
-    encut = "encut", "ENCUT too low"
-    ldau = "ldau", "LDAU parameters don't match"
-    manual = "manual", "Manually deprecated"
+    MANUAL = "M", "manual deprecation"
+    KPTS = "C001", "Too few KPoints"
+    ENCUT = "C002", "ENCUT too low"
+    FORCES = "C003", "Forces too large"
+    CONVERGENCE = "E001", "Calculation did not converge"
+    LDAU = "I001", "LDAU Parameters don't match the inputset"
 
 
 class ValidationDoc(BaseModel):
@@ -30,7 +31,10 @@ class ValidationDoc(BaseModel):
         default_factory=datetime.utcnow,
     )
     reasons: List[Union[DeprecationMessage, str]] = Field(
-        [], description="List of deprecation tags detailing why this task isn't valid"
+        None, description="List of deprecation tags detailing why this task isn't valid"
+    )
+    warnings: List[str] = Field(
+        [], description="List of potential warnings about this calculation"
     )
 
     class Config:
@@ -41,7 +45,7 @@ class ValidationDoc(BaseModel):
         cls,
         task_doc: TaskDocument,
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
-        input_sets: Dict[str, type] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
+        input_sets: Dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
     ) -> "ValidationDoc":
         """
@@ -58,7 +62,6 @@ class ValidationDoc(BaseModel):
         task_type = task_doc.task_type
         inputs = task_doc.orig_inputs
 
-        is_valid = True
         reasons = []
         data = {}
 
@@ -74,16 +77,14 @@ class ValidationDoc(BaseModel):
             )
             data["kpts_ratio"] = num_kpts / valid_num_kpts
             if data["kpts_ratio"] < kpts_tolerance:
-                is_valid = False
-                reasons.append(DeprecationMessage.kpoints)
+                reasons.append(DeprecationMessage.KPTS)
 
             # Checking ENCUT
             encut = inputs.get("incar", {}).get("ENCUT")
             valid_encut = valid_input_set.incar["ENCUT"]
             data["encut_ratio"] = float(encut) / valid_encut  # type: ignore
             if data["encut_ratio"] < 1:
-                is_valid = False
-                reasons.append(DeprecationMessage.encut)
+                reasons.append(DeprecationMessage.ENCUT)
 
             # Checking U-values
             if valid_input_set.incar.get("LDAU"):
@@ -108,14 +109,13 @@ class ValidationDoc(BaseModel):
                     input_set_ldau_params[el] != input_params
                     for el, input_params in input_ldau_params.items()
                 ):
-                    is_valid = False
-                    reasons.append(DeprecationMessage.ldau)
+                    reasons.append(DeprecationMessage.LDAU)
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,
             task_type=task_doc.task_type,
             run_type=task_doc.run_type,
-            valid=is_valid,
+            valid=len(reasons) == 0,
             reasons=reasons,
             **data
         )
