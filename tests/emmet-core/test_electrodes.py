@@ -1,9 +1,10 @@
 import json
 import os
+from pprint import pprint
 
 import pytest
 from monty.json import MontyDecoder
-from monty.serialization import loadfn
+from monty.serialization import dumpfn, loadfn
 from pymatgen import Composition
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
@@ -34,11 +35,13 @@ def insertion_elec(test_dir):
     ie_MVO = InsertionElectrode.from_entries(entries_MVO, entry_Mg)
     ie_CMO = InsertionElectrode.from_entries(entries_CMO, entry_Ca)
 
-    return {
+    d = {
         "LTO": (ie_LTO, entries_LTO[0].structure, entry_Li),
         "MVO": (ie_MVO, entries_MVO[0].structure, entry_Mg),
         "CMO": (ie_CMO, entries_CMO[0].structure, entry_Ca),
     }
+    # d = loadfn(test_dir/"battery_data.json", cls=MontyDecoder) # awaiting pmg update
+    return d
 
 
 kmap = {"specific_energy": "energy_grav", "energy_density": "energy_vol"}
