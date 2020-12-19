@@ -39,21 +39,13 @@ class VoltagePairDoc(BaseModel):
 
     capacity_vol: float = Field(None, description="Volumetric capacity in mAh/cc.")
 
-    energy_grav: float = Field(
-        None, description="Gravimetric energy (Specific energy) in Wh/kg."
-    )
+    energy_grav: float = Field(None, description="Gravimetric energy (Specific energy) in Wh/kg.")
 
-    energy_vol: float = Field(
-        None, description="Volumetric energy (Energy Density) in Wh/l."
-    )
+    energy_vol: float = Field(None, description="Volumetric energy (Energy Density) in Wh/l.")
 
-    fracA_charge: float = Field(
-        None, description="Atomic fraction of the working ion in the charged state."
-    )
+    fracA_charge: float = Field(None, description="Atomic fraction of the working ion in the charged state.")
 
-    fracA_discharge: float = Field(
-        None, description="Atomic fraction of the working ion in the discharged state."
-    )
+    fracA_discharge: float = Field(None, description="Atomic fraction of the working ion in the discharged state.")
 
     @classmethod
     def from_sub_electrode(cls, sub_electrode: AbstractElectrode, **kwargs):
@@ -68,13 +60,9 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
     Features specific to insertion electrode
     """
 
-    stability_charge: float = Field(
-        None, description="The energy above hull of the charged material."
-    )
+    stability_charge: float = Field(None, description="The energy above hull of the charged material.")
 
-    stability_discharge: float = Field(
-        None, description="The energy above hull of the discharged material."
-    )
+    stability_discharge: float = Field(None, description="The energy above hull of the discharged material.")
 
 
 class InsertionElectrodeDoc(InsertionVoltagePairDoc):
@@ -84,9 +72,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
 
     task_id: str = Field(None, description="The id for this battery document.")
 
-    framework_formula: str = Field(
-        None, description="The id for this battery document."
-    )
+    framework_formula: str = Field(None, description="The id for this battery document.")
 
     host_structure: Structure = Field(
         None, description="Host structure (structure without the working ion)",
@@ -106,13 +92,10 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         "discharge based on the stable intermediate states",
     )
 
-    max_voltage_step: float = Field(
-        None, description="Maximum absolute difference in adjacent voltage steps"
-    )
+    max_voltage_step: float = Field(None, description="Maximum absolute difference in adjacent voltage steps")
 
     last_updated: datetime = Field(
-        None,
-        description="Timestamp for the most recent calculation for this Material document",
+        None, description="Timestamp for the most recent calculation for this Material document",
     )
 
     framework: Composition
@@ -130,17 +113,12 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         task_id: str,
         host_structure: Structure,
     ):
-        ie = InsertionElectrode.from_entries(
-            entries=grouped_entries, working_ion_entry=working_ion_entry
-        )
+        ie = InsertionElectrode.from_entries(entries=grouped_entries, working_ion_entry=working_ion_entry)
         d = ie.get_summary_dict()
         d["num_steps"] = d.pop("nsteps", None)
         d["last_updated"] = datetime.utcnow()
         return cls(
-            task_id=task_id,
-            host_structure=host_structure.as_dict(),
-            framework=Composition(d["framework_formula"]),
-            **d
+            task_id=task_id, host_structure=host_structure.as_dict(), framework=Composition(d["framework_formula"]), **d
         )
 
 
@@ -150,8 +128,7 @@ class ConversionVoltagePairDoc(VoltagePairDoc):
     """
 
     reactions: List[str] = Field(
-        None,
-        description="The reaction(s) the characterizes that particular voltage step.",
+        None, description="The reaction(s) the characterizes that particular voltage step.",
     )
 
 
@@ -172,13 +149,10 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
         "discharge based on the stable intermediate states",
     )
 
-    max_voltage_step: float = Field(
-        None, description="Maximum absolute difference in adjacent voltage steps"
-    )
+    max_voltage_step: float = Field(None, description="Maximum absolute difference in adjacent voltage steps")
 
     last_updated: datetime = Field(
-        None,
-        description="Timestamp for the most recent calculation for this Material document",
+        None, description="Timestamp for the most recent calculation for this Material document",
     )
 
     # Make sure that the datetime field is properly formatted
@@ -188,16 +162,10 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
 
     @classmethod
     def from_composition_and_entries(
-        cls,
-        composition: Composition,
-        entries: List[ComputedEntry],
-        working_ion_symbol: str,
-        task_id: str,
+        cls, composition: Composition, entries: List[ComputedEntry], working_ion_symbol: str, task_id: str,
     ):
         ce = ConversionElectrode.from_composition_and_entries(
-            comp=composition,
-            entries_in_chemsys=entries,
-            working_ion_symbol=working_ion_symbol,
+            comp=composition, entries_in_chemsys=entries, working_ion_symbol=working_ion_symbol,
         )
         d = ce.get_summary_dict()
         d["num_steps"] = d.pop("nsteps", None)
@@ -212,43 +180,40 @@ class StructureGroupDoc(BaseModel):
 
     task_id: str = Field(
         None,
-        "The combined task_id of the grouped document is given by the numerically smallest task id followed by '_Li' or whichever working atom is considered the working ion during grouping.",
+        "The combined task_id of the grouped document is given by the numerically smallest task id followed by '_Li' "
+        "or whichever working atom is considered the working ion during grouping.",
     )
 
     structure_matched: bool = Field(
         None,
-        description="True if the structures in this group has been matched to each other.  This is False for groups that contain all the left over structures with the same framework.",
+        description="True if the structures in this group has been matched to each other.  This is False for groups "
+        "that contain all the left over structures with the same framework.",
     )
 
     has_distinct_compositions: bool = Field(
         None,
-        description="True if multiple working ion fractions are available in the group, which means a voltage step exits.",
+        description="True if multiple working ion fractions are available in the group, which means a voltage "
+        "step exits.",
     )
 
     grouped_task_ids: List[str] = Field(
-        None,
-        description="The ids of the materials that have been grouped by the structure matcher.",
+        None, description="The ids of the materials that have been grouped by the structure matcher.",
     )
 
     entry_data: Dict = Field(
-        None,
-        description="Dictionary keyed by the task_id, contains the 'composition' and 'volume' of each material.",
+        None, description="Dictionary keyed by the task_id, contains the 'composition' and 'volume' of each material.",
     )
 
-    framework_formula: str = Field(
-        None, description="The formula of the host framework."
-    )
+    framework_formula: str = Field(None, description="The formula of the host framework.")
 
     working_ion: WorkingIon = Field(None, description="The working ion")
 
     chemsys: str = Field(
-        None,
-        description="The chemsys this group belongs to.  Always includes the working ion",
+        None, description="The chemsys this group belongs to.  Always includes the working ion",
     )
 
     last_updated: datetime = Field(
-        None,
-        description="Timestamp for the most recent calculation for this Material document",
+        None, description="Timestamp for the most recent calculation for this Material document",
     )
 
     # Make sure that the datetime field is properly formatted
