@@ -186,7 +186,7 @@ class StructureGroupDoc(BaseModel):
 
     structure_matched: bool = Field(
         None,
-        description="True if the structures in this group has been matched to each other.  This is False for groups that contain all the left over structures with the same framework.",
+        description="True if the structures in this group has been matched to each other.  This is False for groups   that contain all the left over structures with the same framework.",
     )
 
     has_distinct_compositions: bool = Field(
