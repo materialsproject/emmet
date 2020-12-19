@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Iterable, List
+from typing import Dict, List
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
@@ -180,7 +180,7 @@ class StructureGroupDoc(BaseModel):
 
     task_id: str = Field(
         None,
-        "The combined task_id of the grouped document is given by the numerically smallest task id followed by '_Li' "
+        description="The combined task_id of the grouped document is given by the numerically smallest task id followed by '_Li' "
         "or whichever working atom is considered the working ion during grouping.",
     )
 

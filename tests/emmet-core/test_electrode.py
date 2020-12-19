@@ -64,9 +64,7 @@ def conversion_elec():
             working_ion = "Li"
         elif f in ["MnO2"]:
             working_ion = "Mg"
-        c = ConversionElectrode.from_composition_and_entries(
-            Composition(f), entries, working_ion_symbol=working_ion
-        )
+        c = ConversionElectrode.from_composition_and_entries(Composition(f), entries, working_ion_symbol=working_ion)
         conversion_eletrodes[f] = {
             "working_ion": working_ion,
             "CE": c,
@@ -124,10 +122,7 @@ def test_ConversionDocs(conversion_elec):
             assert vp.average_voltage == sub_elec.get_average_voltage()
 
         vp = ConversionElectrodeDoc.from_composition_and_entries(
-            Composition(k),
-            entries=elec["entries"],
-            working_ion_symbol=elec["working_ion"],
-            task_id="mp-1234",
+            Composition(k), entries=elec["entries"], working_ion_symbol=elec["working_ion"], task_id="mp-1234",
         )
         res_d = vp.dict()
         for k, v in expected.items():
