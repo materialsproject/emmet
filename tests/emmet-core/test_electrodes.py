@@ -3,8 +3,8 @@ import os
 
 import pytest
 from monty.json import MontyDecoder
+from monty.serialization import loadfn
 from pymatgen import Composition
-from pymatgen.apps import battery
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.entries.computed_entries import ComputedEntry
@@ -16,28 +16,19 @@ from emmet.core.electrode import (
     InsertionVoltagePairDoc,
 )
 
-PMG_TESTDIR = os.path.join(os.path.dirname(battery.__file__), "..", "..", "..", "test_files")
 
-
-@pytest.fixture
-def insertion_elec():
+@pytest.fixture(scope="session")
+def insertion_elec(test_dir):
     """
     Recycle the test cases from pymatgen
     """
     entry_Li = ComputedEntry("Li", -1.90753119)
+    entry_Mg = loadfn(test_dir / "Mg_batt.json")
     entry_Ca = ComputedEntry("Ca", -1.99689568)
 
-    with open(os.path.join(PMG_TESTDIR, "LiTiO2_batt.json"), "r") as f:
-        entries_LTO = json.load(f, cls=MontyDecoder)
-
-    with open(os.path.join(PMG_TESTDIR, "MgVO_batt.json"), "r") as file:
-        entries_MVO = json.load(file, cls=MontyDecoder)
-
-    with open(os.path.join(PMG_TESTDIR, "Mg_batt.json"), "r") as file:
-        entry_Mg = json.load(file, cls=MontyDecoder)
-
-    with open(os.path.join(PMG_TESTDIR, "CaMoO2_batt.json"), "r") as f:
-        entries_CMO = json.load(f, cls=MontyDecoder)
+    entries_LTO = loadfn(test_dir / "LiTiO2_batt.json")
+    entries_MVO = loadfn(test_dir / "MgVO_batt.json")
+    entries_CMO = loadfn(test_dir / "CaMoO2_batt.json")
 
     ie_LTO = InsertionElectrode.from_entries(entries_LTO, entry_Li)
     ie_MVO = InsertionElectrode.from_entries(entries_MVO, entry_Mg)
@@ -53,14 +44,13 @@ def insertion_elec():
 kmap = {"specific_energy": "energy_grav", "energy_density": "energy_vol"}
 
 
-@pytest.fixture
-def conversion_elec():
+@pytest.fixture(scope="session")
+def conversion_elec(test_dir):
     formulas = ["LiCoO2", "FeF3", "MnO2"]
     conversion_eletrodes = {}
     for f in formulas:
 
-        with open(os.path.join(PMG_TESTDIR, f + "_batt.json"), "r") as fid:
-            entries = json.load(fid, cls=MontyDecoder)
+        entries = loadfn(test_dir / f"{f}_batt.json", cls=MontyDecoder)
         if f in ["LiCoO2", "FeF3"]:
             working_ion = "Li"
         elif f in ["MnO2"]:
