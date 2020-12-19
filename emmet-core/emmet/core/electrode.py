@@ -180,8 +180,8 @@ class StructureGroupDoc(BaseModel):
 
     task_id: str = Field(
         None,
-        description="The combined task_id of the grouped document is given by the numerically smallest task id followed by '_Li' "
-        "or whichever working atom is considered the working ion during grouping.",
+        description="The combined task_id of the grouped document is given by the numerically smallest task id "
+        "followed by '_Li' or whichever working atom is considered the working ion during grouping.",
     )
 
     structure_matched: bool = Field(
