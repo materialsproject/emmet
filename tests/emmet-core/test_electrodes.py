@@ -22,6 +22,7 @@ from emmet.core.electrode import (
 def insertion_elec(test_dir):
     """
     Recycle the test cases from pymatgen
+    TODO: All thie can be serialized in battery_data.json after PR to pymatgen
     """
     entry_Li = ComputedEntry("Li", -1.90753119)
     entry_Mg = loadfn(test_dir / "Mg_batt.json")
