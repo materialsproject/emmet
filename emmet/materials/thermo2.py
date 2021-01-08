@@ -174,15 +174,19 @@ class ThermoBuilder(Builder):
                     ]
 
                 d["thermo"]["entry"] = e.as_dict()
-                d["thermo"]["explanation"] = [
-                            {"Type": c.__class__.__name__,
-                             "Name": c.name,
-                             "Value": c.value,
-                             "Uncertainty": c.uncertainty,
-                             "Description": c.explain,
-                             }
-                            for c in e.energy_adjustments
-                ]
+                d["thermo"]["explanation"] = {
+                    "compatibility": e.energy_adjustments[0].cls["@class"] if len(e.energy_adjustments) > 0 else None,
+                    "uncorrected_energy": e.uncorrected_energy,
+                    "corrected_energy": e.energy,
+                    "correction_uncertainty": e.correction_uncertainty,
+                    "corrections": [
+                        {"name": c.name,
+                         "description": c.explain,
+                         "value": c.value,
+                         "uncertainty": c.uncertainty}
+                        for c in e.energy_adjustments
+                                    ]
+                }
 
                 elsyms = sorted(set([el.symbol for el in e.composition.elements]))
                 d["chemsys"] = "-".join(elsyms)
@@ -296,8 +300,14 @@ class ThermoBuilder(Builder):
         )
 
         for d in data:
-            entry_type = "gga_u" if "gga_u" in d["entries"] else "gga"
-            entry = d["entries"][entry_type]
+            if "gga_u" in d["entries"]:
+                entry = d["entries"]["gga_u"]
+            elif "gga" in d["entries"]:
+                entry = d["entries"]["gga"]
+            else:
+                # we should only process GGA or GGA+U entries for now
+                continue
+
             # after the materials collection is built with the corrections key populated,
             # the line below can be deleted. Until then, it is necessary in order for
             # .from_dict() to work
@@ -367,7 +377,7 @@ def build_pd(entries):
     entries_by_comp = defaultdict(list)
     for e in entries:
         entries_by_comp[e.composition.reduced_formula].append(e)
-        
+
     reduced_entries = [sorted(comp_entries,key=lambda e: e.energy_per_atom)[0] for comp_entries in entries_by_comp.values()]
 
     return PhaseDiagram(reduced_entries)
