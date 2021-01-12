@@ -20,7 +20,7 @@ class TaskTagger(MapBuilder):
         task_types,
         input_sets=None,
         kpts_tolerance=0.9,
-        max_gradient=100,
+        max_gradient=10,
         LDAU_fields=["LDAUU", "LDAUJ", "LDAUL"],
         **kwargs,
     ):
@@ -240,21 +240,26 @@ def is_valid(
                 )
 
         # Checking task convergence
-        if calc_max_gradient(calcs[0]) > max_gradient:
+        ignored_steps = np.abs(inputs.get("incar", {}).get("NELMDL",-5)) -1
+        gradient = calc_max_gradient(calcs[0],ignored_steps)
+        if gradient > max_gradient:
             d["_warnings"].append(
-                f"Max gradient in electronic energy exceeded {max_gradient} at {calc_max_gradient(calcs[0])}"
+                f"Max gradient in electronic energy exceeded {max_gradient} at {gradient}"
             )
+            d["is_valid"] = False
 
     if len(d["_warnings"]) == 0:
         del d["_warnings"]
 
     return d
 
-
-def calc_max_gradient(calc):
+from itertools import chain
+def calc_max_gradient(calc,ignored_steps):
     energies = [
         [d["e_fr_energy"] for d in step["electronic_steps"]]
         for step in calc["output"]["ionic_steps"]
     ]
-    gradients = [g for e in energies for g in np.gradient(e)]
+    gradients = [np.gradient(e).tolist() for e in energies]
+    gradients = [g[:ignored_steps] for g in gradients if len(g) > ignored_steps]
+    gradients = list(chain.from_iterable(gradients)) or [0]
     return np.max(gradients)
