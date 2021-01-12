@@ -308,9 +308,6 @@ class ThermoBuilder(Builder):
                 # we should only process GGA or GGA+U entries for now
                 continue
 
-            # after the materials collection is built with the corrections key populated,
-            # the line below can be deleted. Until then, it is necessary in order for
-            # .from_dict() to work
             entry["entry_id"] = d["task_id"]
             entry = ComputedEntry.from_dict(entry)
             entry.data["oxide_type"] = oxide_type(Structure.from_dict(d["structure"]))
