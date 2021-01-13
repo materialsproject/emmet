@@ -12,7 +12,7 @@ from emmet.core.material import PropertyOrigin as PropertyOrigin
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 from emmet.core.vasp.task import TaskDocument
-from emmet.stubs import ComputedEntry, Structure
+from emmet.stubs import ComputedStructureEntry, Structure
 
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
@@ -34,7 +34,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         None, description="Mappingionary for tracking the provenance of properties"
     )
 
-    entries: Mapping[RunType, ComputedEntry] = Field(
+    entries: Mapping[RunType, ComputedStructureEntry] = Field(
         None, description="Dictionary for tracking entries for VASP calculations"
     )
 
@@ -43,7 +43,6 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         cls,
         task_group: List[TaskDocument],
         quality_scores=SETTINGS.VASP_QUALITY_SCORES,
-        special_tags=SETTINGS.VASP_SPECIAL_TAGS,
     ) -> "MaterialsDoc":
         """
         Converts a group of tasks into one material
@@ -53,7 +52,6 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         last_updated = max(task.last_updated for task in task_group)
         created_at = min(task.completed_at for task in task_group)
         task_ids = list({task.task_id for task in task_group})
-        sandboxes = list({sbxn for task in task_group for sbxn in task.sandboxes})
 
         deprecated_tasks = list(
             {task.task_id for task in task_group if not task.is_valid}
@@ -96,7 +94,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
                 -1 * is_valid,
                 -1 * quality_scores.get(task_run_type.value, 0),
                 -1 * task.input.parameters.get("ISPIN", 1),
-                -1 * sum(task.input.parameters.get(tag, False) for tag in special_tags),
+                -1 * task.input.parameters.get("LASPH", False),
                 task.output.energy_per_atom,
             )
 
@@ -135,15 +133,13 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
                 [doc for doc in structure_calcs if doc.run_type == rt],
                 key=_structure_eval,
             )
+
             if len(relevant_calcs) > 0:
                 best_task_doc = relevant_calcs[0]
-                entry = best_task_doc.entry
+                entry = best_task_doc.structure_entry
                 entry.data["task_id"] = entry.entry_id
                 entry.entry_id = material_id
                 entries[rt] = entry
-
-        # Warnings
-        # TODO: What warning should we process?
 
         return cls.from_structure(
             structure=structure,
@@ -159,7 +155,6 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             deprecated_tasks=deprecated_tasks,
             origins=origins,
             entries=entries,
-            sandboxes=sandboxes if sandboxes else None,
         )
 
 

@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
 
 from emmet.core import SETTINGS
-from emmet.core.material import PropertyDoc
+from emmet.core.material_property import PropertyDoc
 from emmet.core.structure import StructureMetadata
 from emmet.stubs import Matrix3D, Vector3D
 

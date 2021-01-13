@@ -1,5 +1,5 @@
 import pytest
-from pymatgen import Lattice
+from pymatgen import Element, Lattice
 
 from emmet.core.structure import StructureMetadata
 from emmet.core.symmetry import CrystalSystem, SymmetryData
@@ -22,13 +22,16 @@ def test_symmetry(structure):
     assert symm_doc.symbol == "Pm-3m"
     assert symm_doc.crystal_system == CrystalSystem.cubic
 
+    assert symm_doc.dict()["crystal_system"] == CrystalSystem.cubic
+    assert str(symm_doc.dict()["crystal_system"]) == "Cubic"
+
 
 def test_structure_metadata(structure):
 
     meta_doc = StructureMetadata.from_structure(structure)
 
     assert meta_doc.nsites == 1
-    assert meta_doc.elements == ["Fe"]
+    assert meta_doc.elements == [Element.Fe]
     assert meta_doc.nelements == 1
     assert meta_doc.formula_pretty == "Fe"
     assert meta_doc.formula_anonymous == "A"

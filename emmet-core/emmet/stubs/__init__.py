@@ -1,20 +1,23 @@
+# isort: off
 """
 This module stubs in pydantic models for common MSONable classes, particularly those in Pymatgen
 Use pymatgen classes in pydantic models by importing them from there when you need schema
 
 """
 
+from pymatgen.analysis.diffraction.xrd import DiffractionPattern
 from pymatgen.analysis.xas.spectrum import XAS
-from pymatgen.core.structure import Composition, Structure, Lattice
-from pymatgen.entries.computed_entries import ComputedEntry
-
-from emmet.stubs.math import Matrix3D, Vector3D, Tensor3R, Tensor4R
-from emmet.stubs.misc import Composition as StubComposition
-from emmet.stubs.misc import ComputedEntry as StubComputedEntry
-from emmet.stubs.structure import Structure as StubStructure
-from emmet.stubs.structure import Lattice as StubLattice
+from pymatgen.core.structure import Composition, Lattice, Structure
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.stubs.utils import patch_msonable, use_model
+from emmet.stubs.math import Matrix3D, Vector3D, Tensor3R, Tensor4R
+from emmet.stubs.structure import Lattice as StubLattice
+from emmet.stubs.structure import Structure as StubStructure
+from emmet.stubs.entries import Composition as StubComposition
+from emmet.stubs.entries import ComputedEntry as StubComputedEntry
+from emmet.stubs.entries import ComputedStructureEntry as StubComputedStructureEntry
+from emmet.stubs.xrd import XRDPattern as StubXRDPattern
 
 """
 The stub names are kept in sync with the actual classes so they
@@ -25,6 +28,8 @@ use_model(Structure, StubStructure)
 use_model(Lattice, StubLattice)
 use_model(Composition, StubComposition, add_monty=False)
 use_model(ComputedEntry, StubComputedEntry)
+use_model(DiffractionPattern, StubXRDPattern)
+use_model(ComputedStructureEntry, StubComputedStructureEntry)
 
 # This is after the main block since it depends on that
 from emmet.stubs.xas import XASSpectrum  # noqa
