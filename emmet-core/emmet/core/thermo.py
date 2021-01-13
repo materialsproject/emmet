@@ -1,7 +1,7 @@
 """ Core definition of a Thermo Document """
 from datetime import datetime
 from enum import Enum
-from typing import ClassVar, Dict, List
+from typing import ClassVar, Dict, List, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
@@ -9,7 +9,7 @@ from pymatgen.core.periodic_table import Element
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.structure import StructureMetadata
-from emmet.stubs import Composition, ComputedEntry
+from emmet.stubs import Composition, ComputedEntry, ComputedStructureEntry
 
 
 class DecompositionProduct(BaseModel):
@@ -83,14 +83,14 @@ class ThermoDoc(PropertyDoc):
         description="List of available energy types computed for this material"
     )
 
-    entries: Dict[str, ComputedEntry] = Field(
-        None,
+    entries: Dict[str, Union[ComputedEntry, ComputedStructureEntry]] = Field(
+        ...,
         description="List of all entries that are valid for this material."
         " The keys for this dictionary are names of various calculation types",
     )
 
     @classmethod
-    def from_entries(cls, entries: List[ComputedEntry]):
+    def from_entries(cls, entries: List[Union[ComputedEntry, ComputedStructureEntry]]):
 
         pd = PhaseDiagram(entries)
 

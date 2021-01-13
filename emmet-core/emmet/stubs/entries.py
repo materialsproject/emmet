@@ -3,6 +3,8 @@ from typing import Dict, List, Optional, Tuple, Union
 from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
 
+from emmet.stubs.structure import Structure
+
 
 class Composition(BaseModel):
     """A dictionary mapping element to total quantity"""
@@ -32,3 +34,11 @@ class ComputedEntry(BaseModel):
     )
     data: Dict = Field(None, description="Dictionary of extra data")
     entry_id: str = Field(None, description="Entry ID")
+
+
+class ComputedStructureEntry(ComputedEntry):
+    """
+    A entry of thermodynamic information for a particular structure
+    """
+
+    structure: Structure
