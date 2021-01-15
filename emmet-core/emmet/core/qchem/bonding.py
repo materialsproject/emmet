@@ -95,6 +95,8 @@ class Bonding(BaseModel):
         bab_bonds = {tuple(sorted(b)) for b in mg_bab.graph.edges()}
         if mg_cov is not None:
             cov_bonds = {tuple(sorted(b)) for b in mg_cov.graph.edges()}
+        else:
+            cov_bonds = None
 
         atom_types = dict()
         for ii, site in enumerate(molecule):
