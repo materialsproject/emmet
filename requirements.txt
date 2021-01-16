@@ -10,6 +10,6 @@ networkx==2.5
 sumo==2.1.0
 nltk==3.5
 matminer==0.6.4
-maggma==0.25.0
+maggma==0.26.0
 robocrys==0.2.6
 urllib3==1.24.3
