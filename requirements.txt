@@ -1,5 +1,5 @@
 atomate==0.9.5
-pymatgen==2020.12.31
+pymatgen==2020.9.14
 pymatgen-diffusion==2020.10.8
 monty==4.0.2
 pydash==4.9.0
