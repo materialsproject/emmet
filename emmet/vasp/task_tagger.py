@@ -242,7 +242,7 @@ def is_valid(
         # Checking task convergence
         ignored_steps = np.abs(inputs.get("incar", {}).get("NELMDL",-5)) -1
         gradient = calc_max_gradient(calcs[0],ignored_steps)
-        if gradient > max_gradient:
+        if gradient > max_gradient and "Structure Optimization" in tt:
             d["_warnings"].append(
                 f"Max gradient in electronic energy exceeded {max_gradient} at {gradient}"
             )
