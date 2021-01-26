@@ -85,10 +85,6 @@ def test_InsertionDocs(insertion_elec):
 
 def test_ConversionDocs_from_entries(conversion_elec):
     for k, (elec, expected) in conversion_elec.items():
-        # for sub_elec in elec["CE"].get_sub_electrodes(adjacent_only=True):
-        #     vp = ConversionVoltagePairDoc.from_sub_electrode(sub_electrode=sub_elec)
-        #     assert vp.average_voltage == sub_elec.get_average_voltage()
-        #
         vp = ConversionElectrodeDoc.from_composition_and_entries(
             Composition(k),
             entries=elec["entries"],
