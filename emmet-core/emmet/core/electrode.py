@@ -6,16 +6,10 @@ from pydantic import BaseModel, Field, validator
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
-from pymatgen.core.periodic_table import ElementBase
+from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry
 
 from emmet.stubs import Composition, Structure
-
-
-class WorkingIon(ElementBase):
-    Li = "Li"
-    Ca = "Ca"
-    Mg = "Mg"
 
 
 class VoltagePairDoc(BaseModel):
@@ -99,7 +93,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         description="Returns all the Voltage Steps",
     )
 
-    working_ion: WorkingIon = Field(
+    working_ion: Element = Field(
         None,
         description="The working ion as an Element object",
     )
