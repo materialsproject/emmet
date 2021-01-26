@@ -161,7 +161,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
         description="Returns all the adjacent Voltage Steps",
     )
 
-    working_ion: WorkingIon = Field(
+    working_ion: Element = Field(
         None,
         description="The working ion as an Element object",
     )
@@ -242,7 +242,7 @@ class StructureGroupDoc(BaseModel):
         None, description="The formula of the host framework."
     )
 
-    working_ion: WorkingIon = Field(None, description="The working ion")
+    working_ion: Element = Field(None, description="The working ion")
 
     chemsys: str = Field(
         None,
