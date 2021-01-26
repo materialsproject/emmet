@@ -1,10 +1,5 @@
-import json
-import os
-from pprint import pprint
-
 import pytest
-from monty.json import MontyDecoder
-from monty.serialization import dumpfn, loadfn
+from monty.serialization import loadfn
 from pymatgen import Composition
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
