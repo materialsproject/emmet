@@ -1,5 +1,4 @@
 import tempfile
-import gridfs
 import os
 import numpy as np
 import traceback
@@ -21,14 +20,14 @@ from abipy.core.abinit_units import eV_to_THz
 from maggma.builders import Builder
 from maggma.core import Store
 
-from emmet.core.phonon import PhononWarnings, ThermodynamicProperties, AbinitPhonon
+from emmet.core.phonon import PhononWarnings, ThermodynamicProperties, AbinitPhonon, VibrationalEnergy
 from emmet.core.phonon import PhononDos, PhononBandStructure, PhononWebsiteBS, Ddb, ThermalDisplacement
-from emmet.core.polar import Dielectric, BornEffectiveCharges
+from emmet.core.polar import Dielectric, BornEffectiveCharges, IRDielectric
 from emmet.core.utils import jsanitize
 
 
 class PhononBuilder(Builder):
-    def __init__(self, materials: Store, phonon: Store,
+    def __init__(self, materials: Store, ddb_source: Store, phonon: Store,
                  phonon_bs: Store, phonon_dos: Store,
                  ddb_files: Store, th_disp: Store,
                  phonon_website: Store,
@@ -71,6 +70,7 @@ class PhononBuilder(Builder):
 
         self.materials = materials
         self.phonon = phonon
+        self.ddb_source = ddb_source
         self.phonon_bs = phonon_bs
         self.phonon_dos = phonon_dos
         self.ddb_files = ddb_files
@@ -86,7 +86,7 @@ class PhononBuilder(Builder):
             self.manager = manager
 
         super().__init__(sources=[materials],
-                         targets=[phonon, phonon_bs, phonon_dos, ddb_files,
+                         targets=[phonon, ddb_source, phonon_bs, phonon_dos, ddb_files,
                                   th_disp, phonon_website], **kwargs)
 
     def get_items(self) -> Iterator[Dict]:
@@ -117,15 +117,21 @@ class PhononBuilder(Builder):
             "abinit_output.ddb_id": 1  # file ids to be fetched
         }
 
-        # initialize the gridfs. Assume the input is a MongoStore
-        ddbfs = gridfs.GridFS(self.materials.collection.database, "ddb_fs")
-
         for m in mats:
             item = self.materials.query_one(properties=projection, criteria={self.materials.key: m})
 
             # Read the DDB file and pass as an object. Do not write here since in case of parallel
             # execution each worker will write its own file.
-            item["ddb_str"] = ddbfs.get(item["abinit_output"]["ddb_id"]).read().decode('utf-8')
+            ddb_data = self.ddb_source.query_one(criteria={"_id": item["abinit_output"]["ddb_id"]})
+            if not ddb_data:
+                self.logger.warning(f"DDB file not found for file id {item['abinit_output']['ddb_id']}")
+                continue
+
+            try:
+                item["ddb_str"] = ddb_data["data"].decode("utf-8")
+            except:
+                self.logger.warning(f"could not extract DDB for file id {item['abinit_output']['ddb_id']}")
+                continue
 
             yield item
 
@@ -150,10 +156,10 @@ class PhononBuilder(Builder):
             sr_break = self.get_sum_rule_breakings(item)
             ph_warnings = get_warnings(sr_break["asr"], sr_break["cnsr"],
                                        phonon_properties["ph_bs"])
-            if not ph_warnings.has_neg_fr or ph_warnings.small_q_neg_fr:
-                thermodynamic = get_thermodynamic_properties(phonon_properties["ph_dos"])
+            if PhononWarnings.NEG_FREQ not in ph_warnings:
+                thermodynamic, vibrational_energy = get_thermodynamic_properties(phonon_properties["ph_dos"])
             else:
-                thermodynamic = None
+                thermodynamic, vibrational_energy = None, None
 
             becs = None
             if phonon_properties["becs"] is not None:
@@ -175,6 +181,7 @@ class PhononBuilder(Builder):
                 becs=becs,
                 ir_spectra=phonon_properties["ir_spectra"],
                 thermodynamic=thermodynamic,
+                vibrational_energy=vibrational_energy,
                 abinit_input_vars=abinit_input_vars,
             )
 
@@ -248,7 +255,8 @@ class PhononBuilder(Builder):
                                                                          use_dieflag=has_epsinf)
             task = self.run_anaddb(ddb_path=ddb_path, anaddb_input=anaddb_input, workdir=workdir, )
 
-            with task.open_phbst() as phbst_file, AnaddbNcFile(os.path.join(workdir, "anaddb.nc")) as ananc_file:
+            with task.open_phbst() as phbst_file, \
+                    AnaddbNcFile(task.outpath_from_ext("anaddb.nc")) as ananc_file:
                 # phbst
                 phbands = phbst_file.phbands
                 if has_bec:
@@ -276,8 +284,9 @@ class PhononBuilder(Builder):
                 if e_electronic and e_total and ananc_file.oscillator_strength is not None:
                     die_gen = DielectricTensorGenerator.from_objects(phbands, ananc_file)
 
-                    ir_spectra = IRDielectricTensor(die_gen.oscillator_strength, die_gen.phfreqs,
-                                                    die_gen.epsinf, die_gen.structure).as_dict()
+                    ir_tensor = IRDielectricTensor(die_gen.oscillator_strength, die_gen.phfreqs,
+                                                   die_gen.epsinf, die_gen.structure).as_dict()
+                    ir_spectra = IRDielectric(ir_dielectric_tensor=ir_tensor)
                 else:
                     ir_spectra = None
 
@@ -335,7 +344,7 @@ class PhononBuilder(Builder):
             task = self.run_anaddb(ddb_path, anaddb_input, workdir)
 
             if has_bec:
-                with AnaddbNcFile(os.path.join(workdir, "anaddb.nc")) as ananc_file:
+                with AnaddbNcFile(task.outpath_from_ext("anaddb.nc")) as ananc_file:
                     becs = ananc_file.becs
                     becs_val = becs.values.tolist() if becs else None
                     cnsr = np.max(np.abs(becs.sumrule)) if becs else None
@@ -433,16 +442,14 @@ class PhononBuilder(Builder):
             # Use tetrahedra with dense dosdeltae (required to get accurate value of the integral)
             prtdos = 2
             dosdeltae = 9e-07  # Ha = 2 cm^-1
-            # ng2qppa = 200000
-            ng2qppa = 10000
+            ng2qppa = 200000
             ng2qpt = KSampling.automatic_density(structure, kppa=ng2qppa).kpts[0]
             inp.set_vars(prtdos=prtdos, dosdeltae=dosdeltae, ng2qpt=ng2qpt)
         elif dos == 'gauss':
             # Use gauss with denser grid and a smearing
             prtdos = 1
             dosdeltae = 4.5e-06  # Ha = 10 cm^-1
-            # ng2qppa = 500000
-            ng2qppa = 20000
+            ng2qppa = 500000
             dossmear = 1.82e-5  # Ha = 4 cm^-1
             ng2qpt = KSampling.automatic_density(structure, kppa=ng2qppa).kpts[0]
             inp.set_vars(prtdos=prtdos, dosdeltae=dosdeltae, dossmear=dossmear, ng2qpt=ng2qpt)
@@ -628,7 +635,7 @@ class PhononBuilder(Builder):
 
 
 def get_warnings(asr_break: float, cnsr_break: float,
-                 ph_bs: PhononBandStructureSymmLine) -> PhononWarnings:
+                 ph_bs: PhononBandStructureSymmLine) -> List[PhononWarnings]:
     """
 
     Args:
@@ -640,8 +647,12 @@ def get_warnings(asr_break: float, cnsr_break: float,
         PhononWarnings: the model containing the data of the warnings.
     """
 
-    large_asr_break = asr_break > 30
-    large_cnsr_break = cnsr_break > 0.2 if cnsr_break else False
+    warnings = []
+
+    if asr_break > 30:
+        warnings.append(PhononWarnings.ASR)
+    if cnsr_break and cnsr_break > 0.2:
+        warnings.append(PhononWarnings.CNSR)
 
     # neglect small negative frequencies (0.03 THz ~ 1 cm^-1)
     limit = -0.03
@@ -649,24 +660,23 @@ def get_warnings(asr_break: float, cnsr_break: float,
     bands = np.array(ph_bs.bands)
     neg_freq = bands < limit
 
-    has_neg_freq = np.any(neg_freq)
+    # there are negative frequencies anywhere in the BZ
+    if np.any(neg_freq):
+        warnings.append(PhononWarnings.NEG_FREQ)
 
-    small_q_neg_fr = False
-    if has_neg_freq:
         qpoints = np.array([q.frac_coords for q in ph_bs.qpoints])
 
         qpt_has_neg_freq = np.any(neg_freq, axis=0)
 
         if np.max(np.linalg.norm(qpoints[qpt_has_neg_freq], axis=1)) < 0.05:
-            small_q_neg_fr = True
+            warnings.append(PhononWarnings.SMALL_Q_NEG_FREQ)
 
-    return PhononWarnings(large_asr_break=large_asr_break,
-                          large_cnsr_break=large_cnsr_break,
-                          has_neg_fr=has_neg_freq,
-                          small_q_neg_fr=small_q_neg_fr)
+    return warnings
 
 
-def get_thermodynamic_properties(ph_dos: CompletePhononDos) -> ThermodynamicProperties:
+def get_thermodynamic_properties(
+        ph_dos: CompletePhononDos
+) -> Tuple[ThermodynamicProperties, VibrationalEnergy]:
     """
     Calculates the thermodynamic properties from a phonon DOS
 
@@ -674,8 +684,8 @@ def get_thermodynamic_properties(ph_dos: CompletePhononDos) -> ThermodynamicProp
         ph_dos (CompletePhononDos): The DOS used to calculate the properties.
 
     Returns:
-        ThermodynamicProperties: the model containing the calculated thermodynamic
-            properties.
+        ThermodynamicProperties and VibrationalEnergy: the models containing the calculated thermodynamic
+            properties and vibrational contribution to the total energy.
     """
 
     tstart, tstop, nt = 0, 800, 161
@@ -692,8 +702,16 @@ def get_thermodynamic_properties(ph_dos: CompletePhononDos) -> ThermodynamicProp
         internal_energy.append(ph_dos.internal_energy(t, ph_dos.structure))
         helmholtz_free_energy.append(ph_dos.helmholtz_free_energy(t, ph_dos.structure))
 
-    return ThermodynamicProperties(temperatures=temp.tolist(),
-                                   cv=cv,
-                                   entropy=entropy,
-                                   internal_energy=internal_energy,
-                                   helmholtz_free_energy=helmholtz_free_energy)
+    zpe = ph_dos.zero_point_energy(ph_dos.structure)
+
+    temperatures = temp.tolist()
+    tp = ThermodynamicProperties(temperatures=temperatures,
+                                 cv=cv,
+                                 entropy=entropy)
+
+    ve = VibrationalEnergy(temperatures=temperatures,
+                           internal_energy=internal_energy,
+                           helmholtz_free_energy=helmholtz_free_energy,
+                           zero_point_energy=zpe)
+
+    return tp, ve

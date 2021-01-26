@@ -106,7 +106,7 @@ class Piezoelectric(PropertyDoc):
         )
 
 
-class BornEffectiveCharges(PropertyDoc):
+class BornEffectiveCharges(StructureMetadata):
     """
     A block for the Born effective charges
     """
@@ -125,4 +125,15 @@ class BornEffectiveCharges(PropertyDoc):
     cnsr_break: float = Field(
         None, description="The maximum breaking of the charge neutrality sum "
                           "rule (CNSR) in the Born effective charges."
+    )
+
+
+class IRDielectric(StructureMetadata):
+    """
+    A block for the pymatgen IRDielectricTensor object
+    """
+
+    ir_dielectric_tensor: dict = Field(
+        None,
+        description="Serialized version of a pymatgen IRDielectricTensor object."
     )

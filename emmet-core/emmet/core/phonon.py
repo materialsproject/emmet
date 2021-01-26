@@ -1,37 +1,22 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import List, Tuple, Optional, Literal
+from emmet.core.utils import DocEnum
 from emmet.stubs import Structure
 from emmet.stubs import Vector3D, Tensor4R
-from emmet.core.polar import Dielectric, BornEffectiveCharges
+from emmet.core.polar import Dielectric, BornEffectiveCharges, IRDielectric
 from emmet.core.structure import StructureMetadata
 
 
-class PhononWarnings(BaseModel):
-    """
-    Definition of the possible warnings associated with a phonon document.
-    """
-    large_asr_break: bool = Field(
-        None, description="True if acoustic sum rule max breaking is larger "
-                          "than 30 cm^-1."
-    )
+class PhononWarnings(DocEnum):
 
-    large_cnsr_break: bool = Field(
-        None, description="True if charge neutrality sum rule max breaking "
-                          "is larger than 0.2."
-    )
-
-    has_neg_fr: bool = Field(
-        None, description="True if the phonon band structure has negative "
-                          "frequencies anywhere in the Brillouin zone."
-    )
-
-    small_q_neg_fr: bool = Field(
-        None,
-        description="True if the phonon band structure has negative frequencies,"
-                    " but these are small and very close to the Gamma point "
-                    "(usually related to numerical errors)."
-    )
+    ASR = "ASR break", "acoustic sum rule max breaking is larger than 30 cm^-1."
+    CNSR = "CNSR break", "charge neutrality sum rule max breaking is larger than 0.2."
+    NEG_FREQ = "has negative frequencies", "phonon band structure has negative " \
+                                           "frequencies anywhere in the Brillouin zone."
+    SMALL_Q_NEG_FREQ = "has small q negative frequencies", "the phonon band structure has negative frequencies," \
+                                                           " but these are small and very close to the Gamma point " \
+                                                           "(usually related to numerical errors)."
 
 
 class PhononBandStructure(BaseModel):
@@ -186,6 +171,19 @@ class ThermodynamicProperties(BaseModel):
         description="The values of the vibrational entropy."
     )
 
+
+class VibrationalEnergy(BaseModel):
+    """
+    Definition of the vibrational contribution to the energy as function of
+    the temperature.
+    """
+
+    temperatures: List[float] = Field(
+        ...,
+        description="The list of temperatures at which the thermodynamic properties "
+                    "are calculated"
+    )
+
     internal_energy: List[float] = Field(
         ...,
         description="The values of the phonon contribution to the internal energy."
@@ -194,6 +192,11 @@ class ThermodynamicProperties(BaseModel):
     helmholtz_free_energy: List[float] = Field(
         ...,
         description="The values of the Helmholtz free energy."
+    )
+
+    zero_point_energy: float = Field(
+        ...,
+        description="The value of the zero point energy."
     )
 
 
@@ -216,9 +219,9 @@ class Phonon(StructureMetadata):
         None, description="The maximum breaking of the acoustic sum rule (ASR)."
     )
 
-    warnings: PhononWarnings = Field(
+    warnings: List[PhononWarnings] = Field(
         None,
-        description="The potential warnings associated to the phonon calculation."
+        description="List of warnings associated to the phonon calculation."
     )
 
     dielectric: Dielectric = Field(
@@ -231,15 +234,20 @@ class Phonon(StructureMetadata):
         description="Born effective charges obtained for a phonon calculation."
     )
 
-    ir_spectra: dict = Field(
+    ir_spectra: IRDielectric = Field(
         None,
-        description="Serialized version of a pymatgen IRDielectricTensor object."
+        description="The IRDielectricTensor."
     )
 
     thermodynamic: ThermodynamicProperties = Field(
         None,
         description="The thermodynamic properties extracted from the phonon "
                     "frequencies."
+    )
+
+    vibrational_energy: VibrationalEnergy = Field(
+        None,
+        description="The vibrational contributions to the total energy."
     )
 
     last_updated: datetime = Field(
