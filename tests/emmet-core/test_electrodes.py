@@ -29,9 +29,6 @@ def insertion_elec(test_dir):
     return d
 
 
-kmap = {"specific_energy": "energy_grav", "energy_density": "energy_vol"}
-
-
 @pytest.fixture(scope="session")
 def conversion_elec(test_dir):
     conversion_eletrodes = {}
