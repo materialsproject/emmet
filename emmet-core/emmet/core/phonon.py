@@ -1,11 +1,12 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
-from typing import List, Tuple, Optional, Literal
+from typing import List, Tuple, Optional
 from emmet.core.utils import DocEnum
 from emmet.stubs import Structure
 from emmet.stubs import Vector3D, Tensor4R
 from emmet.core.polar import Dielectric, BornEffectiveCharges, IRDielectric
 from emmet.core.structure import StructureMetadata
+from typing_extensions import Literal
 
 
 class PhononWarnings(DocEnum):
