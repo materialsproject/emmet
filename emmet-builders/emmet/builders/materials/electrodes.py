@@ -24,7 +24,7 @@ def s_hash(el):
     return el.data["comp_delith"]
 
 
-MatDoc = namedtuple("MatDoc", ["task_id", "structure", "formula_pretty", "framework"])
+# MatDoc = namedtuple("MatDoc", ["task_id", "structure", "formula_pretty", "framework"])
 
 REDOX_ELEMENTS = [
     "Ti",
@@ -46,7 +46,7 @@ REDOX_ELEMENTS = [
     "Hf",
 ]
 
-WORKING_IONS = ["Li", "Be", "Na", "Mg", "K", "Ca", "Rb", "Sr", "Cs", "Ba"]
+# WORKING_IONS = ["Li", "Be", "Na", "Mg", "K", "Ca", "Rb", "Sr", "Cs", "Ba"]
 
 MAT_PROPS = [
     "structure",
@@ -225,6 +225,7 @@ class StructureGroupBuilder(Builder):
                         f"Nuking all {len(target_mat_ids)} documents in chemsys {chemsys} in the target database."
                     )
                     self._remove_targets(target_mat_ids)
+                else:
                     continue
 
             yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
