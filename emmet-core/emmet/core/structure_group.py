@@ -68,7 +68,8 @@ class StructureGroupDoc(BaseModel):
 
     chemsys: str = Field(
         None,
-        description="The chemical system this group belongs to, if the atoms for the ignored species is present the chemsys will also include the ignored species.",
+        description="The chemical system this group belongs to, if the atoms for the ignored species is "
+        "present the chemsys will also include the ignored species.",
     )
 
     last_updated: datetime = Field(
