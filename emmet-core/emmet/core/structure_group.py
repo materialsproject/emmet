@@ -2,7 +2,7 @@ import logging
 import operator
 from datetime import datetime
 from itertools import groupby
-from typing import List, Union
+from typing import Iterable, List, Union
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
@@ -126,7 +126,7 @@ class StructureGroupDoc(BaseModel):
             "structure_matched": structure_matched,
             "framework_formula": framework_str,
             "ignored_species": sorted(ignored_species),
-            "chemsys": "-".join(sorted(all_atoms)),
+            "chemsys": "-".join(sorted(all_atoms | set(ignored_species))),
             "has_distinct_compositions": len(all_comps) > 1,
         }
 
@@ -202,7 +202,7 @@ class StructureGroupDoc(BaseModel):
 
 def group_entries_with_structure_matcher(
     g, struct_matcher
-) -> Iterator[List[Union[ComputedStructureEntry]]]:
+) -> Iterable[List[Union[ComputedStructureEntry]]]:
     """
     Group the entries together based on similarity of the  primitive cells
     Args:

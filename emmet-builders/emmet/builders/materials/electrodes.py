@@ -1,4 +1,5 @@
 import operator
+import math
 from collections import namedtuple
 from datetime import datetime
 from functools import lru_cache
@@ -13,6 +14,7 @@ from pymatgen import Composition
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.core import Structure
+from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 __author__ = "Jimmy Shen"
 __email__ = "jmmshn@lbl.gov"
@@ -180,11 +182,11 @@ class StructureGroupBuilder(Builder):
             if self.check_newer:
                 all_target_docs = list(
                     self.sgroups.query(
-                        criteria=chemsys_query,
+                        criteria={"chemsys": chemsys},
                         properties=[
                             "task_id",
                             self.sgroups.last_updated_field,
-                            "grouped_task_ids",
+                            "grouped_ids",
                         ],
                     )
                 )
@@ -215,27 +217,27 @@ class StructureGroupBuilder(Builder):
                 # If any material id is missing or if any material id has been updated
                 target_mat_ids = set()
                 for g_doc in all_target_docs:
-                    target_mat_ids |= set(g_doc["grouped_task_ids"])
+                    target_mat_ids |= set(g_doc["grouped_ids"])
 
                 self.logger.debug(
                     f"There are {len(mat_ids)} material ids in the source database vs {len(target_mat_ids)} in the target database."
                 )
                 if mat_ids == target_mat_ids and max_mat_time < min_target_time:
-                    self.logger.debug(
+                    continue
+                else:
+                    self.logger.info(
                         f"Nuking all {len(target_mat_ids)} documents in chemsys {chemsys} in the target database."
                     )
-                    self._remove_targets(target_mat_ids)
-                else:
-                    continue
+                    self._remove_targets(list(target_mat_ids))
 
             yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
 
     def update_targets(self, items: List):
-        items = list(filter(None, chain.from_iterable(items)))
+        # items = list(filter(None, chain.from_iterable(items)))
         if len(items) > 0:
             self.logger.info("Updating {} sgroups documents".format(len(items)))
-            for k in items:
-                k[self.sgroups.last_updated_field] = datetime.utcnow()
+            for struct_group_dict in items:
+                struct_group_dict[self.sgroups.last_updated_field] = datetime.utcnow()
             self.sgroups.update(docs=items, key=["task_id"])
         else:
             self.logger.info("No items to update")
@@ -262,8 +264,8 @@ class StructureGroupBuilder(Builder):
         )
         # append the working_ion to the group ids
         for sg in s_groups:
-            sg.task_id = f"{sg.task_id}_{self.working_id}"
-        return s_groups
+            sg.task_id = f"{sg.task_id}_{self.working_ion}"
+        return [sg.dict() for sg in s_groups]
 
     def _remove_targets(self, rm_ids):
         self.sgroups.remove_docs({"task_id": {"$in": rm_ids}})
