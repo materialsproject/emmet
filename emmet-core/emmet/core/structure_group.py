@@ -57,7 +57,7 @@ class StructureGroupDoc(BaseModel):
     structure_matched: bool = Field(
         None,
         description="True if the structure matching was performed to group theses entries together."
-        "This is False for groups that contain all the left over entries like the ones that only contain the ignored species.",
+        "This is False for sgroups that contain all the left over entries like the ones that only contain the ignored species.",
     )
 
     has_distinct_compositions: bool = Field(
