@@ -2,19 +2,19 @@ import logging
 import operator
 from datetime import datetime
 from itertools import groupby
-from typing import List
+from typing import List, Union
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
-from pymatgen.entries.computed_entries import ComputedStructureEntry
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.stubs import Composition, Structure
 
 logger = logging.getLogger(__name__)
 
 
-def generic_groupby(list_in, comp=operator.eq):
+def generic_groupby(list_in, comp=operator.eq) -> List[int]:
     """
     Group a list of unsortable objects
     Args:
@@ -95,7 +95,7 @@ class StructureGroupDoc(BaseModel):
     @classmethod
     def from_grouped_entries(
         cls,
-        entries: List[ComputedStructureEntry],
+        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
         ignored_species: List[str],
         structure_matched: bool,
     ) -> "StructureGroupDoc":
@@ -135,7 +135,7 @@ class StructureGroupDoc(BaseModel):
     @classmethod
     def from_ungrouped_structure_entries(
         cls,
-        entries: List[ComputedStructureEntry],
+        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
         ignored_species: List[str],
         ltol: float = 0.2,
         stol: float = 0.3,
@@ -200,7 +200,9 @@ class StructureGroupDoc(BaseModel):
         return results
 
 
-def group_entries_with_structure_matcher(g, struct_matcher):
+def group_entries_with_structure_matcher(
+    g, struct_matcher
+) -> Iterator[List[Union[ComputedStructureEntry]]]:
     """
     Group the entries together based on similarity of the  primitive cells
     Args:
@@ -217,7 +219,7 @@ def group_entries_with_structure_matcher(g, struct_matcher):
         yield [el for el in sub_g]
 
 
-def _get_id_num(task_id):
+def _get_id_num(task_id) -> Union[int, str]:
     if isinstance(task_id, int):
         return task_id
     if isinstance(task_id, str) and "-" in task_id:
