@@ -36,13 +36,14 @@ def entries_lfeo(test_dir):
 
 def test_StructureGroupDoc_from_grouped_entries(entries_lto):
     sgroup_doc = StructureGroupDoc.from_grouped_entries(
-        entries_lto, ignored_species=["Li"]
+        entries_lto, ignored_species=["Li"], structure_matched=True
     )
     assert sgroup_doc.task_id == "mp-0"
     assert sgroup_doc.grouped_ids == ["mp-0", "mp-1", "mp-2", "mp-3", "mp-4", "mp-5"]
-    assert sgroup_doc.framework == "TiO2"
+    assert sgroup_doc.framework_formula == "TiO2"
     assert sgroup_doc.ignored_species == ["Li"]
     assert sgroup_doc.chemsys == "Li-O-Ti"
+    assert sgroup_doc.has_distinct_compositions is True
 
 
 def test_StructureGroupDoc_from_ungrouped_entries(entries_lfeo):
@@ -53,7 +54,7 @@ def test_StructureGroupDoc_from_ungrouped_entries(entries_lfeo):
 
     # Make sure that all the structure in each group has the same framework
     for sgroup_doc in sgroup_docs:
-        framework_ref = sgroup_doc.framework
+        framework_ref = sgroup_doc.framework_formula
         ignored = sgroup_doc.ignored_species
         for entry_id in sgroup_doc.grouped_ids:
             dd_ = entry_dict[entry_id].composition.as_dict()

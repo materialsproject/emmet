@@ -51,7 +51,17 @@ class StructureGroupDoc(BaseModel):
 
     task_id: str = Field(
         None,
-        description="The id of the group is represented by the lowest numerical valued id amoung this group.",
+        description="The combined task_id of the grouped document is given by the numerically smallest task id ",
+    )
+
+    structure_matched: bool = Field(
+        None,
+        description="True if the structure matching was performed to group theses entries together."
+        "This is False for groups that contain all the left over entries like the ones that only contain the ignored species.",
+    )
+
+    has_distinct_compositions: bool = Field(
+        None, description="True if multiple compositions are present in the group."
     )
 
     grouped_ids: list = Field(
@@ -59,9 +69,9 @@ class StructureGroupDoc(BaseModel):
         description="A list of materials ids for all of the materials that were grouped together.",
     )
 
-    framework: str = Field(
+    framework_formula: str = Field(
         None,
-        description="The chemical formula for the framwork (the materials system without working ion).",
+        description="The chemical formula for the framework (the materials system without the ignored species).",
     )
 
     ignored_species: list = Field(None, description="List of ignored atomic species.")
@@ -84,7 +94,10 @@ class StructureGroupDoc(BaseModel):
 
     @classmethod
     def from_grouped_entries(
-        cls, entries: List[ComputedStructureEntry], ignored_species: List[str]
+        cls,
+        entries: List[ComputedStructureEntry],
+        ignored_species: List[str],
+        structure_matched: bool,
     ) -> "StructureGroupDoc":
         """ "
         Assuming a list of entries are already grouped together, create a StructureGroupDoc
@@ -92,8 +105,10 @@ class StructureGroupDoc(BaseModel):
             entries: A list of entries that is already grouped together.
         """
         all_atoms = set()
+        all_comps = set()
         for ient in entries:
             all_atoms |= set(ient.composition.as_dict().keys())
+            all_comps.add(ient.composition.reduced_formula)
 
         common_atoms = all_atoms - set(ignored_species)
         if len(common_atoms) == 0:
@@ -108,9 +123,11 @@ class StructureGroupDoc(BaseModel):
         fields = {
             "task_id": lowest_id,
             "grouped_ids": ids,
-            "framework": framework_str,
+            "structure_matched": structure_matched,
+            "framework_formula": framework_str,
             "ignored_species": sorted(ignored_species),
             "chemsys": "-".join(sorted(all_atoms)),
+            "has_distinct_compositions": len(all_comps) > 1,
         }
 
         return cls(**fields)
@@ -161,7 +178,7 @@ class StructureGroupDoc(BaseModel):
             f_group_l = list(f_group)
             if framework == "ignored":
                 struct_group = cls.from_grouped_entries(
-                    f_group_l, ignored_species=ignored_species
+                    f_group_l, ignored_species=ignored_species, structure_matched=False
                 )
                 cnt_ += len(struct_group.grouped_ids)
                 continue
@@ -171,7 +188,7 @@ class StructureGroupDoc(BaseModel):
             )
             for g in group_entries_with_structure_matcher(f_group_l, sm):
                 struct_group = cls.from_grouped_entries(
-                    g, ignored_species=ignored_species
+                    g, ignored_species=ignored_species, structure_matched=True
                 )
                 cnt_ += len(struct_group.grouped_ids)
                 results.append(struct_group)
