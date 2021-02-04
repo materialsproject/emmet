@@ -394,12 +394,13 @@ class InsertionElectrodeBuilder(MapBuilder):
             ient.data["volume"] = mat_structures[ient.entry_id].volume
             ient.data["decomposition_energy"] = decomp_energies[ient.entry_id]
 
-        return InsertionElectrodeDoc.from_entries(
+        ie = InsertionElectrodeDoc.from_entries(
             grouped_entries=entries,
             working_ion_entry=working_ion_entry,
             task_id=item["task_id"],
             host_structure=host_structure,
         )
+        return ie.dict()
         # failed = False
         # try:
         #     ie = InsertionElectrode.from_entries(entries, working_ion_entry)
