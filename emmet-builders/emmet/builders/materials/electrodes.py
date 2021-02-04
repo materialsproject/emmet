@@ -169,8 +169,11 @@ class StructureGroupBuilder(Builder):
             chemsys = "-".join(sorted(chemsys_l))
             chemsys_wo = "-".join(sorted(set(chemsys_l) - {self.working_ion}))
             chemsys_query = {
-                "chemsys": {"$in": [chemsys_wo, chemsys]},
-                "_sbxn": {"$in": ["core"]},
+                "$and": [
+                    {"chemsys": {"$in": [chemsys_wo, chemsys]}},
+                    {"_sbxn": {"$in": ["core"]}},
+                    self.query.copy(),
+                ]
             }
             self.logger.debug(f"QUERY: {chemsys_query}")
 
