@@ -233,7 +233,7 @@ class StructureGroupBuilder(Builder):
             yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
 
     def update_targets(self, items: List):
-        # items = list(filter(None, chain.from_iterable(items)))
+        items = list(filter(None, chain.from_iterable(items)))
         if len(items) > 0:
             self.logger.info("Updating {} sgroups documents".format(len(items)))
             for struct_group_dict in items:
