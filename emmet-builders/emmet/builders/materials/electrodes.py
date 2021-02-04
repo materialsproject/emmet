@@ -398,7 +398,7 @@ class InsertionElectrodeBuilder(MapBuilder):
             grouped_entries=entries,
             working_ion_entry=working_ion_entry,
             task_id=item["task_id"],
-            host_structure=host_structure.as_dict(),
+            host_structure=host_structure,
         )
         if ie is None:
             return {"failed_reason": "unable to create InsertionElectrode document"}
