@@ -11,6 +11,7 @@ from emmet.core.electrode import InsertionElectrodeDoc
 from emmet.core.structure_group import StructureGroupDoc
 from maggma.builders import Builder, MapBuilder
 from maggma.stores import MongoStore
+from monty.json import MontyEncoder
 from numpy import unique
 from pymatgen import Composition
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
@@ -402,17 +403,5 @@ class InsertionElectrodeBuilder(MapBuilder):
         )
         if ie is None:
             return {"failed_reason": "unable to create InsertionElectrode document"}
+
         return ie.dict()
-        # failed = False
-        # try:
-        #     ie = InsertionElectrode.from_entries(entries, working_ion_entry)
-        # except Exception:
-        #     failed = True
-        #
-        # if failed or ie.num_steps < 1:
-        #     res = {"task_id": item["task_id"], "has_step": False}
-        # else:
-        #     res = {"task_id": item["task_id"], "has_step": True}
-        #     res.update(ie.get_summary_dict())
-        #     res["InsertionElectrode"] = ie.as_dict()
-        # return res

@@ -9,6 +9,7 @@ from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry
 
+from emmet.core.utils import jsanitize
 from emmet.stubs import Composition, Structure
 
 
@@ -56,6 +57,9 @@ class VoltagePairDoc(BaseModel):
         Convert A pymatgen electrode object to a document
         """
         return cls(**sub_electrode.get_summary_dict(), **kwargs)
+
+    def dict(self, *args, **kwargs):
+        return jsanitize(super().dict(*args, **kwargs))
 
 
 class InsertionVoltagePairDoc(VoltagePairDoc):
