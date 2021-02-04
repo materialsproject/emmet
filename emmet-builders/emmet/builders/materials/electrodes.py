@@ -9,6 +9,7 @@ from typing import Iterable, Dict, List, Any
 
 from emmet.core.electrode import InsertionElectrodeDoc
 from emmet.core.structure_group import StructureGroupDoc
+from emmet.core.utils import jsanitize
 from maggma.builders import Builder, MapBuilder
 from maggma.stores import MongoStore
 from monty.json import MontyEncoder
@@ -403,5 +404,4 @@ class InsertionElectrodeBuilder(MapBuilder):
         )
         if ie is None:
             return {"failed_reason": "unable to create InsertionElectrode document"}
-
-        return ie.dict()
+        return jsanitize(ie.dict())

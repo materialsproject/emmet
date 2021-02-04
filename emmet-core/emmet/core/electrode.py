@@ -58,9 +58,6 @@ class VoltagePairDoc(BaseModel):
         """
         return cls(**sub_electrode.get_summary_dict(), **kwargs)
 
-    def dict(self, *args, **kwargs):
-        return jsanitize(super().dict(*args, **kwargs))
-
 
 class InsertionVoltagePairDoc(VoltagePairDoc):
     """

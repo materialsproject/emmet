@@ -44,7 +44,7 @@ class Dielectric(PropertyDoc):
     @classmethod
     def from_ionic_and_electronic(cls, ionic: Matrix3D, electronic: Matrix3D):
 
-        total = np.sum(ionic, electronic).tolist()
+        total = np.sum(ionic, electronic).tolist()  # type: ignore
 
         return cls(
             **{
@@ -81,7 +81,7 @@ class Piezoelectric(PropertyDoc):
     @classmethod
     def from_ionic_and_electronic(cls, ionic: Matrix3D, electronic: Matrix3D):
 
-        total = BasePiezoTensor.from_voigt(np.sum(ionic, electronic))
+        total = BasePiezoTensor.from_voigt(np.sum(ionic, electronic))  # type: ignore
 
         directions, charges, strains = np.linalg.svd(total, full_matrices=False)
         max_index = np.argmax(np.abs(charges))
