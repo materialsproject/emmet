@@ -7,6 +7,7 @@ from itertools import groupby, chain
 from pprint import pprint
 from typing import Iterable, Dict, List, Any
 
+from emmet.core.electrode import InsertionElectrodeDoc
 from emmet.core.structure_group import StructureGroupDoc
 from maggma.builders import Builder, MapBuilder
 from maggma.stores import MongoStore
@@ -346,6 +347,7 @@ class InsertionElectrodeBuilder(MapBuilder):
             return {
                 "task_id": item["task_id"],
                 "working_ion_doc": working_ion_doc,
+                "workin_ion": item["ignored_species"][0],
                 "thermo_docs": thermo_docs,
                 "material_docs": material_docs,
             }
@@ -356,7 +358,6 @@ class InsertionElectrodeBuilder(MapBuilder):
         """
         - Add volume information to each entry to create the insertion electrode document
         - Add the host structure
-        - TODO parse the structures in the different materials documents and create a simple migration graph
         """
         entries = [tdoc_["thermo"]["entry"] for tdoc_ in item["thermo_docs"]]
         entries = list(map(ComputedEntry.from_dict, entries))
@@ -372,35 +373,43 @@ class InsertionElectrodeBuilder(MapBuilder):
             for mat_d_ in item["material_docs"]
         }
 
+        least_wion_ent = min(
+            entries, key=lambda x: x.composition.get_atomic_fraction(working_ion)
+        )
+        mdoc_ = next(
+            filter(
+                lambda x: x["task_id"] == least_wion_ent.entry_id,
+                item["material_docs"],
+            )
+        )
+        host_structure = Structure.from_dict(mdoc_["structure"])
+        host_structure.remove_species([item["working_ion"]])
+
         for ient in entries:
             if mat_structures[ient.entry_id].composition != ient.composition:
                 raise RuntimeError(
-                    f"In {item['task_id']}: the compositions for task {ient.entry_id} are matched between the StructureGroup DB and the Thermo DB "
+                    f"In {item['task_id']}: the compositions for task {ient.entry_id} are matched "
+                    "between the StructureGroup DB and the Thermo DB "
                 )
             ient.data["volume"] = mat_structures[ient.entry_id].volume
             ient.data["decomposition_energy"] = decomp_energies[ient.entry_id]
 
-        failed = False
-        try:
-            ie = InsertionElectrode.from_entries(entries, working_ion_entry)
-        except Exception:
-            failed = True
-
-        if failed or ie.num_steps < 1:
-            res = {"task_id": item["task_id"], "has_step": False}
-        else:
-            res = {"task_id": item["task_id"], "has_step": True}
-            res.update(ie.get_summary_dict())
-            res["InsertionElectrode"] = ie.as_dict()
-            least_wion_ent = min(
-                entries, key=lambda x: x.composition.get_atomic_fraction(working_ion)
-            )
-            mdoc_ = next(
-                filter(
-                    lambda x: x["task_id"] == least_wion_ent.entry_id,
-                    item["material_docs"],
-                )
-            )
-            host_structure = Structure.from_dict(mdoc_["structure"])
-            res["host_structure"] = host_structure.as_dict()
-        return res
+        return InsertionElectrodeDoc.from_entries(
+            grouped_entries=entries,
+            working_ion_entry=working_ion_entry,
+            task_id=item["task_id"],
+            host_structure=host_structure,
+        )
+        # failed = False
+        # try:
+        #     ie = InsertionElectrode.from_entries(entries, working_ion_entry)
+        # except Exception:
+        #     failed = True
+        #
+        # if failed or ie.num_steps < 1:
+        #     res = {"task_id": item["task_id"], "has_step": False}
+        # else:
+        #     res = {"task_id": item["task_id"], "has_step": True}
+        #     res.update(ie.get_summary_dict())
+        #     res["InsertionElectrode"] = ie.as_dict()
+        # return res
