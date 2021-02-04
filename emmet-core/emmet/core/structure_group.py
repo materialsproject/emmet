@@ -23,10 +23,10 @@ def generic_groupby(list_in, comp=operator.eq) -> List[int]:
     Returns:
         [int] list of labels for the input list
     """
-    list_out = [None] * len(list_in)
+    list_out = [-1] * len(list_in)
     label_num = 0
     for i1, ls1 in enumerate(list_out):
-        if ls1 is not None:
+        if ls1 != -1:
             continue
         list_out[i1] = label_num
         for i2, ls2 in list(enumerate(list_out))[i1 + 1 :]:
@@ -57,7 +57,8 @@ class StructureGroupDoc(BaseModel):
     structure_matched: bool = Field(
         None,
         description="True if the structure matching was performed to group theses entries together."
-        "This is False for groups that contain all the left over entries like the ones that only contain the ignored species.",
+        "This is False for groups that contain all the left over entries like the ones that only "
+        "contain the ignored species.",
     )
 
     has_distinct_compositions: bool = Field(

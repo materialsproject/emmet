@@ -305,14 +305,14 @@ class StructureGroupBuilder(Builder):
 #
 #         def modify_item(item):
 #             self.logger.debug(
-#                 f"Looking for {len(item['grouped_task_ids'])} task_ids in the Thermo DB."
+#                 f"Looking for {len(item['grouped_ids'])} task_ids in the Thermo DB."
 #             )
 #             with self.thermo as store:
 #                 thermo_docs = [
 #                     *store.query(
 #                         {
 #                             "$and": [
-#                                 {"task_id": {"$in": item["grouped_task_ids"]}},
+#                                 {"task_id": {"$in": item["grouped_ids"]}},
 #                                 {"_sbxn": {"$in": ["core"]}},
 #                             ]
 #                         },
