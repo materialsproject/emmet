@@ -347,7 +347,7 @@ class InsertionElectrodeBuilder(MapBuilder):
             return {
                 "task_id": item["task_id"],
                 "working_ion_doc": working_ion_doc,
-                "workin_ion": item["ignored_species"][0],
+                "working_ion": item["ignored_species"][0],
                 "thermo_docs": thermo_docs,
                 "material_docs": material_docs,
             }
