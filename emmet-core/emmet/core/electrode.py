@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
@@ -127,10 +127,13 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         working_ion_entry: ComputedEntry,
         task_id: str,
         host_structure: Structure,
-    ):
-        ie = InsertionElectrode.from_entries(
-            entries=grouped_entries, working_ion_entry=working_ion_entry
-        )
+    ) -> Union["InsertionElectrodeDoc", None]:
+        try:
+            ie = InsertionElectrode.from_entries(
+                entries=grouped_entries, working_ion_entry=working_ion_entry
+            )
+        except IndexError:
+            return None
         d = ie.get_summary_dict()
         d["num_steps"] = d.pop("nsteps", None)
         d["last_updated"] = datetime.utcnow()
