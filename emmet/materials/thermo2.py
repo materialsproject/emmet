@@ -2,12 +2,13 @@ from itertools import chain, combinations
 from collections import defaultdict
 
 from pymatgen import Structure, Composition
-from pymatgen.entries.compatibility import MaterialsProjectCompatibility
+from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.entries.computed_entries import ComputedEntry
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.analysis.structure_analyzer import oxide_type
 
 from maggma.builders import Builder
+from emmet.vasp.materials import ID_to_int
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -24,7 +25,8 @@ class ThermoBuilder(Builder):
                 energy and decomposition pathway
             query (dict): dictionary to limit materials to be analyzed
             compatibility (PymatgenCompatability): Compatability module
-                to ensure energies are compatible
+                to ensure energies are compatible. If not specified
+                (compatibility=None), defaults to MaterialsProject2020Compatibility.
         """
 
         self.materials = materials
@@ -33,7 +35,7 @@ class ThermoBuilder(Builder):
         self.compatibility = (
             compatibility
             if compatibility
-            else MaterialsProjectCompatibility("Advanced")
+            else MaterialsProject2020Compatibility()
         )
         self.completed_tasks = set()
         self.entries_cache = defaultdict(list)
@@ -61,11 +63,12 @@ class ThermoBuilder(Builder):
         self.logger.debug(f"Found {len(updated_comps)} updated chemsys")
 
         # All materials that are not present in the thermo collection
-        thermo_mat_ids = self.thermo.distinct(self.thermo.key)
-        mat_ids = self.materials.distinct(self.materials.key, self.query)
-        dif_task_ids = list(set(mat_ids) - set(thermo_mat_ids))
+        # convert all mat_ids into str in case the underlying type is heterogeneous
+        thermo_mat_ids = {ID_to_int(t) for t in self.thermo.distinct(self.thermo.key)}
+        mat_ids = {ID_to_int(t) for t in self.materials.distinct(self.materials.key, self.query)}
+        dif_task_ids = list(mat_ids - thermo_mat_ids)
         q = dict(self.query)
-        q.update({"task_id": {"$in": dif_task_ids}})
+        q.update({"task_id": {"$in": ["{}-{}".format(t[0], t[1]) if t[0] != "" else str(t[1]) for t in dif_task_ids ]}})
         new_mat_comps = set(self.materials.distinct("chemsys", q))
         self.logger.debug(f"Found {len(new_mat_comps)} new materials")
 
@@ -126,7 +129,7 @@ class ThermoBuilder(Builder):
         docs = []
 
         sandboxes, entries = item
-        entries = self.compatibility.process_entries(entries,clean=True)
+        entries = self.compatibility.process_entries(entries, clean=True)
 
         # determine chemsys
         chemsys = "-".join(
@@ -171,7 +174,19 @@ class ThermoBuilder(Builder):
                     ]
 
                 d["thermo"]["entry"] = e.as_dict()
-                d["thermo"]["explanation"] = self.compatibility.get_explanation_dict(e)
+                d["thermo"]["explanation"] = {
+                    "compatibility": e.energy_adjustments[0].cls["@class"] if len(e.energy_adjustments) > 0 else None,
+                    "uncorrected_energy": e.uncorrected_energy,
+                    "corrected_energy": e.energy,
+                    "correction_uncertainty": e.correction_uncertainty,
+                    "corrections": [
+                        {"name": c.name,
+                         "description": c.explain,
+                         "value": c.value,
+                         "uncertainty": c.uncertainty}
+                        for c in e.energy_adjustments
+                                    ]
+                }
 
                 elsyms = sorted(set([el.symbol for el in e.composition.elements]))
                 d["chemsys"] = "-".join(elsyms)
@@ -285,9 +300,14 @@ class ThermoBuilder(Builder):
         )
 
         for d in data:
-            entry_type = "gga_u" if "gga_u" in d["entries"] else "gga"
-            entry = d["entries"][entry_type]
-            entry["correction"] = 0.0
+            if "gga_u" in d["entries"]:
+                entry = d["entries"]["gga_u"]
+            elif "gga" in d["entries"]:
+                entry = d["entries"]["gga"]
+            else:
+                # we should only process GGA or GGA+U entries for now
+                continue
+
             entry["entry_id"] = d["task_id"]
             entry = ComputedEntry.from_dict(entry)
             entry.data["oxide_type"] = oxide_type(Structure.from_dict(d["structure"]))
@@ -353,7 +373,7 @@ def build_pd(entries):
     entries_by_comp = defaultdict(list)
     for e in entries:
         entries_by_comp[e.composition.reduced_formula].append(e)
-        
+
     reduced_entries = [sorted(comp_entries,key=lambda e: e.energy_per_atom)[0] for comp_entries in entries_by_comp.values()]
 
     return PhaseDiagram(reduced_entries)

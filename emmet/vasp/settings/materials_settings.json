@@ -238,6 +238,7 @@
     "materials_key": "entries.scan.composition",
     "tasks_key": "composition_unit_cell",
     "quality_score": {
+      "SCAN Static": 2,
       "SCAN Structure Optimization": 1
     }
   },
@@ -271,6 +272,86 @@
     "quality_score": {
       "SCAN Static": 2,
       "SCAN Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.r2scan.composition",
+    "tasks_key": "composition_unit_cell",
+    "quality_score": {
+      "R2SCAN Static": 2,
+      "R2SCAN Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.r2scan.energy",
+    "tasks_key": "output.energy",
+    "quality_score": {
+      "R2SCAN Static": 2,
+      "R2SCAN Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.r2scan.parameters.potcar_spec",
+    "tasks_key": "input.potcar_spec",
+    "quality_score": {
+      "R2SCAN Static": 2,
+      "R2SCAN Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.r2scan.parameters.run_type",
+    "tasks_key": "calcs_reversed.0.run_type",
+    "quality_score": {
+      "R2SCAN Static": 2,
+      "R2SCAN Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.r2scan.parameters.task_id",
+    "tasks_key": "task_id",
+    "quality_score": {
+      "R2SCAN Static": 2,
+      "R2SCAN Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.pbesol.composition",
+    "tasks_key": "composition_unit_cell",
+    "quality_score": {
+      "PBEsol Static": 2,
+      "PBEsol Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.pbesol.energy",
+    "tasks_key": "output.energy",
+    "quality_score": {
+      "PBEsol Static": 2,
+      "PBEsol Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.pbesol.parameters.potcar_spec",
+    "tasks_key": "input.potcar_spec",
+    "quality_score": {
+      "PBEsol Static": 2,
+      "PBEsol Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.pbesol.parameters.run_type",
+    "tasks_key": "calcs_reversed.0.run_type",
+    "quality_score": {
+      "PBEsol Static": 2,
+      "PBEsol Structure Optimization": 1
+    }
+  },
+  {
+    "materials_key": "entries.pbesol.parameters.task_id",
+    "tasks_key": "task_id",
+    "quality_score": {
+      "PBEsol Static": 2,
+      "PBEsol Structure Optimization": 1
     }
   },
   {
@@ -335,12 +416,46 @@
     "tasks_key": "orig_inputs"
   },
   {
+    "materials_key": "inputs.r2scan_opt",
+    "quality_score": {
+      "R2SCAN Structure Optimization": 2
+    },
+    "tasks_key": "orig_inputs"
+  },
+  {
+    "materials_key": "inputs.r2scan_static",
+    "quality_score": {
+      "R2SCAN Static": 6
+    },
+    "tasks_key": "orig_inputs"
+  },
+  {
+    "materials_key": "inputs.pbesol_opt",
+    "quality_score": {
+      "PBEsol Structure Optimization": 2
+    },
+    "tasks_key": "orig_inputs"
+  },
+  {
+    "materials_key": "inputs.pbesol_static",
+    "quality_score": {
+      "PBEsol Static": 6
+    },
+    "tasks_key": "orig_inputs"
+  },
+  {
     "materials_key": "structure",
     "quality_score": {
-      "GGA+U Static": 4,
-      "GGA+U Structure Optimization": 3,
-      "GGA Static": 2,
-      "GGA Structure Optimization": 1
+      "GGA+U Static": 10,
+      "GGA+U Structure Optimization": 9,
+      "GGA Static": 8,
+      "GGA Structure Optimization": 7,
+      "PBEsol Static": 6,
+      "PBEsol Structure Optimization": 5,
+      "R2SCAN Static": 4,
+      "R2SCAN Structure Optimization": 3,
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
     },
     "tasks_key": "output.structure",
     "track": true
@@ -348,7 +463,21 @@
   {
     "materials_key": "scan_structure",
     "quality_score": {
-      "SCAN Structure Optimization": 6
+      "SCAN Structure Optimization": 1
+    },
+    "tasks_key": "output.structure"
+  },
+  {
+    "materials_key": "r2scan_structure",
+    "quality_score": {
+      "R2SCAN Structure Optimization": 1
+    },
+    "tasks_key": "output.structure"
+  },
+  {
+    "materials_key": "pbesol_structure",
+    "quality_score": {
+      "PBEsol Structure Optimization": 1
     },
     "tasks_key": "output.structure"
   },

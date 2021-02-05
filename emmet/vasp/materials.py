@@ -2,7 +2,7 @@ from pathlib import Path
 from datetime import datetime
 from itertools import chain, groupby
 from operator import itemgetter
-from typing import Optional, Dict, List, Iterator
+from typing import Optional, Dict, List, Iterator, Union
 
 from monty.json import jsanitize
 from pymatgen import Structure
@@ -414,6 +414,7 @@ class MaterialsBuilder(Builder):
 
         for entry in mat.get("entries", {}).values():
             entry["entry_id"] = mat[self.materials.key]
+            entry["correction"] = 0
 
         for entry_type in list(mat.get("entries", {}).keys()):
             if any(
@@ -582,7 +583,7 @@ def group_structures(
             yield group
 
 
-def ID_to_int(s_id: str) -> int:
+def ID_to_int(s_id: Union[str, int]) -> tuple:
     """
     Converts a string id to tuple
     falls back to assuming ID is an Int if it can't process
@@ -590,7 +591,7 @@ def ID_to_int(s_id: str) -> int:
     """
     if isinstance(s_id, str):
         return (s_id.split("-")[0], int(str(s_id).split("-")[-1]))
-    elif isinstance(s_id, (int, float)):
-        return s_id
+    elif isinstance(s_id, int):
+        return ("", s_id)
     else:
         raise Exception(f"Could not parse {s_id} into a number")

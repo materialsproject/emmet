@@ -20,7 +20,8 @@ class TaskTagger(MapBuilder):
         task_types,
         input_sets=None,
         kpts_tolerance=0.9,
-        max_gradient=10,
+        kspacing_tolerance=0.05,
+        max_gradient=100,
         LDAU_fields=["LDAUU", "LDAUJ", "LDAUL"],
         **kwargs,
     ):
@@ -31,7 +32,10 @@ class TaskTagger(MapBuilder):
             tasks (Store): Store of task documents
             task_types (Store): Store of task_types for tasks
             input_sets (Dict): dictionary of task_type and pymatgen input set to validate against
-            kpts_tolerance (float): the minimum kpt density as dictated by the InputSet to require
+            kpts_tolerance (float): relative tolerance to allow kpts to lag behind the InputSet settings
+                (i.e., k-point density may be as low as kpts_tolerance times the InputSet value)
+            kspacing_tolerance (float): absolute tolerance to allow KSPACING to differ from the InputSet settings
+                (i.e., KSPACING may be as much as kspacing_tolerance larger than the InputSet value)
             LDAU_fields (list(String)): LDAU fields to check for consistency
         """
         self.tasks = tasks
@@ -41,8 +45,15 @@ class TaskTagger(MapBuilder):
             "GGA+U Structure Optimization": "MPRelaxSet",
             "GGA Static": "MPStaticSet",
             "GGA+U Static": "MPStaticSet",
+            "SCAN Structure Optimization": "MPScanRelaxSet",
+            "SCAN Static": "MPScanStaticSet",
+            "R2SCAN Structure Optimization": "MPScanRelaxSet",
+            "R2SCAN Static": "MPScanStaticSet",
+            "PBEsol Structure Optimization": "MPScanRelaxSet",
+            "PBEsol Static": "MPScanStaticSet",
         }
         self.kpts_tolerance = kpts_tolerance
+        self.kspacing_tolerance = kspacing_tolerance
         self.LDAU_fields = LDAU_fields
         self.max_gradient = max_gradient
 
@@ -56,12 +67,12 @@ class TaskTagger(MapBuilder):
         super().__init__(
             source=tasks,
             target=task_types,
-            projection=[
-                "orig_inputs",
-                "output.structure",
-                "input.hubbards",
-                "calcs_reversed.output.ionic_steps.electronic_steps.e_fr_energy",
-            ],
+            projection=["orig_inputs",
+                        "output.structure",
+                        "output.bandgap",
+                        "input.hubbards",
+                        "calcs_reversed.output.ionic_steps.electronic_steps.e_fr_energy",
+                        ],
             **kwargs,
         )
 
@@ -75,9 +86,11 @@ class TaskTagger(MapBuilder):
         tt = task_type(item["orig_inputs"])
         iv = is_valid(
             structure=item["output"]["structure"],
+            bandgap=item["output"]["bandgap"],
             inputs=item["orig_inputs"],
             input_sets=self._input_sets,
             kpts_tolerance=self.kpts_tolerance,
+            kspacing_tolerance=self.kspacing_tolerance,
             calcs=item["calcs_reversed"],
             max_gradient=self.max_gradient,
             hubbards=item.get("input", {}).get("hubbards", {}),
@@ -105,7 +118,7 @@ def task_type(inputs, include_calc_type=True):
     except Exception:
         functional = "PBE"
 
-    METAGGA_TYPES = {"TPSS", "RTPSS", "M06L", "MBJL", "SCAN", "MS0", "MS1", "MS2"}
+    METAGGA_TYPES = {"TPSS", "RTPSS", "M06L", "MBJL", "SCAN", "R2SCAN", "MS0", "MS1", "MS2"}
 
     if include_calc_type:
         if incar.get("LHFCALC", False):
@@ -114,6 +127,8 @@ def task_type(inputs, include_calc_type=True):
             calc_type.append(incar["METAGGA"].strip().upper())
         elif incar.get("LDAU", False):
             calc_type.append("GGA+U")
+        elif incar.get("GGA", "").strip().upper() == "PS":
+            calc_type.append("PBEsol")
         elif functional == "PBE":
             calc_type.append("GGA")
         elif functional == "PW91":
@@ -164,21 +179,27 @@ def task_type(inputs, include_calc_type=True):
 
 def is_valid(
     structure,
+    bandgap,
     inputs,
     input_sets,
     calcs,
     max_gradient=100,
     kpts_tolerance=0.9,
+    kspacing_tolerance=0.05,
     hubbards={},
 ):
     """
     Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
 
     Args:
-        structure (dict or Structure): the output structure from the calculation
-        inputs (dict): a dict representation of the inputs in traditional pymatgen inputset form
-        input_sets (dict): a dictionary of task_types -> pymatgen input set for validation
-        kpts_tolerance (float): the tolerance to allow kpts to lag behind the input set settings
+        structure (dict or Structure): the output Structure from the calculation
+        bandgap (float): The output bandgap of the calculation, in eV
+        inputs (dict): a dict representation of the inputs in traditional pymatgen InputSet form
+        input_sets (dict): a dictionary of task_types -> pymatgen InputSet for validation
+        kpts_tolerance (float): relative tolerance to allow kpts to lag behind the InputSet settings
+            (i.e., k-point density may be as low as kpts_tolerance times the InputSet value)
+        kspacing_tolerance (float): absolute tolerance to allow KSPACING to differ from the InputSet settings
+            (i.e., KSPACING may be as much as kspacing_tolerance larger than the InputSet value)
         LDAU_fields (list(String)): LDAU fields to check for consistency
     """
 
@@ -189,19 +210,36 @@ def is_valid(
     d = {"is_valid": True, "_warnings": []}
 
     if tt in input_sets:
-        valid_input_set = input_sets[tt](structure)
+        if "SCAN" in tt or "PBEsol" in tt:
+            # MPScanRelaxSet takes bandgap as an additional kwarg
+            valid_input_set = input_sets[tt](structure, bandgap)
+        else:
+            valid_input_set = input_sets[tt](structure)
 
         # Checking K-Points
-        valid_num_kpts = valid_input_set.kpoints.num_kpts or np.prod(
-            valid_input_set.kpoints.kpts[0]
-        )
-        num_kpts = inputs.get("kpoints", {}).get("nkpoints", 0) or np.prod(
-            inputs.get("kpoints", {}).get("kpoints", [0, 0, 0])
-        )
-        d["kpts_ratio"] = num_kpts / valid_num_kpts
-        if d["kpts_ratio"] < kpts_tolerance:
-            d["is_valid"] = False
-            d["_warnings"].append("Too few KPoints")
+        # Calculations that use KSPACING will not have a .kpoints attr
+        if valid_input_set.kpoints is not None:
+            valid_num_kpts = valid_input_set.kpoints.num_kpts or np.prod(
+                valid_input_set.kpoints.kpts[0]
+            )
+            num_kpts = inputs.get("kpoints", {}).get("nkpoints", 0) or np.prod(
+                inputs.get("kpoints", {}).get("kpoints", [0, 0, 0])
+            )
+            d["kpts_ratio"] = num_kpts / valid_num_kpts
+            if d["kpts_ratio"] < kpts_tolerance:
+                d["is_valid"] = False
+                d["_warnings"].append("Too few KPoints")
+        else:
+            valid_kspacing = valid_input_set.incar.get("KSPACING", 0)
+            if inputs["incar"].get("KSPACING"):
+                d["kspacing_delta"] = inputs["incar"].get("KSPACING") - valid_kspacing
+                # larger KSPACING means fewer k-points
+                if d["kspacing_delta"] > kspacing_tolerance:
+                    # warn, but don't invalidate
+                    d["_warnings"].append("KSPACING differs")
+            else:
+                d["is_valid"] = False
+                d["_warnings"].append("KSPACING not set")
 
         # Checking ENCUT
         encut = inputs.get("incar", {}).get("ENCUT")
@@ -238,6 +276,14 @@ def is_valid(
                         for el, (bad, good) in diff.items()
                     ]
                 )
+
+        # check smearing settings
+        ismear = inputs["incar"].get("ISMEAR", 1)
+
+        # ISMEAR > 0 is only appropriate for metals, per VASP docs
+        if ismear > 0 and bandgap > 0:
+            # warn, but don't invalidate
+            d["_warnings"].append("Inappropriate smearing settings")
 
         # Checking task convergence
         ignored_steps = np.abs(inputs.get("incar", {}).get("NELMDL",-5)) -1
