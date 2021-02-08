@@ -73,6 +73,7 @@ def test_InsertionDocs(insertion_elec):
         for sub_elec in elec.get_sub_electrodes(adjacent_only=True):
             vp = InsertionVoltagePairDoc.from_sub_electrode(sub_electrode=sub_elec)
             assert vp.average_voltage == sub_elec.get_average_voltage()
+        # assert type(ie.dict()["host_structure"]) == dict # This might be a requirement in the future
 
 
 def test_ConversionDocs_from_entries(conversion_elec):

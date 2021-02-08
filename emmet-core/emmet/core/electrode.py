@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
@@ -9,6 +9,7 @@ from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry
 
+from emmet.core.utils import jsanitize
 from emmet.stubs import Composition, Structure
 
 
@@ -127,10 +128,13 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         working_ion_entry: ComputedEntry,
         task_id: str,
         host_structure: Structure,
-    ):
-        ie = InsertionElectrode.from_entries(
-            entries=grouped_entries, working_ion_entry=working_ion_entry
-        )
+    ) -> Union["InsertionElectrodeDoc", None]:
+        try:
+            ie = InsertionElectrode.from_entries(
+                entries=grouped_entries, working_ion_entry=working_ion_entry
+            )
+        except IndexError:
+            return None
         d = ie.get_summary_dict()
         d["num_steps"] = d.pop("nsteps", None)
         d["last_updated"] = datetime.utcnow()
@@ -203,58 +207,3 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
         d["num_steps"] = d.pop("nsteps", None)
         d["last_updated"] = datetime.utcnow()
         return cls(task_id=task_id, framework=Composition(d["framework_formula"]), **d)
-
-
-class StructureGroupDoc(BaseModel):
-    """
-    Document model for the intermediate structure matching database used to build the insertion electrode documents.
-    """
-
-    task_id: str = Field(
-        None,
-        description="The combined task_id of the grouped document is given by the numerically smallest task id "
-        "followed by '_Li' or whichever working atom is considered the working ion during grouping.",
-    )
-
-    structure_matched: bool = Field(
-        None,
-        description="True if the structures in this group has been matched to each other.  This is False for groups "
-        "that contain all the left over structures with the same framework.",
-    )
-
-    has_distinct_compositions: bool = Field(
-        None,
-        description="True if multiple working ion fractions are available in the group, which means a voltage "
-        "step exits.",
-    )
-
-    grouped_task_ids: List[str] = Field(
-        None,
-        description="The ids of the materials that have been grouped by the structure matcher.",
-    )
-
-    entry_data: Dict = Field(
-        None,
-        description="Dictionary keyed by the task_id, contains the 'composition' and 'volume' of each material.",
-    )
-
-    framework_formula: str = Field(
-        None, description="The formula of the host framework."
-    )
-
-    working_ion: Element = Field(None, description="The working ion")
-
-    chemsys: str = Field(
-        None,
-        description="The chemsys this group belongs to.  Always includes the working ion",
-    )
-
-    last_updated: datetime = Field(
-        None,
-        description="Timestamp for the most recent calculation for this Material document",
-    )
-
-    # Make sure that the datetime field is properly formatted
-    @validator("last_updated", pre=True)
-    def last_updated_dict_ok(cls, v):
-        return MontyDecoder().process_decoded(v)
