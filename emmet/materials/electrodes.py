@@ -1,6 +1,6 @@
 from pymatgen.core import Structure, Element
 from maggma.builders import Builder
-from pymatgen.entries.compatibility import MaterialsProjectCompatibility
+from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.analysis.structure_matcher import (
     StructureMatcher, ElementComparator
 )
@@ -95,7 +95,7 @@ class ElectrodesBuilder(Builder):
         self.compatibility = (
             compatibility
             if compatibility
-            else MaterialsProjectCompatibility("Advanced")
+            else MaterialsProject2020Compatibility("Advanced")
         )
         self.completed_tasks = set()
 

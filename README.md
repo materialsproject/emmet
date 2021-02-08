@@ -134,7 +134,7 @@ The VASP builders all operate on a `tasks` Store which is parsed from *any* VASP
 
 2. Filters out materials that can not be directly compared to each other, e.g. they've been calculated by different methods such that their total energies are on different scales.
 
-	By default, this is done by using [`MaterialsProjectCompatibility('Advanced')`](http://pymatgen.org/pymatgen.entries.compatibility.html#pymatgen.entries.compatibility.MaterialsProjectCompatibility) in pymatgen, which intelligently mixes GGA and GGA+U calculations depending on the elements present, and performs corrections to the total energy as appropriate.
+	By default, this is done by using [`MaterialsProject2020Compatibility('Advanced')`](http://pymatgen.org/pymatgen.entries.compatibility.html#pymatgen.entries.compatibility.MaterialsProject2020Compatibility) in pymatgen, which intelligently mixes GGA and GGA+U calculations depending on the elements present, and performs corrections to the total energy as appropriate.
 	
 3. Uses pymatgen's [`phasediagram`](http://pymatgen.org/pymatgen.phasediagram.html) package to calculate the [energy above hull](https://materialsproject.org/wiki/index.php/Glossary_of_Terms#Energetics) for each material and, if the material is unstable, its decomposition pathway. 
 
