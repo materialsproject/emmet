@@ -127,7 +127,7 @@
     "query": {},
     "compatibility": {
       "@module": "pymatgen.entries.compatibility",
-      "@class": "MaterialsProjectCompatibility",
+      "@class": "MaterialsProject2020Compatibility",
       "compat_type": "Advanced",
       "correct_peroxide": true,
       "check_potcar_hash": false
