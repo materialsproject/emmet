@@ -57,7 +57,7 @@ class ThermoBuilder(Builder):
         # last calculated
         q = dict(self.query)
         q.update(
-            {self.materials.key: {"$in": list(self.materials.newer_in(self.thermo))}}
+            {self.materials.key: {"$in": list(self.thermo.newer_in(self.materials))}}
         )
         updated_comps = set(self.materials.distinct("chemsys", q))
         self.logger.debug(f"Found {len(updated_comps)} updated chemsys")
@@ -70,7 +70,7 @@ class ThermoBuilder(Builder):
         q = dict(self.query)
         q.update({"task_id": {"$in": ["{}-{}".format(t[0], t[1]) if t[0] != "" else str(t[1]) for t in dif_task_ids ]}})
         new_mat_comps = set(self.materials.distinct("chemsys", q))
-        self.logger.debug(f"Found {len(new_mat_comps)} new materials")
+        self.logger.debug(f"Found {len(new_mat_comps)} new chemsys")
 
         # All comps affected by changing these chemical systems
         # IE if we update Li-O, we need to update Li-Mn-O, Li-Mn-P-O, etc.
