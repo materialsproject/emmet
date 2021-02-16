@@ -1,5 +1,6 @@
 from itertools import chain, combinations
 from collections import defaultdict
+from datetime import datetime
 
 from pymatgen import Structure, Composition
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
@@ -57,8 +58,9 @@ class ThermoBuilder(Builder):
         # last calculated
         q = dict(self.query)
         q.update(
-            {self.materials.key: {"$in": list(self.materials.newer_in(self.thermo))}}
+            {self.materials.key: {"$in": list(self.thermo.newer_in(self.materials))}}
         )
+        # All chemsys associated with updated materials
         updated_comps = set(self.materials.distinct("chemsys", q))
         self.logger.debug(f"Found {len(updated_comps)} updated chemsys")
 
@@ -69,10 +71,11 @@ class ThermoBuilder(Builder):
         dif_task_ids = list(mat_ids - thermo_mat_ids)
         q = dict(self.query)
         q.update({"task_id": {"$in": ["{}-{}".format(t[0], t[1]) if t[0] != "" else str(t[1]) for t in dif_task_ids ]}})
+        # All chemsys associated with new materials no present in the thermo collection
         new_mat_comps = set(self.materials.distinct("chemsys", q))
-        self.logger.debug(f"Found {len(new_mat_comps)} new materials")
+        self.logger.debug(f"Found {len(new_mat_comps)} new chemsys")
 
-        # All comps affected by changing these chemical systems
+        # All chemsys affected by changing these chemical systems
         # IE if we update Li-O, we need to update Li-Mn-O, Li-Mn-P-O, etc.
         affected_comps = set()
         comps = updated_comps | new_mat_comps | affected_comps
@@ -90,7 +93,7 @@ class ThermoBuilder(Builder):
                 to_process.append(chemsys)
 
         self.logger.info(
-            f"Found {len(to_process)} compositions with new/updated materials"
+            f"Found {len(to_process)} chemsys with new/updated materials"
         )
         self.total = len(to_process)
 
@@ -193,6 +196,7 @@ class ThermoBuilder(Builder):
                 d["nelements"] = len(elsyms)
                 d["elements"] = list(elsyms)
                 d["_sbxn"] = sorted(sandboxes)
+                d["last_updated"] = e.data["last_updated"]
 
                 docs.append(d)
         except PhaseDiagramError as p:
@@ -288,6 +292,7 @@ class ThermoBuilder(Builder):
             self.materials.key,
             "entries",
             "_sbxn",
+            "last_updated"
         ]
         data = list(self.materials.query(properties=fields, criteria=new_q))
 
@@ -312,6 +317,7 @@ class ThermoBuilder(Builder):
             entry = ComputedEntry.from_dict(entry)
             entry.data["oxide_type"] = oxide_type(Structure.from_dict(d["structure"]))
             entry.data["_sbxn"] = d.get("_sbxn", [])
+            entry.data["last_updated"] = d.get("last_updated", datetime.utcnow())
 
             # Add to cache
             elsyms = sorted(set([el.symbol for el in entry.composition.elements]))
