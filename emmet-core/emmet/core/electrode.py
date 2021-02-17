@@ -78,7 +78,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     Insertion electrode
     """
 
-    task_id: str = Field(None, description="The id for this battery document.")
+    battery_id: str = Field(None, description="The id for this battery document.")
 
     framework_formula: str = Field(
         None, description="The id for this battery document."
@@ -158,7 +158,7 @@ class ConversionVoltagePairDoc(VoltagePairDoc):
 
 
 class ConversionElectrodeDoc(ConversionVoltagePairDoc):
-    task_id: str = Field(None, description="The id for this battery document.")
+    battery_id: str = Field(None, description="The id for this battery document.")
 
     adj_pairs: List[ConversionVoltagePairDoc] = Field(
         None,

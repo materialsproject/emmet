@@ -30,7 +30,7 @@ def s_hash(el):
     return el.data["comp_delith"]
 
 
-# MatDoc = namedtuple("MatDoc", ["task_id", "structure", "formula_pretty", "framework"])
+# MatDoc = namedtuple("MatDoc", ["material_id", "structure", "formula_pretty", "framework"])
 
 REDOX_ELEMENTS = [
     "Ti",
@@ -56,7 +56,7 @@ REDOX_ELEMENTS = [
 
 MAT_PROPS = [
     "structure",
-    "task_id",
+    "material_id",
     "formula_pretty",
 ]
 
@@ -171,12 +171,11 @@ class StructureGroupBuilder(Builder):
             chemsys_query = {
                 "$and": [
                     {"chemsys": {"$in": [chemsys_wo, chemsys]}},
-                    {"_sbxn": {"$in": ["core"]}},
                     self.query.copy(),
                 ]
             }
             self.logger.debug(f"QUERY: {chemsys_query}")
-
+            print(chemsys_query)
             all_mats_in_chemsys = list(
                 self.materials.query(
                     criteria=chemsys_query,
@@ -191,7 +190,7 @@ class StructureGroupBuilder(Builder):
                     self.sgroups.query(
                         criteria={"chemsys": chemsys},
                         properties=[
-                            "task_id",
+                            "material_id",
                             self.sgroups.last_updated_field,
                             "grouped_ids",
                         ],
@@ -219,7 +218,9 @@ class StructureGroupBuilder(Builder):
                     f"The newest GROUP doc was generated at {min_target_time}."
                 )
 
-                mat_ids = set([mat_doc["task_id"] for mat_doc in all_mats_in_chemsys])
+                mat_ids = set(
+                    [mat_doc["material_id"] for mat_doc in all_mats_in_chemsys]
+                )
 
                 # If any material id is missing or if any material id has been updated
                 target_mat_ids = set()
@@ -245,7 +246,7 @@ class StructureGroupBuilder(Builder):
             self.logger.info("Updating {} sgroups documents".format(len(items)))
             for struct_group_dict in items:
                 struct_group_dict[self.sgroups.last_updated_field] = datetime.utcnow()
-            self.sgroups.update(docs=items, key=["task_id"])
+            self.sgroups.update(docs=items, key=["material_id"])
         else:
             self.logger.info("No items to update")
 
@@ -253,7 +254,7 @@ class StructureGroupBuilder(Builder):
         # Note since we are just structure grouping we don't need to be careful with energy or correction
         # All of the energy analysis is left to other builders
         d_ = {
-            "entry_id": mdoc["task_id"],
+            "entry_id": mdoc["material_id"],
             "structure": mdoc["structure"],
             "energy": -math.inf,
             "correction": -math.inf,
@@ -271,11 +272,11 @@ class StructureGroupBuilder(Builder):
         )
         # append the working_ion to the group ids
         for sg in s_groups:
-            sg.task_id = f"{sg.task_id}_{self.working_ion}"
+            sg.material_id = f"{sg.material_id}_{self.working_ion}"
         return [sg.dict() for sg in s_groups]
 
     def _remove_targets(self, rm_ids):
-        self.sgroups.remove_docs({"task_id": {"$in": rm_ids}})
+        self.sgroups.remove_docs({"material_id": {"$in": rm_ids}})
 
 
 class InsertionElectrodeBuilder(MapBuilder):
@@ -315,18 +316,17 @@ class InsertionElectrodeBuilder(MapBuilder):
 
         def modify_item(item):
             self.logger.debug(
-                f"Looking for {len(item['grouped_ids'])} task_ids in the Thermo DB."
+                f"Looking for {len(item['grouped_ids'])} material_id in the Thermo DB."
             )
             with self.thermo as store:
                 thermo_docs = [
                     *store.query(
                         {
                             "$and": [
-                                {"task_id": {"$in": item["grouped_ids"]}},
-                                {"_sbxn": {"$in": ["core"]}},
+                                {"material_id": {"$in": item["grouped_ids"]}},
                             ]
                         },
-                        properties=["task_id", "_sbxn", "thermo"],
+                        properties=["material_id", "_sbxn", "thermo"],
                     )
                 ]
 
@@ -335,11 +335,11 @@ class InsertionElectrodeBuilder(MapBuilder):
                     *store.query(
                         {
                             "$and": [
-                                {"task_id": {"$in": item["grouped_ids"]}},
+                                {"material_id": {"$in": item["grouped_ids"]}},
                                 {"_sbxn": {"$in": ["core"]}},
                             ]
                         },
-                        properties=["task_id", "structure"],
+                        properties=["material_id", "structure"],
                     )
                 ]
 
@@ -350,7 +350,7 @@ class InsertionElectrodeBuilder(MapBuilder):
                 )
             working_ion_doc = get_working_ion_entry(item["ignored_species"][0])
             return {
-                "task_id": item["task_id"],
+                "material_id": item["material_id"],
                 "working_ion_doc": working_ion_doc,
                 "working_ion": item["ignored_species"][0],
                 "thermo_docs": thermo_docs,
@@ -371,10 +371,11 @@ class InsertionElectrodeBuilder(MapBuilder):
         )
         working_ion = working_ion_entry.composition.reduced_formula
         decomp_energies = {
-            d_["task_id"]: d_["thermo"]["e_above_hull"] for d_ in item["thermo_docs"]
+            d_["material_id"]: d_["thermo"]["e_above_hull"]
+            for d_ in item["thermo_docs"]
         }
         mat_structures = {
-            mat_d_["task_id"]: Structure.from_dict(mat_d_["structure"])
+            mat_d_["material_id"]: Structure.from_dict(mat_d_["structure"])
             for mat_d_ in item["material_docs"]
         }
 
@@ -383,7 +384,7 @@ class InsertionElectrodeBuilder(MapBuilder):
         )
         mdoc_ = next(
             filter(
-                lambda x: x["task_id"] == least_wion_ent.entry_id,
+                lambda x: x["material_id"] == least_wion_ent.entry_id,
                 item["material_docs"],
             )
         )
@@ -393,7 +394,7 @@ class InsertionElectrodeBuilder(MapBuilder):
         for ient in entries:
             if mat_structures[ient.entry_id].composition != ient.composition:
                 raise RuntimeError(
-                    f"In {item['task_id']}: the compositions for task {ient.entry_id} are matched "
+                    f"In {item['material_id']}: the compositions for task {ient.entry_id} are matched "
                     "between the StructureGroup DB and the Thermo DB "
                 )
             ient.data["volume"] = mat_structures[ient.entry_id].volume
@@ -402,7 +403,7 @@ class InsertionElectrodeBuilder(MapBuilder):
         ie = InsertionElectrodeDoc.from_entries(
             grouped_entries=entries,
             working_ion_entry=working_ion_entry,
-            task_id=item["task_id"],
+            task_id=item["material_id"],
             host_structure=host_structure,
         )
         if ie is None:
