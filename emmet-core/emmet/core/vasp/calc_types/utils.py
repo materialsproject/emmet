@@ -108,6 +108,9 @@ def task_type(
     elif incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
         calc_type.append("Deformation")
 
+    if len(calc_type) == 0:
+        return TaskType("Unrecognized")
+
     return TaskType(" ".join(calc_type))
 
 

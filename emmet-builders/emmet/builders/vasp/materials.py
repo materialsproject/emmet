@@ -206,10 +206,17 @@ class MaterialsBuilder(Builder):
         task_ids = [task.task_id for task in tasks]
         self.logger.debug(f"Processing {formula} : {task_ids}")
 
-        materials = []
         grouped_tasks = self.filter_and_group_tasks(tasks)
-
-        materials = [MaterialsDoc.from_tasks(group) for group in grouped_tasks]
+        materials = []
+        for group in grouped_tasks:
+            try:
+                materials.append(MaterialsDoc.from_tasks(group))
+            except Exception:
+                failed_ids = list({t_.task_id for t_ in group})
+                self.logger.warn(
+                    f"No valid ids found among ids {failed_ids}. This can be the case if the required "
+                    "calculation types are missing from your tasks database."
+                )
         self.logger.debug(f"Produced {len(materials)} materials for {formula}")
 
         return [mat.dict() for mat in materials]
@@ -235,7 +242,7 @@ class MaterialsBuilder(Builder):
             self.materials.remove_docs({self.materials.key: {"$in": material_ids}})
             self.materials.update(
                 docs=jsanitize(items, allow_bson=True),
-                key=["material_id", "sandboxes"],
+                key=["material_id"],
             )
         else:
             self.logger.info("No items to update")
@@ -268,14 +275,6 @@ class MaterialsBuilder(Builder):
             angle_tol=self.angle_tol,
             symprec=self.symprec,
         )
-
         for group in grouped_structures:
             grouped_tasks = [filtered_tasks[struc.index] for struc in group]
-            sandboxes = {frozenset(task.sandboxes) for task in grouped_tasks}
-
-            for sbx_set in maximal_spanning_non_intersecting_subsets(sandboxes):
-                yield [
-                    task
-                    for task in grouped_tasks
-                    if len(set(task.sandboxes).intersection(sbx_set)) > 0
-                ]
+            yield grouped_tasks
