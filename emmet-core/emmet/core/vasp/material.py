@@ -137,7 +137,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             if len(relevant_calcs) > 0:
                 best_task_doc = relevant_calcs[0]
                 entry = best_task_doc.structure_entry
-                entry.data["material_id"] = entry.entry_id
+                entry.data["task_id"] = entry.entry_id
                 entry.entry_id = material_id
                 entries[rt] = entry
 
