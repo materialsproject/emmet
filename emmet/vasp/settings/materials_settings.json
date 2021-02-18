@@ -485,30 +485,48 @@
     "aggregate": true,
     "materials_key": "initial_structures",
     "quality_score": {
-      "GGA+U Static": 4,
-      "GGA+U Structure Optimization": 3,
-      "GGA Static": 2,
-      "GGA Structure Optimization": 1
+      "GGA+U Static": 10,
+      "GGA+U Structure Optimization": 9,
+      "GGA Static": 8,
+      "GGA Structure Optimization": 7,
+      "PBEsol Static": 6,
+      "PBEsol Structure Optimization": 5,
+      "R2SCAN Static": 4,
+      "R2SCAN Structure Optimization": 3,
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
     },
     "tasks_key": "input.structure"
   },
   {
     "materials_key": "magnetism.total_magnetization",
     "quality_score": {
-      "GGA+U Static": 4,
-      "GGA+U Structure Optimization": 3,
-      "GGA Static": 2,
-      "GGA Structure Optimization": 1
+      "GGA+U Static": 10,
+      "GGA+U Structure Optimization": 9,
+      "GGA Static": 8,
+      "GGA Structure Optimization": 7,
+      "PBEsol Static": 6,
+      "PBEsol Structure Optimization": 5,
+      "R2SCAN Static": 4,
+      "R2SCAN Structure Optimization": 3,
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
     },
     "tasks_key": "calcs_reversed.0.output.outcar.total_magnetization"
   },
   {
     "materials_key": "magnetism.magmoms",
     "quality_score": {
-      "GGA+U Static": 4,
-      "GGA+U Structure Optimization": 3,
-      "GGA Static": 2,
-      "GGA Structure Optimization": 1
+      "GGA+U Static": 10,
+      "GGA+U Structure Optimization": 9,
+      "GGA Static": 8,
+      "GGA Structure Optimization": 7,
+      "PBEsol Static": 6,
+      "PBEsol Structure Optimization": 5,
+      "R2SCAN Static": 4,
+      "R2SCAN Structure Optimization": 3,
+      "SCAN Static": 2,
+      "SCAN Structure Optimization": 1
     },
     "tasks_key": "calcs_reversed.0.output.outcar.magmom",
     "optional": true
