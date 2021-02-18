@@ -91,7 +91,10 @@ class RunStatistics(BaseModel):
     total_time: float = Field(
         None, description="The total CPU time for this calculation"
     )
-    cores: int = Field(None, description="The number of cores used by VASP")
+    cores: Union[int, str] = Field(
+        None,
+        description="The number of cores used by VASP (some clusters print `mpi-ranks` here)",
+    )
 
 
 class TaskDocument(StructureMetadata):
