@@ -169,6 +169,7 @@ class MaterialsBuilder(Builder):
             "task_id",
             "formula_pretty",
             "output.energy_per_atom",
+            "output.energy",
             "output.structure",
             "input.parameters",
             "orig_inputs",
