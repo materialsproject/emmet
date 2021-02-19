@@ -21,4 +21,16 @@ class StubComposition(BaseModel):
     __root__: Dict[Element, float]
 
 
+@classmethod
+def get_validators(cls):
+    yield validate_composition
+
+
+def validate_composition(cls, v):
+    if isinstance(v, pymatgen.core.structure.Composition):
+        return v
+    return pymatgen.core.structure.Composition(**v)
+
+
 pymatgen.core.structure.Composition.__pydantic_model__ = StubComposition
+pymatgen.core.structure.Composition.__get_validators__ = get_validators
