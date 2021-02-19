@@ -3,7 +3,7 @@
 This module stubs some pymatgen classes that implement custom behavior
 outside the standard MSONable model
 """
-
+from typing import Dict
 import pymatgen.core.structure
 from pymatgen.core.periodic_table import Element
 from pydantic import BaseModel

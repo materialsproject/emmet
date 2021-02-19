@@ -6,8 +6,8 @@ from functools import partial
 from typing import ClassVar, Mapping, Optional, Sequence, Type, TypeVar, Union
 
 from pydantic import BaseModel, Field, create_model
-from pymatgen import Structure
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
+from pymatgen.core import Structure
 
 from emmet.core.structure import StructureMetadata
 
