@@ -140,7 +140,7 @@ class ThermoBuilder(Builder):
         )
 
         self.logger.debug(
-            f"Procesing {len(entries)} entries for {chemsys} - {sandboxes}"
+            f"Processing {len(entries)} entries for {chemsys} - {sandboxes}"
         )
 
         try:
