@@ -1,5 +1,5 @@
 pymatgen==2021.2.14
-monty==4.0.2
+https://github.com/materialsvirtuallab/monty/archive/8d67c335bd5d8bb71ecc8ac732c82a53e0def4a1.zip
 pydantic==1.7.3
 pybtex==0.24.0
 typing-extensions==3.7.4.3

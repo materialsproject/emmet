@@ -9,7 +9,6 @@ nav:
   - Home: index.md
   - Packages: packages.md
   - Settings: settings.md
-  - Stubs: stubs.md
   - Reference:
     - Core: core.md
 

@@ -7,9 +7,8 @@ from typing import Iterable, List, Union
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
+from pymatgen.core import Composition, Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
-
-from emmet.stubs import Composition, Structure
 
 logger = logging.getLogger(__name__)
 

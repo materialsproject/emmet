@@ -6,9 +6,6 @@
 
 This is the core package for the `emmet` ecosystem. `emmet.core` is where data models are defined. These data models are the most important part of `emmet` since they dictate what all the other packages have to use, serve, or compute.
 
-There is an additional `emmet.stubs` module that provides `pydantic` compatible stubs for various datatypes commonly used in `emmet`. Many of these are from `pymatgen`. These stubs are 100% functional in-place, meaning they can be used as they would be from pymatgen. The stubs provide additional metadata for the models in `emmet` to use for validation and better documentation.
-
-
 ## emmet-cli
 
 Many of the operations in `emmet` are complex. These range from backing up calculations, to parsing, to setting of build chains, to starting workflows. Since these processes are pretty standard, the `emmet` ecosystem provides a CLI implemented in `emmet.cli`. This makes managing MAPI much easier.
