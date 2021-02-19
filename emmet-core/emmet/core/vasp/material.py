@@ -5,6 +5,8 @@ from typing import ClassVar, List, Mapping, Optional, Sequence, Tuple, TypeVar, 
 
 from pydantic import BaseModel, Field, create_model
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
+from pymatgen.core import Structure
+from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.core import SETTINGS
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
@@ -12,7 +14,6 @@ from emmet.core.material import PropertyOrigin as PropertyOrigin
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 from emmet.core.vasp.task import TaskDocument
-from emmet.stubs import ComputedStructureEntry, Structure
 
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):

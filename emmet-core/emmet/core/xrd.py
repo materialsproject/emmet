@@ -3,12 +3,16 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from pydantic import BaseModel, Field, root_validator
-from pymatgen.analysis.diffraction.xrd import WAVELENGTHS, XRDCalculator
+from pymatgen.analysis.diffraction.xrd import (
+    WAVELENGTHS,
+    DiffractionPattern,
+    XRDCalculator,
+)
+from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum, jsanitize
-from emmet.stubs import DiffractionPattern, Structure
 
 
 class Edge(ValueEnum):

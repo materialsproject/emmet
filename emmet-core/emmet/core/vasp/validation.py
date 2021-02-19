@@ -3,11 +3,11 @@ from typing import Dict, List, Union
 
 import numpy as np
 from pydantic import BaseModel, Field, PyObject
+from pymatgen.core import Structure
 
 from emmet.core import SETTINGS
 from emmet.core.utils import DocEnum
 from emmet.core.vasp.task import TaskDocument
-from emmet.stubs import Structure
 
 
 class DeprecationMessage(DocEnum):

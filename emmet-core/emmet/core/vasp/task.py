@@ -6,8 +6,11 @@ from typing import ClassVar, Dict, List, Optional, Union
 from pydantic import BaseModel, Field, validator
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
 from pymatgen.analysis.structure_analyzer import oxide_type
+from pymatgen.core import Composition, Structure
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core import SETTINGS
+from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types import (

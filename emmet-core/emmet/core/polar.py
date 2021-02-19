@@ -8,8 +8,8 @@ from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
 
 from emmet.core import SETTINGS
 from emmet.core.material_property import PropertyDoc
+from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.structure import StructureMetadata
-from emmet.stubs import Matrix3D, Vector3D
 
 VoigtVector = Tuple[float, float, float, float, float, float]
 PiezoTensor = Tuple[VoigtVector, VoigtVector, VoigtVector]
