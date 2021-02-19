@@ -21,7 +21,7 @@ class StubComposition(BaseModel):
     __root__: Dict[Element, float]
 
 
-@classmethod
+@classmethod  # type: ignore
 def get_validators(cls):
     yield validate_composition
 
