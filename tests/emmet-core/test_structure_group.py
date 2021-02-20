@@ -38,7 +38,7 @@ def test_StructureGroupDoc_from_grouped_entries(entries_lto):
     sgroup_doc = StructureGroupDoc.from_grouped_entries(
         entries_lto, ignored_species=["Li"], structure_matched=True
     )
-    assert sgroup_doc.task_id == "mp-0"
+    assert sgroup_doc.material_id == "mp-0"
     assert sgroup_doc.grouped_ids == ["mp-0", "mp-1", "mp-2", "mp-3", "mp-4", "mp-5"]
     assert sgroup_doc.framework_formula == "TiO2"
     assert sgroup_doc.ignored_species == ["Li"]
