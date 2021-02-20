@@ -175,7 +175,6 @@ class StructureGroupBuilder(Builder):
                 ]
             }
             self.logger.debug(f"QUERY: {chemsys_query}")
-            print(chemsys_query)
             all_mats_in_chemsys = list(
                 self.materials.query(
                     criteria=chemsys_query,
