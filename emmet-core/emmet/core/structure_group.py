@@ -7,9 +7,8 @@ from typing import Iterable, List, Union
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
+from pymatgen.core import Composition, Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
-
-from emmet.stubs import Composition, Structure
 
 logger = logging.getLogger(__name__)
 
@@ -49,9 +48,9 @@ class StructureGroupDoc(BaseModel):
     Group of structure
     """
 
-    task_id: str = Field(
+    material_id: str = Field(
         None,
-        description="The combined task_id of the grouped document is given by the numerically smallest task id ",
+        description="The combined material_id of the grouped document is given by the numerically smallest task id ",
     )
 
     structure_matched: bool = Field(
@@ -122,7 +121,7 @@ class StructureGroupDoc(BaseModel):
         lowest_id = min(ids, key=_get_id_num)
 
         fields = {
-            "task_id": lowest_id,
+            "material_id": lowest_id,
             "grouped_ids": ids,
             "structure_matched": structure_matched,
             "framework_formula": framework_str,
@@ -223,7 +222,7 @@ def group_entries_with_structure_matcher(
 def _get_id_num(task_id) -> Union[int, str]:
     if isinstance(task_id, int):
         return task_id
-    if isinstance(task_id, str) and "-" in task_id:
+    if isinstance(task_id, str):
         return int(task_id.split("-")[-1])
     else:
         raise ValueError("TaskID needs to be either a number or of the form xxx-#####")

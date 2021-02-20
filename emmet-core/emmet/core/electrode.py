@@ -6,11 +6,11 @@ from pydantic import BaseModel, Field, validator
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
+from pymatgen.core import Composition, Structure
 from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry
 
 from emmet.core.utils import jsanitize
-from emmet.stubs import Composition, Structure
 
 
 class VoltagePairDoc(BaseModel):
@@ -78,7 +78,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     Insertion electrode
     """
 
-    task_id: str = Field(None, description="The id for this battery document.")
+    battery_id: str = Field(None, description="The id for this battery document.")
 
     framework_formula: str = Field(
         None, description="The id for this battery document."
@@ -158,7 +158,7 @@ class ConversionVoltagePairDoc(VoltagePairDoc):
 
 
 class ConversionElectrodeDoc(ConversionVoltagePairDoc):
-    task_id: str = Field(None, description="The id for this battery document.")
+    battery_id: str = Field(None, description="The id for this battery document.")
 
     adj_pairs: List[ConversionVoltagePairDoc] = Field(
         None,

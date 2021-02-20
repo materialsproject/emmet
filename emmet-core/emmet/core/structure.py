@@ -4,10 +4,10 @@ from __future__ import annotations
 from typing import List, Optional, Type, TypeVar, overload
 
 from pydantic import BaseModel, Field
+from pymatgen.core import Composition, Structure
 from pymatgen.core.periodic_table import Element
 
 from emmet.core.symmetry import SymmetryData
-from emmet.stubs import Composition, Structure
 
 T = TypeVar("T", bound="StructureMetadata")
 

@@ -2,12 +2,41 @@ from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, root_validator
+from pymatgen.analysis.xas.spectrum import XAS
+from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum
-from emmet.stubs import XAS, Structure
-from emmet.stubs.xas import Edge, Type
+
+
+class Edge(ValueEnum):
+    """
+    The interaction edge for XAS
+    There are 2n-1 sub-components to each edge where
+    K: n=1
+    L: n=2
+    M: n=3
+    N: n=4
+    """
+
+    K = "K"
+    L2 = "L2"
+    L3 = "L3"
+    L2_3 = "L2,3"
+
+
+class Type(ValueEnum):
+    """
+    The type of XAS Spectrum
+    XANES - Just the near-edge region
+    EXAFS - Just the extended region
+    XAFS - Fully stitchted XANES + EXAFS
+    """
+
+    XANES = "XANES"
+    EXAFS = "EXAFS"
+    XAFS = "XAFS"
 
 
 class XASDoc(SpectrumDoc):
