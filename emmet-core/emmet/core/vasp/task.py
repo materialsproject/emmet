@@ -11,6 +11,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 
 from emmet.core import SETTINGS
 from emmet.core.math import Matrix3D, Vector3D
+from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types import (
@@ -119,7 +120,7 @@ class TaskDocument(StructureMetadata):
     orig_inputs: Dict[str, Dict] = Field(
         None, description="Summary of the original VASP inputs"
     )
-    task_id: str = Field(None, description="the Task ID For this document")
+    task_id: Union[MPID, int] = Field(None, description="the Task ID For this document")
     tags: List[str] = Field([], description="Metadata tags for this task document")
 
     @property

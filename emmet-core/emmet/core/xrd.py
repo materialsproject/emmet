@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from pydantic import BaseModel, Field, root_validator
@@ -11,6 +11,7 @@ from pymatgen.analysis.diffraction.xrd import (
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 
+from emmet.core.mpid import MPID
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum, jsanitize
 
@@ -60,7 +61,7 @@ class XRDDoc(SpectrumDoc):
     @classmethod
     def from_structure(  # type: ignore[override]
         cls,
-        material_id: str,
+        material_id: Union[MPID, int],
         spectrum_id: str,
         structure: Structure,
         wavelength: float,
@@ -88,7 +89,7 @@ class XRDDoc(SpectrumDoc):
     @classmethod
     def from_target(
         cls,
-        material_id: str,
+        material_id: Union[MPID, int],
         structure: Structure,
         target: Element,
         edge: Edge,

@@ -71,7 +71,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
         # Material ID
         possible_mat_ids = [task.task_id for task in structure_optimizations]
-        possible_mat_ids = sorted(possible_mat_ids, key=ID_to_int)
+        possible_mat_ids = sorted(possible_mat_ids)
 
         if len(possible_mat_ids) == 0:
             raise Exception(f"Could not find a material ID for {task_ids}")
@@ -157,17 +157,3 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             origins=origins,
             entries=entries,
         )
-
-
-def ID_to_int(s_id: str) -> Tuple[str, int]:
-    """
-    Converts a string id to tuple
-    falls back to assuming ID is an Int if it can't process
-    Assumes string IDs are of form "[chars]-[int]" such as mp-234
-    """
-    if isinstance(s_id, str):
-        return (s_id.split("-")[0], int(str(s_id).split("-")[-1]))
-    elif isinstance(s_id, (int, float)):
-        return ("", s_id)
-    else:
-        return None

@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, PyObject
 from pymatgen.core import Structure
 
 from emmet.core import SETTINGS
+from emmet.core.mpid import MPID
 from emmet.core.utils import DocEnum
 from emmet.core.vasp.task import TaskDocument
 
@@ -24,7 +25,9 @@ class ValidationDoc(BaseModel):
     Validation document for a VASP calculation
     """
 
-    task_id: str = Field(..., description="The task_id for this validation document")
+    task_id: Union[MPID, int] = Field(
+        ..., description="The task_id for this validation document"
+    )
     valid: bool = Field(False, description="Whether this task is valid or not")
     last_updated: datetime = Field(
         description="Last updated date for this document",
