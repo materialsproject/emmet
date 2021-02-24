@@ -19,6 +19,6 @@ class MPID(str):
             return True
 
         self_parts = self.split("-")
-        other_parts = other.split()
+        other_parts = other.split("-")
 
         return self_parts < other_parts
