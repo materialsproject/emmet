@@ -4,9 +4,10 @@ This module stubs some pymatgen classes that implement custom behavior
 outside the standard MSONable model
 """
 from typing import Dict
+
 import pymatgen.core.structure
-from pymatgen.core.periodic_table import Element
 from pydantic import BaseModel
+from pymatgen.core.periodic_table import Element
 
 """
 The stub names are kept in sync with the actual classes so they
