@@ -12,7 +12,7 @@ class MPID(str):
     mixing with the Materials Project
     """
 
-    def __lt__(self, other: Union["MPID", int]):
+    def __lt__(self, other: Union["MPID", int, str]):
 
         # Always sort MPIDs before pure integer IDs
         if isinstance(other, int):

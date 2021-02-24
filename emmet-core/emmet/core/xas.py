@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field, root_validator
 from pymatgen.analysis.xas.spectrum import XAS
