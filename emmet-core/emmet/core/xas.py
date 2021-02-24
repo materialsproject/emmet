@@ -6,6 +6,7 @@ from pymatgen.analysis.xas.spectrum import XAS
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 
+from emmet.core.mpid import MPID
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.utils import ValueEnum
 
@@ -62,7 +63,7 @@ class XASDoc(SpectrumDoc):
     def from_spectrum(
         cls,
         xas_spectrum: XAS,
-        material_id: str,
+        material_id: Union[MPID, int],
         **kwargs,
     ):
         spectrum_type = xas_spectrum.spectrum_type

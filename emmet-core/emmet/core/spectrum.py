@@ -5,6 +5,7 @@ from typing import ClassVar, Dict, List, Union
 
 from pydantic import Field
 
+from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
 
 
@@ -14,7 +15,7 @@ class SpectrumDoc(StructureMetadata):
     metadata on the structure the spectra pertains to
     """
 
-    material_id: str = Field(
+    material_id: Union[MPID, int] = Field(
         ...,
         description="The ID of the material, used as a universal reference across proeprty documents."
         "This comes in the form: mp-******",

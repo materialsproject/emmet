@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, create_model
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
 from pymatgen.core import Structure
 
+from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
 
 
@@ -18,7 +19,9 @@ class PropertyOrigin(BaseModel):
     """
 
     name: str = Field(..., description="The property name")
-    task_id: str = Field(..., description="The calculation ID this property comes from")
+    task_id: Union[MPID, int] = Field(
+        ..., description="The calculation ID this property comes from"
+    )
     last_updated: datetime = Field(
         description="The timestamp when this calculation was last updated",
         default_factory=datetime.utcnow,
@@ -34,10 +37,10 @@ class MaterialsDoc(StructureMetadata):
     """
 
     # Only material_id is required for all documents
-    material_id: str = Field(
+    material_id: Union[MPID, int] = Field(
         ...,
         description="The ID of this material, used as a universal reference across proeprty documents."
-        "This comes in the form: mp-******",
+        "This comes in the form and MPID or int",
     )
 
     structure: Structure = Field(
@@ -54,7 +57,7 @@ class MaterialsDoc(StructureMetadata):
         description="Initial structures used in the DFT optimizations corresponding to this material",
     )
 
-    task_ids: Sequence[str] = Field(
+    task_ids: Sequence[Union[MPID, int]] = Field(
         [],
         title="Calculation IDs",
         description="List of Calculations IDs used to make this Materials Document",
@@ -87,7 +90,7 @@ class MaterialsDoc(StructureMetadata):
 
     @classmethod
     def from_structure(  # type: ignore[override]
-        cls: Type[T], structure: Structure, material_id: str, **kwargs
+        cls: Type[T], structure: Structure, material_id: Union[MPID, int], **kwargs
     ) -> T:
         """
         Builds a materials document using the minimal amount of information

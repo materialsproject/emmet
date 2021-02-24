@@ -10,6 +10,7 @@ from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Orde
 from pymatgen.core import Structure
 
 from emmet.core.material import PropertyOrigin
+from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
 
 S = TypeVar("S", bound="PropertyDoc")
@@ -23,10 +24,10 @@ class PropertyDoc(StructureMetadata):
     """
 
     property_name: ClassVar[str]
-    material_id: str = Field(
+    material_id: Union[MPID, int] = Field(
         ...,
         description="The ID of the material, used as a universal reference across proeprty documents."
-        "This comes in the form: mp-******",
+        "This comes in the form of an MPID or int",
     )
 
     last_updated: datetime = Field(
@@ -44,7 +45,7 @@ class PropertyDoc(StructureMetadata):
 
     @classmethod
     def from_structure(  # type: ignore[override]
-        cls: Type[S], structure: Structure, material_id: str, **kwargs
+        cls: Type[S], structure: Structure, material_id: Union[MPID, int], **kwargs
     ) -> S:
         """
         Builds a materials document using the minimal amount of information
