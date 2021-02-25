@@ -130,7 +130,7 @@ class ValidationDoc(BaseModel):
             ]
             max_gradient = np.max(np.gradient(energies)[skip:])
             data["max_gradient"] = max_gradient
-            if max_gradient > SETTINGS.VASP_MAX_SCF_GRADIENT:
+            if max_gradient > max_allowed_scf_gradient:
                 reasons.append(DeprecationMessage.MAX_SCF)
 
         doc = ValidationDoc(
