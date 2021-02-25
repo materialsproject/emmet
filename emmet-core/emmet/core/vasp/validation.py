@@ -17,6 +17,7 @@ class DeprecationMessage(DocEnum):
     ENCUT = "C002", "ENCUT too low"
     FORCES = "C003", "Forces too large"
     CONVERGENCE = "E001", "Calculation did not converge"
+    MAX_SCF = "E002", "Max SCF gradient too large"
     LDAU = "I001", "LDAU Parameters don't match the inputset"
 
 
@@ -39,6 +40,10 @@ class ValidationDoc(BaseModel):
     warnings: List[str] = Field(
         [], description="List of potential warnings about this calculation"
     )
+    data: Dict = Field(
+        description="Dictioary of data used to perform validation."
+        " Useful for post-mortem analysis"
+    )
 
     class Config:
         extra = "allow"
@@ -50,6 +55,7 @@ class ValidationDoc(BaseModel):
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
         input_sets: Dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
+        max_allowed_scf_gradient: float = SETTINGS.MAX_VASP_SCF_GRADIENT,
     ) -> "ValidationDoc":
         """
         Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
@@ -114,12 +120,25 @@ class ValidationDoc(BaseModel):
                 ):
                     reasons.append(DeprecationMessage.LDAU)
 
+            # Check the max upwards SCF step
+            skip = inputs.get("incar", {}).get("NLEMDL")
+            energies = [
+                d["e_fr_energy"]
+                for d in task_doc.calcs_reversed[0]["output"]["ionic_steps"][-1][
+                    "electronic_steps"
+                ]
+            ]
+            max_gradient = np.max(np.gradient(energies)[skip:])
+            data["max_gradient"] = max_gradient
+            if max_gradient > SETTINGS.VASP_MAX_SCF_GRADIENT:
+                reasons.append(DeprecationMessage.MAX_SCF)
+
         doc = ValidationDoc(
             task_id=task_doc.task_id,
             task_type=task_doc.task_type,
             run_type=task_doc.run_type,
             valid=len(reasons) == 0,
             reasons=reasons,
-            **data
+            data=data,
         )
         return doc

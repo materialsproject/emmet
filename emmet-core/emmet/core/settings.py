@@ -67,6 +67,11 @@ class EmmetSettings(BaseSettings):
         ["LDAUU", "LDAUJ", "LDAUL"], description="LDAU fields to validate for tasks"
     )
 
+    VASP_MAX_SCF_GRADIENT: float = Field(
+        100,
+        description="Maximum upward gradient in the last SCF for any VASP calculation",
+    )
+
     class Config:
         env_prefix = "emmet_"
         extra = "ignore"
