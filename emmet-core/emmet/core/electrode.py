@@ -10,6 +10,7 @@ from pymatgen.core import Composition, Structure
 from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry
 
+from emmet.core.mpid import MPID
 from emmet.core.utils import jsanitize
 
 
@@ -126,7 +127,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         cls,
         grouped_entries: List[ComputedEntry],
         working_ion_entry: ComputedEntry,
-        task_id: str,
+        task_id: Union[MPID, int],
         host_structure: Structure,
     ) -> Union["InsertionElectrodeDoc", None]:
         try:
@@ -196,7 +197,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
         composition: Composition,
         entries: List[ComputedEntry],
         working_ion_symbol: str,
-        task_id: str,
+        task_id: Union[MPID, int],
     ):
         ce = ConversionElectrode.from_composition_and_entries(
             comp=composition,

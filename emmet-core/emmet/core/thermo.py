@@ -10,6 +10,7 @@ from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.material_property import PropertyDoc
+from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
 
 
@@ -18,7 +19,7 @@ class DecompositionProduct(BaseModel):
     Entry metadata for a decomposition process
     """
 
-    material_id: str = Field(
+    material_id: Union[MPID, int] = Field(
         None, description="The material this decomposition points to"
     )
     formula: str = Field(

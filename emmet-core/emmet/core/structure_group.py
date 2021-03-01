@@ -10,6 +10,8 @@ from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatc
 from pymatgen.core import Composition, Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
+from emmet.core.mpid import MPID
+
 logger = logging.getLogger(__name__)
 
 
@@ -48,7 +50,7 @@ class StructureGroupDoc(BaseModel):
     Group of structure
     """
 
-    material_id: str = Field(
+    material_id: Union[MPID, int] = Field(
         None,
         description="The combined material_id of the grouped document is given by the numerically smallest task id ",
     )
