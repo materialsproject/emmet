@@ -15,7 +15,6 @@ from emmet.core.utils import group_structures, jsanitize
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.vasp.task import TaskDocument
-from emmet.stubs import ComputedEntry
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
