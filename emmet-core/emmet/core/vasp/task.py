@@ -40,15 +40,15 @@ class InputSummary(BaseModel):
 
     structure: Structure = Field(None, description="The input structure object")
     parameters: Dict = Field(
-        None,
+        {},
         description="Input parameters from VASPRUN for the last calculation in the series",
     )
     pseudo_potentials: Dict = Field(
-        None, description="Summary of the pseudopotentials used in this calculation"
+        {}, description="Summary of the pseudopotentials used in this calculation"
     )
 
     potcar_spec: List[Dict] = Field(
-        None, description="Potcar specification as a title and hash"
+        [], description="Potcar specification as a title and hash"
     )
 
 
@@ -66,10 +66,10 @@ class OutputSummary(BaseModel):
     )
     bandgap: float = Field(None, description="The DFT bandgap for the last calculation")
     forces: List[Vector3D] = Field(
-        None, description="Forces on atoms from the last calculation"
+        [], description="Forces on atoms from the last calculation"
     )
     stress: Matrix3D = Field(
-        None, description="Stress on the unitcell from the last calculation"
+        [], description="Stress on the unitcell from the last calculation"
     )
 
 
@@ -101,7 +101,7 @@ class TaskDocument(StructureMetadata):
 
     dir_name: str = Field(None, description="The directory for this VASP task")
     run_stats: Dict[str, RunStatistics] = Field(
-        None,
+        {},
         description="Summary of runtime statisitics for each calcualtion in this task",
     )
     completed_at: datetime = Field(
@@ -115,16 +115,20 @@ class TaskDocument(StructureMetadata):
         True, description="Whether this task document passed validation or not"
     )
 
-    input: InputSummary = Field(None)
-    output: OutputSummary = Field(None)
+    input: InputSummary = Field(InputSummary())
+    output: OutputSummary = Field(OutputSummary())
 
     state: Status = Field(None, description="State of this calculation")
 
     orig_inputs: Dict[str, Dict] = Field(
-        None, description="Summary of the original VASP inputs"
+        {}, description="Summary of the original VASP inputs"
     )
     task_id: Union[MPID, int] = Field(None, description="the Task ID For this document")
     tags: List[str] = Field([], description="Metadata tags for this task document")
+
+    calcs_reversed: List[Dict] = Field(
+        [], description="The 'raw' calculation docs used to assembled this task"
+    )
 
     # def __post_init__(self):
     #     if self.task_type is None:
@@ -143,7 +147,7 @@ class TaskDocument(StructureMetadata):
         return calc_type(self.orig_inputs, self.input.parameters)
 
     @property
-    def entry(self):
+    def entry(self) -> ComputedEntry:
         """ Turns a Task Doc into a ComputedEntry"""
         entry_dict = {
             "correction": 0.0,
@@ -165,7 +169,7 @@ class TaskDocument(StructureMetadata):
         return ComputedEntry.from_dict(entry_dict)
 
     @property
-    def structure_entry(self):
+    def structure_entry(self) -> ComputedStructureEntry:
         """ Turns a Task Doc into a ComputedStructureEntry"""
         entry_dict = self.entry.as_dict()
         entry_dict["structure"] = self.output.structure
