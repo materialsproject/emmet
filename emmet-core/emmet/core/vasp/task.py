@@ -126,6 +126,10 @@ class TaskDocument(StructureMetadata):
     task_id: Union[MPID, int] = Field(None, description="the Task ID For this document")
     tags: List[str] = Field([], description="Metadata tags for this task document")
 
+    # def __post_init__(self):
+    #     if self.task_type is None:
+    #         self.is_valid = False
+
     @property
     def run_type(self) -> RunType:
         return run_type(self.input.parameters)
