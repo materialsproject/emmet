@@ -1,7 +1,5 @@
 """
-This file defines any arbitrary global variables used in Materials Project
-database building and in the website code, to ensure consistency between
-different modules and packages.
+Settings for defaults in the core definitions of Materials Project Documents
 """
 import importlib
 import json
@@ -17,6 +15,7 @@ DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
 class EmmetSettings(BaseSettings):
     """
     Settings for the emmet- packages
+    Non-core packages should subclass this to get settings specific to their needs
     The default way to modify these is to modify ~/.emmet.json or set the environment variable
     EMMET_CONFIG_FILE to point to the json with emmet settings
     """
