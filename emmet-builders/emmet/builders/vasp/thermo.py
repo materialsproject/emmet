@@ -85,7 +85,7 @@ class Thermo(Builder):
         affected_chemsys = self.get_affected_chemsys(updated_chemsys | new_chemsys)
 
         # Remove overlapping chemical systems
-        to_process_chemsys = {}
+        to_process_chemsys = set()
         for chemsys in updated_chemsys | new_chemsys | affected_chemsys:
             if chemsys not in to_process_chemsys:
                 to_process_chemsys |= chemsys_permutations(chemsys)
@@ -99,29 +99,29 @@ class Thermo(Builder):
         # Will build them in a similar manner to fast Pourbaix
         for chemsys in sorted(to_process_chemsys, key=lambda x: len(x.split("-"))):
             entries = self.get_entries(chemsys)
-
-            # build sandbox sets: ["a"] , ["a","b"], ["core","a","b"]
-            sandbox_sets = set(
-                [frozenset(entry.data.get("sandboxes", {})) for entry in entries]
-            )
-            sandbox_sets = maximal_spanning_non_intersecting_subsets(sandbox_sets)
-            self.logger.debug(f"Found {len(sandbox_sets)}: {sandbox_sets}")
-
-            for sandboxes in sandbox_sets:
-                # only yield maximal subsets so that we can process a equivalent sandbox combinations at a time
-                sandbox_entries = [
-                    entry
-                    for entry in entries
-                    if all(
-                        sandbox in entry.data.get("_sbxn", []) for sandbox in sandboxes
-                    )
-                ]
-
-                yield sandboxes, sandbox_entries
+            yield entries
+            # # build sandbox sets: ["a"] , ["a","b"], ["core","a","b"]
+            # sandbox_sets = set(
+            #     [frozenset(entry.data.get("sandboxes", {})) for entry in entries]
+            # )
+            # sandbox_sets = maximal_spanning_non_intersecting_subsets(sandbox_sets)
+            # self.logger.debug(f"Found {len(sandbox_sets)}: {sandbox_sets}")
+            #
+            # for sandboxes in sandbox_sets:
+            #     # only yield maximal subsets so that we can process a equivalent sandbox combinations at a time
+            #     sandbox_entries = [
+            #         entry
+            #         for entry in entries
+            #         if all(
+            #             sandbox in entry.data.get("_sbxn", []) for sandbox in sandboxes
+            #         )
+            #     ]
+            #
+            #     yield sandboxes, sandbox_entries
 
     def process_item(self, item: Tuple[List[str], List[ComputedEntry]]):
 
-        sandboxes, entries = item
+        entries = item
 
         entries = [ComputedEntry.from_dict(entry) for entry in entries]
         # determine chemsys
@@ -130,11 +130,9 @@ class Thermo(Builder):
         )
         chemsys = "-".join(elements)
 
-        self.logger.debug(
-            f"Procesing {len(entries)} entries for {chemsys} - {sandboxes}"
-        )
+        self.logger.debug(f"Procesing {len(entries)} entries for {chemsys}")
 
-        material_entries = defaultdict(defaultdict(list))
+        material_entries = defaultdict(lambda: defaultdict(list))
         pd_entries = []
         for entry in entries:
             material_entries[entry.entry_id][entry.data["run_type"]].append(entry)
@@ -142,14 +140,13 @@ class Thermo(Builder):
         # TODO: How to make this general and controllable via SETTINGS?
         for material_id in material_entries:
             if "GGA+U" in material_entries[material_id]:
-                pd_entries.append(material_entries[material_id]["GGA+U"])
+                pd_entries.extend(material_entries[material_id]["GGA+U"])
             elif "GGA" in material_entries[material_id]:
-                pd_entries.append(material_entries[material_id]["GGA"])
-
+                pd_entries.extend(material_entries[material_id]["GGA"])
         pd_entries = self.compatibility.process_entries(pd_entries)
 
         try:
-            docs = ThermoDoc.from_entries(pd_entries, sandboxes=sandboxes)
+            docs = ThermoDoc.from_entries(pd_entries)
             for doc in docs:
                 doc.entries = material_entries[doc.material_id]
                 doc.entry_types = list(material_entries[doc.material_id].keys())
@@ -178,9 +175,9 @@ class Thermo(Builder):
         # flatten out lists
         items = list(filter(None, chain.from_iterable(items)))
         # check for duplicates within this set
-        items = list(
-            {(v[self.thermo.key], frozenset(v["sandboxes"])): v for v in items}.values()
-        )
+        # items = list(
+        #     {(v[self.thermo.key], frozenset(v["sandboxes"])): v for v in items}.values()
+        # )
         # Check if already updated this run
         items = [i for i in items if i[self.thermo.key] not in self._completed_tasks]
 
@@ -198,7 +195,7 @@ class Thermo(Builder):
         else:
             self.logger.info("No items to update")
 
-    def get_entries(self, chemsys: str) -> List[ComputedEntry]:
+    def get_entries(self, chemsys: str) -> List[Dict]:
         """
         Gets a entries from the tasks collection for the corresponding chemical systems
         Args:
@@ -230,7 +227,7 @@ class Thermo(Builder):
         new_q["deprecated"] = False
         materials_docs = list(
             self.materials.query(
-                criteria=new_q, properties=[self.materials.key, "entries", "sandboxes"]
+                criteria=new_q, properties=[self.materials.key, "entries"]
             )
         )
 
@@ -240,11 +237,11 @@ class Thermo(Builder):
 
         # Convert the entries into ComputedEntries and store
         for doc in materials_docs:
-            for entry in doc.get("entries", {}):
-                entry["data"]["sandboxes"] = doc["sandboxes"]
-                elsyms = sorted(set([el for el in entry["composition"]]))
-                self._entries_cache["-".join(elsyms)].append(entry)
-                all_entries.append(entry)
+            for r_type, entry_dict in doc.get("entries", {}).items():
+                entry_dict["data"]["run_type"] = r_type
+                elsyms = sorted(set([el for el in entry_dict["composition"]]))
+                self._entries_cache["-".join(elsyms)].append(entry_dict)
+                all_entries.append(entry_dict)
 
         self.logger.info(f"Total entries in {chemsys} : {len(all_entries)}")
 
