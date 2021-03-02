@@ -5,11 +5,11 @@ from maggma.builders import MapBuilder
 from maggma.core import Store
 from pymatgen import Structure
 
-from emmet.core import SETTINGS
+from emmet.builders import SETTINGS
 from emmet.core.vasp.calc_types import run_type, task_type
 from emmet.core.vasp.task import TaskDocument
 from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
-from emmet.core.settings import EmmetSettings
+from emmet.builders.settings import EmmetBuildSettings
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
@@ -20,7 +20,7 @@ class TaskValidator(MapBuilder):
         self,
         tasks: Store,
         task_validation: Store,
-        settings: EmmetSettings = SETTINGS,
+        settings: EmmetBuildSettings = SETTINGS,
         **kwargs,
     ):
         """
@@ -44,6 +44,7 @@ class TaskValidator(MapBuilder):
                 "output.structure",
                 "input.parameters",
                 "calcs_reversed.output.ionic_steps.e_fr_energy",
+                "tags",
             ],
             **kwargs,
         )
@@ -56,10 +57,16 @@ class TaskValidator(MapBuilder):
             item (dict): a (projection of a) task doc
         """
         task_doc = TaskDocument(**item)
-        return ValidationDoc.from_task_doc(
+        validation_doc = ValidationDoc.from_task_doc(
             task_doc=task_doc,
             kpts_tolerance=self.settings.VASP_KPTS_TOLERANCE,
             input_sets=self.settings.VASP_DEFAULT_INPUT_SETS,
             LDAU_fields=self.settings.VASP_CHECKED_LDAU_FIELDS,
             max_allowed_scf_gradient=self.settings.VASP_MAX_SCF_GRADIENT,
-        ).dict()
+        )
+
+        bad_tags = list(set(task_doc.tags).intersection(self.settings.DEPRECATED_TAGS))
+        if len(bad_tags) > 0:
+            validation_doc.warnings.append(f"Manual Deprecation by tags: {bad_tags}")
+            validation_doc.valid = False
+            validation_doc.reasons.append(DeprecationMessage.MANUAL)
