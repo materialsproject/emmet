@@ -5,10 +5,11 @@ from maggma.builders import MapBuilder
 from maggma.core import Store
 from pymatgen import Structure
 
-from emmet.core import SETTINGS
+from emmet.builders import SETTINGS
 from emmet.core.vasp.calc_types import run_type, task_type
 from emmet.core.vasp.task import TaskDocument
 from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
+from emmet.builders.settings import EmmetBuildSettings
 
 __author__ = "Shyam Dwaraknath"
 __email__ = "shyamd@lbl.gov"
@@ -19,7 +20,7 @@ class TaskValidator(MapBuilder):
         self,
         tasks: Store,
         task_validation: Store,
-        kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
+        settings: EmmetBuildSettings = SETTINGS,
         **kwargs,
     ):
         """
@@ -28,20 +29,23 @@ class TaskValidator(MapBuilder):
         Args:
             tasks: Store of task documents
             task_validation: Store of task_types for tasks
-            input_sets: dictionary of task_type and pymatgen input set to validate against
-            kpts_tolerance: the minimum kpt density as dictated by the InputSet to require
-            LDAU_fields: LDAU fields to check for consistency
         """
         self.tasks = tasks
         self.task_validation = task_validation
-        self.kpts_tolerance = kpts_tolerance
+        self.settings = settings
 
         self.kwargs = kwargs
 
         super().__init__(
             source=tasks,
             target=task_validation,
-            projection=["orig_inputs", "output.structure", "input.parameters"],
+            projection=[
+                "orig_inputs",
+                "output.structure",
+                "input.parameters",
+                "calcs_reversed.output.ionic_steps.e_fr_energy",
+                "tags",
+            ],
             **kwargs,
         )
 
@@ -53,4 +57,16 @@ class TaskValidator(MapBuilder):
             item (dict): a (projection of a) task doc
         """
         task_doc = TaskDocument(**item)
-        return ValidationDoc.from_task_doc(task_doc=task_doc).dict()
+        validation_doc = ValidationDoc.from_task_doc(
+            task_doc=task_doc,
+            kpts_tolerance=self.settings.VASP_KPTS_TOLERANCE,
+            input_sets=self.settings.VASP_DEFAULT_INPUT_SETS,
+            LDAU_fields=self.settings.VASP_CHECKED_LDAU_FIELDS,
+            max_allowed_scf_gradient=self.settings.VASP_MAX_SCF_GRADIENT,
+        )
+
+        bad_tags = list(set(task_doc.tags).intersection(self.settings.DEPRECATED_TAGS))
+        if len(bad_tags) > 0:
+            validation_doc.warnings.append(f"Manual Deprecation by tags: {bad_tags}")
+            validation_doc.valid = False
+            validation_doc.reasons.append(DeprecationMessage.MANUAL)
