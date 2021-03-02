@@ -160,7 +160,7 @@ class StructureGroupBuilder(Builder):
             )
         ]
 
-        self.logger.debug(
+        self.logger.info(
             f"Performing initial checks on {len(all_chemsys)} chemical systems containing redox elements with or without the Working Ion."
         )
         self.total = len(all_chemsys)
@@ -230,8 +230,15 @@ class StructureGroupBuilder(Builder):
                     f"There are {len(mat_ids)} material ids in the source database vs {len(target_mat_ids)} in the target database."
                 )
                 if mat_ids == target_mat_ids and max_mat_time < min_target_time:
+                    self.logger.info(
+                        f"Skipping all documents in {chemsys}."
+                    )
+                    all_mats_in_chemsys = []
                     continue
                 else:
+                    self.logger.debug(f"MPIDS: {mat_ids} -> {max_mat_time}")
+                    self.logger.debug(f"MPIDS: {target_mat_ids} -> {min_target_time}")
+                    self.logger.debug(f"MPIDS: {target_mat_ids}")
                     self.logger.info(
                         f"Nuking all {len(target_mat_ids)} documents in chemsys {chemsys} in the target database."
                     )
@@ -261,6 +268,11 @@ class StructureGroupBuilder(Builder):
         return ComputedStructureEntry.from_dict(d_)
 
     def process_item(self, item: Any) -> Any:
+        self.logger.info(
+            f"Processing {len(item['materials'])} materials entries in {item['chemsys']}."
+        )
+        if len(item["materials"])==0:
+            return None
         entries = [*map(self._entry_from_mat_doc, item["materials"])]
         s_groups = StructureGroupDoc.from_ungrouped_structure_entries(
             entries=entries,
@@ -281,28 +293,29 @@ class StructureGroupBuilder(Builder):
 class InsertionElectrodeBuilder(MapBuilder):
     def __init__(
         self,
-        grouped_materials: MongoStore,
-        insertion_electrode: MongoStore,
-        thermo: MongoStore,
+        sgroup: MongoStore,
         material: MongoStore,
+        insertion_electrode: MongoStore,
+        thermo: MongoStore = None,
         query: dict = None,
         **kwargs,
     ):
-        self.grouped_materials = grouped_materials
+        self.sgroup = sgroup
         self.insertion_electrode = insertion_electrode
         self.thermo = thermo
         self.material = material
         qq_ = {} if query is None else query
         qq_.update({"structure_matched": True, "has_distinct_compositions": True})
         super().__init__(
-            source=self.grouped_materials,
+            source=self.sgroup,
             target=self.insertion_electrode,
             query=qq_,
             **kwargs,
         )
 
     def get_items(self):
-        """"""
+        """
+        """
 
         @lru_cache(None)
         def get_working_ion_entry(working_ion):
@@ -317,17 +330,20 @@ class InsertionElectrodeBuilder(MapBuilder):
             self.logger.debug(
                 f"Looking for {len(item['grouped_ids'])} material_id in the Thermo DB."
             )
-            with self.thermo as store:
-                thermo_docs = [
-                    *store.query(
-                        {
-                            "$and": [
-                                {"material_id": {"$in": item["grouped_ids"]}},
-                            ]
-                        },
-                        properties=["material_id", "_sbxn", "thermo"],
-                    )
-                ]
+            thermo_docs = []
+            self.logger.debug(self.thermo)
+            if self.thermo is not None:
+                with self.thermo as store:
+                    thermo_docs = [
+                        *store.query(
+                            {
+                                "$and": [
+                                    {"material_id": {"$in": item["grouped_ids"]}},
+                                ]
+                            },
+                            properties=["material_id", "_sbxn", "thermo"],
+                        )
+                    ]
 
             with self.material as store:
                 material_docs = [
@@ -348,13 +364,17 @@ class InsertionElectrodeBuilder(MapBuilder):
                     "Insertion electrode can only be defined for one working ion species"
                 )
             working_ion_doc = get_working_ion_entry(item["ignored_species"][0])
-            return {
+
+            res = {
                 "material_id": item["material_id"],
                 "working_ion_doc": working_ion_doc,
                 "working_ion": item["ignored_species"][0],
-                "thermo_docs": thermo_docs,
                 "material_docs": material_docs,
             }
+            if self.thermo:
+                resp["thermo_docs"] = thermo_docs
+
+            return res
 
         yield from map(modify_item, super().get_items())
 

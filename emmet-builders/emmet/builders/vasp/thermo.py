@@ -90,7 +90,7 @@ class Thermo(Builder):
             if chemsys not in to_process_chemsys:
                 to_process_chemsys |= chemsys_permutations(chemsys)
 
-        self.logger.inf(
+        self.logger.info(
             f"Found {len(to_process_chemsys)} chemical systems with new/updated materials to process"
         )
         self.total = len(to_process_chemsys)
