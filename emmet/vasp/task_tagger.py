@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from itertools import chain
 from maggma.builders import MapBuilder
 from pymatgen import Structure
 from atomate.utils.utils import load_class
@@ -23,6 +24,7 @@ class TaskTagger(MapBuilder):
         kspacing_tolerance=0.05,
         max_gradient=100,
         LDAU_fields=["LDAUU", "LDAUJ", "LDAUL"],
+        deprecated_tags=None,
         **kwargs,
     ):
         """
@@ -56,6 +58,7 @@ class TaskTagger(MapBuilder):
         self.kspacing_tolerance = kspacing_tolerance
         self.LDAU_fields = LDAU_fields
         self.max_gradient = max_gradient
+        self.deprecated_tags = deprecated_tags if deprecated_tags is not None else []
 
         self._input_sets = {
             name: load_class("pymatgen.io.vasp.sets", inp_set)
@@ -67,12 +70,14 @@ class TaskTagger(MapBuilder):
         super().__init__(
             source=tasks,
             target=task_types,
-            projection=["orig_inputs",
-                        "output.structure",
-                        "output.bandgap",
-                        "input.hubbards",
-                        "calcs_reversed.output.ionic_steps.electronic_steps.e_fr_energy",
-                        ],
+            projection=[
+                "orig_inputs",
+                "output.structure",
+                "output.bandgap",
+                "input.hubbards",
+                "calcs_reversed.output.ionic_steps.electronic_steps.e_fr_energy",
+                "tags",
+            ],
             **kwargs,
         )
 
@@ -94,6 +99,8 @@ class TaskTagger(MapBuilder):
             calcs=item["calcs_reversed"],
             max_gradient=self.max_gradient,
             hubbards=item.get("input", {}).get("hubbards", {}),
+            tags=item.get("tags", []),
+            deprecated_tags=self.deprecated_tags,
         )
 
         d = {"task_type": tt, **iv}
@@ -118,7 +125,17 @@ def task_type(inputs, include_calc_type=True):
     except Exception:
         functional = "PBE"
 
-    METAGGA_TYPES = {"TPSS", "RTPSS", "M06L", "MBJL", "SCAN", "R2SCAN", "MS0", "MS1", "MS2"}
+    METAGGA_TYPES = {
+        "TPSS",
+        "RTPSS",
+        "M06L",
+        "MBJL",
+        "SCAN",
+        "R2SCAN",
+        "MS0",
+        "MS1",
+        "MS2",
+    }
 
     if include_calc_type:
         if incar.get("LHFCALC", False):
@@ -187,6 +204,8 @@ def is_valid(
     kpts_tolerance=0.9,
     kspacing_tolerance=0.05,
     hubbards={},
+    tags=[],
+    deprecated_tags=[],
 ):
     """
     Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
@@ -286,21 +305,26 @@ def is_valid(
             d["_warnings"].append("Inappropriate smearing settings")
 
         # Checking task convergence
-        ignored_steps = np.abs(inputs.get("incar", {}).get("NELMDL",-5)) -1
-        gradient = calc_max_gradient(calcs[0],ignored_steps)
+        ignored_steps = np.abs(inputs.get("incar", {}).get("NELMDL", -5)) - 1
+        gradient = calc_max_gradient(calcs[0], ignored_steps)
         if gradient > max_gradient and "Structure Optimization" in tt:
             d["_warnings"].append(
                 f"Max gradient in electronic energy exceeded {max_gradient} at {gradient}"
             )
             d["is_valid"] = False
 
+        # Checking manual deprecation
+        bad_tags = list(set(tags).intersection(deprecated_tags))
+        if len(bad_tags) > 0:
+            d["_warnings"].append(f"Manual Deprecation by Tags: {bad_tags}")
+
     if len(d["_warnings"]) == 0:
         del d["_warnings"]
 
     return d
 
-from itertools import chain
-def calc_max_gradient(calc,ignored_steps):
+
+def calc_max_gradient(calc, ignored_steps):
     energies = [
         [d["e_fr_energy"] for d in step["electronic_steps"]]
         for step in calc["output"]["ionic_steps"]
