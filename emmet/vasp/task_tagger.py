@@ -317,6 +317,7 @@ def is_valid(
         bad_tags = list(set(tags).intersection(deprecated_tags))
         if len(bad_tags) > 0:
             d["_warnings"].append(f"Manual Deprecation by Tags: {bad_tags}")
+            d["is_valid"] = False
 
     if len(d["_warnings"]) == 0:
         del d["_warnings"]
