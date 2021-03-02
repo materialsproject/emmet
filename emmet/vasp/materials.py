@@ -86,7 +86,6 @@ class MaterialsBuilder(Builder):
             self.tasks.key,
             self.tasks.last_updated_field,
             "sbxn",
-            "tags"
         ]
 
         projected_from_tasks = [p.split(".") for p in projected_from_tasks]
@@ -155,7 +154,7 @@ class MaterialsBuilder(Builder):
                 self.tasks.query(criteria=tasks_q, properties=self.projected_from_tasks)
             )
             for t in tasks:
-                if t[self.tasks.key] in invalid_ids or "deprecated" in t.get("tags",[]):
+                if t[self.tasks.key] in invalid_ids:
                     t["is_valid"] = False
                 else:
                     t["is_valid"] = True
