@@ -55,7 +55,7 @@ class ValidationDoc(BaseModel):
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
         input_sets: Dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
-        max_allowed_scf_gradient: float = SETTINGS.MAX_VASP_SCF_GRADIENT,
+        max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
     ) -> "ValidationDoc":
         """
         Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
