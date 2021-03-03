@@ -3,6 +3,7 @@ from datetime import datetime
 from itertools import chain
 from typing import Dict, Iterator, List, Optional, Set, Tuple
 
+from icecream import ic
 from maggma.core import Builder, Store
 from monty.json import MontyDecoder
 from pymatgen import Structure
@@ -99,7 +100,7 @@ class Thermo(Builder):
         # Yield the chemical systems in order of increasing size
         # Will build them in a similar manner to fast Pourbaix
         for chemsys in sorted(to_process_chemsys, key=lambda x: len(x.split("-"))):
-            entries = self.get_entries(chemsys, include_structure=True)
+            entries = self.get_entries(chemsys)
             yield entries
             # # build sandbox sets: ["a"] , ["a","b"], ["core","a","b"]
             # sandbox_sets = set(
@@ -196,7 +197,7 @@ class Thermo(Builder):
         else:
             self.logger.info("No items to update")
 
-    def get_entries(self, chemsys: str, include_structure: bool = False) -> List[Dict]:
+    def get_entries(self, chemsys: str) -> List[Dict]:
         """
         Gets a entries from the tasks collection for the corresponding chemical systems
         Args:
@@ -240,8 +241,6 @@ class Thermo(Builder):
         for doc in materials_docs:
             for r_type, entry_dict in doc.get("entries", {}).items():
                 entry_dict["data"]["run_type"] = r_type
-                if include_structure:
-                    entry_dict["structure"] = doc["structure"]
                 elsyms = sorted(set([el for el in entry_dict["composition"]]))
                 self._entries_cache["-".join(elsyms)].append(entry_dict)
                 all_entries.append(entry_dict)

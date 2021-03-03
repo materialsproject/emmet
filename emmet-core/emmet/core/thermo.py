@@ -3,6 +3,7 @@ from datetime import datetime
 from enum import Enum
 from typing import ClassVar, Dict, List, Union
 
+from icecream import ic
 from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.core import Composition
@@ -139,6 +140,6 @@ class ThermoDoc(PropertyDoc):
                 elif k in e.data:
                     d[k] = e.data[k]
 
-            docs.append(ThermoDoc.from_composition(composition=e.composition, **d))
+            docs.append(ThermoDoc.from_structure(structure=e.structure, **d))
 
         return docs
