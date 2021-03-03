@@ -39,6 +39,8 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         None, description="Dictionary for tracking entries for VASP calculations"
     )
 
+    # def dict(self):
+
     @classmethod
     def from_tasks(
         cls,

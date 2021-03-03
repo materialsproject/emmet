@@ -9,8 +9,9 @@ from pymatgen import Structure
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility
-from pymatgen.entries.computed_entries import ComputedEntry
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
+from emmet.core.utils import jsanitize
 from emmet.builders.utils import (
     chemsys_permutations,
     maximal_spanning_non_intersecting_subsets,
@@ -51,7 +52,7 @@ class Thermo(Builder):
             if compatibility
             else MaterialsProjectCompatibility("Advanced")
         )
-        self._completed_tasks = {}
+        self._completed_tasks = set()
         self._entries_cache = defaultdict(list)
         super().__init__(sources=[materials], targets=[thermo], **kwargs)
 
@@ -98,7 +99,7 @@ class Thermo(Builder):
         # Yield the chemical systems in order of increasing size
         # Will build them in a similar manner to fast Pourbaix
         for chemsys in sorted(to_process_chemsys, key=lambda x: len(x.split("-"))):
-            entries = self.get_entries(chemsys)
+            entries = self.get_entries(chemsys, include_structure=True)
             yield entries
             # # build sandbox sets: ["a"] , ["a","b"], ["core","a","b"]
             # sandbox_sets = set(
@@ -123,7 +124,7 @@ class Thermo(Builder):
 
         entries = item
 
-        entries = [ComputedEntry.from_dict(entry) for entry in entries]
+        entries = [ComputedStructureEntry.from_dict(entry) for entry in entries]
         # determine chemsys
         elements = sorted(
             set([el.symbol for e in entries for el in e.composition.elements])
@@ -191,11 +192,11 @@ class Thermo(Builder):
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(items)} thermo documents")
-            self.thermo.update(docs=items, key=[self.thermo.key, "sandboxes"])
+            self.thermo.update(docs=jsanitize(items), key=[self.thermo.key])
         else:
             self.logger.info("No items to update")
 
-    def get_entries(self, chemsys: str) -> List[Dict]:
+    def get_entries(self, chemsys: str, include_structure: bool = False) -> List[Dict]:
         """
         Gets a entries from the tasks collection for the corresponding chemical systems
         Args:
@@ -227,7 +228,7 @@ class Thermo(Builder):
         new_q["deprecated"] = False
         materials_docs = list(
             self.materials.query(
-                criteria=new_q, properties=[self.materials.key, "entries"]
+                criteria=new_q, properties=[self.materials.key, "entries", "structure"]
             )
         )
 
@@ -239,6 +240,8 @@ class Thermo(Builder):
         for doc in materials_docs:
             for r_type, entry_dict in doc.get("entries", {}).items():
                 entry_dict["data"]["run_type"] = r_type
+                if include_structure:
+                    entry_dict["structure"] = doc["structure"]
                 elsyms = sorted(set([el for el in entry_dict["composition"]]))
                 self._entries_cache["-".join(elsyms)].append(entry_dict)
                 all_entries.append(entry_dict)
