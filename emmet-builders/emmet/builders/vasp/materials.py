@@ -55,6 +55,7 @@ class MaterialsBuilder(Builder):
         Args:
             tasks: Store of task documents
             materials: Store of materials documents to generate
+            task_validation: Store for storing task validation results
             query: dictionary to limit tasks to be analyzed
             allowed_task_types: list of task_types that can be processed
             symprec: tolerance for SPGLib spacegroup finding
@@ -156,7 +157,7 @@ class MaterialsBuilder(Builder):
             invalid_ids = {
                 doc[self.tasks.key]
                 for doc in self.task_validation.query(
-                    {"is_valid": False}, [self.task_validation.key]
+                    {"valid": False}, [self.task_validation.key]
                 )
             }
         else:
