@@ -3,7 +3,6 @@ from datetime import datetime
 from itertools import chain
 from typing import Dict, Iterator, List, Optional, Set, Tuple
 
-from icecream import ic
 from maggma.core import Builder, Store
 from monty.json import MontyDecoder
 from pymatgen import Structure

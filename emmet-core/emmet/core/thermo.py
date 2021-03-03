@@ -3,7 +3,6 @@ from datetime import datetime
 from enum import Enum
 from typing import ClassVar, Dict, List, Union
 
-from icecream import ic
 from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.core import Composition

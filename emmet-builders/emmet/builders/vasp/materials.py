@@ -182,6 +182,7 @@ class MaterialsBuilder(Builder):
         for formula in to_process_forms:
             tasks_query = dict(temp_query)
             tasks_query["formula_pretty"] = formula
+            tasks_query[""]
             tasks = list(
                 self.tasks.query(criteria=tasks_query, properties=projected_fields)
             )
