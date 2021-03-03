@@ -21,7 +21,7 @@ from emmet.cli.decorators import sbatch
 
 logger = logging.getLogger("emmet")
 GARDEN = "/home/m/matcomp/garden"
-PREFIX = "block_"
+PREFIXES = ["res_", "aflow_", "block_"]
 FILE_FILTERS = [
     "INCAR*",
     "CONTCAR*",
@@ -53,7 +53,7 @@ STORE_VOLUMETRIC_DATA = []
     "-p",
     "--pattern",
     show_default=True,
-    default=f"{PREFIX}*",
+    default="block_*",
     help="Pattern for sub-paths to include.",
 )
 def tasks(directory, nmax, pattern):
@@ -108,17 +108,18 @@ def check_pattern(nested_allowed=False):
     pattern = ctx.parent.params["pattern"]
     if not nested_allowed and os.sep in pattern:
         raise EmmetCliError(f"Nested pattern ({pattern}) not allowed!")
-    elif not pattern.startswith(PREFIX):
-        raise EmmetCliError(f"Pattern ({pattern}) only allowed to start with {PREFIX}!")
+    elif not any(pattern.startswith(p) for p in PREFIXES):
+        raise EmmetCliError(f"Pattern ({pattern}) only allowed to start with one of {PREFIXES}!")
 
 
 def load_block_launchers():
+    prefix = "block_"  # TODO old prefixes (e.g. res/aflow) might not be needed for backup
     block_launchers = defaultdict(list)
     gen = VaspDirsGenerator()
     for idx, vasp_dir in enumerate(gen):
         if idx and not idx % 500:
             logger.info(f"{idx} launchers found ...")
-        launch_dir = PREFIX + vasp_dir.split(PREFIX, 1)[-1]
+        launch_dir = prefix + vasp_dir.split(prefix, 1)[-1]
         block, launcher = launch_dir.split(os.sep, 1)
         block_launchers[block].append(launcher)
     logger.info(f"Loaded {len(block_launchers)} block(s) with {gen.value} launchers.")
