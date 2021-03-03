@@ -56,7 +56,8 @@ STORE_VOLUMETRIC_DATA = []
     default="block_*",
     help="Pattern for sub-paths to include.",
 )
-def tasks(directory, nmax, pattern):
+@click.option("--reorg", is_flag=True, help="Reorganize directory in block/launchers.")
+def tasks(directory, nmax, pattern, reorg):
     """Backup, restore, and parse VASP calculations."""
     pass
 

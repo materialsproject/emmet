@@ -229,6 +229,8 @@ def get_vasp_dirs():
     run = ctx.parent.parent.params["run"]
     nmax = ctx.parent.params["nmax"]
     pattern = ctx.parent.params["pattern"]
+    reorg = ctx.parent.params["reorg"]
+
     base_path = ctx.parent.params["directory"].rstrip(os.sep)
     base_path_index = len(base_path.split(os.sep))
     if pattern:
@@ -282,8 +284,7 @@ def get_vasp_dirs():
                     gzipped = True
 
             # NOTE skip symlink'ing on MP calculations from the early days
-            vasp_dir = get_symlinked_path(root, base_path_index)
-            # vasp_dir = root
+            vasp_dir = get_symlinked_path(root, base_path_index) if reorg else root
             create_orig_inputs(vasp_dir)
             dirs[:] = []  # don't descend further (i.e. ignore relax1/2)
             logger.log(logging.INFO if gzipped else logging.DEBUG, vasp_dir)
