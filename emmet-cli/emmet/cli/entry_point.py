@@ -31,12 +31,13 @@ def opt_prompt():
 @click.option("--run", is_flag=True, help="Run DB/filesystem write operations.")
 @click.option("--issue", type=int, help="Production tracker issue (required if --run).")
 @click.option("--sbatch", is_flag=True, help="Switch to SBatch mode.")
+@click.option("--ntries", default=1, show_default=True, help="Number of jobs (for walltime > 48h).")
 @click.option("--bb", is_flag=True, help="Use burst buffer.")
 @click.option("--yes", is_flag=True, help="Automatic yes to all prompts.")
 @click.option("--no-dupe-check", is_flag=True, help="Skip duplicate check(s).")
 @click.option("--verbose", is_flag=True, help="Show debug messages.")
 @click.version_option()
-def emmet(spec_or_dbfile, run, issue, sbatch, bb, yes, no_dupe_check, verbose):
+def emmet(spec_or_dbfile, run, issue, sbatch, ntries, bb, yes, no_dupe_check, verbose):
     """Command line interface for emmet"""
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     ctx = click.get_current_context()
