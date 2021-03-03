@@ -63,6 +63,7 @@ class TaskValidator(MapBuilder):
             input_sets=self.settings.VASP_DEFAULT_INPUT_SETS,
             LDAU_fields=self.settings.VASP_CHECKED_LDAU_FIELDS,
             max_allowed_scf_gradient=self.settings.VASP_MAX_SCF_GRADIENT,
+            deprecated_tags=self.settings.DEPRECATED_TAGS,
         )
 
         bad_tags = list(set(task_doc.tags).intersection(self.settings.DEPRECATED_TAGS))

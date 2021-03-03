@@ -76,11 +76,13 @@ class EmmetSettings(BaseSettings):
         extra = "ignore"
 
     @root_validator(pre=True)
-    def load_default_settings(cls, values):
+    def load_default_settings(cls, values: dict = None):
         """
         Loads settings from a root file if available and uses that as defaults in
         place of built in defaults
         """
+        if values is None:
+            values = dict()
         config_file_path: str = values.get("config_file", DEFAULT_CONFIG_FILE_PATH)
 
         new_values = {}
