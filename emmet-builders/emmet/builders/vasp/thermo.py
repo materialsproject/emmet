@@ -9,8 +9,9 @@ from pymatgen import Structure
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility
-from pymatgen.entries.computed_entries import ComputedEntry
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
+from emmet.core.utils import jsanitize
 from emmet.builders.utils import (
     chemsys_permutations,
     maximal_spanning_non_intersecting_subsets,
@@ -46,12 +47,13 @@ class Thermo(Builder):
         self.materials = materials
         self.thermo = thermo
         self.query = query if query else {}
+        self.use_statics = use_statics
         self.compatibility = (
             compatibility
             if compatibility
             else MaterialsProjectCompatibility("Advanced")
         )
-        self._completed_tasks = {}
+        self._completed_tasks = set()
         self._entries_cache = defaultdict(list)
         super().__init__(sources=[materials], targets=[thermo], **kwargs)
 
@@ -123,7 +125,7 @@ class Thermo(Builder):
 
         entries = item
 
-        entries = [ComputedEntry.from_dict(entry) for entry in entries]
+        entries = [ComputedStructureEntry.from_dict(entry) for entry in entries]
         # determine chemsys
         elements = sorted(
             set([el.symbol for e in entries for el in e.composition.elements])
@@ -191,7 +193,7 @@ class Thermo(Builder):
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(items)} thermo documents")
-            self.thermo.update(docs=items, key=[self.thermo.key, "sandboxes"])
+            self.thermo.update(docs=jsanitize(items), key=[self.thermo.key])
         else:
             self.logger.info("No items to update")
 
@@ -227,7 +229,7 @@ class Thermo(Builder):
         new_q["deprecated"] = False
         materials_docs = list(
             self.materials.query(
-                criteria=new_q, properties=[self.materials.key, "entries"]
+                criteria=new_q, properties=[self.materials.key, "entries", "structure"]
             )
         )
 

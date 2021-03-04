@@ -1,7 +1,5 @@
 """
-This file defines any arbitrary global variables used in Materials Project
-database building and in the website code, to ensure consistency between
-different modules and packages.
+Settings for defaults in the core definitions of Materials Project Documents
 """
 import importlib
 import json
@@ -17,6 +15,7 @@ DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
 class EmmetSettings(BaseSettings):
     """
     Settings for the emmet- packages
+    Non-core packages should subclass this to get settings specific to their needs
     The default way to modify these is to modify ~/.emmet.json or set the environment variable
     EMMET_CONFIG_FILE to point to the json with emmet settings
     """
@@ -67,16 +66,23 @@ class EmmetSettings(BaseSettings):
         ["LDAUU", "LDAUJ", "LDAUL"], description="LDAU fields to validate for tasks"
     )
 
+    VASP_MAX_SCF_GRADIENT: float = Field(
+        100,
+        description="Maximum upward gradient in the last SCF for any VASP calculation",
+    )
+
     class Config:
         env_prefix = "emmet_"
         extra = "ignore"
 
     @root_validator(pre=True)
-    def load_default_settings(cls, values):
+    def load_default_settings(cls, values: dict = None):
         """
         Loads settings from a root file if available and uses that as defaults in
         place of built in defaults
         """
+        if values is None:
+            values = dict()
         config_file_path: str = values.get("config_file", DEFAULT_CONFIG_FILE_PATH)
 
         new_values = {}
