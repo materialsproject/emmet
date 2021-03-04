@@ -133,7 +133,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         all_run_types = set(run_types.values())
         for rt in all_run_types:
             relevant_calcs = sorted(
-                [doc for doc in structure_calcs if doc.run_type == rt],
+                [doc for doc in structure_calcs if doc.run_type == rt and doc.is_valid],
                 key=_structure_eval,
             )
 

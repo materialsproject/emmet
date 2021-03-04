@@ -47,6 +47,7 @@ class Thermo(Builder):
         self.materials = materials
         self.thermo = thermo
         self.query = query if query else {}
+        self.use_statics = use_statics
         self.compatibility = (
             compatibility
             if compatibility

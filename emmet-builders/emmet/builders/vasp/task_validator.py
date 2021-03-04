@@ -20,7 +20,6 @@ class TaskValidator(MapBuilder):
         self,
         tasks: Store,
         task_validation: Store,
-        settings: EmmetBuildSettings = SETTINGS,
         **kwargs,
     ):
         """
@@ -32,7 +31,7 @@ class TaskValidator(MapBuilder):
         """
         self.tasks = tasks
         self.task_validation = task_validation
-        self.settings = settings
+        self.settings = SETTINGS
 
         self.kwargs = kwargs
 
@@ -63,7 +62,6 @@ class TaskValidator(MapBuilder):
             input_sets=self.settings.VASP_DEFAULT_INPUT_SETS,
             LDAU_fields=self.settings.VASP_CHECKED_LDAU_FIELDS,
             max_allowed_scf_gradient=self.settings.VASP_MAX_SCF_GRADIENT,
-            deprecated_tags=self.settings.DEPRECATED_TAGS,
         )
 
         bad_tags = list(set(task_doc.tags).intersection(self.settings.DEPRECATED_TAGS))
@@ -71,3 +69,5 @@ class TaskValidator(MapBuilder):
             validation_doc.warnings.append(f"Manual Deprecation by tags: {bad_tags}")
             validation_doc.valid = False
             validation_doc.reasons.append(DeprecationMessage.MANUAL)
+
+        return validation_doc

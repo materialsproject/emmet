@@ -57,7 +57,6 @@ class ValidationDoc(BaseModel):
         input_sets: Dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
-        deprecated_tags: List["str"] = None,
     ) -> "ValidationDoc":
         """
         Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
@@ -75,7 +74,6 @@ class ValidationDoc(BaseModel):
 
         reasons = []
         data = {}
-        dep_tags_ = [] if deprecated_tags is None else deprecated_tags
 
         if task_type in input_sets:
             valid_input_set = input_sets[task_type](structure)
@@ -135,9 +133,6 @@ class ValidationDoc(BaseModel):
             data["max_gradient"] = max_gradient
             if max_gradient > max_allowed_scf_gradient:
                 reasons.append(DeprecationMessage.MAX_SCF)
-
-        if set(task_doc.tags) | set(dep_tags_):
-            reasons.append(DeprecationMessage.MANUAL)
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,
