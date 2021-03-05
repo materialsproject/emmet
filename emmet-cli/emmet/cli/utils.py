@@ -13,6 +13,7 @@ from fnmatch import fnmatch
 from datetime import datetime
 from collections import defaultdict
 from pymatgen import Structure
+from pymatgen.util.provenance import StructureNL
 from atomate.vasp.database import VaspCalcDb
 from fireworks.fw_config import FW_BLOCK_FORMAT
 from mongogrant.client import Client
@@ -326,7 +327,7 @@ def reconstruct_command(sbatch=False):
     return " ".join(command).strip().strip("\\")
 
 
-def parse_vasp_dirs(vaspdirs, tag, task_ids):
+def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):
     process = multiprocessing.current_process()
     name = process.name
     chunk_idx = int(name.rsplit("-")[1]) - 1
@@ -335,6 +336,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
     ctx = click.get_current_context()
     spec_or_dbfile = ctx.parent.parent.params["spec_or_dbfile"]
     target = calcdb_from_mgrant(spec_or_dbfile)
+    snl_collection = target.db.snls_user
     sbxn = list(filter(None, target.collection.distinct("sbxn")))
     logger.info(f"Using sandboxes {sbxn}.")
     no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
@@ -370,8 +372,10 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
         except Exception as ex:
             logger.error(f"Failed to assimilate {vaspdir}: {ex}")
             continue
+
         task_doc["sbxn"] = sbxn
         manual_taskid = isinstance(task_ids, dict)
+        snl_metas_avail = isinstance(snl_metas, dict)
         task_id = task_ids[launcher] if manual_taskid else task_ids[chunk_idx][count]
         task_doc["task_id"] = task_id
         logger.info(f"Using {task_id} for {launcher}.")
@@ -381,6 +385,24 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
             if docs[0]["tags"]:
                 task_doc["tags"] += docs[0]["tags"]
                 logger.info(f"Adding existing tags {docs[0]['tags']} to {tags}.")
+
+        snl_dct = None
+        if snl_metas_avail:
+            snl_meta = snl_metas.get(launcher)
+            if snl_meta:
+                references = snl_meta.get("references")
+                authors = snl_meta.get("authors", ["Materials Project <feedback@materialsproject.org>"])
+                kwargs = {"projects": [tag]}
+                if references:
+                    kwargs["references"] = references
+
+                struct = Structure.from_dict(task_doc["input"]["structure"])
+                snl = StructureNL(struct, authors, **kwargs)
+                snl_dct = snl.as_dict()
+                snl_dct.update(get_meta_from_structure(struct))
+                snl_id = snl_meta["snl_id"]
+                snl_dct["snl_id"] = snl_id
+                logger.info(f"Created SNL object for {snl_id}.")
 
         if run:
             if task_doc["state"] == "successful":
@@ -410,6 +432,10 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
                         continue
 
                 if target.collection.count(query):
+                    if snl_dct:
+                        result = snl_collection.insert_one(snl_dct)
+                        logger.info(f"SNL {result.inserted_id} inserted into {snl_collection.full_name}.")
+
                     shutil.rmtree(vaspdir)
                     logger.info(f"{name} Successfully parsed and removed {launcher}.")
                     count += 1

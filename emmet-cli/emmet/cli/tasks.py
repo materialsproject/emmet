@@ -336,6 +336,11 @@ def restore(inputfile, file_filter):
     help="JSON file mapping launcher name to task ID.",
 )
 @click.option(
+    "--snl-metas",
+    type=click.Path(exists=True),
+    help="JSON file mapping launcher name to SNL metadata.",
+)
+@click.option(
     "--nproc",
     type=int,
     default=1,
@@ -349,7 +354,7 @@ def restore(inputfile, file_filter):
     default=STORE_VOLUMETRIC_DATA,
     help="Store any of CHGCAR, LOCPOT, AECCAR0, AECCAR1, AECCAR2, ELFCAR.",
 )
-def parse(task_ids, nproc, store_volumetric_data):
+def parse(task_ids, snl_metas, nproc, store_volumetric_data):
     """Parse VASP launchers into tasks"""
     ctx = click.get_current_context()
     if "CLIENT" not in ctx.obj:
@@ -360,6 +365,7 @@ def parse(task_ids, nproc, store_volumetric_data):
     directory = ctx.parent.params["directory"].rstrip(os.sep)
     tag = os.path.basename(directory)
     target = ctx.obj["CLIENT"]
+    snl_collection = target.db.snls_user
     logger.info(
         f"Connected to {target.collection.full_name} with {target.collection.count()} tasks."
     )
@@ -388,24 +394,60 @@ def parse(task_ids, nproc, store_volumetric_data):
         # reserve list of task_ids to avoid collisions during multiprocessing
         # insert empty doc with max ID + 1 into target collection for parallel SLURM jobs
         # NOTE use regex first to reduce size of distinct below 16MB
-        all_task_ids = target.collection.distinct(
-            "task_id", {"task_id": {"$regex": r"^mp-\d{7,}$"}}
-        )
+        q = {"task_id": {"$regex": r"^mp-\d{7,}$"}}
+        all_task_ids = [t["task_id"] for t in target.collection.find(q, {"_id": 0, "task_id": 1})]
         if not all_task_ids:
             all_task_ids = target.collection.distinct("task_id")
 
         next_tid = max(int(tid.split("-")[-1]) for tid in all_task_ids) + 1
         lst = [f"mp-{next_tid + n}" for n in range(nmax)]
+        task_ids = chunks(lst, chunk_size)
+
         if run:
             sep_tid = f"mp-{next_tid + nmax}"
             target.collection.insert({"task_id": sep_tid})
             logger.info(f"Inserted separator task with task_id {sep_tid}.")
-        task_ids = chunks(lst, chunk_size)
-        logger.info(f"Reserved {len(lst)} task ID(s).")
+            logger.info(f"Reserved {len(lst)} task ID(s).")
+        else:
+            logger.info(f"Would reserve {len(lst)} task ID(s).")
+
+    sep_snlid = None
+    if snl_metas:
+        with open(snl_metas, "r") as f:
+            snl_metas = json.load(f)
+
+        # reserve list of snl_ids to avoid collisions during multiprocessing
+        # insert empty doc with max ID + 1 into target collection for parallel SLURM jobs
+        all_snl_ids = snl_collection.distinct("snl_id")
+        prefixes = set()
+        next_snlid = -1
+
+        for snlid in all_snl_ids:
+            prefix, index = snlid.split("-", 1)
+            index = int(index)
+            prefixes.add(prefix)
+            if index > next_snlid:
+                next_snlid = index
+
+        next_snlid += 1
+        prefix = prefixes.pop()  # NOTE use the first prefix found
+        nsnls = len(snl_metas)
+
+        for n, launcher in enumerate(snl_metas):
+            snl_id = f"{prefix}-{next_snlid + n}"
+            snl_metas[launcher]["snl_id"] = snl_id
+
+        if run:
+            sep_snlid = f"{prefix}-{next_snlid + nsnls}"
+            snl_collection.insert({"snl_id": sep_snlid})
+            logger.info(f"Inserted separator SNL with snl_id {sep_snlid}.")
+            logger.info(f"Reserved {nsnls} SNL ID(s).")
+        else:
+            logger.info(f"Would reserve {nsnls} SNL ID(s).")
 
     while iterator or queue:
         try:
-            args = [next(iterator), tag, task_ids]
+            args = [next(iterator), tag, task_ids, snl_metas]
             queue.append(pool.apply_async(parse_vasp_dirs, args))
         except (StopIteration, TypeError):
             iterator = None
@@ -426,6 +468,9 @@ def parse(task_ids, nproc, store_volumetric_data):
         if sep_tid:
             target.collection.remove({"task_id": sep_tid})
             logger.info(f"Removed separator task {sep_tid}.")
+        if sep_snlid:
+            snl_collection.remove({"snl_id": sep_snlid})
+            logger.info(f"Removed separator SNL {sep_snlid}.")
     else:
         logger.info(f"Would parse and insert {count}/{gen.value} tasks in {directory}.")
     return ReturnCodes.SUCCESS if count and gen.value else ReturnCodes.WARNING
