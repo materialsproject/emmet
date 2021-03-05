@@ -10,7 +10,7 @@ from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.core import SETTINGS
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
-from emmet.core.material import PropertyOrigin as PropertyOrigin
+from emmet.core.material import PropertyOrigin
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 from emmet.core.vasp.task import TaskDocument
@@ -39,16 +39,20 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         None, description="Dictionary for tracking entries for VASP calculations"
     )
 
-    # def dict(self):
-
     @classmethod
     def from_tasks(
         cls,
         task_group: List[TaskDocument],
         quality_scores=SETTINGS.VASP_QUALITY_SCORES,
+        use_statics: bool = False,
     ) -> "MaterialsDoc":
         """
         Converts a group of tasks into one material
+
+        Args:
+            task_group: List of task document
+            quality_scores: quality scores for various calculation types
+            use_statics: Use statics to define a material
         """
 
         # Metadata
@@ -56,23 +60,25 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         created_at = min(task.completed_at for task in task_group)
         task_ids = list({task.task_id for task in task_group})
 
-        deprecated_tasks = list(
-            {task.task_id for task in task_group if not task.is_valid}
-        )
+        deprecated_tasks = {task.task_id for task in task_group if not task.is_valid}
         run_types = {task.task_id: task.run_type for task in task_group}
         task_types = {task.task_id: task.task_type for task in task_group}
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
-        # TODO: Fix the type checking by hardcoding the Enums?
         structure_optimizations = [
             task
             for task in task_group
             if task.task_type == TaskType.Structure_Optimization  # type: ignore
         ]
         statics = [task for task in task_group if task.task_type == TaskType.Static]  # type: ignore
+        structure_calcs = (
+            structure_optimizations + statics
+            if use_statics
+            else structure_optimizations
+        )
 
         # Material ID
-        possible_mat_ids = [task.task_id for task in structure_optimizations]
+        possible_mat_ids = [task.task_id for task in structure_calcs]
         possible_mat_ids = sorted(possible_mat_ids)
 
         if len(possible_mat_ids) == 0:
@@ -101,7 +107,6 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
                 task.output.energy_per_atom,
             )
 
-        structure_calcs = structure_optimizations + statics
         best_structure_calc = sorted(structure_calcs, key=_structure_eval)[0]
         structure = best_structure_calc.output.structure
 
@@ -115,9 +120,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         ]
 
         # Deprecated
-        deprecated = all(
-            task.task_id in deprecated_tasks for task in structure_optimizations
-        )
+        deprecated = all(task.task_id in deprecated_tasks for task in structure_calcs)
 
         # Origins
         origins = [
