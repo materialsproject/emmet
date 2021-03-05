@@ -102,24 +102,6 @@ class Thermo(Builder):
         for chemsys in sorted(to_process_chemsys, key=lambda x: len(x.split("-"))):
             entries = self.get_entries(chemsys)
             yield entries
-            # # build sandbox sets: ["a"] , ["a","b"], ["core","a","b"]
-            # sandbox_sets = set(
-            #     [frozenset(entry.data.get("sandboxes", {})) for entry in entries]
-            # )
-            # sandbox_sets = maximal_spanning_non_intersecting_subsets(sandbox_sets)
-            # self.logger.debug(f"Found {len(sandbox_sets)}: {sandbox_sets}")
-            #
-            # for sandboxes in sandbox_sets:
-            #     # only yield maximal subsets so that we can process a equivalent sandbox combinations at a time
-            #     sandbox_entries = [
-            #         entry
-            #         for entry in entries
-            #         if all(
-            #             sandbox in entry.data.get("_sbxn", []) for sandbox in sandboxes
-            #         )
-            #     ]
-            #
-            #     yield sandboxes, sandbox_entries
 
     def process_item(self, item: Tuple[List[str], List[ComputedEntry]]):
 
@@ -176,10 +158,6 @@ class Thermo(Builder):
         """
         # flatten out lists
         items = list(filter(None, chain.from_iterable(items)))
-        # check for duplicates within this set
-        # items = list(
-        #     {(v[self.thermo.key], frozenset(v["sandboxes"])): v for v in items}.values()
-        # )
         # Check if already updated this run
         items = [i for i in items if i[self.thermo.key] not in self._completed_tasks]
 
@@ -229,7 +207,7 @@ class Thermo(Builder):
         new_q["deprecated"] = False
         materials_docs = list(
             self.materials.query(
-                criteria=new_q, properties=[self.materials.key, "entries", "structure"]
+                criteria=new_q, properties=[self.materials.key, "entries"]
             )
         )
 
