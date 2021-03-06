@@ -139,6 +139,6 @@ class ThermoDoc(PropertyDoc):
                 elif k in e.data:
                     d[k] = e.data[k]
 
-            docs.append(ThermoDoc.from_composition(composition=e.composition, **d))
+            docs.append(ThermoDoc.from_structure(structure=e.structure, **d))
 
         return docs

@@ -51,6 +51,10 @@ class InputSummary(BaseModel):
         [], description="Potcar specification as a title and hash"
     )
 
+    is_hubbard: bool = Field(False, description="Is this a Hubbard +U calculation.")
+
+    hubbards: Dict = Field({}, description="The hubbard parameters used.")
+
 
 class OutputSummary(BaseModel):
     """
@@ -130,6 +134,10 @@ class TaskDocument(StructureMetadata):
         [], description="The 'raw' calculation docs used to assembled this task"
     )
 
+    # def __post_init__(self):
+    #     if self.task_type is None:
+    #         self.is_valid = False
+
     @property
     def run_type(self) -> RunType:
         return run_type(self.input.parameters)
@@ -152,6 +160,8 @@ class TaskDocument(StructureMetadata):
             "energy": self.output.energy,
             "parameters": {
                 "potcar_spec": self.input.potcar_spec,
+                "is_hubbard": self.input.is_hubbard,
+                "hubbards": self.input.hubbards,
                 # This is done to be compatible with MontyEncoder for the ComputedEntry
                 "run_type": str(self.run_type),
             },

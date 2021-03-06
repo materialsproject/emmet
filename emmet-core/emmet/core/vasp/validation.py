@@ -5,6 +5,7 @@ import numpy as np
 from pydantic import BaseModel, Field, PyObject
 from pymatgen.core import Structure
 
+from emmet.builders import EmmetBuildSettings
 from emmet.core import SETTINGS
 from emmet.core.mpid import MPID
 from emmet.core.utils import DocEnum

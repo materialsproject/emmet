@@ -20,7 +20,6 @@ class TaskValidator(MapBuilder):
         self,
         tasks: Store,
         task_validation: Store,
-        settings: EmmetBuildSettings = SETTINGS,
         **kwargs,
     ):
         """
@@ -32,7 +31,7 @@ class TaskValidator(MapBuilder):
         """
         self.tasks = tasks
         self.task_validation = task_validation
-        self.settings = settings
+        self.settings = SETTINGS
 
         self.kwargs = kwargs
 
@@ -70,3 +69,5 @@ class TaskValidator(MapBuilder):
             validation_doc.warnings.append(f"Manual Deprecation by tags: {bad_tags}")
             validation_doc.valid = False
             validation_doc.reasons.append(DeprecationMessage.MANUAL)
+
+        return validation_doc

@@ -10,12 +10,13 @@ from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 
 from emmet.builders.utils import maximal_spanning_non_intersecting_subsets
-from emmet.core import SETTINGS
+
+# from emmet.core import SETTINGS
+from emmet.builders import SETTINGS
 from emmet.core.utils import group_structures, jsanitize
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.vasp.task import TaskDocument
-from emmet.stubs import ComputedEntry
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -50,12 +51,14 @@ class MaterialsBuilder(Builder):
         ltol: float = SETTINGS.LTOL,
         stol: float = SETTINGS.STOL,
         angle_tol: float = SETTINGS.ANGLE_TOL,
+        build_tags: List[str] = SETTINGS.BUILD_TAGS,
         **kwargs,
     ):
         """
         Args:
             tasks: Store of task documents
             materials: Store of materials documents to generate
+            task_validation: Store for storing task validation results
             query: dictionary to limit tasks to be analyzed
             allowed_task_types: list of task_types that can be processed
             symprec: tolerance for SPGLib spacegroup finding
@@ -75,6 +78,7 @@ class MaterialsBuilder(Builder):
 
         self._allowed_task_types = {TaskType(t) for t in self.allowed_task_types}
 
+        self.build_tags = build_tags if build_tags else []
         self.query = query if query else {}
         self.symprec = symprec
         self.ltol = ltol
@@ -132,6 +136,8 @@ class MaterialsBuilder(Builder):
         # Get all processed tasks:
         temp_query = dict(self.query)
         temp_query["state"] = "successful"
+        if self.build_tags:
+            temp_query["tags"] = {"$in": self.build_tags}
 
         self.logger.info("Finding tasks to process")
         all_tasks = {
@@ -157,7 +163,7 @@ class MaterialsBuilder(Builder):
             invalid_ids = {
                 doc[self.tasks.key]
                 for doc in self.task_validation.query(
-                    {"is_valid": False}, [self.task_validation.key]
+                    {"valid": False}, [self.task_validation.key]
                 )
             }
         else:
@@ -172,6 +178,9 @@ class MaterialsBuilder(Builder):
             "output.energy",
             "output.structure",
             "input.parameters",
+            "input.is_hubbard",
+            "input.hubbards",
+            "input.potcar_spec",
             "orig_inputs",
             "input.structure",
             "tags",
