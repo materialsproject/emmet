@@ -14,8 +14,17 @@ class EmmetBuildSettings(EmmetSettings):
     EMMET_CONFIG_FILE to point to the json with emmet settings
     """
 
-    BUILD_TAGS: List[str] = Field([], description="Tags for the build")
-    DEPRECATED_TAGS: List[str] = Field([], description="Tags to deprecate")
+    BUILD_TAGS: List[str] = Field(
+        [], description="Tags for calculations to build materials"
+    )
+    EXCLUDED_TAGS: List[str] = Field(
+        [],
+        description="Tags to exclude from materials",
+    )
+
+    DEPRECATED_TAGS: List[str] = Field(
+        [], description="Tags for calculations to deprecate"
+    )
 
     VASP_ALLOWED_VASP_TYPES: List[TaskType] = Field(
         [t.value for t in TaskType],
