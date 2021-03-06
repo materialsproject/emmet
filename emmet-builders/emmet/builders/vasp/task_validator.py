@@ -1,9 +1,9 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 import numpy as np
 from maggma.builders import MapBuilder
 from maggma.core import Store
-from pymatgen import Structure
+from pymatgen.core import Structure
 
 from emmet.builders import SETTINGS
 from emmet.core.vasp.calc_types import run_type, task_type
@@ -20,6 +20,7 @@ class TaskValidator(MapBuilder):
         self,
         tasks: Store,
         task_validation: Store,
+        settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
         """
@@ -31,8 +32,7 @@ class TaskValidator(MapBuilder):
         """
         self.tasks = tasks
         self.task_validation = task_validation
-        self.settings = SETTINGS
-
+        self.settings = settings or SETTINGS
         self.kwargs = kwargs
 
         super().__init__(
