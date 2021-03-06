@@ -26,7 +26,6 @@ class Thermo(Builder):
         materials: Store,
         thermo: Store,
         query: Optional[Dict] = None,
-        use_statics: bool = False,
         compatibility=None,
         **kwargs,
     ):
@@ -39,7 +38,6 @@ class Thermo(Builder):
             thermo (Store): Store of thermodynamic data such as formation
                 energy and decomposition pathway
             query (dict): dictionary to limit materials to be analyzed
-            use_statics: Use the statics to compute thermodynamic information
             compatibility (PymatgenCompatability): Compatability module
                 to ensure energies are compatible
         """
@@ -47,7 +45,6 @@ class Thermo(Builder):
         self.materials = materials
         self.thermo = thermo
         self.query = query if query else {}
-        self.use_statics = use_statics
         self.compatibility = (
             compatibility
             if compatibility
@@ -64,7 +61,6 @@ class Thermo(Builder):
 
         # Search index for materials
         self.materials.ensure_index("material_id")
-        self.materials.ensure_index("sandboxes")
         self.materials.ensure_index("last_updated")
 
         # Search index for thermo

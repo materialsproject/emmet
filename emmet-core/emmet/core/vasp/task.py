@@ -134,10 +134,6 @@ class TaskDocument(StructureMetadata):
         [], description="The 'raw' calculation docs used to assembled this task"
     )
 
-    # def __post_init__(self):
-    #     if self.task_type is None:
-    #         self.is_valid = False
-
     @property
     def run_type(self) -> RunType:
         return run_type(self.input.parameters)

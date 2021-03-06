@@ -5,7 +5,7 @@ from typing import Dict, Iterator, List, Optional
 
 from maggma.builders import Builder
 from maggma.stores import Store
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 
