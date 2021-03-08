@@ -62,7 +62,7 @@ def group_structures(
             yield group
 
 
-def jsanitize(obj, strict=False, allow_bson=False):
+def jsanitize(obj, strict=False, allow_bson=True):
     """
     This method cleans an input json-like object, either a list or a dict or
     some sequence, nested or otherwise, by converting all non-string
