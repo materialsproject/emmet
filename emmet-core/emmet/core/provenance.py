@@ -1,11 +1,15 @@
 """ Core definition of a Provenance Document """
+from collections import defaultdict
 from datetime import datetime
-from typing import ClassVar, Dict, List
+from typing import ClassVar, Dict, List, Union
 
 from pybtex.database import BibliographyData, parse_string
 from pydantic import BaseModel, EmailStr, Field, HttpUrl, validator
+from pydash.objects import get
+from pymatgen.util.provenance import StructureNL
 
 from emmet.core.material_property import PropertyDoc
+from emmet.core.mpid import MPID
 from emmet.core.utils import ValueEnum
 
 
@@ -48,32 +52,31 @@ class Provenance(PropertyDoc):
     property_name: ClassVar[str] = "provenance"
 
     created_at: datetime = Field(
-        None,
+        ...,
         description="creation date for the first structure corresponding to this material",
     )
 
-    projects: List[str] = Field(
-        None, description="List of projects this material belongs to"
+    references: List[str] = Field(
+        None, description="Bibtex reference strings for this material"
     )
-    bibtex_string: str = Field(
-        None, description="Bibtex reference string for this material"
-    )
+
+    authors: List[Author] = Field(None, description="List of authors for this material")
+
     remarks: List[str] = Field(
         None, description="List of remarks for the provenance of this material"
     )
-    authors: List[Author] = Field(None, description="List of authors for this material")
 
     theoretical: bool = Field(
         True, description="If this material has any experimental provenance or not"
     )
 
-    database_IDs: Dict[Database, List[str]] = Field(
+    database_IDs: Dict[str, List[str]] = Field(
         None, description="Database IDs corresponding to this material"
     )
 
     history: List[History] = Field(
         None,
-        description="List of history nodes specifying the transformations or orignation of this material",
+        description="List of history nodes specifying the transformations or orignation of this material for the entry closest matching the material input",
     )
 
     @validator("authors")
