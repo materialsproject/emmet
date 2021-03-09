@@ -47,7 +47,7 @@ class MaterialsBuilder(Builder):
         materials: Store,
         task_validation: Optional[Store] = None,
         query: Optional[Dict] = None,
-        settings: Optional[EmmetBuildSettings] = None,
+        user_settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
         """
@@ -62,7 +62,8 @@ class MaterialsBuilder(Builder):
         self.materials = materials
         self.task_validation = task_validation
         self.query = query if query else {}
-        self.settings = settings or SETTINGS
+        self.user_settings = user_settings
+        self.settings = user_settings or SETTINGS
         self.kwargs = kwargs
 
         sources = [tasks]
