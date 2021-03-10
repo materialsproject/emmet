@@ -11,9 +11,6 @@ from emmet.core.vasp.task import TaskDocument
 from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
 from emmet.builders.settings import EmmetBuildSettings
 
-__author__ = "Shyam Dwaraknath"
-__email__ = "shyamd@lbl.gov"
-
 
 class TaskValidator(MapBuilder):
     def __init__(
@@ -32,7 +29,7 @@ class TaskValidator(MapBuilder):
         """
         self.tasks = tasks
         self.task_validation = task_validation
-        self.settings = settings or SETTINGS
+        self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
         super().__init__(
@@ -59,6 +56,7 @@ class TaskValidator(MapBuilder):
         validation_doc = ValidationDoc.from_task_doc(
             task_doc=task_doc,
             kpts_tolerance=self.settings.VASP_KPTS_TOLERANCE,
+            kspacing_tolerance=self.settings.VASP_KSPACING_TOLERANCE,
             input_sets=self.settings.VASP_DEFAULT_INPUT_SETS,
             LDAU_fields=self.settings.VASP_CHECKED_LDAU_FIELDS,
             max_allowed_scf_gradient=self.settings.VASP_MAX_SCF_GRADIENT,
