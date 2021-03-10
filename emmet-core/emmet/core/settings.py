@@ -54,6 +54,11 @@ class EmmetSettings(BaseSettings):
         description="Relative tolerance for kpt density to still be a valid task document",
     )
 
+    VASP_KSPACING_TOLERANCE: float = Field(
+        0.05,
+        description="Relative tolerance for kspacing to still be a valid task document",
+    )
+
     VASP_DEFAULT_INPUT_SETS: Dict[str, PyObject] = Field(
         {
             "GGA Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
