@@ -124,7 +124,7 @@ class TaskDocument(StructureMetadata):
 
     state: Status = Field(None, description="State of this calculation")
 
-    orig_inputs: Dict[str, Dict] = Field(
+    orig_inputs: Dict[str, Any] = Field(
         {}, description="Summary of the original VASP inputs"
     )
     task_id: Union[MPID, int] = Field(None, description="the Task ID For this document")
