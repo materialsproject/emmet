@@ -270,7 +270,7 @@ def restore(inputfile, file_filter):
         f" and {nfiles} file filters to {directory} ..."
     )
 
-    nfiles_restore_total, max_args = 0, 15000
+    nfiles_restore_total, max_args = 0, 14000
     for block, files in block_launchers.items():
         # get full list of matching files in archive and check against existing files
         args = shlex.split(f"htar -tf {GARDEN}/{block}.tar")
