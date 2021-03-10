@@ -1,7 +1,7 @@
 """ Core definition of a VASP Task Document """
 from datetime import datetime
 from functools import lru_cache, partial
-from typing import ClassVar, Dict, List, Optional, Union
+from typing import ClassVar, Dict, List, Optional, Union, Any
 
 from pydantic import BaseModel, Field, validator
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
