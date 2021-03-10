@@ -18,6 +18,7 @@ class TaskValidator(MapBuilder):
         tasks: Store,
         task_validation: Store,
         settings: Optional[EmmetBuildSettings] = None,
+        query: Optional[Dict] = None,
         **kwargs,
     ):
         """
@@ -30,6 +31,7 @@ class TaskValidator(MapBuilder):
         self.tasks = tasks
         self.task_validation = task_validation
         self.settings = EmmetBuildSettings.autoload(settings)
+        self.query = query
         self.kwargs = kwargs
 
         super().__init__(
@@ -42,6 +44,7 @@ class TaskValidator(MapBuilder):
                 "calcs_reversed.output.ionic_steps.e_fr_energy",
                 "tags",
             ],
+            query=query,
             **kwargs,
         )
 
