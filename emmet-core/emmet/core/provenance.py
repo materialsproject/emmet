@@ -6,11 +6,12 @@ from typing import ClassVar, Dict, List, Union
 from pybtex.database import BibliographyData, parse_string
 from pydantic import BaseModel, EmailStr, Field, HttpUrl, validator
 from pydash.objects import get
+from pymatgen.core import Structure
 from pymatgen.util.provenance import StructureNL
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
-from emmet.core.utils import ValueEnum
+from emmet.core.utils import ValueEnum, group_structures
 
 
 class Database(ValueEnum):
@@ -19,7 +20,7 @@ class Database(ValueEnum):
     """
 
     ICSD = "icsd"
-    PaulingFiles = "pf"
+    Pauling_Files = "pf"
     COD = "cod"
 
 
@@ -85,3 +86,86 @@ class Provenance(PropertyDoc):
     def remove_duplicate_authors(cls, authors):
         authors_dict = {entry.name.lower(): entry for entry in authors}
         return list(authors_dict.items())
+
+    @classmethod
+    def from_SNLs(
+        cls,
+        material_id: Union[MPID, int],
+        snls: List[StructureNL],
+    ) -> "Provenance":
+        """
+        Converts legacy Pymatgen SNLs into a single provenance document
+        """
+
+        # Choose earliest created_at
+        created_at = sorted(
+            [get(snl, "about.created_at.string", datetime.max) for snl in snls]
+        )[0]
+
+        # Choose earliest history
+        history = sorted(
+            snls, key=lambda snl: get(snl, "about.created_at.string", datetime.max)
+        )[0]["about"]["history"]
+
+        # Aggregate all references into one dict to remove duplicates
+        refs = {}
+        for snl in snls:
+            try:
+                entries = parse_string(snl["about"]["references"], bib_format="bibtex")
+                refs.update(entries.entries)
+            except Exception:
+                logger.debug(f"Failed parsing bibtex: {snl['about']['references']}")
+
+        bib_data = BibliographyData(entries=refs)
+        references = [ref.to_string("bibtex") for ref in bib_data.entries]
+
+        # TODO: Maybe we should combine this robocrystallographer?
+        # TODO: Refine these tags / remarks
+        remarks = list(
+            set([remark for snl in snls for remark in snl["about"]["remarks"]])
+        )
+        tags = [r for r in remarks if len(r) < 140]
+
+        # Aggregate all authors - Converting a single dictionary first
+        # performs duplicate checking
+        authors = {
+            entry["name"].lower(): entry["email"]
+            for snl in snls
+            for entry in snl["about"]["authors"]
+        }
+        authors = [
+            {"name": name.title(), "email": email} for name, email in authors.items()
+        ]
+
+        # Check if this entry is experimental
+        if any(get(snl, "about.history.0.experimental", False) for snl in snls):
+            experimental = True
+
+        # Aggregate all the database IDs
+        snl_ids = [snl.snl_id for snl in snls]
+        db_ids = {
+            Database[db_id]: [snl_id for snl_id in snl_ids if db_id in snl_id]
+            for db_id in map(str, Database)
+        }
+
+        # remove Nones and empty lists
+        db_ids = {k: list(filter(None, v)) for k, v in db_ids.items()}
+        db_ids = {k: v for k, v in db_ids.items() if len(v) > 0}
+
+        # Get experimental bool
+        experimental = any(
+            snl.get("about.history.0.experimental", False) for snl in snls
+        )
+
+        snl_fields = {
+            "created_at": created_at,
+            "references": references,
+            "authors": authors,
+            "remarks": remarks,
+            "tags": tags,
+            "database_IDs": db_ids,
+            "theoretical": not experimental,
+            "history": history,
+        }
+
+        return Provenance(material_id=material_id, **snl_fields)
