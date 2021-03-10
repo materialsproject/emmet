@@ -11,10 +11,6 @@ from emmet.core.vasp.task import TaskDocument
 from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
 from emmet.builders.settings import EmmetBuildSettings
 
-__author__ = "Shyam Dwaraknath"
-__email__ = "shyamd@lbl.gov"
-
-
 class TaskValidator(MapBuilder):
     def __init__(
         self,
