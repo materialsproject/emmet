@@ -253,7 +253,10 @@ def restore(inputfile, file_filter):
                 if fnmatch(line, pattern):
                     if nlaunchers == nmax:
                         break
-                    block, launcher = line.split(os.sep, 1)
+                    if os.sep in line:
+                        block, launcher = line.split(os.sep, 1)
+                    else:
+                        block, launcher = line.strip(), ""
                     for ff in file_filter:
                         block_launchers[block].append(
                             os.path.join(launcher.strip(), ff)
