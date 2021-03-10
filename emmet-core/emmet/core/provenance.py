@@ -57,25 +57,27 @@ class Provenance(PropertyDoc):
     )
 
     references: List[str] = Field(
-        None, description="Bibtex reference strings for this material"
+        [], description="Bibtex reference strings for this material"
     )
 
-    authors: List[Author] = Field(None, description="List of authors for this material")
+    authors: List[Author] = Field([], description="List of authors for this material")
 
     remarks: List[str] = Field(
-        None, description="List of remarks for the provenance of this material"
+        [], description="List of remarks for the provenance of this material"
     )
+
+    tags: List[str] = Field([])
 
     theoretical: bool = Field(
         True, description="If this material has any experimental provenance or not"
     )
 
     database_IDs: Dict[str, List[str]] = Field(
-        None, description="Database IDs corresponding to this material"
+        dict(), description="Database IDs corresponding to this material"
     )
 
     history: List[History] = Field(
-        None,
+        [],
         description="List of history nodes specifying the transformations or orignation of this material for the entry closest matching the material input",
     )
 
