@@ -3,9 +3,10 @@ import os
 from pathlib import PosixPath
 from random import random
 
-from emmet.core.settings import EmmetSettings
-from monty.serialization import loadfn, dumpfn
+from monty.serialization import dumpfn, loadfn
 from monty.tempfile import ScratchDir
+
+from emmet.core.settings import EmmetSettings
 
 
 def test_default_config_path(tmp_path: PosixPath):

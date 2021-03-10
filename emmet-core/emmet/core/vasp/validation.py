@@ -68,7 +68,8 @@ class ValidationDoc(BaseModel):
             kspacing_tolerance:  the tolerance to allow kspacing to lag behind the input set settings
             input_sets: a dictionary of task_types -> pymatgen input set for validation
             LDAU_fields: LDAU fields to check for consistency
-            max_allowed_scf_gradient: maximum uphill gradient allowed for SCF steps after the initial equillibriation periuod
+            max_allowed_scf_gradient: maximum uphill gradient allowed for SCF steps after the
+                initial equillibriation period
         """
 
         structure = task_doc.output.structure

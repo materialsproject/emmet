@@ -3,7 +3,7 @@ Settings for defaults in the core definitions of Materials Project Documents
 """
 import importlib
 import json
-from typing import Dict, List, Optional, Union, TypeVar, Type
+from typing import Dict, List, Optional, Type, TypeVar, Union
 
 import requests
 from pydantic import BaseSettings, Field, root_validator, validator
@@ -104,11 +104,11 @@ class EmmetSettings(BaseSettings):
         return new_values
 
     @classmethod
-    def autoload(cls: Type[S], settings: Union[None, dict, Type[S]]) -> S:
+    def autoload(cls: Type[S], settings: Union[None, dict, S]) -> S:
         if settings is None:
             return cls()
         elif isinstance(settings, dict):
-            return cls(settings)
+            return cls(**settings)
         return settings
 
     def as_dict(self):
@@ -123,4 +123,3 @@ class EmmetSettings(BaseSettings):
         HotPatch to enable serializing EmmetSettings via Monty
         """
         return cls(**settings)
-
