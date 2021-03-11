@@ -110,11 +110,15 @@ def check_pattern(nested_allowed=False):
     if not nested_allowed and os.sep in pattern:
         raise EmmetCliError(f"Nested pattern ({pattern}) not allowed!")
     elif not any(pattern.startswith(p) for p in PREFIXES):
-        raise EmmetCliError(f"Pattern ({pattern}) only allowed to start with one of {PREFIXES}!")
+        raise EmmetCliError(
+            f"Pattern ({pattern}) only allowed to start with one of {PREFIXES}!"
+        )
 
 
 def load_block_launchers():
-    prefix = "block_"  # TODO old prefixes (e.g. res/aflow) might not be needed for backup
+    prefix = (
+        "block_"  # TODO old prefixes (e.g. res/aflow) might not be needed for backup
+    )
     block_launchers = defaultdict(list)
     gen = VaspDirsGenerator()
     for idx, vasp_dir in enumerate(gen):
@@ -395,7 +399,9 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data):
         # insert empty doc with max ID + 1 into target collection for parallel SLURM jobs
         # NOTE use regex first to reduce size of distinct below 16MB
         q = {"task_id": {"$regex": r"^mp-\d{7,}$"}}
-        all_task_ids = [t["task_id"] for t in target.collection.find(q, {"_id": 0, "task_id": 1})]
+        all_task_ids = [
+            t["task_id"] for t in target.collection.find(q, {"_id": 0, "task_id": 1})
+        ]
         if not all_task_ids:
             all_task_ids = target.collection.distinct("task_id")
 

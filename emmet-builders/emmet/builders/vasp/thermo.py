@@ -5,7 +5,7 @@ from typing import Dict, Iterator, List, Optional, Set, Tuple
 
 from maggma.core import Builder, Store
 from monty.json import MontyDecoder
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility

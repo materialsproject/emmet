@@ -12,7 +12,7 @@ from glob import glob
 from fnmatch import fnmatch
 from datetime import datetime
 from collections import defaultdict
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.util.provenance import StructureNL
 from atomate.vasp.database import VaspCalcDb
 from fireworks.fw_config import FW_BLOCK_FORMAT
@@ -345,7 +345,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):
     count = 0
     drone = VaspDrone(
         additional_fields={"tags": tags},
-        store_volumetric_data=ctx.params['store_volumetric_data']
+        store_volumetric_data=ctx.params["store_volumetric_data"],
     )
 
     for vaspdir in vaspdirs:
@@ -391,7 +391,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):
             snl_meta = snl_metas.get(launcher)
             if snl_meta:
                 references = snl_meta.get("references")
-                authors = snl_meta.get("authors", ["Materials Project <feedback@materialsproject.org>"])
+                authors = snl_meta.get(
+                    "authors", ["Materials Project <feedback@materialsproject.org>"]
+                )
                 kwargs = {"projects": [tag]}
                 if references:
                     kwargs["references"] = references
@@ -414,7 +416,11 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):
                     target.insert_task(task_doc, use_gridfs=True)
                 except DocumentTooLarge:
                     output = dotty(task_doc["calcs_reversed"][0]["output"])
-                    pop_keys = ["normalmode_eigenvecs", "force_constants", "outcar.onsite_density_matrices"]
+                    pop_keys = [
+                        "normalmode_eigenvecs",
+                        "force_constants",
+                        "outcar.onsite_density_matrices",
+                    ]
 
                     for k in pop_keys:
                         if k not in output:
@@ -434,7 +440,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):
                 if target.collection.count(query):
                     if snl_dct:
                         result = snl_collection.insert_one(snl_dct)
-                        logger.info(f"SNL {result.inserted_id} inserted into {snl_collection.full_name}.")
+                        logger.info(
+                            f"SNL {result.inserted_id} inserted into {snl_collection.full_name}."
+                        )
 
                     shutil.rmtree(vaspdir)
                     logger.info(f"{name} Successfully parsed and removed {launcher}.")

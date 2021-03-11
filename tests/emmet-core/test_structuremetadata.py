@@ -1,6 +1,5 @@
 import pytest
-from pymatgen import Element, Lattice
-from pymatgen.core import Structure
+from pymatgen.core import Element, Lattice, Structure
 
 from emmet.core.structure import StructureMetadata
 from emmet.core.symmetry import CrystalSystem, SymmetryData

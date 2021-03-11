@@ -1,7 +1,7 @@
 import logging
 import click
 
-from pymatgen import Structure
+from pymatgen.core import Structure
 
 from emmet.cli import SETTINGS
 from emmet.cli.utils import ensure_indexes, get_meta_from_structure
