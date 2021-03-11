@@ -1,7 +1,7 @@
 """ Core definition of a Provenance Document """
 from collections import defaultdict
 from datetime import datetime
-from typing import ClassVar, Dict, List, Union
+from typing import ClassVar, Dict, List, Optional, Union
 
 from pybtex.database import BibliographyData, parse_string
 from pydantic import BaseModel, EmailStr, Field, HttpUrl, validator
@@ -39,13 +39,13 @@ class History(BaseModel):
     """
 
     name: str
-    url: HttpUrl
-    description: Dict = Field(
+    url: str
+    description: Optional[Dict] = Field(
         None, description="Dictionary of exra data for this history node"
     )
 
 
-class Provenance(PropertyDoc):
+class ProvenanceDoc(PropertyDoc):
     """
     A provenance property block
     """
@@ -73,7 +73,7 @@ class Provenance(PropertyDoc):
         True, description="If this material has any experimental provenance or not"
     )
 
-    database_IDs: Dict[str, List[str]] = Field(
+    database_IDs: Dict[Database, List[str]] = Field(
         dict(), description="Database IDs corresponding to this material"
     )
 
@@ -91,7 +91,7 @@ class Provenance(PropertyDoc):
     def from_SNLs(
         cls,
         material_id: Union[MPID, int],
-        snls: List[StructureNL],
+        snls: List[Dict],
     ) -> "Provenance":
         """
         Converts legacy Pymatgen SNLs into a single provenance document
@@ -142,9 +142,9 @@ class Provenance(PropertyDoc):
             experimental = True
 
         # Aggregate all the database IDs
-        snl_ids = [snl.snl_id for snl in snls]
+        snl_ids = [snl.get("snl_id", "") for snl in snls]
         db_ids = {
-            Database[db_id]: [snl_id for snl_id in snl_ids if db_id in snl_id]
+            Database(db_id): [snl_id for snl_id in snl_ids if db_id in snl_id]
             for db_id in map(str, Database)
         }
 
@@ -154,7 +154,7 @@ class Provenance(PropertyDoc):
 
         # Get experimental bool
         experimental = any(
-            snl.get("about.history.0.experimental", False) for snl in snls
+            get(snl, "about.history.0.experimental", False) for snl in snls
         )
 
         snl_fields = {
@@ -168,4 +168,4 @@ class Provenance(PropertyDoc):
             "history": history,
         }
 
-        return Provenance(material_id=material_id, **snl_fields)
+        return ProvenanceDoc(material_id=material_id, **snl_fields)
