@@ -130,13 +130,14 @@ class ProvenanceDoc(PropertyDoc):
 
         # Aggregate all authors - Converting a single dictionary first
         # performs duplicate checking
-        authors = {
+        authors_dict = {
             entry["name"].lower(): entry["email"]
             for snl in snls
             for entry in snl["about"]["authors"]
         }
         authors = [
-            {"name": name.title(), "email": email} for name, email in authors.items()
+            {"name": name.title(), "email": email}
+            for name, email in authors_dict.items()
         ]
 
         # Check if this entry is experimental
