@@ -1,10 +1,11 @@
 """ Core definition of a Provenance Document """
+import warnings
 from collections import defaultdict
 from datetime import datetime
 from typing import ClassVar, Dict, List, Optional, Union
 
 from pybtex.database import BibliographyData, parse_string
-from pydantic import BaseModel, EmailStr, Field, HttpUrl, validator
+from pydantic import BaseModel, EmailStr, Field, validator
 from pydash.objects import get
 from pymatgen.core import Structure
 from pymatgen.util.provenance import StructureNL
@@ -79,7 +80,8 @@ class ProvenanceDoc(PropertyDoc):
 
     history: List[History] = Field(
         [],
-        description="List of history nodes specifying the transformations or orignation of this material for the entry closest matching the material input",
+        description="List of history nodes specifying the transformations or orignation"
+        " of this material for the entry closest matching the material input",
     )
 
     @validator("authors")
@@ -92,7 +94,7 @@ class ProvenanceDoc(PropertyDoc):
         cls,
         material_id: Union[MPID, int],
         snls: List[Dict],
-    ) -> "Provenance":
+    ) -> "ProvenanceDoc":
         """
         Converts legacy Pymatgen SNLs into a single provenance document
         """
@@ -114,7 +116,7 @@ class ProvenanceDoc(PropertyDoc):
                 entries = parse_string(snl["about"]["references"], bib_format="bibtex")
                 refs.update(entries.entries)
             except Exception:
-                logger.debug(f"Failed parsing bibtex: {snl['about']['references']}")
+                warnings.warn(f"Failed parsing bibtex: {snl['about']['references']}")
 
         bib_data = BibliographyData(entries=refs)
         references = [ref.to_string("bibtex") for ref in bib_data.entries]
