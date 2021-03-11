@@ -116,17 +116,17 @@ class Thermo(Builder):
 
         self.logger.debug(f"Procesing {len(entries)} entries for {chemsys}")
 
-        material_entries = defaultdict(lambda: defaultdict(list))
+        material_entries = defaultdict(dict)
         pd_entries = []
         for entry in entries:
-            material_entries[entry.entry_id][entry.data["run_type"]].append(entry)
+            material_entries[entry.entry_id][entry.data["run_type"]] = entry
 
         # TODO: How to make this general and controllable via SETTINGS?
         for material_id in material_entries:
             if "GGA+U" in material_entries[material_id]:
-                pd_entries.extend(material_entries[material_id]["GGA+U"])
+                pd_entries.append(material_entries[material_id]["GGA+U"])
             elif "GGA" in material_entries[material_id]:
-                pd_entries.extend(material_entries[material_id]["GGA"])
+                pd_entries.append(material_entries[material_id]["GGA"])
         pd_entries = self.compatibility.process_entries(pd_entries)
 
         try:
@@ -141,7 +141,7 @@ class Thermo(Builder):
                 elsyms.extend([el.symbol for el in e.composition.elements])
 
             self.logger.warning(
-                f"Phase diagram errorin chemsys {'-'.join(sorted(set(elsyms)))}: {p}"
+                f"Phase diagram error in chemsys {'-'.join(sorted(set(elsyms)))}: {p}"
             )
             return []
         except Exception as e:
