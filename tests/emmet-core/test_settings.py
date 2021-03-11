@@ -3,6 +3,9 @@ import os
 from pathlib import PosixPath
 from random import random
 
+from monty.serialization import dumpfn, loadfn
+from monty.tempfile import ScratchDir
+
 from emmet.core.settings import EmmetSettings
 
 
@@ -40,3 +43,14 @@ def test_from_url():
     test_config = EmmetSettings()
 
     assert test_config.ANGLE_TOL == 1.0
+
+
+def test_seriallization():
+
+    test_config = EmmetSettings()
+
+    with ScratchDir("."):
+        dumpfn(test_config, "test.json")
+        reload_config = loadfn("test.json")
+
+        assert isinstance(reload_config, EmmetSettings)

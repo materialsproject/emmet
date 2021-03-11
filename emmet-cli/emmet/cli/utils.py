@@ -382,9 +382,11 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):
 
         if docs:
             # make sure that task gets the same tags as the previously parsed task
+            # (run through set to implicitly remove duplicate tags)
             if docs[0]["tags"]:
-                task_doc["tags"] += docs[0]["tags"]
-                logger.info(f"Adding existing tags {docs[0]['tags']} to {tags}.")
+                existing_tags = list(set(docs[0]["tags"]))
+                task_doc["tags"] += existing_tags
+                logger.info(f"Adding existing tags {existing_tags} to {tags}.")
 
         snl_dct = None
         if snl_metas_avail:

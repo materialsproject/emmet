@@ -62,7 +62,7 @@ class MaterialsBuilder(Builder):
         self.materials = materials
         self.task_validation = task_validation
         self.query = query if query else {}
-        self.settings = settings or SETTINGS
+        self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
         sources = [tasks]

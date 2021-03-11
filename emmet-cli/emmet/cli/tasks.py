@@ -253,7 +253,10 @@ def restore(inputfile, file_filter):
                 if fnmatch(line, pattern):
                     if nlaunchers == nmax:
                         break
-                    block, launcher = line.split(os.sep, 1)
+                    if os.sep in line:
+                        block, launcher = line.split(os.sep, 1)
+                    else:
+                        block, launcher = line.strip(), ""
                     for ff in file_filter:
                         block_launchers[block].append(
                             os.path.join(launcher.strip(), ff)
@@ -267,7 +270,7 @@ def restore(inputfile, file_filter):
         f" and {nfiles} file filters to {directory} ..."
     )
 
-    nfiles_restore_total, max_args = 0, 15000
+    nfiles_restore_total, max_args = 0, 14000
     for block, files in block_launchers.items():
         # get full list of matching files in archive and check against existing files
         args = shlex.split(f"htar -tf {GARDEN}/{block}.tar")

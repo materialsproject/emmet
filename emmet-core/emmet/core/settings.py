@@ -3,13 +3,16 @@ Settings for defaults in the core definitions of Materials Project Documents
 """
 import importlib
 import json
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Type, TypeVar, Union
 
 import requests
 from pydantic import BaseSettings, Field, root_validator, validator
 from pydantic.types import Path, PyObject
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
+
+
+S = TypeVar("S", bound="EmmetSettings")
 
 
 class EmmetSettings(BaseSettings):
@@ -54,6 +57,11 @@ class EmmetSettings(BaseSettings):
         description="Relative tolerance for kpt density to still be a valid task document",
     )
 
+    VASP_KSPACING_TOLERANCE: float = Field(
+        0.05,
+        description="Relative tolerance for kspacing to still be a valid task document",
+    )
+
     VASP_DEFAULT_INPUT_SETS: Dict[str, PyObject] = Field(
         {
             "GGA Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
@@ -94,3 +102,24 @@ class EmmetSettings(BaseSettings):
         new_values.update(values)
 
         return new_values
+
+    @classmethod
+    def autoload(cls: Type[S], settings: Union[None, dict, S]) -> S:
+        if settings is None:
+            return cls()
+        elif isinstance(settings, dict):
+            return cls(**settings)
+        return settings
+
+    def as_dict(self):
+        """
+        HotPatch to enable serializing EmmetSettings via Monty
+        """
+        return self.dict(exclude_unset=True, exclude_defaults=True)
+
+    @classmethod
+    def from_dict(cls: Type[S], settings: Dict) -> S:
+        """
+        HotPatch to enable serializing EmmetSettings via Monty
+        """
+        return cls(**settings)
