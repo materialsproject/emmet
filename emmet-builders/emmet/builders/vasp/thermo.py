@@ -5,8 +5,8 @@ from typing import Dict, Iterator, List, Optional, Set, Tuple
 
 from maggma.core import Builder, Store
 from monty.json import MontyDecoder
-from pymatgen import Structure
-from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
+from pymatgen.core import Structure
+from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
@@ -18,7 +18,11 @@ from emmet.builders.utils import (
 )
 from emmet.core.thermo import ThermoDoc
 from emmet.core.vasp.calc_types import run_type
-
+class PhaseDiagramError(Exception):
+    """
+    An exception class for Phase Diagram generation.
+    """
+    pass
 
 class Thermo(Builder):
     def __init__(
