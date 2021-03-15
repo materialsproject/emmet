@@ -106,12 +106,5 @@ class MigrationGraphDoc(BaseModel):
                                    f"MigrationGraphDoc ({k}) MigrationGraph ({mg_k})")
 
         # TODO add any datamapping from the DB to reconstructed object here.
+
         return mg
-
-
-
-
-
-
-
-
