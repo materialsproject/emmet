@@ -6,7 +6,7 @@ from typing import Dict, Iterator, List, Optional, Set, Tuple
 from maggma.core import Builder, Store
 from monty.json import MontyDecoder
 from pymatgen.core import Structure
-from pymatgen.analysis.phase_diagram import PhaseDiagram
+from pymatgen.analysis.phase_diagram import PhaseDiagramError
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
@@ -18,11 +18,6 @@ from emmet.builders.utils import (
 )
 from emmet.core.thermo import ThermoDoc
 from emmet.core.vasp.calc_types import run_type
-class PhaseDiagramError(Exception):
-    """
-    An exception class for Phase Diagram generation.
-    """
-    pass
 
 class Thermo(Builder):
     def __init__(
@@ -106,6 +101,8 @@ class Thermo(Builder):
     def process_item(self, item: Tuple[List[str], List[ComputedEntry]]):
 
         entries = item
+        if len(entries) == 0:
+            return []
 
         entries = [ComputedStructureEntry.from_dict(entry) for entry in entries]
         # determine chemsys
@@ -114,20 +111,21 @@ class Thermo(Builder):
         )
         chemsys = "-".join(elements)
 
-        self.logger.debug(f"Procesing {len(entries)} entries for {chemsys}")
+        self.logger.debug(f"Processing {len(entries)} entries for {chemsys}")
 
-        material_entries = defaultdict(lambda: defaultdict(list))
+        material_entries = defaultdict(dict)
         pd_entries = []
         for entry in entries:
-            material_entries[entry.entry_id][entry.data["run_type"]].append(entry)
+            material_entries[entry.entry_id][entry.data["run_type"]] = entry
 
         # TODO: How to make this general and controllable via SETTINGS?
         for material_id in material_entries:
             if "GGA+U" in material_entries[material_id]:
-                pd_entries.extend(material_entries[material_id]["GGA+U"])
+                pd_entries.append(material_entries[material_id]["GGA+U"])
             elif "GGA" in material_entries[material_id]:
-                pd_entries.extend(material_entries[material_id]["GGA"])
+                pd_entries.append(material_entries[material_id]["GGA"])
         pd_entries = self.compatibility.process_entries(pd_entries)
+        self.logger.debug(f"{len(pd_entries)} remain in {chemsys} after filtering")
 
         try:
             docs = ThermoDoc.from_entries(pd_entries)
@@ -141,11 +139,11 @@ class Thermo(Builder):
                 elsyms.extend([el.symbol for el in e.composition.elements])
 
             self.logger.warning(
-                f"Phase diagram errorin chemsys {'-'.join(sorted(set(elsyms)))}: {p}"
+                f"Phase diagram error in chemsys {'-'.join(sorted(set(elsyms)))}: {p}"
             )
             return []
         except Exception as e:
-            self.logger.error(f"Got unexpected error: {e}")
+            self.logger.error(f"Got unexpected error while processing {[ent_.entry_id for ent_ in entries]}: {e}")
             return []
 
         return [d.dict() for d in docs]
@@ -249,7 +247,7 @@ class Thermo(Builder):
         thermo_mat_ids = self.thermo.distinct(self.thermo.key)
         mat_ids = self.materials.distinct(self.materials.key, self.query)
         dif_task_ids = list(set(mat_ids) - set(thermo_mat_ids))
-        q = {"task_id": {"$in": dif_task_ids}}
+        q = {"material_id": {"$in": dif_task_ids}}
         new_mat_chemsys = set(self.materials.distinct("chemsys", q))
         self.logger.debug(f"Found {len(new_mat_chemsys)} new chemical systems")
 
