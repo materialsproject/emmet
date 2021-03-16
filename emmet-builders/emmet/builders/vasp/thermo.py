@@ -114,7 +114,7 @@ class Thermo(Builder):
         )
         chemsys = "-".join(elements)
 
-        self.logger.debug(f"Procesing {len(entries)} entries for {chemsys}")
+        self.logger.debug(f"Processing {len(entries)} entries for {chemsys}")
 
         material_entries = defaultdict(dict)
         pd_entries = []
@@ -128,6 +128,7 @@ class Thermo(Builder):
             elif "GGA" in material_entries[material_id]:
                 pd_entries.append(material_entries[material_id]["GGA"])
         pd_entries = self.compatibility.process_entries(pd_entries)
+        self.logger.debug(f"{len(pd_entries)} remain in {chemsys} after filtering")
 
         try:
             docs = ThermoDoc.from_entries(pd_entries)
