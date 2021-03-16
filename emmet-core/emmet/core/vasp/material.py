@@ -55,7 +55,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             use_statics: Use statics to define a material
         """
         if task_group == 0:
-            raise Exception(f"Must have more than one task in the group.")
+            raise Exception("Must have more than one task in the group.")
 
         # Material ID
         possible_mat_ids = [task.task_id for task in task_group]
@@ -82,7 +82,6 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             if use_statics
             else structure_optimizations
         )
-
 
         def _structure_eval(task: TaskDocument):
             """
