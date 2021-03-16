@@ -106,6 +106,8 @@ class Thermo(Builder):
     def process_item(self, item: Tuple[List[str], List[ComputedEntry]]):
 
         entries = item
+        if len(entries) == 0:
+            return []
 
         entries = [ComputedStructureEntry.from_dict(entry) for entry in entries]
         # determine chemsys
