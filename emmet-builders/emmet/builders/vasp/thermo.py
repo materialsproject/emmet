@@ -145,7 +145,7 @@ class Thermo(Builder):
             )
             return []
         except Exception as e:
-            self.logger.error(f"Got unexpected error: {e}")
+            self.logger.error(f"Got unexpected error while processing {[ent_.entry_id for ent_ in pd_entries]}: {e}")
             return []
 
         return [d.dict() for d in docs]
