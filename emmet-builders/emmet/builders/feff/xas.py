@@ -9,7 +9,7 @@ from monty.json import jsanitize
 from maggma.core import Store
 from maggma.builders import GroupBuilder
 
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from emmet.core.xas import XASDoc

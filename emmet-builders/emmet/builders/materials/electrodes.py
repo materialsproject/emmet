@@ -14,7 +14,7 @@ from maggma.builders import Builder, MapBuilder
 from maggma.stores import MongoStore
 from monty.json import MontyEncoder
 from numpy import unique
-from pymatgen import Composition
+from pymatgen.core import Composition
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.core import Structure
