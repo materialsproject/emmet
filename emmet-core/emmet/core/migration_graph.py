@@ -102,8 +102,8 @@ class MigrationGraphDoc(BaseModel):
         for k, v in self.unique_hops.items():
             mg_k = get_mg_uhop_key(v["ipos"], v["epos"])
             if k != mg_k:
-                raise RuntimeError("The unique hops in the reconstructed migration graph is different than the one in the document"
-                                   f"MigrationGraphDoc ({k}) MigrationGraph ({mg_k})")
+                raise RuntimeError("The unique hops in the reconstructed migration graph is different than the one "
+                                   f"in the document MigrationGraphDoc ({k}) MigrationGraph ({mg_k})")
 
         # TODO add any datamapping from the DB to reconstructed object here.
 

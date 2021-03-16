@@ -249,7 +249,7 @@ class Thermo(Builder):
         thermo_mat_ids = self.thermo.distinct(self.thermo.key)
         mat_ids = self.materials.distinct(self.materials.key, self.query)
         dif_task_ids = list(set(mat_ids) - set(thermo_mat_ids))
-        q = {"task_id": {"$in": dif_task_ids}}
+        q = {"material_id": {"$in": dif_task_ids}}
         new_mat_chemsys = set(self.materials.distinct("chemsys", q))
         self.logger.debug(f"Found {len(new_mat_chemsys)} new chemical systems")
 
