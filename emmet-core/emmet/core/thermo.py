@@ -13,6 +13,7 @@ from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
 
+
 class DecompositionProduct(BaseModel):
     """
     Entry metadata for a decomposition process
