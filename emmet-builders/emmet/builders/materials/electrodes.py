@@ -1,29 +1,27 @@
-import operator
 import math
+import operator
 from collections import namedtuple
 from datetime import datetime
 from functools import lru_cache
-from itertools import groupby, chain
+from itertools import chain, groupby
 from pprint import pprint
-from typing import Iterable, Dict, List, Any
+from typing import Any, Dict, Iterable, List
 
-from emmet.core.electrode import InsertionElectrodeDoc
-from emmet.core.structure_group import StructureGroupDoc
-from emmet.core.utils import jsanitize
 from maggma.builders import Builder, MapBuilder
 from maggma.stores import MongoStore
 from monty.json import MontyEncoder
 from numpy import unique
-from pymatgen.core import Composition
-from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
+from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
-from pymatgen.core import Structure
-from pymatgen.entries.computed_entries import ComputedStructureEntry
+from pymatgen.core import Composition, Structure
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+
+from emmet.core.electrode import InsertionElectrodeDoc
+from emmet.core.structure_group import StructureGroupDoc
+from emmet.core.utils import jsanitize
 
 __author__ = "Jimmy Shen"
 __email__ = "jmmshn@lbl.gov"
-
-from pymatgen.entries.computed_entries import ComputedEntry
 
 
 def s_hash(el):
@@ -284,14 +282,12 @@ class InsertionElectrodeBuilder(MapBuilder):
         grouped_materials: MongoStore,
         insertion_electrode: MongoStore,
         thermo: MongoStore,
-        material: MongoStore,
         query: dict = None,
         **kwargs,
     ):
         self.grouped_materials = grouped_materials
         self.insertion_electrode = insertion_electrode
         self.thermo = thermo
-        self.material = material
         qq_ = {} if query is None else query
         qq_.update({"structure_matched": True, "has_distinct_compositions": True})
         super().__init__(
@@ -304,13 +300,11 @@ class InsertionElectrodeBuilder(MapBuilder):
     def get_items(self):
         """"""
 
-        @lru_cache(None)
+        @lru_cache()
         def get_working_ion_entry(working_ion):
             with self.thermo as store:
                 working_ion_docs = [*store.query({"chemsys": working_ion})]
-            best_wion = min(
-                working_ion_docs, key=lambda x: x["thermo"]["energy_per_atom"]
-            )
+            best_wion = min(working_ion_docs, key=lambda x: x["energy_per_atom"])
             return best_wion
 
         def modify_item(item):
@@ -325,35 +319,30 @@ class InsertionElectrodeBuilder(MapBuilder):
                                 {"material_id": {"$in": item["grouped_ids"]}},
                             ]
                         },
-                        properties=["material_id", "_sbxn", "thermo"],
-                    )
-                ]
-
-            with self.material as store:
-                material_docs = [
-                    *store.query(
-                        {
-                            "$and": [
-                                {"material_id": {"$in": item["grouped_ids"]}},
-                                {"_sbxn": {"$in": ["core"]}},
-                            ]
-                        },
-                        properties=["material_id", "structure"],
+                        properties=[
+                            "material_id",
+                            "_sbxn",
+                            "thermo",
+                            "entries",
+                            "energy_type",
+                            "energy_above_hull",
+                        ],
                     )
                 ]
 
             self.logger.debug(f"Found for {len(thermo_docs)} Thermo Documents.")
+
             if len(item["ignored_species"]) != 1:
                 raise ValueError(
                     "Insertion electrode can only be defined for one working ion species"
                 )
+
             working_ion_doc = get_working_ion_entry(item["ignored_species"][0])
             return {
                 "material_id": item["material_id"],
                 "working_ion_doc": working_ion_doc,
                 "working_ion": item["ignored_species"][0],
                 "thermo_docs": thermo_docs,
-                "material_docs": material_docs,
             }
 
         yield from map(modify_item, super().get_items())
@@ -363,40 +352,27 @@ class InsertionElectrodeBuilder(MapBuilder):
         - Add volume information to each entry to create the insertion electrode document
         - Add the host structure
         """
-        entries = [tdoc_["thermo"]["entry"] for tdoc_ in item["thermo_docs"]]
-        entries = list(map(ComputedEntry.from_dict, entries))
+        entries = [
+            tdoc_["entries"][tdoc_["energy_type"]] for tdoc_ in item["thermo_docs"]
+        ]
+        entries = list(map(ComputedStructureEntry.from_dict, entries))
         working_ion_entry = ComputedEntry.from_dict(
-            item["working_ion_doc"]["thermo"]["entry"]
+            item["working_ion_doc"]["entries"][item["working_ion_doc"]["energy_type"]]
         )
         working_ion = working_ion_entry.composition.reduced_formula
+
         decomp_energies = {
-            d_["material_id"]: d_["thermo"]["e_above_hull"]
-            for d_ in item["thermo_docs"]
-        }
-        mat_structures = {
-            mat_d_["material_id"]: Structure.from_dict(mat_d_["structure"])
-            for mat_d_ in item["material_docs"]
+            d_["material_id"]: d_["energy_above_hull"] for d_ in item["thermo_docs"]
         }
 
         least_wion_ent = min(
             entries, key=lambda x: x.composition.get_atomic_fraction(working_ion)
         )
-        mdoc_ = next(
-            filter(
-                lambda x: x["material_id"] == least_wion_ent.entry_id,
-                item["material_docs"],
-            )
-        )
-        host_structure = Structure.from_dict(mdoc_["structure"])
+        host_structure = least_wion_ent.structure.copy()
         host_structure.remove_species([item["working_ion"]])
 
         for ient in entries:
-            if mat_structures[ient.entry_id].composition != ient.composition:
-                raise RuntimeError(
-                    f"In {item['material_id']}: the compositions for task {ient.entry_id} are matched "
-                    "between the StructureGroup DB and the Thermo DB "
-                )
-            ient.data["volume"] = mat_structures[ient.entry_id].volume
+            ient.data["volume"] = ient.structure.volume
             ient.data["decomposition_energy"] = decomp_energies[ient.entry_id]
 
         ie = InsertionElectrodeDoc.from_entries(

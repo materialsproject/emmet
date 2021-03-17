@@ -117,6 +117,8 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
 
     framework: Composition
 
+    electrode_object: Dict
+
     # Make sure that the datetime field is properly formatted
     @validator("last_updated", pre=True)
     def last_updated_dict_ok(cls, v):
@@ -132,7 +134,9 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     ) -> Union["InsertionElectrodeDoc", None]:
         try:
             ie = InsertionElectrode.from_entries(
-                entries=grouped_entries, working_ion_entry=working_ion_entry
+                entries=grouped_entries,
+                working_ion_entry=working_ion_entry,
+                strip_structures=True,
             )
         except IndexError:
             return None
@@ -140,9 +144,10 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         d["num_steps"] = d.pop("nsteps", None)
         d["last_updated"] = datetime.utcnow()
         return cls(
-            task_id=task_id,
+            battery_id=task_id,
             host_structure=host_structure.as_dict(),
             framework=Composition(d["framework_formula"]),
+            electrode_object=ie.as_dict(),
             **d
         )
 
