@@ -54,7 +54,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             quality_scores: quality scores for various calculation types
             use_statics: Use statics to define a material
         """
-        if task_group == 0:
+        if len(task_group) == 0:
             raise Exception("Must have more than one task in the group.")
 
         # Material ID
