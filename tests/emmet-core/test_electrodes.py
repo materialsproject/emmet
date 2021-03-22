@@ -1,8 +1,8 @@
 import pytest
 from monty.serialization import loadfn
-from pymatgen import Composition
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
+from pymatgen.core import Composition
 from pymatgen.entries.computed_entries import ComputedEntry
 
 from emmet.core.electrode import (

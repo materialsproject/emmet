@@ -54,6 +54,12 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             quality_scores: quality scores for various calculation types
             use_statics: Use statics to define a material
         """
+        if len(task_group) == 0:
+            raise Exception("Must have more than one task in the group.")
+
+        # Material ID
+        possible_mat_ids = [task.task_id for task in task_group]
+        material_id = min(possible_mat_ids)
 
         # Metadata
         last_updated = max(task.last_updated for task in task_group)
@@ -76,15 +82,6 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             if use_statics
             else structure_optimizations
         )
-
-        # Material ID
-        possible_mat_ids = [task.task_id for task in structure_calcs]
-        possible_mat_ids = sorted(possible_mat_ids)
-
-        if len(possible_mat_ids) == 0:
-            raise Exception(f"Could not find a material ID for {task_ids}")
-        else:
-            material_id = possible_mat_ids[0]
 
         def _structure_eval(task: TaskDocument):
             """
