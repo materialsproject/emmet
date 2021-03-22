@@ -1,12 +1,18 @@
 """ Core definition of a Provenance Document """
+import warnings
+from collections import defaultdict
 from datetime import datetime
-from typing import ClassVar, Dict, List
+from typing import ClassVar, Dict, List, Optional, Union
 
 from pybtex.database import BibliographyData, parse_string
-from pydantic import BaseModel, EmailStr, Field, HttpUrl, validator
+from pydantic import BaseModel, EmailStr, Field, validator
+from pydash.objects import get
+from pymatgen.core import Structure
+from pymatgen.util.provenance import StructureNL
 
 from emmet.core.material_property import PropertyDoc
-from emmet.core.utils import ValueEnum
+from emmet.core.mpid import MPID
+from emmet.core.utils import ValueEnum, group_structures
 
 
 class Database(ValueEnum):
@@ -15,7 +21,7 @@ class Database(ValueEnum):
     """
 
     ICSD = "icsd"
-    PaulingFiles = "pf"
+    Pauling_Files = "pf"
     COD = "cod"
 
 
@@ -34,13 +40,13 @@ class History(BaseModel):
     """
 
     name: str
-    url: HttpUrl
-    description: Dict = Field(
+    url: str
+    description: Optional[Dict] = Field(
         None, description="Dictionary of exra data for this history node"
     )
 
 
-class Provenance(PropertyDoc):
+class ProvenanceDoc(PropertyDoc):
     """
     A provenance property block
     """
@@ -48,35 +54,121 @@ class Provenance(PropertyDoc):
     property_name: ClassVar[str] = "provenance"
 
     created_at: datetime = Field(
-        None,
+        ...,
         description="creation date for the first structure corresponding to this material",
     )
 
-    projects: List[str] = Field(
-        None, description="List of projects this material belongs to"
+    references: List[str] = Field(
+        [], description="Bibtex reference strings for this material"
     )
-    bibtex_string: str = Field(
-        None, description="Bibtex reference string for this material"
-    )
+
+    authors: List[Author] = Field([], description="List of authors for this material")
+
     remarks: List[str] = Field(
-        None, description="List of remarks for the provenance of this material"
+        [], description="List of remarks for the provenance of this material"
     )
-    authors: List[Author] = Field(None, description="List of authors for this material")
+
+    tags: List[str] = Field([])
 
     theoretical: bool = Field(
         True, description="If this material has any experimental provenance or not"
     )
 
     database_IDs: Dict[Database, List[str]] = Field(
-        None, description="Database IDs corresponding to this material"
+        dict(), description="Database IDs corresponding to this material"
     )
 
     history: List[History] = Field(
-        None,
-        description="List of history nodes specifying the transformations or orignation of this material",
+        [],
+        description="List of history nodes specifying the transformations or orignation"
+        " of this material for the entry closest matching the material input",
     )
 
     @validator("authors")
     def remove_duplicate_authors(cls, authors):
         authors_dict = {entry.name.lower(): entry for entry in authors}
         return list(authors_dict.items())
+
+    @classmethod
+    def from_SNLs(
+        cls,
+        material_id: Union[MPID, int],
+        snls: List[Dict],
+    ) -> "ProvenanceDoc":
+        """
+        Converts legacy Pymatgen SNLs into a single provenance document
+        """
+
+        # Choose earliest created_at
+        created_at = sorted(
+            [get(snl, "about.created_at.string", datetime.max) for snl in snls]
+        )[0]
+
+        # Choose earliest history
+        history = sorted(
+            snls, key=lambda snl: get(snl, "about.created_at.string", datetime.max)
+        )[0]["about"]["history"]
+
+        # Aggregate all references into one dict to remove duplicates
+        refs = {}
+        for snl in snls:
+            try:
+                entries = parse_string(snl["about"]["references"], bib_format="bibtex")
+                refs.update(entries.entries)
+            except Exception:
+                warnings.warn(f"Failed parsing bibtex: {snl['about']['references']}")
+
+        bib_data = BibliographyData(entries=refs)
+        references = [ref.to_string("bibtex") for ref in bib_data.entries]
+
+        # TODO: Maybe we should combine this robocrystallographer?
+        # TODO: Refine these tags / remarks
+        remarks = list(
+            set([remark for snl in snls for remark in snl["about"]["remarks"]])
+        )
+        tags = [r for r in remarks if len(r) < 140]
+
+        # Aggregate all authors - Converting a single dictionary first
+        # performs duplicate checking
+        authors_dict = {
+            entry["name"].lower(): entry["email"]
+            for snl in snls
+            for entry in snl["about"]["authors"]
+        }
+        authors = [
+            {"name": name.title(), "email": email}
+            for name, email in authors_dict.items()
+        ]
+
+        # Check if this entry is experimental
+        if any(get(snl, "about.history.0.experimental", False) for snl in snls):
+            experimental = True
+
+        # Aggregate all the database IDs
+        snl_ids = [snl.get("snl_id", "") for snl in snls]
+        db_ids = {
+            Database(db_id): [snl_id for snl_id in snl_ids if db_id in snl_id]
+            for db_id in map(str, Database)
+        }
+
+        # remove Nones and empty lists
+        db_ids = {k: list(filter(None, v)) for k, v in db_ids.items()}
+        db_ids = {k: v for k, v in db_ids.items() if len(v) > 0}
+
+        # Get experimental bool
+        experimental = any(
+            get(snl, "about.history.0.experimental", False) for snl in snls
+        )
+
+        snl_fields = {
+            "created_at": created_at,
+            "references": references,
+            "authors": authors,
+            "remarks": remarks,
+            "tags": tags,
+            "database_IDs": db_ids,
+            "theoretical": not experimental,
+            "history": history,
+        }
+
+        return ProvenanceDoc(material_id=material_id, **snl_fields)
