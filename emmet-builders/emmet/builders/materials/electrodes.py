@@ -50,7 +50,7 @@ REDOX_ELEMENTS = [
     "Hf",
 ]
 
-# WORKING_IONS = ["Li", "Be", "Na", "Mg", "K", "Ca", "Rb", "Sr", "Cs", "Ba"]
+WORKING_IONS = ["Li", "Be", "Na", "Mg", "K", "Ca", "Rb", "Sr", "Cs", "Ba"]
 
 MAT_PROPS = [
     "structure",
@@ -137,12 +137,13 @@ class StructureGroupBuilder(Builder):
             - get the oldest timestamp for the target documents (min_target_time)
             - if min_target_time is < max_mat_time then nuke all the target documents
         """
-
+        other_wions = list(set(WORKING_IONS) - {self.working_ion})
         # All potentially interesting chemsys must contain the working ion
         base_query = {
             "$and": [
-                {"elements": {"$in": REDOX_ELEMENTS + [self.working_ion]}},
                 self.query.copy(),
+                {"elements": {"$in": REDOX_ELEMENTS + [self.working_ion]}},
+                {"elements": {"$nin": other_wions}},
             ]
         }
         self.logger.debug(f"Initial Chemsys QUERY: {base_query}")
@@ -228,7 +229,7 @@ class StructureGroupBuilder(Builder):
                     f"There are {len(mat_ids)} material ids in the source database vs {len(target_mat_ids)} in the target database."
                 )
                 if mat_ids == target_mat_ids and max_mat_time < min_target_time:
-                    continue
+                    yield None
                 else:
                     self.logger.info(
                         f"Nuking all {len(target_mat_ids)} documents in chemsys {chemsys} in the target database."
@@ -259,6 +260,8 @@ class StructureGroupBuilder(Builder):
         return ComputedStructureEntry.from_dict(d_)
 
     def process_item(self, item: Any) -> Any:
+        if item is None:
+            return None
         entries = [*map(self._entry_from_mat_doc, item["materials"])]
         s_groups = StructureGroupDoc.from_ungrouped_structure_entries(
             entries=entries,
