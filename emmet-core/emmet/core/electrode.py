@@ -73,11 +73,11 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
         None, description="The energy above hull of the discharged material."
     )
 
-    id_charge: Union[MPID, None] = Field(
+    id_charge: Union[MPID, int, None] = Field(
         None, description="The material-id of the charged structure."
     )
 
-    id_discharge: Union[MPID, None] = Field(
+    id_discharge: Union[MPID, int, None] = Field(
         None, description="The material-id of the charged structure."
     )
 
