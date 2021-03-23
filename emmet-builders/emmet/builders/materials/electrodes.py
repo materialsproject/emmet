@@ -142,7 +142,8 @@ class StructureGroupBuilder(Builder):
         base_query = {
             "$and": [
                 self.query.copy(),
-                {"elements": {"$in": REDOX_ELEMENTS + [self.working_ion]}},
+                {"elements": {"$in": REDOX_ELEMENTS}},
+                {"elements": {"$in": [self.working_ion]}},
                 {"elements": {"$nin": other_wions}},
             ]
         }
@@ -230,13 +231,17 @@ class StructureGroupBuilder(Builder):
                 )
                 if mat_ids == target_mat_ids and max_mat_time < min_target_time:
                     yield None
+                elif len(target_mat_ids) == 0:
+                    self.logger.info(
+                        f"No documents in chemsys {chemsys} in the target database."
+                    )
                 else:
                     self.logger.info(
                         f"Nuking all {len(target_mat_ids)} documents in chemsys {chemsys} in the target database."
                     )
                     self._remove_targets(list(target_mat_ids))
-
-            yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
+            else:
+                yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
 
     def update_targets(self, items: List):
         items = list(filter(None, chain.from_iterable(items)))
