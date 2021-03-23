@@ -235,11 +235,13 @@ class StructureGroupBuilder(Builder):
                     self.logger.info(
                         f"No documents in chemsys {chemsys} in the target database."
                     )
+                    yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
                 else:
                     self.logger.info(
                         f"Nuking all {len(target_ids)} documents in chemsys {chemsys} in the target database."
                     )
                     self._remove_targets(list(target_ids))
+                    yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
             else:
                 yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
 
@@ -249,7 +251,7 @@ class StructureGroupBuilder(Builder):
             self.logger.info("Updating {} sgroups documents".format(len(items)))
             for struct_group_dict in items:
                 struct_group_dict[self.sgroups.last_updated_field] = datetime.utcnow()
-            self.sgroups.update(docs=items, key=["material_id"])
+            self.sgroups.update(docs=items, key=["group_id"])
         else:
             self.logger.info("No items to update")
 
