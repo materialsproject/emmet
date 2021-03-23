@@ -5,6 +5,7 @@ from typing import List
 from pydantic.fields import Field
 from emmet.core.settings import EmmetSettings
 from emmet.core.vasp.calc_types import TaskType
+from emmet.core.provenance import Author, History
 
 
 class EmmetBuildSettings(EmmetSettings):
@@ -29,4 +30,32 @@ class EmmetBuildSettings(EmmetSettings):
     VASP_ALLOWED_VASP_TYPES: List[TaskType] = Field(
         [t.value for t in TaskType],
         description="Allowed task_types to build materials from",
+    )
+
+    DEFAULT_REFERENCE: str = Field(
+        "@article{Jain2013,\nauthor = {Jain, Anubhav and Ong, Shyue Ping and "
+        "Hautier, Geoffroy and Chen, Wei and Richards, William Davidson and "
+        "Dacek, Stephen and Cholia, Shreyas and Gunter, Dan and Skinner, David "
+        "and Ceder, Gerbrand and Persson, Kristin a.},\n"
+        "doi = {10.1063/1.4812323},\nissn = {2166532X},\n"
+        "journal = {APL Materials},\nnumber = {1},\npages = {011002},\n"
+        "title = {{The Materials Project: A materials genome approach to "
+        "accelerating materials innovation}},\n"
+        "url = {http://link.aip.org/link/AMPADS/v1/i1/p011002/s1\\&Agg=doi},\n"
+        "volume = {1},\nyear = {2013}\n}\n\n@misc{MaterialsProject,\n"
+        "title = {{Materials Project}},\nurl = {http://www.materialsproject.org}\n}",
+        description="Default bibtex citation for all provenance",
+    )
+
+    DEFAULT_AUTHOR: Author = Field(
+        Author(name="Materials Project", email="feedback@materialsproject.org"),
+        description="Default Author for provenance ",
+    )
+
+    DEFAULT_HISTORY: History = Field(
+        History(
+            name="Materials Project Optimized Structure",
+            url="http://www.materialsproject.org",
+        ),
+        description="Default History for provenance ",
     )

@@ -37,6 +37,7 @@ def get_format(fname):
 
 def load_canonical_structures(ctx, full_name, formula):
     from emmet.core.vasp.calc_types import task_type  # TODO import error
+
     collection = ctx.obj["COLLECTIONS"][full_name]
 
     if formula not in canonical_structures[full_name]:
@@ -169,7 +170,7 @@ def calc(ctx, specs, nmax, skip):
     help="Author to assign to all structures.",
 )
 @click.pass_context
-def prep(ctx, archive, authors):
+def prep(ctx, archive, authors):  # noqa: C901
     """prep structures from an archive for submission"""
     run = ctx.obj["RUN"]
     collections = ctx.obj["COLLECTIONS"]

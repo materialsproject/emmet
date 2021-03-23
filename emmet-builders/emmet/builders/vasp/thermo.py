@@ -19,6 +19,7 @@ from emmet.builders.utils import (
 from emmet.core.thermo import ThermoDoc
 from emmet.core.vasp.calc_types import run_type
 
+
 class Thermo(Builder):
     def __init__(
         self,
@@ -143,7 +144,9 @@ class Thermo(Builder):
             )
             return []
         except Exception as e:
-            self.logger.error(f"Got unexpected error while processing {[ent_.entry_id for ent_ in entries]}: {e}")
+            self.logger.error(
+                f"Got unexpected error while processing {[ent_.entry_id for ent_ in entries]}: {e}"
+            )
             return []
 
         return [d.dict() for d in docs]

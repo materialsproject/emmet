@@ -106,7 +106,10 @@ def sbatch(func):
         run = ctx.grand_parent.params["run"]
         ntries = ctx.grand_parent.params["ntries"]
         if run:
-            click.secho(f"SBATCH MODE! Submitting to SLURM queue with {ntries} tries.", fg="green")
+            click.secho(
+                f"SBATCH MODE! Submitting to SLURM queue with {ntries} tries.",
+                fg="green",
+            )
 
         directory = ctx.parent.params.get("directory")
         if not directory:
