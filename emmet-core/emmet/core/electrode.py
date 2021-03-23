@@ -73,6 +73,14 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
         None, description="The energy above hull of the discharged material."
     )
 
+    id_charge: Union[MPID, None] = Field(
+        None, description="The material-id of the charged structure."
+    )
+
+    id_discharge: Union[MPID, None] = Field(
+        None, description="The material-id of the charged structure."
+    )
+
 
 class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     """
@@ -115,9 +123,20 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         description="Timestamp for the most recent calculation for this Material document",
     )
 
-    framework: Composition
+    framework: Composition = Field(
+        None,
+        description="The chemical compositions of the host framework",
+    )
 
-    electrode_object: Dict
+    material_ids: List[Union[MPID]] = Field(
+        None,
+        description="The ids of all structures that matched to the present host lattice, regardless of stability.  The stable entries can be found in the adjacent pairs.",
+    )
+
+    electrode_object: Dict = Field(
+        None,
+        description="The pymatgen electrode object",
+    )
 
     # Make sure that the datetime field is properly formatted
     @validator("last_updated", pre=True)
@@ -141,8 +160,10 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         except IndexError:
             return None
         d = ie.get_summary_dict()
+        d["material_ids"] = d["stable_material_ids"] + d["unstable_material_ids"]
         d["num_steps"] = d.pop("nsteps", None)
         d["last_updated"] = datetime.utcnow()
+
         return cls(
             battery_id=task_id,
             host_structure=host_structure.as_dict(),
