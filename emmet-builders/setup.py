@@ -1,6 +1,7 @@
 import datetime
 from pathlib import Path
 from setuptools import setup, find_namespace_packages
+
 required = []
 
 with open(Path(__file__).parent / "requirements.txt") as f:
