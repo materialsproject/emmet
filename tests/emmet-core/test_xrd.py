@@ -1,7 +1,6 @@
 import pytest
-from pymatgen import Element, Lattice
 from pymatgen.analysis.diffraction.xrd import WAVELENGTHS
-from pymatgen.core import Structure
+from pymatgen.core import Element, Lattice, Structure
 
 from emmet.core.spectrum import SpectrumDoc
 from emmet.core.structure import StructureMetadata

@@ -23,8 +23,6 @@ from emmet.core.utils import jsanitize
 __author__ = "Jimmy Shen"
 __email__ = "jmmshn@lbl.gov"
 
-from pymatgen.entries.computed_entries import ComputedEntry
-
 
 def s_hash(el):
     return el.data["comp_delith"]
@@ -52,7 +50,7 @@ REDOX_ELEMENTS = [
     "Hf",
 ]
 
-# WORKING_IONS = ["Li", "Be", "Na", "Mg", "K", "Ca", "Rb", "Sr", "Cs", "Ba"]
+WORKING_IONS = ["Li", "Be", "Na", "Mg", "K", "Ca", "Rb", "Sr", "Cs", "Ba"]
 
 MAT_PROPS = [
     "structure",
@@ -89,19 +87,18 @@ def generic_groupby(list_in, comp=operator.eq):
     return list_out
 
 
-
 class StructureGroupBuilder(Builder):
     def __init__(
-            self,
-            materials: MongoStore,
-            sgroups: MongoStore,
-            working_ion: str,
-            query: dict = None,
-            ltol: float = 0.2,
-            stol: float = 0.3,
-            angle_tol: float = 5.0,
-            check_newer: bool = True,
-            **kwargs,
+        self,
+        materials: MongoStore,
+        sgroups: MongoStore,
+        working_ion: str,
+        query: dict = None,
+        ltol: float = 0.2,
+        stol: float = 0.3,
+        angle_tol: float = 5.0,
+        check_newer: bool = True,
+        **kwargs,
     ):
         """
         Aggregate materials entries into sgroups that are topotactically similar to each other.
@@ -140,12 +137,14 @@ class StructureGroupBuilder(Builder):
             - get the oldest timestamp for the target documents (min_target_time)
             - if min_target_time is < max_mat_time then nuke all the target documents
         """
-
+        other_wions = list(set(WORKING_IONS) - {self.working_ion})
         # All potentially interesting chemsys must contain the working ion
         base_query = {
             "$and": [
-                {"elements": {"$in": REDOX_ELEMENTS + [self.working_ion]}},
                 self.query.copy(),
+                {"elements": {"$in": REDOX_ELEMENTS}},
+                {"elements": {"$in": [self.working_ion]}},
+                {"elements": {"$nin": other_wions}},
             ]
         }
         self.logger.debug(f"Initial Chemsys QUERY: {base_query}")
@@ -231,14 +230,18 @@ class StructureGroupBuilder(Builder):
                     f"There are {len(mat_ids)} material ids in the source database vs {len(target_mat_ids)} in the target database."
                 )
                 if mat_ids == target_mat_ids and max_mat_time < min_target_time:
-                    continue
+                    yield None
+                elif len(target_mat_ids) == 0:
+                    self.logger.info(
+                        f"No documents in chemsys {chemsys} in the target database."
+                    )
                 else:
                     self.logger.info(
                         f"Nuking all {len(target_mat_ids)} documents in chemsys {chemsys} in the target database."
                     )
                     self._remove_targets(list(target_mat_ids))
-
-            yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
+            else:
+                yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
 
     def update_targets(self, items: List):
         items = list(filter(None, chain.from_iterable(items)))
@@ -262,6 +265,8 @@ class StructureGroupBuilder(Builder):
         return ComputedStructureEntry.from_dict(d_)
 
     def process_item(self, item: Any) -> Any:
+        if item is None:
+            return None
         entries = [*map(self._entry_from_mat_doc, item["materials"])]
         s_groups = StructureGroupDoc.from_ungrouped_structure_entries(
             entries=entries,
@@ -278,14 +283,15 @@ class StructureGroupBuilder(Builder):
     def _remove_targets(self, rm_ids):
         self.sgroups.remove_docs({"material_id": {"$in": rm_ids}})
 
+
 class InsertionElectrodeBuilder(MapBuilder):
     def __init__(
-            self,
-            grouped_materials: MongoStore,
-            insertion_electrode: MongoStore,
-            thermo: MongoStore,
-            query: dict = None,
-            **kwargs,
+        self,
+        grouped_materials: MongoStore,
+        insertion_electrode: MongoStore,
+        thermo: MongoStore,
+        query: dict = None,
+        **kwargs,
     ):
         self.grouped_materials = grouped_materials
         self.insertion_electrode = insertion_electrode
@@ -306,9 +312,7 @@ class InsertionElectrodeBuilder(MapBuilder):
         def get_working_ion_entry(working_ion):
             with self.thermo as store:
                 working_ion_docs = [*store.query({"chemsys": working_ion})]
-            best_wion = min(
-                working_ion_docs, key=lambda x: x["energy_per_atom"]
-            )
+            best_wion = min(working_ion_docs, key=lambda x: x["energy_per_atom"])
             return best_wion
 
         def modify_item(item):
@@ -323,7 +327,14 @@ class InsertionElectrodeBuilder(MapBuilder):
                                 {"material_id": {"$in": item["grouped_ids"]}},
                             ]
                         },
-                        properties=["material_id", "_sbxn", "thermo", "entries", "energy_type", "energy_above_hull"],
+                        properties=[
+                            "material_id",
+                            "_sbxn",
+                            "thermo",
+                            "entries",
+                            "energy_type",
+                            "energy_above_hull",
+                        ],
                     )
                 ]
 
@@ -349,16 +360,17 @@ class InsertionElectrodeBuilder(MapBuilder):
         - Add volume information to each entry to create the insertion electrode document
         - Add the host structure
         """
-        entries = [tdoc_["entries"][tdoc_["energy_type"]] for tdoc_ in item["thermo_docs"]]
+        entries = [
+            tdoc_["entries"][tdoc_["energy_type"]] for tdoc_ in item["thermo_docs"]
+        ]
         entries = list(map(ComputedStructureEntry.from_dict, entries))
         working_ion_entry = ComputedEntry.from_dict(
-            item["working_ion_doc"]["entries"][item["working_ion_doc"]['energy_type']]
+            item["working_ion_doc"]["entries"][item["working_ion_doc"]["energy_type"]]
         )
         working_ion = working_ion_entry.composition.reduced_formula
 
         decomp_energies = {
-            d_["material_id"]: d_["energy_above_hull"]
-            for d_ in item["thermo_docs"]
+            d_["material_id"]: d_["energy_above_hull"] for d_ in item["thermo_docs"]
         }
 
         least_wion_ent = min(

@@ -2,8 +2,13 @@ import datetime
 from pathlib import Path
 from setuptools import setup, find_namespace_packages
 
+required = []
+
 with open(Path(__file__).parent / "requirements.txt") as f:
-    required = f.read().splitlines()
+    for line in f.readlines():
+        if "#egg=" in line:
+            continue
+        required.append(line)
 
 setup(
     name="emmet-builders",

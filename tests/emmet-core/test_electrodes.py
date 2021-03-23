@@ -1,8 +1,8 @@
 import pytest
 from monty.serialization import loadfn
-from pymatgen import Composition
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
+from pymatgen.core import Composition
 from pymatgen.entries.computed_entries import ComputedEntry
 
 from emmet.core.electrode import (
@@ -69,10 +69,12 @@ def test_InsertionDocs(insertion_elec):
             host_structure=struct,
         )
         assert ie.average_voltage == elec.get_average_voltage()
+        assert len(ie.material_ids) > 2
         # Make sure that each adjacent pair can be converted into a sub electrode
         for sub_elec in elec.get_sub_electrodes(adjacent_only=True):
             vp = InsertionVoltagePairDoc.from_sub_electrode(sub_electrode=sub_elec)
             assert vp.average_voltage == sub_elec.get_average_voltage()
+            assert "mp" in vp.id_charge
         # assert type(ie.dict()["host_structure"]) == dict # This might be a requirement in the future
 
 

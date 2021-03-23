@@ -4,7 +4,7 @@ from enum import Enum
 from typing import ClassVar, Dict, List, Union
 
 from pydantic import BaseModel, Field
-from pymatgen.analysis.phase_diagram import PhaseDiagram
+from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
 from pymatgen.core import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
@@ -12,11 +12,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
-class PhaseDiagramError(Exception):
-    """
-    An exception class for Phase Diagram generation.
-    """
-    pass
+
 
 class DecompositionProduct(BaseModel):
     """
