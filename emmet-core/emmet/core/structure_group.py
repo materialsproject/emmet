@@ -50,23 +50,17 @@ class StructureGroupDoc(BaseModel):
     Group of structure
     """
 
-    material_id: Union[MPID, int] = Field(
+    group_id: str = Field(
         None,
-        description="The combined material_id of the grouped document is given by the numerically smallest task id ",
-    )
-
-    structure_matched: bool = Field(
-        None,
-        description="True if the structure matching was performed to group theses entries together."
-        "This is False for groups that contain all the left over entries like the ones that only "
-        "contain the ignored species.",
+        description="The combined material_id of the grouped document is given by the numerically smallest "
+        "material_id, you can also append the followed by the ignored species at the end.",
     )
 
     has_distinct_compositions: bool = Field(
         None, description="True if multiple compositions are present in the group."
     )
 
-    grouped_ids: list = Field(
+    material_ids: list = Field(
         None,
         description="A list of materials ids for all of the materials that were grouped together.",
     )
@@ -99,12 +93,12 @@ class StructureGroupDoc(BaseModel):
         cls,
         entries: List[Union[ComputedEntry, ComputedStructureEntry]],
         ignored_species: List[str],
-        structure_matched: bool,
     ) -> "StructureGroupDoc":
         """ "
         Assuming a list of entries are already grouped together, create a StructureGroupDoc
         Args:
             entries: A list of entries that is already grouped together.
+            ignored_species: The species that are ignored during structure matching
         """
         all_atoms = set()
         all_comps = set()
@@ -121,11 +115,10 @@ class StructureGroupDoc(BaseModel):
             framework_str = framework_comp.reduced_formula
         ids = [ient.entry_id for ient in entries]
         lowest_id = min(ids, key=_get_id_num)
-
+        sub_script = "_".join(ignored_species)
         fields = {
-            "material_id": lowest_id,
-            "grouped_ids": ids,
-            "structure_matched": structure_matched,
+            "group_id": f"{lowest_id}_{sub_script}",
+            "material_ids": ids,
             "framework_formula": framework_str,
             "ignored_species": sorted(ignored_species),
             "chemsys": "-".join(sorted(all_atoms | set(ignored_species))),
@@ -176,13 +169,13 @@ class StructureGroupDoc(BaseModel):
 
         cnt_ = 0
         for framework, f_group in framework_groups:
-            # if you only have ignored atoms put them into one "ignored" groupd
+            # if you only have ignored atoms put them into one "ignored" group
             f_group_l = list(f_group)
             if framework == "ignored":
                 struct_group = cls.from_grouped_entries(
-                    f_group_l, ignored_species=ignored_species, structure_matched=False
+                    f_group_l, ignored_species=ignored_species
                 )
-                cnt_ += len(struct_group.grouped_ids)
+                cnt_ += len(struct_group.material_ids)
                 continue
 
             logger.debug(
@@ -190,9 +183,9 @@ class StructureGroupDoc(BaseModel):
             )
             for g in group_entries_with_structure_matcher(f_group_l, sm):
                 struct_group = cls.from_grouped_entries(
-                    g, ignored_species=ignored_species, structure_matched=True
+                    g, ignored_species=ignored_species
                 )
-                cnt_ += len(struct_group.grouped_ids)
+                cnt_ += len(struct_group.material_ids)
                 results.append(struct_group)
         if cnt_ != len(entries):
             raise RuntimeError(
@@ -209,6 +202,7 @@ def group_entries_with_structure_matcher(
     Group the entries together based on similarity of the  primitive cells
     Args:
         g: a list of entries
+        struct_matcher: the StructureMatcher object used to aggregate structures
     Returns:
         subgroups: subgroups that are grouped together based on structure similarity
     """

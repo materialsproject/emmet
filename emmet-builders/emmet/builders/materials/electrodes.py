@@ -189,9 +189,9 @@ class StructureGroupBuilder(Builder):
                     self.sgroups.query(
                         criteria={"chemsys": chemsys},
                         properties=[
-                            "material_id",
+                            "group_id",
                             self.sgroups.last_updated_field,
-                            "grouped_ids",
+                            "material_ids",
                         ],
                     )
                 )
@@ -222,24 +222,24 @@ class StructureGroupBuilder(Builder):
                 )
 
                 # If any material id is missing or if any material id has been updated
-                target_mat_ids = set()
+                target_ids = set()
                 for g_doc in all_target_docs:
-                    target_mat_ids |= set(g_doc["grouped_ids"])
+                    target_ids |= set(g_doc["material_ids"])
 
                 self.logger.debug(
-                    f"There are {len(mat_ids)} material ids in the source database vs {len(target_mat_ids)} in the target database."
+                    f"There are {len(mat_ids)} material ids in the source database vs {len(target_ids)} in the target database."
                 )
-                if mat_ids == target_mat_ids and max_mat_time < min_target_time:
+                if mat_ids == target_ids and max_mat_time < min_target_time:
                     yield None
-                elif len(target_mat_ids) == 0:
+                elif len(target_ids) == 0:
                     self.logger.info(
                         f"No documents in chemsys {chemsys} in the target database."
                     )
                 else:
                     self.logger.info(
-                        f"Nuking all {len(target_mat_ids)} documents in chemsys {chemsys} in the target database."
+                        f"Nuking all {len(target_ids)} documents in chemsys {chemsys} in the target database."
                     )
-                    self._remove_targets(list(target_mat_ids))
+                    self._remove_targets(list(target_ids))
             else:
                 yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
 
@@ -275,13 +275,10 @@ class StructureGroupBuilder(Builder):
             stol=self.stol,
             angle_tol=self.angle_tol,
         )
-        # append the working_ion to the group ids
-        for sg in s_groups:
-            sg.material_id = f"{sg.material_id}_{self.working_ion}"
         return [sg.dict() for sg in s_groups]
 
     def _remove_targets(self, rm_ids):
-        self.sgroups.remove_docs({"material_id": {"$in": rm_ids}})
+        self.sgroups.remove_docs({"material_ids": {"$in": rm_ids}})
 
 
 class InsertionElectrodeBuilder(MapBuilder):
@@ -317,14 +314,14 @@ class InsertionElectrodeBuilder(MapBuilder):
 
         def modify_item(item):
             self.logger.debug(
-                f"Looking for {len(item['grouped_ids'])} material_id in the Thermo DB."
+                f"Looking for {len(item['material_ids'])} material_id in the Thermo DB."
             )
             with self.thermo as store:
                 thermo_docs = [
                     *store.query(
                         {
                             "$and": [
-                                {"material_id": {"$in": item["grouped_ids"]}},
+                                {"material_id": {"$in": item["material_ids"]}},
                             ]
                         },
                         properties=[

@@ -21,7 +21,7 @@ class VoltagePairDoc(BaseModel):
         object to gain access to some basic statistics about the voltage step
     """
 
-    max_delta_volume: str = Field(
+    max_delta_volume: float = Field(
         None,
         description="Volume changes in % for a particular voltage step using: "
         "max(charge, discharge) / min(charge, discharge) - 1",
