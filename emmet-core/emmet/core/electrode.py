@@ -65,11 +65,11 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
     Features specific to insertion electrode
     """
 
-    formula_charge: float = Field(
+    formula_charge: str = Field(
         None, description="The chemical formula of the charged material."
     )
 
-    formula_discharge: float = Field(
+    formula_discharge: str = Field(
         None, description="The chemical formula of the discharged material."
     )
 
@@ -186,7 +186,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         elements = sorted(
             host_structure.composition.elements + working_ion_entry.composition.elements
         )
-        chemsys = "-".join(elements)
+        chemsys = "-".join(sorted(map(str, elements)))
         return cls(
             battery_id=battery_id,
             host_structure=host_structure.as_dict(),
