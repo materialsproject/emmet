@@ -1739,7 +1739,7 @@
   },
   {
     "parameters": {},
-    "entry_id": "mp-11"
+    "entry_id": "mp-11",
     "correction": -1.874,
     "@module": "pymatgen.entries.computed_entries",
     "@class": "ComputedStructureEntry",
