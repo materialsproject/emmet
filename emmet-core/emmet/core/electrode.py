@@ -78,7 +78,7 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
     )
 
     id_discharge: Union[MPID, int, None] = Field(
-        None, description="The material-id of the charged structure."
+        None, description="The material-id of the discharged structure."
     )
 
 
@@ -128,6 +128,11 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         description="The chemical compositions of the host framework",
     )
 
+    elements: List[Element] = Field(
+        None,
+        description="The atomic species contained in this electrode.",
+    )
+
     material_ids: List[Union[MPID]] = Field(
         None,
         description="The ids of all structures that matched to the present host lattice, regardless of stability. "
@@ -164,12 +169,15 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         d["material_ids"] = d["stable_material_ids"] + d["unstable_material_ids"]
         d["num_steps"] = d.pop("nsteps", None)
         d["last_updated"] = datetime.utcnow()
-
+        elements = sorted(
+            host_structure.composition.elements + working_ion_entry.composition.elements
+        )
         return cls(
             battery_id=battery_id,
             host_structure=host_structure.as_dict(),
             framework=Composition(d["framework_formula"]),
             electrode_object=ie.as_dict(),
+            elements=elements,
             **d
         )
 
