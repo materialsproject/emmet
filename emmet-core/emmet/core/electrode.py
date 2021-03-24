@@ -148,7 +148,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         cls,
         grouped_entries: List[ComputedEntry],
         working_ion_entry: ComputedEntry,
-        task_id: Union[MPID, int],
+        battery_id: str,
         host_structure: Structure,
     ) -> Union["InsertionElectrodeDoc", None]:
         try:
@@ -165,7 +165,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         d["last_updated"] = datetime.utcnow()
 
         return cls(
-            battery_id=task_id,
+            battery_id=battery_id,
             host_structure=host_structure.as_dict(),
             framework=Composition(d["framework_formula"]),
             electrode_object=ie.as_dict(),

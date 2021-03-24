@@ -230,16 +230,19 @@ class StructureGroupBuilder(Builder):
                     f"There are {len(mat_ids)} material ids in the source database vs {len(target_ids)} in the target database."
                 )
                 if mat_ids == target_ids and max_mat_time < min_target_time:
+                    self.logger.info(f"Skipping chemsys {chemsys}.")
                     yield None
                 elif len(target_ids) == 0:
                     self.logger.info(
                         f"No documents in chemsys {chemsys} in the target database."
                     )
+                    yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
                 else:
                     self.logger.info(
                         f"Nuking all {len(target_ids)} documents in chemsys {chemsys} in the target database."
                     )
                     self._remove_targets(list(target_ids))
+                    yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
             else:
                 yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
 
@@ -249,7 +252,7 @@ class StructureGroupBuilder(Builder):
             self.logger.info("Updating {} sgroups documents".format(len(items)))
             for struct_group_dict in items:
                 struct_group_dict[self.sgroups.last_updated_field] = datetime.utcnow()
-            self.sgroups.update(docs=items, key=["material_id"])
+            self.sgroups.update(docs=items, key=["group_id"])
         else:
             self.logger.info("No items to update")
 
@@ -285,8 +288,8 @@ class InsertionElectrodeBuilder(MapBuilder):
     def __init__(
         self,
         grouped_materials: MongoStore,
-        insertion_electrode: MongoStore,
         thermo: MongoStore,
+        insertion_electrode: MongoStore,
         query: dict = None,
         **kwargs,
     ):
@@ -294,7 +297,7 @@ class InsertionElectrodeBuilder(MapBuilder):
         self.insertion_electrode = insertion_electrode
         self.thermo = thermo
         qq_ = {} if query is None else query
-        qq_.update({"structure_matched": True, "has_distinct_compositions": True})
+        qq_.update({"has_distinct_compositions": True})
         super().__init__(
             source=self.grouped_materials,
             target=self.insertion_electrode,
@@ -344,7 +347,7 @@ class InsertionElectrodeBuilder(MapBuilder):
 
             working_ion_doc = get_working_ion_entry(item["ignored_species"][0])
             return {
-                "material_id": item["material_id"],
+                "group_id": item["group_id"],
                 "working_ion_doc": working_ion_doc,
                 "working_ion": item["ignored_species"][0],
                 "thermo_docs": thermo_docs,
@@ -383,7 +386,7 @@ class InsertionElectrodeBuilder(MapBuilder):
         ie = InsertionElectrodeDoc.from_entries(
             grouped_entries=entries,
             working_ion_entry=working_ion_entry,
-            task_id=item["material_id"],
+            battery_id=item["group_id"],
             host_structure=host_structure,
         )
         if ie is None:

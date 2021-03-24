@@ -65,7 +65,7 @@ def test_InsertionDocs(insertion_elec):
         ie = InsertionElectrodeDoc.from_entries(
             grouped_entries=elec._stable_entries,
             working_ion_entry=wion_entry,
-            task_id="mp-1234",
+            battery_id="mp-1234",
             host_structure=struct,
         )
         assert ie.average_voltage == elec.get_average_voltage()
