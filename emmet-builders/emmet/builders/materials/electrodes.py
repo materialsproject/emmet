@@ -398,7 +398,7 @@ class InsertionElectrodeBuilder(Builder):
             host_structure=host_structure,
         )
         if ie is None:
-            return {"failed_reason": "unable to create InsertionElectrode document"}
+            return None # {"failed_reason": "unable to create InsertionElectrode document"}
         return jsanitize(ie.dict())
 
     def update_targets(self, items: List):
