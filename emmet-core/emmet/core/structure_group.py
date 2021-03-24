@@ -181,9 +181,6 @@ class StructureGroupDoc(BaseModel):
             logger.debug(
                 f"Performing structure matching for {framework} with {len(f_group_l)} documents."
             )
-            print(
-                f"Performing structure matching for {framework} with {len(f_group_l)} documents."
-            )
             for g in group_entries_with_structure_matcher(f_group_l, sm):
                 struct_group = cls.from_grouped_entries(
                     g, ignored_species=ignored_species
