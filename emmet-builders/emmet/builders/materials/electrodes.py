@@ -284,7 +284,7 @@ class StructureGroupBuilder(Builder):
         self.sgroups.remove_docs({"material_ids": {"$in": rm_ids}})
 
 
-class InsertionElectrodeBuilder(MapBuilder):
+class InsertionElectrodeBuilder(Builder):
     def __init__(
         self,
         grouped_materials: MongoStore,
@@ -296,66 +296,74 @@ class InsertionElectrodeBuilder(MapBuilder):
         self.grouped_materials = grouped_materials
         self.insertion_electrode = insertion_electrode
         self.thermo = thermo
-        qq_ = {} if query is None else query
-        qq_.update({"has_distinct_compositions": True})
+        self.query = query if query else {}
+
         super().__init__(
-            source=self.grouped_materials,
-            target=self.insertion_electrode,
-            query=qq_,
+            sources=[self.grouped_materials, self.thermo],
+            targets=[self.insertion_electrode],
             **kwargs,
         )
 
     def get_items(self):
-        """"""
+        """
+        Get items
+        """
 
-        @lru_cache()
+        @lru_cache(1000)
         def get_working_ion_entry(working_ion):
             with self.thermo as store:
                 working_ion_docs = [*store.query({"chemsys": working_ion})]
             best_wion = min(working_ion_docs, key=lambda x: x["energy_per_atom"])
             return best_wion
 
-        def modify_item(item):
+        def get_thermo_docs(mat_ids):
             self.logger.debug(
-                f"Looking for {len(item['material_ids'])} material_id in the Thermo DB."
+                f"Looking for {len(mat_ids)} material_id in the Thermo DB."
             )
-            with self.thermo as store:
-                thermo_docs = [
-                    *store.query(
-                        {
-                            "$and": [
-                                {"material_id": {"$in": item["material_ids"]}},
-                            ]
-                        },
-                        properties=[
-                            "material_id",
-                            "_sbxn",
-                            "thermo",
-                            "entries",
-                            "energy_type",
-                            "energy_above_hull",
-                        ],
-                    )
-                ]
-
+            thermo_docs = list(
+                self.thermo.query(
+                    {
+                        "$and": [
+                            {"material_id": {"$in": mat_ids}},
+                        ]
+                    },
+                    properties=[
+                        "material_id",
+                        "_sbxn",
+                        "thermo",
+                        "entries",
+                        "energy_type",
+                        "energy_above_hull",
+                    ],
+                )
+            )
             self.logger.debug(f"Found for {len(thermo_docs)} Thermo Documents.")
 
-            if len(item["ignored_species"]) != 1:
-                raise ValueError(
-                    "Insertion electrode can only be defined for one working ion species"
-                )
+            # if len(item["ignored_species"]) != 1:
+            #     raise ValueError(
+            #         "Insertion electrode can only be defined for one working ion species"
+            #     )
 
-            working_ion_doc = get_working_ion_entry(item["ignored_species"][0])
-            return {
-                "group_id": item["group_id"],
+            return thermo_docs
+            # return {
+            #     "group_id": item["group_id"],
+            #     "working_ion_doc": working_ion_doc,
+            #     "working_ion": item["ignored_species"][0],
+            #     "thermo_docs": thermo_docs,
+            # }
+
+        q_ = {"$and": [self.query, {"has_distinct_compositions": True}]}
+        for group_doc in self.grouped_materials.query(q_):
+            working_ion_doc = get_working_ion_entry(group_doc["ignored_species"][0])
+            thermo_docs = get_thermo_docs(group_doc["material_ids"])
+            yield {
+                "group_id": group_doc["group_id"],
                 "working_ion_doc": working_ion_doc,
-                "working_ion": item["ignored_species"][0],
+                "working_ion": group_doc["ignored_species"][0],
                 "thermo_docs": thermo_docs,
             }
 
-        yield from map(modify_item, super().get_items())
-
-    def unary_function(self, item):
+    def process_item(self, item) -> Dict:
         """
         - Add volume information to each entry to create the insertion electrode document
         - Add the host structure
@@ -392,3 +400,15 @@ class InsertionElectrodeBuilder(MapBuilder):
         if ie is None:
             return {"failed_reason": "unable to create InsertionElectrode document"}
         return jsanitize(ie.dict())
+
+    def update_targets(self, items: List):
+        items = list(filter(None, chain.from_iterable(items)))
+        if len(items) > 0:
+            self.logger.info("Updating {} battery documents".format(len(items)))
+            for struct_group_dict in items:
+                struct_group_dict[
+                    self.grouped_materials.last_updated_field
+                ] = datetime.utcnow()
+            self.insertion_electrode.update(docs=items, key=["battery_id"])
+        else:
+            self.logger.info("No items to update")
