@@ -24,10 +24,10 @@ def generic_groupby(list_in, comp=operator.eq) -> List[int]:
     Returns:
         [int] list of labels for the input list
     """
-    list_out = [-1] * len(list_in)
+    list_out = [None] * len(list_in)
     label_num = 0
     for i1, ls1 in enumerate(list_out):
-        if ls1 != -1:
+        if ls1 is not None:
             continue
         list_out[i1] = label_num
         for i2, ls2 in list(enumerate(list_out))[i1 + 1 :]:
@@ -181,6 +181,9 @@ class StructureGroupDoc(BaseModel):
             logger.debug(
                 f"Performing structure matching for {framework} with {len(f_group_l)} documents."
             )
+            print(
+                f"Performing structure matching for {framework} with {len(f_group_l)} documents."
+            )
             for g in group_entries_with_structure_matcher(f_group_l, sm):
                 struct_group = cls.from_grouped_entries(
                     g, ignored_species=ignored_species
@@ -210,6 +213,7 @@ def group_entries_with_structure_matcher(
         g,
         comp=lambda x, y: struct_matcher.fit(x.structure, y.structure, symmetric=True),
     )
+    print(labs)
     for ilab in set(labs):
         sub_g = [g[itr] for itr, jlab in enumerate(labs) if jlab == ilab]
         yield [el for el in sub_g]

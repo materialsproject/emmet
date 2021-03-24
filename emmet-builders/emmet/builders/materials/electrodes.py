@@ -52,11 +52,7 @@ REDOX_ELEMENTS = [
 
 WORKING_IONS = ["Li", "Be", "Na", "Mg", "K", "Ca", "Rb", "Sr", "Cs", "Ba"]
 
-MAT_PROPS = [
-    "structure",
-    "material_id",
-    "formula_pretty",
-]
+MAT_PROPS = ["structure", "material_id", "formula_pretty", "entries"]
 
 sg_fields = ["number", "hall_number", "international", "hall", "choice"]
 
@@ -398,7 +394,7 @@ class InsertionElectrodeBuilder(Builder):
             host_structure=host_structure,
         )
         if ie is None:
-            return None # {"failed_reason": "unable to create InsertionElectrode document"}
+            return None  # {"failed_reason": "unable to create InsertionElectrode document"}
         return jsanitize(ie.dict())
 
     def update_targets(self, items: List):
