@@ -65,6 +65,14 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
     Features specific to insertion electrode
     """
 
+    formula_charge: float = Field(
+        None, description="The chemical formula of the charged material."
+    )
+
+    formula_discharge: float = Field(
+        None, description="The chemical formula of the discharged material."
+    )
+
     stability_charge: float = Field(
         None, description="The energy above hull of the charged material."
     )
@@ -139,6 +147,12 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         "The stable entries can be found in the adjacent pairs.",
     )
 
+    chemsys: str = Field(
+        None,
+        description="The chemical system this electrode belongs to. "
+        "Note: The conversion electrode can be calculated on this chemical system",
+    )
+
     electrode_object: Dict = Field(
         None,
         description="The pymatgen electrode object",
@@ -172,12 +186,14 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         elements = sorted(
             host_structure.composition.elements + working_ion_entry.composition.elements
         )
+        chemsys = "-".join(elements)
         return cls(
             battery_id=battery_id,
             host_structure=host_structure.as_dict(),
             framework=Composition(d["framework_formula"]),
             electrode_object=ie.as_dict(),
             elements=elements,
+            chemsys=chemsys,
             **d
         )
 
