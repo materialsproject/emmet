@@ -359,6 +359,7 @@ class InsertionElectrodeBuilder(Builder):
             # }
 
         q_ = {"$and": [self.query, {"has_distinct_compositions": True}]}
+        self.total = self.grouped_materials.count(q_)
         for group_doc in self.grouped_materials.query(q_):
             working_ion_doc = get_working_ion_entry(group_doc["ignored_species"][0])
             thermo_docs = get_thermo_docs(group_doc["material_ids"])
