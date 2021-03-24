@@ -334,6 +334,16 @@ class InsertionElectrodeBuilder(Builder):
                 )
             )
             self.logger.debug(f"Found for {len(thermo_docs)} Thermo Documents.")
+            if len(thermo_docs) != len(mat_ids):
+                missing_ids = set(mat_ids) - set(
+                    [t_["material_id"] for t_ in thermo_docs]
+                )
+                self.logger.warn(
+                    f"The following ids are missing from the entries in thermo {missing_ids}.\n"
+                    "The is likely due to the fact that a calculation other than GGA or GGA+U was "
+                    "validated for the materials builder."
+                )
+                return None
 
             # if len(item["ignored_species"]) != 1:
             #     raise ValueError(
@@ -352,22 +362,32 @@ class InsertionElectrodeBuilder(Builder):
         for group_doc in self.grouped_materials.query(q_):
             working_ion_doc = get_working_ion_entry(group_doc["ignored_species"][0])
             thermo_docs = get_thermo_docs(group_doc["material_ids"])
-            yield {
-                "group_id": group_doc["group_id"],
-                "working_ion_doc": working_ion_doc,
-                "working_ion": group_doc["ignored_species"][0],
-                "thermo_docs": thermo_docs,
-            }
+            if thermo_docs:
+                yield {
+                    "group_id": group_doc["group_id"],
+                    "working_ion_doc": working_ion_doc,
+                    "working_ion": group_doc["ignored_species"][0],
+                    "thermo_docs": thermo_docs,
+                }
+            else:
+                yield None
 
     def process_item(self, item) -> Dict:
         """
         - Add volume information to each entry to create the insertion electrode document
         - Add the host structure
         """
+        if item is None:
+            return None
+        self.logger.debug(
+            f"Working on {item['group_id']} with {len(item['thermo_docs'])}"
+        )
+
         entries = [
             tdoc_["entries"][tdoc_["energy_type"]] for tdoc_ in item["thermo_docs"]
         ]
         entries = list(map(ComputedStructureEntry.from_dict, entries))
+
         working_ion_entry = ComputedEntry.from_dict(
             item["working_ion_doc"]["entries"][item["working_ion_doc"]["energy_type"]]
         )
