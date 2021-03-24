@@ -402,7 +402,7 @@ class InsertionElectrodeBuilder(Builder):
         return jsanitize(ie.dict())
 
     def update_targets(self, items: List):
-        items = list(filter(None, chain.from_iterable(items)))
+        items = list(filter(None, items))
         if len(items) > 0:
             self.logger.info("Updating {} battery documents".format(len(items)))
             for struct_group_dict in items:
