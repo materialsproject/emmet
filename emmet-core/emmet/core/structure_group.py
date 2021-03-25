@@ -215,8 +215,8 @@ def group_entries_with_structure_matcher(
         wion = struct_matcher.as_dict()["ignored_species"][0]
 
     # Sort the entries by symmetry and by working ion fraction
-    def get_num_sym_ops(structure):
-        sga = SpacegroupAnalyzer(structure)
+    def get_num_sym_ops(ent):
+        sga = SpacegroupAnalyzer(ent.structure)
         return len(sga.get_space_group_operations())
 
     g.sort(key=get_num_sym_ops, reverse=True)
