@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, validator
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core import Composition, Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.mpid import MPID
 
@@ -196,21 +197,35 @@ class StructureGroupDoc(BaseModel):
 
 
 def group_entries_with_structure_matcher(
-    g, struct_matcher
+    g,
+    struct_matcher: StructureMatcher,
+    working_ion: str = None,
 ) -> Iterable[List[Union[ComputedStructureEntry]]]:
     """
     Group the entries together based on similarity of the  primitive cells
     Args:
         g: a list of entries
         struct_matcher: the StructureMatcher object used to aggregate structures
+        working_ion: the name of the working ion, if none use the first ignored species
+            from the structure_matcher
     Returns:
         subgroups: subgroups that are grouped together based on structure similarity
     """
+    if working_ion is None:
+        wion = struct_matcher.as_dict()["ignored_species"][0]
+
+    # Sort the entries by symmetry and by working ion fraction
+    def get_num_sym_ops(structure):
+        sga = SpacegroupAnalyzer(structure)
+        return len(sga.get_space_group_operations())
+
+    g.sort(key=get_num_sym_ops, reverse=True)
+    g.sort(key=lambda x: x.composition.get_atomic_fraction(wion))
+
     labs = generic_groupby(
         g,
         comp=lambda x, y: struct_matcher.fit(x.structure, y.structure, symmetric=True),
     )
-    print(labs)
     for ilab in set(labs):
         sub_g = [g[itr] for itr, jlab in enumerate(labs) if jlab == ilab]
         yield [el for el in sub_g]
