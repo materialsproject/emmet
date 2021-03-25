@@ -204,7 +204,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
             elements=elements,
             nelements=len(elements),
             chemsys=chemsys,
-            formula_anonymous=framework.composition.anonymized_formula,
+            formula_anonymous=framework.anonymized_formula,
             **d
         )
 
