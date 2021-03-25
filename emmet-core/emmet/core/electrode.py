@@ -116,7 +116,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         description="The working ion as an Element object",
     )
 
-    num_steps: float = Field(
+    num_steps: int = Field(
         None,
         description="The number of distinct voltage steps in from fully charge to "
         "discharge based on the stable intermediate states",
