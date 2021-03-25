@@ -138,7 +138,17 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
 
     elements: List[Element] = Field(
         None,
-        description="The atomic species contained in this electrode.",
+        description="The atomic species contained in this electrode (not including the working ion).",
+    )
+
+    nelements: int = Field(
+        None,
+        description="The number of elements in the material (not including the working ion).",
+    )
+
+    chemsys: str = Field(
+        None,
+        description="The chemical system this electrode belongs to (not including the working ion)",
     )
 
     material_ids: List[Union[MPID]] = Field(
@@ -147,10 +157,10 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         "The stable entries can be found in the adjacent pairs.",
     )
 
-    chemsys: str = Field(
+    formula_anonymous: str = Field(
         None,
-        description="The chemical system this electrode belongs to. "
-        "Note: The conversion electrode can be calculated on this chemical system",
+        title="Anonymous Formula",
+        description="Anonymized representation of the formula (not including the working ion)",
     )
 
     electrode_object: Dict = Field(
@@ -183,17 +193,18 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         d["material_ids"] = d["stable_material_ids"] + d["unstable_material_ids"]
         d["num_steps"] = d.pop("nsteps", None)
         d["last_updated"] = datetime.utcnow()
-        elements = sorted(
-            host_structure.composition.elements + working_ion_entry.composition.elements
-        )
+        elements = sorted(host_structure.composition.elements)
         chemsys = "-".join(sorted(map(str, elements)))
+        framework = Composition(d["framework_formula"])
         return cls(
             battery_id=battery_id,
             host_structure=host_structure.as_dict(),
-            framework=Composition(d["framework_formula"]),
+            framework=framework,
             electrode_object=ie.as_dict(),
             elements=elements,
+            nelements=len(elements),
             chemsys=chemsys,
+            formula_anonymous=framework.composition.anonymized_formula,
             **d
         )
 
