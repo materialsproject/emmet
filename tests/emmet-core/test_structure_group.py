@@ -36,10 +36,11 @@ def entries_lfeo(test_dir):
 
 def test_StructureGroupDoc_from_grouped_entries(entries_lto):
     sgroup_doc = StructureGroupDoc.from_grouped_entries(
-        entries_lto, ignored_species=["Li"], structure_matched=True
+        entries_lto,
+        ignored_species=["Li"],
     )
-    assert sgroup_doc.material_id == "mp-0"
-    assert sgroup_doc.grouped_ids == ["mp-0", "mp-1", "mp-2", "mp-3", "mp-4", "mp-5"]
+    assert sgroup_doc.group_id == "mp-0_Li"
+    assert sgroup_doc.material_ids == ["mp-0", "mp-1", "mp-2", "mp-3", "mp-4", "mp-5"]
     assert sgroup_doc.framework_formula == "TiO2"
     assert sgroup_doc.ignored_species == ["Li"]
     assert sgroup_doc.chemsys == "Li-O-Ti"
@@ -56,7 +57,7 @@ def test_StructureGroupDoc_from_ungrouped_entries(entries_lfeo):
     for sgroup_doc in sgroup_docs:
         framework_ref = sgroup_doc.framework_formula
         ignored = sgroup_doc.ignored_species
-        for entry_id in sgroup_doc.grouped_ids:
+        for entry_id in sgroup_doc.material_ids:
             dd_ = entry_dict[entry_id].composition.as_dict()
             for k in ignored:
                 if k in dd_:

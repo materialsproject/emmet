@@ -113,6 +113,8 @@ def jsanitize(obj, strict=False, allow_bson=False):
             for k, v in obj.dict().items()
         }
     if isinstance(obj, (int, float)):
+        if np.isnan(obj):
+            return 0
         return obj
 
     if obj is None:
