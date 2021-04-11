@@ -429,3 +429,8 @@ class InsertionElectrodeBuilder(Builder):
             self.insertion_electrode.update(docs=items, key=["battery_id"])
         else:
             self.logger.info("No items to update")
+
+
+# class MigrationGraphBuilder(InsertionElectrodeBuilder):
+#     def process_item(self, item) -> Dict:
+#         pass
