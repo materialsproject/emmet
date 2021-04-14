@@ -5,7 +5,7 @@ from datetime import datetime
 from functools import lru_cache
 from itertools import chain, groupby
 from pprint import pprint
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Union
 
 from maggma.builders import Builder, MapBuilder
 from maggma.stores import MongoStore
@@ -137,7 +137,7 @@ class InsertionElectrodeBuilder(GroupedThermoDocsBuilder):
             item["working_ion"] = item["ignored_species"][0]
             yield item
 
-    def process_item(self, item) -> Dict:
+    def process_item(self, item) -> Union[Dict, None]:
         """
         - Add volume information to each entry to create the insertion electrode document
         - Add the host structure
