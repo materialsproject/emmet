@@ -5,23 +5,16 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Dict, Type, TypeVar, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model
 from pymatgen.core import Structure
 
 from emmet.core.mpid import MPID
-from emmet.core.material_property import PropertyDoc
-from emmet.core import SETTINGS
-
 from pymatgen.core.periodic_table import Element
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.core import OrbitalType, Spin
 from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pymatgen.analysis.magnetism.analyzer import (
-    CollinearMagneticStructureAnalyzer,
-    Ordering,
-)
 
 
 class ElectronicStructureBaseData(BaseModel):
@@ -46,7 +39,7 @@ class ElectronicStructureBaseData(BaseModel):
     )
 
 
-class ElectronicStructureSummary(ElectronicStructureBaseData):
+class MainSummaryData(ElectronicStructureBaseData):
     is_gap_direct: bool = Field(
         ..., description="Whether the band gap is direct.",
     )
@@ -55,12 +48,8 @@ class ElectronicStructureSummary(ElectronicStructureBaseData):
         ..., description="Whether the material is a metal.",
     )
 
-    magnetic_ordering: Union[str, Ordering] = Field(
-        ..., description="Magnetic ordering of the calculation.",
-    )
 
-
-class BandStructureSummaryData(ElectronicStructureSummary):
+class BandStructureSummaryData(MainSummaryData):
     nbands: float = Field(
         ..., description="Number of bands.",
     )
@@ -88,39 +77,41 @@ class BandstructureData(BaseModel):
 
 
 class DosData(BaseModel):
-    total: Dict[Union[Spin, str], ElectronicStructureBaseData] = Field(
+    total: Dict[Spin, ElectronicStructureBaseData] = Field(
         None, description="Total DOS summary data.",
     )
 
     elemental: Dict[
-        Element,
-        Dict[
-            Union[str, OrbitalType], Dict[Union[Spin, str], ElectronicStructureBaseData]
-        ],
+        Element, Dict[Union[str, OrbitalType], Dict[Spin, ElectronicStructureBaseData]]
     ] = Field(
         None,
         description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
-    orbital: Dict[
-        Union[str, OrbitalType], Dict[Union[Spin, str], ElectronicStructureBaseData]
-    ] = Field(
+    orbital: Dict[OrbitalType, Dict[Spin, ElectronicStructureBaseData]] = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
-    )
-
-    magnetic_ordering: Union[str, Ordering] = Field(
-        None, description="Magnetic ordering of the calculation.",
     )
 
 
 T = TypeVar("T", bound="ElectronicStructureDoc")
 
 
-class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
+class ElectronicStructureDoc(ElectronicStructureBaseData):
     """
     Definition for a core Electronic Structure Document
     """
+
+    # Only material_id is required for all documents
+    material_id: Union[MPID, int] = Field(
+        ...,
+        description="The ID of this material, used as a universal reference across property documents."
+        "This comes in the form and MPID or int",
+    )
+
+    structure: Structure = Field(
+        ..., description="The best structure for this material"
+    )
 
     bandstructure: BandstructureData = Field(
         None, description="Band structure data for the material."
@@ -139,8 +130,6 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         material_id: Union[MPID, int],
         structure: Structure,
         dos: Dict[Union[MPID, int], CompleteDos],
-        is_gap_direct: bool,
-        is_metal: bool,
         setyawan_curtarolo: Dict[Union[MPID, int], BandStructureSymmLine] = None,
         hinuma: Dict[Union[MPID, int], BandStructureSymmLine] = None,
         latimer_munro: Dict[Union[MPID, int], BandStructureSymmLine] = None,
@@ -163,11 +152,6 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
         dos_efermi = dos.efermi
 
-        is_gap_direct = is_gap_direct
-        is_metal = is_metal
-
-        dos_mag_ordering = CollinearMagneticStructureAnalyzer(dos.structure).ordering
-
         summary_band_gap = dos.get_gap()
         summary_cbm, summary_vbm = dos.get_cbm_vbm()
 
@@ -175,7 +159,6 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             "total": defaultdict(dict),
             "elemental": {element: defaultdict(dict) for element in elements},
             "orbital": defaultdict(dict),
-            "magnetic_ordering": dos_mag_ordering,
         }
 
         for spin in spins:
@@ -241,10 +224,6 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             if bs_input is not None:
                 bs_task, bs = list(bs_input.items())[0]
 
-                bs_mag_ordering = CollinearMagneticStructureAnalyzer(
-                    bs.structure
-                ).ordering
-
                 gap_dict = bs.get_band_gap()
                 is_metal = bs.is_metal()
 
@@ -292,8 +271,8 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                         hskp = HighSymmKpath(
                             new_structure,
                             path_type="all",
-                            symprec=SETTINGS.SYMPREC,
-                            angle_tolerance=SETTINGS.ANGLE_TOL,
+                            symprec=0.1,
+                            angle_tolerance=5,
                             atol=1e-5,
                         )
                         equivalent_labels = hskp.equiv_labels
@@ -308,13 +287,12 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     efermi=bs_efermi,
                     nbands=nbands,
                     equivalent_labels=equivalent_labels,
-                    magnetic_ordering=bs_mag_ordering,
                 )
 
         bs_entry = BandstructureData(**bs_data)
         dos_entry = DosData(**dos_data)
 
-        return cls.from_structure(
+        return cls(
             material_id=material_id,
             calc_id=dos_task,
             structure=structure,
@@ -324,7 +302,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             efermi=dos_efermi,
             is_gap_direct=is_gap_direct,
             is_metal=is_metal,
-            magnetic_ordering=dos_mag_ordering,
             bandstructure=bs_entry,
             dos=dos_entry,
         )
+
