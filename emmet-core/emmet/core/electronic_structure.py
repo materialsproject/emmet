@@ -39,7 +39,7 @@ class ElectronicStructureBaseData(BaseModel):
     )
 
 
-class MainSummaryData(ElectronicStructureBaseData):
+class ElectronicStructureSummary(ElectronicStructureBaseData):
     is_gap_direct: bool = Field(
         ..., description="Whether the band gap is direct.",
     )
@@ -49,7 +49,7 @@ class MainSummaryData(ElectronicStructureBaseData):
     )
 
 
-class BandStructureSummaryData(MainSummaryData):
+class BandStructureSummaryData(ElectronicStructureSummary):
     nbands: float = Field(
         ..., description="Number of bands.",
     )
@@ -97,7 +97,7 @@ class DosData(BaseModel):
 T = TypeVar("T", bound="ElectronicStructureDoc")
 
 
-class ElectronicStructureDoc(ElectronicStructureBaseData):
+class ElectronicStructureDoc(ElectronicStructureSummary):
     """
     Definition for a core Electronic Structure Document
     """
@@ -305,4 +305,3 @@ class ElectronicStructureDoc(ElectronicStructureBaseData):
             bandstructure=bs_entry,
             dos=dos_entry,
         )
-
