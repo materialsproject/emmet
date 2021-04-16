@@ -46,6 +46,7 @@ class ElectronicStructureBuilder(Builder):
         self.electronic_structure = electronic_structure
         self.bandstructure_fs = bandstructure_fs
         self.dos_fs = dos_fs
+        self.mat_chunk_size = mat_chunk_size
         self.query = query if query else {}
 
         super().__init__(
@@ -76,10 +77,9 @@ class ElectronicStructureBuilder(Builder):
 
         mats = [mat for mat in mats_set]
 
-        mat_chunk_size = 10
-
         mats_chunked = [
-            mats[i : i + mat_chunk_size] for i in range(0, len(mats), mat_chunk_size)
+            mats[i : i + self.mat_chunk_size]
+            for i in range(0, len(mats), self.mat_chunk_size)
         ]
 
         self.logger.debug(
