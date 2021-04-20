@@ -88,7 +88,7 @@ def jsanitize(obj, strict=False, allow_bson=False):
         or (bson is not None and isinstance(obj, bson.objectid.ObjectId))
     ):
         return obj
-    if isinstance(obj, (list, tuple)):
+    if isinstance(obj, (list, tuple, set)):
         return [jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj]
     if np is not None and isinstance(obj, np.ndarray):
         return [
