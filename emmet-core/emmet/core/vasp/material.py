@@ -72,12 +72,13 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         task_types = {task.task_id: task.task_type for task in task_group}
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
+        valid_tasks = [task for task in task_group if task.is_valid]
         structure_optimizations = [
             task
-            for task in task_group
+            for task in valid_tasks
             if task.task_type == TaskType.Structure_Optimization  # type: ignore
         ]
-        statics = [task for task in task_group if task.task_type == TaskType.Static]  # type: ignore
+        statics = [task for task in valid_tasks if task.task_type == TaskType.Static]  # type: ignore
         structure_calcs = (
             structure_optimizations + statics
             if use_statics
@@ -95,10 +96,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
             task_run_type = task.run_type
 
-            is_valid = task.task_id in deprecated_tasks
-
             return (
-                -1 * is_valid,
                 -1 * quality_scores.get(task_run_type.value, 0),
                 -1 * task.input.parameters.get("ISPIN", 1),
                 -1 * task.input.parameters.get("LASPH", False),
