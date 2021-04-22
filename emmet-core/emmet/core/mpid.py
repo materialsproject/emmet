@@ -4,7 +4,7 @@ from typing import Union
 
 NOTHING = object()
 
-mpid_regex = re.compile("^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
+mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
 
 
 class MPID:
@@ -54,7 +54,7 @@ class MPID:
     @classmethod
     def __modify_schema__(cls, field_schema):
         field_schema.update(
-            pattern="^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$",
+            pattern=r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$",
             examples=["mp-3534", "3453", "mp-834-Ag"],
         )
 

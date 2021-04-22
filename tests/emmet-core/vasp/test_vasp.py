@@ -71,4 +71,4 @@ def task_ldau(test_dir):
 
 
 def test_ldau(task_ldau):
-    assert ValidationDoc.from_task_doc(task_ldau).valid == False
+    assert ValidationDoc.from_task_doc(task_ldau).valid is False
