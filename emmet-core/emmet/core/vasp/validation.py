@@ -73,14 +73,14 @@ class ValidationDoc(BaseModel):
         """
 
         structure = task_doc.output.structure
-        task_type = task_doc.task_type
+        calc_type = task_doc.calc_type
         inputs = task_doc.orig_inputs
 
         reasons = []
         data = {}
 
-        if task_type in input_sets:
-            valid_input_set = input_sets[task_type](structure)
+        if str(calc_type) in input_sets:
+            valid_input_set = input_sets[str(calc_type)](structure)
 
             # Checking K-Points
             # Calculations that use KSPACING will not have a .kpoints attr
@@ -115,15 +115,17 @@ class ValidationDoc(BaseModel):
             # Checking U-values
             if valid_input_set.incar.get("LDAU"):
                 # Assemble actual input LDAU params into dictionary to account for possibility
-                # of differing order of elements
-                structure_set_symbol_set = structure.symbol_set
+                # of differing order of elements.
+                structure_set_symbol_set = _get_unsorted_symbol_set(structure)
                 inputs_ldau_fields = [structure_set_symbol_set] + [
                     inputs.get("incar", {}).get(k, []) for k in LDAU_fields
                 ]
                 input_ldau_params = {d[0]: d[1:] for d in zip(*inputs_ldau_fields)}
 
                 # Assemble required input_set LDAU params into dictionary
-                input_set_symbol_set = valid_input_set.poscar.structure.symbol_set
+                input_set_symbol_set = _get_unsorted_symbol_set(
+                    valid_input_set.poscar.structure
+                )
                 input_set_ldau_fields = [input_set_symbol_set] + [
                     valid_input_set.incar.get(k) for k in LDAU_fields
                 ]
@@ -152,10 +154,21 @@ class ValidationDoc(BaseModel):
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,
-            task_type=task_doc.task_type,
+            calc_type=calc_type,
             run_type=task_doc.run_type,
             valid=len(reasons) == 0,
             reasons=reasons,
             data=data,
         )
         return doc
+
+
+def _get_unsorted_symbol_set(structure: Structure):
+    """
+    Have to build structure_symbol set manually to ensure we get the right order since pymatgen sorts its symbol_set list
+    """
+    return list(
+        {
+            str(sp): 1 for site in structure for sp, v in site.species.items() if v != 0
+        }.keys()
+    )

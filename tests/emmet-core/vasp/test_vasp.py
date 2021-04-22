@@ -60,3 +60,15 @@ def test_computed_entry(tasks):
     entries = [task.entry for task in tasks]
     ids = {e.entry_id for e in entries}
     assert ids == {"mp-1141021", "mp-149", "mp-1686587", "mp-1440634"}
+
+
+@pytest.fixture(scope="session")
+def task_ldau(test_dir):
+    with zopen(test_dir / "test_task.json") as f:
+        data = json.load(f)
+
+    return TaskDocument(**data)
+
+
+def test_ldau(task_ldau):
+    assert ValidationDoc.from_task_doc(task_ldau).valid == False
