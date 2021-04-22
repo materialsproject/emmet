@@ -19,7 +19,7 @@ class PropertyOrigin(BaseModel):
     """
 
     name: str = Field(..., description="The property name")
-    task_id: Union[MPID, int] = Field(
+    task_id: MPID = Field(
         ..., description="The calculation ID this property comes from"
     )
     last_updated: datetime = Field(
@@ -37,7 +37,7 @@ class MaterialsDoc(StructureMetadata):
     """
 
     # Only material_id is required for all documents
-    material_id: Union[MPID, int] = Field(
+    material_id: MPID = Field(
         ...,
         description="The ID of this material, used as a universal reference across proeprty documents."
         "This comes in the form and MPID or int",
@@ -57,7 +57,7 @@ class MaterialsDoc(StructureMetadata):
         description="Initial structures used in the DFT optimizations corresponding to this material",
     )
 
-    task_ids: Sequence[Union[MPID, int]] = Field(
+    task_ids: Sequence[MPID] = Field(
         [],
         title="Calculation IDs",
         description="List of Calculations IDs used to make this Materials Document",
@@ -90,7 +90,7 @@ class MaterialsDoc(StructureMetadata):
 
     @classmethod
     def from_structure(  # type: ignore[override]
-        cls: Type[T], structure: Structure, material_id: Union[MPID, int], **kwargs
+        cls: Type[T], structure: Structure, material_id: MPID, **kwargs
     ) -> T:
         """
         Builds a materials document using the minimal amount of information

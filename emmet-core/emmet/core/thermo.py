@@ -19,7 +19,7 @@ class DecompositionProduct(BaseModel):
     Entry metadata for a decomposition process
     """
 
-    material_id: Union[MPID, int] = Field(
+    material_id: MPID = Field(
         None, description="The material this decomposition points to"
     )
     formula: str = Field(

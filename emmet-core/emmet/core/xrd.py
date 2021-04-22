@@ -61,7 +61,7 @@ class XRDDoc(SpectrumDoc):
     @classmethod
     def from_structure(  # type: ignore[override]
         cls,
-        material_id: Union[MPID, int],
+        material_id: MPID,
         spectrum_id: str,
         structure: Structure,
         wavelength: float,
@@ -89,7 +89,7 @@ class XRDDoc(SpectrumDoc):
     @classmethod
     def from_target(
         cls,
-        material_id: Union[MPID, int],
+        material_id: MPID,
         structure: Structure,
         target: Element,
         edge: Edge,

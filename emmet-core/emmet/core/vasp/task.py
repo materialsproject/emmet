@@ -127,7 +127,7 @@ class TaskDocument(StructureMetadata):
     orig_inputs: Dict[str, Any] = Field(
         {}, description="Summary of the original VASP inputs"
     )
-    task_id: Union[MPID, int] = Field(None, description="the Task ID For this document")
+    task_id: MPID = Field(None, description="the Task ID For this document")
     tags: List[str] = Field([], description="Metadata tags for this task document")
 
     calcs_reversed: List[Dict] = Field(

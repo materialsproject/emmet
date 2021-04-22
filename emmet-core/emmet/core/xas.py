@@ -63,7 +63,7 @@ class XASDoc(SpectrumDoc):
     def from_spectrum(
         cls,
         xas_spectrum: XAS,
-        material_id: Union[MPID, int],
+        material_id: MPID,
         **kwargs,
     ):
         spectrum_type = xas_spectrum.spectrum_type

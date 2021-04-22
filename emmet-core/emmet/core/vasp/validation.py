@@ -27,9 +27,7 @@ class ValidationDoc(BaseModel):
     Validation document for a VASP calculation
     """
 
-    task_id: Union[MPID, int] = Field(
-        ..., description="The task_id for this validation document"
-    )
+    task_id: MPID = Field(..., description="The task_id for this validation document")
     valid: bool = Field(False, description="Whether this task is valid or not")
     last_updated: datetime = Field(
         description="Last updated date for this document",

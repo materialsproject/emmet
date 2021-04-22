@@ -151,7 +151,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         description="The chemical system this electrode belongs to (not including the working ion)",
     )
 
-    material_ids: List[Union[MPID]] = Field(
+    material_ids: List[MPID] = Field(
         None,
         description="The ids of all structures that matched to the present host lattice, regardless of stability. "
         "The stable entries can be found in the adjacent pairs.",
@@ -259,7 +259,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
         composition: Composition,
         entries: List[ComputedEntry],
         working_ion_symbol: str,
-        task_id: Union[MPID, int],
+        task_id: MPID,
     ):
         ce = ConversionElectrode.from_composition_and_entries(
             comp=composition,

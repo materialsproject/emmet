@@ -24,7 +24,7 @@ class PropertyDoc(StructureMetadata):
     """
 
     property_name: ClassVar[str]
-    material_id: Union[MPID, int] = Field(
+    material_id: MPID = Field(
         ...,
         description="The ID of the material, used as a universal reference across proeprty documents."
         "This comes in the form of an MPID or int",
@@ -45,7 +45,7 @@ class PropertyDoc(StructureMetadata):
 
     @classmethod
     def from_structure(  # type: ignore[override]
-        cls: Type[S], structure: Structure, material_id: Union[MPID, int], **kwargs
+        cls: Type[S], structure: Structure, material_id: MPID, **kwargs
     ) -> S:
         """
         Builds a materials document using the minimal amount of information
