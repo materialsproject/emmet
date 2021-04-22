@@ -31,9 +31,6 @@ jobs:
           pip install -r ${{ matrix.package }}/requirements.txt
           pip install -r requirements-testing.txt
 
-      - name: Lint with pycodestyle
-        run: pycodestyle ${{ matrix.package }}
-
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
