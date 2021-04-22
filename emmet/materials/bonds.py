@@ -5,10 +5,10 @@ import numpy as np
 
 from itertools import chain
 
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.analysis.local_env import NearNeighbors
 from pymatgen.analysis.graphs import StructureGraph
-from pymatgen import __version__ as pymatgen_version
+from pymatgen.core import __version__ as pymatgen_version
 
 from maggma.builders import MapBuilder
 from maggma.validators import JSONSchemaValidator, msonable_schema

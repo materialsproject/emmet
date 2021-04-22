@@ -1,7 +1,7 @@
 import numpy as np
 from itertools import combinations
 
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.core.tensors import Tensor
 from pymatgen.analysis.piezo import PiezoTensor
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer

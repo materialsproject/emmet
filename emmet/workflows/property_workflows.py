@@ -16,7 +16,7 @@ from pymatgen.core.tensors import Tensor, SquareTensor,\
         get_tkd_value, symmetry_reduce
 from pymatgen.analysis.elasticity.strain import Strain
 from pymatgen.core.operations import SymmOp
-from pymatgen import Structure
+from pymatgen.core import Structure
 from fireworks import LaunchPad
 
 logger = logging.getLogger(__name__)

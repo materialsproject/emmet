@@ -1,7 +1,7 @@
 import os
 import unittest
 from maggma.stores import JSONStore, MemoryStore
-from pymatgen import Composition
+from pymatgen.core import Composition
 from numpy import unique
 from emmet.materials.electrodes import ElectrodesBuilder, mat_props, generic_groupby
 from emmet.materials.thermo import chemsys_permutations

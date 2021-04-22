@@ -15,7 +15,7 @@ import numpy as np
 
 from monty.json import MontyDecoder, jsanitize
 
-from pymatgen import Structure, MPRester, PeriodicSite
+from pymatgen.core import Structure, MPRester, PeriodicSite
 from pymatgen.analysis.structure_matcher import StructureMatcher, PointDefectComparator
 from pymatgen.electronic_structure.bandstructure import BandStructure
 from pymatgen.analysis.defects.core import Vacancy, Substitution, Interstitial, DefectEntry

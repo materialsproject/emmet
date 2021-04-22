@@ -9,7 +9,7 @@ from pymongo.errors import CursorNotFound
 from pymongo.collection import ReturnDocument
 from pymongo.errors import DocumentTooLarge
 #from pymatgen.analysis.structure_prediction.volume_predictor import DLSVolumePredictor
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.alchemy.materials import TransformedStructure
 from pymatgen.util.provenance import StructureNL, Author
 from fireworks import LaunchPad, Firework

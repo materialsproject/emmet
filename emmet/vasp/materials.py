@@ -5,7 +5,7 @@ from operator import itemgetter
 from typing import Optional, Dict, List, Iterator, Union
 
 from monty.json import jsanitize
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.analysis.piezo import PiezoTensor
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer

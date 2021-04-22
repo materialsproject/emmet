@@ -4,7 +4,7 @@ from typing import List, Dict
 
 from itertools import groupby
 from pydash import py_
-from pymatgen import Structure
+from pymatgen.core import Structure
 import numpy as np
 
 from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum

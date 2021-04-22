@@ -2,7 +2,7 @@ from itertools import chain, combinations
 from collections import defaultdict
 from datetime import datetime
 
-from pymatgen import Structure, Composition
+from pymatgen.core import Structure, Composition
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.entries.computed_entries import ComputedEntry
 from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError

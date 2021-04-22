@@ -2,7 +2,7 @@ import os
 import numpy as np
 from itertools import chain
 from maggma.builders import MapBuilder
-from pymatgen import Structure
+from pymatgen.core import Structure
 from atomate.utils.utils import load_class
 
 __author__ = "Shyam Dwaraknath"

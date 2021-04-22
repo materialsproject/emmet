@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from pymatgen import Structure
+from pymatgen.core import Structure
 from emmet.materials.basic_descriptors import BasicDescriptorsBuilder
 from maggma.stores import MemoryStore
 

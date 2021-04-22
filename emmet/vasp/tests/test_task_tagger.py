@@ -5,7 +5,7 @@ from datetime import datetime
 from emmet.vasp.task_tagger import TaskTagger
 from maggma.stores import JSONStore, MemoryStore
 
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.io.vasp.sets import MPRelaxSet, MPStaticSet, MPNonSCFSet
 
 __author__ = "Shyam Dwaraknath"

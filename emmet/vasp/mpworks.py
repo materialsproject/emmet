@@ -2,7 +2,7 @@ import numpy as np
 from datetime import datetime
 import os
 
-from pymatgen import Composition
+from pymatgen.core import Composition
 from pymatgen.entries.compatibility import MaterialsProjectCompatibility
 from pymatgen.entries.computed_entries import ComputedEntry
 

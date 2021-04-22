@@ -2,7 +2,7 @@ from datetime import datetime
 from collections import deque
 
 from maggma.builders import Builder
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymongo import UpdateOne
 

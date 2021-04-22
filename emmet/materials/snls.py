@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from pydash.objects import get
 
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.analysis.structure_matcher import StructureMatcher, ElementComparator
 from pymatgen.util.provenance import StructureNL
 from maggma.builders import Builder

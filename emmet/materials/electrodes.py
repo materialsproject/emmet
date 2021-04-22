@@ -14,7 +14,7 @@ from pymatgen.entries.computed_entries import ComputedStructureEntry, ComputedEn
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pymatgen import Composition
+from pymatgen.core import Composition
 from emmet.materials.thermo import chemsys_permutations
 from pymatgen.analysis.structure_analyzer import oxide_type
 from numpy import unique

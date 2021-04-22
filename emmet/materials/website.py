@@ -19,14 +19,14 @@ from emmet.materials.snls import mp_default_snl_fields
 from emmet.common.utils import scrub_class_and_module
 from emmet import __version__ as emmet_version
 
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.io.cif import CifWriter
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.analysis.structure_analyzer import RelaxationAnalyzer
 from pymatgen.analysis.diffraction.core import DiffractionPattern
 from pymatgen.util.provenance import StructureNL
-from pymatgen import __version__ as pymatgen_version
+from pymatgen.core import __version__ as pymatgen_version
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 

@@ -4,7 +4,7 @@ from monty.serialization import loadfn
 from pymatgen.core.structure import Structure
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.core.periodic_table import Specie
-from pymatgen import __version__ as pymatgen_version
+from pymatgen.core import __version__ as pymatgen_version
 
 from maggma.builders import MapBuilder
 from maggma.validators import JSONSchemaValidator

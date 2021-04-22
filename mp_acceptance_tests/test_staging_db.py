@@ -7,7 +7,7 @@ import unittest
 
 from mongogrant import Client
 from monty.serialization import loadfn
-from pymatgen import MPRester
+from pymatgen.core import MPRester
 import pymongo
 
 TESTFILES_DIR = os.path.dirname(os.path.abspath(__file__))

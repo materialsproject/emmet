@@ -1,9 +1,9 @@
 import os.path
 from monty.serialization import loadfn
 
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
-from pymatgen import __version__ as pymatgen_version
+from pymatgen.core import __version__ as pymatgen_version
 from maggma.validators import JSONSchemaValidator
 from maggma.builders import MapBuilder
 

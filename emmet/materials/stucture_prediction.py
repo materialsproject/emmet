@@ -2,7 +2,7 @@ from datetime import datetime
 
 from maggma.builder import Builder
 
-from pymatgen import Specie, Structure
+from pymatgen.core import Specie, Structure
 from pymatgen.io.cif import CifWriter
 from pymatgen.analysis.structure_prediction.substitutor import Substitutor
 from pymatgen.analysis.structure_prediction.substitution_probability import (

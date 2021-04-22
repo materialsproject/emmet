@@ -10,7 +10,7 @@ from emmet.vasp.materials import structure_metadata
 from monty.json import MSONable, MontyDecoder
 from monty.serialization import loadfn
 
-from pymatgen import Composition, Structure
+from pymatgen.core import Composition, Structure
 from pymatgen.io.cif import CifParser
 
 

@@ -23,7 +23,7 @@ from copy import deepcopy
 from monty.json import jsanitize
 from monty.serialization import loadfn
 
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.analysis.elasticity.elastic import ElasticTensor,\
         ElasticTensorExpansion
 from pymatgen.analysis.elasticity.strain import Deformation, Strain

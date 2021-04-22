@@ -1,5 +1,5 @@
 from itertools import chain
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 from emmet.vasp.task_tagger import task_type
 from maggma.builders import Builder
