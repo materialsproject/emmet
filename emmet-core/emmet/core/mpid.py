@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from typing import Union
+from typing import Tuple, Union
 
 NOTHING = object()
 
@@ -18,18 +18,27 @@ class MPID:
     def __init__(self, val: Union["MPID", int, str]):
 
         if isinstance(val, MPID):
-            self.parts = val.parts
+            self.parts = val.parts  # type: ignore
 
         elif isinstance(val, int):
             self.parts = (NOTHING, val)
 
         elif isinstance(val, str):
             parts = val.split("-")
-            parts[1] = int(parts[1])
+            parts[1] = int(parts[1])  # type: ignore
             self.parts = tuple(parts)
 
-    def __eq__(self, other: Union["MPID", int, str]):
-        return self.parts == other.parts
+        else:
+
+            raise ValueError(
+                "Must provide an MPID, int, or string of the format prefix-number"
+            )
+
+    def __eq__(self, other: object):
+        if isinstance(other, MPID):
+            return self.parts == other.parts
+        elif isinstance(other, (int, str)):
+            return self.parts == MPID(other).parts
 
     def __str__(self):
         return "-".join(self.parts)
@@ -41,7 +50,7 @@ class MPID:
             return True
         elif isinstance(other, str):
             other_parts = other.split("-")
-            other_parts[1] = int(other_parts[1])
+            other_parts[1] = int(other_parts[1])  # type: ignore
         else:
             other_parts = other.parts
 
