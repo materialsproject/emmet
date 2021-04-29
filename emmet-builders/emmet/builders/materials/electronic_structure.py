@@ -202,11 +202,11 @@ class ElectronicStructureBuilder(Builder):
         Args:
             items ([Dict]): A list of ElectronicStructureDoc dictionaries to update
         """
-        items = list(filter(None, items))[0]
+        items = list(filter(None, items))
 
         if len(items) > 0:
             self.logger.info("Updating {} electronic structure docs".format(len(items)))
-            self.electronic_structure.update(docs=items)
+            self.electronic_structure.update(docs=items[0])
         else:
             self.logger.info("No electronic structure docs to update")
 
