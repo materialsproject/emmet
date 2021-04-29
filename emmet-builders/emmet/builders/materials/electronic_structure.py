@@ -1,8 +1,8 @@
 from collections import defaultdict
 from emmet.core.electronic_structure import ElectronicStructureDoc
+from emmet.core import SETTINGS
 
 import numpy as np
-from monty.json import jsanitize
 from maggma.builders import Builder
 from pymatgen.core import Structure
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
@@ -451,7 +451,11 @@ class ElectronicStructureBuilder(Builder):
 
     @staticmethod
     def _obtain_path_type(
-        labels_dict, structure, symprec=0.1, angle_tolerance=5, atol=1e-5
+        labels_dict,
+        structure,
+        symprec=SETTINGS.SYMPREC,
+        angle_tolerance=SETTINGS.ANGLE_TOL,
+        atol=1e-5,
     ):
 
         type_dict = {"sc": "setyawan_curtarolo", "hin": "hinuma", "lm": "latimer_munro"}
