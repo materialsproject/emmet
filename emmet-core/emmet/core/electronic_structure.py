@@ -9,12 +9,18 @@ from pydantic import BaseModel, Field, create_model
 from pymatgen.core import Structure
 
 from emmet.core.mpid import MPID
+from emmet.core import SETTINGS
+
 from pymatgen.core.periodic_table import Element
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.core import OrbitalType, Spin
 from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.analysis.magnetism.analyzer import (
+    CollinearMagneticStructureAnalyzer,
+    Ordering,
+)
 
 
 class ElectronicStructureBaseData(BaseModel):
@@ -46,6 +52,10 @@ class ElectronicStructureSummary(ElectronicStructureBaseData):
 
     is_metal: bool = Field(
         ..., description="Whether the material is a metal.",
+    )
+
+    magnetic_ordering: Ordering = Field(
+        ..., description="Magnetic ordering of the calculation.",
     )
 
 
@@ -93,6 +103,10 @@ class DosData(BaseModel):
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
+    magnetic_ordering: Ordering = Field(
+        ..., description="Magnetic ordering of the calculation.",
+    )
+
 
 T = TypeVar("T", bound="ElectronicStructureDoc")
 
@@ -130,6 +144,8 @@ class ElectronicStructureDoc(ElectronicStructureSummary):
         material_id: Union[MPID, int],
         structure: Structure,
         dos: Dict[Union[MPID, int], CompleteDos],
+        is_gap_direct: bool,
+        is_metal: bool,
         setyawan_curtarolo: Dict[Union[MPID, int], BandStructureSymmLine] = None,
         hinuma: Dict[Union[MPID, int], BandStructureSymmLine] = None,
         latimer_munro: Dict[Union[MPID, int], BandStructureSymmLine] = None,
@@ -152,6 +168,11 @@ class ElectronicStructureDoc(ElectronicStructureSummary):
 
         dos_efermi = dos.efermi
 
+        is_gap_direct = is_gap_direct
+        is_metal = is_metal
+
+        dos_mag_ordering = CollinearMagneticStructureAnalyzer(dos.structure).ordering
+
         summary_band_gap = dos.get_gap()
         summary_cbm, summary_vbm = dos.get_cbm_vbm()
 
@@ -159,6 +180,7 @@ class ElectronicStructureDoc(ElectronicStructureSummary):
             "total": defaultdict(dict),
             "elemental": {element: defaultdict(dict) for element in elements},
             "orbital": defaultdict(dict),
+            "magnetic_ordering": dos_mag_ordering,
         }
 
         for spin in spins:
@@ -224,6 +246,10 @@ class ElectronicStructureDoc(ElectronicStructureSummary):
             if bs_input is not None:
                 bs_task, bs = list(bs_input.items())[0]
 
+                bs_mag_ordering = CollinearMagneticStructureAnalyzer(
+                    bs.structure
+                ).ordering
+
                 gap_dict = bs.get_band_gap()
                 is_metal = bs.is_metal()
 
@@ -271,8 +297,8 @@ class ElectronicStructureDoc(ElectronicStructureSummary):
                         hskp = HighSymmKpath(
                             new_structure,
                             path_type="all",
-                            symprec=0.1,
-                            angle_tolerance=5,
+                            symprec=SETTINGS.SYMPREC,
+                            angle_tolerance=SETTINGS.ANGLE_TOL,
                             atol=1e-5,
                         )
                         equivalent_labels = hskp.equiv_labels
@@ -287,6 +313,7 @@ class ElectronicStructureDoc(ElectronicStructureSummary):
                     efermi=bs_efermi,
                     nbands=nbands,
                     equivalent_labels=equivalent_labels,
+                    magnetic_ordering=bs_mag_ordering,
                 )
 
         bs_entry = BandstructureData(**bs_data)
@@ -302,6 +329,7 @@ class ElectronicStructureDoc(ElectronicStructureSummary):
             efermi=dos_efermi,
             is_gap_direct=is_gap_direct,
             is_metal=is_metal,
+            magnetic_ordering=dos_mag_ordering,
             bandstructure=bs_entry,
             dos=dos_entry,
         )
