@@ -1,9 +1,13 @@
 from collections import defaultdict
+from math import ceil
+import numpy as np
+
 from emmet.core.electronic_structure import ElectronicStructureDoc
 from emmet.core import SETTINGS
 
-import numpy as np
 from maggma.builders import Builder
+from maggma.utils import grouper
+
 from pymatgen.core import Structure
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.dos import CompleteDos
@@ -27,8 +31,8 @@ class ElectronicStructureBuilder(Builder):
         **kwargs,
     ):
         """
-        Creates an electronic structure collection from a tasks collection, 
-        the associated band structures and density of states file store collections, 
+        Creates an electronic structure collection from a tasks collection,
+        the associated band structures and density of states file store collections,
         and the materials collection.
 
         Individual bandstructures for each of the three conventions are generated.
@@ -58,6 +62,20 @@ class ElectronicStructureBuilder(Builder):
 
         self.chunk_size = 1
 
+    def prechunk(self, number_splits: int):
+        """
+        Prechunk method to perform chunking by the key field
+        """
+        q = dict(self.query)
+
+        keys = self.electronic_structure.newer_in(
+            self.materials, criteria=q, exhaustive=True
+        )
+
+        N = ceil(len(keys) / number_splits)
+        for split in grouper(keys, N):
+            yield {"query": {self.materials.key: {"$in": list(split)}}}
+
     def get_items(self):
         """
         Gets all items to process
@@ -68,14 +86,15 @@ class ElectronicStructureBuilder(Builder):
 
         self.logger.info("Electronic Structure Builder Started")
 
-        # get all materials that were updated since the electronic structure was last updated
         q = dict(self.query)
 
-        mat_ids = list(self.materials.distinct(self.materials.key, criteria=q))
+        mat_ids = self.materials.distinct(self.materials.key, criteria=q)
         es_ids = self.electronic_structure.distinct(self.electronic_structure.key)
 
         mats_set = set(
-            self.electronic_structure.newer_in(target=self.materials, exhaustive=True)
+            self.electronic_structure.newer_in(
+                target=self.materials, criteria=q, exhaustive=True
+            )
         ) | (set(mat_ids) - set(es_ids))
 
         mats = [mat for mat in mats_set]
