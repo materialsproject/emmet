@@ -5,10 +5,11 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Dict, Type, TypeVar, Union
 
-from pydantic import BaseModel, Field, create_model
+from pydantic import BaseModel, Field
 from pymatgen.core import Structure
 
 from emmet.core.mpid import MPID
+from emmet.core.material_property import PropertyDoc
 from emmet.core import SETTINGS
 
 from pymatgen.core.periodic_table import Element
@@ -87,45 +88,39 @@ class BandstructureData(BaseModel):
 
 
 class DosData(BaseModel):
-    total: Dict[Spin, ElectronicStructureBaseData] = Field(
+    total: Dict[Union[Spin, str], ElectronicStructureBaseData] = Field(
         None, description="Total DOS summary data.",
     )
 
     elemental: Dict[
-        Element, Dict[Union[str, OrbitalType], Dict[Spin, ElectronicStructureBaseData]]
+        Element,
+        Dict[
+            Union[str, OrbitalType], Dict[Union[Spin, str], ElectronicStructureBaseData]
+        ],
     ] = Field(
         None,
         description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
-    orbital: Dict[OrbitalType, Dict[Spin, ElectronicStructureBaseData]] = Field(
+    orbital: Dict[
+        OrbitalType, Dict[Union[Spin, str], ElectronicStructureBaseData]
+    ] = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
     magnetic_ordering: Ordering = Field(
-        ..., description="Magnetic ordering of the calculation.",
+        None, description="Magnetic ordering of the calculation.",
     )
 
 
 T = TypeVar("T", bound="ElectronicStructureDoc")
 
 
-class ElectronicStructureDoc(ElectronicStructureSummary):
+class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     """
     Definition for a core Electronic Structure Document
     """
-
-    # Only material_id is required for all documents
-    material_id: Union[MPID, int] = Field(
-        ...,
-        description="The ID of this material, used as a universal reference across property documents."
-        "This comes in the form and MPID or int",
-    )
-
-    structure: Structure = Field(
-        ..., description="The best structure for this material"
-    )
 
     bandstructure: BandstructureData = Field(
         None, description="Band structure data for the material."
@@ -319,7 +314,7 @@ class ElectronicStructureDoc(ElectronicStructureSummary):
         bs_entry = BandstructureData(**bs_data)
         dos_entry = DosData(**dos_data)
 
-        return cls(
+        return ElectronicStructureDoc.from_structure(
             material_id=material_id,
             calc_id=dos_task,
             structure=structure,
