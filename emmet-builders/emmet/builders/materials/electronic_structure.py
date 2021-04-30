@@ -166,7 +166,7 @@ class ElectronicStructureBuilder(Builder):
                 )
 
             if dos is None:
-                doc = ElectronicStructureDoc(
+                doc = ElectronicStructureDoc.from_structure(
                     material_id=mat[self.materials.key],
                     calc_id=mat["other"]["task_id"],
                     structure=structure,
