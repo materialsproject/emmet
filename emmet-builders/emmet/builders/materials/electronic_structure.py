@@ -1,9 +1,11 @@
 from collections import defaultdict
 from math import ceil
 import numpy as np
+from itertools import chain
 
 from emmet.core.electronic_structure import ElectronicStructureDoc
 from emmet.core import SETTINGS
+from emmet.core.utils import jsanitize
 
 from maggma.builders import Builder
 from maggma.utils import grouper
@@ -201,13 +203,13 @@ class ElectronicStructureBuilder(Builder):
         Inserts electronic structure documents into the electronic_structure collection
 
         Args:
-            items ([Dict]): A list of ElectronicStructureDoc dictionaries to update
+            items ([[Dict]]): A list of ElectronicStructureDoc dictionaries to update
         """
-        items = list(filter(None, items))
+        items = list(filter(None, chain.from_iterable(items)))
 
         if len(items) > 0:
             self.logger.info("Updating {} electronic structure docs".format(len(items)))
-            self.electronic_structure.update(docs=items[0])
+            self.electronic_structure.update(docs=jsanitize(items, allow_bson=True))
         else:
             self.logger.info("No electronic structure docs to update")
 
