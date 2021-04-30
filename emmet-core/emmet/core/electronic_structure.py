@@ -314,7 +314,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         bs_entry = BandstructureData(**bs_data)
         dos_entry = DosData(**dos_data)
 
-        return ElectronicStructureDoc.from_structure(
+        return cls.from_structure(
             material_id=material_id,
             calc_id=dos_task,
             structure=structure,

@@ -190,6 +190,8 @@ class ElectronicStructureBuilder(Builder):
 
             doc = doc.dict()
 
+            doc["structure"] = structure.as_dict()
+
             d_list.append(doc)
 
         return d_list
