@@ -55,7 +55,7 @@ class ElectronicStructureSummary(ElectronicStructureBaseData):
         ..., description="Whether the material is a metal.",
     )
 
-    magnetic_ordering: Union[str, OrbitalType] = Field(
+    magnetic_ordering: Union[str, Ordering] = Field(
         ..., description="Magnetic ordering of the calculation.",
     )
 
@@ -109,7 +109,7 @@ class DosData(BaseModel):
         description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
-    magnetic_ordering: Union[str, OrbitalType] = Field(
+    magnetic_ordering: Union[str, Ordering] = Field(
         None, description="Magnetic ordering of the calculation.",
     )
 
