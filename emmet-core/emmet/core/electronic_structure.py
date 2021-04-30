@@ -103,7 +103,7 @@ class DosData(BaseModel):
     )
 
     orbital: Dict[
-        OrbitalType, Dict[Union[Spin, str], ElectronicStructureBaseData]
+        Union[str, OrbitalType], Dict[Union[Spin, str], ElectronicStructureBaseData]
     ] = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
