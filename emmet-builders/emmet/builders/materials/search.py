@@ -1,7 +1,5 @@
 from maggma.builders import Builder
 from collections import defaultdict
-from math import ceil
-from maggma.utils import grouper
 
 
 class SearchBuilder(Builder):
@@ -17,7 +15,6 @@ class SearchBuilder(Builder):
         elasticity,
         dielectric,
         phonon,
-        insertion_electrodes,
         substrates,
         surfaces,
         eos,
@@ -36,7 +33,6 @@ class SearchBuilder(Builder):
         self.elasticity = elasticity
         self.dielectric = dielectric
         self.phonon = phonon
-        self.insertion_electrodes = insertion_electrodes
         self.substrates = substrates
         self.surfaces = surfaces
         self.eos = eos
@@ -54,7 +50,6 @@ class SearchBuilder(Builder):
                 elasticity,
                 dielectric,
                 phonon,
-                insertion_electrodes,
                 surfaces,
                 substrates,
                 eos,
@@ -77,16 +72,17 @@ class SearchBuilder(Builder):
 
         q = dict(self.query)
 
-        mat_ids = self.materials.distinct(field=self.materials.key, criteria=q)
-        search_ids = self.search.distinct(field=self.search.key, criteria=q)
+        mat_ids = self.materials.distinct(field="task_id", criteria=q)
+        search_ids = self.search.distinct(field="task_id", criteria=q)
+        thermo_ids = self.thermo.distinct(field="task_id", criteria=q)
 
-        search_set = set(mat_ids) - set(search_ids)
+        search_set = set(mat_ids).intersection(thermo_ids) - set(search_ids)
 
         search_list = [key for key in search_set]
 
         chunk_list = [
             search_list[i : i + self.mat_chunk_size]
-            for i in range(0, len(search_list), self.mat_chunk_size)
+            for i in range(0, len(search_list), mat_chunk_size)
         ]
         self.total = len(chunk_list)
 
@@ -118,12 +114,6 @@ class SearchBuilder(Builder):
                 "phonon": list(
                     self.phonon.query({self.phonon.key: query}, [self.phonon.key])
                 ),
-                "insertion_electrodes": list(
-                    self.insertion_electrodes.query(
-                        {self.insertion_electrodes.key: query},
-                        [self.insertion_electrodes.key],
-                    )
-                ),
                 "surface_properties": list(
                     self.surfaces.query({self.surfaces.key: query})
                 ),
@@ -132,18 +122,6 @@ class SearchBuilder(Builder):
             }
 
             yield data
-
-    def prechunk(self, number_splits: int):
-        """
-        Prechunk method to perform chunking by the key field
-        """
-        q = dict(self.query)
-
-        keys = self.search.newer_in(self.materials, criteria=q, exhaustive=True)
-
-        N = ceil(len(keys) / number_splits)
-        for split in grouper(keys, N):
-            yield {"query": {self.materials.key: {"$in": list(split)}}}
 
     def process_item(self, item):
 
@@ -164,7 +142,7 @@ class SearchBuilder(Builder):
             "density",
             "density_atomic",
             "symmetry",
-            "material_id",
+            "task_id",
             "structure",
             "deprecated",
         ]
@@ -180,13 +158,14 @@ class SearchBuilder(Builder):
 
         for id in ids:
 
-            d[id]["has_props"] = set()
+            d[id]["has_props"] = []
 
             # Thermo
 
             thermo_fields = [
                 "uncorrected_energy_per_atom",
                 "energy_per_atom",
+                "energy_uncertainty_per_atom",
                 "formation_energy_per_atom",
                 "energy_above_hull",
                 "is_stable",
@@ -197,7 +176,7 @@ class SearchBuilder(Builder):
             for doc in item["thermo"]:
                 if doc[self.thermo.key] == id:
                     for field in thermo_fields:
-                        d[id][field] = doc[field]
+                        d[id][field] = doc["thermo"][field]
 
             # XAS
 
@@ -209,7 +188,7 @@ class SearchBuilder(Builder):
                     if d[id].get("xas", None) is None:
                         d[id]["xas"] = []
 
-                    d[id]["has_props"].add("xas")
+                    d[id]["has_props"].append("xas")
 
                     d[id]["xas"].append({field: doc[field] for field in xas_fields})
 
@@ -223,7 +202,7 @@ class SearchBuilder(Builder):
                     if d[id].get("grain_boundaries", None) is None:
                         d[id]["grain_boundaries"] = []
 
-                    d[id]["has_props"].add("grain_boundaries")
+                    d[id]["has_props"].append("grain_boundaries")
 
                     d[id]["grain_boundaries"].append(
                         {field: doc[field] for field in gb_fields}
@@ -249,11 +228,11 @@ class SearchBuilder(Builder):
 
                     if doc["bandstructure"] is not None:
                         if any(doc["bandstructure"].values()):
-                            d[id]["has_props"].add("bandstructure")
+                            d[id]["has_props"].append("bandstructure")
                             d[id]["bandstructure"] = doc["bandstructure"]
 
                     if doc["dos"] is not None:
-                        d[id]["has_props"].add("dos")
+                        d[id]["has_props"].append("dos")
                         d[id]["dos"] = doc["dos"]
 
             # Magnetism
@@ -269,7 +248,7 @@ class SearchBuilder(Builder):
 
             for doc in item["magnetism"]:
                 if doc[self.magnetism.key] == id:
-                    d[id]["has_props"].add("magnetism")
+                    d[id]["has_props"].append("magnetism")
 
                     d[id]["spin_polarized"] = True
 
@@ -291,7 +270,7 @@ class SearchBuilder(Builder):
 
             for doc in item["elasticity"]:
                 if doc[self.elasticity.key] == id:
-                    d[id]["has_props"].add("elasticity")
+                    d[id]["has_props"].append("elasticity")
 
                     for field in elasticity_fields:
                         d[id][field] = doc["elasticity"][field]
@@ -312,13 +291,13 @@ class SearchBuilder(Builder):
                     check_dielectric = doc.get("dielectric", None)
                     check_piezo = doc.get("piezo", None)
                     if check_dielectric is not None and check_dielectric != {}:
-                        d[id]["has_props"].add("dielectric")
+                        d[id]["has_props"].append("dielectric")
 
                         for field in dielectric_fields:
                             d[id][field] = doc["dielectric"][field]
 
                     if check_piezo is not None and check_piezo != {}:
-                        d[id]["has_props"].add("piezoelectric")
+                        d[id]["has_props"].append("piezoelectric")
 
                         for field in piezo_fields:
                             d[id][field] = doc["piezo"][field]
@@ -334,7 +313,7 @@ class SearchBuilder(Builder):
 
             for doc in item["surface_properties"]:
                 if doc[self.surfaces.key] == id:
-                    d[id]["has_props"].add("surface_properties")
+                    d[id]["has_props"].append("surface_properties")
 
                     for field in surface_fields:
                         d[id][field] = doc[field]
@@ -344,46 +323,44 @@ class SearchBuilder(Builder):
             for doc in item["eos"]:
 
                 if doc[self.eos.key] == id:
-                    d[id]["has_props"].add("eos")
+                    d[id]["has_props"].append("eos")
+
+            d[id]["has_props"] = list(set(d[id]["has_props"]))
 
             # Phonon
 
             for doc in item["phonon"]:
 
                 if doc[self.phonon.key] == id:
-                    d[id]["has_props"].add("phonon")
+                    d[id]["has_props"].append("phonon")
 
-            # Insertion Electrodes
-
-            for doc in item["insertion_electrodes"]:
-
-                if doc[self.phonon.key] == id:
-                    d[id]["has_props"].add("insertion_electrode")
+            d[id]["has_props"] = list(set(d[id]["has_props"]))
 
             # Substrates
 
             for doc in item["substrates"]:
 
                 if doc[self.substrates.key] == id:
-                    d[id]["has_props"].add("substrates")
+                    d[id]["has_props"].append("substrates")
 
-            d[id]["has_props"] = list(d[id]["has_props"])
+            d[id]["has_props"] = list(set(d[id]["has_props"]))
 
         return d
 
     def update_targets(self, items):
         """
-        Copy each search doc to the store
+        Copy each seardh doc to the store
 
         Args:
-            items ([dict]): A list of dictionaries of mpid document pairs to update
+            items ([dict]): A list of tuples of docs to update
         """
         items = list(filter(None, items))
 
         if len(items) > 0:
-            self.logger.info("Inserting {} search docs".format(len(items[0])))
-
-            docs = list(items[0].values())
-            self.search.update(docs)
+            self.logger.info(
+                "Inserting {} search docs".format(len(list(items[0].keys())))
+            )
+            for key, doc in items[0].items():
+                self.search.update(doc, key=self.search.key)
         else:
             self.logger.info("No search entries to copy")
