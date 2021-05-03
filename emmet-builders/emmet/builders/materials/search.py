@@ -1,5 +1,7 @@
 from maggma.builders import Builder
 from collections import defaultdict
+from math import ceil
+from maggma.utils import grouper
 
 
 class SearchBuilder(Builder):
@@ -122,6 +124,18 @@ class SearchBuilder(Builder):
             }
 
             yield data
+
+    def prechunk(self, number_splits: int):
+        """
+        Prechunk method to perform chunking by the key field
+        """
+        q = dict(self.query)
+
+        keys = self.search.newer_in(self.materials, criteria=q, exhaustive=True)
+
+        N = ceil(len(keys) / number_splits)
+        for split in grouper(keys, N):
+            yield {"query": {self.materials.key: {"$in": list(split)}}}
 
     def process_item(self, item):
 
