@@ -18,6 +18,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 
 from emmet.core.electrode import InsertionElectrodeDoc
 from emmet.core.structure_group import StructureGroupDoc
+from emmet.core.migration import MigrationGraphDoc
 from emmet.core.utils import jsanitize
 
 __author__ = "Jimmy Shen"
@@ -122,7 +123,9 @@ class GroupedThermoDocsBuilder(Builder):
 class InsertionElectrodeBuilder(GroupedThermoDocsBuilder):
     def get_items(self):
         """
-        Get items
+        Additional fields:
+            - working_ion: the name of the working ion
+            - working_ion_doc: the materials document for the working ion
         """
 
         @lru_cache(1000)
@@ -198,4 +201,28 @@ class InsertionElectrodeBuilder(GroupedThermoDocsBuilder):
 
 class MigrationGraphBuilder(InsertionElectrodeBuilder):
     def process_item(self, item) -> Dict:
-        pass
+        if item["thermo_docs"] is None:
+            return None
+
+        self.logger.debug(
+            f"Working on {item['group_id']} with {len(item['thermo_docs'])}"
+        )
+
+        entries = [
+            tdoc_["entries"][tdoc_["energy_type"]] for tdoc_ in item["thermo_docs"]
+        ]
+        entries = list(map(ComputedStructureEntry.from_dict, entries))
+
+        working_ion_entry = ComputedEntry.from_dict(
+            item["working_ion_doc"]["entries"][item["working_ion_doc"]["energy_type"]]
+        )
+        working_ion = working_ion_entry.composition.reduced_formula
+
+        struct = MigrationGraph.get_structure_from_entries(entries=entries, migrating_ion_entry=working_ion_entry)
+
+        mg_doc = MigrationGraphDoc.from_entries(entries=entries, working_ion_entry=working_ion_entry, ltol=item['ltol'],
+                                       stol=item['stol'],
+                                       angle_tol=item['angle_tol'],
+                                       symprec=item['symprec'])
+        d = mg_doc.dict()
+        return jsanitize(d)
