@@ -198,7 +198,7 @@ class SearchBuilder(Builder):
             for doc in item["thermo"]:
                 if doc[self.thermo.key] == id:
                     for field in thermo_fields:
-                        d[id][field] = doc["thermo"][field]
+                        d[id][field] = doc[field]
 
             # XAS
 
