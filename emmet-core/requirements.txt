@@ -1,4 +1,5 @@
 pymatgen==2022.0.5
+pymatgen-analysis-diffusion==2021.4.29
 https://github.com/materialsvirtuallab/monty/archive/8d67c335bd5d8bb71ecc8ac732c82a53e0def4a1.zip
 pydantic==1.8.1
 pybtex==0.24.0
