@@ -5,7 +5,7 @@ from datetime import datetime
 from functools import lru_cache
 from itertools import chain, groupby
 from pprint import pprint
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Optional
 
 from maggma.builders import Builder, MapBuilder
 from maggma.stores import MongoStore
@@ -29,28 +29,6 @@ def s_hash(el):
 
 
 # MatDoc = namedtuple("MatDoc", ["material_id", "structure", "formula_pretty", "framework"])
-
-REDOX_ELEMENTS = [
-    "Ti",
-    "V",
-    "Cr",
-    "Mn",
-    "Fe",
-    "Co",
-    "Ni",
-    "Cu",
-    "Nb",
-    "Mo",
-    "Sn",
-    "Sb",
-    "W",
-    "Re",
-    "Bi",
-    "C",
-    "Hf",
-]
-
-WORKING_IONS = ["Li", "Be", "Na", "Mg", "K", "Ca", "Rb", "Sr", "Cs", "Ba"]
 
 MAT_PROPS = ["structure", "material_id", "formula_pretty", "entries"]
 
@@ -94,6 +72,7 @@ class StructureGroupBuilder(Builder):
         stol: float = 0.3,
         angle_tol: float = 5.0,
         check_newer: bool = True,
+        settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
         """
@@ -114,6 +93,7 @@ class StructureGroupBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
         self.check_newer = check_newer
+        self.settings = EmmetBuildSettings.autoload(settings)
         super().__init__(sources=[materials], targets=[sgroups], **kwargs)
 
     def prechunk(self, number_splits: int) -> Iterable[Dict]:
@@ -133,12 +113,12 @@ class StructureGroupBuilder(Builder):
             - get the oldest timestamp for the target documents (min_target_time)
             - if min_target_time is < max_mat_time then nuke all the target documents
         """
-        other_wions = list(set(WORKING_IONS) - {self.working_ion})
+        other_wions = list(set(self.settings.SGROUP_WORKING_IONS) - {self.working_ion})
         # All potentially interesting chemsys must contain the working ion
         base_query = {
             "$and": [
                 self.query.copy(),
-                {"elements": {"$in": REDOX_ELEMENTS}},
+                {"elements": {"$in": self.settings.SGROUP_REDOX_ELEMENTS}},
                 {"elements": {"$in": [self.working_ion]}},
                 {"elements": {"$nin": other_wions}},
             ]

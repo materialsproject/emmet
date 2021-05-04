@@ -32,6 +32,36 @@ class EmmetBuildSettings(EmmetSettings):
         description="Allowed task_types to build materials from",
     )
 
+    SGROUP_WORKING_IONS: List[str] = Field(
+        ["Li", "Be", "Na", "Mg", "K", "Ca", "Rb", "Sr", "Cs", "Ba"],
+        description="Working ions names, all groups will consist of formulas "
+                    "with and without the working ion."
+    )
+
+    SGROUP_REDOX_ELEMENTS: List[str] = Field(
+        [
+            "Ti",
+            "V",
+            "Cr",
+            "Mn",
+            "Fe",
+            "Co",
+            "Ni",
+            "Cu",
+            "Nb",
+            "Mo",
+            "Sn",
+            "Sb",
+            "W",
+            "Re",
+            "Bi",
+            "C",
+            "Hf",
+        ],
+        description="Redox element names, all groups will consist of formulas "
+                    "that must contain redox element."
+    )
+
     DEFAULT_REFERENCE: str = Field(
         "@article{Jain2013,\nauthor = {Jain, Anubhav and Ong, Shyue Ping and "
         "Hautier, Geoffroy and Chen, Wei and Richards, William Davidson and "
@@ -59,3 +89,4 @@ class EmmetBuildSettings(EmmetSettings):
         ),
         description="Default History for provenance ",
     )
+
