@@ -319,6 +319,7 @@ class ThermoBuilder(Builder):
             entry.data["oxide_type"] = oxide_type(Structure.from_dict(d["structure"]))
             entry.data["_sbxn"] = d.get("_sbxn", [])
             entry.data["last_updated"] = d.get("last_updated", datetime.utcnow())
+            entry.data["oxidation_states"] = {}
             with Timeout():
                 try:
                     oxi_states = entry.composition.oxi_state_guesses(max_sites=-20)
