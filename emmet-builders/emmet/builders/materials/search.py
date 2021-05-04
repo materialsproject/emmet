@@ -180,7 +180,7 @@ class SearchBuilder(Builder):
 
         for id in ids:
 
-            d[id]["has_props"] = []
+            d[id]["has_props"] = set()
 
             # Thermo
 
@@ -209,7 +209,7 @@ class SearchBuilder(Builder):
                     if d[id].get("xas", None) is None:
                         d[id]["xas"] = []
 
-                    d[id]["has_props"].append("xas")
+                    d[id]["has_props"].add("xas")
 
                     d[id]["xas"].append({field: doc[field] for field in xas_fields})
 
@@ -223,7 +223,7 @@ class SearchBuilder(Builder):
                     if d[id].get("grain_boundaries", None) is None:
                         d[id]["grain_boundaries"] = []
 
-                    d[id]["has_props"].append("grain_boundaries")
+                    d[id]["has_props"].add("grain_boundaries")
 
                     d[id]["grain_boundaries"].append(
                         {field: doc[field] for field in gb_fields}
@@ -249,11 +249,11 @@ class SearchBuilder(Builder):
 
                     if doc["bandstructure"] is not None:
                         if any(doc["bandstructure"].values()):
-                            d[id]["has_props"].append("bandstructure")
+                            d[id]["has_props"].add("bandstructure")
                             d[id]["bandstructure"] = doc["bandstructure"]
 
                     if doc["dos"] is not None:
-                        d[id]["has_props"].append("dos")
+                        d[id]["has_props"].add("dos")
                         d[id]["dos"] = doc["dos"]
 
             # Magnetism
@@ -269,7 +269,7 @@ class SearchBuilder(Builder):
 
             for doc in item["magnetism"]:
                 if doc[self.magnetism.key] == id:
-                    d[id]["has_props"].append("magnetism")
+                    d[id]["has_props"].add("magnetism")
 
                     d[id]["spin_polarized"] = True
 
@@ -291,7 +291,7 @@ class SearchBuilder(Builder):
 
             for doc in item["elasticity"]:
                 if doc[self.elasticity.key] == id:
-                    d[id]["has_props"].append("elasticity")
+                    d[id]["has_props"].add("elasticity")
 
                     for field in elasticity_fields:
                         d[id][field] = doc["elasticity"][field]
@@ -312,13 +312,13 @@ class SearchBuilder(Builder):
                     check_dielectric = doc.get("dielectric", None)
                     check_piezo = doc.get("piezo", None)
                     if check_dielectric is not None and check_dielectric != {}:
-                        d[id]["has_props"].append("dielectric")
+                        d[id]["has_props"].add("dielectric")
 
                         for field in dielectric_fields:
                             d[id][field] = doc["dielectric"][field]
 
                     if check_piezo is not None and check_piezo != {}:
-                        d[id]["has_props"].append("piezoelectric")
+                        d[id]["has_props"].add("piezoelectric")
 
                         for field in piezo_fields:
                             d[id][field] = doc["piezo"][field]
@@ -334,7 +334,7 @@ class SearchBuilder(Builder):
 
             for doc in item["surface_properties"]:
                 if doc[self.surfaces.key] == id:
-                    d[id]["has_props"].append("surface_properties")
+                    d[id]["has_props"].add("surface_properties")
 
                     for field in surface_fields:
                         d[id][field] = doc[field]
@@ -344,36 +344,30 @@ class SearchBuilder(Builder):
             for doc in item["eos"]:
 
                 if doc[self.eos.key] == id:
-                    d[id]["has_props"].append("eos")
-
-            d[id]["has_props"] = list(set(d[id]["has_props"]))
+                    d[id]["has_props"].add("eos")
 
             # Phonon
 
             for doc in item["phonon"]:
 
                 if doc[self.phonon.key] == id:
-                    d[id]["has_props"].append("phonon")
-
-            d[id]["has_props"] = list(set(d[id]["has_props"]))
+                    d[id]["has_props"].add("phonon")
 
             # Insertion Electrodes
 
             for doc in item["insertion_electrodes"]:
 
                 if doc[self.phonon.key] == id:
-                    d[id]["has_props"].append("insertion_electrode")
-
-            d[id]["has_props"] = list(set(d[id]["has_props"]))
+                    d[id]["has_props"].add("insertion_electrode")
 
             # Substrates
 
             for doc in item["substrates"]:
 
                 if doc[self.substrates.key] == id:
-                    d[id]["has_props"].append("substrates")
+                    d[id]["has_props"].add("substrates")
 
-            d[id]["has_props"] = list(set(d[id]["has_props"]))
+            d[id]["has_props"] = list(d[id]["has_props"])
 
         return d
 
