@@ -17,6 +17,7 @@ class SearchBuilder(Builder):
         elasticity,
         dielectric,
         phonon,
+        insertion_electrodes,
         substrates,
         surfaces,
         eos,
@@ -35,6 +36,7 @@ class SearchBuilder(Builder):
         self.elasticity = elasticity
         self.dielectric = dielectric
         self.phonon = phonon
+        self.inserion_electrodes = insertion_electrodes
         self.substrates = substrates
         self.surfaces = surfaces
         self.eos = eos
@@ -52,6 +54,7 @@ class SearchBuilder(Builder):
                 elasticity,
                 dielectric,
                 phonon,
+                insertion_electrodes,
                 surfaces,
                 substrates,
                 eos,
@@ -115,6 +118,12 @@ class SearchBuilder(Builder):
                 "dielectric": list(self.dielectric.query({self.dielectric.key: query})),
                 "phonon": list(
                     self.phonon.query({self.phonon.key: query}, [self.phonon.key])
+                ),
+                "insertion_electrodes": list(
+                    self.insertion_electrodes.query(
+                        {self.insertion_electrodes.key: query},
+                        [self.insertion_electrodes.key],
+                    )
                 ),
                 "surface_properties": list(
                     self.surfaces.query({self.surfaces.key: query})
@@ -347,6 +356,15 @@ class SearchBuilder(Builder):
 
                 if doc[self.phonon.key] == id:
                     d[id]["has_props"].append("phonon")
+
+            d[id]["has_props"] = list(set(d[id]["has_props"]))
+
+            # Insertion Electrodes
+
+            for doc in item["insertion_electrodes"]:
+
+                if doc[self.phonon.key] == id:
+                    d[id]["has_props"].append("insertion_electrode")
 
             d[id]["has_props"] = list(set(d[id]["has_props"]))
 
