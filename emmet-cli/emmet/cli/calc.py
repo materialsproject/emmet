@@ -10,7 +10,7 @@ from bson.errors import InvalidBSON
 from collections import defaultdict
 from zipfile import ZipFile
 from fnmatch import fnmatch
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.alchemy.materials import TransformedStructure
 from pymatgen.util.provenance import StructureNL, Author
 

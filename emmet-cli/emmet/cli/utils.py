@@ -12,7 +12,7 @@ from glob import glob
 from fnmatch import fnmatch
 from datetime import datetime
 from collections import defaultdict
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.util.provenance import StructureNL
 from atomate.vasp.database import VaspCalcDb
 from fireworks.fw_config import FW_BLOCK_FORMAT
