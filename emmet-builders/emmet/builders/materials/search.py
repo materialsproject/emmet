@@ -87,7 +87,7 @@ class SearchBuilder(Builder):
 
         chunk_list = [
             search_list[i : i + self.mat_chunk_size]
-            for i in range(0, len(search_list), mat_chunk_size)
+            for i in range(0, len(search_list), self.mat_chunk_size)
         ]
         self.total = len(chunk_list)
 
