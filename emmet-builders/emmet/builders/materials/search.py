@@ -164,7 +164,7 @@ class SearchBuilder(Builder):
             "density",
             "density_atomic",
             "symmetry",
-            "task_id",
+            "material_id",
             "structure",
             "deprecated",
         ]
