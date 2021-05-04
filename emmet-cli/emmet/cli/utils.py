@@ -352,6 +352,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
         logger.info(f"{name} VaspDir: {vaspdir}")
         launcher = get_subdir(vaspdir)
         query = {"dir_name": {"$regex": launcher}}
+        manual_taskid = isinstance(task_ids, dict)
         docs = list(
             target.collection.find(query, projection).sort([("_id", -1)]).limit(1)
         )
@@ -359,6 +360,8 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
         if docs:
             if no_dupe_check:
                 logger.warning(f"FORCING re-parse of {launcher}!")
+                if not manual_taskid:
+                    raise ValueError("need --task-ids when re-parsing!")
             else:
                 if run:
                     shutil.rmtree(vaspdir)
@@ -374,7 +377,6 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             continue
 
         task_doc["sbxn"] = sbxn
-        manual_taskid = isinstance(task_ids, dict)
         snl_metas_avail = isinstance(snl_metas, dict)
         task_id = task_ids[launcher] if manual_taskid else task_ids[chunk_idx][count]
         task_doc["task_id"] = task_id
