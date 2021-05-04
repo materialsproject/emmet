@@ -79,9 +79,8 @@ class SearchBuilder(Builder):
 
         mat_ids = self.materials.distinct(field="task_id", criteria=q)
         search_ids = self.search.distinct(field="task_id", criteria=q)
-        thermo_ids = self.thermo.distinct(field="task_id", criteria=q)
 
-        search_set = set(mat_ids).intersection(thermo_ids) - set(search_ids)
+        search_set = set(mat_ids) - set(search_ids)
 
         search_list = [key for key in search_set]
 
