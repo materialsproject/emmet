@@ -33,7 +33,7 @@ from pymatgen.util.provenance import StructureNL
 
 from datetime import datetime
 from collections import defaultdict
-from pymatgen import Structure
+from pymatgen.core import Structure
 from pymatgen.util.provenance import StructureNL
 from atomate.vasp.database import VaspCalcDb
 from atomate.vasp.drones import VaspDrone
