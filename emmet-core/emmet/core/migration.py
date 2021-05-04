@@ -5,7 +5,6 @@ from datetime import datetime
 from itertools import groupby
 from typing import Iterable, List, Union
 
-from docutils.nodes import Element
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
