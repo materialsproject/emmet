@@ -1,3 +1,5 @@
+import warnings
+
 from itertools import chain, combinations
 from collections import defaultdict
 from datetime import datetime
@@ -133,7 +135,9 @@ class ThermoBuilder(Builder):
         docs = []
 
         sandboxes, entries = item
-        entries = self.compatibility.process_entries(entries, clean=True)
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', message="Failed to guess oxidation states")
+            entries = self.compatibility.process_entries(entries, clean=True)
 
         # determine chemsys
         chemsys = "-".join(
