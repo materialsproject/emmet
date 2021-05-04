@@ -376,7 +376,7 @@ class SearchBuilder(Builder):
         Copy each search doc to the store
 
         Args:
-            items ([dict]): A list of tuples of docs to update
+            items ([dict]): A list of dictionaries of mpid document pairs to update
         """
         items = list(filter(None, items))
 
