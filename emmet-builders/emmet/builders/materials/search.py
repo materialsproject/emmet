@@ -387,10 +387,9 @@ class SearchBuilder(Builder):
         items = list(filter(None, items))
 
         if len(items) > 0:
-            self.logger.info(
-                "Inserting {} search docs".format(len(list(items[0].keys())))
-            )
-            for key, doc in items[0].items():
-                self.search.update(doc, key=self.search.key)
+            self.logger.info("Inserting {} search docs".format(len(items[0])))
+
+            docs = list(items[0].values())
+            self.search.update(docs)
         else:
             self.logger.info("No search entries to copy")
