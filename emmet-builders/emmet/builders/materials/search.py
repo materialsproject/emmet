@@ -187,7 +187,6 @@ class SearchBuilder(Builder):
             thermo_fields = [
                 "uncorrected_energy_per_atom",
                 "energy_per_atom",
-                "energy_uncertainty_per_atom",
                 "formation_energy_per_atom",
                 "energy_above_hull",
                 "is_stable",
