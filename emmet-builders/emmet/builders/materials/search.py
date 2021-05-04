@@ -36,7 +36,7 @@ class SearchBuilder(Builder):
         self.elasticity = elasticity
         self.dielectric = dielectric
         self.phonon = phonon
-        self.inserion_electrodes = insertion_electrodes
+        self.insertion_electrodes = insertion_electrodes
         self.substrates = substrates
         self.surfaces = surfaces
         self.eos = eos
