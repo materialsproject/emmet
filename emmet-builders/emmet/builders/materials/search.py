@@ -77,8 +77,8 @@ class SearchBuilder(Builder):
 
         q = dict(self.query)
 
-        mat_ids = self.materials.distinct(field="task_id", criteria=q)
-        search_ids = self.search.distinct(field="task_id", criteria=q)
+        mat_ids = self.materials.distinct(field=self.materials.key, criteria=q)
+        search_ids = self.search.distinct(field=self.search.key, criteria=q)
 
         search_set = set(mat_ids) - set(search_ids)
 
