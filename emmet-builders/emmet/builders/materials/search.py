@@ -381,7 +381,7 @@ class SearchBuilder(Builder):
 
     def update_targets(self, items):
         """
-        Copy each seardh doc to the store
+        Copy each search doc to the store
 
         Args:
             items ([dict]): A list of tuples of docs to update
