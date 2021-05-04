@@ -342,11 +342,15 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
     no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
     run = ctx.parent.parent.params["run"]
     projection = {"tags": 1, "task_id": 1}
+    #projection = {"tags": 1, "task_id": 1, "calcs_reversed": 1}
     count = 0
     drone = VaspDrone(
         additional_fields={"tags": tags},
         store_volumetric_data=ctx.params["store_volumetric_data"],
     )
+    #fs_keys = ["bandstructure", "dos", "chgcar", "locpot", "elfcar"]
+    #for i in range(3):
+    #    fs_keys.append(f"aeccar{i}")
 
     for vaspdir in vaspdirs:
         logger.info(f"{name} VaspDir: {vaspdir}")
@@ -413,8 +417,29 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
         if run:
             if task_doc["state"] == "successful":
                 if docs and no_dupe_check:
+                    #new_calc = task_doc["calcs_reversed"][0]
+                    #existing_calc = docs[0]["calcs_reversed"][0]
+                    #print(existing_calc.keys())
+
+                    #for fs_key in fs_keys:
+                    #    print(fs_key)
+                    #    fs_id_key = f"{fs_key}_fs_id"
+                    #    if fs_id_key in existing_calc:
+                    #        if fs_id_key in new_calc:
+                    #            # NOTE the duplicate fs_id / s3 object has already been
+                    #            # created in the drone though
+                    #            raise NotImplementedError(
+                    #                f"Missing duplicate check to decide on overwriting {key}_fs_id"
+                    #            )
+
+                    #        for k in [fs_id_key, f"{key}_compression"]:
+                    #            new_calc[k] = existing_calc[k]
+
+                    #        print(fs_id_key, task_doc["calcs_reversed"][0][fs_id_key])  # TODO CHECK
                     target.collection.remove({"task_id": task_id})
                     logger.warning(f"Removed previously parsed task {task_id}!")
+
+                #return count  # TODO remove
 
                 try:
                     target.insert_task(task_doc, use_gridfs=True)
