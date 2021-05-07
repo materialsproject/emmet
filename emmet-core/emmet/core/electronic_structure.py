@@ -151,25 +151,27 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
         # -- Process density of states data
 
-        dos_task, dos = list(dos.items())[0]
+        dos_task, dos_obj = list(dos.items())[0]
 
         orbitals = [OrbitalType.s, OrbitalType.p, OrbitalType.d]
-        spins = list(dos.densities.keys())
+        spins = list(dos_obj.densities.keys())
 
-        ele_dos = dos.get_element_dos()
-        tot_orb_dos = dos.get_spd_dos()
+        ele_dos = dos_obj.get_element_dos()
+        tot_orb_dos = dos_obj.get_spd_dos()
 
         elements = ele_dos.keys()
 
-        dos_efermi = dos.efermi
+        dos_efermi = dos_obj.efermi
 
         is_gap_direct = is_gap_direct
         is_metal = is_metal
 
-        dos_mag_ordering = CollinearMagneticStructureAnalyzer(dos.structure).ordering
+        dos_mag_ordering = CollinearMagneticStructureAnalyzer(
+            dos_obj.structure
+        ).ordering
 
-        summary_band_gap = dos.get_gap()
-        summary_cbm, summary_vbm = dos.get_cbm_vbm()
+        summary_band_gap = dos_obj.get_gap()
+        summary_cbm, summary_vbm = dos_obj.get_cbm_vbm()
 
         dos_data = {
             "total": defaultdict(dict),
@@ -181,8 +183,8 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         for spin in spins:
 
             # - Process total DOS data
-            band_gap = dos.get_gap(spin=spin)
-            (cbm, vbm) = dos.get_cbm_vbm(spin=spin)
+            band_gap = dos_obj.get_gap(spin=spin)
+            (cbm, vbm) = dos_obj.get_cbm_vbm(spin=spin)
 
             dos_data["total"][spin] = ElectronicStructureBaseData(
                 calc_id=dos_task, band_gap=band_gap, cbm=cbm, vbm=vbm, efermi=dos_efermi
@@ -205,7 +207,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
         # - Process element and element orbital projection data
         for ele in ele_dos:
-            orb_dos = dos.get_element_spd_dos(ele)
+            orb_dos = dos_obj.get_element_spd_dos(ele)
 
             for orbital in ["total"] + list(orb_dos.keys()):
                 if orbital == "total":
@@ -298,7 +300,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                         )
                         equivalent_labels = hskp.equiv_labels
 
-                bs_data[bs_type] = BandStructureSummaryData(
+                bs_data[bs_type] = BandStructureSummaryData(  # type: ignore
                     calc_id=bs_task,
                     band_gap=band_gap,
                     cbm=cbm,
@@ -315,7 +317,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         dos_entry = DosData(**dos_data)
 
         return cls.from_structure(
-            material_id=material_id,
+            material_id=MPID(material_id),
             calc_id=dos_task,
             structure=structure,
             band_gap=summary_band_gap,
