@@ -51,9 +51,7 @@ class ThermoBuilder(Builder):
         self.oxi_states = oxi_states
         self.query = query if query else {}
         self.compatibility = (
-            compatibility
-            if compatibility
-            else MaterialsProject2020Compatibility()
+            compatibility if compatibility else MaterialsProject2020Compatibility()
         )
         self.completed_tasks = set()
         self.entries_cache = defaultdict(list)
@@ -84,10 +82,22 @@ class ThermoBuilder(Builder):
         # All materials that are not present in the thermo collection
         # convert all mat_ids into str in case the underlying type is heterogeneous
         thermo_mat_ids = {ID_to_int(t) for t in self.thermo.distinct(self.thermo.key)}
-        mat_ids = {ID_to_int(t) for t in self.materials.distinct(self.materials.key, self.query)}
+        mat_ids = {
+            ID_to_int(t)
+            for t in self.materials.distinct(self.materials.key, self.query)
+        }
         dif_task_ids = list(mat_ids - thermo_mat_ids)
         q = dict(self.query)
-        q.update({"task_id": {"$in": ["{}-{}".format(t[0], t[1]) if t[0] != "" else str(t[1]) for t in dif_task_ids ]}})
+        q.update(
+            {
+                "task_id": {
+                    "$in": [
+                        "{}-{}".format(t[0], t[1]) if t[0] != "" else str(t[1])
+                        for t in dif_task_ids
+                    ]
+                }
+            }
+        )
         # All chemsys associated with new materials no present in the thermo collection
         new_mat_comps = set(self.materials.distinct("chemsys", q))
         self.logger.debug(f"Found {len(new_mat_comps)} new chemsys")
@@ -109,9 +119,7 @@ class ThermoBuilder(Builder):
                 processed |= chemsys_permutations(chemsys)
                 to_process.append(chemsys)
 
-        self.logger.info(
-            f"Found {len(to_process)} chemsys with new/updated materials"
-        )
+        self.logger.info(f"Found {len(to_process)} chemsys with new/updated materials")
         self.total = len(to_process)
 
         for chemsys in to_process:
@@ -150,7 +158,9 @@ class ThermoBuilder(Builder):
 
         sandboxes, entries = item
         with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', message="Failed to guess oxidation states.*")
+            warnings.filterwarnings(
+                "ignore", message="Failed to guess oxidation states.*"
+            )
             entries = self.compatibility.process_entries(entries, clean=True)
 
         # determine chemsys
@@ -197,17 +207,21 @@ class ThermoBuilder(Builder):
 
                 d["thermo"]["entry"] = e.as_dict()
                 d["thermo"]["explanation"] = {
-                    "compatibility": e.energy_adjustments[0].cls["@class"] if len(e.energy_adjustments) > 0 else None,
+                    "compatibility": e.energy_adjustments[0].cls["@class"]
+                    if len(e.energy_adjustments) > 0
+                    else None,
                     "uncorrected_energy": e.uncorrected_energy,
                     "corrected_energy": e.energy,
                     "correction_uncertainty": e.correction_uncertainty,
                     "corrections": [
-                        {"name": c.name,
-                         "description": c.explain,
-                         "value": c.value,
-                         "uncertainty": c.uncertainty}
+                        {
+                            "name": c.name,
+                            "description": c.explain,
+                            "value": c.value,
+                            "uncertainty": c.uncertainty,
+                        }
                         for c in e.energy_adjustments
-                                    ]
+                    ],
                 }
 
                 elsyms = sorted(set([el.symbol for el in e.composition.elements]))
@@ -312,7 +326,7 @@ class ThermoBuilder(Builder):
             self.materials.key,
             "entries",
             "_sbxn",
-            "last_updated"
+            "last_updated",
         ]
         data = list(self.materials.query(properties=fields, criteria=new_q))
         oxi_states_data = {}
@@ -411,6 +425,9 @@ def build_pd(entries):
     for e in entries:
         entries_by_comp[e.composition.reduced_formula].append(e)
 
-    reduced_entries = [sorted(comp_entries,key=lambda e: e.energy_per_atom)[0] for comp_entries in entries_by_comp.values()]
+    reduced_entries = [
+        sorted(comp_entries, key=lambda e: e.energy_per_atom)[0]
+        for comp_entries in entries_by_comp.values()
+    ]
 
     return PhaseDiagram(reduced_entries)
