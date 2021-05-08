@@ -18,7 +18,7 @@ class BondValenceBuilder(MapBuilder):
     Calculate plausible oxidation states from structures.
     """
 
-    def __init__(self, materials, bond_valence, **kwargs):
+    def __init__(self, materials, bond_valence, timeout=14, **kwargs):
 
         self.materials = materials
         self.bond_valence = bond_valence
@@ -27,7 +27,6 @@ class BondValenceBuilder(MapBuilder):
             source=materials,
             target=bond_valence,
             projection=["structure"],
-            timeout=14,
             **kwargs
         )
 
