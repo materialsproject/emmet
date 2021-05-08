@@ -331,6 +331,7 @@ class ThermoBuilder(Builder):
         data = list(self.materials.query(properties=fields, criteria=new_q))
         oxi_states_data = {}
         if self.oxi_states:
+            self.oxi_states.connect()
             task_ids = [t["task_id"] for t in data]
             oxi_states_data = {
                 d["task_id"]: d["bond_valence"]["average_oxidation_states"]
