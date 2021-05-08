@@ -362,7 +362,7 @@ class ThermoBuilder(Builder):
             entry.data["oxide_type"] = oxide_type(Structure.from_dict(d["structure"]))
             entry.data["_sbxn"] = d.get("_sbxn", [])
             entry.data["last_updated"] = d.get("last_updated", datetime.utcnow())
-            entry.data["oxidation_states"] = oxi_state_data.get(d["task_id"], {})
+            entry.data["oxidation_states"] = oxi_states_data.get(d["task_id"], {})
 
             # Add to cache
             elsyms = sorted(set([el.symbol for el in entry.composition.elements]))
