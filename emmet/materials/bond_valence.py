@@ -1,4 +1,6 @@
 import os.path
+import numpy as np
+from itertools import groupby
 from monty.serialization import loadfn
 
 from pymatgen.core.structure import Structure
@@ -50,9 +52,20 @@ class BondValenceBuilder(MapBuilder):
             d["successful"] = True
             s.add_oxidation_state_by_site(valences)
 
+            # construct a dict of average oxi_states for use
+            # by MP2020 corrections. The format should mirror
+            # the output of the first element from Composition.oxi_state_guesses()
+            # e.g. {'Li': 1.0, 'O': -2.0}
+            s_list=[(t.specie.element, t.specie.oxi_state) for t in s.sites]
+            s_list = sorted(s_list, key=lambda x: x[0])
+            oxi_state_dict = {}
+            for c,g in groupby(s_list, key=lambda x: x[0]):
+                oxi_state_dict[str(c)] = np.mean([e[1] for e in g])
+
             d["bond_valence"] = {
                 "possible_species": list(possible_species),
                 "possible_valences": valences,
+                "average_oxidation_states": oxi_state_dict,
                 "method": "BVAnalyzer",
                 "structure": s.as_dict(),
             }
@@ -76,6 +89,7 @@ class BondValenceBuilder(MapBuilder):
                 d["bond_valence"] = {
                     "possible_species": list(possible_species),
                     "possible_valences": valences,
+                    "average_oxidation_states": first_oxi_state_guess,
                     "method": "oxi_state_guesses",
                     "structure": s.as_dict(),
                 }
