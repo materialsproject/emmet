@@ -48,7 +48,7 @@ class ThermoBuilder(Builder):
 
         self.materials = materials
         self.thermo = thermo
-        self.oxi_states = oxi_states
+        self.oxi_states = oxi_states if oxi_states else None
         self.query = query if query else {}
         self.compatibility = (
             compatibility if compatibility else MaterialsProject2020Compatibility()
@@ -333,10 +333,10 @@ class ThermoBuilder(Builder):
         if self.oxi_states:
             task_ids = [t["task_id"] for t in data]
             oxi_states_data = {
-                d["task_id"]: d["average_oxidation_states"]
+                d["task_id"]: d["bond_valence"]["average_oxidation_states"]
                 for d in self.oxi_states.query(
                     properties=["task_id", "bond_valence.average_oxidation_states"],
-                    criteria={"task_id": {"$in": task_ids}},
+                    criteria={"task_id": {"$in": task_ids}, "successful": True},
                 )
             }
 
