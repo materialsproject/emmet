@@ -15,7 +15,7 @@ MODULE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 BOND_VALENCE_SCHEMA = os.path.join(MODULE_DIR, "schema", "bond_valence.json")
 
 
-class BondValenceBuilder(MapBuilder):
+class OxidationStateBuilder(MapBuilder):
     """
     Calculate plausible oxidation states from structures.
     """
