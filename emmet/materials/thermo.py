@@ -324,14 +324,14 @@ class ThermoBuilder(Builder):
             entry.data["_sbxn"] = d.get("_sbxn", [])
             entry.data["last_updated"] = d.get("last_updated", datetime.utcnow())
             entry.data["oxidation_states"] = {}
-            with Timeout():
-                try:
-                    oxi_states = entry.composition.oxi_state_guesses(max_sites=-20)
-                except ValueError:
-                    oxi_states = []
+            # with Timeout():
+            #     try:
+            #         oxi_states = entry.composition.oxi_state_guesses(max_sites=-20)
+            #     except ValueError:
+            #         oxi_states = []
 
-                if oxi_states != []:
-                    entry.data["oxidation_states"] = oxi_states[0]
+            #     if oxi_states != []:
+            #         entry.data["oxidation_states"] = oxi_states[0]
 
             # Add to cache
             elsyms = sorted(set([el.symbol for el in entry.composition.elements]))

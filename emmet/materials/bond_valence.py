@@ -26,13 +26,12 @@ class BondValenceBuilder(MapBuilder):
         super().__init__(
             source=materials,
             target=bond_valence,
-            ufn=self.calc,
             projection=["structure"],
             timeout=14,
             **kwargs
         )
 
-    def calc(self, item):
+    def unary_function(self, item):
         s = Structure.from_dict(item["structure"])
 
         d = {
