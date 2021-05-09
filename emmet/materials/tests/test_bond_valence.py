@@ -2,7 +2,7 @@ import os
 import unittest
 from maggma.stores import JSONStore, MemoryStore
 from maggma.runner import Runner
-from emmet.materials.bond_valence import BondValenceBuilder
+from emmet.materials.bond_valence import OxidationStateBuilder
 
 __author__ = "Matthew Horton"
 __email__ = "mkhorton@lbl.gov"
@@ -11,7 +11,7 @@ module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 test_mats = os.path.join(module_dir, "..", "..", "..", "test_files", "thermo_test.json")
 
 
-class TestBondValence(unittest.TestCase):
+class TestOxidationState(unittest.TestCase):
     def setUp(self):
 
         self.materials = JSONStore(test_mats)
@@ -19,7 +19,7 @@ class TestBondValence(unittest.TestCase):
 
     def test_build(self):
 
-        builder = BondValenceBuilder(self.materials, self.bond_valence)
+        builder = OxidationStateBuilder(self.materials, self.bond_valence)
         runner = Runner([builder])
         runner.run()
 
