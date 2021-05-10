@@ -693,7 +693,7 @@ def upload_latest(mongo_configfile, num_materials):
             run_and_log_info(args=["rclone", "moveto", restore_dir.as_posix(), (full_root_dir / 'raw').as_posix()])
 
             # run compressed cmd
-            compress_cmds = base_cmds + ["compress", "-l", "raw", "-o", "compressed", "--nproc", "4"]
+            compress_cmds = base_cmds + ["compress", "-l", "raw", "-o", "compressed", "--nproc", "32"]
             logger.info(f"Compressing using command [{' '.join(compress_cmds)}]".strip())
             run_and_log_info(args=compress_cmds)
 
