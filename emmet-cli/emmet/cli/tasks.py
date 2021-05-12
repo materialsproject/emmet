@@ -735,6 +735,7 @@ def upload_latest(mongo_configfile, num_materials):
         logger.info("Run flag not supplied...")
     return ReturnCodes.SUCCESS
 
+
 @tasks.command()
 @click.option(
     "--mongo-configfile",
@@ -778,8 +779,8 @@ def clear_uploaded(mongo_configfile):
             if '.tar.gz' in file and "nomad" not in r:
                 files.append(os.path.join(r, file))
     cleaned_files = [file[file.find("block"):][:-7] for file in files]
-    cursor = gdrive_mongo_store.query(criteria={"path": {"$in":cleaned_files}},
-                                      properties={"path":1, "nomad_updated":1})
+    cursor = gdrive_mongo_store.query(criteria={"path": {"$in": cleaned_files}},
+                                      properties={"path": 1, "nomad_updated": 1})
     log = dict()
     for entry in cursor:
         log[entry["path"]] = entry["nomad_updated"]
@@ -805,6 +806,7 @@ def clear_uploaded(mongo_configfile):
             if not os.path.exists(path):
                 logger.error(f"cannot find {path}")
     return ReturnCodes.SUCCESS
+
 
 @tasks.command()
 @sbatch
