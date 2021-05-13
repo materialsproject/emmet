@@ -1112,6 +1112,7 @@ def log_to_mongodb(mongo_configfile: str, task_records: List[GDriveLog], raw_dir
                                          mgclient_config_path=configfile.as_posix())
     gdrive_mongo_store.connect()
     for record in task_records:
+        logger.info(f"Updating/adding record {record.path}")
         try:
             fill_record_data(record, raw_dir, compress_dir)
         except Exception as e:
