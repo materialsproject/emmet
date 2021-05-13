@@ -13,6 +13,7 @@ from emmet.core import SETTINGS
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
+from emmet.core.task import TaskDocument as BaseTaskDocument
 from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types import (
     CalcType,
@@ -98,21 +99,15 @@ class RunStatistics(BaseModel):
     )
 
 
-class TaskDocument(StructureMetadata):
+class TaskDocument(BaseTaskDocument, StructureMetadata):
     """
     Definition of VASP Task Document
     """
 
-    dir_name: str = Field(None, description="The directory for this VASP task")
+    calc_code: ClassVar[str] = "VASP"
     run_stats: Dict[str, RunStatistics] = Field(
         {},
         description="Summary of runtime statisitics for each calcualtion in this task",
-    )
-    completed_at: datetime = Field(
-        None, description="Timestamp for when this task was completed"
-    )
-    last_updated: datetime = Field(
-        None, description="Timestamp for this task document was last updateed"
     )
 
     is_valid: bool = Field(
@@ -127,8 +122,6 @@ class TaskDocument(StructureMetadata):
     orig_inputs: Dict[str, Any] = Field(
         {}, description="Summary of the original VASP inputs"
     )
-    task_id: MPID = Field(None, description="the Task ID For this document")
-    tags: List[str] = Field([], description="Metadata tags for this task document")
 
     calcs_reversed: List[Dict] = Field(
         [], description="The 'raw' calculation docs used to assembled this task"
