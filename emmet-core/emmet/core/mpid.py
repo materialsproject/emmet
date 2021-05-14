@@ -41,7 +41,7 @@ class MPID:
             return self.parts == MPID(other).parts
 
     def __str__(self):
-        return "-".join(self.parts)
+        return "-".join((str(i) for i in self.parts))
 
     def __lt__(self, other: Union["MPID", int, str]):
 
