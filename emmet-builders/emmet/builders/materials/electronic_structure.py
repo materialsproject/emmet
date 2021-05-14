@@ -1,7 +1,6 @@
 from collections import defaultdict
 from math import ceil
 import numpy as np
-from itertools import chain
 
 from emmet.core.electronic_structure import ElectronicStructureDoc
 from emmet.core import SETTINGS
@@ -28,7 +27,7 @@ class ElectronicStructureBuilder(Builder):
         electronic_structure,
         bandstructure_fs,
         dos_fs,
-        mat_chunk_size,
+        chunk_size=10,
         query=None,
         **kwargs,
     ):
@@ -39,13 +38,13 @@ class ElectronicStructureBuilder(Builder):
 
         Individual bandstructures for each of the three conventions are generated.
 
-        tasks (Store) : Store of task documents
-        materials (Store) : Store of materials documents
-        electronic_structure (Store) : Store of electronic structure summary data documents
-        bandstructure_fs (Store) : store of bandstructures
-        dos_fs (Store) : store of DOS
-        mat_chunk_size (int): Chunk size of materials to process simultaneously
-        query (dict): dictionary to limit tasks to be analyzed
+        tasks (Store): Store of task documents
+        materials (Store): Store of materials documents
+        electronic_structure (Store): Store of electronic structure summary data documents
+        bandstructure_fs (Store): Store of bandstructures
+        dos_fs (Store): Store of DOS
+        chunk_size (int): Chunk size to use for processing. Defaults to 10.
+        query (dict): Dictionary to limit materials to be analyzed
         """
 
         self.tasks = tasks
@@ -53,16 +52,15 @@ class ElectronicStructureBuilder(Builder):
         self.electronic_structure = electronic_structure
         self.bandstructure_fs = bandstructure_fs
         self.dos_fs = dos_fs
-        self.mat_chunk_size = mat_chunk_size
+        self.chunk_size = chunk_size
         self.query = query if query else {}
 
         super().__init__(
             sources=[tasks, materials, bandstructure_fs, dos_fs],
             targets=[electronic_structure],
+            chunk_size=chunk_size,
             **kwargs,
         )
-
-        self.chunk_size = 1
 
     def prechunk(self, number_splits: int):
         """
@@ -101,23 +99,17 @@ class ElectronicStructureBuilder(Builder):
 
         mats = [mat for mat in mats_set]
 
-        mats_chunked = [
-            mats[i : i + self.mat_chunk_size]
-            for i in range(0, len(mats), self.mat_chunk_size)
-        ]
-
         self.logger.info(
             "Processing {} materials for electronic structure".format(len(mats))
         )
 
-        self.total = len(mats_chunked)
+        self.total = len(mats)
 
-        for chunk in mats_chunked:
-            self.logger.info("Handling materials: {}".format(chunk))
-            mats = self._update_materials_doc(chunk)
-            yield mats
+        for mat in mats:
+            mat = self._update_materials_doc(mat)
+            yield mat
 
-    def process_item(self, mats):
+    def process_item(self, mat):
         """
         Process the band structures and dos data.
 
@@ -128,84 +120,73 @@ class ElectronicStructureBuilder(Builder):
             (dict): electronic_structure document
         """
 
-        d_list = []
+        structure = Structure.from_dict(mat["structure"])
 
-        for mat in mats:
+        self.logger.info("Processing: {}".format(mat[self.materials.key]))
 
-            structure = Structure.from_dict(mat["structure"])
+        dos = None
+        bs = {}
 
-            self.logger.info("Processing: {}".format(mat[self.materials.key]))
-
-            dos = None
-            bs = {}
-
-            for bs_type, bs_entry in mat["bandstructure"].items():
-                if bs_entry.get("object", None) is not None:
-                    bs[bs_type] = (
-                        {
-                            bs_entry["task_id"]: BandStructureSymmLine.from_dict(
-                                bs_entry["object"]
-                            )
-                        }
-                        if bs_entry
-                        else None
-                    )
-
-            if mat["dos"]:
-                if mat["dos"]["object"] is not None:
-                    self.logger.info("Processing density of states")
-                    dos = {
-                        mat["dos"]["task_id"]: CompleteDos.from_dict(
-                            mat["dos"]["object"]
+        for bs_type, bs_entry in mat["bandstructure"].items():
+            if bs_entry.get("object", None) is not None:
+                bs[bs_type] = (
+                    {
+                        bs_entry["task_id"]: BandStructureSymmLine.from_dict(
+                            bs_entry["object"]
                         )
                     }
-
-            if bs:
-                self.logger.info(
-                    "Processing band structure types: {}".format(
-                        [bs_type for bs_type, bs_entry in bs.items() if bs_entry]
-                    )
+                    if bs_entry
+                    else None
                 )
 
-            if dos is None:
-                doc = ElectronicStructureDoc.from_structure(
-                    material_id=mat[self.materials.key],
-                    calc_id=mat["other"]["task_id"],
-                    structure=structure,
-                    band_gap=mat["other"]["band_gap"],
-                    cbm=mat["other"]["cbm"],
-                    vbm=mat["other"]["vbm"],
-                    efermi=mat["other"]["efermi"],
-                    is_gap_direct=mat["other"]["is_gap_direct"],
-                    is_metal=mat["other"]["is_metal"],
-                    magnetic_ordering=mat["other"]["magnetic_ordering"],
+        if mat["dos"]:
+            if mat["dos"]["object"] is not None:
+                self.logger.info("Processing density of states")
+                dos = {
+                    mat["dos"]["task_id"]: CompleteDos.from_dict(mat["dos"]["object"])
+                }
+
+        if bs:
+            self.logger.info(
+                "Processing band structure types: {}".format(
+                    [bs_type for bs_type, bs_entry in bs.items() if bs_entry]
                 )
-            else:
-                doc = ElectronicStructureDoc.from_bsdos(
-                    material_id=mat[self.materials.key],
-                    structure=structure,
-                    dos=dos,
-                    is_gap_direct=mat["other"]["is_gap_direct"],
-                    is_metal=mat["other"]["is_metal"],
-                    **bs,
-                )
+            )
 
-            doc = doc.dict()
+        if dos is None:
+            doc = ElectronicStructureDoc.from_structure(
+                material_id=mat[self.materials.key],
+                calc_id=mat["other"]["task_id"],
+                structure=structure,
+                band_gap=mat["other"]["band_gap"],
+                cbm=mat["other"]["cbm"],
+                vbm=mat["other"]["vbm"],
+                efermi=mat["other"]["efermi"],
+                is_gap_direct=mat["other"]["is_gap_direct"],
+                is_metal=mat["other"]["is_metal"],
+                magnetic_ordering=mat["other"]["magnetic_ordering"],
+            )
+        else:
+            doc = ElectronicStructureDoc.from_bsdos(
+                material_id=mat[self.materials.key],
+                structure=structure,
+                dos=dos,
+                is_gap_direct=mat["other"]["is_gap_direct"],
+                is_metal=mat["other"]["is_metal"],
+                **bs,
+            )
 
-            doc["structure"] = structure.as_dict()
-
-            d_list.append(doc)
-
-        return d_list
+        return doc.dict()
 
     def update_targets(self, items):
         """
         Inserts electronic structure documents into the electronic_structure collection
 
         Args:
-            items ([[Dict]]): A list of ElectronicStructureDoc dictionaries to update
+            items ([Dict]): A list of ElectronicStructureDoc dictionaries to update
         """
-        items = list(filter(None, chain.from_iterable(items)))
+
+        items = list(filter(None, items))
 
         if len(items) > 0:
             self.logger.info("Updating {} electronic structure docs".format(len(items)))
@@ -213,10 +194,10 @@ class ElectronicStructureBuilder(Builder):
         else:
             self.logger.info("No electronic structure docs to update")
 
-    def _update_materials_doc(self, mat_list):
+    def _update_materials_doc(self, mat_id):
         # find bs type for each task in task_type and store each different bs object
 
-        mats = self.materials.query(
+        mat = self.materials.query_one(
             properties=[
                 self.materials.key,
                 "structure",
@@ -224,178 +205,172 @@ class ElectronicStructureBuilder(Builder):
                 "task_types",
                 self.materials.last_updated_field,
             ],
-            criteria={self.materials.key: {"$in": mat_list}},
+            criteria={self.materials.key: mat_id},
         )
 
-        for mat in mats:
+        mat["dos"] = {}
+        mat["bandstructure"] = defaultdict(dict)
+        mat["other"] = {}
 
-            mat["dos"] = {}
-            mat["bandstructure"] = defaultdict(dict)
-            mat["other"] = {}
+        bs_calcs = defaultdict(list)
+        dos_calcs = []
+        other_calcs = []
 
-            bs_calcs = defaultdict(list)
-            dos_calcs = []
-            other_calcs = []
+        for task_id in mat["task_types"].keys():
 
-            for task_id in mat["task_types"].keys():
+            # Handle all line-mode tasks
+            if "NSCF Line" in mat["task_types"][task_id]:
 
-                # Handle all line-mode tasks
-                if "NSCF Line" in mat["task_types"][task_id]:
+                bs_type = None
 
-                    bs_type = None
+                task_query = self.tasks.query_one(
+                    properties=[
+                        "calcs_reversed",
+                        "last_updated",
+                        "input.is_hubbard",
+                        "orig_inputs.kpoints",
+                        "input.parameters",
+                        "input.structure",
+                    ],
+                    criteria={"task_id": str(task_id)},
+                )
 
-                    task_query = self.tasks.query_one(
-                        properties=[
-                            "calcs_reversed",
-                            "last_updated",
-                            "input.is_hubbard",
-                            "orig_inputs.kpoints",
-                            "input.parameters",
-                            "input.structure",
-                        ],
-                        criteria={"task_id": str(task_id)},
+                fs_id = str(task_query["calcs_reversed"][0]["bandstructure_fs_id"])
+
+                structure = Structure.from_dict(task_query["input"]["structure"])
+
+                kpoints = task_query["orig_inputs"]["kpoints"]
+                labels_dict = {
+                    label: point
+                    for label, point in zip(kpoints["labels"], kpoints["kpoints"])
+                    if label is not None
+                }
+
+                bs_type = self._obtain_path_type(labels_dict, structure)
+
+                if bs_type is None:
+
+                    bs_dict = self.bandstructure_fs.query_one(
+                        {self.bandstructure_fs.key: str(task_id)}
                     )
 
-                    fs_id = str(task_query["calcs_reversed"][0]["bandstructure_fs_id"])
+                    if bs_dict is not None:
 
-                    structure = Structure.from_dict(task_query["input"]["structure"])
+                        bs = BandStructureSymmLine.from_dict(bs_dict["data"])
 
-                    kpoints = task_query["orig_inputs"]["kpoints"]
-                    labels_dict = {
-                        label: point
-                        for label, point in zip(kpoints["labels"], kpoints["kpoints"])
-                        if label is not None
-                    }
+                        bs_type = self._obtain_path_type(bs.labels_dict, bs.structure)
 
-                    bs_type = self._obtain_path_type(labels_dict, structure)
+                is_hubbard = task_query["input"]["is_hubbard"]
+                nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
+                lu_dt = task_query["last_updated"]
 
-                    if bs_type is None:
-
-                        bs_dict = self.bandstructure_fs.query_one(
-                            {self.bandstructure_fs.key: str(task_id)}
-                        )
-
-                        if bs_dict is not None:
-
-                            bs = BandStructureSymmLine.from_dict(bs_dict["data"])
-
-                            bs_type = self._obtain_path_type(
-                                bs.labels_dict, bs.structure
-                            )
-
-                    is_hubbard = task_query["input"]["is_hubbard"]
-                    nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
-                    lu_dt = task_query["last_updated"]
-
-                    if bs_type is not None:
-                        bs_calcs[bs_type].append(
-                            {
-                                "fs_id": fs_id,
-                                "task_id": task_id,
-                                "is_hubbard": int(is_hubbard),
-                                "nkpoints": int(nkpoints),
-                                "updated_on": lu_dt,
-                            }
-                        )
-
-                # Handle uniform tasks
-                if "NSCF Uniform" in mat["task_types"][task_id]:
-                    task_query = self.tasks.query_one(
-                        properties=[
-                            "calcs_reversed",
-                            "last_updated",
-                            "input.is_hubbard",
-                            "orig_inputs.kpoints",
-                            "input.parameters",
-                        ],
-                        criteria={"task_id": str(task_id)},
-                    )
-
-                    fs_id = str(task_query["calcs_reversed"][0]["dos_fs_id"])
-
-                    is_hubbard = task_query["input"]["is_hubbard"]
-
-                    if (
-                        task_query["orig_inputs"]["kpoints"]["generation_style"]
-                        == "Monkhorst"
-                    ):
-                        nkpoints = np.prod(
-                            task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
-                        )
-                    else:
-                        nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
-
-                    nedos = task_query["input"]["parameters"]["NEDOS"]
-                    lu_dt = task_query["last_updated"]
-
-                    dos_calcs.append(
+                if bs_type is not None:
+                    bs_calcs[bs_type].append(
                         {
                             "fs_id": fs_id,
                             "task_id": task_id,
                             "is_hubbard": int(is_hubbard),
                             "nkpoints": int(nkpoints),
-                            "nedos": int(nedos),
                             "updated_on": lu_dt,
                         }
                     )
 
-                # Handle static and structure opt tasks
-                if "Static" or "Structure Optimization" in mat["task_types"][task_id]:
-                    task_query = self.tasks.query_one(
-                        properties=[
-                            "last_updated",
-                            "input.is_hubbard",
-                            "orig_inputs.kpoints",
-                            "calcs_reversed",
-                            "input.structure",
-                        ],
-                        criteria={"task_id": str(task_id)},
+            # Handle uniform tasks
+            if "NSCF Uniform" in mat["task_types"][task_id]:
+                task_query = self.tasks.query_one(
+                    properties=[
+                        "calcs_reversed",
+                        "last_updated",
+                        "input.is_hubbard",
+                        "orig_inputs.kpoints",
+                        "input.parameters",
+                    ],
+                    criteria={"task_id": str(task_id)},
+                )
+
+                fs_id = str(task_query["calcs_reversed"][0]["dos_fs_id"])
+
+                is_hubbard = task_query["input"]["is_hubbard"]
+
+                if (
+                    task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Monkhorst"
+                ):
+                    nkpoints = np.prod(
+                        task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
                     )
+                else:
+                    nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
 
-                    structure = Structure.from_dict(task_query["input"]["structure"])
+                nedos = task_query["input"]["parameters"]["NEDOS"]
+                lu_dt = task_query["last_updated"]
 
-                    other_mag_ordering = CollinearMagneticStructureAnalyzer(
-                        structure
-                    ).ordering
+                dos_calcs.append(
+                    {
+                        "fs_id": fs_id,
+                        "task_id": task_id,
+                        "is_hubbard": int(is_hubbard),
+                        "nkpoints": int(nkpoints),
+                        "nedos": int(nedos),
+                        "updated_on": lu_dt,
+                    }
+                )
 
-                    is_hubbard = task_query["input"]["is_hubbard"]
+            # Handle static and structure opt tasks
+            if "Static" or "Structure Optimization" in mat["task_types"][task_id]:
+                task_query = self.tasks.query_one(
+                    properties=[
+                        "last_updated",
+                        "input.is_hubbard",
+                        "orig_inputs.kpoints",
+                        "calcs_reversed",
+                        "input.structure",
+                    ],
+                    criteria={"task_id": str(task_id)},
+                )
 
-                    last_calc = task_query["calcs_reversed"][-1]
+                structure = Structure.from_dict(task_query["input"]["structure"])
 
-                    if last_calc["input"]["kpoints"]["generation_style"] == "Monkhorst":
-                        nkpoints = np.prod(
-                            last_calc["input"]["kpoints"]["kpoints"][0], axis=0
-                        )
-                    else:
-                        nkpoints = last_calc["input"]["kpoints"]["nkpoints"]
+                other_mag_ordering = CollinearMagneticStructureAnalyzer(
+                    structure
+                ).ordering
 
-                    lu_dt = task_query["last_updated"]
+                is_hubbard = task_query["input"]["is_hubbard"]
 
-                    other_calcs.append(
-                        {
-                            "is_static": True
-                            if "Static" in mat["task_types"][task_id]
-                            else False,
-                            "task_id": task_id,
-                            "is_hubbard": int(is_hubbard),
-                            "nkpoints": int(nkpoints),
-                            "magnetic_ordering": other_mag_ordering,
-                            "updated_on": lu_dt,
-                            "calcs_reversed": task_query["calcs_reversed"],
-                        }
+                last_calc = task_query["calcs_reversed"][-1]
+
+                if last_calc["input"]["kpoints"]["generation_style"] == "Monkhorst":
+                    nkpoints = np.prod(
+                        last_calc["input"]["kpoints"]["kpoints"][0], axis=0
                     )
+                else:
+                    nkpoints = last_calc["input"]["kpoints"]["nkpoints"]
 
-            updated_materials_docs = self._obtain_path_type(
-                bs_calcs, dos_calcs, other_calcs
-            )
+                lu_dt = task_query["last_updated"]
 
-        return updated_materials_docs
+                other_calcs.append(
+                    {
+                        "is_static": True
+                        if "Static" in mat["task_types"][task_id]
+                        else False,
+                        "task_id": task_id,
+                        "is_hubbard": int(is_hubbard),
+                        "nkpoints": int(nkpoints),
+                        "magnetic_ordering": other_mag_ordering,
+                        "updated_on": lu_dt,
+                        "calcs_reversed": task_query["calcs_reversed"],
+                    }
+                )
+
+        updated_materials_doc = self._obtain_blessed_calculations(
+            mat, bs_calcs, dos_calcs, other_calcs
+        )
+
+        return updated_materials_doc
 
     def _obtain_blessed_calculations(
         self, materials_doc, bs_calcs, dos_calcs, other_calcs
     ):
-
-        updated_materials_docs = []
 
         bs_types = ["setyawan_curtarolo", "hinuma", "latimer_munro"]
 
@@ -481,9 +456,7 @@ class ElectronicStructureBuilder(Builder):
                     else:
                         materials_doc["other"][prop] = task_output_data[prop]
 
-            updated_materials_docs.append(materials_doc)
-
-        return updated_materials_docs
+        return materials_doc
 
     @staticmethod
     def _obtain_path_type(
