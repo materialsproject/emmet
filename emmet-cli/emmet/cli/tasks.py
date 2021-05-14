@@ -695,7 +695,6 @@ def upload_latest(mongo_configfile, num_materials):
                            ["restore", "--inputfile", full_emmet_input_file_path.as_posix(), "-f", "*"]
             run_and_log_info(args=restore_cmds)
             logger.info(f"Restoring using command [{' '.join(restore_cmds)}]")
-            # logger.info("DBUGGING, NOT EXECUTING")
 
             # move restored content to directory/raw
             run_and_log_info(args=["rclone", "moveto", restore_dir.as_posix(), (full_root_dir / 'raw').as_posix()])
