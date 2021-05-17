@@ -176,6 +176,18 @@ class ElectronicStructureBuilder(Builder):
                 **bs,
             )
 
+        for bs_type, bs_summary in doc.bandstructure:
+            if bs_summary is not None:
+                bgap_diff = [doc.band_gap - doc]
+
+        if any(abs(gap) > 0.25 for gap in bgap_diff):
+            if doc.warnings is None:
+                doc.warnings = []
+            doc.warnings.append(
+                "Absolute difference between blessed band gap and at least one\
+                 line-mode calculation band gap is larger than 0.25 eV."
+            )
+
         return doc.dict()
 
     def update_targets(self, items):
