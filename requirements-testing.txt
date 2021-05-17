@@ -6,3 +6,4 @@ pydocstyle==5.0.2
 flake8==3.7.9
 mypy==0.770
 mypy-extensions==0.4.3
+seekpath==2.0.1
