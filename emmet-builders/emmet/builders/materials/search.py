@@ -1,3 +1,6 @@
+from emmet.core.search import SearchDoc
+from emmet.core.mpid import MPID
+from emmet.core.utils import jsanitize
 from maggma.builders import Builder
 from collections import defaultdict
 from math import ceil
@@ -7,7 +10,6 @@ from maggma.utils import grouper
 class SearchBuilder(Builder):
     def __init__(
         self,
-        mat_chunk_size,
         materials,
         thermo,
         xas,
@@ -22,11 +24,11 @@ class SearchBuilder(Builder):
         surfaces,
         eos,
         search,
+        chunk_size=100,
         query=None,
-        **kwargs
+        **kwargs,
     ):
 
-        self.mat_chunk_size = mat_chunk_size
         self.materials = materials
         self.thermo = thermo
         self.xas = xas
@@ -41,6 +43,7 @@ class SearchBuilder(Builder):
         self.surfaces = surfaces
         self.eos = eos
         self.search = search
+        self.chunk_size = chunk_size
         self.query = query if query else {}
 
         super().__init__(
@@ -60,10 +63,9 @@ class SearchBuilder(Builder):
                 eos,
             ],
             targets=[search],
-            **kwargs
+            chunk_size=chunk_size,
+            **kwargs,
         )
-
-        self.chunk_size = 1
 
     def get_items(self):
         """
@@ -84,51 +86,30 @@ class SearchBuilder(Builder):
 
         search_list = [key for key in search_set]
 
-        chunk_list = [
-            search_list[i : i + self.mat_chunk_size]
-            for i in range(0, len(search_list), self.mat_chunk_size)
-        ]
-        self.total = len(chunk_list)
+        self.total = len(search_list)
 
-        self.logger.debug(
-            "Processing {} materials in {} chunks".format(
-                len(search_list), len(chunk_list)
-            )
-        )
+        self.logger.debug("Processing {} materials.".format(self.total))
 
-        for entry in chunk_list:
-
-            query = {"$in": entry}
+        for entry in search_list:
 
             data = {
-                "materials": list(self.materials.query({self.materials.key: query})),
-                "thermo": list(self.thermo.query({self.thermo.key: query})),
-                "xas": list(self.xas.query({self.xas.key: query})),
-                "grain_boundaries": list(
-                    self.grain_boundaries.query({self.grain_boundaries.key: query})
-                ),
-                "electronic_structure": list(
-                    self.electronic_structure.query(
-                        {self.electronic_structure.key: query}
-                    )
-                ),
-                "magnetism": list(self.magnetism.query({self.magnetism.key: query})),
-                "elasticity": list(self.elasticity.query({self.elasticity.key: query})),
-                "dielectric": list(self.dielectric.query({self.dielectric.key: query})),
-                "phonon": list(
-                    self.phonon.query({self.phonon.key: query}, [self.phonon.key])
-                ),
+                "materials": list(self.materials.query({self.materials.key: entry})),
+                "thermo": list(self.thermo.query({self.thermo.key: entry})),
+                "xas": list(self.xas.query({self.xas.key: entry})),
+                "grain_boundaries": list(self.grain_boundaries.query({self.grain_boundaries.key: entry})),
+                "electronic_structure": list(self.electronic_structure.query({self.electronic_structure.key: entry})),
+                "magnetism": list(self.magnetism.query({self.magnetism.key: entry})),
+                "elasticity": list(self.elasticity.query({self.elasticity.key: entry})),
+                "dielectric": list(self.dielectric.query({self.dielectric.key: entry})),
+                "phonon": list(self.phonon.query({self.phonon.key: entry}, [self.phonon.key])),
                 "insertion_electrodes": list(
                     self.insertion_electrodes.query(
-                        {self.insertion_electrodes.key: query},
-                        [self.insertion_electrodes.key],
+                        {self.insertion_electrodes.key: entry}, [self.insertion_electrodes.key]
                     )
                 ),
-                "surface_properties": list(
-                    self.surfaces.query({self.surfaces.key: query})
-                ),
-                "substrates": list(self.surfaces.query({self.substrates.key: query})),
-                "eos": list(self.eos.query({self.eos.key: query}, [self.eos.key])),
+                "surface_properties": list(self.surfaces.query({self.surfaces.key: entry})),
+                "substrates": list(self.surfaces.query({self.substrates.key: entry})),
+                "eos": list(self.eos.query({self.eos.key: entry}, [self.eos.key])),
             }
 
             yield data
@@ -164,7 +145,6 @@ class SearchBuilder(Builder):
             "density",
             "density_atomic",
             "symmetry",
-            "material_id",
             "structure",
             "deprecated",
         ]
@@ -175,6 +155,8 @@ class SearchBuilder(Builder):
 
             ids.append(doc[self.materials.key])
             d[ids[-1]] = defaultdict(dict)
+            d[ids[-1]]["material_id"] = MPID(doc["material_id"])
+
             for field in materials_fields:
                 d[ids[-1]][field] = doc[field]
 
@@ -225,20 +207,11 @@ class SearchBuilder(Builder):
 
                     d[id]["has_props"].add("grain_boundaries")
 
-                    d[id]["grain_boundaries"].append(
-                        {field: doc[field] for field in gb_fields}
-                    )
+                    d[id]["grain_boundaries"].append({field: doc[field] for field in gb_fields})
 
             # Electronic Structure + Bandstructure + DOS
 
-            es_fields = [
-                "band_gap",
-                "efermi",
-                "cbm",
-                "vbm",
-                "is_gap_direct",
-                "is_metal",
-            ]
+            es_fields = ["band_gap", "efermi", "cbm", "vbm", "is_gap_direct", "is_metal"]
 
             for doc in item["electronic_structure"]:
                 if doc[self.electronic_structure.key] == id:
@@ -298,12 +271,7 @@ class SearchBuilder(Builder):
 
             # Dielectric and Piezo
 
-            dielectric_fields = [
-                "e_total",
-                "e_ionic",
-                "e_static",
-                "n",
-            ]
+            dielectric_fields = ["e_total", "e_ionic", "e_static", "n"]
 
             piezo_fields = ["e_ij_max"]
 
@@ -369,6 +337,9 @@ class SearchBuilder(Builder):
 
             d[id]["has_props"] = list(d[id]["has_props"])
 
+        for mpid in d:
+            d[mpid] = SearchDoc(**d[mpid])
+
         return d
 
     def update_targets(self, items):
@@ -380,10 +351,10 @@ class SearchBuilder(Builder):
         """
         items = list(filter(None, items))
 
-        if len(items) > 0:
-            self.logger.info("Inserting {} search docs".format(len(items[0])))
+        docs = list([doc.dict(exclude_none=True) for doc in items[0].values()])
 
-            docs = list(items[0].values())
-            self.search.update(docs)
+        if len(items) > 0:
+            self.logger.info("Inserting {} search docs".format(len(docs)))
+            self.search.update(docs=jsanitize(docs, allow_bson=True))
         else:
-            self.logger.info("No search entries to copy")
+            self.logger.info("No search entries to update")
