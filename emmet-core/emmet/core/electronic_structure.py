@@ -20,16 +20,12 @@ from pymatgen.electronic_structure.core import OrbitalType, Spin
 from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pymatgen.analysis.magnetism.analyzer import (
-    CollinearMagneticStructureAnalyzer,
-    Ordering,
-)
+from pymatgen.analysis.magnetism.analyzer import CollinearMagneticStructureAnalyzer, Ordering
 
 
 class ElectronicStructureBaseData(BaseModel):
     task_id: Union[MPID, int] = Field(
-        ...,
-        description="The source calculation (task) ID for the electronic structure data.",
+        ..., description="The source calculation (task) ID for the electronic structure data."
     )
 
     band_gap: float = Field(..., description="Band gap energy in eV.")
@@ -46,48 +42,37 @@ class ElectronicStructureSummary(ElectronicStructureBaseData):
 
     is_metal: bool = Field(..., description="Whether the material is a metal.")
 
-    magnetic_ordering: Union[str, Ordering] = Field(
-        ..., description="Magnetic ordering of the calculation."
-    )
+    magnetic_ordering: Union[str, Ordering] = Field(..., description="Magnetic ordering of the calculation.")
 
 
 class BandStructureSummaryData(ElectronicStructureSummary):
     nbands: float = Field(..., description="Number of bands.")
 
-    equivalent_labels: Dict = Field(
-        ..., description="Equivalent k-point labels in other k-path conventions."
-    )
+    equivalent_labels: Dict = Field(..., description="Equivalent k-point labels in other k-path conventions.")
 
     direct_gap: float = Field(..., description="Direct gap energy in eV.")
 
 
 class DosSummaryData(ElectronicStructureBaseData):
-    spin_polarization: float = Field(
-        None, description="Spin polarization at the fermi level."
-    )
+    spin_polarization: float = Field(None, description="Spin polarization at the fermi level.")
 
 
 class BandstructureData(BaseModel):
     setyawan_curtarolo: BandStructureSummaryData = Field(
-        None,
-        description="Band structure summary data using the Setyawan-Curtarolo path convention.",
+        None, description="Band structure summary data using the Setyawan-Curtarolo path convention."
     )
 
     hinuma: BandStructureSummaryData = Field(
-        None,
-        description="Band structure summary data using the Hinuma et al. path convention.",
+        None, description="Band structure summary data using the Hinuma et al. path convention."
     )
 
     latimer_munro: BandStructureSummaryData = Field(
-        None,
-        description="Band structure summary data using the Latimer-Munro path convention.",
+        None, description="Band structure summary data using the Latimer-Munro path convention."
     )
 
 
 class DosData(BaseModel):
-    total: Dict[Union[Spin, str], DosSummaryData] = Field(
-        None, description="Total DOS summary data."
-    )
+    total: Dict[Union[Spin, str], DosSummaryData] = Field(None, description="Total DOS summary data.")
 
     elemental: Dict[
         Element,
@@ -95,22 +80,13 @@ class DosData(BaseModel):
             Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
             Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
         ],
-    ] = Field(
-        None,
-        description="Band structure summary data using the Hinuma et al. path convention.",
-    )
+    ] = Field(None, description="Band structure summary data using the Hinuma et al. path convention.")
 
     orbital: Dict[
-        Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
-        Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
-    ] = Field(
-        None,
-        description="Band structure summary data using the Latimer-Munro path convention.",
-    )
+        Union[Literal["total", "s", "p", "d", "f"], OrbitalType], Dict[Union[Literal["1", "-1"], Spin], DosSummaryData]
+    ] = Field(None, description="Band structure summary data using the Latimer-Munro path convention.")
 
-    magnetic_ordering: Union[str, Ordering] = Field(
-        None, description="Magnetic ordering of the calculation."
-    )
+    magnetic_ordering: Union[str, Ordering] = Field(None, description="Magnetic ordering of the calculation.")
 
 
 T = TypeVar("T", bound="ElectronicStructureDoc")
@@ -121,25 +97,22 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     Definition for a core Electronic Structure Document
     """
 
-    bandstructure: BandstructureData = Field(
-        None, description="Band structure data for the material."
-    )
+    bandstructure: BandstructureData = Field(None, description="Band structure data for the material.")
 
     dos: DosData = Field(None, description="Density of states data for the material.")
 
     last_updated: datetime = Field(
-        description="Timestamp for when this document was last updated",
-        default_factory=datetime.utcnow,
+        description="Timestamp for when this document was last updated", default_factory=datetime.utcnow
     )
 
     @classmethod
     def from_bsdos(  # type: ignore[override]
         cls: Type[T],
         material_id: Union[MPID, int],
-        structure: Structure,
         dos: Dict[Union[MPID, int], CompleteDos],
         is_gap_direct: bool,
         is_metal: bool,
+        structures: Dict[Union[MPID, int], Structure] = None,
         setyawan_curtarolo: Dict[Union[MPID, int], BandStructureSymmLine] = None,
         hinuma: Dict[Union[MPID, int], BandStructureSymmLine] = None,
         latimer_munro: Dict[Union[MPID, int], BandStructureSymmLine] = None,
@@ -165,9 +138,12 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         is_gap_direct = is_gap_direct
         is_metal = is_metal
 
-        dos_mag_ordering = CollinearMagneticStructureAnalyzer(
-            dos_obj.structure
-        ).ordering
+        structure = dos_obj.structure
+
+        if structures is not None and structures[dos_task]:
+            structure = structures[dos_task]
+
+        dos_mag_ordering = CollinearMagneticStructureAnalyzer(structure).ordering
 
         summary_band_gap = dos_obj.get_gap()
         summary_cbm, summary_vbm = dos_obj.get_cbm_vbm()
@@ -247,20 +223,17 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     )
 
         #  -- Process band structure data
-        bs_data = {
-            "setyawan_curtarolo": setyawan_curtarolo,
-            "hinuma": hinuma,
-            "latimer_munro": latimer_munro,
-        }
+        bs_data = {"setyawan_curtarolo": setyawan_curtarolo, "hinuma": hinuma, "latimer_munro": latimer_munro}
 
         for bs_type, bs_input in bs_data.items():
 
             if bs_input is not None:
                 bs_task, bs = list(bs_input.items())[0]
 
-                bs_mag_ordering = CollinearMagneticStructureAnalyzer(
-                    bs.structure
-                ).ordering
+                if structures is not None and structures[bs_task]:
+                    bs_mag_ordering = CollinearMagneticStructureAnalyzer(structures[bs_task]).ordering
+                else:
+                    bs_mag_ordering = CollinearMagneticStructureAnalyzer(bs.structure).ordering
 
                 gap_dict = bs.get_band_gap()
                 is_metal = bs.is_metal()
@@ -281,36 +254,15 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 nbands = bs.nb_bands
 
                 # - Get equivalent labels between different conventions
-                hskp = HighSymmKpath(
-                    bs.structure,
-                    path_type="all",
-                    symprec=0.1,
-                    angle_tolerance=5,
-                    atol=1e-5,
-                )
+                hskp = HighSymmKpath(bs.structure, path_type="all", symprec=0.1, angle_tolerance=5, atol=1e-5)
                 equivalent_labels = hskp.equiv_labels
 
                 if bs_type == "latimer_munro":
-                    gen_labels = set(
-                        [
-                            label
-                            for label in equivalent_labels["latimer_munro"][
-                                "setyawan_curtarolo"
-                            ]
-                        ]
-                    )
-                    kpath_labels = set(
-                        [
-                            kpoint.label
-                            for kpoint in bs.kpoints
-                            if kpoint.label is not None
-                        ]
-                    )
+                    gen_labels = set([label for label in equivalent_labels["latimer_munro"]["setyawan_curtarolo"]])
+                    kpath_labels = set([kpoint.label for kpoint in bs.kpoints if kpoint.label is not None])
 
                     if not gen_labels.issubset(kpath_labels):
-                        new_structure = SpacegroupAnalyzer(
-                            bs.structure
-                        ).get_primitive_standard_structure(
+                        new_structure = SpacegroupAnalyzer(bs.structure).get_primitive_standard_structure(
                             international_monoclinic=False
                         )
 
