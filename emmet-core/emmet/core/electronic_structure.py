@@ -1,9 +1,11 @@
 """ Core definition of an Electronic Structure """
 from __future__ import annotations
 from collections import defaultdict
+from math import isnan
 
 from datetime import datetime
 from typing import Dict, Type, TypeVar, Union
+from typing_extensions import Literal
 
 from pydantic import BaseModel, Field
 from pymatgen.core import Structure
@@ -56,6 +58,14 @@ class BandStructureSummaryData(ElectronicStructureSummary):
         ..., description="Equivalent k-point labels in other k-path conventions."
     )
 
+    direct_gap: float = Field(..., description="Direct gap energy in eV.")
+
+
+class DosSummaryData(ElectronicStructureBaseData):
+    spin_polarization: float = Field(
+        None, description="Spin polarization at the fermi level."
+    )
+
 
 class BandstructureData(BaseModel):
     setyawan_curtarolo: BandStructureSummaryData = Field(
@@ -75,14 +85,15 @@ class BandstructureData(BaseModel):
 
 
 class DosData(BaseModel):
-    total: Dict[Union[Spin, str], ElectronicStructureBaseData] = Field(
+    total: Dict[Union[Spin, str], DosSummaryData] = Field(
         None, description="Total DOS summary data."
     )
 
     elemental: Dict[
         Element,
         Dict[
-            Union[str, OrbitalType], Dict[Union[Spin, str], ElectronicStructureBaseData]
+            Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
+            Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
         ],
     ] = Field(
         None,
@@ -90,7 +101,8 @@ class DosData(BaseModel):
     )
 
     orbital: Dict[
-        Union[str, OrbitalType], Dict[Union[Spin, str], ElectronicStructureBaseData]
+        Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
+        Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
     ] = Field(
         None,
         description="Band structure summary data using the Latimer-Munro path convention.",
@@ -173,8 +185,20 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             band_gap = dos_obj.get_gap(spin=spin)
             (cbm, vbm) = dos_obj.get_cbm_vbm(spin=spin)
 
-            dos_data["total"][spin] = ElectronicStructureBaseData(
-                task_id=dos_task, band_gap=band_gap, cbm=cbm, vbm=vbm, efermi=dos_efermi
+            try:
+                spin_polarization = dos_obj.spin_polarization
+                if isnan(spin_polarization):
+                    spin_polarization = None
+            except KeyError:
+                spin_polarization = None
+
+            dos_data["total"][spin] = DosSummaryData(
+                task_id=dos_task,
+                band_gap=band_gap,
+                cbm=cbm,
+                vbm=vbm,
+                efermi=dos_efermi,
+                spin_polarization=spin_polarization,
             )
 
             # - Process total orbital projection data
@@ -184,12 +208,15 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
                 (cbm, vbm) = tot_orb_dos[orbital].get_cbm_vbm(spin=spin)
 
-                dos_data["orbital"][orbital][spin] = ElectronicStructureBaseData(
+                spin_polarization = None
+
+                dos_data["orbital"][orbital][spin] = DosSummaryData(
                     task_id=dos_task,
                     band_gap=band_gap,
                     cbm=cbm,
                     vbm=vbm,
                     efermi=dos_efermi,
+                    spin_polarization=spin_polarization,
                 )
 
         # - Process element and element orbital projection data
@@ -208,14 +235,15 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     band_gap = proj_dos[label].get_gap(spin=spin)
                     (cbm, vbm) = proj_dos[label].get_cbm_vbm(spin=spin)
 
-                    dos_data["elemental"][ele][orbital][
-                        spin
-                    ] = ElectronicStructureBaseData(
+                    spin_polarization = None
+
+                    dos_data["elemental"][ele][orbital][spin] = DosSummaryData(
                         task_id=dos_task,
                         band_gap=band_gap,
                         cbm=cbm,
                         vbm=vbm,
                         efermi=dos_efermi,
+                        spin_polarization=spin_polarization,
                     )
 
         #  -- Process band structure data
@@ -236,6 +264,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
                 gap_dict = bs.get_band_gap()
                 is_metal = bs.is_metal()
+                direct_gap = bs.get_direct_band_gap()
 
                 if is_metal:
                     band_gap = 0.0
@@ -262,7 +291,14 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 equivalent_labels = hskp.equiv_labels
 
                 if bs_type == "latimer_munro":
-                    gen_labels = set([label for label in equivalent_labels["lm"]["sc"]])
+                    gen_labels = set(
+                        [
+                            label
+                            for label in equivalent_labels["latimer_munro"][
+                                "setyawan_curtarolo"
+                            ]
+                        ]
+                    )
                     kpath_labels = set(
                         [
                             kpoint.label
@@ -290,6 +326,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 bs_data[bs_type] = BandStructureSummaryData(  # type: ignore
                     task_id=bs_task,
                     band_gap=band_gap,
+                    direct_gap=direct_gap,
                     cbm=cbm,
                     vbm=vbm,
                     is_gap_direct=is_gap_direct,
