@@ -176,17 +176,18 @@ class ElectronicStructureBuilder(Builder):
                 **bs,
             )
 
-        for bs_type, bs_summary in doc.bandstructure:
-            if bs_summary is not None:
-                bgap_diff = [doc.band_gap - doc]
+            bgap_diff = []
+            for bs_type, bs_summary in doc.bandstructure:
+                if bs_summary is not None:
+                    bgap_diff.append(doc.band_gap - bs_summary.band_gap)
 
-        if any(abs(gap) > 0.25 for gap in bgap_diff):
-            if doc.warnings is None:
-                doc.warnings = []
-            doc.warnings.append(
-                "Absolute difference between blessed band gap and at least one\
-                 line-mode calculation band gap is larger than 0.25 eV."
-            )
+            if any(abs(gap) > 0.25 for gap in bgap_diff):
+                if doc.warnings is None:
+                    doc.warnings = []
+                doc.warnings.append(
+                    "Absolute difference between blessed band gap and at least one\
+                    line-mode calculation band gap is larger than 0.25 eV."
+                )
 
         return doc.dict()
 
@@ -479,14 +480,12 @@ class ElectronicStructureBuilder(Builder):
         atol=1e-5,
     ):
 
-        type_dict = {"sc": "setyawan_curtarolo", "hin": "hinuma", "lm": "latimer_munro"}
-
         bs_type = None
 
         if any([label.islower() for label in labels_dict]):
-            bs_type = "lm"
+            bs_type = "latimer_munro"
         else:
-            for ptype in ["sc", "hin"]:
+            for ptype in ["setyawan_curtarolo", "hinuma"]:
                 hskp = HighSymmKpath(
                     structure,
                     has_magmoms=False,
@@ -517,4 +516,5 @@ class ElectronicStructureBuilder(Builder):
                 ):
                     bs_type = ptype
 
-        return type_dict[bs_type] if bs_type is not None else bs_type
+        return bs_type
+
