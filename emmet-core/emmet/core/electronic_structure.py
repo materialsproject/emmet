@@ -25,48 +25,35 @@ from pymatgen.analysis.magnetism.analyzer import (
 
 
 class ElectronicStructureBaseData(BaseModel):
-    calc_id: Union[MPID, int] = Field(
-        ..., description="The source calculation ID for the electronic structure data."
+    task_id: Union[MPID, int] = Field(
+        ...,
+        description="The source calculation (task) ID for the electronic structure data.",
     )
 
-    band_gap: float = Field(
-        ..., description="Band gap energy in eV.",
-    )
+    band_gap: float = Field(..., description="Band gap energy in eV.")
 
-    cbm: Union[float, Dict] = Field(
-        None, description="Conduction band minimum data.",
-    )
+    cbm: Union[float, Dict] = Field(None, description="Conduction band minimum data.")
 
-    vbm: Union[float, Dict] = Field(
-        None, description="Valence band maximum data.",
-    )
+    vbm: Union[float, Dict] = Field(None, description="Valence band maximum data.")
 
-    efermi: float = Field(
-        ..., description="Fermi energy eV.",
-    )
+    efermi: float = Field(..., description="Fermi energy eV.")
 
 
 class ElectronicStructureSummary(ElectronicStructureBaseData):
-    is_gap_direct: bool = Field(
-        ..., description="Whether the band gap is direct.",
-    )
+    is_gap_direct: bool = Field(..., description="Whether the band gap is direct.")
 
-    is_metal: bool = Field(
-        ..., description="Whether the material is a metal.",
-    )
+    is_metal: bool = Field(..., description="Whether the material is a metal.")
 
     magnetic_ordering: Union[str, Ordering] = Field(
-        ..., description="Magnetic ordering of the calculation.",
+        ..., description="Magnetic ordering of the calculation."
     )
 
 
 class BandStructureSummaryData(ElectronicStructureSummary):
-    nbands: float = Field(
-        ..., description="Number of bands.",
-    )
+    nbands: float = Field(..., description="Number of bands.")
 
     equivalent_labels: Dict = Field(
-        ..., description="Equivalent k-point labels in other k-path conventions.",
+        ..., description="Equivalent k-point labels in other k-path conventions."
     )
 
 
@@ -89,7 +76,7 @@ class BandstructureData(BaseModel):
 
 class DosData(BaseModel):
     total: Dict[Union[Spin, str], ElectronicStructureBaseData] = Field(
-        None, description="Total DOS summary data.",
+        None, description="Total DOS summary data."
     )
 
     elemental: Dict[
@@ -110,7 +97,7 @@ class DosData(BaseModel):
     )
 
     magnetic_ordering: Union[str, Ordering] = Field(
-        None, description="Magnetic ordering of the calculation.",
+        None, description="Magnetic ordering of the calculation."
     )
 
 
@@ -187,7 +174,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             (cbm, vbm) = dos_obj.get_cbm_vbm(spin=spin)
 
             dos_data["total"][spin] = ElectronicStructureBaseData(
-                calc_id=dos_task, band_gap=band_gap, cbm=cbm, vbm=vbm, efermi=dos_efermi
+                task_id=dos_task, band_gap=band_gap, cbm=cbm, vbm=vbm, efermi=dos_efermi
             )
 
             # - Process total orbital projection data
@@ -198,7 +185,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 (cbm, vbm) = tot_orb_dos[orbital].get_cbm_vbm(spin=spin)
 
                 dos_data["orbital"][orbital][spin] = ElectronicStructureBaseData(
-                    calc_id=dos_task,
+                    task_id=dos_task,
                     band_gap=band_gap,
                     cbm=cbm,
                     vbm=vbm,
@@ -224,7 +211,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     dos_data["elemental"][ele][orbital][
                         spin
                     ] = ElectronicStructureBaseData(
-                        calc_id=dos_task,
+                        task_id=dos_task,
                         band_gap=band_gap,
                         cbm=cbm,
                         vbm=vbm,
@@ -301,7 +288,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                         equivalent_labels = hskp.equiv_labels
 
                 bs_data[bs_type] = BandStructureSummaryData(  # type: ignore
-                    calc_id=bs_task,
+                    task_id=bs_task,
                     band_gap=band_gap,
                     cbm=cbm,
                     vbm=vbm,
@@ -318,7 +305,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
         return cls.from_structure(
             material_id=MPID(material_id),
-            calc_id=dos_task,
+            task_id=dos_task,
             structure=structure,
             band_gap=summary_band_gap,
             cbm=summary_cbm,

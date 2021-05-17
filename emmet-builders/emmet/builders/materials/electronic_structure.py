@@ -156,7 +156,7 @@ class ElectronicStructureBuilder(Builder):
         if dos is None:
             doc = ElectronicStructureDoc.from_structure(
                 material_id=mat[self.materials.key],
-                calc_id=mat["other"]["task_id"],
+                task_id=mat["other"]["task_id"],
                 structure=structure,
                 band_gap=mat["other"]["band_gap"],
                 cbm=mat["other"]["cbm"],
