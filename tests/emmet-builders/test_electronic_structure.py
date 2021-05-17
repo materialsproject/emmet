@@ -36,7 +36,7 @@ def dos_fs():
     return MemoryStore()
 
 
-def test_electronic_Structure_builder(
+def test_electronic_structure_builder(
     tasks_store, materials_store, electronic_structure_store, bandstructure_fs, dos_fs
 ):
 
