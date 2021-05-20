@@ -8,3 +8,7 @@ def test_mpid():
     assert MPID("mp-3") < MPID("np-3")
     assert MPID("mp-3") > MPID("mp-2")
     assert 3 > MPID("mp-3")
+
+
+def test_to_str():
+    assert str(MPID("mp-149")) == "mp-149"
