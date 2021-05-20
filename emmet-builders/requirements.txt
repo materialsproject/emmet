@@ -5,3 +5,4 @@ pydantic==1.8.1
 typing-extensions==3.7.4.3
 seekpath==2.0.1
 emmet-core
+seekpath==2.0.1
