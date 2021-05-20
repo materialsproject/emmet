@@ -3,3 +3,4 @@ maggma==0.26.0
 pymatgen==2022.0.5
 pydantic==1.8.1
 typing-extensions==3.7.4.3
+seekpath==2.0.1
