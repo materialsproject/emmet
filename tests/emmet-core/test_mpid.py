@@ -10,3 +10,7 @@ def test_mpid():
     assert 3 > MPID("mp-3")
 
     assert min([MPID("mp-44545"), MPID("mp-33"), MPID("mp-2134234")]) == MPID("mp-33")
+
+
+def test_to_str():
+    assert str(MPID("mp-149")) == "mp-149"

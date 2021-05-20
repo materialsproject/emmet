@@ -14,7 +14,7 @@ setup(
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
     install_requires=[
-        "pymatgen>=2021.3,<2023.0",
+        "pymatgen~=2021.3",
         "monty~=2021.3",
         "pydantic[email]~=1.8",
         "pybtex~=0.24",
