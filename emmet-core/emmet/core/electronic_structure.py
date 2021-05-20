@@ -119,6 +119,21 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     ) -> T:
         """
         Builds a electronic structure document using band structure and density of states data.
+
+        Args:
+            material_id (MPID): A material ID.
+            dos (Dict[MPID, CompleteDos]): Dictionary mapping a calculation (task) ID to a CompleteDos object.
+            is_gap_direct (bool): Direct gap indicator included at root level of document.
+            is_metal (bool): Metallic indicator included at root level of document.
+            structures (Dict[MPID, Structure]) = Dictionary mapping a calculation (task) ID to the structures used
+                as inputs. This is to ensures correct magnetic moment information is included.
+            setyawan_curtarolo (Dict[MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
+                BandStructureSymmLine object from a calculation run using the Setyawan-Curtarolo k-path convention.
+            hinuma (Dict[MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
+                BandStructureSymmLine object from a calculation run using the Hinuma et al. k-path convention.
+            latimer_munro (Dict[MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
+                BandStructureSymmLine object from a calculation run using the Latimer-Munro k-path convention.
+
         """
 
         # -- Process density of states data
