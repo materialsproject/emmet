@@ -30,9 +30,7 @@ class MPID:
 
         else:
 
-            raise ValueError(
-                "Must provide an MPID, int, or string of the format prefix-number"
-            )
+            raise ValueError("Must provide an MPID, int, or string of the format prefix-number")
 
     def __eq__(self, other: object):
         if isinstance(other, MPID):
@@ -62,10 +60,7 @@ class MPID:
 
     @classmethod
     def __modify_schema__(cls, field_schema):
-        field_schema.update(
-            pattern=r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$",
-            examples=["mp-3534", "3453", "mp-834-Ag"],
-        )
+        field_schema.update(pattern=r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$", examples=["mp-3534", "3453", "mp-834-Ag"])
 
     @classmethod
     def validate(cls, v):
