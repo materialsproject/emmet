@@ -1,5 +1,5 @@
 """ Core definition of a VASP Task Document """
-from functools import cached_property
+from functools import lru_cache
 from typing import Any, ClassVar, Dict, List
 
 from pydantic import Field
@@ -55,7 +55,8 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
             return self.structure[self.absorbing_atom].specie
         return self.structure[self.absorbing_atom].specie.element
 
-    @cached_property
+    @property
+    @lru_cache()
     def xas_spectrum(self) -> XAS:
 
         if not all([len(p) == 6 for p in self.spectrum]):
