@@ -11,7 +11,8 @@ from pymatgen.core import Composition, Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-from emmet.core.mpid import MPID
+__author__ = "Jimmy Shen"
+__email__ = "jmmshn@gmail.com"
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +80,18 @@ class StructureGroupDoc(BaseModel):
         "present the chemsys will also include the ignored species.",
     )
 
+    ltol: float = Field(
+        None, description="Lattice length tolerance parameter for the StructureMatcher."
+    )
+
+    stol: float = Field(
+        None, description="site position tolerance parameter for the StructureMatcher."
+    )
+
+    angle_tol: float = Field(
+        None, description="Bond angle tolerance parameter for the StructureMatcher."
+    )
+
     last_updated: datetime = Field(
         None,
         description="Timestamp when this document was built.",
@@ -94,6 +107,7 @@ class StructureGroupDoc(BaseModel):
         cls,
         entries: List[Union[ComputedEntry, ComputedStructureEntry]],
         ignored_species: List[str],
+        **kwargs,
     ) -> "StructureGroupDoc":
         """ "
         Assuming a list of entries are already grouped together, create a StructureGroupDoc
@@ -125,6 +139,7 @@ class StructureGroupDoc(BaseModel):
             "chemsys": "-".join(sorted(all_atoms | set(ignored_species))),
             "has_distinct_compositions": len(all_comps) > 1,
         }
+        fields.update(kwargs)
 
         return cls(**fields)
 
@@ -184,7 +199,11 @@ class StructureGroupDoc(BaseModel):
             )
             for g in group_entries_with_structure_matcher(f_group_l, sm):
                 struct_group = cls.from_grouped_entries(
-                    g, ignored_species=ignored_species
+                    g,
+                    ignored_species=ignored_species,
+                    ltol=ltol,
+                    stol=stol,
+                    angle_tol=angle_tol,
                 )
                 cnt_ += len(struct_group.material_ids)
                 results.append(struct_group)
