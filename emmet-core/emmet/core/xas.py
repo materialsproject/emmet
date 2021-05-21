@@ -92,7 +92,7 @@ class XASDoc(SpectrumDoc):
     @classmethod
     def from_task_docs(
         cls, all_tasks: List[TaskDocument], material_id: MPID, num_samples: int = 200
-    ) -> Dict:
+    ) -> List[XASDoc]:
         """
         Converts a set of FEFF Task Documents into XASDocs by merging XANES + EXAFS into XAFS spectra first
         and then merging along equivalent elements to get element averaged spectra
@@ -109,7 +109,7 @@ class XASDoc(SpectrumDoc):
         # This is a hack using extra attributes within this function to carry some extra information
         # without generating new objects
         for task in all_tasks:
-            spectrum = task.spectrum
+            spectrum = task.xas_spectrum
             spectrum.last_updated = task.last_updated
             spectrum.task_ids = [task.task_id]
             all_spectra.append(spectrum)
