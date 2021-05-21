@@ -27,7 +27,7 @@ class CalcType(ValueEnum):
 
 
 class TaskDocument(BaseTaskDocument, StructureMetadata):
-    """ Task Document for a FEFF XAS Calculation. Doesn't support EELS for now """
+    """Task Document for a FEFF XAS Calculation. Doesn't support EELS for now"""
 
     calc_code: ClassVar[str] = "FEFF"
 
@@ -56,28 +56,31 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
         return self.structure[self.absorbing_atom].specie.element
 
     @property
-    @lru_cache()
     def xas_spectrum(self) -> XAS:
 
-        if not all([len(p) == 6 for p in self.spectrum]):
-            raise ValueError(
-                "Spectrum data doesn't appear to be from xmu.dat which holds XAS data"
+        if not hasattr(self, "_xas_spectrum"):
+
+            if not all([len(p) == 6 for p in self.spectrum]):
+                raise ValueError(
+                    "Spectrum data doesn't appear to be from xmu.dat which holds XAS data"
+                )
+
+            energy = [point[0] for point in self.spectrum]  # (eV)
+            intensity = [point[3] for point in self.spectrum]  # (mu)
+            structure = self.structure
+            absorbing_index = self.absorbing_atom
+            absorbing_element = self.absorbing_element
+            edge = self.edge
+            spectrum_type = str(self.spectrum_type)
+
+            self._xas_spectrum = XAS(
+                x=energy,
+                y=intensity,
+                structure=structure,
+                absorbing_element=absorbing_element,
+                absorbing_index=absorbing_index,
+                edge=edge,
+                spectrum_type=spectrum_type,
             )
 
-        energy = [point[0] for point in self.spectrum]  # (eV)
-        intensity = [point[3] for point in self.spectrum]  # (mu)
-        structure = self.structure
-        absorbing_index = self.absorbing_atom
-        absorbing_element = self.absorbing_element
-        edge = self.edge
-        spectrum_type = str(self.spectrum_type)
-
-        return XAS(
-            x=energy,
-            y=intensity,
-            structure=structure,
-            absorbing_element=absorbing_element,
-            absorbing_index=absorbing_index,
-            edge=edge,
-            spectrum_type=spectrum_type,
-        )
+        return self._xas_spectrum
