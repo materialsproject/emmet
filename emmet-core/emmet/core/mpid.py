@@ -2,12 +2,10 @@ import re
 from dataclasses import dataclass
 from typing import Tuple, Union
 
-NOTHING = object()
-
 mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
 
 
-class MPID:
+class MPID(str):
     """
     A Materials Project type ID with a prefix and an integer
     This class enables seemlessly mixing MPIDs and regular integer IDs
@@ -19,14 +17,17 @@ class MPID:
 
         if isinstance(val, MPID):
             self.parts = val.parts  # type: ignore
+            self.string = val.string  # type: ignore
 
         elif isinstance(val, int):
-            self.parts = (NOTHING, val)
+            self.parts = (None, val)
+            self.string = str(val)
 
         elif isinstance(val, str):
             parts = val.split("-")
             parts[1] = int(parts[1])  # type: ignore
             self.parts = tuple(parts)
+            self.string = val
 
         else:
 
@@ -36,12 +37,12 @@ class MPID:
 
     def __eq__(self, other: object):
         if isinstance(other, MPID):
-            return self.parts == other.parts
+            return self.string == other.string
         elif isinstance(other, (int, str)):
-            return self.parts == MPID(other).parts
+            return self.string == MPID(other).string
 
     def __str__(self):
-        return "-".join((str(i) for i in self.parts))
+        return self.string
 
     def __repr__(self):
         return f"MPID({self})"
@@ -52,15 +53,14 @@ class MPID:
         if isinstance(other, int):
             return True
         elif isinstance(other, str):
-            other_parts = other.split("-")
-            other_parts[1] = int(other_parts[1])  # type: ignore
+            other_parts = MPID(other).parts
         else:
             other_parts = other.parts
 
         return self.parts < other_parts
 
     def __hash__(self):
-        return hash(self.parts)
+        return hash(self.string)
 
     @classmethod
     def __get_validators__(cls):
