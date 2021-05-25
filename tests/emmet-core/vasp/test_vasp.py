@@ -1,7 +1,6 @@
 import json
 
 import pytest
-from maggma.stores import JSONStore, MemoryStore
 from monty.io import zopen
 
 from emmet.core import SETTINGS
