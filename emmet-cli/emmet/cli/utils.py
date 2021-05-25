@@ -795,51 +795,51 @@ def nomad_upload_data(task_ids: List[str], username: str,
         logger.error(f"[{name}] failed to write json and re-zip data: {e}")
         _nomad_clean_up(upload_preparation_dir, None)
         return False
-    # try:
-    #     # upload to nomad
-    #     logger.info(f"[{name}] Start Uploading [{zipped_upload_preparation_file_path}]"
-    #                 f"[{os.path.getsize(zipped_upload_preparation_file_path)} bytes] to NOMAD")
-    #     user = client.auth.get_auth().response().result
-    #     token = user.access_token
-    #     url = nomad_url + '/uploads/?publish_directly=true'
-    #     with open(zipped_upload_preparation_file_path, 'rb') as f:
-    #         response = requests.put(url=url, headers={'Authorization': 'Bearer %s' % token}, data=f)
-    #     upload_id = response.json()['upload_id']
-    #     if response.status_code == 200:
-    #         logger.info(f"[{name}] is done uploading. Upload ID = [{upload_id}]")
-    #         upload_completed = True
-    #     else:
-    #         upload_completed = False
-    #         logger.error(f'Upload [{upload_id}] failed with code [{response.json()}]')
-    #         from urllib.error import HTTPError
-    #         raise HTTPError(url=response.url,
-    #                         code=response.status_code,
-    #                         msg=f'Upload [{upload_id}] failed with code [{response.json()}]',
-    #                         hdrs=response.headers,
-    #                         fp=None)
-    # except Exception as e:
-    #     logger.error(f"[{name}] Failed to upload to NOMAD: {e}. Removing data generated.")
-    #     # _nomad_clean_up(upload_preparation_dir, Path(zipped_upload_preparation_file_path))
-    #     return False
+    try:
+        # upload to nomad
+        logger.info(f"[{name}] Start Uploading [{zipped_upload_preparation_file_path}]"
+                    f"[{os.path.getsize(zipped_upload_preparation_file_path)} bytes] to NOMAD")
+        user = client.auth.get_auth().response().result
+        token = user.access_token
+        url = nomad_url + '/uploads/?publish_directly=true'
+        with open(zipped_upload_preparation_file_path, 'rb') as f:
+            response = requests.put(url=url, headers={'Authorization': 'Bearer %s' % token}, data=f)
+        upload_id = response.json()['upload_id']
+        if response.status_code == 200:
+            logger.info(f"[{name}] is done uploading. Upload ID = [{upload_id}]")
+            upload_completed = True
+        else:
+            upload_completed = False
+            logger.error(f'Upload [{upload_id}] failed with code [{response.json()}]')
+            from urllib.error import HTTPError
+            raise HTTPError(url=response.url,
+                            code=response.status_code,
+                            msg=f'Upload [{upload_id}] failed with code [{response.json()}]',
+                            hdrs=response.headers,
+                            fp=None)
+    except Exception as e:
+        logger.error(f"[{name}] Failed to upload to NOMAD: {e}. Removing data generated.")
+        _nomad_clean_up(upload_preparation_dir, Path(zipped_upload_preparation_file_path))
+        return False
 
-    # try:
-    #     # update mongo store
-    #     if upload_completed:
-    #         for record in records:
-    #             record.nomad_updated = datetime.now()
-    #             record.nomad_upload_id = upload_id
-    #         gdrive_mongo_store.update(docs=[record.dict() for record in records], key="task_id")
-    # except Exception as e:
-    #     logger.error(f"[{name}] Failed to log to mongo store: {e}. Removing data generated.")
-    #     _nomad_clean_up(upload_preparation_dir, Path(zipped_upload_preparation_file_path))
-    #     return False
-    # try:
-    #     _nomad_clean_up(upload_preparation_dir, Path(zipped_upload_preparation_file_path))
-    # except Exception as e:
-    #     logger.error(f"[{name}] Failed to clean up: {e}")
+    try:
+        # update mongo store
+        if upload_completed:
+            for record in records:
+                record.nomad_updated = datetime.now()
+                record.nomad_upload_id = upload_id
+            gdrive_mongo_store.update(docs=[record.dict() for record in records], key="task_id")
+    except Exception as e:
+        logger.error(f"[{name}] Failed to log to mongo store: {e}. Removing data generated.")
+        _nomad_clean_up(upload_preparation_dir, Path(zipped_upload_preparation_file_path))
+        return False
+    try:
+        _nomad_clean_up(upload_preparation_dir, Path(zipped_upload_preparation_file_path))
+    except Exception as e:
+        logger.error(f"[{name}] Failed to clean up: {e}")
 
-    # return upload_completed
-    return True
+    return upload_completed
+
 
 def _nomad_clean_up(upload_preparation_dir: Optional[Path], zipped_upload_preparation_file_path: Optional[Path]):
     if upload_preparation_dir is not None and upload_preparation_dir.exists():
