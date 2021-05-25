@@ -54,6 +54,9 @@ class MPID:
 
         return self.parts < other_parts
 
+    def __hash__(self):
+        return hash(self.parts)
+
     @classmethod
     def __get_validators__(cls):
         yield cls.validate

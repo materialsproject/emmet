@@ -11,6 +11,11 @@ def test_mpid():
 
     assert min([MPID("mp-44545"), MPID("mp-33"), MPID("mp-2134234")]) == MPID("mp-33")
 
+    assert (
+        len(set([MPID("mp-33"), MPID("mp-44545"), MPID("mp-33"), MPID("mp-2134234")]))
+        == 3
+    )
+
 
 def test_to_str():
     assert str(MPID("mp-149")) == "mp-149"
