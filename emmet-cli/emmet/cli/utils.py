@@ -838,8 +838,8 @@ def nomad_upload_data(task_ids: List[str], username: str,
     # except Exception as e:
     #     logger.error(f"[{name}] Failed to clean up: {e}")
 
-    return upload_completed
-
+    # return upload_completed
+    return True
 
 def _nomad_clean_up(upload_preparation_dir: Optional[Path], zipped_upload_preparation_file_path: Optional[Path]):
     if upload_preparation_dir is not None and upload_preparation_dir.exists():
