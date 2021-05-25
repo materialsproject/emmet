@@ -1,14 +1,10 @@
 """ Core definition of a Provenance Document """
 import warnings
-from collections import defaultdict
 from datetime import datetime
-from typing import ClassVar, Dict, List, Optional, Union
+from typing import ClassVar, Dict, List, Optional
 
 from pybtex.database import BibliographyData, parse_string
 from pydantic import BaseModel, EmailStr, Field, validator
-from pydash.objects import get
-from pymatgen.core import Structure
-from pymatgen.util.provenance import StructureNL
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
@@ -101,12 +97,18 @@ class ProvenanceDoc(PropertyDoc):
 
         # Choose earliest created_at
         created_at = sorted(
-            [get(snl, "about.created_at.string", datetime.max) for snl in snls]
+            [
+                snl.get("about", {}).get("created_at", {}).get("string", datetime.max)
+                for snl in snls
+            ]
         )[0]
 
         # Choose earliest history
         history = sorted(
-            snls, key=lambda snl: get(snl, "about.created_at.string", datetime.max)
+            snls,
+            key=lambda snl: snl.get("about", {})
+            .get("created_at", {})
+            .get("string", datetime.max),
         )[0]["about"]["history"]
 
         # Aggregate all references into one dict to remove duplicates
@@ -141,7 +143,10 @@ class ProvenanceDoc(PropertyDoc):
         ]
 
         # Check if this entry is experimental
-        if any(get(snl, "about.history.0.experimental", False) for snl in snls):
+        if any(
+            snl.get("about", {}).get("history", [{}])[0].get("experimental", False)
+            for snl in snls
+        ):
             experimental = True
 
         # Aggregate all the database IDs
@@ -157,7 +162,8 @@ class ProvenanceDoc(PropertyDoc):
 
         # Get experimental bool
         experimental = any(
-            get(snl, "about.history.0.experimental", False) for snl in snls
+            snl.get("about", {}).get("history", [{}])[0].get("experimental", False)
+            for snl in snls
         )
 
         snl_fields = {
