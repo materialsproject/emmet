@@ -16,6 +16,7 @@ setup(
         "pydantic[email]~=1.8",
         "pybtex~=0.24",
         "typing-extensions>=3.7,<4.0",
+        "bson~=0.5",
     ],
     license="modified BSD",
     zip_safe=False,
