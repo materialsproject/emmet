@@ -3,6 +3,5 @@ monty==v2021.3.3
 pydantic==1.8.2
 pybtex==0.24.0
 typing-extensions==3.10.0.0
-pymongo==3.11.4
-maggma==0.27.0
 seekpath==2.0.1
+setuptools-scm==6.0.1

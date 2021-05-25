@@ -1,7 +1,5 @@
-import datetime
-from pathlib import Path
 from setuptools import setup, find_namespace_packages
-from setuptools_scm import get_version, DEFAULT_LOCAL_SCHEME
+from setuptools_scm import get_version
 
 version = get_version(root="..", relative_to=__file__, version_scheme="post-release")
 version = version.split(".post")[0]
@@ -18,10 +16,7 @@ setup(
     packages=find_namespace_packages(include=["emmet.*"]),
     install_requires=[
         f"emmet-core~={version}",
-        "pymatgen~=2021.3",
-        "pydantic[email]~=1.8",
-        "typing-extensions~=3.7",
-        "maggma~=0.26.0",
+        "maggma~=0.27.0",
     ],
     license="modified BSD",
     zip_safe=False,
