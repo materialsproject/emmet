@@ -25,6 +25,7 @@ class Thermo(Builder):
         self,
         materials: Store,
         thermo: Store,
+        oxidation_states: Optional[Store] = None,
         query: Optional[Dict] = None,
         compatibility=None,
         **kwargs,
@@ -48,11 +49,17 @@ class Thermo(Builder):
         self.compatibility = (
             compatibility
             if compatibility
-            else MaterialsProjectCompatibility("Advanced")
+            else MaterialsProject2020Compatibility("Advanced")
         )
+        self.oxidation_states = oxidation_states
         self._completed_tasks = set()
         self._entries_cache = defaultdict(list)
-        super().__init__(sources=[materials], targets=[thermo], **kwargs)
+
+        sources = [materials]
+        if oxidation_states is not None:
+            sources.append(oxidation_states)
+
+        super().__init__(sources=sources, targets=[thermo], **kwargs)
 
     def ensure_indexes(self):
         """
@@ -212,6 +219,18 @@ class Thermo(Builder):
             )
         )
 
+        # Get Oxidation state data for each material
+        oxi_states_data = {}
+        if self.oxidation_states:
+            material_ids = [t["material_id"] for t in materials_docs]
+            oxi_states_data = {
+                d["material_id"]: d["bond_valence"]["average_oxidation_states"]
+                for d in self.oxidation_states.query(
+                    properties=["material_id", "bond_valence.average_oxidation_states"],
+                    criteria={"material_id": {"$in": material_ids}, "successful": True},
+                )
+            }
+
         self.logger.debug(
             f"Got {len(materials_docs)} entries from DB for {len(query_chemsys)} sub-chemsys for {chemsys}"
         )
@@ -219,6 +238,9 @@ class Thermo(Builder):
         # Convert the entries into ComputedEntries and store
         for doc in materials_docs:
             for r_type, entry_dict in doc.get("entries", {}).items():
+                entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
+                    entry_dict["entry_id"], {}
+                )
                 entry_dict["data"]["run_type"] = r_type
                 elsyms = sorted(set([el for el in entry_dict["composition"]]))
                 self._entries_cache["-".join(elsyms)].append(entry_dict)
