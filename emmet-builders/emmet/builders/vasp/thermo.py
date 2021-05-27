@@ -74,6 +74,21 @@ class Thermo(Builder):
         self.thermo.ensure_index("material_id")
         self.thermo.ensure_index("last_updated")
 
+    def prechunk(self, number_splits: int) -> Iterable[Dict]:
+        updated_chemsys = self.get_updated_chemsys()
+        new_chemsys = self.get_new_chemsys()
+
+        affected_chemsys = self.get_affected_chemsys(updated_chemsys | new_chemsys)
+
+        # Remove overlapping chemical systems
+        to_process_chemsys = set()
+        for chemsys in updated_chemsys | new_chemsys | affected_chemsys:
+            if chemsys not in to_process_chemsys:
+                to_process_chemsys |= chemsys_permutations(chemsys)
+
+        for chemsys_chunk in grouper(to_process_chemsys, number_splits):
+            yield {"chemsys": {"$in": list(chemsys_chunk)}}
+
     def get_items(self) -> Iterator[List[Dict]]:
         """
         Gets whole chemical systems of entries to process

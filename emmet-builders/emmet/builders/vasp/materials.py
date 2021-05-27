@@ -91,6 +91,36 @@ class MaterialsBuilder(Builder):
             self.task_validation.ensure_index("task_id")
             self.task_validation.ensure_index("valid")
 
+    def prechunk(self, number_splits: int) -> Iterable[Dict]:
+        """Prechunk the materials builder for distributed computation"""
+        temp_query = dict(self.query)
+        temp_query["state"] = "successful"
+        if len(self.settings.BUILD_TAGS) > 0 and len(self.settings.EXCLUDED_TAGS) > 0:
+            temp_query["$and"] = [
+                {"tags": {"$in": self.settings.BUILD_TAGS}},
+                {"tags": {"$nin": self.settings.EXCLUDED_TAGS}},
+            ]
+        elif len(self.settings.BUILD_TAGS) > 0:
+            temp_query["tags"] = {"$in": self.settings.BUILD_TAGS}
+
+        self.logger.info("Finding tasks to process")
+        all_tasks = {
+            doc[self.tasks.key]
+            for doc in self.tasks.query(temp_query, [self.tasks.key])
+        }
+        processed_tasks = {
+            t_id
+            for d in self.materials.query({}, ["task_ids"])
+            for t_id in d.get("task_ids", [])
+        }
+        to_process_tasks = all_tasks - processed_tasks
+        to_process_forms = self.tasks.distinct(
+            "formula_pretty", {self.tasks.key: {"$in": list(to_process_tasks)}}
+        )
+
+        for formula_chunk in grouper(to_process_forms, number_splits):
+            yield {"formula_pretty": {"$in": list(formula_chunk)}}
+
     def get_items(self) -> Iterator[List[Dict]]:
         """
         Gets all items to process into materials documents.
