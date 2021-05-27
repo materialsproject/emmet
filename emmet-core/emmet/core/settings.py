@@ -79,6 +79,10 @@ class EmmetSettings(BaseSettings):
         description="Maximum upward gradient in the last SCF for any VASP calculation",
     )
 
+    VASP_DEPRECATED_TAGS: List[str] = Field(
+        [], description="List of tags to manually deprecate in task validation"
+    )
+
     class Config:
         env_prefix = "emmet_"
         extra = "ignore"

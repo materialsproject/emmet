@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 from pydantic import BaseModel, Field, PyObject
@@ -57,7 +57,7 @@ class ValidationDoc(BaseModel):
         input_sets: Dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
-        deprecated_tags: Optional[List[str]] = None,
+        deprecated_tags: List[str] = SETTINGS.VASP_DEPRECATED_TAGS,
     ) -> "ValidationDoc":
         """
         Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
