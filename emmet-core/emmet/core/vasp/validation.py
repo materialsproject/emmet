@@ -13,7 +13,6 @@ from emmet.core.vasp.task import TaskDocument
 
 class DeprecationMessage(DocEnum):
     MANUAL = "M", "manual deprecation"
-    DEPRECATED_TAGS = "M001", "Deprecated tag"
     KPTS = "C001", "Too few KPoints"
     KSPACING = "C002", "KSpacing not high enough"
     ENCUT = "C002", "ENCUT too low"
@@ -57,7 +56,6 @@ class ValidationDoc(BaseModel):
         input_sets: Dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
-        deprecated_tags: List[str] = SETTINGS.VASP_DEPRECATED_TAGS,
     ) -> "ValidationDoc":
         """
         Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
@@ -167,13 +165,6 @@ class ValidationDoc(BaseModel):
         data["max_gradient"] = max_gradient
         if max_gradient > max_allowed_scf_gradient:
             reasons.append(DeprecationMessage.MAX_SCF)
-
-        # Check for Manual deprecations
-        if deprecated_tags is not None:
-            bad_tags = list(set(task_doc.tags).intersection(deprecated_tags))
-            if len(bad_tags) > 0:
-                reasons.append(DeprecationMessage.DEPRECATED_TAGS)
-                data["bad_tags"] = bad_tags
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,

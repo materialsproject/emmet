@@ -79,10 +79,6 @@ class EmmetSettings(BaseSettings):
         description="Maximum upward gradient in the last SCF for any VASP calculation",
     )
 
-    VASP_DEPRECATED_TAGS: List[str] = Field(
-        [], description="List of tags to manually deprecate in task validation"
-    )
-
     VASP_USE_STATICS: bool = Field(
         True,
         description="Use static calculations for structure and energy along with structure optimizations",
