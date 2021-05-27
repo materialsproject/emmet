@@ -243,7 +243,7 @@ class MaterialsBuilder(Builder):
                 )
         self.logger.debug(f"Produced {len(materials)} materials for {formula}")
 
-        return [mat.dict() for mat in materials]
+        return jsanitize([mat.dict() for mat in materials], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """
@@ -265,7 +265,7 @@ class MaterialsBuilder(Builder):
             self.logger.info(f"Updating {len(items)} materials")
             self.materials.remove_docs({self.materials.key: {"$in": material_ids}})
             self.materials.update(
-                docs=jsanitize(items, allow_bson=True),
+                docs=items,
                 key=["material_id"],
             )
         else:
