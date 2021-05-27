@@ -116,7 +116,7 @@ class ValidationDoc(BaseModel):
                         )
 
             # warn, but don't invalidate if wrong ISMEAR
-            if inputs.get("incar", {}).get("ISMEAR") > 0 and bandgap > 0:
+            if inputs.get("incar", {}).get("ISMEAR", 1) > 0 and bandgap > 0:
                 warnings.append("Inappropriate smearing settings")
 
             # Checking ENCUT

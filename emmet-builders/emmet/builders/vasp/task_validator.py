@@ -40,8 +40,8 @@ class TaskValidator(MapBuilder):
             projection=[
                 "orig_inputs",
                 "output.structure",
-                "input.parameters",
-                "calcs_reversed.output.ionic_steps.e_fr_energy",
+                "output.bandgap" "input.parameters",
+                "calcs_reversed.output.ionic_steps.electronic_steps.e_fr_energy",
                 "tags",
             ],
             query=query,
