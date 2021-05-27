@@ -1,21 +1,13 @@
 from datetime import datetime
 from itertools import chain
-from operator import itemgetter
-from typing import Dict, Iterator, List, Optional
+from typing import Dict, Iterable, Iterator, List, Optional
 
 from maggma.builders import Builder
 from maggma.stores import Store
-from pymatgen.core import Structure
-from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
+from maggma.utils import grouper
 
-from emmet.builders.utils import maximal_spanning_non_intersecting_subsets
-
-# from emmet.core import SETTINGS
-from emmet.builders import SETTINGS
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import group_structures, jsanitize
-from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.vasp.task import TaskDocument
 
@@ -33,11 +25,8 @@ class MaterialsBuilder(Builder):
         1.) Find all documents with the same formula
         2.) Select only task documents for the task_types we can select properties from
         3.) Aggregate task documents based on strucutre similarity
-        4.) Convert task docs to property docs with metadata for selection and aggregation
-        5.) Select the best property doc for each property
-        6.) Build material document from best property docs
-        7.) Post-process material document
-        8.) Validate material document
+        4.) Create a MaterialDoc from the group of task documents
+        5.) Validate material document
 
     """
 
@@ -56,6 +45,7 @@ class MaterialsBuilder(Builder):
             materials: Store of materials documents to generate
             task_validation: Store for storing task validation results
             query: dictionary to limit tasks to be analyzed
+            settings: EmmetSettings to use in the build process
         """
 
         self.tasks = tasks

@@ -1,23 +1,17 @@
 from collections import defaultdict
-from datetime import datetime
 from itertools import chain
-from typing import Dict, Iterator, List, Optional, Set, Tuple
+from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple
 
 from maggma.core import Builder, Store
+from maggma.utils import grouper
 from monty.json import MontyDecoder
-from pymatgen.core import Structure
 from pymatgen.analysis.phase_diagram import PhaseDiagramError
-from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.entries.compatibility import MaterialsProjectCompatibility
+from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core.utils import jsanitize
-from emmet.builders.utils import (
-    chemsys_permutations,
-    maximal_spanning_non_intersecting_subsets,
-)
+from emmet.builders.utils import chemsys_permutations
 from emmet.core.thermo import ThermoDoc
-from emmet.core.vasp.calc_types import run_type
+from emmet.core.utils import jsanitize
 
 
 class Thermo(Builder):
@@ -121,13 +115,12 @@ class Thermo(Builder):
             entries = self.get_entries(chemsys)
             yield entries
 
-    def process_item(self, item: Tuple[List[str], List[ComputedEntry]]):
+    def process_item(self, item: List[Dict]):
 
-        entries = item
-        if len(entries) == 0:
+        if len(item) == 0:
             return []
 
-        entries = [ComputedStructureEntry.from_dict(entry) for entry in entries]
+        entries = [ComputedStructureEntry.from_dict(entry) for entry in item]
         # determine chemsys
         elements = sorted(
             set([el.symbol for e in entries for el in e.composition.elements])
@@ -229,9 +222,7 @@ class Thermo(Builder):
         new_q["chemsys"] = {"$in": list(query_chemsys)}
         new_q["deprecated"] = False
         materials_docs = list(
-            self.materials.query(
-                criteria=new_q, properties=[self.materials.key, "entries"]
-            )
+            self.materials.query(criteria=new_q, properties=["material_id", "entries"])
         )
 
         # Get Oxidation state data for each material
@@ -268,7 +259,7 @@ class Thermo(Builder):
     def get_updated_chemsys(
         self,
     ) -> Set:
-        """ Gets updated chemical system as defined by the updating of an existing material """
+        """Gets updated chemical system as defined by the updating of an existing material"""
 
         updated_mats = self.thermo.newer_in(self.materials, criteria=self.query)
         updated_chemsys = set(
@@ -281,7 +272,7 @@ class Thermo(Builder):
         return updated_chemsys
 
     def get_new_chemsys(self) -> Set:
-        """ Gets newer chemical system as defined by introduction of a new material """
+        """Gets newer chemical system as defined by introduction of a new material"""
 
         # All materials that are not present in the thermo collection
         thermo_mat_ids = self.thermo.distinct(self.thermo.key)
@@ -294,7 +285,7 @@ class Thermo(Builder):
         return new_mat_chemsys
 
     def get_affected_chemsys(self, chemical_systems: Set) -> Set:
-        """ Gets chemical systems affected by changes in the supplied chemical systems """
+        """Gets chemical systems affected by changes in the supplied chemical systems"""
         # First get all chemsys with any of the elements we've marked
         affected_chemsys = set()
         affected_els = list({el for c in chemical_systems for el in c.split("-")})
