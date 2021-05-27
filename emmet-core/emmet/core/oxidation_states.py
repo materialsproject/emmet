@@ -9,7 +9,7 @@ from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Specie
 
 
-class OxidationStateDocument(BaseModel):
+class OxidationStateDoc(BaseModel):
 
     possible_species: List[str]
     possible_valences: List[float]

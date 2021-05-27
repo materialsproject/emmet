@@ -2,7 +2,7 @@ import pytest
 from pymatgen.core import Structure
 from pymatgen.util.testing import PymatgenTest
 
-from emmet.core.oxidation_states import OxidationStateDocument
+from emmet.core.oxidation_states import OxidationStateDoc
 
 test_structures = {
     name: struc
@@ -39,7 +39,7 @@ fail_structures = {
 def test_oxidation_state(structure: Structure):
     """Very simple test to make sure this actually works"""
 
-    doc = OxidationStateDocument.from_structure(structure)
+    doc = OxidationStateDoc.from_structure(structure)
     print(structure.composition)
     assert doc is not None
 
@@ -48,6 +48,6 @@ def test_oxidation_state(structure: Structure):
 def test_oxidation_state_failures(structure: Structure):
     """Very simple test to make sure this actually fails"""
 
-    doc = OxidationStateDocument.from_structure(structure)
+    doc = OxidationStateDoc.from_structure(structure)
     print(structure.composition)
     assert doc is None
