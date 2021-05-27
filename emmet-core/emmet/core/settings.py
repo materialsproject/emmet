@@ -83,6 +83,11 @@ class EmmetSettings(BaseSettings):
         [], description="List of tags to manually deprecate in task validation"
     )
 
+    VASP_USE_STATICS: bool = Field(
+        True,
+        description="Use static calculations for structure and energy along with structure optimizations",
+    )
+
     class Config:
         env_prefix = "emmet_"
         extra = "ignore"

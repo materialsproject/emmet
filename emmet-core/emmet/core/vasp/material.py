@@ -44,8 +44,8 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
     def from_tasks(
         cls,
         task_group: List[TaskDocument],
-        quality_scores=SETTINGS.VASP_QUALITY_SCORES,
-        use_statics: bool = False,
+        quality_scores: Dict[str, int] = SETTINGS.VASP_QUALITY_SCORES,
+        use_statics: bool = SETTINGS.VASP_USE_STATICS,
     ) -> "MaterialsDoc":
         """
         Converts a group of tasks into one material
