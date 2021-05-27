@@ -10,7 +10,7 @@ from pymatgen.core import __version__ as pymatgen_version
 from emmet.core.oxidation_states import OxidationStateDoc
 
 
-class OxidationStates(MapBuilder):
+class OxidationStatesBuilder(MapBuilder):
     def __init__(
         self,
         materials: Store,
@@ -40,7 +40,6 @@ class OxidationStates(MapBuilder):
         )
 
     def unary_function(self, item):
-
         structure = Structure.from_dict(item["structure"])
         oxi_doc = OxidationStateDoc.from_structure(structure)
         doc = oxi_doc.dict()

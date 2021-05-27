@@ -14,7 +14,7 @@ from emmet.core.thermo import ThermoDoc
 from emmet.core.utils import jsanitize
 
 
-class Thermo(Builder):
+class ThermoBuilder(Builder):
     def __init__(
         self,
         materials: Store,
