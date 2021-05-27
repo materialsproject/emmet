@@ -134,13 +134,7 @@ class Thermo(Builder):
         for entry in entries:
             material_entries[entry.entry_id][entry.data["run_type"]] = entry
 
-        # TODO: How to make this general and controllable via SETTINGS?
-        for material_id in material_entries:
-            if "GGA+U" in material_entries[material_id]:
-                pd_entries.append(material_entries[material_id]["GGA+U"])
-            elif "GGA" in material_entries[material_id]:
-                pd_entries.append(material_entries[material_id]["GGA"])
-        pd_entries = self.compatibility.process_entries(pd_entries)
+        pd_entries = self.compatibility.process_entries(entries)
         self.logger.debug(f"{len(pd_entries)} remain in {chemsys} after filtering")
 
         try:
