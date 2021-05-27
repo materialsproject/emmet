@@ -1,13 +1,13 @@
 """
 Settings for defaults in the core definitions of Materials Project Documents
 """
-import importlib
 import json
-from typing import Dict, List, Optional, Type, TypeVar, Union
+from pathlib import Path
+from typing import Dict, List, Type, TypeVar, Union
 
 import requests
 from pydantic import BaseSettings, Field, root_validator, validator
-from pydantic.types import Path, PyObject
+from pydantic.types import PyObject
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
 
