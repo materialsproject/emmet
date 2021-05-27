@@ -158,7 +158,7 @@ class Thermo(Builder):
             )
             return []
 
-        return [d.dict() for d in docs]
+        return jsanitize([d.dict() for d in docs], allow_bson=True)
 
     def update_targets(self, items):
         """
@@ -169,9 +169,9 @@ class Thermo(Builder):
         # flatten out lists
         items = list(filter(None, chain.from_iterable(items)))
         # Check if already updated this run
-        items = [i for i in items if i[self.thermo.key] not in self._completed_tasks]
+        items = [i for i in items if i["material_id"] not in self._completed_tasks]
 
-        self._completed_tasks |= {i[self.thermo.key] for i in items}
+        self._completed_tasks |= {i["material_id"] for i in items}
 
         for item in items:
             if isinstance(item["last_updated"], dict):
@@ -181,7 +181,7 @@ class Thermo(Builder):
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(items)} thermo documents")
-            self.thermo.update(docs=jsanitize(items), key=[self.thermo.key])
+            self.thermo.update(docs=items, key=["material_id"])
         else:
             self.logger.info("No items to update")
 
