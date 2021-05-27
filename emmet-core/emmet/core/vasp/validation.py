@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 
 import numpy as np
 from pydantic import BaseModel, Field, PyObject
@@ -79,6 +79,7 @@ class ValidationDoc(BaseModel):
 
         reasons = []
         data = {}
+        warnings = []
 
         if str(calc_type) in input_sets:
 
@@ -110,6 +111,15 @@ class ValidationDoc(BaseModel):
                     # larger KSPACING means fewer k-points
                     if data["kspacing_delta"] > kspacing_tolerance:
                         reasons.append(DeprecationMessage.KSPACING)
+                    elif data["kspacing_delta"] < kspacing_tolerance:
+                        warnings.append(
+                            f"KSPACING is lower than input set: {data['kspacing_delta']}"
+                            " lower than {kspacing_tolerance} ",
+                        )
+
+            # warn, but don't invalidate if wrong ISMEAR
+            if inputs.get("incar", {}).get("ISMEAR") > 0 and bandgap > 0:
+                warnings.append("Inappropriate smearing settings")
 
             # Checking ENCUT
             encut = inputs.get("incar", {}).get("ENCUT")
@@ -172,6 +182,7 @@ class ValidationDoc(BaseModel):
             valid=len(reasons) == 0,
             reasons=reasons,
             data=data,
+            warnings=warnings,
         )
         return doc
 
