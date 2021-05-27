@@ -84,7 +84,6 @@ class MaterialsBuilder(Builder):
         # Search index for materials
         self.materials.ensure_index("material_id")
         self.materials.ensure_index("last_updated")
-        self.materials.ensure_index("sandboxes")
         self.materials.ensure_index("task_ids")
 
         if self.task_validation:
