@@ -1,12 +1,14 @@
 import logging
+from collections import defaultdict
 from itertools import groupby
-from typing import Dict, List, Literal
+from typing import Dict, List
 
 import numpy as np
 from pydantic import BaseModel
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Specie
+from typing_extensions import Literal
 
 
 class OxidationStateDoc(BaseModel):
@@ -34,11 +36,15 @@ class OxidationStateDoc(BaseModel):
             # by MP2020 corrections. The format should mirror
             # the output of the first element from Composition.oxi_state_guesses()
             # e.g. {'Li': 1.0, 'O': -2.0}
-            s_list = [(t.specie.element, t.specie.oxi_state) for t in structure.sites]
-            s_list = sorted(s_list, key=lambda x: x[0])
-            oxi_state_dict = {}
-            for c, g in groupby(s_list, key=lambda x: x[0]):
-                oxi_state_dict[str(c)] = np.mean([e[1] for e in g])
+
+            site_oxidation_list = defaultdict(list)
+            for site in structure:
+                site_oxidation_list[site.specie.element].append(site.specie.oxi_state)
+
+            oxi_state_dict = {
+                str(el): np.mean(oxi_states)
+                for el, oxi_states in site_oxidation_list.items()
+            }
 
             d = {
                 "possible_species": list(possible_species),
