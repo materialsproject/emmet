@@ -85,3 +85,4 @@ class OxidationStateDoc(BaseModel):
 
             except Exception as e:
                 logging.error("Oxidation state guess failed with: {}".format(e))
+                raise e
