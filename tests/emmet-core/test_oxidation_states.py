@@ -1,3 +1,4 @@
+import pydantic
 import pytest
 from pymatgen.core import Structure
 from pymatgen.util.testing import PymatgenTest
@@ -5,7 +6,7 @@ from pymatgen.util.testing import PymatgenTest
 from emmet.core.oxidation_states import OxidationStateDoc
 
 test_structures = {
-    name: struc
+    name: struc.get_reduced_structure()
     for name, struc in PymatgenTest.TEST_STRUCTURES.items()
     if name
     in [
@@ -20,14 +21,6 @@ test_structures = {
         "NaFePO4",
         "Pb2TiZrO6",
         "SrTiO3",
-    ]
-}
-
-fail_structures = {
-    name: struc
-    for name, struc in PymatgenTest.TEST_STRUCTURES.items()
-    if name
-    in [
         "TiO2",
         "BaNiO3",
         "VO2",
@@ -38,16 +31,6 @@ fail_structures = {
 @pytest.mark.parametrize("structure", test_structures.values())
 def test_oxidation_state(structure: Structure):
     """Very simple test to make sure this actually works"""
-
+    print(f"Should work : {structure.composition}")
     doc = OxidationStateDoc.from_structure(structure)
-    print(structure.composition)
     assert doc is not None
-
-
-@pytest.mark.parametrize("structure", fail_structures.values())
-def test_oxidation_state_failures(structure: Structure):
-    """Very simple test to make sure this actually fails"""
-
-    doc = OxidationStateDoc.from_structure(structure)
-    print(structure.composition)
-    assert doc is None
