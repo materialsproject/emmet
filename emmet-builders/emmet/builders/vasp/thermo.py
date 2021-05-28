@@ -224,9 +224,9 @@ class ThermoBuilder(Builder):
         if self.oxidation_states:
             material_ids = [t["material_id"] for t in materials_docs]
             oxi_states_data = {
-                d["material_id"]: d["bond_valence"]["average_oxidation_states"]
+                d["material_id"]: d.get("average_oxidation_states", {})
                 for d in self.oxidation_states.query(
-                    properties=["material_id", "bond_valence.average_oxidation_states"],
+                    properties=["material_id", "average_oxidation_states"],
                     criteria={"material_id": {"$in": material_ids}, "successful": True},
                 )
             }
@@ -258,7 +258,7 @@ class ThermoBuilder(Builder):
         updated_mats = self.thermo.newer_in(self.materials, criteria=self.query)
         updated_chemsys = set(
             self.materials.distinct(
-                "chemsys", {self.materials.key: {"$in": list(updated_mats)}}
+                "chemsys", {"material_id": {"$in": list(updated_mats)}}
             )
         )
         self.logger.debug(f"Found {len(updated_chemsys)} updated chemical systems")
@@ -269,8 +269,8 @@ class ThermoBuilder(Builder):
         """Gets newer chemical system as defined by introduction of a new material"""
 
         # All materials that are not present in the thermo collection
-        thermo_mat_ids = self.thermo.distinct(self.thermo.key)
-        mat_ids = self.materials.distinct(self.materials.key, self.query)
+        thermo_mat_ids = self.thermo.distinct("material_id")
+        mat_ids = self.materials.distinct("material_id", self.query)
         dif_task_ids = list(set(mat_ids) - set(thermo_mat_ids))
         q = {"material_id": {"$in": dif_task_ids}}
         new_mat_chemsys = set(self.materials.distinct("chemsys", q))
