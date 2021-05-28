@@ -62,6 +62,7 @@ class ThermoBuilder(Builder):
 
         # Search index for materials
         self.materials.ensure_index("material_id")
+        self.materials.ensure_index("chemsys")
         self.materials.ensure_index("last_updated")
 
         # Search index for thermo
@@ -99,10 +100,12 @@ class ThermoBuilder(Builder):
         affected_chemsys = self.get_affected_chemsys(updated_chemsys | new_chemsys)
 
         # Remove overlapping chemical systems
-        to_process_chemsys = set()
+        processed = set()
+        to_process_chemsys = []
         for chemsys in updated_chemsys | new_chemsys | affected_chemsys:
-            if chemsys not in to_process_chemsys:
-                to_process_chemsys |= chemsys_permutations(chemsys)
+            if chemsys not in processed:
+                processed |= chemsys_permutations(chemsys)
+                to_process_chemsys.append(chemsys)
 
         self.logger.info(
             f"Found {len(to_process_chemsys)} chemical systems with new/updated materials to process"
