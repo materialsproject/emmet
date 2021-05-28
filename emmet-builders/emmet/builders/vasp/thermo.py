@@ -1,3 +1,4 @@
+import warnings
 from collections import defaultdict
 from itertools import chain
 from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple
@@ -137,7 +138,11 @@ class ThermoBuilder(Builder):
         for entry in entries:
             material_entries[entry.entry_id][entry.data["run_type"]] = entry
 
-        pd_entries = self.compatibility.process_entries(entries)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message="Failed to guess oxidation states.*"
+            )
+            pd_entries = self.compatibility.process_entries(entries)
         self.logger.debug(f"{len(pd_entries)} remain in {chemsys} after filtering")
 
         try:
