@@ -1,4 +1,4 @@
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 from maggma.builders import MapBuilder
@@ -6,10 +6,10 @@ from maggma.core import Store
 from pymatgen.core import Structure
 
 from emmet.builders import SETTINGS
+from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.vasp.calc_types import run_type, task_type
 from emmet.core.vasp.task import TaskDocument
 from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
-from emmet.builders.settings import EmmetBuildSettings
 
 
 class TaskValidator(MapBuilder):
@@ -40,8 +40,9 @@ class TaskValidator(MapBuilder):
             projection=[
                 "orig_inputs",
                 "output.structure",
+                "output.bandgap",
                 "input.parameters",
-                "calcs_reversed.output.ionic_steps.e_fr_energy",
+                "calcs_reversed.output.ionic_steps.electronic_steps.e_fr_energy",
                 "tags",
             ],
             query=query,

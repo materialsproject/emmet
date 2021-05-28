@@ -1,12 +1,9 @@
 """ Core definition of a Materials Document """
-from datetime import datetime
-from functools import partial
-from typing import ClassVar, List, Mapping, Optional, Sequence, Tuple, TypeVar, Union
+from typing import Dict, List, Mapping, Sequence
 
-from pydantic import BaseModel, Field, create_model
+from pydantic import Field
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
-from pymatgen.core import Structure
+from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.core import SETTINGS
@@ -44,8 +41,8 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
     def from_tasks(
         cls,
         task_group: List[TaskDocument],
-        quality_scores=SETTINGS.VASP_QUALITY_SCORES,
-        use_statics: bool = False,
+        quality_scores: Dict[str, int] = SETTINGS.VASP_QUALITY_SCORES,
+        use_statics: bool = SETTINGS.VASP_USE_STATICS,
     ) -> "MaterialsDoc":
         """
         Converts a group of tasks into one material

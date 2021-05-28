@@ -1,21 +1,13 @@
 from datetime import datetime
 from itertools import chain
-from operator import itemgetter
-from typing import Dict, Iterator, List, Optional
+from typing import Dict, Iterable, Iterator, List, Optional
 
 from maggma.builders import Builder
 from maggma.stores import Store
-from pymatgen.core import Structure
-from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
+from maggma.utils import grouper
 
-from emmet.builders.utils import maximal_spanning_non_intersecting_subsets
-
-# from emmet.core import SETTINGS
-from emmet.builders import SETTINGS
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import group_structures, jsanitize
-from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.vasp.task import TaskDocument
 
@@ -33,11 +25,8 @@ class MaterialsBuilder(Builder):
         1.) Find all documents with the same formula
         2.) Select only task documents for the task_types we can select properties from
         3.) Aggregate task documents based on strucutre similarity
-        4.) Convert task docs to property docs with metadata for selection and aggregation
-        5.) Select the best property doc for each property
-        6.) Build material document from best property docs
-        7.) Post-process material document
-        8.) Validate material document
+        4.) Create a MaterialDoc from the group of task documents
+        5.) Validate material document
 
     """
 
@@ -56,6 +45,7 @@ class MaterialsBuilder(Builder):
             materials: Store of materials documents to generate
             task_validation: Store for storing task validation results
             query: dictionary to limit tasks to be analyzed
+            settings: EmmetSettings to use in the build process
         """
 
         self.tasks = tasks
@@ -84,12 +74,41 @@ class MaterialsBuilder(Builder):
         # Search index for materials
         self.materials.ensure_index("material_id")
         self.materials.ensure_index("last_updated")
-        self.materials.ensure_index("sandboxes")
         self.materials.ensure_index("task_ids")
 
         if self.task_validation:
             self.task_validation.ensure_index("task_id")
             self.task_validation.ensure_index("valid")
+
+    def prechunk(self, number_splits: int) -> Iterable[Dict]:
+        """Prechunk the materials builder for distributed computation"""
+        temp_query = dict(self.query)
+        temp_query["state"] = "successful"
+        if len(self.settings.BUILD_TAGS) > 0 and len(self.settings.EXCLUDED_TAGS) > 0:
+            temp_query["$and"] = [
+                {"tags": {"$in": self.settings.BUILD_TAGS}},
+                {"tags": {"$nin": self.settings.EXCLUDED_TAGS}},
+            ]
+        elif len(self.settings.BUILD_TAGS) > 0:
+            temp_query["tags"] = {"$in": self.settings.BUILD_TAGS}
+
+        self.logger.info("Finding tasks to process")
+        all_tasks = {
+            doc[self.tasks.key]
+            for doc in self.tasks.query(temp_query, [self.tasks.key])
+        }
+        processed_tasks = {
+            t_id
+            for d in self.materials.query({}, ["task_ids"])
+            for t_id in d.get("task_ids", [])
+        }
+        to_process_tasks = all_tasks - processed_tasks
+        to_process_forms = self.tasks.distinct(
+            "formula_pretty", {self.tasks.key: {"$in": list(to_process_tasks)}}
+        )
+
+        for formula_chunk in grouper(to_process_forms, number_splits):
+            yield {"formula_pretty": {"$in": list(formula_chunk)}}
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
@@ -213,7 +232,7 @@ class MaterialsBuilder(Builder):
                 )
         self.logger.debug(f"Produced {len(materials)} materials for {formula}")
 
-        return [mat.dict() for mat in materials]
+        return jsanitize([mat.dict() for mat in materials], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """
@@ -235,7 +254,7 @@ class MaterialsBuilder(Builder):
             self.logger.info(f"Updating {len(items)} materials")
             self.materials.remove_docs({self.materials.key: {"$in": material_ids}})
             self.materials.update(
-                docs=jsanitize(items, allow_bson=True),
+                docs=items,
                 key=["material_id"],
             )
         else:
