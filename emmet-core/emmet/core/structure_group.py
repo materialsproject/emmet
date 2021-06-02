@@ -7,11 +7,9 @@ from typing import Iterable, List, Union
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
-from pymatgen.core import Composition, Structure
+from pymatgen.core import Composition
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-
-from emmet.core.mpid import MPID
 
 logger = logging.getLogger(__name__)
 

@@ -1,10 +1,12 @@
-from emmet.core.search import SearchDoc
-from emmet.core.mpid import MPID
-from emmet.core.utils import jsanitize
-from maggma.builders import Builder
 from collections import defaultdict
 from math import ceil
+
+from maggma.builders import Builder
 from maggma.utils import grouper
+
+from emmet.core.mpid import MPID
+from emmet.core.search import SearchDoc
+from emmet.core.utils import jsanitize
 
 
 class SearchBuilder(Builder):
@@ -96,18 +98,29 @@ class SearchBuilder(Builder):
                 "materials": list(self.materials.query({self.materials.key: entry})),
                 "thermo": list(self.thermo.query({self.thermo.key: entry})),
                 "xas": list(self.xas.query({self.xas.key: entry})),
-                "grain_boundaries": list(self.grain_boundaries.query({self.grain_boundaries.key: entry})),
-                "electronic_structure": list(self.electronic_structure.query({self.electronic_structure.key: entry})),
+                "grain_boundaries": list(
+                    self.grain_boundaries.query({self.grain_boundaries.key: entry})
+                ),
+                "electronic_structure": list(
+                    self.electronic_structure.query(
+                        {self.electronic_structure.key: entry}
+                    )
+                ),
                 "magnetism": list(self.magnetism.query({self.magnetism.key: entry})),
                 "elasticity": list(self.elasticity.query({self.elasticity.key: entry})),
                 "dielectric": list(self.dielectric.query({self.dielectric.key: entry})),
-                "phonon": list(self.phonon.query({self.phonon.key: entry}, [self.phonon.key])),
+                "phonon": list(
+                    self.phonon.query({self.phonon.key: entry}, [self.phonon.key])
+                ),
                 "insertion_electrodes": list(
                     self.insertion_electrodes.query(
-                        {self.insertion_electrodes.key: entry}, [self.insertion_electrodes.key]
+                        {self.insertion_electrodes.key: entry},
+                        [self.insertion_electrodes.key],
                     )
                 ),
-                "surface_properties": list(self.surfaces.query({self.surfaces.key: entry})),
+                "surface_properties": list(
+                    self.surfaces.query({self.surfaces.key: entry})
+                ),
                 "substrates": list(self.surfaces.query({self.substrates.key: entry})),
                 "eos": list(self.eos.query({self.eos.key: entry}, [self.eos.key])),
             }
@@ -207,11 +220,20 @@ class SearchBuilder(Builder):
 
                     d[id]["has_props"].add("grain_boundaries")
 
-                    d[id]["grain_boundaries"].append({field: doc[field] for field in gb_fields})
+                    d[id]["grain_boundaries"].append(
+                        {field: doc[field] for field in gb_fields}
+                    )
 
             # Electronic Structure + Bandstructure + DOS
 
-            es_fields = ["band_gap", "efermi", "cbm", "vbm", "is_gap_direct", "is_metal"]
+            es_fields = [
+                "band_gap",
+                "efermi",
+                "cbm",
+                "vbm",
+                "is_gap_direct",
+                "is_metal",
+            ]
 
             for doc in item["electronic_structure"]:
                 if doc[self.electronic_structure.key] == id:

@@ -1,11 +1,11 @@
-import pytest
 from pathlib import Path
-from maggma.stores import JSONStore, MemoryStore
 
-from emmet.builders.vasp.materials import MaterialsBuilder
-from emmet.builders.materials.electronic_structure import ElectronicStructureBuilder
+import pytest
+from maggma.stores import JSONStore, MemoryStore
 from monty.serialization import dumpfn, loadfn
-from emmet.core.utils import jsanitize
+
+from emmet.builders.materials.electronic_structure import ElectronicStructureBuilder
+from emmet.builders.vasp.materials import MaterialsBuilder
 
 
 @pytest.fixture(scope="session")
@@ -53,7 +53,9 @@ def test_electronic_structure_builder(
 
 
 def test_serialization(tmpdir):
-    builder = ElectronicStructureBuilder(MemoryStore(), MemoryStore(), MemoryStore(), MemoryStore(), MemoryStore())
+    builder = ElectronicStructureBuilder(
+        MemoryStore(), MemoryStore(), MemoryStore(), MemoryStore(), MemoryStore()
+    )
 
     dumpfn(builder.as_dict(), Path(tmpdir) / "test.json")
     loadfn(Path(tmpdir) / "test.json")

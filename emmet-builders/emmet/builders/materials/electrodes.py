@@ -1,34 +1,22 @@
 import math
 import operator
-from collections import namedtuple
 from datetime import datetime
 from functools import lru_cache
-from itertools import chain, groupby
-from pprint import pprint
+from itertools import chain
 from typing import Any, Dict, Iterable, List
 
-from maggma.builders import Builder, MapBuilder
+from maggma.builders import Builder
 from maggma.stores import MongoStore
-from monty.json import MontyEncoder
-from numpy import unique
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
-from pymatgen.apps.battery.insertion_battery import InsertionElectrode
-from pymatgen.core import Composition, Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.electrode import InsertionElectrodeDoc
 from emmet.core.structure_group import StructureGroupDoc
 from emmet.core.utils import jsanitize
 
-__author__ = "Jimmy Shen"
-__email__ = "jmmshn@lbl.gov"
-
 
 def s_hash(el):
     return el.data["comp_delith"]
 
-
-# MatDoc = namedtuple("MatDoc", ["material_id", "structure", "formula_pretty", "framework"])
 
 REDOX_ELEMENTS = [
     "Ti",

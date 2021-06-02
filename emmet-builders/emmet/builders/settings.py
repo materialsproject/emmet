@@ -2,10 +2,12 @@
 Settings for defaults in the build pipelines for the Materials Project
 """
 from typing import List
+
 from pydantic.fields import Field
+
+from emmet.core.provenance import Author, History
 from emmet.core.settings import EmmetSettings
 from emmet.core.vasp.calc_types import TaskType
-from emmet.core.provenance import Author, History
 
 
 class EmmetBuildSettings(EmmetSettings):

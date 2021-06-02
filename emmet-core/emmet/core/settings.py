@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Type, TypeVar, Union
 
 import requests
-from pydantic import BaseSettings, Field, root_validator, validator
+from pydantic import BaseSettings, Field, root_validator
 from pydantic.types import PyObject
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))

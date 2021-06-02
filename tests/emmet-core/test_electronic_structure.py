@@ -1,6 +1,7 @@
-from emmet.core.electronic_structure import ElectronicStructureDoc
 import pytest
 from monty.serialization import loadfn
+
+from emmet.core.electronic_structure import ElectronicStructureDoc
 
 
 @pytest.fixture(scope="session")
@@ -54,4 +55,3 @@ def test_from_bsdos(bandstructure, dos, structure):
     assert es_doc.bandstructure.setyawan_curtarolo.band_gap == 0.0
     assert es_doc.bandstructure.setyawan_curtarolo.efermi == 5.18804178
     assert es_doc.bandstructure.setyawan_curtarolo.nbands == 96.0
-

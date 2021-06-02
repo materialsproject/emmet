@@ -1,20 +1,16 @@
 from collections import defaultdict
 from itertools import chain
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Tuple
 
-import numpy as np
 from maggma.core import Builder, Store
 from maggma.utils import grouper
-from pymatgen.analysis.structure_matcher import StructureMatcher
+from pymatgen.analysis.structure_matcher import OrderDisorderElementComparator
 from pymatgen.core import Structure
 from pymatgen.util.provenance import StructureNL
 
-from emmet.builders import SETTINGS
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.provenance import ProvenanceDoc
 from emmet.core.utils import group_structures
-from emmet.core.vasp.calc_types import run_type, task_type
-from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
 
 
 class ProvenanceBuilder(Builder):
@@ -43,6 +39,11 @@ class ProvenanceBuilder(Builder):
         self.query = query
         self.kwargs = kwargs
 
+        materials.key = "material_id"
+        provenance.key = "material_id"
+        for s in source_snls:
+            s.key = "snl_id"
+
         super().__init__(
             sources=[materials, *source_snls], targets=[provenance], **kwargs
         )
@@ -58,6 +59,40 @@ class ProvenanceBuilder(Builder):
         for s in self.source_snls:
             s.ensure_index("snl_id")
             s.ensure_index("formula_pretty")
+
+    def prechunk(self, number_splits: int) -> Iterable[Dict]:
+        self.ensure_indicies()
+
+        # Find all formulas for materials that have been updated since this
+        # builder was last ran
+        q = {**self.query, "property_name": ProvenanceDoc.property_name}
+        updated_materials = self.provenance.newer_in(
+            self.materials,
+            criteria=q,
+            exhaustive=True,
+        )
+        forms_to_update = set(
+            self.materials.distinct(
+                "formula_pretty", {"material_id": {"$in": updated_materials}}
+            )
+        )
+
+        # Find all new SNL formulas since the builder was last run
+        for source in self.source_snls:
+            new_snls = self.provenance.newer_in(source)
+            forms_to_update |= set(source.distinct("formula_pretty", new_snls))
+
+        # Now reduce to the set of formulas we actually have
+        forms_avail = set(self.materials.distinct("formula_pretty", self.query))
+        forms_to_update = forms_to_update & forms_avail
+
+        self.logger.info(
+            f"Found {len(forms_to_update)} new/updated systems to distribute to workers "
+            f"in chunks of {len(forms_to_update)/number_splits}"
+        )
+
+        for chunk in grouper(forms_to_update, number_splits):
+            yield {"formula_pretty": {"$in": chunk}}
 
     def get_items(self) -> Tuple[List[Dict], List[Dict]]:
         """
@@ -183,6 +218,7 @@ class ProvenanceBuilder(Builder):
             ltol=self.settings.LTOL,
             stol=self.settings.STOL,
             angle_tol=self.settings.ANGLE_TOL,
+            comparator=OrderDisorderElementComparator(),
         )
         matched_groups = [
             group
@@ -191,8 +227,8 @@ class ProvenanceBuilder(Builder):
         ]
         snls = [
             struc
-            for struc in group
             for group in matched_groups
+            for struc in group
             if isinstance(struc, StructureNL)
         ]
 

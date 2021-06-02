@@ -1,14 +1,14 @@
 import warnings
 from collections import defaultdict
 from itertools import chain
-from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple
+from typing import Dict, Iterable, Iterator, List, Optional, Set
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
 from monty.json import MontyDecoder
 from pymatgen.analysis.phase_diagram import PhaseDiagramError
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.builders.utils import chemsys_permutations
 from emmet.core.thermo import ThermoDoc

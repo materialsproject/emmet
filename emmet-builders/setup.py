@@ -1,4 +1,4 @@
-from setuptools import setup, find_namespace_packages
+from setuptools import find_namespace_packages, setup
 from setuptools_scm import get_version
 
 version = get_version(root="..", relative_to=__file__, version_scheme="post-release")

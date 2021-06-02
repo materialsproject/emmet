@@ -1,17 +1,18 @@
 import datetime
 from enum import Enum
-from itertools import groupby, product
-from pathlib import Path
-from typing import Dict, Iterator, List
+from itertools import groupby
+from typing import Iterator, List
 
 import bson
 import numpy as np
 from monty.json import MSONable
-from monty.serialization import loadfn
 from pydantic import BaseModel
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
+from pymatgen.analysis.structure_matcher import (
+    AbstractComparator,
+    ElementComparator,
+    StructureMatcher,
+)
 from pymatgen.core.structure import Structure
-from typing_extensions import Literal
 
 from emmet.core import SETTINGS
 
@@ -30,6 +31,7 @@ def group_structures(
     stol: float = SETTINGS.STOL,
     angle_tol: float = SETTINGS.ANGLE_TOL,
     symprec: float = SETTINGS.SYMPREC,
+    comparator: AbstractComparator = ElementComparator(),
 ) -> Iterator[List[Structure]]:
     """
     Groups structures according to space group and structure matching
@@ -50,7 +52,7 @@ def group_structures(
         scale=True,
         attempt_supercell=False,
         allow_subset=False,
-        comparator=ElementComparator(),
+        comparator=comparator,
     )
 
     def _get_sg(struc):

@@ -1,27 +1,31 @@
 from collections import defaultdict
 from math import ceil
+
 import numpy as np
-
-from emmet.core.electronic_structure import ElectronicStructureDoc
-from emmet.core import SETTINGS
-from emmet.core.utils import jsanitize
-
 from maggma.builders import Builder
 from maggma.utils import grouper
-
+from pymatgen.analysis.magnetism.analyzer import CollinearMagneticStructureAnalyzer
 from pymatgen.core import Structure
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.bandstructure import HighSymmKpath
-from pymatgen.analysis.magnetism.analyzer import CollinearMagneticStructureAnalyzer
 
-
-__author__ = "Jason Munro <jmunro@lbl.gov>"
+from emmet.core import SETTINGS
+from emmet.core.electronic_structure import ElectronicStructureDoc
+from emmet.core.utils import jsanitize
 
 
 class ElectronicStructureBuilder(Builder):
     def __init__(
-        self, tasks, materials, electronic_structure, bandstructure_fs, dos_fs, chunk_size=10, query=None, **kwargs
+        self,
+        tasks,
+        materials,
+        electronic_structure,
+        bandstructure_fs,
+        dos_fs,
+        chunk_size=10,
+        query=None,
+        **kwargs
     ):
         """
         Creates an electronic structure collection from a tasks collection,
@@ -60,7 +64,9 @@ class ElectronicStructureBuilder(Builder):
         """
         q = dict(self.query)
 
-        keys = self.electronic_structure.newer_in(self.materials, criteria=q, exhaustive=True)
+        keys = self.electronic_structure.newer_in(
+            self.materials, criteria=q, exhaustive=True
+        )
 
         N = ceil(len(keys) / number_splits)
         for split in grouper(keys, N):
@@ -81,13 +87,17 @@ class ElectronicStructureBuilder(Builder):
         mat_ids = self.materials.distinct(self.materials.key, criteria=q)
         es_ids = self.electronic_structure.distinct(self.electronic_structure.key)
 
-        mats_set = set(self.electronic_structure.newer_in(target=self.materials, criteria=q, exhaustive=True)) | (
-            set(mat_ids) - set(es_ids)
-        )
+        mats_set = set(
+            self.electronic_structure.newer_in(
+                target=self.materials, criteria=q, exhaustive=True
+            )
+        ) | (set(mat_ids) - set(es_ids))
 
         mats = [mat for mat in mats_set]
 
-        self.logger.info("Processing {} materials for electronic structure".format(len(mats)))
+        self.logger.info(
+            "Processing {} materials for electronic structure".format(len(mats))
+        )
 
         self.total = len(mats)
 
@@ -116,17 +126,27 @@ class ElectronicStructureBuilder(Builder):
         for bs_type, bs_entry in mat["bandstructure"].items():
             if bs_entry.get("object", None) is not None:
                 bs[bs_type] = (
-                    {bs_entry["task_id"]: BandStructureSymmLine.from_dict(bs_entry["object"])} if bs_entry else None
+                    {
+                        bs_entry["task_id"]: BandStructureSymmLine.from_dict(
+                            bs_entry["object"]
+                        )
+                    }
+                    if bs_entry
+                    else None
                 )
 
         if mat["dos"]:
             if mat["dos"]["object"] is not None:
                 self.logger.info("Processing density of states")
-                dos = {mat["dos"]["task_id"]: CompleteDos.from_dict(mat["dos"]["object"])}
+                dos = {
+                    mat["dos"]["task_id"]: CompleteDos.from_dict(mat["dos"]["object"])
+                }
 
         if bs:
             self.logger.info(
-                "Processing band structure types: {}".format([bs_type for bs_type, bs_entry in bs.items() if bs_entry])
+                "Processing band structure types: {}".format(
+                    [bs_type for bs_type, bs_entry in bs.items() if bs_entry]
+                )
             )
 
         if dos is None:
@@ -187,7 +207,13 @@ class ElectronicStructureBuilder(Builder):
         # find bs type for each task in task_type and store each different bs object
 
         mat = self.materials.query_one(
-            properties=[self.materials.key, "structure", "inputs", "task_types", self.materials.last_updated_field],
+            properties=[
+                self.materials.key,
+                "structure",
+                "inputs",
+                "task_types",
+                self.materials.last_updated_field,
+            ],
             criteria={self.materials.key: mat_id},
         )
 
@@ -224,14 +250,18 @@ class ElectronicStructureBuilder(Builder):
 
                 kpoints = task_query["orig_inputs"]["kpoints"]
                 labels_dict = {
-                    label: point for label, point in zip(kpoints["labels"], kpoints["kpoints"]) if label is not None
+                    label: point
+                    for label, point in zip(kpoints["labels"], kpoints["kpoints"])
+                    if label is not None
                 }
 
                 bs_type = self._obtain_path_type(labels_dict, structure)
 
                 if bs_type is None:
 
-                    bs_dict = self.bandstructure_fs.query_one({self.bandstructure_fs.key: str(task_id)})
+                    bs_dict = self.bandstructure_fs.query_one(
+                        {self.bandstructure_fs.key: str(task_id)}
+                    )
 
                     if bs_dict is not None:
 
@@ -271,8 +301,13 @@ class ElectronicStructureBuilder(Builder):
 
                 is_hubbard = task_query["input"]["is_hubbard"]
 
-                if task_query["orig_inputs"]["kpoints"]["generation_style"] == "Monkhorst":
-                    nkpoints = np.prod(task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0)
+                if (
+                    task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Monkhorst"
+                ):
+                    nkpoints = np.prod(
+                        task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
+                    )
                 else:
                     nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
 
@@ -305,14 +340,18 @@ class ElectronicStructureBuilder(Builder):
 
                 structure = Structure.from_dict(task_query["input"]["structure"])
 
-                other_mag_ordering = CollinearMagneticStructureAnalyzer(structure).ordering
+                other_mag_ordering = CollinearMagneticStructureAnalyzer(
+                    structure
+                ).ordering
 
                 is_hubbard = task_query["input"]["is_hubbard"]
 
                 last_calc = task_query["calcs_reversed"][-1]
 
                 if last_calc["input"]["kpoints"]["generation_style"] == "Monkhorst":
-                    nkpoints = np.prod(last_calc["input"]["kpoints"]["kpoints"][0], axis=0)
+                    nkpoints = np.prod(
+                        last_calc["input"]["kpoints"]["kpoints"][0], axis=0
+                    )
                 else:
                     nkpoints = last_calc["input"]["kpoints"]["nkpoints"]
 
@@ -320,7 +359,9 @@ class ElectronicStructureBuilder(Builder):
 
                 other_calcs.append(
                     {
-                        "is_static": True if "Static" in mat["task_types"][task_id] else False,
+                        "is_static": True
+                        if "Static" in mat["task_types"][task_id]
+                        else False,
                         "task_id": task_id,
                         "is_hubbard": int(is_hubbard),
                         "nkpoints": int(nkpoints),
@@ -330,11 +371,15 @@ class ElectronicStructureBuilder(Builder):
                     }
                 )
 
-        updated_materials_doc = self._obtain_blessed_calculations(mat, bs_calcs, dos_calcs, other_calcs)
+        updated_materials_doc = self._obtain_blessed_calculations(
+            mat, bs_calcs, dos_calcs, other_calcs
+        )
 
         return updated_materials_doc
 
-    def _obtain_blessed_calculations(self, materials_doc, bs_calcs, dos_calcs, other_calcs):
+    def _obtain_blessed_calculations(
+        self, materials_doc, bs_calcs, dos_calcs, other_calcs
+    ):
 
         bs_types = ["setyawan_curtarolo", "hinuma", "latimer_munro"]
 
@@ -343,34 +388,58 @@ class ElectronicStructureBuilder(Builder):
             if bs_calcs[bs_type]:
                 sorted_bs_data = sorted(
                     bs_calcs[bs_type],
-                    key=lambda entry: (entry["is_hubbard"], entry["nkpoints"], entry["updated_on"]),
+                    key=lambda entry: (
+                        entry["is_hubbard"],
+                        entry["nkpoints"],
+                        entry["updated_on"],
+                    ),
                     reverse=True,
                 )
 
-                materials_doc["bandstructure"][bs_type]["task_id"] = sorted_bs_data[0]["task_id"]
+                materials_doc["bandstructure"][bs_type]["task_id"] = sorted_bs_data[0][
+                    "task_id"
+                ]
 
-                bs_obj = self.bandstructure_fs.query_one(criteria={"fs_id": sorted_bs_data[0]["fs_id"]})
+                bs_obj = self.bandstructure_fs.query_one(
+                    criteria={"fs_id": sorted_bs_data[0]["fs_id"]}
+                )
 
-                materials_doc["bandstructure"][bs_type]["object"] = bs_obj["data"] if bs_obj is not None else None
+                materials_doc["bandstructure"][bs_type]["object"] = (
+                    bs_obj["data"] if bs_obj is not None else None
+                )
 
             if dos_calcs:
 
                 sorted_dos_data = sorted(
                     dos_calcs,
-                    key=lambda entry: (entry["is_hubbard"], entry["nkpoints"], entry["nedos"], entry["updated_on"]),
+                    key=lambda entry: (
+                        entry["is_hubbard"],
+                        entry["nkpoints"],
+                        entry["nedos"],
+                        entry["updated_on"],
+                    ),
                     reverse=True,
                 )
 
                 materials_doc["dos"]["task_id"] = sorted_dos_data[0]["task_id"]
 
-                dos_obj = self.dos_fs.query_one(criteria={"fs_id": sorted_dos_data[0]["fs_id"]})
-                materials_doc["dos"]["object"] = dos_obj["data"] if dos_obj is not None else None
+                dos_obj = self.dos_fs.query_one(
+                    criteria={"fs_id": sorted_dos_data[0]["fs_id"]}
+                )
+                materials_doc["dos"]["object"] = (
+                    dos_obj["data"] if dos_obj is not None else None
+                )
 
             if other_calcs:
 
                 sorted_other_data = sorted(
                     other_calcs,
-                    key=lambda entry: (entry["is_static"], entry["is_hubbard"], entry["nkpoints"], entry["updated_on"]),
+                    key=lambda entry: (
+                        entry["is_static"],
+                        entry["is_hubbard"],
+                        entry["nkpoints"],
+                        entry["updated_on"],
+                    ),
                     reverse=True,
                 )
 
@@ -378,9 +447,13 @@ class ElectronicStructureBuilder(Builder):
 
                 task_output_data = sorted_other_data[0]["calcs_reversed"][-1]["output"]
                 materials_doc["other"]["band_gap"] = task_output_data["bandgap"]
-                materials_doc["other"]["magnetic_ordering"] = sorted_other_data[0]["magnetic_ordering"]
+                materials_doc["other"]["magnetic_ordering"] = sorted_other_data[0][
+                    "magnetic_ordering"
+                ]
 
-                materials_doc["other"]["is_metal"] = materials_doc["other"]["band_gap"] == 0.0
+                materials_doc["other"]["is_metal"] = (
+                    materials_doc["other"]["band_gap"] == 0.0
+                )
 
                 for prop in ["efermi", "cbm", "vbm", "is_gap_direct", "is_metal"]:
 
@@ -396,7 +469,11 @@ class ElectronicStructureBuilder(Builder):
 
     @staticmethod
     def _obtain_path_type(
-        labels_dict, structure, symprec=SETTINGS.SYMPREC, angle_tolerance=SETTINGS.ANGLE_TOL, atol=1e-5
+        labels_dict,
+        structure,
+        symprec=SETTINGS.SYMPREC,
+        angle_tolerance=SETTINGS.ANGLE_TOL,
+        atol=1e-5,
     ):
 
         bs_type = None
@@ -415,17 +492,24 @@ class ElectronicStructureBuilder(Builder):
                     atol=atol,
                 )
                 hs_labels_full = hskp.kpath["kpoints"]
-                hs_path_uniq = set([label for segment in hskp.kpath["path"] for label in segment])
+                hs_path_uniq = set(
+                    [label for segment in hskp.kpath["path"] for label in segment]
+                )
 
-                hs_labels = {k: hs_labels_full[k] for k in hs_path_uniq if k in hs_path_uniq}
+                hs_labels = {
+                    k: hs_labels_full[k] for k in hs_path_uniq if k in hs_path_uniq
+                }
 
                 shared_items = {
                     k: labels_dict[k]
                     for k in labels_dict
-                    if k in hs_labels and np.allclose(labels_dict[k], hs_labels[k], atol=1e-3)
+                    if k in hs_labels
+                    and np.allclose(labels_dict[k], hs_labels[k], atol=1e-3)
                 }
 
-                if len(shared_items) == len(labels_dict) and len(shared_items) == len(hs_labels):
+                if len(shared_items) == len(labels_dict) and len(shared_items) == len(
+                    hs_labels
+                ):
                     bs_type = ptype
 
         return bs_type

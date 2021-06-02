@@ -1,11 +1,10 @@
 import warnings
 from itertools import groupby
-from typing import Dict, List
+from typing import List
 
 import numpy as np
 from pydantic import Field
 from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
-from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 

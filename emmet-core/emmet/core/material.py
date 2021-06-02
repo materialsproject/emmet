@@ -2,11 +2,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from functools import partial
-from typing import ClassVar, Mapping, Optional, Sequence, Type, TypeVar, Union
+from typing import Mapping, Sequence, Type, TypeVar
 
-from pydantic import BaseModel, Field, create_model
-from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
+from pydantic import BaseModel, Field
 from pymatgen.core import Structure
 
 from emmet.core.mpid import MPID

@@ -1,6 +1,5 @@
 import re
-from dataclasses import dataclass
-from typing import Tuple, Union
+from typing import Union
 
 mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
 

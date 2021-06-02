@@ -1,7 +1,7 @@
 """ Core definition of Structure metadata """
 from __future__ import annotations
 
-from typing import List, Optional, Type, TypeVar, overload
+from typing import List, Optional, Type, TypeVar
 
 from pydantic import BaseModel, Field
 from pymatgen.core import Composition, Structure

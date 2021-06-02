@@ -1,4 +1,3 @@
-import pydantic
 import pytest
 from pymatgen.core import Structure
 from pymatgen.util.testing import PymatgenTest

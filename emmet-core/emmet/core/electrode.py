@@ -11,7 +11,6 @@ from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry
 
 from emmet.core.mpid import MPID
-from emmet.core.utils import jsanitize
 
 
 class VoltagePairDoc(BaseModel):

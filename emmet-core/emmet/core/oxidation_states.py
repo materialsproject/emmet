@@ -1,6 +1,5 @@
 import logging
 from collections import defaultdict
-from itertools import groupby
 from typing import Dict, List
 
 import numpy as np

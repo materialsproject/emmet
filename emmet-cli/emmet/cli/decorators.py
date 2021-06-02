@@ -1,15 +1,15 @@
-import os
-import io
-import click
-import logging
 import contextlib
-
+import io
+import logging
+import os
 from datetime import datetime
 from functools import update_wrapper
+
+import click
 from slurmpy import Slurm
 
 from emmet.cli import SETTINGS
-from emmet.cli.utils import reconstruct_command, EmmetCliError, ReturnCodes
+from emmet.cli.utils import EmmetCliError, ReturnCodes, reconstruct_command
 
 logger = logging.getLogger("emmet")
 COMMENT_TEMPLATE = """

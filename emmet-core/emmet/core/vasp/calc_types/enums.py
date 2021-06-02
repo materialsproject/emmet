@@ -6,7 +6,7 @@ from emmet.core.utils import ValueEnum
 
 
 class RunType(ValueEnum):
-    """ VASP calculation run types """
+    """VASP calculation run types"""
 
     AM05 = "AM05"
     GGA = "GGA"
@@ -71,7 +71,7 @@ class RunType(ValueEnum):
 
 
 class TaskType(ValueEnum):
-    """ VASP calculation task types """
+    """VASP calculation task types"""
 
     NSCF_Line = "NSCF Line"
     NSCF_Uniform = "NSCF Uniform"
@@ -87,7 +87,7 @@ class TaskType(ValueEnum):
 
 
 class CalcType(ValueEnum):
-    """ VASP calculation types """
+    """VASP calculation types"""
 
     AM05_NSCF_Line = "AM05 NSCF Line"
     AM05_NSCF_Uniform = "AM05 NSCF Uniform"

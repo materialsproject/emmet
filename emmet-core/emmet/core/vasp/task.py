@@ -1,28 +1,16 @@
 """ Core definition of a VASP Task Document """
-from datetime import datetime
-from functools import lru_cache, partial
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Union
 
-from pydantic import BaseModel, Field, validator
-from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
+from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.core import Composition, Structure
+from pymatgen.core import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core import SETTINGS
 from emmet.core.math import Matrix3D, Vector3D
-from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
 from emmet.core.task import TaskDocument as BaseTaskDocument
 from emmet.core.utils import ValueEnum
-from emmet.core.vasp.calc_types import (
-    CalcType,
-    RunType,
-    TaskType,
-    calc_type,
-    run_type,
-    task_type,
-)
+from emmet.core.vasp.calc_types import RunType, calc_type, run_type, task_type
 
 
 class Status(ValueEnum):
@@ -141,7 +129,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
 
     @property
     def entry(self) -> ComputedEntry:
-        """ Turns a Task Doc into a ComputedEntry"""
+        """Turns a Task Doc into a ComputedEntry"""
         entry_dict = {
             "correction": 0.0,
             "entry_id": self.task_id,
@@ -165,7 +153,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
 
     @property
     def structure_entry(self) -> ComputedStructureEntry:
-        """ Turns a Task Doc into a ComputedStructureEntry"""
+        """Turns a Task Doc into a ComputedStructureEntry"""
         entry_dict = self.entry.as_dict()
         entry_dict["structure"] = self.output.structure
 

@@ -1,23 +1,29 @@
-import os
-import sys
 import json
-import math
-import shlex
-import click
-import shutil
 import logging
-import subprocess
+import math
 import multiprocessing
-
-from fnmatch import fnmatch
+import os
+import shlex
+import shutil
+import subprocess
+import sys
 from collections import defaultdict, deque
+from fnmatch import fnmatch
+
+import click
 from hpsspy import HpssOSError
 from hpsspy.os.path import isfile
-from emmet.cli.utils import VaspDirsGenerator, EmmetCliError, ReturnCodes
-from emmet.cli.utils import ensure_indexes, get_subdir, parse_vasp_dirs
-from emmet.cli.utils import chunks, iterator_slice
-from emmet.cli.decorators import sbatch
 
+from emmet.cli.decorators import sbatch
+from emmet.cli.utils import (
+    EmmetCliError,
+    ReturnCodes,
+    VaspDirsGenerator,
+    chunks,
+    ensure_indexes,
+    iterator_slice,
+    parse_vasp_dirs,
+)
 
 logger = logging.getLogger("emmet")
 GARDEN = "/home/m/matcomp/garden"

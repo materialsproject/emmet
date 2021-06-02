@@ -1,13 +1,14 @@
-from typing import List, Dict
-from itertools import chain
-from datetime import datetime
 import traceback
+from datetime import datetime
+from itertools import chain
+from typing import Dict, List
 
-from maggma.core import Store
 from maggma.builders import GroupBuilder
+from maggma.core import Store
+
 from emmet.core.feff.task import TaskDocument as FEFFTaskDocument
-from emmet.core.xas import XASDoc
 from emmet.core.utils import jsanitize
+from emmet.core.xas import XASDoc
 
 
 class XASBuilder(GroupBuilder):

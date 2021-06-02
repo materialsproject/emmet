@@ -1,4 +1,5 @@
-from click.core import Context, Command, Group
+from click.core import Command, Context, Group
+
 from emmet.cli import emmet
 
 

@@ -8,7 +8,7 @@ from pydantic import BaseModel, EmailStr, Field, validator
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
-from emmet.core.utils import ValueEnum, group_structures
+from emmet.core.utils import ValueEnum
 
 
 class Database(ValueEnum):

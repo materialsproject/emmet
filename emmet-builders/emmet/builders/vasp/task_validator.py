@@ -1,13 +1,9 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, Optional
 
-import numpy as np
 from maggma.builders import MapBuilder
 from maggma.core import Store
-from pymatgen.core import Structure
 
-from emmet.builders import SETTINGS
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.vasp.calc_types import run_type, task_type
 from emmet.core.vasp.task import TaskDocument
 from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
 
