@@ -1,6 +1,6 @@
 import warnings
 from itertools import groupby
-from typing import List
+from typing import ClassVar, List
 
 import numpy as np
 from pydantic import Field
@@ -47,6 +47,8 @@ class XASDoc(SpectrumDoc):
     """
     Document describing a XAS Spectrum.
     """
+
+    spectrum_name: ClassVar[str] = "XAS"
 
     spectrum: XAS
 

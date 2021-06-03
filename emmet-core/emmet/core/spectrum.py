@@ -14,7 +14,7 @@ class SpectrumDoc(StructureMetadata):
     metadata on the structure the spectra pertains to
     """
 
-    spectrum_type: ClassVar[str]
+    spectrum_name: ClassVar[str]
 
     material_id: MPID = Field(
         ...,

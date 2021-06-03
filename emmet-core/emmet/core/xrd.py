@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import ClassVar, Dict
 
 import numpy as np
 from pydantic import Field, root_validator
@@ -28,6 +28,8 @@ class XRDDoc(SpectrumDoc):
     """
     Document describing a XRD Diffraction Pattern
     """
+
+    spectrum_name: ClassVar[str] = "XRD"
 
     spectrum: DiffractionPattern
     min_two_theta: float
