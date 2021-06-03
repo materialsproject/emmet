@@ -504,11 +504,8 @@ def compress(input_dir, output_dir, nproc):
     default=STORE_VOLUMETRIC_DATA,
     help="Store any of CHGCAR, LOCPOT, AECCAR0, AECCAR1, AECCAR2, ELFCAR.",
 )
-<<<<<<< HEAD
 def parse(task_ids, snl_metas, nproc, store_volumetric_data):  # noqa: C901
-=======
-def parse(task_ids, snl_metas, nproc, store_volumetric_data):
->>>>>>> 059ea1e (cli: add snl_metas option for parsing)
+
     """Parse VASP launchers into tasks"""
     ctx = click.get_current_context()
     if "CLIENT" not in ctx.obj:
@@ -549,13 +546,11 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data):
         # insert empty doc with max ID + 1 into target collection for parallel SLURM jobs
         # NOTE use regex first to reduce size of distinct below 16MB
         q = {"task_id": {"$regex": r"^mp-\d{7,}$"}}
-<<<<<<< HEAD
+
         all_task_ids = [
             t["task_id"] for t in target.collection.find(q, {"_id": 0, "task_id": 1})
         ]
-=======
-        all_task_ids = [t["task_id"] for t in target.collection.find(q, {"_id": 0, "task_id": 1})]
->>>>>>> 059ea1e (cli: add snl_metas option for parsing)
+
         if not all_task_ids:
             all_task_ids = target.collection.distinct("task_id")
 
