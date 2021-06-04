@@ -3,17 +3,19 @@ from collections import defaultdict
 from typing import Dict, List
 
 import numpy as np
-from pydantic import BaseModel
+from pydantic import Field
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Specie
 from typing_extensions import Literal
 
+from emmet.core.material_property import PropertyDoc
+from emmet.core.mpid import MPID
 
-class OxidationStateDoc(BaseModel):
 
-    possible_species: List[str]
-    possible_valences: List[float]
+class OxidationStateDoc(PropertyDoc):
+    """Oxidation states computed from the structure"""
+
     possible_species: List[str] = Field(
         description="Possible charged species in this material"
     )
@@ -26,7 +28,7 @@ class OxidationStateDoc(BaseModel):
     method: str = Field(description="Method used to compute oxidation states")
 
     @classmethod
-    def from_structure(cls, structure: Structure):
+    def from_structure(cls, structure: Structure, material_id: MPID):
         structure.remove_oxidation_states()
         try:
             bva = BVAnalyzer()
@@ -56,11 +58,8 @@ class OxidationStateDoc(BaseModel):
                 "possible_species": list(possible_species),
                 "possible_valences": valences,
                 "average_oxidation_states": oxi_state_dict,
-                "method": "BVAnalyzer",
-                "structure": structure,
+                "method": "Bond Valence Analysis",
             }
-
-            return cls(**d)
 
         except Exception as e:
             logging.error("BVAnalyzer failed with: {}".format(e))
@@ -83,12 +82,11 @@ class OxidationStateDoc(BaseModel):
                     "possible_species": list(possible_species),
                     "possible_valences": valences,
                     "average_oxidation_states": first_oxi_state_guess,
-                    "method": "oxi_state_guesses",
-                    "structure": structure,
+                    "method": "Oxidation State Guess",
                 }
-
-                return cls(**d)
 
             except Exception as e:
                 logging.error("Oxidation state guess failed with: {}".format(e))
                 raise e
+
+        return super().from_structure(structure=structure, material_id=material_id, **d)
