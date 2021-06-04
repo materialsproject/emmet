@@ -14,9 +14,16 @@ class OxidationStateDoc(BaseModel):
 
     possible_species: List[str]
     possible_valences: List[float]
-    average_oxidation_states: Dict[str, float]
-    method: Literal["BVAnalyzer", "oxi_state_guesses"]
-    structure: Structure
+    possible_species: List[str] = Field(
+        description="Possible charged species in this material"
+    )
+    possible_valences: List[float] = Field(
+        description="List of valences for each site in this material"
+    )
+    average_oxidation_states: Dict[str, float] = Field(
+        description="Average oxidation states for each unique species"
+    )
+    method: str = Field(description="Method used to compute oxidation states")
 
     @classmethod
     def from_structure(cls, structure: Structure):
