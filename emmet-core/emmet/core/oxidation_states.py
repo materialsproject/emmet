@@ -28,7 +28,9 @@ class OxidationStateDoc(PropertyDoc):
     method: str = Field(description="Method used to compute oxidation states")
 
     @classmethod
-    def from_structure(cls, structure: Structure, material_id: MPID):
+    def from_structure(
+        cls, structure: Structure, material_id: MPID, **kwargs  # type: ignore[override]
+    ):
         structure.remove_oxidation_states()
         try:
             bva = BVAnalyzer()
@@ -89,4 +91,6 @@ class OxidationStateDoc(PropertyDoc):
                 logging.error("Oxidation state guess failed with: {}".format(e))
                 raise e
 
-        return super().from_structure(structure=structure, material_id=material_id, **d)
+        return super().from_structure(
+            structure=structure, material_id=material_id, **d, **kwargs
+        )
