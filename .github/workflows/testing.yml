@@ -109,6 +109,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   auto-gen-release:
+    needs:
+      - lint
+      - test
+      - docs
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.EMMET_SEMVER_BUMP_TOKEN }}
