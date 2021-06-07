@@ -79,5 +79,7 @@ class MPID(str):
             return v
         elif isinstance(v, str) and mpid_regex.fullmatch(v):
             return MPID(v)
+        elif isinstance(v, int):
+            return MPID(v)
 
         raise ValueError("Invalid MPID Format")

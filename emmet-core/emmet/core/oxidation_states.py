@@ -3,23 +3,32 @@ from collections import defaultdict
 from typing import Dict, List
 
 import numpy as np
-from pydantic import BaseModel
+from pydantic import Field
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Specie
 from typing_extensions import Literal
 
+from emmet.core.material_property import PropertyDoc
+from emmet.core.mpid import MPID
 
-class OxidationStateDoc(BaseModel):
 
-    possible_species: List[str]
-    possible_valences: List[float]
-    average_oxidation_states: Dict[str, float]
-    method: Literal["BVAnalyzer", "oxi_state_guesses"]
-    structure: Structure
+class OxidationStateDoc(PropertyDoc):
+    """Oxidation states computed from the structure"""
+
+    possible_species: List[str] = Field(
+        description="Possible charged species in this material"
+    )
+    possible_valences: List[float] = Field(
+        description="List of valences for each site in this material"
+    )
+    average_oxidation_states: Dict[str, float] = Field(
+        description="Average oxidation states for each unique species"
+    )
+    method: str = Field(description="Method used to compute oxidation states")
 
     @classmethod
-    def from_structure(cls, structure: Structure):
+    def from_structure(cls, structure: Structure, material_id: MPID, **kwargs):  # type: ignore[override]
         structure.remove_oxidation_states()
         try:
             bva = BVAnalyzer()
@@ -49,11 +58,8 @@ class OxidationStateDoc(BaseModel):
                 "possible_species": list(possible_species),
                 "possible_valences": valences,
                 "average_oxidation_states": oxi_state_dict,
-                "method": "BVAnalyzer",
-                "structure": structure,
+                "method": "Bond Valence Analysis",
             }
-
-            return cls(**d)
 
         except Exception as e:
             logging.error("BVAnalyzer failed with: {}".format(e))
@@ -76,12 +82,13 @@ class OxidationStateDoc(BaseModel):
                     "possible_species": list(possible_species),
                     "possible_valences": valences,
                     "average_oxidation_states": first_oxi_state_guess,
-                    "method": "oxi_state_guesses",
-                    "structure": structure,
+                    "method": "Oxidation State Guess",
                 }
-
-                return cls(**d)
 
             except Exception as e:
                 logging.error("Oxidation state guess failed with: {}".format(e))
                 raise e
+
+        return super().from_structure(
+            structure=structure, material_id=material_id, **d, **kwargs
+        )

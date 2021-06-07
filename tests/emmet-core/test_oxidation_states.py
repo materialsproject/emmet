@@ -31,5 +31,5 @@ test_structures = {
 def test_oxidation_state(structure: Structure):
     """Very simple test to make sure this actually works"""
     print(f"Should work : {structure.composition}")
-    doc = OxidationStateDoc.from_structure(structure)
+    doc = OxidationStateDoc.from_structure(structure, material_id=33)
     assert doc is not None
