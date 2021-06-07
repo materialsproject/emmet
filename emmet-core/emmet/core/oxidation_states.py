@@ -28,9 +28,7 @@ class OxidationStateDoc(PropertyDoc):
     method: str = Field(description="Method used to compute oxidation states")
 
     @classmethod
-    def from_structure(
-        cls, structure: Structure, material_id: MPID, **kwargs  # type: ignore[override]
-    ):
+    def from_structure(cls, structure: Structure, material_id: MPID, **kwargs):  # type: ignore[override]
         structure.remove_oxidation_states()
         try:
             bva = BVAnalyzer()
