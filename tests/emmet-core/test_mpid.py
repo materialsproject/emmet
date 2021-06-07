@@ -16,6 +16,8 @@ def test_mpid():
         == 3
     )
 
+    MPID(3)
+
 
 def test_to_str():
     assert str(MPID("mp-149")) == "mp-149"
