@@ -55,10 +55,6 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         if len(task_group) == 0:
             raise Exception("Must have more than one task in the group.")
 
-        # Material ID
-        possible_mat_ids = [task.task_id for task in task_group]
-        material_id = min(possible_mat_ids)
-
         # Metadata
         last_updated = max(task.last_updated for task in task_group)
         created_at = min(task.completed_at for task in task_group)
@@ -82,6 +78,13 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             else structure_optimizations
         )
 
+        # Material ID
+        possible_mat_ids = [task.task_id for task in structure_optimizations]
+        material_id = min(possible_mat_ids)
+
+        # Always prefer a static over a structure opt
+        task_quality_scores = {"Structure Optimization": 1, "Static": 2}
+
         def _structure_eval(task: TaskDocument):
             """
             Helper function to order structures optimziation and statics calcs by
@@ -95,6 +98,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
             return (
                 -1 * quality_scores.get(task_run_type.value, 0),
+                -1 * task_quality_scores.get(task.task_type.value, 0),
                 -1 * task.input.parameters.get("ISPIN", 1),
                 -1 * task.input.parameters.get("LASPH", False),
                 task.output.energy_per_atom,
