@@ -47,8 +47,8 @@ class ThermoBuilder(Builder):
             else MaterialsProject2020Compatibility("Advanced")
         )
         self.oxidation_states = oxidation_states
-        self._completed_tasks = set()
-        self._entries_cache = defaultdict(list)
+        self._completed_tasks: Set[str] = set()
+        self._entries_cache: Dict[str, List[ComputedStructureEntry]] = defaultdict(list)
 
         sources = [materials]
         if oxidation_states is not None:
@@ -133,7 +133,9 @@ class ThermoBuilder(Builder):
 
         self.logger.debug(f"Processing {len(entries)} entries for {chemsys}")
 
-        material_entries = defaultdict(dict)
+        material_entries: Dict[str, Dict[str, ComputedStructureEntry]] = defaultdict(
+            dict
+        )
         pd_entries = []
         for entry in entries:
             material_entries[entry.entry_id][entry.data["run_type"]] = entry
