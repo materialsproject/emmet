@@ -1,12 +1,10 @@
-from typing import Dict
-from collections import defaultdict
 from math import ceil
 
 from maggma.builders import Builder
 from maggma.utils import grouper
 
 from emmet.core.mpid import MPID
-from emmet.core.search import SearchDoc, key
+from emmet.core.search import SearchDoc
 from emmet.core.utils import jsanitize
 
 
