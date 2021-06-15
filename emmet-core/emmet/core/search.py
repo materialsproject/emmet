@@ -261,3 +261,135 @@ class SearchDoc(PropertyDoc):
     # Theoretical
 
     theoretical: bool = Field(True, description="Whether the material is theoretical.")
+
+    @classmethod
+    def from_docs(cls, material_id: MPID, **docs: Dict[str, Dict]):
+        """Converts a bunch of search docs into a SearchDoc"""
+        doc = _copy_from_doc(docs)
+
+        # Reshape document for various sub-sections
+        # Electronic Structure + Bandstructure + DOS
+        doc["electronic_structure"] = {
+            k: v for sub_doc in doc["electronic_structure"] for k, v in sub_doc.items()
+        }
+        if "bandstructure" in doc:
+            doc["has_props"].append("bandstructure")
+        if "dos" in doc:
+            doc["has_props"].append("dos")
+        if "calc_id" in doc:
+            doc["es_source_calc_id"] = doc["calc_id"]
+            del doc["calc_id"]
+
+        # Magnetism
+        doc["spin_polarized"] = "magnetism" in doc
+
+        doc["has_props"] = list(set(doc["has_props"]))
+
+        return SearchDoc(material_id=material_id, **doc)
+
+
+# Key mapping
+search_fields: Dict[str, list] = {
+    "materials": [
+        "nsites",
+        "elements",
+        "nelements",
+        "composition",
+        "composition_reduced",
+        "formula_pretty",
+        "formula_anonymous",
+        "chemsys",
+        "volume",
+        "density",
+        "density_atomic",
+        "symmetry",
+        "structure",
+        "deprecated",
+    ],
+    "thermo": [
+        "uncorrected_energy_per_atom",
+        "energy_per_atom",
+        "formation_energy_per_atom",
+        "energy_above_hull",
+        "is_stable",
+        "equillibrium_reaction_energy_per_atom",
+        "decomposes_to",
+    ],
+    "xas": ["absorbing_element", "edge", "spectrum_type", "xas_id"],
+    "grain_boundaries": [
+        "gb_energy",
+        "sigma",
+        "type",
+        "rotation_angle",
+        "w_sep",
+    ],
+    "electronic_structure": [
+        "band_gap",
+        "efermi",
+        "cbm",
+        "vbm",
+        "is_gap_direct",
+        "is_metal",
+        "bandstructure",
+        "dos",
+        "calc_id",
+        "bandstructure",
+        "dos",
+    ],
+    "magnetism": [
+        "ordering",
+        "total_magnetization",
+        "total_magnetization_normalized_vol",
+        "total_magnetization_normalized_formula_units",
+    ],
+    "elasticity": [
+        "k_voigt",
+        "k_reuss",
+        "k_vrh",
+        "g_voigt",
+        "g_reuss",
+        "g_vrh",
+        "universal_anisotropy",
+        "homogeneous_poisson",
+    ],
+    "dielectric": ["e_total", "e_ionic", "e_static", "n"],
+    "piezoelectric": ["e_ij_max"],
+    "surface_properties": [
+        "weighted_surface_energy",
+        "weighted_surface_energy_EV_PER_ANG2",
+        "shape_factor",
+        "surface_anisotropy",
+    ],
+    "eos": [],
+    "phonon": [],
+    "insertion_electrodes": [],
+    "substrates": [],
+}
+
+
+def _copy_from_doc(doc):
+    """Helper functin to copy the list of keys over from amalgamated document"""
+    d = {"has_props": []}
+    # Complex function to grab the keys and put them in the root doc
+    # if the item is a list, it makes one doc per item with those corresponding keys
+    for sub_doc in search_fields:
+        if sub_doc in doc:
+            d["has_props"].append(sub_doc)
+            if isinstance(search_fields[sub_doc], list):
+                d[sub_doc] = []
+                for sub_item in search_fields[sub_doc]:
+                    temp_doc = {
+                        copy_key: sub_item[copy_key]
+                        for copy_key in search_fields[sub_doc]
+                        if copy_key in sub_item
+                    }
+                    d[sub_doc].append(temp_doc)
+            else:
+                d.update(
+                    {
+                        copy_key: d[sub_doc][copy_key]
+                        for copy_key in search_fields[sub_doc]
+                        if copy_key in d[sub_doc]
+                    }
+                )
+    return d
