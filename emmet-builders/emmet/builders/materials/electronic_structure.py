@@ -112,6 +112,7 @@ class ElectronicStructureBuilder(Builder):
 
         dos = None
         bs = {}
+        structures = {}
 
         for bs_type, bs_entry in mat["bandstructure"].items():
             if bs_entry.get("object", None) is not None:
@@ -119,10 +120,14 @@ class ElectronicStructureBuilder(Builder):
                     {bs_entry["task_id"]: BandStructureSymmLine.from_dict(bs_entry["object"])} if bs_entry else None
                 )
 
+                structures[bs_entry["task_id"]] = bs_entry["output_structure"]
+
         if mat["dos"]:
             if mat["dos"]["object"] is not None:
                 self.logger.info("Processing density of states")
                 dos = {mat["dos"]["task_id"]: CompleteDos.from_dict(mat["dos"]["object"])}
+
+                structures[mat["dos"]["task_id"]] = mat["dos"]["output_structure"]
 
         if bs:
             self.logger.info(
@@ -145,7 +150,7 @@ class ElectronicStructureBuilder(Builder):
         else:
             doc = ElectronicStructureDoc.from_bsdos(
                 material_id=mat[self.materials.key],
-                structure=structure,
+                structures=structures,
                 dos=dos,
                 is_gap_direct=mat["other"]["is_gap_direct"],
                 is_metal=mat["other"]["is_metal"],
@@ -213,14 +218,14 @@ class ElectronicStructureBuilder(Builder):
                         "input.is_hubbard",
                         "orig_inputs.kpoints",
                         "input.parameters",
-                        "input.structure",
+                        "output.structure",
                     ],
                     criteria={"task_id": str(task_id)},
                 )
 
                 fs_id = str(task_query["calcs_reversed"][0]["bandstructure_fs_id"])
 
-                structure = Structure.from_dict(task_query["input"]["structure"])
+                structure = Structure.from_dict(task_query["output"]["structure"])
 
                 kpoints = task_query["orig_inputs"]["kpoints"]
                 labels_dict = {
@@ -251,6 +256,7 @@ class ElectronicStructureBuilder(Builder):
                             "is_hubbard": int(is_hubbard),
                             "nkpoints": int(nkpoints),
                             "updated_on": lu_dt,
+                            "output_structure": structure,
                         }
                     )
 
@@ -263,6 +269,7 @@ class ElectronicStructureBuilder(Builder):
                         "input.is_hubbard",
                         "orig_inputs.kpoints",
                         "input.parameters",
+                        "output.structure",
                     ],
                     criteria={"task_id": str(task_id)},
                 )
@@ -270,6 +277,8 @@ class ElectronicStructureBuilder(Builder):
                 fs_id = str(task_query["calcs_reversed"][0]["dos_fs_id"])
 
                 is_hubbard = task_query["input"]["is_hubbard"]
+
+                structure = Structure.from_dict(task_query["output"]["structure"])
 
                 if task_query["orig_inputs"]["kpoints"]["generation_style"] == "Monkhorst":
                     nkpoints = np.prod(task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0)
@@ -287,6 +296,7 @@ class ElectronicStructureBuilder(Builder):
                         "nkpoints": int(nkpoints),
                         "nedos": int(nedos),
                         "updated_on": lu_dt,
+                        "output_structure": structure,
                     }
                 )
 
@@ -298,12 +308,12 @@ class ElectronicStructureBuilder(Builder):
                         "input.is_hubbard",
                         "orig_inputs.kpoints",
                         "calcs_reversed",
-                        "input.structure",
+                        "output.structure",
                     ],
                     criteria={"task_id": str(task_id)},
                 )
 
-                structure = Structure.from_dict(task_query["input"]["structure"])
+                structure = Structure.from_dict(task_query["output"]["structure"])
 
                 other_mag_ordering = CollinearMagneticStructureAnalyzer(structure).ordering
 
@@ -353,6 +363,8 @@ class ElectronicStructureBuilder(Builder):
 
                 materials_doc["bandstructure"][bs_type]["object"] = bs_obj["data"] if bs_obj is not None else None
 
+                materials_doc["bandstructure"][bs_type]["output_structure"] = sorted_bs_data[0]["output_structure"]
+
             if dos_calcs:
 
                 sorted_dos_data = sorted(
@@ -365,6 +377,8 @@ class ElectronicStructureBuilder(Builder):
 
                 dos_obj = self.dos_fs.query_one(criteria={"fs_id": sorted_dos_data[0]["fs_id"]})
                 materials_doc["dos"]["object"] = dos_obj["data"] if dos_obj is not None else None
+
+                materials_doc["dos"]["output_structure"] = sorted_dos_data[0]["output_structure"]
 
             if other_calcs:
 
