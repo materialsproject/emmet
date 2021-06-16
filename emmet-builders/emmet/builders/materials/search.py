@@ -92,8 +92,8 @@ class SearchBuilder(Builder):
         for entry in search_set:
 
             data = {
-                "materials": list(self.materials.query({self.materials.key: entry})),
-                "thermo": list(self.thermo.query({self.thermo.key: entry})),
+                "materials": self.materials.query_one({self.materials.key: entry}),
+                "thermo": self.thermo._one({self.thermo.key: entry}),
                 "xas": list(self.xas.query({self.xas.key: entry})),
                 "grain_boundaries": list(
                     self.grain_boundaries.query({self.grain_boundaries.key: entry})
@@ -103,11 +103,11 @@ class SearchBuilder(Builder):
                         {self.electronic_structure.key: entry}
                     )
                 ),
-                "magnetism": list(self.magnetism.query({self.magnetism.key: entry})),
-                "elasticity": list(self.elasticity.query({self.elasticity.key: entry})),
-                "dielectric": list(self.dielectric.query({self.dielectric.key: entry})),
-                "phonon": list(
-                    self.phonon.query({self.phonon.key: entry}, [self.phonon.key])
+                "magnetism": self.magnetism.query_one({self.magnetism.key: entry}),
+                "elasticity": self.elasticity.query_one({self.elasticity.key: entry}),
+                "dielectric": self.dielectric.query_one({self.dielectric.key: entry}),
+                "phonon": self.phonon.query_one(
+                    {self.phonon.key: entry}, [self.phonon.key]
                 ),
                 "insertion_electrodes": list(
                     self.insertion_electrodes.query(
@@ -115,11 +115,11 @@ class SearchBuilder(Builder):
                         [self.insertion_electrodes.key],
                     )
                 ),
-                "surface_properties": list(
-                    self.surfaces.query({self.surfaces.key: entry})
+                "surface_properties": self.surfaces.query_one(
+                    {self.surfaces.key: entry}
                 ),
                 "substrates": list(self.surfaces.query({self.substrates.key: entry})),
-                "eos": list(self.eos.query({self.eos.key: entry}, [self.eos.key])),
+                "eos": self.eos.query_one({self.eos.key: entry}, [self.eos.key]),
             }
 
             yield data
