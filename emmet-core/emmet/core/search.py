@@ -269,9 +269,6 @@ class SearchDoc(PropertyDoc):
 
         # Reshape document for various sub-sections
         # Electronic Structure + Bandstructure + DOS
-        doc["electronic_structure"] = {
-            k: v for sub_doc in doc["electronic_structure"] for k, v in sub_doc.items()
-        }
         if "bandstructure" in doc:
             doc["has_props"].append("bandstructure")
         if "dos" in doc:
