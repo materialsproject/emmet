@@ -274,8 +274,8 @@ class SearchDoc(PropertyDoc):
         if "dos" in doc:
             doc["has_props"].append("dos")
         if "calc_id" in doc:
-            doc["es_source_calc_id"] = doc["calc_id"]
-            del doc["calc_id"]
+            doc["es_source_calc_id"] = doc["task_id"]
+            del doc["task_id"]
 
         # Magnetism
         doc["spin_polarized"] = "magnetism" in doc
@@ -329,7 +329,7 @@ search_fields: Dict[str, list] = {
         "is_metal",
         "bandstructure",
         "dos",
-        "calc_id",
+        "task_id",
         "bandstructure",
         "dos",
     ],
