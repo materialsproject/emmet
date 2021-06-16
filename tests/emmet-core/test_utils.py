@@ -1,14 +1,12 @@
 import datetime
 import json
-import os
-import unittest
 
 import numpy as np
 import pytest
 from bson.objectid import ObjectId
 from monty.json import MSONable
 
-from emmet.core.utils import DocEnum, ValueEnum, get_sg, group_structures, jsanitize
+from emmet.core.utils import DocEnum, ValueEnum, jsanitize
 
 
 def test_jsanitize():

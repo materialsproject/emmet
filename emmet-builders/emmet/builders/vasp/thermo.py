@@ -1,30 +1,26 @@
+import warnings
 from collections import defaultdict
-from datetime import datetime
 from itertools import chain
-from typing import Dict, Iterator, List, Optional, Set, Tuple
+from typing import Dict, Iterable, Iterator, List, Optional, Set
 
 from maggma.core import Builder, Store
+from maggma.utils import grouper
 from monty.json import MontyDecoder
-from pymatgen.core import Structure
 from pymatgen.analysis.phase_diagram import PhaseDiagramError
-from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.entries.compatibility import MaterialsProjectCompatibility
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
+from pymatgen.entries.computed_entries import ComputedStructureEntry
 
-from emmet.core.utils import jsanitize
-from emmet.builders.utils import (
-    chemsys_permutations,
-    maximal_spanning_non_intersecting_subsets,
-)
+from emmet.builders.utils import chemsys_permutations
 from emmet.core.thermo import ThermoDoc
-from emmet.core.vasp.calc_types import run_type
+from emmet.core.utils import jsanitize
 
 
-class Thermo(Builder):
+class ThermoBuilder(Builder):
     def __init__(
         self,
         materials: Store,
         thermo: Store,
+        oxidation_states: Optional[Store] = None,
         query: Optional[Dict] = None,
         compatibility=None,
         **kwargs,
@@ -48,11 +44,17 @@ class Thermo(Builder):
         self.compatibility = (
             compatibility
             if compatibility
-            else MaterialsProjectCompatibility("Advanced")
+            else MaterialsProject2020Compatibility("Advanced")
         )
-        self._completed_tasks = set()
-        self._entries_cache = defaultdict(list)
-        super().__init__(sources=[materials], targets=[thermo], **kwargs)
+        self.oxidation_states = oxidation_states
+        self._completed_tasks: Set[str] = set()
+        self._entries_cache: Dict[str, List[ComputedStructureEntry]] = defaultdict(list)
+
+        sources = [materials]
+        if oxidation_states is not None:
+            sources.append(oxidation_states)
+
+        super().__init__(sources=sources, targets=[thermo], **kwargs)
 
     def ensure_indexes(self):
         """
@@ -61,11 +63,27 @@ class Thermo(Builder):
 
         # Search index for materials
         self.materials.ensure_index("material_id")
+        self.materials.ensure_index("chemsys")
         self.materials.ensure_index("last_updated")
 
         # Search index for thermo
         self.thermo.ensure_index("material_id")
         self.thermo.ensure_index("last_updated")
+
+    def prechunk(self, number_splits: int) -> Iterable[Dict]:
+        updated_chemsys = self.get_updated_chemsys()
+        new_chemsys = self.get_new_chemsys()
+
+        affected_chemsys = self.get_affected_chemsys(updated_chemsys | new_chemsys)
+
+        # Remove overlapping chemical systems
+        to_process_chemsys = set()
+        for chemsys in updated_chemsys | new_chemsys | affected_chemsys:
+            if chemsys not in to_process_chemsys:
+                to_process_chemsys |= chemsys_permutations(chemsys)
+
+        for chemsys_chunk in grouper(to_process_chemsys, number_splits):
+            yield {"chemsys": {"$in": list(chemsys_chunk)}}
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
@@ -83,10 +101,12 @@ class Thermo(Builder):
         affected_chemsys = self.get_affected_chemsys(updated_chemsys | new_chemsys)
 
         # Remove overlapping chemical systems
-        to_process_chemsys = set()
+        processed = set()
+        to_process_chemsys = []
         for chemsys in updated_chemsys | new_chemsys | affected_chemsys:
-            if chemsys not in to_process_chemsys:
-                to_process_chemsys |= chemsys_permutations(chemsys)
+            if chemsys not in processed:
+                processed |= chemsys_permutations(chemsys)
+                to_process_chemsys.append(chemsys)
 
         self.logger.info(
             f"Found {len(to_process_chemsys)} chemical systems with new/updated materials to process"
@@ -99,13 +119,12 @@ class Thermo(Builder):
             entries = self.get_entries(chemsys)
             yield entries
 
-    def process_item(self, item: Tuple[List[str], List[ComputedEntry]]):
+    def process_item(self, item: List[Dict]):
 
-        entries = item
-        if len(entries) == 0:
+        if len(item) == 0:
             return []
 
-        entries = [ComputedStructureEntry.from_dict(entry) for entry in entries]
+        entries = [ComputedStructureEntry.from_dict(entry) for entry in item]
         # determine chemsys
         elements = sorted(
             set([el.symbol for e in entries for el in e.composition.elements])
@@ -114,18 +133,18 @@ class Thermo(Builder):
 
         self.logger.debug(f"Processing {len(entries)} entries for {chemsys}")
 
-        material_entries = defaultdict(dict)
+        material_entries: Dict[str, Dict[str, ComputedStructureEntry]] = defaultdict(
+            dict
+        )
         pd_entries = []
         for entry in entries:
             material_entries[entry.entry_id][entry.data["run_type"]] = entry
 
-        # TODO: How to make this general and controllable via SETTINGS?
-        for material_id in material_entries:
-            if "GGA+U" in material_entries[material_id]:
-                pd_entries.append(material_entries[material_id]["GGA+U"])
-            elif "GGA" in material_entries[material_id]:
-                pd_entries.append(material_entries[material_id]["GGA"])
-        pd_entries = self.compatibility.process_entries(pd_entries)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message="Failed to guess oxidation states.*"
+            )
+            pd_entries = self.compatibility.process_entries(entries)
         self.logger.debug(f"{len(pd_entries)} remain in {chemsys} after filtering")
 
         try:
@@ -149,7 +168,7 @@ class Thermo(Builder):
             )
             return []
 
-        return [d.dict() for d in docs]
+        return jsanitize([d.dict() for d in docs], allow_bson=True)
 
     def update_targets(self, items):
         """
@@ -160,9 +179,9 @@ class Thermo(Builder):
         # flatten out lists
         items = list(filter(None, chain.from_iterable(items)))
         # Check if already updated this run
-        items = [i for i in items if i[self.thermo.key] not in self._completed_tasks]
+        items = [i for i in items if i["material_id"] not in self._completed_tasks]
 
-        self._completed_tasks |= {i[self.thermo.key] for i in items}
+        self._completed_tasks |= {i["material_id"] for i in items}
 
         for item in items:
             if isinstance(item["last_updated"], dict):
@@ -172,7 +191,7 @@ class Thermo(Builder):
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(items)} thermo documents")
-            self.thermo.update(docs=jsanitize(items), key=[self.thermo.key])
+            self.thermo.update(docs=items, key=["material_id"])
         else:
             self.logger.info("No items to update")
 
@@ -207,10 +226,20 @@ class Thermo(Builder):
         new_q["chemsys"] = {"$in": list(query_chemsys)}
         new_q["deprecated"] = False
         materials_docs = list(
-            self.materials.query(
-                criteria=new_q, properties=[self.materials.key, "entries"]
-            )
+            self.materials.query(criteria=new_q, properties=["material_id", "entries"])
         )
+
+        # Get Oxidation state data for each material
+        oxi_states_data = {}
+        if self.oxidation_states:
+            material_ids = [t["material_id"] for t in materials_docs]
+            oxi_states_data = {
+                d["material_id"]: d.get("average_oxidation_states", {})
+                for d in self.oxidation_states.query(
+                    properties=["material_id", "average_oxidation_states"],
+                    criteria={"material_id": {"$in": material_ids}, "successful": True},
+                )
+            }
 
         self.logger.debug(
             f"Got {len(materials_docs)} entries from DB for {len(query_chemsys)} sub-chemsys for {chemsys}"
@@ -219,6 +248,9 @@ class Thermo(Builder):
         # Convert the entries into ComputedEntries and store
         for doc in materials_docs:
             for r_type, entry_dict in doc.get("entries", {}).items():
+                entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
+                    entry_dict["entry_id"], {}
+                )
                 entry_dict["data"]["run_type"] = r_type
                 elsyms = sorted(set([el for el in entry_dict["composition"]]))
                 self._entries_cache["-".join(elsyms)].append(entry_dict)
@@ -231,12 +263,12 @@ class Thermo(Builder):
     def get_updated_chemsys(
         self,
     ) -> Set:
-        """ Gets updated chemical system as defined by the updating of an existing material """
+        """Gets updated chemical system as defined by the updating of an existing material"""
 
         updated_mats = self.thermo.newer_in(self.materials, criteria=self.query)
         updated_chemsys = set(
             self.materials.distinct(
-                "chemsys", {self.materials.key: {"$in": list(updated_mats)}}
+                "chemsys", {"material_id": {"$in": list(updated_mats)}}
             )
         )
         self.logger.debug(f"Found {len(updated_chemsys)} updated chemical systems")
@@ -244,11 +276,11 @@ class Thermo(Builder):
         return updated_chemsys
 
     def get_new_chemsys(self) -> Set:
-        """ Gets newer chemical system as defined by introduction of a new material """
+        """Gets newer chemical system as defined by introduction of a new material"""
 
         # All materials that are not present in the thermo collection
-        thermo_mat_ids = self.thermo.distinct(self.thermo.key)
-        mat_ids = self.materials.distinct(self.materials.key, self.query)
+        thermo_mat_ids = self.thermo.distinct("material_id")
+        mat_ids = self.materials.distinct("material_id", self.query)
         dif_task_ids = list(set(mat_ids) - set(thermo_mat_ids))
         q = {"material_id": {"$in": dif_task_ids}}
         new_mat_chemsys = set(self.materials.distinct("chemsys", q))
@@ -257,7 +289,7 @@ class Thermo(Builder):
         return new_mat_chemsys
 
     def get_affected_chemsys(self, chemical_systems: Set) -> Set:
-        """ Gets chemical systems affected by changes in the supplied chemical systems """
+        """Gets chemical systems affected by changes in the supplied chemical systems"""
         # First get all chemsys with any of the elements we've marked
         affected_chemsys = set()
         affected_els = list({el for c in chemical_systems for el in c.split("-")})

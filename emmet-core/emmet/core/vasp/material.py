@@ -1,12 +1,9 @@
 """ Core definition of a Materials Document """
-from datetime import datetime
-from functools import partial
-from typing import ClassVar, List, Mapping, Optional, Sequence, Tuple, TypeVar, Union
+from typing import Dict, List, Mapping, Sequence
 
-from pydantic import BaseModel, Field, create_model
+from pydantic import Field
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
-from pymatgen.core import Structure
+from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.core import SETTINGS
@@ -44,8 +41,8 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
     def from_tasks(
         cls,
         task_group: List[TaskDocument],
-        quality_scores=SETTINGS.VASP_QUALITY_SCORES,
-        use_statics: bool = False,
+        quality_scores: Dict[str, int] = SETTINGS.VASP_QUALITY_SCORES,
+        use_statics: bool = SETTINGS.VASP_USE_STATICS,
     ) -> "MaterialsDoc":
         """
         Converts a group of tasks into one material
@@ -57,10 +54,6 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         """
         if len(task_group) == 0:
             raise Exception("Must have more than one task in the group.")
-
-        # Material ID
-        possible_mat_ids = [task.task_id for task in task_group]
-        material_id = min(possible_mat_ids)
 
         # Metadata
         last_updated = max(task.last_updated for task in task_group)
@@ -85,6 +78,13 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             else structure_optimizations
         )
 
+        # Material ID
+        possible_mat_ids = [task.task_id for task in structure_optimizations]
+        material_id = min(possible_mat_ids)
+
+        # Always prefer a static over a structure opt
+        task_quality_scores = {"Structure Optimization": 1, "Static": 2}
+
         def _structure_eval(task: TaskDocument):
             """
             Helper function to order structures optimziation and statics calcs by
@@ -98,6 +98,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
             return (
                 -1 * quality_scores.get(task_run_type.value, 0),
+                -1 * task_quality_scores.get(task.task_type.value, 0),
                 -1 * task.input.parameters.get("ISPIN", 1),
                 -1 * task.input.parameters.get("LASPH", False),
                 task.output.energy_per_atom,

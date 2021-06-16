@@ -1,0 +1,2 @@
+-r ./emmet-core/requirements.txt
+-r ./emmet-builders/requirements.txt

@@ -2,9 +2,6 @@ import pytest
 from pymatgen.analysis.diffraction.xrd import WAVELENGTHS
 from pymatgen.core import Element, Lattice, Structure
 
-from emmet.core.spectrum import SpectrumDoc
-from emmet.core.structure import StructureMetadata
-from emmet.core.symmetry import CrystalSystem, SymmetryData
 from emmet.core.xrd import Edge, XRDDoc
 
 

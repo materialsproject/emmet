@@ -1,13 +1,14 @@
-from typing import List, Dict
-from itertools import chain
-from datetime import datetime
 import traceback
+from datetime import datetime
+from itertools import chain
+from typing import Dict, List
 
-from maggma.core import Store
 from maggma.builders import GroupBuilder
+from maggma.core import Store
+
 from emmet.core.feff.task import TaskDocument as FEFFTaskDocument
-from emmet.core.xas import XASDoc
 from emmet.core.utils import jsanitize
+from emmet.core.xas import XASDoc
 
 
 class XASBuilder(GroupBuilder):
@@ -17,10 +18,10 @@ class XASBuilder(GroupBuilder):
     # TODO: Generate MPID from materials collection rather than from task metadata
     """
 
-    def __init__(self, tasks: Store, xas: Store, num_samples: int = 200.0, **kwargs):
+    def __init__(self, tasks: Store, xas: Store, num_samples: int = 200, **kwargs):
         self.tasks = tasks
         self.xas = xas
-        self.num_samples = 200
+        self.num_samples = num_samples
         self.kwargs = kwargs
 
         super().__init__(source=tasks, target=xas, grouping_keys=["mp_id"])

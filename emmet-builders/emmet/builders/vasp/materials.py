@@ -1,21 +1,14 @@
 from datetime import datetime
 from itertools import chain
-from operator import itemgetter
-from typing import Dict, Iterator, List, Optional
+from typing import Dict, Iterable, Iterator, List, Optional
 
 from maggma.builders import Builder
 from maggma.stores import Store
+from maggma.utils import grouper
+
 from pymatgen.core import Structure
-from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
-
-from emmet.builders.utils import maximal_spanning_non_intersecting_subsets
-
-# from emmet.core import SETTINGS
-from emmet.builders import SETTINGS
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import group_structures, jsanitize
-from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.vasp.task import TaskDocument
 
@@ -33,11 +26,8 @@ class MaterialsBuilder(Builder):
         1.) Find all documents with the same formula
         2.) Select only task documents for the task_types we can select properties from
         3.) Aggregate task documents based on strucutre similarity
-        4.) Convert task docs to property docs with metadata for selection and aggregation
-        5.) Select the best property doc for each property
-        6.) Build material document from best property docs
-        7.) Post-process material document
-        8.) Validate material document
+        4.) Create a MaterialDoc from the group of task documents
+        5.) Validate material document
 
     """
 
@@ -56,6 +46,7 @@ class MaterialsBuilder(Builder):
             materials: Store of materials documents to generate
             task_validation: Store for storing task validation results
             query: dictionary to limit tasks to be analyzed
+            settings: EmmetSettings to use in the build process
         """
 
         self.tasks = tasks
@@ -84,12 +75,41 @@ class MaterialsBuilder(Builder):
         # Search index for materials
         self.materials.ensure_index("material_id")
         self.materials.ensure_index("last_updated")
-        self.materials.ensure_index("sandboxes")
         self.materials.ensure_index("task_ids")
 
         if self.task_validation:
             self.task_validation.ensure_index("task_id")
             self.task_validation.ensure_index("valid")
+
+    def prechunk(self, number_splits: int) -> Iterable[Dict]:
+        """Prechunk the materials builder for distributed computation"""
+        temp_query = dict(self.query)
+        temp_query["state"] = "successful"
+        if len(self.settings.BUILD_TAGS) > 0 and len(self.settings.EXCLUDED_TAGS) > 0:
+            temp_query["$and"] = [
+                {"tags": {"$in": self.settings.BUILD_TAGS}},
+                {"tags": {"$nin": self.settings.EXCLUDED_TAGS}},
+            ]
+        elif len(self.settings.BUILD_TAGS) > 0:
+            temp_query["tags"] = {"$in": self.settings.BUILD_TAGS}
+
+        self.logger.info("Finding tasks to process")
+        all_tasks = {
+            doc[self.tasks.key]
+            for doc in self.tasks.query(temp_query, [self.tasks.key])
+        }
+        processed_tasks = {
+            t_id
+            for d in self.materials.query({}, ["task_ids"])
+            for t_id in d.get("task_ids", [])
+        }
+        to_process_tasks = all_tasks - processed_tasks
+        to_process_forms = self.tasks.distinct(
+            "formula_pretty", {self.tasks.key: {"$in": list(to_process_tasks)}}
+        )
+
+        for formula_chunk in grouper(to_process_forms, number_splits):
+            yield {"formula_pretty": {"$in": list(formula_chunk)}}
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
@@ -184,7 +204,7 @@ class MaterialsBuilder(Builder):
 
             yield tasks
 
-    def process_item(self, tasks: List[Dict]) -> List[Dict]:
+    def process_item(self, items: List[Dict]) -> List[Dict]:
         """
         Process the tasks into a list of materials
 
@@ -195,7 +215,7 @@ class MaterialsBuilder(Builder):
             ([dict],list) : a list of new materials docs and a list of task_ids that were processsed
         """
 
-        tasks = [TaskDocument(**task) for task in tasks]
+        tasks = [TaskDocument(**task) for task in items]
         formula = tasks[0].formula_pretty
         task_ids = [task.task_id for task in tasks]
         self.logger.debug(f"Processing {formula} : {task_ids}")
@@ -213,7 +233,7 @@ class MaterialsBuilder(Builder):
                 )
         self.logger.debug(f"Produced {len(materials)} materials for {formula}")
 
-        return [mat.dict() for mat in materials]
+        return jsanitize([mat.dict() for mat in materials], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """
@@ -224,24 +244,26 @@ class MaterialsBuilder(Builder):
                 processed task_ids
         """
 
-        items = list(filter(None, chain.from_iterable(items)))
+        docs = list(chain.from_iterable(items))  # type: ignore
 
-        for item in items:
+        for item in docs:
             item.update({"_bt": self.timestamp})
 
-        material_ids = list({item["material_id"] for item in items})
+        material_ids = list({item["material_id"] for item in docs})
 
         if len(items) > 0:
-            self.logger.info(f"Updating {len(items)} materials")
+            self.logger.info(f"Updating {len(docs)} materials")
             self.materials.remove_docs({self.materials.key: {"$in": material_ids}})
             self.materials.update(
-                docs=jsanitize(items, allow_bson=True),
+                docs=docs,
                 key=["material_id"],
             )
         else:
             self.logger.info("No items to update")
 
-    def filter_and_group_tasks(self, tasks: List[TaskDocument]) -> Iterator[List[Dict]]:
+    def filter_and_group_tasks(
+        self, tasks: List[TaskDocument]
+    ) -> Iterator[List[TaskDocument]]:
         """
         Groups tasks by structure matching
         """
@@ -259,7 +281,7 @@ class MaterialsBuilder(Builder):
 
         for idx, task in enumerate(filtered_tasks):
             s = task.output.structure
-            s.index = idx
+            s.index: int = idx  # type: ignore
             structures.append(s)
 
         grouped_structures = group_structures(
@@ -270,5 +292,5 @@ class MaterialsBuilder(Builder):
             symprec=self.settings.SYMPREC,
         )
         for group in grouped_structures:
-            grouped_tasks = [filtered_tasks[struc.index] for struc in group]
+            grouped_tasks = [filtered_tasks[struc.index] for struc in group]  # type: ignore
             yield grouped_tasks

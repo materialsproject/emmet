@@ -1,13 +1,11 @@
 """ Core definition of a VASP Task Document """
-from functools import lru_cache
 from typing import Any, ClassVar, Dict, List
 
 from pydantic import Field
-from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
+from pymatgen.analysis.xas.spectrum import XAS
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 
-from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
 from emmet.core.task import TaskDocument as BaseTaskDocument
 from emmet.core.utils import ValueEnum

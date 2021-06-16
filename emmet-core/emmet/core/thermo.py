@@ -1,17 +1,13 @@
 """ Core definition of a Thermo Document """
-from datetime import datetime
-from enum import Enum
+from collections import defaultdict
 from typing import ClassVar, Dict, List, Union
 
 from pydantic import BaseModel, Field
-from pymatgen.analysis.phase_diagram import PhaseDiagram, PhaseDiagramError
-from pymatgen.core import Composition
-from pymatgen.core.periodic_table import Element
+from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
-from emmet.core.structure import StructureMetadata
 
 
 class DecompositionProduct(BaseModel):
@@ -65,7 +61,7 @@ class ThermoDoc(PropertyDoc):
         description="Flag for whether this material is on the hull and therefore stable",
     )
 
-    equillibrium_reaction_energy_per_atom: float = Field(
+    equilibrium_reaction_energy_per_atom: float = Field(
         None,
         description="The reaction energy of a stable entry from the neighboring equilibrium stable materials in eV."
         " Also known as the inverse distance to hull.",
@@ -94,7 +90,17 @@ class ThermoDoc(PropertyDoc):
     @classmethod
     def from_entries(cls, entries: List[Union[ComputedEntry, ComputedStructureEntry]]):
 
-        pd = PhaseDiagram(entries)
+        entries_by_comp = defaultdict(list)
+        for e in entries:
+            entries_by_comp[e.composition.reduced_formula].append(e)
+
+        # Only use lowest entry per composition to speed up QHull in Phase Diagram
+        reduced_entries = [
+            sorted(comp_entries, key=lambda e: e.energy_per_atom)[0]
+            for comp_entries in entries_by_comp.values()
+        ]
+
+        pd = PhaseDiagram(reduced_entries)
 
         docs = []
 
@@ -117,7 +123,7 @@ class ThermoDoc(PropertyDoc):
             # Store different info if stable vs decomposes
             if d["is_stable"]:
                 d[
-                    "equillibrium_reaction_energy_per_atom"
+                    "equilibrium_reaction_energy_per_atom"
                 ] = pd.get_equilibrium_reaction_energy(e)
             else:
                 d["decomposes_to"] = [

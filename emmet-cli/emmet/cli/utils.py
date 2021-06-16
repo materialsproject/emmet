@@ -1,28 +1,28 @@
-import os
-import stat
-import mgzip
-import click
-import shutil
-import logging
 import itertools
+import logging
 import multiprocessing
-
-from enum import Enum
-from glob import glob
-from fnmatch import fnmatch
-from datetime import datetime
+import os
+import shutil
+import stat
 from collections import defaultdict
-from pymatgen.core import Structure
-from pymatgen.util.provenance import StructureNL
+from datetime import datetime
+from enum import Enum
+from fnmatch import fnmatch
+from glob import glob
+
+import click
+import mgzip
 from atomate.vasp.database import VaspCalcDb
+from atomate.vasp.drones import VaspDrone
+from dotty_dict import dotty
 from fireworks.fw_config import FW_BLOCK_FORMAT
 from mongogrant.client import Client
-from atomate.vasp.drones import VaspDrone
+from pymatgen.core import Structure
+from pymatgen.util.provenance import StructureNL
 from pymongo.errors import DocumentTooLarge
-from dotty_dict import dotty
 
-from emmet.core.utils import group_structures
 from emmet.cli import SETTINGS
+from emmet.core.utils import group_structures
 
 logger = logging.getLogger("emmet")
 perms = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP
@@ -342,14 +342,14 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
     no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
     run = ctx.parent.parent.params["run"]
     projection = {"tags": 1, "task_id": 1}
-    #projection = {"tags": 1, "task_id": 1, "calcs_reversed": 1}
+    # projection = {"tags": 1, "task_id": 1, "calcs_reversed": 1}
     count = 0
     drone = VaspDrone(
         additional_fields={"tags": tags},
         store_volumetric_data=ctx.params["store_volumetric_data"],
     )
-    #fs_keys = ["bandstructure", "dos", "chgcar", "locpot", "elfcar"]
-    #for i in range(3):
+    # fs_keys = ["bandstructure", "dos", "chgcar", "locpot", "elfcar"]
+    # for i in range(3):
     #    fs_keys.append(f"aeccar{i}")
 
     for vaspdir in vaspdirs:
@@ -417,11 +417,11 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
         if run:
             if task_doc["state"] == "successful":
                 if docs and no_dupe_check:
-                    #new_calc = task_doc["calcs_reversed"][0]
-                    #existing_calc = docs[0]["calcs_reversed"][0]
-                    #print(existing_calc.keys())
+                    # new_calc = task_doc["calcs_reversed"][0]
+                    # existing_calc = docs[0]["calcs_reversed"][0]
+                    # print(existing_calc.keys())
 
-                    #for fs_key in fs_keys:
+                    # for fs_key in fs_keys:
                     #    print(fs_key)
                     #    fs_id_key = f"{fs_key}_fs_id"
                     #    if fs_id_key in existing_calc:
@@ -439,7 +439,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                     target.collection.remove({"task_id": task_id})
                     logger.warning(f"Removed previously parsed task {task_id}!")
 
-                #return count  # TODO remove
+                # return count  # TODO remove
 
                 try:
                     target.insert_task(task_doc, use_gridfs=True)

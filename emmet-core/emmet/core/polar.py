@@ -1,15 +1,13 @@
 """ Core definition for Polar property Document """
-from datetime import datetime
-from typing import ClassVar, Dict, List, Tuple
+from typing import ClassVar, Tuple
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
 
 from emmet.core import SETTINGS
 from emmet.core.material_property import PropertyDoc
-from emmet.core.math import Matrix3D, Vector3D
-from emmet.core.structure import StructureMetadata
+from emmet.core.math import Matrix3D
 
 VoigtVector = Tuple[float, float, float, float, float, float]
 PiezoTensor = Tuple[VoigtVector, VoigtVector, VoigtVector]

@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pytest
-from pymatgen.core import Element, Lattice, Structure
+from pymatgen.core import Lattice, Structure
 from pymatgen.util.provenance import Author, HistoryNode, StructureNL
 
 from emmet.core.provenance import Database, ProvenanceDoc

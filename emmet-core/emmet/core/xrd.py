@@ -1,8 +1,7 @@
-from enum import Enum
-from typing import Dict, List, Optional, Tuple, Union
+from typing import ClassVar, Dict
 
 import numpy as np
-from pydantic import BaseModel, Field, root_validator
+from pydantic import Field, root_validator
 from pymatgen.analysis.diffraction.xrd import (
     WAVELENGTHS,
     DiffractionPattern,
@@ -13,7 +12,7 @@ from pymatgen.core.periodic_table import Element
 
 from emmet.core.mpid import MPID
 from emmet.core.spectrum import SpectrumDoc
-from emmet.core.utils import ValueEnum, jsanitize
+from emmet.core.utils import ValueEnum
 
 
 class Edge(ValueEnum):
@@ -29,6 +28,8 @@ class XRDDoc(SpectrumDoc):
     """
     Document describing a XRD Diffraction Pattern
     """
+
+    spectrum_name: ClassVar[str] = "XRD"
 
     spectrum: DiffractionPattern
     min_two_theta: float

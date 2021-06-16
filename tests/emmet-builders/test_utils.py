@@ -1,5 +1,3 @@
-from itertools import chain, combinations
-
 from emmet.builders.utils import (
     chemsys_permutations,
     maximal_spanning_non_intersecting_subsets,

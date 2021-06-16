@@ -1,11 +1,10 @@
 import warnings
 from itertools import groupby
-from typing import Dict, List
+from typing import ClassVar, List
 
 import numpy as np
 from pydantic import Field
 from pymatgen.analysis.xas.spectrum import XAS, site_weighted_spectrum
-from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
@@ -49,6 +48,8 @@ class XASDoc(SpectrumDoc):
     Document describing a XAS Spectrum.
     """
 
+    spectrum_name: ClassVar[str] = "XAS"
+
     spectrum: XAS
 
     task_ids: List[str] = Field(
@@ -89,7 +90,7 @@ class XASDoc(SpectrumDoc):
     @classmethod
     def from_task_docs(
         cls, all_tasks: List[TaskDocument], material_id: MPID, num_samples: int = 200
-    ):
+    ) -> List["XASDoc"]:
         """
         Converts a set of FEFF Task Documents into XASDocs by merging XANES + EXAFS into XAFS spectra first
         and then merging along equivalent elements to get element averaged spectra

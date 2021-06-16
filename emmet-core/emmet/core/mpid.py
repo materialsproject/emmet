@@ -1,6 +1,5 @@
 import re
-from dataclasses import dataclass
-from typing import Tuple, Union
+from typing import Union
 
 mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
 
@@ -79,6 +78,8 @@ class MPID(str):
         if isinstance(v, MPID):
             return v
         elif isinstance(v, str) and mpid_regex.fullmatch(v):
+            return MPID(v)
+        elif isinstance(v, int):
             return MPID(v)
 
         raise ValueError("Invalid MPID Format")

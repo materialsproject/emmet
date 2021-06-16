@@ -1,7 +1,6 @@
 """ Core definition of Spectrum document """
 from datetime import datetime
-from functools import partial
-from typing import ClassVar, Dict, List, Union
+from typing import ClassVar, List
 
 from pydantic import Field
 
@@ -14,6 +13,8 @@ class SpectrumDoc(StructureMetadata):
     Base model definition for any spectra document. This should contain
     metadata on the structure the spectra pertains to
     """
+
+    spectrum_name: ClassVar[str]
 
     material_id: MPID = Field(
         ...,

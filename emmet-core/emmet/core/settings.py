@@ -1,13 +1,13 @@
 """
 Settings for defaults in the core definitions of Materials Project Documents
 """
-import importlib
 import json
-from typing import Dict, List, Optional, Type, TypeVar, Union
+from pathlib import Path
+from typing import Dict, List, Type, TypeVar, Union
 
 import requests
-from pydantic import BaseSettings, Field, root_validator, validator
-from pydantic.types import Path, PyObject
+from pydantic import BaseSettings, Field, root_validator
+from pydantic.types import PyObject
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
 
@@ -77,6 +77,11 @@ class EmmetSettings(BaseSettings):
     VASP_MAX_SCF_GRADIENT: float = Field(
         100,
         description="Maximum upward gradient in the last SCF for any VASP calculation",
+    )
+
+    VASP_USE_STATICS: bool = Field(
+        True,
+        description="Use static calculations for structure and energy along with structure optimizations",
     )
 
     class Config:

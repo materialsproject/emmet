@@ -73,12 +73,19 @@ class ValidationDoc(BaseModel):
         structure = task_doc.output.structure
         calc_type = task_doc.calc_type
         inputs = task_doc.orig_inputs
+        bandgap = task_doc.output.bandgap
 
         reasons = []
         data = {}
+        warnings = []
 
         if str(calc_type) in input_sets:
-            valid_input_set = input_sets[str(calc_type)](structure)
+
+            # Ensure inputsets that need the bandgap get it
+            try:
+                valid_input_set = input_sets[str(calc_type)](structure, bandgap=bandgap)
+            except TypeError:
+                valid_input_set = input_sets[str(calc_type)](structure)
 
             # Checking K-Points
             # Calculations that use KSPACING will not have a .kpoints attr
@@ -102,6 +109,20 @@ class ValidationDoc(BaseModel):
                     # larger KSPACING means fewer k-points
                     if data["kspacing_delta"] > kspacing_tolerance:
                         reasons.append(DeprecationMessage.KSPACING)
+                    elif data["kspacing_delta"] < kspacing_tolerance:
+                        warnings.append(
+                            f"KSPACING is lower than input set: {data['kspacing_delta']}"
+                            " lower than {kspacing_tolerance} ",
+                        )
+
+            # warn, but don't invalidate if wrong ISMEAR
+            valid_ismear = valid_input_set.incar.get("ISMEAR", 1)
+            curr_ismear = inputs.get("incar", {}).get("ISMEAR", 1)
+            if curr_ismear != valid_ismear:
+                warnings.append(
+                    f"Inappropriate smearing settings. Set to {curr_ismear},"
+                    " but should be {valid_ismear}"
+                )
 
             # Checking ENCUT
             encut = inputs.get("incar", {}).get("ENCUT")
@@ -137,18 +158,18 @@ class ValidationDoc(BaseModel):
                 ):
                     reasons.append(DeprecationMessage.LDAU)
 
-            # Check the max upwards SCF step
-            skip = inputs.get("incar", {}).get("NLEMDL")
-            energies = [
-                d["e_fr_energy"]
-                for d in task_doc.calcs_reversed[0]["output"]["ionic_steps"][-1][
-                    "electronic_steps"
-                ]
+        # Check the max upwards SCF step
+        skip = inputs.get("incar", {}).get("NLEMDL")
+        energies = [
+            d["e_fr_energy"]
+            for d in task_doc.calcs_reversed[0]["output"]["ionic_steps"][-1][
+                "electronic_steps"
             ]
-            max_gradient = np.max(np.gradient(energies)[skip:])
-            data["max_gradient"] = max_gradient
-            if max_gradient > max_allowed_scf_gradient:
-                reasons.append(DeprecationMessage.MAX_SCF)
+        ]
+        max_gradient = np.max(np.gradient(energies)[skip:])
+        data["max_gradient"] = max_gradient
+        if max_gradient > max_allowed_scf_gradient:
+            reasons.append(DeprecationMessage.MAX_SCF)
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,
@@ -157,6 +178,7 @@ class ValidationDoc(BaseModel):
             valid=len(reasons) == 0,
             reasons=reasons,
             data=data,
+            warnings=warnings,
         )
         return doc
 

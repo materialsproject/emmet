@@ -1,11 +1,11 @@
-from maggma.utils import grouper
-import pytest
 from pathlib import Path
-from maggma.stores import JSONStore, MemoryStore
 
-from emmet.builders.vasp.materials import MaterialsBuilder
-from emmet.builders.materials.search import SearchBuilder
+import pytest
+from maggma.stores import JSONStore, MemoryStore
 from monty.serialization import dumpfn, loadfn
+
+from emmet.builders.materials.search import SearchBuilder
+from emmet.builders.vasp.materials import MaterialsBuilder
 
 
 @pytest.fixture(scope="session")

@@ -1,5 +1,6 @@
+from pkg_resources import DistributionNotFound, get_distribution
+
 from emmet.builders.settings import EmmetBuildSettings
-from pkg_resources import get_distribution, DistributionNotFound
 
 SETTINGS = EmmetBuildSettings()
 

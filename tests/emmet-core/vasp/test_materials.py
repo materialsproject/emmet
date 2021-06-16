@@ -29,7 +29,7 @@ def test_make_mat(test_tasks):
     ]
 
     with pytest.raises(Exception):
-        MaterialsDoc.from_tasks(bad_task_group)
+        MaterialsDoc.from_tasks(bad_task_group, use_statics=False)
 
 
 def test_schema():

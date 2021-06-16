@@ -1,11 +1,11 @@
-import pytest
 from pathlib import Path
-from maggma.stores import JSONStore, MemoryStore
 
-from emmet.builders.vasp.task_validator import TaskValidator
-from emmet.builders.vasp.materials import MaterialsBuilder
+import pytest
+from maggma.stores import JSONStore, MemoryStore
 from monty.serialization import dumpfn, loadfn
-from emmet.core.utils import jsanitize
+
+from emmet.builders.vasp.materials import MaterialsBuilder
+from emmet.builders.vasp.task_validator import TaskValidator
 
 
 @pytest.fixture(scope="session")

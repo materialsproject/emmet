@@ -1,18 +1,15 @@
-import os
 import logging
-import click
-
-from multiprocessing_logging import install_mp_handler
-from log4mongo.handlers import BufferedMongoHandler
-from github3 import authorize, login
+import os
 from io import StringIO
 
-from emmet.cli.admin import admin
-from emmet.cli.tasks import tasks
-from emmet.cli.calc import calc
-from emmet.cli.utils import calcdb_from_mgrant, ensure_indexes
-from emmet.cli.utils import EmmetCliError
+import click
+from github3 import authorize, login
+from multiprocessing_logging import install_mp_handler
 
+from emmet.cli.admin import admin
+from emmet.cli.calc import calc
+from emmet.cli.tasks import tasks
+from emmet.cli.utils import EmmetCliError, calcdb_from_mgrant
 
 logger = logging.getLogger("")
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
