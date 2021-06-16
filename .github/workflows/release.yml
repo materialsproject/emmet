@@ -10,7 +10,7 @@ jobs:
     strategy:
         max-parallel: 6
         matrix:
-          package: ["emmet-core"]
+          package: ["emmet-core","emmet-builders"]
 
     steps:
     - uses: actions/checkout@v2.3.4

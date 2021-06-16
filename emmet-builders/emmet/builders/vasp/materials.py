@@ -6,6 +6,7 @@ from maggma.builders import Builder
 from maggma.stores import Store
 from maggma.utils import grouper
 
+from pymatgen.core import Structure
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import group_structures, jsanitize
 from emmet.core.vasp.material import MaterialsDoc
@@ -203,7 +204,7 @@ class MaterialsBuilder(Builder):
 
             yield tasks
 
-    def process_item(self, tasks: List[Dict]) -> List[Dict]:
+    def process_item(self, items: List[Dict]) -> List[Dict]:
         """
         Process the tasks into a list of materials
 
@@ -214,7 +215,7 @@ class MaterialsBuilder(Builder):
             ([dict],list) : a list of new materials docs and a list of task_ids that were processsed
         """
 
-        tasks = [TaskDocument(**task) for task in tasks]
+        tasks = [TaskDocument(**task) for task in items]
         formula = tasks[0].formula_pretty
         task_ids = [task.task_id for task in tasks]
         self.logger.debug(f"Processing {formula} : {task_ids}")
@@ -243,24 +244,26 @@ class MaterialsBuilder(Builder):
                 processed task_ids
         """
 
-        items = list(filter(None, chain.from_iterable(items)))
+        docs = list(chain.from_iterable(items))  # type: ignore
 
-        for item in items:
+        for item in docs:
             item.update({"_bt": self.timestamp})
 
-        material_ids = list({item["material_id"] for item in items})
+        material_ids = list({item["material_id"] for item in docs})
 
         if len(items) > 0:
-            self.logger.info(f"Updating {len(items)} materials")
+            self.logger.info(f"Updating {len(docs)} materials")
             self.materials.remove_docs({self.materials.key: {"$in": material_ids}})
             self.materials.update(
-                docs=items,
+                docs=docs,
                 key=["material_id"],
             )
         else:
             self.logger.info("No items to update")
 
-    def filter_and_group_tasks(self, tasks: List[TaskDocument]) -> Iterator[List[Dict]]:
+    def filter_and_group_tasks(
+        self, tasks: List[TaskDocument]
+    ) -> Iterator[List[TaskDocument]]:
         """
         Groups tasks by structure matching
         """
@@ -278,7 +281,7 @@ class MaterialsBuilder(Builder):
 
         for idx, task in enumerate(filtered_tasks):
             s = task.output.structure
-            s.index = idx
+            s.index: int = idx  # type: ignore
             structures.append(s)
 
         grouped_structures = group_structures(
@@ -289,5 +292,5 @@ class MaterialsBuilder(Builder):
             symprec=self.settings.SYMPREC,
         )
         for group in grouped_structures:
-            grouped_tasks = [filtered_tasks[struc.index] for struc in group]
+            grouped_tasks = [filtered_tasks[struc.index] for struc in group]  # type: ignore
             yield grouped_tasks
