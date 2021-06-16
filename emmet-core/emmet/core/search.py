@@ -123,7 +123,7 @@ class SearchDoc(PropertyDoc):
         description="Flag for whether this material is on the hull and therefore stable",
     )
 
-    equillibrium_reaction_energy_per_atom: float = Field(
+    equilibrium_reaction_energy_per_atom: float = Field(
         None,
         description="The reaction energy of a stable entry from the neighboring equilibrium stable materials in eV."
         " Also known as the inverse distance to hull.",
@@ -309,7 +309,7 @@ search_fields: Dict[str, list] = {
         "formation_energy_per_atom",
         "energy_above_hull",
         "is_stable",
-        "equillibrium_reaction_energy_per_atom",
+        "equilibrium_reaction_energy_per_atom",
         "decomposes_to",
     ],
     "xas": ["absorbing_element", "edge", "spectrum_type", "xas_id"],

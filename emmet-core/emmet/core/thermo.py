@@ -61,7 +61,7 @@ class ThermoDoc(PropertyDoc):
         description="Flag for whether this material is on the hull and therefore stable",
     )
 
-    equillibrium_reaction_energy_per_atom: float = Field(
+    equilibrium_reaction_energy_per_atom: float = Field(
         None,
         description="The reaction energy of a stable entry from the neighboring equilibrium stable materials in eV."
         " Also known as the inverse distance to hull.",
@@ -123,7 +123,7 @@ class ThermoDoc(PropertyDoc):
             # Store different info if stable vs decomposes
             if d["is_stable"]:
                 d[
-                    "equillibrium_reaction_energy_per_atom"
+                    "equilibrium_reaction_energy_per_atom"
                 ] = pd.get_equilibrium_reaction_energy(e)
             else:
                 d["decomposes_to"] = [
