@@ -372,24 +372,25 @@ def _copy_from_doc(doc):
     d = {"has_props": []}
     # Complex function to grab the keys and put them in the root doc
     # if the item is a list, it makes one doc per item with those corresponding keys
-    for sub_doc in search_fields:
-        if sub_doc in doc:
-            d["has_props"].append(sub_doc)
-            if isinstance(search_fields[sub_doc], list):
-                d[sub_doc] = []
-                for sub_item in search_fields[sub_doc]:
-                    temp_doc = {
-                        copy_key: sub_item[copy_key]
-                        for copy_key in search_fields[sub_doc]
-                        if copy_key in sub_item
-                    }
-                    d[sub_doc].append(temp_doc)
-            else:
-                d.update(
-                    {
-                        copy_key: d[sub_doc][copy_key]
-                        for copy_key in search_fields[sub_doc]
-                        if copy_key in d[sub_doc]
-                    }
-                )
+    for doc_key in search_fields:
+        sub_doc = doc.get(doc_key, None)
+        if isinstance(sub_doc, list) and len(sub_doc) > 0:
+            d["has_props"].append(doc_key)
+            d[doc_key] = []
+            for sub_item in sub_doc:
+                temp_doc = {
+                    copy_key: sub_item[copy_key]
+                    for copy_key in search_fields[doc_key]
+                    if copy_key in sub_item
+                }
+                d[doc_key].append(temp_doc)
+        elif isinstance(sub_doc, dict):
+            d["has_props"].append(doc_key)
+            d.update(
+                {
+                    copy_key: sub_doc[copy_key]
+                    for copy_key in search_fields[doc_key]
+                    if copy_key in sub_doc
+                }
+            )
     return d
