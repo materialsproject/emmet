@@ -93,7 +93,7 @@ class SearchBuilder(Builder):
 
             data = {
                 "materials": self.materials.query_one({self.materials.key: entry}),
-                "thermo": self.thermo._one({self.thermo.key: entry}),
+                "thermo": self.thermo.query_one({self.thermo.key: entry}),
                 "xas": list(self.xas.query({self.xas.key: entry})),
                 "grain_boundaries": list(
                     self.grain_boundaries.query({self.grain_boundaries.key: entry})
