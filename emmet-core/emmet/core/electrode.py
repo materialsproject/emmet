@@ -27,8 +27,7 @@ class VoltagePairDoc(BaseModel):
     )
 
     average_voltage: float = Field(
-        None,
-        description="The average voltage in V for a particular voltage step.",
+        None, description="The average voltage in V for a particular voltage step."
     )
 
     capacity_grav: float = Field(None, description="Gravimetric capacity in mAh/g.")
@@ -101,18 +100,15 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     )
 
     host_structure: Structure = Field(
-        None,
-        description="Host structure (structure without the working ion)",
+        None, description="Host structure (structure without the working ion)"
     )
 
     adj_pairs: List[InsertionVoltagePairDoc] = Field(
-        None,
-        description="Returns all the Voltage Steps",
+        None, description="Returns all the Voltage Steps"
     )
 
     working_ion: Element = Field(
-        None,
-        description="The working ion as an Element object",
+        None, description="The working ion as an Element object"
     )
 
     num_steps: int = Field(
@@ -131,8 +127,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     )
 
     framework: Composition = Field(
-        None,
-        description="The chemical compositions of the host framework",
+        None, description="The chemical compositions of the host framework"
     )
 
     elements: List[Element] = Field(
@@ -162,9 +157,8 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         description="Anonymized representation of the formula (not including the working ion)",
     )
 
-    electrode_object: Dict = Field(
-        None,
-        description="The pymatgen electrode object",
+    electrode_object: InsertionElectrode = Field(
+        None, description="The pymatgen electrode object"
     )
 
     # Make sure that the datetime field is properly formatted
@@ -223,13 +217,11 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
     battery_id: str = Field(None, description="The id for this battery document.")
 
     adj_pairs: List[ConversionVoltagePairDoc] = Field(
-        None,
-        description="Returns all the adjacent Voltage Steps",
+        None, description="Returns all the adjacent Voltage Steps"
     )
 
     working_ion: Element = Field(
-        None,
-        description="The working ion as an Element object",
+        None, description="The working ion as an Element object"
     )
 
     num_steps: int = Field(
