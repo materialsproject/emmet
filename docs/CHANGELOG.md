@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.3.1](https://github.com/materialsproject/emmet/tree/v0.3.1) (2021-06-21)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.3.0...v0.3.1)
+
+**Merged pull requests:**
+
+- Use deprecated tasks in Materials Builder [\#207](https://github.com/materialsproject/emmet/pull/207) ([shyamd](https://github.com/shyamd))
+
 ## [v0.3.0](https://github.com/materialsproject/emmet/tree/v0.3.0) (2021-06-16)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.2.4...v0.3.0)
