@@ -65,7 +65,6 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         task_types = {task.task_id: task.task_type for task in task_group}
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
-        valid_tasks = [task for task in task_group if task.is_valid]
         structure_optimizations = [
             task
             for task in task_group
@@ -121,8 +120,8 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
         # Deprecated
         deprecated = all(task.task_id in deprecated_tasks for task in structure_calcs)
-        deprecated = deprecated or best_structure_calc.task_id in deprecated_tasks 
-        
+        deprecated = deprecated or best_structure_calc.task_id in deprecated_tasks
+
         # Origins
         origins = [
             PropertyOrigin(
