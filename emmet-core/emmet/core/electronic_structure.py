@@ -26,10 +26,7 @@ from emmet.core.mpid import MPID
 
 
 class ElectronicStructureBaseData(BaseModel):
-    task_id: Union[MPID, int] = Field(
-        ...,
-        description="The source calculation (task) ID for the electronic structure data.",
-    )
+    task_id: MPID = Field(..., description="The source calculation (task) ID for the electronic structure data.")
 
     band_gap: float = Field(..., description="Band gap energy in eV.")
 
@@ -134,14 +131,14 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     @classmethod
     def from_bsdos(  # type: ignore[override]
         cls: Type[T],
-        material_id: Union[MPID, int],
-        dos: Dict[Union[MPID, int], CompleteDos],
+        material_id: MPID,
+        dos: Dict[MPID, CompleteDos],
         is_gap_direct: bool,
         is_metal: bool,
-        structures: Dict[Union[MPID, int], Structure] = None,
-        setyawan_curtarolo: Dict[Union[MPID, int], BandStructureSymmLine] = None,
-        hinuma: Dict[Union[MPID, int], BandStructureSymmLine] = None,
-        latimer_munro: Dict[Union[MPID, int], BandStructureSymmLine] = None,
+        structures: Dict[MPID, Structure] = None,
+        setyawan_curtarolo: Dict[MPID, BandStructureSymmLine] = None,
+        hinuma: Dict[MPID, BandStructureSymmLine] = None,
+        latimer_munro: Dict[MPID, BandStructureSymmLine] = None,
     ) -> T:
         """
         Builds a electronic structure document using band structure and density of states data.

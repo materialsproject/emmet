@@ -66,10 +66,7 @@ class XASDoc(SpectrumDoc):
 
     @classmethod
     def from_spectrum(
-        cls,
-        xas_spectrum: XAS,
-        material_id: MPID,
-        **kwargs,
+        cls, xas_spectrum: XAS, material_id: MPID, **kwargs,
     ):
         spectrum_type = xas_spectrum.spectrum_type
         el = xas_spectrum.absorbing_element
@@ -130,10 +127,7 @@ class XASDoc(SpectrumDoc):
         # Dictionary of all site to spectra mapping
         sites_to_spectra = {
             index: list(group)
-            for index, group in groupby(
-                all_spectra,
-                key=lambda x: x.absorbing_index,
-            )
+            for index, group in groupby(all_spectra, key=lambda x: x.absorbing_index,)
         }
 
         # perform spectra merging
@@ -141,8 +135,7 @@ class XASDoc(SpectrumDoc):
             type_to_spectra = {
                 index: list(group)
                 for index, group in groupby(
-                    spectra,
-                    key=lambda x: (x.edge, x.spectrum_type),
+                    spectra, key=lambda x: (x.edge, x.spectrum_type),
                 )
             }
             # Make K-edge XAFS spectra by merging XANES + EXAFS
