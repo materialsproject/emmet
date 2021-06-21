@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.3.2](https://github.com/materialsproject/emmet/tree/v0.3.2) (2021-06-21)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.3.1...v0.3.2)
+
+**Merged pull requests:**
+
+- Electronic Structure model and builder fixes [\#206](https://github.com/materialsproject/emmet/pull/206) ([munrojm](https://github.com/munrojm))
+
 ## [v0.3.1](https://github.com/materialsproject/emmet/tree/v0.3.1) (2021-06-21)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.3.0...v0.3.1)
