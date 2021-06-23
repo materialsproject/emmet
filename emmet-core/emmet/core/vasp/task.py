@@ -117,7 +117,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
 
     @property
     def run_type(self) -> RunType:
-        return run_type(self.input.parameters)
+        return run_type(self.calcs_reversed[0].get("input", {}).get("parameters", {}))
 
     @property
     def task_type(self):
