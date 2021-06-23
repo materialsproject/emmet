@@ -125,7 +125,10 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
 
     @property
     def calc_type(self):
-        return calc_type(self.orig_inputs, self.input.parameters)
+        return calc_type(
+            self.orig_inputs,
+            self.calcs_reversed[0].get("input", {}).get("parameters", {}),
+        )
 
     @property
     def entry(self) -> ComputedEntry:
