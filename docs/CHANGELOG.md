@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.3.4](https://github.com/materialsproject/emmet/tree/v0.3.4) (2021-06-23)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.3.3...v0.3.4)
+
+**Merged pull requests:**
+
+- Bug: Reference the last calculation to determine `run_type` [\#211](https://github.com/materialsproject/emmet/pull/211) ([shyamd](https://github.com/shyamd))
+
+## [v0.3.3](https://github.com/materialsproject/emmet/tree/v0.3.3) (2021-06-23)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.3.2...v0.3.3)
+
+**Merged pull requests:**
+
+- Remove `bson` package requirement [\#209](https://github.com/materialsproject/emmet/pull/209) ([shyamd](https://github.com/shyamd))
+
 ## [v0.3.2](https://github.com/materialsproject/emmet/tree/v0.3.2) (2021-06-21)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.3.1...v0.3.2)
