@@ -37,7 +37,7 @@ class TaskValidator(MapBuilder):
                 "orig_inputs",
                 "output.structure",
                 "output.bandgap",
-                "input.parameters",
+                "calcs_reversed.0.input.parameters",
                 "calcs_reversed.output.ionic_steps.electronic_steps.e_fr_energy",
                 "tags",
             ],
