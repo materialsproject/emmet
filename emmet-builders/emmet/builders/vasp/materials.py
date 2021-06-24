@@ -190,7 +190,7 @@ class MaterialsBuilder(Builder):
                 self.tasks.query(criteria=tasks_query, properties=projected_fields)
             )
             for t in tasks:
-                t["is_valid"] = t[self.tasks.key] in invalid_ids
+                t["is_valid"] = t[self.tasks.key] not in invalid_ids
 
             yield tasks
 
