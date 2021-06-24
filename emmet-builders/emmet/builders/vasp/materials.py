@@ -94,19 +94,17 @@ class MaterialsBuilder(Builder):
             temp_query["tags"] = {"$in": self.settings.BUILD_TAGS}
 
         self.logger.info("Finding tasks to process")
-        all_tasks = {
-            doc[self.tasks.key]
-            for doc in self.tasks.query(temp_query, [self.tasks.key])
-        }
-        processed_tasks = {
-            t_id
-            for d in self.materials.query({}, ["task_ids"])
-            for t_id in d.get("task_ids", [])
-        }
-        to_process_tasks = all_tasks - processed_tasks
-        to_process_forms = self.tasks.distinct(
-            "formula_pretty", {self.tasks.key: {"$in": list(to_process_tasks)}}
+        all_tasks = list(
+            self.tasks.query(temp_query, [self.tasks.key, "formula_pretty"])
         )
+
+        processed_tasks = set(self.materials.distinct("task_ids"))
+        to_process_tasks = {d[self.tasks.key] for d in all_tasks} - processed_tasks
+        to_process_forms = {
+            d["formula_pretty"]
+            for d in all_tasks
+            if d[self.tasks.key] in to_process_tasks
+        }
 
         for formula_chunk in grouper(to_process_forms, number_splits):
             yield {"formula_pretty": {"$in": list(formula_chunk)}}
@@ -144,19 +142,18 @@ class MaterialsBuilder(Builder):
             temp_query["tags"] = {"$in": self.settings.BUILD_TAGS}
 
         self.logger.info("Finding tasks to process")
-        all_tasks = {
-            doc[self.tasks.key]
-            for doc in self.tasks.query(temp_query, [self.tasks.key])
-        }
-        processed_tasks = {
-            t_id
-            for d in self.materials.query({}, ["task_ids"])
-            for t_id in d.get("task_ids", [])
-        }
-        to_process_tasks = all_tasks - processed_tasks
-        to_process_forms = self.tasks.distinct(
-            "formula_pretty", {self.tasks.key: {"$in": list(to_process_tasks)}}
+        all_tasks = list(
+            self.tasks.query(temp_query, [self.tasks.key, "formula_pretty"])
         )
+
+        processed_tasks = set(self.materials.distinct("task_ids"))
+        to_process_tasks = {d[self.tasks.key] for d in all_tasks} - processed_tasks
+        to_process_forms = {
+            d["formula_pretty"]
+            for d in all_tasks
+            if d[self.tasks.key] in to_process_tasks
+        }
+
         self.logger.info(f"Found {len(to_process_tasks)} unprocessed tasks")
         self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
 
@@ -197,10 +194,7 @@ class MaterialsBuilder(Builder):
                 self.tasks.query(criteria=tasks_query, properties=projected_fields)
             )
             for t in tasks:
-                if t[self.tasks.key] in invalid_ids:
-                    t["is_valid"] = False
-                else:
-                    t["is_valid"] = True
+                t["is_valid"] = t[self.tasks.key] not in invalid_ids
 
             yield tasks
 
