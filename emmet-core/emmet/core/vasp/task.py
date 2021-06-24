@@ -118,11 +118,9 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     @property
     def run_type(self) -> RunType:
         params = self.calcs_reversed[0].get("input", {}).get("parameters", {})
-        ldau_fields = {
-            k: self.calcs_reversed[0].get("input", {}).get("incar", {}).get(k, [])
-            for k in ["LDAUL", "LDAUJ", "LDAUU"]
-        }
-        return run_type({**params, **ldau_fields})
+        incar = self.calcs_reversed[0].get("input", {}).get("incar", {})
+
+        return run_type({**params, **incar})
 
     @property
     def task_type(self):
@@ -131,13 +129,11 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     @property
     def calc_type(self):
         params = self.calcs_reversed[0].get("input", {}).get("parameters", {})
-        ldau_fields = {
-            k: self.calcs_reversed[0].get("input", {}).get("incar", {}).get(k, [])
-            for k in ["LDAUL", "LDAUJ", "LDAUU"]
-        }
+        incar = self.calcs_reversed[0].get("input", {}).get("incar", {})
+
         return calc_type(
             self.orig_inputs,
-            {**params, **ldau_fields},
+            {**params, **incar},
         )
 
     @property
