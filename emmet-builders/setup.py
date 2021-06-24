@@ -16,7 +16,7 @@ setup(
     packages=find_namespace_packages(include=["emmet.*"]),
     install_requires=[
         f"emmet-core~={version}",
-        "maggma~=0.27.0",
+        "maggma~=0.29.0",
     ],
     license="modified BSD",
     zip_safe=False,
