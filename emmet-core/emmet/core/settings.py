@@ -66,6 +66,8 @@ class EmmetSettings(BaseSettings):
         {
             "GGA Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
             "GGA+U Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
+            "GGA Static": "pymatgen.io.vasp.sets.MPStaticSet",
+            "GGA+U Static": "pymatgen.io.vasp.sets.MPStaticSet",
         },
         description="Default input sets for task validation",
     )
