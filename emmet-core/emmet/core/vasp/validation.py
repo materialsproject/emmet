@@ -121,7 +121,7 @@ class ValidationDoc(BaseModel):
             if curr_ismear != valid_ismear:
                 warnings.append(
                     f"Inappropriate smearing settings. Set to {curr_ismear},"
-                    " but should be {valid_ismear}"
+                    f" but should be {valid_ismear}"
                 )
 
             # Checking ENCUT
