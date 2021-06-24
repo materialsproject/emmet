@@ -181,7 +181,7 @@ class MaterialsBuilder(Builder):
             "output.energy_per_atom",
             "output.energy",
             "output.structure",
-            "calcs_reversed.0.input.parameters",
+            "calcs_reversed.input.parameters",
             "input.is_hubbard",
             "input.hubbards",
             "input.potcar_spec",
