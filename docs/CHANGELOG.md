@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.3.6](https://github.com/materialsproject/emmet/tree/v0.3.6) (2021-06-24)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.3.5...v0.3.6)
+
+**Merged pull requests:**
+
+- Fix projection for vasp run\_type determination [\#213](https://github.com/materialsproject/emmet/pull/213) ([shyamd](https://github.com/shyamd))
+
 ## [v0.3.5](https://github.com/materialsproject/emmet/tree/v0.3.5) (2021-06-24)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.3.4...v0.3.5)
