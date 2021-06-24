@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.4.0](https://github.com/materialsproject/emmet/tree/v0.4.0) (2021-06-24)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.3.6...v0.4.0)
+
+**Merged pull requests:**
+
+- Add R2SCAN to run\_types [\#214](https://github.com/materialsproject/emmet/pull/214) ([shyamd](https://github.com/shyamd))
+
 ## [v0.3.6](https://github.com/materialsproject/emmet/tree/v0.3.6) (2021-06-24)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.3.5...v0.3.6)
