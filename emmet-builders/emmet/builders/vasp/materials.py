@@ -96,7 +96,7 @@ class MaterialsBuilder(Builder):
         self.logger.info("Finding tasks to process")
         all_tasks = list(self.tasks.query(temp_query, [self.tasks.key]))
 
-        processed_tasks = self.materials.distinct("task_ids")
+        processed_tasks = set(self.materials.distinct("task_ids"))
         to_process_tasks = {d[self.tasks.key] for d in all_tasks} - processed_tasks
         to_process_forms = {
             d["formula_pretty"]
@@ -142,7 +142,7 @@ class MaterialsBuilder(Builder):
         self.logger.info("Finding tasks to process")
         all_tasks = list(self.tasks.query(temp_query, [self.tasks.key]))
 
-        processed_tasks = self.materials.distinct("task_ids")
+        processed_tasks = set(self.materials.distinct("task_ids"))
         to_process_tasks = {d[self.tasks.key] for d in all_tasks} - processed_tasks
         to_process_forms = {
             d["formula_pretty"]
