@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.3.5](https://github.com/materialsproject/emmet/tree/v0.3.5) (2021-06-24)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.3.4...v0.3.5)
+
+**Merged pull requests:**
+
+- Fix `run_type` in validation [\#212](https://github.com/materialsproject/emmet/pull/212) ([shyamd](https://github.com/shyamd))
+
 ## [v0.3.4](https://github.com/materialsproject/emmet/tree/v0.3.4) (2021-06-23)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.3.3...v0.3.4)
