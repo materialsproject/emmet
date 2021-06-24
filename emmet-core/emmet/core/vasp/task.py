@@ -1,7 +1,7 @@
 """ Core definition of a VASP Task Document """
 from typing import Any, ClassVar, Dict, List, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
@@ -167,7 +167,24 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     @property
     def structure_entry(self) -> ComputedStructureEntry:
         """Turns a Task Doc into a ComputedStructureEntry"""
-        entry_dict = self.entry.as_dict()
-        entry_dict["structure"] = self.output.structure
+        entry_dict = {
+            "correction": 0.0,
+            "entry_id": self.task_id,
+            "composition": self.output.structure.composition,
+            "energy": self.output.energy,
+            "parameters": {
+                "potcar_spec": self.input.potcar_spec,
+                "is_hubbard": self.input.is_hubbard,
+                "hubbards": self.input.hubbards,
+                # This is done to be compatible with MontyEncoder for the ComputedEntry
+                "run_type": str(self.run_type),
+            },
+            "data": {
+                "oxide_type": oxide_type(self.output.structure),
+                "aspherical": self.input.parameters.get("LASPH", True),
+                "last_updated": self.last_updated,
+            },
+            "structure": self.output.structure,
+        }
 
         return ComputedStructureEntry.from_dict(entry_dict)

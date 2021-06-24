@@ -69,4 +69,5 @@ def task_ldau(test_dir):
 
 
 def test_ldau(task_ldau):
+    assert task_ldau.run_type == RunType.GGA_U
     assert ValidationDoc.from_task_doc(task_ldau).valid is False
