@@ -8,7 +8,7 @@ from emmet.core.vasp.task import TaskDocument
 from emmet.core.vasp.validation import ValidationDoc
 
 
-def test_task_tye():
+def test_task_type():
 
     # TODO: Switch this to actual inputs?
     input_types = [
