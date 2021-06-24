@@ -1,7 +1,7 @@
 """ Core definition of a VASP Task Document """
 from typing import Any, ClassVar, Dict, List, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
