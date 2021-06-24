@@ -17,6 +17,11 @@ def run_type(parameters: Dict) -> RunType:
 
     Args:
         parameters: Dictionary of VASP parameters from Vasprun.xml
+
+        *** WARNING ***
+        VASP mangles the LDAU* fields in the parameters field
+        If you're not using the TaskDocument.run_type, copy over
+        LDAU* fields from the incar rather than trust parameters
     """
 
     if parameters.get("LDAU", False):
