@@ -108,11 +108,14 @@ class ValidationDoc(BaseModel):
                     )
                     # larger KSPACING means fewer k-points
                     if data["kspacing_delta"] > kspacing_tolerance:
-                        reasons.append(DeprecationMessage.KSPACING)
+                        warnings.append(
+                            f"KSPACING is greater than input set: {data['kspacing_delta']}"
+                            f" lower than {kspacing_tolerance} ",
+                        )
                     elif data["kspacing_delta"] < kspacing_tolerance:
                         warnings.append(
                             f"KSPACING is lower than input set: {data['kspacing_delta']}"
-                            " lower than {kspacing_tolerance} ",
+                            f" lower than {kspacing_tolerance} ",
                         )
 
             # warn, but don't invalidate if wrong ISMEAR
