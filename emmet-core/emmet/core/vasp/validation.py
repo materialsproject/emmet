@@ -173,18 +173,18 @@ class ValidationDoc(BaseModel):
                         ]
                     )
 
-        # Check the max upwards SCF step
-        skip = abs(inputs.get("incar", {}).get("NLEMDL", -5)) - 1
-        energies = [
-            d["e_fr_energy"]
-            for d in task_doc.calcs_reversed[0]["output"]["ionic_steps"][-1][
-                "electronic_steps"
+            # Check the max upwards SCF step
+            skip = abs(inputs.get("incar", {}).get("NLEMDL", -5)) - 1
+            energies = [
+                d["e_fr_energy"]
+                for d in task_doc.calcs_reversed[0]["output"]["ionic_steps"][-1][
+                    "electronic_steps"
+                ]
             ]
-        ]
-        max_gradient = np.max(np.gradient(energies)[skip:])
-        data["max_gradient"] = max_gradient
-        if max_gradient > max_allowed_scf_gradient:
-            reasons.append(DeprecationMessage.MAX_SCF)
+            max_gradient = np.max(np.gradient(energies)[skip:])
+            data["max_gradient"] = max_gradient
+            if max_gradient > max_allowed_scf_gradient:
+                reasons.append(DeprecationMessage.MAX_SCF)
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,
