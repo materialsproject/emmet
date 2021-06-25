@@ -38,6 +38,11 @@ class OxidationStatesBuilder(MapBuilder):
 
     def unary_function(self, item):
         structure = Structure.from_dict(item["structure"])
-        oxi_doc = OxidationStateDoc.from_structure(structure)
+        mpid = item["material_id"]
+
+        oxi_doc = OxidationStateDoc.from_structure(
+            structure=structure, material_id=mpid
+        )
         doc = jsanitize(oxi_doc.dict(), allow_bson=True)
+
         return doc
