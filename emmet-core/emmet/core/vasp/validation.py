@@ -174,7 +174,7 @@ class ValidationDoc(BaseModel):
                     )
 
         # Check the max upwards SCF step
-        skip = inputs.get("incar", {}).get("NLEMDL")
+        skip = abs(inputs.get("incar", {}).get("NLEMDL", -5)) - 1
         energies = [
             d["e_fr_energy"]
             for d in task_doc.calcs_reversed[0]["output"]["ionic_steps"][-1][
