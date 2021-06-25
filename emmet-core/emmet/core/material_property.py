@@ -38,7 +38,7 @@ class PropertyDoc(StructureMetadata):
     )
 
     warnings: Sequence[str] = Field(
-        None, description="Any warnings related to this property"
+        [], description="Any warnings related to this property"
     )
 
     @classmethod
