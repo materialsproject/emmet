@@ -155,11 +155,23 @@ class ValidationDoc(BaseModel):
                     d[0]: d[1:] for d in zip(*input_set_ldau_fields)
                 }
 
-                if any(
-                    input_set_ldau_params[el] != input_params
-                    for el, input_params in input_ldau_params.items()
-                ):
+                all_elements = list(
+                    set(input_set_ldau_params.keys()) | set(input_ldau_params.keys())
+                )
+                diff_ldau_params = {
+                    el: (input_set_ldau_params.get(el, 0), input_ldau_params.get(el, 0))
+                    for el in all_elements
+                    if input_set_ldau_params.get(el) != input_ldau_params.get(el)
+                }
+
+                if len(diff_ldau_params) > 0:
                     reasons.append(DeprecationMessage.LDAU)
+                    warnings.extend(
+                        [
+                            f"U-value for {el} should be {good} but was {bad}"
+                            for el, (bad, good) in diff_ldau_params.items()
+                        ]
+                    )
 
         # Check the max upwards SCF step
         skip = inputs.get("incar", {}).get("NLEMDL")
