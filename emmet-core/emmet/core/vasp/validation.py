@@ -181,10 +181,16 @@ class ValidationDoc(BaseModel):
                     "electronic_steps"
                 ]
             ]
-            max_gradient = np.max(np.gradient(energies)[skip:])
-            data["max_gradient"] = max_gradient
-            if max_gradient > max_allowed_scf_gradient:
-                reasons.append(DeprecationMessage.MAX_SCF)
+            if len(energies) > skip:
+                max_gradient = np.max(np.gradient(energies)[skip:])
+                data["max_gradient"] = max_gradient
+                if max_gradient > max_allowed_scf_gradient:
+                    reasons.append(DeprecationMessage.MAX_SCF)
+            else:
+                warnings.append(
+                    "Not enough electronic steps to compute valid gradient"
+                    " and compare with max SCF gradient tolerance"
+                )
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,
