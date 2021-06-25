@@ -134,16 +134,16 @@ class ValidationDoc(BaseModel):
             if data["encut_ratio"] < 1:
                 reasons.append(DeprecationMessage.ENCUT)
 
-            # Checking U-values
-            if valid_input_set.incar.get("LDAU"):
-                # Assemble actual input LDAU params into dictionary to account for possibility
-                # of differing order of elements.
-                structure_set_symbol_set = _get_unsorted_symbol_set(structure)
-                inputs_ldau_fields = [structure_set_symbol_set] + [
-                    inputs.get("incar", {}).get(k, []) for k in LDAU_fields
-                ]
-                input_ldau_params = {d[0]: d[1:] for d in zip(*inputs_ldau_fields)}
+            # Assemble actual input LDAU params into dictionary to account for possibility
+            # of differing order of elements.
+            structure_set_symbol_set = _get_unsorted_symbol_set(structure)
+            inputs_ldau_fields = [structure_set_symbol_set] + [
+                inputs.get("incar", {}).get(k, []) for k in LDAU_fields
+            ]
+            input_ldau_params = {d[0]: d[1:] for d in zip(*inputs_ldau_fields)}
 
+            # Checking U-values
+            if valid_input_set.incar.get("LDAU") or len(input_ldau_params) > 0:
                 # Assemble required input_set LDAU params into dictionary
                 input_set_symbol_set = _get_unsorted_symbol_set(
                     valid_input_set.poscar.structure
