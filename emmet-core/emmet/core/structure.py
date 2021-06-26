@@ -85,13 +85,15 @@ class StructureMetadata(BaseModel):
             if fields is None
             else fields
         )
+        composition = composition.remove_charges()
+
         elsyms = sorted(set([e.symbol for e in composition.elements]))
 
         data = {
             "elements": elsyms,
             "nelements": len(elsyms),
             "composition": composition,
-            "composition_reduced": composition.reduced_composition,
+            "composition_reduced": composition.reduced_composition.remove_charges(),
             "formula_pretty": composition.reduced_formula,
             "formula_anonymous": composition.anonymized_formula,
             "chemsys": "-".join(elsyms),
@@ -126,7 +128,7 @@ class StructureMetadata(BaseModel):
             if fields is None
             else fields
         )
-        comp = structure.composition
+        comp = structure.composition.remove_charges()
         elsyms = sorted(set([e.symbol for e in comp.elements]))
         symmetry = SymmetryData.from_structure(structure)
 
