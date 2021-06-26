@@ -1,3 +1,5 @@
+from typing import Union
+
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Structure
 from robocrys import StructureCondenser, StructureDescriber
@@ -12,9 +14,11 @@ class MineralData(BaseModel):
     Model for mineral data in the condensed structure robocrystallographer field
     """
 
-    type: str = Field(
+    type: Union[str, None] = Field(
         description="Mineral type.",
     )
+
+    name: str = Field(None, description="The mineral name if found")
 
 
 class CondensedStructureData(BaseModel):
