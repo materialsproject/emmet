@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.4.1](https://github.com/materialsproject/emmet/tree/v0.4.1) (2021-06-27)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.4.0...v0.4.1)
+
+**Merged pull requests:**
+
+- Fix oxidation doc composition [\#217](https://github.com/materialsproject/emmet/pull/217) ([shyamd](https://github.com/shyamd))
+
 ## [v0.4.0](https://github.com/materialsproject/emmet/tree/v0.4.0) (2021-06-24)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.3.6...v0.4.0)
