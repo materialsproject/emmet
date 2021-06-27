@@ -4,6 +4,7 @@ from pymatgen.core import Structure
 from pymatgen.core import __version__ as pymatgen_version
 
 from emmet.core.oxidation_states import OxidationStateDoc
+from emmet.core.utils import jsanitize
 
 
 class OxidationStatesBuilder(MapBuilder):
@@ -37,14 +38,11 @@ class OxidationStatesBuilder(MapBuilder):
 
     def unary_function(self, item):
         structure = Structure.from_dict(item["structure"])
-        oxi_doc = OxidationStateDoc.from_structure(structure)
-        doc = oxi_doc.dict()
+        mpid = item["material_id"]
 
-        doc.update(
-            {
-                "pymatgen_version": pymatgen_version,
-                "successful": True,
-            }
+        oxi_doc = OxidationStateDoc.from_structure(
+            structure=structure, material_id=mpid
         )
+        doc = jsanitize(oxi_doc.dict(), allow_bson=True)
 
         return doc
