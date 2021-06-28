@@ -10,7 +10,10 @@ setup(
     author_email="feedback@materialsproject.org",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
-    package_data={"emmet.core.vasp.calc_types": ["*.yaml"]},
+    package_data={
+        "emmet.core.vasp.calc_types": ["*.yaml"],
+        "emmet.core.subtrates": ["*.json"],
+    },
     include_package_data=True,
     install_requires=[
         "pymatgen>=2021.3,<2023.0",
