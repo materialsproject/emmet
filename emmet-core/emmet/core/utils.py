@@ -1,7 +1,7 @@
 import datetime
 from enum import Enum
 from itertools import groupby
-from typing import Iterator, List
+from typing import Any, Iterator, List
 
 import bson
 import numpy as np
@@ -143,7 +143,12 @@ class ValueEnum(Enum):
         """Special Equals to enable converting strings back to the enum"""
         if isinstance(o, str):
             return super().__eq__(self.__class__(o))
-        return super().__eq__(o)
+        elif isinstance(o, self.__class__):
+            return super().__eq__(o)
+        return False
+
+    def __hash__(self) -> Any:
+        return super().__hash__()
 
 
 class DocEnum(ValueEnum):
