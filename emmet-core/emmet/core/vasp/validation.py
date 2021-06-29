@@ -4,6 +4,7 @@ from typing import Dict, List, Union
 import numpy as np
 from pydantic import BaseModel, Field, PyObject
 from pymatgen.core.structure import Structure
+from pymatgen.io.vasp.sets import VaspInputSet
 
 from emmet.core import SETTINGS
 from emmet.core.mpid import MPID
@@ -83,9 +84,11 @@ class ValidationDoc(BaseModel):
 
             # Ensure inputsets that need the bandgap get it
             try:
-                valid_input_set = input_sets[str(calc_type)](structure, bandgap=bandgap)
+                valid_input_set: VaspInputSet = input_sets[str(calc_type)](
+                    structure, bandgap=bandgap
+                )
             except TypeError:
-                valid_input_set = input_sets[str(calc_type)](structure)
+                valid_input_set: VaspInputSet = input_sets[str(calc_type)](structure)
 
             # Checking K-Points
             # Calculations that use KSPACING will not have a .kpoints attr
