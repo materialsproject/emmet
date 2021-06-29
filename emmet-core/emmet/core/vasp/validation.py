@@ -137,34 +137,26 @@ class ValidationDoc(BaseModel):
             if data["encut_ratio"] < 1:
                 reasons.append(DeprecationMessage.ENCUT)
 
-            # Assemble actual input LDAU params into dictionary to account for possibility
-            # of differing order of elements.
-            structure_set_symbol_set = _get_unsorted_symbol_set(structure)
-            inputs_ldau_fields = [structure_set_symbol_set] + [
-                inputs.get("incar", {}).get(k, []) for k in LDAU_fields
-            ]
-            input_ldau_params = {d[0]: d[1:] for d in zip(*inputs_ldau_fields)}
-
+            # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
+            input_hubbards = task_doc.input.hubbards
+            print(input_hubbards)
             # Checking U-values
             if valid_input_set.incar.get("LDAU") or len(input_ldau_params) > 0:
                 # Assemble required input_set LDAU params into dictionary
-                input_set_symbol_set = _get_unsorted_symbol_set(
-                    valid_input_set.poscar.structure
+                input_set_hubbards = dict(
+                    zip(
+                        valid_input_set.poscar.site_symbols,
+                        valid_input_set.incar.get("LDAUU", []),
+                    )
                 )
-                input_set_ldau_fields = [input_set_symbol_set] + [
-                    valid_input_set.incar.get(k) for k in LDAU_fields
-                ]
-                input_set_ldau_params = {
-                    d[0]: d[1:] for d in zip(*input_set_ldau_fields)
-                }
 
                 all_elements = list(
-                    set(input_set_ldau_params.keys()) | set(input_ldau_params.keys())
+                    set(input_set_hubbards.keys()) | set(input_hubbards.keys())
                 )
                 diff_ldau_params = {
-                    el: (input_set_ldau_params.get(el, 0), input_ldau_params.get(el, 0))
+                    el: (input_set_hubbards.get(el, 0), input_hubbards.get(el, 0))
                     for el in all_elements
-                    if input_set_ldau_params.get(el) != input_ldau_params.get(el)
+                    if input_set_hubbards.get(el) != input_hubbards.get(el)
                 }
 
                 if len(diff_ldau_params) > 0:
