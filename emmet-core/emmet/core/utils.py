@@ -139,6 +139,12 @@ class ValueEnum(Enum):
     def __str__(self):
         return str(self.value)
 
+    def __eq__(self, o: object) -> bool:
+        """Special Equals to enable converting strings back to the enum"""
+        if isinstance(o, str):
+            return super().__eq__(self.__class__(o))
+        return super().__eq__(o)
+
 
 class DocEnum(ValueEnum):
     """
