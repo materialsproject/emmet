@@ -73,3 +73,15 @@ def task_ldau(test_dir):
 def test_ldau(task_ldau):
     assert task_ldau.run_type == RunType.GGA_U
     assert ValidationDoc.from_task_doc(task_ldau).valid is False
+
+
+def test_ldau_validation(test_dir):
+    with open(test_dir / "old_aflow_ggau_task.json") as f:
+        data = json.load(f)
+
+    task = TaskDocument(**data)
+    assert task.run_type == "GGA+U"
+
+    valid = ValidationDoc.from_task_doc(task)
+
+    assert valid.valid
