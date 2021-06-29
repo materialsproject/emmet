@@ -88,7 +88,7 @@ class ValidationDoc(BaseModel):
                     structure, bandgap=bandgap
                 )
             except TypeError:
-                valid_input_set: VaspInputSet = input_sets[str(calc_type)](structure)
+                valid_input_set = input_sets[str(calc_type)](structure)
 
             # Checking K-Points
             # Calculations that use KSPACING will not have a .kpoints attr
@@ -139,9 +139,9 @@ class ValidationDoc(BaseModel):
 
             # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
             input_hubbards = task_doc.input.hubbards
-            print(input_hubbards)
+
             # Checking U-values
-            if valid_input_set.incar.get("LDAU") or len(input_ldau_params) > 0:
+            if valid_input_set.incar.get("LDAU") or len(input_hubbards) > 0:
                 # Assemble required input_set LDAU params into dictionary
                 input_set_hubbards = dict(
                     zip(
