@@ -3,7 +3,7 @@ from typing import Dict, List, Union
 
 import numpy as np
 from pydantic import BaseModel, Field, PyObject
-from pymatgen.core import Structure
+from pymatgen.core.structure import Structure
 
 from emmet.core import SETTINGS
 from emmet.core.mpid import MPID
