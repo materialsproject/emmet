@@ -156,7 +156,9 @@ class ValidationDoc(BaseModel):
                 diff_ldau_params = {
                     el: (input_set_hubbards.get(el, 0), input_hubbards.get(el, 0))
                     for el in all_elements
-                    if input_set_hubbards.get(el) != input_hubbards.get(el)
+                    if not np.allclose(
+                        input_set_hubbards.get(el, 0), input_hubbards.get(el, 0)
+                    )
                 }
 
                 if len(diff_ldau_params) > 0:
