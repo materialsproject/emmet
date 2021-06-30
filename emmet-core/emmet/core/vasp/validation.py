@@ -141,7 +141,7 @@ class ValidationDoc(BaseModel):
             input_hubbards = task_doc.input.hubbards
 
             # Checking U-values
-            if valid_input_set.incar.get("LDAU") or len(input_hubbards) > 0:
+            if valid_input_set.incar.get("LDAU", False) or len(input_hubbards) > 0:
                 # Assemble required input_set LDAU params into dictionary
                 input_set_hubbards = dict(
                     zip(
