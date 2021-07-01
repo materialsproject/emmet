@@ -33,3 +33,4 @@ def test_oxidation_state(structure: Structure):
     print(f"Should work : {structure.composition}")
     doc = OxidationStateDoc.from_structure(structure, material_id=33)
     assert doc is not None
+    assert doc.structure is not None
