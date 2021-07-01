@@ -177,7 +177,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
             },
             "data": {
                 "oxide_type": oxide_type(self.output.structure),
-                "aspherical": self.input.parameters.get("LASPH", True),
+                "aspherical": self.input.parameters.get("LASPH", False),
                 "last_updated": self.last_updated,
             },
             "structure": self.output.structure,
