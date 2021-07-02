@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.5.0](https://github.com/materialsproject/emmet/tree/v0.5.0) (2021-07-02)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.4.1...v0.5.0)
+
+**Merged pull requests:**
+
+- Fix Validation [\#215](https://github.com/materialsproject/emmet/pull/215) ([shyamd](https://github.com/shyamd))
+
 ## [v0.4.1](https://github.com/materialsproject/emmet/tree/v0.4.1) (2021-06-27)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.4.0...v0.4.1)
