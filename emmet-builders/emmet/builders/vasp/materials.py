@@ -176,13 +176,18 @@ class MaterialsBuilder(Builder):
             "task_id",
             "formula_pretty",
             "output.energy_per_atom",
-            "output.energy",
             "output.structure",
+            "input.parameters",
+            # needed for run_type and task_type
             "calcs_reversed.input.parameters",
+            "calcs_reversed.input.incar",
+            "orig_inputs",
+            # needed for entry from task_doc
+            "output.energy",
             "input.is_hubbard",
             "input.hubbards",
             "input.potcar_spec",
-            "orig_inputs",
+            # misc info for materials doc
             "input.structure",
             "tags",
         ]
