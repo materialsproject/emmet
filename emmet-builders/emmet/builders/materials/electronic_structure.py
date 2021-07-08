@@ -262,9 +262,6 @@ class ElectronicStructureBuilder(Builder):
                 if doc.warnings is None:
                     doc.warnings = []
 
-                print(struct)
-                print(struct_prim)
-
                 doc.warnings.append(
                     f"The input structure for {task_id} may not match the expected standard primitive! "
                 )

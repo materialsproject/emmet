@@ -361,30 +361,31 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         dos_entry = DosData(**dos_data)
 
         # Obtain summary data
-        bs_gap = bs_entry.setyawan_curtarolo.band_gap
+
+        bs_gap = (
+            bs_entry.setyawan_curtarolo.band_gap
+            if bs_entry.setyawan_curtarolo is not None
+            else None
+        )
         dos_cbm, dos_vbm = dos_obj.get_cbm_vbm()
         dos_gap = max(dos_cbm - dos_vbm, 0.0)
 
-        if bs_gap is not None:
-            print(bs_gap, dos_gap)
-            if bs_gap <= dos_gap + 0.2:
-                summary_task = bs_entry.setyawan_curtarolo.task_id
-                summary_band_gap = bs_gap
-                summary_cbm = bs_entry.setyawan_curtarolo.cbm
-                summary_vbm = bs_entry.setyawan_curtarolo.vbm
-                summary_efermi = bs_entry.setyawan_curtarolo.efermi
-                is_gap_direct = bs_entry.setyawan_curtarolo.is_gap_direct
-                is_metal = bs_entry.setyawan_curtarolo.is_metal
-                summary_magnetic_ordering = (
-                    bs_entry.setyawan_curtarolo.magnetic_ordering
-                )
-            else:
-                summary_task = dos_entry.dict()["total"][Spin.up]["task_id"]
-                summary_band_gap = dos_gap
-                summary_cbm = dos_cbm
-                summary_vbm = dos_vbm
-                summary_efermi = dos_efermi
-                summary_magnetic_ordering = dos_mag_ordering
+        if bs_gap is not None and bs_gap <= dos_gap + 0.2:
+            summary_task = bs_entry.setyawan_curtarolo.task_id
+            summary_band_gap = bs_gap
+            summary_cbm = bs_entry.setyawan_curtarolo.cbm
+            summary_vbm = bs_entry.setyawan_curtarolo.vbm
+            summary_efermi = bs_entry.setyawan_curtarolo.efermi
+            is_gap_direct = bs_entry.setyawan_curtarolo.is_gap_direct
+            is_metal = bs_entry.setyawan_curtarolo.is_metal
+            summary_magnetic_ordering = bs_entry.setyawan_curtarolo.magnetic_ordering
+        else:
+            summary_task = dos_entry.dict()["total"][Spin.up]["task_id"]
+            summary_band_gap = dos_gap
+            summary_cbm = dos_cbm
+            summary_vbm = dos_vbm
+            summary_efermi = dos_efermi
+            summary_magnetic_ordering = dos_mag_ordering
 
         return cls.from_structure(
             material_id=MPID(material_id),
