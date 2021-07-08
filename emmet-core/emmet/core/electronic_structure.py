@@ -366,7 +366,8 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         dos_gap = max(dos_cbm - dos_vbm, 0.0)
 
         if bs_gap is not None:
-            if np.isclose(bs_gap, dos_gap, atol=0, rtol=0.1):
+            print(bs_gap, dos_gap)
+            if bs_gap <= dos_gap + 0.2:
                 summary_task = bs_entry.setyawan_curtarolo.task_id
                 summary_band_gap = bs_gap
                 summary_cbm = bs_entry.setyawan_curtarolo.cbm
@@ -374,12 +375,16 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 summary_efermi = bs_entry.setyawan_curtarolo.efermi
                 is_gap_direct = bs_entry.setyawan_curtarolo.is_gap_direct
                 is_metal = bs_entry.setyawan_curtarolo.is_metal
+                summary_magnetic_ordering = (
+                    bs_entry.setyawan_curtarolo.magnetic_ordering
+                )
             else:
-                summary_task = dos_entry.dict()["total"]["1"]["task_id"]
+                summary_task = dos_entry.dict()["total"][Spin.up]["task_id"]
                 summary_band_gap = dos_gap
                 summary_cbm = dos_cbm
                 summary_vbm = dos_vbm
                 summary_efermi = dos_efermi
+                summary_magnetic_ordering = dos_mag_ordering
 
         return cls.from_structure(
             material_id=MPID(material_id),
@@ -391,7 +396,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             efermi=summary_efermi,
             is_gap_direct=is_gap_direct,
             is_metal=is_metal,
-            magnetic_ordering=dos_mag_ordering,
+            magnetic_ordering=summary_magnetic_ordering,
             bandstructure=bs_entry,
             dos=dos_entry,
         )

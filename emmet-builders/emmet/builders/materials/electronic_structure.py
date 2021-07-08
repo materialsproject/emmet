@@ -209,21 +209,7 @@ class ElectronicStructureBuilder(Builder):
                 **bs,
             )
 
-            doc = self._bsdos_checks(doc, dos, structures)
-
-        # Main structure check
-        struct_prim = SpacegroupAnalyzer(structure).get_primitive_standard_structure(
-            international_monoclinic=False
-        )
-        if not np.allclose(
-            structure.lattice.matrix, struct_prim.lattice.matrix, atol=1e-5
-        ):
-            if doc.warnings is None:
-                doc.warnings = []
-
-            doc.warnings.append(
-                f"The main structure does not match the expected standard primitive! "
-            )
+            doc = self._bsdos_checks(doc, dos[mat["dos"]["task_id"]], structures)
 
         return doc.dict()
 
@@ -271,13 +257,16 @@ class ElectronicStructureBuilder(Builder):
                 international_monoclinic=False
             )
             if not np.allclose(
-                struct.lattice.matrix, struct_prim.lattice.matrix, atol=1e-5
+                struct.lattice.matrix, struct_prim.lattice.matrix, atol=1e-3
             ):
                 if doc.warnings is None:
                     doc.warnings = []
 
+                print(struct)
+                print(struct_prim)
+
                 doc.warnings.append(
-                    f"The input structure for {task_id} not match the expected standard primitive! "
+                    f"The input structure for {task_id} may not match the expected standard primitive! "
                 )
 
         # Check line-mode and uniform for same structure
