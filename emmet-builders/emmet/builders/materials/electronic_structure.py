@@ -6,6 +6,7 @@ from maggma.builders import Builder
 from maggma.utils import grouper
 from pymatgen.analysis.magnetism.analyzer import CollinearMagneticStructureAnalyzer
 from pymatgen.core import Structure
+from pymatgen.electronic_structure.core import Spin
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.bandstructure import HighSymmKpath
@@ -212,11 +213,21 @@ class ElectronicStructureBuilder(Builder):
             doc = self._bsdos_checks(doc, dos[mat["dos"]["task_id"]], structures)
 
         # Magnetic ordering check
-        mag_orderings = {
-            bs_summary.task_id: bs_summary.magnetic_ordering
-            for bs_type, bs_summary in doc.bandstructure
-            if bs_summary is not None
-        }
+        mag_orderings = {}
+        if doc.bandstructure is not None:
+            mag_orderings.update(
+                {
+                    bs_summary.task_id: bs_summary.magnetic_ordering
+                    for bs_type, bs_summary in doc.bandstructure
+                    if bs_summary is not None
+                }
+            )
+
+        if doc.dos is not None:
+            dos_dict = doc.dos.dict()
+            mag_orderings.update(
+                {dos_dict["total"][Spin.up]["task_id"]: dos_dict["magnetic_ordering"]}
+            )
 
         for task_id, ordering in mag_orderings.items():
             if doc.magnetic_ordering != ordering:
