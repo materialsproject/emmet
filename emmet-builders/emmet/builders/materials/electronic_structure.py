@@ -25,7 +25,7 @@ class ElectronicStructureBuilder(Builder):
         dos_fs,
         chunk_size=10,
         query=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Creates an electronic structure collection from a tasks collection,
@@ -310,8 +310,13 @@ class ElectronicStructureBuilder(Builder):
 
                 structure = Structure.from_dict(task_query["output"]["structure"])
 
-                if task_query["orig_inputs"]["kpoints"]["generation_style"] == "Monkhorst":
-                    nkpoints = np.prod(task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0)
+                if (
+                    task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Monkhorst"
+                ):
+                    nkpoints = np.prod(
+                        task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
+                    )
 
                 else:
                     nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
@@ -414,7 +419,9 @@ class ElectronicStructureBuilder(Builder):
                     bs_obj["data"] if bs_obj is not None else None
                 )
 
-                materials_doc["bandstructure"][bs_type]["output_structure"] = sorted_bs_data[0]["output_structure"]
+                materials_doc["bandstructure"][bs_type][
+                    "output_structure"
+                ] = sorted_bs_data[0]["output_structure"]
 
             if dos_calcs:
 
@@ -438,7 +445,9 @@ class ElectronicStructureBuilder(Builder):
                     dos_obj["data"] if dos_obj is not None else None
                 )
 
-                materials_doc["dos"]["output_structure"] = sorted_dos_data[0]["output_structure"]
+                materials_doc["dos"]["output_structure"] = sorted_dos_data[0][
+                    "output_structure"
+                ]
 
             if other_calcs:
 
@@ -465,7 +474,14 @@ class ElectronicStructureBuilder(Builder):
                     materials_doc["other"]["band_gap"] == 0.0
                 )
 
-                for prop in ["efermi", "cbm", "vbm", "is_gap_direct", "is_metal"]:
+                for prop in [
+                    "efermi",
+                    "cbm",
+                    "vbm",
+                    "is_gap_direct",
+                    "is_metal",
+                    "eigenvalue_band_properties",
+                ]:
 
                     # First try other calcs_reversed entries if properties are not found in last
                     if prop not in task_output_data:
