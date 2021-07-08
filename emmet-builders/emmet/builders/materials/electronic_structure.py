@@ -1,6 +1,6 @@
 from collections import defaultdict
 from math import ceil
-
+import itertools
 import numpy as np
 from maggma.builders import Builder
 from maggma.utils import grouper
@@ -9,6 +9,8 @@ from pymatgen.core import Structure
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.bandstructure import HighSymmKpath
+from pymatgen.analysis.structure_matcher import StructureMatcher
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core import SETTINGS
 from emmet.core.electronic_structure import ElectronicStructureDoc
@@ -155,7 +157,8 @@ class ElectronicStructureBuilder(Builder):
             )
 
         if dos is None:
-            doc = ElectronicStructureDoc.from_structure(
+            # Summary data
+            d = dict(
                 material_id=mat[self.materials.key],
                 task_id=mat["other"]["task_id"],
                 structure=structure,
@@ -166,7 +169,36 @@ class ElectronicStructureBuilder(Builder):
                 is_gap_direct=mat["other"]["is_gap_direct"],
                 is_metal=mat["other"]["is_metal"],
                 magnetic_ordering=mat["other"]["magnetic_ordering"],
+                warnings=None,
             )
+
+            # Eigenvalue band property checks
+            eig_values = mat["other"].get("eigenvalue_band_properties", None)
+
+            if eig_values is not None:
+                if not np.isclose(
+                    mat["other"]["band_gap"], eig_values["bandgap"], atol=0.2, rtol=0.0
+                ):
+                    if d["warnings"] is None:
+                        d["warnings"] = []
+
+                    d["warnings"].append(
+                        "Regular band gap and band gap from eigenvalue_band_properties do not agree.\
+                        Using data from eigenvalue_band_properties!"
+                    )
+
+                    d["band_gap"] = eig_values["bandgap"]
+                    d["cbm"] = eig_values["cbm"]
+                    d["vbm"] = eig_values["vbm"]
+                    d["is_gap_direct"] = eig_values["is_gap_direct"]
+                    d["is_metal"] = (
+                        True
+                        if np.isclose(d["band_gap"], 0.0, atol=0.01, rtol=0)
+                        else False
+                    )
+
+            doc = ElectronicStructureDoc.from_structure(**d)
+
         else:
             doc = ElectronicStructureDoc.from_bsdos(
                 material_id=mat[self.materials.key],
@@ -177,18 +209,66 @@ class ElectronicStructureBuilder(Builder):
                 **bs,
             )
 
+            # Band gap difference check for uniform and line-mode calculations
             bgap_diff = []
             for bs_type, bs_summary in doc.bandstructure:
                 if bs_summary is not None:
                     bgap_diff.append(doc.band_gap - bs_summary.band_gap)
+
+            if dos is not None:
+                bgap_diff.append(doc.band_gap - dos.get_gap())
 
             if any(abs(gap) > 0.25 for gap in bgap_diff):
                 if doc.warnings is None:
                     doc.warnings = []
                 doc.warnings.append(
                     "Absolute difference between blessed band gap and at least one\
-                    line-mode calculation band gap is larger than 0.25 eV."
+                    line-mode or uniform calculation band gap is larger than 0.25 eV."
                 )
+
+            # Line-mode and uniform structure primitive checks
+
+            pair_list = []
+            for task_id, struct in structures.items():
+                pair_list.append((task_id, struct))
+
+                struct_prim = SpacegroupAnalyzer(
+                    struct
+                ).get_primitive_standard_structure(international_monoclinic=False)
+                if not np.allclose(
+                    struct.lattice.matrix, struct_prim.lattice.matrix, atol=1e-5
+                ):
+                    if doc.warnings is None:
+                        doc.warnings = []
+
+                    doc.warnings.append(
+                        f"The input structure for {task_id} not match the expected standard primitive! "
+                    )
+
+            # Check line-mode and uniform for same structure
+            sm = StructureMatcher()
+            for pair in itertools.combinations(pair_list, 2):
+                if not sm.fit(pair[0][1], pair[1][1]):
+                    if doc.warnings is None:
+                        doc.warnings = []
+
+                    doc.warnings.append(
+                        f"The input structures for {pair[0][0]} and {pair[1][0]} not are not equivalent! "
+                    )
+
+        # Main structure check
+        struct_prim = SpacegroupAnalyzer(structure).get_primitive_standard_structure(
+            international_monoclinic=False
+        )
+        if not np.allclose(
+            struct.lattice.matrix, struct_prim.lattice.matrix, atol=1e-5
+        ):
+            if doc.warnings is None:
+                doc.warnings = []
+
+            doc.warnings.append(
+                f"The input structure for {task_id} not match the expected standard primitive! "
+            )
 
         return doc.dict()
 
