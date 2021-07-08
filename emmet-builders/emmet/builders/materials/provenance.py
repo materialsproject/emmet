@@ -36,7 +36,7 @@ class ProvenanceBuilder(Builder):
         self.provenance = provenance
         self.source_snls = source_snls
         self.settings = EmmetBuildSettings.autoload(settings)
-        self.query = query
+        self.query = query or {}
         self.kwargs = kwargs
 
         materials.key = "material_id"
