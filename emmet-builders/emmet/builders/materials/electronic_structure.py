@@ -156,7 +156,7 @@ class ElectronicStructureBuilder(Builder):
                 )
             )
 
-        # Summary data
+        # Default summary data
         d = dict(
             material_id=mat[self.materials.key],
             task_id=mat["other"]["task_id"],
@@ -210,6 +210,22 @@ class ElectronicStructureBuilder(Builder):
             )
 
             doc = self._bsdos_checks(doc, dos[mat["dos"]["task_id"]], structures)
+
+        # Magnetic ordering check
+        mag_orderings = {
+            bs_summary.task_id: bs_summary.magnetic_ordering
+            for bs_type, bs_summary in doc.bandstructure
+            if bs_summary is not None
+        }
+
+        for task_id, ordering in mag_orderings.items():
+            if doc.magnetic_ordering != ordering:
+                if doc.warnings is None:
+                    doc.warnings = []
+
+                doc.warnings.append(
+                    f"Summary data magnetic ordering does not agree with the ordering from {task_id}"
+                )
 
         return doc.dict()
 
