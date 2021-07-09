@@ -5,7 +5,8 @@ from typing import ClassVar, Dict, List, Optional
 
 from monty.json import MontyDecoder
 from pybtex.database import BibliographyData, parse_string
-from pydantic import BaseModel, EmailStr, Field, validator
+from pybtex.errors import set_strict_mode
+from pydantic import BaseModel, Field, root_validator, validator
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
@@ -126,6 +127,7 @@ class ProvenanceDoc(PropertyDoc):
         refs = {}
         for snl in snls:
             try:
+                set_strict_mode(False)
                 entries = parse_string(snl["about"]["references"], bib_format="bibtex")
                 refs.update(entries.entries)
             except Exception:
