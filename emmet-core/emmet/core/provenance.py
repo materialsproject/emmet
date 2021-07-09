@@ -98,12 +98,13 @@ class ProvenanceDoc(PropertyDoc):
         assert (
             len(snls) > 0
         ), "Error must provide a non-zero list of SNLs to convert from SNLs"
+
+        decoder = MontyDecoder()
         # Choose earliest created_at
         created_at = sorted(
-            [
-                snl.get("about", {}).get("created_at", {}).get("string", datetime.max)
-                for snl in snls
-            ]
+            decoder.process_decoded(
+                [snl.get("about", {}).get("created_at", datetime.max) for snl in snls]
+            )
         )[0]
 
         # Choose earliest history
