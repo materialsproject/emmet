@@ -211,7 +211,11 @@ class ProvenanceBuilder(Builder):
         m_strucs = [Structure.from_dict(mat["structure"])] + [
             Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]
         ]
-        snl_strucs = [StructureNL.from_dict(snl) for snl in snls]
+        snl_strucs = []
+        for snl in snls:
+            struc = StructureNL.from_dict(snl).structure
+            struc.snl = snl
+            snl_strucs.append(struc)
 
         groups = group_structures(
             m_strucs + snl_strucs,
@@ -223,13 +227,13 @@ class ProvenanceBuilder(Builder):
         matched_groups = [
             group
             for group in groups
-            if any(isinstance(struc, Structure) for struc in group)
+            if any(not hasattr(struc, "snl") for struc in group)
         ]
         snls = [
-            struc
+            struc.snl
             for group in matched_groups
             for struc in group
-            if isinstance(struc, StructureNL)
+            if hasattr(struc, "snl")
         ]
 
         self.logger.debug(f"Found {len(snls)} SNLs for {mat['material_id']}")
