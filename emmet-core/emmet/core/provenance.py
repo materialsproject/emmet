@@ -1,8 +1,9 @@
 """ Core definition of a Provenance Document """
 import warnings
-from datetime import datetime
+from datetime import date, datetime
 from typing import ClassVar, Dict, List, Optional
 
+from monty.json import MontyDecoder
 from pybtex.database import BibliographyData, parse_string
 from pydantic import BaseModel, EmailStr, Field, validator
 
@@ -125,7 +126,8 @@ class ProvenanceDoc(PropertyDoc):
                 warnings.warn(f"Failed parsing bibtex: {snl['about']['references']}")
 
         bib_data = BibliographyData(entries=refs)
-        references = [ref.to_string("bibtex") for ref in bib_data.entries]
+
+        references = [ref.to_string("bibtex") for ref in bib_data.entries.values()]
 
         # TODO: Maybe we should combine this robocrystallographer?
         # TODO: Refine these tags / remarks
