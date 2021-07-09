@@ -117,9 +117,9 @@ class ProvenanceDoc(PropertyDoc):
         # Choose earliest history
         history = sorted(
             snls,
-            key=lambda snl: snl.get("about", {})
-            .get("created_at", {})
-            .get("string", datetime.max),
+            key=lambda snl: decoder.process_decoded(
+                snl.get("about", {}).get("created_at", datetime.max)
+            ),
         )[0]["about"]["history"]
 
         # Aggregate all references into one dict to remove duplicates
