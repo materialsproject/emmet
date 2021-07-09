@@ -213,7 +213,7 @@ class ProvenanceBuilder(Builder):
         ]
         snl_strucs = []
         for snl in snls:
-            struc = StructureNL.from_dict(snl).structure
+            struc = Structure.from_dict(snl)
             struc.snl = snl
             snl_strucs.append(struc)
 
