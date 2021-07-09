@@ -28,7 +28,7 @@ class Author(BaseModel):
     """
 
     name: str = Field(None)
-    email: EmailStr = Field(None)
+    email: str = Field(None)
 
 
 class History(BaseModel):
