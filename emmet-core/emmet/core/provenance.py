@@ -149,11 +149,11 @@ class ProvenanceDoc(PropertyDoc):
         ]
 
         # Check if this entry is experimental
-        if any(
-            snl.get("about", {}).get("history", [{}])[0].get("experimental", False)
+        experimental = any(
+            history.get("experimental", False)
             for snl in snls
-        ):
-            experimental = True
+            for history in snl.get("about", {}).get("history", [{}])
+        )
 
         # Aggregate all the database IDs
         snl_ids = [snl.get("snl_id", "") for snl in snls]
@@ -165,12 +165,6 @@ class ProvenanceDoc(PropertyDoc):
         # remove Nones and empty lists
         db_ids = {k: list(filter(None, v)) for k, v in db_ids.items()}
         db_ids = {k: v for k, v in db_ids.items() if len(v) > 0}
-
-        # Get experimental bool
-        experimental = any(
-            snl.get("about", {}).get("history", [{}])[0].get("experimental", False)
-            for snl in snls
-        )
 
         snl_fields = {
             "created_at": created_at,
