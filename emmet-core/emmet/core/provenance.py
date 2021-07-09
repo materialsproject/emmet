@@ -95,6 +95,9 @@ class ProvenanceDoc(PropertyDoc):
         Converts legacy Pymatgen SNLs into a single provenance document
         """
 
+        assert (
+            len(snls) > 0
+        ), "Error must provide a non-zero list of SNLs to convert from SNLs"
         # Choose earliest created_at
         created_at = sorted(
             [
