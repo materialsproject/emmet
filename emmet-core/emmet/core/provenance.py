@@ -42,6 +42,12 @@ class History(BaseModel):
         None, description="Dictionary of exra data for this history node"
     )
 
+    @root_validator(pre=True)
+    def str_to_dict(cls, values):
+        if isinstance(values.get("description"), str):
+            values["description"] = {"string": values.get("description")}
+        return values
+
 
 class ProvenanceDoc(PropertyDoc):
     """
