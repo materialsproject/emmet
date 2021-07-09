@@ -130,8 +130,10 @@ class ProvenanceDoc(PropertyDoc):
                 set_strict_mode(False)
                 entries = parse_string(snl["about"]["references"], bib_format="bibtex")
                 refs.update(entries.entries)
-            except Exception:
-                warnings.warn(f"Failed parsing bibtex: {snl['about']['references']}")
+            except Exception as e:
+                warnings.warn(
+                    f"Failed parsing bibtex: {snl['about']['references']} due to {e}"
+                )
 
         bib_data = BibliographyData(entries=refs)
 
