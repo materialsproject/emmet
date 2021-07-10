@@ -194,7 +194,7 @@ class ProvenanceBuilder(Builder):
                 doc.history.append(self.settings.DEFAULT_HISTORY)
                 doc.references.append(self.settings.DEFAULT_REFERENCE)
 
-                snl_docs.append(doc.dict())
+                snl_docs.append(doc.dict(exclude_unset=True))
 
         return snl_docs
 
@@ -222,7 +222,7 @@ class ProvenanceBuilder(Builder):
             ltol=self.settings.LTOL,
             stol=self.settings.STOL,
             angle_tol=self.settings.ANGLE_TOL,
-            comparator=OrderDisorderElementComparator(),
+            # comparator=OrderDisorderElementComparator(),
         )
         matched_groups = [
             group
