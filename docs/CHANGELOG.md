@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.6.0](https://github.com/materialsproject/emmet/tree/v0.6.0) (2021-07-12)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.5.0...v0.6.0)
+
+**Merged pull requests:**
+
+- Add Deprecated Materials to MaterialsDoc construction [\#220](https://github.com/materialsproject/emmet/pull/220) ([shyamd](https://github.com/shyamd))
+- Fix provenance [\#219](https://github.com/materialsproject/emmet/pull/219) ([shyamd](https://github.com/shyamd))
+
 ## [v0.5.0](https://github.com/materialsproject/emmet/tree/v0.5.0) (2021-07-02)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.4.1...v0.5.0)
