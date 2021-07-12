@@ -4,7 +4,7 @@ import pytest
 from maggma.stores import JSONStore, MemoryStore
 from monty.serialization import dumpfn, loadfn
 
-from emmet.builders.materials.search import SearchBuilder
+from emmet.builders.materials.summary import SummaryBuilder
 from emmet.builders.vasp.materials import MaterialsBuilder
 
 
@@ -82,11 +82,11 @@ def xas():
 
 
 @pytest.fixture
-def search():
+def summary():
     return MemoryStore(key="material_id")
 
 
-def test_search_builder(
+def test_summary_builder(
     materials,
     thermo,
     xas,
@@ -100,10 +100,10 @@ def test_search_builder(
     substrates,
     surfaces,
     eos,
-    search,
+    summary,
 ):
 
-    builder = SearchBuilder(
+    builder = SummaryBuilder(
         materials=materials,
         electronic_structure=electronic_structure,
         thermo=thermo,
@@ -117,15 +117,15 @@ def test_search_builder(
         xas=xas,
         grain_boundaries=grain_boundaries,
         eos=eos,
-        search=search,
+        summary=summary,
     )
 
     builder.run()
-    assert search.count() == 1
+    assert summary.count() == 1
 
 
 def test_serialization(tmpdir):
-    builder = SearchBuilder(
+    builder = SummaryBuilder(
         MemoryStore(),
         MemoryStore(),
         MemoryStore(),
