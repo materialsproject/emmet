@@ -35,7 +35,9 @@ class RobocrystallographerBuilder(MapBuilder):
         mpid = item["material_id"]
 
         doc = RobocrystallogapherDoc.from_structure(
-            structure=structure, material_id=mpid
+            structure=structure,
+            material_id=mpid,
+            fields=[],
         )
 
         return jsanitize(doc.dict(), allow_bson=True)
