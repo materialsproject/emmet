@@ -230,6 +230,8 @@ class MaterialsBuilder(Builder):
                     f"No valid ids found among ids {failed_ids}. This can be the case if the required "
                     "calculation types are missing from your tasks database."
                 )
+                materials.append(MaterialsDoc.construct_deprecated_material(tasks))
+
         self.logger.debug(f"Produced {len(materials)} materials for {formula}")
 
         return jsanitize([mat.dict() for mat in materials], allow_bson=True)
