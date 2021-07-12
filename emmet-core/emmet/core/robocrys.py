@@ -57,7 +57,7 @@ class RobocrystallogapherDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_structure(cls, structure: Structure, material_id: MPID, **kwargs):
+    def from_structure(cls, structure: Structure, material_id: MPID, **kwargs):  # type: ignore[override]
         condensed_structure = StructureCondenser().condense_structure(structure)
         description = StructureDescriber(
             describe_symmetry_labels=False, fmt="unicode", return_parts=False
