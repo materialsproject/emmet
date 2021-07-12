@@ -18,6 +18,7 @@ setup(
         "pydantic[email]~=1.8",
         "pybtex~=0.24",
         "typing-extensions>=3.7,<4.0",
+        "robocrys~=0.2",
     ],
     license="modified BSD",
     zip_safe=False,
