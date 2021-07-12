@@ -11,18 +11,18 @@ from emmet.core.mpid import MPID
 from emmet.core.thermo import DecompositionProduct
 from emmet.core.xas import Edge, Type
 
-T = TypeVar("T", bound="SearchDoc")
+T = TypeVar("T", bound="SummaryDoc")
 
 
 class SearchSummary(BaseModel):
     """
-    Statistics about a specified SearchDoc field.
+    Statistics about a specified SummaryDoc field.
     """
 
     field: str = Field(
         None,
         title="Field",
-        description="Field name corresponding to a field in SearchDoc",
+        description="Field name corresponding to a field in SummaryDoc",
     )
     num_samples: Optional[int] = Field(
         None,
@@ -59,7 +59,7 @@ class SearchSummary(BaseModel):
 
 class XASSearchData(BaseModel):
     """
-    Fields in XAS sub docs in search
+    Fields in XAS sub docs in summary
     """
 
     edge: Edge = Field(
@@ -72,7 +72,7 @@ class XASSearchData(BaseModel):
 
 class GBSearchData(BaseModel):
     """
-    Fields in grain boundary sub docs in search
+    Fields in grain boundary sub docs in summary
     """
 
     sigma: int = Field(None, description="Sigma value of the boundary")
@@ -274,7 +274,7 @@ class SummaryDoc(PropertyDoc):
 
     @classmethod
     def from_docs(cls, material_id: MPID, **docs: Dict[str, Dict]):
-        """Converts a bunch of search docs into a SearchDoc"""
+        """Converts a bunch of summary docs into a SummaryDoc"""
         doc = _copy_from_doc(docs)
 
         # Reshape document for various sub-sections
