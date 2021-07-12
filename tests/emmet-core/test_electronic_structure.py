@@ -44,9 +44,9 @@ def test_from_bsdos(bandstructure, dos, structure):
 
     assert str(es_doc.material_id) == "mp-13"
     assert es_doc.band_gap == 0.0
-    assert es_doc.cbm == 5.0607
-    assert es_doc.vbm == 5.1977
-    assert es_doc.efermi == 5.0962618
+    assert es_doc.cbm is None
+    assert es_doc.vbm is None
+    assert es_doc.efermi == 5.18804178
     assert es_doc.is_gap_direct is False
     assert es_doc.is_metal is True
     assert str(es_doc.magnetic_ordering) == "Ordering.FM"
