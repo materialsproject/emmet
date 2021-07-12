@@ -5,4 +5,4 @@ pybtex==0.24.0
 typing-extensions==3.10.0.0
 seekpath==2.0.1
 setuptools-scm==6.0.1
-robocrys==0.2.6
+robocrys==0.2.7
