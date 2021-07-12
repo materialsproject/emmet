@@ -94,13 +94,16 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             """
 
             task_run_type = task.run_type
+            _SPECIAL_TAGS = ["LASPH", "ISPIN"]
+            special_tags = sum(
+                task.input.parameters.get(tag, False) for tag in _SPECIAL_TAGS
+            )
 
             return (
                 -1 * int(task.is_valid),
                 -1 * quality_scores.get(task_run_type.value, 0),
                 -1 * task_quality_scores.get(task.task_type.value, 0),
-                -1 * task.input.parameters.get("ISPIN", 1),
-                -1 * task.input.parameters.get("LASPH", False),
+                -1 * special_tags,
                 task.output.energy_per_atom,
             )
 
@@ -161,4 +164,62 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             deprecated_tasks=deprecated_tasks,
             origins=origins,
             entries=entries,
+        )
+
+    @classmethod
+    def construct_deprecated_material(
+        cls,
+        task_group: List[TaskDocument],
+    ) -> "MaterialsDoc":
+        """
+        Converts a group of tasks into a deprecated material
+
+        Args:
+            task_group: List of task document
+        """
+        if len(task_group) == 0:
+            raise Exception("Must have more than one task in the group.")
+
+        # Metadata
+        last_updated = max(task.last_updated for task in task_group)
+        created_at = min(task.completed_at for task in task_group)
+        task_ids = list({task.task_id for task in task_group})
+
+        deprecated_tasks = {task.task_id for task in task_group}
+        run_types = {task.task_id: task.run_type for task in task_group}
+        task_types = {task.task_id: task.task_type for task in task_group}
+        calc_types = {task.task_id: task.calc_type for task in task_group}
+
+        # Material ID
+        material_id = min([task.task_id for task in task_group])
+
+        # Choose any random structure for metadata
+        structure = SpacegroupAnalyzer(
+            task_group[0].output.structure, symprec=0.1
+        ).get_conventional_standard_structure()
+
+        # Initial Structures
+        initial_structures = [task.input.structure for task in task_group]
+        sm = StructureMatcher(
+            ltol=0.1, stol=0.1, angle_tol=0.1, scale=False, attempt_supercell=False
+        )
+        initial_structures = [
+            group[0] for group in sm.group_structures(initial_structures)
+        ]
+
+        # Deprecated
+        deprecated = True
+
+        return cls.from_structure(
+            structure=structure,
+            material_id=material_id,
+            last_updated=last_updated,
+            created_at=created_at,
+            task_ids=task_ids,
+            calc_types=calc_types,
+            run_types=run_types,
+            task_types=task_types,
+            initial_structures=initial_structures,
+            deprecated=deprecated,
+            deprecated_tasks=deprecated_tasks,
         )
