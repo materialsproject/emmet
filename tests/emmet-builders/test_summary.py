@@ -52,6 +52,11 @@ def dielectric():
 
 
 @pytest.fixture
+def piezoelectric():
+    return MemoryStore()
+
+
+@pytest.fixture
 def phonon():
     return MemoryStore()
 
@@ -95,6 +100,7 @@ def test_summary_builder(
     magnetism,
     elasticity,
     dielectric,
+    piezoelectric,
     phonon,
     insertion_electrodes,
     substrates,
@@ -109,6 +115,7 @@ def test_summary_builder(
         thermo=thermo,
         magnetism=magnetism,
         dielectric=dielectric,
+        piezoelectric=piezoelectric,
         phonon=phonon,
         insertion_electrodes=insertion_electrodes,
         elasticity=elasticity,
@@ -126,6 +133,7 @@ def test_summary_builder(
 
 def test_serialization(tmpdir):
     builder = SummaryBuilder(
+        MemoryStore(),
         MemoryStore(),
         MemoryStore(),
         MemoryStore(),
