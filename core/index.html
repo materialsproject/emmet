@@ -253,6 +253,11 @@
   </a>
 </li>
 <li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.structure">
+    structure
+  </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.symmetry">
     symmetry
   </a>
@@ -309,11 +314,6 @@
 <li class="md-nav__item">
 <a class="md-nav__link" href="#emmet.core.material.MaterialsDoc.origins">
     origins
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#emmet.core.material.MaterialsDoc.structure">
-    structure
   </a>
 </li>
 <li class="md-nav__item">
@@ -708,6 +708,11 @@
   </a>
 </li>
 <li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.structure">
+    structure
+  </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="#emmet.core.structure.StructureMetadata.symmetry">
     symmetry
   </a>
@@ -764,11 +769,6 @@
 <li class="md-nav__item">
 <a class="md-nav__link" href="#emmet.core.material.MaterialsDoc.origins">
     origins
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#emmet.core.material.MaterialsDoc.structure">
-    structure
   </a>
 </li>
 <li class="md-nav__item">
@@ -1270,6 +1270,18 @@ nsites: <span class="nb">int</span> </code>
 </div>
 </div>
 <div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.structure.StructureMetadata.structure">
+<code class="highlight">
+structure: <span class="n">Structure</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic-field"><code>pydantic-field</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.structure.StructureMetadata.structure" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>The structure for this metadata</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
 <h3 class="doc doc-heading" id="emmet.core.structure.StructureMetadata.symmetry">
 <code class="highlight">
 symmetry: <span class="n">SymmetryData</span> </code>
@@ -1398,19 +1410,6 @@ origins: <span class="n">PropertyOrigin</span> </code>
 <a class="headerlink" href="#emmet.core.material.MaterialsDoc.origins" title="Permanent link">¶</a></h3>
 <div class="doc doc-contents">
 <p>Dictionary for tracking the provenance of properties</p>
-</div>
-</div>
-<div class="doc doc-object doc-attribute">
-<h3 class="doc doc-heading" id="emmet.core.material.MaterialsDoc.structure">
-<code class="highlight">
-structure: <span class="n">Structure</span> </code>
-<span class="doc doc-properties">
-<small class="doc doc-property doc-property-pydantic-field"><code>pydantic-field</code></small>
-<small class="doc doc-property doc-property-required"><code>required</code></small>
-</span>
-<a class="headerlink" href="#emmet.core.material.MaterialsDoc.structure" title="Permanent link">¶</a></h3>
-<div class="doc doc-contents">
-<p>The best structure for this material</p>
 </div>
 </div>
 <div class="doc doc-object doc-attribute">
@@ -1895,33 +1894,41 @@ from_SNLs<span class="p">(</span><span class="n">material_id</span><span class="
 <span class="sd">    Converts legacy Pymatgen SNLs into a single provenance document</span>
 <span class="sd">    """</span>
 
+    <span class="k">assert</span> <span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">snls</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="p">),</span> <span class="s2">"Error must provide a non-zero list of SNLs to convert from SNLs"</span>
+
+    <span class="n">decoder</span> <span class="o">=</span> <span class="n">MontyDecoder</span><span class="p">()</span>
     <span class="c1"># Choose earliest created_at</span>
     <span class="n">created_at</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="n">snl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"about"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"created_at"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"string"</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">snl</span> <span class="ow">in</span> <span class="n">snls</span>
-        <span class="p">]</span>
+        <span class="n">decoder</span><span class="o">.</span><span class="n">process_decoded</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">snl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"about"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"created_at"</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">max</span><span class="p">)</span> <span class="k">for</span> <span class="n">snl</span> <span class="ow">in</span> <span class="n">snls</span><span class="p">]</span>
+        <span class="p">)</span>
     <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="c1"># Choose earliest history</span>
     <span class="n">history</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
         <span class="n">snls</span><span class="p">,</span>
-        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">snl</span><span class="p">:</span> <span class="n">snl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"about"</span><span class="p">,</span> <span class="p">{})</span>
-        <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"created_at"</span><span class="p">,</span> <span class="p">{})</span>
-        <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"string"</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">max</span><span class="p">),</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">snl</span><span class="p">:</span> <span class="n">decoder</span><span class="o">.</span><span class="n">process_decoded</span><span class="p">(</span>
+            <span class="n">snl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"about"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"created_at"</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
+        <span class="p">),</span>
     <span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"about"</span><span class="p">][</span><span class="s2">"history"</span><span class="p">]</span>
 
     <span class="c1"># Aggregate all references into one dict to remove duplicates</span>
     <span class="n">refs</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">snl</span> <span class="ow">in</span> <span class="n">snls</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
+            <span class="n">set_strict_mode</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">entries</span> <span class="o">=</span> <span class="n">parse_string</span><span class="p">(</span><span class="n">snl</span><span class="p">[</span><span class="s2">"about"</span><span class="p">][</span><span class="s2">"references"</span><span class="p">],</span> <span class="n">bib_format</span><span class="o">=</span><span class="s2">"bibtex"</span><span class="p">)</span>
             <span class="n">refs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="o">.</span><span class="n">entries</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Failed parsing bibtex: </span><span class="si">{</span><span class="n">snl</span><span class="p">[</span><span class="s1">'about'</span><span class="p">][</span><span class="s1">'references'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Failed parsing bibtex: </span><span class="si">{</span><span class="n">snl</span><span class="p">[</span><span class="s1">'about'</span><span class="p">][</span><span class="s1">'references'</span><span class="p">]</span><span class="si">}</span><span class="s2"> due to </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
 
     <span class="n">bib_data</span> <span class="o">=</span> <span class="n">BibliographyData</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="n">refs</span><span class="p">)</span>
-    <span class="n">references</span> <span class="o">=</span> <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="s2">"bibtex"</span><span class="p">)</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">bib_data</span><span class="o">.</span><span class="n">entries</span><span class="p">]</span>
+
+    <span class="n">references</span> <span class="o">=</span> <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="s2">"bibtex"</span><span class="p">)</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">bib_data</span><span class="o">.</span><span class="n">entries</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
 
     <span class="c1"># TODO: Maybe we should combine this robocrystallographer?</span>
     <span class="c1"># TODO: Refine these tags / remarks</span>
@@ -1943,11 +1950,11 @@ from_SNLs<span class="p">(</span><span class="n">material_id</span><span class="
     <span class="p">]</span>
 
     <span class="c1"># Check if this entry is experimental</span>
-    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
-        <span class="n">snl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"about"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"history"</span><span class="p">,</span> <span class="p">[{}])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"experimental"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="n">experimental</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+        <span class="n">history</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"experimental"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">snl</span> <span class="ow">in</span> <span class="n">snls</span>
-    <span class="p">):</span>
-        <span class="n">experimental</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">history</span> <span class="ow">in</span> <span class="n">snl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"about"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"history"</span><span class="p">,</span> <span class="p">[{}])</span>
+    <span class="p">)</span>
 
     <span class="c1"># Aggregate all the database IDs</span>
     <span class="n">snl_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">snl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"snl_id"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="k">for</span> <span class="n">snl</span> <span class="ow">in</span> <span class="n">snls</span><span class="p">]</span>
@@ -1959,12 +1966,6 @@ from_SNLs<span class="p">(</span><span class="n">material_id</span><span class="
     <span class="c1"># remove Nones and empty lists</span>
     <span class="n">db_ids</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">db_ids</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
     <span class="n">db_ids</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">db_ids</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">}</span>
-
-    <span class="c1"># Get experimental bool</span>
-    <span class="n">experimental</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
-        <span class="n">snl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"about"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"history"</span><span class="p">,</span> <span class="p">[{}])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"experimental"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">snl</span> <span class="ow">in</span> <span class="n">snls</span>
-    <span class="p">)</span>
 
     <span class="n">snl_fields</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">"created_at"</span><span class="p">:</span> <span class="n">created_at</span><span class="p">,</span>
