@@ -8,6 +8,7 @@ from typing import Dict, List, Type, TypeVar, Union
 import requests
 from monty.json import MontyDecoder
 from pydantic import BaseSettings, Field, root_validator
+from pydantic.class_validators import validator
 from pydantic.types import PyObject
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
@@ -119,13 +120,6 @@ class EmmetSettings(BaseSettings):
             return cls(**settings)
         return settings
 
-    @classmethod
-    def from_dict(cls, data):
-        """ Custom from_dict because monty serializaiton is currently broken """
-        decoder = MontyDecoder()
-        data = {
-            decoder.process_decoded(k): decoder.process_decoded(v)
-            for k, v in data.items()
-            if not k.startswith("@")
-        }
-        return cls(**data)
+    @validator("VASP_DEFAULT_INPUT_SETS", pre=True)
+    def convert_input_sets(cls, value):
+        return MontyDecoder().process_decoded(value)
