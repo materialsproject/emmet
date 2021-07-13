@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Type, TypeVar, Union
 
 import requests
+from monty.json import MontyDecoder
 from pydantic import BaseSettings, Field, root_validator
 from pydantic.types import PyObject
 
@@ -118,15 +119,13 @@ class EmmetSettings(BaseSettings):
             return cls(**settings)
         return settings
 
-    def as_dict(self):
-        """
-        HotPatch to enable serializing EmmetSettings via Monty
-        """
-        return self.dict(exclude_unset=True, exclude_defaults=True)
-
     @classmethod
-    def from_dict(cls: Type[S], settings: Dict) -> S:
-        """
-        HotPatch to enable serializing EmmetSettings via Monty
-        """
-        return cls(**settings)
+    def from_dict(cls, data):
+        """ Custom from_dict because monty serializaiton is currently broken """
+        decoder = MontyDecoder()
+        data = {
+            decoder.process_decoded(k): decoder.process_decoded(v)
+            for k, v in data.items()
+            if not k.startswith("@")
+        }
+        return cls(**data)
