@@ -126,23 +126,19 @@ class SummaryBuilder(Builder):
                 "eos": self.eos.query_one({self.eos.key: entry}, [self.eos.key]),
             }
 
-            data["magnetism"] = (
-                data["magnetism"]["magnetism"]
-                if data["magnetism"] is not None
-                else None
-            )
+            sub_fields = {
+                "magnetism": "magnetism",
+                "dielectric": "dielectric",
+                "piezoelectric": "piezo",
+            }
 
-            data["dielectric"] = (
-                data["dielectric"]["dielectric"]
-                if data["dielectric"] is not None
-                else None
-            )
-
-            data["piezoelectric"] = (
-                data["piezoelectric"]["piezo"]
-                if data["piezoelectric"] is not None
-                else None
-            )
+            for collection, sub_field in sub_fields.items():
+                if data[collection] is not None:
+                    data[collection] = (
+                        data[collection][sub_field]
+                        if sub_field in data[collection]
+                        else None
+                    )
 
             yield data
 
