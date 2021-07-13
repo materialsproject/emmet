@@ -169,7 +169,7 @@ class ElectronicStructureBuilder(Builder):
             is_gap_direct=mat["other"]["is_gap_direct"],
             is_metal=mat["other"]["is_metal"],
             magnetic_ordering=mat["other"]["magnetic_ordering"],
-            warnings=None,
+            warnings=[],
         )
 
         # Eigenvalue band property checks
