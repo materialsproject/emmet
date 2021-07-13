@@ -373,8 +373,12 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         if bs_gap is not None and bs_gap <= dos_gap + 0.2:
             summary_task = bs_entry.setyawan_curtarolo.task_id
             summary_band_gap = bs_gap
-            summary_cbm = bs_entry.setyawan_curtarolo.cbm
-            summary_vbm = bs_entry.setyawan_curtarolo.vbm
+            summary_cbm = bs_entry.setyawan_curtarolo.cbm.get(  # type: ignore
+                "energy", None
+            )
+            summary_vbm = bs_entry.setyawan_curtarolo.vbm.get(  # type: ignore
+                "energy", None
+            )  # type: ignore
             summary_efermi = bs_entry.setyawan_curtarolo.efermi
             is_gap_direct = bs_entry.setyawan_curtarolo.is_gap_direct
             is_metal = bs_entry.setyawan_curtarolo.is_metal
