@@ -201,16 +201,18 @@ class ElectronicStructureBuilder(Builder):
 
         else:
 
-            doc = ElectronicStructureDoc.from_bsdos(
-                material_id=mat[self.materials.key],
-                structures=structures,
-                dos=dos,
-                is_gap_direct=d["is_gap_direct"],
-                is_metal=d["is_metal"],
-                **bs,
-            )
-
-            doc = self._bsdos_checks(doc, dos[mat["dos"]["task_id"]], structures)
+            try:
+                doc = ElectronicStructureDoc.from_bsdos(
+                    material_id=mat[self.materials.key],
+                    structures=structures,
+                    dos=dos,
+                    is_gap_direct=d["is_gap_direct"],
+                    is_metal=d["is_metal"],
+                    **bs,
+                )
+                doc = self._bsdos_checks(doc, dos[mat["dos"]["task_id"]], structures)
+            except Exception:
+                doc = ElectronicStructureDoc.from_structure(**d)
 
         # Magnetic ordering check
         mag_orderings = {}
