@@ -104,16 +104,12 @@ class SummaryBuilder(Builder):
                 "electronic_structure": self.electronic_structure.query_one(
                     {self.electronic_structure.key: entry}
                 ),
-                "magnetism": self.magnetism.query_one({self.magnetism.key: entry}).get(
-                    "magnetism", None
-                ),
+                "magnetism": self.magnetism.query_one({self.magnetism.key: entry}),
                 "elasticity": self.elasticity.query_one({self.elasticity.key: entry}),
-                "dielectric": self.dielectric.query_one(
-                    {self.dielectric.key: entry}
-                ).get("dielectric", None),
+                "dielectric": self.dielectric.query_one({self.dielectric.key: entry}),
                 "piezoelectric": self.piezoelectric.query_one(
                     {self.piezoelectric.key: entry}
-                ).get("piezo", None),
+                ),
                 "phonon": self.phonon.query_one(
                     {self.phonon.key: entry}, [self.phonon.key]
                 ),
@@ -129,6 +125,24 @@ class SummaryBuilder(Builder):
                 "substrates": list(self.surfaces.query({self.substrates.key: entry})),
                 "eos": self.eos.query_one({self.eos.key: entry}, [self.eos.key]),
             }
+
+            data["magnetism"] = (
+                data["magnetism"]["magnetism"]
+                if data["magnetism"] is not None
+                else None
+            )
+
+            data["dielectric"] = (
+                data["dielectric"]["dielectric"]
+                if data["dielectric"] is not None
+                else None
+            )
+
+            data["piezoelectric"] = (
+                data["piezoelectric"]["piezo"]
+                if data["piezoelectric"] is not None
+                else None
+            )
 
             yield data
 
