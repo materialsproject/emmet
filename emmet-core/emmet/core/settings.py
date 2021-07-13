@@ -6,7 +6,9 @@ from pathlib import Path
 from typing import Dict, List, Type, TypeVar, Union
 
 import requests
+from monty.json import MontyDecoder
 from pydantic import BaseSettings, Field, root_validator
+from pydantic.class_validators import validator
 from pydantic.types import PyObject
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
@@ -118,15 +120,14 @@ class EmmetSettings(BaseSettings):
             return cls(**settings)
         return settings
 
+    @validator("VASP_DEFAULT_INPUT_SETS", pre=True)
+    def convert_input_sets(cls, value):
+        if isinstance(value, dict):
+            return {k: MontyDecoder().process_decoded(v) for k, v in value.items()}
+        return value
+
     def as_dict(self):
         """
         HotPatch to enable serializing EmmetSettings via Monty
         """
         return self.dict(exclude_unset=True, exclude_defaults=True)
-
-    @classmethod
-    def from_dict(cls: Type[S], settings: Dict) -> S:
-        """
-        HotPatch to enable serializing EmmetSettings via Monty
-        """
-        return cls(**settings)

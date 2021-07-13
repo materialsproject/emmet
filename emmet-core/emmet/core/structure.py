@@ -4,8 +4,9 @@ from __future__ import annotations
 from typing import List, Optional, Type, TypeVar
 
 from pydantic import BaseModel, Field
-from pymatgen.core import Composition, Structure
+from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
+from pymatgen.core.structure import Structure
 
 from emmet.core.symmetry import SymmetryData
 
@@ -18,6 +19,9 @@ class StructureMetadata(BaseModel):
     """
 
     # Structure metadata
+    structure: Optional[Structure] = Field(
+        None, description="The structure for this metadata"
+    )
     nsites: int = Field(None, description="Total number of sites in the structure")
     elements: List[Element] = Field(
         None, description="List of elements in the material"
