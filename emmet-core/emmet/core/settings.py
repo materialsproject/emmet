@@ -122,4 +122,12 @@ class EmmetSettings(BaseSettings):
 
     @validator("VASP_DEFAULT_INPUT_SETS", pre=True)
     def convert_input_sets(cls, value):
-        return MontyDecoder().process_decoded(value)
+        if isinstance(value, dict):
+            return {k: MontyDecoder().process_decoded(v) for k, v in value.items()}
+        return value
+
+    def as_dict(self):
+        """
+        HotPatch to enable serializing EmmetSettings via Monty
+        """
+        return self.dict(exclude_unset=True, exclude_defaults=True)
