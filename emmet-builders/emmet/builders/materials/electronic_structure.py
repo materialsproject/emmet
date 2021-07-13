@@ -360,7 +360,10 @@ class ElectronicStructureBuilder(Builder):
                     if label is not None
                 }
 
-                bs_type = self._obtain_path_type(labels_dict, structure)
+                try:
+                    bs_type = self._obtain_path_type(labels_dict, structure)
+                except Exception:
+                    bs_type = None
 
                 if bs_type is None:
 
