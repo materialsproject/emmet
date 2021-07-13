@@ -280,10 +280,16 @@ class SummaryDoc(PropertyDoc):
         # Reshape document for various sub-sections
         # Electronic Structure + Bandstructure + DOS
         if "bandstructure" in doc:
-            doc["has_props"].append("bandstructure")
+            if doc["bandstructure"] != {} and doc["bandstructure"] is not None:
+                doc["has_props"].append("bandstructure")
+            else:
+                del doc["bandstructure"]
         if "dos" in doc:
-            doc["has_props"].append("dos")
-        if "calc_id" in doc:
+            if doc["dos"] != {} and doc["dos"] is not None:
+                doc["has_props"].append("dos")
+            else:
+                del doc["bandstructure"]
+        if "task_id" in doc:
             doc["es_source_calc_id"] = doc["task_id"]
             del doc["task_id"]
 
@@ -334,8 +340,6 @@ summary_fields: Dict[str, list] = {
         "bandstructure",
         "dos",
         "task_id",
-        "bandstructure",
-        "dos",
     ],
     "magnetism": [
         "ordering",
