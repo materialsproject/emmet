@@ -38,7 +38,7 @@ class ElectronicStructureBaseData(BaseModel):
 
     vbm: Union[float, Dict] = Field(None, description="Valence band maximum data.")
 
-    efermi: float = Field(..., description="Fermi energy eV.")
+    efermi: float = Field(None, description="Fermi energy eV.")
 
 
 class ElectronicStructureSummary(ElectronicStructureBaseData):
