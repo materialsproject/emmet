@@ -288,7 +288,7 @@ class SummaryDoc(PropertyDoc):
             if doc["dos"] != {} and doc["dos"] is not None:
                 doc["has_props"].append("dos")
             else:
-                del doc["bandstructure"]
+                del doc["dos"]
         if "task_id" in doc:
             doc["es_source_calc_id"] = doc["task_id"]
             del doc["task_id"]
