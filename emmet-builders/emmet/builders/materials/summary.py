@@ -19,6 +19,7 @@ class SummaryBuilder(Builder):
         magnetism,
         elasticity,
         dielectric,
+        piezoelectric,
         phonon,
         insertion_electrodes,
         substrates,
@@ -38,6 +39,7 @@ class SummaryBuilder(Builder):
         self.magnetism = magnetism
         self.elasticity = elasticity
         self.dielectric = dielectric
+        self.piezoelectric = piezoelectric
         self.phonon = phonon
         self.insertion_electrodes = insertion_electrodes
         self.substrates = substrates
@@ -57,6 +59,7 @@ class SummaryBuilder(Builder):
                 magnetism,
                 elasticity,
                 dielectric,
+                piezoelectric,
                 phonon,
                 insertion_electrodes,
                 surfaces,
@@ -98,14 +101,19 @@ class SummaryBuilder(Builder):
                 "grain_boundaries": list(
                     self.grain_boundaries.query({self.grain_boundaries.key: entry})
                 ),
-                "electronic_structure": list(
-                    self.electronic_structure.query(
-                        {self.electronic_structure.key: entry}
-                    )
+                "electronic_structure": self.electronic_structure.query_one(
+                    {self.electronic_structure.key: entry}
                 ),
-                "magnetism": self.magnetism.query_one({self.magnetism.key: entry}),
+                "magnetism": self.magnetism.query_one({self.magnetism.key: entry}).get(
+                    "magnetism", None
+                ),
                 "elasticity": self.elasticity.query_one({self.elasticity.key: entry}),
-                "dielectric": self.dielectric.query_one({self.dielectric.key: entry}),
+                "dielectric": self.dielectric.query_one(
+                    {self.dielectric.key: entry}
+                ).get("dielectric", None),
+                "piezoelectric": self.piezoelectric.query_one(
+                    {self.piezoelectric.key: entry}
+                ).get("piezo", None),
                 "phonon": self.phonon.query_one(
                     {self.phonon.key: entry}, [self.phonon.key]
                 ),
