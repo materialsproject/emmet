@@ -130,6 +130,7 @@ class SummaryBuilder(Builder):
                 "magnetism": "magnetism",
                 "dielectric": "dielectric",
                 "piezoelectric": "piezo",
+                "elasticity": "elasticity",
             }
 
             for collection, sub_field in sub_fields.items():
