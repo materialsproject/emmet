@@ -1,10 +1,12 @@
 """ Core definition of a Provenance Document """
 import warnings
-from datetime import datetime
+from datetime import date, datetime
 from typing import ClassVar, Dict, List, Optional
 
+from monty.json import MontyDecoder
 from pybtex.database import BibliographyData, parse_string
-from pydantic import BaseModel, EmailStr, Field, validator
+from pybtex.errors import set_strict_mode
+from pydantic import BaseModel, Field, root_validator, validator
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
@@ -27,7 +29,7 @@ class Author(BaseModel):
     """
 
     name: str = Field(None)
-    email: EmailStr = Field(None)
+    email: str = Field(None)
 
 
 class History(BaseModel):
@@ -40,6 +42,12 @@ class History(BaseModel):
     description: Optional[Dict] = Field(
         None, description="Dictionary of exra data for this history node"
     )
+
+    @root_validator(pre=True)
+    def str_to_dict(cls, values):
+        if isinstance(values.get("description"), str):
+            values["description"] = {"string": values.get("description")}
+        return values
 
 
 class ProvenanceDoc(PropertyDoc):
@@ -95,33 +103,41 @@ class ProvenanceDoc(PropertyDoc):
         Converts legacy Pymatgen SNLs into a single provenance document
         """
 
+        assert (
+            len(snls) > 0
+        ), "Error must provide a non-zero list of SNLs to convert from SNLs"
+
+        decoder = MontyDecoder()
         # Choose earliest created_at
         created_at = sorted(
-            [
-                snl.get("about", {}).get("created_at", {}).get("string", datetime.max)
-                for snl in snls
-            ]
+            decoder.process_decoded(
+                [snl.get("about", {}).get("created_at", datetime.max) for snl in snls]
+            )
         )[0]
 
         # Choose earliest history
         history = sorted(
             snls,
-            key=lambda snl: snl.get("about", {})
-            .get("created_at", {})
-            .get("string", datetime.max),
+            key=lambda snl: decoder.process_decoded(
+                snl.get("about", {}).get("created_at", datetime.max)
+            ),
         )[0]["about"]["history"]
 
         # Aggregate all references into one dict to remove duplicates
         refs = {}
         for snl in snls:
             try:
+                set_strict_mode(False)
                 entries = parse_string(snl["about"]["references"], bib_format="bibtex")
                 refs.update(entries.entries)
-            except Exception:
-                warnings.warn(f"Failed parsing bibtex: {snl['about']['references']}")
+            except Exception as e:
+                warnings.warn(
+                    f"Failed parsing bibtex: {snl['about']['references']} due to {e}"
+                )
 
         bib_data = BibliographyData(entries=refs)
-        references = [ref.to_string("bibtex") for ref in bib_data.entries]
+
+        references = [ref.to_string("bibtex") for ref in bib_data.entries.values()]
 
         # TODO: Maybe we should combine this robocrystallographer?
         # TODO: Refine these tags / remarks
@@ -143,11 +159,11 @@ class ProvenanceDoc(PropertyDoc):
         ]
 
         # Check if this entry is experimental
-        if any(
-            snl.get("about", {}).get("history", [{}])[0].get("experimental", False)
+        experimental = any(
+            history.get("experimental", False)
             for snl in snls
-        ):
-            experimental = True
+            for history in snl.get("about", {}).get("history", [{}])
+        )
 
         # Aggregate all the database IDs
         snl_ids = [snl.get("snl_id", "") for snl in snls]
@@ -159,12 +175,6 @@ class ProvenanceDoc(PropertyDoc):
         # remove Nones and empty lists
         db_ids = {k: list(filter(None, v)) for k, v in db_ids.items()}
         db_ids = {k: v for k, v in db_ids.items() if len(v) > 0}
-
-        # Get experimental bool
-        experimental = any(
-            snl.get("about", {}).get("history", [{}])[0].get("experimental", False)
-            for snl in snls
-        )
 
         snl_fields = {
             "created_at": created_at,

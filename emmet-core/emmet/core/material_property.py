@@ -38,7 +38,7 @@ class PropertyDoc(StructureMetadata):
     )
 
     warnings: Sequence[str] = Field(
-        None, description="Any warnings related to this property"
+        [], description="Any warnings related to this property"
     )
 
     @classmethod
@@ -50,8 +50,5 @@ class PropertyDoc(StructureMetadata):
         """
 
         return super().from_structure(  # type: ignore
-            structure=structure,
-            material_id=material_id,
-            include_structure=False,
-            **kwargs
+            structure=structure, material_id=material_id, **kwargs
         )
