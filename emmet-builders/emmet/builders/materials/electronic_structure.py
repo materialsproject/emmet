@@ -416,6 +416,8 @@ class ElectronicStructureBuilder(Builder):
                 if (
                     task_query["orig_inputs"]["kpoints"]["generation_style"]
                     == "Monkhorst"
+                    or task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Gamma"
                 ):
                     nkpoints = np.prod(
                         task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
@@ -462,7 +464,10 @@ class ElectronicStructureBuilder(Builder):
 
                 last_calc = task_query["calcs_reversed"][-1]
 
-                if last_calc["input"]["kpoints"]["generation_style"] == "Monkhorst":
+                if (
+                    last_calc["input"]["kpoints"]["generation_style"] == "Monkhorst"
+                    or last_calc["input"]["kpoints"]["generation_style"] == "Gamma"
+                ):
                     nkpoints = np.prod(
                         last_calc["input"]["kpoints"]["kpoints"][0], axis=0
                     )
@@ -539,6 +544,8 @@ class ElectronicStructureBuilder(Builder):
                 reverse=True,
             )
 
+            print(sorted_dos_data)
+
             materials_doc["dos"]["task_id"] = sorted_dos_data[0]["task_id"]
 
             dos_obj = self.dos_fs.query_one(
@@ -593,6 +600,8 @@ class ElectronicStructureBuilder(Builder):
                             materials_doc["other"][prop] = calc["output"][prop]
                 else:
                     materials_doc["other"][prop] = task_output_data[prop]
+
+        print(materials_doc)
 
         return materials_doc
 
