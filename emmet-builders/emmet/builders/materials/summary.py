@@ -137,7 +137,8 @@ class SummaryBuilder(Builder):
                 if data[collection] is not None:
                     data[collection] = (
                         data[collection][sub_field]
-                        if sub_field in data[collection]
+                        if (sub_field in data[collection])
+                        and (data[collection][sub_field] != {})
                         else None
                     )
 
