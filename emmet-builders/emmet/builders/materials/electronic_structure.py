@@ -195,8 +195,7 @@ class ElectronicStructureBuilder(Builder):
                     True if np.isclose(d["band_gap"], 0.0, atol=0.01, rtol=0) else False
                 )
 
-        if dos is None and bs == {}:
-
+        if dos is None:
             doc = ElectronicStructureDoc.from_structure(**d)
 
         else:
@@ -361,7 +360,10 @@ class ElectronicStructureBuilder(Builder):
                     if label is not None
                 }
 
-                bs_type = self._obtain_path_type(labels_dict, structure)
+                try:
+                    bs_type = self._obtain_path_type(labels_dict, structure)
+                except Exception:
+                    bs_type = None
 
                 if bs_type is None:
 
@@ -524,73 +526,73 @@ class ElectronicStructureBuilder(Builder):
                     "output_structure"
                 ] = sorted_bs_data[0]["output_structure"]
 
-            if dos_calcs:
+        if dos_calcs:
 
-                sorted_dos_data = sorted(
-                    dos_calcs,
-                    key=lambda entry: (
-                        entry["is_hubbard"],
-                        entry["nkpoints"],
-                        entry["nedos"],
-                        entry["updated_on"],
-                    ),
-                    reverse=True,
-                )
+            sorted_dos_data = sorted(
+                dos_calcs,
+                key=lambda entry: (
+                    entry["is_hubbard"],
+                    entry["nkpoints"],
+                    entry["nedos"],
+                    entry["updated_on"],
+                ),
+                reverse=True,
+            )
 
-                materials_doc["dos"]["task_id"] = sorted_dos_data[0]["task_id"]
+            materials_doc["dos"]["task_id"] = sorted_dos_data[0]["task_id"]
 
-                dos_obj = self.dos_fs.query_one(
-                    criteria={"fs_id": sorted_dos_data[0]["fs_id"]}
-                )
-                materials_doc["dos"]["object"] = (
-                    dos_obj["data"] if dos_obj is not None else None
-                )
+            dos_obj = self.dos_fs.query_one(
+                criteria={"fs_id": sorted_dos_data[0]["fs_id"]}
+            )
+            materials_doc["dos"]["object"] = (
+                dos_obj["data"] if dos_obj is not None else None
+            )
 
-                materials_doc["dos"]["output_structure"] = sorted_dos_data[0][
-                    "output_structure"
-                ]
+            materials_doc["dos"]["output_structure"] = sorted_dos_data[0][
+                "output_structure"
+            ]
 
-            if other_calcs:
+        if other_calcs:
 
-                sorted_other_data = sorted(
-                    other_calcs,
-                    key=lambda entry: (
-                        entry["is_static"],
-                        entry["is_hubbard"],
-                        entry["nkpoints"],
-                        entry["updated_on"],
-                    ),
-                    reverse=True,
-                )
+            sorted_other_data = sorted(
+                other_calcs,
+                key=lambda entry: (
+                    entry["is_static"],
+                    entry["is_hubbard"],
+                    entry["nkpoints"],
+                    entry["updated_on"],
+                ),
+                reverse=True,
+            )
 
-                materials_doc["other"]["task_id"] = str(sorted_other_data[0]["task_id"])
+            materials_doc["other"]["task_id"] = str(sorted_other_data[0]["task_id"])
 
-                task_output_data = sorted_other_data[0]["calcs_reversed"][-1]["output"]
-                materials_doc["other"]["band_gap"] = task_output_data["bandgap"]
-                materials_doc["other"]["magnetic_ordering"] = sorted_other_data[0][
-                    "magnetic_ordering"
-                ]
+            task_output_data = sorted_other_data[0]["calcs_reversed"][-1]["output"]
+            materials_doc["other"]["band_gap"] = task_output_data["bandgap"]
+            materials_doc["other"]["magnetic_ordering"] = sorted_other_data[0][
+                "magnetic_ordering"
+            ]
 
-                materials_doc["other"]["is_metal"] = (
-                    materials_doc["other"]["band_gap"] == 0.0
-                )
+            materials_doc["other"]["is_metal"] = (
+                materials_doc["other"]["band_gap"] == 0.0
+            )
 
-                for prop in [
-                    "efermi",
-                    "cbm",
-                    "vbm",
-                    "is_gap_direct",
-                    "is_metal",
-                    "eigenvalue_band_properties",
-                ]:
+            for prop in [
+                "efermi",
+                "cbm",
+                "vbm",
+                "is_gap_direct",
+                "is_metal",
+                "eigenvalue_band_properties",
+            ]:
 
-                    # First try other calcs_reversed entries if properties are not found in last
-                    if prop not in task_output_data:
-                        for calc in sorted_other_data[0]["calcs_reversed"]:
-                            if calc["output"].get(prop, None) is not None:
-                                materials_doc["other"][prop] = calc["output"][prop]
-                    else:
-                        materials_doc["other"][prop] = task_output_data[prop]
+                # First try other calcs_reversed entries if properties are not found in last
+                if prop not in task_output_data:
+                    for calc in sorted_other_data[0]["calcs_reversed"]:
+                        if calc["output"].get(prop, None) is not None:
+                            materials_doc["other"][prop] = calc["output"][prop]
+                else:
+                    materials_doc["other"][prop] = task_output_data[prop]
 
         return materials_doc
 
