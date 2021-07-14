@@ -55,7 +55,7 @@ def test_electronic_structure_builder(
     )
 
     builder.run()
-    assert electronic_structure_store.count() == 1
+    assert electronic_structure_store.count() == 3
 
 
 def test_serialization(tmpdir):
