@@ -544,8 +544,6 @@ class ElectronicStructureBuilder(Builder):
                 reverse=True,
             )
 
-            print(sorted_dos_data)
-
             materials_doc["dos"]["task_id"] = sorted_dos_data[0]["task_id"]
 
             dos_obj = self.dos_fs.query_one(
@@ -600,8 +598,6 @@ class ElectronicStructureBuilder(Builder):
                             materials_doc["other"][prop] = calc["output"][prop]
                 else:
                     materials_doc["other"][prop] = task_output_data[prop]
-
-        print(materials_doc)
 
         return materials_doc
 
