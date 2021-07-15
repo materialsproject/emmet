@@ -10,7 +10,9 @@ from emmet.builders.vasp.materials import MaterialsBuilder
 
 @pytest.fixture(scope="session")
 def tasks_store(test_dir):
-    return JSONStore(test_dir / "test_si_tasks.json.gz")
+    return JSONStore(
+        test_dir / "electronic_structure/es_task_docs.json.gz", key="task_id"
+    )
 
 
 @pytest.fixture(scope="session")
@@ -27,13 +29,17 @@ def electronic_structure_store():
 
 
 @pytest.fixture
-def bandstructure_fs():
-    return MemoryStore()
+def bandstructure_fs(test_dir):
+    return JSONStore(
+        test_dir / "electronic_structure/es_bs_objs.json.gz", key="task_id"
+    )
 
 
 @pytest.fixture
-def dos_fs():
-    return MemoryStore()
+def dos_fs(test_dir):
+    return JSONStore(
+        test_dir / "electronic_structure/es_dos_objs.json.gz", key="task_id"
+    )
 
 
 def test_electronic_structure_builder(
@@ -49,7 +55,7 @@ def test_electronic_structure_builder(
     )
 
     builder.run()
-    assert electronic_structure_store.count() == 1
+    assert electronic_structure_store.count() == 3
 
 
 def test_serialization(tmpdir):

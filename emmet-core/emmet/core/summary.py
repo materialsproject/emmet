@@ -11,18 +11,18 @@ from emmet.core.mpid import MPID
 from emmet.core.thermo import DecompositionProduct
 from emmet.core.xas import Edge, Type
 
-T = TypeVar("T", bound="SearchDoc")
+T = TypeVar("T", bound="SummaryDoc")
 
 
 class SearchSummary(BaseModel):
     """
-    Statistics about a specified SearchDoc field.
+    Statistics about a specified SummaryDoc field.
     """
 
     field: str = Field(
         None,
         title="Field",
-        description="Field name corresponding to a field in SearchDoc",
+        description="Field name corresponding to a field in SummaryDoc",
     )
     num_samples: Optional[int] = Field(
         None,
@@ -59,7 +59,7 @@ class SearchSummary(BaseModel):
 
 class XASSearchData(BaseModel):
     """
-    Fields in XAS sub docs in search
+    Fields in XAS sub docs in summary
     """
 
     edge: Edge = Field(
@@ -72,7 +72,7 @@ class XASSearchData(BaseModel):
 
 class GBSearchData(BaseModel):
     """
-    Fields in grain boundary sub docs in search
+    Fields in grain boundary sub docs in summary
     """
 
     sigma: int = Field(None, description="Sigma value of the boundary")
@@ -84,7 +84,7 @@ class GBSearchData(BaseModel):
     rotation_angle: float = Field(None, description="Rotation angle in degrees")
 
 
-class SearchDoc(PropertyDoc):
+class SummaryDoc(PropertyDoc):
     """
     Summary information about materials and their properties, useful for materials
     screening studies and searching.
@@ -123,7 +123,7 @@ class SearchDoc(PropertyDoc):
         description="Flag for whether this material is on the hull and therefore stable",
     )
 
-    equilibrium_reaction_energy_per_atom: float = Field(
+    equillibrium_reaction_energy_per_atom: float = Field(
         None,
         description="The reaction energy of a stable entry from the neighboring equilibrium stable materials in eV."
         " Also known as the inverse distance to hull.",
@@ -158,10 +158,6 @@ class SearchDoc(PropertyDoc):
 
     is_metal: bool = Field(None, description="Whether the material is a metal.")
 
-    magnetic_ordering: Union[str, Ordering] = Field(
-        None, description="Magnetic ordering of the calculation."
-    )
-
     es_source_calc_id: Union[MPID, int] = Field(
         None, description="The source calculation ID for the electronic structure data."
     )
@@ -190,6 +186,16 @@ class SearchDoc(PropertyDoc):
 
     total_magnetization_normalized_formula_units: float = Field(
         None, description="Total magnetization normalized by formula unit in μB/f.u. ."
+    )
+
+    num_magnetic_sites: int = Field(None, description="The number of magnetic sites.")
+
+    num_unique_magnetic_sites: int = Field(
+        None, description="The number of unique magnetic sites."
+    )
+
+    types_of_magnetic_species: List[Element] = Field(
+        None, description="Magnetic specie elements."
     )
 
     # Elasticity
@@ -252,6 +258,10 @@ class SearchDoc(PropertyDoc):
 
     shape_factor: float = Field(None, description="Shape factor.")
 
+    has_reconstructed: bool = Field(
+        None, description="Whether the material has any reconstructed surfaces."
+    )
+
     # Has Props
 
     has_props: List[str] = Field(
@@ -264,16 +274,22 @@ class SearchDoc(PropertyDoc):
 
     @classmethod
     def from_docs(cls, material_id: MPID, **docs: Dict[str, Dict]):
-        """Converts a bunch of search docs into a SearchDoc"""
+        """Converts a bunch of summary docs into a SummaryDoc"""
         doc = _copy_from_doc(docs)
 
         # Reshape document for various sub-sections
         # Electronic Structure + Bandstructure + DOS
         if "bandstructure" in doc:
-            doc["has_props"].append("bandstructure")
+            if doc["bandstructure"] != {} and doc["bandstructure"] is not None:
+                doc["has_props"].append("bandstructure")
+            else:
+                del doc["bandstructure"]
         if "dos" in doc:
-            doc["has_props"].append("dos")
-        if "calc_id" in doc:
+            if doc["dos"] != {} and doc["dos"] is not None:
+                doc["has_props"].append("dos")
+            else:
+                del doc["dos"]
+        if "task_id" in doc:
             doc["es_source_calc_id"] = doc["task_id"]
             del doc["task_id"]
 
@@ -282,11 +298,11 @@ class SearchDoc(PropertyDoc):
 
         doc["has_props"] = list(set(doc["has_props"]))
 
-        return SearchDoc(material_id=material_id, **doc)
+        return SummaryDoc(material_id=material_id, **doc)
 
 
 # Key mapping
-search_fields: Dict[str, list] = {
+summary_fields: Dict[str, list] = {
     "materials": [
         "nsites",
         "elements",
@@ -309,17 +325,11 @@ search_fields: Dict[str, list] = {
         "formation_energy_per_atom",
         "energy_above_hull",
         "is_stable",
-        "equilibrium_reaction_energy_per_atom",
+        "equillibrium_reaction_energy_per_atom",
         "decomposes_to",
     ],
     "xas": ["absorbing_element", "edge", "spectrum_type", "xas_id"],
-    "grain_boundaries": [
-        "gb_energy",
-        "sigma",
-        "type",
-        "rotation_angle",
-        "w_sep",
-    ],
+    "grain_boundaries": ["gb_energy", "sigma", "type", "rotation_angle", "w_sep"],
     "electronic_structure": [
         "band_gap",
         "efermi",
@@ -330,14 +340,15 @@ search_fields: Dict[str, list] = {
         "bandstructure",
         "dos",
         "task_id",
-        "bandstructure",
-        "dos",
     ],
     "magnetism": [
         "ordering",
         "total_magnetization",
         "total_magnetization_normalized_vol",
         "total_magnetization_normalized_formula_units",
+        "num_magnetic_sites",
+        "num_unique_magnetic_sites",
+        "types_of_magnetic_species",
     ],
     "elasticity": [
         "k_voigt",
@@ -356,6 +367,8 @@ search_fields: Dict[str, list] = {
         "weighted_surface_energy_EV_PER_ANG2",
         "shape_factor",
         "surface_anisotropy",
+        "weighted_work_function",
+        "has_reconstructed",
     ],
     "eos": [],
     "phonon": [],
@@ -369,7 +382,7 @@ def _copy_from_doc(doc):
     d = {"has_props": []}
     # Complex function to grab the keys and put them in the root doc
     # if the item is a list, it makes one doc per item with those corresponding keys
-    for doc_key in search_fields:
+    for doc_key in summary_fields:
         sub_doc = doc.get(doc_key, None)
         if isinstance(sub_doc, list) and len(sub_doc) > 0:
             d["has_props"].append(doc_key)
@@ -377,7 +390,7 @@ def _copy_from_doc(doc):
             for sub_item in sub_doc:
                 temp_doc = {
                     copy_key: sub_item[copy_key]
-                    for copy_key in search_fields[doc_key]
+                    for copy_key in summary_fields[doc_key]
                     if copy_key in sub_item
                 }
                 d[doc_key].append(temp_doc)
@@ -386,7 +399,7 @@ def _copy_from_doc(doc):
             d.update(
                 {
                     copy_key: sub_doc[copy_key]
-                    for copy_key in search_fields[doc_key]
+                    for copy_key in summary_fields[doc_key]
                     if copy_key in sub_doc
                 }
             )

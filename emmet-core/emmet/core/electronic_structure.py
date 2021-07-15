@@ -5,6 +5,7 @@ from collections import defaultdict
 from datetime import datetime
 from math import isnan
 from typing import Dict, Type, TypeVar, Union
+import numpy as np
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.magnetism.analyzer import (
@@ -26,7 +27,10 @@ from emmet.core.mpid import MPID
 
 
 class ElectronicStructureBaseData(BaseModel):
-    task_id: MPID = Field(..., description="The source calculation (task) ID for the electronic structure data.")
+    task_id: MPID = Field(
+        ...,
+        description="The source calculation (task) ID for the electronic structure data.",
+    )
 
     band_gap: float = Field(..., description="Band gap energy in eV.")
 
@@ -34,7 +38,7 @@ class ElectronicStructureBaseData(BaseModel):
 
     vbm: Union[float, Dict] = Field(None, description="Valence band maximum data.")
 
-    efermi: float = Field(..., description="Fermi energy eV.")
+    efermi: float = Field(None, description="Fermi energy eV.")
 
 
 class ElectronicStructureSummary(ElectronicStructureBaseData):
@@ -182,9 +186,6 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             structure = structures[dos_task]
 
         dos_mag_ordering = CollinearMagneticStructureAnalyzer(structure).ordering
-
-        summary_band_gap = dos_obj.get_gap()
-        summary_cbm, summary_vbm = dos_obj.get_cbm_vbm()
 
         dos_data = {
             "total": defaultdict(dict),
@@ -359,17 +360,57 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         bs_entry = BandstructureData(**bs_data)
         dos_entry = DosData(**dos_data)
 
+        # Obtain summary data
+
+        bs_gap = (
+            bs_entry.setyawan_curtarolo.band_gap
+            if bs_entry.setyawan_curtarolo is not None
+            else None
+        )
+        dos_cbm, dos_vbm = dos_obj.get_cbm_vbm()
+        dos_gap = max(dos_cbm - dos_vbm, 0.0)
+
+        if bs_gap is not None and bs_gap <= dos_gap + 0.2:
+            summary_task = bs_entry.setyawan_curtarolo.task_id
+            summary_band_gap = bs_gap
+            summary_cbm = (
+                bs_entry.setyawan_curtarolo.cbm.get(  # type: ignore
+                    "energy", None
+                )
+                if bs_entry.setyawan_curtarolo.cbm is not None
+                else None
+            )
+            summary_vbm = (
+                bs_entry.setyawan_curtarolo.vbm.get(  # type: ignore
+                    "energy", None
+                )
+                if bs_entry.setyawan_curtarolo.cbm is not None
+                else None
+            )  # type: ignore
+            summary_efermi = bs_entry.setyawan_curtarolo.efermi
+            is_gap_direct = bs_entry.setyawan_curtarolo.is_gap_direct
+            is_metal = bs_entry.setyawan_curtarolo.is_metal
+            summary_magnetic_ordering = bs_entry.setyawan_curtarolo.magnetic_ordering
+        else:
+            summary_task = dos_entry.dict()["total"][Spin.up]["task_id"]
+            summary_band_gap = dos_gap
+            summary_cbm = dos_cbm
+            summary_vbm = dos_vbm
+            summary_efermi = dos_efermi
+            summary_magnetic_ordering = dos_mag_ordering
+            is_metal = True if np.isclose(dos_gap, 0.0, atol=0.01, rtol=0) else False
+
         return cls.from_structure(
             material_id=MPID(material_id),
-            task_id=dos_task,
+            task_id=summary_task,
             structure=structure,
             band_gap=summary_band_gap,
             cbm=summary_cbm,
             vbm=summary_vbm,
-            efermi=dos_efermi,
+            efermi=summary_efermi,
             is_gap_direct=is_gap_direct,
             is_metal=is_metal,
-            magnetic_ordering=dos_mag_ordering,
+            magnetic_ordering=summary_magnetic_ordering,
             bandstructure=bs_entry,
             dos=dos_entry,
         )

@@ -4,11 +4,11 @@ from maggma.builders import Builder
 from maggma.utils import grouper
 
 from emmet.core.mpid import MPID
-from emmet.core.search import SearchDoc
+from emmet.core.summary import SummaryDoc
 from emmet.core.utils import jsanitize
 
 
-class SearchBuilder(Builder):
+class SummaryBuilder(Builder):
     def __init__(
         self,
         materials,
@@ -19,12 +19,13 @@ class SearchBuilder(Builder):
         magnetism,
         elasticity,
         dielectric,
+        piezoelectric,
         phonon,
         insertion_electrodes,
         substrates,
         surfaces,
         eos,
-        search,
+        summary,
         chunk_size=100,
         query=None,
         **kwargs,
@@ -38,12 +39,13 @@ class SearchBuilder(Builder):
         self.magnetism = magnetism
         self.elasticity = elasticity
         self.dielectric = dielectric
+        self.piezoelectric = piezoelectric
         self.phonon = phonon
         self.insertion_electrodes = insertion_electrodes
         self.substrates = substrates
         self.surfaces = surfaces
         self.eos = eos
-        self.search = search
+        self.summary = summary
         self.chunk_size = chunk_size
         self.query = query if query else {}
 
@@ -57,13 +59,14 @@ class SearchBuilder(Builder):
                 magnetism,
                 elasticity,
                 dielectric,
+                piezoelectric,
                 phonon,
                 insertion_electrodes,
                 surfaces,
                 substrates,
                 eos,
             ],
-            targets=[search],
+            targets=[summary],
             chunk_size=chunk_size,
             **kwargs,
         )
@@ -76,20 +79,20 @@ class SearchBuilder(Builder):
             list of relevant materials and data
         """
 
-        self.logger.info("Search Builder Started")
+        self.logger.info("Summary Builder Started")
 
         q = dict(self.query)
 
         mat_ids = self.materials.distinct(field=self.materials.key, criteria=q)
-        search_ids = self.search.distinct(field=self.search.key, criteria=q)
+        summary_ids = self.summary.distinct(field=self.summary.key, criteria=q)
 
-        search_set = set(mat_ids) - set(search_ids)
+        summary_set = set(mat_ids) - set(summary_ids)
 
-        self.total = len(search_set)
+        self.total = len(summary_set)
 
         self.logger.debug("Processing {} materials.".format(self.total))
 
-        for entry in search_set:
+        for entry in summary_set:
 
             data = {
                 "materials": self.materials.query_one({self.materials.key: entry}),
@@ -98,14 +101,15 @@ class SearchBuilder(Builder):
                 "grain_boundaries": list(
                     self.grain_boundaries.query({self.grain_boundaries.key: entry})
                 ),
-                "electronic_structure": list(
-                    self.electronic_structure.query(
-                        {self.electronic_structure.key: entry}
-                    )
+                "electronic_structure": self.electronic_structure.query_one(
+                    {self.electronic_structure.key: entry}
                 ),
                 "magnetism": self.magnetism.query_one({self.magnetism.key: entry}),
                 "elasticity": self.elasticity.query_one({self.elasticity.key: entry}),
                 "dielectric": self.dielectric.query_one({self.dielectric.key: entry}),
+                "piezoelectric": self.piezoelectric.query_one(
+                    {self.piezoelectric.key: entry}
+                ),
                 "phonon": self.phonon.query_one(
                     {self.phonon.key: entry}, [self.phonon.key]
                 ),
@@ -122,6 +126,22 @@ class SearchBuilder(Builder):
                 "eos": self.eos.query_one({self.eos.key: entry}, [self.eos.key]),
             }
 
+            sub_fields = {
+                "magnetism": "magnetism",
+                "dielectric": "dielectric",
+                "piezoelectric": "piezo",
+                "elasticity": "elasticity",
+            }
+
+            for collection, sub_field in sub_fields.items():
+                if data[collection] is not None:
+                    data[collection] = (
+                        data[collection][sub_field]
+                        if (sub_field in data[collection])
+                        and (data[collection][sub_field] != {})
+                        else None
+                    )
+
             yield data
 
     def prechunk(self, number_splits: int):
@@ -130,7 +150,7 @@ class SearchBuilder(Builder):
         """
         q = dict(self.query)
 
-        keys = self.search.newer_in(self.materials, criteria=q, exhaustive=True)
+        keys = self.summary.newer_in(self.materials, criteria=q, exhaustive=True)
 
         N = ceil(len(keys) / number_splits)
         for split in grouper(keys, N):
@@ -139,12 +159,12 @@ class SearchBuilder(Builder):
     def process_item(self, item):
 
         material_id = MPID(item["materials"]["material_id"])
-        doc = SearchDoc.from_docs(material_id=material_id, **item)
+        doc = SummaryDoc.from_docs(material_id=material_id, **item)
         return jsanitize(doc.dict(exclude_none=True), allow_bson=True)
 
     def update_targets(self, items):
         """
-        Copy each search doc to the store
+        Copy each summary doc to the store
 
         Args:
             items ([dict]): A list of dictionaries of mpid document pairs to update
@@ -152,7 +172,7 @@ class SearchBuilder(Builder):
         items = list(filter(None, items))
 
         if len(items) > 0:
-            self.logger.info("Inserting {} search docs".format(len(items)))
-            self.search.update(docs=items)
+            self.logger.info("Inserting {} summary docs".format(len(items)))
+            self.summary.update(docs=items)
         else:
-            self.logger.info("No search entries to update")
+            self.logger.info("No summary entries to update")
