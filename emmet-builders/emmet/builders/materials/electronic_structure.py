@@ -179,8 +179,6 @@ class ElectronicStructureBuilder(Builder):
             if not np.isclose(
                 mat["other"]["band_gap"], eig_values["bandgap"], atol=0.2, rtol=0.0
             ):
-                if d["warnings"] is None:
-                    d["warnings"] = []
 
                 d["warnings"].append(
                     "Regular band gap and band gap from eigenvalue_band_properties do not agree.\
@@ -212,6 +210,9 @@ class ElectronicStructureBuilder(Builder):
                 doc = self._bsdos_checks(doc, dos[mat["dos"]["task_id"]], structures)
 
             except Exception:
+                d["warnings"].append(
+                    "Band structure and/or data exists but an error occured while processing."
+                )
                 doc = ElectronicStructureDoc.from_structure(**d)
 
         # Magnetic ordering check
@@ -233,8 +234,6 @@ class ElectronicStructureBuilder(Builder):
 
         for task_id, ordering in mag_orderings.items():
             if doc.magnetic_ordering != ordering:
-                if doc.warnings is None:
-                    doc.warnings = []
 
                 doc.warnings.append(
                     f"Summary data magnetic ordering does not agree with the ordering from {task_id}"
