@@ -1,7 +1,6 @@
 from typing import Dict, List, Optional, TypeVar, Union
 
 from pydantic import BaseModel, Field
-from pymatgen.analysis.magnetism.analyzer import Ordering
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Structure
 
@@ -14,7 +13,7 @@ from emmet.core.xas import Edge, Type
 T = TypeVar("T", bound="SummaryDoc")
 
 
-class SearchSummary(BaseModel):
+class SummaryStats(BaseModel):
     """
     Statistics about a specified SummaryDoc field.
     """
