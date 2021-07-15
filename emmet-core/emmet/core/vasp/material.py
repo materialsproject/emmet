@@ -198,15 +198,6 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             task_group[0].output.structure, symprec=0.1
         ).get_conventional_standard_structure()
 
-        # Initial Structures
-        initial_structures = [task.input.structure for task in task_group]
-        sm = StructureMatcher(
-            ltol=0.1, stol=0.1, angle_tol=0.1, scale=False, attempt_supercell=False
-        )
-        initial_structures = [
-            group[0] for group in sm.group_structures(initial_structures)
-        ]
-
         # Deprecated
         deprecated = True
 
@@ -219,7 +210,6 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             calc_types=calc_types,
             run_types=run_types,
             task_types=task_types,
-            initial_structures=initial_structures,
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,
         )
