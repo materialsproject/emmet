@@ -224,13 +224,15 @@ class MaterialsBuilder(Builder):
         for group in grouped_tasks:
             try:
                 materials.append(MaterialsDoc.from_tasks(group))
-            except Exception:
+            except Exception as e:
                 failed_ids = list({t_.task_id for t_ in group})
+                doc = MaterialsDoc.construct_deprecated_material(tasks)
+                doc.warnings.append(str(e))
+                materials.append(doc)
                 self.logger.warn(
-                    f"No valid ids found among ids {failed_ids}. This can be the case if the required "
-                    "calculation types are missing from your tasks database."
+                    f"Failed making material for {failed_ids}."
+                    f" Inserted as deprecated Material: {doc.material_id}"
                 )
-                materials.append(MaterialsDoc.construct_deprecated_material(tasks))
 
         self.logger.debug(f"Produced {len(materials)} materials for {formula}")
 
