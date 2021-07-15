@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.7.2](https://github.com/materialsproject/emmet/tree/v0.7.2) (2021-07-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.7.1...v0.7.2)
+
+**Merged pull requests:**
+
+- Fix Deprecated Materials Speed [\#224](https://github.com/materialsproject/emmet/pull/224) ([shyamd](https://github.com/shyamd))
+
+## [v0.7.1](https://github.com/materialsproject/emmet/tree/v0.7.1) (2021-07-13)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.7.0...v0.7.1)
+
 ## [v0.7.0](https://github.com/materialsproject/emmet/tree/v0.7.0) (2021-07-13)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.6.0...v0.7.0)
