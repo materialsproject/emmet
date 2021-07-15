@@ -181,8 +181,8 @@ class ElectronicStructureBuilder(Builder):
             ):
 
                 d["warnings"].append(
-                    "Regular band gap and band gap from eigenvalue_band_properties do not agree.\
-                    Using data from eigenvalue_band_properties where appropriate."
+                    "Regular band gap and band gap from eigenvalue_band_properties do not agree. \
+Using data from eigenvalue_band_properties where appropriate."
                 )
 
                 d["band_gap"] = eig_values["bandgap"]
