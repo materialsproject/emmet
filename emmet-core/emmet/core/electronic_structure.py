@@ -398,6 +398,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             summary_vbm = dos_vbm
             summary_efermi = dos_efermi
             summary_magnetic_ordering = dos_mag_ordering
+            is_metal = True if np.isclose(dos_gap, 0.0, atol=0.01, rtol=0) else False
 
         return cls.from_structure(
             material_id=MPID(material_id),
