@@ -231,7 +231,7 @@ class SummaryDoc(PropertyDoc):
 
     e_ionic: float = Field(None, description="Ionic contributio to dielectric constant")
 
-    e_static: float = Field(
+    e_electronic: float = Field(
         None, description="Electronic contribution to dielectric constant"
     )
 
