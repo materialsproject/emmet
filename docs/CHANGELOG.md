@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.8.2](https://github.com/materialsproject/emmet/tree/v0.8.2) (2021-07-16)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.8.1...v0.8.2)
+
+**Merged pull requests:**
+
+- Summary field bug fix [\#226](https://github.com/materialsproject/emmet/pull/226) ([munrojm](https://github.com/munrojm))
+
 ## [v0.8.1](https://github.com/materialsproject/emmet/tree/v0.8.1) (2021-07-15)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.8.0...v0.8.1)
