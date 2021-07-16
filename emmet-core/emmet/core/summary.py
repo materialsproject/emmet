@@ -231,7 +231,7 @@ class SummaryDoc(PropertyDoc):
 
     e_ionic: float = Field(None, description="Ionic contributio to dielectric constant")
 
-    e_static: float = Field(
+    e_electronic: float = Field(
         None, description="Electronic contribution to dielectric constant"
     )
 
@@ -359,7 +359,7 @@ summary_fields: Dict[str, list] = {
         "universal_anisotropy",
         "homogeneous_poisson",
     ],
-    "dielectric": ["e_total", "e_ionic", "e_static", "n"],
+    "dielectric": ["e_total", "e_ionic", "e_electronic", "n"],
     "piezoelectric": ["e_ij_max"],
     "surface_properties": [
         "weighted_surface_energy",
