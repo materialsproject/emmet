@@ -42,12 +42,62 @@ class History(BaseModel):
     description: Optional[Dict] = Field(
         None, description="Dictionary of exra data for this history node"
     )
+    experimental: Optional[bool] = Field(
+        False,
+        description="Whether this node dictates this is an experimental history not",
+    )
 
     @root_validator(pre=True)
     def str_to_dict(cls, values):
         if isinstance(values.get("description"), str):
             values["description"] = {"string": values.get("description")}
         return values
+
+
+class SNLAbout(BaseModel):
+    """A data dictionary definining extra fields in a SNL"""
+
+    references: str = Field(
+        "", description="Bibtex reference strings for this material"
+    )
+
+    authors: List[Author] = Field([], description="List of authors for this material")
+
+    remarks: List[str] = Field(
+        [], description="List of remarks for the provenance of this material"
+    )
+
+    tags: List[str] = Field([])
+
+    database_IDs: Dict[Database, List[str]] = Field(
+        dict(), description="Database IDs corresponding to this material"
+    )
+
+    history: List[History] = Field(
+        [],
+        description="List of history nodes specifying the transformations or orignation"
+        " of this material for the entry closest matching the material input",
+    )
+
+    created_at: datetime = Field(
+        default_factory=datetime.utcnow(), description="The creation date for this SNL"
+    )
+
+    @validator("created_at", pre=True)
+    def convert_monty_date(cls, v):
+        if isinstance(v, dict):
+            if v.get("@module", "datetime") and v.get("@class", "datetime"):
+                return datetime.fromisoformat(v["string"])
+            raise ValueError("Improper monty dict datetime")
+        return v
+
+
+class SNLDict(BaseModel):
+    """Pydantic validated dictionary for SNL"""
+
+    about: SNLAbout
+
+    snl_id: str = Field(..., description="The SNL ID for this entry")
 
 
 class ProvenanceDoc(PropertyDoc):
