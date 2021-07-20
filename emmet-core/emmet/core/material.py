@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Mapping, Sequence, Type, TypeVar
+from typing import List, Mapping, Type, TypeVar
 
 from pydantic import BaseModel, Field
 from pymatgen.core import Structure
@@ -50,18 +50,18 @@ class MaterialsDoc(StructureMetadata):
         description="Whether this materials document is deprecated.",
     )
 
-    initial_structures: Sequence[Structure] = Field(
+    initial_structures: List[Structure] = Field(
         [],
         description="Initial structures used in the DFT optimizations corresponding to this material",
     )
 
-    task_ids: Sequence[MPID] = Field(
+    task_ids: List[MPID] = Field(
         [],
         title="Calculation IDs",
         description="List of Calculations IDs used to make this Materials Document",
     )
 
-    deprecated_tasks: Sequence[str] = Field([], title="Deprecated Tasks")
+    deprecated_tasks: List[str] = Field([], title="Deprecated Tasks")
 
     calc_types: Mapping[str, str] = Field(
         None,
@@ -78,13 +78,11 @@ class MaterialsDoc(StructureMetadata):
         default_factory=datetime.utcnow,
     )
 
-    origins: Sequence[PropertyOrigin] = Field(
+    origins: List[PropertyOrigin] = Field(
         None, description="Dictionary for tracking the provenance of properties"
     )
 
-    warnings: Sequence[str] = Field(
-        [], description="Any warnings related to this material"
-    )
+    warnings: List[str] = Field([], description="Any warnings related to this material")
 
     @classmethod
     def from_structure(  # type: ignore[override]

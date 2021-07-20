@@ -4,7 +4,7 @@ import pytest
 from pymatgen.core import Lattice, Structure
 from pymatgen.util.provenance import Author, HistoryNode, StructureNL
 
-from emmet.core.provenance import Database, ProvenanceDoc
+from emmet.core.provenance import Database, ProvenanceDoc, SNLDict
 
 
 @pytest.fixture
@@ -23,6 +23,7 @@ def snls(structure):
             authors=[Author("test{i}", "test@test.com").as_dict()],
             history=[HistoryNode("nothing", "url.com", {})],
             created_at=datetime.utcnow(),
+            references="",
         ).as_dict()
         for i in range(3)
     ]
@@ -30,7 +31,7 @@ def snls(structure):
     docs[1]["snl_id"] = "user-1"
     docs[2]["snl_id"] = "pf-3"
 
-    return docs
+    return [SNLDict(**d) for d in docs]
 
 
 def test_from_snls(snls):
@@ -47,5 +48,5 @@ def test_from_snls(snls):
     }
 
     # Test experimental detection
-    snls[0]["about"]["history"][0]["experimental"] = True
+    snls[0].about.history[0].experimental = True
     assert ProvenanceDoc.from_SNLs(material_id="mp-3", snls=snls).theoretical is False

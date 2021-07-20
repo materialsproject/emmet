@@ -90,5 +90,9 @@ class OxidationStateDoc(PropertyDoc):
                 raise e
 
         return super().from_structure(
-            structure=structure, material_id=material_id, **d, **kwargs
+            structure=structure,
+            material_id=material_id,
+            include_structure=True,
+            **d,
+            **kwargs
         )

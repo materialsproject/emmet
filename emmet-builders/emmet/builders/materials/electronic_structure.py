@@ -1,14 +1,17 @@
 from collections import defaultdict
 from math import ceil
-
+import itertools
 import numpy as np
 from maggma.builders import Builder
 from maggma.utils import grouper
 from pymatgen.analysis.magnetism.analyzer import CollinearMagneticStructureAnalyzer
 from pymatgen.core import Structure
+from pymatgen.electronic_structure.core import Spin
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.bandstructure import HighSymmKpath
+from pymatgen.analysis.structure_matcher import StructureMatcher
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core import SETTINGS
 from emmet.core.electronic_structure import ElectronicStructureDoc
@@ -25,7 +28,7 @@ class ElectronicStructureBuilder(Builder):
         dos_fs,
         chunk_size=10,
         query=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Creates an electronic structure collection from a tasks collection,
@@ -154,40 +157,86 @@ class ElectronicStructureBuilder(Builder):
                 )
             )
 
+        # Default summary data
+        d = dict(
+            material_id=mat[self.materials.key],
+            task_id=mat["other"]["task_id"],
+            structure=structure,
+            band_gap=mat["other"]["band_gap"],
+            cbm=mat["other"]["cbm"],
+            vbm=mat["other"]["vbm"],
+            efermi=mat["other"]["efermi"],
+            is_gap_direct=mat["other"]["is_gap_direct"],
+            is_metal=mat["other"]["is_metal"],
+            magnetic_ordering=mat["other"]["magnetic_ordering"],
+            warnings=[],
+        )
+
+        # Eigenvalue band property checks
+        eig_values = mat["other"].get("eigenvalue_band_properties", None)
+
+        if eig_values is not None:
+            if not np.isclose(
+                mat["other"]["band_gap"], eig_values["bandgap"], atol=0.2, rtol=0.0
+            ):
+
+                d["warnings"].append(
+                    "Regular band gap and band gap from eigenvalue_band_properties do not agree. \
+Using data from eigenvalue_band_properties where appropriate."
+                )
+
+                d["band_gap"] = eig_values["bandgap"]
+                d["cbm"] = eig_values["cbm"]
+                d["vbm"] = eig_values["vbm"]
+                d["is_gap_direct"] = eig_values["is_gap_direct"]
+                d["is_metal"] = (
+                    True if np.isclose(d["band_gap"], 0.0, atol=0.01, rtol=0) else False
+                )
+
         if dos is None:
-            doc = ElectronicStructureDoc.from_structure(
-                material_id=mat[self.materials.key],
-                task_id=mat["other"]["task_id"],
-                structure=structure,
-                band_gap=mat["other"]["band_gap"],
-                cbm=mat["other"]["cbm"],
-                vbm=mat["other"]["vbm"],
-                efermi=mat["other"]["efermi"],
-                is_gap_direct=mat["other"]["is_gap_direct"],
-                is_metal=mat["other"]["is_metal"],
-                magnetic_ordering=mat["other"]["magnetic_ordering"],
-            )
+            doc = ElectronicStructureDoc.from_structure(**d)
+
         else:
-            doc = ElectronicStructureDoc.from_bsdos(
-                material_id=mat[self.materials.key],
-                structures=structures,
-                dos=dos,
-                is_gap_direct=mat["other"]["is_gap_direct"],
-                is_metal=mat["other"]["is_metal"],
-                **bs,
+
+            try:
+                doc = ElectronicStructureDoc.from_bsdos(
+                    material_id=mat[self.materials.key],
+                    structures=structures,
+                    dos=dos,
+                    is_gap_direct=d["is_gap_direct"],
+                    is_metal=d["is_metal"],
+                    **bs,
+                )
+                doc = self._bsdos_checks(doc, dos[mat["dos"]["task_id"]], structures)
+
+            except Exception:
+                d["warnings"].append(
+                    "Band structure and/or data exists but an error occured while processing."
+                )
+                doc = ElectronicStructureDoc.from_structure(**d)
+
+        # Magnetic ordering check
+        mag_orderings = {}
+        if doc.bandstructure is not None:
+            mag_orderings.update(
+                {
+                    bs_summary.task_id: bs_summary.magnetic_ordering
+                    for bs_type, bs_summary in doc.bandstructure
+                    if bs_summary is not None
+                }
             )
 
-            bgap_diff = []
-            for bs_type, bs_summary in doc.bandstructure:
-                if bs_summary is not None:
-                    bgap_diff.append(doc.band_gap - bs_summary.band_gap)
+        if doc.dos is not None:
+            dos_dict = doc.dos.dict()
+            mag_orderings.update(
+                {dos_dict["total"][Spin.up]["task_id"]: dos_dict["magnetic_ordering"]}
+            )
 
-            if any(abs(gap) > 0.25 for gap in bgap_diff):
-                if doc.warnings is None:
-                    doc.warnings = []
+        for task_id, ordering in mag_orderings.items():
+            if doc.magnetic_ordering != ordering:
+
                 doc.warnings.append(
-                    "Absolute difference between blessed band gap and at least one\
-                    line-mode calculation band gap is larger than 0.25 eV."
+                    f"Summary data magnetic ordering does not agree with the ordering from {task_id}"
                 )
 
         return doc.dict()
@@ -207,6 +256,56 @@ class ElectronicStructureBuilder(Builder):
             self.electronic_structure.update(docs=jsanitize(items, allow_bson=True))
         else:
             self.logger.info("No electronic structure docs to update")
+
+    def _bsdos_checks(self, doc, dos, structures):
+        # Band gap difference check for uniform and line-mode calculations
+        bgap_diff = []
+        for bs_type, bs_summary in doc.bandstructure:
+            if bs_summary is not None:
+                bgap_diff.append(doc.band_gap - bs_summary.band_gap)
+
+        if dos is not None:
+            bgap_diff.append(doc.band_gap - dos.get_gap())
+
+        if any(abs(gap) > 0.25 for gap in bgap_diff):
+            if doc.warnings is None:
+                doc.warnings = []
+            doc.warnings.append(
+                "Absolute difference between blessed band gap and at least one\
+                    line-mode or uniform calculation band gap is larger than 0.25 eV."
+            )
+
+        # Line-mode and uniform structure primitive checks
+
+        pair_list = []
+        for task_id, struct in structures.items():
+            pair_list.append((task_id, struct))
+
+            struct_prim = SpacegroupAnalyzer(struct).get_primitive_standard_structure(
+                international_monoclinic=False
+            )
+            if not np.allclose(
+                struct.lattice.matrix, struct_prim.lattice.matrix, atol=1e-3
+            ):
+                if doc.warnings is None:
+                    doc.warnings = []
+
+                doc.warnings.append(
+                    f"The input structure for {task_id} may not match the expected standard primitive! "
+                )
+
+        # Check line-mode and uniform for same structure
+        sm = StructureMatcher()
+        for pair in itertools.combinations(pair_list, 2):
+            if not sm.fit(pair[0][1], pair[1][1]):
+                if doc.warnings is None:
+                    doc.warnings = []
+
+                doc.warnings.append(
+                    f"The input structures for {pair[0][0]} and {pair[1][0]} not are not equivalent! "
+                )
+
+        return doc
 
     def _update_materials_doc(self, mat_id):
         # find bs type for each task in task_type and store each different bs object
@@ -260,7 +359,10 @@ class ElectronicStructureBuilder(Builder):
                     if label is not None
                 }
 
-                bs_type = self._obtain_path_type(labels_dict, structure)
+                try:
+                    bs_type = self._obtain_path_type(labels_dict, structure)
+                except Exception:
+                    bs_type = None
 
                 if bs_type is None:
 
@@ -310,8 +412,15 @@ class ElectronicStructureBuilder(Builder):
 
                 structure = Structure.from_dict(task_query["output"]["structure"])
 
-                if task_query["orig_inputs"]["kpoints"]["generation_style"] == "Monkhorst":
-                    nkpoints = np.prod(task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0)
+                if (
+                    task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Monkhorst"
+                    or task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Gamma"
+                ):
+                    nkpoints = np.prod(
+                        task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
+                    )
 
                 else:
                     nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
@@ -354,7 +463,10 @@ class ElectronicStructureBuilder(Builder):
 
                 last_calc = task_query["calcs_reversed"][-1]
 
-                if last_calc["input"]["kpoints"]["generation_style"] == "Monkhorst":
+                if (
+                    last_calc["input"]["kpoints"]["generation_style"] == "Monkhorst"
+                    or last_calc["input"]["kpoints"]["generation_style"] == "Gamma"
+                ):
                     nkpoints = np.prod(
                         last_calc["input"]["kpoints"]["kpoints"][0], axis=0
                     )
@@ -414,66 +526,77 @@ class ElectronicStructureBuilder(Builder):
                     bs_obj["data"] if bs_obj is not None else None
                 )
 
-                materials_doc["bandstructure"][bs_type]["output_structure"] = sorted_bs_data[0]["output_structure"]
+                materials_doc["bandstructure"][bs_type][
+                    "output_structure"
+                ] = sorted_bs_data[0]["output_structure"]
 
-            if dos_calcs:
+        if dos_calcs:
 
-                sorted_dos_data = sorted(
-                    dos_calcs,
-                    key=lambda entry: (
-                        entry["is_hubbard"],
-                        entry["nkpoints"],
-                        entry["nedos"],
-                        entry["updated_on"],
-                    ),
-                    reverse=True,
-                )
+            sorted_dos_data = sorted(
+                dos_calcs,
+                key=lambda entry: (
+                    entry["is_hubbard"],
+                    entry["nkpoints"],
+                    entry["nedos"],
+                    entry["updated_on"],
+                ),
+                reverse=True,
+            )
 
-                materials_doc["dos"]["task_id"] = sorted_dos_data[0]["task_id"]
+            materials_doc["dos"]["task_id"] = sorted_dos_data[0]["task_id"]
 
-                dos_obj = self.dos_fs.query_one(
-                    criteria={"fs_id": sorted_dos_data[0]["fs_id"]}
-                )
-                materials_doc["dos"]["object"] = (
-                    dos_obj["data"] if dos_obj is not None else None
-                )
+            dos_obj = self.dos_fs.query_one(
+                criteria={"fs_id": sorted_dos_data[0]["fs_id"]}
+            )
+            materials_doc["dos"]["object"] = (
+                dos_obj["data"] if dos_obj is not None else None
+            )
 
-                materials_doc["dos"]["output_structure"] = sorted_dos_data[0]["output_structure"]
+            materials_doc["dos"]["output_structure"] = sorted_dos_data[0][
+                "output_structure"
+            ]
 
-            if other_calcs:
+        if other_calcs:
 
-                sorted_other_data = sorted(
-                    other_calcs,
-                    key=lambda entry: (
-                        entry["is_static"],
-                        entry["is_hubbard"],
-                        entry["nkpoints"],
-                        entry["updated_on"],
-                    ),
-                    reverse=True,
-                )
+            sorted_other_data = sorted(
+                other_calcs,
+                key=lambda entry: (
+                    entry["is_static"],
+                    entry["is_hubbard"],
+                    entry["nkpoints"],
+                    entry["updated_on"],
+                ),
+                reverse=True,
+            )
 
-                materials_doc["other"]["task_id"] = str(sorted_other_data[0]["task_id"])
+            materials_doc["other"]["task_id"] = str(sorted_other_data[0]["task_id"])
 
-                task_output_data = sorted_other_data[0]["calcs_reversed"][-1]["output"]
-                materials_doc["other"]["band_gap"] = task_output_data["bandgap"]
-                materials_doc["other"]["magnetic_ordering"] = sorted_other_data[0][
-                    "magnetic_ordering"
-                ]
+            task_output_data = sorted_other_data[0]["calcs_reversed"][-1]["output"]
+            materials_doc["other"]["band_gap"] = task_output_data["bandgap"]
+            materials_doc["other"]["magnetic_ordering"] = sorted_other_data[0][
+                "magnetic_ordering"
+            ]
 
-                materials_doc["other"]["is_metal"] = (
-                    materials_doc["other"]["band_gap"] == 0.0
-                )
+            materials_doc["other"]["is_metal"] = (
+                materials_doc["other"]["band_gap"] == 0.0
+            )
 
-                for prop in ["efermi", "cbm", "vbm", "is_gap_direct", "is_metal"]:
+            for prop in [
+                "efermi",
+                "cbm",
+                "vbm",
+                "is_gap_direct",
+                "is_metal",
+                "eigenvalue_band_properties",
+            ]:
 
-                    # First try other calcs_reversed entries if properties are not found in last
-                    if prop not in task_output_data:
-                        for calc in sorted_other_data[0]["calcs_reversed"]:
-                            if calc["output"].get(prop, None) is not None:
-                                materials_doc["other"][prop] = calc["output"][prop]
-                    else:
-                        materials_doc["other"][prop] = task_output_data[prop]
+                # First try other calcs_reversed entries if properties are not found in last
+                if prop not in task_output_data:
+                    for calc in sorted_other_data[0]["calcs_reversed"]:
+                        if calc["output"].get(prop, None) is not None:
+                            materials_doc["other"][prop] = calc["output"][prop]
+                else:
+                    materials_doc["other"][prop] = task_output_data[prop]
 
         return materials_doc
 
