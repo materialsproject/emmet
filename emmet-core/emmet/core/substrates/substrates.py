@@ -115,7 +115,12 @@ class SubstratesDoc(PropertyDoc):
         else:
             all_matches = list(sorted(all_matches, key=lambda x: x.matching_area))
 
-        return cls(material_id=material_id, substrates=all_matches, **kwargs)
+        return super().from_structure(
+            material_id=material_id,
+            structure=structure,
+            substrates=all_matches,
+            **kwargs
+        )
 
 
 def _groupby_itemkey(iterable, item):
