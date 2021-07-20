@@ -1,9 +1,8 @@
 """ Core definition of a Provenance Document """
 import warnings
-from datetime import date, datetime
+from datetime import datetime
 from typing import ClassVar, Dict, List, Optional
 
-from monty.json import MontyDecoder
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
 from pydantic import BaseModel, Field, root_validator, validator
@@ -147,7 +146,7 @@ class ProvenanceDoc(PropertyDoc):
     def from_SNLs(
         cls,
         material_id: MPID,
-        snls: List[Dict],
+        snls: List[SNLDict],
     ) -> "ProvenanceDoc":
         """
         Converts legacy Pymatgen SNLs into a single provenance document
@@ -157,28 +156,18 @@ class ProvenanceDoc(PropertyDoc):
             len(snls) > 0
         ), "Error must provide a non-zero list of SNLs to convert from SNLs"
 
-        decoder = MontyDecoder()
         # Choose earliest created_at
-        created_at = sorted(
-            decoder.process_decoded(
-                [snl.get("about", {}).get("created_at", datetime.max) for snl in snls]
-            )
-        )[0]
+        created_at = min([snl.about.created_at for snl in snls])
 
         # Choose earliest history
-        history = sorted(
-            snls,
-            key=lambda snl: decoder.process_decoded(
-                snl.get("about", {}).get("created_at", datetime.max)
-            ),
-        )[0]["about"]["history"]
+        history = sorted(snls, key=lambda snl: snl.about.created_at)[0].about.history
 
         # Aggregate all references into one dict to remove duplicates
         refs = {}
         for snl in snls:
             try:
                 set_strict_mode(False)
-                entries = parse_string(snl["about"]["references"], bib_format="bibtex")
+                entries = parse_string(snl.about.references, bib_format="bibtex")
                 refs.update(entries.entries)
             except Exception as e:
                 warnings.warn(
@@ -191,32 +180,18 @@ class ProvenanceDoc(PropertyDoc):
 
         # TODO: Maybe we should combine this robocrystallographer?
         # TODO: Refine these tags / remarks
-        remarks = list(
-            set([remark for snl in snls for remark in snl["about"]["remarks"]])
-        )
+        remarks = list(set([remark for snl in snls for remark in snl.about.remarks]))
         tags = [r for r in remarks if len(r) < 140]
 
-        # Aggregate all authors - Converting a single dictionary first
-        # performs duplicate checking
-        authors_dict = {
-            entry["name"].lower(): entry["email"]
-            for snl in snls
-            for entry in snl["about"]["authors"]
-        }
-        authors = [
-            {"name": name.title(), "email": email}
-            for name, email in authors_dict.items()
-        ]
+        authors = [entry for snl in snls for entry in snl.about.authors]
 
         # Check if this entry is experimental
         experimental = any(
-            history.get("experimental", False)
-            for snl in snls
-            for history in snl.get("about", {}).get("history", [{}])
+            history.experimental for snl in snls for history in snl.about.history
         )
 
         # Aggregate all the database IDs
-        snl_ids = [snl.get("snl_id", "") for snl in snls]
+        snl_ids = {snl.snl_id for snl in snls}
         db_ids = {
             Database(db_id): [snl_id for snl_id in snl_ids if db_id in snl_id]
             for db_id in map(str, Database)
@@ -226,7 +201,7 @@ class ProvenanceDoc(PropertyDoc):
         db_ids = {k: list(filter(None, v)) for k, v in db_ids.items()}
         db_ids = {k: v for k, v in db_ids.items() if len(v) > 0}
 
-        snl_fields = {
+        fields = {
             "created_at": created_at,
             "references": references,
             "authors": authors,
@@ -237,4 +212,4 @@ class ProvenanceDoc(PropertyDoc):
             "history": history,
         }
 
-        return ProvenanceDoc(material_id=material_id, **snl_fields)
+        return ProvenanceDoc(material_id=material_id, **fields)
