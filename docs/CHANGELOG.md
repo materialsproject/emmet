@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.8.3](https://github.com/materialsproject/emmet/tree/v0.8.3) (2021-07-20)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.8.2...v0.8.3)
+
+**Fixed bugs:**
+
+- Oxidation state composition fields not serialized properly [\#216](https://github.com/materialsproject/emmet/issues/216)
+
+**Closed issues:**
+
+- Feature Request: Robocrystallographer [\#208](https://github.com/materialsproject/emmet/issues/208)
+- Rotate structure to standard convention [\#111](https://github.com/materialsproject/emmet/issues/111)
+- Returned docs too large for common API queries \(third-order elasticity\) [\#76](https://github.com/materialsproject/emmet/issues/76)
+
+**Merged pull requests:**
+
+- Better Provenance Management [\#228](https://github.com/materialsproject/emmet/pull/228) ([shyamd](https://github.com/shyamd))
+
 ## [v0.8.2](https://github.com/materialsproject/emmet/tree/v0.8.2) (2021-07-16)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.8.1...v0.8.2)
