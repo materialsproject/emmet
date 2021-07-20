@@ -88,7 +88,7 @@ class SubstratesDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_structure(
+    def from_structure(  # type: ignore[override]
         cls,
         material_id: MPID,
         structure: Structure,
