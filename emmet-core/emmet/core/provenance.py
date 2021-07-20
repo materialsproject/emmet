@@ -91,7 +91,7 @@ class ProvenanceDoc(PropertyDoc):
     @validator("authors")
     def remove_duplicate_authors(cls, authors):
         authors_dict = {entry.name.lower(): entry for entry in authors}
-        return list(authors_dict.items())
+        return list(authors_dict.values())
 
     @classmethod
     def from_SNLs(
