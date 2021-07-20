@@ -79,7 +79,7 @@ class SNLAbout(BaseModel):
     )
 
     created_at: datetime = Field(
-        default_factory=datetime.utcnow(), description="The creation date for this SNL"
+        default_factory=datetime.utcnow, description="The creation date for this SNL"
     )
 
     @validator("created_at", pre=True)
@@ -171,7 +171,7 @@ class ProvenanceDoc(PropertyDoc):
                 refs.update(entries.entries)
             except Exception as e:
                 warnings.warn(
-                    f"Failed parsing bibtex: {snl['about']['references']} due to {e}"
+                    f"Failed parsing bibtex: {snl.about.references} due to {e}"
                 )
 
         bib_data = BibliographyData(entries=refs)
