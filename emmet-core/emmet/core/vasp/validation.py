@@ -2,11 +2,12 @@ from datetime import datetime
 from typing import Dict, List, Union
 
 import numpy as np
-from pydantic import BaseModel, Field, PyObject
+from pydantic import Field, PyObject
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.sets import VaspInputSet
 
 from emmet.core import SETTINGS
+from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.utils import DocEnum
 from emmet.core.vasp.task import TaskDocument
@@ -23,7 +24,7 @@ class DeprecationMessage(DocEnum):
     LDAU = "I001", "LDAU Parameters don't match the inputset"
 
 
-class ValidationDoc(BaseModel):
+class ValidationDoc(EmmetBaseModel):
     """
     Validation document for a VASP calculation
     """

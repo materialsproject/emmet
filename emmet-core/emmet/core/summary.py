@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Structure
 
+from emmet.core.base import EmmetBaseModel
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
@@ -83,7 +84,7 @@ class GBSearchData(BaseModel):
     rotation_angle: float = Field(None, description="Rotation angle in degrees")
 
 
-class SummaryDoc(PropertyDoc):
+class SummaryDoc(EmmetBaseModel):
     """
     Summary information about materials and their properties, useful for materials
     screening studies and searching.

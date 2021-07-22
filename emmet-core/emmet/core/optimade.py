@@ -7,6 +7,7 @@ from optimade.models import Species, StructureResourceAttributes
 from pymatgen.core.composition import Composition, formula_double_format
 from pymatgen.core.structure import Structure
 
+from emmet.core.base import BaseModel, EmmetBaseModel
 from emmet.core.mpid import MPID
 
 letters = "ABCDEFGHIJKLMNOPQRSTUVXYZ"
@@ -75,7 +76,7 @@ def hill_formula(comp: Composition) -> str:
     return "".join(formula)
 
 
-class OptimadeMaterialsDoc(StructureResourceAttributes):
+class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
     """Optimade Structure resource with a few extra MP specific fields for materials"""
 
     material_id: MPID
