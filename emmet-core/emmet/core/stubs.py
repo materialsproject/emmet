@@ -5,7 +5,7 @@ outside the standard MSONable model
 """
 from typing import Dict
 
-import pymatgen.core.structure
+import pymatgen.core.composition
 from pydantic import BaseModel
 from pymatgen.core.periodic_table import Element
 
@@ -30,8 +30,8 @@ def get_validators(cls):
 def validate_composition(cls, v):
     if isinstance(v, pymatgen.core.structure.Composition):
         return v
-    return pymatgen.core.structure.Composition(**v)
+    return pymatgen.core.composition.Composition(**v)
 
 
-pymatgen.core.structure.Composition.__pydantic_model__ = StubComposition
-pymatgen.core.structure.Composition.__get_validators__ = get_validators
+pymatgen.core.composition.Composition.__pydantic_model__ = StubComposition
+pymatgen.core.composition.Composition.__get_validators__ = get_validators

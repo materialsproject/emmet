@@ -8,12 +8,13 @@ from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Structure
 
+from emmet.core.base import EmmetBaseModel
 from emmet.core.symmetry import SymmetryData
 
 T = TypeVar("T", bound="StructureMetadata")
 
 
-class StructureMetadata(BaseModel):
+class StructureMetadata(EmmetBaseModel):
     """
     Mix-in class for structure metadata
     """

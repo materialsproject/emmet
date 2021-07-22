@@ -2,12 +2,13 @@
 from datetime import datetime
 from typing import ClassVar, List
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 
 
-class TaskDocument(BaseModel):
+class TaskDocument(EmmetBaseModel):
     """
     Definition of Task Document
     """
