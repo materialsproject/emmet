@@ -4,12 +4,10 @@ from typing import Dict, Iterable, List, Optional, Tuple
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
-from pymatgen.analysis.structure_matcher import OrderDisorderElementComparator
-from pymatgen.core import Structure
-from pymatgen.util.provenance import StructureNL
+from pymatgen.core.structure import Structure
 
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.provenance import ProvenanceDoc
+from emmet.core.provenance import ProvenanceDoc, SNLDict
 from emmet.core.utils import group_structures
 
 
@@ -214,7 +212,7 @@ class ProvenanceBuilder(Builder):
         snl_strucs = []
         for snl in snls:
             struc = Structure.from_dict(snl)
-            struc.snl = snl
+            struc.snl = SNLDict(**snl)
             snl_strucs.append(struc)
 
         groups = group_structures(
