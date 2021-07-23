@@ -2,7 +2,7 @@ import pytest
 from pymatgen.core import Structure
 from pymatgen.util.testing import PymatgenTest
 
-from emmet.core.oxidation_states import OxidationStateDoc
+from emmet.core.robocrys import RobocrystallogapherDoc
 
 test_structures = {
     name: struc.get_reduced_structure()
@@ -28,9 +28,8 @@ test_structures = {
 
 
 @pytest.mark.parametrize("structure", test_structures.values())
-def test_oxidation_state(structure: Structure):
+def test_robocrys(structure: Structure):
     """Very simple test to make sure this actually works"""
     print(f"Should work : {structure.composition}")
-    doc = OxidationStateDoc.from_structure(structure, material_id=33)
+    doc = RobocrystallogapherDoc.from_structure(structure, material_id=33)
     assert doc is not None
-    assert doc.structure is not None

@@ -115,7 +115,9 @@ class ThermoBuilder(Builder):
 
         # Yield the chemical systems in order of increasing size
         # Will build them in a similar manner to fast Pourbaix
-        for chemsys in sorted(to_process_chemsys, key=lambda x: len(x.split("-"))):
+        for chemsys in sorted(
+            to_process_chemsys, key=lambda x: len(x.split("-")), reverse=True
+        ):
             entries = self.get_entries(chemsys)
             yield entries
 

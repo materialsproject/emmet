@@ -1,7 +1,10 @@
+from datetime import datetime
+
 import pytest
-from pymatgen.core import Structure
+from pymatgen.core.structure import Structure
 from pymatgen.util.testing import PymatgenTest
 
+from emmet.core.optimade import OptimadeMaterialsDoc
 from emmet.core.oxidation_states import OxidationStateDoc
 
 test_structures = {
@@ -31,6 +34,7 @@ test_structures = {
 def test_oxidation_state(structure: Structure):
     """Very simple test to make sure this actually works"""
     print(f"Should work : {structure.composition}")
-    doc = OxidationStateDoc.from_structure(structure, material_id=33)
+    doc = OptimadeMaterialsDoc.from_structure(
+        structure, material_id=33, last_updated=datetime.utcnow()
+    )
     assert doc is not None
-    assert doc.structure is not None

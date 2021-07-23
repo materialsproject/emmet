@@ -72,7 +72,7 @@ jobs:
         run: |
           pytest --cov=emmet --cov-report=xml tests/${{ matrix.package }}
 
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v2.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
@@ -97,28 +97,3 @@ jobs:
 
     - name: Build
       run: mkdocs build
-
-  merge-deps:
-    needs:
-      - lint
-      - test
-      - docs
-    runs-on: ubuntu-latest
-    steps:
-      - name: Merge me!
-        uses: ridedott/merge-me-action@master
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  auto-gen-release:
-    needs:
-      - lint
-      - test
-      - docs
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.EMMET_SEMVER_BUMP_TOKEN }}
-    steps:
-      - uses: rymndhng/release-on-push-action@v0.20.0
-        with:
-          bump_version_scheme: norelease

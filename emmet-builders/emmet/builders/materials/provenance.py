@@ -4,12 +4,10 @@ from typing import Dict, Iterable, List, Optional, Tuple
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
-from pymatgen.analysis.structure_matcher import OrderDisorderElementComparator
-from pymatgen.core import Structure
-from pymatgen.util.provenance import StructureNL
+from pymatgen.core.structure import Structure
 
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.provenance import ProvenanceDoc
+from emmet.core.provenance import ProvenanceDoc, SNLDict
 from emmet.core.utils import group_structures
 
 
@@ -36,7 +34,7 @@ class ProvenanceBuilder(Builder):
         self.provenance = provenance
         self.source_snls = source_snls
         self.settings = EmmetBuildSettings.autoload(settings)
-        self.query = query
+        self.query = query or {}
         self.kwargs = kwargs
 
         materials.key = "material_id"
@@ -194,7 +192,7 @@ class ProvenanceBuilder(Builder):
                 doc.history.append(self.settings.DEFAULT_HISTORY)
                 doc.references.append(self.settings.DEFAULT_REFERENCE)
 
-                snl_docs.append(doc.dict())
+                snl_docs.append(doc.dict(exclude_unset=True))
 
         return snl_docs
 
@@ -211,25 +209,29 @@ class ProvenanceBuilder(Builder):
         m_strucs = [Structure.from_dict(mat["structure"])] + [
             Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]
         ]
-        snl_strucs = [StructureNL.from_dict(snl) for snl in snls]
+        snl_strucs = []
+        for snl in snls:
+            struc = Structure.from_dict(snl)
+            struc.snl = SNLDict(**snl)
+            snl_strucs.append(struc)
 
         groups = group_structures(
             m_strucs + snl_strucs,
             ltol=self.settings.LTOL,
             stol=self.settings.STOL,
             angle_tol=self.settings.ANGLE_TOL,
-            comparator=OrderDisorderElementComparator(),
+            # comparator=OrderDisorderElementComparator(),
         )
         matched_groups = [
             group
             for group in groups
-            if any(isinstance(struc, Structure) for struc in group)
+            if any(not hasattr(struc, "snl") for struc in group)
         ]
         snls = [
-            struc
+            struc.snl
             for group in matched_groups
             for struc in group
-            if isinstance(struc, StructureNL)
+            if hasattr(struc, "snl")
         ]
 
         self.logger.debug(f"Found {len(snls)} SNLs for {mat['material_id']}")

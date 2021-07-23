@@ -1,5 +1,92 @@
 # Changelog
 
+## [v0.8.3](https://github.com/materialsproject/emmet/tree/v0.8.3) (2021-07-20)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.8.2...v0.8.3)
+
+**Fixed bugs:**
+
+- Oxidation state composition fields not serialized properly [\#216](https://github.com/materialsproject/emmet/issues/216)
+
+**Closed issues:**
+
+- Feature Request: Robocrystallographer [\#208](https://github.com/materialsproject/emmet/issues/208)
+- Rotate structure to standard convention [\#111](https://github.com/materialsproject/emmet/issues/111)
+- Returned docs too large for common API queries \(third-order elasticity\) [\#76](https://github.com/materialsproject/emmet/issues/76)
+
+**Merged pull requests:**
+
+- Better Provenance Management [\#228](https://github.com/materialsproject/emmet/pull/228) ([shyamd](https://github.com/shyamd))
+
+## [v0.8.2](https://github.com/materialsproject/emmet/tree/v0.8.2) (2021-07-16)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.8.1...v0.8.2)
+
+**Merged pull requests:**
+
+- Summary field bug fix [\#226](https://github.com/materialsproject/emmet/pull/226) ([munrojm](https://github.com/munrojm))
+
+## [v0.8.1](https://github.com/materialsproject/emmet/tree/v0.8.1) (2021-07-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.8.0...v0.8.1)
+
+**Merged pull requests:**
+
+- Rename summary stats model [\#225](https://github.com/materialsproject/emmet/pull/225) ([munrojm](https://github.com/munrojm))
+
+## [v0.8.0](https://github.com/materialsproject/emmet/tree/v0.8.0) (2021-07-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.7.2...v0.8.0)
+
+**Merged pull requests:**
+
+- Electronic structure and search builder updates [\#221](https://github.com/materialsproject/emmet/pull/221) ([munrojm](https://github.com/munrojm))
+
+## [v0.7.2](https://github.com/materialsproject/emmet/tree/v0.7.2) (2021-07-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.7.1...v0.7.2)
+
+**Merged pull requests:**
+
+- Fix Deprecated Materials Speed [\#224](https://github.com/materialsproject/emmet/pull/224) ([shyamd](https://github.com/shyamd))
+
+## [v0.7.1](https://github.com/materialsproject/emmet/tree/v0.7.1) (2021-07-13)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.7.0...v0.7.1)
+
+## [v0.7.0](https://github.com/materialsproject/emmet/tree/v0.7.0) (2021-07-13)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.6.0...v0.7.0)
+
+**Merged pull requests:**
+
+- Robocrystallographer document [\#222](https://github.com/materialsproject/emmet/pull/222) ([shyamd](https://github.com/shyamd))
+
+## [v0.6.0](https://github.com/materialsproject/emmet/tree/v0.6.0) (2021-07-12)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.5.0...v0.6.0)
+
+**Merged pull requests:**
+
+- Add Deprecated Materials to MaterialsDoc construction [\#220](https://github.com/materialsproject/emmet/pull/220) ([shyamd](https://github.com/shyamd))
+- Fix provenance [\#219](https://github.com/materialsproject/emmet/pull/219) ([shyamd](https://github.com/shyamd))
+
+## [v0.5.0](https://github.com/materialsproject/emmet/tree/v0.5.0) (2021-07-02)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.4.1...v0.5.0)
+
+**Merged pull requests:**
+
+- Fix Validation [\#215](https://github.com/materialsproject/emmet/pull/215) ([shyamd](https://github.com/shyamd))
+
+## [v0.4.1](https://github.com/materialsproject/emmet/tree/v0.4.1) (2021-06-27)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.4.0...v0.4.1)
+
+**Merged pull requests:**
+
+- Fix oxidation doc composition [\#217](https://github.com/materialsproject/emmet/pull/217) ([shyamd](https://github.com/shyamd))
+
 ## [v0.4.0](https://github.com/materialsproject/emmet/tree/v0.4.0) (2021-06-24)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.3.6...v0.4.0)

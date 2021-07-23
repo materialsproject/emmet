@@ -2,10 +2,12 @@ from datetime import datetime
 from typing import Dict, List, Union
 
 import numpy as np
-from pydantic import BaseModel, Field, PyObject
-from pymatgen.core import Structure
+from pydantic import Field, PyObject
+from pymatgen.core.structure import Structure
+from pymatgen.io.vasp.sets import VaspInputSet
 
 from emmet.core import SETTINGS
+from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.utils import DocEnum
 from emmet.core.vasp.task import TaskDocument
@@ -22,7 +24,7 @@ class DeprecationMessage(DocEnum):
     LDAU = "I001", "LDAU Parameters don't match the inputset"
 
 
-class ValidationDoc(BaseModel):
+class ValidationDoc(EmmetBaseModel):
     """
     Validation document for a VASP calculation
     """
@@ -83,7 +85,9 @@ class ValidationDoc(BaseModel):
 
             # Ensure inputsets that need the bandgap get it
             try:
-                valid_input_set = input_sets[str(calc_type)](structure, bandgap=bandgap)
+                valid_input_set: VaspInputSet = input_sets[str(calc_type)](
+                    structure, bandgap=bandgap
+                )
             except TypeError:
                 valid_input_set = input_sets[str(calc_type)](structure)
 
@@ -108,11 +112,14 @@ class ValidationDoc(BaseModel):
                     )
                     # larger KSPACING means fewer k-points
                     if data["kspacing_delta"] > kspacing_tolerance:
-                        reasons.append(DeprecationMessage.KSPACING)
+                        warnings.append(
+                            f"KSPACING is greater than input set: {data['kspacing_delta']}"
+                            f" lower than {kspacing_tolerance} ",
+                        )
                     elif data["kspacing_delta"] < kspacing_tolerance:
                         warnings.append(
                             f"KSPACING is lower than input set: {data['kspacing_delta']}"
-                            " lower than {kspacing_tolerance} ",
+                            f" lower than {kspacing_tolerance} ",
                         )
 
             # warn, but don't invalidate if wrong ISMEAR
@@ -121,7 +128,7 @@ class ValidationDoc(BaseModel):
             if curr_ismear != valid_ismear:
                 warnings.append(
                     f"Inappropriate smearing settings. Set to {curr_ismear},"
-                    " but should be {valid_ismear}"
+                    f" but should be {valid_ismear}"
                 )
 
             # Checking ENCUT
@@ -131,45 +138,57 @@ class ValidationDoc(BaseModel):
             if data["encut_ratio"] < 1:
                 reasons.append(DeprecationMessage.ENCUT)
 
-            # Checking U-values
-            if valid_input_set.incar.get("LDAU"):
-                # Assemble actual input LDAU params into dictionary to account for possibility
-                # of differing order of elements.
-                structure_set_symbol_set = _get_unsorted_symbol_set(structure)
-                inputs_ldau_fields = [structure_set_symbol_set] + [
-                    inputs.get("incar", {}).get(k, []) for k in LDAU_fields
-                ]
-                input_ldau_params = {d[0]: d[1:] for d in zip(*inputs_ldau_fields)}
+            # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
+            input_hubbards = task_doc.input.hubbards
 
+            # Checking U-values
+            if valid_input_set.incar.get("LDAU", False) or len(input_hubbards) > 0:
                 # Assemble required input_set LDAU params into dictionary
-                input_set_symbol_set = _get_unsorted_symbol_set(
-                    valid_input_set.poscar.structure
+                input_set_hubbards = dict(
+                    zip(
+                        valid_input_set.poscar.site_symbols,
+                        valid_input_set.incar.get("LDAUU", []),
+                    )
                 )
-                input_set_ldau_fields = [input_set_symbol_set] + [
-                    valid_input_set.incar.get(k) for k in LDAU_fields
-                ]
-                input_set_ldau_params = {
-                    d[0]: d[1:] for d in zip(*input_set_ldau_fields)
+
+                all_elements = list(
+                    set(input_set_hubbards.keys()) | set(input_hubbards.keys())
+                )
+                diff_ldau_params = {
+                    el: (input_set_hubbards.get(el, 0), input_hubbards.get(el, 0))
+                    for el in all_elements
+                    if not np.allclose(
+                        input_set_hubbards.get(el, 0), input_hubbards.get(el, 0)
+                    )
                 }
 
-                if any(
-                    input_set_ldau_params[el] != input_params
-                    for el, input_params in input_ldau_params.items()
-                ):
+                if len(diff_ldau_params) > 0:
                     reasons.append(DeprecationMessage.LDAU)
+                    warnings.extend(
+                        [
+                            f"U-value for {el} should be {good} but was {bad}"
+                            for el, (bad, good) in diff_ldau_params.items()
+                        ]
+                    )
 
-        # Check the max upwards SCF step
-        skip = inputs.get("incar", {}).get("NLEMDL")
-        energies = [
-            d["e_fr_energy"]
-            for d in task_doc.calcs_reversed[0]["output"]["ionic_steps"][-1][
-                "electronic_steps"
+            # Check the max upwards SCF step
+            skip = abs(inputs.get("incar", {}).get("NLEMDL", -5)) - 1
+            energies = [
+                d["e_fr_energy"]
+                for d in task_doc.calcs_reversed[0]["output"]["ionic_steps"][-1][
+                    "electronic_steps"
+                ]
             ]
-        ]
-        max_gradient = np.max(np.gradient(energies)[skip:])
-        data["max_gradient"] = max_gradient
-        if max_gradient > max_allowed_scf_gradient:
-            reasons.append(DeprecationMessage.MAX_SCF)
+            if len(energies) > skip:
+                max_gradient = np.max(np.gradient(energies)[skip:])
+                data["max_gradient"] = max_gradient
+                if max_gradient > max_allowed_scf_gradient:
+                    reasons.append(DeprecationMessage.MAX_SCF)
+            else:
+                warnings.append(
+                    "Not enough electronic steps to compute valid gradient"
+                    " and compare with max SCF gradient tolerance"
+                )
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,
