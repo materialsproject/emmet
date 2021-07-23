@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.9.0](https://github.com/materialsproject/emmet/tree/v0.9.0) (2021-07-23)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.8.3...v0.9.0)
+
+**Closed issues:**
+
+- Fix and standardize settings context var [\#237](https://github.com/materialsproject/emmet/issues/237)
+- Build data in document model [\#232](https://github.com/materialsproject/emmet/issues/232)
+- Thoughts on having StructureNL instead of Structure in canonical materials structure field? [\#97](https://github.com/materialsproject/emmet/issues/97)
+
+**Merged pull requests:**
+
+- New EmmetBaseModel [\#235](https://github.com/materialsproject/emmet/pull/235) ([shyamd](https://github.com/shyamd))
+- Substrates [\#231](https://github.com/materialsproject/emmet/pull/231) ([shyamd](https://github.com/shyamd))
+- Optimade Materials Doc [\#230](https://github.com/materialsproject/emmet/pull/230) ([shyamd](https://github.com/shyamd))
+
 ## [v0.8.3](https://github.com/materialsproject/emmet/tree/v0.8.3) (2021-07-20)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.8.2...v0.8.3)
