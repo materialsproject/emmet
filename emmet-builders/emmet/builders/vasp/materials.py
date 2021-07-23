@@ -8,6 +8,7 @@ from maggma.utils import grouper
 
 from pymatgen.core import Structure
 from emmet.builders.settings import EmmetBuildSettings
+from emmet.builders import SETTINGS
 from emmet.core.utils import group_structures, jsanitize
 from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.vasp.task import TaskDocument
@@ -223,7 +224,13 @@ class MaterialsBuilder(Builder):
         materials = []
         for group in grouped_tasks:
             try:
-                materials.append(MaterialsDoc.from_tasks(group))
+                materials.append(
+                    MaterialsDoc.from_tasks(
+                        group,
+                        quality_scores=self.settings.VASP_QUALITY_SCORES,
+                        use_statics=self.settings.VASP_USE_STATICS,
+                    )
+                )
             except Exception as e:
                 failed_ids = list({t_.task_id for t_ in group})
                 doc = MaterialsDoc.construct_deprecated_material(tasks)
