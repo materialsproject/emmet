@@ -108,9 +108,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             )
 
         best_structure_calc = sorted(structure_calcs, key=_structure_eval)[0]
-        structure = SpacegroupAnalyzer(
-            best_structure_calc.output.structure, symprec=0.1
-        ).get_conventional_standard_structure()
+        structure = best_structure_calc.output.structure
 
         # Initial Structures
         initial_structures = [task.input.structure for task in task_group]
