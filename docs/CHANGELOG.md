@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.9.1](https://github.com/materialsproject/emmet/tree/v0.9.1) (2021-07-26)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.9.0...v0.9.1)
+
+**Merged pull requests:**
+
+- Revert structure back to using computed structure [\#239](https://github.com/materialsproject/emmet/pull/239) ([shyamd](https://github.com/shyamd))
+
 ## [v0.9.0](https://github.com/materialsproject/emmet/tree/v0.9.0) (2021-07-23)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.8.3...v0.9.0)
