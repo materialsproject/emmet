@@ -272,7 +272,7 @@ class DefectBuilder(Builder):
             self.logger.debug(f"NO MPID FOUND FOR {task} - {struc.composition}")
             return False
         diel = get_dielectric(mpid)
-        if not diel:
+        if diel is None:
             self.logger.debug(f"NO DIEL FOUND FOR {task} - {struc.composition}")
             return False
         return True
@@ -346,6 +346,7 @@ class DefectBuilder(Builder):
         props = [
             'task_id',
             'input',
+            'nsites',
             'output.structure'
             'transformations',
             'defect',
@@ -361,7 +362,7 @@ class DefectBuilder(Builder):
             angle_tol=SETTINGS.ANGLE_TOL,
             primitive_cell=False,
             scale=True,
-            attempt_supercell=False,
+            attempt_supercell=True,
             allow_subset=False,
             comparator=ElementComparator(),
         )
@@ -370,7 +371,8 @@ class DefectBuilder(Builder):
             if run_type(b.get('input').get('dft')).value.split('+U')[0] == \
                 run_type(d.get('input').get('dft')).value.split('+U')[0] and \
                     sm.fit(DefectBuilder.get_pristine_supercell(d), DefectBuilder.get_pristine_supercell(b)):
-                return True
+                if abs(b['nsites'] - d['nsites']) <= 1:
+                    return True
             return False
 
         pairs = [(defect['task_id'], bulk['task_id']) for bulk in bulks for defect in defects if _compare(bulk, defect)]
@@ -380,14 +382,10 @@ class DefectBuilder(Builder):
     @staticmethod
     def get_pristine_supercell(x):
         if x.get('defect'):
-            s = load_class(x['defect']['@module'], x['defect']['@class']).from_dict(x['defect']).bulk_structure
-            s.make_supercell(x.get('scale'))
+            return load_class(x['defect']['@module'], x['defect']['@class']).from_dict(x['defect']).bulk_structure
         elif x.get('transformations'):
-            s = Structure.from_dict(x['transformations']['history'][0]['input_structure']),
-        else:
-            s = Structure.from_dict(x['input']['structure'])
-
-        return s
+            return Structure.from_dict(x['transformations']['history'][0]['input_structure'])
+        return Structure.from_dict(x['input']['structure'])
 
     def process_item(self, tasks):
         """
@@ -400,73 +398,6 @@ class DefectBuilder(Builder):
 
         self.logger.debug(f"Produced {len(defect_docs)} ")
         return [d.dict() for d in defect_docs]
-
-    def get_defect_entry_from_tasks(self, defect_task, bulk_task):
-        parameters = self.get_parameters_from_tasks(defect_task, bulk_task)
-
-        defect_entry = DefectEntry(
-            self.get_defect_from_task(defect_task),
-            uncorrected_energy=parameters['defect_energy'] - parameters['bulk_energy'],
-            parameters=parameters,
-            entry_id=parameters['task_id']
-        )
-        DefectCompatibility().process_entry(defect_entry, perform_corrections=True)
-        defect_entry_as_dict = defect_entry.as_dict()
-        defect_entry_as_dict['task_id'] = defect_entry_as_dict['entry_id']  # this seemed necessary for legacy db
-
-        self.logger.info(f"Produced defect entry for {parameters['material_id']}")
-
-        return defect_entry_as_dict
-
-    def get_parameters_from_tasks(self, defect_task, bulk_task):
-
-        self.logger.debug("Getting parameters from defect and bulk task")
-
-        def get_init(x):
-            if x.get('transformations'):
-                return Structure.from_dict(x['transformations']['history'][0]['input_structure'])
-            return Structure.from_dict(x['input']['structure'])
-
-        init_defect_structure = get_init(defect_task)
-        init_bulk_structure = get_init(bulk_task)  # use init to avoid site_properties in matching
-
-        final_defect_structure = Structure.from_dict(defect_task['output']['structure'])
-        final_bulk_structure = Structure.from_dict(bulk_task['output']['structure'])
-
-        axis_grid = [[float(x) for x in _] for _ in defect_task['output']['v_hartree_grid']]
-        bulk_planar_averages = [[float(x) for x in _] for _ in bulk_task['output']['v_hartree']]
-        defect_planar_averages = [[float(x) for x in _] for _ in defect_task['output']['v_hartree']]
-
-        dfi, site_matching_indices = matcher(init_bulk_structure, init_defect_structure)
-
-        mpid = get_mpid(init_bulk_structure)
-
-        dielectric = get_dielectric(mpid)
-
-        parameters = {
-            'defect_energy': defect_task['output']['energy'],
-            'bulk_energy': bulk_task['output']['energy'],
-            'axis_grid': axis_grid,
-            'defect_frac_sc_coords': final_defect_structure[dfi].frac_coords,
-            'defect_planar_averages': defect_planar_averages,
-            'bulk_planar_averages': bulk_planar_averages,
-            'site_matching_indices': site_matching_indices,
-            'initial_defect_structure': init_defect_structure,
-            'final_defect_structure': final_defect_structure,
-            'vbm': bulk_task['output']['vbm'],
-            'cbm': bulk_task['output']['cbm'],
-            'dielectric': dielectric,
-            'material_id': mpid,
-            'entry_id': defect_task.get('task_id')
-        }
-
-        # cannot be easily queried for, so check here.
-        if 'v_hartree' in final_defect_structure.site_properties:
-            parameters['bulk_atomic_site_averages'] = final_bulk_structure.site_properties['v_hartree']
-        if 'v_hartree' in final_defect_structure.site_properties:
-            parameters['defect_atomic_site_averages'] = final_defect_structure.site_properties['v_hartree']
-
-        return parameters
 
     def get_defect_from_task(self, task):
         defect = unpack(self.defect_query.split('.'), task)
@@ -486,7 +417,7 @@ class DefectBuilder(Builder):
         task_ids = list(chain.from_iterable([item['task_ids'] for item in items]))
 
         if len(items) > 0:
-            self.logger.info(f"Updating {len(items)} materials")
+            self.logger.info(f"Updating {len(items)} defects")
             self.defects.remove_docs({self.defects.key: {"$in": task_ids}})
             self.defects.update(
                 docs=jsanitize(items, allow_bson=True),
