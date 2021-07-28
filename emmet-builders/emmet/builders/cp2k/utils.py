@@ -59,6 +59,9 @@ def matcher(bulk_struc, defect_struc, final_bulk_struc=None, final_defect_struc=
 def get_dielectric(mpid):
     with MPRester() as mp:
         dat = mp.get_data(mpid, prop='diel')
+        band_gap = mp.get_data(mpid, prop='band_gap')[0]['band_gap']
+    if band_gap == 0.0:
+        return np.inf
     try:
         return dat[0]['diel']['e_total']
     except:
