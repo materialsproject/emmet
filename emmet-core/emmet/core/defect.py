@@ -1,36 +1,28 @@
 """ Core definition for Defect property Document """
 from datetime import datetime
-from typing import ClassVar, Dict, Sequence, Tuple, Mapping, List
+from typing import ClassVar, Dict, Tuple, Mapping, List
 
-import numpy as np
-from pydantic import BaseModel, Field
-from pymatgen.analysis.defects.core import Defect, DefectEntry
+from pymatgen.analysis.defects.core import DefectEntry
 
-from emmet.core import SETTINGS
-from emmet.core.material import PropertyDoc
 from emmet.core.cp2k.task import TaskDocument
 from emmet.core.cp2k.material import MaterialsDoc
-from emmet.core.structure import StructureMetadata
-from emmet.stubs import Matrix3D, Vector3D
 from emmet.core.cp2k.calc_types.utils import run_type
 
 from pymatgen.core import Structure, Composition
 from pymatgen.analysis.defects.defect_compatibility import DefectCompatibility
 import numpy as np
 from pymatgen.ext.matproj import MPRester
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from monty.json import MontyDecoder
 from emmet.core.cp2k.calc_types.enums import CalcType, TaskType, RunType
 from itertools import groupby
-from pydantic import BaseModel, Field, validator, dataclasses
-from pydantic.dataclasses import dataclass
+from pydantic import Field, validator
 from emmet.builders.cp2k.utils import get_mpid, get_dielectric, matcher
-from pydantic.class_validators import root_validator
-from pymatgen.entries.computed_entries import CompositionEnergyAdjustment, ComputedStructureEntry
+
+from pymatgen.entries.computed_entries import CompositionEnergyAdjustment
 from pymatgen.analysis.defects.thermodynamics import DefectPhaseDiagram, DefectPredominanceDiagram
-from pydantic import BaseModel, ValidationError, root_validator
+from pydantic import BaseModel
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
-from pymatgen.core import Element, Species
+from pymatgen.core import Element
 
 
 class DefectDoc(BaseModel):
