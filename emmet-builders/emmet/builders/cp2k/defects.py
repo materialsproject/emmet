@@ -244,7 +244,7 @@ class DefectBuilder(Builder):
                     doc["is_valid"] = True
 
         # yield list of defects that are of the same type, matched to an appropriate bulk calc
-        self.logger.debug(f"Processing ")
+        self.logger.info(f"Starting defect matching.")
 
         grouped_pairs = [
             [
