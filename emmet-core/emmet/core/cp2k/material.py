@@ -1,10 +1,10 @@
 """ Core definition of a Materials Document """
-from datetime import datetime
-from functools import partial
-from typing import ClassVar, List, Mapping, Optional, Sequence, Tuple, TypeVar, Union
+from typing import List, Mapping, Sequence, Tuple
 
-from pydantic import BaseModel, Field, create_model
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
+from pydantic import Field
+from pymatgen.analysis.structure_matcher import StructureMatcher
+from pymatgen.entries.computed_entries import ComputedStructureEntry
+
 
 from emmet.core import SETTINGS
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
@@ -12,7 +12,6 @@ from emmet.core.material import PropertyOrigin as PropertyOrigin
 from emmet.core.structure import StructureMetadata
 from emmet.core.cp2k.calc_types import CalcType, RunType, TaskType
 from emmet.core.cp2k.task import TaskDocument
-from emmet.stubs import ComputedEntry, Structure
 
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
@@ -34,7 +33,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         None, description="Mappingionary for tracking the provenance of properties"
     )
 
-    entries: Mapping[RunType, ComputedEntry] = Field(
+    entries: Mapping[RunType, ComputedStructureEntry] = Field(
         None, description="Dictionary for tracking entries for CP2K calculations"
     )
 
