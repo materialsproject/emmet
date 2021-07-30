@@ -29,6 +29,23 @@ class EmmetSettings(BaseSettings):
         DEFAULT_CONFIG_FILE_PATH, description="File to load alternative defaults from"
     )
 
+    CP2K_SPECIAL_TAGS: List[str] = Field(
+        [], description="Special tags to prioritize for CP2K task documents"
+    )
+
+    CP2K_QUALITY_SCORES: Dict[str, int] = Field(
+        {"HYBRID": 4, "SCAN": 3, "GGA+U": 2, "GGA": 1},
+        description="Dictionary Mapping CP2K calculation run types to rung level for CP2K materials builders",
+    )
+
+    CP2K_DEFAULT_INPUT_SETS: Dict = Field(
+        {
+            "GGA Structure Optimization": "pymatgen.io.cp2k.sets.RelaxSet",
+            "GGA+U Structure Optimization": "pymatgen.io.cp2k.sets.RelaxSet",
+        },
+        description="Default input sets for task validation",
+    )
+
     LTOL: float = Field(
         0.2, description="Fractional length tolerance for structure matching"
     )
