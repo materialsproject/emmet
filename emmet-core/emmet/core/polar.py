@@ -1,15 +1,13 @@
 """ Core definition for Polar property Document """
-from datetime import datetime
-from typing import ClassVar, Dict, List, Tuple
+from typing import ClassVar, Tuple
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
 
 from emmet.core import SETTINGS
-from emmet.core.material import PropertyDoc
-from emmet.core.structure import StructureMetadata
-from emmet.stubs import Matrix3D, Vector3D
+from emmet.core.material_property import PropertyDoc
+from emmet.core.math import Matrix3D
 
 VoigtVector = Tuple[float, float, float, float, float, float]
 PiezoTensor = Tuple[VoigtVector, VoigtVector, VoigtVector]
@@ -44,7 +42,7 @@ class Dielectric(PropertyDoc):
     @classmethod
     def from_ionic_and_electronic(cls, ionic: Matrix3D, electronic: Matrix3D):
 
-        total = np.sum(ionic, electronic).tolist()
+        total = np.sum(ionic, electronic).tolist()  # type: ignore
 
         return cls(
             **{
@@ -81,7 +79,7 @@ class Piezoelectric(PropertyDoc):
     @classmethod
     def from_ionic_and_electronic(cls, ionic: Matrix3D, electronic: Matrix3D):
 
-        total = BasePiezoTensor.from_voigt(np.sum(ionic, electronic))
+        total = BasePiezoTensor.from_voigt(np.sum(ionic, electronic))  # type: ignore
 
         directions, charges, strains = np.linalg.svd(total, full_matrices=False)
         max_index = np.argmax(np.abs(charges))

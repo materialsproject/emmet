@@ -1,9 +1,9 @@
-import datetime
-from pathlib import Path
-from setuptools import setup, find_namespace_packages
+from setuptools import find_namespace_packages, setup
+from setuptools_scm import get_version
 
-with open(Path(__file__).parent / "requirements.txt") as f:
-    required = f.read().splitlines()
+version = get_version(root="..", relative_to=__file__, version_scheme="post-release")
+version = version.split(".post")[0]
+
 
 setup(
     name="emmet-builders",
@@ -14,7 +14,10 @@ setup(
     author_email="feedback@materialsproject.org",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
-    install_requires=required,
+    install_requires=[
+        f"emmet-core~={version}",
+        "maggma~=0.29.0",
+    ],
     license="modified BSD",
     zip_safe=False,
 )

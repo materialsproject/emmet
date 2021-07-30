@@ -1,6 +1,5 @@
 import pytest
 from monty.serialization import MontyDecoder
-from pymatgen.entries.entry_tools import EntrySet
 
 from emmet.core.thermo import ThermoDoc
 
@@ -68,6 +67,7 @@ def entries():
     )
 
 
+@pytest.mark.xfail
 def test_from_entries(entries):
     docs = ThermoDoc.from_entries(entries)
 

@@ -29,7 +29,20 @@ def test_make_mat(test_tasks):
     ]
 
     with pytest.raises(Exception):
-        MaterialsDoc.from_tasks(bad_task_group)
+        MaterialsDoc.from_tasks(bad_task_group, use_statics=False)
+
+
+def test_make_deprecated_mat(test_tasks):
+    bad_task_group = [
+        task for task in test_tasks if task.task_type != TaskType.Structure_Optimization
+    ]
+
+    material = MaterialsDoc.construct_deprecated_material(bad_task_group)
+
+    assert material.deprecated
+    assert material.formula_pretty == "Si"
+    assert len(material.task_ids) == 3
+    assert material.entries is None
 
 
 def test_schema():

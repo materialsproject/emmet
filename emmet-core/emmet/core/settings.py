@@ -1,22 +1,26 @@
 """
-This file defines any arbitrary global variables used in Materials Project
-database building and in the website code, to ensure consistency between
-different modules and packages.
+Settings for defaults in the core definitions of Materials Project Documents
 """
-import importlib
 import json
-from typing import Dict, List, Optional
+from pathlib import Path
+from typing import Dict, List, Type, TypeVar, Union
 
 import requests
-from pydantic import BaseSettings, Field, root_validator, validator
-from pydantic.types import Path
+from monty.json import MontyDecoder
+from pydantic import BaseSettings, Field, root_validator
+from pydantic.class_validators import validator
+from pydantic.types import PyObject
 
 DEFAULT_CONFIG_FILE_PATH = str(Path.home().joinpath(".emmet.json"))
+
+
+S = TypeVar("S", bound="EmmetSettings")
 
 
 class EmmetSettings(BaseSettings):
     """
     Settings for the emmet- packages
+    Non-core packages should subclass this to get settings specific to their needs
     The default way to modify these is to modify ~/.emmet.json or set the environment variable
     EMMET_CONFIG_FILE to point to the json with emmet settings
     """
@@ -45,15 +49,6 @@ class EmmetSettings(BaseSettings):
         description="Maximum miller allowed for computing strain direction for maximal piezo response",
     )
 
-    TAGS_TO_SANDBOXES: Optional[Dict[str, List[str]]] = Field(
-        None,
-        description="Mapping of calcuation tags to sandboxes: Dict[sandbox, list of tags]."
-        " Any calculation without these tags will be kept as core.",
-    )
-
-    VASP_SPECIAL_TAGS: List[str] = Field(
-        ["LASPH"], description="Special tags to prioritize for VASP Task Documents"
-    )
     VASP_QUALITY_SCORES: Dict[str, int] = Field(
         {"SCAN": 3, "GGA+U": 2, "GGA": 1},
         description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builders",
@@ -64,10 +59,17 @@ class EmmetSettings(BaseSettings):
         description="Relative tolerance for kpt density to still be a valid task document",
     )
 
-    VASP_DEFAULT_INPUT_SETS: Dict = Field(
+    VASP_KSPACING_TOLERANCE: float = Field(
+        0.05,
+        description="Relative tolerance for kspacing to still be a valid task document",
+    )
+
+    VASP_DEFAULT_INPUT_SETS: Dict[str, PyObject] = Field(
         {
             "GGA Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
             "GGA+U Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
+            "GGA Static": "pymatgen.io.vasp.sets.MPStaticSet",
+            "GGA+U Static": "pymatgen.io.vasp.sets.MPStaticSet",
         },
         description="Default input sets for task validation",
     )
@@ -76,21 +78,14 @@ class EmmetSettings(BaseSettings):
         ["LDAUU", "LDAUJ", "LDAUL"], description="LDAU fields to validate for tasks"
     )
 
-    CP2K_SPECIAL_TAGS: List[str] = Field(
-        [], description="Special tags to prioritize for CP2K task documents"
+    VASP_MAX_SCF_GRADIENT: float = Field(
+        100,
+        description="Maximum upward gradient in the last SCF for any VASP calculation",
     )
 
-    CP2K_QUALITY_SCORES: Dict[str, int] = Field(
-        {"HYBRID": 4, "SCAN": 3, "GGA+U": 2, "GGA": 1},
-        description="Dictionary Mapping CP2K calculation run types to rung level for CP2K materials builders",
-    )
-
-    CP2K_DEFAULT_INPUT_SETS: Dict = Field(
-        {
-            "GGA Structure Optimization": "pymatgen.io.cp2k.sets.RelaxSet",
-            "GGA+U Structure Optimization": "pymatgen.io.cp2k.sets.RelaxSet",
-        },
-        description="Default input sets for task validation",
+    VASP_USE_STATICS: bool = Field(
+        True,
+        description="Use static calculations for structure and energy along with structure optimizations",
     )
 
     class Config:
@@ -117,15 +112,22 @@ class EmmetSettings(BaseSettings):
 
         return new_values
 
-    @validator("VASP_DEFAULT_INPUT_SETS", pre=True)
-    def load_input_sets(cls, values):
-        input_sets = {}
-        for name, inp_set in values.items():
-            if isinstance(inp_set, str):
-                _module = ".".join(inp_set.split(".")[:-1])
-                _class = inp_set.split(".")[-1]
-                input_sets[name] = getattr(importlib.import_module(_module), _class)
-            elif isinstance(inp_set, type):
-                input_sets[name] = inp_set
+    @classmethod
+    def autoload(cls: Type[S], settings: Union[None, dict, S]) -> S:
+        if settings is None:
+            return cls()
+        elif isinstance(settings, dict):
+            return cls(**settings)
+        return settings
 
-        return input_sets
+    @validator("VASP_DEFAULT_INPUT_SETS", pre=True)
+    def convert_input_sets(cls, value):
+        if isinstance(value, dict):
+            return {k: MontyDecoder().process_decoded(v) for k, v in value.items()}
+        return value
+
+    def as_dict(self):
+        """
+        HotPatch to enable serializing EmmetSettings via Monty
+        """
+        return self.dict(exclude_unset=True, exclude_defaults=True)

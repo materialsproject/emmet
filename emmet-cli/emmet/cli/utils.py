@@ -1,27 +1,28 @@
-import os
-import stat
-import mgzip
-import click
-import shutil
-import logging
 import itertools
+import logging
 import multiprocessing
-
-from enum import Enum
-from glob import glob
-from fnmatch import fnmatch
-from datetime import datetime
+import os
+import shutil
+import stat
 from collections import defaultdict
-from pymatgen import Structure
+from datetime import datetime
+from enum import Enum
+from fnmatch import fnmatch
+from glob import glob
+
+import click
+import mgzip
 from atomate.vasp.database import VaspCalcDb
+from atomate.vasp.drones import VaspDrone
+from dotty_dict import dotty
 from fireworks.fw_config import FW_BLOCK_FORMAT
 from mongogrant.client import Client
-from atomate.vasp.drones import VaspDrone
+from pymatgen.core import Structure
+from pymatgen.util.provenance import StructureNL
 from pymongo.errors import DocumentTooLarge
-from dotty_dict import dotty
 
-from emmet.core.utils import group_structures
 from emmet.cli import SETTINGS
+from emmet.core.utils import group_structures
 
 logger = logging.getLogger("emmet")
 perms = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP
@@ -229,6 +230,8 @@ def get_vasp_dirs():
     run = ctx.parent.parent.params["run"]
     nmax = ctx.parent.params["nmax"]
     pattern = ctx.parent.params["pattern"]
+    reorg = ctx.parent.params["reorg"]
+
     base_path = ctx.parent.params["directory"].rstrip(os.sep)
     base_path_index = len(base_path.split(os.sep))
     if pattern:
@@ -282,8 +285,7 @@ def get_vasp_dirs():
                     gzipped = True
 
             # NOTE skip symlink'ing on MP calculations from the early days
-            vasp_dir = get_symlinked_path(root, base_path_index)
-            # vasp_dir = root
+            vasp_dir = get_symlinked_path(root, base_path_index) if reorg else root
             create_orig_inputs(vasp_dir)
             dirs[:] = []  # don't descend further (i.e. ignore relax1/2)
             logger.log(logging.INFO if gzipped else logging.DEBUG, vasp_dir)
@@ -325,7 +327,7 @@ def reconstruct_command(sbatch=False):
     return " ".join(command).strip().strip("\\")
 
 
-def parse_vasp_dirs(vaspdirs, tag, task_ids):
+def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
     process = multiprocessing.current_process()
     name = process.name
     chunk_idx = int(name.rsplit("-")[1]) - 1
@@ -334,21 +336,27 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
     ctx = click.get_current_context()
     spec_or_dbfile = ctx.parent.parent.params["spec_or_dbfile"]
     target = calcdb_from_mgrant(spec_or_dbfile)
+    snl_collection = target.db.snls_user
     sbxn = list(filter(None, target.collection.distinct("sbxn")))
     logger.info(f"Using sandboxes {sbxn}.")
     no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
     run = ctx.parent.parent.params["run"]
     projection = {"tags": 1, "task_id": 1}
+    # projection = {"tags": 1, "task_id": 1, "calcs_reversed": 1}
     count = 0
     drone = VaspDrone(
         additional_fields={"tags": tags},
-        store_volumetric_data=ctx.params['store_volumetric_data']
+        store_volumetric_data=ctx.params["store_volumetric_data"],
     )
+    # fs_keys = ["bandstructure", "dos", "chgcar", "locpot", "elfcar"]
+    # for i in range(3):
+    #    fs_keys.append(f"aeccar{i}")
 
     for vaspdir in vaspdirs:
         logger.info(f"{name} VaspDir: {vaspdir}")
         launcher = get_subdir(vaspdir)
         query = {"dir_name": {"$regex": launcher}}
+        manual_taskid = isinstance(task_ids, dict)
         docs = list(
             target.collection.find(query, projection).sort([("_id", -1)]).limit(1)
         )
@@ -356,6 +364,8 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
         if docs:
             if no_dupe_check:
                 logger.warning(f"FORCING re-parse of {launcher}!")
+                if not manual_taskid:
+                    raise ValueError("need --task-ids when re-parsing!")
             else:
                 if run:
                     shutil.rmtree(vaspdir)
@@ -369,29 +379,77 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
         except Exception as ex:
             logger.error(f"Failed to assimilate {vaspdir}: {ex}")
             continue
+
         task_doc["sbxn"] = sbxn
-        manual_taskid = isinstance(task_ids, dict)
+        snl_metas_avail = isinstance(snl_metas, dict)
         task_id = task_ids[launcher] if manual_taskid else task_ids[chunk_idx][count]
         task_doc["task_id"] = task_id
         logger.info(f"Using {task_id} for {launcher}.")
 
         if docs:
             # make sure that task gets the same tags as the previously parsed task
+            # (run through set to implicitly remove duplicate tags)
             if docs[0]["tags"]:
-                task_doc["tags"] += docs[0]["tags"]
-                logger.info(f"Adding existing tags {docs[0]['tags']} to {tags}.")
+                existing_tags = list(set(docs[0]["tags"]))
+                task_doc["tags"] += existing_tags
+                logger.info(f"Adding existing tags {existing_tags} to {tags}.")
+
+        snl_dct = None
+        if snl_metas_avail:
+            snl_meta = snl_metas.get(launcher)
+            if snl_meta:
+                references = snl_meta.get("references")
+                authors = snl_meta.get(
+                    "authors", ["Materials Project <feedback@materialsproject.org>"]
+                )
+                kwargs = {"projects": [tag]}
+                if references:
+                    kwargs["references"] = references
+
+                struct = Structure.from_dict(task_doc["input"]["structure"])
+                snl = StructureNL(struct, authors, **kwargs)
+                snl_dct = snl.as_dict()
+                snl_dct.update(get_meta_from_structure(struct))
+                snl_id = snl_meta["snl_id"]
+                snl_dct["snl_id"] = snl_id
+                logger.info(f"Created SNL object for {snl_id}.")
 
         if run:
             if task_doc["state"] == "successful":
                 if docs and no_dupe_check:
+                    # new_calc = task_doc["calcs_reversed"][0]
+                    # existing_calc = docs[0]["calcs_reversed"][0]
+                    # print(existing_calc.keys())
+
+                    # for fs_key in fs_keys:
+                    #    print(fs_key)
+                    #    fs_id_key = f"{fs_key}_fs_id"
+                    #    if fs_id_key in existing_calc:
+                    #        if fs_id_key in new_calc:
+                    #            # NOTE the duplicate fs_id / s3 object has already been
+                    #            # created in the drone though
+                    #            raise NotImplementedError(
+                    #                f"Missing duplicate check to decide on overwriting {key}_fs_id"
+                    #            )
+
+                    #        for k in [fs_id_key, f"{key}_compression"]:
+                    #            new_calc[k] = existing_calc[k]
+
+                    #        print(fs_id_key, task_doc["calcs_reversed"][0][fs_id_key])  # TODO CHECK
                     target.collection.remove({"task_id": task_id})
                     logger.warning(f"Removed previously parsed task {task_id}!")
+
+                # return count  # TODO remove
 
                 try:
                     target.insert_task(task_doc, use_gridfs=True)
                 except DocumentTooLarge:
                     output = dotty(task_doc["calcs_reversed"][0]["output"])
-                    pop_keys = ["normalmode_eigenvecs", "force_constants", "outcar.onsite_density_matrices"]
+                    pop_keys = [
+                        "normalmode_eigenvecs",
+                        "force_constants",
+                        "outcar.onsite_density_matrices",
+                    ]
 
                     for k in pop_keys:
                         if k not in output:
@@ -409,6 +467,12 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids):
                         continue
 
                 if target.collection.count(query):
+                    if snl_dct:
+                        result = snl_collection.insert_one(snl_dct)
+                        logger.info(
+                            f"SNL {result.inserted_id} inserted into {snl_collection.full_name}."
+                        )
+
                     shutil.rmtree(vaspdir)
                     logger.info(f"{name} Successfully parsed and removed {launcher}.")
                     count += 1

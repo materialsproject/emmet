@@ -1,17 +1,18 @@
 import datetime
 from enum import Enum
-from itertools import groupby, product
-from pathlib import Path
-from typing import Dict, Iterator, List
+from itertools import groupby
+from typing import Any, Iterator, List
 
 import bson
 import numpy as np
 from monty.json import MSONable
-from monty.serialization import loadfn
 from pydantic import BaseModel
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
+from pymatgen.analysis.structure_matcher import (
+    AbstractComparator,
+    ElementComparator,
+    StructureMatcher,
+)
 from pymatgen.core.structure import Structure
-from typing_extensions import Literal
 
 from emmet.core import SETTINGS
 
@@ -30,6 +31,7 @@ def group_structures(
     stol: float = SETTINGS.STOL,
     angle_tol: float = SETTINGS.ANGLE_TOL,
     symprec: float = SETTINGS.SYMPREC,
+    comparator: AbstractComparator = ElementComparator(),
 ) -> Iterator[List[Structure]]:
     """
     Groups structures according to space group and structure matching
@@ -50,7 +52,7 @@ def group_structures(
         scale=True,
         attempt_supercell=False,
         allow_subset=False,
-        comparator=ElementComparator(),
+        comparator=comparator,
     )
 
     def _get_sg(struc):
@@ -88,7 +90,7 @@ def jsanitize(obj, strict=False, allow_bson=False):
         or (bson is not None and isinstance(obj, bson.objectid.ObjectId))
     ):
         return obj
-    if isinstance(obj, (list, tuple)):
+    if isinstance(obj, (list, tuple, set)):
         return [jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj]
     if np is not None and isinstance(obj, np.ndarray):
         return [
@@ -113,6 +115,8 @@ def jsanitize(obj, strict=False, allow_bson=False):
             for k, v in obj.dict().items()
         }
     if isinstance(obj, (int, float)):
+        if np.isnan(obj):
+            return 0
         return obj
 
     if obj is None:
@@ -134,6 +138,17 @@ class ValueEnum(Enum):
 
     def __str__(self):
         return str(self.value)
+
+    def __eq__(self, o: object) -> bool:
+        """Special Equals to enable converting strings back to the enum"""
+        if isinstance(o, str):
+            return super().__eq__(self.__class__(o))
+        elif isinstance(o, self.__class__):
+            return super().__eq__(o)
+        return False
+
+    def __hash__(self) -> Any:
+        return super().__hash__()
 
 
 class DocEnum(ValueEnum):

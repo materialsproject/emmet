@@ -1,15 +1,15 @@
-import os
-import io
-import click
-import logging
 import contextlib
-
+import io
+import logging
+import os
 from datetime import datetime
 from functools import update_wrapper
+
+import click
 from slurmpy import Slurm
 
 from emmet.cli import SETTINGS
-from emmet.cli.utils import reconstruct_command, EmmetCliError, ReturnCodes
+from emmet.cli.utils import EmmetCliError, ReturnCodes, reconstruct_command
 
 logger = logging.getLogger("emmet")
 COMMENT_TEMPLATE = """
@@ -104,8 +104,12 @@ def sbatch(func):
             return ctx.invoke(func, *args, **kwargs)
 
         run = ctx.grand_parent.params["run"]
+        ntries = ctx.grand_parent.params["ntries"]
         if run:
-            click.secho("SBATCH MODE! Submitting to SLURM queue.", fg="green")
+            click.secho(
+                f"SBATCH MODE! Submitting to SLURM queue with {ntries} tries.",
+                fg="green",
+            )
 
         directory = ctx.parent.params.get("directory")
         if not directory:
@@ -162,7 +166,7 @@ def sbatch(func):
         command += reconstruct_command(sbatch=True)
         slurmpy_stderr = io.StringIO()
         with contextlib.redirect_stderr(slurmpy_stderr):
-            s.run(command, _cmd="sbatch" if run else "cat", tries=1)  # 6 days
+            s.run(command, _cmd="sbatch" if run else "cat", tries=ntries)
         ret = slurmpy_stderr.getvalue()[2:-1]
         logger.info("\n" + ret.encode("utf-8").decode("unicode_escape"))
         # TODO add jobid to SUBMITTED.value

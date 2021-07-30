@@ -1,23 +1,28 @@
 """ Core definition of Structure metadata """
 from __future__ import annotations
 
-from typing import List, Optional, Type, TypeVar, overload
+from typing import List, Optional, Type, TypeVar
 
 from pydantic import BaseModel, Field
+from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
+from pymatgen.core.structure import Structure
 
+from emmet.core.base import EmmetBaseModel
 from emmet.core.symmetry import SymmetryData
-from emmet.stubs import Composition, Structure
 
 T = TypeVar("T", bound="StructureMetadata")
 
 
-class StructureMetadata(BaseModel):
+class StructureMetadata(EmmetBaseModel):
     """
     Mix-in class for structure metadata
     """
 
     # Structure metadata
+    structure: Optional[Structure] = Field(
+        None, description="The structure for this metadata"
+    )
     nsites: int = Field(None, description="Total number of sites in the structure")
     elements: List[Element] = Field(
         None, description="List of elements in the material"
@@ -85,13 +90,15 @@ class StructureMetadata(BaseModel):
             if fields is None
             else fields
         )
+        composition = composition.remove_charges()
+
         elsyms = sorted(set([e.symbol for e in composition.elements]))
 
         data = {
             "elements": elsyms,
             "nelements": len(elsyms),
             "composition": composition,
-            "composition_reduced": composition.reduced_composition,
+            "composition_reduced": composition.reduced_composition.remove_charges(),
             "formula_pretty": composition.reduced_formula,
             "formula_anonymous": composition.anonymized_formula,
             "chemsys": "-".join(elsyms),
@@ -126,7 +133,7 @@ class StructureMetadata(BaseModel):
             if fields is None
             else fields
         )
-        comp = structure.composition
+        comp = structure.composition.remove_charges()
         elsyms = sorted(set([e.symbol for e in comp.elements]))
         symmetry = SymmetryData.from_structure(structure)
 

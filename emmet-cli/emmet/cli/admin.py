@@ -1,12 +1,10 @@
 import logging
-import click
 
-from pymatgen import Structure
+import click
+from pymatgen.core import Structure
 
 from emmet.cli import SETTINGS
-from emmet.cli.utils import ensure_indexes, get_meta_from_structure
-from emmet.cli.utils import EmmetCliError
-
+from emmet.cli.utils import EmmetCliError, ensure_indexes, get_meta_from_structure
 
 logger = logging.getLogger("emmet")
 

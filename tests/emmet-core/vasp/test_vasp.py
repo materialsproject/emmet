@@ -1,16 +1,14 @@
 import json
 
 import pytest
-from maggma.stores import JSONStore, MemoryStore
 from monty.io import zopen
 
-from emmet.core import SETTINGS
 from emmet.core.vasp.calc_types import RunType, TaskType, run_type, task_type
 from emmet.core.vasp.task import TaskDocument
 from emmet.core.vasp.validation import ValidationDoc
 
 
-def test_task_tye():
+def test_task_type():
 
     # TODO: Switch this to actual inputs?
     input_types = [
@@ -35,6 +33,8 @@ def test_run_type():
         ("GGA+U", {"GGA": "--", "LDAU": True}),
         ("SCAN", {"METAGGA": "Scan"}),
         ("SCAN+U", {"METAGGA": "Scan", "LDAU": True}),
+        ("R2SCAN", {"METAGGA": "R2SCAN"}),
+        ("R2SCAN+U", {"METAGGA": "R2SCAN", "LDAU": True}),
     ]
 
     for _type, params in params_sets:
@@ -56,20 +56,32 @@ def test_validator(tasks):
     assert all(doc.valid for doc in validation_docs)
 
 
-def test_sandboxing():
-
-    test_doc = TaskDocument(task_id="test")
-    assert test_doc.sandboxes == ["core"]
-
-    SETTINGS.TAGS_TO_SANDBOXES = {"test_sbxn": ["test"]}
-    test_doc = TaskDocument(task_id="test", tags=["test"])
-    assert test_doc.sandboxes == ["test_sbxn"]
-
-    test_doc = TaskDocument(task_id="test", tags=["test"], sandboxes=["test_selected"])
-    assert test_doc.sandboxes == ["test_selected"]
-
-
 def test_computed_entry(tasks):
     entries = [task.entry for task in tasks]
     ids = {e.entry_id for e in entries}
     assert ids == {"mp-1141021", "mp-149", "mp-1686587", "mp-1440634"}
+
+
+@pytest.fixture(scope="session")
+def task_ldau(test_dir):
+    with zopen(test_dir / "test_task.json") as f:
+        data = json.load(f)
+
+    return TaskDocument(**data)
+
+
+def test_ldau(task_ldau):
+    assert task_ldau.run_type == RunType.GGA_U
+    assert ValidationDoc.from_task_doc(task_ldau).valid is False
+
+
+def test_ldau_validation(test_dir):
+    with open(test_dir / "old_aflow_ggau_task.json") as f:
+        data = json.load(f)
+
+    task = TaskDocument(**data)
+    assert task.run_type == "GGA+U"
+
+    valid = ValidationDoc.from_task_doc(task)
+
+    assert valid.valid
