@@ -1,13 +1,9 @@
 from datetime import datetime
 from itertools import chain
-from operator import itemgetter
 from typing import Dict, Iterator, List, Optional
 
 from maggma.builders import Builder
 from maggma.stores import Store
-from pymatgen.core import Structure
-from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 
 from emmet.builders.utils import maximal_spanning_non_intersecting_subsets
 from emmet.core import SETTINGS
@@ -15,7 +11,6 @@ from emmet.core.utils import group_structures, jsanitize
 from emmet.core.cp2k.calc_types import TaskType
 from emmet.core.cp2k.material import MaterialsDoc
 from emmet.core.cp2k.task import TaskDocument
-from emmet.stubs import ComputedEntry
 
 __author__ = "Nicholas Winner <nwinner@berkeley.edu>"
 __maintainer__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
