@@ -204,8 +204,6 @@ class DefectDoc(BaseModel):
 
         mpid = get_mpid(init_bulk_structure)
 
-        dielectric = get_dielectric(mpid)
-
         parameters = {
             'defect_energy': defect_task['output']['energy'],
             'bulk_energy': bulk_task['output']['energy'],
@@ -218,13 +216,16 @@ class DefectDoc(BaseModel):
             'final_defect_structure': final_defect_structure,
             'vbm': bulk_task['output']['vbm'],
             'cbm': bulk_task['output']['cbm'],
-            'dielectric': dielectric,
             'material_id': mpid,
             'entry_id': defect_task.get('task_id')
         }
 
+        dielectric = get_dielectric(mpid)
+        if dielectric is not np.inf or None:
+            parameters['dielectric'] = dielectric
+
         # cannot be easily queried for, so check here.
-        if 'v_hartree' in final_defect_structure.site_properties:
+        if 'v_hartree' in final_bulk_structure.site_properties:
             parameters['bulk_atomic_site_averages'] = final_bulk_structure.site_properties['v_hartree']
         if 'v_hartree' in final_defect_structure.site_properties:
             parameters['defect_atomic_site_averages'] = final_defect_structure.site_properties['v_hartree']
@@ -263,7 +264,9 @@ class DefectThermoDoc(BaseModel):
     def decode(cls, defect_predominance_diagrams):
         for e in defect_predominance_diagrams:
             if isinstance(defect_predominance_diagrams[e], dict):
-                defect_predominance_diagrams[e] = MontyDecoder().process_decoded({k: v for k, v in defect_predominance_diagrams[e].items()})
+                defect_predominance_diagrams[e] = MontyDecoder().process_decoded(
+                    {k: v for k, v in defect_predominance_diagrams[e].items()}
+                )
         return defect_predominance_diagrams
 
     @classmethod
@@ -282,6 +285,13 @@ class DefectThermoDoc(BaseModel):
         defect_predominance_diagrams = {}
         task_ids = {}
 
+        dos = get_dos(mpid)
+
+        for m in materials:
+            for run_type in m.entries:
+                bg = dos.get_gap()
+                band_gaps[run_type] = bg
+
         for d in docs:
             for run_type in d.entries:
                 if run_type not in defect_entries:
@@ -290,7 +300,6 @@ class DefectThermoDoc(BaseModel):
                     task_ids[run_type] = set()
                 defect_entries[run_type].append(d.entries[run_type])
                 vbms[run_type] = d.entries[run_type].parameters['vbm']  # TODO Need to find best vbm
-                band_gaps[run_type] = d.entries[run_type].parameters['cbm'] - vbms[run_type]  # TODO Need to find best bg
                 task_ids[run_type].update(d.task_ids)
 
         for run_type in defect_entries:
@@ -303,7 +312,7 @@ class DefectThermoDoc(BaseModel):
             )
             defect_predominance_diagrams[run_type] = DefectPredominanceDiagram(
                 defect_phase_diagram=defect_phase_diagram[run_type],
-                bulk_dos=get_dos(mpid),
+                bulk_dos=dos,
                 entries=[
                     m.entries[run_type]
                     if run_type in m.entries else m.entries[DEFAULT_RT_U]
