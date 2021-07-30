@@ -94,7 +94,6 @@ class DefectDoc(BaseModel):
         last_updated = datetime.now() or max(task.last_updated for task in task_group)
         created_at = datetime.now() or min(task.completed_at for task in task_group)
         task_ids = list({task.task_id for task in task_group})
-        sandboxes = list({sbxn for task in task_group for sbxn in task.sandboxes})
 
         deprecated_tasks = list(
             {task.task_id for task in task_group if not task.is_valid}
@@ -130,7 +129,6 @@ class DefectDoc(BaseModel):
                 'last_updated': last_updated,
                 'created_at': created_at,
                 'task_ids': set(task_ids),
-                'sandboxes': sandboxes,
                 'deprecated_tasks': deprecated_tasks,
                 'tasks': final_tasks,
                 'material_id': list({v.parameters['material_id'] for v in entries.values()})[0],
