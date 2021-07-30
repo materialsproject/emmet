@@ -1,12 +1,11 @@
 """ Core definition of a CP2K Task Document """
 from datetime import datetime
-from functools import lru_cache, partial
-from typing import ClassVar, Dict, List, Optional, Union
+from typing import Dict, List
 
 from pydantic import BaseModel, Field, validator
-from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer, Ordering
 from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.io.cp2k.inputs import Cp2kInput
+from pymatgen.core import Structure
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core import SETTINGS
 from emmet.core.structure import StructureMetadata
@@ -19,7 +18,7 @@ from emmet.core.cp2k.calc_types import (
     run_type,
     task_type,
 )
-from emmet.stubs import ComputedEntry, Matrix3D, Structure, Vector3D
+from emmet.core.math import Matrix3D, Vector3D
 
 
 class Status(ValueEnum):
@@ -180,6 +179,28 @@ class TaskDocument(StructureMetadata):
         }
 
         return ComputedEntry.from_dict(entry_dict)
+
+    @property
+    def structure_entry(self) -> ComputedStructureEntry:
+        """Turns a Task Doc into a ComputedStructureEntry"""
+        entry_dict = {
+            "correction": 0.0,
+            "entry_id": self.task_id,
+            "composition": self.output.structure.composition,
+            "energy": self.output.energy,
+            "parameters": {
+                "atomic_kind_info": self.input.atomic_kind_info,
+                # This is done to be compatible with MontyEncoder for the ComputedEntry
+                "run_type": str(self.run_type),
+            },
+            "data": {
+                "oxide_type": oxide_type(self.output.structure),
+                "last_updated": self.last_updated,
+            },
+            "structure": self.output.structure,
+        }
+
+        return ComputedStructureEntry.from_dict(entry_dict)
 
     @validator("sandboxes", always=True)
     def tags_to_sandboxes(cls, v, values):
