@@ -1,35 +1,24 @@
 from datetime import datetime
 from itertools import chain, groupby, combinations
-from operator import itemgetter
 from typing import Dict, Iterator, List, Optional
-import numpy as np
 
 from maggma.builders import Builder
 from maggma.stores import Store
 from pymatgen.core import Structure
-from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher, PointDefectComparator
 from atomate.utils.utils import load_class
 
-from pymatgen.analysis.defects.core import (
-    Defect, Vacancy, Substitution, Polaron, Interstitial, GhostVacancy, DefectEntry
-)
-from pymatgen.analysis.defects.defect_compatibility import DefectCompatibility
+
 from monty.json import MontyDecoder
 
-from emmet.builders.utils import maximal_spanning_non_intersecting_subsets
-from emmet.builders.cp2k.utils import matcher, get_dielectric, get_mpid
+from emmet.builders.cp2k.utils import get_dielectric, get_mpid
 from emmet.core import SETTINGS
 from emmet.core.utils import jsanitize, get_sg
 from emmet.core.cp2k.calc_types import TaskType
 from emmet.core.cp2k.material import MaterialsDoc
-from emmet.core.cp2k.task import TaskDocument
-from emmet.stubs import ComputedEntry
+
 from emmet.core.cp2k.calc_types.utils import run_type
 from emmet.core.defect import DefectDoc, DefectThermoDoc
-
-from pymatgen.ext.matproj import MPRester
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 __author__ = "Nicholas Winner <nwinner@berkeley.edu>"
 __maintainer__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
@@ -37,21 +26,26 @@ __maintainer__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
 class DefectBuilder(Builder):
     """
-    The Materials Builder matches VASP task documents by structure similarity into materials
-    document. The purpose of this builder is group calculations and determine the best structure.
-    All other properties are derived from other builders.
+    The DefectBuilder collects task documents performed on structures containing a single point defect.
+    The builder is intended to group tasks corresponding to the same defect (species including charge state),
+    find the best ones, and perform finite-size defect corrections to create a defect document. These
+    defect documents can then be assembled into defect phase diagrams using the DefectThermoBuilder.
+
+    In order to make the build process easier, an entry must exist inside of the task doc that identifies it
+    as a point defect calculation. Currently this is the Pymatgen defect object keyed by "defect". In the future,
+    this may be changed to having a defect transformation in the transformation history.
 
     The process is as follows:
 
-        1.) Find all documents with the same formula
-        2.) Select only task documents for the task_types we can select properties from
-        3.) Aggregate task documents based on structure similarity
-        4.) Convert task docs to property docs with metadata for selection and aggregation
-        5.) Select the best property doc for each property
-        6.) Build material document from best property docs
-        7.) Post-process material document
-        8.) Validate material document
-
+        1.) Find all documents containing the defect query.
+        2.) Find all documents that do not contain the defect query, and which have DOS and dielectric data already
+            calculated. These are the candidate bulk tasks.
+        3.) For each candidate defect task, attempt to match to a candidate bulk task of the same number of sites
+            (+/- 1) with the required properties for analysis. Reject defects that do not have a corresponding
+            bulk calculation.
+        4.) Convert (defect, bulk task) doc pairs to DefectDocs
+        5.) Post-process and validate defect document
+        6.) Update the defect store
     """
 
     def __init__(
@@ -71,7 +65,7 @@ class DefectBuilder(Builder):
         Args:
             tasks: Store of task documents
             defects: Store of defect documents to generate
-            query: dictionary to limit tasks to be analyzed
+            query: dictionary to limit tasks to be analyzed. NOT the same as the defect_query property
             allowed_task_types: list of task_types that can be processed
             symprec: tolerance for SPGLib spacegroup finding
             ltol: StructureMatcher tuning parameter for matching tasks to materials
@@ -264,7 +258,11 @@ class DefectBuilder(Builder):
 
         yield grouped_pairs
 
+    # TODO: This must be changed once access to internal MP database is avaiable. RN it uses the MAPI
     def preprocess_bulk(self, task):
+        """
+        Given a TaskDoc that could be a bulk for defect analysis, check to see if it can be used.
+        """
         t = next(self.tasks.query(criteria={'task_id': task}, properties=['output.structure']))
         struc = Structure.from_dict(t.get('output').get('structure'))
         mpid = get_mpid(struc)
