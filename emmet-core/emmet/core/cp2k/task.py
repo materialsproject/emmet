@@ -128,7 +128,7 @@ class TaskDocument(StructureMetadata):
     orig_inputs: Dict = Field(
         None, description="Summary of the original CP2K inputs"
     )
-    task_id: str = Field(None, description="the Task ID For this document")
+    task_id: int = Field(None, description="the Task ID For this document")
     tags: List[str] = Field([], description="Metadata tags for this task document")
 
     sandboxes: List[str] = Field(
