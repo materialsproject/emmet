@@ -8,6 +8,7 @@ from pydantic.fields import Field
 from emmet.core.provenance import Author, History
 from emmet.core.settings import EmmetSettings
 from emmet.core.vasp.calc_types import TaskType
+from emmet.core.cp2k.calc_types import TaskType as Cp2kTaskType
 
 
 class EmmetBuildSettings(EmmetSettings):
@@ -31,6 +32,11 @@ class EmmetBuildSettings(EmmetSettings):
 
     VASP_ALLOWED_VASP_TYPES: List[TaskType] = Field(
         [t.value for t in TaskType],
+        description="Allowed task_types to build materials from",
+    )
+
+    CP2K_ALLOWED_CP2K_TYPES: List[Cp2kTaskType] = Field(
+        [t.value for t in Cp2kTaskType],
         description="Allowed task_types to build materials from",
     )
 
