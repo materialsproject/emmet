@@ -6,6 +6,7 @@ from maggma.builders import Builder
 from maggma.stores import Store
 
 from emmet.builders.utils import maximal_spanning_non_intersecting_subsets
+from emmet.builders.settings import EmmetBuildSettings
 from emmet.core import SETTINGS
 from emmet.core.utils import group_structures, jsanitize
 from emmet.core.cp2k.calc_types import TaskType
@@ -41,11 +42,7 @@ class MaterialsBuilder(Builder):
         materials: Store,
         task_validation: Optional[Store] = None,
         query: Optional[Dict] = None,
-        allowed_task_types: Optional[List[str]] = None,
-        symprec: float = SETTINGS.SYMPREC,
-        ltol: float = SETTINGS.LTOL,
-        stol: float = SETTINGS.STOL,
-        angle_tol: float = SETTINGS.ANGLE_TOL,
+        settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
         """
@@ -63,19 +60,8 @@ class MaterialsBuilder(Builder):
         self.tasks = tasks
         self.materials = materials
         self.task_validation = task_validation
-        self.allowed_task_types = (
-            [t.value for t in TaskType]
-            if allowed_task_types is None
-            else allowed_task_types
-        )
-
-        self._allowed_task_types = {TaskType(t) for t in self.allowed_task_types}
-
         self.query = query if query else {}
-        self.symprec = symprec
-        self.ltol = ltol
-        self.stol = stol
-        self.angle_tol = angle_tol
+        self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
         sources = [tasks]
@@ -115,8 +101,9 @@ class MaterialsBuilder(Builder):
         """
 
         self.logger.info("Materials builder started")
+        # TODO make a cp2k allowed type setting
         self.logger.info(
-            f"Allowed task types: {[task_type.value for task_type in self._allowed_task_types]}"
+            f"Allowed task types: {[task_type.value for task_type in self.settings.VASP_ALLOWED_VASP_TYPES]}"
         )
 
         self.logger.info("Setting indexes")
@@ -203,11 +190,31 @@ class MaterialsBuilder(Builder):
         self.logger.debug(f"Processing {formula} : {task_ids}")
 
         grouped_tasks = self.filter_and_group_tasks(tasks)
+        materials = []
+        for group in grouped_tasks:
+            try:
+                materials.append(
+                    MaterialsDoc.from_tasks(
+                        group,
+                        quality_scores=self.settings.CP2K_QUALITY_SCORES,
+                    )
+                )
+            except Exception as e:
 
-        materials = [MaterialsDoc.from_tasks(group) for group in grouped_tasks]
+                # TODO construct deprecated
+
+                failed_ids = list({t_.task_id for t_ in group})
+                doc = MaterialsDoc.construct_deprecated_material(tasks)
+                doc.warnings.append(str(e))
+                materials.append(doc)
+                self.logger.warn(
+                    f"Failed making material for {failed_ids}."
+                    f" Inserted as deprecated Material: {doc.material_id}"
+                )
+
         self.logger.debug(f"Produced {len(materials)} materials for {formula}")
 
-        return [mat.dict() for mat in materials]
+        return jsanitize([mat.dict() for mat in materials], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """
@@ -230,7 +237,7 @@ class MaterialsBuilder(Builder):
             self.materials.remove_docs({self.materials.key: {"$in": material_ids}})
             self.materials.update(
                 docs=jsanitize(items, allow_bson=True),
-                key=["material_id", "sandboxes"],
+                key=["material_id"],
             )
         else:
             self.logger.info("No items to update")
@@ -240,50 +247,33 @@ class MaterialsBuilder(Builder):
         Groups tasks by structure matching
         """
 
-        filtered_tasks = [
-            task
-            for task in tasks
-            if any(
-                allowed_type is task.task_type
-                for allowed_type in self._allowed_task_types
-            )
-        ]
+        """
+        Groups tasks by structure matching
+        """
+
+        # TODO why did the way vasp builder did it not work here?
+        filtered_tasks = []
+        for task in tasks:
+            for allowed_type in self.settings.CP2K_ALLOWED_CP2K_TYPES:
+                if task.task_type is allowed_type:
+                    filtered_tasks.append(task)
+                    continue
 
         structures = []
 
         for idx, task in enumerate(filtered_tasks):
             s = task.output.structure
-            s.index = idx
+            s.index: int = idx  # type: ignore
             structures.append(s)
 
         grouped_structures = group_structures(
             structures,
-            ltol=self.ltol,
-            stol=self.stol,
-            angle_tol=self.angle_tol,
-            symprec=self.symprec,
+            ltol=self.settings.LTOL,
+            stol=self.settings.STOL,
+            angle_tol=self.settings.ANGLE_TOL,
+            symprec=self.settings.SYMPREC,
         )
-        from itertools import groupby
 
-        def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:
-            struc.remove_oxidation_states()
-            struc.remove_spin()
-            for p in struc.site_properties:
-                struc.remove_site_property(p)
-            """helper function to get spacegroup with a loose tolerance"""
-            try:
-                return struc.get_space_group_info(symprec=symprec)[0]
-            except Exception:
-                return -1
-
-        for key, group in groupby(sorted(structures, key=get_sg), key=get_sg):
-#        for group in grouped_structures:
-            grouped_tasks = [filtered_tasks[struc.index] for struc in group]
-            sandboxes = {frozenset(task.sandboxes) for task in grouped_tasks}
-
-            for sbx_set in maximal_spanning_non_intersecting_subsets(sandboxes):
-                yield [
-                    task
-                    for task in grouped_tasks
-                    if len(set(task.sandboxes).intersection(sbx_set)) > 0
-                ]
+        for group in grouped_structures:
+            grouped_tasks = [filtered_tasks[struc.index] for struc in group]  # type: ignore
+            yield grouped_tasks
