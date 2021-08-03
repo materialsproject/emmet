@@ -4,14 +4,16 @@ from typing import ClassVar, Dict, Tuple, Mapping, List
 
 from pymatgen.analysis.defects.core import DefectEntry
 
+from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.cp2k.task import TaskDocument
 from emmet.core.cp2k.material import MaterialsDoc
 from emmet.core.cp2k.calc_types.utils import run_type
+from emmet.core.material import PropertyOrigin
 
 from pymatgen.core import Structure, Composition
 from pymatgen.analysis.defects.defect_compatibility import DefectCompatibility
-import numpy as np
+
 from pymatgen.ext.matproj import MPRester
 from monty.json import MontyDecoder
 from emmet.core.cp2k.calc_types.enums import CalcType, TaskType, RunType
@@ -29,7 +31,7 @@ from emmet.core.polar import Dielectric
 from emmet.core.electronic_structure import ElectronicStructureDoc
 
 
-class DefectDoc(BaseModel):
+class DefectDoc(EmmetBaseModel):
     """
     A document used to represent a single defect. e.g. a O vacancy with a -2 charge.
 
@@ -44,31 +46,30 @@ class DefectDoc(BaseModel):
 
     property_name: ClassVar[str] = "defect"
 
-    material_id: MPID = Field(None, description="Unique material ID for the host material")
-
-    defect_id: MPID = Field(None, description="Unique ID for this defect")
-
     chemsys: List = Field(None, description="Chemical system of the bulk")
 
-    calc_types: Mapping[str, CalcType] = Field(  # type: ignore
+
+    material_id: MPID = Field(None, description="Unique material ID for the host material")
+
+    task_ids: List[int] = Field(
+        None, description="All task ids used in creating this defect doc."
+    )
+
+    calc_types: Mapping[int, CalcType] = Field(  # type: ignore
         None,
         description="Calculation types for all the calculations that make up this material",
     )
-    task_types: Mapping[str, TaskType] = Field(
+    task_types: Mapping[int, TaskType] = Field(
         None,
         description="Task types for all the calculations that make up this material",
     )
-    run_types: Mapping[str, RunType] = Field(
+    run_types: Mapping[int, RunType] = Field(
         None,
         description="Run types for all the calculations that make up this material",
     )
 
     tasks: Mapping[RunType, Tuple[TaskDocument, TaskDocument]] = Field(
         None, description="Task documents (defect task, bulk task) for the defect entry of RunType"
-    )
-
-    task_ids: List[MPID] = Field(
-        None, description="All task ids used in creating this defect doc."
     )
 
     entries: Mapping[RunType, DefectEntry] = Field(
@@ -98,7 +99,7 @@ class DefectDoc(BaseModel):
         # Metadata
         last_updated = datetime.now() or max(task.last_updated for task in task_group)
         created_at = datetime.now() or min(task.completed_at for task in task_group)
-        task_ids = list({task.task_id for task in task_group})
+        task_ids = {task.task_id for task in task_group}
 
         deprecated_tasks = list(
             {task.task_id for task in task_group if not task.is_valid}
@@ -138,14 +139,13 @@ class DefectDoc(BaseModel):
                 'calc_types': calc_types,
                 'last_updated': last_updated,
                 'created_at': created_at,
-                'task_ids': set(task_ids),
+                'task_ids': task_ids,
                 'deprecated_tasks': deprecated_tasks,
                 'tasks': final_tasks,
                 'material_id': list({v.parameters['material_id'] for v in entries.values()})[0],
                 'entry_ids': {rt: entries[rt].entry_id for rt in entries},
                 'chemsys': list([v.defect.bulk_structure.composition.elements for v in entries.values()])[0],
         }
-
         return cls(**{k: v for k, v in data.items()})
 
     @classmethod
