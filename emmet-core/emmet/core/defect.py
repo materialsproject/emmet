@@ -4,6 +4,7 @@ from typing import ClassVar, Dict, Tuple, Mapping, List
 
 from pymatgen.analysis.defects.core import DefectEntry
 
+from emmet.core.mpid import MPID
 from emmet.core.cp2k.task import TaskDocument
 from emmet.core.cp2k.material import MaterialsDoc
 from emmet.core.cp2k.calc_types.utils import run_type
@@ -24,6 +25,9 @@ from pydantic import BaseModel
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.core import Element
 
+from emmet.core.polar import Dielectric
+from emmet.core.electronic_structure import ElectronicStructureDoc
+
 
 class DefectDoc(BaseModel):
     """
@@ -40,7 +44,9 @@ class DefectDoc(BaseModel):
 
     property_name: ClassVar[str] = "defect"
 
-    material_id: str = Field(None, description="Unique material ID for the host material")
+    material_id: MPID = Field(None, description="Unique material ID for the host material")
+
+    defect_id: MPID = Field(None, description="Unique ID for this defect")
 
     chemsys: List = Field(None, description="Chemical system of the bulk")
 
@@ -61,7 +67,7 @@ class DefectDoc(BaseModel):
         None, description="Task documents (defect task, bulk task) for the defect entry of RunType"
     )
 
-    task_ids: List = Field(
+    task_ids: List[MPID] = Field(
         None, description="All task ids used in creating this defect doc."
     )
 
@@ -87,8 +93,7 @@ class DefectDoc(BaseModel):
                 series of DefectEntry objects.
             query: How to retrieve the defect object stored in the task.
         """
-
-        task_group = [TaskDocument(**defect_task) for defect_task, bulk_task in tasks]
+        task_group = [TaskDocument(**defect_task) for defect_task, bulk_task, dielectric in tasks]
 
         # Metadata
         last_updated = datetime.now() or max(task.last_updated for task in task_group)
@@ -111,10 +116,15 @@ class DefectDoc(BaseModel):
         for key, tasks_for_runtype in groupby(sorted(tasks, key=_run_type), key=_run_type):
             entry_and_docs = [
                 (
-                    cls.get_defect_entry_from_tasks(defect_task=defect_task, bulk_task=bulk_task, query=query),
+                    cls.get_defect_entry_from_tasks(
+                        defect_task=defect_task,
+                        bulk_task=bulk_task,
+                        dielectric=dielectric,
+                        query=query
+                    ),
                     TaskDocument(**defect_task), TaskDocument(**bulk_task)
                 )
-                for defect_task, bulk_task in tasks_for_runtype
+                for defect_task, bulk_task, dielectric in tasks_for_runtype
             ]
             entry_and_docs.sort(key=lambda x: x[1].nsites, reverse=True)  # TODO Turn into kpoint density sorting
             best_entry, best_defect_task, best_bulk_task = entry_and_docs[0]
@@ -139,16 +149,20 @@ class DefectDoc(BaseModel):
         return cls(**{k: v for k, v in data.items()})
 
     @classmethod
-    def get_defect_entry_from_tasks(cls, defect_task, bulk_task, query='defect'):
+    def get_defect_entry_from_tasks(cls, defect_task, bulk_task, dielectric=None, query='defect'):
         """
         Extract a defect entry from a single pair (defect and bulk) of tasks.
 
         Args:
             defect_task: task dict for the defect calculation
             bulk_task: task dict for the bulk calculation
+            dielectric: Dielectric doc if the defect is charged. If not present, no dielectric
+                corrections will be performed, even if the defect is charged.
             query: Mongo-style query to retrieve the defect object from the defect task
         """
         parameters = cls.get_parameters_from_tasks(defect_task=defect_task, bulk_task=bulk_task)
+        if dielectric:
+            parameters['dielectric'] = dielectric
 
         defect_entry = DefectEntry(
             cls.get_defect_from_task(query=query, task=defect_task),
@@ -210,10 +224,6 @@ class DefectDoc(BaseModel):
             'entry_id': defect_task.get('task_id')
         }
 
-        dielectric = get_dielectric(mpid)
-        if dielectric is not np.inf or None:
-            parameters['dielectric'] = dielectric
-
         # cannot be easily queried for, so check here.
         if 'v_hartree' in final_bulk_structure.site_properties:
             parameters['bulk_atomic_site_averages'] = final_bulk_structure.site_properties['v_hartree']
@@ -260,7 +270,7 @@ class DefectThermoDoc(BaseModel):
         return defect_predominance_diagrams
 
     @classmethod
-    def from_docs(cls, docs: List[DefectDoc], materials: List[MaterialsDoc]) -> "DefectThermoDoc":
+    def from_docs(cls, docs: List[DefectDoc], materials: List[MaterialsDoc], electronic_structure: ElectronicStructureDoc) -> "DefectThermoDoc":
 
         DEFAULT_RT = RunType('GGA')  # TODO NEED A procedure for getting all GGA or GGA+U keys
         DEFAULT_RT_U = RunType('GGA+U')
@@ -275,7 +285,7 @@ class DefectThermoDoc(BaseModel):
         defect_predominance_diagrams = {}
         task_ids = {}
 
-        dos = get_dos(mpid)
+        dos = electronic_structure.dos.total
 
         for m in materials:
             for run_type in m.entries:

@@ -285,7 +285,7 @@ class DefectBuilder(Builder):
 
         elec = next(self.electronic_structure.query(properties=['band_gap'], criteria={"material_id": mpid}))
         if elec['band_gap'] > 0:
-            diel = next(self.dielectric.query(criteria={"material_id": mpid}))
+            diel = next(self.dielectric.query(criteria={self.dielectric.key: mpid}))
             if diel is None:
                 self.logger.info(f"Task {task} for composition {struc.composition} requires"
                                  f"dielectric properties, but none found in dielectric store")
@@ -402,8 +402,8 @@ class DefectBuilder(Builder):
     def get_dielectric(self, task_id):
         t = next(self.tasks.query(criteria={'task_id': task_id}, properties=['output.structure']))
         struc = Structure.from_dict(t.get('output').get('structure'))
-        for diel in self.dielectric.query(criteria={'task_id': get_mpid(struc)}, properties=['total']):
-            return diel
+        for diel in self.dielectric.query(criteria={'task_id': get_mpid(struc)}, properties=['dielectric.total']):
+            return diel['dielectric']['total']
         return None
 
     @staticmethod
@@ -432,8 +432,9 @@ class DefectBuilder(Builder):
         returns: the defect document as a dictionary
         """
         self.logger.info(f"Processing group of {len(items)} defects into DefectDoc")
-        defect_doc = DefectDoc.from_tasks(tasks=items, query=self.defect_query)
-        return defect_doc.dict()
+        if items:
+            defect_doc = DefectDoc.from_tasks(tasks=items, query=self.defect_query)
+            return defect_doc.dict()
 
     def get_defect_from_task(self, task):
         """
