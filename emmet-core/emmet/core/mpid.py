@@ -58,7 +58,7 @@ class MPID(str):
 
         other_parts = MPID(other).parts
 
-        if self.parts[0] != "" and other_parts[0] != "":
+        if (self.parts[0] != "" and other_parts[0] != ""):
             # both have prefixes; normal comparison
             return self.parts < other_parts
         elif self.parts[0] != "":
