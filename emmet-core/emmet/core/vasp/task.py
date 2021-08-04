@@ -92,7 +92,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     Definition of VASP Task Document
     """
 
-    calc_code: ClassVar[str] = "VASP"
+    calc_code = "VASP"
     run_stats: Dict[str, RunStatistics] = Field(
         {},
         description="Summary of runtime statisitics for each calcualtion in this task",

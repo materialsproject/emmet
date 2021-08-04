@@ -48,7 +48,7 @@ class XASDoc(SpectrumDoc):
     Document describing a XAS Spectrum.
     """
 
-    spectrum_name: ClassVar[str] = "XAS"
+    spectrum_name = "XAS"
 
     spectrum: XAS
 

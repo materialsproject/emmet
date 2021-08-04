@@ -29,7 +29,7 @@ class XRDDoc(SpectrumDoc):
     Document describing a XRD Diffraction Pattern
     """
 
-    spectrum_name: ClassVar[str] = "XRD"
+    spectrum_name = "XRD"
 
     spectrum: DiffractionPattern
     min_two_theta: float

@@ -13,9 +13,7 @@ class TaskDocument(EmmetBaseModel):
     Definition of Task Document
     """
 
-    calc_code: ClassVar[str] = Field(
-        ..., description="The calculation code used to compute this task"
-    )
+    calc_code: str = Field(description="The calculation code used to compute this task")
     version: str = Field(None, description="The version of the calculation code")
     dir_name: str = Field(None, description="The directory for this task")
     task_id: MPID = Field(None, description="the Task ID For this document")

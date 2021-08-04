@@ -33,9 +33,7 @@ class ThermoDoc(PropertyDoc):
     A thermo entry document
     """
 
-    property_name: ClassVar[str] = Field(
-        "thermo", description="The subfield name for this property"
-    )
+    property_name = "thermo"
 
     uncorrected_energy_per_atom: float = Field(
         ..., description="The total DFT energy of this material per atom in eV/atom"
