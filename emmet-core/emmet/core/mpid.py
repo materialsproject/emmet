@@ -26,7 +26,7 @@ class MPID(str):
             self.parts = val.parts  # type: ignore
             self.string = val.string  # type: ignore
 
-        elif isinstance(val, int) or isinstance(val, str) and val.isnumeric():
+        elif isinstance(val, int) or (isinstance(val, str) and val.isnumeric()):
             self.parts = ("", int(val))
             self.string = str(val)
 
@@ -58,7 +58,7 @@ class MPID(str):
 
         other_parts = MPID(other).parts
 
-        if self.parts[0] != "" and other_parts[0] != "":
+        if (self.parts[0] != "" and other_parts[0] != ""):
             # both have prefixes; normal comparison
             return self.parts < other_parts
         elif self.parts[0] != "":
