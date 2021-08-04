@@ -121,6 +121,8 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     Definition for a core Electronic Structure Document
     """
 
+    property_name = "electronc_structure"
+
     bandstructure: BandstructureData = Field(
         None, description="Band structure data for the material."
     )
