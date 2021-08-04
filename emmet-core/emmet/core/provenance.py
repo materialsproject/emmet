@@ -104,7 +104,7 @@ class ProvenanceDoc(PropertyDoc):
     A provenance property block
     """
 
-    property_name: ClassVar[str] = "provenance"
+    property_name = "provenance"
 
     created_at: datetime = Field(
         ...,
