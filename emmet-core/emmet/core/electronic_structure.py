@@ -5,8 +5,8 @@ from collections import defaultdict
 from datetime import datetime
 from math import isnan
 from typing import Dict, Type, TypeVar, Union
-import numpy as np
 
+import numpy as np
 from pydantic import BaseModel, Field
 from pymatgen.analysis.magnetism.analyzer import (
     CollinearMagneticStructureAnalyzer,
@@ -374,16 +374,12 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             summary_task = bs_entry.setyawan_curtarolo.task_id
             summary_band_gap = bs_gap
             summary_cbm = (
-                bs_entry.setyawan_curtarolo.cbm.get(  # type: ignore
-                    "energy", None
-                )
+                bs_entry.setyawan_curtarolo.cbm.get("energy", None)  # type: ignore
                 if bs_entry.setyawan_curtarolo.cbm is not None
                 else None
             )
             summary_vbm = (
-                bs_entry.setyawan_curtarolo.vbm.get(  # type: ignore
-                    "energy", None
-                )
+                bs_entry.setyawan_curtarolo.vbm.get("energy", None)  # type: ignore
                 if bs_entry.setyawan_curtarolo.cbm is not None
                 else None
             )  # type: ignore

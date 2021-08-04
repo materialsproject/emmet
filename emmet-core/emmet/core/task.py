@@ -1,6 +1,6 @@
 """ Core definition of a Task Document which represents a calculation from some program"""
 from datetime import datetime
-from typing import ClassVar, List
+from typing import List
 
 from pydantic import Field
 

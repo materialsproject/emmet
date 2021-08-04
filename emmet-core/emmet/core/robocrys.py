@@ -43,6 +43,7 @@ class RobocrystallogapherDoc(PropertyDoc):
         Structural features, mineral prototypes, dimensionality, ...
 
     """
+
     property_name = "robocrys"
 
     description: str = Field(

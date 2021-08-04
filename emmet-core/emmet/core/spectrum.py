@@ -1,6 +1,6 @@
 """ Core definition of Spectrum document """
 from datetime import datetime
-from typing import ClassVar, List
+from typing import List
 
 from pydantic import Field
 

@@ -1,13 +1,14 @@
 """ Core definition of a VASP Task Document """
-from typing import Any,  Dict, List
+from typing import Any, Dict, List
 
-from emmet.core.structure import StructureMetadata
-from emmet.core.task import TaskDocument as BaseTaskDocument
-from emmet.core.utils import ValueEnum
 from pydantic import Field
 from pymatgen.analysis.xas.spectrum import XAS
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
+
+from emmet.core.structure import StructureMetadata
+from emmet.core.task import TaskDocument as BaseTaskDocument
+from emmet.core.utils import ValueEnum
 
 
 class CalcType(ValueEnum):

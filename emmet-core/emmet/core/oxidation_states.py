@@ -17,7 +17,7 @@ class OxidationStateDoc(PropertyDoc):
     """Oxidation states computed from the structure"""
 
     property_name = "oxidation"
-    
+
     possible_species: List[str] = Field(
         description="Possible charged species in this material"
     )

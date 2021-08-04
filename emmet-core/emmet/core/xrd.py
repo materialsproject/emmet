@@ -1,4 +1,4 @@
-from typing import ClassVar, Dict
+from typing import Dict
 
 import numpy as np
 from pydantic import Field, root_validator

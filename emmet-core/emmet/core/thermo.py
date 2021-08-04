@@ -1,6 +1,6 @@
 """ Core definition of a Thermo Document """
 from collections import defaultdict
-from typing import ClassVar, Dict, List, Union
+from typing import Dict, List, Literal, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
