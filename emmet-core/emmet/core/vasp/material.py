@@ -7,6 +7,7 @@ from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.core import SETTINGS
+from emmet.core.mpid import MPID
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.structure import StructureMetadata
@@ -189,7 +190,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
         # Material ID
-        material_id = min([task.task_id for task in task_group])
+        material_id = min([MPID(task.task_id) for task in task_group])
 
         # Choose any random structure for metadata
         structure = SpacegroupAnalyzer(
