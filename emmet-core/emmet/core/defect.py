@@ -13,6 +13,7 @@ from emmet.core.material import PropertyOrigin
 
 from pymatgen.core import Structure, Composition
 from pymatgen.analysis.defects.defect_compatibility import DefectCompatibility
+from pymatgen.electronic_structure.dos import CompleteDos
 
 from pymatgen.ext.matproj import MPRester
 from monty.json import MontyDecoder
@@ -27,10 +28,8 @@ from pydantic import BaseModel
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.core import Element
 
-from emmet.core.polar import Dielectric
-from emmet.core.electronic_structure import ElectronicStructureDoc
 
-
+# TODO Update DefectDoc on defect entry level so you don't re-do uncessary corrections
 class DefectDoc(EmmetBaseModel):
     """
     A document used to represent a single defect. e.g. a O vacancy with a -2 charge.
@@ -48,8 +47,9 @@ class DefectDoc(EmmetBaseModel):
 
     chemsys: List = Field(None, description="Chemical system of the bulk")
 
-
     material_id: MPID = Field(None, description="Unique material ID for the host material")
+
+    defect_id: int = Field(None, description="Unique ID for this defect")
 
     task_ids: List[int] = Field(
         None, description="All task ids used in creating this defect doc."
@@ -76,6 +76,16 @@ class DefectDoc(EmmetBaseModel):
         None, description="Dictionary for tracking entries for CP2K calculations"
     )
 
+    last_updated: datetime = Field(
+        description="Timestamp for when this document was last updated",
+        default_factory=datetime.utcnow,
+    )
+
+    created_at: datetime = Field(
+        description="Timestamp for when this material document was first created",
+        default_factory=datetime.utcnow,
+    )
+
     # TODO How can monty serialization incorporate into pydantic? It seems like VASP MatDocs dont need this
     @validator("entries", pre=True)
     def decode(cls, entries):
@@ -83,6 +93,52 @@ class DefectDoc(EmmetBaseModel):
             if isinstance(entries[e], dict):
                 entries[e] = MontyDecoder().process_decoded({k: v for k, v in entries[e].items()})
         return entries
+
+    def update(self, defect_task, bulk_task, dielectric, query='defect'):
+
+        defect_task = TaskDocument(**defect_task)
+        bulk_task = TaskDocument(**bulk_task)
+
+        rt = defect_task.run_type
+        tt = defect_task.task_type
+        ct = defect_task.calc_type
+
+        # Metadata
+        last_updated = max(dtsk.last_updated for dtsk, btsk in self.tasks.values()) if self.tasks else datetime.now()
+        created_at = min(dtsk.last_updated for dtsk, btsk in self.tasks.values()) if self.tasks else datetime.now()
+        task_ids = {dtsk.task_id for dtsk, btsk in self.tasks.values()} if self.tasks else {}
+
+        if defect_task.task_id in task_ids:
+            return
+        else:
+            self.last_updated = last_updated
+            self.created_at = created_at
+            self.task_ids.append(defect_task.task_id)
+            #self['deprecated_tasks'].update(defect_task.task_id)
+
+            def _run_type(x):
+                return run_type(x[0]['input']['dft']).value
+
+            def _compare(new, old):
+                # TODO return kpoint density
+                return new['nsites'] > old['nsites']
+
+            if _compare(defect_task, self.tasks[rt]):
+                self.run_types.update({defect_task.task_id: rt})
+                self.task_types.update({defect_task.task_id: tt})
+                self.calc_types.update({defect_task.task_id: ct})
+                entry = self.get_defect_entry_from_tasks(
+                            defect_task=defect_task,
+                            bulk_task=bulk_task,
+                            dielectric=dielectric,
+                            query=query
+                        )
+                self.entries[rt] = entry
+                self.tasks[rt] = (defect_task, bulk_task)
+
+    def update_all(self, tasks, query='defect'):
+        for defect_task, bulk_task, dielectric in tasks:
+            self.update(defect_task=defect_task, bulk_task=bulk_task, dielectric=dielectric, query=query)
 
     @classmethod
     def from_tasks(cls, tasks: List, query='defect') -> "DefectDoc":
@@ -111,6 +167,10 @@ class DefectDoc(EmmetBaseModel):
 
         def _run_type(x):
             return run_type(x[0]['input']['dft']).value
+
+        def _sort(x):
+            # return kpoint density
+            pass
 
         entries = {}
         final_tasks = {}
@@ -142,7 +202,8 @@ class DefectDoc(EmmetBaseModel):
                 'task_ids': task_ids,
                 'deprecated_tasks': deprecated_tasks,
                 'tasks': final_tasks,
-                'material_id': list({v.parameters['material_id'] for v in entries.values()})[0],
+                'material_id': best_entry.parameters['material_id'],
+                'defect_id': best_entry.defect.get_hash(),
                 'entry_ids': {rt: entries[rt].entry_id for rt in entries},
                 'chemsys': list([v.defect.bulk_structure.composition.elements for v in entries.values()])[0],
         }
@@ -270,13 +331,18 @@ class DefectThermoDoc(BaseModel):
         return defect_predominance_diagrams
 
     @classmethod
-    def from_docs(cls, docs: List[DefectDoc], materials: List[MaterialsDoc], electronic_structure: ElectronicStructureDoc) -> "DefectThermoDoc":
+    def from_docs(cls, defects: List[DefectDoc], materials: List[MaterialsDoc], electronic_structure: CompleteDos) -> "DefectThermoDoc":
 
         DEFAULT_RT = RunType('GGA')  # TODO NEED A procedure for getting all GGA or GGA+U keys
         DEFAULT_RT_U = RunType('GGA+U')
 
-        mpid = docs[0].material_id
-        cls.get_adjusted_entries(materials=materials, defects=docs)
+        mpid = defects[0].material_id
+
+        chempots = {
+            m.structure.composition.elements[0]:
+                {rt: m.entries[rt].energy_per_atom for rt in m.entries}
+            for m in materials if m.structure.composition.is_element
+        }
 
         defect_entries = {}
         defect_phase_diagram = {}
@@ -285,22 +351,52 @@ class DefectThermoDoc(BaseModel):
         defect_predominance_diagrams = {}
         task_ids = {}
 
-        dos = electronic_structure.dos.total
+        dos = CompleteDos.from_dict(electronic_structure)
+        bg = dos.get_gap()
 
         for m in materials:
-            for run_type in m.entries:
-                bg = dos.get_gap()
-                band_gaps[run_type] = bg
+            for rt, ent in m.entries.items():
+                # Chempot shift
+                for el, amt in ent.composition.element_composition.items():
+                    _rt = DEFAULT_RT if rt not in chempots[Element(el)] else rt
+                    adj = CompositionEnergyAdjustment(-chempots[Element(el)][_rt],
+                                                      n_atoms=amt,
+                                                      name=f"Elemental shift {el} to formation energy space"
+                                                      )
+                    ent.energy_adjustments.append(adj)
 
-        for d in docs:
-            for run_type in d.entries:
-                if run_type not in defect_entries:
-                    defect_entries[run_type] = []
-                if run_type not in task_ids:
-                    task_ids[run_type] = set()
-                defect_entries[run_type].append(d.entries[run_type])
-                vbms[run_type] = d.entries[run_type].parameters['vbm']  # TODO Need to find best vbm
-                task_ids[run_type].update(d.task_ids)
+                # Other stuff
+                band_gaps[rt] = bg
+                ent.parameters['software'] = 'cp2k'
+                ent.structure.remove_spin()
+                ent.structure.remove_oxidation_states()
+                MaterialsProject2020Compatibility().process_entry(ent)
+
+        for d in defects:
+            for rt, ent in d.entries.items():
+                # Chempot shift
+                __found_chempots__ = True
+                comp = Composition(ent.defect.defect_composition, allow_negative=True) - \
+                       ent.defect.bulk_structure.composition
+                for el, amt in comp.items():
+                    if Element(el) not in chempots:
+                        __found_chempots__ = False
+                        break
+                    _rt = DEFAULT_RT if rt not in chempots[Element(el)] else rt
+                    ent.corrections[f"Elemental shift {el} to formation energy space"] = -amt * chempots[Element(el)][
+                        _rt]
+
+                if not __found_chempots__:
+                    continue
+
+                # Other stuff
+                if rt not in defect_entries:
+                    defect_entries[rt] = []
+                if rt not in task_ids:
+                    task_ids[rt] = set()
+                defect_entries[rt].append(d.entries[rt])
+                vbms[rt] = d.entries[rt].parameters['vbm']  # TODO Need to find best vbm
+                task_ids[rt].update(d.task_ids)
 
         for run_type in defect_entries:
             # TODO MUST FILTER COMPATIBLE AT SOME POINT
@@ -328,54 +424,6 @@ class DefectThermoDoc(BaseModel):
         }
 
         return cls(**{k: v for k, v in data.items()})
-
-    @classmethod
-    def get_adjusted_entries(cls, materials: List[MaterialsDoc], defects: List[DefectDoc]):
-        """
-        Shift the energy of all entries to formation energy space, i.e. elemental entries to 0eV
-
-        The chemical potentials (elemental energies) are acquired for each run type that is available
-        in materials. If a chempot does not exist for a non-standard run type, but does exist for
-        a GGA calculation, then this will be used as the fall-back.
-
-        Args:
-            materials: list of MaterialsDocs with *ComputedStructureEntries* as the entries
-
-            defects: list of DefectDocs
-
-        returns:
-            None
-        """
-
-        DEFAULT_RT = RunType('GGA')  # TODO NEED A procedure for getting all GGA or GGA+U keys
-
-        chempots = {
-            m.structure.composition.elements[0].element:
-                {rt: m.entries[rt].energy_per_atom for rt in m.entries}
-            for m in materials if m.structure.composition.is_element
-        }
-
-        for m in materials:
-            for rt, ent in m.entries.items():
-                ent.parameters['software'] = 'cp2k'
-                ent.structure.remove_spin()
-                ent.structure.remove_oxidation_states()
-                MaterialsProject2020Compatibility().process_entry(ent)
-                for el, amt in ent.composition.element_composition.items():
-                    _rt = DEFAULT_RT if rt not in chempots[Element(el)] else rt
-                    adj = CompositionEnergyAdjustment(-chempots[Element(el)][_rt],
-                                                      n_atoms=amt,
-                                                      name=f"Elemental shift {el} to formation energy space"
-                                                      )
-                    ent.energy_adjustments.append(adj)
-
-        for d in defects:
-            for rt, ent in d.entries.items():
-                comp = Composition(ent.defect.defect_composition, allow_negative=True) - \
-                       ent.defect.bulk_structure.composition
-                for el, amt in comp.items():
-                    _rt = DEFAULT_RT if rt not in chempots[Element(el)] else rt
-                    ent.corrections[f"Elemental shift {el} to formation energy space"] = -amt*chempots[Element(el)][_rt]
 
 
 def get_dos(mpid):
