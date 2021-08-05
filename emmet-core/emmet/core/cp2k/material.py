@@ -5,13 +5,13 @@ from pydantic import Field
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
-
 from emmet.core import SETTINGS
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin as PropertyOrigin
 from emmet.core.structure import StructureMetadata
 from emmet.core.cp2k.calc_types import CalcType, RunType, TaskType
 from emmet.core.cp2k.task import TaskDocument
+from emmet.builders.cp2k.utils import get_mpid
 
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
@@ -69,12 +69,12 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         statics = [task for task in task_group if task.task_type == TaskType.Static]  # type: ignore
 
         # Material ID
-        possible_mat_ids = [task.task_id for task in structure_optimizations] # TODO remove + statics ?
+        possible_mat_ids = [task.task_id for task in structure_optimizations]  # TODO remove + statics ?
         possible_mat_ids = sorted(possible_mat_ids, key=ID_to_int)
 
-        from emmet.builders.cp2k.utils import get_mpid
         matched_id = get_mpid([task.output.structure for task in structure_optimizations + statics][0])
-        if matched_id: possible_mat_ids.insert(0, matched_id)
+        if matched_id:
+            possible_mat_ids.insert(0, matched_id)
 
         if len(possible_mat_ids) == 0:
             raise Exception(f"Could not find a material ID for {task_ids}")
@@ -129,7 +129,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
                 last_updated=best_structure_calc.last_updated,
             )
         ]
-        from pymatgen.entries.computed_entries import ComputedStructureEntry
+
         # entries
         entries = {}
         all_run_types = set(run_types.values())
@@ -143,7 +143,9 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
                 entry = best_task_doc.entry
                 entry.data["task_id"] = entry.entry_id
                 entry.entry_id = material_id
+
                 # TODO Standard material doc doesn't have this
+                best_task_doc.output.structure.remove_oxidation_states()
                 entries[rt] = ComputedStructureEntry(
                     structure=best_task_doc.output.structure,
                     energy=entry.energy,
