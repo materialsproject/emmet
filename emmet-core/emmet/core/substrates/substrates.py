@@ -83,6 +83,8 @@ class SubstrateMatch(BaseModel):
 class SubstratesDoc(PropertyDoc):
     """Substrate matches computed for the material"""
 
+    property_name = "substrates"
+
     substrates: List[SubstrateMatch] = Field(
         description="The list of matches for all given substrates"
     )

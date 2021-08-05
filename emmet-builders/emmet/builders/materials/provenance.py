@@ -192,7 +192,7 @@ class ProvenanceBuilder(Builder):
                 doc.history.append(self.settings.DEFAULT_HISTORY)
                 doc.references.append(self.settings.DEFAULT_REFERENCE)
 
-                snl_docs.append(doc.dict(exclude_unset=True))
+                snl_docs.append(doc.dict(exclude_none=True))
 
         return snl_docs
 

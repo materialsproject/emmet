@@ -41,7 +41,10 @@ class RobocrystallogapherDoc(PropertyDoc):
     This document contains the descriptive data from robocrystallographer
     for a material:
         Structural features, mineral prototypes, dimensionality, ...
+
     """
+
+    property_name = "robocrys"
 
     description: str = Field(
         description="Decription text from robocrytallographer.",

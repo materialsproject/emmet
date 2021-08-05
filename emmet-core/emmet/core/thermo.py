@@ -1,6 +1,6 @@
 """ Core definition of a Thermo Document """
 from collections import defaultdict
-from typing import ClassVar, Dict, List, Union
+from typing import Dict, List, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
@@ -33,9 +33,7 @@ class ThermoDoc(PropertyDoc):
     A thermo entry document
     """
 
-    property_name: ClassVar[str] = Field(
-        "thermo", description="The subfield name for this property"
-    )
+    property_name = "thermo"
 
     uncorrected_energy_per_atom: float = Field(
         ..., description="The total DFT energy of this material per atom in eV/atom"

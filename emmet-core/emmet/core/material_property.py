@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import ClassVar, Sequence, Type, TypeVar
+from typing import Sequence, Type, TypeVar
 
 from pydantic import Field
 from pymatgen.core import Structure
@@ -21,7 +21,7 @@ class PropertyDoc(StructureMetadata):
     This is intended to be inherited and extended not used directly
     """
 
-    property_name: ClassVar[str]
+    property_name: str
     material_id: MPID = Field(
         ...,
         description="The ID of the material, used as a universal reference across proeprty documents."

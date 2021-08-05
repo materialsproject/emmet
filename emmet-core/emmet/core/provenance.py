@@ -1,7 +1,7 @@
 """ Core definition of a Provenance Document """
 import warnings
 from datetime import datetime
-from typing import ClassVar, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
@@ -104,7 +104,7 @@ class ProvenanceDoc(PropertyDoc):
     A provenance property block
     """
 
-    property_name: ClassVar[str] = "provenance"
+    property_name = "provenance"
 
     created_at: datetime = Field(
         ...,

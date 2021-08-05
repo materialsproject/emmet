@@ -1,5 +1,5 @@
 """ Core definition of a VASP Task Document """
-from typing import Any, ClassVar, Dict, List, Union
+from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import oxide_type
@@ -92,7 +92,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     Definition of VASP Task Document
     """
 
-    calc_code: ClassVar[str] = "VASP"
+    calc_code = "VASP"
     run_stats: Dict[str, RunStatistics] = Field(
         {},
         description="Summary of runtime statisitics for each calcualtion in this task",

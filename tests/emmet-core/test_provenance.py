@@ -50,3 +50,4 @@ def test_from_snls(snls):
     # Test experimental detection
     snls[0].about.history[0].experimental = True
     assert ProvenanceDoc.from_SNLs(material_id="mp-3", snls=snls).theoretical is False
+    assert doc.dict(exclude_none=True)["property_name"] == "provenance"

@@ -1,6 +1,6 @@
 import pytest
-from monty.serialization import loadfn
 from maggma.stores import JSONStore
+from monty.serialization import loadfn
 from pymatgen.electronic_structure.bandstructure import BandStructureSymmLine
 from pymatgen.electronic_structure.dos import CompleteDos
 

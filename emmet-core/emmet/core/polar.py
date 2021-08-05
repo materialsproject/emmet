@@ -1,5 +1,5 @@
 """ Core definition for Polar property Document """
-from typing import ClassVar, Tuple
+from typing import Tuple
 
 import numpy as np
 from pydantic import Field
@@ -19,7 +19,7 @@ class Dielectric(PropertyDoc):
     A dielectric property block
     """
 
-    property_name: ClassVar[str] = "dielectric"
+    property_name = "dielectric"
 
     total: Matrix3D = Field(description="Total dielectric response")
     ionic: Matrix3D = Field(
@@ -62,7 +62,7 @@ class Piezoelectric(PropertyDoc):
     A dielectric package block
     """
 
-    property_name: ClassVar[str] = "piezoelectric"
+    property_name = "piezoelectric"
 
     total: PiezoTensor = Field(None, description="")
     ionic: PiezoTensor = Field(None, description="")
