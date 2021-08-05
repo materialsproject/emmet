@@ -120,7 +120,7 @@ class ValidationDoc(EmmetBaseModel):
                             f"KSPACING is greater than input set by {data['kspacing_delta']}",
                         )
                     # warn but don't invalidate if KSPACING is smaller by more than tolerance (more k-points)
-                    elif data["kspacing_delta"] < -1*kspacing_tolerance:
+                    elif data["kspacing_delta"] < -1 * kspacing_tolerance:
                         warnings.append(
                             f"KSPACING is lower than input set by {data['kspacing_delta']}"
                         )
