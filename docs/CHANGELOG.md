@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.9.2](https://github.com/materialsproject/emmet/tree/v0.9.2) (2021-08-05)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.9.1...v0.9.2)
+
+**Closed issues:**
+
+- feature: build data in all models [\#202](https://github.com/materialsproject/emmet/issues/202)
+
+**Merged pull requests:**
+
+- fix bugs in MPID [\#240](https://github.com/materialsproject/emmet/pull/240) ([rkingsbury](https://github.com/rkingsbury))
+
 ## [v0.9.1](https://github.com/materialsproject/emmet/tree/v0.9.1) (2021-07-26)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.9.0...v0.9.1)
