@@ -1,17 +1,18 @@
 from datetime import datetime
 from itertools import chain, groupby, combinations
 from typing import Dict, Iterator, List, Optional
+from copy import deepcopy
 
 from maggma.builders import Builder
 from maggma.stores import Store
 from pymatgen.core import Structure
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher, PointDefectComparator
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from atomate.utils.utils import load_class
 
 
 from monty.json import MontyDecoder
 
-from emmet.builders.cp2k.utils import get_mpid
 from emmet.builders.settings import EmmetBuildSettings
 
 from emmet.core import SETTINGS
@@ -57,13 +58,10 @@ class DefectBuilder(Builder):
         defects: Store,
         dielectric: Store,
         electronic_structure: Store,
+        materials: Store,
         task_validation: Optional[Store] = None,
         query: Optional[Dict] = None,
         allowed_task_types: Optional[List[str]] = None,
-        symprec: float = SETTINGS.SYMPREC,
-        ltol: float = SETTINGS.LTOL,
-        stol: float = SETTINGS.STOL,
-        angle_tol: float = SETTINGS.ANGLE_TOL,
         settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
@@ -80,13 +78,10 @@ class DefectBuilder(Builder):
         """
 
         self.tasks = tasks
-        self.tasks.key = 'task_id'
         self.defects = defects
-        self.defects.key = 'task_ids'
+        self.materials = materials
         self.dielectric = dielectric
-        self.dielectric.key = 'task_id'
         self.electronic_structure = electronic_structure
-        self.electronic_structure.key = "material_id"
 
         self.task_validation = task_validation
         self.allowed_task_types = (
@@ -97,39 +92,14 @@ class DefectBuilder(Builder):
 
         self._allowed_task_types = {TaskType(t) for t in self.allowed_task_types}
         self.settings = EmmetBuildSettings.autoload(settings)
-
         self.query = query if query else {}
-        self.symprec = symprec
-        self.ltol = ltol
-        self.stol = stol
-        self.angle_tol = angle_tol
+        self.timestamp = None
         self.kwargs = kwargs
 
-        sources = [tasks, dielectric, electronic_structure]
+        sources = [tasks, dielectric, electronic_structure, materials]
         if self.task_validation:
             sources.append(self.task_validation)
         super().__init__(sources=sources, targets=[defects], **kwargs)
-
-    def ensure_indexes(self):
-        """
-        Ensures indicies on the tasks and materials collections
-        """
-
-        # Basic search index for tasks
-        self.tasks.ensure_index("task_id")
-        self.tasks.ensure_index("last_updated")
-        self.tasks.ensure_index("state")
-        self.tasks.ensure_index("formula_pretty")
-
-        # Search index for materials
-        self.defects.ensure_index("material_id")
-        self.defects.ensure_index("last_updated")
-        self.defects.ensure_index("sandboxes")
-        self.defects.ensure_index("task_ids")
-
-        if self.task_validation:
-            self.task_validation.ensure_index("task_id")
-            self.task_validation.ensure_index("valid")
 
     @property
     def defect_query(self) -> str:
@@ -177,6 +147,32 @@ class DefectBuilder(Builder):
             'input',
             'transformations',
         ]
+
+    def ensure_indexes(self):
+        """
+        Ensures indicies on the tasks and materials collections
+        """
+
+        # Basic search index for tasks
+        self.tasks.ensure_index("task_id")
+        self.tasks.ensure_index("last_updated")
+        self.tasks.ensure_index("state")
+        self.tasks.ensure_index("formula_pretty")
+
+        # Search index for materials
+        self.materials.ensure_index("material_id")
+        self.materials.ensure_index("last_updated")
+        self.materials.ensure_index("task_ids")
+
+        # Search index for materials
+        self.defects.ensure_index("material_id")
+        self.defects.ensure_index("defect_id")
+        self.defects.ensure_index("last_updated")
+        self.defects.ensure_index("task_ids")
+
+        if self.task_validation:
+            self.task_validation.ensure_index("task_id")
+            self.task_validation.ensure_index("valid")
 
     def prechunk(self, number_splits: int) -> Iterator[Dict]:
         raise NotImplementedError
@@ -232,7 +228,7 @@ class DefectBuilder(Builder):
             for t_id in d.get("task_ids", [])
         }
 
-        bulk_tasks = set(filter(self.preprocess_bulk, all_tasks - defect_tasks))
+        bulk_tasks = set(filter(self.__preprocess_bulk, all_tasks - defect_tasks))
         unprocessed_defect_tasks = defect_tasks - processed_defect_tasks
 
         self.logger.info(f"Found {len(unprocessed_defect_tasks)} unprocessed defect tasks")
@@ -261,38 +257,52 @@ class DefectBuilder(Builder):
         # yield list of defects that are of the same type, matched to an appropriate bulk calc
         self.logger.info(f"Starting defect matching.")
 
-        for defect_task_group in self.filter_and_group_tasks(defect_tasks):
-            yield [
-                (
-                    next(self.tasks.query({'task_id': defect_tasks_id}, properties=None)),
-                    next(self.tasks.query({'task_id': bulk_tasks_id}, properties=None)),
-                    self.get_dielectric(bulk_tasks_id)
-                )
-                for defect_tasks_id, bulk_tasks_id in self.match_defects_to_bulks(bulk_tasks, defect_task_group)
-                ]
+        for defect_id, defect_task_group in self.__filter_and_group_tasks(unprocessed_defect_tasks):
+            yield self.__get_defect_doc(defect_id), self.__get_item_bundle(bulk_tasks, defect_task_group)
 
-    # TODO: This must be changed once access to internal MP database is avaiable. RN it uses the MAPI
-    def preprocess_bulk(self, task):
+    def process_item(self, items):
         """
-        Given a TaskDoc that could be a bulk for defect analysis, check to see if it can be used.
+        Process a group of defect tasks that correspond to the same defect into a single defect
+        document. If the DefectDoc already exists, then update it and return it. If it does not,
+        create a new DefectDoc
+
+        Args:
+            items: (DefectDoc or None, [(defect task dict, bulk task dict, dielectric dict), ... ]
+
+        returns: the defect document as a dictionary
         """
-        t = next(self.tasks.query(criteria={'task_id': task}, properties=['output.structure']))
-        struc = Structure.from_dict(t.get('output').get('structure'))
-        mpid = get_mpid(struc)
-        if not mpid:
-            self.logger.debug(f"NO MPID FOUND FOR {task} - {struc.composition}")
-            return False
+        defect_doc, item_bundle = items
+        self.logger.info(f"Processing group of {len(item_bundle)} defects into DefectDoc")
+        if item_bundle:
+            if defect_doc:
+                defect_doc.update_all(item_bundle, query=self.defect_query)
+            else:
+                defect_doc = DefectDoc.from_tasks(tasks=item_bundle, query=self.defect_query)
+            return defect_doc.dict()
 
-        elec = next(self.electronic_structure.query(properties=['band_gap'], criteria={"material_id": mpid}))
-        if elec['band_gap'] > 0:
-            diel = next(self.dielectric.query(criteria={self.dielectric.key: mpid}))
-            if diel is None:
-                self.logger.info(f"Task {task} for composition {struc.composition} requires"
-                                 f"dielectric properties, but none found in dielectric store")
-                return False
-        return True
+    def update_targets(self, items):
+        """
+        Inserts the new task_types into the task_types collection
+        """
 
-    def filter_and_group_tasks(self, tasks):
+        items = [item for item in items if item]
+
+        for item in items:
+            item.update({"_bt": self.timestamp})
+
+        defect_id = [item['defect_id'] for item in items]
+
+        if len(items) > 0:
+            self.logger.info(f"Updating {len(items)} defects")
+            self.defects.remove_docs({self.defects.key: {"$in": defect_id}})
+            self.defects.update(
+                docs=jsanitize(items, allow_bson=True),
+                key='task_ids',
+            )
+        else:
+            self.logger.info("No items to update")
+
+    def __filter_and_group_tasks(self, tasks):
         """
         Groups defect tasks. Tasks are grouped according to the reduced representation
         of the defect, and so tasks with different settings (e.g. supercell size, functional)
@@ -302,7 +312,8 @@ class DefectBuilder(Builder):
             tasks: task_ids for unprocessed defects
 
         returns:
-            Groups of task_ids that correspond to the same defect
+            [(defect_id, [task_ids]), ...] where task_ids correspond to the same defect, which
+            is uniquely labeled by defect_id
         """
 
         props = [
@@ -314,7 +325,7 @@ class DefectBuilder(Builder):
 
         pdc = PointDefectComparator(check_charge=True, check_primitive_cell=True, check_lattice_scale=False)
         defects = [
-            {'task_id': t['task_id'], 'defect': self.get_defect_from_task(t)}
+            {'task_id': t['task_id'], 'defect': self.__get_defect_from_task(t)}
             for t in self.tasks.query(criteria={'task_id': {'$in': list(tasks)}}, properties=props)
         ]
 
@@ -340,12 +351,92 @@ class DefectBuilder(Builder):
                 inds = list(inds)
                 matches.extend([unmatched[i][0] for i in inds])
                 unmatched = [unmatched[i] for i in range(len(unmatched)) if i not in inds]
-                all_groups.append([defects[i]['task_id'] for i in matches])
+                all_groups.append((defects[i]['defect'].get_hash(), [defects[i]['task_id'] for i in matches]))
 
         self.logger.debug(f"All groups {all_groups}")
         return all_groups
 
-    def match_defects_to_bulks(self, bulk_ids, defect_ids):
+    def __get_defect_from_task(self, task):
+        """
+        Using the defect_query property, retrieve a pymatgen defect object from the task document
+        """
+        defect = unpack(self.defect_query.split('.'), task)
+        needed_keys = ['@module', '@class', 'structure', 'defect_site', 'charge', 'site_name']
+        return MontyDecoder().process_decoded({k: v for k, v in defect.items() if k in needed_keys})
+
+    def __get_defect_doc(self, defect_id):
+        """
+        Given a unique defect id, retrieve the defect document from the defect store if it exists
+
+        Args:
+            defect_id: Unique defect ID created by the Defect.get_hash() function
+
+        returns: DefectDoc or None
+        """
+        doc = list(self.defects.query(criteria={'defect_id': defect_id}, properties=None))
+        return doc[0] if doc else None
+
+    def __get_dielectric(self, task_id):
+        """
+        Given a bulk task's task_id, find the material_id, and then use it to query the dielectric store
+        and retrieve the total dielectric tensor for defect analysis. If no dielectric exists, as would
+        be the case for metallic systems, return None.
+        """
+        t = next(self.tasks.query(criteria={'task_id': task_id}, properties=['output.structure']))
+        struc = Structure.from_dict(t.get('output').get('structure'))
+        for diel in self.dielectric.query(criteria={self.dielectric.key: self.__get_mpid(struc)}, properties=['dielectric.total']):
+            return diel['dielectric']['total']
+        return None
+
+    def __get_item_bundle(self, bulk_tasks, defect_task_group):
+        """
+        Gets a group of items that can be processed together into a defect document.
+
+        Args:
+            bulk_tasks: possible bulk tasks to match to defects
+            defect_task_group: group of equivalent defects (defined by PointDefectComparator)
+
+        returns: [(defect task dict, bulk_task_dict, dielectric dict), ...]
+        """
+        return [
+            (
+                next(self.tasks.query({'task_id': defect_tasks_id}, properties=None)),
+                next(self.tasks.query({'task_id': bulk_tasks_id}, properties=None)),
+                self.__get_dielectric(bulk_tasks_id),
+            )
+            for defect_tasks_id, bulk_tasks_id
+            in self.__match_defects_to_bulks(bulk_tasks, defect_task_group)
+        ]
+
+    def __get_mpid(self, structure):
+        """
+        Given a structure, determine if an equivalent structure exists, with a material_id,
+        in the materials store.
+
+        Args:
+            structure: Candidate structure
+
+        returns: material_id, if one exists, else None
+        """
+        struc = deepcopy(structure)
+        struc.remove_oxidation_states()
+        struc.remove_spin()
+        for p in struc.site_properties:
+            struc.remove_site_property(p)
+        sga = SpacegroupAnalyzer(struc)
+
+        sm = StructureMatcher(ltol=self.settings.LTOL, stol=self.settings.STOL, angle_tol=self.settings.ANGLE_TOL)
+        data = self.materials.query(
+            criteria={
+                'chemsys': struc.composition.chemical_system,
+                'spacegroup.symbol': sga.get_space_group_symbol()
+            },
+            properties=['material_id', 'formation_energy_per_atom']
+        )
+        data = filter(lambda x: sm.fit(x[0], x[1]), list(data))
+        return None if not data else sorted(data, key=lambda x: x)[0]['material_id']
+    
+    def __match_defects_to_bulks(self, bulk_ids, defect_ids):
         """
         Given task_ids of bulk and defect tasks, match the defects to a bulk task that has
         commensurate:
@@ -385,7 +476,7 @@ class DefectBuilder(Builder):
         def _compare(b, d):
             if run_type(b.get('input').get('dft')).value.split('+U')[0] == \
                 run_type(d.get('input').get('dft')).value.split('+U')[0] and \
-                    sm.fit(DefectBuilder.get_pristine_supercell(d), DefectBuilder.get_pristine_supercell(b)):
+                    sm.fit(DefectBuilder.__get_pristine_supercell(d), DefectBuilder.__get_pristine_supercell(b)):
                 if abs(b['nsites'] - d['nsites']) <= 1:
                     return True
             return False
@@ -399,15 +490,33 @@ class DefectBuilder(Builder):
         self.logger.debug(f"Found {len(pairs)} commensurate bulk/defect pairs")
         return pairs
 
-    def get_dielectric(self, task_id):
-        t = next(self.tasks.query(criteria={'task_id': task_id}, properties=['output.structure']))
+    def __preprocess_bulk(self, task):
+        """
+        Given a TaskDoc that could be a bulk for defect analysis, check to see if it can be used. Bulk
+        tasks must have:
+
+            (1) Correspond to an existing material_id in the materials store
+            (2) If the bulk is not a metal, then the dielectric tensor must exist in the dielectric store
+        """
+        t = next(self.tasks.query(criteria={'task_id': task}, properties=['output.structure']))
         struc = Structure.from_dict(t.get('output').get('structure'))
-        for diel in self.dielectric.query(criteria={'task_id': get_mpid(struc)}, properties=['dielectric.total']):
-            return diel['dielectric']['total']
-        return None
+        mpid = self.__get_mpid(struc)
+        if not mpid:
+            self.logger.debug(f"NO MPID FOUND FOR {task} - {struc.composition}")
+            return False
+
+        elec = next(self.electronic_structure.query(properties=None, criteria={"material_id": mpid}))
+        dos = MontyDecoder().process_decoded({k: v for k, v in elec.items()})
+        if dos.get_gap():
+            diel = next(self.dielectric.query(criteria={self.dielectric.key: mpid}))
+            if diel is None:
+                self.logger.info(f"Task {task} for composition {struc.composition} requires"
+                                 f"dielectric properties, but none found in dielectric store")
+                return False
+        return True
 
     @staticmethod
-    def get_pristine_supercell(task):
+    def __get_pristine_supercell(self, task):
         """
         Given a task document for a defect calculation, retrieve the un-defective, pristine supercell.
         If defect cannot be found in task, return the input structure.
@@ -420,54 +529,17 @@ class DefectBuilder(Builder):
             return Structure.from_dict(task['transformations']['history'][0]['input_structure'])
         return Structure.from_dict(task['input']['structure'])
 
-    def process_item(self, items):
-        """
-        Process a group of defect tasks into a single defect document.
-
-        Args:
-            tasks: list of task pairs corresponding to 1 defect (same species/oxidation state), but
-                for any number of calculation settings.
-             e.g. [(defect task, bulk task), (defect task, bulk task), ...]
-
-        returns: the defect document as a dictionary
-        """
-        self.logger.info(f"Processing group of {len(items)} defects into DefectDoc")
-        if items:
-            defect_doc = DefectDoc.from_tasks(tasks=items, query=self.defect_query)
-            return defect_doc.dict()
-
-    def get_defect_from_task(self, task):
-        """
-        Using the defect_query property, retrieve a pymatgen defect object from the task document
-        """
-        defect = unpack(self.defect_query.split('.'), task)
-        needed_keys = ['@module', '@class', 'structure', 'defect_site', 'charge', 'site_name']
-        return MontyDecoder().process_decoded({k: v for k, v in defect.items() if k in needed_keys})
-
-    def update_targets(self, items):
-        """
-        Inserts the new task_types into the task_types collection
-        """
-
-        items = [item for item in items if item]
-
-        for item in items:
-            item.update({"_bt": self.timestamp})
-
-        task_ids = list(chain.from_iterable([item['task_ids'] for item in items]))
-
-        if len(items) > 0:
-            self.logger.info(f"Updating {len(items)} defects")
-            self.defects.remove_docs({self.defects.key: {"$in": task_ids}})
-            self.defects.update(
-                docs=jsanitize(items, allow_bson=True),
-                key='task_ids',
-            )
-        else:
-            self.logger.info("No items to update")
-
 
 class DefectThermoBuilder(Builder):
+
+    """
+    This builder creates collections of the DefectThermoDoc object.
+
+        (1) Find all DefectDocs that correspond to the same bulk material
+            given by material_id
+        (2) Create a new DefectThermoDoc for all of those documents
+        (3) Insert/Update the defect_thermos store with the new documents
+    """
 
     def __init__(
             self,
@@ -476,10 +548,6 @@ class DefectThermoBuilder(Builder):
             materials: Store,
             electronic_structures: Store,
             query: Optional[Dict] = None,
-            symprec: float = SETTINGS.SYMPREC,
-            ltol: float = SETTINGS.LTOL,
-            stol: float = SETTINGS.STOL,
-            angle_tol: float = SETTINGS.ANGLE_TOL,
             **kwargs,
     ):
         """
@@ -487,12 +555,8 @@ class DefectThermoBuilder(Builder):
             defects: Store of defect documents (generated by DefectBuilder)
             defect_thermos: Store of DefectThermoDocs to generate.
             materials: Store of MaterialDocs to construct phase diagram
+            electronic_structures: Store of DOS objects
             query: dictionary to limit tasks to be analyzed
-            allowed_task_types: list of task_types that can be processed
-            symprec: tolerance for SPGLib spacegroup finding
-            ltol: StructureMatcher tuning parameter for matching tasks to materials
-            stol: StructureMatcher tuning parameter for matching tasks to materials
-            angle_tol: StructureMatcher tuning parameter for matching tasks to materials
         """
 
         self.defects = defects
@@ -501,17 +565,10 @@ class DefectThermoBuilder(Builder):
         self.electronic_structures = electronic_structures
 
         self.query = query if query else {}
-        self.symprec = symprec
-        self.ltol = ltol
-        self.stol = stol
-        self.angle_tol = angle_tol
+        self.timestamp = None
         self.kwargs = kwargs
 
         super().__init__(sources=[defects, materials, electronic_structures], targets=[defect_thermos], **kwargs)
-
-    @property
-    def defect_doc_query(self):
-        return 'material_id'
 
     def ensure_indexes(self):
         """
@@ -520,10 +577,12 @@ class DefectThermoBuilder(Builder):
 
         # Basic search index for tasks
         self.defects.ensure_index("material_id")
+        self.defects.ensure_index("defect_id")
 
         # Search index for materials
-        self.defects.ensure_index("material_id")
+        self.defect_thermos.ensure_index("material_id")
 
+    # TODO need to only process new tasks. Fast builder so currently is OK for small collections
     def get_items(self) -> Iterator[List[Dict]]:
         """
         Gets items to process into DefectThermoDocs.
@@ -532,6 +591,7 @@ class DefectThermoBuilder(Builder):
             iterator yielding tuples containing:
                 - group of DefectDocs belonging to the same bulk material as indexed by material_id,
                 - materials in the chemsys of the bulk material for constructing phase diagram
+                - Dos of the bulk material for constructing phase diagrams/getting doping
 
         """
 
@@ -543,23 +603,57 @@ class DefectThermoBuilder(Builder):
         self.timestamp = datetime.utcnow()
 
         # Get all tasks
-        self.logger.info("Finding defect docs to process")
+        self.logger.info("Finding tasks to process")
+        temp_query = dict(self.query)
+        temp_query["state"] = "successful"
+
+        #unprocessed_defect_tasks = all_tasks - processed_defect_tasks
 
         all_docs = [doc for doc in self.defects.query()]
         for key, group in groupby(sorted(all_docs, key=lambda x: x['material_id']), key=lambda x: x['material_id']):
             group = [g for g in group]
-            yield (group, self.get_materials(group), self.get_electronic_structure(group))
+            yield (group, self.__get_materials(key), self.__get_electronic_structure(group))
 
-    def get_electronic_structure(self, group):
+    def process_item(self, docs):
+        """
+        Process a group of defects belonging to the same material into a defect thermo doc
+        """
+        self.logger.info(f"Processing defects")
+        defects, materials, elec_struc = docs
+        defects = [DefectDoc(**d) for d in defects]
+        materials = [MaterialsDoc(**m) for m in materials]
+        defect_thermo_doc = DefectThermoDoc.from_docs(defects, materials=materials, electronic_structure=elec_struc)
+        return defect_thermo_doc.dict()
+
+    def update_targets(self, items):
+        """
+        Inserts the new DefectThermoDocs into the defect_thermos store
+        """
+        items = [item for item in items if item]
+        for item in items:
+            item.update({"_bt": self.timestamp})
+
+        if len(items) > 0:
+            self.logger.info(f"Updating {len(items)} defect thermo docs")
+            self.defect_thermos.update(
+                docs=jsanitize(items, allow_bson=True),
+                key=self.defect_thermos.key,
+            )
+        else:
+            self.logger.info("No items to update")
+
+    def __get_electronic_structure(self, group):
         return next(self.electronic_structures.query(criteria={'material_id': group[0]['material_id']}, properties=None))
 
-    def get_materials(self, group) -> List:
+    def __get_materials(self, key) -> List:
         """
         Given a group of DefectDocs, use the bulk material_id to get materials in the chemsys from the
         materials store.
         """
-        bulk = self.materials.query(criteria={'material_id': group[0]['material_id']}, properties=None)
-        elements = group[0]['chemsys']
+        bulk = list(self.materials.query(criteria={'material_id': key}, properties=None))
+        if not bulk:
+            raise LookupError
+        elements = bulk[0]['chemsys']
 
         if isinstance(elements, str):
             elements = elements.split("-")
@@ -571,38 +665,11 @@ class DefectThermoBuilder(Builder):
 
         return list(chain(self.materials.query(criteria={"chemsys": {"$in": all_chemsyses}}, properties=None), bulk))
 
-    def process_item(self, docs):
-        """
-        Process a group of defects belonging to the same material into a defect thermo doc
-        :param item:
-        :return:
-        """
-        self.logger.info(f"Processing defects")
-        defects, materials, elec_struc = docs
-        defects = [DefectDoc(**d) for d in defects]
-        materials = [MaterialsDoc(**m) for m in materials]
-        defect_thermo_doc = DefectThermoDoc.from_docs(defects, materials=materials, electronic_structure=elec_struc)
-        return defect_thermo_doc.dict()
-
-    def update_targets(self, items):
-        """
-        Inserts the new task_types into the task_types collection
-        """
-
-        #item.update({"_bt": self.timestamp})
-
-        if len(items) > 0:
-            self.logger.info(f"Updating {len(items)} defect thermo docs")
-            #self.defects.remove_docs({self.defects.key: {"$in": task_ids}})
-            self.defect_thermos.update(
-                docs=jsanitize(items, allow_bson=True),
-                key='material_id',
-            )
-        else:
-            self.logger.info("No items to update")
-
 
 def unpack(query, d):
+    """
+    Unpack a mongo-style query into dictionary retrieval
+    """
     if not query:
         return d
     if isinstance(d, List):
