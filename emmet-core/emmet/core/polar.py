@@ -1,5 +1,5 @@
 """ Core definition for Polar property Document """
-from typing import Literal, Tuple
+from typing import Tuple
 
 import numpy as np
 from pydantic import Field
