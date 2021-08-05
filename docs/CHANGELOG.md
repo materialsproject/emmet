@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.9.3](https://github.com/materialsproject/emmet/tree/v0.9.3) (2021-08-05)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.9.2...v0.9.3)
+
+**Merged pull requests:**
+
+- Fix property doc names [\#241](https://github.com/materialsproject/emmet/pull/241) ([shyamd](https://github.com/shyamd))
+
 ## [v0.9.2](https://github.com/materialsproject/emmet/tree/v0.9.2) (2021-08-05)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.9.1...v0.9.2)
