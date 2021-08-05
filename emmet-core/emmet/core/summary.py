@@ -89,6 +89,8 @@ class SummaryDoc(PropertyDoc):
     screening studies and searching.
     """
 
+    property_name = "summary"
+
     # Materials
 
     deprecated: bool = Field(
