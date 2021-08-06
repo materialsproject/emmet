@@ -2,26 +2,26 @@ from datetime import datetime
 from itertools import chain, groupby, combinations
 from typing import Dict, Iterator, List, Optional
 from copy import deepcopy
+from monty.json import MontyDecoder
 
 from maggma.builders import Builder
 from maggma.stores import Store
+
 from pymatgen.core import Structure
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher, PointDefectComparator
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+
 from atomate.utils.utils import load_class
-
-
-from monty.json import MontyDecoder
-
-from emmet.builders.settings import EmmetBuildSettings
 
 from emmet.core import SETTINGS
 from emmet.core.utils import jsanitize, get_sg
-from emmet.core.cp2k.calc_types import TaskType
-from emmet.core.cp2k.material import MaterialsDoc
-
-from emmet.core.cp2k.calc_types.utils import run_type
 from emmet.core.defect import DefectDoc, DefectThermoDoc
+from emmet.core.cp2k.calc_types import TaskType
+from emmet.core.cp2k.calc_types.utils import run_type
+from emmet.core.cp2k.material import MaterialsDoc
+from emmet.builders.settings import EmmetBuildSettings
+from emmet.builders.cp2k.utils import get_mpid
+
 
 __author__ = "Nicholas Winner <nwinner@berkeley.edu>"
 __maintainer__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
@@ -112,6 +112,12 @@ class DefectBuilder(Builder):
         you can check via 'transformations.history.0.defect'
         """
         return 'defect'
+
+    @property
+    def identifying_defect_properties(self):
+        return [
+            'charge'
+        ]
 
     @property
     def required_defect_properties(self) -> List:
@@ -287,14 +293,19 @@ class DefectBuilder(Builder):
 
         items = [item for item in items if item]
 
-        for item in items:
-            item.update({"_bt": self.timestamp})
-
-        defect_id = [item['defect_id'] for item in items]
-
         if len(items) > 0:
             self.logger.info(f"Updating {len(items)} defects")
-            self.defects.remove_docs({self.defects.key: {"$in": defect_id}})
+            for item in items:
+                item.update({"_bt": self.timestamp})
+                self.defects.remove_docs(
+                    {
+                       "name": item['name'],
+                       "symmetry.symbol": item['symmetry']['symbol'],
+                       "density": item['density'],
+                       "composition_reduced": item['composition_reduced'].as_dict(),
+                       "charge": item['charge'],
+                    }
+                )
             self.defects.update(
                 docs=jsanitize(items, allow_bson=True),
                 key='task_ids',
@@ -351,7 +362,9 @@ class DefectBuilder(Builder):
                 inds = list(inds)
                 matches.extend([unmatched[i][0] for i in inds])
                 unmatched = [unmatched[i] for i in range(len(unmatched)) if i not in inds]
-                all_groups.append((defects[i]['defect'].get_hash(), [defects[i]['task_id'] for i in matches]))
+                all_groups.append(
+                    (self.__get_defect_identifer(defects[i]['defect']), [defects[i]['task_id'] for i in matches])
+                )
 
         self.logger.debug(f"All groups {all_groups}")
         return all_groups
@@ -373,8 +386,32 @@ class DefectBuilder(Builder):
 
         returns: DefectDoc or None
         """
-        doc = list(self.defects.query(criteria={'defect_id': defect_id}, properties=None))
-        return doc[0] if doc else None
+        doc = list(self.defects.query(criteria={**defect_id}, properties=None))
+        return DefectDoc(**doc[0]) if doc else None
+
+    # TODO Should query by more than just space group symbol
+    # TODO I think I need one more identifier to uniquely ID I think... volume of reduced cell maybe?
+    def __get_defect_identifer(self, defect):
+        """
+        Get a dict of mongo queries that can be used to uniquely ID a defect. Currently this is:
+            (1) "name" the defect name which contains the class (defect type) and multiplicity
+            (2) "charge" on the defect
+            (3) "symmetry.symbol" the space group symbol for the bulk structure
+            (4) "density" of the bulk structure
+            (5) "composition_reduced" of the bulk structure
+
+        (1) and (2) identify the defect while (3)-(5) identify the host material
+        """
+        sga = SpacegroupAnalyzer(
+            defect.bulk_structure, symprec=self.settings.SYMPREC, angle_tolerance=self.settings.ANGLE_TOL
+        )
+        return {
+                   "name": defect.name,
+                   "charge": defect.charge,
+                   "symmetry.symbol": sga.get_space_group_symbol(),
+                   "density": defect.bulk_structure.density,
+                   "composition_reduced": defect.bulk_structure.composition.reduced_composition.as_dict(),
+        }
 
     def __get_dielectric(self, task_id):
         """
@@ -384,7 +421,7 @@ class DefectBuilder(Builder):
         """
         t = next(self.tasks.query(criteria={'task_id': task_id}, properties=['output.structure']))
         struc = Structure.from_dict(t.get('output').get('structure'))
-        for diel in self.dielectric.query(criteria={self.dielectric.key: self.__get_mpid(struc)}, properties=['dielectric.total']):
+        for diel in self.dielectric.query(criteria={self.dielectric.key: get_mpid(struc)}, properties=['dielectric.total']):
             return diel['dielectric']['total']
         return None
 
@@ -408,6 +445,7 @@ class DefectBuilder(Builder):
             in self.__match_defects_to_bulks(bulk_tasks, defect_task_group)
         ]
 
+    # TODO NEED TO GET FORM EN FOR SORTING FROM MATDOC
     def __get_mpid(self, structure):
         """
         Given a structure, determine if an equivalent structure exists, with a material_id,
@@ -424,14 +462,13 @@ class DefectBuilder(Builder):
         for p in struc.site_properties:
             struc.remove_site_property(p)
         sga = SpacegroupAnalyzer(struc)
-
         sm = StructureMatcher(ltol=self.settings.LTOL, stol=self.settings.STOL, angle_tol=self.settings.ANGLE_TOL)
         data = self.materials.query(
             criteria={
                 'chemsys': struc.composition.chemical_system,
                 'spacegroup.symbol': sga.get_space_group_symbol()
             },
-            properties=['material_id', 'formation_energy_per_atom']
+            properties=['material_id']
         )
         data = filter(lambda x: sm.fit(x[0], x[1]), list(data))
         return None if not data else sorted(data, key=lambda x: x)[0]['material_id']
@@ -500,7 +537,7 @@ class DefectBuilder(Builder):
         """
         t = next(self.tasks.query(criteria={'task_id': task}, properties=['output.structure']))
         struc = Structure.from_dict(t.get('output').get('structure'))
-        mpid = self.__get_mpid(struc)
+        mpid = get_mpid(struc)
         if not mpid:
             self.logger.debug(f"NO MPID FOUND FOR {task} - {struc.composition}")
             return False
@@ -516,7 +553,7 @@ class DefectBuilder(Builder):
         return True
 
     @staticmethod
-    def __get_pristine_supercell(self, task):
+    def __get_pristine_supercell(task):
         """
         Given a task document for a defect calculation, retrieve the un-defective, pristine supercell.
         If defect cannot be found in task, return the input structure.
@@ -675,7 +712,3 @@ def unpack(query, d):
     if isinstance(d, List):
         return unpack(query[1:], d.__getitem__(int(query.pop(0))))
     return unpack(query[1:], d.__getitem__(query.pop(0)))
-
-
-
-
