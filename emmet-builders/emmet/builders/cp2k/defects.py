@@ -237,6 +237,10 @@ class DefectBuilder(Builder):
         bulk_tasks = set(filter(self.__preprocess_bulk, all_tasks - defect_tasks))
         unprocessed_defect_tasks = defect_tasks - processed_defect_tasks
 
+        if not unprocessed_defect_tasks:
+            self.logger.info("No unprocessed to tasks, exiting")
+            return
+
         self.logger.info(f"Found {len(unprocessed_defect_tasks)} unprocessed defect tasks")
         self.logger.info(f"Found {len(bulk_tasks)} bulk tasks with dielectric properties")
 
