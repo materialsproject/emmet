@@ -1,36 +1,31 @@
 """ Core definition for Defect property Document """
 from datetime import datetime
 from typing import ClassVar, Dict, Tuple, Mapping, List
+from monty.json import MontyDecoder
+from itertools import groupby
+from pydantic import Field, validator, BaseModel
 
+from pymatgen.core import Structure, Composition, Element
 from pymatgen.analysis.defects.core import DefectEntry
+from pymatgen.analysis.defects.defect_compatibility import DefectCompatibility
+from pymatgen.analysis.defects.thermodynamics import DefectPhaseDiagram, DefectPredominanceDiagram
+from pymatgen.electronic_structure.dos import CompleteDos
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.entries.computed_entries import CompositionEnergyAdjustment
+from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
+from pymatgen.ext.matproj import MPRester
 
-from emmet.core.base import EmmetBaseModel
+from emmet.core.structure import StructureMetadata
 from emmet.core.mpid import MPID
 from emmet.core.cp2k.task import TaskDocument
+from emmet.core.cp2k.calc_types.enums import CalcType, TaskType, RunType
 from emmet.core.cp2k.material import MaterialsDoc
 from emmet.core.cp2k.calc_types.utils import run_type
-from emmet.core.material import PropertyOrigin
-
-from pymatgen.core import Structure, Composition
-from pymatgen.analysis.defects.defect_compatibility import DefectCompatibility
-from pymatgen.electronic_structure.dos import CompleteDos
-
-from pymatgen.ext.matproj import MPRester
-from monty.json import MontyDecoder
-from emmet.core.cp2k.calc_types.enums import CalcType, TaskType, RunType
-from itertools import groupby
-from pydantic import Field, validator
-from emmet.builders.cp2k.utils import get_mpid, get_dielectric, matcher
-
-from pymatgen.entries.computed_entries import CompositionEnergyAdjustment
-from pymatgen.analysis.defects.thermodynamics import DefectPhaseDiagram, DefectPredominanceDiagram
-from pydantic import BaseModel
-from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
-from pymatgen.core import Element
+from emmet.builders.cp2k.utils import get_mpid, matcher
 
 
 # TODO Update DefectDoc on defect entry level so you don't re-do uncessary corrections
-class DefectDoc(EmmetBaseModel):
+class DefectDoc(StructureMetadata):
     """
     A document used to represent a single defect. e.g. a O vacancy with a -2 charge.
 
@@ -45,11 +40,11 @@ class DefectDoc(EmmetBaseModel):
 
     property_name: ClassVar[str] = "defect"
 
-    chemsys: List = Field(None, description="Chemical system of the bulk")
+    name: str = Field(None, description="Name of this defect")
 
-    material_id: MPID = Field(None, description="Unique material ID for the host material")
+    charge: int = Field(None, description="Charge of this defect")
 
-    defect_id: int = Field(None, description="Unique ID for this defect")
+    material_id: MPID = Field(None, description="Unique material ID for the bulk material")
 
     task_ids: List[int] = Field(
         None, description="All task ids used in creating this defect doc."
@@ -96,24 +91,23 @@ class DefectDoc(EmmetBaseModel):
 
     def update(self, defect_task, bulk_task, dielectric, query='defect'):
 
-        defect_task = TaskDocument(**defect_task)
-        bulk_task = TaskDocument(**bulk_task)
+        defect_task_doc = TaskDocument(**defect_task)
+        bulk_task_doc = TaskDocument(**bulk_task)
 
-        rt = defect_task.run_type
-        tt = defect_task.task_type
-        ct = defect_task.calc_type
+        rt = defect_task_doc.run_type
+        tt = defect_task_doc.task_type
+        ct = defect_task_doc.calc_type
 
         # Metadata
         last_updated = max(dtsk.last_updated for dtsk, btsk in self.tasks.values()) if self.tasks else datetime.now()
         created_at = min(dtsk.last_updated for dtsk, btsk in self.tasks.values()) if self.tasks else datetime.now()
-        task_ids = {dtsk.task_id for dtsk, btsk in self.tasks.values()} if self.tasks else {}
 
-        if defect_task.task_id in task_ids:
+        if defect_task_doc.task_id in self.task_ids:
             return
         else:
             self.last_updated = last_updated
             self.created_at = created_at
-            self.task_ids.append(defect_task.task_id)
+            self.task_ids.append(defect_task_doc.task_id)
             #self['deprecated_tasks'].update(defect_task.task_id)
 
             def _run_type(x):
@@ -123,10 +117,10 @@ class DefectDoc(EmmetBaseModel):
                 # TODO return kpoint density
                 return new['nsites'] > old['nsites']
 
-            if _compare(defect_task, self.tasks[rt]):
-                self.run_types.update({defect_task.task_id: rt})
-                self.task_types.update({defect_task.task_id: tt})
-                self.calc_types.update({defect_task.task_id: ct})
+            if defect_task_doc.run_type not in self.tasks or _compare(defect_task, self.tasks[rt]):
+                self.run_types.update({defect_task_doc.task_id: rt})
+                self.task_types.update({defect_task_doc.task_id: tt})
+                self.calc_types.update({defect_task_doc.task_id: ct})
                 entry = self.get_defect_entry_from_tasks(
                             defect_task=defect_task,
                             bulk_task=bulk_task,
@@ -134,7 +128,7 @@ class DefectDoc(EmmetBaseModel):
                             query=query
                         )
                 self.entries[rt] = entry
-                self.tasks[rt] = (defect_task, bulk_task)
+                self.tasks[rt] = (defect_task_doc, bulk_task_doc)
 
     def update_all(self, tasks, query='defect'):
         for defect_task, bulk_task, dielectric in tasks:
@@ -169,8 +163,8 @@ class DefectDoc(EmmetBaseModel):
             return run_type(x[0]['input']['dft']).value
 
         def _sort(x):
-            # return kpoint density
-            pass
+            # TODO return kpoint density, currently just does supercell size
+            return x[1].nsites
 
         entries = {}
         final_tasks = {}
@@ -187,7 +181,7 @@ class DefectDoc(EmmetBaseModel):
                 )
                 for defect_task, bulk_task, dielectric in tasks_for_runtype
             ]
-            entry_and_docs.sort(key=lambda x: x[1].nsites, reverse=True)  # TODO Turn into kpoint density sorting
+            entry_and_docs.sort(key=_sort, reverse=True)
             best_entry, best_defect_task, best_bulk_task = entry_and_docs[0]
             entries[best_defect_task.run_type] = best_entry
             final_tasks[best_defect_task.run_type] = (best_defect_task, best_bulk_task)
@@ -203,11 +197,13 @@ class DefectDoc(EmmetBaseModel):
                 'deprecated_tasks': deprecated_tasks,
                 'tasks': final_tasks,
                 'material_id': best_entry.parameters['material_id'],
-                'defect_id': best_entry.defect.get_hash(),
                 'entry_ids': {rt: entries[rt].entry_id for rt in entries},
-                'chemsys': list([v.defect.bulk_structure.composition.elements for v in entries.values()])[0],
+                'name': best_entry.defect.name,
+                'charge': best_entry.defect.charge,
         }
-        return cls(**{k: v for k, v in data.items()})
+        prim = SpacegroupAnalyzer(best_entry.defect.bulk_structure).get_primitive_standard_structure()
+        data.update(StructureMetadata.from_structure(prim).dict())
+        return cls(**data)
 
     @classmethod
     def get_defect_entry_from_tasks(cls, defect_task, bulk_task, dielectric=None, query='defect'):
@@ -236,6 +232,15 @@ class DefectDoc(EmmetBaseModel):
         defect_entry_as_dict['task_id'] = defect_entry_as_dict['entry_id']  # this seemed necessary for legacy db
 
         return defect_entry
+
+    @classmethod
+    def get_defect_from_task(cls, query, task):
+        """
+        Unpack a Mongo-style query and retrieve a defect object from a task.
+        """
+        defect = unpack(query.split('.'), task)
+        needed_keys = ['@module', '@class', 'structure', 'defect_site', 'charge', 'site_name']
+        return MontyDecoder().process_decoded({k: v for k, v in defect.items() if k in needed_keys})
 
     @classmethod
     def get_parameters_from_tasks(cls, defect_task, bulk_task):
@@ -292,15 +297,6 @@ class DefectDoc(EmmetBaseModel):
             parameters['defect_atomic_site_averages'] = final_defect_structure.site_properties['v_hartree']
 
         return parameters
-
-    @classmethod
-    def get_defect_from_task(cls, query, task):
-        """
-        Unpack a Mongo-style query and retrieve a defect object from a task.
-        """
-        defect = unpack(query.split('.'), task)
-        needed_keys = ['@module', '@class', 'structure', 'defect_site', 'charge', 'site_name']
-        return MontyDecoder().process_decoded({k: v for k, v in defect.items() if k in needed_keys})
 
 
 class DefectThermoDoc(BaseModel):
