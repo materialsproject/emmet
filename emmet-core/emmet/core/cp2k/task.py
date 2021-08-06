@@ -7,7 +7,7 @@ from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core import SETTINGS
+from emmet.core.task import TaskDocument as BaseTaskDocument
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import ValueEnum
 from emmet.core.cp2k.calc_types import (
@@ -98,7 +98,7 @@ class RunStatistics(BaseModel):
     cores: int = Field(None, description="The number of cores used by CP2K")
 
 
-class TaskDocument(StructureMetadata):
+class TaskDocument(BaseTaskDocument, StructureMetadata):
     """
     Definition of CP2K Task Document
     """
@@ -130,10 +130,6 @@ class TaskDocument(StructureMetadata):
     )
     task_id: int = Field(None, description="the Task ID For this document")
     tags: List[str] = Field([], description="Metadata tags for this task document")
-
-    sandboxes: List[str] = Field(
-        None, description="List of sandboxes this task document is allowed in"
-    )
 
     run_type: RunType = Field(None)
     task_type: TaskType = Field(None)
