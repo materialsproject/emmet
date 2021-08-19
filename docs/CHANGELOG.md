@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.10.0](https://github.com/materialsproject/emmet/tree/v0.10.0) (2021-08-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.9.3...v0.10.0)
+
+**Merged pull requests:**
+
+- Deprecation data added to PropertyDoc [\#247](https://github.com/materialsproject/emmet/pull/247) ([munrojm](https://github.com/munrojm))
+
 ## [v0.9.3](https://github.com/materialsproject/emmet/tree/v0.9.3) (2021-08-05)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.9.2...v0.9.3)
