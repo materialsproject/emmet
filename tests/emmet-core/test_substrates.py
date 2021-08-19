@@ -44,7 +44,10 @@ def test_substrate_match():
 def test_substrate_doc(structure):
     test_substrates = DEFAULT_SUBSTRATES[0:2]
     doc = SubstratesDoc.from_structure(
-        material_id="mp-33", structure=structure, substrates=test_substrates
+        material_id="mp-33",
+        structure=structure,
+        substrates=test_substrates,
+        deprecated=False,
     )
     assert doc is not None
     assert doc.material_id == "mp-33"

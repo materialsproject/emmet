@@ -41,6 +41,7 @@ def test_from_bsdos_1(bandstructure, dos, structure):
         dos={"mp-1671247": dos},
         is_gap_direct=False,
         is_metal=True,
+        deprecated=False,
         setyawan_curtarolo={"mp-1056141": bandstructure},
         structures={"mp-1671247": structure, "mp-1056141": structure},
     )
@@ -89,6 +90,7 @@ def test_from_bsdos_2(bandstructure_fs, dos_fs):
         dos={"mp-823888": dos},
         is_gap_direct=False,
         is_metal=True,
+        deprecated=False,
         setyawan_curtarolo={"mp-1612487": bs},
     )
 
