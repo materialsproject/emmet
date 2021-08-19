@@ -32,16 +32,17 @@ class OxidationStatesBuilder(MapBuilder):
         super().__init__(
             source=materials,
             target=oxidation_states,
-            projection=["structure"],
+            projection=["structure", "deprecated"],
             **kwargs,
         )
 
     def unary_function(self, item):
         structure = Structure.from_dict(item["structure"])
         mpid = item["material_id"]
+        deprecated = item["deprecated"]
 
         oxi_doc = OxidationStateDoc.from_structure(
-            structure=structure, material_id=mpid
+            structure=structure, material_id=mpid, deprecated=deprecated
         )
         doc = jsanitize(oxi_doc.dict(), allow_bson=True)
 

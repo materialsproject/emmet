@@ -160,6 +160,7 @@ class ElectronicStructureBuilder(Builder):
         # Default summary data
         d = dict(
             material_id=mat[self.materials.key],
+            deprecated=mat["deprecated"],
             task_id=mat["other"]["task_id"],
             structure=structure,
             band_gap=mat["other"]["band_gap"],
@@ -205,6 +206,7 @@ Using data from eigenvalue_band_properties where appropriate."
                     dos=dos,
                     is_gap_direct=d["is_gap_direct"],
                     is_metal=d["is_metal"],
+                    deprecated=d["deprecated"],
                     **bs,
                 )
                 doc = self._bsdos_checks(doc, dos[mat["dos"]["task_id"]], structures)
@@ -316,6 +318,7 @@ Using data from eigenvalue_band_properties where appropriate."
                 "structure",
                 "inputs",
                 "task_types",
+                "deprecated",
                 self.materials.last_updated_field,
             ],
             criteria={self.materials.key: mat_id},

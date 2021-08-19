@@ -150,7 +150,7 @@ class ThermoBuilder(Builder):
         self.logger.debug(f"{len(pd_entries)} remain in {chemsys} after filtering")
 
         try:
-            docs = ThermoDoc.from_entries(pd_entries)
+            docs = ThermoDoc.from_entries(pd_entries, deprecated=False)
             for doc in docs:
                 doc.entries = material_entries[doc.material_id]
                 doc.entry_types = list(material_entries[doc.material_id].keys())
@@ -228,7 +228,9 @@ class ThermoBuilder(Builder):
         new_q["chemsys"] = {"$in": list(query_chemsys)}
         new_q["deprecated"] = False
         materials_docs = list(
-            self.materials.query(criteria=new_q, properties=["material_id", "entries"])
+            self.materials.query(
+                criteria=new_q, properties=["material_id", "entries", "deprecated"]
+            )
         )
 
         # Get Oxidation state data for each material

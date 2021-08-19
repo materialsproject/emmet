@@ -93,9 +93,6 @@ class SummaryDoc(PropertyDoc):
 
     # Materials
 
-    deprecated: bool = Field(
-        ..., description="Whether the material is tagged as deprecated"
-    )
     structure: Structure = Field(
         ..., description="The lowest energy structure for this material"
     )

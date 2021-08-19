@@ -83,13 +83,14 @@ class SubstratesBuilder(Builder):
             )
             mat = self.materials.query_one(
                 criteria={self.materials.key: mpid},
-                properties=["structure", "material_id", "last_updated"],
+                properties=["structure", "deprecated", "material_id", "last_updated"],
             )
 
             yield {
                 "structure": mat["structure"],
                 "material_id": mat[self.materials.key],
                 "elastic_tensor": e_tensor,
+                "deprecated": mat["deprecated"],
                 "last_updated": max(
                     mat.get("last_updated"), e_tensor.get("last_updated")
                 ),
@@ -111,6 +112,7 @@ class SubstratesBuilder(Builder):
         elastic_tensor = (
             ElasticTensor.from_voigt(elastic_tensor) if elastic_tensor else None
         )
+        deprecated = item["deprecated"]
 
         self.logger.debug("Calculating substrates for {}".format(item["task_id"]))
 
@@ -121,6 +123,7 @@ class SubstratesBuilder(Builder):
             material_id=mpid,
             structure=film,
             elastic_tensor=elastic_tensor,
+            deprecated=deprecated,
             last_updated=item["last_updated"],
         )
 
