@@ -274,7 +274,7 @@ class SummaryDoc(PropertyDoc):
     theoretical: bool = Field(True, description="Whether the material is theoretical.")
 
     @classmethod
-    def from_docs(cls, material_id: MPID, **docs: Dict[str, Dict]):
+    def from_docs(cls, material_id: MPID, **docs: Dict[str, Dict], **kwargs):
         """Converts a bunch of summary docs into a SummaryDoc"""
         doc = _copy_from_doc(docs)
 
@@ -299,7 +299,7 @@ class SummaryDoc(PropertyDoc):
 
         doc["has_props"] = list(set(doc["has_props"]))
 
-        return SummaryDoc(material_id=material_id, **doc)
+        return SummaryDoc(material_id=material_id, **doc, **kwargs)
 
 
 # Key mapping
