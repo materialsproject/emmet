@@ -14,7 +14,11 @@ def fake_materias(test_dir):
 
     for doc in entries.query():
         materials_store.update(
-            {"material_id": doc["entry_id"], "structure": doc["structure"]}
+            {
+                "material_id": doc["entry_id"],
+                "structure": doc["structure"],
+                "deprecated": False,
+            }
         )
     return materials_store
 

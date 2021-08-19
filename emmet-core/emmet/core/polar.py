@@ -22,25 +22,17 @@ class Dielectric(PropertyDoc):
     property_name = "dielectric"
 
     total: Matrix3D = Field(description="Total dielectric response")
-    ionic: Matrix3D = Field(
-        description="Dielectric response due to atomic rearrangement"
-    )
-    electronic: Matrix3D = Field(
-        description="Dielectric response due to electron rearrangement"
-    )
+    ionic: Matrix3D = Field(description="Dielectric response due to atomic rearrangement")
+    electronic: Matrix3D = Field(description="Dielectric response due to electron rearrangement")
 
     e_total: float = Field(description="Total electric permittivity")
-    e_ionic: float = Field(
-        description="Electric permittivity from atomic rearrangement"
-    )
-    e_electronic: float = Field(
-        description="Electric permittivity due to electrons rearrangement"
-    )
+    e_ionic: float = Field(description="Electric permittivity from atomic rearrangement")
+    e_electronic: float = Field(description="Electric permittivity due to electrons rearrangement")
 
     n: float = Field(title="Refractive index")
 
     @classmethod
-    def from_ionic_and_electronic(cls, ionic: Matrix3D, electronic: Matrix3D):
+    def from_ionic_and_electronic(cls, ionic: Matrix3D, electronic: Matrix3D, **kwargs):
 
         total = np.sum(ionic, electronic).tolist()  # type: ignore
 
@@ -53,7 +45,8 @@ class Dielectric(PropertyDoc):
                 "e_ionic": np.average(np.diagonal(ionic)),
                 "e_electronic": np.average(np.diagonal(electronic)),
                 "n": np.sqrt(np.average(np.diagonal(electronic))),
-            }
+            },
+            **kwargs
         )
 
 
@@ -69,15 +62,11 @@ class Piezoelectric(PropertyDoc):
     electronic: PiezoTensor = Field(None, description="")
 
     e_ij_max: float = Field(None, description="")
-    max_direction: Tuple[int, int, int] = Field(
-        None, description="Miller direction for maximum piezo response"
-    )
-    strain_for_max: Matrix3D = Field(
-        None, description="Normalized strain direction for maximum piezo repsonse"
-    )
+    max_direction: Tuple[int, int, int] = Field(None, description="Miller direction for maximum piezo response")
+    strain_for_max: Matrix3D = Field(None, description="Normalized strain direction for maximum piezo repsonse")
 
     @classmethod
-    def from_ionic_and_electronic(cls, ionic: Matrix3D, electronic: Matrix3D):
+    def from_ionic_and_electronic(cls, ionic: Matrix3D, electronic: Matrix3D, **kwargs):
 
         total = BasePiezoTensor.from_voigt(np.sum(ionic, electronic))  # type: ignore
 
@@ -99,5 +88,6 @@ class Piezoelectric(PropertyDoc):
                 "e_ij_max": charges[max_index],
                 "max_direction": np.round(max_direction / min_val),
                 "strain_for_max": strains[max_index],
-            }
+            },
+            **kwargs
         )

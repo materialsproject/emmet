@@ -15,9 +15,7 @@ class DecompositionProduct(BaseModel):
     Entry metadata for a decomposition process
     """
 
-    material_id: MPID = Field(
-        None, description="The material this decomposition points to"
-    )
+    material_id: MPID = Field(None, description="The material this decomposition points to")
     formula: str = Field(
         None,
         description="The formula of the decomposed material this material decomposes to",
@@ -46,13 +44,9 @@ class ThermoDoc(PropertyDoc):
 
     energy_uncertainy_per_atom: float = Field(None, description="")
 
-    formation_energy_per_atom: float = Field(
-        None, description="The formation energy per atom in eV/atom"
-    )
+    formation_energy_per_atom: float = Field(None, description="The formation energy per atom in eV/atom")
 
-    energy_above_hull: float = Field(
-        ..., description="The energy above the hull in eV/Atom"
-    )
+    energy_above_hull: float = Field(..., description="The energy above the hull in eV/Atom")
 
     is_stable: bool = Field(
         False,
@@ -75,9 +69,7 @@ class ThermoDoc(PropertyDoc):
         description="The type of calculation this energy evaluation comes from. TODO: Convert to enum?",
     )
 
-    entry_types: List[str] = Field(
-        description="List of available energy types computed for this material"
-    )
+    entry_types: List[str] = Field(description="List of available energy types computed for this material")
 
     entries: Dict[str, Union[ComputedEntry, ComputedStructureEntry]] = Field(
         ...,
@@ -86,7 +78,7 @@ class ThermoDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_entries(cls, entries: List[Union[ComputedEntry, ComputedStructureEntry]]):
+    def from_entries(cls, entries: List[Union[ComputedEntry, ComputedStructureEntry]], **kwargs):
 
         entries_by_comp = defaultdict(list)
         for e in entries:
@@ -94,8 +86,7 @@ class ThermoDoc(PropertyDoc):
 
         # Only use lowest entry per composition to speed up QHull in Phase Diagram
         reduced_entries = [
-            sorted(comp_entries, key=lambda e: e.energy_per_atom)[0]
-            for comp_entries in entries_by_comp.values()
+            sorted(comp_entries, key=lambda e: e.energy_per_atom)[0] for comp_entries in entries_by_comp.values()
         ]
 
         pd = PhaseDiagram(reduced_entries)
@@ -107,8 +98,7 @@ class ThermoDoc(PropertyDoc):
 
             d = {
                 "material_id": e.entry_id,
-                "uncorrected_energy_per_atom": e.uncorrected_energy
-                / e.composition.num_atoms,
+                "uncorrected_energy_per_atom": e.uncorrected_energy / e.composition.num_atoms,
                 "energy_per_atom": e.uncorrected_energy / e.composition.num_atoms,
                 "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
                 "energy_above_hull": ehull,
@@ -120,9 +110,7 @@ class ThermoDoc(PropertyDoc):
 
             # Store different info if stable vs decomposes
             if d["is_stable"]:
-                d[
-                    "equilibrium_reaction_energy_per_atom"
-                ] = pd.get_equilibrium_reaction_energy(e)
+                d["equilibrium_reaction_energy_per_atom"] = pd.get_equilibrium_reaction_energy(e)
             else:
                 d["decomposes_to"] = [
                     {
@@ -143,6 +131,6 @@ class ThermoDoc(PropertyDoc):
                 elif k in e.data:
                     d[k] = e.data[k]
 
-            docs.append(ThermoDoc.from_structure(structure=e.structure, **d))
+            docs.append(ThermoDoc.from_structure(structure=e.structure, **d, **kwargs))
 
         return docs
