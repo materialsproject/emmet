@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Sequence, Type, TypeVar
+from typing import Sequence, Type, TypeVar, Union, List
 
 from pydantic import Field
 from pymatgen.core import Structure
@@ -10,6 +10,7 @@ from pymatgen.core import Structure
 from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
+from emmet.core.vasp.validation import DeprecationMessage
 
 S = TypeVar("S", bound="PropertyDoc")
 
@@ -28,27 +29,28 @@ class PropertyDoc(StructureMetadata):
         "This comes in the form of an MPID or int",
     )
 
+    deprecated: bool = Field(
+        ...,
+        description="Whether this property document is deprecated.",
+    )
+
+    reasons: List[Union[DeprecationMessage, str]] = Field(
+        None, description="List of deprecation tags detailing why this document isn't valid"
+    )
+
     last_updated: datetime = Field(
         description="Timestamp for the most recent calculation update for this property",
         default_factory=datetime.utcnow,
     )
 
-    origins: Sequence[PropertyOrigin] = Field(
-        [], description="Dictionary for tracking the provenance of properties"
-    )
+    origins: Sequence[PropertyOrigin] = Field([], description="Dictionary for tracking the provenance of properties")
 
-    warnings: Sequence[str] = Field(
-        [], description="Any warnings related to this property"
-    )
+    warnings: Sequence[str] = Field([], description="Any warnings related to this property")
 
     @classmethod
-    def from_structure(  # type: ignore[override]
-        cls: Type[S], structure: Structure, material_id: MPID, **kwargs
-    ) -> S:
+    def from_structure(cls: Type[S], structure: Structure, material_id: MPID, **kwargs) -> S:  # type: ignore[override]
         """
         Builds a materials document using the minimal amount of information
         """
 
-        return super().from_structure(  # type: ignore
-            structure=structure, material_id=material_id, **kwargs
-        )
+        return super().from_structure(structure=structure, material_id=material_id, **kwargs)  # type: ignore
