@@ -43,7 +43,6 @@ class XRDDoc(SpectrumDoc):
         print("Validations")
         # Only do this if neither target not edge is defined
         if "target" not in values and "edge" not in values:
-            print("Are we even getting here?")
             try:
                 pymatgen_wavelength = next(k for k, v in WAVELENGTHS.items() if np.allclose(values["wavelength"], v))
                 values["target"] = pymatgen_wavelength[:2]
