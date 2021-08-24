@@ -49,9 +49,9 @@ class PropertyDoc(StructureMetadata):
     warnings: Sequence[str] = Field([], description="Any warnings related to this property")
 
     @classmethod
-    def from_structure(cls: Type[S], structure: Structure, material_id: MPID, **kwargs) -> S:  # type: ignore[override]
+    def from_structure(cls: Type[S], meta_structure: Structure, material_id: MPID, **kwargs) -> S:  # type: ignore[override]
         """
         Builds a materials document using the minimal amount of information
         """
 
-        return super().from_structure(structure=structure, material_id=material_id, **kwargs)  # type: ignore
+        return super().from_structure(meta_structure=meta_structure, material_id=material_id, **kwargs)  # type: ignore
