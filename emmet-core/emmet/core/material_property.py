@@ -34,8 +34,9 @@ class PropertyDoc(StructureMetadata):
         description="Whether this property document is deprecated.",
     )
 
-    reasons: List[Union[DeprecationMessage, str]] = Field(
-        None, description="List of deprecation tags detailing why this document isn't valid"
+    deprecation_reasons: List[Union[DeprecationMessage, str]] = Field(
+        None,
+        description="List of deprecation tags detailing why this document isn't valid",
     )
 
     last_updated: datetime = Field(
