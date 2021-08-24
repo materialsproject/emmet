@@ -18,6 +18,7 @@ class OxidationStateDoc(PropertyDoc):
 
     property_name = "oxidation"
 
+    structure: Structure = Field(..., description="The structure used in the generation of the oxidation state data")
     possible_species: List[str] = Field(description="Possible charged species in this material")
     possible_valences: List[float] = Field(description="List of valences for each site in this material")
     average_oxidation_states: Dict[str, float] = Field(description="Average oxidation states for each unique species")
@@ -77,5 +78,5 @@ class OxidationStateDoc(PropertyDoc):
                 raise e
 
         return super().from_structure(
-            structure=structure, material_id=material_id, include_structure=True, **d, **kwargs
+            meta_structure=structure, material_id=material_id, structure=structure, **d, **kwargs
         )

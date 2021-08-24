@@ -19,29 +19,21 @@ class Substrate(BaseModel):
     structure: Structure
 
 
-DEFAULT_SUBSTRATES = [
-    Substrate(**d) for d in loadfn(Path(__file__).parent.joinpath("structures.json"))
-]
+DEFAULT_SUBSTRATES = [Substrate(**d) for d in loadfn(Path(__file__).parent.joinpath("structures.json"))]
 
 
 class SubstrateMatch(BaseModel):
     """A single substrate match"""
 
     substrate_id: MPID = Field(description="The MPID for the substrate")
-    substrate_orientation: Tuple[int, int, int] = Field(
-        description="The miller orientation of the substrate"
-    )
+    substrate_orientation: Tuple[int, int, int] = Field(description="The miller orientation of the substrate")
     substrate_formula: str = Field(description="The formula of the substrate")
-    film_orientation: Tuple[int, int, int] = Field(
-        description="The orientation of the material if grown as a film"
-    )
+    film_orientation: Tuple[int, int, int] = Field(description="The orientation of the material if grown as a film")
     matching_area: float = Field(
         description="The minimal coinicidence matching area for this film orientation and substrate orientation"
     )
     elastic_energy: float = Field(None, description="The elastic strain energy")
-    von_misess_strain: float = Field(
-        None, description="The Von mises strain for the film"
-    )
+    von_misess_strain: float = Field(None, description="The Von mises strain for the film")
 
     @classmethod
     def from_structure(
@@ -55,18 +47,13 @@ class SubstrateMatch(BaseModel):
         # Calculate lowest matches and group by substrate orientation
         matches_by_orient = _groupby_itemkey(
             substrate_analyzer.calculate(
-                film=film,
-                substrate=substrate,
-                elasticity_tensor=elastic_tensor,
-                lowest=True,
+                film=film, substrate=substrate, elasticity_tensor=elastic_tensor, lowest=True,
             ),
             item="match_area",
         )
 
         # Find the lowest area match for each substrate orientation
-        lowest_matches = [
-            min(g, key=lambda x: x.match_area) for _, g in matches_by_orient
-        ]
+        lowest_matches = [min(g, key=lambda x: x.match_area) for _, g in matches_by_orient]
 
         for match in lowest_matches:
             yield SubstrateMatch(
@@ -85,9 +72,7 @@ class SubstratesDoc(PropertyDoc):
 
     property_name = "substrates"
 
-    substrates: List[SubstrateMatch] = Field(
-        description="The list of matches for all given substrates"
-    )
+    substrates: List[SubstrateMatch] = Field(description="The list of matches for all given substrates")
 
     @classmethod
     def from_structure(  # type: ignore[override]
@@ -118,10 +103,7 @@ class SubstratesDoc(PropertyDoc):
             all_matches = list(sorted(all_matches, key=lambda x: x.matching_area))
 
         return super().from_structure(
-            material_id=material_id,
-            structure=structure,
-            substrates=all_matches,
-            **kwargs
+            material_id=material_id, meta_structure=structure, substrates=all_matches, **kwargs
         )
 
 

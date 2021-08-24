@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, root_validator, validator
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.utils import ValueEnum
+from pymatgen.core.structure import Structure
 
 
 class Database(ValueEnum):
@@ -40,8 +41,7 @@ class History(BaseModel):
     url: str
     description: Optional[Dict] = Field(None, description="Dictionary of exra data for this history node")
     experimental: Optional[bool] = Field(
-        False,
-        description="Whether this node dictates this is an experimental history not",
+        False, description="Whether this node dictates this is an experimental history not",
     )
 
     @root_validator(pre=True)
@@ -97,8 +97,7 @@ class ProvenanceDoc(PropertyDoc):
     property_name = "provenance"
 
     created_at: datetime = Field(
-        ...,
-        description="creation date for the first structure corresponding to this material",
+        ..., description="creation date for the first structure corresponding to this material",
     )
 
     references: List[str] = Field([], description="Bibtex reference strings for this material")
@@ -125,7 +124,7 @@ class ProvenanceDoc(PropertyDoc):
         return list(authors_dict.values())
 
     @classmethod
-    def from_SNLs(cls, material_id: MPID, snls: List[SNLDict], **kwargs) -> "ProvenanceDoc":
+    def from_SNLs(cls, material_id: MPID, structure: Structure, snls: List[SNLDict], **kwargs) -> "ProvenanceDoc":
         """
         Converts legacy Pymatgen SNLs into a single provenance document
         """
@@ -182,4 +181,6 @@ class ProvenanceDoc(PropertyDoc):
             "history": history,
         }
 
-        return ProvenanceDoc(material_id=material_id, last_updated=last_updated, **fields, **kwargs)
+        return super().from_structure(
+            material_id=material_id, meta_structure=structure, last_updated=last_updated, **fields, **kwargs
+        )

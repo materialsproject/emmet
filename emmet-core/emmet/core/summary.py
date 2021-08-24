@@ -19,9 +19,7 @@ class SummaryStats(BaseModel):
     """
 
     field: str = Field(
-        None,
-        title="Field",
-        description="Field name corresponding to a field in SummaryDoc",
+        None, title="Field", description="Field name corresponding to a field in SummaryDoc",
     )
     num_samples: Optional[int] = Field(
         None,
@@ -32,20 +30,14 @@ class SummaryStats(BaseModel):
     min: float = Field(
         None,
         title="Minimum",
-        description="The minimum value "
-        "of the specified field used to "
-        "generate statistics.",
+        description="The minimum value " "of the specified field used to " "generate statistics.",
     )
     max: float = Field(
         None,
         title="Maximum",
-        description="The maximum value "
-        "of the specified field used to "
-        "generate statistics.",
+        description="The maximum value " "of the specified field used to " "generate statistics.",
     )
-    median: float = Field(
-        None, title="Median", description="The median of the field values."
-    )
+    median: float = Field(None, title="Median", description="The median of the field values.")
     mean: float = Field(None, title="Mean", description="The mean of the field values.")
     distribution: List[float] = Field(
         None,
@@ -61,9 +53,7 @@ class XASSearchData(BaseModel):
     Fields in XAS sub docs in summary
     """
 
-    edge: Edge = Field(
-        None, title="Absorption Edge", description="The interaction edge for XAS"
-    )
+    edge: Edge = Field(None, title="Absorption Edge", description="The interaction edge for XAS")
     absorbing_element: Element = Field(None, title="Absorbing Element")
 
     spectrum_type: Type = Field(None, title="Type of XAS Spectrum")
@@ -93,9 +83,7 @@ class SummaryDoc(PropertyDoc):
 
     # Materials
 
-    structure: Structure = Field(
-        ..., description="The lowest energy structure for this material"
-    )
+    structure: Structure = Field(..., description="The lowest energy structure for this material")
 
     # Thermo
 
@@ -104,21 +92,15 @@ class SummaryDoc(PropertyDoc):
     )
 
     energy_per_atom: float = Field(
-        None,
-        description="The total corrected DFT energy of this material per atom in eV/atom",
+        None, description="The total corrected DFT energy of this material per atom in eV/atom",
     )
 
-    formation_energy_per_atom: float = Field(
-        None, description="The formation energy per atom in eV/atom"
-    )
+    formation_energy_per_atom: float = Field(None, description="The formation energy per atom in eV/atom")
 
-    energy_above_hull: float = Field(
-        None, description="The energy above the hull in eV/Atom"
-    )
+    energy_above_hull: float = Field(None, description="The energy above the hull in eV/Atom")
 
     is_stable: bool = Field(
-        False,
-        description="Flag for whether this material is on the hull and therefore stable",
+        False, description="Flag for whether this material is on the hull and therefore stable",
     )
 
     equillibrium_reaction_energy_per_atom: float = Field(
@@ -138,9 +120,7 @@ class SummaryDoc(PropertyDoc):
 
     # GB
 
-    grain_boundaries: List[GBSearchData] = Field(
-        None, description="List of grain boundary documents."
-    )
+    grain_boundaries: List[GBSearchData] = Field(None, description="List of grain boundary documents.")
 
     # Electronic Structure
 
@@ -160,9 +140,7 @@ class SummaryDoc(PropertyDoc):
         None, description="The source calculation ID for the electronic structure data."
     )
 
-    bandstructure: BandstructureData = Field(
-        None, description="Band structure data for the material."
-    )
+    bandstructure: BandstructureData = Field(None, description="Band structure data for the material.")
 
     dos: DosData = Field(None, description="Density of states data for the material.")
 
@@ -188,37 +166,23 @@ class SummaryDoc(PropertyDoc):
 
     num_magnetic_sites: int = Field(None, description="The number of magnetic sites.")
 
-    num_unique_magnetic_sites: int = Field(
-        None, description="The number of unique magnetic sites."
-    )
+    num_unique_magnetic_sites: int = Field(None, description="The number of unique magnetic sites.")
 
-    types_of_magnetic_species: List[Element] = Field(
-        None, description="Magnetic specie elements."
-    )
+    types_of_magnetic_species: List[Element] = Field(None, description="Magnetic specie elements.")
 
     # Elasticity
 
     k_voigt: float = Field(None, description="Voigt average of the bulk modulus.")
 
-    k_reuss: float = Field(
-        None, description="Reuss average of the bulk modulus in GPa."
-    )
+    k_reuss: float = Field(None, description="Reuss average of the bulk modulus in GPa.")
 
-    k_vrh: float = Field(
-        None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa."
-    )
+    k_vrh: float = Field(None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa.")
 
-    g_voigt: float = Field(
-        None, description="Voigt average of the shear modulus in GPa."
-    )
+    g_voigt: float = Field(None, description="Voigt average of the shear modulus in GPa.")
 
-    g_reuss: float = Field(
-        None, description="Reuss average of the shear modulus in GPa."
-    )
+    g_reuss: float = Field(None, description="Reuss average of the shear modulus in GPa.")
 
-    g_vrh: float = Field(
-        None, description="Voigt-Reuss-Hill average of the shear modulus in GPa."
-    )
+    g_vrh: float = Field(None, description="Voigt-Reuss-Hill average of the shear modulus in GPa.")
 
     universal_anisotropy: float = Field(None, description="Elastic anisotropy.")
 
@@ -230,9 +194,7 @@ class SummaryDoc(PropertyDoc):
 
     e_ionic: float = Field(None, description="Ionic contributio to dielectric constant")
 
-    e_electronic: float = Field(
-        None, description="Electronic contribution to dielectric constant"
-    )
+    e_electronic: float = Field(None, description="Electronic contribution to dielectric constant")
 
     n: float = Field(None, description="Refractive index")
 
@@ -240,31 +202,21 @@ class SummaryDoc(PropertyDoc):
 
     # Surface Properties
 
-    weighted_surface_energy_EV_PER_ANG2: float = Field(
-        None, description="Weighted surface energy in eV/Å²"
-    )
+    weighted_surface_energy_EV_PER_ANG2: float = Field(None, description="Weighted surface energy in eV/Å²")
 
-    weighted_surface_energy: float = Field(
-        None, description="Weighted surface energy in J/m²"
-    )
+    weighted_surface_energy: float = Field(None, description="Weighted surface energy in J/m²")
 
-    weighted_work_function: float = Field(
-        None, description="Weighted work function in eV."
-    )
+    weighted_work_function: float = Field(None, description="Weighted work function in eV.")
 
     surface_anisotropy: float = Field(None, description="Surface energy anisotropy.")
 
     shape_factor: float = Field(None, description="Shape factor.")
 
-    has_reconstructed: bool = Field(
-        None, description="Whether the material has any reconstructed surfaces."
-    )
+    has_reconstructed: bool = Field(None, description="Whether the material has any reconstructed surfaces.")
 
     # Has Props
 
-    has_props: List[str] = Field(
-        None, description="List of properties that are available for a given material."
-    )
+    has_props: List[str] = Field(None, description="List of properties that are available for a given material.")
 
     # Theoretical
 
@@ -376,7 +328,7 @@ summary_fields: Dict[str, list] = {
 
 
 def _copy_from_doc(doc):
-    """Helper functin to copy the list of keys over from amalgamated document"""
+    """Helper function to copy the list of keys over from amalgamated document"""
     d = {"has_props": []}
     # Complex function to grab the keys and put them in the root doc
     # if the item is a list, it makes one doc per item with those corresponding keys
@@ -387,18 +339,10 @@ def _copy_from_doc(doc):
             d[doc_key] = []
             for sub_item in sub_doc:
                 temp_doc = {
-                    copy_key: sub_item[copy_key]
-                    for copy_key in summary_fields[doc_key]
-                    if copy_key in sub_item
+                    copy_key: sub_item[copy_key] for copy_key in summary_fields[doc_key] if copy_key in sub_item
                 }
                 d[doc_key].append(temp_doc)
         elif isinstance(sub_doc, dict):
             d["has_props"].append(doc_key)
-            d.update(
-                {
-                    copy_key: sub_doc[copy_key]
-                    for copy_key in summary_fields[doc_key]
-                    if copy_key in sub_doc
-                }
-            )
+            d.update({copy_key: sub_doc[copy_key] for copy_key in summary_fields[doc_key] if copy_key in sub_doc})
     return d
