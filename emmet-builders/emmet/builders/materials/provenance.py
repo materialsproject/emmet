@@ -108,7 +108,7 @@ class ProvenanceBuilder(Builder):
         forms_avail = set(self.materials.distinct("formula_pretty", self.query))
         forms_to_update = forms_to_update & forms_avail
 
-        self.logger.info(f"Found {len(forms_to_update)} new/updated systems to proces")
+        self.logger.info(f"Found {len(forms_to_update)} new/updated systems to process")
 
         self.total = len(forms_to_update)
 
@@ -119,7 +119,12 @@ class ProvenanceBuilder(Builder):
 
             mats = list(
                 self.materials.query(
-                    properties=["material_id", "last_updated", "structure", "initial_structures", "formula_pretty"],
+                    properties=["material_id", 
+                                "last_updated", 
+                                "structure", 
+                                "initial_structures", 
+                                "formula_pretty", 
+                                "deprecated"],
                     criteria={"formula_pretty": {"$in": formulas}},
                 )
             )
@@ -155,9 +160,11 @@ class ProvenanceBuilder(Builder):
         # Match up SNLS with materials
         for mat in mats:
             matched_snls = list(self.match(source_snls, mat))
+            
             if len(matched_snls) > 0:
                 doc = ProvenanceDoc.from_SNLs(
-                    material_id=mat["material_id"], structure=mat["structure"], snls=matched_snls
+                    material_id=mat["material_id"], structure=Structure.from_dict(mat["structure"]), 
+                    snls=matched_snls, deprecated=mat["deprecated"]
                 )
 
                 doc.authors.append(self.settings.DEFAULT_AUTHOR)
@@ -186,6 +193,7 @@ class ProvenanceBuilder(Builder):
             struc = Structure.from_dict(snl)
             struc.snl = SNLDict(**snl)
             snl_strucs.append(struc)
+            
 
         groups = group_structures(
             m_strucs + snl_strucs,
@@ -194,6 +202,7 @@ class ProvenanceBuilder(Builder):
             angle_tol=self.settings.ANGLE_TOL,
             # comparator=OrderDisorderElementComparator(),
         )
+
         matched_groups = [group for group in groups if any(not hasattr(struc, "snl") for struc in group)]
         snls = [struc.snl for group in matched_groups for struc in group if hasattr(struc, "snl")]
 

@@ -147,9 +147,10 @@ class ProvenanceDoc(PropertyDoc):
                 refs.update(entries.entries)
             except Exception as e:
                 warnings.warn(f"Failed parsing bibtex: {snl.about.references} due to {e}")
+    
 
         bib_data = BibliographyData(entries=refs)
-
+    
         references = [ref.to_string("bibtex") for ref in bib_data.entries.values()]
 
         # TODO: Maybe we should combine this robocrystallographer?
