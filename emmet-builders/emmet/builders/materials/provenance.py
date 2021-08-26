@@ -119,12 +119,14 @@ class ProvenanceBuilder(Builder):
 
             mats = list(
                 self.materials.query(
-                    properties=["material_id", 
-                                "last_updated", 
-                                "structure", 
-                                "initial_structures", 
-                                "formula_pretty", 
-                                "deprecated"],
+                    properties=[
+                        "material_id",
+                        "last_updated",
+                        "structure",
+                        "initial_structures",
+                        "formula_pretty",
+                        "deprecated",
+                    ],
                     criteria={"formula_pretty": {"$in": formulas}},
                 )
             )
@@ -160,11 +162,13 @@ class ProvenanceBuilder(Builder):
         # Match up SNLS with materials
         for mat in mats:
             matched_snls = list(self.match(source_snls, mat))
-            
+
             if len(matched_snls) > 0:
                 doc = ProvenanceDoc.from_SNLs(
-                    material_id=mat["material_id"], structure=Structure.from_dict(mat["structure"]), 
-                    snls=matched_snls, deprecated=mat["deprecated"]
+                    material_id=mat["material_id"],
+                    structure=Structure.from_dict(mat["structure"]),
+                    snls=matched_snls,
+                    deprecated=mat["deprecated"],
                 )
 
                 doc.authors.append(self.settings.DEFAULT_AUTHOR)
@@ -193,7 +197,6 @@ class ProvenanceBuilder(Builder):
             struc = Structure.from_dict(snl)
             struc.snl = SNLDict(**snl)
             snl_strucs.append(struc)
-            
 
         groups = group_structures(
             m_strucs + snl_strucs,
