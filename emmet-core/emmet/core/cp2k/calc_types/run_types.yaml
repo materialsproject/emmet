@@ -4,6 +4,14 @@ GGA:
     FRACTION: 0
   GGA:
     GGA: --
+METAGGA:
+  R2SCAN:
+    FUNCTIONAL:
+      - MGGA_C_R2SCAN
+      - MGGA_X_R2SCAN
+    FRACTION: 0
+  METAGGA:
+    METAGGA: --
 HYBRID:
   HYBRID:
     HYBRID: --

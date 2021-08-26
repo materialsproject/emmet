@@ -2,7 +2,7 @@
 from pathlib import Path
 from typing import Dict
 from monty.serialization import loadfn
-
+from typing import Iterable
 
 from emmet.core.cp2k.calc_types.enums import RunType, TaskType, CalcType
 
@@ -24,6 +24,8 @@ def run_type(dft: Dict) -> RunType:
         """
         if isinstance(v1, str) and isinstance(v2, str):
             return v1.strip().upper() == v2.strip().upper()
+        elif isinstance(v1, Iterable) and isinstance(v2, Iterable):
+            return set(v1) == set(v2)
         else:
             return v1 == v2
 
@@ -46,7 +48,7 @@ def run_type(dft: Dict) -> RunType:
         for special_type, params in _RUN_TYPE_DATA[functional_class].items():
             if all(
                 [
-                    _variant_equal(parameters.get(param, None), value)
+                    _variant_equal(parameters.get(param, True), value)
                     for param, value in params.items()
                 ]
             ):
