@@ -17,12 +17,10 @@ class DecompositionProduct(BaseModel):
 
     material_id: MPID = Field(None, description="The material this decomposition points to")
     formula: str = Field(
-        None,
-        description="The formula of the decomposed material this material decomposes to",
+        None, description="The formula of the decomposed material this material decomposes to",
     )
     amount: float = Field(
-        None,
-        description="The amount of the decomposed material by formula units this this material decomposes to",
+        None, description="The amount of the decomposed material by formula units this this material decomposes to",
     )
 
 
@@ -38,8 +36,7 @@ class ThermoDoc(PropertyDoc):
     )
 
     energy_per_atom: float = Field(
-        ...,
-        description="The total corrected DFT energy of this material per atom in eV/atom",
+        ..., description="The total corrected DFT energy of this material per atom in eV/atom",
     )
 
     energy_uncertainy_per_atom: float = Field(None, description="")
@@ -49,8 +46,7 @@ class ThermoDoc(PropertyDoc):
     energy_above_hull: float = Field(..., description="The energy above the hull in eV/Atom")
 
     is_stable: bool = Field(
-        False,
-        description="Flag for whether this material is on the hull and therefore stable",
+        False, description="Flag for whether this material is on the hull and therefore stable",
     )
 
     equilibrium_reaction_energy_per_atom: float = Field(
@@ -65,8 +61,7 @@ class ThermoDoc(PropertyDoc):
     )
 
     energy_type: str = Field(
-        ...,
-        description="The type of calculation this energy evaluation comes from. TODO: Convert to enum?",
+        ..., description="The type of calculation this energy evaluation comes from. TODO: Convert to enum?",
     )
 
     entry_types: List[str] = Field(description="List of available energy types computed for this material")
@@ -113,11 +108,7 @@ class ThermoDoc(PropertyDoc):
                 d["equilibrium_reaction_energy_per_atom"] = pd.get_equilibrium_reaction_energy(e)
             else:
                 d["decomposes_to"] = [
-                    {
-                        "material_id": de.entry_id,
-                        "formula": de.composition.formula,
-                        "amount": amt,
-                    }
+                    {"material_id": de.entry_id, "formula": de.composition.formula, "amount": amt}
                     for de, amt in decomp.items()
                 ]
 
@@ -131,6 +122,6 @@ class ThermoDoc(PropertyDoc):
                 elif k in e.data:
                     d[k] = e.data[k]
 
-            docs.append(ThermoDoc.from_structure(structure=e.structure, **d, **kwargs))
+            docs.append(ThermoDoc.from_structure(meta_structure=e.structure, **d, **kwargs))
 
         return docs

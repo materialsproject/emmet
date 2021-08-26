@@ -30,12 +30,11 @@ class PropertyDoc(StructureMetadata):
     )
 
     deprecated: bool = Field(
-        ...,
-        description="Whether this property document is deprecated.",
+        ..., description="Whether this property document is deprecated.",
     )
 
-    reasons: List[Union[DeprecationMessage, str]] = Field(
-        None, description="List of deprecation tags detailing why this document isn't valid"
+    deprecation_reasons: List[Union[DeprecationMessage, str]] = Field(
+        None, description="List of deprecation tags detailing why this document isn't valid",
     )
 
     last_updated: datetime = Field(
@@ -48,9 +47,11 @@ class PropertyDoc(StructureMetadata):
     warnings: Sequence[str] = Field([], description="Any warnings related to this property")
 
     @classmethod
-    def from_structure(cls: Type[S], structure: Structure, material_id: MPID, **kwargs) -> S:  # type: ignore[override]
+    def from_structure(  # type: ignore[override]
+        cls: Type[S], meta_structure: Structure, material_id: MPID, **kwargs
+    ) -> S:
         """
         Builds a materials document using the minimal amount of information
         """
 
-        return super().from_structure(structure=structure, material_id=material_id, **kwargs)  # type: ignore
+        return super().from_structure(meta_structure=meta_structure, material_id=material_id, **kwargs)  # type: ignore

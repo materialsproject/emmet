@@ -28,8 +28,7 @@ from emmet.core.mpid import MPID
 
 class ElectronicStructureBaseData(BaseModel):
     task_id: MPID = Field(
-        ...,
-        description="The source calculation (task) ID for the electronic structure data.",
+        ..., description="The source calculation (task) ID for the electronic structure data.",
     )
 
     band_gap: float = Field(..., description="Band gap energy in eV.")
@@ -63,18 +62,15 @@ class DosSummaryData(ElectronicStructureBaseData):
 
 class BandstructureData(BaseModel):
     setyawan_curtarolo: BandStructureSummaryData = Field(
-        None,
-        description="Band structure summary data using the Setyawan-Curtarolo path convention.",
+        None, description="Band structure summary data using the Setyawan-Curtarolo path convention.",
     )
 
     hinuma: BandStructureSummaryData = Field(
-        None,
-        description="Band structure summary data using the Hinuma et al. path convention.",
+        None, description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
     latimer_munro: BandStructureSummaryData = Field(
-        None,
-        description="Band structure summary data using the Latimer-Munro path convention.",
+        None, description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
 
@@ -88,16 +84,13 @@ class DosData(BaseModel):
             Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
         ],
     ] = Field(
-        None,
-        description="Band structure summary data using the Hinuma et al. path convention.",
+        None, description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
     orbital: Dict[
-        Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
-        Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
+        Union[Literal["total", "s", "p", "d", "f"], OrbitalType], Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
     ] = Field(
-        None,
-        description="Band structure summary data using the Latimer-Munro path convention.",
+        None, description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
     magnetic_ordering: Union[str, Ordering] = Field(None, description="Magnetic ordering of the calculation.")
@@ -118,8 +111,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     dos: DosData = Field(None, description="Density of states data for the material.")
 
     last_updated: datetime = Field(
-        description="Timestamp for when this document was last updated",
-        default_factory=datetime.utcnow,
+        description="Timestamp for when this document was last updated", default_factory=datetime.utcnow,
     )
 
     @classmethod
@@ -288,13 +280,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 nbands = bs.nb_bands
 
                 # - Get equivalent labels between different conventions
-                hskp = HighSymmKpath(
-                    bs.structure,
-                    path_type="all",
-                    symprec=0.1,
-                    angle_tolerance=5,
-                    atol=1e-5,
-                )
+                hskp = HighSymmKpath(bs.structure, path_type="all", symprec=0.1, angle_tolerance=5, atol=1e-5,)
                 equivalent_labels = hskp.equiv_labels
 
                 if bs_type == "latimer_munro":
@@ -367,7 +353,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         return cls.from_structure(
             material_id=MPID(material_id),
             task_id=summary_task,
-            structure=structure,
+            meta_structure=structure,
             band_gap=summary_band_gap,
             cbm=summary_cbm,
             vbm=summary_vbm,
