@@ -30,6 +30,7 @@ class ProvenanceBuilder(Builder):
             provenance: Store to update with provenance data
             source_snls: List of locations to grab SNL
             query : query on materials to limit search
+            timeout: timeout in seconds for finding provenance for each material
         """
         self.materials = materials
         self.provenance = provenance
