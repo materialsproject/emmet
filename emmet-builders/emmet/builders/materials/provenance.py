@@ -3,7 +3,7 @@ from itertools import chain
 from typing import Dict, Iterable, List, Optional, Tuple
 
 from maggma.core import Builder, Store
-from maggma.utils import grouper
+from maggma.utils import Timeout, grouper
 from pymatgen.core.structure import Structure
 
 from emmet.builders.settings import EmmetBuildSettings
@@ -19,6 +19,7 @@ class ProvenanceBuilder(Builder):
         source_snls: List[Store],
         settings: Optional[EmmetBuildSettings] = None,
         query: Optional[Dict] = None,
+        timeout: int = 600,
         **kwargs,
     ):
         """
@@ -27,7 +28,7 @@ class ProvenanceBuilder(Builder):
         Args:
             materials: Store of materials docs to tag with SNLs
             provenance: Store to update with provenance data
-            source_snls: List of locations to grab SNLs
+            source_snls: List of locations to grab SNL
             query : query on materials to limit search
         """
         self.materials = materials
@@ -35,6 +36,7 @@ class ProvenanceBuilder(Builder):
         self.source_snls = source_snls
         self.settings = EmmetBuildSettings.autoload(settings)
         self.query = query or {}
+        self.timeout = timeout
         self.kwargs = kwargs
 
         materials.key = "material_id"
@@ -42,7 +44,9 @@ class ProvenanceBuilder(Builder):
         for s in source_snls:
             s.key = "snl_id"
 
-        super().__init__(sources=[materials, *source_snls], targets=[provenance], **kwargs)
+        super().__init__(
+            sources=[materials, *source_snls], targets=[provenance], **kwargs
+        )
 
     def ensure_indicies(self):
 
@@ -62,13 +66,23 @@ class ProvenanceBuilder(Builder):
         # Find all formulas for materials that have been updated since this
         # builder was last ran
         q = self.query
-        updated_materials = self.provenance.newer_in(self.materials, criteria=q, exhaustive=True,)
-        forms_to_update = set(self.materials.distinct("formula_pretty", {"material_id": {"$in": updated_materials}}))
+        updated_materials = self.provenance.newer_in(
+            self.materials,
+            criteria=q,
+            exhaustive=True,
+        )
+        forms_to_update = set(
+            self.materials.distinct(
+                "formula_pretty", {"material_id": {"$in": updated_materials}}
+            )
+        )
 
         # Find all new SNL formulas since the builder was last run
         for source in self.source_snls:
             new_snls = self.provenance.newer_in(source)
-            forms_to_update |= set(source.distinct("formula_pretty", {source.key: {"$in": new_snls}}))
+            forms_to_update |= set(
+                source.distinct("formula_pretty", {source.key: {"$in": new_snls}})
+            )
 
         # Now reduce to the set of formulas we actually have
         forms_avail = set(self.materials.distinct("formula_pretty", self.query))
@@ -96,13 +110,23 @@ class ProvenanceBuilder(Builder):
         # Find all formulas for materials that have been updated since this
         # builder was last ran
         q = self.query
-        updated_materials = self.provenance.newer_in(self.materials, criteria=q, exhaustive=True,)
-        forms_to_update = set(self.materials.distinct("formula_pretty", {"material_id": {"$in": updated_materials}}))
+        updated_materials = self.provenance.newer_in(
+            self.materials,
+            criteria=q,
+            exhaustive=True,
+        )
+        forms_to_update = set(
+            self.materials.distinct(
+                "formula_pretty", {"material_id": {"$in": updated_materials}}
+            )
+        )
 
         # Find all new SNL formulas since the builder was last run
         for source in self.source_snls:
             new_snls = self.provenance.newer_in(source)
-            forms_to_update |= set(source.distinct("formula_pretty", {source.key: {"$in": new_snls}}))
+            forms_to_update |= set(
+                source.distinct("formula_pretty", {source.key: {"$in": new_snls}})
+            )
 
         # Now reduce to the set of formulas we actually have
         forms_avail = set(self.materials.distinct("formula_pretty", self.query))
@@ -115,7 +139,9 @@ class ProvenanceBuilder(Builder):
         for formulas in grouper(forms_to_update, self.chunk_size):
             snls = []  # type: list
             for source in self.source_snls:
-                snls.extend(source.query(criteria={"formula_pretty": {"$in": formulas}}))
+                snls.extend(
+                    source.query(criteria={"formula_pretty": {"$in": formulas}})
+                )
 
             mats = list(
                 self.materials.query(
@@ -143,7 +169,9 @@ class ProvenanceBuilder(Builder):
 
                 mat_group = mat_groups[formula]
 
-                self.logger.debug(f"Found {len(snl_group)} snls and {len(mat_group)} mats")
+                self.logger.debug(
+                    f"Found {len(snl_group)} snls and {len(mat_group)} mats"
+                )
                 yield mat_group, snl_group
 
     def process_item(self, item) -> List[Dict]:
@@ -161,21 +189,29 @@ class ProvenanceBuilder(Builder):
 
         # Match up SNLS with materials
         for mat in mats:
-            matched_snls = list(self.match(source_snls, mat))
+            try:
+                with Timeout(
+                    seconds=self.timeout,
+                ):
+                    matched_snls = list(self.match(source_snls, mat))
 
-            if len(matched_snls) > 0:
-                doc = ProvenanceDoc.from_SNLs(
-                    material_id=mat["material_id"],
-                    structure=Structure.from_dict(mat["structure"]),
-                    snls=matched_snls,
-                    deprecated=mat["deprecated"],
+                    if len(matched_snls) > 0:
+                        doc = ProvenanceDoc.from_SNLs(
+                            material_id=mat["material_id"],
+                            structure=Structure.from_dict(mat["structure"]),
+                            snls=matched_snls,
+                            deprecated=mat["deprecated"],
+                        )
+
+                        doc.authors.append(self.settings.DEFAULT_AUTHOR)
+                        doc.history.append(self.settings.DEFAULT_HISTORY)
+                        doc.references.append(self.settings.DEFAULT_REFERENCE)
+
+                        snl_docs.append(doc.dict(exclude_none=True))
+            except TimeoutError:
+                self.logger.warning(
+                    f"Timed out trying to identify provenance for {mat['material_id']}"
                 )
-
-                doc.authors.append(self.settings.DEFAULT_AUTHOR)
-                doc.history.append(self.settings.DEFAULT_HISTORY)
-                doc.references.append(self.settings.DEFAULT_REFERENCE)
-
-                snl_docs.append(doc.dict(exclude_none=True))
 
         return snl_docs
 
@@ -206,8 +242,17 @@ class ProvenanceBuilder(Builder):
             # comparator=OrderDisorderElementComparator(),
         )
 
-        matched_groups = [group for group in groups if any(not hasattr(struc, "snl") for struc in group)]
-        snls = [struc.snl for group in matched_groups for struc in group if hasattr(struc, "snl")]
+        matched_groups = [
+            group
+            for group in groups
+            if any(not hasattr(struc, "snl") for struc in group)
+        ]
+        snls = [
+            struc.snl
+            for group in matched_groups
+            for struc in group
+            if hasattr(struc, "snl")
+        ]
 
         self.logger.debug(f"Found {len(snls)} SNLs for {mat['material_id']}")
         return snls
