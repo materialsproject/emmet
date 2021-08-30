@@ -320,6 +320,7 @@ summary_fields: Dict[str, list] = {
         "weighted_work_function",
         "has_reconstructed",
     ],
+    "provenance": ["theoretical"],
     "eos": [],
     "phonon": [],
     "insertion_electrodes": [],

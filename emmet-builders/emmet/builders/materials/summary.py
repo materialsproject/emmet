@@ -25,6 +25,7 @@ class SummaryBuilder(Builder):
         substrates,
         surfaces,
         eos,
+        provenance,
         summary,
         chunk_size=100,
         query=None,
@@ -45,6 +46,7 @@ class SummaryBuilder(Builder):
         self.substrates = substrates
         self.surfaces = surfaces
         self.eos = eos
+        self.provenance = provenance
         self.summary = summary
         self.chunk_size = chunk_size
         self.query = query if query else {}
@@ -65,6 +67,7 @@ class SummaryBuilder(Builder):
                 surfaces,
                 substrates,
                 eos,
+                provenance,
             ],
             targets=[summary],
             chunk_size=chunk_size,
@@ -98,32 +101,22 @@ class SummaryBuilder(Builder):
                 "materials": self.materials.query_one({self.materials.key: entry}),
                 "thermo": self.thermo.query_one({self.thermo.key: entry}),
                 "xas": list(self.xas.query({self.xas.key: entry})),
-                "grain_boundaries": list(
-                    self.grain_boundaries.query({self.grain_boundaries.key: entry})
-                ),
-                "electronic_structure": self.electronic_structure.query_one(
-                    {self.electronic_structure.key: entry}
-                ),
+                "grain_boundaries": list(self.grain_boundaries.query({self.grain_boundaries.key: entry})),
+                "electronic_structure": self.electronic_structure.query_one({self.electronic_structure.key: entry}),
                 "magnetism": self.magnetism.query_one({self.magnetism.key: entry}),
                 "elasticity": self.elasticity.query_one({self.elasticity.key: entry}),
                 "dielectric": self.dielectric.query_one({self.dielectric.key: entry}),
-                "piezoelectric": self.piezoelectric.query_one(
-                    {self.piezoelectric.key: entry}
-                ),
-                "phonon": self.phonon.query_one(
-                    {self.phonon.key: entry}, [self.phonon.key]
-                ),
+                "piezoelectric": self.piezoelectric.query_one({self.piezoelectric.key: entry}),
+                "phonon": self.phonon.query_one({self.phonon.key: entry}, [self.phonon.key]),
                 "insertion_electrodes": list(
                     self.insertion_electrodes.query(
-                        {self.insertion_electrodes.key: entry},
-                        [self.insertion_electrodes.key],
+                        {self.insertion_electrodes.key: entry}, [self.insertion_electrodes.key],
                     )
                 ),
-                "surface_properties": self.surfaces.query_one(
-                    {self.surfaces.key: entry}
-                ),
+                "surface_properties": self.surfaces.query_one({self.surfaces.key: entry}),
                 "substrates": list(self.surfaces.query({self.substrates.key: entry})),
                 "eos": self.eos.query_one({self.eos.key: entry}, [self.eos.key]),
+                "provenance": self.provenance.query_one({self.provenance.key: entry}),
             }
 
             sub_fields = {
@@ -137,8 +130,7 @@ class SummaryBuilder(Builder):
                 if data[collection] is not None:
                     data[collection] = (
                         data[collection][sub_field]
-                        if (sub_field in data[collection])
-                        and (data[collection][sub_field] != {})
+                        if (sub_field in data[collection]) and (data[collection][sub_field] != {})
                         else None
                     )
 
