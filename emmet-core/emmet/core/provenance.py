@@ -40,9 +40,6 @@ class History(BaseModel):
     name: str
     url: str
     description: Optional[Dict] = Field(None, description="Dictionary of exra data for this history node")
-    experimental: Optional[bool] = Field(
-        False, description="Whether this node dictates this is an experimental history not",
-    )
 
     @root_validator(pre=True)
     def str_to_dict(cls, values):
@@ -160,7 +157,13 @@ class ProvenanceDoc(PropertyDoc):
         authors = [entry for snl in snls for entry in snl.about.authors]
 
         # Check if this entry is experimental
-        experimental = any(history.experimental for snl in snls for history in snl.about.history)
+        exp_vals = []
+        for snl in snls:
+            for entry in snl.about.history:
+                if entry.description is not None:
+                    exp_vals.append(entry.description.get("experimental", False))
+
+        experimental = any(exp_vals)
 
         # Aggregate all the database IDs
         snl_ids = {snl.snl_id for snl in snls}
