@@ -228,7 +228,8 @@ class ProvenanceBuilder(Builder):
         for group in groups:
             for snl_struc in snl_strucs:
                 if sm.fit(group[0], snl_struc):
-                    snls.append(snl_struc.snl)
+                    if snl_struc.snl not in snls:
+                        snls.append(snl_struc.snl)
 
         self.logger.debug(f"Found {len(snls)} SNLs for {mat['material_id']}")
         return snls
