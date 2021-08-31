@@ -1,6 +1,7 @@
 from collections import defaultdict
 from itertools import chain
 from typing import Dict, Iterable, List, Optional, Tuple
+from math import ceil
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
@@ -62,7 +63,7 @@ class ProvenanceBuilder(Builder):
         # Find all formulas for materials that have been updated since this
         # builder was last ran
         q = self.query
-        updated_materials = self.provenance.newer_in(self.materials, criteria=q, exhaustive=True,)
+        updated_materials = self.provenance.newer_in(self.materials, criteria=q, exhaustive=True)
         forms_to_update = set(self.materials.distinct("formula_pretty", {"material_id": {"$in": updated_materials}}))
 
         # Find all new SNL formulas since the builder was last run
@@ -73,14 +74,16 @@ class ProvenanceBuilder(Builder):
         # Now reduce to the set of formulas we actually have
         forms_avail = set(self.materials.distinct("formula_pretty", self.query))
         forms_to_update = forms_to_update & forms_avail
+        
+        N = ceil(len(forms_to_update) / number_splits)
 
         self.logger.info(
             f"Found {len(forms_to_update)} new/updated systems to distribute to workers "
-            f"in chunks of {len(forms_to_update)/number_splits}"
+            f"in {N} chunks."
         )
 
-        for chunk in grouper(forms_to_update, number_splits):
-            yield {"formula_pretty": {"$in": chunk}}
+        for chunk in grouper(forms_to_update, N):
+            yield {"query": {"formula_pretty": {"$in": chunk}}}
 
     def get_items(self) -> Tuple[List[Dict], List[Dict]]:  # type: ignore
         """
