@@ -5,6 +5,7 @@ from math import ceil
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
+from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.structure import Structure
 
 from emmet.builders.settings import EmmetBuildSettings
@@ -74,12 +75,11 @@ class ProvenanceBuilder(Builder):
         # Now reduce to the set of formulas we actually have
         forms_avail = set(self.materials.distinct("formula_pretty", self.query))
         forms_to_update = forms_to_update & forms_avail
-        
+
         N = ceil(len(forms_to_update) / number_splits)
 
         self.logger.info(
-            f"Found {len(forms_to_update)} new/updated systems to distribute to workers "
-            f"in {N} chunks."
+            f"Found {len(forms_to_update)} new/updated systems to distribute to workers " f"in {N} chunks."
         )
 
         for chunk in grouper(forms_to_update, N):
@@ -201,16 +201,34 @@ class ProvenanceBuilder(Builder):
             struc.snl = SNLDict(**snl)
             snl_strucs.append(struc)
 
+        # Only use StructureMatcher group_structures method on mat structures
         groups = group_structures(
-            m_strucs + snl_strucs,
+            m_strucs,
             ltol=self.settings.LTOL,
             stol=self.settings.STOL,
             angle_tol=self.settings.ANGLE_TOL,
             # comparator=OrderDisorderElementComparator(),
         )
 
-        matched_groups = [group for group in groups if any(not hasattr(struc, "snl") for struc in group)]
-        snls = [struc.snl for group in matched_groups for struc in group if hasattr(struc, "snl")]
+        # Manually iterate through groups of mat structures and all snl structures and check fit
+        # Otherwise, this step is too slow.
+        sm = StructureMatcher(
+            ltol=self.settings.LTOL,
+            stol=self.settings.STOL,
+            angle_tol=self.settings.ANGLE_TOL,
+            primitive_cell=True,
+            scale=True,
+            attempt_supercell=False,
+            allow_subset=False,
+            comparator=ElementComparator(),
+        )
+
+        snls = []
+
+        for group in groups:
+            for snl_struc in snl_strucs:
+                if sm.fit(group[0], snl_struc):
+                    snls.append(snl_struc.snl)
 
         self.logger.debug(f"Found {len(snls)} SNLs for {mat['material_id']}")
         return snls
