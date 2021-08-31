@@ -133,7 +133,7 @@ class ProvenanceDoc(PropertyDoc):
 
         # Choose earliest created_at
         created_at = min([snl.about.created_at for snl in snls])
-        #last_updated = max([snl.about.created_at for snl in snls])
+        # last_updated = max([snl.about.created_at for snl in snls])
 
         # Choose earliest history
         history = sorted(snls, key=lambda snl: snl.about.created_at)[0].about.history
@@ -181,6 +181,4 @@ class ProvenanceDoc(PropertyDoc):
             "history": history,
         }
 
-        return super().from_structure(
-            material_id=material_id, meta_structure=structure, **fields, **kwargs,
-        )
+        return super().from_structure(material_id=material_id, meta_structure=structure, **fields, **kwargs,)
