@@ -268,6 +268,7 @@ summary_fields: Dict[str, list] = {
         "symmetry",
         "structure",
         "deprecated",
+        "task_ids",
     ],
     "thermo": [
         "uncorrected_energy_per_atom",
