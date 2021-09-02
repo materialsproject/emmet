@@ -85,6 +85,10 @@ class SummaryDoc(PropertyDoc):
 
     structure: Structure = Field(..., description="The lowest energy structure for this material")
 
+    task_ids: List[MPID] = Field(
+        [], title="Calculation IDs", description="List of Calculations IDs associated with this material.",
+    )
+
     # Thermo
 
     uncorrected_energy_per_atom: float = Field(
@@ -268,6 +272,7 @@ summary_fields: Dict[str, list] = {
         "symmetry",
         "structure",
         "deprecated",
+        "task_ids",
     ],
     "thermo": [
         "uncorrected_energy_per_atom",
@@ -320,6 +325,7 @@ summary_fields: Dict[str, list] = {
         "weighted_work_function",
         "has_reconstructed",
     ],
+    "provenance": ["theoretical"],
     "eos": [],
     "phonon": [],
     "insertion_electrodes": [],

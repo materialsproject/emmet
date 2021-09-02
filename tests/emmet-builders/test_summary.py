@@ -87,6 +87,11 @@ def xas():
 
 
 @pytest.fixture
+def provenance():
+    return MemoryStore()
+
+
+@pytest.fixture
 def summary():
     return MemoryStore(key="material_id")
 
@@ -106,6 +111,7 @@ def test_summary_builder(
     substrates,
     surfaces,
     eos,
+    provenance,
     summary,
 ):
 
@@ -124,6 +130,7 @@ def test_summary_builder(
         xas=xas,
         grain_boundaries=grain_boundaries,
         eos=eos,
+        provenance=provenance,
         summary=summary,
     )
 
@@ -133,6 +140,7 @@ def test_summary_builder(
 
 def test_serialization(tmpdir):
     builder = SummaryBuilder(
+        MemoryStore(),
         MemoryStore(),
         MemoryStore(),
         MemoryStore(),
