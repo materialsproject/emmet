@@ -84,6 +84,10 @@ class SummaryDoc(PropertyDoc):
     # Materials
 
     structure: Structure = Field(..., description="The lowest energy structure for this material")
+    
+    task_ids: List[MPID] = Field(
+        [], title="Calculation IDs", description="List of Calculations IDs associated with this material.",
+    )
 
     # Thermo
 
