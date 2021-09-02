@@ -76,14 +76,14 @@ class ProvenanceBuilder(Builder):
         # Now reduce to the set of formulas we actually have
         forms_avail = set(self.materials.distinct("formula_pretty", self.query))
         forms_to_update = forms_to_update & forms_avail
-        
-        mat_ids = set(self.materials.distinct("material_id", {"formula_pretty":{"$in": list(forms_to_update)}})) & set(updated_materials)
+
+        mat_ids = set(self.materials.distinct("material_id", {"formula_pretty": {"$in": list(forms_to_update)}})) & set(
+            updated_materials
+        )
 
         N = ceil(len(mat_ids) / number_splits)
 
-        self.logger.info(
-            f"Found {len(mat_ids)} new/updated systems to distribute to workers " f"in {N} chunks."
-        )
+        self.logger.info(f"Found {len(mat_ids)} new/updated systems to distribute to workers " f"in {N} chunks.")
 
         for chunk in grouper(mat_ids, N):
             yield {"query": {"material_id": {"$in": chunk}}}
@@ -113,40 +113,40 @@ class ProvenanceBuilder(Builder):
         # Now reduce to the set of formulas we actually have
         forms_avail = set(self.materials.distinct("formula_pretty", self.query))
         forms_to_update = forms_to_update & forms_avail
-        
-        mat_ids = set(self.materials.distinct("material_id", {"formula_pretty":{"$in": list(forms_to_update)}})) & set(updated_materials)
-        
-        self.total = len(mat_ids )
+
+        mat_ids = set(self.materials.distinct("material_id", {"formula_pretty": {"$in": list(forms_to_update)}})) & set(
+            updated_materials
+        )
+
+        self.total = len(mat_ids)
 
         self.logger.info(f"Found {self.total} new/updated systems to process")
 
         for mat_id in mat_ids:
-            
-             
+
             mat = self.materials.query_one(
-                    properties=[
-                        "material_id",
-                        "last_updated",
-                        "structure",
-                        "initial_structures",
-                        "formula_pretty",
-                        "deprecated",
-                    ],
-                    criteria={"material_id": mat_id},
-                )
-            
-            
+                properties=[
+                    "material_id",
+                    "last_updated",
+                    "structure",
+                    "initial_structures",
+                    "formula_pretty",
+                    "deprecated",
+                ],
+                criteria={"material_id": mat_id},
+            )
+
             snls = []  # type: list
             for source in self.source_snls:
                 snls.extend(source.query(criteria={"formula_pretty": mat["formula_pretty"]}))
-         
+
             snl_groups = defaultdict(list)
             for snl in snls:
                 struc = Structure.from_dict(snl)
                 snl_sg = get_sg(struc)
                 struc.snl = SNLDict(**snl)
                 snl_groups[snl_sg].append(struc)
-                      
+
             mat_sg = get_sg(Structure.from_dict(mat["structure"]))
 
             snl_structs = snl_groups[mat_sg]
@@ -168,7 +168,7 @@ class ProvenanceBuilder(Builder):
         self.logger.debug(f"Finding Provenance {formula_pretty}")
 
         # Match up SNLS with materials
-        
+
         matched_snls = self.match(snl_structs, mat)
 
         if len(matched_snls) > 0:
@@ -179,10 +179,12 @@ class ProvenanceBuilder(Builder):
                 deprecated=mat["deprecated"],
             )
         else:
-            doc = ProvenanceDoc(material_id=mat["material_id"], 
-                                structure=Structure.from_dict(mat["structure"]), 
-                                deprecated=mat["deprecated"],
-                                created_at=datetime.utcnow())
+            doc = ProvenanceDoc(
+                material_id=mat["material_id"],
+                structure=Structure.from_dict(mat["structure"]),
+                deprecated=mat["deprecated"],
+                created_at=datetime.utcnow(),
+            )
 
         doc.authors.append(self.settings.DEFAULT_AUTHOR)
         doc.history.append(self.settings.DEFAULT_HISTORY)
