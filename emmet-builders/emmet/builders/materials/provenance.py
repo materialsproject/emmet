@@ -154,7 +154,7 @@ class ProvenanceBuilder(Builder):
             self.logger.debug(f"Found {len(snl_structs)} potential snls for {mat_id}")
             yield mat, snl_structs
 
-    def process_item(self, item) -> List[Dict]:
+    def process_item(self, item) -> Dict:
         """
         Matches SNLS and Materials
         Args:

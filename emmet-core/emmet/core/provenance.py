@@ -185,4 +185,3 @@ class ProvenanceDoc(PropertyDoc):
         }
 
         return super().from_structure(material_id=material_id, meta_structure=structure, **fields, **kwargs,)
-
