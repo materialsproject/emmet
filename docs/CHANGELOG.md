@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.12.1](https://github.com/materialsproject/emmet/tree/v0.12.1) (2021-09-02)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.0...v0.12.1)
+
+**Merged pull requests:**
+
+- Provenance to summary [\#256](https://github.com/materialsproject/emmet/pull/256) ([munrojm](https://github.com/munrojm))
+
 ## [v0.12.0](https://github.com/materialsproject/emmet/tree/v0.12.0) (2021-09-02)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.11.0...v0.12.0)
