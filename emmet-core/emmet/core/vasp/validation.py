@@ -32,19 +32,13 @@ class ValidationDoc(EmmetBaseModel):
     task_id: MPID = Field(..., description="The task_id for this validation document")
     valid: bool = Field(False, description="Whether this task is valid or not")
     last_updated: datetime = Field(
-        description="Last updated date for this document",
-        default_factory=datetime.utcnow,
+        description="Last updated date for this document", default_factory=datetime.utcnow,
     )
     reasons: List[Union[DeprecationMessage, str]] = Field(
         None, description="List of deprecation tags detailing why this task isn't valid"
     )
-    warnings: List[str] = Field(
-        [], description="List of potential warnings about this calculation"
-    )
-    data: Dict = Field(
-        description="Dictioary of data used to perform validation."
-        " Useful for post-mortem analysis"
-    )
+    warnings: List[str] = Field([], description="List of potential warnings about this calculation")
+    data: Dict = Field(description="Dictioary of data used to perform validation." " Useful for post-mortem analysis")
 
     class Config:
         extra = "allow"
@@ -85,18 +79,14 @@ class ValidationDoc(EmmetBaseModel):
 
             # Ensure inputsets that need the bandgap get it
             try:
-                valid_input_set: VaspInputSet = input_sets[str(calc_type)](
-                    structure, bandgap=bandgap
-                )
+                valid_input_set: VaspInputSet = input_sets[str(calc_type)](structure, bandgap=bandgap)
             except TypeError:
                 valid_input_set = input_sets[str(calc_type)](structure)
 
             # Checking K-Points
             # Calculations that use KSPACING will not have a .kpoints attr
             if valid_input_set.kpoints is not None:
-                valid_num_kpts = valid_input_set.kpoints.num_kpts or np.prod(
-                    valid_input_set.kpoints.kpts[0]
-                )
+                valid_num_kpts = valid_input_set.kpoints.num_kpts or np.prod(valid_input_set.kpoints.kpts[0])
                 num_kpts = inputs.get("kpoints", {}).get("nkpoints", 0) or np.prod(
                     inputs.get("kpoints", {}).get("kpoints", [1, 1, 1])
                 )
@@ -107,9 +97,7 @@ class ValidationDoc(EmmetBaseModel):
             else:
                 valid_kspacing = valid_input_set.incar.get("KSPACING", 0)
                 if inputs.get("incar", {}).get("KSPACING"):
-                    data["kspacing_delta"] = (
-                        inputs["incar"].get("KSPACING") - valid_kspacing
-                    )
+                    data["kspacing_delta"] = inputs["incar"].get("KSPACING") - valid_kspacing
                     # larger KSPACING means fewer k-points
                     if data["kspacing_delta"] > kspacing_tolerance:
                         warnings.append(
@@ -127,8 +115,7 @@ class ValidationDoc(EmmetBaseModel):
             curr_ismear = inputs.get("incar", {}).get("ISMEAR", 1)
             if curr_ismear != valid_ismear:
                 warnings.append(
-                    f"Inappropriate smearing settings. Set to {curr_ismear},"
-                    f" but should be {valid_ismear}"
+                    f"Inappropriate smearing settings. Set to {curr_ismear}," f" but should be {valid_ismear}"
                 )
 
             # Checking ENCUT
@@ -138,46 +125,38 @@ class ValidationDoc(EmmetBaseModel):
             if data["encut_ratio"] < 1:
                 reasons.append(DeprecationMessage.ENCUT)
 
-            # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
-            input_hubbards = task_doc.input.hubbards
+            # Checking U-values (only if +U calc)
+            if task_doc.input.is_hubbard:
 
-            # Checking U-values
-            if valid_input_set.incar.get("LDAU", False) or len(input_hubbards) > 0:
-                # Assemble required input_set LDAU params into dictionary
-                input_set_hubbards = dict(
-                    zip(
-                        valid_input_set.poscar.site_symbols,
-                        valid_input_set.incar.get("LDAUU", []),
-                    )
-                )
+                # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
+                input_hubbards = task_doc.input.hubbards
 
-                all_elements = list(
-                    set(input_set_hubbards.keys()) | set(input_hubbards.keys())
-                )
-                diff_ldau_params = {
-                    el: (input_set_hubbards.get(el, 0), input_hubbards.get(el, 0))
-                    for el in all_elements
-                    if not np.allclose(
-                        input_set_hubbards.get(el, 0), input_hubbards.get(el, 0)
+                if valid_input_set.incar.get("LDAU", False) or len(input_hubbards) > 0:
+                    # Assemble required input_set LDAU params into dictionary
+                    input_set_hubbards = dict(
+                        zip(valid_input_set.poscar.site_symbols, valid_input_set.incar.get("LDAUU", []),)
                     )
-                }
 
-                if len(diff_ldau_params) > 0:
-                    reasons.append(DeprecationMessage.LDAU)
-                    warnings.extend(
-                        [
-                            f"U-value for {el} should be {good} but was {bad}"
-                            for el, (bad, good) in diff_ldau_params.items()
-                        ]
-                    )
+                    all_elements = list(set(input_set_hubbards.keys()) | set(input_hubbards.keys()))
+                    diff_ldau_params = {
+                        el: (input_set_hubbards.get(el, 0), input_hubbards.get(el, 0))
+                        for el in all_elements
+                        if not np.allclose(input_set_hubbards.get(el, 0), input_hubbards.get(el, 0))
+                    }
+
+                    if len(diff_ldau_params) > 0:
+                        reasons.append(DeprecationMessage.LDAU)
+                        warnings.extend(
+                            [
+                                f"U-value for {el} should be {good} but was {bad}"
+                                for el, (good, bad) in diff_ldau_params.items()
+                            ]
+                        )
 
             # Check the max upwards SCF step
             skip = abs(inputs.get("incar", {}).get("NLEMDL", -5)) - 1
             energies = [
-                d["e_fr_energy"]
-                for d in task_doc.calcs_reversed[0]["output"]["ionic_steps"][-1][
-                    "electronic_steps"
-                ]
+                d["e_fr_energy"] for d in task_doc.calcs_reversed[0]["output"]["ionic_steps"][-1]["electronic_steps"]
             ]
             if len(energies) > skip:
                 max_gradient = np.max(np.gradient(energies)[skip:])
@@ -206,8 +185,4 @@ def _get_unsorted_symbol_set(structure: Structure):
     """
     Have to build structure_symbol set manually to ensure we get the right order since pymatgen sorts its symbol_set list
     """
-    return list(
-        {
-            str(sp): 1 for site in structure for sp, v in site.species.items() if v != 0
-        }.keys()
-    )
+    return list({str(sp): 1 for site in structure for sp, v in site.species.items() if v != 0}.keys())
