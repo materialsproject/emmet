@@ -138,38 +138,40 @@ class ValidationDoc(EmmetBaseModel):
             if data["encut_ratio"] < 1:
                 reasons.append(DeprecationMessage.ENCUT)
 
-            # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
-            input_hubbards = task_doc.input.hubbards
+             # Checking U-values (only if +U calc)
+            if task_doc.input.is_hubbard:
+           
+                # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
+                input_hubbards = task_doc.input.hubbards     
 
-            # Checking U-values
-            if valid_input_set.incar.get("LDAU", False) or len(input_hubbards) > 0:
-                # Assemble required input_set LDAU params into dictionary
-                input_set_hubbards = dict(
-                    zip(
-                        valid_input_set.poscar.site_symbols,
-                        valid_input_set.incar.get("LDAUU", []),
+                if valid_input_set.incar.get("LDAU", False) or len(input_hubbards) > 0:
+                    # Assemble required input_set LDAU params into dictionary
+                    input_set_hubbards = dict(
+                        zip(
+                            valid_input_set.poscar.site_symbols,
+                            valid_input_set.incar.get("LDAUU", []),
+                        )
                     )
-                )
 
-                all_elements = list(
-                    set(input_set_hubbards.keys()) | set(input_hubbards.keys())
-                )
-                diff_ldau_params = {
-                    el: (input_set_hubbards.get(el, 0), input_hubbards.get(el, 0))
-                    for el in all_elements
-                    if not np.allclose(
-                        input_set_hubbards.get(el, 0), input_hubbards.get(el, 0)
+                    all_elements = list(
+                        set(input_set_hubbards.keys()) | set(input_hubbards.keys())
                     )
-                }
+                    diff_ldau_params = {
+                        el: (input_set_hubbards.get(el, 0), input_hubbards.get(el, 0))
+                        for el in all_elements
+                        if not np.allclose(
+                            input_set_hubbards.get(el, 0), input_hubbards.get(el, 0)
+                        )
+                    }
 
-                if len(diff_ldau_params) > 0:
-                    reasons.append(DeprecationMessage.LDAU)
-                    warnings.extend(
-                        [
-                            f"U-value for {el} should be {good} but was {bad}"
-                            for el, (bad, good) in diff_ldau_params.items()
-                        ]
-                    )
+                    if len(diff_ldau_params) > 0:
+                        reasons.append(DeprecationMessage.LDAU)
+                        warnings.extend(
+                            [
+                                f"U-value for {el} should be {good} but was {bad}"
+                                for el, (good, bad) in diff_ldau_params.items()
+                            ]
+                        )
 
             # Check the max upwards SCF step
             skip = abs(inputs.get("incar", {}).get("NLEMDL", -5)) - 1
