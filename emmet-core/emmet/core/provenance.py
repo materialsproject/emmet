@@ -40,9 +40,6 @@ class History(BaseModel):
     name: str
     url: str
     description: Optional[Dict] = Field(None, description="Dictionary of exra data for this history node")
-    experimental: Optional[bool] = Field(
-        False, description="Whether this node dictates this is an experimental history not",
-    )
 
     @root_validator(pre=True)
     def str_to_dict(cls, values):
@@ -133,7 +130,7 @@ class ProvenanceDoc(PropertyDoc):
 
         # Choose earliest created_at
         created_at = min([snl.about.created_at for snl in snls])
-        last_updated = max([snl.about.created_at for snl in snls])
+        # last_updated = max([snl.about.created_at for snl in snls])
 
         # Choose earliest history
         history = sorted(snls, key=lambda snl: snl.about.created_at)[0].about.history
@@ -160,7 +157,13 @@ class ProvenanceDoc(PropertyDoc):
         authors = [entry for snl in snls for entry in snl.about.authors]
 
         # Check if this entry is experimental
-        experimental = any(history.experimental for snl in snls for history in snl.about.history)
+        exp_vals = []
+        for snl in snls:
+            for entry in snl.about.history:
+                if entry.description is not None:
+                    exp_vals.append(entry.description.get("experimental", False))
+
+        experimental = any(exp_vals)
 
         # Aggregate all the database IDs
         snl_ids = {snl.snl_id for snl in snls}
@@ -181,6 +184,4 @@ class ProvenanceDoc(PropertyDoc):
             "history": history,
         }
 
-        return super().from_structure(
-            material_id=material_id, meta_structure=structure, last_updated=last_updated, **fields, **kwargs,
-        )
+        return super().from_structure(material_id=material_id, meta_structure=structure, **fields, **kwargs,)
