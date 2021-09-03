@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.12.2](https://github.com/materialsproject/emmet/tree/v0.12.2) (2021-09-02)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.1...v0.12.2)
+
+**Merged pull requests:**
+
+- Validation builder U fix [\#257](https://github.com/materialsproject/emmet/pull/257) ([munrojm](https://github.com/munrojm))
+
 ## [v0.12.1](https://github.com/materialsproject/emmet/tree/v0.12.1) (2021-09-02)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.0...v0.12.1)
