@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.12.5](https://github.com/materialsproject/emmet/tree/v0.12.5) (2021-09-09)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.4...v0.12.5)
+
+**Merged pull requests:**
+
+- Chunking bug fix [\#265](https://github.com/materialsproject/emmet/pull/265) ([munrojm](https://github.com/munrojm))
+
 ## [v0.12.4](https://github.com/materialsproject/emmet/tree/v0.12.4) (2021-09-09)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.3...v0.12.4)
