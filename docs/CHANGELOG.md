@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.12.4](https://github.com/materialsproject/emmet/tree/v0.12.4) (2021-09-09)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.3...v0.12.4)
+
+**Merged pull requests:**
+
+- Fix pre-chunking for materials and thermo builder [\#264](https://github.com/materialsproject/emmet/pull/264) ([munrojm](https://github.com/munrojm))
+
 ## [v0.12.3](https://github.com/materialsproject/emmet/tree/v0.12.3) (2021-09-09)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.2...v0.12.3)
