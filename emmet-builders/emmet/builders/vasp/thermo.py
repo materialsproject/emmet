@@ -2,6 +2,7 @@ import warnings
 from collections import defaultdict
 from itertools import chain
 from typing import Dict, Iterable, Iterator, List, Optional, Set
+from math import ceil
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
@@ -82,7 +83,9 @@ class ThermoBuilder(Builder):
             if chemsys not in to_process_chemsys:
                 to_process_chemsys |= chemsys_permutations(chemsys)
 
-        for chemsys_chunk in grouper(to_process_chemsys, number_splits):
+        N = ceil(len(to_process_chemsys) / number_splits)
+
+        for chemsys_chunk in grouper(to_process_chemsys, N):
             yield {"query": {"chemsys": {"$in": list(chemsys_chunk)}}}
 
     def get_items(self) -> Iterator[List[Dict]]:

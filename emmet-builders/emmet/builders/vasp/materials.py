@@ -1,5 +1,6 @@
 from datetime import datetime
 from itertools import chain
+from math import ceil
 from typing import Dict, Iterable, Iterator, List, Optional
 
 from maggma.builders import Builder
@@ -107,7 +108,9 @@ class MaterialsBuilder(Builder):
             if d[self.tasks.key] in to_process_tasks
         }
 
-        for formula_chunk in grouper(to_process_forms, number_splits):
+        N = ceil(len(to_process_forms) / number_splits)
+
+        for formula_chunk in grouper(to_process_forms, N):
             yield {"query": {"formula_pretty": {"$in": list(formula_chunk)}}}
 
     def get_items(self) -> Iterator[List[Dict]]:
