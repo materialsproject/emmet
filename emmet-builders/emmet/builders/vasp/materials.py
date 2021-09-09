@@ -111,6 +111,7 @@ class MaterialsBuilder(Builder):
         N = ceil(len(to_process_forms) / number_splits)
 
         for formula_chunk in grouper(to_process_forms, N):
+
             yield {"query": {"formula_pretty": {"$in": list(formula_chunk)}}}
 
     def get_items(self) -> Iterator[List[Dict]]:

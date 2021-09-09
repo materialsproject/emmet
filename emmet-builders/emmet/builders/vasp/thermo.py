@@ -86,6 +86,7 @@ class ThermoBuilder(Builder):
         N = ceil(len(to_process_chemsys) / number_splits)
 
         for chemsys_chunk in grouper(to_process_chemsys, N):
+
             yield {"query": {"chemsys": {"$in": list(chemsys_chunk)}}}
 
     def get_items(self) -> Iterator[List[Dict]]:
