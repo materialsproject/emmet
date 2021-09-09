@@ -71,6 +71,10 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
         # Material ID
         possible_mat_ids = [task.task_id for task in structure_optimizations]
+        
+        if use_statics:
+            possible_mat_ids += [task.task_id for task in statics]
+        
         material_id = min(possible_mat_ids)
 
         # Always prefer a static over a structure opt
