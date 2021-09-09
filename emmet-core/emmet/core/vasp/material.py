@@ -17,16 +17,13 @@ from emmet.core.vasp.task import TaskDocument
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
     calc_types: Mapping[str, CalcType] = Field(  # type: ignore
-        None,
-        description="Calculation types for all the calculations that make up this material",
+        None, description="Calculation types for all the calculations that make up this material",
     )
     task_types: Mapping[str, TaskType] = Field(
-        None,
-        description="Task types for all the calculations that make up this material",
+        None, description="Task types for all the calculations that make up this material",
     )
     run_types: Mapping[str, RunType] = Field(
-        None,
-        description="Run types for all the calculations that make up this material",
+        None, description="Run types for all the calculations that make up this material",
     )
 
     origins: List[PropertyOrigin] = Field(None, description="Mappingionary for tracking the provenance of properties")
@@ -71,6 +68,10 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
         # Material ID
         possible_mat_ids = [task.task_id for task in structure_optimizations]
+
+        if use_statics:
+            possible_mat_ids += [task.task_id for task in statics]
+
         material_id = min(possible_mat_ids)
 
         # Always prefer a static over a structure opt
@@ -112,9 +113,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         # Origins
         origins = [
             PropertyOrigin(
-                name="structure",
-                task_id=best_structure_calc.task_id,
-                last_updated=best_structure_calc.last_updated,
+                name="structure", task_id=best_structure_calc.task_id, last_updated=best_structure_calc.last_updated,
             )
         ]
 
@@ -123,8 +122,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         all_run_types = set(run_types.values())
         for rt in all_run_types:
             relevant_calcs = sorted(
-                [doc for doc in structure_calcs if doc.run_type == rt and doc.is_valid],
-                key=_structure_eval,
+                [doc for doc in structure_calcs if doc.run_type == rt and doc.is_valid], key=_structure_eval,
             )
 
             if len(relevant_calcs) > 0:
@@ -151,10 +149,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         )
 
     @classmethod
-    def construct_deprecated_material(
-        cls,
-        task_group: List[TaskDocument],
-    ) -> "MaterialsDoc":
+    def construct_deprecated_material(cls, task_group: List[TaskDocument],) -> "MaterialsDoc":
         """
         Converts a group of tasks into a deprecated material
 
