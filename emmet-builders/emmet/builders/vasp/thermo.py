@@ -83,7 +83,7 @@ class ThermoBuilder(Builder):
                 to_process_chemsys |= chemsys_permutations(chemsys)
 
         for chemsys_chunk in grouper(to_process_chemsys, number_splits):
-            yield {"chemsys": {"$in": list(chemsys_chunk)}}
+            yield {"query": {"chemsys": {"$in": list(chemsys_chunk)}}}
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
@@ -264,9 +264,7 @@ class ThermoBuilder(Builder):
 
         return all_entries
 
-    def get_updated_chemsys(
-        self,
-    ) -> Set:
+    def get_updated_chemsys(self,) -> Set:
         """Gets updated chemical system as defined by the updating of an existing material"""
 
         updated_mats = self.thermo.newer_in(self.materials, criteria=self.query)
