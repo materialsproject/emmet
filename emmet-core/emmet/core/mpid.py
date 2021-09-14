@@ -58,12 +58,7 @@ class MPID(str):
 
         if self.parts[0] != "" and other_parts[0] != "":
             # both have prefixes; normal comparison
-
-            # if prefixes are different, sort using int value
-            if self.parts[0] != other_parts[0]:
-                return self.parts[1] < other_parts[1]
-            else:  # compare normally
-                return self.parts < other_parts
+            return self.parts[1] < other_parts[1]
         elif self.parts[0] != "":
             # other is a pure int, self is prefixed
             # Always sort MPIDs before pure integer IDs
