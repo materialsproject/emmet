@@ -38,9 +38,7 @@ class MPID(str):
 
         else:
 
-            raise ValueError(
-                "Must provide an MPID, int, or string of the format prefix-number"
-            )
+            raise ValueError("Must provide an MPID, int, or string of the format prefix-number")
 
     def __eq__(self, other: object):
         if isinstance(other, MPID):
@@ -58,9 +56,14 @@ class MPID(str):
 
         other_parts = MPID(other).parts
 
-        if (self.parts[0] != "" and other_parts[0] != ""):
+        if self.parts[0] != "" and other_parts[0] != "":
             # both have prefixes; normal comparison
-            return self.parts < other_parts
+
+            # if prefixes are different, sort using int value
+            if self.parts[0] != other_parts[0]:
+                return self.parts[1] < other_parts[1]
+            else:  # compare normally
+                return self.parts < other_parts
         elif self.parts[0] != "":
             # other is a pure int, self is prefixed
             # Always sort MPIDs before pure integer IDs
@@ -85,8 +88,7 @@ class MPID(str):
     @classmethod
     def __modify_schema__(cls, field_schema):
         field_schema.update(
-            pattern=r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$",
-            examples=["mp-3534", "3453", "mp-834-Ag"],
+            pattern=r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$", examples=["mp-3534", "3453", "mp-834-Ag"],
         )
 
     @classmethod
