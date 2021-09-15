@@ -85,11 +85,6 @@ class ThermoDoc(PropertyDoc):
         " The keys for this dictionary are names of various calculation types",
     )
 
-    phase_diagram: PhaseDiagram = Field(
-        None,
-        description="Phase diagram for the entire chemical system of this material.",
-    )
-
     @classmethod
     def from_entries(
         cls, entries: List[Union[ComputedEntry, ComputedStructureEntry]], **kwargs
@@ -120,7 +115,6 @@ class ThermoDoc(PropertyDoc):
                 "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
                 "energy_above_hull": ehull,
                 "is_stable": e in pd.stable_entries,
-                "phase_diagram": pd.as_dict(),
             }
 
             if "last_updated" in e.data:
