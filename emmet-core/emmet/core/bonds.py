@@ -59,6 +59,7 @@ class BondingDoc(PropertyDoc):
         :param structure: ideally an oxidation state-decorated structure
         :param material_id: mpid
         :param preferred_methods: list of strings of NearNeighbor classes or NearNeighbor instances
+        :param deprecated: whether source material is or is not deprecated
         :param kwargs: to pass to PropertyDoc
         :return:
         """
@@ -94,7 +95,6 @@ class BondingDoc(PropertyDoc):
                     "coordination_envs_anonymous": sg.types_of_coordination_environments(
                         anonymous=True
                     ),
-                    "deprecated": False,
                 }
 
                 break
