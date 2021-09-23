@@ -1,5 +1,25 @@
 # Changelog
 
+## [v0.13.0](https://github.com/materialsproject/emmet/tree/v0.13.0) (2021-09-23)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.13.0)
+
+**Merged pull requests:**
+
+- Builder bug fixes [\#272](https://github.com/materialsproject/emmet/pull/272) ([munrojm](https://github.com/munrojm))
+
+## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.12.8)
+
+## [v0.12.7](https://github.com/materialsproject/emmet/tree/v0.12.7) (2021-09-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.7)
+
+**Merged pull requests:**
+
+- Remove phase diagram from thermo doc and builder [\#270](https://github.com/materialsproject/emmet/pull/270) ([munrojm](https://github.com/munrojm))
+
 ## [v0.12.6](https://github.com/materialsproject/emmet/tree/v0.12.6) (2021-09-14)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.5...v0.12.6)
