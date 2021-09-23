@@ -107,7 +107,11 @@ class ThermoBuilder(Builder):
         # Remove overlapping chemical systems
         processed = set()
         to_process_chemsys = []
-        for chemsys in updated_chemsys | new_chemsys | affected_chemsys:
+        for chemsys in sorted(
+            updated_chemsys | new_chemsys | affected_chemsys,
+            key=lambda x: len(x),
+            reverse=True,
+        ):
             if chemsys not in processed:
                 processed |= chemsys_permutations(chemsys)
                 to_process_chemsys.append(chemsys)
