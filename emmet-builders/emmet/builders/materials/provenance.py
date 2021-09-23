@@ -11,7 +11,7 @@ from pymatgen.core.structure import Structure
 
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.provenance import ProvenanceDoc, SNLDict
-from emmet.core.utils import group_structures, get_sg
+from emmet.core.utils import get_sg, jsanitize
 
 
 class ProvenanceBuilder(Builder):
@@ -190,7 +190,7 @@ class ProvenanceBuilder(Builder):
         doc.history.append(self.settings.DEFAULT_HISTORY)
         doc.references.append(self.settings.DEFAULT_REFERENCE)
 
-        snl_doc = doc.dict(exclude_none=True)
+        snl_doc = jsanitize(doc.dict(exclude_none=True), allow_bson=True)
 
         return snl_doc
 

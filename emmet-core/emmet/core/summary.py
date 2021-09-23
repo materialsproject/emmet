@@ -280,7 +280,7 @@ summary_fields: Dict[str, list] = {
         "formation_energy_per_atom",
         "energy_above_hull",
         "is_stable",
-        "equillibrium_reaction_energy_per_atom",
+        "equilibrium_reaction_energy_per_atom",
         "decomposes_to",
     ],
     "xas": ["absorbing_element", "edge", "spectrum_type", "xas_id"],

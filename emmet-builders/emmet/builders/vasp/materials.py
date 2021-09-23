@@ -96,17 +96,11 @@ class MaterialsBuilder(Builder):
             temp_query["tags"] = {"$in": self.settings.BUILD_TAGS}
 
         self.logger.info("Finding tasks to process")
-        all_tasks = list(
-            self.tasks.query(temp_query, [self.tasks.key, "formula_pretty"])
-        )
+        all_tasks = list(self.tasks.query(temp_query, [self.tasks.key, "formula_pretty"]))
 
         processed_tasks = set(self.materials.distinct("task_ids"))
         to_process_tasks = {d[self.tasks.key] for d in all_tasks} - processed_tasks
-        to_process_forms = {
-            d["formula_pretty"]
-            for d in all_tasks
-            if d[self.tasks.key] in to_process_tasks
-        }
+        to_process_forms = {d["formula_pretty"] for d in all_tasks if d[self.tasks.key] in to_process_tasks}
 
         N = ceil(len(to_process_forms) / number_splits)
 
@@ -147,17 +141,11 @@ class MaterialsBuilder(Builder):
             temp_query["tags"] = {"$in": self.settings.BUILD_TAGS}
 
         self.logger.info("Finding tasks to process")
-        all_tasks = list(
-            self.tasks.query(temp_query, [self.tasks.key, "formula_pretty"])
-        )
+        all_tasks = list(self.tasks.query(temp_query, [self.tasks.key, "formula_pretty"]))
 
         processed_tasks = set(self.materials.distinct("task_ids"))
         to_process_tasks = {d[self.tasks.key] for d in all_tasks} - processed_tasks
-        to_process_forms = {
-            d["formula_pretty"]
-            for d in all_tasks
-            if d[self.tasks.key] in to_process_tasks
-        }
+        to_process_forms = {d["formula_pretty"] for d in all_tasks if d[self.tasks.key] in to_process_tasks}
 
         self.logger.info(f"Found {len(to_process_tasks)} unprocessed tasks")
         self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
@@ -167,10 +155,7 @@ class MaterialsBuilder(Builder):
 
         if self.task_validation:
             invalid_ids = {
-                doc[self.tasks.key]
-                for doc in self.task_validation.query(
-                    {"valid": False}, [self.task_validation.key]
-                )
+                doc[self.tasks.key] for doc in self.task_validation.query({"valid": False}, [self.task_validation.key])
             }
         else:
             invalid_ids = set()
@@ -200,9 +185,7 @@ class MaterialsBuilder(Builder):
         for formula in to_process_forms:
             tasks_query = dict(temp_query)
             tasks_query["formula_pretty"] = formula
-            tasks = list(
-                self.tasks.query(criteria=tasks_query, properties=projected_fields)
-            )
+            tasks = list(self.tasks.query(criteria=tasks_query, properties=projected_fields))
             for t in tasks:
                 t["is_valid"] = t[self.tasks.key] not in invalid_ids
 
@@ -241,8 +224,7 @@ class MaterialsBuilder(Builder):
                 doc.warnings.append(str(e))
                 materials.append(doc)
                 self.logger.warn(
-                    f"Failed making material for {failed_ids}."
-                    f" Inserted as deprecated Material: {doc.material_id}"
+                    f"Failed making material for {failed_ids}." f" Inserted as deprecated Material: {doc.material_id}"
                 )
 
         self.logger.debug(f"Produced {len(materials)} materials for {formula}")
@@ -274,9 +256,7 @@ class MaterialsBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
-    def filter_and_group_tasks(
-        self, tasks: List[TaskDocument]
-    ) -> Iterator[List[TaskDocument]]:
+    def filter_and_group_tasks(self, tasks: List[TaskDocument]) -> Iterator[List[TaskDocument]]:
         """
         Groups tasks by structure matching
         """
@@ -284,10 +264,7 @@ class MaterialsBuilder(Builder):
         filtered_tasks = [
             task
             for task in tasks
-            if any(
-                allowed_type is task.task_type
-                for allowed_type in self.settings.VASP_ALLOWED_VASP_TYPES
-            )
+            if any(allowed_type is task.task_type for allowed_type in self.settings.VASP_ALLOWED_VASP_TYPES)
         ]
 
         structures = []
