@@ -40,13 +40,7 @@ class BondingDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_structure(
-        cls,
-        structure: Structure,
-        material_id: MPID,
-        preferred_methods: List[Union[str, NearNeighbors]] = ("CrystalNN", "MinimumDistanceNN",),
-        **kwargs
-    ):
+    def from_structure(cls, structure, material_id, preferred_methods=("CrystalNN", "MinimumDistanceNN",), **kwargs):
         """
         Calculate
 
