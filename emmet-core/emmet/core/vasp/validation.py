@@ -124,7 +124,7 @@ class ValidationDoc(EmmetBaseModel):
             data["encut_ratio"] = float(encut) / valid_encut  # type: ignore
             if data["encut_ratio"] < 1:
                 reasons.append(DeprecationMessage.ENCUT)
-            
+
             # U-value checks
             # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
             input_hubbards = task_doc.input.hubbards
