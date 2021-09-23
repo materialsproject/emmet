@@ -444,11 +444,6 @@
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#emmet.core.thermo.ThermoDoc.phase_diagram">
-    phase_diagram
-  </a>
-</li>
-<li class="md-nav__item">
 <a class="md-nav__link" href="#emmet.core.thermo.ThermoDoc.uncorrected_energy_per_atom">
     uncorrected_energy_per_atom
   </a>
@@ -959,11 +954,6 @@
 <li class="md-nav__item">
 <a class="md-nav__link" href="#emmet.core.thermo.ThermoDoc.is_stable">
     is_stable
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#emmet.core.thermo.ThermoDoc.phase_diagram">
-    phase_diagram
   </a>
 </li>
 <li class="md-nav__item">
@@ -1838,18 +1828,6 @@ is_stable: <span class="nb">bool</span> </code>
 </div>
 </div>
 <div class="doc doc-object doc-attribute">
-<h3 class="doc doc-heading" id="emmet.core.thermo.ThermoDoc.phase_diagram">
-<code class="highlight">
-phase_diagram: <span class="n">PhaseDiagram</span> </code>
-<span class="doc doc-properties">
-<small class="doc doc-property doc-property-pydantic-field"><code>pydantic-field</code></small>
-</span>
-<a class="headerlink" href="#emmet.core.thermo.ThermoDoc.phase_diagram" title="Permanent link">¶</a></h3>
-<div class="doc doc-contents">
-<p>Phase diagram for the entire chemical system of this material.</p>
-</div>
-</div>
-<div class="doc doc-object doc-attribute">
 <h3 class="doc doc-heading" id="emmet.core.thermo.ThermoDoc.uncorrected_energy_per_atom">
 <code class="highlight">
 uncorrected_energy_per_atom: <span class="nb">float</span> </code>
@@ -2094,7 +2072,7 @@ from_SNLs<span class="p">(</span><span class="n">material_id</span><span class="
         <span class="s2">"history"</span><span class="p">:</span> <span class="n">history</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_structure</span><span class="p">(</span><span class="n">material_id</span><span class="o">=</span><span class="n">material_id</span><span class="p">,</span> <span class="n">meta_structure</span><span class="o">=</span><span class="n">structure</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,)</span>
+    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_structure</span><span class="p">(</span><span class="n">material_id</span><span class="o">=</span><span class="n">material_id</span><span class="p">,</span> <span class="n">meta_structure</span><span class="o">=</span><span class="n">structure</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre>
 </div>
 </details>
