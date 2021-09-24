@@ -1,4 +1,10 @@
 {
+    "elements": [
+        "O",
+        "Ca",
+        "Mn",
+        "Zn"
+    ],
     "calcs_reversed": [
         {
             "output": {
