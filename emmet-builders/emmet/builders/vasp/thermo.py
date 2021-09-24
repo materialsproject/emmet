@@ -239,7 +239,9 @@ class ThermoBuilder(Builder):
         """Gets updated chemical system as defined by the updating of an existing material"""
 
         updated_mats = self.thermo.newer_in(self.materials, criteria=self.query)
-        updated_chemsys = set(self.materials.distinct("chemsys", {"material_id": {"$in": list(updated_mats)}}))
+        updated_chemsys = set(
+            self.materials.distinct("chemsys", {"material_id": {"$in": list(updated_mats)}, **self.query})
+        )
         self.logger.debug(f"Found {len(updated_chemsys)} updated chemical systems")
 
         return updated_chemsys

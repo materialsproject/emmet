@@ -167,6 +167,11 @@ class ValidationDoc(EmmetBaseModel):
                     " and compare with max SCF gradient tolerance"
                 )
 
+            # Check for Am and Po elements. These currently do not have proper elemental entries
+            # and will not get treated properly by the thermo builder.
+            if "Am" in task_doc.elements or "Po" in task_doc.elements:
+                reasons.append(DeprecationMessage.MANUAL)
+
         doc = ValidationDoc(
             task_id=task_doc.task_id,
             calc_type=calc_type,
