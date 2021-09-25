@@ -70,6 +70,7 @@ class ValidationDoc(EmmetBaseModel):
         calc_type = task_doc.calc_type
         inputs = task_doc.orig_inputs
         bandgap = task_doc.output.bandgap
+        chemsys = task_doc.chemsys
 
         reasons = []
         data = {}
@@ -169,7 +170,7 @@ class ValidationDoc(EmmetBaseModel):
 
             # Check for Am and Po elements. These currently do not have proper elemental entries
             # and will not get treated properly by the thermo builder.
-            if "Am" in task_doc.elements or "Po" in task_doc.elements:
+            if ("Am" in chemsys) or ("Po" in chemsys):
                 reasons.append(DeprecationMessage.MANUAL)
 
         doc = ValidationDoc(
