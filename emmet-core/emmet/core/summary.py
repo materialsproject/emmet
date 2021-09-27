@@ -220,7 +220,7 @@ class SummaryDoc(PropertyDoc):
 
     # Oxi States
 
-    possible_species: List[str] = Field(description="Possible charged species in this material.")
+    possible_species: List[str] = Field(None, description="Possible charged species in this material.")
 
     # Has Props
 
