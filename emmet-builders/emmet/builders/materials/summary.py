@@ -24,6 +24,7 @@ class SummaryBuilder(Builder):
         insertion_electrodes,
         substrates,
         surfaces,
+        oxi_states,
         eos,
         provenance,
         summary,
@@ -45,6 +46,7 @@ class SummaryBuilder(Builder):
         self.insertion_electrodes = insertion_electrodes
         self.substrates = substrates
         self.surfaces = surfaces
+        self.oxi_states = oxi_states
         self.eos = eos
         self.provenance = provenance
         self.summary = summary
@@ -65,6 +67,7 @@ class SummaryBuilder(Builder):
                 phonon,
                 insertion_electrodes,
                 surfaces,
+                oxi_states,
                 substrates,
                 eos,
                 provenance,
@@ -115,6 +118,7 @@ class SummaryBuilder(Builder):
                 ),
                 "surface_properties": self.surfaces.query_one({self.surfaces.key: entry}),
                 "substrates": list(self.surfaces.query({self.substrates.key: entry})),
+                "oxi_states": self.oxi_states.query({self.oxi_states.key: entry}),
                 "eos": self.eos.query_one({self.eos.key: entry}, [self.eos.key]),
                 "provenance": self.provenance.query_one({self.provenance.key: entry}),
             }

@@ -218,6 +218,10 @@ class SummaryDoc(PropertyDoc):
 
     has_reconstructed: bool = Field(None, description="Whether the material has any reconstructed surfaces.")
 
+    # Oxi States
+
+    possible_species: List[str] = Field(description="Possible charged species in this material.")
+
     # Has Props
 
     has_props: List[str] = Field(None, description="List of properties that are available for a given material.")
@@ -325,6 +329,7 @@ summary_fields: Dict[str, list] = {
         "weighted_work_function",
         "has_reconstructed",
     ],
+    "oxi_states": ["possible_species"],
     "provenance": ["theoretical"],
     "eos": [],
     "phonon": [],
