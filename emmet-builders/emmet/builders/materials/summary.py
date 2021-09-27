@@ -118,7 +118,7 @@ class SummaryBuilder(Builder):
                 ),
                 "surface_properties": self.surfaces.query_one({self.surfaces.key: entry}),
                 "substrates": list(self.surfaces.query({self.substrates.key: entry})),
-                "oxi_states": self.oxi_states.query({self.oxi_states.key: entry}),
+                "oxi_states": self.oxi_states.query_one({self.oxi_states.key: entry}),
                 "eos": self.eos.query_one({self.eos.key: entry}, [self.eos.key]),
                 "provenance": self.provenance.query_one({self.provenance.key: entry}),
             }
