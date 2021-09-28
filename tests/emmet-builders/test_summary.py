@@ -72,6 +72,11 @@ def substrates():
 
 
 @pytest.fixture
+def oxi_states():
+    return MemoryStore()
+
+
+@pytest.fixture
 def surfaces():
     return MemoryStore()
 
@@ -110,6 +115,7 @@ def test_summary_builder(
     insertion_electrodes,
     substrates,
     surfaces,
+    oxi_states,
     eos,
     provenance,
     summary,
@@ -127,6 +133,7 @@ def test_summary_builder(
         elasticity=elasticity,
         substrates=substrates,
         surfaces=surfaces,
+        oxi_states=oxi_states,
         xas=xas,
         grain_boundaries=grain_boundaries,
         eos=eos,
@@ -140,6 +147,7 @@ def test_summary_builder(
 
 def test_serialization(tmpdir):
     builder = SummaryBuilder(
+        MemoryStore(),
         MemoryStore(),
         MemoryStore(),
         MemoryStore(),
