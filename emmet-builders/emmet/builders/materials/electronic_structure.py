@@ -12,6 +12,7 @@ from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.io.vasp.sets import MPStaticSet
 
 from emmet.core import SETTINGS
 from emmet.core.electronic_structure import ElectronicStructureDoc
