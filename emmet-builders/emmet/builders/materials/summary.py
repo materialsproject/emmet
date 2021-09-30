@@ -104,19 +104,30 @@ class SummaryBuilder(Builder):
                 "materials": self.materials.query_one({self.materials.key: entry}),
                 "thermo": self.thermo.query_one({self.thermo.key: entry}),
                 "xas": list(self.xas.query({self.xas.key: entry})),
-                "grain_boundaries": list(self.grain_boundaries.query({self.grain_boundaries.key: entry})),
-                "electronic_structure": self.electronic_structure.query_one({self.electronic_structure.key: entry}),
+                "grain_boundaries": list(
+                    self.grain_boundaries.query({self.grain_boundaries.key: entry})
+                ),
+                "electronic_structure": self.electronic_structure.query_one(
+                    {self.electronic_structure.key: entry}
+                ),
                 "magnetism": self.magnetism.query_one({self.magnetism.key: entry}),
                 "elasticity": self.elasticity.query_one({self.elasticity.key: entry}),
                 "dielectric": self.dielectric.query_one({self.dielectric.key: entry}),
-                "piezoelectric": self.piezoelectric.query_one({self.piezoelectric.key: entry}),
-                "phonon": self.phonon.query_one({self.phonon.key: entry}, [self.phonon.key]),
+                "piezoelectric": self.piezoelectric.query_one(
+                    {self.piezoelectric.key: entry}
+                ),
+                "phonon": self.phonon.query_one(
+                    {self.phonon.key: entry}, [self.phonon.key]
+                ),
                 "insertion_electrodes": list(
                     self.insertion_electrodes.query(
-                        {self.insertion_electrodes.key: entry}, [self.insertion_electrodes.key],
+                        {self.insertion_electrodes.key: entry},
+                        [self.insertion_electrodes.key],
                     )
                 ),
-                "surface_properties": self.surfaces.query_one({self.surfaces.key: entry}),
+                "surface_properties": self.surfaces.query_one(
+                    {self.surfaces.key: entry}
+                ),
                 "substrates": list(self.surfaces.query({self.substrates.key: entry})),
                 "oxi_states": self.oxi_states.query_one({self.oxi_states.key: entry}),
                 "eos": self.eos.query_one({self.eos.key: entry}, [self.eos.key]),
@@ -134,7 +145,8 @@ class SummaryBuilder(Builder):
                 if data[collection] is not None:
                     data[collection] = (
                         data[collection][sub_field]
-                        if (sub_field in data[collection]) and (data[collection][sub_field] != {})
+                        if (sub_field in data[collection])
+                        and (data[collection][sub_field] != {})
                         else None
                     )
 

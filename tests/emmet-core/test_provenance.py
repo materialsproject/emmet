@@ -37,7 +37,9 @@ def snls(structure):
 
 def test_from_snls(snls, structure):
 
-    doc = ProvenanceDoc.from_SNLs(material_id="mp-3", structure=structure, snls=snls, deprecated=False)
+    doc = ProvenanceDoc.from_SNLs(
+        material_id="mp-3", structure=structure, snls=snls, deprecated=False
+    )
 
     assert isinstance(doc, ProvenanceDoc)
     assert doc.property_name == "provenance"
@@ -51,7 +53,9 @@ def test_from_snls(snls, structure):
     # Test experimental detection
     snls[0].about.history[0].description["experimental"] = True
     assert (
-        ProvenanceDoc.from_SNLs(material_id="mp-3", snls=snls, structure=structure, deprecated=False).theoretical
+        ProvenanceDoc.from_SNLs(
+            material_id="mp-3", snls=snls, structure=structure, deprecated=False
+        ).theoretical
         is False
     )
     assert doc.dict(exclude_none=True)["property_name"] == "provenance"
