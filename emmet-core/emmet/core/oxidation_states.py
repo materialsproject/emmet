@@ -44,7 +44,7 @@ class OxidationStateDoc(PropertyDoc):
             "possible_species": [],
             "possible_valences": [],
             "average_oxidation_states": {},
-        }
+        }  # type: dict
 
         try:
             bva = BVAnalyzer()
