@@ -58,7 +58,6 @@ class DielectricDoc(PropertyDoc):
         return super().from_structure(
             meta_structure=structure,
             material_id=material_id,
-            structure=structure,
             **{
                 "total": total,
                 "ionic": ionic,
@@ -87,18 +86,30 @@ class PiezoelectricDoc(PropertyDoc):
     max_direction: Tuple[int, int, int] = Field(
         None, description="Miller direction for maximum piezo response"
     )
-    strain_for_max: Matrix3D = Field(
+    strain_for_max: VoigtVector = Field(
         None, description="Normalized strain direction for maximum piezo repsonse"
     )
 
     @classmethod
     def from_ionic_and_electronic(
-        cls, ionic: PiezoTensor, electronic: PiezoTensor, **kwargs
+        cls,
+        material_id: MPID,
+        ionic: PiezoTensor,
+        electronic: PiezoTensor,
+        structure: Structure,
+        **kwargs,
     ):
 
-        total = BasePiezoTensor.from_voigt(np.sum(ionic, electronic))  # type: ignore
+        ionic_tensor = BasePiezoTensor.from_voigt(ionic)
+        electronic_tensor = BasePiezoTensor.from_voigt(electronic)
+        total = ionic_tensor + electronic_tensor
 
-        directions, charges, strains = np.linalg.svd(total, full_matrices=False)
+        # Symmeterize Convert to IEEE orientation
+        total = total.convert_to_ieee(structure)
+        ionic_tensor = ionic_tensor.convert_to_ieee(structure)
+        electronic_tensor = electronic_tensor.convert_to_ieee(structure)
+
+        directions, charges, strains = np.linalg.svd(total.voigt, full_matrices=False)
         max_index = np.argmax(np.abs(charges))
 
         max_direction = directions[max_index]
@@ -108,14 +119,16 @@ class PiezoelectricDoc(PropertyDoc):
         min_val = min_val[min_val > (np.max(min_val) / SETTINGS.MAX_PIEZO_MILLER)]
         min_val = np.min(min_val)
 
-        return cls(
+        return super().from_structure(
+            meta_structure=structure,
+            material_id=material_id,
             **{
-                "total": total.zeroed().voigt,
-                "ionic": ionic,
-                "static": electronic,
+                "total": total.zeroed().voigt.tolist(),
+                "ionic": ionic_tensor.zeroed().voigt.tolist(),
+                "electronic": electronic_tensor.zeroed().voigt.tolist(),
                 "e_ij_max": charges[max_index],
-                "max_direction": np.round(max_direction / min_val),
-                "strain_for_max": strains[max_index],
+                "max_direction": tuple(np.round(max_direction / min_val)),
+                "strain_for_max": tuple(strains[max_index]),
             },
             **kwargs,
         )

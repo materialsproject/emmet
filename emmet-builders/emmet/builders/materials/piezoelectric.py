@@ -4,30 +4,30 @@ from maggma.core import Store
 import numpy as np
 
 from pymatgen.core.structure import Structure
-from emmet.core.polar import DielectricDoc
+from emmet.core.polar import DielectricDoc, PiezoelectricDoc
 from emmet.core.utils import jsanitize
 
 
-class DielectricBuilder(Builder):
+class PiezoelectricBuilder(Builder):
     def __init__(
         self,
         materials: Store,
         tasks: Store,
-        dielectric: Store,
+        piezoelectric: Store,
         query: Optional[Dict] = None,
         **kwargs,
     ):
         self.materials = materials
         self.tasks = tasks
-        self.dielectric = dielectric
+        self.piezoelectric = piezoelectric
         self.query = query or {}
         self.kwargs = kwargs
 
         self.materials.key = "material_id"
         self.tasks.key = "task_id"
-        self.dielectric.key = "material_id"
+        self.piezoelectric.key = "material_id"
 
-        super().__init__(sources=[materials, tasks], targets=[dielectric], **kwargs)
+        super().__init__(sources=[materials, tasks], targets=[piezoelectric], **kwargs)
 
     def get_items(self):
         """
@@ -37,21 +37,44 @@ class DielectricBuilder(Builder):
             generator or list relevant tasks and materials to process
         """
 
-        self.logger.info("Dielectric Builder Started")
+        self.logger.info("Piezoelectric Builder Started")
 
         q = dict(self.query)
 
+        # Ensure no centrosymmetry
+        q.update(
+            {
+                "symmetry.point_group": {
+                    "$nin": [
+                        "-1",
+                        "2/m",
+                        "mmm",
+                        "4/m",
+                        "4/mmm",
+                        "-3",
+                        "-3m",
+                        "6/m",
+                        "6/mmm",
+                        "m-3",
+                        "m-3m",
+                    ]
+                }
+            }
+        )
+
         mat_ids = self.materials.distinct(self.materials.key, criteria=q)
-        di_ids = self.dielectric.distinct(self.dielectric.key)
+        piezo_ids = self.piezoelectric.distinct(self.piezoelectric.key)
 
         mats_set = set(
-            self.dielectric.newer_in(target=self.materials, criteria=q, exhaustive=True)
-        ) | (set(mat_ids) - set(di_ids))
+            self.piezoelectric.newer_in(
+                target=self.materials, criteria=q, exhaustive=True
+            )
+        ) | (set(mat_ids) - set(piezo_ids))
 
         mats = [mat for mat in mats_set]
 
         self.logger.info(
-            "Processing {} materials for dielectric data".format(len(mats))
+            "Processing {} materials for piezoelectric data".format(len(mats))
         )
 
         self.total = len(mats)
@@ -68,18 +91,18 @@ class DielectricBuilder(Builder):
         structure = Structure.from_dict(item["structure"])
         mpid = item["material_id"]
         origin_entry = {
-            "name": "dielectric",
+            "name": "piezoelectric",
             "task_id": item["task_id"],
             "last_updated": item["task_updated"],
         }
 
-        doc = DielectricDoc.from_ionic_and_electronic(
+        doc = PiezoelectricDoc.from_ionic_and_electronic(
             structure=structure,
             material_id=mpid,
             origins=[origin_entry],
             deprecated=False,
-            ionic=item["epsilon_ionic"],
-            electronic=item["epsilon_static"],
+            ionic=item["piezo_ionic"],
+            electronic=item["piezo_static"],
             last_updated=item["updated_on"],
         )
 
@@ -92,8 +115,8 @@ class DielectricBuilder(Builder):
         docs = list(filter(None, items))
 
         if len(docs) > 0:
-            self.logger.info(f"Found {len(docs)} dielectric docs to update")
-            self.dielectric.update(docs)
+            self.logger.info(f"Found {len(docs)} piezoelectric docs to update")
+            self.piezoelectric.update(docs)
         else:
             self.logger.info("No items to update")
 
@@ -129,8 +152,8 @@ class DielectricBuilder(Builder):
                     "input.is_hubbard",
                     "orig_inputs.kpoints",
                     "input.parameters",
-                    "output.epsilon_static",
-                    "output.epsilon_ionic",
+                    "output.piezo_tensor",
+                    "output.piezo_ionic_tensor",
                     "output.structure",
                 ],
                 criteria={self.tasks.key: str(task_id)},
@@ -159,8 +182,8 @@ class DielectricBuilder(Builder):
                     "task_id": task_id,
                     "is_hubbard": int(is_hubbard),
                     "nkpoints": int(nkpoints),
-                    "epsilon_static": task_query["output"]["epsilon_static"],
-                    "epsilon_ionic": task_query["output"]["epsilon_ionic"],
+                    "piezo_static": task_query["output"]["piezo_tensor"],
+                    "piezo_ionic": task_query["output"]["piezo_ionic_tensor"],
                     "structure": structure,
                     "updated_on": lu_dt,
                     "task_updated": task_updated,
