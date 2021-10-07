@@ -36,8 +36,6 @@ def test_dielectric(dielectric_structure):
         deprecated=False,
     )
 
-    print(doc.dict())
-
     assert isinstance(doc, DielectricDoc)
     assert doc.property_name == "dielectric"
     assert doc.material_id == "mp-149"
