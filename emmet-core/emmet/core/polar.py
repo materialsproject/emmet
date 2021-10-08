@@ -24,9 +24,11 @@ class DielectricDoc(PropertyDoc):
 
     property_name = "dielectric"
 
-    total: Tensor = Field(description="Total dielectric response")
-    ionic: Tensor = Field(description="Dielectric response due to atomic rearrangement")
-    electronic: Tensor = Field(
+    total: Matrix3D = Field(description="Total dielectric response")
+    ionic: Matrix3D = Field(
+        description="Dielectric response due to atomic rearrangement"
+    )
+    electronic: Matrix3D = Field(
         description="Dielectric response due to electron rearrangement"
     )
 
@@ -50,18 +52,18 @@ class DielectricDoc(PropertyDoc):
         **kwargs,
     ):
 
-        ionic = Tensor(ionic).convert_to_ieee(structure)
-        electronic = Tensor(electronic).convert_to_ieee(structure)
+        ionic_tensor = Tensor(ionic).convert_to_ieee(structure)
+        electronic_tensor = Tensor(electronic).convert_to_ieee(structure)
 
-        total = ionic + electronic
+        total = ionic_tensor + electronic_tensor
 
         return super().from_structure(
             meta_structure=structure,
             material_id=material_id,
             **{
-                "total": total,
-                "ionic": ionic,
-                "electronic": electronic,
+                "total": total.tolist(),
+                "ionic": ionic_tensor.tolist(),
+                "electronic": electronic_tensor.tolist(),
                 "e_total": np.average(np.diagonal(total)),
                 "e_ionic": np.average(np.diagonal(ionic)),
                 "e_electronic": np.average(np.diagonal(electronic)),
