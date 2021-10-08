@@ -1,6 +1,7 @@
 """ Core definition of a Thermo Document """
 from collections import defaultdict
 from typing import Dict, List, Union
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
@@ -149,4 +150,27 @@ class ThermoDoc(PropertyDoc):
                 ThermoDoc.from_structure(meta_structure=e.structure, **d, **kwargs)
             )
 
-        return docs
+        return docs, pd
+
+
+class PhaseDiagramDoc(BaseModel):
+    """
+    A phase diagram document
+    """
+
+    property_name = "phase_diagram"
+
+    chemsys: str = Field(
+        ...,
+        title="Chemical System",
+        description="Dash-delimited string of elements in the material",
+    )
+
+    phase_diagram: PhaseDiagram = Field(
+        ..., description="Phase diagram for the chemical system.",
+    )
+
+    last_updated: datetime = Field(
+        description="Timestamp for the most recent calculation update for this property",
+        default_factory=datetime.utcnow,
+    )
