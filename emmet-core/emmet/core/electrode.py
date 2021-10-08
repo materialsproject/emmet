@@ -8,7 +8,7 @@ from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.core import Composition, Structure
 from pymatgen.core.periodic_table import Element
-from pymatgen.entries.computed_entries import ComputedEntry
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.mpid import MPID
 
@@ -169,7 +169,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     @classmethod
     def from_entries(
         cls,
-        grouped_entries: List[ComputedEntry],
+        grouped_entries: List[ComputedStructureEntry],
         working_ion_entry: ComputedEntry,
         battery_id: str,
         host_structure: Structure,
