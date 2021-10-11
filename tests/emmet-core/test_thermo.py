@@ -35,7 +35,9 @@ def O_structure(test_dir):
 
 
 @pytest.fixture
-def entries(Fe3O4_structure, Fe2O3a_structure, Fe2O3b_structure, Fe_structure, O_structure):
+def entries(
+    Fe3O4_structure, Fe2O3a_structure, Fe2O3b_structure, Fe_structure, O_structure
+):
     return MontyDecoder().process_decoded(
         [
             {
@@ -103,7 +105,7 @@ def entries(Fe3O4_structure, Fe2O3a_structure, Fe2O3b_structure, Fe_structure, O
 
 
 def test_from_entries(entries):
-    docs = ThermoDoc.from_entries(entries, deprecated=False)
+    docs, pd = ThermoDoc.from_entries(entries, deprecated=False)
 
     assert len(docs) == len(entries)
 
