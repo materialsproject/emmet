@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.14.1](https://github.com/materialsproject/emmet/tree/v0.14.1) (2021-10-12)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.0...v0.14.1)
+
+**Merged pull requests:**
+
+- Fix phase diagram ensure index [\#280](https://github.com/materialsproject/emmet/pull/280) ([munrojm](https://github.com/munrojm))
+
+## [v0.14.0](https://github.com/materialsproject/emmet/tree/v0.14.0) (2021-10-11)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.13.3...v0.14.0)
+
+**Merged pull requests:**
+
+- Update dielectric, piezoelectric and thermo builders [\#278](https://github.com/materialsproject/emmet/pull/278) ([munrojm](https://github.com/munrojm))
+
 ## [v0.13.3](https://github.com/materialsproject/emmet/tree/v0.13.3) (2021-09-28)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.13.2...v0.13.3)

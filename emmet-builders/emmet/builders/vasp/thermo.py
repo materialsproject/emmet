@@ -12,7 +12,7 @@ from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from emmet.builders.utils import chemsys_permutations
-from emmet.core.thermo import ThermoDoc
+from emmet.core.thermo import ThermoDoc, PhaseDiagramDoc
 from emmet.core.utils import jsanitize
 
 
@@ -21,6 +21,7 @@ class ThermoBuilder(Builder):
         self,
         materials: Store,
         thermo: Store,
+        phase_diagram: Optional[Store] = None,
         oxidation_states: Optional[Store] = None,
         query: Optional[Dict] = None,
         compatibility=None,
@@ -34,6 +35,8 @@ class ThermoBuilder(Builder):
             materials (Store): Store of materials documents
             thermo (Store): Store of thermodynamic data such as formation
                 energy and decomposition pathway
+            phase_diagram (Store): Store of phase diagram data for each unique chemical system
+            oxidation_states (Store): Store of oxidation state data to use in correction scheme application
             query (dict): dictionary to limit materials to be analyzed
             compatibility (PymatgenCompatability): Compatability module
                 to ensure energies are compatible
@@ -48,6 +51,7 @@ class ThermoBuilder(Builder):
             else MaterialsProject2020Compatibility("Advanced")
         )
         self.oxidation_states = oxidation_states
+        self.phase_diagram = phase_diagram
         self._completed_tasks: Set[str] = set()
         self._entries_cache: Dict[str, List[ComputedStructureEntry]] = defaultdict(list)
 
@@ -55,7 +59,11 @@ class ThermoBuilder(Builder):
         if oxidation_states is not None:
             sources.append(oxidation_states)
 
-        super().__init__(sources=sources, targets=[thermo], **kwargs)
+        targets = [thermo]
+        if phase_diagram is not None:
+            targets.append(phase_diagram)
+
+        super().__init__(sources=sources, targets=targets, **kwargs)
 
     def ensure_indexes(self):
         """
@@ -70,6 +78,10 @@ class ThermoBuilder(Builder):
         # Search index for thermo
         self.thermo.ensure_index("material_id")
         self.thermo.ensure_index("last_updated")
+
+        # Search index for phase_diagram
+        if self.phase_diagram:
+            self.phase_diagram.ensure_index("chemsys")
 
     def prechunk(self, number_splits: int) -> Iterable[Dict]:
         updated_chemsys = self.get_updated_chemsys()
@@ -124,7 +136,7 @@ class ThermoBuilder(Builder):
         # Yield the chemical systems in order of increasing size
         # Will build them in a similar manner to fast Pourbaix
         for chemsys in sorted(
-            to_process_chemsys, key=lambda x: len(x.split("-")), reverse=True
+            to_process_chemsys, key=lambda x: len(x.split("-")), reverse=False
         ):
             entries = self.get_entries(chemsys)
             yield entries
@@ -158,10 +170,12 @@ class ThermoBuilder(Builder):
         self.logger.debug(f"{len(pd_entries)} remain in {chemsys} after filtering")
 
         try:
-            docs = ThermoDoc.from_entries(pd_entries, deprecated=False)
+            docs, pd = ThermoDoc.from_entries(pd_entries, deprecated=False)
             for doc in docs:
                 doc.entries = material_entries[doc.material_id]
                 doc.entry_types = list(material_entries[doc.material_id].keys())
+
+            pd_doc = PhaseDiagramDoc(chemsys=chemsys, phase_diagram=pd)
 
         except PhaseDiagramError as p:
             elsyms = []
@@ -178,16 +192,21 @@ class ThermoBuilder(Builder):
             )
             return []
 
-        return jsanitize([d.dict() for d in docs], allow_bson=True)
+        return jsanitize(
+            [{**doc.dict(), "phase_diagram": pd_doc.dict()} for d in docs],
+            allow_bson=True,
+        )
 
     def update_targets(self, items):
         """
-        Inserts the thermo docs into the thermo collection
+        Inserts the thermo and phase diagram docs into the thermo collection
         Args:
-            items ([[dict]]): a list of list of thermo dictionaries to update
+            items ([[tuple(dict,dict)]]): a list of list of thermo dictionaries to update
         """
+
         # flatten out lists
         items = list(filter(None, chain.from_iterable(items)))
+
         # Check if already updated this run
         items = [i for i in items if i["material_id"] not in self._completed_tasks]
 
@@ -199,11 +218,15 @@ class ThermoBuilder(Builder):
                     item["last_updated"]
                 )
 
+            if "phase_diagram" in item:
+                pd_doc = item.pop("phase_diagram")
+                self.phase_diagram.update(pd_doc)
+
         if len(items) > 0:
             self.logger.info(f"Updating {len(items)} thermo documents")
             self.thermo.update(docs=items, key=["material_id"])
         else:
-            self.logger.info("No items to update")
+            self.logger.info("No thermo items to update")
 
     def get_entries(self, chemsys: str) -> List[Dict]:
         """
