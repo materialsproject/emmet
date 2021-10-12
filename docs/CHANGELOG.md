@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.14.1](https://github.com/materialsproject/emmet/tree/v0.14.1) (2021-10-12)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.0...v0.14.1)
+
+**Merged pull requests:**
+
+- Fix phase diagram ensure index [\#280](https://github.com/materialsproject/emmet/pull/280) ([munrojm](https://github.com/munrojm))
+
 ## [v0.14.0](https://github.com/materialsproject/emmet/tree/v0.14.0) (2021-10-11)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.13.3...v0.14.0)
@@ -34,19 +42,19 @@
 
 ## [v0.13.0](https://github.com/materialsproject/emmet/tree/v0.13.0) (2021-09-23)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.13.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.13.0)
 
 **Merged pull requests:**
 
 - Builder bug fixes [\#272](https://github.com/materialsproject/emmet/pull/272) ([munrojm](https://github.com/munrojm))
 
-## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.12.8)
-
 ## [v0.12.7](https://github.com/materialsproject/emmet/tree/v0.12.7) (2021-09-15)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.7)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.12.7)
+
+## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.8)
 
 **Merged pull requests:**
 
