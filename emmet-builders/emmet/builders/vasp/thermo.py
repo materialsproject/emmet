@@ -80,7 +80,8 @@ class ThermoBuilder(Builder):
         self.thermo.ensure_index("last_updated")
 
         # Search index for phase_diagram
-        self.phase_diagram.ensure_index("chemsys")
+        if self.phase_diagram:
+            self.phase_diagram.ensure_index("chemsys")
 
     def prechunk(self, number_splits: int) -> Iterable[Dict]:
         updated_chemsys = self.get_updated_chemsys()
