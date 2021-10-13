@@ -112,7 +112,7 @@ class ThermoDoc(PropertyDoc):
                 "material_id": e.entry_id,
                 "uncorrected_energy_per_atom": e.uncorrected_energy
                 / e.composition.num_atoms,
-                "energy_per_atom": e.uncorrected_energy / e.composition.num_atoms,
+                "energy_per_atom": e.energy / e.composition.num_atoms,
                 "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
                 "energy_above_hull": ehull,
                 "is_stable": e in pd.stable_entries,
