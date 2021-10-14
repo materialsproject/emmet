@@ -193,7 +193,7 @@ class ThermoBuilder(Builder):
             return []
 
         return jsanitize(
-            [{**doc.dict(), "phase_diagram": pd_doc.dict()} for d in docs],
+            [{**d.dict(), "phase_diagram": pd_doc.dict()} for d in docs],
             allow_bson=True,
         )
 
@@ -220,7 +220,8 @@ class ThermoBuilder(Builder):
 
             if "phase_diagram" in item:
                 pd_doc = item.pop("phase_diagram")
-                self.phase_diagram.update(pd_doc)
+                if self.phase_diagram is not None:
+                    self.phase_diagram.update(pd_doc)
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(items)} thermo documents")
