@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.14.4](https://github.com/materialsproject/emmet/tree/v0.14.4) (2021-10-14)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.3...v0.14.4)
+
+**Merged pull requests:**
+
+- thermo builder bugs [\#282](https://github.com/materialsproject/emmet/pull/282) ([acrutt](https://github.com/acrutt))
+
 ## [v0.14.3](https://github.com/materialsproject/emmet/tree/v0.14.3) (2021-10-13)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.2...v0.14.3)
