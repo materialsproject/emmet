@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.14.2](https://github.com/materialsproject/emmet/tree/v0.14.2) (2021-10-12)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.1...v0.14.2)
+
+**Merged pull requests:**
+
+- ComputedStructureEntry type consistency [\#279](https://github.com/materialsproject/emmet/pull/279) ([acrutt](https://github.com/acrutt))
+
 ## [v0.14.1](https://github.com/materialsproject/emmet/tree/v0.14.1) (2021-10-12)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.0...v0.14.1)
