@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.14.3](https://github.com/materialsproject/emmet/tree/v0.14.3) (2021-10-13)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.2...v0.14.3)
+
+**Merged pull requests:**
+
+- ThermoDoc.from\_entries\(\) energy fix [\#281](https://github.com/materialsproject/emmet/pull/281) ([acrutt](https://github.com/acrutt))
+
 ## [v0.14.2](https://github.com/materialsproject/emmet/tree/v0.14.2) (2021-10-12)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.1...v0.14.2)
