@@ -207,7 +207,7 @@ class ThermoBuilder(Builder):
         """
         Inserts the thermo and phase diagram docs into the thermo collection
         Args:
-            items ([[tuple(List[dict],dict)]]): a list of list of thermo dictionaries to update
+            items ([[tuple(List[dict],List[dict])]]): a list of list of thermo dictionaries to update
         """
 
         # print(len(items))
