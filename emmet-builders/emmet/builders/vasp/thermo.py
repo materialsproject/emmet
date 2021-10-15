@@ -175,7 +175,16 @@ class ThermoBuilder(Builder):
                 doc.entries = material_entries[doc.material_id]
                 doc.entry_types = list(material_entries[doc.material_id].keys())
 
-            pd_doc = PhaseDiagramDoc(chemsys=chemsys, phase_diagram=pd)
+            pd_data = None
+
+            if self.phase_diagram:
+                pd_doc = PhaseDiagramDoc(chemsys=chemsys, phase_diagram=pd)
+                pd_data = jsanitize(pd_doc.dict(), allow_bson=True)
+
+            docs_pd_pair = (
+                jsanitize([d.dict() for d in docs], allow_bson=True),
+                pd_data,
+            )
 
         except PhaseDiagramError as p:
             elsyms = []
@@ -192,40 +201,40 @@ class ThermoBuilder(Builder):
             )
             return []
 
-        return jsanitize(
-            [{**d.dict(), "phase_diagram": pd_doc.dict()} for d in docs],
-            allow_bson=True,
-        )
+        return docs_pd_pair
 
     def update_targets(self, items):
         """
         Inserts the thermo and phase diagram docs into the thermo collection
         Args:
-            items ([[tuple(dict,dict)]]): a list of list of thermo dictionaries to update
+            items ([[tuple(List[dict],dict)]]): a list of list of thermo dictionaries to update
         """
 
+        thermo_docs = items[0]
+        phase_diagram_doc = items[1]
+
         # flatten out lists
-        items = list(filter(None, chain.from_iterable(items)))
+        thermo_docs = list(filter(None, chain.from_iterable(items)))
 
         # Check if already updated this run
-        items = [i for i in items if i["material_id"] not in self._completed_tasks]
+        thermo_docs = [
+            i for i in items if i["material_id"] not in self._completed_tasks
+        ]
 
-        self._completed_tasks |= {i["material_id"] for i in items}
+        self._completed_tasks |= {i["material_id"] for i in thermo_docs}
 
-        for item in items:
+        for item in thermo_docs:
             if isinstance(item["last_updated"], dict):
                 item["last_updated"] = MontyDecoder().process_decoded(
                     item["last_updated"]
                 )
 
-            if "phase_diagram" in item:
-                pd_doc = item.pop("phase_diagram")
-                if self.phase_diagram is not None:
-                    self.phase_diagram.update(pd_doc)
+        if phase_diagram_doc is not None:
+            self.phase_diagram.update(phase_diagram_doc)
 
-        if len(items) > 0:
-            self.logger.info(f"Updating {len(items)} thermo documents")
-            self.thermo.update(docs=items, key=["material_id"])
+        if len(thermo_docs) > 0:
+            self.logger.info(f"Updating {len(thermo_docs)} thermo documents")
+            self.thermo.update(docs=thermo_docs, key=["material_id"])
         else:
             self.logger.info("No thermo items to update")
 
