@@ -175,7 +175,7 @@ class ThermoBuilder(Builder):
                 doc.entries = material_entries[doc.material_id]
                 doc.entry_types = list(material_entries[doc.material_id].keys())
 
-            pd_data = None
+            pd_data = [None]
 
             if self.phase_diagram:
                 pd_doc = PhaseDiagramDoc(chemsys=chemsys, phase_diagram=pd)
@@ -183,7 +183,7 @@ class ThermoBuilder(Builder):
 
             docs_pd_pair = (
                 jsanitize([d.dict() for d in docs], allow_bson=True),
-                pd_data,
+                [pd_data],
             )
 
         except PhaseDiagramError as p:
@@ -210,15 +210,18 @@ class ThermoBuilder(Builder):
             items ([[tuple(List[dict],dict)]]): a list of list of thermo dictionaries to update
         """
 
-        thermo_docs = items[0]
-        phase_diagram_doc = items[1]
+        # print(len(items))
+
+        thermo_docs = [item[0] for item in items]
+        phase_diagram_docs = [item[1] for item in items]
 
         # flatten out lists
-        thermo_docs = list(filter(None, chain.from_iterable(items)))
+        thermo_docs = list(filter(None, chain.from_iterable(thermo_docs)))
+        phase_diagram_docs = list(filter(None, chain.from_iterable(phase_diagram_docs)))
 
         # Check if already updated this run
         thermo_docs = [
-            i for i in items if i["material_id"] not in self._completed_tasks
+            i for i in thermo_docs if i["material_id"] not in self._completed_tasks
         ]
 
         self._completed_tasks |= {i["material_id"] for i in thermo_docs}
@@ -229,8 +232,8 @@ class ThermoBuilder(Builder):
                     item["last_updated"]
                 )
 
-        if phase_diagram_doc is not None:
-            self.phase_diagram.update(phase_diagram_doc)
+        if self.phase_diagram:
+            self.phase_diagram.update(phase_diagram_docs)
 
         if len(thermo_docs) > 0:
             self.logger.info(f"Updating {len(thermo_docs)} thermo documents")
