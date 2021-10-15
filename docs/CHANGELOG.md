@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.14.5](https://github.com/materialsproject/emmet/tree/v0.14.5) (2021-10-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.4...v0.14.5)
+
+**Merged pull requests:**
+
+- Optimize phase diagram building in the thermo builder [\#283](https://github.com/materialsproject/emmet/pull/283) ([munrojm](https://github.com/munrojm))
+
 ## [v0.14.4](https://github.com/materialsproject/emmet/tree/v0.14.4) (2021-10-14)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.3...v0.14.4)
@@ -66,19 +74,19 @@
 
 ## [v0.13.0](https://github.com/materialsproject/emmet/tree/v0.13.0) (2021-09-23)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.13.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.13.0)
 
 **Merged pull requests:**
 
 - Builder bug fixes [\#272](https://github.com/materialsproject/emmet/pull/272) ([munrojm](https://github.com/munrojm))
 
-## [v0.12.7](https://github.com/materialsproject/emmet/tree/v0.12.7) (2021-09-15)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.12.7)
-
 ## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.8)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.12.8)
+
+## [v0.12.7](https://github.com/materialsproject/emmet/tree/v0.12.7) (2021-09-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.7)
 
 **Merged pull requests:**
 
