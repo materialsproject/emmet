@@ -7,4 +7,4 @@ seekpath==2.0.1
 setuptools-scm==6.3.1
 robocrys==0.2.7
 matminer==0.7.4
-optimade==0.16.2
+optimade==0.16.5
