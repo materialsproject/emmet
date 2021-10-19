@@ -1,9 +1,13 @@
+from math import ceil
+from typing import Dict, Iterator, Optional
+
 import numpy as np
-from typing import Optional, Dict
-from maggma.stores import Store
 from maggma.builders import Builder
-from emmet.core.magnetism import MagnetismDoc
+from maggma.stores import Store
+from maggma.utils import grouper
 from pymatgen.core.structure import Structure
+
+from emmet.core.magnetism import MagnetismDoc
 from emmet.core.utils import jsanitize
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>, Matthew Horton <mkhorton@lbl.gov>"
@@ -38,6 +42,18 @@ class MagneticBuilder(Builder):
         self.magnetism.key = "material_id"
 
         super().__init__(sources=[materials, tasks], targets=[magnetism], **kwargs)
+
+    def prechunk(self, number_splits: int) -> Iterator[Dict]:
+        """
+        Prechunk method to perform chunking by the key field
+        """
+        q = dict(self.query)
+
+        keys = self.magnetism.newer_in(self.materials, criteria=q, exhaustive=True)
+
+        N = ceil(len(keys) / number_splits)
+        for split in grouper(keys, N):
+            yield {"query": {self.materials.key: {"$in": list(split)}}}
 
     def get_items(self):
         """
