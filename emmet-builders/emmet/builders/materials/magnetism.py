@@ -1,5 +1,6 @@
-import os.path
-
+import numpy as np
+from typing import Optional, Dict
+from maggma.stores import Store
 from maggma.builders import Builder
 from emmet.core.magnetism import MagnetismDoc
 from pymatgen.core.structure import Structure
@@ -7,12 +8,16 @@ from emmet.core.utils import jsanitize
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>, Matthew Horton <mkhorton@lbl.gov>"
 
-MODULE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-MAGNETISM_SCHEMA = os.path.join(MODULE_DIR, "schema", "magnetism.json")
-
 
 class MagneticBuilder(Builder):
-    def __init__(self, materials, magnetism, tasks, **kwargs):
+    def __init__(
+        self,
+        materials: Store,
+        magnetism: Store,
+        tasks: Store,
+        query: Optional[Dict] = None,
+        **kwargs,
+    ):
         """
         Creates a magnetism collection for materials
 
@@ -25,6 +30,8 @@ class MagneticBuilder(Builder):
         self.materials = materials
         self.magnetism = magnetism
         self.tasks = tasks
+        self.query = query or {}
+        self.kwargs = kwargs
 
         self.materials.key = "material_id"
         self.tasks.key = "task_id"
@@ -45,7 +52,7 @@ class MagneticBuilder(Builder):
         q = dict(self.query)
 
         mat_ids = self.materials.distinct(self.materials.key, criteria=q)
-        mag_ids = self.dielectric.distinct(self.magnetism.key)
+        mag_ids = self.magnetism.distinct(self.magnetism.key)
 
         mats_set = set(
             self.magnetism.newer_in(target=self.materials, criteria=q, exhaustive=True)
@@ -58,39 +65,10 @@ class MagneticBuilder(Builder):
         self.total = len(mats)
 
         for mat in mats:
-            mat_doc = self.materials.query_one(
-                {self.materials.key: mat},
-                [
-                    self.materials.key,
-                    "structure",
-                    "deprecated",
-                    "origins",
-                    "last_updated",
-                ],
-            )
+            doc = self._get_processed_doc(mat)
 
-            task_doc = None
-
-            origins = mat_doc.get("origins", [])
-
-            if len(origins) > 0:
-                for entry in origins:
-                    if entry["name"] == "structure":
-                        task_doc = self.tasks.query_one(
-                            {self.tasks.key: entry["task_id"]},
-                            ["calcs_reversed", "task_id", "last_updated"],
-                        )
-                        break
-
-            if mat_doc is not None and task_doc is not None:
-                mat_doc["task_id"] = task_doc["task_id"]
-                mat_doc["total_magnetization"] = abs(
-                    task_doc["calcs_reversed"][-1]["output"]["outcar"][
-                        "total_magnetization"
-                    ]
-                )
-                mat["task_updated"] = task_doc["last_updated"]
-                yield mat_doc
+            if doc is not None:
+                yield doc
             else:
                 pass
 
@@ -104,11 +82,112 @@ class MagneticBuilder(Builder):
         }
 
         doc = MagnetismDoc.from_structure(
-            meta_structure=structure,
+            structure=structure,
             material_id=mpid,
+            total_magnetization=item["total_magnetization"],
             origins=[origin_entry],
             deprecated=item["deprecated"],
             last_updated=item["last_updated"],
         )
 
         return jsanitize(doc.dict(), allow_bson=True)
+
+    def update_targets(self, items):
+        """
+        Inserts the new magnetism docs into the magnetism collection
+        """
+        docs = list(filter(None, items))
+
+        if len(docs) > 0:
+            self.logger.info(f"Found {len(docs)} magnetism docs to update")
+            self.magnetism.update(docs)
+        else:
+            self.logger.info("No items to update")
+
+    def _get_processed_doc(self, mat):
+
+        mat_doc = self.materials.query_one(
+            {self.materials.key: mat},
+            [
+                self.materials.key,
+                "structure",
+                "task_types",
+                "run_types",
+                "deprecated_tasks",
+                "last_updated",
+                "deprecated",
+            ],
+        )
+
+        task_types = mat_doc["task_types"].items()
+
+        potential_task_ids = []
+
+        for task_id, task_type in task_types:
+            if task_type in ["Structure Optimization", "Static"]:
+                if task_id not in mat_doc["deprecated_tasks"]:
+                    potential_task_ids.append(task_id)
+
+        final_docs = []
+
+        for task_id in potential_task_ids:
+            task_query = self.tasks.query_one(
+                properties=[
+                    "last_updated",
+                    "input.is_hubbard",
+                    "orig_inputs.kpoints",
+                    "input.parameters",
+                    "output.structure",
+                    "calcs_reversed",
+                ],
+                criteria={self.tasks.key: str(task_id)},
+            )
+
+            structure = mat_doc["structure"]
+
+            is_hubbard = task_query["input"]["is_hubbard"]
+
+            if (
+                task_query["orig_inputs"]["kpoints"]["generation_style"] == "Monkhorst"
+                or task_query["orig_inputs"]["kpoints"]["generation_style"] == "Gamma"
+            ):
+                nkpoints = np.prod(
+                    task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
+                )
+
+            else:
+                nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
+
+            lu_dt = mat_doc["last_updated"]
+            task_updated = task_query["last_updated"]
+            total_magnetization = task_query["calcs_reversed"][-1]["output"]["outcar"][
+                "total_magnetization"
+            ]
+
+            final_docs.append(
+                {
+                    "task_id": task_id,
+                    "is_hubbard": int(is_hubbard),
+                    "nkpoints": int(nkpoints),
+                    "structure": structure,
+                    "deprecated": mat_doc["deprecated"],
+                    "total_magnetization": total_magnetization,
+                    "last_updated": lu_dt,
+                    "task_updated": task_updated,
+                    self.materials.key: mat_doc[self.materials.key],
+                }
+            )
+
+        if len(final_docs) > 0:
+            sorted_final_docs = sorted(
+                final_docs,
+                key=lambda entry: (
+                    entry["is_hubbard"],
+                    entry["nkpoints"],
+                    entry["last_updated"],
+                ),
+                reverse=True,
+            )
+            return sorted_final_docs[0]
+        else:
+            return None
