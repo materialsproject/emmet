@@ -14,6 +14,8 @@ class MagnetismDoc(PropertyDoc):
     Magnetic data obtain from the calculated structure
     """
 
+    property_name = "magnetism"
+
     ordering: str = Field(
         None, description="Magnetic ordering.",
     )
@@ -58,12 +60,14 @@ class MagnetismDoc(PropertyDoc):
     def from_structure(cls, structure: Structure, total_magnetization: float, material_id: MPID, **kwargs):  # type: ignore[override]
 
         struct_has_magmoms = "magmom" in structure.site_properties
-        total_magnetization = total_magnetization  # not necessarily == sum(magmoms)
+        total_magnetization = abs(
+            total_magnetization
+        )  # not necessarily == sum(magmoms)
         msa = CollinearMagneticStructureAnalyzer(
             structure, round_magmoms=True, threshold_nonmag=0.2, threshold=0
         )
 
-        magmoms = msa.magmoms
+        magmoms = msa.magmoms.tolist()
 
         d = {
             "ordering": msa.ordering.value if struct_has_magmoms else "Unknown",
