@@ -49,6 +49,8 @@ class MagneticBuilder(Builder):
         """
         q = dict(self.query)
 
+        q.update({"deprecated": False})
+
         keys = self.magnetism.newer_in(self.materials, criteria=q, exhaustive=True)
 
         N = ceil(len(keys) / number_splits)
@@ -66,6 +68,8 @@ class MagneticBuilder(Builder):
         self.logger.info("Magnetism Builder Started")
 
         q = dict(self.query)
+
+        q.update({"deprecated": False})
 
         mat_ids = self.materials.distinct(self.materials.key, criteria=q)
         mag_ids = self.magnetism.distinct(self.magnetism.key)
@@ -124,86 +128,30 @@ class MagneticBuilder(Builder):
 
         mat_doc = self.materials.query_one(
             {self.materials.key: mat},
-            [
-                self.materials.key,
-                "structure",
-                "task_types",
-                "run_types",
-                "deprecated_tasks",
-                "last_updated",
-                "deprecated",
-            ],
+            [self.materials.key, "origins", "last_updated", "structure"],
         )
 
-        task_types = mat_doc["task_types"].items()
+        for origin in mat_doc["origins"]:
+            if origin["name"] == "structure":
+                task_id = origin["task_id"]
 
-        potential_task_ids = []
+        task_query = self.tasks.query_one(
+            properties=["last_updated", "calcs_reversed"],
+            criteria={self.tasks.key: task_id},
+        )
 
-        for task_id, task_type in task_types:
-            if task_type in ["Structure Optimization", "Static"]:
-                if task_id not in mat_doc["deprecated_tasks"]:
-                    potential_task_ids.append(task_id)
+        task_updated = task_query["last_updated"]
+        total_magnetization = task_query["calcs_reversed"][-1]["output"]["outcar"][
+            "total_magnetization"
+        ]
 
-        final_docs = []
+        mat_doc.update(
+            {
+                "task_id": task_id,
+                "total_magnetization": total_magnetization,
+                "task_updated": task_updated,
+                self.materials.key: mat_doc[self.materials.key],
+            }
+        )
 
-        for task_id in potential_task_ids:
-            task_query = self.tasks.query_one(
-                properties=[
-                    "last_updated",
-                    "input.is_hubbard",
-                    "orig_inputs.kpoints",
-                    "input.parameters",
-                    "output.structure",
-                    "calcs_reversed",
-                ],
-                criteria={self.tasks.key: str(task_id)},
-            )
-
-            structure = mat_doc["structure"]
-
-            is_hubbard = task_query["input"]["is_hubbard"]
-
-            if (
-                task_query["orig_inputs"]["kpoints"]["generation_style"] == "Monkhorst"
-                or task_query["orig_inputs"]["kpoints"]["generation_style"] == "Gamma"
-            ):
-                nkpoints = np.prod(
-                    task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
-                )
-
-            else:
-                nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
-
-            lu_dt = mat_doc["last_updated"]
-            task_updated = task_query["last_updated"]
-            total_magnetization = task_query["calcs_reversed"][-1]["output"]["outcar"][
-                "total_magnetization"
-            ]
-
-            final_docs.append(
-                {
-                    "task_id": task_id,
-                    "is_hubbard": int(is_hubbard),
-                    "nkpoints": int(nkpoints),
-                    "structure": structure,
-                    "deprecated": mat_doc["deprecated"],
-                    "total_magnetization": total_magnetization,
-                    "last_updated": lu_dt,
-                    "task_updated": task_updated,
-                    self.materials.key: mat_doc[self.materials.key],
-                }
-            )
-
-        if len(final_docs) > 0:
-            sorted_final_docs = sorted(
-                final_docs,
-                key=lambda entry: (
-                    entry["is_hubbard"],
-                    entry["nkpoints"],
-                    entry["last_updated"],
-                ),
-                reverse=True,
-            )
-            return sorted_final_docs[0]
-        else:
-            return None
+        return mat_doc
