@@ -314,7 +314,7 @@ class InsertionElectrodeBuilder(Builder):
             )
             thermo_docs = list(
                 self.thermo.query(
-                    {"$and": [{"material_id": {"$in": mat_ids}},]},
+                    {"$and": [{"material_id": {"$in": mat_ids}}]},
                     properties=[
                         "material_id",
                         "_sbxn",
