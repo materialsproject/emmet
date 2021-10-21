@@ -1,9 +1,12 @@
-from typing import Dict, Optional, List
+from math import ceil
+from typing import Dict, Iterator, Optional
+
+import numpy as np
 from maggma.builders import Builder
 from maggma.core import Store
-import numpy as np
-
+from maggma.utils import grouper
 from pymatgen.core.structure import Structure
+
 from emmet.core.polar import DielectricDoc
 from emmet.core.utils import jsanitize
 
@@ -28,6 +31,18 @@ class DielectricBuilder(Builder):
         self.dielectric.key = "material_id"
 
         super().__init__(sources=[materials, tasks], targets=[dielectric], **kwargs)
+
+    def prechunk(self, number_splits: int) -> Iterator[Dict]:
+        """
+        Prechunk method to perform chunking by the key field
+        """
+        q = dict(self.query)
+
+        keys = self.dielectric.newer_in(self.materials, criteria=q, exhaustive=True)
+
+        N = ceil(len(keys) / number_splits)
+        for split in grouper(keys, N):
+            yield {"query": {self.materials.key: {"$in": list(split)}}}
 
     def get_items(self):
         """

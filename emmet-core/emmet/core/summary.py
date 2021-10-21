@@ -180,6 +180,10 @@ class SummaryDoc(PropertyDoc):
 
     # Magnetism
 
+    is_magnetic: bool = Field(
+        None, description="Whether the material is magnetic.",
+    )
+
     ordering: str = Field(None, description="Type of magnetic ordering.")
 
     total_magnetization: float = Field(None, description="Total magnetization in μB.")
@@ -303,9 +307,6 @@ class SummaryDoc(PropertyDoc):
             doc["es_source_calc_id"] = doc["task_id"]
             del doc["task_id"]
 
-        # Magnetism
-        doc["spin_polarized"] = "magnetism" in doc
-
         doc["has_props"] = list(set(doc["has_props"]))
 
         return SummaryDoc(material_id=material_id, **doc)
@@ -353,6 +354,7 @@ summary_fields: Dict[str, list] = {
         "task_id",
     ],
     "magnetism": [
+        "is_magnetic",
         "ordering",
         "total_magnetization",
         "total_magnetization_normalized_vol",

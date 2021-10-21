@@ -3,10 +3,12 @@ import operator
 from datetime import datetime
 from functools import lru_cache
 from itertools import chain
-from typing import Any, Dict, Iterable, List
+from math import ceil
+from typing import Any, Iterator, Dict, List
 
 from maggma.builders import Builder
 from maggma.stores import MongoStore
+from maggma.utils import grouper
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.electrode import InsertionElectrodeDoc
@@ -104,11 +106,17 @@ class StructureGroupBuilder(Builder):
         self.check_newer = check_newer
         super().__init__(sources=[materials], targets=[sgroups], **kwargs)
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:
+    def prechunk(self, number_splits: int) -> Iterator[Dict]:
         """
-        TODO can implement this for distributed runs by adding filters
+        Prechunk method to perform chunking by the key field
         """
-        pass
+        q = dict(self.query)
+
+        keys = self.sgroups.newer_in(self.materials, criteria=q, exhaustive=True)
+
+        N = ceil(len(keys) / number_splits)
+        for split in grouper(keys, N):
+            yield {"query": {self.materials.key: {"$in": list(split)}}}
 
     def get_items(self):
         """
@@ -306,11 +314,7 @@ class InsertionElectrodeBuilder(Builder):
             )
             thermo_docs = list(
                 self.thermo.query(
-                    {
-                        "$and": [
-                            {"material_id": {"$in": mat_ids}},
-                        ]
-                    },
+                    {"$and": [{"material_id": {"$in": mat_ids}}]},
                     properties=[
                         "material_id",
                         "_sbxn",
