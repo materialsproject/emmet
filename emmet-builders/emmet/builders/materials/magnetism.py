@@ -128,7 +128,7 @@ class MagneticBuilder(Builder):
 
         mat_doc = self.materials.query_one(
             {self.materials.key: mat},
-            [self.materials.key, "origins", "last_updated", "structure"],
+            [self.materials.key, "origins", "last_updated", "structure", "deprecated"],
         )
 
         for origin in mat_doc["origins"]:
