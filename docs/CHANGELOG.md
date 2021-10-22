@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.15.0](https://github.com/materialsproject/emmet/tree/v0.15.0) (2021-10-22)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.6...v0.15.0)
+
+**Merged pull requests:**
+
+- Magnetism builder updates [\#286](https://github.com/materialsproject/emmet/pull/286) ([munrojm](https://github.com/munrojm))
+
 ## [v0.14.6](https://github.com/materialsproject/emmet/tree/v0.14.6) (2021-10-21)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.5...v0.14.6)
