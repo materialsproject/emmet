@@ -354,6 +354,7 @@ summary_fields: Dict[str, list] = {
         "task_id",
     ],
     "magnetism": [
+        "is_magnetic",
         "ordering",
         "total_magnetization",
         "total_magnetization_normalized_vol",

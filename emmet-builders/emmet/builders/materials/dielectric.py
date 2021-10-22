@@ -1,6 +1,7 @@
 from math import ceil
 from typing import Dict, Optional, Iterator
 
+
 import numpy as np
 from maggma.builders import Builder
 from maggma.core import Store
