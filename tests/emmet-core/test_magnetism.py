@@ -3,6 +3,7 @@ from pymatgen.core import Structure
 from monty.serialization import loadfn
 
 from emmet.core.magnetism import MagnetismDoc
+from emmet.core.utils import jsanitize
 
 
 @pytest.fixture(scope="session")
@@ -14,7 +15,7 @@ def test_magnetism_doc(magnetism_test_data):
     test_orderings = {"mp-1034331": "FM", "mp-753472": "NM"}
 
     for material in magnetism_test_data:
-        structure = Structure.from_dict(material["structure"])
+        structure = Structure.from_dict(jsanitize(material["structure"]))
         total_magnetization = material["magnetism"]["total_magnetization"]
         material_id = material["task_id"]
 
@@ -25,7 +26,7 @@ def test_magnetism_doc(magnetism_test_data):
             deprecated=False,
         )
         assert doc is not None
-        assert doc.total_magnetization == pytest.approx(total_magnetization)
+        assert doc.total_magnetization == pytest.approx(abs(total_magnetization))
 
         if material_id in test_orderings:
             assert doc.ordering == test_orderings[material_id]
