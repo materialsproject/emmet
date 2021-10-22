@@ -362,6 +362,7 @@ summary_fields: Dict[str, list] = {
         "num_magnetic_sites",
         "num_unique_magnetic_sites",
         "types_of_magnetic_species",
+        "is_magnetic",
     ],
     "elasticity": [
         "k_voigt",

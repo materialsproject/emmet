@@ -31,7 +31,7 @@ class OxidationStateDoc(PropertyDoc):
     average_oxidation_states: Dict[str, float] = Field(
         description="Average oxidation states for each unique species"
     )
-    method: str = Field(description="Method used to compute oxidation states")
+    method: str = Field(None, description="Method used to compute oxidation states")
 
     @classmethod
     def from_structure(cls, structure: Structure, material_id: MPID, **kwargs):  # type: ignore[override]
@@ -104,6 +104,7 @@ class OxidationStateDoc(PropertyDoc):
             except Exception as e:
                 logging.error("Oxidation state guess failed with: {}".format(e))
                 d["warnings"] = ["Oxidation state guessing failed."]
+                d["state"] = "unsuccessful"
 
         return super().from_structure(
             meta_structure=structure,
