@@ -296,6 +296,18 @@ class InsertionElectrodeBuilder(Builder):
             **kwargs,
         )
 
+    def prechunk(self, number_splits: int) -> Iterator[Dict]:
+        """
+        Prechunk method to perform chunking by the key field
+        """
+        q = dict(self.query)
+
+        keys = self.grouped_materials.distinct(self.grouped_materials.key, criteria=q)
+
+        N = ceil(len(keys) / number_splits)
+        for split in grouper(keys, N):
+            yield {"query": {self.materials.key: {"$in": list(split)}}}
+
     def get_items(self):
         """
         Get items
