@@ -306,7 +306,7 @@ class InsertionElectrodeBuilder(Builder):
 
         N = ceil(len(keys) / number_splits)
         for split in grouper(keys, N):
-            yield {"query": {self.materials.key: {"$in": list(split)}}}
+            yield {"query": {self.grouped_materials.key: {"$in": list(split)}}}
 
     def get_items(self):
         """
