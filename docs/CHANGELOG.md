@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.15.1](https://github.com/materialsproject/emmet/tree/v0.15.1) (2021-10-25)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.0...v0.15.1)
+
+**Merged pull requests:**
+
+- Fix electrode chunking [\#288](https://github.com/materialsproject/emmet/pull/288) ([munrojm](https://github.com/munrojm))
+
 ## [v0.15.0](https://github.com/materialsproject/emmet/tree/v0.15.0) (2021-10-22)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.6...v0.15.0)
