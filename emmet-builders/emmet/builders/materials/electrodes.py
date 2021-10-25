@@ -112,11 +112,11 @@ class StructureGroupBuilder(Builder):
         """
         q = dict(self.query)
 
-        keys = self.sgroups.newer_in(self.materials, criteria=q, exhaustive=True)
+        all_chemsys = self.materials.distinct("chemsys", criteria=q)
 
-        N = ceil(len(keys) / number_splits)
-        for split in grouper(keys, N):
-            yield {"query": {self.materials.key: {"$in": list(split)}}}
+        N = ceil(len(all_chemsys) / number_splits)
+        for split in grouper(all_chemsys, N):
+            yield {"query": {"chemsys": {"$in": list(split)}}}
 
     def get_items(self):
         """
