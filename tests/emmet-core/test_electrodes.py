@@ -63,7 +63,7 @@ def test_InsertionDocs(insertion_elec):
     for k, (elec, struct, wion_entry) in insertion_elec.items():
         # Make sure that main document can be created using an InsertionElectrode object
         ie = InsertionElectrodeDoc.from_entries(
-            grouped_entries=elec._stable_entries,
+            grouped_entries=elec.stable_entries,
             working_ion_entry=wion_entry,
             battery_id="mp-1234",
             host_structure=struct,
