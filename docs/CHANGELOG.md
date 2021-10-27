@@ -1,5 +1,37 @@
 # Changelog
 
+## [v0.15.2](https://github.com/materialsproject/emmet/tree/v0.15.2) (2021-10-25)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.1...v0.15.2)
+
+**Merged pull requests:**
+
+- Chunk with chemsys in structure group builder [\#289](https://github.com/materialsproject/emmet/pull/289) ([munrojm](https://github.com/munrojm))
+
+## [v0.15.1](https://github.com/materialsproject/emmet/tree/v0.15.1) (2021-10-25)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.0...v0.15.1)
+
+**Merged pull requests:**
+
+- Fix electrode chunking [\#288](https://github.com/materialsproject/emmet/pull/288) ([munrojm](https://github.com/munrojm))
+
+## [v0.15.0](https://github.com/materialsproject/emmet/tree/v0.15.0) (2021-10-22)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.6...v0.15.0)
+
+**Merged pull requests:**
+
+- Magnetism builder updates [\#286](https://github.com/materialsproject/emmet/pull/286) ([munrojm](https://github.com/munrojm))
+
+## [v0.14.6](https://github.com/materialsproject/emmet/tree/v0.14.6) (2021-10-21)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.5...v0.14.6)
+
+**Merged pull requests:**
+
+- Builder chunking fixes [\#287](https://github.com/materialsproject/emmet/pull/287) ([munrojm](https://github.com/munrojm))
+
 ## [v0.14.5](https://github.com/materialsproject/emmet/tree/v0.14.5) (2021-10-15)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.14.4...v0.14.5)
