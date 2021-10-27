@@ -124,8 +124,17 @@ class StructureGroupBuilder(Builder):
             new_chemsys_list.append(new_chemsys)
 
         N = ceil(len(new_chemsys_list) / number_splits)
+
         for split in grouper(new_chemsys_list, N):
-            yield {"query": {"chemsys": {"$in": list(split)}}}
+            new_split_add = []
+            for chemsys in split:
+                elements = [element for element in chemsys.split("-")] + [
+                    self.working_ion
+                ]
+                new_chemsys = "-".join(sorted(elements))
+                new_split_add.append(new_chemsys)
+
+            yield {"query": {"chemsys": {"$in": new_split_add + split}}}
 
     def get_items(self):
         """
