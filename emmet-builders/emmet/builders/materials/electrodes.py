@@ -114,8 +114,17 @@ class StructureGroupBuilder(Builder):
 
         all_chemsys = self.materials.distinct("chemsys", criteria=q)
 
-        N = ceil(len(all_chemsys) / number_splits)
-        for split in grouper(all_chemsys, N):
+        new_chemsys_list = []
+
+        for chemsys in all_chemsys:
+            elements = [
+                element for element in chemsys.split("-") if element != self.working_ion
+            ]
+            new_chemsys = "-".join(sorted(elements))
+            new_chemsys_list.append(new_chemsys)
+
+        N = ceil(len(new_chemsys_list) / number_splits)
+        for split in grouper(new_chemsys_list, N):
             yield {"query": {"chemsys": {"$in": list(split)}}}
 
     def get_items(self):
