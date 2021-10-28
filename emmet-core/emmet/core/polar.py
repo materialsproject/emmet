@@ -1,5 +1,5 @@
 """ Core definition for Polar property Document """
-from typing import Tuple
+from typing import Tuple, List
 from emmet.core.mpid import MPID
 
 import numpy as np
@@ -8,7 +8,7 @@ from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
 
 from emmet.core import SETTINGS
 from emmet.core.material_property import PropertyDoc
-from emmet.core.math import Matrix3D
+from emmet.core.math import Matrix3D, Vector3D
 from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import Tensor
 
@@ -24,12 +24,10 @@ class DielectricDoc(PropertyDoc):
 
     property_name = "dielectric"
 
-    total: Matrix3D = Field(description="Total dielectric response")
-    ionic: Matrix3D = Field(
-        description="Dielectric response due to atomic rearrangement"
-    )
+    total: Matrix3D = Field(description="Total dielectric tensor")
+    ionic: Matrix3D = Field(description="Ionic contribution to dielectric tensor")
     electronic: Matrix3D = Field(
-        description="Dielectric response due to electron rearrangement"
+        description="Electronic contribution to dielectric tensor"
     )
 
     e_total: float = Field(description="Total electric permittivity")
@@ -80,16 +78,20 @@ class PiezoelectricDoc(PropertyDoc):
 
     property_name = "piezoelectric"
 
-    total: PiezoTensor = Field(None, description="")
-    ionic: PiezoTensor = Field(None, description="")
-    electronic: PiezoTensor = Field(None, description="")
-
-    e_ij_max: float = Field(None, description="")
-    max_direction: Tuple[int, int, int] = Field(
-        None, description="Miller direction for maximum piezo response"
+    total: PiezoTensor = Field(description="Total piezoelectric tensor in C/m²")
+    ionic: PiezoTensor = Field(
+        description="Ionic contribution to piezoelectric tensor in C/m²"
     )
-    strain_for_max: VoigtVector = Field(
-        None, description="Normalized strain direction for maximum piezo repsonse"
+    electronic: PiezoTensor = Field(
+        description="Electronic contribution to piezoelectric tensor in C/m²"
+    )
+
+    e_ij_max: float = Field(description="Piezoelectric modulus")
+    max_direction: List[int] = Field(
+        description="Miller direction for maximum piezo response"
+    )
+    strain_for_max: List[float] = Field(
+        description="Normalized strain direction for maximum piezo repsonse"
     )
 
     @classmethod
