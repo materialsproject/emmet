@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.15.4](https://github.com/materialsproject/emmet/tree/v0.15.4) (2021-10-27)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.3...v0.15.4)
+
+**Merged pull requests:**
+
+- Fix grouper bug [\#294](https://github.com/materialsproject/emmet/pull/294) ([munrojm](https://github.com/munrojm))
+
 ## [v0.15.3](https://github.com/materialsproject/emmet/tree/v0.15.3) (2021-10-27)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.2...v0.15.3)
