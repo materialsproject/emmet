@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.15.5](https://github.com/materialsproject/emmet/tree/v0.15.5) (2021-10-28)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.4...v0.15.5)
+
+**Merged pull requests:**
+
+- Fix piezo model [\#295](https://github.com/materialsproject/emmet/pull/295) ([munrojm](https://github.com/munrojm))
+
 ## [v0.15.4](https://github.com/materialsproject/emmet/tree/v0.15.4) (2021-10-27)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.3...v0.15.4)
