@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.15.6](https://github.com/materialsproject/emmet/tree/v0.15.6) (2021-10-29)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.5...v0.15.6)
+
+**Merged pull requests:**
+
+- Reference proper structure in polar builders [\#296](https://github.com/materialsproject/emmet/pull/296) ([munrojm](https://github.com/munrojm))
+
 ## [v0.15.5](https://github.com/materialsproject/emmet/tree/v0.15.5) (2021-10-28)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.4...v0.15.5)
