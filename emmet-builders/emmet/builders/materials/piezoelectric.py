@@ -166,6 +166,7 @@ class PiezoelectricBuilder(Builder):
                     "last_updated",
                     "input.is_hubbard",
                     "orig_inputs.kpoints",
+                    "orig_inputs.poscar",
                     "input.parameters",
                     "output.piezo_tensor",
                     "output.piezo_ionic_tensor",
@@ -174,7 +175,7 @@ class PiezoelectricBuilder(Builder):
                 criteria={self.tasks.key: str(task_id)},
             )
 
-            structure = mat_doc["structure"]
+            structure = task_query["orig_inputs"]["poscar"]["structure"]
 
             is_hubbard = task_query["input"]["is_hubbard"]
 
