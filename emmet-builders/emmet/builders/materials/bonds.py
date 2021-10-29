@@ -1,6 +1,7 @@
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
 from pymatgen.core import Structure
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.core import __version__ as pymatgen_version
 
 from emmet.core.bonds import BondingDoc
@@ -39,6 +40,9 @@ class BondingBuilder(MapBuilder):
         structure = Structure.from_dict(item["structure"])
         mpid = item["material_id"]
         deprecated = item["deprecated"]
+
+        # temporarily convert to conventional structure inside this builder, in future do structure setting operations in a separate builder
+        structure = SpacegroupAnalyzer(structure).get_conventional_standard_structure()
 
         bonding_doc = BondingDoc.from_structure(
             structure=structure, material_id=mpid, deprecated=deprecated
