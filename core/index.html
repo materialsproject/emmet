@@ -657,6 +657,21 @@
 <nav aria-label="PiezoelectricDoc" class="md-nav">
 <ul class="md-nav__list">
 <li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.PiezoelectricDoc.e_ij_max">
+    e_ij_max
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.PiezoelectricDoc.electronic">
+    electronic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.PiezoelectricDoc.ionic">
+    ionic
+  </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="#emmet.core.polar.PiezoelectricDoc.max_direction">
     max_direction
   </a>
@@ -664,6 +679,11 @@
 <li class="md-nav__item">
 <a class="md-nav__link" href="#emmet.core.polar.PiezoelectricDoc.strain_for_max">
     strain_for_max
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.PiezoelectricDoc.total">
+    total
   </a>
 </li>
 </ul>
@@ -1194,6 +1214,21 @@
 <nav aria-label="PiezoelectricDoc" class="md-nav">
 <ul class="md-nav__list">
 <li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.PiezoelectricDoc.e_ij_max">
+    e_ij_max
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.PiezoelectricDoc.electronic">
+    electronic
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.PiezoelectricDoc.ionic">
+    ionic
+  </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="#emmet.core.polar.PiezoelectricDoc.max_direction">
     max_direction
   </a>
@@ -1201,6 +1236,11 @@
 <li class="md-nav__item">
 <a class="md-nav__link" href="#emmet.core.polar.PiezoelectricDoc.strain_for_max">
     strain_for_max
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#emmet.core.polar.PiezoelectricDoc.total">
+    total
   </a>
 </li>
 </ul>
@@ -2370,7 +2410,7 @@ electronic: <span class="n">Tuple</span><span class="p">[</span><span class="n">
 </span>
 <a class="headerlink" href="#emmet.core.polar.DielectricDoc.electronic" title="Permanent link">¶</a></h3>
 <div class="doc doc-contents">
-<p>Dielectric response due to electron rearrangement</p>
+<p>Electronic contribution to dielectric tensor</p>
 </div>
 </div>
 <div class="doc doc-object doc-attribute">
@@ -2383,7 +2423,7 @@ ionic: <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple
 </span>
 <a class="headerlink" href="#emmet.core.polar.DielectricDoc.ionic" title="Permanent link">¶</a></h3>
 <div class="doc doc-contents">
-<p>Dielectric response due to atomic rearrangement</p>
+<p>Ionic contribution to dielectric tensor</p>
 </div>
 </div>
 <div class="doc doc-object doc-attribute">
@@ -2396,7 +2436,7 @@ total: <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple
 </span>
 <a class="headerlink" href="#emmet.core.polar.DielectricDoc.total" title="Permanent link">¶</a></h3>
 <div class="doc doc-contents">
-<p>Total dielectric response</p>
+<p>Total dielectric tensor</p>
 </div>
 </div>
 </div>
@@ -2413,11 +2453,51 @@ total: <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple
 <p>A dielectric package block</p>
 <div class="doc doc-children">
 <div class="doc doc-object doc-attribute">
-<h3 class="doc doc-heading" id="emmet.core.polar.PiezoelectricDoc.max_direction">
+<h3 class="doc doc-heading" id="emmet.core.polar.PiezoelectricDoc.e_ij_max">
 <code class="highlight">
-max_direction: <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> </code>
+e_ij_max: <span class="nb">float</span> </code>
 <span class="doc doc-properties">
 <small class="doc doc-property doc-property-pydantic-field"><code>pydantic-field</code></small>
+<small class="doc doc-property doc-property-required"><code>required</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.polar.PiezoelectricDoc.e_ij_max" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Piezoelectric modulus</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.polar.PiezoelectricDoc.electronic">
+<code class="highlight">
+electronic: <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic-field"><code>pydantic-field</code></small>
+<small class="doc doc-property doc-property-required"><code>required</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.polar.PiezoelectricDoc.electronic" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Electronic contribution to piezoelectric tensor in C/m²</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.polar.PiezoelectricDoc.ionic">
+<code class="highlight">
+ionic: <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic-field"><code>pydantic-field</code></small>
+<small class="doc doc-property doc-property-required"><code>required</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.polar.PiezoelectricDoc.ionic" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Ionic contribution to piezoelectric tensor in C/m²</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.polar.PiezoelectricDoc.max_direction">
+<code class="highlight">
+max_direction: <span class="nb">int</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic-field"><code>pydantic-field</code></small>
+<small class="doc doc-property doc-property-required"><code>required</code></small>
 </span>
 <a class="headerlink" href="#emmet.core.polar.PiezoelectricDoc.max_direction" title="Permanent link">¶</a></h3>
 <div class="doc doc-contents">
@@ -2427,13 +2507,27 @@ max_direction: <span class="n">Tuple</span><span class="p">[</span><span class="
 <div class="doc doc-object doc-attribute">
 <h3 class="doc doc-heading" id="emmet.core.polar.PiezoelectricDoc.strain_for_max">
 <code class="highlight">
-strain_for_max: <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> </code>
+strain_for_max: <span class="nb">float</span> </code>
 <span class="doc doc-properties">
 <small class="doc doc-property doc-property-pydantic-field"><code>pydantic-field</code></small>
+<small class="doc doc-property doc-property-required"><code>required</code></small>
 </span>
 <a class="headerlink" href="#emmet.core.polar.PiezoelectricDoc.strain_for_max" title="Permanent link">¶</a></h3>
 <div class="doc doc-contents">
 <p>Normalized strain direction for maximum piezo repsonse</p>
+</div>
+</div>
+<div class="doc doc-object doc-attribute">
+<h3 class="doc doc-heading" id="emmet.core.polar.PiezoelectricDoc.total">
+<code class="highlight">
+total: <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-pydantic-field"><code>pydantic-field</code></small>
+<small class="doc doc-property doc-property-required"><code>required</code></small>
+</span>
+<a class="headerlink" href="#emmet.core.polar.PiezoelectricDoc.total" title="Permanent link">¶</a></h3>
+<div class="doc doc-contents">
+<p>Total piezoelectric tensor in C/m²</p>
 </div>
 </div>
 </div>
