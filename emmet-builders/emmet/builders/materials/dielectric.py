@@ -144,6 +144,7 @@ class DielectricBuilder(Builder):
                     "last_updated",
                     "input.is_hubbard",
                     "orig_inputs.kpoints",
+                    "orig_inputs.poscar",
                     "input.parameters",
                     "output.epsilon_static",
                     "output.epsilon_ionic",
@@ -152,7 +153,7 @@ class DielectricBuilder(Builder):
                 criteria={self.tasks.key: str(task_id)},
             )
 
-            structure = mat_doc["structure"]
+            structure = task_query["orig_inputs"]["poscar"]["structure"]
 
             is_hubbard = task_query["input"]["is_hubbard"]
 

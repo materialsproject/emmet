@@ -104,8 +104,8 @@ class PiezoelectricDoc(PropertyDoc):
         **kwargs,
     ):
 
-        ionic_tensor = BasePiezoTensor.from_voigt(ionic)
-        electronic_tensor = BasePiezoTensor.from_voigt(electronic)
+        ionic_tensor = BasePiezoTensor.from_vasp_voigt(ionic)
+        electronic_tensor = BasePiezoTensor.from_vasp_voigt(electronic)
         total = ionic_tensor + electronic_tensor
 
         # Symmeterize Convert to IEEE orientation
