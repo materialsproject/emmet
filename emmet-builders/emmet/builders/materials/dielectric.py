@@ -144,11 +144,10 @@ class DielectricBuilder(Builder):
                     "last_updated",
                     "input.is_hubbard",
                     "orig_inputs.kpoints",
-                    "orig_inputs.poscar",
+                    "orig_inputs.poscar.structure",
                     "input.parameters",
                     "output.epsilon_static",
                     "output.epsilon_ionic",
-                    "output.structure",
                 ],
                 criteria={self.tasks.key: str(task_id)},
             )
