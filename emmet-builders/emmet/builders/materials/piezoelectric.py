@@ -166,11 +166,10 @@ class PiezoelectricBuilder(Builder):
                     "last_updated",
                     "input.is_hubbard",
                     "orig_inputs.kpoints",
-                    "orig_inputs.poscar",
+                    "orig_inputs.poscar.structure",
                     "input.parameters",
                     "output.piezo_tensor",
                     "output.piezo_ionic_tensor",
-                    "output.structure",
                 ],
                 criteria={self.tasks.key: str(task_id)},
             )
