@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.15.10](https://github.com/materialsproject/emmet/tree/v0.15.10) (2021-11-01)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.9...v0.15.10)
+
+**Merged pull requests:**
+
+- Patch fix correct tensor variable in dielectric [\#301](https://github.com/materialsproject/emmet/pull/301) ([munrojm](https://github.com/munrojm))
+
 ## [v0.15.9](https://github.com/materialsproject/emmet/tree/v0.15.9) (2021-11-01)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.8...v0.15.9)
