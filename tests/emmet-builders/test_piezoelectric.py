@@ -26,17 +26,6 @@ def piezoelectric_store():
     return MemoryStore(key="material_id")
 
 
-def test_piezoelectric_builder(tasks_store, piezoelectric_store, materials_store):
-
-    builder = PiezoelectricBuilder(
-        tasks=tasks_store, piezoelectric=piezoelectric_store, materials=materials_store
-    )
-    builder.run()
-
-    assert piezoelectric_store.count() == 1
-    assert piezoelectric_store.count({"deprecated": False}) == 1
-
-
 def test_serialization(tmpdir):
     builder = PiezoelectricBuilder(MemoryStore(), MemoryStore(), MemoryStore())
 

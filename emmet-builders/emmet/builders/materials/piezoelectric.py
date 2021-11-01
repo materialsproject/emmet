@@ -30,7 +30,9 @@ class PiezoelectricBuilder(Builder):
         self.tasks.key = "task_id"
         self.piezoelectric.key = "material_id"
 
-        super().__init__(sources=[materials, tasks], targets=[piezoelectric], **kwargs)
+        super().__init__(
+            sources=[materials, tasks], targets=[piezoelectric], **kwargs,
+        )
 
     def prechunk(self, number_splits: int):
         """
@@ -38,10 +40,48 @@ class PiezoelectricBuilder(Builder):
         """
         q = dict(self.query)
 
+        # Ensure no centrosymmetry
+        q.update(
+            {
+                "symmetry.point_group": {
+                    "$nin": [
+                        "-1",
+                        "2/m",
+                        "mmm",
+                        "4/m",
+                        "4/mmm",
+                        "-3",
+                        "-3m",
+                        "6/m",
+                        "6/mmm",
+                        "m-3",
+                        "m-3m",
+                    ]
+                }
+            }
+        )
+
         keys = self.piezoelectric.newer_in(self.materials, criteria=q, exhaustive=True)
 
-        N = ceil(len(keys) / number_splits)
-        for split in grouper(keys, N):
+        # Obtain only materials with DFPT Dielectric task type entries
+        pipeline = [
+            {"$match": {"material_id": {"$in": list(keys)}}},
+            {
+                "$project": {
+                    "array": {"$objectToArray": "$task_types"},
+                    "material_id": "$material_id",
+                }
+            },
+            {"$match": {"array.v": "DFPT Dielectric"}},
+            {"$project": {"material_id": "$material_id"}},
+        ]
+
+        new_keys = [
+            doc["material_id"] for doc in self.materials._collection.aggregate(pipeline)
+        ]
+
+        N = ceil(len(new_keys) / number_splits)
+        for split in grouper(new_keys, N):
             yield {"query": {self.materials.key: {"$in": list(split)}}}
 
     def get_items(self):
@@ -86,7 +126,22 @@ class PiezoelectricBuilder(Builder):
             )
         ) | (set(mat_ids) - set(piezo_ids))
 
-        mats = [mat for mat in mats_set]
+        # Obtain only materials with DFPT Dielectric task type entries
+        pipeline = [
+            {"$match": {"material_id": {"$in": list(mats_set)}}},
+            {
+                "$project": {
+                    "array": {"$objectToArray": "$task_types"},
+                    "material_id": "$material_id",
+                }
+            },
+            {"$match": {"array.v": "DFPT Dielectric"}},
+            {"$project": {"material_id": "$material_id"}},
+        ]
+
+        mats = [
+            doc["material_id"] for doc in self.materials._collection.aggregate(pipeline)
+        ]
 
         self.logger.info(
             "Processing {} materials for piezoelectric data".format(len(mats))
