@@ -193,41 +193,45 @@ class PiezoelectricBuilder(Builder):
                     "input.parameters",
                     "output.piezo_tensor",
                     "output.piezo_ionic_tensor",
+                    "output.bandgap",
                 ],
                 criteria={self.tasks.key: str(task_id)},
             )
+            if task_query["output"]["bandgap"] > 0:
 
-            structure = task_query["orig_inputs"]["poscar"]["structure"]
+                structure = task_query["orig_inputs"]["poscar"]["structure"]
 
-            is_hubbard = task_query["input"]["is_hubbard"]
+                is_hubbard = task_query["input"]["is_hubbard"]
 
-            if (
-                task_query["orig_inputs"]["kpoints"]["generation_style"] == "Monkhorst"
-                or task_query["orig_inputs"]["kpoints"]["generation_style"] == "Gamma"
-            ):
-                nkpoints = np.prod(
-                    task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
+                if (
+                    task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Monkhorst"
+                    or task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Gamma"
+                ):
+                    nkpoints = np.prod(
+                        task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
+                    )
+
+                else:
+                    nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
+
+                lu_dt = mat_doc["last_updated"]
+                task_updated = task_query["last_updated"]
+
+                final_docs.append(
+                    {
+                        "task_id": task_id,
+                        "is_hubbard": int(is_hubbard),
+                        "nkpoints": int(nkpoints),
+                        "piezo_static": task_query["output"]["piezo_tensor"],
+                        "piezo_ionic": task_query["output"]["piezo_ionic_tensor"],
+                        "structure": structure,
+                        "updated_on": lu_dt,
+                        "task_updated": task_updated,
+                        self.materials.key: mat_doc[self.materials.key],
+                    }
                 )
-
-            else:
-                nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
-
-            lu_dt = mat_doc["last_updated"]
-            task_updated = task_query["last_updated"]
-
-            final_docs.append(
-                {
-                    "task_id": task_id,
-                    "is_hubbard": int(is_hubbard),
-                    "nkpoints": int(nkpoints),
-                    "piezo_static": task_query["output"]["piezo_tensor"],
-                    "piezo_ionic": task_query["output"]["piezo_ionic_tensor"],
-                    "structure": structure,
-                    "updated_on": lu_dt,
-                    "task_updated": task_updated,
-                    self.materials.key: mat_doc[self.materials.key],
-                }
-            )
 
         if len(final_docs) > 0:
             sorted_final_docs = sorted(

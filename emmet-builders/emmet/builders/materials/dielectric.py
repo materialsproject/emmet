@@ -148,41 +148,46 @@ class DielectricBuilder(Builder):
                     "input.parameters",
                     "output.epsilon_static",
                     "output.epsilon_ionic",
+                    "output.bandgap",
                 ],
                 criteria={self.tasks.key: str(task_id)},
             )
 
-            structure = task_query["orig_inputs"]["poscar"]["structure"]
+            if task_query["output"]["bandgap"] > 0:
 
-            is_hubbard = task_query["input"]["is_hubbard"]
+                structure = task_query["orig_inputs"]["poscar"]["structure"]
 
-            if (
-                task_query["orig_inputs"]["kpoints"]["generation_style"] == "Monkhorst"
-                or task_query["orig_inputs"]["kpoints"]["generation_style"] == "Gamma"
-            ):
-                nkpoints = np.prod(
-                    task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
+                is_hubbard = task_query["input"]["is_hubbard"]
+
+                if (
+                    task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Monkhorst"
+                    or task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Gamma"
+                ):
+                    nkpoints = np.prod(
+                        task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
+                    )
+
+                else:
+                    nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
+
+                lu_dt = mat_doc["last_updated"]
+                task_updated = task_query["last_updated"]
+
+                final_docs.append(
+                    {
+                        "task_id": task_id,
+                        "is_hubbard": int(is_hubbard),
+                        "nkpoints": int(nkpoints),
+                        "epsilon_static": task_query["output"]["epsilon_static"],
+                        "epsilon_ionic": task_query["output"]["epsilon_ionic"],
+                        "structure": structure,
+                        "updated_on": lu_dt,
+                        "task_updated": task_updated,
+                        self.materials.key: mat_doc[self.materials.key],
+                    }
                 )
-
-            else:
-                nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
-
-            lu_dt = mat_doc["last_updated"]
-            task_updated = task_query["last_updated"]
-
-            final_docs.append(
-                {
-                    "task_id": task_id,
-                    "is_hubbard": int(is_hubbard),
-                    "nkpoints": int(nkpoints),
-                    "epsilon_static": task_query["output"]["epsilon_static"],
-                    "epsilon_ionic": task_query["output"]["epsilon_ionic"],
-                    "structure": structure,
-                    "updated_on": lu_dt,
-                    "task_updated": task_updated,
-                    self.materials.key: mat_doc[self.materials.key],
-                }
-            )
 
         if len(final_docs) > 0:
             sorted_final_docs = sorted(
