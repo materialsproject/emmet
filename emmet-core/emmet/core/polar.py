@@ -63,9 +63,9 @@ class DielectricDoc(PropertyDoc):
                 "ionic": ionic_tensor.tolist(),
                 "electronic": electronic_tensor.tolist(),
                 "e_total": np.average(np.diagonal(total)),
-                "e_ionic": np.average(np.diagonal(ionic)),
-                "e_electronic": np.average(np.diagonal(electronic)),
-                "n": np.sqrt(np.average(np.diagonal(electronic))),
+                "e_ionic": np.average(np.diagonal(ionic_tensor)),
+                "e_electronic": np.average(np.diagonal(electronic_tensor)),
+                "n": np.sqrt(np.average(np.diagonal(electronic_tensor))),
             },
             **kwargs,
         )

@@ -33,7 +33,7 @@ class DielectricBuilder(Builder):
 
         super().__init__(sources=[materials, tasks], targets=[dielectric], **kwargs)
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:
+    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
         """
         Prechunk method to perform chunking by the key field
         """
@@ -41,25 +41,8 @@ class DielectricBuilder(Builder):
 
         keys = self.dielectric.newer_in(self.materials, criteria=q, exhaustive=True)
 
-        # Obtain only materials with DFPT Dielectric task type entries
-        pipeline = [
-            {"$match": {"material_id": {"$in": list(keys)}}},
-            {
-                "$project": {
-                    "array": {"$objectToArray": "$task_types"},
-                    "material_id": "$material_id",
-                }
-            },
-            {"$match": {"array.v": "DFPT Dielectric"}},
-            {"$project": {"material_id": "$material_id"}},
-        ]
-
-        new_keys = [
-            doc["material_id"] for doc in self.materials._collection.aggregate(pipeline)
-        ]
-
-        N = ceil(len(new_keys) / number_splits)
-        for split in grouper(new_keys, N):
+        N = ceil(len(keys) / number_splits)
+        for split in grouper(keys, N):
             yield {"query": {self.materials.key: {"$in": list(split)}}}
 
     def get_items(self):
@@ -81,22 +64,7 @@ class DielectricBuilder(Builder):
             self.dielectric.newer_in(target=self.materials, criteria=q, exhaustive=True)
         ) | (set(mat_ids) - set(di_ids))
 
-        # Obtain only materials with DFPT Dielectric task type entries
-        pipeline = [
-            {"$match": {"material_id": {"$in": list(mats_set)}}},
-            {
-                "$project": {
-                    "array": {"$objectToArray": "$task_types"},
-                    "material_id": "$material_id",
-                }
-            },
-            {"$match": {"array.v": "DFPT Dielectric"}},
-            {"$project": {"material_id": "$material_id"}},
-        ]
-
-        mats = [
-            doc["material_id"] for doc in self.materials._collection.aggregate(pipeline)
-        ]
+        mats = [mat for mat in mats_set]
 
         self.logger.info(
             "Processing {} materials for dielectric data".format(len(mats))

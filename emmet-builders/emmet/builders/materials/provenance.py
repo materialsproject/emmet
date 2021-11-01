@@ -61,7 +61,7 @@ class ProvenanceBuilder(Builder):
             s.ensure_index("snl_id")
             s.ensure_index("formula_pretty")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:
+    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
         self.ensure_indicies()
 
         # Find all formulas for materials that have been updated since this

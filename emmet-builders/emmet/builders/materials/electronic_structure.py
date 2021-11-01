@@ -20,7 +20,15 @@ from emmet.core.utils import jsanitize
 
 class ElectronicStructureBuilder(Builder):
     def __init__(
-        self, tasks, materials, electronic_structure, bandstructure_fs, dos_fs, chunk_size=10, query=None, **kwargs,
+        self,
+        tasks,
+        materials,
+        electronic_structure,
+        bandstructure_fs,
+        dos_fs,
+        chunk_size=10,
+        query=None,
+        **kwargs,
     ):
         """
         Creates an electronic structure collection from a tasks collection,
@@ -53,13 +61,15 @@ class ElectronicStructureBuilder(Builder):
             **kwargs,
         )
 
-    def prechunk(self, number_splits: int):
+    def prechunk(self, number_splits: int):  # pragma: no cover
         """
         Prechunk method to perform chunking by the key field
         """
         q = dict(self.query)
 
-        keys = self.electronic_structure.newer_in(self.materials, criteria=q, exhaustive=True)
+        keys = self.electronic_structure.newer_in(
+            self.materials, criteria=q, exhaustive=True
+        )
 
         N = ceil(len(keys) / number_splits)
         for split in grouper(keys, N):
@@ -80,13 +90,17 @@ class ElectronicStructureBuilder(Builder):
         mat_ids = self.materials.distinct(self.materials.key, criteria=q)
         es_ids = self.electronic_structure.distinct(self.electronic_structure.key)
 
-        mats_set = set(self.electronic_structure.newer_in(target=self.materials, criteria=q, exhaustive=True)) | (
-            set(mat_ids) - set(es_ids)
-        )
+        mats_set = set(
+            self.electronic_structure.newer_in(
+                target=self.materials, criteria=q, exhaustive=True
+            )
+        ) | (set(mat_ids) - set(es_ids))
 
         mats = [mat for mat in mats_set]
 
-        self.logger.info("Processing {} materials for electronic structure".format(len(mats)))
+        self.logger.info(
+            "Processing {} materials for electronic structure".format(len(mats))
+        )
 
         self.total = len(mats)
 
@@ -116,7 +130,13 @@ class ElectronicStructureBuilder(Builder):
         for bs_type, bs_entry in mat["bandstructure"].items():
             if bs_entry.get("object", None) is not None:
                 bs[bs_type] = (
-                    {bs_entry["task_id"]: BandStructureSymmLine.from_dict(bs_entry["object"])} if bs_entry else None
+                    {
+                        bs_entry["task_id"]: BandStructureSymmLine.from_dict(
+                            bs_entry["object"]
+                        )
+                    }
+                    if bs_entry
+                    else None
                 )
 
                 structures[bs_entry["task_id"]] = bs_entry["output_structure"]
@@ -124,13 +144,17 @@ class ElectronicStructureBuilder(Builder):
         if mat["dos"]:
             if mat["dos"]["object"] is not None:
                 self.logger.info("Processing density of states")
-                dos = {mat["dos"]["task_id"]: CompleteDos.from_dict(mat["dos"]["object"])}
+                dos = {
+                    mat["dos"]["task_id"]: CompleteDos.from_dict(mat["dos"]["object"])
+                }
 
                 structures[mat["dos"]["task_id"]] = mat["dos"]["output_structure"]
 
         if bs:
             self.logger.info(
-                "Processing band structure types: {}".format([bs_type for bs_type, bs_entry in bs.items() if bs_entry])
+                "Processing band structure types: {}".format(
+                    [bs_type for bs_type, bs_entry in bs.items() if bs_entry]
+                )
             )
 
         # Default summary data
@@ -153,7 +177,9 @@ class ElectronicStructureBuilder(Builder):
         eig_values = mat["other"].get("eigenvalue_band_properties", None)
 
         if eig_values is not None:
-            if not np.isclose(mat["other"]["band_gap"], eig_values["bandgap"], atol=0.2, rtol=0.0):
+            if not np.isclose(
+                mat["other"]["band_gap"], eig_values["bandgap"], atol=0.2, rtol=0.0
+            ):
 
                 d["warnings"].append(
                     "Regular band gap and band gap from eigenvalue_band_properties do not agree. \
@@ -164,7 +190,9 @@ Using data from eigenvalue_band_properties where appropriate."
                 d["cbm"] = eig_values["cbm"]
                 d["vbm"] = eig_values["vbm"]
                 d["is_gap_direct"] = eig_values["is_gap_direct"]
-                d["is_metal"] = True if np.isclose(d["band_gap"], 0.0, atol=0.01, rtol=0) else False
+                d["is_metal"] = (
+                    True if np.isclose(d["band_gap"], 0.0, atol=0.01, rtol=0) else False
+                )
 
         if dos is None:
             doc = ElectronicStructureDoc.from_structure(**d)
@@ -184,7 +212,9 @@ Using data from eigenvalue_band_properties where appropriate."
                 doc = self._bsdos_checks(doc, dos[mat["dos"]["task_id"]], structures)
 
             except Exception:
-                d["warnings"].append("Band structure and/or data exists but an error occured while processing.")
+                d["warnings"].append(
+                    "Band structure and/or data exists but an error occured while processing."
+                )
                 doc = ElectronicStructureDoc.from_structure(**d)
 
         # Magnetic ordering check
@@ -200,12 +230,16 @@ Using data from eigenvalue_band_properties where appropriate."
 
         if doc.dos is not None:
             dos_dict = doc.dos.dict()
-            mag_orderings.update({dos_dict["total"][Spin.up]["task_id"]: dos_dict["magnetic_ordering"]})
+            mag_orderings.update(
+                {dos_dict["total"][Spin.up]["task_id"]: dos_dict["magnetic_ordering"]}
+            )
 
         for task_id, ordering in mag_orderings.items():
             if doc.magnetic_ordering != ordering:
 
-                doc.warnings.append(f"Summary data magnetic ordering does not agree with the ordering from {task_id}")
+                doc.warnings.append(
+                    f"Summary data magnetic ordering does not agree with the ordering from {task_id}"
+                )
 
         return doc.dict()
 
@@ -249,8 +283,12 @@ Using data from eigenvalue_band_properties where appropriate."
         for task_id, struct in structures.items():
             pair_list.append((task_id, struct))
 
-            struct_prim = SpacegroupAnalyzer(struct).get_primitive_standard_structure(international_monoclinic=False)
-            if not np.allclose(struct.lattice.matrix, struct_prim.lattice.matrix, atol=1e-3):
+            struct_prim = SpacegroupAnalyzer(struct).get_primitive_standard_structure(
+                international_monoclinic=False
+            )
+            if not np.allclose(
+                struct.lattice.matrix, struct_prim.lattice.matrix, atol=1e-3
+            ):
                 if doc.warnings is None:
                     doc.warnings = []
 
@@ -265,7 +303,9 @@ Using data from eigenvalue_band_properties where appropriate."
                 if doc.warnings is None:
                     doc.warnings = []
 
-                doc.warnings.append(f"The input structures for {pair[0][0]} and {pair[1][0]} not are not equivalent! ")
+                doc.warnings.append(
+                    f"The input structures for {pair[0][0]} and {pair[1][0]} not are not equivalent! "
+                )
 
         return doc
 
@@ -317,7 +357,9 @@ Using data from eigenvalue_band_properties where appropriate."
 
                 kpoints = task_query["orig_inputs"]["kpoints"]
                 labels_dict = {
-                    label: point for label, point in zip(kpoints["labels"], kpoints["kpoints"]) if label is not None
+                    label: point
+                    for label, point in zip(kpoints["labels"], kpoints["kpoints"])
+                    if label is not None
                 }
 
                 try:
@@ -327,7 +369,9 @@ Using data from eigenvalue_band_properties where appropriate."
 
                 if bs_type is None:
 
-                    bs_dict = self.bandstructure_fs.query_one({self.bandstructure_fs.key: str(task_id)})
+                    bs_dict = self.bandstructure_fs.query_one(
+                        {self.bandstructure_fs.key: str(task_id)}
+                    )
 
                     if bs_dict is not None:
 
@@ -372,10 +416,14 @@ Using data from eigenvalue_band_properties where appropriate."
                 structure = Structure.from_dict(task_query["output"]["structure"])
 
                 if (
-                    task_query["orig_inputs"]["kpoints"]["generation_style"] == "Monkhorst"
-                    or task_query["orig_inputs"]["kpoints"]["generation_style"] == "Gamma"
+                    task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Monkhorst"
+                    or task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Gamma"
                 ):
-                    nkpoints = np.prod(task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0)
+                    nkpoints = np.prod(
+                        task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
+                    )
 
                 else:
                     nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
@@ -410,7 +458,9 @@ Using data from eigenvalue_band_properties where appropriate."
 
                 structure = Structure.from_dict(task_query["output"]["structure"])
 
-                other_mag_ordering = CollinearMagneticStructureAnalyzer(structure).ordering
+                other_mag_ordering = CollinearMagneticStructureAnalyzer(
+                    structure
+                ).ordering
 
                 is_hubbard = task_query["input"]["is_hubbard"]
 
@@ -420,7 +470,9 @@ Using data from eigenvalue_band_properties where appropriate."
                     last_calc["input"]["kpoints"]["generation_style"] == "Monkhorst"
                     or last_calc["input"]["kpoints"]["generation_style"] == "Gamma"
                 ):
-                    nkpoints = np.prod(last_calc["input"]["kpoints"]["kpoints"][0], axis=0)
+                    nkpoints = np.prod(
+                        last_calc["input"]["kpoints"]["kpoints"][0], axis=0
+                    )
                 else:
                     nkpoints = last_calc["input"]["kpoints"]["nkpoints"]
 
@@ -428,7 +480,9 @@ Using data from eigenvalue_band_properties where appropriate."
 
                 other_calcs.append(
                     {
-                        "is_static": True if "Static" in mat["task_types"][task_id] else False,
+                        "is_static": True
+                        if "Static" in mat["task_types"][task_id]
+                        else False,
                         "task_id": task_id,
                         "is_hubbard": int(is_hubbard),
                         "nkpoints": int(nkpoints),
@@ -438,11 +492,15 @@ Using data from eigenvalue_band_properties where appropriate."
                     }
                 )
 
-        updated_materials_doc = self._obtain_blessed_calculations(mat, bs_calcs, dos_calcs, other_calcs)
+        updated_materials_doc = self._obtain_blessed_calculations(
+            mat, bs_calcs, dos_calcs, other_calcs
+        )
 
         return updated_materials_doc
 
-    def _obtain_blessed_calculations(self, materials_doc, bs_calcs, dos_calcs, other_calcs):
+    def _obtain_blessed_calculations(
+        self, materials_doc, bs_calcs, dos_calcs, other_calcs
+    ):
 
         bs_types = ["setyawan_curtarolo", "hinuma", "latimer_munro"]
 
@@ -451,38 +509,66 @@ Using data from eigenvalue_band_properties where appropriate."
             if bs_calcs[bs_type]:
                 sorted_bs_data = sorted(
                     bs_calcs[bs_type],
-                    key=lambda entry: (entry["is_hubbard"], entry["nkpoints"], entry["updated_on"],),
+                    key=lambda entry: (
+                        entry["is_hubbard"],
+                        entry["nkpoints"],
+                        entry["updated_on"],
+                    ),
                     reverse=True,
                 )
 
-                materials_doc["bandstructure"][bs_type]["task_id"] = sorted_bs_data[0]["task_id"]
+                materials_doc["bandstructure"][bs_type]["task_id"] = sorted_bs_data[0][
+                    "task_id"
+                ]
 
-                bs_obj = self.bandstructure_fs.query_one(criteria={"fs_id": sorted_bs_data[0]["fs_id"]})
+                bs_obj = self.bandstructure_fs.query_one(
+                    criteria={"fs_id": sorted_bs_data[0]["fs_id"]}
+                )
 
-                materials_doc["bandstructure"][bs_type]["object"] = bs_obj["data"] if bs_obj is not None else None
+                materials_doc["bandstructure"][bs_type]["object"] = (
+                    bs_obj["data"] if bs_obj is not None else None
+                )
 
-                materials_doc["bandstructure"][bs_type]["output_structure"] = sorted_bs_data[0]["output_structure"]
+                materials_doc["bandstructure"][bs_type][
+                    "output_structure"
+                ] = sorted_bs_data[0]["output_structure"]
 
         if dos_calcs:
 
             sorted_dos_data = sorted(
                 dos_calcs,
-                key=lambda entry: (entry["is_hubbard"], entry["nkpoints"], entry["nedos"], entry["updated_on"],),
+                key=lambda entry: (
+                    entry["is_hubbard"],
+                    entry["nkpoints"],
+                    entry["nedos"],
+                    entry["updated_on"],
+                ),
                 reverse=True,
             )
 
             materials_doc["dos"]["task_id"] = sorted_dos_data[0]["task_id"]
 
-            dos_obj = self.dos_fs.query_one(criteria={"fs_id": sorted_dos_data[0]["fs_id"]})
-            materials_doc["dos"]["object"] = dos_obj["data"] if dos_obj is not None else None
+            dos_obj = self.dos_fs.query_one(
+                criteria={"fs_id": sorted_dos_data[0]["fs_id"]}
+            )
+            materials_doc["dos"]["object"] = (
+                dos_obj["data"] if dos_obj is not None else None
+            )
 
-            materials_doc["dos"]["output_structure"] = sorted_dos_data[0]["output_structure"]
+            materials_doc["dos"]["output_structure"] = sorted_dos_data[0][
+                "output_structure"
+            ]
 
         if other_calcs:
 
             sorted_other_data = sorted(
                 other_calcs,
-                key=lambda entry: (entry["is_static"], entry["is_hubbard"], entry["nkpoints"], entry["updated_on"],),
+                key=lambda entry: (
+                    entry["is_static"],
+                    entry["is_hubbard"],
+                    entry["nkpoints"],
+                    entry["updated_on"],
+                ),
                 reverse=True,
             )
 
@@ -490,9 +576,13 @@ Using data from eigenvalue_band_properties where appropriate."
 
             task_output_data = sorted_other_data[0]["calcs_reversed"][-1]["output"]
             materials_doc["other"]["band_gap"] = task_output_data["bandgap"]
-            materials_doc["other"]["magnetic_ordering"] = sorted_other_data[0]["magnetic_ordering"]
+            materials_doc["other"]["magnetic_ordering"] = sorted_other_data[0][
+                "magnetic_ordering"
+            ]
 
-            materials_doc["other"]["is_metal"] = materials_doc["other"]["band_gap"] == 0.0
+            materials_doc["other"]["is_metal"] = (
+                materials_doc["other"]["band_gap"] == 0.0
+            )
 
             for prop in [
                 "efermi",
@@ -515,7 +605,11 @@ Using data from eigenvalue_band_properties where appropriate."
 
     @staticmethod
     def _obtain_path_type(
-        labels_dict, structure, symprec=SETTINGS.SYMPREC, angle_tolerance=SETTINGS.ANGLE_TOL, atol=1e-5,
+        labels_dict,
+        structure,
+        symprec=SETTINGS.SYMPREC,
+        angle_tolerance=SETTINGS.ANGLE_TOL,
+        atol=1e-5,
     ):
 
         bs_type = None
@@ -534,17 +628,24 @@ Using data from eigenvalue_band_properties where appropriate."
                     atol=atol,
                 )
                 hs_labels_full = hskp.kpath["kpoints"]
-                hs_path_uniq = set([label for segment in hskp.kpath["path"] for label in segment])
+                hs_path_uniq = set(
+                    [label for segment in hskp.kpath["path"] for label in segment]
+                )
 
-                hs_labels = {k: hs_labels_full[k] for k in hs_path_uniq if k in hs_path_uniq}
+                hs_labels = {
+                    k: hs_labels_full[k] for k in hs_path_uniq if k in hs_path_uniq
+                }
 
                 shared_items = {
                     k: labels_dict[k]
                     for k in labels_dict
-                    if k in hs_labels and np.allclose(labels_dict[k], hs_labels[k], atol=1e-3)
+                    if k in hs_labels
+                    and np.allclose(labels_dict[k], hs_labels[k], atol=1e-3)
                 }
 
-                if len(shared_items) == len(labels_dict) and len(shared_items) == len(hs_labels):
+                if len(shared_items) == len(labels_dict) and len(shared_items) == len(
+                    hs_labels
+                ):
                     bs_type = ptype
 
         return bs_type
