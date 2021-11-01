@@ -34,7 +34,7 @@ class PiezoelectricBuilder(Builder):
             sources=[materials, tasks], targets=[piezoelectric], **kwargs,
         )
 
-    def prechunk(self, number_splits: int):
+    def prechunk(self, number_splits: int):  # pragma: no cover
         """
         Prechunk method to perform chunking by the key field
         """

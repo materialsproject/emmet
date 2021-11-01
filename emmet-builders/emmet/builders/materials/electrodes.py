@@ -106,7 +106,7 @@ class StructureGroupBuilder(Builder):
         self.check_newer = check_newer
         super().__init__(sources=[materials], targets=[sgroups], **kwargs)
 
-    def prechunk(self, number_splits: int) -> Iterator[Dict]:
+    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
         """
         Prechunk method to perform chunking by the key field
         """
