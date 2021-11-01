@@ -26,6 +26,17 @@ def dielectric_store():
     return MemoryStore(key="material_id")
 
 
+def test_dielectric_builder(tasks_store, dielectric_store, materials_store):
+
+    builder = DielectricBuilder(
+        tasks=tasks_store, dielectric=dielectric_store, materials=materials_store
+    )
+    builder.run()
+
+    assert dielectric_store.count() == 1
+    assert dielectric_store.count({"deprecated": False}) == 1
+
+
 def test_serialization(tmpdir):
     builder = DielectricBuilder(MemoryStore(), MemoryStore(), MemoryStore())
 
