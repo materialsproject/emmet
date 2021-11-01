@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.15.9](https://github.com/materialsproject/emmet/tree/v0.15.9) (2021-11-01)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.8...v0.15.9)
+
+**Merged pull requests:**
+
+- Ensure DFPT tasks in polar builders [\#300](https://github.com/materialsproject/emmet/pull/300) ([munrojm](https://github.com/munrojm))
+
 ## [v0.15.8](https://github.com/materialsproject/emmet/tree/v0.15.8) (2021-10-31)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.7...v0.15.8)
@@ -154,19 +162,19 @@
 
 ## [v0.13.0](https://github.com/materialsproject/emmet/tree/v0.13.0) (2021-09-23)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.13.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.13.0)
 
 **Merged pull requests:**
 
 - Builder bug fixes [\#272](https://github.com/materialsproject/emmet/pull/272) ([munrojm](https://github.com/munrojm))
 
-## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.12.8)
-
 ## [v0.12.7](https://github.com/materialsproject/emmet/tree/v0.12.7) (2021-09-15)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.7)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.12.7)
+
+## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.8)
 
 **Merged pull requests:**
 
