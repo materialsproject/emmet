@@ -83,7 +83,7 @@ class MaterialsBuilder(Builder):
             self.task_validation.ensure_index("task_id")
             self.task_validation.ensure_index("valid")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:
+    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
         """Prechunk the materials builder for distributed computation"""
         temp_query = dict(self.query)
         temp_query["state"] = "successful"
