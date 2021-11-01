@@ -83,7 +83,7 @@ class ThermoBuilder(Builder):
         if self.phase_diagram:
             self.phase_diagram.ensure_index("chemsys")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:
+    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
         updated_chemsys = self.get_updated_chemsys()
         new_chemsys = self.get_new_chemsys()
 
