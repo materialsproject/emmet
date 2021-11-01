@@ -146,6 +146,7 @@ class DielectricBuilder(Builder):
                     "orig_inputs.kpoints",
                     "orig_inputs.poscar.structure",
                     "input.parameters",
+                    "input.structure",
                     "output.epsilon_static",
                     "output.epsilon_ionic",
                     "output.bandgap",
@@ -155,7 +156,10 @@ class DielectricBuilder(Builder):
 
             if task_query["output"]["bandgap"] > 0:
 
-                structure = task_query["orig_inputs"]["poscar"]["structure"]
+                try:
+                    structure = task_query["orig_inputs"]["poscar"]["structure"]
+                except KeyError:
+                    structure = task_query["input"]["structure"]
 
                 is_hubbard = task_query["input"]["is_hubbard"]
 

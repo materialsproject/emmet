@@ -191,6 +191,7 @@ class PiezoelectricBuilder(Builder):
                     "orig_inputs.kpoints",
                     "orig_inputs.poscar.structure",
                     "input.parameters",
+                    "input.structure",
                     "output.piezo_tensor",
                     "output.piezo_ionic_tensor",
                     "output.bandgap",
@@ -199,7 +200,10 @@ class PiezoelectricBuilder(Builder):
             )
             if task_query["output"]["bandgap"] > 0:
 
-                structure = task_query["orig_inputs"]["poscar"]["structure"]
+                try:
+                    structure = task_query["orig_inputs"]["poscar"]["structure"]
+                except KeyError:
+                    structure = task_query["input"]["structure"]
 
                 is_hubbard = task_query["input"]["is_hubbard"]
 
