@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.15.11](https://github.com/materialsproject/emmet/tree/v0.15.11) (2021-11-02)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.10...v0.15.11)
+
+**Merged pull requests:**
+
+- Final polar builder updates [\#303](https://github.com/materialsproject/emmet/pull/303) ([munrojm](https://github.com/munrojm))
+- Remove chunking methods from test coverage for materials and thermo [\#302](https://github.com/materialsproject/emmet/pull/302) ([munrojm](https://github.com/munrojm))
+
 ## [v0.15.10](https://github.com/materialsproject/emmet/tree/v0.15.10) (2021-11-01)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.9...v0.15.10)
