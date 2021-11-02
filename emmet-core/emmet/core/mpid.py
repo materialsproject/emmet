@@ -24,7 +24,7 @@ class MPID(str):
 
         elif isinstance(val, str):
             parts = val.split("-")
-            parts[1] = int(parts[1])  # type: ignore
+            parts[-1] = int(parts[-1])  # type: ignore
             self.parts = tuple(parts)
             self.string = val
 

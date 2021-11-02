@@ -115,9 +115,9 @@ class DefectDoc(StructureMetadata):
 
             def _compare(new, old):
                 # TODO return kpoint density
-                return new['nsites'] > old['nsites']
+                return new['nsites'] > old.nsites
 
-            if defect_task_doc.run_type not in self.tasks or _compare(defect_task, self.tasks[rt]):
+            if defect_task_doc.run_type not in self.tasks or _compare(defect_task, self.tasks[rt][0]):
                 self.run_types.update({defect_task_doc.task_id: rt})
                 self.task_types.update({defect_task_doc.task_id: tt})
                 self.calc_types.update({defect_task_doc.task_id: ct})
@@ -135,7 +135,7 @@ class DefectDoc(StructureMetadata):
             self.update(defect_task=defect_task, bulk_task=bulk_task, dielectric=dielectric, query=query)
 
     @classmethod
-    def from_tasks(cls, tasks: List, query='defect') -> "DefectDoc":
+    def from_tasks(cls, tasks: List, query='defect', material_id=None) -> "DefectDoc":
         """
         The standard way to create this document.
 
@@ -164,25 +164,29 @@ class DefectDoc(StructureMetadata):
 
         def _sort(x):
             # TODO return kpoint density, currently just does supercell size
-            return x[1].nsites
+            return -x[0]['nsites'], x[0]['output']['energy']
 
         entries = {}
         final_tasks = {}
         for key, tasks_for_runtype in groupby(sorted(tasks, key=_run_type), key=_run_type):
-            entry_and_docs = [
+            sorted_tasks = sorted(tasks_for_runtype, key=_sort)
+
+            convergence = [
                 (
-                    cls.get_defect_entry_from_tasks(
-                        defect_task=defect_task,
-                        bulk_task=bulk_task,
-                        dielectric=dielectric,
-                        query=query
-                    ),
-                    TaskDocument(**defect_task), TaskDocument(**bulk_task)
+                    t[0]['nsites'],
+                    t[0]['output']['energy'], t[1]['output']['energy'],
+                    t[0]['defect']['@class'],
                 )
-                for defect_task, bulk_task, dielectric in tasks_for_runtype
+                for t in sorted_tasks
             ]
-            entry_and_docs.sort(key=_sort, reverse=True)
-            best_entry, best_defect_task, best_bulk_task = entry_and_docs[0]
+            #print(convergence)
+            #for t in sorted_tasks:
+            #    print('\t', TaskDocument(**t[0]).task_id)
+            #    print('\t', TaskDocument(**t[1]).task_id)
+
+            best_defect_task, best_bulk_task, dielectric = sorted_tasks[0]
+            best_entry = cls.get_defect_entry_from_tasks(best_defect_task, best_bulk_task, dielectric, query)
+            best_defect_task, best_bulk_task = TaskDocument(**best_defect_task), TaskDocument(**best_bulk_task)
             entries[best_defect_task.run_type] = best_entry
             final_tasks[best_defect_task.run_type] = (best_defect_task, best_bulk_task)
 
@@ -196,7 +200,7 @@ class DefectDoc(StructureMetadata):
                 'task_ids': task_ids,
                 'deprecated_tasks': deprecated_tasks,
                 'tasks': final_tasks,
-                'material_id': best_entry.parameters['material_id'],
+                'material_id': material_id if material_id else best_entry.parameters['material_id'],
                 'entry_ids': {rt: entries[rt].entry_id for rt in entries},
                 'defect': best_entry.defect,
                 'name': best_entry.defect.name,
@@ -253,7 +257,17 @@ class DefectDoc(StructureMetadata):
         """
 
         def get_init(x):
+            """
+            Helper function. If transformations were applied, get the structure post defect
+            transformation
+            """
             if x.get('transformations', {}).get('history'):
+                for i, y in enumerate(x['transformations']['history']):
+                    if y['@class'] == 'DefectTransformation':
+                        if len(x['transformations']['history']) == 1:
+                            return Structure.from_dict(x['input']['structure'])
+                        else:
+                            return Structure.from_dict(x['transformations']['history'][i+1]['input_structure'])
                 return Structure.from_dict(x['transformations']['history'][0]['input_structure'])
             return Structure.from_dict(x['input']['structure'])
 
@@ -263,25 +277,11 @@ class DefectDoc(StructureMetadata):
         final_defect_structure = Structure.from_dict(defect_task['output']['structure'])
         final_bulk_structure = Structure.from_dict(bulk_task['output']['structure'])
 
-        axis_grid = [[float(x) for x in _] for _ in defect_task['output']['v_hartree_grid']]
-        bulk_planar_averages = [[float(x) for x in _] for _ in bulk_task['output']['v_hartree']]
-        defect_planar_averages = [[float(x) for x in _] for _ in defect_task['output']['v_hartree']]
-
-        dfi, site_matching_indices = matcher(
-            init_bulk_structure, init_defect_structure,
-            final_bulk_struc=final_bulk_structure, final_defect_struc=final_defect_structure
-        )
-
         mpid = get_mpid(init_bulk_structure)
 
         parameters = {
             'defect_energy': defect_task['output']['energy'],
             'bulk_energy': bulk_task['output']['energy'],
-            'axis_grid': axis_grid,
-            'defect_frac_sc_coords': final_defect_structure[dfi].frac_coords,
-            'defect_planar_averages': defect_planar_averages,
-            'bulk_planar_averages': bulk_planar_averages,
-            'site_matching_indices': site_matching_indices,
             'initial_defect_structure': init_defect_structure,
             'final_defect_structure': final_defect_structure,
             'vbm': bulk_task['output']['vbm'],
@@ -289,6 +289,24 @@ class DefectDoc(StructureMetadata):
             'material_id': mpid,
             'entry_id': defect_task.get('task_id')
         }
+
+        # TODO Should probably get these even if not needed for corrections
+        if init_defect_structure.charge != 0:
+            axis_grid = [[float(x) for x in _] for _ in defect_task['output']['v_hartree_grid']]
+            bulk_planar_averages = [[float(x) for x in _] for _ in bulk_task['output']['v_hartree']]
+            defect_planar_averages = [[float(x) for x in _] for _ in defect_task['output']['v_hartree']]
+
+            dfi, site_matching_indices = matcher(
+                init_bulk_structure, init_defect_structure,
+                final_bulk_struc=final_bulk_structure, final_defect_struc=final_defect_structure
+            )
+            defect_frac_sc_coords = final_defect_structure[dfi].frac_coords
+
+            parameters['axis_grid'] = axis_grid
+            parameters['bulk_planar_averages'] = bulk_planar_averages
+            parameters['defect_planar_averages'] = defect_planar_averages
+            parameters['defect_frac_sc_coords'] = defect_frac_sc_coords
+            parameters['site_matching_indices'] = site_matching_indices
 
         # cannot be easily queried for, so check here.
         if 'v_hartree' in final_bulk_structure.site_properties:

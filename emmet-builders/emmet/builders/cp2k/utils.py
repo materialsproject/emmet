@@ -13,6 +13,8 @@ def unpack(query, d):
 
 
 # TODO Move polaron compare to a different function to make validation easier
+# TODO Matching should have have an easier way of setting distance tolerance
+    # can't this all be done inside of structure matcher to find mapping or something?
 def matcher(bulk_struc, defect_struc, final_bulk_struc=None, final_defect_struc=None):
     matching_indices = []
     dis = []
@@ -50,6 +52,7 @@ def matcher(bulk_struc, defect_struc, final_bulk_struc=None, final_defect_struc=
         return def_index, matching_indices
 
     elif len(def_index) > 1:
+        print(def_index)
         raise ValueError("The provided defect structure and bulk structure "
                          "have more than one potential defect site")
 

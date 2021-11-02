@@ -200,7 +200,6 @@ class MaterialsBuilder(Builder):
                     )
                 )
             except Exception as e:
-
                 # TODO construct deprecated
 
                 failed_ids = list({t_.task_id for t_ in group})
@@ -264,6 +263,8 @@ class MaterialsBuilder(Builder):
         for idx, task in enumerate(filtered_tasks):
             s = task.output.structure
             s.index: int = idx  # type: ignore
+            s.remove_oxidation_states()
+            s.remove_spin()
             structures.append(s)
 
         grouped_structures = group_structures(

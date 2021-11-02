@@ -7,14 +7,17 @@ from pydantic import BaseModel, Field
 from emmet.core import SETTINGS
 from emmet.core.utils import DocEnum
 from emmet.core.vasp.task import TaskDocument
-from emmet.stubs import Structure
 
 
 class DeprecationMessage(DocEnum):
 
-    encut = "cutoff", "PW cutoff too low"
-    ldau = "ldau", "LDAU parameters don't match"
-    manual = "manual", "Manually deprecated"
+    MANUAL = "M", "manual deprecation"
+    CUTOFF = "C002", "PW cutoff too low"
+    FORCES = "C003", "Forces too large"
+    CONVERGENCE = "E001", "Calculation did not converge"
+    MAX_SCF = "E002", "Max SCF gradient too large"
+    LDAU = "I001", "LDAU Parameters don't match the inputset"
+    BASIS = "", "Improper basis sets"
 
 
 class ValidationDoc(BaseModel):

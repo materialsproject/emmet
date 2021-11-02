@@ -69,10 +69,11 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         statics = [task for task in task_group if task.task_type == TaskType.Static]  # type: ignore
 
         # Material ID
-        possible_mat_ids = [task.task_id for task in structure_optimizations]  # TODO remove + statics ?
+        possible_mat_ids = [task.task_id for task in structure_optimizations + statics]  # TODO remove + statics ?
         possible_mat_ids = sorted(possible_mat_ids, key=ID_to_int)
 
         matched_id = get_mpid([task.output.structure for task in structure_optimizations + statics][0])
+
         if matched_id:
             possible_mat_ids.insert(0, matched_id)
 
