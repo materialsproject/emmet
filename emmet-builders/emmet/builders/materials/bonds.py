@@ -18,7 +18,7 @@ class BondingBuilder(MapBuilder):
         collection with structure and mp-id.
 
         Args:
-            oxidation_states: Store of oxidation
+            oxidation_states: Store of oxidation states
             bonding: Store to update with bonding documents
             query : query on materials to limit search
         """
