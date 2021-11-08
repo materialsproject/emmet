@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.15.12](https://github.com/materialsproject/emmet/tree/v0.15.12) (2021-11-08)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.11...v0.15.12)
+
+**Merged pull requests:**
+
+- Include `charge_density` in summary `has_props` [\#305](https://github.com/materialsproject/emmet/pull/305) ([munrojm](https://github.com/munrojm))
+
 ## [v0.15.11](https://github.com/materialsproject/emmet/tree/v0.15.11) (2021-11-02)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.10...v0.15.11)
