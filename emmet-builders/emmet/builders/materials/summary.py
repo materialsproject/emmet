@@ -27,6 +27,7 @@ class SummaryBuilder(Builder):
         oxi_states,
         eos,
         provenance,
+        charge_density_index,
         summary,
         chunk_size=100,
         query=None,
@@ -49,6 +50,8 @@ class SummaryBuilder(Builder):
         self.oxi_states = oxi_states
         self.eos = eos
         self.provenance = provenance
+        self.charge_density_index = charge_density_index
+
         self.summary = summary
         self.chunk_size = chunk_size
         self.query = query if query else {}
@@ -71,6 +74,7 @@ class SummaryBuilder(Builder):
                 substrates,
                 eos,
                 provenance,
+                charge_density_index,
             ],
             targets=[summary],
             chunk_size=chunk_size,
@@ -100,8 +104,18 @@ class SummaryBuilder(Builder):
 
         for entry in summary_set:
 
+            materials_doc = self.materials.query_one({self.materials.key: entry})
+
+            static_tasks = set(
+                [
+                    task_id
+                    for task_id, task_type in materials_doc["task_types"].items()
+                    if task_type == "Static"
+                ]
+            ) - set(materials_doc["deprecated_tasks"])
+
             data = {
-                "materials": self.materials.query_one({self.materials.key: entry}),
+                "materials": materials_doc,
                 "thermo": self.thermo.query_one({self.thermo.key: entry}),
                 "xas": list(self.xas.query({self.xas.key: entry})),
                 "grain_boundaries": list(
@@ -132,6 +146,9 @@ class SummaryBuilder(Builder):
                 "oxi_states": self.oxi_states.query_one({self.oxi_states.key: entry}),
                 "eos": self.eos.query_one({self.eos.key: entry}, [self.eos.key]),
                 "provenance": self.provenance.query_one({self.provenance.key: entry}),
+                "charge_density": self.charge_density_index.query_one(
+                    {"task_id": {"$in": list(static_tasks)}}, ["task_id"]
+                ),
             }
 
             sub_fields = {

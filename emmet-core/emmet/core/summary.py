@@ -386,6 +386,7 @@ summary_fields: Dict[str, list] = {
     ],
     "oxi_states": ["possible_species"],
     "provenance": ["theoretical"],
+    "charge_density": [],
     "eos": [],
     "phonon": [],
     "insertion_electrodes": [],

@@ -97,6 +97,11 @@ def provenance():
 
 
 @pytest.fixture
+def charge_density_index():
+    return MemoryStore()
+
+
+@pytest.fixture
 def summary():
     return MemoryStore(key="material_id")
 
@@ -118,6 +123,7 @@ def test_summary_builder(
     oxi_states,
     eos,
     provenance,
+    charge_density_index,
     summary,
 ):
 
@@ -138,6 +144,7 @@ def test_summary_builder(
         grain_boundaries=grain_boundaries,
         eos=eos,
         provenance=provenance,
+        charge_density_index=charge_density_index,
         summary=summary,
     )
 
@@ -147,6 +154,7 @@ def test_summary_builder(
 
 def test_serialization(tmpdir):
     builder = SummaryBuilder(
+        MemoryStore(),
         MemoryStore(),
         MemoryStore(),
         MemoryStore(),
