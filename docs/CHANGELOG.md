@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.15.13](https://github.com/materialsproject/emmet/tree/v0.15.13) (2021-11-09)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.12...v0.15.13)
+
+**Merged pull requests:**
+
+- Remove summary sub docs to fix magnetism and polar data [\#306](https://github.com/materialsproject/emmet/pull/306) ([munrojm](https://github.com/munrojm))
+
 ## [v0.15.12](https://github.com/materialsproject/emmet/tree/v0.15.12) (2021-11-08)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.11...v0.15.12)
@@ -187,19 +195,19 @@
 
 ## [v0.13.0](https://github.com/materialsproject/emmet/tree/v0.13.0) (2021-09-23)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.13.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.13.0)
 
 **Merged pull requests:**
 
 - Builder bug fixes [\#272](https://github.com/materialsproject/emmet/pull/272) ([munrojm](https://github.com/munrojm))
 
-## [v0.12.7](https://github.com/materialsproject/emmet/tree/v0.12.7) (2021-09-15)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.12.7)
-
 ## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.8)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.12.8)
+
+## [v0.12.7](https://github.com/materialsproject/emmet/tree/v0.12.7) (2021-09-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.7)
 
 **Merged pull requests:**
 
