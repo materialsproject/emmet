@@ -152,9 +152,6 @@ class SummaryBuilder(Builder):
             }
 
             sub_fields = {
-                "magnetism": "magnetism",
-                "dielectric": "dielectric",
-                "piezoelectric": "piezo",
                 "elasticity": "elasticity",
             }
 
