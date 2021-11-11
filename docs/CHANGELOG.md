@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.15.14](https://github.com/materialsproject/emmet/tree/v0.15.14) (2021-11-11)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.13...v0.15.14)
+
+**Merged pull requests:**
+
+- Add element number cap to phase diagram generation in thermo [\#307](https://github.com/materialsproject/emmet/pull/307) ([munrojm](https://github.com/munrojm))
+
 ## [v0.15.13](https://github.com/materialsproject/emmet/tree/v0.15.13) (2021-11-09)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.12...v0.15.13)
