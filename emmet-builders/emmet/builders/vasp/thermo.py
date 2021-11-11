@@ -25,6 +25,7 @@ class ThermoBuilder(Builder):
         oxidation_states: Optional[Store] = None,
         query: Optional[Dict] = None,
         compatibility=None,
+        num_phase_diagram_eles: Optional[int] = None,
         **kwargs,
     ):
         """
@@ -40,6 +41,8 @@ class ThermoBuilder(Builder):
             query (dict): dictionary to limit materials to be analyzed
             compatibility (PymatgenCompatability): Compatability module
                 to ensure energies are compatible
+            num_phase_diagram_eles (int): Maximum number of elements to use in phase diagram construction
+                for data within the separate phase_diagram collection
         """
 
         self.materials = materials
@@ -52,6 +55,7 @@ class ThermoBuilder(Builder):
         )
         self.oxidation_states = oxidation_states
         self.phase_diagram = phase_diagram
+        self.num_phase_diagram_eles = num_phase_diagram_eles
         self._completed_tasks: Set[str] = set()
         self._entries_cache: Dict[str, List[ComputedStructureEntry]] = defaultdict(list)
 
@@ -177,7 +181,7 @@ class ThermoBuilder(Builder):
 
             pd_data = [None]
 
-            if self.phase_diagram:
+            if self.phase_diagram and len(elements) <= self.num_phase_diagram_eles:  # type: ignore
                 pd_doc = PhaseDiagramDoc(chemsys=chemsys, phase_diagram=pd)
                 pd_data = jsanitize(pd_doc.dict(), allow_bson=True)
 
