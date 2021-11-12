@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.15.15](https://github.com/materialsproject/emmet/tree/v0.15.15) (2021-11-12)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.14...v0.15.15)
+
+**Merged pull requests:**
+
+- Remove store query for phase diagram data [\#308](https://github.com/materialsproject/emmet/pull/308) ([munrojm](https://github.com/munrojm))
+
 ## [v0.15.14](https://github.com/materialsproject/emmet/tree/v0.15.14) (2021-11-11)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.13...v0.15.14)
@@ -203,19 +211,19 @@
 
 ## [v0.13.0](https://github.com/materialsproject/emmet/tree/v0.13.0) (2021-09-23)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.13.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.13.0)
 
 **Merged pull requests:**
 
 - Builder bug fixes [\#272](https://github.com/materialsproject/emmet/pull/272) ([munrojm](https://github.com/munrojm))
 
-## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.12.8)
-
 ## [v0.12.7](https://github.com/materialsproject/emmet/tree/v0.12.7) (2021-09-15)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.7)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.12.7)
+
+## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.8)
 
 **Merged pull requests:**
 
