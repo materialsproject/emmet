@@ -186,7 +186,6 @@ class ThermoBuilder(Builder):
                     self.num_phase_diagram_eles is None
                     or len(elements) <= self.num_phase_diagram_eles
                 ):
-                    pd_data = self.phase_diagram.get_pd_data(chemsys, pd)
                     pd_doc = PhaseDiagramDoc(chemsys=chemsys, phase_diagram=pd)
                     pd_data = jsanitize(pd_doc.dict(), allow_bson=True)
 
