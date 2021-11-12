@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.15.16](https://github.com/materialsproject/emmet/tree/v0.15.16) (2021-11-12)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.15...v0.15.16)
+
+**Merged pull requests:**
+
+- Fix default phase diagram value [\#309](https://github.com/materialsproject/emmet/pull/309) ([munrojm](https://github.com/munrojm))
+
 ## [v0.15.15](https://github.com/materialsproject/emmet/tree/v0.15.15) (2021-11-12)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.14...v0.15.15)
