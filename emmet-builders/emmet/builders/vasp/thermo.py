@@ -179,7 +179,7 @@ class ThermoBuilder(Builder):
                 doc.entries = material_entries[doc.material_id]
                 doc.entry_types = list(material_entries[doc.material_id].keys())
 
-            pd_data = [None]
+            pd_data = None
 
             if self.phase_diagram:
                 if (
