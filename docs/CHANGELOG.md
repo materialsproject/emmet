@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.16.0](https://github.com/materialsproject/emmet/tree/v0.16.0) (2021-11-13)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.16...v0.16.0)
+
+**Merged pull requests:**
+
+- Initial commit of similarity builder [\#310](https://github.com/materialsproject/emmet/pull/310) ([munrojm](https://github.com/munrojm))
+
 ## [v0.15.16](https://github.com/materialsproject/emmet/tree/v0.15.16) (2021-11-12)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.15...v0.15.16)
