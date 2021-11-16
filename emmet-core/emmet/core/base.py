@@ -40,4 +40,6 @@ class EmmetBaseModel(BaseModel):
     Base Model for default emmet data
     """
 
-    builder_meta: EmmetMeta
+    builder_meta: EmmetMeta = Field(
+        default_factory=EmmetMeta, description="Builder metadata"
+    )
