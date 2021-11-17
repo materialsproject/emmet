@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.17.0](https://github.com/materialsproject/emmet/tree/v0.17.0) (2021-11-17)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.16.0...v0.17.0)
+
+**Merged pull requests:**
+
+- Update emmet meta [\#313](https://github.com/materialsproject/emmet/pull/313) ([munrojm](https://github.com/munrojm))
+
 ## [v0.16.0](https://github.com/materialsproject/emmet/tree/v0.16.0) (2021-11-13)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.15.16...v0.16.0)
