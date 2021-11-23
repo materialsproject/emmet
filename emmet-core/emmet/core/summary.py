@@ -294,12 +294,18 @@ class SummaryDoc(PropertyDoc):
         # Reshape document for various sub-sections
         # Electronic Structure + Bandstructure + DOS
         if "bandstructure" in doc:
-            if doc["bandstructure"] != {} and doc["bandstructure"] is not None:
+            if (
+                list(filter(lambda x: x is not None, doc["bandstructure"].values()))
+                and doc["bandstructure"] is not None
+            ):
                 doc["has_props"].append("bandstructure")
             else:
                 del doc["bandstructure"]
         if "dos" in doc:
-            if doc["dos"] != {} and doc["dos"] is not None:
+            if (
+                list(filter(lambda x: x is not None, doc["dos"].values()))
+                and doc["dos"] is not None
+            ):
                 doc["has_props"].append("dos")
             else:
                 del doc["dos"]
