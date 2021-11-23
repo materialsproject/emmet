@@ -247,16 +247,16 @@ class ElectronicStructureBuilder(Builder):
         if mat["dos"] and mat["dos"]["lmaxmix"] != expected_lmaxmix:
             doc.warnings.append(
                 "An incorrect calculation parameter may lead to errors in the band gap of "
-                f"0.1-0.2 eV (LMAXIX is {mat['dos']['lmaxmix']} and should be {expected_lmaxmix} for {mat['dos']['task_id']}). "
-                f"A correction calculation is planned."
+                f"0.1-0.2 eV (LMAXIX is {mat['dos']['lmaxmix']} and should be {expected_lmaxmix} for "
+                f"{mat['dos']['task_id']}). A correction calculation is planned."
             )
 
         for bs_type, bs_entry in mat["bandstructure"].items():
             if bs_entry["lmaxmix"] != expected_lmaxmix:
                 doc.warnings.append(
                     "An incorrect calculation parameter may lead to errors in the band gap of "
-                    f"0.1-0.2 eV (LMAXIX is {bs_entry['lmaxmix']} and should be {expected_lmaxmix} for {bs_entry['task_id']}). "
-                    f"A correction calculation is planned."
+                    f"0.1-0.2 eV (LMAXIX is {bs_entry['lmaxmix']} and should be {expected_lmaxmix} for "
+                    f"{bs_entry['task_id']}). A correction calculation is planned."
                 )
 
         return doc.dict()
