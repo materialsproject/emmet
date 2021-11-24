@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.18.0](https://github.com/materialsproject/emmet/tree/v0.18.0) (2021-11-24)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.17.0...v0.18.0)
+
+**Merged pull requests:**
+
+- General builder updates [\#317](https://github.com/materialsproject/emmet/pull/317) ([munrojm](https://github.com/munrojm))
+
 ## [v0.17.0](https://github.com/materialsproject/emmet/tree/v0.17.0) (2021-11-17)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.16.0...v0.17.0)
