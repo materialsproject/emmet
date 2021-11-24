@@ -4,7 +4,7 @@ from maggma.builders import Builder
 from maggma.utils import grouper
 
 from emmet.core.mpid import MPID
-from emmet.core.summary import SummaryDoc
+from emmet.core.summary import SummaryDoc, HasProps
 from emmet.core.utils import jsanitize
 
 
@@ -115,44 +115,59 @@ class SummaryBuilder(Builder):
             ) - set(materials_doc["deprecated_tasks"])
 
             data = {
-                "materials": materials_doc,
-                "thermo": self.thermo.query_one({self.thermo.key: entry}),
-                "xas": list(self.xas.query({self.xas.key: entry})),
-                "grain_boundaries": list(
+                HasProps.materials.value: materials_doc,
+                HasProps.thermo.value: self.thermo.query_one({self.thermo.key: entry}),
+                HasProps.xas.value: list(self.xas.query({self.xas.key: entry})),
+                HasProps.grain_boundaries.value: list(
                     self.grain_boundaries.query({self.grain_boundaries.key: entry})
                 ),
-                "electronic_structure": self.electronic_structure.query_one(
+                HasProps.electronic_structure.value: self.electronic_structure.query_one(
                     {self.electronic_structure.key: entry}
                 ),
-                "magnetism": self.magnetism.query_one({self.magnetism.key: entry}),
-                "elasticity": self.elasticity.query_one({self.elasticity.key: entry}),
-                "dielectric": self.dielectric.query_one({self.dielectric.key: entry}),
-                "piezoelectric": self.piezoelectric.query_one(
+                HasProps.magnetism.value: self.magnetism.query_one(
+                    {self.magnetism.key: entry}
+                ),
+                HasProps.elasticity.value: self.elasticity.query_one(
+                    {self.elasticity.key: entry}
+                ),
+                HasProps.dielectric.value: self.dielectric.query_one(
+                    {self.dielectric.key: entry}
+                ),
+                HasProps.piezoelectric.value: self.piezoelectric.query_one(
                     {self.piezoelectric.key: entry}
                 ),
-                "phonon": self.phonon.query_one(
+                HasProps.phonon.value: self.phonon.query_one(
                     {self.phonon.key: entry}, [self.phonon.key]
                 ),
-                "insertion_electrodes": list(
+                HasProps.insertion_electrodes.value: list(
                     self.insertion_electrodes.query(
-                        {self.insertion_electrodes.key: entry},
-                        [self.insertion_electrodes.key],
+                        {"material_ids": entry}, [self.insertion_electrodes.key],
                     )
                 ),
-                "surface_properties": self.surfaces.query_one(
+                HasProps.surface_properties.value: self.surfaces.query_one(
                     {self.surfaces.key: entry}
                 ),
-                "substrates": list(self.surfaces.query({self.substrates.key: entry})),
-                "oxi_states": self.oxi_states.query_one({self.oxi_states.key: entry}),
-                "eos": self.eos.query_one({self.eos.key: entry}, [self.eos.key]),
-                "provenance": self.provenance.query_one({self.provenance.key: entry}),
-                "charge_density": self.charge_density_index.query_one(
+                HasProps.substrates.value: list(
+                    self.substrates.query(
+                        {self.substrates.key: entry}, [self.substrates.key]
+                    )
+                ),
+                HasProps.oxi_states.value: self.oxi_states.query_one(
+                    {self.oxi_states.key: entry}
+                ),
+                HasProps.eos.value: self.eos.query_one(
+                    {self.eos.key: entry}, [self.eos.key]
+                ),
+                HasProps.provenance.value: self.provenance.query_one(
+                    {self.provenance.key: entry}
+                ),
+                HasProps.charge_density.value: self.charge_density_index.query_one(
                     {"task_id": {"$in": list(static_tasks)}}, ["task_id"]
                 ),
             }
 
             sub_fields = {
-                "elasticity": "elasticity",
+                HasProps.elasticity.value: "elasticity",
             }
 
             for collection, sub_field in sub_fields.items():
@@ -180,7 +195,7 @@ class SummaryBuilder(Builder):
 
     def process_item(self, item):
 
-        material_id = MPID(item["materials"]["material_id"])
+        material_id = MPID(item[HasProps.materials.value]["material_id"])
         doc = SummaryDoc.from_docs(material_id=material_id, **item)
         return jsanitize(doc.dict(exclude_none=True), allow_bson=True)
 

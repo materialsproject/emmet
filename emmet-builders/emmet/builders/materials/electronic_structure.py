@@ -12,6 +12,7 @@ from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.io.vasp.sets import MPStaticSet
 
 from emmet.core import SETTINGS
 from emmet.core.electronic_structure import ElectronicStructureDoc
@@ -182,8 +183,8 @@ class ElectronicStructureBuilder(Builder):
             ):
 
                 d["warnings"].append(
-                    "Regular band gap and band gap from eigenvalue_band_properties do not agree. \
-Using data from eigenvalue_band_properties where appropriate."
+                    "Regular parsed band gap and band gap from eigenvalue_band_properties do not agree. "
+                    f"Using data from eigenvalue_band_properties where appropriate."
                 )
 
                 d["band_gap"] = eig_values["bandgap"]
@@ -241,6 +242,23 @@ Using data from eigenvalue_band_properties where appropriate."
                     f"Summary data magnetic ordering does not agree with the ordering from {task_id}"
                 )
 
+        # LMAXMIX check, VASP default is 2
+        expected_lmaxmix = MPStaticSet(structure).incar.get("LMAXMIX", 2)
+        if mat["dos"] and mat["dos"]["lmaxmix"] != expected_lmaxmix:
+            doc.warnings.append(
+                "An incorrect calculation parameter may lead to errors in the band gap of "
+                f"0.1-0.2 eV (LMAXIX is {mat['dos']['lmaxmix']} and should be {expected_lmaxmix} for "
+                f"{mat['dos']['task_id']}). A correction calculation is planned."
+            )
+
+        for bs_type, bs_entry in mat["bandstructure"].items():
+            if bs_entry["lmaxmix"] != expected_lmaxmix:
+                doc.warnings.append(
+                    "An incorrect calculation parameter may lead to errors in the band gap of "
+                    f"0.1-0.2 eV (LMAXIX is {bs_entry['lmaxmix']} and should be {expected_lmaxmix} for "
+                    f"{bs_entry['task_id']}). A correction calculation is planned."
+                )
+
         return doc.dict()
 
     def update_targets(self, items):
@@ -273,8 +291,8 @@ Using data from eigenvalue_band_properties where appropriate."
             if doc.warnings is None:
                 doc.warnings = []
             doc.warnings.append(
-                "Absolute difference between blessed band gap and at least one\
-                    line-mode or uniform calculation band gap is larger than 0.25 eV."
+                "Absolute difference between blessed band gap and at least one "
+                f"line-mode or uniform calculation band gap is larger than 0.25 eV."
             )
 
         # Line-mode and uniform structure primitive checks
@@ -286,15 +304,23 @@ Using data from eigenvalue_band_properties where appropriate."
             struct_prim = SpacegroupAnalyzer(struct).get_primitive_standard_structure(
                 international_monoclinic=False
             )
+
             if not np.allclose(
                 struct.lattice.matrix, struct_prim.lattice.matrix, atol=1e-3
             ):
+
                 if doc.warnings is None:
                     doc.warnings = []
 
-                doc.warnings.append(
-                    f"The input structure for {task_id} may not match the expected standard primitive! "
-                )
+                if np.isclose(struct_prim.volume, struct.volume, atol=5, rtol=0):
+                    doc.warnings.append(
+                        f"The input structure for {task_id} is primitive but may not exactly match the "
+                        f"standard primitive setting."
+                    )
+                else:
+                    doc.warnings.append(
+                        f"The input structure for {task_id} does not match the expected standard primitive"
+                    )
 
         # Check line-mode and uniform for same structure
         sm = StructureMatcher()
@@ -304,7 +330,8 @@ Using data from eigenvalue_band_properties where appropriate."
                     doc.warnings = []
 
                 doc.warnings.append(
-                    f"The input structures for {pair[0][0]} and {pair[1][0]} not are not equivalent! "
+                    f"The input structures between bandstructure calculations {pair[0][0]} and {pair[1][0]} "
+                    f"are not equivalent"
                 )
 
         return doc
@@ -344,6 +371,7 @@ Using data from eigenvalue_band_properties where appropriate."
                         "calcs_reversed",
                         "last_updated",
                         "input.is_hubbard",
+                        "input.incar",
                         "orig_inputs.kpoints",
                         "input.parameters",
                         "output.structure",
@@ -380,6 +408,9 @@ Using data from eigenvalue_band_properties where appropriate."
                         bs_type = self._obtain_path_type(bs.labels_dict, bs.structure)
 
                 is_hubbard = task_query["input"]["is_hubbard"]
+                lmaxmix = task_query["input"]["incar"].get(
+                    "LMAXMIX", 2
+                )  # VASP default is 2, alternatively could project `parameters`
                 nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
                 lu_dt = task_query["last_updated"]
 
@@ -389,6 +420,7 @@ Using data from eigenvalue_band_properties where appropriate."
                             "fs_id": fs_id,
                             "task_id": task_id,
                             "is_hubbard": int(is_hubbard),
+                            "lmaxmix": lmaxmix,
                             "nkpoints": int(nkpoints),
                             "updated_on": lu_dt,
                             "output_structure": structure,
@@ -402,6 +434,7 @@ Using data from eigenvalue_band_properties where appropriate."
                         "calcs_reversed",
                         "last_updated",
                         "input.is_hubbard",
+                        "input.incar",
                         "orig_inputs.kpoints",
                         "input.parameters",
                         "output.structure",
@@ -410,6 +443,10 @@ Using data from eigenvalue_band_properties where appropriate."
                 )
 
                 fs_id = str(task_query["calcs_reversed"][0]["dos_fs_id"])
+
+                lmaxmix = task_query["input"]["incar"].get(
+                    "LMAXMIX", 2
+                )  # VASP default is 2, alternatively could project `parameters`
 
                 is_hubbard = task_query["input"]["is_hubbard"]
 
@@ -436,6 +473,7 @@ Using data from eigenvalue_band_properties where appropriate."
                         "fs_id": fs_id,
                         "task_id": task_id,
                         "is_hubbard": int(is_hubbard),
+                        "lmaxmix": lmaxmix,
                         "nkpoints": int(nkpoints),
                         "nedos": int(nedos),
                         "updated_on": lu_dt,
@@ -521,6 +559,10 @@ Using data from eigenvalue_band_properties where appropriate."
                     "task_id"
                 ]
 
+                materials_doc["bandstructure"][bs_type]["lmaxmix"] = sorted_bs_data[0][
+                    "lmaxmix"
+                ]
+
                 bs_obj = self.bandstructure_fs.query_one(
                     criteria={"fs_id": sorted_bs_data[0]["fs_id"]}
                 )
@@ -547,6 +589,8 @@ Using data from eigenvalue_band_properties where appropriate."
             )
 
             materials_doc["dos"]["task_id"] = sorted_dos_data[0]["task_id"]
+
+            materials_doc["dos"]["lmaxmix"] = sorted_dos_data[0]["lmaxmix"]
 
             dos_obj = self.dos_fs.query_one(
                 criteria={"fs_id": sorted_dos_data[0]["fs_id"]}
