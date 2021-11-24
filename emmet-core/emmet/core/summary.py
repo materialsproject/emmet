@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Dict, List, Optional, TypeVar, Union
 
 from pydantic import BaseModel, Field
@@ -11,6 +12,32 @@ from emmet.core.thermo import DecompositionProduct
 from emmet.core.xas import Edge, Type
 
 T = TypeVar("T", bound="SummaryDoc")
+
+
+class HasProps(Enum):
+    """
+    Enum of possible hasprops values.
+    """
+
+    materials = "materials"
+    thermo = "thermo"
+    xas = "xas"
+    grain_boundaries = "grain_boundaries"
+    electronic_structure = "electronic_structure"
+    bandstructure = "bandstructure"
+    dos = "dos"
+    magnetism = "magnetism"
+    elasticity = "elasticity"
+    dielectric = "dielectric"
+    piezoelectric = "piezoelectric"
+    surface_properties = "surface_properties"
+    oxi_states = "oxi_states"
+    provenance = "provenance"
+    charge_density = "charge_density"
+    eos = "eos"
+    phonon = "phonon"
+    insertion_electrodes = "insertion_electrodes"
+    substrates = "substrates"
 
 
 class SummaryStats(BaseModel):
@@ -278,7 +305,7 @@ class SummaryDoc(PropertyDoc):
 
     # Has Props
 
-    has_props: List[str] = Field(
+    has_props: List[HasProps] = Field(
         None, description="List of properties that are available for a given material."
     )
 
@@ -297,14 +324,14 @@ class SummaryDoc(PropertyDoc):
             if doc["bandstructure"] is not None and list(
                 filter(lambda x: x is not None, doc["bandstructure"].values())
             ):
-                doc["has_props"].append("bandstructure")
+                doc["has_props"].append(HasProps.bandstructure.value)
             else:
                 del doc["bandstructure"]
         if "dos" in doc:
             if doc["dos"] is not None and list(
                 filter(lambda x: x is not None, doc["dos"].values())
             ):
-                doc["has_props"].append("dos")
+                doc["has_props"].append(HasProps.dos.value)
             else:
                 del doc["dos"]
         if "task_id" in doc:
@@ -318,7 +345,7 @@ class SummaryDoc(PropertyDoc):
 
 # Key mapping
 summary_fields: Dict[str, list] = {
-    "materials": [
+    HasProps.materials.value: [
         "nsites",
         "elements",
         "nelements",
@@ -335,7 +362,7 @@ summary_fields: Dict[str, list] = {
         "deprecated",
         "task_ids",
     ],
-    "thermo": [
+    HasProps.thermo.value: [
         "uncorrected_energy_per_atom",
         "energy_per_atom",
         "formation_energy_per_atom",
@@ -344,9 +371,15 @@ summary_fields: Dict[str, list] = {
         "equilibrium_reaction_energy_per_atom",
         "decomposes_to",
     ],
-    "xas": ["absorbing_element", "edge", "spectrum_type", "xas_id"],
-    "grain_boundaries": ["gb_energy", "sigma", "type", "rotation_angle", "w_sep"],
-    "electronic_structure": [
+    HasProps.xas.value: ["absorbing_element", "edge", "spectrum_type", "spectrum_id"],
+    HasProps.grain_boundaries.value: [
+        "gb_energy",
+        "sigma",
+        "type",
+        "rotation_angle",
+        "w_sep",
+    ],
+    HasProps.electronic_structure.value: [
         "band_gap",
         "efermi",
         "cbm",
@@ -357,7 +390,7 @@ summary_fields: Dict[str, list] = {
         "dos",
         "task_id",
     ],
-    "magnetism": [
+    HasProps.magnetism.value: [
         "is_magnetic",
         "ordering",
         "total_magnetization",
@@ -368,7 +401,7 @@ summary_fields: Dict[str, list] = {
         "types_of_magnetic_species",
         "is_magnetic",
     ],
-    "elasticity": [
+    HasProps.elasticity.value: [
         "k_voigt",
         "k_reuss",
         "k_vrh",
@@ -378,9 +411,9 @@ summary_fields: Dict[str, list] = {
         "universal_anisotropy",
         "homogeneous_poisson",
     ],
-    "dielectric": ["e_total", "e_ionic", "e_electronic", "n"],
-    "piezoelectric": ["e_ij_max"],
-    "surface_properties": [
+    HasProps.dielectric.value: ["e_total", "e_ionic", "e_electronic", "n"],
+    HasProps.piezoelectric.value: ["e_ij_max"],
+    HasProps.surface_properties.value: [
         "weighted_surface_energy",
         "weighted_surface_energy_EV_PER_ANG2",
         "shape_factor",
@@ -388,13 +421,13 @@ summary_fields: Dict[str, list] = {
         "weighted_work_function",
         "has_reconstructed",
     ],
-    "oxi_states": ["possible_species"],
-    "provenance": ["theoretical"],
-    "charge_density": [],
-    "eos": [],
-    "phonon": [],
-    "insertion_electrodes": [],
-    "substrates": [],
+    HasProps.oxi_states.value: ["possible_species"],
+    HasProps.provenance.value: ["theoretical"],
+    HasProps.charge_density.value: [],
+    HasProps.eos.value: [],
+    HasProps.phonon.value: [],
+    HasProps.insertion_electrodes.value: [],
+    HasProps.substrates.value: [],
 }
 
 
