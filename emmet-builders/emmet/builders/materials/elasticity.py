@@ -35,6 +35,8 @@ from pymatgen.core import Structure
 from pymatgen.core.tensors import TensorMapping
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
+from emmet.core.elasticity import ElasticityDoc
+
 logger = logging.getLogger(__name__)
 
 
@@ -204,9 +206,8 @@ def get_elastic_analysis(opt_task, defo_tasks):
 
     Returns:
         elastic document with fitted elastic tensor and analysis
-
     """
-    elastic_doc = {"warnings": []}
+
     opt_struct = Structure.from_dict(opt_task["output"]["structure"])
     input_struct = Structure.from_dict(opt_task["input"]["structure"])
 
@@ -217,23 +218,24 @@ def get_elastic_analysis(opt_task, defo_tasks):
 
     explicit, derived = process_elastic_calcs(opt_task, defo_tasks)
     all_calcs = explicit + derived
+    elastic_doc = {"calculations": all_calcs}
+
     stresses = [c.get("cauchy_stress") for c in all_calcs]
     pk_stresses = [c.get("pk_stress") for c in all_calcs]
     strains = [c.get("strain") for c in all_calcs]
-    elastic_doc["calculations"] = all_calcs
     vstrains = [s.zeroed(0.002).voigt for s in strains]
+
     if np.linalg.matrix_rank(vstrains) == 6:
         if order == 2:
             et_fit = legacy_fit(strains, stresses)
         elif order == 3:
-            # Test for TOEC
             if len(strains) < 70:
                 logger.info(
-                    "insufficient valid strains for {} TOEC".format(
-                        opt_task["formula_pretty"]
-                    )
+                    f"Insufficient valid strains for {opt_task['formula_pretty']} "
+                    f"third order elasticity. Skipped."
                 )
                 return None
+
             eq_stress = -0.1 * Stress(opt_task["output"]["stress"])
             # strains = [s.zeroed(0.0001) for s in strains]
             # et_expansion = pdb_function(ElasticTensorExpansion.from_diff_fit,
@@ -244,6 +246,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
             et_exp = et_exp_raw.voigt_symmetrized.convert_to_ieee(opt_struct)
             et_exp = et_exp.round(1)
             et_fit = ElasticTensor(et_exp[0])
+
             # Update elastic doc with TOEC stuff
             tec = et_exp.thermal_expansion_coeff(opt_struct, 300)
             elastic_doc.update(
@@ -254,11 +257,14 @@ def get_elastic_analysis(opt_task, defo_tasks):
                     "average_linear_thermal_expansion": np.trace(tec) / 3,
                 }
             )
+
         et = et_fit.voigt_symmetrized.convert_to_ieee(opt_struct)
+
         vasp_input = opt_task["input"]
         if "structure" in vasp_input:
             vasp_input.pop("structure")
         completed_at = max([d["completed_at"] for d in defo_tasks])
+
         elastic_doc.update(
             {
                 "optimization_task_id": opt_task["task_id"],
@@ -278,6 +284,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
                 "formula_pretty": opt_struct.composition.reduced_formula,
             }
         )
+
         # Add magnetic type
         mag = CollinearMagneticStructureAnalyzer(opt_struct).ordering.value
         # TODO figure out how to get mag
@@ -296,61 +303,65 @@ def get_elastic_analysis(opt_task, defo_tasks):
             else:
                 prop_dict[k] = np.round(v, 0)
         elastic_doc.update(prop_dict)
+
         # Update with state and warnings
         state, warnings = get_state_and_warnings(elastic_doc)
         elastic_doc.update({"state": state, "warnings": warnings})
+
         # TODO: add kpoints params?
         return elastic_doc
+
     else:
         logger.info(
-            "insufficient valid strains for {}".format(opt_task["formula_pretty"])
+            f"Insufficient valid strains for {opt_task['formula_pretty']}. Skipped."
         )
         return None
 
 
-def get_distinct_rotations(structure, symprec=0.1, atol=1e-6):
-    """
-    Get distinct rotations from structure spacegroup operations
-
-    Args:
-        structure (Structure): structure object to analyze and
-            get corresponding rotations for
-        symprec (float): symprec for SpacegroupAnalyzer
-        atol (float): absolute tolerance for relative indices
-    """
-    sga = SpacegroupAnalyzer(structure, symprec)
-    symmops = sga.get_symmetry_operations(cartesian=True)
-    rotations = [s.rotation_matrix for s in symmops]
-    if len(rotations) == 1:
-        return rotations
-    unique_rotations = [np.array(rotations[0])]
-    for rotation in rotations[1:]:
-        if not any(
-            [np.allclose(urot, rotation, atol=atol) for urot in unique_rotations]
-        ):
-            unique_rotations.append(rotation)
-    return unique_rotations
-
-
-def get_strain_state(strain):
-    """
-    Helper function to get strain state
-
-    Args:
-        strain (Strain): Input strain
-
-    Returns:
-        6-tuple corresponding to strain state
-    """
-    vstrain = strain.zeroed(5e-5).voigt
-    vstrain[vstrain == 0] = np.inf
-    min_nonzero = np.argmin(np.abs(vstrain))
-    vstrain[vstrain == np.inf] = 0
-    strain_state = vstrain / vstrain[min_nonzero]
-    return strain_state.round(4)
+#
+# def get_distinct_rotations(structure, symprec=0.1, atol=1e-6):
+#     """
+#     Get distinct rotations from structure spacegroup operations
+#
+#     Args:
+#         structure (Structure): structure object to analyze and
+#             get corresponding rotations for
+#         symprec (float): symprec for SpacegroupAnalyzer
+#         atol (float): absolute tolerance for relative indices
+#     """
+#     sga = SpacegroupAnalyzer(structure, symprec)
+#     symmops = sga.get_symmetry_operations(cartesian=True)
+#     rotations = [s.rotation_matrix for s in symmops]
+#     if len(rotations) == 1:
+#         return rotations
+#     unique_rotations = [np.array(rotations[0])]
+#     for rotation in rotations[1:]:
+#         if not any(
+#             [np.allclose(urot, rotation, atol=atol) for urot in unique_rotations]
+#         ):
+#             unique_rotations.append(rotation)
+#     return unique_rotations
 
 
-allowed_strain_states = get_default_strain_states(3)
+# def get_strain_state(strain):
+#     """
+#     Helper function to get strain state
+#
+#     Args:
+#         strain (Strain): Input strain
+#
+#     Returns:
+#         6-tuple corresponding to strain state
+#     """
+#     vstrain = strain.zeroed(5e-5).voigt
+#     vstrain[vstrain == 0] = np.inf
+#     min_nonzero = np.argmin(np.abs(vstrain))
+#     vstrain[vstrain == np.inf] = 0
+#     strain_state = vstrain / vstrain[min_nonzero]
+#     return strain_state.round(4)
+
+
+# allowed_strain_states = get_default_strain_states(3)
 # TODO: make it so opt_doc not necessary?
 def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, tol=0.002):
     """
@@ -501,170 +512,171 @@ def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, tol=0.002):
     return list(explicit_calcs.values()), derived_calcs
 
 
-def group_by_material_id(
-    materials_dict,
-    docs,
-    structure_key="structure",
-    tol=1e-6,
-    loosen=True,
-    structure_matcher=None,
-):
-    """
-    Groups a collection of documents by material id
-    as found in a materials collection
+#
+# def group_by_material_id(
+#     materials_dict,
+#     docs,
+#     structure_key="structure",
+#     tol=1e-6,
+#     loosen=True,
+#     structure_matcher=None,
+# ):
+#     """
+#     Groups a collection of documents by material id
+#     as found in a materials collection
+#
+#     Args:
+#         materials_dict (dict): dictionary of structures keyed by task_id
+#         docs ([dict]): list of documents
+#         tol (float): tolerance for lattice grouping
+#         loosen (bool): whether or not to loosen criteria if no matches are
+#             found
+#         structure_key (string): mongo-style key of documents where structures
+#             are contained (e. g. input.structure or output.structure)
+#         structure_matcher (StructureMatcher): structure
+#             matcher for finding equivalent structures
+#
+#     Returns:
+#         documents grouped by task_id from the materials
+#         collection
+#     """
+#     # Structify all input structures
+#     materials_dict = {
+#         mp_id: Structure.from_dict(struct) for mp_id, struct in materials_dict.items()
+#     }
+#     # Get magnetic phases
+#     mags = {}
+#     # TODO: refactor this with data from materials collection?
+#     for mp_id, structure in materials_dict.items():
+#         mag = CollinearMagneticStructureAnalyzer(structure).ordering.value
+#         # TODO figure out how to get mag_types
+#         # mags[mp_id] = mag_types[mag]
+#     docs_by_mp_id = {}
+#     for doc in docs:
+#         sm = structure_matcher or StructureMatcher(comparator=ElementComparator())
+#         structure = Structure.from_dict(get(doc, structure_key))
+#         input_sg_symbol = SpacegroupAnalyzer(structure, 0.1).get_space_group_symbol()
+#         # Iterate over all candidates until match is found
+#         matches = {
+#             c_id: candidate
+#             for c_id, candidate in materials_dict.items()
+#             if sm.fit(candidate, structure)
+#         }
+#         niter = 0
+#         if not matches:
+#             # First try with conventional structure then loosen match criteria
+#             convs = {
+#                 c_id: SpacegroupAnalyzer(
+#                     candidate, 0.1
+#                 ).get_conventional_standard_structure()
+#                 for c_id, candidate in materials_dict.items()
+#             }
+#             matches = {
+#                 c_id: candidate
+#                 for c_id, candidate in materials_dict.items()
+#                 if sm.fit(convs[c_id], structure)
+#             }
+#             while len(matches) < 1 and niter < 4 and loosen:
+#                 logger.debug("Loosening sm criteria")
+#                 sm = StructureMatcher(
+#                     sm.ltol * 2, sm.stol * 2, sm.angle_tol * 2, primitive_cell=False
+#                 )
+#                 matches = {
+#                     c_id: candidate
+#                     for c_id, candidate in materials_dict.items()
+#                     if sm.fit(convs[c_id], structure)
+#                 }
+#                 niter += 1
+#         if matches:
+#             # Get best match by spacegroup, then mag phase, then closest density
+#             mag = doc["magnetic_type"]
+#
+#             def sort_criteria(m_id):
+#                 dens_diff = abs(matches[m_id].density - structure.density)
+#                 sg = matches[m_id].get_space_group_info(0.1)[0]
+#                 mag_id = mags[m_id]
+#                 # prefer explicit matches, allow non-mag materials match with FM tensors
+#                 if mag_id == mag:
+#                     mag_match = 0
+#                 elif mag_id == "Non-magnetic" and mag == "FM":
+#                     mag_match = 1
+#                 else:
+#                     mag_match = 2
+#                 return (sg != input_sg_symbol, mag_match, dens_diff)
+#
+#             sorted_ids = sorted(list(matches.keys()), key=sort_criteria)
+#             mp_id = sorted_ids[0]
+#             if mp_id in docs_by_mp_id:
+#                 docs_by_mp_id[mp_id].append(doc)
+#             else:
+#                 docs_by_mp_id[mp_id] = [doc]
+#         else:
+#             logger.debug(
+#                 "No material match found for formula {}".format(
+#                     structure.composition.reduced_formula
+#                 )
+#             )
+#     return docs_by_mp_id
 
-    Args:
-        materials_dict (dict): dictionary of structures keyed by task_id
-        docs ([dict]): list of documents
-        tol (float): tolerance for lattice grouping
-        loosen (bool): whether or not to loosen criteria if no matches are
-            found
-        structure_key (string): mongo-style key of documents where structures
-            are contained (e. g. input.structure or output.structure)
-        structure_matcher (StructureMatcher): structure
-            matcher for finding equivalent structures
+#
+# def group_deformations_by_optimization_task(docs, tol=1e-6):
+#     """
+#     Groups a set of deformation tasks by equivalent lattices
+#     to an optimization task.  Basically the same as
+#     group_by_parent_lattice, except does an additional
+#     step of finding the optimization and using that
+#     as the grouping parameter.  Also filters document
+#     sets that don't include an optimization and deformations.
+#
+#     Args:
+#         docs ([{}]): list of documents
+#         tol (float): tolerance for lattice equivalence
+#     """
+#     # TODO: this could prolly be refactored to be more generally useful
+#     tasks_by_lattice = group_by_parent_lattice(docs, tol)
+#     tasks_by_opt_task = []
+#     for _, task_set in tasks_by_lattice:
+#         opt_struct_tasks = [
+#             task for task in task_set if "structure optimization" in task["task_label"]
+#         ]
+#         deformation_tasks = [
+#             task for task in task_set if "elastic deformation" in task["task_label"]
+#         ]
+#         opt_struct_tasks.reverse()
+#         if opt_struct_tasks and deformation_tasks:
+#             tasks_by_opt_task.append((opt_struct_tasks[-1], deformation_tasks))
+#         else:
+#             logger.debug("No structure opt matching tasks")
+#     return tasks_by_opt_task
 
-    Returns:
-        documents grouped by task_id from the materials
-        collection
-    """
-    # Structify all input structures
-    materials_dict = {
-        mp_id: Structure.from_dict(struct) for mp_id, struct in materials_dict.items()
-    }
-    # Get magnetic phases
-    mags = {}
-    # TODO: refactor this with data from materials collection?
-    for mp_id, structure in materials_dict.items():
-        mag = CollinearMagneticStructureAnalyzer(structure).ordering.value
-        # TODO figure out how to get mag_types
-        # mags[mp_id] = mag_types[mag]
-    docs_by_mp_id = {}
-    for doc in docs:
-        sm = structure_matcher or StructureMatcher(comparator=ElementComparator())
-        structure = Structure.from_dict(get(doc, structure_key))
-        input_sg_symbol = SpacegroupAnalyzer(structure, 0.1).get_space_group_symbol()
-        # Iterate over all candidates until match is found
-        matches = {
-            c_id: candidate
-            for c_id, candidate in materials_dict.items()
-            if sm.fit(candidate, structure)
-        }
-        niter = 0
-        if not matches:
-            # First try with conventional structure then loosen match criteria
-            convs = {
-                c_id: SpacegroupAnalyzer(
-                    candidate, 0.1
-                ).get_conventional_standard_structure()
-                for c_id, candidate in materials_dict.items()
-            }
-            matches = {
-                c_id: candidate
-                for c_id, candidate in materials_dict.items()
-                if sm.fit(convs[c_id], structure)
-            }
-            while len(matches) < 1 and niter < 4 and loosen:
-                logger.debug("Loosening sm criteria")
-                sm = StructureMatcher(
-                    sm.ltol * 2, sm.stol * 2, sm.angle_tol * 2, primitive_cell=False
-                )
-                matches = {
-                    c_id: candidate
-                    for c_id, candidate in materials_dict.items()
-                    if sm.fit(convs[c_id], structure)
-                }
-                niter += 1
-        if matches:
-            # Get best match by spacegroup, then mag phase, then closest density
-            mag = doc["magnetic_type"]
-
-            def sort_criteria(m_id):
-                dens_diff = abs(matches[m_id].density - structure.density)
-                sg = matches[m_id].get_space_group_info(0.1)[0]
-                mag_id = mags[m_id]
-                # prefer explicit matches, allow non-mag materials match with FM tensors
-                if mag_id == mag:
-                    mag_match = 0
-                elif mag_id == "Non-magnetic" and mag == "FM":
-                    mag_match = 1
-                else:
-                    mag_match = 2
-                return (sg != input_sg_symbol, mag_match, dens_diff)
-
-            sorted_ids = sorted(list(matches.keys()), key=sort_criteria)
-            mp_id = sorted_ids[0]
-            if mp_id in docs_by_mp_id:
-                docs_by_mp_id[mp_id].append(doc)
-            else:
-                docs_by_mp_id[mp_id] = [doc]
-        else:
-            logger.debug(
-                "No material match found for formula {}".format(
-                    structure.composition.reduced_formula
-                )
-            )
-    return docs_by_mp_id
-
-
-def group_deformations_by_optimization_task(docs, tol=1e-6):
-    """
-    Groups a set of deformation tasks by equivalent lattices
-    to an optimization task.  Basically the same as
-    group_by_parent_lattice, except does an additional
-    step of finding the optimization and using that
-    as the grouping parameter.  Also filters document
-    sets that don't include an optimization and deformations.
-
-    Args:
-        docs ([{}]): list of documents
-        tol (float): tolerance for lattice equivalence
-    """
-    # TODO: this could prolly be refactored to be more generally useful
-    tasks_by_lattice = group_by_parent_lattice(docs, tol)
-    tasks_by_opt_task = []
-    for _, task_set in tasks_by_lattice:
-        opt_struct_tasks = [
-            task for task in task_set if "structure optimization" in task["task_label"]
-        ]
-        deformation_tasks = [
-            task for task in task_set if "elastic deformation" in task["task_label"]
-        ]
-        opt_struct_tasks.reverse()
-        if opt_struct_tasks and deformation_tasks:
-            tasks_by_opt_task.append((opt_struct_tasks[-1], deformation_tasks))
-        else:
-            logger.debug("No structure opt matching tasks")
-    return tasks_by_opt_task
-
-
-def group_by_parent_lattice(docs, tol=1e-5):
-    """
-    Groups a set of documents by parent lattice equivalence
-
-    Args:
-        docs ([{}]): list of documents e. g. dictionaries or cursor
-        tol (float): tolerance for equivalent lattice finding using,
-            np.allclose, default 1e-5
-    """
-    docs_by_lattice = []
-    for doc in docs:
-        sim_lattice = get(doc, "output.structure.lattice.matrix")
-        if "deformation" in doc["task_label"]:
-            # Note that this assumes only one transformation, deformstructuretransformation
-            defo = doc["transmuter"]["transformation_params"][0]["deformation"]
-            parent_lattice = np.dot(sim_lattice, np.transpose(np.linalg.inv(defo)))
-        else:
-            parent_lattice = np.array(sim_lattice)
-        match = False
-        for unique_lattice, lattice_docs in docs_by_lattice:
-            match = np.allclose(unique_lattice, parent_lattice, atol=tol)
-            if match:
-                lattice_docs.append(doc)
-                break
-        if not match:
-            docs_by_lattice.append([parent_lattice, [doc]])
-    return docs_by_lattice
+#
+# def group_by_parent_lattice(docs, tol=1e-5):
+#     """
+#     Groups a set of documents by parent lattice equivalence
+#
+#     Args:
+#         docs ([{}]): list of documents e. g. dictionaries or cursor
+#         tol (float): tolerance for equivalent lattice finding using,
+#             np.allclose, default 1e-5
+#     """
+#     docs_by_lattice = []
+#     for doc in docs:
+#         sim_lattice = get(doc, "output.structure.lattice.matrix")
+#         if "deformation" in doc["task_label"]:
+#             # Note that this assumes only one transformation, deformstructuretransformation
+#             defo = doc["transmuter"]["transformation_params"][0]["deformation"]
+#             parent_lattice = np.dot(sim_lattice, np.transpose(np.linalg.inv(defo)))
+#         else:
+#             parent_lattice = np.array(sim_lattice)
+#         match = False
+#         for unique_lattice, lattice_docs in docs_by_lattice:
+#             match = np.allclose(unique_lattice, parent_lattice, atol=tol)
+#             if match:
+#                 lattice_docs.append(doc)
+#                 break
+#         if not match:
+#             docs_by_lattice.append([parent_lattice, [doc]])
+#     return docs_by_lattice
 
 
 def legacy_fit(strains, stresses):
@@ -758,30 +770,30 @@ def get_state_and_warnings(elastic_doc):
     return state, warnings
 
 
-def generate_formula_dict(materials_store, query=None):
-    """
-    Function that generates a nested dictionary of structures
-    keyed first by formula and then by task_id using
-    mongo aggregation pipelines
-
-    Args:
-        materials_store (Store): store of materials
-
-    Returns:
-        Nested dictionary keyed by formula-mp_id with structure values.
-
-    """
-    props = ["formula_pretty", "structure", "task_id", "magnetic_type"]
-    results = materials_store.groupby(
-        "formula_pretty", properties=props, criteria=query
-    )
-    formula_dict = {}
-    for id_doc, docs in results:
-        formula = id_doc["formula_pretty"]
-        task_ids = [d["task_id"] for d in docs]
-        structures = [d["structure"] for d in docs]
-        formula_dict[formula] = dict(zip(task_ids, structures))
-    return formula_dict
+# def generate_formula_dict(materials_store, query=None):
+#     """
+#     Function that generates a nested dictionary of structures
+#     keyed first by formula and then by task_id using
+#     mongo aggregation pipelines
+#
+#     Args:
+#         materials_store (Store): store of materials
+#
+#     Returns:
+#         Nested dictionary keyed by formula-mp_id with structure values.
+#
+#     """
+#     props = ["formula_pretty", "structure", "task_id", "magnetic_type"]
+#     results = materials_store.groupby(
+#         "formula_pretty", properties=props, criteria=query
+#     )
+#     formula_dict = {}
+#     for id_doc, docs in results:
+#         formula = id_doc["formula_pretty"]
+#         task_ids = [d["task_id"] for d in docs]
+#         structures = [d["structure"] for d in docs]
+#         formula_dict[formula] = dict(zip(task_ids, structures))
+#     return formula_dict
 
 
 def elastic_sanitize(tensor):
