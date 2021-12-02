@@ -124,7 +124,7 @@ class ElasticityBuilder(Builder):
         """
 
         # Get elastic tasks
-        task_ids = item["task_ids"]
+        task_ids = [int(i) for i in item["task_ids"]]
         query = {
             "task_id": {"$in": task_ids},
             "task_label": {
@@ -132,7 +132,19 @@ class ElasticityBuilder(Builder):
             },
         }
         query.update(self.query)
-        cursor = self.tasks.query(criteria=query)
+
+        props = [
+            "output",
+            "input",
+            "completed_at",
+            "transmuter",
+            "task_id",
+            "task_label",
+            "formula_pretty",
+            "dir_name",
+        ]
+
+        cursor = self.tasks.query(criteria=query, properties=props)
 
         # Separate optimization and
         opt_tasks = []
