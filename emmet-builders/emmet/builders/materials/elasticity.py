@@ -18,7 +18,7 @@ from pymatgen.core import Structure
 from pymatgen.core.tensors import TensorMapping
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-from emmet.core.elasticity import ElasticityDoc
+from emmet.core.elasticity import ElasticityDerivedProperty, ElasticityDoc
 
 logger = logging.getLogger(__name__)
 
@@ -159,12 +159,20 @@ class ElasticityBuilder(Builder):
                 elastic_doc = get_elastic_analysis(opt_tasks[0], deform_tasks)
 
                 if elastic_doc:
+
+                    # Get derived property
+                    names = ["k_voigt"]
+                    derived = ElasticityDerivedProperty(
+                        **{n: elastic_doc[n] for n in names}
+                    )
+
                     # convert to Materials doc
                     elastic_doc = ElasticityDoc.from_structures_and_elastic_tensor(
                         structure=elastic_doc["optimized_structure"],
                         material_id=item["material_id"],
                         elastic_tensor=elastic_doc["elastic_tensor"],
                         elastic_tensor_original=elastic_doc["elastic_tensor_original"],
+                        derived_property=derived,
                     )
                     elastic_doc = elastic_doc.dict()
 

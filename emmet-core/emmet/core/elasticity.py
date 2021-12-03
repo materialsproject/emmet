@@ -1,6 +1,6 @@
-from typing import Any, Dict, List, Tuple
+from typing import List, Optional, Tuple
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pymatgen.core.structure import Structure
 
 from emmet.core.material_property import PropertyDoc
@@ -14,36 +14,7 @@ VoigtTensor = Tuple[
 ]
 
 
-class ElasticityDoc(PropertyDoc):
-    """
-    Elasticity doc.
-    """
-
-    property_name: str = "elasticity"
-
-    order: int = Field(default=2, description="Order of the elastic tensor")
-
-    elastic_tensor: VoigtTensor = Field(
-        ...,
-        description="Elastic tensor corresponding to IEEE orientation, symmetrized to "
-        "crystal structure",
-    )
-    compliance_tensor: VoigtTensor = Field(
-        None, description="Compliance tensor corresponding to IEEE orientation"
-    )
-    elastic_tensor_original: VoigtTensor = Field(
-        None,
-        description="Elastic tensor corresponding to POSCAR (conventional standard "
-        "cell) orientation unsymmetrized",
-    )
-
-    strains: List[Matrix3D] = Field(
-        None, description="Lagrangian strain tensors applied to structures"
-    )
-    cauchy_stresses: List[Matrix3D] = Field(
-        None, description="Cauchy stress tensors on strained structures"
-    )
-
+class ElasticityDerivedProperty(BaseModel):
     k_voigt: float = Field(None, description="Bulk modulus Voigt average")
     k_reuss: float = Field(None, description="Bulk modulus Reuss average")
     k_vrh: float = Field(None, description="Bulk modulus Voigt-Reuss-Hill average")
@@ -80,6 +51,41 @@ class ElasticityDoc(PropertyDoc):
     homogeneous_poisson: float = Field(None, description="Isotropic Poisson ratio")
     y_mod: float = Field(None, description="Young's modulus")
 
+
+class ElasticityDoc(PropertyDoc):
+    """
+    Elasticity doc.
+    """
+
+    property_name: str = "elasticity"
+
+    order: int = Field(default=2, description="Order of the elastic tensor")
+
+    elastic_tensor: VoigtTensor = Field(
+        ...,
+        description="Elastic tensor corresponding to IEEE orientation, symmetrized to "
+        "crystal structure",
+    )
+    compliance_tensor: VoigtTensor = Field(
+        None, description="Compliance tensor corresponding to IEEE orientation"
+    )
+    elastic_tensor_original: VoigtTensor = Field(
+        None,
+        description="Elastic tensor corresponding to POSCAR (conventional standard "
+        "cell) orientation unsymmetrized",
+    )
+
+    strains: List[Matrix3D] = Field(
+        None, description="Lagrangian strain tensors applied to structures"
+    )
+    cauchy_stresses: List[Matrix3D] = Field(
+        None, description="Cauchy stress tensors on strained structures"
+    )
+
+    derived_property: ElasticityDerivedProperty = Field(
+        None, description="Derived elastic properties"
+    )
+
     @classmethod
     def from_structures_and_elastic_tensor(
         cls,
@@ -87,7 +93,8 @@ class ElasticityDoc(PropertyDoc):
         material_id: MPID,
         elastic_tensor: VoigtTensor,
         elastic_tensor_original: VoigtTensor,
-        **kwargs
+        derived_property: Optional[ElasticityDerivedProperty] = None,
+        **kwargs,
     ):
         # TODO computing additional property that can be derived
         # compute derived properties, e.g. ieee tensor, compliance tensor
@@ -97,5 +104,6 @@ class ElasticityDoc(PropertyDoc):
             material_id,
             elastic_tensor=elastic_tensor,
             elastic_tensor_original=elastic_tensor_original,
-            **kwargs
+            derived_property=derived_property,
+            **kwargs,
         )
