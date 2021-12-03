@@ -1,9 +1,11 @@
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from pydantic import Field
+from pymatgen.core.structure import Structure
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D
+from emmet.core.mpid import MPID
 
 # TODO, move to core.math?
 VoigtVector = Tuple[float, float, float, float, float, float]
@@ -19,14 +21,7 @@ class ElasticityDoc(PropertyDoc):
 
     property_name: str = "elasticity"
 
-    order: int = Field(..., default=2, description="Order of the elastic tensor")
-
-    strains: List[Matrix3D] = Field(
-        ..., description="Lagrangian strain tensors applied to structures"
-    )
-    cauchy_stresses: List[Matrix3D] = Field(
-        ..., description="Cauchy stress tensors on strained structures"
-    )
+    order: int = Field(default=2, description="Order of the elastic tensor")
 
     elastic_tensor: VoigtTensor = Field(
         ...,
@@ -34,42 +29,73 @@ class ElasticityDoc(PropertyDoc):
         "crystal structure",
     )
     compliance_tensor: VoigtTensor = Field(
-        ..., description="Compliance tensor corresponding to IEEE orientation"
+        None, description="Compliance tensor corresponding to IEEE orientation"
     )
     elastic_tensor_original: VoigtTensor = Field(
-        ...,
+        None,
         description="Elastic tensor corresponding to POSCAR (conventional standard "
         "cell) orientation unsymmetrized",
     )
 
-    k_voigt: float = Field(..., description="Bulk modulus Voigt average")
-    k_reuss: float = Field(..., description="Bulk modulus Reuss average")
-    k_vrh: float = Field(..., description="Bulk modulus Voigt-Reuss-Hill average")
-    g_voigt: float = Field(..., description="Shear modulus Voigt average")
-    g_reuss: float = Field(..., description="Shear modulus Reuss average")
-    g_vrh: float = Field(..., description="Shear modulus Voigt-Reuss-Hill average")
+    strains: List[Matrix3D] = Field(
+        None, description="Lagrangian strain tensors applied to structures"
+    )
+    cauchy_stresses: List[Matrix3D] = Field(
+        None, description="Cauchy stress tensors on strained structures"
+    )
+
+    k_voigt: float = Field(None, description="Bulk modulus Voigt average")
+    k_reuss: float = Field(None, description="Bulk modulus Reuss average")
+    k_vrh: float = Field(None, description="Bulk modulus Voigt-Reuss-Hill average")
+    g_voigt: float = Field(None, description="Shear modulus Voigt average")
+    g_reuss: float = Field(None, description="Shear modulus Reuss average")
+    g_vrh: float = Field(None, description="Shear modulus Voigt-Reuss-Hill average")
 
     snyder_ac: float = Field(
-        ..., description="Snyder's acoustic sound velocity (in SI units)"
+        None, description="Snyder's acoustic sound velocity (in SI units)"
     )
     snyder_opt: float = Field(
-        ..., description="Snyder's optical sound velocity (in SI units)"
+        None, description="Snyder's optical sound velocity (in SI units)"
     )
     snyder_total: float = Field(
-        ..., description="Snyder's total sound velocity (in SI units)"
+        None, description="Snyder's total sound velocity (in SI units)"
     )
 
     clarke_thermalcond: float = Field(
-        ..., description="Clarke's thermal conductivity (in SI units)"
+        None, description="Clarke's thermal conductivity (in SI units)"
     )
     cahill_thermalcond: float = Field(
-        ..., description="Cahill's thermal conductivity (in SI units)"
+        None, description="Cahill's thermal conductivity (in SI units)"
     )
-    debye_temperature: float = Field(..., description="Debye temperature (in SI units)")
+    debye_temperature: float = Field(
+        None, description="Debye temperature (in SI " "units)"
+    )
 
-    trans_v: float = Field(..., description="Transverse sound velocity (in SI units)")
-    long_v: float = Field(..., description="Longitudinal sound velocity (in SI units)")
+    trans_v: float = Field(None, description="Transverse sound velocity (in SI units)")
+    long_v: float = Field(None, description="Longitudinal sound velocity (in SI units)")
 
-    universal_anisotropy: float = Field(..., description="Universal elastic anisotropy")
-    homogeneous_poisson: float = Field(..., description="Isotropic Poisson ratio")
-    y_mod: float = Field(..., description="Young's modulus")
+    universal_anisotropy: float = Field(
+        None, description="Universal elastic " "anisotropy"
+    )
+    homogeneous_poisson: float = Field(None, description="Isotropic Poisson ratio")
+    y_mod: float = Field(None, description="Young's modulus")
+
+    @classmethod
+    def from_structures_and_elastic_tensor(
+        cls,
+        structure: Structure,
+        material_id: MPID,
+        elastic_tensor: VoigtTensor,
+        elastic_tensor_original: VoigtTensor,
+        **kwargs
+    ):
+        # TODO computing additional property that can be derived
+        # compute derived properties, e.g. ieee tensor, compliance tensor
+
+        return cls.from_structure(
+            structure,
+            material_id,
+            elastic_tensor=elastic_tensor,
+            elastic_tensor_original=elastic_tensor_original,
+            **kwargs
+        )

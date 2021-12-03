@@ -1,21 +1,5 @@
-"""
-This module contains 3 builders for elastic properties.
-
-1.  The ElasticityBuilder builds individual documents
-    corresponding to aggregated tasks corresponding to a
-    single input structure, e. g. all of the tasks in one
-    workflow.  This is where elastic tensors are fitted.
-2.  The ElasticAggregateBuilder aggregates elastic documents
-    that all correspond to the same structure and also
-    assigns a "state" based on the elastic document's validity.
-3.  The ElasticCopyBuilder is a simple copy builder that
-    transfers all of the aggregated tasks with "successful" states
-    into a production collection.  It's not strictly necessary,
-    but is currently in use in the production pipeline.
-"""
 import logging
 import warnings
-from copy import deepcopy
 from datetime import datetime
 from itertools import chain, groupby, product
 from typing import Dict, Iterable, Iterator, List, Optional, Set, Union
@@ -30,7 +14,6 @@ from pymatgen.analysis.elasticity.elastic import ElasticTensor, ElasticTensorExp
 from pymatgen.analysis.elasticity.strain import Deformation, Strain
 from pymatgen.analysis.elasticity.stress import Stress
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core import Structure
 from pymatgen.core.tensors import TensorMapping
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
@@ -174,8 +157,19 @@ class ElasticityBuilder(Builder):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 elastic_doc = get_elastic_analysis(opt_tasks[0], deform_tasks)
+
                 if elastic_doc:
-                    elastic_doc["last_updated"] = datetime.utcnow()
+                    # convert to Materials doc
+                    elastic_doc = ElasticityDoc.from_structures_and_elastic_tensor(
+                        structure=elastic_doc["optimized_structure"],
+                        material_id=item["material_id"],
+                        elastic_tensor=elastic_doc["elastic_tensor"],
+                        elastic_tensor_original=elastic_doc["elastic_tensor_original"],
+                    )
+                    elastic_doc = elastic_doc.dict()
+
+                    # TODO symmetry cannot be `jsanitize`d below. How to deal with it?
+                    elastic_doc.pop("symmetry", None)
 
             return elastic_doc
 
@@ -191,8 +185,9 @@ class ElasticityBuilder(Builder):
 
         self.logger.info(f"Updating {len(items)} elastic documents")
 
-        # TODO what is key?
-        self.elasticity.update(items, key="optimization_dir_name")
+        # TODO key is used for determing uniqueness, used to be optimization_dir_name
+        # self.elasticity.update(items, key="optimization_dir_name")
+        self.elasticity.update(items, key="material_id")
 
 
 def get_elastic_analysis(opt_task, defo_tasks):
@@ -309,6 +304,7 @@ def get_elastic_analysis(opt_task, defo_tasks):
         elastic_doc.update({"state": state, "warnings": warnings})
 
         # TODO: add kpoints params?
+
         return elastic_doc
 
     else:
