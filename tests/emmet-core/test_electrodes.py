@@ -1,8 +1,9 @@
+from pymatgen.core.periodic_table import Element
 import pytest
 from monty.serialization import loadfn
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
-from pymatgen.core import Composition
+from pymatgen.core import Composition, Element
 from pymatgen.entries.computed_entries import ComputedEntry
 
 from emmet.core.electrode import (
@@ -96,3 +97,18 @@ def test_ConversionDocs_from_sub_electrodes(conversion_elec):
         for sub_elec in elec["CE"].get_sub_electrodes(adjacent_only=True):
             vp = ConversionVoltagePairDoc.from_sub_electrode(sub_electrode=sub_elec)
             assert vp.average_voltage == sub_elec.get_average_voltage()
+
+
+def test_get_charge_discharge_formula():
+
+    test_cases = [
+        (Composition("Li2CoO3"), Composition("Li7(CoO3)2"), Element("Li")),
+        (Composition("Al4(CoO4)3"), Composition("Al2CoO4"), Element("Al")),
+        (Composition("Li17(Co4O9)2"), Composition("Li21(Co4O9)2"), Element("Li")),
+    ]
+
+    results = [
+        InsertionElectrodeDoc.get_charge_discharge_formula(*case) for case in test_cases
+    ]
+
+    assert results == ["Li2-3.5CoO3", "Al1.33-2CoO4", "Li8.5-10.5Co4O9"]

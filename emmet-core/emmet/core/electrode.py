@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Union
+from typing import List, Union
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
@@ -95,6 +95,11 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
 
     battery_id: str = Field(None, description="The id for this battery document.")
 
+    charge_discharge_formula: str = Field(
+        None,
+        description="Reduced formula with working ion range produced by combining the charge and discharge formulas.",
+    )
+
     framework_formula: str = Field(
         None, description="The id for this battery document."
     )
@@ -189,16 +194,52 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         elements = sorted(host_structure.composition.elements)
         chemsys = "-".join(sorted(map(str, elements)))
         framework = Composition(d["framework_formula"])
+        charge_discharge_formula = cls.get_charge_discharge_formula(
+            Composition(d["formula_charge"]),
+            Composition(d["formula_discharge"]),
+            Element(d["working_ion"]),
+        )
         return cls(
             battery_id=battery_id,
             host_structure=host_structure.as_dict(),
             framework=framework,
+            charge_discharge_formula=charge_discharge_formula,
             electrode_object=ie.as_dict(),
             elements=elements,
             nelements=len(elements),
             chemsys=chemsys,
             formula_anonymous=framework.anonymized_formula,
             **d
+        )
+
+    @staticmethod
+    def get_charge_discharge_formula(
+        charge_comp: Composition, discharge_comp: Composition, working_ion: Element
+    ):
+
+        working_ion_subscripts = []
+
+        for comp in [charge_comp, discharge_comp]:
+
+            comp_dict = comp.get_el_amt_dict()
+
+            working_ion_num = (
+                comp_dict.pop(working_ion.value)
+                if working_ion.value in comp_dict
+                else 0
+            )
+            temp_comp = Composition.from_dict(comp_dict)
+
+            (temp_reduced, n) = temp_comp.get_reduced_composition_and_factor()
+
+            working_ion_subscripts.append(
+                "{:.2f}".format(working_ion_num / n).rstrip(".0")
+            )
+
+        return (
+            working_ion.value
+            + "-".join(working_ion_subscripts)
+            + temp_reduced.reduced_formula
         )
 
 
