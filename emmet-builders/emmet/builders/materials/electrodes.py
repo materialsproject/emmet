@@ -14,6 +14,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from emmet.core.electrode import InsertionElectrodeDoc
 from emmet.core.structure_group import StructureGroupDoc
 from emmet.core.utils import jsanitize
+from emmet.builders.settings import EmmetBuildSettings
 
 
 def s_hash(el):
@@ -73,6 +74,9 @@ def generic_groupby(list_in, comp=operator.eq):
     return list_out
 
 
+default_build_settings = EmmetBuildSettings()
+
+
 class StructureGroupBuilder(Builder):
     def __init__(
         self,
@@ -80,9 +84,9 @@ class StructureGroupBuilder(Builder):
         sgroups: MongoStore,
         working_ion: str,
         query: dict = None,
-        ltol: float = 0.2,
-        stol: float = 0.3,
-        angle_tol: float = 5.0,
+        ltol: float = default_build_settings.LTOL,
+        stol: float = default_build_settings.STOL,
+        angle_tol: float = default_build_settings.ANGLE_TOL,
         check_newer: bool = True,
         **kwargs,
     ):
