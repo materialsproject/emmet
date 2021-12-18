@@ -95,7 +95,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
 
     battery_id: str = Field(None, description="The id for this battery document.")
 
-    charge_discharge_formula: str = Field(
+    battery_formula: str = Field(
         None,
         description="Reduced formula with working ion range produced by combining the charge and discharge formulas.",
     )
@@ -194,7 +194,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         elements = sorted(host_structure.composition.elements)
         chemsys = "-".join(sorted(map(str, elements)))
         framework = Composition(d["framework_formula"])
-        charge_discharge_formula = cls.get_charge_discharge_formula(
+        battery_formula = cls.get_battery_formula(
             Composition(d["formula_charge"]),
             Composition(d["formula_discharge"]),
             Element(d["working_ion"]),
@@ -203,7 +203,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
             battery_id=battery_id,
             host_structure=host_structure.as_dict(),
             framework=framework,
-            charge_discharge_formula=charge_discharge_formula,
+            battery_formula=battery_formula,
             electrode_object=ie.as_dict(),
             elements=elements,
             nelements=len(elements),
@@ -213,7 +213,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         )
 
     @staticmethod
-    def get_charge_discharge_formula(
+    def get_battery_formula(
         charge_comp: Composition, discharge_comp: Composition, working_ion: Element
     ):
 

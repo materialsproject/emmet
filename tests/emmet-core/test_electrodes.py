@@ -99,7 +99,7 @@ def test_ConversionDocs_from_sub_electrodes(conversion_elec):
             assert vp.average_voltage == sub_elec.get_average_voltage()
 
 
-def test_get_charge_discharge_formula():
+def test_get_battery_formula():
 
     test_cases = [
         (Composition("Li2CoO3"), Composition("Li7(CoO3)2"), Element("Li")),
@@ -107,8 +107,6 @@ def test_get_charge_discharge_formula():
         (Composition("Li17(Co4O9)2"), Composition("Li21(Co4O9)2"), Element("Li")),
     ]
 
-    results = [
-        InsertionElectrodeDoc.get_charge_discharge_formula(*case) for case in test_cases
-    ]
+    results = [InsertionElectrodeDoc.get_battery_formula(*case) for case in test_cases]
 
     assert results == ["Li2-3.5CoO3", "Al1.33-2CoO4", "Li8.5-10.5Co4O9"]
