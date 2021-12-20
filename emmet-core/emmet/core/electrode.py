@@ -166,6 +166,8 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         None, description="The pymatgen electrode object"
     )
 
+    warnings: List[str] = Field([], description="Any warnings related to this material")
+
     # Make sure that the datetime field is properly formatted
     @validator("last_updated", pre=True)
     def last_updated_dict_ok(cls, v):
@@ -194,11 +196,28 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         elements = sorted(host_structure.composition.elements)
         chemsys = "-".join(sorted(map(str, elements)))
         framework = Composition(d["framework_formula"])
+        discharge_comp = Composition(d["formula_discharge"])
+        working_ion_ele = Element(d["working_ion"])
         battery_formula = cls.get_battery_formula(
-            Composition(d["formula_charge"]),
-            Composition(d["formula_discharge"]),
-            Element(d["working_ion"]),
+            Composition(d["formula_charge"]), discharge_comp, working_ion_ele,
         )
+
+        # Check if more than one working ion per transition metal and warn
+        warnings = []
+        transition_metal_fraction = sum(
+            [
+                discharge_comp.get_atomic_fraction(element)
+                for element in discharge_comp
+                if element.is_transition_metal
+            ]
+        )
+        if (
+            discharge_comp.get_atomic_fraction(working_ion_ele)
+            / transition_metal_fraction
+            > 1.0
+        ):
+            warnings.append("More than one working ion per transition metal")
+
         return cls(
             battery_id=battery_id,
             host_structure=host_structure.as_dict(),
@@ -209,7 +228,8 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
             nelements=len(elements),
             chemsys=chemsys,
             formula_anonymous=framework.anonymized_formula,
-            **d
+            warnings=warnings,
+            **d,
         )
 
     @staticmethod
