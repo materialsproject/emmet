@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.19.0](https://github.com/materialsproject/emmet/tree/v0.19.0) (2021-12-20)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.18.0...v0.19.0)
+
+**Merged pull requests:**
+
+- Electrode builder updates [\#322](https://github.com/materialsproject/emmet/pull/322) ([munrojm](https://github.com/munrojm))
+
 ## [v0.18.0](https://github.com/materialsproject/emmet/tree/v0.18.0) (2021-11-24)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.17.0...v0.18.0)
