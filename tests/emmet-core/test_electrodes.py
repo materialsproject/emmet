@@ -67,7 +67,6 @@ def test_InsertionDocs(insertion_elec):
             grouped_entries=elec.stable_entries,
             working_ion_entry=wion_entry,
             battery_id="mp-1234",
-            host_structure=struct,
         )
         assert ie.average_voltage == elec.get_average_voltage()
         assert len(ie.material_ids) > 2

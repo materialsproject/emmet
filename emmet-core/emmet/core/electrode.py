@@ -179,7 +179,6 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         grouped_entries: List[ComputedStructureEntry],
         working_ion_entry: ComputedEntry,
         battery_id: str,
-        host_structure: Structure,
     ) -> Union["InsertionElectrodeDoc", None]:
         try:
             ie = InsertionElectrode.from_entries(
@@ -189,7 +188,16 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
             )
         except IndexError:
             return None
+        # First get host structure
+
         d = ie.get_summary_dict()
+
+        least_wion_ent = next(
+            item for item in grouped_entries if item.entry_id == d["id_charge"]
+        )
+        host_structure = least_wion_ent.structure.copy()
+        host_structure.remove_species([d["working_ion"]])
+
         d["material_ids"] = d["stable_material_ids"] + d["unstable_material_ids"]
         d["num_steps"] = d.pop("nsteps", None)
         d["last_updated"] = datetime.utcnow()

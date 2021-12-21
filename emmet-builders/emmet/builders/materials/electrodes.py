@@ -413,22 +413,16 @@ class InsertionElectrodeBuilder(Builder):
         entries = [
             tdoc_["entries"][tdoc_["energy_type"]] for tdoc_ in item["thermo_docs"]
         ]
+
         entries = list(map(ComputedStructureEntry.from_dict, entries))
 
         working_ion_entry = ComputedEntry.from_dict(
             item["working_ion_doc"]["entries"][item["working_ion_doc"]["energy_type"]]
         )
-        working_ion = working_ion_entry.composition.reduced_formula
 
         decomp_energies = {
             d_["material_id"]: d_["energy_above_hull"] for d_ in item["thermo_docs"]
         }
-
-        least_wion_ent = min(
-            entries, key=lambda x: x.composition.get_atomic_fraction(working_ion)
-        )
-        host_structure = least_wion_ent.structure.copy()
-        host_structure.remove_species([item["working_ion"]])
 
         for ient in entries:
             ient.data["volume"] = ient.structure.volume
@@ -438,7 +432,6 @@ class InsertionElectrodeBuilder(Builder):
             grouped_entries=entries,
             working_ion_entry=working_ion_entry,
             battery_id=item["group_id"],
-            host_structure=host_structure,
         )
         if ie is None:
             return None  # {"failed_reason": "unable to create InsertionElectrode document"}
