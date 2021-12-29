@@ -15,6 +15,10 @@ VoigtTensor = Tuple[
 
 
 class ElasticityDerivedProperty(BaseModel):
+    """
+    Derived elastic properties.
+    """
+
     k_voigt: float = Field(None, description="Bulk modulus Voigt average")
     k_reuss: float = Field(None, description="Bulk modulus Reuss average")
     k_vrh: float = Field(None, description="Bulk modulus Voigt-Reuss-Hill average")
@@ -39,14 +43,14 @@ class ElasticityDerivedProperty(BaseModel):
         None, description="Cahill's thermal conductivity (in SI units)"
     )
     debye_temperature: float = Field(
-        None, description="Debye temperature (in SI " "units)"
+        None, description="Debye temperature (in SI units)"
     )
 
     trans_v: float = Field(None, description="Transverse sound velocity (in SI units)")
     long_v: float = Field(None, description="Longitudinal sound velocity (in SI units)")
 
     universal_anisotropy: float = Field(
-        None, description="Universal elastic " "anisotropy"
+        None, description="Universal elastic anisotropy"
     )
     homogeneous_poisson: float = Field(None, description="Isotropic Poisson ratio")
     y_mod: float = Field(None, description="Young's modulus")
@@ -105,5 +109,6 @@ class ElasticityDoc(PropertyDoc):
             elastic_tensor=elastic_tensor,
             elastic_tensor_original=elastic_tensor_original,
             derived_property=derived_property,
+            include_structure=True,
             **kwargs,
         )
