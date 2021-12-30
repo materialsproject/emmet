@@ -63,20 +63,22 @@ class ElasticityDoc(PropertyDoc):
 
     property_name: str = "elasticity"
 
-    order: int = Field(default=2, description="Order of the elastic tensor")
+    elastic_tensor_order: int = Field(
+        default=2, description="Order of the elastic tensor"
+    )
 
     elastic_tensor: VoigtTensor = Field(
         ...,
         description="Elastic tensor corresponding to IEEE orientation, symmetrized to "
         "crystal structure",
     )
-    compliance_tensor: VoigtTensor = Field(
-        None, description="Compliance tensor corresponding to IEEE orientation"
-    )
     elastic_tensor_original: VoigtTensor = Field(
         None,
         description="Elastic tensor corresponding to POSCAR (conventional standard "
-        "cell) orientation unsymmetrized",
+        "cell) orientation, unsymmetrized",
+    )
+    compliance_tensor: VoigtTensor = Field(
+        None, description="Compliance tensor corresponding to IEEE orientation"
     )
 
     strains: List[Matrix3D] = Field(
@@ -90,25 +92,71 @@ class ElasticityDoc(PropertyDoc):
         None, description="Derived elastic properties"
     )
 
+    optimization_task: List[MPID] = Field(
+        None,
+        description="Optimization task used to calculate the elastic tensor, i.e. "
+        "non-strained state",
+    )
+
+    deformation_tasks: List[MPID] = Field(
+        None, description="Deformation tasks used to calculate the elastic tensor"
+    )
+
+    fitting_method: str = Field(
+        None, description="Fitting method used to calculate the elastic tensor"
+    )
+
     @classmethod
-    def from_structures_and_elastic_tensor(
+    def from_structure_and_elastic_tensor(
         cls,
         structure: Structure,
         material_id: MPID,
         elastic_tensor: VoigtTensor,
         elastic_tensor_original: VoigtTensor,
+        order: int = 2,
+        compliance_tensor: Optional[VoigtTensor] = None,
+        strains: Optional[List[Matrix3D]] = None,
+        cauchy_stresses: Optional[List[Matrix3D]] = None,
         derived_property: Optional[ElasticityDerivedProperty] = None,
+        optimization_task: List[MPID] = None,
+        deformation_tasks: List[MPID] = None,
+        fitting_method: str = None,
         **kwargs,
     ):
-        # TODO computing additional property that can be derived
-        # compute derived properties, e.g. ieee tensor, compliance tensor
+        # TODO
+        if compliance_tensor is None:
+            pass
+        if derived_property is None:
+            pass
+
+        # consistence check
+        if strains is not None:
+            if cauchy_stresses:
+                assert len(strains) == len(cauchy_stresses), (
+                    "Expect the same number of strains and cauchy stresses; got "
+                    f"{len(strains)} and {len(cauchy_stresses)}, respectively."
+                )
+
+            if optimization_task is not None and deformation_tasks is not None:
+                assert len(strains) == 1 + len(deformation_tasks), (
+                    "Expect the number of strains be equal to 1 plus the number of "
+                    f"deformation tasks; got {len(strains)} and "
+                    f"1 + {len(deformation_tasks)}, respectively."
+                )
 
         return cls.from_structure(
             structure,
             material_id,
+            elastic_tensor_order=order,
             elastic_tensor=elastic_tensor,
             elastic_tensor_original=elastic_tensor_original,
+            compliance_tensor=compliance_tensor,
+            strains=strains,
+            cauchy_stresses=cauchy_stresses,
             derived_property=derived_property,
+            optimization_task=optimization_task,
+            deformation_tasks=deformation_tasks,
+            fitting_method=fitting_method,
             include_structure=True,
             **kwargs,
         )
