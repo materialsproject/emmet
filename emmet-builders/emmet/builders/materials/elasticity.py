@@ -335,8 +335,8 @@ def analyze_elastic_data(
     #
     fitting_data = FittingData(
         strains=[d["strain"].tolist() for d in primary_data],
-        cauchy_stersses=[d["cauchy_stress"].tolist() for d in primary_data],
-        second_pk_stersses=[d["second_pk_stress"].tolist() for d in primary_data],
+        cauchy_stresses=[d["cauchy_stress"].tolist() for d in primary_data],
+        second_pk_stresses=[d["second_pk_stress"].tolist() for d in primary_data],
         deformations=[d["deformation"].tolist() for d in primary_data],
         deformation_tasks=[d["task_id"] for d in primary_data],
         deformation_dir_name=[d["dir_name"] for d in primary_data],
@@ -370,7 +370,7 @@ def analyze_elastic_data(
         order=2,
         elastic_tensor=et_doc,
         compliance_tensor=ct_doc,
-        derived_property=derived_props,
+        derived_properties=derived_props,
         fitting_data=fitting_data,
         fitting_method=fitting_method,
     )

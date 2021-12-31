@@ -155,16 +155,11 @@ class ElasticityDoc(PropertyDoc):
         *,
         order: int = 2,
         compliance_tensor: Optional[ComplianceTensorDoc] = None,
-        derived_property: Optional[DerivedProperties] = None,
+        derived_properties: Optional[DerivedProperties] = None,
         fitting_data: Optional[FittingData] = None,
         fitting_method: str = None,
         **kwargs,
     ):
-        # TODO
-        if compliance_tensor is None:
-            pass
-        if derived_property is None:
-            pass
 
         return cls.from_structure(
             structure,
@@ -172,7 +167,7 @@ class ElasticityDoc(PropertyDoc):
             elastic_tensor=elastic_tensor,
             compliance_tensor=compliance_tensor,
             order=order,
-            derived_property=derived_property,
+            derived_properties=derived_properties,
             fitting_data=fitting_data,
             fitting_method=fitting_method,
             include_structure=True,
