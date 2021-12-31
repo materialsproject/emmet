@@ -8,7 +8,7 @@ from emmet.core.math import Matrix3D, MatrixVoigt
 from emmet.core.mpid import MPID
 
 
-class ElasticTensor(BaseModel):
+class ElasticTensorDoc(BaseModel):
     raw: MatrixVoigt = Field(
         None,
         description="Elastic tensor corresponding to POSCAR (conventional standard "
@@ -21,7 +21,7 @@ class ElasticTensor(BaseModel):
     )
 
 
-class ComplianceTensor(BaseModel):
+class ComplianceTensorDoc(BaseModel):
     raw: MatrixVoigt = Field(
         None,
         description="Compliance tensor corresponding to POSCAR (conventional standard "
@@ -106,9 +106,11 @@ class ElasticityDoc(PropertyDoc):
 
     property_name: str = "elasticity"
 
-    elastic_tensor: ElasticTensor = Field(None, description="Elastic tensor")
+    elastic_tensor: ElasticTensorDoc = Field(None, description="Elastic tensor")
 
-    compliance_tensor: ComplianceTensor = Field(None, description="Compliance tensor")
+    compliance_tensor: ComplianceTensorDoc = Field(
+        None, description="Compliance tensor"
+    )
 
     order: int = Field(
         default=2, description="Order of the expansion of the elastic tensor"
@@ -131,10 +133,10 @@ class ElasticityDoc(PropertyDoc):
         cls,
         structure: Structure,
         material_id: MPID,
-        elastic_tensor: ElasticTensor,
+        elastic_tensor: ElasticTensorDoc,
         *,
         order: int = 2,
-        compliance_tensor: Optional[ComplianceTensor] = None,
+        compliance_tensor: Optional[ComplianceTensorDoc] = None,
         derived_property: Optional[DerivedProperties] = None,
         fitting_data: Optional[FittingData] = None,
         fitting_method: str = None,
