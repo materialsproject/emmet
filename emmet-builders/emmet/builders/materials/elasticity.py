@@ -1,18 +1,14 @@
 import itertools
-import logging
-import warnings
 from datetime import datetime
 from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from atomate.vasp.workflows.base.elastic import get_default_strain_states
 from maggma.core import Builder, Store
-from monty.json import jsanitize
-from pydash.objects import get, set_
+from pydash.objects import get
 from pymatgen.analysis.elasticity.elastic import ElasticTensor, ElasticTensorExpansion
 from pymatgen.analysis.elasticity.strain import Deformation, Strain
 from pymatgen.analysis.elasticity.stress import Stress
-from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
 from pymatgen.core import Structure
 from pymatgen.core.tensors import TensorMapping
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
@@ -23,6 +19,7 @@ from emmet.core.elasticity import (
     ElasticTensorDoc,
     FittingData,
 )
+from emmet.core.utils import jsanitize
 
 DEFORM_TASK_LABEL = "elastic deformation"
 OPTIM_TASK_LABEL = "elastic structure optimization"
@@ -147,7 +144,7 @@ class ElasticityBuilder(Builder):
 
         cursor = self.tasks.query(criteria=query, properties=props)
 
-        grouped = group_deform_tasks_by_opt_task(cursor)
+        grouped = group_deform_tasks_by_opt_task(cursor, self.logger)
 
         elastic_docs = []
         for opt_tasks, deform_tasks in grouped:
@@ -162,7 +159,7 @@ class ElasticityBuilder(Builder):
 
             doc = analyze_elastic_data(opt_task, deform_tasks, self.logger)
             if doc:
-                doc = doc.dict()
+                doc = jsanitize(doc.dict(), allow_bson=True)
                 elastic_docs.append(doc)
 
             return elastic_docs
@@ -174,8 +171,7 @@ class ElasticityBuilder(Builder):
         Args:
             items: elastic docs
         """
-        items = itertools.chain.from_iterable(items)
-        items = [jsanitize(doc, strict=True, allow_bson=True) for doc in items]
+        items = list(itertools.chain.from_iterable(items))
 
         self.logger.info(f"Updating {len(items)} elastic documents")
 
@@ -291,7 +287,9 @@ def filter_deform_tasks_by_time(
     return list(d2t.values())
 
 
-def analyze_elastic_data(opt_task: Dict, deform_tasks: List[Dict], logger) -> Dict:
+def analyze_elastic_data(
+    opt_task: Dict, deform_tasks: List[Dict], logger
+) -> ElasticityDoc:
     """
     Analyze optimization task and deformation tasks to fit elastic tensor.
 
@@ -323,14 +321,14 @@ def analyze_elastic_data(opt_task: Dict, deform_tasks: List[Dict], logger) -> Di
         return None
 
     pk_stresses = [d["second_pk_stress"] for d in full_data]
-    fitting_method = "finite_difference"
 
+    fitting_method = "finite_difference"
     elastic_tensor = fit_elastic_tensor(
-        strains, pk_stresses, eq_stress=eq_stress, fitting_method="fitting_method"
+        strains, pk_stresses, eq_stress=eq_stress, fitting_method=fitting_method
     )
 
     # generate derived property
-    derived_props = get_derived_properties(structure, elastic_tensor)
+    derived_props = get_derived_properties(structure, elastic_tensor, logger)
 
     #
     # prepare data for ElasticityDoc
@@ -558,7 +556,7 @@ def generate_derived_fitting_data(
                     derived_calcs_by_strain[d_strain] = [(op, p_task_id)]
 
     # process derived calcs
-    primary_calcs_by_id = {calc["task_id"] for calc in primary_data}
+    primary_calcs_by_id = {calc["task_id"]: calc for calc in primary_data}
 
     derived_data = []
     for d_strain, calc_set in derived_calcs_by_strain.items():

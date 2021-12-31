@@ -102,7 +102,7 @@ class FittingData(BaseModel):
         None, description="Deformation tasks corresponding to the strained structures"
     )
     deformation_dir_name: List[str] = Field(
-        None, "Paths to the deformation tasks running directories"
+        None, description="Paths to the deformation tasks running directories"
     )
 
     # data associated with optimization task
@@ -113,7 +113,7 @@ class FittingData(BaseModel):
         None, description="Optimization task corresponding to the relaxed structure"
     )
     optimization_dir_name: str = Field(
-        None, "Path to the optimization task running directory"
+        None, description="Path to the optimization task running directory"
     )
 
 
