@@ -12,12 +12,12 @@ class ElasticTensorDoc(BaseModel):
     raw: MatrixVoigt = Field(
         None,
         description="Elastic tensor corresponding to POSCAR (conventional standard "
-        "cell) orientation, unsymmetrized",
+        "cell) orientation, unsymmetrized. (in GPa)",
     )
     ieee_format: MatrixVoigt = Field(
         None,
         description="Elastic tensor corresponding to IEEE orientation, symmetrized to "
-        "crystal structure",
+        "crystal structure. (in GPa)",
     )
 
 
@@ -25,10 +25,11 @@ class ComplianceTensorDoc(BaseModel):
     raw: MatrixVoigt = Field(
         None,
         description="Compliance tensor corresponding to POSCAR (conventional standard "
-        "cell)",
+        "cell). (in TPa^-1)",
     )
     ieee_format: MatrixVoigt = Field(
-        None, description="Compliance tensor corresponding to IEEE orientation"
+        None,
+        description="Compliance tensor corresponding to IEEE orientation (in TPa^-1)",
     )
 
 
@@ -77,6 +78,14 @@ class DerivedProperties(BaseModel):
 
 
 class FittingData(BaseModel):
+    """
+    Data to fit the elastic tensor.
+
+    These are intended for the explicitly calculated primary data, not containing
+    derived data from symmetry operations.
+    """
+
+    # data associated with deformation tasks
     strains: List[Matrix3D] = Field(
         None, description="Lagrangian strain tensors applied to structures"
     )
@@ -87,15 +96,24 @@ class FittingData(BaseModel):
         None, description="Second Piola–Kirchhoff stress tensors on structures"
     )
     deformations: List[Matrix3D] = Field(
-        None, description="The deformations corresponding to each strain state"
-    )
-    optimization_task: List[MPID] = Field(
-        None,
-        description="Optimization task used to fit the elastic tensor, i.e. "
-        "non-strained state",
+        None, description="Deformations corresponding to the strained structures"
     )
     deformation_tasks: List[MPID] = Field(
-        None, description="Deformation tasks used to fit the elastic tensor"
+        None, description="Deformation tasks corresponding to the strained structures"
+    )
+    deformation_dir_name: List[str] = Field(
+        None, "Paths to the deformation tasks running directories"
+    )
+
+    # data associated with optimization task
+    equilibrium_cauchy_stress: Matrix3D = Field(
+        None, description="Cauchy stress tensor of the equilibrium (relaxed) structure"
+    )
+    optimization_task: MPID = Field(
+        None, description="Optimization task corresponding to the relaxed structure"
+    )
+    optimization_dir_name: str = Field(
+        None, "Path to the optimization task running directory"
     )
 
 
