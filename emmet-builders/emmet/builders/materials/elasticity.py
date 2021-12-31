@@ -2,13 +2,12 @@ import itertools
 import logging
 import warnings
 from datetime import datetime
-from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Set, Tuple, Union
+from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from atomate.vasp.workflows.base.elastic import get_default_strain_states
 from maggma.core import Builder, Store
 from monty.json import jsanitize
-from monty.serialization import loadfn
 from pydash.objects import get, set_
 from pymatgen.analysis.elasticity.elastic import ElasticTensor, ElasticTensorExpansion
 from pymatgen.analysis.elasticity.strain import Deformation, Strain
@@ -18,13 +17,13 @@ from pymatgen.core import Structure
 from pymatgen.core.tensors import TensorMapping
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-from emmet.core.elasticity import ElasticityDerivedProperty, ElasticityDoc
-
-logger = logging.getLogger(__name__)
-
+from emmet.core.elasticity import ElasticityDoc, FittingData
 
 DEFORM_TASK_LABEL = "elastic deformation"
 OPTIM_TASK_LABEL = "elastic structure optimization"
+
+TENSOR_COMP_TOL = 1e-5  # tolerance for comparing tensor values
+LATTICE_COMP_TOL = 1e-5  # tolerance for comparing lattice
 
 
 class ElasticityBuilder(Builder):
@@ -96,18 +95,21 @@ class ElasticityBuilder(Builder):
         )
 
         for n, doc in enumerate(cursor):
-            logger.debug(f"Getting material_id {doc['material_id']}; index {n}")
+            self.logger.debug(f"Getting material_id {doc['material_id']}; index {n}")
             yield doc
 
     def process_item(self, item: Dict) -> List[Dict]:
         """
         Process all tasks belong to the same material.
 
-        There can be multiple optimization tasks for the same materials due to:
-            1. structure match tolerance in material doc
-            2. later fixes of earlier calculations (e.g. LREAL)
-        As a result, there are multiple groups of deformation tasks, each corresponding
-        to an optimization task. This method can deal with these.
+        There can be multiple optimization tasks for the same material due to, e.g.
+        later fixes of earlier calculations. The optimization task with later completed
+        time is selected.
+
+        As a result, there can be multiple deformation tasks corresponding to the
+        same deformation, and the deformation tasks are filtered by:
+        - VASP INCAR params
+        - task completion time
 
         Args:
             item: a dictionary with key `task_ids`, which gives the ids of the tasks
@@ -138,66 +140,33 @@ class ElasticityBuilder(Builder):
 
         cursor = self.tasks.query(criteria=query, properties=props)
 
-        # Group by deformation tasks to their optimization tasks
-        grouped = group_deformations_by_optimization_task(cursor)
+        grouped = group_deform_tasks_by_opt_task(cursor)
 
         elastic_docs = []
-
         for opt_tasks, deform_tasks in grouped:
 
-            # more than 1 opt tasks with the same lattice, we select the latest
-            if len(opt_tasks) > 1:
+            # filter opt and deform tasks such that there is only one opt task and
+            # the deformation tasks are independent
+            opt_task = filter_opt_tasks_by_time(opt_tasks, self.logger)
+            deform_tasks = filter_deform_tasks_by_incar(opt_task, deform_tasks)
+            deform_tasks = filter_deform_tasks_by_time(
+                opt_task, deform_tasks, self.logger
+            )
 
-                # TODO what's the difference of `completed_at` and `last_updated` for a
-                #  task? Ask Matt or Jason
-                completed = [
-                    (datetime.fromisoformat(t["completed_at"]), t) for t in opt_tasks
-                ]
-                sorted_by_completed = sorted(completed, key=lambda pair: pair[0])
-                latest_pair = sorted_by_completed[-1]
-                opt_task = latest_pair[1]
-
-                task_ids = [t["task_id"] for t in opt_tasks]
-                self.logger.warning(
-                    f"{len(opt_tasks)} optimization tasks {task_ids} have the same "
-                    f"lattice; the latest one {opt_task['task_id']} selected."
+            doc = analyze_elastic_data(opt_task, deform_tasks, self.logger)
+            if doc:
+                doc = ElasticityDoc.from_structure_and_elastic_tensor(
+                    structure=doc["optimized_structure"],
+                    material_id=item["material_id"],
+                    elastic_tensor=doc["elastic_tensor"],
+                    compliance_tensor=doc["compliance_tensor"],
+                    order=doc["order"],
+                    derived_property=doc["derived"],
+                    fitting_data=doc["fitting_data"],
+                    fitting_method=doc["fitting_method"],
                 )
-
-            # only one opt task
-            else:
-                opt_task = opt_tasks[0]
-
-            # filter deformations tasks by VASP INCAR parameters
-            deform_tasks = filter_deformation_tasks(opt_task, deform_tasks)
-
-            # TODO do we need the warnings?
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-
-                doc = get_elastic_analysis(opt_task, deform_tasks)
-
-                if doc:
-
-                    # get derived property
-                    # TODO expand
-                    names = ["k_voigt"]
-                    derived = ElasticityDerivedProperty(**{n: doc[n] for n in names})
-
-                    # convert to ElasticityDoc
-                    doc = ElasticityDoc.from_structures_and_elastic_tensor(
-                        structure=doc["optimized_structure"],
-                        material_id=item["material_id"],
-                        elastic_tensor=doc["elastic_tensor"],
-                        elastic_tensor_original=doc["elastic_tensor_original"],
-                        derived_property=derived,
-                    )
-
-                    doc = doc.dict()
-
-                    # TODO symmetry cannot be `jsanitize`d below. How to deal with it?
-                    doc.pop("symmetry", None)
-
-                    elastic_docs.append(doc)
+                doc = doc.dict()
+                elastic_docs.append(doc)
 
             return elastic_docs
 
@@ -213,204 +182,140 @@ class ElasticityBuilder(Builder):
 
         self.logger.info(f"Updating {len(items)} elastic documents")
 
-        # TODO key is used for determing uniqueness, used to be optimization_dir_name
-        # self.elasticity.update(items, key="optimization_dir_name")
         self.elasticity.update(items, key="material_id")
 
 
-def get_elastic_analysis(opt_task, defo_tasks):
+def filter_opt_tasks_by_time(opt_tasks: List[Dict], logger) -> Dict:
     """
-    Performs the analysis of opt_tasks and defo_tasks necessary for
-    an elastic analysis
+    If there are more than one optimization tasks with the same lattice, select the
+    latest completed one.
+
+    Args:
+        opt_tasks: the optimization tasks
+        logger:
+
+    Returns:
+        latest optimization task
+    """
+
+    if len(opt_tasks) > 1:
+
+        # TODO what's the difference of `completed_at` and `last_updated` for a
+        #  task? Ask Matt or Jason
+        completed = [(datetime.fromisoformat(t["completed_at"]), t) for t in opt_tasks]
+        sorted_by_completed = sorted(completed, key=lambda pair: pair[0])
+        latest_pair = sorted_by_completed[-1]
+        result = latest_pair[1]
+
+        task_ids = [t["task_id"] for t in opt_tasks]
+        logger.warning(
+            f"{len(opt_tasks)} optimization tasks {task_ids} have the same "
+            f"lattice; the latest one {result['task_id']} selected."
+        )
+
+    else:
+        result = opt_tasks[0]
+
+    return result
+
+
+def filter_deform_tasks_by_incar(
+    opt_task: Dict,
+    deform_tasks: List[Dict],
+    fields: Sequence[str] = ("LREAL", "ENCUT"),
+) -> List[Dict]:
+    """
+    Filter deformation tasks by matching INCAR fields to those of the optimization
+    tasks.
+
+    Args:
+        opt_task: optimization task
+        deform_tasks: deformation tasks
+        fields: the INCAR fields to match
+
+    Returns:
+        selected deformation tasks
+    """
+    # TODO what is the difference of `incar` and `orig_incar` for a task? which to use?
+    opt_incar_values = {k: opt_task["input"]["incar"][k] for k in fields}
+
+    selected = []
+    for task in deform_tasks:
+        incar_values = {k: task["input"]["incar"][k] for k in fields}
+        if incar_values == opt_incar_values:
+            selected.append(task)
+
+    return selected
+
+
+def filter_deform_tasks_by_time(
+    opt_task: Dict, deform_tasks: [List[Dict]], logger
+) -> List[Dict]:
+    """
+    For deformation tasks with the same deformation, select the latest completed one.
+
+    Args:
+        opt_task: optimization task
+        deform_tasks: the deformation tasks
+        logger:
+
+    Returns:
+        filtered deformation tasks
+    """
+
+    structure = Structure.from_dict(opt_task["output"]["structure"])
+
+    d2t = TensorMapping(tol=TENSOR_COMP_TOL)
+
+    for doc in deform_tasks:
+        deformed_structure = Structure.from_dict(doc["output"]["structure"])
+        deform = Deformation(get_deformation(structure, deformed_structure))
+
+        # assume only one deformation, should already be checked in
+        # `group_by_parent_lattice()`
+        stored_deform = doc["transmuter"]["transformation_params"][0]["deformation"]
+
+        if not np.allclose(deform, stored_deform, atol=TENSOR_COMP_TOL):
+            opt_task_id = opt_task["task_id"]
+            deform_task_id = doc["task_id"]
+            logger.debug(
+                "Inequivalent calculated and stored deformations for optimization task "
+                f"{opt_task_id} and deformation task {deform_task_id}."
+            )
+
+        if deform in d2t:
+            current = datetime.fromisoformat(doc["completed_at"])
+            exist = datetime.fromisoformat(d2t[deform]["completed_at"])
+            if current > exist:
+                d2t[deform] = doc
+        else:
+            d2t[deform] = doc
+
+    return list(d2t.values())
+
+
+def analyze_elastic_data(opt_task: Dict, deform_tasks: List[Dict]) -> Dict:
+    """
+    Analyze optimization task and deformation tasks to fit elastic tensor.
+
+    This currently only deal with second order elastic tensor.
 
     Args:
         opt_task: task doc corresponding to optimization
-        defo_tasks: task doc corresponding to deformations
+        deform_tasks: task docs corresponding to deformations
 
     Returns:
         elastic document with fitted elastic tensor and analysis
     """
 
-    opt_struct = Structure.from_dict(opt_task["output"]["structure"])
-    input_struct = Structure.from_dict(opt_task["input"]["structure"])
+    structure = Structure.from_dict(opt_task["output"]["structure"])
 
-    # For now, discern order (i.e. TOEC) using parameters from optimization
-    # TODO: figure this out more intelligently
-    diff = get(opt_task, "input.incar.EDIFFG", 0)
-    order = 3 if np.isclose(diff, -0.001) else 2
-
-    explicit, derived = process_elastic_calcs(opt_task, defo_tasks)
-    all_calcs = explicit + derived
-    elastic_doc = {"calculations": all_calcs}
-
-    stresses = [c.get("cauchy_stress") for c in all_calcs]
-    pk_stresses = [c.get("pk_stress") for c in all_calcs]
-    strains = [c.get("strain") for c in all_calcs]
-    vstrains = [s.zeroed(0.002).voigt for s in strains]
-
-    if np.linalg.matrix_rank(vstrains) == 6:
-        if order == 2:
-            et_fit = legacy_fit(strains, stresses)
-        elif order == 3:
-            if len(strains) < 70:
-                logger.info(
-                    f"Insufficient valid strains for {opt_task['formula_pretty']} "
-                    f"third order elasticity. Skipped."
-                )
-                return None
-
-            eq_stress = -0.1 * Stress(opt_task["output"]["stress"])
-            # strains = [s.zeroed(0.0001) for s in strains]
-            # et_expansion = pdb_function(ElasticTensorExpansion.from_diff_fit,
-            #     strains, pk_stresses, eq_stress=eq_stress, tol=1e-5)
-            et_exp_raw = ElasticTensorExpansion.from_diff_fit(
-                strains, pk_stresses, eq_stress=eq_stress, tol=1e-6
-            )
-            et_exp = et_exp_raw.voigt_symmetrized.convert_to_ieee(opt_struct)
-            et_exp = et_exp.round(1)
-            et_fit = ElasticTensor(et_exp[0])
-
-            # Update elastic doc with TOEC stuff
-            tec = et_exp.thermal_expansion_coeff(opt_struct, 300)
-            elastic_doc.update(
-                {
-                    "elastic_tensor_expansion": elastic_sanitize(et_exp),
-                    "elastic_tensor_expansion_original": elastic_sanitize(et_exp_raw),
-                    "thermal_expansion_tensor": tec,
-                    "average_linear_thermal_expansion": np.trace(tec) / 3,
-                }
-            )
-
-        et = et_fit.voigt_symmetrized.convert_to_ieee(opt_struct)
-
-        vasp_input = opt_task["input"]
-        if "structure" in vasp_input:
-            vasp_input.pop("structure")
-        completed_at = max([d["completed_at"] for d in defo_tasks])
-
-        elastic_doc.update(
-            {
-                "optimization_task_id": opt_task["task_id"],
-                "optimization_dir_name": opt_task["dir_name"],
-                "cauchy_stresses": stresses,
-                "strains": strains,
-                "elastic_tensor": elastic_sanitize(et.zeroed(0.01).round(0)),
-                # Convert compliance to 10^-12 Pa
-                "compliance_tensor": elastic_sanitize(et.compliance_tensor * 1000),
-                "elastic_tensor_original": elastic_sanitize(et_fit),
-                "optimized_structure": opt_struct,
-                "spacegroup": input_struct.get_space_group_info()[0],
-                "input_structure": input_struct,
-                "completed_at": completed_at,
-                "optimization_input": vasp_input,
-                "order": order,
-                "formula_pretty": opt_struct.composition.reduced_formula,
-            }
-        )
-
-        # Add magnetic type
-        mag = CollinearMagneticStructureAnalyzer(opt_struct).ordering.value
-        # TODO figure out how to get mag
-        # elastic_doc["magnetic_type"] = mag_types[mag]
-        try:
-            prop_dict = et.get_structure_property_dict(opt_struct)
-            prop_dict.pop("structure")
-        except ValueError:
-            logger.debug(
-                "Negative K or G found, structure property " "dict not computed"
-            )
-            prop_dict = et.property_dict
-        for k, v in prop_dict.items():
-            if k in ["homogeneous_poisson", "universal_anisotropy"]:
-                prop_dict[k] = np.round(v, 2)
-            else:
-                prop_dict[k] = np.round(v, 0)
-        elastic_doc.update(prop_dict)
-
-        # Update with state and warnings
-        state, warnings = get_state_and_warnings(elastic_doc)
-        elastic_doc.update({"state": state, "warnings": warnings})
-
-        # TODO: add kpoints params?
-
-        return elastic_doc
-
-    else:
-        logger.info(
-            f"Insufficient valid strains for {opt_task['formula_pretty']}. Skipped."
-        )
-        return None
+    # generate fitting data
 
 
-#
-# def get_distinct_rotations(structure, symprec=0.1, atol=1e-6):
-#     """
-#     Get distinct rotations from structure spacegroup operations
-#
-#     Args:
-#         structure (Structure): structure object to analyze and
-#             get corresponding rotations for
-#         symprec (float): symprec for SpacegroupAnalyzer
-#         atol (float): absolute tolerance for relative indices
-#     """
-#     sga = SpacegroupAnalyzer(structure, symprec)
-#     symmops = sga.get_symmetry_operations(cartesian=True)
-#     rotations = [s.rotation_matrix for s in symmops]
-#     if len(rotations) == 1:
-#         return rotations
-#     unique_rotations = [np.array(rotations[0])]
-#     for rotation in rotations[1:]:
-#         if not any(
-#             [np.allclose(urot, rotation, atol=atol) for urot in unique_rotations]
-#         ):
-#             unique_rotations.append(rotation)
-#     return unique_rotations
+def generate_fitting_data():
 
-
-# def get_strain_state(strain):
-#     """
-#     Helper function to get strain state
-#
-#     Args:
-#         strain (Strain): Input strain
-#
-#     Returns:
-#         6-tuple corresponding to strain state
-#     """
-#     vstrain = strain.zeroed(5e-5).voigt
-#     vstrain[vstrain == 0] = np.inf
-#     min_nonzero = np.argmin(np.abs(vstrain))
-#     vstrain[vstrain == np.inf] = 0
-#     strain_state = vstrain / vstrain[min_nonzero]
-#     return strain_state.round(4)
-
-
-# allowed_strain_states = get_default_strain_states(3)
-# TODO: make it so opt_doc not necessary?
-def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, tol=0.002):
-    """
-    Generates the list of calcs from deformation docs, along with 'derived
-    stresses', i. e. stresses derived from symmop transformations of existing
-    calcs from transformed strains resulting in an independent strain
-    not in the input list
-
-    Args:
-        opt_doc (dict): document for optimization task
-        defo_docs ([dict]) list of documents for deformation tasks
-        add_derived (bool): flag for whether or not to add derived
-            stress-strain pairs based on symmetry
-        tol (float): tolerance for assigning equivalent stresses/strains
-
-    Returns ([dict], [dict]):
-        Two lists of summary documents corresponding to strains
-        and stresses, one explicit and one derived
-    """
-    structure = Structure.from_dict(opt_doc["output"]["structure"])
-    input_structure = Structure.from_dict(opt_doc["input"]["structure"])
-
-    # Process explicit calcs, store in dict keyed by strain
-    explicit_calcs = TensorMapping()
-    for doc in defo_docs:
+    for doc in deform_tasks:
         calc = {
             "type": "explicit",
             "input": doc["input"],
@@ -419,13 +324,168 @@ def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, tol=0.002):
             "completed_at": doc["completed_at"],
         }
         deformed_structure = Structure.from_dict(doc["output"]["structure"])
-        defo = Deformation(calculate_deformation(structure, deformed_structure))
+        defo = Deformation(get_deformation(structure, deformed_structure))
         # Warning if deformation is not equivalent to stored deformation
         stored_defo = doc["transmuter"]["transformation_params"][0]["deformation"]
         if not np.allclose(defo, stored_defo, atol=1e-5):
-            wmsg = "Inequivalent stored and calc. deformations."
-            logger.debug(wmsg)
-            calc["warnings"] = wmsg
+            msg = "Inequivalent stored and calc. deformations."
+            logger.debug(msg)
+            calc["warnings"] = msg
+        cauchy_stress = -0.1 * Stress(doc["output"]["stress"])
+        pk_stress = cauchy_stress.piola_kirchoff_2(defo)
+        strain = defo.green_lagrange_strain
+        calc.update(
+            {
+                "deformation": defo,
+                "cauchy_stress": cauchy_stress,
+                "strain": strain,
+                "pk_stress": pk_stress,
+            }
+        )
+        if strain in explicit_calcs:
+            existing_value = explicit_calcs[strain]
+            if doc["completed_at"] > existing_value["completed_at"]:
+                explicit_calcs[strain] = calc
+        else:
+            explicit_calcs[strain] = calc
+
+    if not add_derived:
+        return explicit_calcs.values(), None
+
+
+def analyze_elastic_data(opt_task: Dict, deform_tasks: List[Dict], logger) -> Dict:
+    """
+    Analyze optimization task and deformation tasks to fit elastic tensor.
+
+    This currently only deal with second order elastic tensor.
+
+    Args:
+        opt_task: task doc corresponding to optimization
+        deform_tasks: task docs corresponding to deformations
+        logger:
+
+    Returns:
+        elastic document with fitted elastic tensor and analysis
+    """
+
+    opt_struct = Structure.from_dict(opt_task["output"]["structure"])
+    input_struct = Structure.from_dict(opt_task["input"]["structure"])
+
+    explicit, derived = process_elastic_calcs(opt_task, deform_tasks, logger)
+    all_calcs = explicit + derived
+
+    elastic_doc = {"calculations": all_calcs}
+
+    stresses = [c.get("cauchy_stress") for c in all_calcs]
+    pk_stresses = [c.get("pk_stress") for c in all_calcs]
+    strains = [c.get("strain") for c in all_calcs]
+
+    eq_stress = -0.1 * Stress(opt_task["output"]["stress"])
+
+    vstrains = [s.zeroed(0.002).voigt for s in strains]
+    if np.linalg.matrix_rank(vstrains) != 6:
+        logger.info(
+            f"Insufficient valid strains for {opt_task['formula_pretty']}. Skipped."
+        )
+        return None
+
+    et_fit = fit_elastic_tensor(strains, pk_stresses, eq_stress=eq_stress)
+    et = et_fit.voigt_symmetrized.convert_to_ieee(opt_struct)
+
+    vasp_input = opt_task["input"]
+    if "structure" in vasp_input:
+        vasp_input.pop("structure")
+    # TODO convert to datetime and then compare
+    completed_at = max([d["completed_at"] for d in deform_tasks])
+
+    elastic_doc.update(
+        {
+            "optimization_task_id": opt_task["task_id"],
+            "optimization_dir_name": opt_task["dir_name"],
+            "cauchy_stresses": stresses,
+            "strains": strains,
+            "elastic_tensor": elastic_sanitize(et.zeroed(0.01).round(0)),
+            # Convert compliance to 10^-12 Pa
+            "compliance_tensor": elastic_sanitize(et.compliance_tensor * 1000),
+            "elastic_tensor_original": elastic_sanitize(et_fit),
+            "optimized_structure": opt_struct,
+            "spacegroup": input_struct.get_space_group_info()[0],
+            "input_structure": input_struct,
+            "completed_at": completed_at,
+            "optimization_input": vasp_input,
+            "order": 2,
+            "formula_pretty": opt_struct.composition.reduced_formula,
+        }
+    )
+
+    # Add magnetic type
+    mag = CollinearMagneticStructureAnalyzer(opt_struct).ordering.value
+    # TODO figure out how to get mag
+
+    # elastic_doc["magnetic_type"] = mag_types[mag]
+    try:
+        prop_dict = et.get_structure_property_dict(opt_struct)
+        prop_dict.pop("structure")
+    except ValueError:
+        logger.debug(
+            "Negative K or G found, structure property " "dict not " "computed"
+        )
+        prop_dict = et.property_dict
+
+    for k, v in prop_dict.items():
+        if k in ["homogeneous_poisson", "universal_anisotropy"]:
+            prop_dict[k] = np.round(v, 2)
+        else:
+            prop_dict[k] = np.round(v, 0)
+    elastic_doc.update(prop_dict)
+
+    # Update with state and warnings
+    state, warnings = get_state_and_warnings(elastic_doc)
+    elastic_doc.update({"state": state, "warnings": warnings})
+
+    # TODO: add kpoints params?
+
+    return elastic_doc
+
+
+def process_elastic_calcs(opt_tasks, deform_tasks, logger, add_derived=True, tol=0.002):
+    """
+    Generates the list of calcs from deformation docs, along with 'derived
+    stresses', i.e. stresses derived from symmop transformations of existing
+    calcs from transformed strains resulting in an independent strain
+    not in the input list
+
+    Args:
+        opt_tasks (dict): document for optimization task
+        deform_tasks ([dict]) list of documents for deformation tasks
+        add_derived (bool): flag for whether or not to add derived
+            stress-strain pairs based on symmetry
+        tol (float): tolerance for assigning equivalent stresses/strains
+
+    Returns ([dict], [dict]):
+        Two lists of summary documents corresponding to strains
+        and stresses, one explicit and one derived
+    """
+    structure = Structure.from_dict(opt_tasks["output"]["structure"])
+
+    # Process explicit calcs, store in dict keyed by strain
+    explicit_calcs = TensorMapping()
+    for doc in deform_tasks:
+        calc = {
+            "type": "explicit",
+            "input": doc["input"],
+            "output": doc["output"],
+            "task_id": doc["task_id"],
+            "completed_at": doc["completed_at"],
+        }
+        deformed_structure = Structure.from_dict(doc["output"]["structure"])
+        defo = Deformation(get_deformation(structure, deformed_structure))
+        # Warning if deformation is not equivalent to stored deformation
+        stored_defo = doc["transmuter"]["transformation_params"][0]["deformation"]
+        if not np.allclose(defo, stored_defo, atol=1e-5):
+            msg = "Inequivalent stored and calc. deformations."
+            logger.debug(msg)
+            calc["warnings"] = msg
         cauchy_stress = -0.1 * Stress(doc["output"]["stress"])
         pk_stress = cauchy_stress.piola_kirchoff_2(defo)
         strain = defo.green_lagrange_strain
@@ -643,8 +703,8 @@ def process_elastic_calcs(opt_doc, defo_docs, add_derived=True, tol=0.002):
 #     return docs_by_mp_id
 
 
-def group_deformations_by_optimization_task(
-    docs: Union[Iterator[Dict], List[Dict]], tol: float = 1e-6
+def group_deform_tasks_by_opt_task(
+    docs: Union[Iterator[Dict], List[Dict]], logger
 ) -> List[Tuple[List[Dict], List[Dict]]]:
     """
     Group deformation tasks by equivalent lattices to optimization task(s).
@@ -658,13 +718,13 @@ def group_deformations_by_optimization_task(
 
     Args:
         docs: task docs
-        tol: tolerance for lattice equivalence
+        logger:
 
     Returns:
         [([optimization_task], [deformation_task])]
     """
 
-    tasks_by_lattice = group_by_parent_lattice(docs, tol)
+    tasks_by_lattice = group_by_parent_lattice(docs, logger)
 
     tasks_by_opt_task = []
     for _, task_set in tasks_by_lattice:
@@ -683,13 +743,14 @@ def group_deformations_by_optimization_task(
     return tasks_by_opt_task
 
 
-def group_by_parent_lattice(docs: Union[Iterator[Dict], List[Dict]], tol: float = 1e-6):
+def group_by_parent_lattice(docs: Union[Iterator[Dict], List[Dict]], logger):
     """
     Groups a set of task documents by parent lattice equivalence.
 
     Args:
         docs: task docs
-        tol: tolerance for lattice equivalence
+        logger:
+
     Returns:
         [(lattice, List[tasks])], tuple of lattice and a list of tasks with the same
         lattice before deformation
@@ -714,7 +775,7 @@ def group_by_parent_lattice(docs: Union[Iterator[Dict], List[Dict]], tol: float 
 
         match = False
         for unique_lattice, lattice_docs in docs_by_lattice:
-            match = np.allclose(unique_lattice, parent_lattice, atol=tol)
+            match = np.allclose(unique_lattice, parent_lattice, atol=LATTICE_COMP_TOL)
             if match:
                 lattice_docs.append(doc)
                 break
@@ -724,62 +785,56 @@ def group_by_parent_lattice(docs: Union[Iterator[Dict], List[Dict]], tol: float 
     return docs_by_lattice
 
 
-def filter_deformation_tasks(
-    opt_task: Dict,
-    deform_tasks: List[Dict],
-    fields: Sequence[str] = ("LREAL", "ENCUT"),
-) -> List[Dict]:
+def fit_elastic_tensor(
+    strains: List[Strain],
+    stresses: List[Stress],
+    eq_stress: Stress,
+    fitting_method: str = "finite_difference",
+    order: int = 2,
+) -> ElasticTensor:
     """
-    Filter deformation tasks by matching INCAR fields to those of the optimization
-    tasks.
+    Fitting the elastic tensor.
 
     Args:
-        opt_task: optimization task
-        deform_tasks: deformation tasks
-        fields: the INCAR fileds to match
+        strains: all strains
+        stresses: all stresses
+        eq_stress: equilibrium stress, i.e. stress on the relaxed structure
+        fitting_method: method used to fit the elastic tensor, `finite_difference` |
+            `pseudoinverse` | `independent`.
+        order: expansion order of the elastic tensor, 2 | 3.
 
-    Returns:
-        selected deformation tasks
     """
-    # TODO what is the difference of `incar` and `orig_incar` for a task? which to use?
-    opt_incar_values = {k: opt_task["input"]["incar"][k] for k in fields}
 
-    selected = []
-    for task in deform_tasks:
-        incar_values = {k: task["input"]["incar"][k] for k in fields}
-        if incar_values == opt_incar_values:
-            selected.append(task)
+    if order > 2 or fitting_method == "finite_difference":
 
-    return selected
+        # force finite diff if order > 2
+        result = ElasticTensorExpansion.from_diff_fit(
+            strains, stresses, eq_stress=eq_stress, order=order
+        )
+        if order == 2:
+            result = ElasticTensor(result[0])
+    elif fitting_method == "pseudoinverse":
+        result = ElasticTensor.from_pseudoinverse(strains, stresses)
+    elif fitting_method == "independent":
+        result = ElasticTensor.from_independent_strains(
+            strains, stresses, eq_stress=eq_stress
+        )
+    else:
+        raise ValueError(f"Unsupported elastic fitting method {fitting_method}")
+
+    return result
 
 
-def legacy_fit(strains, stresses):
+def get_deformation(structure, deformed_structure):
     """
-    Legacy fitting method for mpworks documents, intended to be temporary
-
     Args:
-        strains: strains
-        stresses: stresses
-
-    Returns:
-        elastic tensor fit using the legacy functionality
-
-    """
-    strains = [s.zeroed(0.002) for s in strains]
-    return ElasticTensor.from_independent_strains(strains, stresses)
-
-
-def calculate_deformation(undeformed_structure, deformed_structure):
-    """
-
-    Args:
-        undeformed_structure (Structure): undeformed structure
+        structure (Structure): undeformed structure
         deformed_structure (Structure): deformed structure
 
     Returns:
         deformation matrix
     """
-    ulatt = undeformed_structure.lattice.matrix
+    ulatt = structure.lattice.matrix
     dlatt = deformed_structure.lattice.matrix
     return np.transpose(np.dot(np.linalg.inv(ulatt), dlatt))
 
@@ -842,32 +897,6 @@ def get_state_and_warnings(elastic_doc):
         warnings = None
 
     return state, warnings
-
-
-# def generate_formula_dict(materials_store, query=None):
-#     """
-#     Function that generates a nested dictionary of structures
-#     keyed first by formula and then by task_id using
-#     mongo aggregation pipelines
-#
-#     Args:
-#         materials_store (Store): store of materials
-#
-#     Returns:
-#         Nested dictionary keyed by formula-mp_id with structure values.
-#
-#     """
-#     props = ["formula_pretty", "structure", "task_id", "magnetic_type"]
-#     results = materials_store.groupby(
-#         "formula_pretty", properties=props, criteria=query
-#     )
-#     formula_dict = {}
-#     for id_doc, docs in results:
-#         formula = id_doc["formula_pretty"]
-#         task_ids = [d["task_id"] for d in docs]
-#         structures = [d["structure"] for d in docs]
-#         formula_dict[formula] = dict(zip(task_ids, structures))
-#     return formula_dict
 
 
 def elastic_sanitize(tensor):
