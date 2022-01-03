@@ -19,6 +19,7 @@ from emmet.core.elasticity import (
     ElasticTensorDoc,
     FittingData,
 )
+from emmet.core.material import PropertyOrigin
 from emmet.core.math import MatrixVoigt
 from emmet.core.utils import jsanitize
 
@@ -345,6 +346,12 @@ def analyze_elastic_data(
         optimization_task=opt_task["task_id"],
         optimization_dir_name=opt_task["dir_name"],
     )
+    # origins store the same info as optimization_task and deformation_tasks
+    opt_origin = [PropertyOrigin(name="optimization", task_id=opt_task["task_id"])]
+    deform_origins = [
+        PropertyOrigin(name="deformation", task_id=d["task_id"]) for d in primary_data
+    ]
+    origins = opt_origin + deform_origins
 
     # elastic tensor, ieee format is symmetrized and rounded
     ieee_et = elastic_tensor.voigt_symmetrized.convert_to_ieee(structure)
@@ -375,7 +382,8 @@ def analyze_elastic_data(
         derived_properties=derived_props,
         fitting_data=fitting_data,
         fitting_method=fitting_method,
-        state=state,
+        origins=origins,
+        # state=state,
         warnings=warnings,
     )
 
@@ -384,7 +392,7 @@ def analyze_elastic_data(
 
 def generate_primary_fitting_data(deform_tasks: List[Dict]) -> List[Dict]:
     """
-    Get the fitting data from primary deformation tasks (i.e. the explicitly computed
+    Get the fitting data from primary deformation tasks, i.e. the explicitly computed
         tasks.
 
     Args:
