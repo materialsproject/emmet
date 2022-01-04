@@ -169,3 +169,13 @@ class DocEnum(ValueEnum):
         if doc is not None:
             self.__doc__ = doc
         return self
+
+
+def get_enum_source(enum_name, doc, items):
+    header = f"""
+class {enum_name}(ValueEnum):
+    \"\"\" {doc} \"\"\"\n
+"""
+    items = [f'    {const} = "{val}"' for const, val in items.items()]
+
+    return header + "\n".join(items)
