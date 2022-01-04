@@ -24,7 +24,7 @@ class TaskDocument(EmmetBaseModel):
     )
     last_updated: datetime = Field(
         default_factory=datetime.utcnow,
-        description="Timestamp for this task document was last updateed",
+        description="Timestamp for this task document was last updated",
     )
 
     tags: List[str] = Field([], description="Metadata tags for this task document")

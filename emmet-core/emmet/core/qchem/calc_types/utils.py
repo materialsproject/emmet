@@ -1,6 +1,6 @@
 """ Utilities to determine level of theory, task type, and calculation type for Q-Chem calculations"""
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from monty.serialization import loadfn
 from typing_extensions import Literal
@@ -20,7 +20,7 @@ functional_synonyms = {"wb97xd": "wb97x-d",
                        "wb97xv": "wb97x-v"}
 
 def level_of_theory(
-        parameters: Dict,
+        parameters: Dict[str, Any],
         custom_smd:Optional[str]=None
 ) -> LevelOfTheory:
     """
@@ -113,29 +113,26 @@ def level_of_theory(
 
     return LevelOfTheory(lot)
 
-def task_type(task: Dict) -> TaskType:
-    special_run_type = task.get("special_run_type")
+def task_type(special_run_type: str, orig: Dict[str, Any]) -> TaskType:
     if special_run_type == "frequency_flattener":
         return TaskType("frequency-flattening geometry optimization")
     elif special_run_type == "ts_frequency_flattener":
         return TaskType("frequency-flattening transition-state geometry optimization")
 
-    if task["orig"]["rem"].get("job_type") == "sp":
+    if orig["rem"].get("job_type") == "sp":
         return TaskType("single-point")
-    elif task["orig"]["rem"].get("job_type") == "force":
-        return TaskType("gradient")
-    elif task["orig"]["rem"].get("job_type") == "opt":
+    elif orig["rem"].get("job_type") == "opt":
         return TaskType("geometry optimization")
-    elif task["orig"]["rem"].get("job_type") == "ts":
+    elif orig["rem"].get("job_type") == "ts":
         return TaskType("transition-state geometry optimization")
-    elif task["orig"]["rem"].get("job_type") == "freq":
+    elif orig["rem"].get("job_type") == "freq":
         return TaskType("frequency analysis")
 
     return TaskType("unknown")
 
 def calc_type(
-    task: Dict,
-    parameters: Dict,
+    special_run_type: str,
+    orig: Dict[str, Any],
     custom_smd: Optional[str] = None
 ) -> CalcType:
     """
@@ -145,6 +142,6 @@ def calc_type(
         inputs: inputs dict with an incar, kpoints, potcar, and poscar dictionaries
         parameters: Dictionary of VASP parameters from Vasprun.xml
     """
-    rt = level_of_theory(parameters, custom_smd=custom_smd).value
-    tt = task_type(task).value
+    rt = level_of_theory(orig, custom_smd=custom_smd).value
+    tt = task_type(special_run_type, orig).value
     return CalcType(f"{rt} {tt}")

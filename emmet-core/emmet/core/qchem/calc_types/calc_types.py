@@ -2,7 +2,6 @@
 
 TASK_TYPES = [
     "single-point",
-    "gradient",
     "geometry optimization",
     "frequency analysis",
     "frequency-flattening geometry optimization",
