@@ -23,6 +23,7 @@ from emmet.core.material import PropertyOrigin
 from emmet.core.math import MatrixVoigt
 from emmet.core.utils import jsanitize
 
+# TODO should these be moved to SETTINGS?
 DEFORM_TASK_LABEL = "elastic deformation"
 OPTIM_TASK_LABEL = "elastic structure optimization"
 
@@ -43,21 +44,23 @@ class ElasticityBuilder(Builder):
         **kwargs,
     ):
         """
-        Creates a elastic collection for materials
+        Creates an elastic collection for materials.
 
         Args:
-            tasks (Store): Store of tasks
-            materials (Store): Store of materials properties
-            elasticity (Store): Store of elastic properties
-            query (dict): dictionary to limit tasks to be analyzed
-            incremental (bool): whether or not to use a lu_filter based on the current
-                datetime, is set to False if target is empty, but True if not
+            tasks: Store of tasks
+            materials: Store of materials properties
+            elasticity: Store of elastic properties
+            query: dictionary to limit tasks to be analyzed
+            incremental: whether to use a lu_filter based on the current datetime.
+                Set to False if target is empty, but True if not.
         """
 
         self.tasks = tasks
         self.materials = materials
         self.elasticity = elasticity
         self.query = query if query is not None else {}
+        self.incremental = incremental
+        self.kwargs = kwargs
 
         # TODO enable this
         ## By default, incremental
@@ -144,6 +147,11 @@ class ElasticityBuilder(Builder):
             "formula_pretty",
             "dir_name",
         ]
+
+        # TODO does this affect running speed too much?
+        # connect() needed to make `mrun` work in multiprocessing mode, since
+        # tasks.query() used in this method
+        self.tasks.connect()
 
         cursor = self.tasks.query(criteria=query, properties=props)
 
