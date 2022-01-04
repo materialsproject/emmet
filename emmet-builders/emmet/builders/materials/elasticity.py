@@ -88,12 +88,12 @@ class ElasticityBuilder(Builder):
         self.elasticity.ensure_index("optimization_task_id")
         self.elasticity.ensure_index("last_updated")
 
-    def get_items(self) -> Iterable[Dict]:
+    def get_items(self) -> List[Dict]:
         """
         Gets all items to process into materials documents
 
         Returns:
-            generator of material doc with material_id and task_ids keys
+            generator of task docs of the same material
         """
 
         self.logger.info("Elastic Builder Started")
@@ -104,11 +104,34 @@ class ElasticityBuilder(Builder):
             criteria=self.query, properties=["material_id", "task_ids"]
         )
 
+        # query for tasks
+        query = self.query.copy()
+        query["task_label"] = {"$regex": f"({DEFORM_TASK_LABEL})|({OPTIM_TASK_LABEL})"}
+
         for n, doc in enumerate(cursor):
             self.logger.debug(f"Getting material_id {doc['material_id']}; index {n}")
-            yield doc
 
-    def process_item(self, item: Dict) -> List[Dict]:
+            # update query with task_ids
+            task_ids = [int(i) for i in doc["task_ids"]]
+            query["task_id"] = {"$in": task_ids}
+
+            projections = [
+                "output",
+                "input",
+                "completed_at",
+                "transmuter",
+                "task_id",
+                "task_label",
+                "formula_pretty",
+                "dir_name",
+            ]
+
+            task_cursor = self.tasks.query(criteria=query, properties=projections)
+            tasks = list(task_cursor)
+
+            yield tasks
+
+    def process_item(self, item: List[Dict]) -> List[Dict]:
         """
         Process all tasks belong to the same material.
 
@@ -122,40 +145,13 @@ class ElasticityBuilder(Builder):
         - task completion time
 
         Args:
-            item: a dictionary with key `task_ids`, which gives the ids of the tasks
-                that belong to the same material
+            item: a list of tasks doc that belong to the same material
 
         Returns:
             an elasticity document, represented as a dict
         """
 
-        # Get elastic tasks
-        task_ids = [int(i) for i in item["task_ids"]]
-        query = {
-            "task_id": {"$in": task_ids},
-            "task_label": {"$regex": f"({DEFORM_TASK_LABEL})|({OPTIM_TASK_LABEL})"},
-        }
-        query.update(self.query)
-
-        props = [
-            "output",
-            "input",
-            "completed_at",
-            "transmuter",
-            "task_id",
-            "task_label",
-            "formula_pretty",
-            "dir_name",
-        ]
-
-        # TODO does this affect running speed too much?
-        # connect() needed to make `mrun` work in multiprocessing mode, since
-        # tasks.query() used in this method
-        self.tasks.connect()
-
-        cursor = self.tasks.query(criteria=query, properties=props)
-
-        grouped = group_deform_tasks_by_opt_task(cursor, self.logger)
+        grouped = group_deform_tasks_by_opt_task(item, self.logger)
 
         elastic_docs = []
         for opt_tasks, deform_tasks in grouped:
