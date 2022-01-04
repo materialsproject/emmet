@@ -2,9 +2,7 @@
 from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel, Field
-from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.core import Structure
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pymatgen.core.structure import Molecule
 
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.structure import StructureMetadata

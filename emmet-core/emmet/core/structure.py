@@ -6,12 +6,13 @@ from typing import List, Optional, Type, TypeVar
 from pydantic import Field
 from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
-from pymatgen.core.structure import Structure
+from pymatgen.core.structure import Structure, Molecule
 
 from emmet.core.base import EmmetBaseModel
-from emmet.core.symmetry import SymmetryData
+from emmet.core.symmetry import SymmetryData, PointGroupData
 
 T = TypeVar("T", bound="StructureMetadata")
+S = TypeVar("S", bound="MoleculeMetadata")
 
 
 class StructureMetadata(EmmetBaseModel):
@@ -129,6 +130,61 @@ class StructureMetadata(EmmetBaseModel):
             "volume": meta_structure.volume,
             "density": meta_structure.density,
             "density_atomic": meta_structure.volume / meta_structure.num_sites,
+            "symmetry": symmetry,
+        }
+
+        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
+
+
+class MoleculeMetadata(EmmetBaseModel):
+    """
+    Mix-in class for molecule metadata
+    """
+
+    natoms: int = Field(None, description="Total number of atoms in the molecule")
+    elements: List[Element] = Field(None, description="List of elements in the molecule")
+    nelements: int = Field(None, title="Number of Elements")
+    composition: Composition = Field(None, description="Full composition for the molecule")
+    formula_alphabetical: str = Field(
+        None,
+        title="Alphabetical Formula",
+        description="Alphabetical molecular formula",
+    )
+    chemsys: str = Field(
+        None,
+        title="Chemical System",
+        description="dash-delimited string of elements in the molecule",
+    )
+
+    symmetry: PointGroupData = Field(None, description="Symmetry data for this molecule")
+
+    @classmethod
+    def from_molecule(cls: Type[S], molecule: Molecule, fields: Optional[List[str]] = None, **kwargs) -> T:
+
+        fields = (
+            [
+                "natoms",
+                "elements",
+                "nelements",
+                "composition",
+                "formula_alphabetical",
+                "chemsys",
+                "symmetry",
+            ]
+            if fields is None
+            else fields
+        )
+        comp = molecule.composition
+        elsyms = sorted(set([e.symbol for e in comp.elements]))
+        symmetry = PointGroupData.from_structure(molecule)
+
+        data = {
+            "nsites": len(molecule),
+            "elements": elsyms,
+            "nelements": len(elsyms),
+            "composition": comp,
+            "alphabetical_formula": comp.alphabetical_formula,
+            "chemsys": "-".join(elsyms),
             "symmetry": symmetry,
         }
 

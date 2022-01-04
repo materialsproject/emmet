@@ -44,6 +44,16 @@ class EmmetSettings(BaseSettings):
         5, description="Angle tolerance for structure matching in degrees."
     )
 
+    PGATOL: float = Field(
+        0.3, description="Distance tolerance to consider sites as symmetrically equivalent."
+    )
+    PGAEIGENTOL: float = Field(
+        0.01, description="Tolerance to compare eigen values of the inertia tensor."
+    )
+    PGAMATRIXTOL: float = Field(
+        0.1, description="Tolerance used to generate the full set of symmetry operations of the point group."
+    )
+
     MAX_PIEZO_MILLER: int = Field(
         10,
         description="Maximum miller allowed for computing strain direction for maximal piezo response",
