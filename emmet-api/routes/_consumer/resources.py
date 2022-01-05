@@ -3,7 +3,7 @@ from mp_api.routes._consumer.query_operator import (
     UserSettingsPostQuery,
     UserSettingsGetQuery,
 )
-from mp_api.routes._consumer.models import UserSettingsDoc
+from emmet.core._user_settings import UserSettingsDoc
 
 
 def settings_resource(consumer_settings_store):
