@@ -159,7 +159,7 @@ class MoleculeMetadata(EmmetBaseModel):
     symmetry: PointGroupData = Field(None, description="Symmetry data for this molecule")
 
     @classmethod
-    def from_molecule(cls: Type[S], molecule: Molecule, fields: Optional[List[str]] = None, **kwargs) -> T:
+    def from_molecule(cls: Type[S], meta_molecule: Molecule, fields: Optional[List[str]] = None, **kwargs) -> T:
 
         fields = (
             [
@@ -174,12 +174,12 @@ class MoleculeMetadata(EmmetBaseModel):
             if fields is None
             else fields
         )
-        comp = molecule.composition
+        comp = meta_molecule.composition
         elsyms = sorted(set([e.symbol for e in comp.elements]))
-        symmetry = PointGroupData.from_structure(molecule)
+        symmetry = PointGroupData.from_structure(meta_molecule)
 
         data = {
-            "nsites": len(molecule),
+            "nsites": len(meta_molecule),
             "elements": elsyms,
             "nelements": len(elsyms),
             "composition": comp,

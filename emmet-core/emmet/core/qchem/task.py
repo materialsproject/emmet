@@ -8,8 +8,14 @@ from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.structure import MoleculeMetadata
 from emmet.core.task import TaskDocument as BaseTaskDocument
 from emmet.core.utils import ValueEnum
-from emmet.core.qchem.calc_types.enums import LevelOfTheory, CalcType, TaskType
-from emmet.core.qchem.calc_types.utils import calc_type, level_of_theory, task_type
+from emmet.core.qchem.calc_types import (
+    LevelOfTheory,
+    CalcType,
+    TaskType,
+    calc_type,
+    level_of_theory,
+    task_type
+)
 
 
 class Status(ValueEnum):
