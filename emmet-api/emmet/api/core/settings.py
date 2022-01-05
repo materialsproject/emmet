@@ -1,5 +1,5 @@
 from pydantic import BaseSettings, Field
-from mp_api import __file__ as root_dir
+from emmet.api import __file__ as root_dir
 import os
 
 

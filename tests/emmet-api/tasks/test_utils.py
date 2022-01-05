@@ -1,7 +1,7 @@
 import os
 from json import load
 
-from mp_api import MAPISettings
+from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.tasks.utils import calcs_reversed_to_trajectory
 
 
