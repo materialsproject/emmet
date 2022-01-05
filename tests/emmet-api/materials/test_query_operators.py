@@ -1,6 +1,6 @@
 import os
 
-from mp_api.core.settings import MAPISettings
+from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.query_operators import (
     FormulaQuery,
     ChemsysQuery,

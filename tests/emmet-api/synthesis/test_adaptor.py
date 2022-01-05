@@ -3,7 +3,7 @@ from json import load
 
 from pymatgen.core import Composition
 
-from mp_api import MAPISettings
+from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.synthesis.data_adaptor import string2comp, convert_recipe
 
 

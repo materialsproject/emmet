@@ -3,7 +3,7 @@ from emmet.api.routes.mpcomplete.query_operator import (
     MPCompleteGetQuery,
     MPCompletePostQuery,
 )
-from mp_api.core.settings import MAPISettings
+from emmet.api.core.settings import MAPISettings
 
 from pymatgen.core.structure import Structure
 

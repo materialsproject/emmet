@@ -5,7 +5,7 @@ import pytest
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
 
-from mp_api.core.api import MAPI
+from emmet.api.core import MAPI
 
 from maggma.api.resource import ReadOnlyResource
 from maggma.stores import MemoryStore

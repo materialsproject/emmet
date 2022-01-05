@@ -8,7 +8,7 @@ from emmet.api.routes.electronic_structure.query_operators import (
     DOSDataQuery,
     ObjectQuery,
 )
-from emmet.api.routes.electronic_structure.models.core import (
+from emmet.core.electronic_structure import (
     BSPathType,
     DOSProjectionType,
 )

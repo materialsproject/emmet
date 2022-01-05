@@ -4,7 +4,7 @@ from emmet.api.routes.tasks.query_operators import (
     TrajectoryQuery,
     DeprecationQuery,
 )
-from mp_api.core.settings import MAPISettings
+from emmet.api.core.settings import MAPISettings
 
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn

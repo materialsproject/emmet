@@ -5,8 +5,8 @@ from emmet.api.routes.synthesis.utils import (
     mask_paragraphs,
     mask_highlights,
 )
-from mp_api import MAPISettings
-from emmet.api.routes.synthesis.models.core import SynthesisSearchResultModel
+from emmet.api.core.settings import MAPISettings
+from emmet.core.synthesis import SynthesisSearchResultModel
 
 
 def test_make_ellipsis():

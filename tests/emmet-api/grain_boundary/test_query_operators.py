@@ -5,7 +5,7 @@ from emmet.api.routes.grain_boundary.query_operators import (
     GBStructureQuery,
     GBTaskIDQuery,
 )
-from emmet.api.routes.grain_boundary.models import GBTypeEnum
+from emmet.core.grain_boundary import GBTypeEnum
 
 
 def test_grain_boundary_structure_query():
