@@ -1,4 +1,7 @@
-from mp_api.routes.bonds.query_operators import BondLengthQuery, CoordinationEnvsQuery
+from emmet.api.routes.bonds.query_operators import (
+    BondLengthQuery,
+    CoordinationEnvsQuery,
+)
 
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn

@@ -1,6 +1,6 @@
 from maggma.api.query_operator.dynamic import NumericQuery
 from maggma.api.resource import ReadOnlyResource
-from mp_api.routes.eos.models import EOSDoc
+from emmet.core.eos import EOSDoc
 
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 

@@ -4,7 +4,7 @@ from json import load
 from pymatgen.core import Composition
 
 from mp_api import MAPISettings
-from mp_api.routes.synthesis.data_adaptor import string2comp, convert_recipe
+from emmet.api.routes.synthesis.data_adaptor import string2comp, convert_recipe
 
 
 def test_string2comp():

@@ -1,4 +1,4 @@
-from mp_api.routes.thermo.query_operators import IsStableQuery
+from emmet.api.routes.thermo.query_operators import IsStableQuery
 
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn

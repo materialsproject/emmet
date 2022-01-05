@@ -8,14 +8,17 @@ from emmet.core.mpid import MPID
 
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
-from mp_api.routes.electronic_structure.models.core import BSPathType, DOSProjectionType
+from emmet.core.electronic_structure import (
+    BSPathType,
+    DOSProjectionType,
+)
 
 from collections import defaultdict
 
 if version_info >= (3, 8):
     from typing import Literal  # type: ignore
 else:
-    from typing_extensions import Literal
+    from typing_extensions import Literal  # type: ignore
 
 
 class ESSummaryDataQuery(QueryOperator):

@@ -1,7 +1,7 @@
 from maggma.api.resource import ReadOnlyResource
 from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
-from mp_api.routes.charge_density.models import ChgcarDataDoc
-from mp_api.routes.charge_density.query_operators import ChgcarTaskIDQuery
+from emmet.core.charge_density import ChgcarDataDoc
+from emmet.api.routes.charge_density.query_operators import ChgcarTaskIDQuery
 
 
 def charge_density_resource(s3_store):

@@ -1,4 +1,4 @@
-from mp_api.routes.xas.query_operators import XASQuery, XASTaskIDQuery
+from emmet.api.routes.xas.query_operators import XASQuery, XASTaskIDQuery
 
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn

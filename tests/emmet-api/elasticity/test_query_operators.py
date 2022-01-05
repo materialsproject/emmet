@@ -1,4 +1,4 @@
-from mp_api.routes.elasticity.query_operators import (
+from emmet.api.routes.elasticity.query_operators import (
     BulkModulusQuery,
     ShearModulusQuery,
     PoissonQuery,

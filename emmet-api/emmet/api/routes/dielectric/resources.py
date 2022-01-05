@@ -2,7 +2,7 @@ from maggma.api.resource import ReadOnlyResource
 from emmet.core.polar import DielectricDoc
 
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-from mp_api.routes.dielectric.query_operators import DielectricQuery
+from emmet.api.routes.dielectric.query_operators import DielectricQuery
 
 
 def dielectric_resource(dielectric_store):

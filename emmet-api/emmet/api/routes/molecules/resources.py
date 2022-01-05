@@ -1,13 +1,13 @@
 from maggma.api.resource import ReadOnlyResource
-from mp_api.routes.molecules.models import MoleculesDoc
+from emmet.core.molecules import MoleculesDoc
 
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-from mp_api.routes.molecules.query_operators import (
+from emmet.api.routes.molecules.query_operators import (
     MoleculeBaseQuery,
     MoleculeElementsQuery,
     MoleculeFormulaQuery,
 )
-from mp_api.routes.tasks.query_operators import MultipleTaskIDsQuery
+from emmet.api.routes.tasks.query_operators import MultipleTaskIDsQuery
 
 
 def molecules_resource(molecules_store):

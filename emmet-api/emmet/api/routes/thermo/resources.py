@@ -8,8 +8,8 @@ from maggma.api.query_operator import (
     SortQuery,
     SparseFieldsQuery,
 )
-from mp_api.routes.thermo.query_operators import IsStableQuery
-from mp_api.routes.materials.query_operators import (
+from emmet.api.routes.thermo.query_operators import IsStableQuery
+from emmet.api.routes.materials.query_operators import (
     MultiMaterialIDQuery,
     FormulaQuery,
     ChemsysQuery,

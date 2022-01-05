@@ -1,6 +1,6 @@
 from maggma.api.resource import ReadOnlyResource
 from maggma.api.query_operator import PaginationQuery
-from mp_api.routes.materials.query_operators import DeprecationQuery
+from emmet.api.routes.materials.query_operators import DeprecationQuery
 
 from emmet.core.provenance import ProvenanceDoc
 

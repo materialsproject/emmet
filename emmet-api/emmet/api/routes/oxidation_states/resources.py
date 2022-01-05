@@ -7,8 +7,8 @@ from maggma.api.query_operator import (
     SparseFieldsQuery,
 )
 
-from mp_api.routes.materials.query_operators import FormulaQuery, ChemsysQuery
-from mp_api.routes.oxidation_states.query_operators import PossibleOxiStateQuery
+from emmet.api.routes.materials.query_operators import FormulaQuery, ChemsysQuery
+from emmet.api.routes.oxidation_states.query_operators import PossibleOxiStateQuery
 
 
 def oxi_states_resource(oxi_states_store):

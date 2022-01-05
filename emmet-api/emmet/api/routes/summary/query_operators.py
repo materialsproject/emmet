@@ -17,7 +17,7 @@ from collections import defaultdict
 if version_info >= (3, 8):
     from typing import Literal  # type: ignore
 else:
-    from typing_extensions import Literal
+    from typing_extensions import Literal  # type: ignore
 
 
 class HasPropsQuery(QueryOperator):

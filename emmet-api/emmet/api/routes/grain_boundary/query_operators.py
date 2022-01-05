@@ -6,7 +6,7 @@ from maggma.api.utils import STORE_PARAMS
 from collections import defaultdict
 from pymatgen.core.composition import Composition
 
-from mp_api.routes.grain_boundary.models import GBTypeEnum
+from emmet.core.grain_boundary import GBTypeEnum
 
 
 class GBStructureQuery(QueryOperator):

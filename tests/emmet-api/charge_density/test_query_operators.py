@@ -1,4 +1,4 @@
-from mp_api.routes.charge_density.query_operators import ChgcarTaskIDQuery
+from emmet.api.routes.charge_density.query_operators import ChgcarTaskIDQuery
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 

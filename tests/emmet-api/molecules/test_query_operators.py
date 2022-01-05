@@ -1,7 +1,7 @@
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 
-from mp_api.routes.molecules.query_operators import (
+from emmet.api.routes.molecules.query_operators import (
     MoleculeBaseQuery,
     MoleculeElementsQuery,
     MoleculeFormulaQuery,

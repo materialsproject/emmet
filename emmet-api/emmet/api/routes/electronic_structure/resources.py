@@ -3,20 +3,20 @@ from maggma.api.resource import ReadOnlyResource
 from emmet.core.electronic_structure import ElectronicStructureDoc
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 
-from mp_api.routes.materials.query_operators import (
+from emmet.api.routes.materials.query_operators import (
     ElementsQuery,
     FormulaQuery,
     ChemsysQuery,
     DeprecationQuery,
 )
 
-from mp_api.routes.electronic_structure.query_operators import (
+from emmet.api.routes.electronic_structure.query_operators import (
     ESSummaryDataQuery,
     BSDataQuery,
     DOSDataQuery,
     ObjectQuery,
 )
-from mp_api.routes.electronic_structure.models.doc import BSObjectDoc, DOSObjectDoc
+from emmet.core.electronic_structure import BSObjectDoc, DOSObjectDoc
 
 
 def es_resource(es_store):

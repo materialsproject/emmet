@@ -2,7 +2,6 @@ from fastapi import Query, Body
 from pymatgen.core.structure import Structure
 from maggma.api.utils import STORE_PARAMS
 from maggma.api.query_operator import QueryOperator
-from uuid import uuid4
 
 
 class MPCompletePostQuery(QueryOperator):

@@ -1,5 +1,5 @@
 from maggma.api.resource import ReadOnlyResource
-from mp_api.routes.fermi.models import FermiDoc
+from emmet.core.fermi import FermiDoc
 
 from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 

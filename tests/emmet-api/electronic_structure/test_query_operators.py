@@ -2,13 +2,16 @@ from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 from pymatgen.electronic_structure.core import OrbitalType
 
-from mp_api.routes.electronic_structure.query_operators import (
+from emmet.api.routes.electronic_structure.query_operators import (
     ESSummaryDataQuery,
     BSDataQuery,
     DOSDataQuery,
     ObjectQuery,
 )
-from mp_api.routes.electronic_structure.models.core import BSPathType, DOSProjectionType
+from emmet.api.routes.electronic_structure.models.core import (
+    BSPathType,
+    DOSProjectionType,
+)
 
 from pymatgen.analysis.magnetism.analyzer import Ordering
 from pymatgen.core.periodic_table import Element

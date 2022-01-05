@@ -1,14 +1,14 @@
-from maggma.api.resource import ReadOnlyResource
-from mp_api.routes.substrates.models import SubstratesDoc
-
 from maggma.api.query_operator import (
+    NumericQuery,
     PaginationQuery,
     SortQuery,
     SparseFieldsQuery,
-    NumericQuery,
     StringQueryOperator,
 )
-from mp_api.routes.substrates.query_operators import SubstrateStructureQuery
+from maggma.api.resource import ReadOnlyResource
+
+from emmet.api.routes.substrates.query_operators import SubstrateStructureQuery
+from emmet.core.substrates import SubstratesDoc
 
 
 def substrates_resource(substrates_store):

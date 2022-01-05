@@ -1,7 +1,7 @@
 from maggma.api.resource import ReadOnlyResource
-from mp_api.routes.grain_boundary.models import GrainBoundaryDoc
+from emmet.core.grain_boundary import GrainBoundaryDoc
 
-from mp_api.routes.grain_boundary.query_operators import (
+from emmet.api.routes.grain_boundary.query_operators import (
     GBStructureQuery,
     GBTaskIDQuery,
 )

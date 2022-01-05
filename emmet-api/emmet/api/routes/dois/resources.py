@@ -1,5 +1,5 @@
 from maggma.api.resource import ReadOnlyResource
-from mp_api.routes.dois.models import DOIDoc
+from emmet.core.dois import DOIDoc
 
 from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 

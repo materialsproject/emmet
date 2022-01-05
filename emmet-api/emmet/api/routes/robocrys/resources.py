@@ -1,7 +1,8 @@
 from maggma.api.resource import ReadOnlyResource
 from maggma.api.resource.aggregation import AggregationResource
-from mp_api.routes.robocrys.models import RobocrysDoc
-from mp_api.routes.robocrys.query_operators import RoboTextSearchQuery
+
+from emmet.api.routes.robocrys.query_operators import RoboTextSearchQuery
+from emmet.core.robocrys import RobocrysDoc
 
 
 def robo_resource(robo_store):

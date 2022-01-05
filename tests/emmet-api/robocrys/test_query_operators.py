@@ -1,4 +1,4 @@
-from mp_api.routes.robocrys.query_operators import RoboTextSearchQuery
+from emmet.api.routes.robocrys.query_operators import RoboTextSearchQuery
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 

@@ -4,7 +4,8 @@ from maggma.api.resource.aggregation import AggregationResource
 
 
 from emmet.core.material import MaterialsDoc
-from mp_api.routes.materials.models.doc import FindStructure, FormulaAutocomplete
+from emmet.core.find_structure import FindStructure
+from emmet.core.formula_autocomplete import FormulaAutocomplete
 
 from maggma.api.query_operator import (
     PaginationQuery,
@@ -13,8 +14,8 @@ from maggma.api.query_operator import (
     NumericQuery,
 )
 
-from mp_api.routes.materials.hint_scheme import MaterialsHintScheme
-from mp_api.routes.materials.query_operators import (
+from emmet.api.routes.materials.hint_scheme import MaterialsHintScheme
+from emmet.api.routes.materials.query_operators import (
     ElementsQuery,
     FormulaQuery,
     ChemsysQuery,

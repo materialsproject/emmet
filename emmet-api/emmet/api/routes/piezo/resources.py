@@ -2,7 +2,7 @@ from maggma.api.resource import ReadOnlyResource
 from emmet.core.polar import PiezoelectricDoc
 
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-from mp_api.routes.piezo.query_operators import PiezoelectricQuery
+from emmet.api.routes.piezo.query_operators import PiezoelectricQuery
 
 
 def piezo_resource(piezo_store):

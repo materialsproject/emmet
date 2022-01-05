@@ -1,4 +1,4 @@
-from mp_api.routes._general_store.query_operator import (
+from emmet.api.routes._general_store.query_operator import (
     GeneralStoreGetQuery,
     GeneralStorePostQuery,
 )

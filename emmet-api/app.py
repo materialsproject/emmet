@@ -1,5 +1,4 @@
 import os
-from monty.serialization import loadfn
 
 from mp_api.core.api import MAPI
 from mp_api.core.settings import MAPISettings
@@ -275,7 +274,7 @@ else:
     raise RuntimeError("Must specify MongoDB Atlas URI")
 
 # Materials
-from mp_api.routes.materials.resources import (
+from emmet.api.routes.materials.resources import (
     materials_resource,
     find_structure_resource,
     formula_autocomplete_resource,
@@ -297,7 +296,7 @@ from emmet.api.routes.bonds.resources import bonds_resource
 resources.update({"bonds": [bonds_resource(bonds_store)]})
 
 # Tasks
-from mp_api.routes.tasks.resources import (
+from emmet.api.routes.tasks.resources import (
     task_resource,
     trajectory_resource,
     task_deprecation_resource,
@@ -314,7 +313,7 @@ resources.update(
 )
 
 # Thermo
-from mp_api.routes.thermo.resources import phase_diagram_resource, thermo_resource
+from emmet.api.routes.thermo.resources import phase_diagram_resource, thermo_resource
 
 resources.update(
     {
@@ -326,85 +325,85 @@ resources.update(
 )
 
 # Dielectric
-from mp_api.routes.dielectric.resources import dielectric_resource
+from emmet.api.routes.dielectric.resources import dielectric_resource
 
 resources.update({"dielectric": [dielectric_resource(dielectric_store)]})
 
 # Piezoelectric
-from mp_api.routes.piezo.resources import piezo_resource
+from emmet.api.routes.piezo.resources import piezo_resource
 
 resources.update({"piezoelectric": [piezo_resource(piezoelectric_store)]})
 
 # Magnetism
-from mp_api.routes.magnetism.resources import magnetism_resource
+from emmet.api.routes.magnetism.resources import magnetism_resource
 
 resources.update({"magnetism": [magnetism_resource(magnetism_store)]})
 
 # Phonon
-from mp_api.routes.phonon.resources import phonon_bsdos_resource
+from emmet.api.routes.phonon.resources import phonon_bsdos_resource
 
 resources.update({"phonon": [phonon_bsdos_resource(phonon_bs_store)]})
 
 # EOS
-from mp_api.routes.eos.resources import eos_resource
+from emmet.api.routes.eos.resources import eos_resource
 
 resources.update({"eos": [eos_resource(eos_store)]})
 
 # Similarity
-from mp_api.routes.similarity.resources import similarity_resource
+from emmet.api.routes.similarity.resources import similarity_resource
 
 resources.update({"similarity": [similarity_resource(similarity_store)]})
 
 # XAS
-from mp_api.routes.xas.resources import xas_resource
+from emmet.api.routes.xas.resources import xas_resource
 
 resources.update({"xas": [xas_resource(xas_store)]})
 
 # Grain Boundaries
-from mp_api.routes.grain_boundary.resources import gb_resource
+from emmet.api.routes.grain_boundary.resources import gb_resource
 
 resources.update({"grain_boundary": [gb_resource(gb_store)]})
 
 # Fermi Surface
-from mp_api.routes.fermi.resources import fermi_resource
+from emmet.api.routes.fermi.resources import fermi_resource
 
 resources.update({"fermi": [fermi_resource(fermi_store)]})
 
 # Elasticity
-from mp_api.routes.elasticity.resources import elasticity_resource
+from emmet.api.routes.elasticity.resources import elasticity_resource
 
 resources.update({"elasticity": [elasticity_resource(elasticity_store)]})
 
 # DOIs
-from mp_api.routes.dois.resources import dois_resource
+from emmet.api.routes.dois.resources import dois_resource
 
 resources.update({"doi": [dois_resource(doi_store)]})
 
 # Substrates
-from mp_api.routes.substrates.resources import substrates_resource
+from emmet.api.routes.substrates.resources import substrates_resource
 
 resources.update({"substrates": [substrates_resource(substrates_store)]})
 
 # Surface Properties
-from mp_api.routes.surface_properties.resources import surface_props_resource
+from emmet.api.routes.surface_properties.resources import surface_props_resource
 
 resources.update({"surface_properties": [surface_props_resource(surface_props_store)]})
 
 
 # Robocrystallographer
-from mp_api.routes.robocrys.resources import robo_resource, robo_search_resource
+from emmet.api.routes.robocrys.resources import robo_resource, robo_search_resource
 
 resources.update(
     {"robocrys": [robo_search_resource(robo_store), robo_resource(robo_store)]}
 )
 
 # Synthesis
-from mp_api.routes.synthesis.resources import synth_resource
+from emmet.api.routes.synthesis.resources import synth_resource
 
 resources.update({"synthesis": [synth_resource(synth_store)]})
 
 # Electrodes
-from mp_api.routes.electrodes.resources import insertion_electrodes_resource
+from emmet.api.routes.electrodes.resources import insertion_electrodes_resource
 
 resources.update(
     {
@@ -415,27 +414,27 @@ resources.update(
 )
 
 # Molecules
-from mp_api.routes.molecules.resources import molecules_resource
+from emmet.api.routes.molecules.resources import molecules_resource
 
 resources.update({"molecules": [molecules_resource(molecules_store)]})
 
 # Oxidation States
-from mp_api.routes.oxidation_states.resources import oxi_states_resource
+from emmet.api.routes.oxidation_states.resources import oxi_states_resource
 
 resources.update({"oxidation_states": [oxi_states_resource(oxi_states_store)]})
 
 # Provenance
-from mp_api.routes.provenance.resources import provenance_resource
+from emmet.api.routes.provenance.resources import provenance_resource
 
 resources.update({"provenance": [provenance_resource(provenance_store)]})
 
 # Charge Density
-from mp_api.routes.charge_density.resources import charge_density_resource
+from emmet.api.routes.charge_density.resources import charge_density_resource
 
 resources.update({"charge_density": [charge_density_resource(s3_chgcar)]})
 
 # Summary
-from mp_api.routes.summary.resources import summary_resource, summary_stats_resource
+from emmet.api.routes.summary.resources import summary_resource, summary_stats_resource
 
 resources.update(
     {
@@ -447,7 +446,7 @@ resources.update(
 )
 
 # Electronic Structure
-from mp_api.routes.electronic_structure.resources import (
+from emmet.api.routes.electronic_structure.resources import (
     es_resource,
     bs_resource,
     bs_obj_resource,
@@ -467,17 +466,17 @@ resources.update(
     }
 )
 # MPComplete
-from mp_api.routes.mpcomplete.resources import mpcomplete_resource
+from emmet.api.routes.mpcomplete.resources import mpcomplete_resource
 
 resources.update({"mpcomplete": [mpcomplete_resource(mpcomplete_store)]})
 
 # Consumers
-from mp_api.routes._consumer.resources import settings_resource
+from emmet.api.routes._consumer.resources import settings_resource
 
 resources.update({"_user_settings": [settings_resource(consumer_settings_store)]})
 
 # General Store
-from mp_api.routes._general_store.resources import general_store_resource
+from emmet.api.routes._general_store.resources import general_store_resource
 
 resources.update({"_general_store": [general_store_resource(general_store)]})
 

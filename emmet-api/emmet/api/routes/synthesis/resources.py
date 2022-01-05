@@ -1,7 +1,7 @@
 from maggma.api.resource import AggregationResource
-from mp_api.routes.synthesis.models import SynthesisSearchResultModel
-from mp_api.routes.synthesis.query_operators import SynthesisSearchQuery
 
+from emmet.api.routes.synthesis.query_operators import SynthesisSearchQuery
+from emmet.core.synthesis.core import SynthesisSearchResultModel
 
 synth_indexes = [
     ("synthesis_type", False),

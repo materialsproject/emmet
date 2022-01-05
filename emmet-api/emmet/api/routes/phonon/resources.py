@@ -1,8 +1,7 @@
-from maggma.api.resource import ReadOnlyResource
-from mp_api.routes.phonon.models import PhononBSDOSDoc
-from mp_api.routes.phonon.query_operators import PhononImgQuery
-
 from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from maggma.api.resource import ReadOnlyResource
+
+from emmet.core.phonon import PhononBSDOSDoc
 
 
 def phonon_bsdos_resource(phonon_bs_store):

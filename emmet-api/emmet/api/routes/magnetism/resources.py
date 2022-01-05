@@ -2,7 +2,7 @@ from maggma.api.resource import ReadOnlyResource
 from emmet.core.magnetism import MagnetismDoc
 
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-from mp_api.routes.magnetism.query_operators import MagneticQuery
+from emmet.api.routes.magnetism.query_operators import MagneticQuery
 
 
 def magnetism_resource(magnetism_store):

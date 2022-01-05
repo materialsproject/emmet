@@ -1,9 +1,9 @@
+from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 from maggma.api.query_operator.dynamic import NumericQuery
 from maggma.api.resource import ReadOnlyResource
-from mp_api.routes.surface_properties.models import SurfacePropDoc
 
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-from mp_api.routes.surface_properties.query_operators import ReconstructedQuery
+from emmet.api.routes.surface_properties.query_operators import ReconstructedQuery
+from emmet.core.surface_properties import SurfacePropDoc
 
 
 def surface_props_resource(surface_prop_store):

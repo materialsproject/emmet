@@ -1,6 +1,7 @@
-from maggma.api.resource import ReadOnlyResource
-from mp_api.routes.similarity.models import SimilarityDoc
 from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
+from maggma.api.resource import ReadOnlyResource
+
+from emmet.core.similarity import SimilarityDoc
 
 
 def similarity_resource(similarity_store):

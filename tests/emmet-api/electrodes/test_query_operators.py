@@ -1,4 +1,4 @@
-from mp_api.routes.electrodes.query_operators import (
+from emmet.api.routes.electrodes.query_operators import (
     ElectrodeFormulaQuery,
     VoltageStepQuery,
     InsertionVoltageStepQuery,

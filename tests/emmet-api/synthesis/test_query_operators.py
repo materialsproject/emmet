@@ -1,5 +1,5 @@
-from mp_api.routes.synthesis.query_operators import SynthesisSearchQuery
-from mp_api.routes.synthesis.models import SynthesisTypeEnum, OperationTypeEnum
+from emmet.api.routes.synthesis.query_operators import SynthesisSearchQuery
+from emmet.api.routes.synthesis.models import SynthesisTypeEnum, OperationTypeEnum
 
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn

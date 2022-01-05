@@ -1,4 +1,4 @@
-from mp_api.routes.materials.hint_scheme import MaterialsHintScheme
+from emmet.api.routes.materials.hint_scheme import MaterialsHintScheme
 
 
 def test_materials_hint_scheme():

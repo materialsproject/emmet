@@ -2,7 +2,7 @@ from typing import Optional
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
-from mp_api.routes.materials.utils import formula_to_criteria
+from emmet.api.routes.materials.utils import formula_to_criteria
 from pymatgen.core.periodic_table import Element
 
 from collections import defaultdict

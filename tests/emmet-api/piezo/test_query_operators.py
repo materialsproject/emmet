@@ -1,4 +1,4 @@
-from mp_api.routes.piezo.query_operators import PiezoelectricQuery
+from emmet.api.routes.piezo.query_operators import PiezoelectricQuery
 
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn

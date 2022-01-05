@@ -1,4 +1,4 @@
-from mp_api.routes.surface_properties.query_operators import ReconstructedQuery
+from emmet.api.routes.surface_properties.query_operators import ReconstructedQuery
 
 
 from monty.tempfile import ScratchDir

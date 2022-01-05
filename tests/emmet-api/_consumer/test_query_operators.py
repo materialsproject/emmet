@@ -1,4 +1,4 @@
-from mp_api.routes._consumer.query_operator import (
+from emmet.api.routes._consumer.query_operator import (
     UserSettingsGetQuery,
     UserSettingsPostQuery,
 )

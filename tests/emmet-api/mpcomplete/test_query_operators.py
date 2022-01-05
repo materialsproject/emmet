@@ -1,5 +1,5 @@
 import os
-from mp_api.routes.mpcomplete.query_operator import (
+from emmet.api.routes.mpcomplete.query_operator import (
     MPCompleteGetQuery,
     MPCompletePostQuery,
 )

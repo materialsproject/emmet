@@ -1,12 +1,12 @@
 import os
 from json import load
-from mp_api.routes.synthesis.utils import (
+from emmet.api.routes.synthesis.utils import (
     make_ellipsis,
     mask_paragraphs,
     mask_highlights,
 )
 from mp_api import MAPISettings
-from mp_api.routes.synthesis.models.core import SynthesisSearchResultModel
+from emmet.api.routes.synthesis.models.core import SynthesisSearchResultModel
 
 
 def test_make_ellipsis():

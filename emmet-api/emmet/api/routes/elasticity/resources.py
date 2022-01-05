@@ -1,8 +1,8 @@
 from maggma.api.resource import ReadOnlyResource
-from mp_api.routes.elasticity.models import ElasticityDoc
+from emmet.core.elasticity import ElasticityDoc
 
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-from mp_api.routes.elasticity.query_operators import (
+from emmet.api.routes.elasticity.query_operators import (
     ElasticityChemsysQuery,
     BulkModulusQuery,
     ShearModulusQuery,

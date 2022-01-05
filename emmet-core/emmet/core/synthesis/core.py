@@ -3,9 +3,9 @@ from typing import List, Optional, Any
 
 from pydantic import BaseModel, Field
 
-from mp_api.routes.synthesis.models.materials import ExtractedMaterial
-from mp_api.routes.synthesis.models.operations import Operation
-from mp_api.routes.synthesis.models.reaction import ReactionFormula
+from emmet.core.synthesis.materials import ExtractedMaterial
+from emmet.core.synthesis.operations import Operation
+from emmet.core.synthesis.reaction import ReactionFormula
 
 
 class SynthesisTypeEnum(str, Enum):

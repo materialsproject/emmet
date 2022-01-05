@@ -1,18 +1,18 @@
-from maggma.api.resource import ReadOnlyResource
-from mp_api.routes.tasks.models import DeprecationDoc, TaskDoc, TrajectoryDoc
-
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-from mp_api.routes.tasks.query_operators import (
-    MultipleTaskIDsQuery,
-    TrajectoryQuery,
-    DeprecationQuery,
-)
-from mp_api.routes.tasks.hint_scheme import TasksHintScheme
-from mp_api.routes.materials.query_operators import (
+from maggma.api.resource import ReadOnlyResource
+
+from emmet.api.routes.materials.query_operators import (
+    ChemsysQuery,
     ElementsQuery,
     FormulaQuery,
-    ChemsysQuery,
 )
+from emmet.api.routes.tasks.hint_scheme import TasksHintScheme
+from emmet.api.routes.tasks.query_operators import (
+    DeprecationQuery,
+    MultipleTaskIDsQuery,
+    TrajectoryQuery,
+)
+from emmet.core.tasks import DeprecationDoc, TaskDoc, TrajectoryDoc
 
 
 def task_resource(task_store):

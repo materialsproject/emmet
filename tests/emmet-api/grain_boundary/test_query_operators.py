@@ -1,8 +1,11 @@
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 
-from mp_api.routes.grain_boundary.query_operators import GBStructureQuery, GBTaskIDQuery
-from mp_api.routes.grain_boundary.models import GBTypeEnum
+from emmet.api.routes.grain_boundary.query_operators import (
+    GBStructureQuery,
+    GBTaskIDQuery,
+)
+from emmet.api.routes.grain_boundary.models import GBTypeEnum
 
 
 def test_grain_boundary_structure_query():

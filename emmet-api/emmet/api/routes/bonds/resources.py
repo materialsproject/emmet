@@ -3,7 +3,10 @@ from emmet.core.bonds import BondingDoc
 
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 
-from mp_api.routes.bonds.query_operators import BondLengthQuery, CoordinationEnvsQuery
+from emmet.api.routes.bonds.query_operators import (
+    BondLengthQuery,
+    CoordinationEnvsQuery,
+)
 
 
 def bonds_resource(bonds_store):

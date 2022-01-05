@@ -1,19 +1,19 @@
-from mp_api.routes.synthesis.models.core import (
+from emmet.core.synthesis.core import (
     SynthesisRecipe,
     SynthesisTypeEnum,
     SynthesisSearchResultModel,
 )
-from mp_api.routes.synthesis.models.materials import (
+from emmet.core.synthesis.materials import (
     Component,
     ExtractedMaterial,
 )
-from mp_api.routes.synthesis.models.operations import (
+from emmet.core.synthesis.operations import (
     Value,
     Conditions,
     Operation,
     OperationTypeEnum,
 )
-from mp_api.routes.synthesis.models.reaction import (
+from emmet.core.synthesis.reaction import (
     FormulaPart,
     ReactionFormula,
 )
