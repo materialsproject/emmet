@@ -292,7 +292,7 @@ resources.update(
 )
 
 # Bonds
-from mp_api.routes.bonds.resources import bonds_resource
+from emmet.api.routes.bonds.resources import bonds_resource
 
 resources.update({"bonds": [bonds_resource(bonds_store)]})
 
