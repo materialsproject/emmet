@@ -1,2 +1,3 @@
 -r ./emmet-core/requirements.txt
 -r ./emmet-builders/requirements.txt
+-r ./emmet-api/requirements.txt
