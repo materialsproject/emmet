@@ -25,7 +25,7 @@ To use the API, you have three options:
     ```
 
     The `MPRester` client can be accessed by importing from it. This will ultimately replace the legacy `MPRester` available in pymatgen.
-    
+
     For more details on how to use this, including code examples, please see <https://next-gen.materialsproject.org/api>.
 
 2. You can demo the API interactively on this documentation page. Click the "Authorize" button, paste in your API key, and then click the appropriate section to try out a query.
