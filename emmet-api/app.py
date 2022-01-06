@@ -1,7 +1,7 @@
 import os
 
-from mp_api.core.api import MAPI
-from mp_api.core.settings import MAPISettings
+from emmet.api.core.api import MAPI
+from emmet import MAPISettings
 from maggma.stores import MongoURIStore, S3Store
 
 resources = {}
