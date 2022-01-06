@@ -51,6 +51,20 @@ class OutputSummary(BaseModel):
     frequency_modes: List[List[List[float]]] = Field(None,
                                                description="Vibrational frequency modes of the molecule")
 
+    def as_dict(self) -> Dict[str, Any]:
+        return {
+            "initial_molecule": self.initial_molecule,
+            "optimized_molecule": self.optimized_molecule,
+            "final_energy": self.final_energy,
+            "enthalpy": self.enthalpy,
+            "entropy": self.entropy,
+            "mulliken": self.mulliken,
+            "resp": self.resp,
+            "nbo": self.nbo,
+            "frequencies": self.frequencies,
+            "frequency_modes": self.frequency_modes
+        }
+
 
 class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     """
@@ -109,8 +123,7 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
             "molecule": self.output.molecule,
             "composition": self.output.molecule.composition,
             "energy": self.output.final_energy,
-            "enthalpy": self.output.enthalpy,
-            "entropy": self.output.entropy,
+            # "output": self.output.as_dict(),
             "parameters": self.orig,
             "last_updated": self.last_updated
         }

@@ -1,0 +1,311 @@
+import logging
+from collections import defaultdict
+from typing import Dict, List, Any, Tuple, Union
+import copy
+
+from typing_extensions import Literal
+
+import numpy as np
+from pydantic import Field
+import networkx as nx
+
+from pymatgen.core.structure import Molecule
+from pymatgen.analysis.graphs import MoleculeGraph
+from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
+
+from pymatgen.core.periodic_table import Specie, Element
+
+from emmet.core.material_property import PropertyDoc
+from emmet.core.mpid import MPID
+from emmet.core.qchem.task import TaskDocument
+
+
+metals = ["Li", "Mg", "Ca", "Zn", "Al"]
+
+
+def fix_C_Li_bonds(critic):
+    for key in critic["bonding"]:
+        if critic["bonding"][key]["atoms"] == ["Li","C"] or critic["bonding"][key]["atoms"] == ["C","Li"]:
+            if critic["bonding"][key]["field"] <= 0.02 and critic["bonding"][key]["field"] > 0.012 and critic["bonding"][key]["distance"] < 2.5:
+                critic["processed"]["bonds"].append([int(entry) - 1 for entry in critic["bonding"][key]["atom_ids"]])
+    return critic
+
+
+def make_mol_graph(mol, critic_bonds=None):
+    mol_graph = MoleculeGraph.with_local_env_strategy(mol,
+                                                      OpenBabelNN())
+    mol_graph = metal_edge_extender(mol_graph)
+    if critic_bonds:
+        mg_edges = mol_graph.graph.edges()
+        for bond in critic_bonds:
+            bond.sort()
+            if bond[0] != bond[1]:
+                bond = (bond[0], bond[1])
+                if bond not in mg_edges:
+                    mol_graph.add_edge(bond[0],bond[1])
+    return mol_graph
+
+
+def nbo_molecule_graph(
+        mol: Molecule,
+        nbo: Dict[str, Any]
+):
+    """
+    Construct a molecule graph from NBO data.
+
+    :param mol: molecule to be analyzed
+    :param nbo: Output from NBO7
+    :return:
+    """
+
+    mg = MoleculeGraph.with_empty_graph(mol)
+
+    warnings = set()
+
+    alpha_bonds = set()
+    beta_bonds = set()
+
+    for bond_ind in nbo["hybridization_character"][1].get("type", list()):
+        if nbo["hybridization_character"][1]["type"][bond_ind] != "BD":
+            continue
+
+        from_ind = int(nbo["hybridization_character"][1]["atom 1 number"][bond_ind]) - 1
+        to_ind = int(nbo["hybridization_character"][1]["atom 2 number"][bond_ind]) - 1
+
+        if nbo["hybridization_character"][1]["atom 1 symbol"][bond_ind] in metals:
+            m_contrib = float(nbo["hybridization_character"][1]["atom 1 polarization"][bond_ind])
+        elif nbo["hybridization_character"][1]["atom 2 symbol"][bond_ind] in metals:
+            m_contrib = float(nbo["hybridization_character"][1]["atom 2 polarization"][bond_ind])
+        else:
+            m_contrib = None
+
+        if m_contrib is None or m_contrib >= 30.0:
+            bond_type = "covalent"
+            warnings.add("Contains covalent bond with metal atom")
+        else:
+            bond_type = "electrostatic"
+
+        alpha_bonds.add((from_ind, to_ind, bond_type))
+
+    if mol.spin_multiplicity != 1:
+        for bond_ind in nbo["hybridization_character"][3].get("type", list()):
+            if nbo["hybridization_character"][3]["type"][bond_ind] != "BD":
+                continue
+
+            from_ind = int(nbo["hybridization_character"][3]["atom 1 number"][bond_ind]) - 1
+            to_ind = int(nbo["hybridization_character"][3]["atom 2 number"][bond_ind]) - 1
+
+            if nbo["hybridization_character"][3]["atom 1 symbol"][bond_ind] in metals:
+                m_contrib = float(nbo["hybridization_character"][3]["atom 1 polarization"][bond_ind])
+            elif nbo["hybridization_character"][3]["atom 2 symbol"][bond_ind] in metals:
+                m_contrib = float(nbo["hybridization_character"][3]["atom 2 polarization"][bond_ind])
+            else:
+                m_contrib = None
+
+            if m_contrib is None or m_contrib >= 30.0:
+                bond_type = "covalent"
+                warnings.add("Contains covalent bond with metal atom")
+            else:
+                bond_type = "electrostatic"
+
+            beta_bonds.add((from_ind, to_ind, bond_type))
+
+    cutoff = 3.0
+    metal_indices = [i for i, e in enumerate(mol.species) if e in metals]
+
+    poss_coord = dict()
+    dist_mat = mol.distance_matrix
+    for i in metal_indices:
+        poss_coord[i] = list()
+        row = dist_mat[i]
+        for j, val in enumerate(row):
+            if i != j and val < cutoff:
+                poss_coord[i].append(j)
+
+    if len(nbo["perturbation_energy"]) > 0:
+        for inter_ind in nbo["perturbation_energy"][0].get("donor type", list()):
+            coord = False
+            m_ind = None
+            x_ind = None
+            if int(nbo["perturbation_energy"][0]["acceptor atom 1 number"][inter_ind]) - 1 in metal_indices:
+                if nbo["perturbation_energy"][0]["donor type"][inter_ind] == "LP" and nbo["perturbation_energy"][0]["acceptor type"][inter_ind] == "LV":
+                    coord = True
+                    m_ind = int(nbo["perturbation_energy"][0]["acceptor atom 1 number"][inter_ind]) - 1
+                    x_ind = int(nbo["perturbation_energy"][0]["donor atom 1 number"][inter_ind]) - 1
+                elif nbo["perturbation_energy"][0]["donor type"][inter_ind] == "LP" and nbo["perturbation_energy"][0]["acceptor type"][inter_ind] == "RY*":
+                    coord = True
+                    m_ind = int(nbo["perturbation_energy"][0]["acceptor atom 1 number"][inter_ind]) - 1
+                    x_ind = int(nbo["perturbation_energy"][0]["donor atom 1 number"][inter_ind]) - 1
+            elif nbo["perturbation_energy"][0]["donor atom 1 number"][inter_ind] - 1 in metal_indices:
+                if nbo["perturbation_energy"][0]["donor type"][inter_ind] == "LP" and nbo["perturbation_energy"][0]["acceptor type"][inter_ind] == "LV":
+                    coord = True
+                    m_ind = int(nbo["perturbation_energy"][0]["donor atom 1 number"][inter_ind]) - 1
+                    x_ind = int(nbo["perturbation_energy"][0]["acceptor atom 1 number"][inter_ind]) - 1
+
+            if not coord:
+                continue
+            elif x_ind not in poss_coord[m_ind]:
+                continue
+
+            if coord:
+                energy = float(nbo["perturbation_energy"][0]["perturbation energy"][inter_ind])
+                if energy >= 3.0:
+                    alpha_bonds.add((x_ind, m_ind, "coordination"))
+
+    if mol.spin_multiplicity != 1 and len(nbo["perturbation_energy"]) > 1:
+        for inter_ind in nbo["perturbation_energy"][1].get("donor type", list()):
+            coord = False
+            m_ind = None
+            x_ind = None
+            if nbo["perturbation_energy"][1]["acceptor atom 1 number"][inter_ind] - 1 in metal_indices:
+                if nbo["perturbation_energy"][1]["donor type"][inter_ind] == "LP" and nbo["perturbation_energy"][1]["acceptor type"][inter_ind] == "LV":
+                    coord = True
+                    m_ind = int(nbo["perturbation_energy"][1]["acceptor atom 1 number"][inter_ind]) - 1
+                    x_ind = int(nbo["perturbation_energy"][1]["donor atom 1 number"][inter_ind]) - 1
+                elif nbo["perturbation_energy"][1]["donor type"][inter_ind] == "LP" and nbo["perturbation_energy"][1]["acceptor type"][inter_ind] == "RY*":
+                    coord = True
+                    m_ind = int(nbo["perturbation_energy"][1]["acceptor atom 1 number"][inter_ind]) - 1
+                    x_ind = int(nbo["perturbation_energy"][1]["donor atom 1 number"][inter_ind]) - 1
+            elif nbo["perturbation_energy"][1]["donor atom 1 number"][inter_ind] - 1 in metal_indices:
+                if nbo["perturbation_energy"][1]["donor type"][inter_ind] == "LP" and nbo["perturbation_energy"][1]["acceptor type"][inter_ind] == "LV":
+                    coord = True
+                    m_ind = int(nbo["perturbation_energy"][1]["donor atom 1 number"][inter_ind]) - 1
+                    x_ind = int(nbo["perturbation_energy"][1]["acceptor atom 1 number"][inter_ind]) - 1
+
+            if not coord:
+                continue
+            elif x_ind not in poss_coord[m_ind]:
+                continue
+
+            if coord:
+                energy = float(nbo["perturbation_energy"][1]["perturbation energy"][inter_ind])
+                if energy >= 3.0:
+                    beta_bonds.add((x_ind, m_ind, "coordination"))
+
+    sorted_alpha = set([tuple(sorted([a[0], a[1]])) for a in alpha_bonds])
+    sorted_beta = set([tuple(sorted([b[0], b[1]])) for b in beta_bonds])
+
+    if sorted_alpha != sorted_beta:
+        warnings.add("Difference in bonding between alpha and beta electrons")
+
+    for bond in alpha_bonds.union(beta_bonds):
+        if (bond[0], bond[1]) not in mg.graph.edges() and (bond[1], bond[0]) not in mg.graph.edges():
+            if bond[0] < bond[1]:
+                mg.add_edge(bond[0], bond[1], edge_properties={"type": bond[2]})
+            else:
+                mg.add_edge(bond[1], bond[0], edge_properties={"type": bond[2]})
+
+    mg_copy = copy.deepcopy(mg)
+    mg_copy.remove_nodes(metal_indices)
+
+    if not nx.is_connected(mg_copy.graph.to_undirected()):
+        warnings.add("Metal-centered complex")
+
+    return (mg, warnings)
+
+
+class BondingDoc(PropertyDoc):
+    """Structure graphs representing chemical bonds calculated from structure
+    using near neighbor strategies as defined in pymatgen."""
+
+    property_name = "bonding"
+
+    molecule_graph: MoleculeGraph = Field(description="Molecule graph",)
+
+    method: str = Field(description="Method used to compute structure graph")
+
+    bond_types: Dict[str, List[float]] = Field(
+        description="Dictionary of bond types to their length, e.g. a C-O to "
+        "a list of the lengths of C-O bonds in Angstrom."
+    )
+
+    bonds: List[Tuple[int, int]] = Field(
+        description="List of bonds in the form (a, b), where a and b are 0-indexed atom indices",
+    )
+
+    bonds_nometal: List[Tuple[int, int]] = Field(
+        description="List of bonds in the form (a, b), where a and b are 0-indexed atom indices, "
+                    "with all metal ions removed",
+    )
+
+    @classmethod
+    def from_task(
+        cls,
+        task: TaskDocument,
+        molecule_id: MPID,
+        **kwargs
+    ):
+        """
+        Determine bonding from a task document
+
+        Method preferences are as follows:
+        - NBO7
+        - Critic2
+        - OpenBabelNN + metal_edge_extender in pymatgen
+
+        :param task: task document from which bonding properties can be extracted
+        :param molecule_id: mpid
+        :param kwargs: to pass to PropertyDoc
+        :return:
+        """
+
+        mg = None
+        method = None
+        warnings = list()
+
+        # First check if NBO7 data is available
+        if task.output.nbo is not None:
+            if task.orig["rem"].get("run_nbo6", False):
+                method = "NBO7"
+                mg, warnings = nbo_molecule_graph(task.output.molecule, task.output.nbo)
+
+        # Then check if critic information is available
+        if mg is None and task.critic2 is not None:
+            method = "Critic2"
+            critic = fix_C_Li_bonds(task.critic2)
+            critic_bonds = critic["processed"]["bonds"]
+            mg = make_mol_graph(task.output.molecule, critic_bonds=critic_bonds)
+
+        if mg is None:
+            method = "OpenBabelNN + metal_edge_extender"
+            mg = make_mol_graph(task.output.moleculue)
+
+        bonds = list()
+        for bond in mg.graph.edges():
+            bonds.append(sorted([bond[0],bond[1]]))
+
+        # Calculuate bond lengths
+        bond_types = dict()
+        for u, v in mg.graph.edges():
+            species_u = str(mg.molecule.species[u])
+            species_v = str(mg.molecule.species[v])
+            if species_u < species_v:
+                species = f"{species_u}-{species_v}"
+            else:
+                species = f"{species_v}-{species_u}"
+            dist = mg.molecule.get_distance(u, v)
+            if species not in bond_types:
+                bond_types[species] = [dist]
+            else:
+                bond_types[species].append(dist)
+
+        mol_nometal = copy.deepcopy(task.output.molecule)
+        mol_nometal.remove_species(metals)
+        mol_nometal.set_charge_and_spin(0)
+        mg_nometal = MoleculeGraph.with_local_env_strategy(mol_nometal, OpenBabelNN())
+
+        bonds_nometal = list()
+        for bond in mg_nometal.graph.edges():
+            bonds_nometal.append(sorted([bond[0],bond[1]]))
+
+        return super().from_molecule(
+            meta_molecule=task.output.molecule,
+            molecule_id=molecule_id,
+            method=method,
+            warnings=warnings,
+            molecule_graph=mg,
+            bond_types=bond_types,
+            bonds=bonds,
+            bonds_nometal=bonds_nometal,
+            **kwargs
+        )

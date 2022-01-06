@@ -141,6 +141,8 @@ class MoleculeMetadata(EmmetBaseModel):
     Mix-in class for molecule metadata
     """
 
+    charge: float = Field(None, description="Charge of the molecule")
+    spin_multiplicity: int = Field(None, description="Spin multiplicity of the molecule")
     natoms: int = Field(None, description="Total number of atoms in the molecule")
     elements: List[Element] = Field(None, description="List of elements in the molecule")
     nelements: int = Field(None, title="Number of Elements")
@@ -163,6 +165,8 @@ class MoleculeMetadata(EmmetBaseModel):
 
         fields = (
             [
+                "charge",
+                "spin_multiplicity",
                 "natoms",
                 "elements",
                 "nelements",
@@ -179,6 +183,8 @@ class MoleculeMetadata(EmmetBaseModel):
         symmetry = PointGroupData.from_structure(meta_molecule)
 
         data = {
+            "charge": meta_molecule.charge,
+            "spin_multiplicity": meta_molecule.spin_multiplicity,
             "nsites": len(meta_molecule),
             "elements": elsyms,
             "nelements": len(elsyms),
