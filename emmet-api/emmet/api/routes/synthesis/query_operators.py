@@ -12,7 +12,7 @@ class SynthesisSearchQuery(QueryOperator):
     Method to generate a synthesis text search query
     """
 
-    def query(
+    def query(  # noqa: C901
         self,
         keywords: Optional[str] = Query(
             None,
@@ -113,6 +113,7 @@ class SynthesisSearchQuery(QueryOperator):
         pipeline[-1]["$facet"]["results"].append({"$project": project_dict})
 
         crit: Dict[str, Any] = {}
+
         if synthesis_type:
             crit["synthesis_type"] = {"$in": synthesis_type}
         if target_formula:
