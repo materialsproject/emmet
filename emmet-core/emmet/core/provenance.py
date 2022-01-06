@@ -194,7 +194,7 @@ class ProvenanceDoc(PropertyDoc):
         snl_ids = {snl.snl_id for snl in snls}
         db_ids = {
             Database(db_id): [snl_id for snl_id in snl_ids if db_id in snl_id]
-            for db_id in map(str, Database)
+            for db_id in map(str, Database)  # type: ignore
         }
 
         # remove Nones and empty lists
