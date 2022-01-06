@@ -2202,7 +2202,7 @@ from_SNLs<span class="p">(</span><span class="n">material_id</span><span class="
     <span class="n">snl_ids</span> <span class="o">=</span> <span class="p">{</span><span class="n">snl</span><span class="o">.</span><span class="n">snl_id</span> <span class="k">for</span> <span class="n">snl</span> <span class="ow">in</span> <span class="n">snls</span><span class="p">}</span>
     <span class="n">db_ids</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">Database</span><span class="p">(</span><span class="n">db_id</span><span class="p">):</span> <span class="p">[</span><span class="n">snl_id</span> <span class="k">for</span> <span class="n">snl_id</span> <span class="ow">in</span> <span class="n">snl_ids</span> <span class="k">if</span> <span class="n">db_id</span> <span class="ow">in</span> <span class="n">snl_id</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">db_id</span> <span class="ow">in</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Database</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">db_id</span> <span class="ow">in</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Database</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
     <span class="p">}</span>
 
     <span class="c1"># remove Nones and empty lists</span>
