@@ -14,7 +14,7 @@ setup(
     author_email="feedback@materialsproject.org",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
-    install_requires=[f"emmet-core~={version}", "maggma>=0.29.0",],
+    install_requires=[f"emmet-core~={version}", "maggma>=0.29.0"],
     license="modified BSD",
     zip_safe=False,
 )
