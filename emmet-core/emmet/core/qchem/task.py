@@ -100,3 +100,19 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
             self.orig,
             custom_smd=self.custom_smd
         )
+
+    @property
+    def entry(self) -> Dict[str, Any]:
+
+        entry_dict = {
+            "entry_id": self.task_id,
+            "molecule": self.output.molecule,
+            "composition": self.output.molecule.composition,
+            "energy": self.output.final_energy,
+            "enthalpy": self.output.enthalpy,
+            "entropy": self.output.entropy,
+            "parameters": self.orig,
+            "last_updated": self.last_updated
+        }
+
+        return entry_dict

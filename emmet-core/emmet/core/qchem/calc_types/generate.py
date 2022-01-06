@@ -28,7 +28,7 @@ lot_enum = get_enum_source(
     "Levels of theory for calculations in Q-Chem",
     dict(
         {
-            "_".join(lot.split()).replace("+", "_").replace("-", "_").replace("(", "_").replace(")", "_").replace("/", "_"): lot
+            "_".join(lot.split()).replace("+", "_").replace("-", "_").replace("(", "_").replace(")", "_").replace("/", "_").replace("*", "_d"): lot
             for lot in _LOTS
         }
     )
@@ -37,14 +37,14 @@ lot_enum = get_enum_source(
 task_type_enum = get_enum_source(
     "TaskType",
     "Calculation task types for Q-Chem",
-    {"_".join(tt.split()): tt for tt in TASK_TYPES}
+    {"_".join(tt.split()).replace("-","_"): tt for tt in TASK_TYPES}
 )
 
 calc_type_enum = get_enum_source(
     "CalcType",
     "Calculation types (LOT + task type) for Q-Chem",
     {
-        f"{'_'.join(lot.split()).replace('+','_').replace('-','_').replace('(', '_').replace(')', '_').replace('/', '_')}_{'_'.join(tt.split())}": f"{lot} {tt}"
+        f"{'_'.join(lot.split()).replace('+','_').replace('-','_').replace('(', '_').replace(')', '_').replace('/', '_')}_{'_'.join(tt.split()).replace('-', '_')}": f"{lot} {tt}"
         for lot, tt in product(_LOTS, TASK_TYPES)
     }
 )

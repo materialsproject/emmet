@@ -59,6 +59,21 @@ class EmmetSettings(BaseSettings):
         description="Maximum miller allowed for computing strain direction for maximal piezo response",
     )
 
+    QCHEM_FUNCTIONAL_QUALITY_SCORES: Dict[str, int] = Field(
+        {"wB97M-V": 7, "wB97X-V": 6, "wB97X-D3": 5, "wB97X-D": 5, "B3LYP": 4, "B97M-rV": 3, "B97-D3":2, "B97-D": 2, "PBE": 1},
+        description="Dictionary mapping Q-Chem density functionals to a quality score."
+    )
+
+    QCHEM_BASIS_QUALITY_SCORE: Dict[str, int] = Field(
+        {"6-31g*": 1, "def2-SVPD": 2, "def2-TZVP": 3, "def2-TZVPD": 4, "def2-TZVPP": 5, "def2-TZVPPD": 6, "def2-QZVPPD": 7},
+        description="Dictionary mapping Q-Chem basis sets to a quality score."
+    )
+
+    QCHEM_SOLVENT_MODEL_QUALITY_SCORES: Dict[str, int] = Field(
+        {"SMD": 5, "PCM": 3, "VACUUM": 1},
+        description="Dictionary mapping Q-Chem solvent models to a quality score."
+    )
+
     VASP_QUALITY_SCORES: Dict[str, int] = Field(
         {"SCAN": 3, "GGA+U": 2, "GGA": 1},
         description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builders",
