@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.20.2](https://github.com/materialsproject/emmet/tree/v0.20.2) (2022-01-07)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.20.1...v0.20.2)
+
+**Merged pull requests:**
+
+- Bump min maggma version [\#330](https://github.com/materialsproject/emmet/pull/330) ([munrojm](https://github.com/munrojm))
+
 ## [v0.20.1](https://github.com/materialsproject/emmet/tree/v0.20.1) (2022-01-06)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.20.0...v0.20.1)
