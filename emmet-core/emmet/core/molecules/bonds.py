@@ -15,9 +15,9 @@ from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 
 from pymatgen.core.periodic_table import Specie, Element
 
-from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.qchem.task import TaskDocument
+from emmet.core.molecules.molecule_property import PropertyDoc
 
 
 metals = ["Li", "Mg", "Ca", "Zn", "Al"]
@@ -234,7 +234,7 @@ class BondingDoc(PropertyDoc):
         task: TaskDocument,
         molecule_id: MPID,
         **kwargs
-    ):
+    ): # type: ignore[override]
         """
         Determine bonding from a task document
 
@@ -253,18 +253,23 @@ class BondingDoc(PropertyDoc):
         method = None
         warnings = list()
 
+        if task.output.optimized_molecule is not None:
+            mol = task.output.optimized_molecule
+        else:
+            mol = task.output.initial_molecule
+
         # First check if NBO7 data is available
         if task.output.nbo is not None:
             if task.orig["rem"].get("run_nbo6", False):
                 method = "NBO7"
-                mg, warnings = nbo_molecule_graph(task.output.molecule, task.output.nbo)
+                mg, warnings = nbo_molecule_graph(mol, task.output.nbo)
 
         # Then check if critic information is available
         if mg is None and task.critic2 is not None:
             method = "Critic2"
             critic = fix_C_Li_bonds(task.critic2)
             critic_bonds = critic["processed"]["bonds"]
-            mg = make_mol_graph(task.output.molecule, critic_bonds=critic_bonds)
+            mg = make_mol_graph(mol, critic_bonds=critic_bonds)
 
         if mg is None:
             method = "OpenBabelNN + metal_edge_extender"
@@ -289,7 +294,7 @@ class BondingDoc(PropertyDoc):
             else:
                 bond_types[species].append(dist)
 
-        mol_nometal = copy.deepcopy(task.output.molecule)
+        mol_nometal = copy.deepcopy(mol)
         mol_nometal.remove_species(metals)
         mol_nometal.set_charge_and_spin(0)
         mg_nometal = MoleculeGraph.with_local_env_strategy(mol_nometal, OpenBabelNN())
@@ -299,7 +304,7 @@ class BondingDoc(PropertyDoc):
             bonds_nometal.append(sorted([bond[0],bond[1]]))
 
         return super().from_molecule(
-            meta_molecule=task.output.molecule,
+            meta_molecule=mol,
             molecule_id=molecule_id,
             method=method,
             warnings=warnings,

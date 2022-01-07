@@ -1,0 +1,85 @@
+import logging
+from collections import defaultdict
+from typing import Dict, List, Optional, Tuple
+
+from typing_extensions import Literal
+
+import numpy as np
+from pydantic import Field
+
+from pymatgen.core.structure import Molecule
+from pymatgen.core.periodic_table import Specie, Element
+
+from emmet.core.mpid import MPID
+from emmet.core.qchem.task import TaskDocument
+from emmet.core.molecules.molecule_property import PropertyDoc
+
+
+class PartialChargesDoc(PropertyDoc):
+    """Atomic partial charges of a molecule"""
+
+    property_name = "partial_charges"
+
+    charges: List[float] = Field(description="Atomic partial charges for the molecule")
+
+    method: str = Field(None, description="Method used to compute atomic partial charges")
+
+    @classmethod
+    def from_task(
+            cls,
+            task: TaskDocument,
+            molecule_id: MPID,
+            preferred_methods: Tuple = ("NBO7", "RESP", "Critic2", "Mulliken"),
+            **kwargs
+    ): # type: ignore[override]
+        """
+        Determine partial charges from a task document
+
+        :param task: task document from which partial charges can be extracted
+        :param molecule_id: mpid
+        :param preferred_methods: list of methods; by default, NBO7, RESP, Critic2, and Mulliken, in that order
+        :param kwargs: to pass to PropertyDoc
+        :return:
+        """
+
+        charges = None
+        method = None
+
+        for m in preferred_methods:
+            if m == "NBO7" and task.output.nbo is not None:
+                if not task.orig["rem"].get("run_nbo6", False):
+                    continue
+                method = m
+                charges = [float(task.output.nbo["natural_populations"][0]["Charge"][str(i)]) for i in range(len(task.output.molecule))]
+                break
+            elif m == "RESP" and task.output.resp is not None:
+                method = m
+                charges = task.output.resp
+                break
+            elif m == "Critic2" and task.critic2 is not None:
+                method = m
+                charges = list(task.critic2["processed"]["charges"])
+                break
+            elif m == "Mulliken" and task.output.mulliken is not None:
+                method = m
+                if task.output.molecule.spin_multiplicity == 1:
+                    charges = task.output.mulliken
+                else:
+                    charges = [mull[0] for mull in task.output.mulliken]
+                break
+
+        if charges is None:
+            raise Exception("No valid partial charge information!")
+
+        if task.output.optimized_molecule is not None:
+            mol = task.output.optimized_molecule
+        else:
+            mol = task.output.initial_molecule
+
+        return super().from_moleculue(
+            meta_molecule=mol,
+            molecule_id=molecule_id,
+            charges=charges,
+            method=method,
+            **kwargs
+        )
