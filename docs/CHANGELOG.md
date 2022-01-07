@@ -1,5 +1,41 @@
 # Changelog
 
+## [v0.20.1](https://github.com/materialsproject/emmet/tree/v0.20.1) (2022-01-06)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.20.0...v0.20.1)
+
+**Merged pull requests:**
+
+- Add dockerfile for emmet api [\#328](https://github.com/materialsproject/emmet/pull/328) ([munrojm](https://github.com/munrojm))
+
+## [v0.20.0](https://github.com/materialsproject/emmet/tree/v0.20.0) (2022-01-06)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.19.1...v0.20.0)
+
+**Closed issues:**
+
+- Elastic builder [\#245](https://github.com/materialsproject/emmet/issues/245)
+
+**Merged pull requests:**
+
+- Emmet API package [\#327](https://github.com/materialsproject/emmet/pull/327) ([munrojm](https://github.com/munrojm))
+
+## [v0.19.1](https://github.com/materialsproject/emmet/tree/v0.19.1) (2021-12-21)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.19.0...v0.19.1)
+
+**Merged pull requests:**
+
+- Electrode host structure bug fix [\#323](https://github.com/materialsproject/emmet/pull/323) ([munrojm](https://github.com/munrojm))
+
+## [v0.19.0](https://github.com/materialsproject/emmet/tree/v0.19.0) (2021-12-20)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.18.0...v0.19.0)
+
+**Merged pull requests:**
+
+- Electrode builder updates [\#322](https://github.com/materialsproject/emmet/pull/322) ([munrojm](https://github.com/munrojm))
+
 ## [v0.18.0](https://github.com/materialsproject/emmet/tree/v0.18.0) (2021-11-24)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.17.0...v0.18.0)

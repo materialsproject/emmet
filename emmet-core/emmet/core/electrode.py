@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Union
+from typing import List, Union
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
@@ -95,6 +95,11 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
 
     battery_id: str = Field(None, description="The id for this battery document.")
 
+    battery_formula: str = Field(
+        None,
+        description="Reduced formula with working ion range produced by combining the charge and discharge formulas.",
+    )
+
     framework_formula: str = Field(
         None, description="The id for this battery document."
     )
@@ -161,6 +166,8 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         None, description="The pymatgen electrode object"
     )
 
+    warnings: List[str] = Field([], description="Any warnings related to this material")
+
     # Make sure that the datetime field is properly formatted
     @validator("last_updated", pre=True)
     def last_updated_dict_ok(cls, v):
@@ -172,7 +179,6 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         grouped_entries: List[ComputedStructureEntry],
         working_ion_entry: ComputedEntry,
         battery_id: str,
-        host_structure: Structure,
     ) -> Union["InsertionElectrodeDoc", None]:
         try:
             ie = InsertionElectrode.from_entries(
@@ -182,23 +188,86 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
             )
         except IndexError:
             return None
+        # First get host structure
+
         d = ie.get_summary_dict()
+
+        least_wion_ent = next(
+            item for item in grouped_entries if item.entry_id == d["id_charge"]
+        )
+        host_structure = least_wion_ent.structure.copy()
+        host_structure.remove_species([d["working_ion"]])
+
         d["material_ids"] = d["stable_material_ids"] + d["unstable_material_ids"]
         d["num_steps"] = d.pop("nsteps", None)
         d["last_updated"] = datetime.utcnow()
         elements = sorted(host_structure.composition.elements)
         chemsys = "-".join(sorted(map(str, elements)))
         framework = Composition(d["framework_formula"])
+        discharge_comp = Composition(d["formula_discharge"])
+        working_ion_ele = Element(d["working_ion"])
+        battery_formula = cls.get_battery_formula(
+            Composition(d["formula_charge"]), discharge_comp, working_ion_ele,
+        )
+
+        # Check if more than one working ion per transition metal and warn
+        warnings = []
+        transition_metal_fraction = sum(
+            [
+                discharge_comp.get_atomic_fraction(element)
+                for element in discharge_comp
+                if element.is_transition_metal
+            ]
+        )
+        if (
+            discharge_comp.get_atomic_fraction(working_ion_ele)
+            / transition_metal_fraction
+            > 1.0
+        ):
+            warnings.append("More than one working ion per transition metal")
+
         return cls(
             battery_id=battery_id,
             host_structure=host_structure.as_dict(),
             framework=framework,
+            battery_formula=battery_formula,
             electrode_object=ie.as_dict(),
             elements=elements,
             nelements=len(elements),
             chemsys=chemsys,
             formula_anonymous=framework.anonymized_formula,
-            **d
+            warnings=warnings,
+            **d,
+        )
+
+    @staticmethod
+    def get_battery_formula(
+        charge_comp: Composition, discharge_comp: Composition, working_ion: Element
+    ):
+
+        working_ion_subscripts = []
+
+        for comp in [charge_comp, discharge_comp]:
+
+            comp_dict = comp.get_el_amt_dict()
+
+            working_ion_num = (
+                comp_dict.pop(working_ion.value)
+                if working_ion.value in comp_dict
+                else 0
+            )
+            temp_comp = Composition.from_dict(comp_dict)
+
+            (temp_reduced, n) = temp_comp.get_reduced_composition_and_factor()
+
+            working_ion_subscripts.append(
+                "{:.2f}".format(working_ion_num / n).rstrip(".0")
+            )
+
+        return (
+            working_ion.value
+            + "-".join(working_ion_subscripts)
+            + temp_reduced.reduced_formula
         )
 
 
