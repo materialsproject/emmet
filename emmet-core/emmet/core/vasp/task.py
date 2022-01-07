@@ -7,38 +7,11 @@ from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core.base import EmmetBaseModel
 from emmet.core.math import Matrix3D, Vector3D
-from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
+from emmet.core.task import TaskDocument as BaseTaskDocument
 from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types import RunType, calc_type, run_type, task_type
-
-
-class BaseTaskDocument(EmmetBaseModel):
-    """
-    Definition of base Task Document
-    """
-
-    calc_code: str = Field(description="The calculation code used to compute this task")
-    version: str = Field(None, description="The version of the calculation code")
-    dir_name: str = Field(None, description="The directory for this task")
-    task_id: MPID = Field(None, description="the Task ID For this document")
-
-    completed: bool = Field(False, description="Whether this calcuation completed")
-    completed_at: datetime = Field(
-        None, description="Timestamp for when this task was completed"
-    )
-    last_updated: datetime = Field(
-        default_factory=datetime.utcnow,
-        description="Timestamp for this task document was last updateed",
-    )
-
-    tags: List[str] = Field([], description="Metadata tags for this task document")
-
-    warnings: List[str] = Field(
-        None, description="Any warnings related to this property"
-    )
 
 
 class Status(ValueEnum):
