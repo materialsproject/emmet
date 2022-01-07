@@ -45,12 +45,17 @@ class PartialChargesDoc(PropertyDoc):
         charges = None
         method = None
 
+        if task.output.optimized_molecule is not None:
+            mol = task.output.optimized_molecule
+        else:
+            mol = task.output.initial_molecule
+
         for m in preferred_methods:
             if m == "NBO7" and task.output.nbo is not None:
                 if not task.orig["rem"].get("run_nbo6", False):
                     continue
                 method = m
-                charges = [float(task.output.nbo["natural_populations"][0]["Charge"][str(i)]) for i in range(len(task.output.molecule))]
+                charges = [float(task.output.nbo["natural_populations"][0]["Charge"][str(i)]) for i in range(len(mol))]
                 break
             elif m == "RESP" and task.output.resp is not None:
                 method = m
@@ -71,15 +76,72 @@ class PartialChargesDoc(PropertyDoc):
         if charges is None:
             raise Exception("No valid partial charge information!")
 
+        return super().from_moleculue(
+            meta_molecule=mol,
+            molecule_id=molecule_id,
+            charges=charges,
+            method=method,
+            **kwargs
+        )
+
+
+class PartialSpinsDoc(PropertyDoc):
+    """Atomic partial charges of a molecule"""
+
+    property_name = "partial_spins"
+
+    spins: List[float] = Field(description="Atomic partial spins for the molecule")
+
+    method: str = Field(None, description="Method used to compute atomic partial spins")
+
+    @classmethod
+    def from_task(
+            cls,
+            task: TaskDocument,
+            molecule_id: MPID,
+            preferred_methods: Tuple = ("NBO7", "Mulliken"),
+            **kwargs
+    ): # type: ignore[override]
+        """
+        Determine partial spins from a task document
+
+        :param task: task document from which partial spins can be extracted
+        :param molecule_id: mpid
+        :param preferred_methods: list of methods; by default, NBO7 and Mulliken, in that order
+        :param kwargs: to pass to PropertyDoc
+        :return:
+        """
+
+        spins = None
+        method = None
+
         if task.output.optimized_molecule is not None:
             mol = task.output.optimized_molecule
         else:
             mol = task.output.initial_molecule
 
+        if mol.spin_multiplicity == 1:
+            raise Exception("Closed-shell molecule has no partial spins!")
+
+        for m in preferred_methods:
+            if m == "NBO7" and task.output.nbo is not None:
+                if not task.orig["rem"].get("run_nbo6", False):
+                    continue
+                method = m
+                spins = [float(task.output.nbo["natural_populations"][0]["Density"][str(i)]) for i in range(len(mol))]
+                break
+            elif m == "Mulliken" and task.output.mulliken is not None:
+                method = m
+                spins = [mull[1] for mull in task.output.mulliken]
+                break
+
+        if spins is None:
+            raise Exception("No valid partial spin information!")
+
         return super().from_moleculue(
             meta_molecule=mol,
             molecule_id=molecule_id,
-            charges=charges,
+            spins=spins,
             method=method,
             **kwargs
         )
