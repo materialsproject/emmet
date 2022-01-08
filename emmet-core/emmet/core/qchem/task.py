@@ -105,7 +105,7 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
     @property
     def task_type(self) -> TaskType:
-        return task_type(self.special_run_type, self.orig)
+        return task_type(self.orig, special_run_type=self.special_run_type)
 
     @property
     def calc_type(self) -> CalcType:

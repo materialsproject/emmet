@@ -17,7 +17,9 @@ from emmet.core.qchem.calc_types.calc_types import (
 )
 
 functional_synonyms = {"wb97xd": "wb97x-d",
-                       "wb97xv": "wb97x-v"}
+                       "wb97xd3": "wb97x-d3",
+                       "wb97xv": "wb97x-v",
+                       "wb97mv": "wb97m-v"}
 
 def level_of_theory(
         parameters: Dict[str, Any],
@@ -105,6 +107,9 @@ def level_of_theory(
                     break
             if not match:
                 raise ValueError(f"Unknown solvent with SMD parameters {custom_smd}!")
+        else:
+            if solvent not in SOLVENTS:
+                raise ValueError(f"Unexpected solvent {solvent.upper()}")
         solvation = f"SMD({solvent.upper()})"
     else:
         raise ValueError(f"Unexpected implicit solvent method {solvent_method}!")
@@ -113,7 +118,7 @@ def level_of_theory(
 
     return LevelOfTheory(lot)
 
-def task_type(special_run_type: str, orig: Dict[str, Any]) -> TaskType:
+def task_type(orig: Dict[str, Any], special_run_type: Optional[str] = None) -> TaskType:
     if special_run_type == "frequency_flattener":
         return TaskType("frequency-flattening geometry optimization")
     elif special_run_type == "ts_frequency_flattener":
@@ -143,5 +148,5 @@ def calc_type(
         parameters: Dictionary of VASP parameters from Vasprun.xml
     """
     rt = level_of_theory(orig, custom_smd=custom_smd).value
-    tt = task_type(special_run_type, orig).value
+    tt = task_type(orig, special_run_type=special_run_type).value
     return CalcType(f"{rt} {tt}")

@@ -44,7 +44,7 @@ calc_type_enum = get_enum_source(
     "CalcType",
     "Calculation types (LOT + task type) for Q-Chem",
     {
-        f"{'_'.join(lot.split()).replace('+','_').replace('-','_').replace('(', '_').replace(')', '_').replace('/', '_')}_{'_'.join(tt.split()).replace('-', '_')}": f"{lot} {tt}"
+        f"{'_'.join(lot.split()).replace('+','_').replace('-','_').replace('(', '_').replace(')', '_').replace('/', '_').replace('*', '_d')}_{'_'.join(tt.split()).replace('-', '_')}": f"{lot} {tt}"
         for lot, tt in product(_LOTS, TASK_TYPES)
     }
 )
