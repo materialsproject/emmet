@@ -118,12 +118,23 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     @property
     def entry(self) -> Dict[str, Any]:
 
+        if self.output.optimized_molecule is not None:
+            mol = self.output.optimized_molecule
+        else:
+            mol = self.output.initial_moleculue
+
         entry_dict = {
             "entry_id": self.task_id,
-            "molecule": self.output.molecule,
-            "composition": self.output.molecule.composition,
+            "charge": self.charge,
+            "spin_multiplicity": self.spin_multiplicity,
+            "level_of_theory": self.level_of_theory,
+            "task_type": self.task_type,
+            "calc_type": self.calc_type,
+            "molecule": mol,
+            "composition": mol.composition,
+            "formula": mol.composition.alphabetical_formula,
             "energy": self.output.final_energy,
-            # "output": self.output.as_dict(),
+            "output": self.output.as_dict(),
             "parameters": self.orig,
             "last_updated": self.last_updated
         }

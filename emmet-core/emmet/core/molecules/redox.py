@@ -10,23 +10,25 @@ import numpy as np
 from pydantic import Field
 import networkx as nx
 
+from pymatgen.core.periodic_table import Specie, Element
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
-
-from pymatgen.core.periodic_table import Specie, Element
+from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
 from emmet.core import SETTINGS
 from emmet.core.mpid import MPID
 from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import evaluate_molecule
+from emmet.core.qchem.calc_types import TaskType
+from emmet.core.qchem.molecule import evaluate_lot
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.molecules.bonds import metals
+from emmet.core.molecules.thermo import get_free_energy
 
 
 
 reference_potentials = {"H": 4.44,
-                        "Li": 1.4,
+                        "Li": 1.40,
                         "Mg": 2.06,
                         "Ca": 1.60}
 
@@ -58,11 +60,11 @@ class RedoxDoc(PropertyDoc):
     oxidation_potentials: Dict[str, float] = Field(description="Oxidation potentials with various reference electrodes")
 
     @classmethod
-    def from_tasks(
+    def from_entries(
         cls,
-        tasks: List[TaskDocument],
+        entries: List[Dict[str, Any]],
         **kwargs
-    ):
+    ) -> List["RedoxDoc"]:
         """
         Construct documents describing molecular redox properties from task documents.
         Note that multiple documents may be made by this procedure.
@@ -73,28 +75,27 @@ class RedoxDoc(PropertyDoc):
         3. Group by level of theory (LOT)
         3. Within each group, construct documents, preferring higher LOT
 
-        :param tasks:
-        :param kwargs:
+        :param entries: List of entries (dicts derived from TaskDocuments)
+        :param kwargs: To be passed to PropertyDoc
         :return:
         """
 
         docs = list()
 
+        mm = MoleculeMatcher()
+
         # First, group tasks by formula
         tasks_by_formula = defaultdict(list)
-        for t in tasks:
-            tasks_by_formula[t.formula_alphabetical].append(t)
+        for t in entries:
+            tasks_by_formula[t["formula"]].append(t)
             
         for form_group in tasks_by_formula.values():
             mol_graphs_nometal = list()
             group_by_graph = defaultdict(list)
 
             # Within each group, group by the covalent molecular graph
-            for task in form_group:
-                if task.output.optimized_molecule is not None:
-                    mol = task.output.optimized_molecule
-                else:
-                    mol = task.output.initial_molecule
+            for t in form_group:
+                mol = t["molecule"]
 
                 mol_nometal = copy.deepcopy(mol)
                 mol_nometal.remove_species(metals)
@@ -107,15 +108,123 @@ class RedoxDoc(PropertyDoc):
                         break
 
                 if match is None:
-                    group_by_graph[len(mol_graphs_nometal)].append(task)
+                    group_by_graph[len(mol_graphs_nometal)].append(t)
                     mol_graphs_nometal.append(mg_nometal)
                 else:
-                    group_by_graph[match].append(task)
+                    group_by_graph[match].append(t)
 
             # Now finally, group by level of theory
             for graph_group in group_by_graph.values():
                 lot_groups = defaultdict(list)
-                for task in graph_group:
-                    lot_groups[task.level_of_theory].append(task)
+                for t in graph_group:
+                    lot_groups[t["level_of_theory"]].append(t)
 
-                # Now see if we have enough data for a full document
+                docs_by_charge = dict()
+                # Now try to form documents
+                # Start with highest lot; keep going down until you can make complete documents
+                for lot, group in sorted(lot_groups.items(), key=lambda x: evaluate_lot(x[0])):
+                    # Sorting important because we want to make docs only from lowest-energy instances
+                    ffopts = sorted(
+                        [f for f in group if f["task_type"] == TaskType.frequency_flattening_geometry_optimization],
+                        key=lambda x: x.output.final_energy)
+
+                    charges = [f["charge"] for f in ffopts]
+                    if all([c in docs_by_charge for c in charges]):
+                        continue
+                    single_points = [s for s in group if s.task_type == TaskType.single_point]
+
+                    for ff in ffopts:
+                        d = {
+                            "electron_affinity": None,
+                            "ea_id": None,
+                            "ionization_energy": None,
+                            "ie_id": None,
+                            "reduction_free_energy": None,
+                            "red_id": None,
+                            "oxidation_free_energy": None,
+                            "ox_id": None,
+                            "reduction_potentials": None,
+                            "oxidations_potentials": None
+                        }
+
+                        charge = ff.charge
+
+                        # Doc already exists at a higher LOT; move on
+                        if charge in docs_by_charge:
+                            continue
+
+                        ff_mol = ff["output"]["optimized_molecule"]
+
+                        ff_g = get_free_energy(
+                            ff["output"]["final_energy"],
+                            ff["output"]["enthalpy"],
+                            ff["output"]["entropy"]
+                        )
+
+                        # Look for IE and EA SP
+                        for sp in single_points:
+                            sp_mol = sp["output"]["initial_moleculue"]
+
+                            # EA
+                            if sp["charge"] == charge - 1 and mm.fit(ff_mol, sp_mol):
+                                d["electron_affinity"] = (sp["output"]["final_energy"] - ff["output"]["final_energy"]) * 27.2114
+                                d["ea_id"] = sp["task_id"]
+                            elif sp["charge"] == charge + 1 and mm.fit(ff_mol, sp_mol):
+                                d["ionization_energy"] = (sp["output"]["final_energy"] - ff["output"]["final_energy"]) * 27.2114
+                                d["ie_id"] = sp["task_id"]
+
+                            if d["ea_id"] is not None and d["ie_ed"] is not None:
+                                break
+
+                        # If no vertical IE or EA, can't make complete doc; give up
+                        if d["ea_id"] is None or d["ie_id"] is None:
+                            continue
+
+                        # Look for adiabatic reduction and oxidation calcs
+                        for other in ffopts:
+                            # Reduction
+                            if other["charge"] == charge - 1:
+                                other_g = get_free_energy(
+                                    other["output"]["final_energy"],
+                                    other["output"]["enthalpy"],
+                                    other["output"]["entropy"]
+                                )
+                                d["reduction_free_energy"] = other_g - ff_g
+                                d["reduction_potentials"] = dict()
+                                for ref, pot in reference_potentials.items():
+                                    d["reduction_potentials"][ref] = -1 * d["reduction_free_energy"] - pot
+                                d["red_id"] = other["task_id"]
+
+                            # Oxidation
+                            elif other.charge == charge + 1:
+                                other_g = get_free_energy(
+                                    other["output"]["final_energy"],
+                                    other["output"]["enthalpy"],
+                                    other["output"]["entropy"]
+                                )
+                                d["oxidation_free_energy"] = other_g - ff_g
+                                d["oxidations_potentials"] = dict()
+                                for ref, pot in reference_potentials.items():
+                                    d["oxidations_potentials"][ref] = d["oxidation_free_energy"] - pot
+
+                                d["ox_id"] = other["task_id"]
+
+                            if d["red_id"] is not None and d["ox_id"] is not None:
+                                break
+
+                        if d["red_id"] is None or d["ox_id"] is None:
+                            continue
+
+                        docs_by_charge[charge] = RedoxDoc.from_molecule(
+                            meta_molecule=ff_mol,
+                            molecule_id=ff.get("entry_id", ff["task_id"]),
+                            **d,
+                            **kwargs
+                        )
+                        if all([c in docs_by_charge for c in charges]):
+                            break
+
+                for doc in docs_by_charge.values():
+                    docs.append(doc)
+
+        return docs
