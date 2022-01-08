@@ -16,6 +16,70 @@ from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.task import TaskDocument
 
 
+def evaluate_lot(
+    lot: LevelOfTheory,
+    funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+    basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+    solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
+):
+    """
+
+    :param lot: Level of theory to be evaluated
+    :param funct_scores: Scores for various density functionals
+    :param basis_scores: Scores for various basis sets
+    :param solvent_scores: Scores for various implicit solvent models
+    :return:
+    """
+
+    lot_comp = lot.value.split("/")
+
+    return (
+        -1 * funct_scores.get(lot_comp[0], 0),
+        -1 * basis_scores.get(lot_comp[1], 0),
+        -1 * solvent_scores.get(lot_comp[2].split("(")[0], 0)
+    )
+
+
+def evaluate_molecule(
+        task: TaskDocument,
+        funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+        basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+        solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
+        task_quality_scores: Dict[str, int] = SETTINGS.QCHEM_TASK_QUALITY_SCORES):
+    """
+    Helper function to order optimization calcs by
+    - Level of theory
+    - Spin polarization
+    - Special Tags
+    - Energy
+
+    :param task: Task to be evaluated
+    :param funct_scores: Scores for various density functionals
+    :param basis_scores: Scores for various basis sets
+    :param solvent_scores: Scores for various implicit solvent models
+    :param task_quality_scores: Scores for variouus task types
+    :return:
+    """
+
+    lot = task.level_of_theory
+
+    lot_eval = evaluate_lot(
+        lot,
+        funct_scores=funct_scores,
+        basis_scores=basis_scores,
+        solvent_scores=solvent_scores
+    )
+
+    return (
+        -1 * int(task.is_valid),
+        lot_eval[0],
+        lot_eval[1],
+        lot_eval[2],
+        -1 * task_quality_scores.get(task.task_type.value, 0),
+        task.output.final_energy,
+    )
+
+
 class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
     calc_types: Mapping[str, CalcType] = Field(  # type: ignore
@@ -43,9 +107,6 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
     def from_tasks(
             cls,
             task_group: List[TaskDocument],
-            funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
-            basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
-            solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
     ) -> "MoleculeDoc":
 
         """
@@ -77,31 +138,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
         molecule_id = min(possible_mol_ids)
 
-        # Always prefer a static over a structure opt
-        task_quality_scores = {"geometry optimization": 1, "frequency-flattening geometry optimization": 2}
-
-        def _evaluate_molecule(task: TaskDocument):
-            """
-            Helper function to order optimization calcs by
-            - Level of theory
-            - Spin polarization
-            - Special Tags
-            - Energy
-            """
-
-            lot_comp = task.level_of_theory.value.split("/")
-
-
-            return (
-                -1 * int(task.is_valid),
-                -1 * funct_scores.get(lot_comp[0], 0),
-                -1 * basis_scores.get(lot_comp[1], 0),
-                -1 * solvent_scores.get(lot_comp[2].split("(")[0], 0),
-                -1 * task_quality_scores.get(task.task_type.value, 0),
-                task.output.final_energy,
-            )
-
-        best_molecule_calc = sorted(geometry_optimizations, key=_evaluate_molecule)[0]
+        best_molecule_calc = sorted(geometry_optimizations, key=evaluate_molecule)[0]
         molecule = best_molecule_calc.output.molecule
 
         # Initial Structures
@@ -130,7 +167,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         for lot in all_lots:
             relevant_calcs = sorted(
                 [doc for doc in geometry_optimizations if doc.level_of_theory == lot and doc.is_valid],
-                key=_evaluate_molecule,
+                key=evaluate_molecule,
             )
 
             if len(relevant_calcs) > 0:

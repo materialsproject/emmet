@@ -12,6 +12,7 @@ from pymatgen.core.periodic_table import Specie, Element
 
 from emmet.core.mpid import MPID
 from emmet.core.qchem.task import TaskDocument
+from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 
 
@@ -81,6 +82,7 @@ class PartialChargesDoc(PropertyDoc):
             molecule_id=molecule_id,
             charges=charges,
             method=method,
+            origins=PropertyOrigin(name="partial_charges", task_id=task.task_id),
             **kwargs
         )
 
@@ -143,5 +145,6 @@ class PartialSpinsDoc(PropertyDoc):
             molecule_id=molecule_id,
             spins=spins,
             method=method,
+            origins=PropertyOrigin(name="partial_charges", task_id=task.task_id),
             **kwargs
         )

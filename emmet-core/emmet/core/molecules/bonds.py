@@ -17,6 +17,7 @@ from pymatgen.core.periodic_table import Specie, Element
 
 from emmet.core.mpid import MPID
 from emmet.core.qchem.task import TaskDocument
+from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 
 
@@ -205,8 +206,7 @@ def nbo_molecule_graph(
 
 
 class BondingDoc(PropertyDoc):
-    """Structure graphs representing chemical bonds calculated from structure
-    using near neighbor strategies as defined in pymatgen."""
+    """Representation of molecular bonding."""
 
     property_name = "bonding"
 
@@ -312,5 +312,6 @@ class BondingDoc(PropertyDoc):
             bond_types=bond_types,
             bonds=bonds,
             bonds_nometal=bonds_nometal,
+            origins=PropertyOrigin(name="partial_charges", task_id=task.task_id),
             **kwargs
         )

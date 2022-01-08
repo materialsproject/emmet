@@ -10,6 +10,7 @@ from pymatgen.core.structure import Molecule
 
 from emmet.core.mpid import MPID
 from emmet.core.structure import MoleculeMetadata
+from emmet.core.material import PropertyOrigin
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.molecule_property import PropertyDoc
 
@@ -141,5 +142,6 @@ class VibrationDoc(PropertyDoc):
             frequencies=frequencies,
             frequency_modes=frequency_modes,
             spectrum=spectrum,
+            origins=PropertyOrigin(name="partial_charges", task_id=task.task_id),
             **kwargs
         )

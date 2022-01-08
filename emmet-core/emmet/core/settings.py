@@ -74,6 +74,11 @@ class EmmetSettings(BaseSettings):
         description="Dictionary mapping Q-Chem solvent models to a quality score."
     )
 
+    QCHEM_TASK_QUALITY_SCORES: Dict[str, int] = Field(
+        {"geometry optimization": 1, "frequency-flattening geometry optimization": 2},
+        description="Dictionary mapping Q-Chem task type to a quality score"
+    )
+
     VASP_QUALITY_SCORES: Dict[str, int] = Field(
         {"SCAN": 3, "GGA+U": 2, "GGA": 1},
         description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builders",
