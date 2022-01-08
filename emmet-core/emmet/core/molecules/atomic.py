@@ -82,7 +82,7 @@ class PartialChargesDoc(PropertyDoc):
             molecule_id=molecule_id,
             charges=charges,
             method=method,
-            origins=PropertyOrigin(name="partial_charges", task_id=task.task_id),
+            origins=[PropertyOrigin(name="partial_charges", task_id=task.task_id)],
             **kwargs
         )
 
@@ -145,6 +145,6 @@ class PartialSpinsDoc(PropertyDoc):
             molecule_id=molecule_id,
             spins=spins,
             method=method,
-            origins=PropertyOrigin(name="partial_charges", task_id=task.task_id),
+            origins=[PropertyOrigin(name="partial_spins", task_id=task.task_id)],
             **kwargs
         )

@@ -312,6 +312,6 @@ class BondingDoc(PropertyDoc):
             bond_types=bond_types,
             bonds=bonds,
             bonds_nometal=bonds_nometal,
-            origins=PropertyOrigin(name="partial_charges", task_id=task.task_id),
+            origins=[PropertyOrigin(name="bonding", task_id=task.task_id)],
             **kwargs
         )

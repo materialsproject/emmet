@@ -21,6 +21,7 @@ from emmet.core.mpid import MPID
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.calc_types import TaskType
 from emmet.core.qchem.molecule import evaluate_lot
+from emmer.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.molecules.bonds import metals
 from emmet.core.molecules.thermo import get_free_energy
@@ -218,6 +219,14 @@ class RedoxDoc(PropertyDoc):
                         docs_by_charge[charge] = RedoxDoc.from_molecule(
                             meta_molecule=ff_mol,
                             molecule_id=ff.get("entry_id", ff["task_id"]),
+                            origins=[PropertyOrigin(name="redox", task_id=x) for x in [
+                                ff["task_id"],
+                                d["ea_id"],
+                                d["ie_id"],
+                                d["red_id"],
+                                d["ox_id"]
+                            ]
+                                     ],
                             **d,
                             **kwargs
                         )

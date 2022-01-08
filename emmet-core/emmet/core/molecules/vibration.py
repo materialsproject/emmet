@@ -96,7 +96,7 @@ class VibSpectrumDoc(SpectrumDoc):
 
 class VibrationDoc(PropertyDoc):
 
-    property_name = "vibrational_modes"
+    property_name = "vibrations"
 
     molecule: Molecule
 
@@ -142,6 +142,6 @@ class VibrationDoc(PropertyDoc):
             frequencies=frequencies,
             frequency_modes=frequency_modes,
             spectrum=spectrum,
-            origins=PropertyOrigin(name="partial_charges", task_id=task.task_id),
+            origins=[PropertyOrigin(name="vibrations", task_id=task.task_id)],
             **kwargs
         )
