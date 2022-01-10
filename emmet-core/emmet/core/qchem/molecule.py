@@ -121,7 +121,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
         # Metadata
         last_updated = max(task.last_updated for task in task_group)
-        created_at = min(task.completed_at for task in task_group)
+        created_at = min(task.last_updated for task in task_group)
         task_ids = list({task.task_id for task in task_group})
 
         deprecated_tasks = {task.task_id for task in task_group if not task.is_valid}
@@ -139,13 +139,19 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         molecule_id = min(possible_mol_ids)
 
         best_molecule_calc = sorted(geometry_optimizations, key=evaluate_molecule)[0]
-        molecule = best_molecule_calc.output.molecule
+        molecule = best_molecule_calc.output.optimized_molecule
 
-        # Initial Structures
-        initial_molecules = [task.orig["molecule"] for task in task_group]
+        # Initial molecules
+        initial_molecules = list()
+        for task in task_group:
+            if isinstance(task.orig["molecule"], Molecule):
+                initial_molecules.append(task.orig["molecule"])
+            else:
+                initial_molecules.append(Molecule.from_dict(task.orig["molecule"]))
+
         mm = MoleculeMatcher()
         initial_molecules = [
-            group[0] for group in mm.group_structures(initial_molecules)
+            group[0] for group in mm.group_molecules(initial_molecules)
         ]
 
         # Deprecated
@@ -208,11 +214,11 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
         # Metadata
         last_updated = max(task.last_updated for task in task_group)
-        created_at = min(task.completed_at for task in task_group)
+        created_at = min(task.last_updated for task in task_group)
         task_ids = list({task.task_id for task in task_group})
 
         deprecated_tasks = {task.task_id for task in task_group}
-        run_types = {task.task_id: task.run_type for task in task_group}
+        levels_of_theory = {task.task_id: task.level_of_theory for task in task_group}
         task_types = {task.task_id: task.task_type for task in task_group}
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
@@ -220,7 +226,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         molecule_id = min([task.task_id for task in task_group])
 
         # Choose any random structure for metadata
-        molecule = task_group[0].output.molecule
+        molecule = task_group[0].output.initial_molecule
 
         # Deprecated
         deprecated = True
@@ -232,7 +238,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             created_at=created_at,
             task_ids=task_ids,
             calc_types=calc_types,
-            run_types=run_types,
+            levels_of_theory=levels_of_theory,
             task_types=task_types,
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,

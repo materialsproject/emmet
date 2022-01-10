@@ -180,7 +180,7 @@ class MoleculeMetadata(EmmetBaseModel):
         )
         comp = meta_molecule.composition
         elsyms = sorted(set([e.symbol for e in comp.elements]))
-        symmetry = PointGroupData.from_structure(meta_molecule)
+        symmetry = PointGroupData.from_molecule(meta_molecule)
 
         data = {
             "charge": meta_molecule.charge,
@@ -189,7 +189,7 @@ class MoleculeMetadata(EmmetBaseModel):
             "elements": elsyms,
             "nelements": len(elsyms),
             "composition": comp,
-            "alphabetical_formula": comp.alphabetical_formula,
+            "formula_alphabetical": comp.alphabetical_formula,
             "chemsys": "-".join(elsyms),
             "symmetry": symmetry,
         }

@@ -1,4 +1,5 @@
 import json
+import datetime
 
 import pytest
 
@@ -12,8 +13,11 @@ from emmet.core.qchem.task import TaskDocument
 
 @pytest.fixture(scope="session")
 def test_tasks(test_dir):
-    with zopen(test_dir / "test_si_tasks.json.gz") as f:
+    with zopen(test_dir / "liec_tasks.json.gz") as f:
         data = json.load(f)
+
+    for d in data:
+        d["last_updated"] = datetime.datetime.strptime(d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f")
 
     tasks = [TaskDocument(**t) for t in data]
     return tasks
@@ -22,7 +26,7 @@ def test_tasks(test_dir):
 def test_make_mol(test_tasks):
 
     molecule = MoleculeDoc.from_tasks(test_tasks)
-    assert molecule.formula_pretty == "C3 H4 Li1 O3"
+    assert molecule.formula_alphabetical == "C3 H4 Li1 O3"
     assert len(molecule.task_ids) == 5
     assert len(molecule.entries) == 1
 
@@ -39,10 +43,10 @@ def test_make_deprecated_mat(test_tasks):
         task for task in test_tasks if task.task_type not in [TaskType.geometry_optimization, TaskType.frequency_flattening_geometry_optimization]
     ]
 
-    molecule = MoleculeDoc.construct_deprecated_moleculue(bad_task_group)
+    molecule = MoleculeDoc.construct_deprecated_molecule(bad_task_group)
 
     assert molecule.deprecated
-    assert molecule.formula_pretty == "Si"
+    assert molecule.formula_alphabetical == "C3 H4 Li1 O3"
     assert len(molecule.task_ids) == 4
     assert molecule.entries is None
 
