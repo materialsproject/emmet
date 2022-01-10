@@ -21,6 +21,11 @@ def test_tasks(test_dir):
     tasks = [TaskDocument(**t) for t in data]
     return tasks
 
+@pytest.fixture(scope="session")
+def open_shell(test_dir):
+    task = TaskDocument(**loadfn((test_dir / "open_shell_nbo_task.json.gz")))
+    return task
+
 
 def test_partial_charges(test_tasks):
     # Test RESP
@@ -48,3 +53,18 @@ def test_partial_charges(test_tasks):
     assert pcd.method == "NBO7"
     nbo_charges = [float(test_tasks[4].output.nbo["natural_populations"][0]["Charge"][str(i)]) for i in range(11)]
     assert pcd.charges == nbo_charges
+
+def test_partial_spins(open_shell):
+    # Test Mulliken
+    psd = PartialSpinsDoc.from_task(open_shell, molecule_id="libe-202098", preferred_methods=("Mulliken",))
+
+    assert psd.property_name == "partial_spins"
+    assert psd.method == "Mulliken"
+    assert psd.spins == [m[1] for m in open_shell.output.mulliken]
+
+    # Test NBO
+    psd = PartialSpinsDoc.from_task(open_shell, molecule_id="libe-202098", preferred_methods=("NBO7",))
+
+    assert psd.method == "NBO7"
+    spins = [float(open_shell.output.nbo["natural_populations"][0]["Density"][str(i)]) for i in range(11)]
+    assert psd.spins == spins
