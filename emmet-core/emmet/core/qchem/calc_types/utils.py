@@ -108,7 +108,7 @@ def level_of_theory(
             if not match:
                 raise ValueError(f"Unknown solvent with SMD parameters {custom_smd}!")
         else:
-            if solvent not in SOLVENTS:
+            if solvent.upper() not in SOLVENTS:
                 raise ValueError(f"Unexpected solvent {solvent.upper()}")
         solvation = f"SMD({solvent.upper()})"
     else:

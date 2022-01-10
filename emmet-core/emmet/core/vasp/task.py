@@ -116,6 +116,12 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
         [], description="The 'raw' calculation docs used to assembled this task"
     )
 
+    warnings: List[str] = Field(
+        None, description="Any warnings related to this property"
+    )
+
+    tags: List[str] = Field([], description="Metadata tags for this task document")
+
     @property
     def run_type(self) -> RunType:
         params = self.calcs_reversed[0].get("input", {}).get("parameters", {})

@@ -2,9 +2,12 @@ import json
 
 import pytest
 from monty.io import zopen
+from monty.serialization import loadfn
 
 from emmet.core.qchem.calc_types import LevelOfTheory, TaskType, level_of_theory, task_type
 from emmet.core.qchem.task import TaskDocument
+from emmet.core.mpid import MPID
+
 
 def test_task_type():
 
@@ -92,14 +95,32 @@ def test_unexpected_lots():
                          "pcm": {"theory": "cpcm"},
                          "solvent": {"dielectric": 3.2}})
 
-    # # Unknown solvent for SMD, based on custom parameters
-    # with pytest.raises(ValueError):
-    #     pass
-    #
-    # # Unexpected solvent with given name
-    # with pytest.raises(ValueError):
-    #     pass
-    #
-    # # solvent=other for SMD, but no custom_smd provided
-    # with pytest.raises(ValueError):
-    #     pass
+    # Unknown solvent for SMD, based on custom parameters
+    with pytest.raises(ValueError):
+        level_of_theory({"rem": {"method": "wb97xv", "basis": "def2-tzvppd", "solvent_method": "smd"},
+                         "smx": {"solvent": "other"}},
+                        custom_smd="4.9,1.558,0.0,0.576,49.94,0.667,0.0")
+
+    # Unexpected solvent with given name
+    with pytest.raises(ValueError):
+        level_of_theory({"rem": {"method": "wb97xv", "basis": "def2-tzvppd", "solvent_method": "smd"},
+                         "smx": {"solvent": "methanol"}})
+
+    # solvent=other for SMD, but no custom_smd provided
+    with pytest.raises(ValueError):
+        level_of_theory({"rem": {"method": "wb97xv", "basis": "def2-tzvppd", "solvent_method": "smd"},
+                         "smx": {"solvent": "other"}})
+
+
+@pytest.fixture(scope="session")
+def tasks(test_dir):
+    data = loadfn((test_dir / "random_bh4_entries.json.gz").as_posix())
+
+    return [TaskDocument(**d) for d in data]
+
+
+def test_computed_entry(tasks):
+    entries = [task.entry for task in tasks]
+    ids = {e["entry_id"] for e in entries}
+    expected = {MPID(i) for i in {675022, 674849, 674968, 674490, 674950, 674338, 674322, 675078, 674385, 675041}}
+    assert ids == expected

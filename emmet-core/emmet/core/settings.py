@@ -64,7 +64,7 @@ class EmmetSettings(BaseSettings):
         description="Dictionary mapping Q-Chem density functionals to a quality score."
     )
 
-    QCHEM_BASIS_QUALITY_SCORE: Dict[str, int] = Field(
+    QCHEM_BASIS_QUALITY_SCORES: Dict[str, int] = Field(
         {"6-31g*": 1, "def2-SVPD": 2, "def2-TZVP": 3, "def2-TZVPD": 4, "def2-TZVPP": 5, "def2-TZVPPD": 6, "def2-QZVPPD": 7},
         description="Dictionary mapping Q-Chem basis sets to a quality score."
     )

@@ -99,6 +99,13 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     special_run_type: str = Field(None,
                                   description="Special workflow name (if applicable)")
 
+    tags: Dict[str, Any] = Field(None,
+                                 description="Metadata tags")
+
+    warnings: Dict[str, bool] = Field(
+        None, description="Any warnings related to this task document"
+    )
+
     @property
     def level_of_theory(self) -> LevelOfTheory:
         return level_of_theory(self.orig, custom_smd=self.custom_smd)
@@ -121,7 +128,7 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
         if self.output.optimized_molecule is not None:
             mol = self.output.optimized_molecule
         else:
-            mol = self.output.initial_moleculue
+            mol = self.output.initial_molecule
 
         entry_dict = {
             "entry_id": self.task_id,
@@ -135,7 +142,8 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
             "formula": mol.composition.alphabetical_formula,
             "energy": self.output.final_energy,
             "output": self.output.as_dict(),
-            "parameters": self.orig,
+            "orig": self.orig,
+            "tags": self.tags,
             "last_updated": self.last_updated
         }
 
