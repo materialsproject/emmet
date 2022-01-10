@@ -30,6 +30,7 @@ class PartialChargesDoc(PropertyDoc):
             cls,
             task: TaskDocument,
             molecule_id: MPID,
+            deprecated: bool=False,
             preferred_methods: Tuple = ("NBO7", "RESP", "Critic2", "Mulliken"),
             **kwargs
     ): # type: ignore[override]
@@ -68,7 +69,7 @@ class PartialChargesDoc(PropertyDoc):
                 break
             elif m == "Mulliken" and task.output.mulliken is not None:
                 method = m
-                if task.output.molecule.spin_multiplicity == 1:
+                if mol.spin_multiplicity == 1:
                     charges = task.output.mulliken
                 else:
                     charges = [mull[0] for mull in task.output.mulliken]
@@ -77,11 +78,12 @@ class PartialChargesDoc(PropertyDoc):
         if charges is None:
             raise Exception("No valid partial charge information!")
 
-        return super().from_moleculue(
+        return super().from_molecule(
             meta_molecule=mol,
             molecule_id=molecule_id,
             charges=charges,
             method=method,
+            deprecated=deprecated,
             origins=[PropertyOrigin(name="partial_charges", task_id=task.task_id)],
             **kwargs
         )
@@ -101,6 +103,7 @@ class PartialSpinsDoc(PropertyDoc):
             cls,
             task: TaskDocument,
             molecule_id: MPID,
+            deprecated: bool=False,
             preferred_methods: Tuple = ("NBO7", "Mulliken"),
             **kwargs
     ): # type: ignore[override]
@@ -140,8 +143,9 @@ class PartialSpinsDoc(PropertyDoc):
         if spins is None:
             raise Exception("No valid partial spin information!")
 
-        return super().from_moleculue(
+        return super().from_molecule(
             meta_molecule=mol,
+            deprecated=deprecated,
             molecule_id=molecule_id,
             spins=spins,
             method=method,

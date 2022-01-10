@@ -135,6 +135,10 @@ class VibrationDoc(PropertyDoc):
         frequencies = task.output.frequencies
         frequency_modes =task.output.frequency_modes
 
+        warnings = list()
+        if frequencies[0] < 0.0:
+            warnings.append("Imaginary frequencies")
+
         return super().from_molecule(
             meta_molecule=mol,
             molecule_id=molecule_id,
@@ -143,5 +147,6 @@ class VibrationDoc(PropertyDoc):
             frequency_modes=frequency_modes,
             spectrum=spectrum,
             origins=[PropertyOrigin(name="vibrations", task_id=task.task_id)],
+            warnings=warnings
             **kwargs
         )

@@ -213,7 +213,8 @@ class RedoxDoc(PropertyDoc):
                             if d["red_id"] is not None and d["ox_id"] is not None:
                                 break
 
-                        if d["red_id"] is None or d["ox_id"] is None:
+                        # Need to either be able to oxidize or reduce the molecule to make a doc
+                        if d["red_id"] is None and d["ox_id"] is None:
                             continue
 
                         docs_by_charge[charge] = RedoxDoc.from_molecule(
