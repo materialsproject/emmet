@@ -66,29 +66,30 @@ def nbo_molecule_graph(
     alpha_bonds = set()
     beta_bonds = set()
 
-    for bond_ind in nbo["hybridization_character"][1].get("type", list()):
-        if nbo["hybridization_character"][1]["type"][bond_ind] != "BD":
-            continue
+    if len(nbo["hybridization_character"]) >= 2:
+        for bond_ind in nbo["hybridization_character"][1].get("type", list()):
+            if nbo["hybridization_character"][1]["type"][bond_ind] != "BD":
+                continue
 
-        from_ind = int(nbo["hybridization_character"][1]["atom 1 number"][bond_ind]) - 1
-        to_ind = int(nbo["hybridization_character"][1]["atom 2 number"][bond_ind]) - 1
+            from_ind = int(nbo["hybridization_character"][1]["atom 1 number"][bond_ind]) - 1
+            to_ind = int(nbo["hybridization_character"][1]["atom 2 number"][bond_ind]) - 1
 
-        if nbo["hybridization_character"][1]["atom 1 symbol"][bond_ind] in metals:
-            m_contrib = float(nbo["hybridization_character"][1]["atom 1 polarization"][bond_ind])
-        elif nbo["hybridization_character"][1]["atom 2 symbol"][bond_ind] in metals:
-            m_contrib = float(nbo["hybridization_character"][1]["atom 2 polarization"][bond_ind])
-        else:
-            m_contrib = None
+            if nbo["hybridization_character"][1]["atom 1 symbol"][bond_ind] in metals:
+                m_contrib = float(nbo["hybridization_character"][1]["atom 1 polarization"][bond_ind])
+            elif nbo["hybridization_character"][1]["atom 2 symbol"][bond_ind] in metals:
+                m_contrib = float(nbo["hybridization_character"][1]["atom 2 polarization"][bond_ind])
+            else:
+                m_contrib = None
 
-        if m_contrib is None or m_contrib >= 30.0:
-            bond_type = "covalent"
-            warnings.add("Contains covalent bond with metal atom")
-        else:
-            bond_type = "electrostatic"
+            if m_contrib is None or m_contrib >= 30.0:
+                bond_type = "covalent"
+                warnings.add("Contains covalent bond with metal atom")
+            else:
+                bond_type = "electrostatic"
 
-        alpha_bonds.add((from_ind, to_ind, bond_type))
+            alpha_bonds.add((from_ind, to_ind, bond_type))
 
-    if mol.spin_multiplicity != 1:
+    if mol.spin_multiplicity != 1 and len(nbo["hybridization_character"]) >= 4:
         for bond_ind in nbo["hybridization_character"][3].get("type", list()):
             if nbo["hybridization_character"][3]["type"][bond_ind] != "BD":
                 continue
@@ -202,7 +203,7 @@ def nbo_molecule_graph(
     if not nx.is_connected(mg_copy.graph.to_undirected()):
         warnings.add("Metal-centered complex")
 
-    return (mg, warnings)
+    return (mg, list(warnings))
 
 
 class BondingDoc(PropertyDoc):
@@ -233,6 +234,8 @@ class BondingDoc(PropertyDoc):
         cls,
         task: TaskDocument,
         molecule_id: MPID,
+        deprecated: bool=False,
+        preferred_methods: Tuple = ("NBO7", "Critic2", "OpenBabelNN + metal_edge_extender"),
         **kwargs
     ): # type: ignore[override]
         """
@@ -245,6 +248,8 @@ class BondingDoc(PropertyDoc):
 
         :param task: task document from which bonding properties can be extracted
         :param molecule_id: mpid
+        :param preferred_methods: list of methods; by default, NBO7, Critic2, and the combination
+            of OpenBabelNN and metal_edge_extender in pymatgen, in that order
         :param kwargs: to pass to PropertyDoc
         :return:
         """
@@ -258,28 +263,30 @@ class BondingDoc(PropertyDoc):
         else:
             mol = task.output.initial_molecule
 
-        # First check if NBO7 data is available
-        if task.output.nbo is not None:
-            if task.orig["rem"].get("run_nbo6", False):
-                method = "NBO7"
-                mg, warnings = nbo_molecule_graph(mol, task.output.nbo)
+        for m in preferred_methods:
+            if mg is not None:
+                break
 
-        # Then check if critic information is available
-        if mg is None and task.critic2 is not None:
-            method = "Critic2"
-            critic = fix_C_Li_bonds(task.critic2)
-            critic_bonds = critic["processed"]["bonds"]
-            mg = make_mol_graph(mol, critic_bonds=critic_bonds)
+            if m == "NBO7" and task.output.nbo is not None:
+                if task.orig["rem"].get("run_nbo6", False):
+                    method = "NBO7"
+                    mg, warnings = nbo_molecule_graph(mol, task.output.nbo)
 
-        if mg is None:
-            method = "OpenBabelNN + metal_edge_extender"
-            mg = make_mol_graph(task.output.moleculue)
+            elif m == "Critic2" and task.critic2 is not None:
+                method = "Critic2"
+                critic = fix_C_Li_bonds(task.critic2)
+                critic_bonds = critic["processed"]["bonds"]
+                mg = make_mol_graph(mol, critic_bonds=critic_bonds)
+
+            else:
+                method = "OpenBabelNN + metal_edge_extender"
+                mg = make_mol_graph(mol)
 
         bonds = list()
         for bond in mg.graph.edges():
             bonds.append(sorted([bond[0],bond[1]]))
 
-        # Calculuate bond lengths
+        # Calculate bond lengths
         bond_types = dict()
         for u, v in mg.graph.edges():
             species_u = str(mg.molecule.species[u])
@@ -294,14 +301,12 @@ class BondingDoc(PropertyDoc):
             else:
                 bond_types[species].append(dist)
 
-        mol_nometal = copy.deepcopy(mol)
-        mol_nometal.remove_species(metals)
-        mol_nometal.set_charge_and_spin(0)
-        mg_nometal = MoleculeGraph.with_local_env_strategy(mol_nometal, OpenBabelNN())
+        m_inds = [e for e in range(len(mol)) if str(mol.species[e]) in metals]
 
         bonds_nometal = list()
-        for bond in mg_nometal.graph.edges():
-            bonds_nometal.append(sorted([bond[0],bond[1]]))
+        for bond in bonds:
+            if not any([m in bond for m in m_inds]):
+                bonds_nometal.append(bond)
 
         return super().from_molecule(
             meta_molecule=mol,
@@ -312,6 +317,7 @@ class BondingDoc(PropertyDoc):
             bond_types=bond_types,
             bonds=bonds,
             bonds_nometal=bonds_nometal,
+            deprecated=deprecated,
             origins=[PropertyOrigin(name="bonding", task_id=task.task_id)],
             **kwargs
         )

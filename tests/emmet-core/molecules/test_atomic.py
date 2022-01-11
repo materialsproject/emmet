@@ -21,6 +21,7 @@ def test_tasks(test_dir):
     tasks = [TaskDocument(**t) for t in data]
     return tasks
 
+
 @pytest.fixture(scope="session")
 def open_shell(test_dir):
     task = TaskDocument(**loadfn((test_dir / "open_shell_nbo_task.json.gz")))
