@@ -99,8 +99,12 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         None, description="List of property origins for tracking the provenance of properties"
     )
 
-    entries: Mapping[LevelOfTheory, Dict[str, Any]] = Field(
-        None, description="Mapping for tracking entries for Q-Chem calculations"
+    entries: List[Dict[str, Any]] = Field(
+        None, description="Dictionary representations of all task documents for this molecule"
+    )
+
+    best_entries: Mapping[LevelOfTheory, Dict[str, Any]] = Field(
+        None, description="Mapping for tracking the best entries at each level of theory for Q-Chem calculations"
     )
 
     @classmethod
@@ -118,6 +122,8 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         """
         if len(task_group) == 0:
             raise Exception("Must have more than one task in the group.")
+
+        entries = [t.entry for t in task_group]
 
         # Metadata
         last_updated = max(task.last_updated for task in task_group)
@@ -168,7 +174,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         ]
 
         # entries
-        entries = {}
+        best_entries = {}
         all_lots = set(levels_of_theory.values())
         for lot in all_lots:
             relevant_calcs = sorted(
@@ -181,7 +187,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
                 entry = best_task_doc.entry
                 entry["task_id"] = entry["entry_id"]
                 entry["entry_id"] = molecule_id
-                entries[lot] = entry
+                best_entries[lot] = entry
 
         return cls.from_molecule(
             molecule=molecule,
@@ -196,7 +202,8 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,
             origins=origins,
-            entries=entries
+            entries=entries,
+            best_entries=best_entries
         )
 
     @classmethod

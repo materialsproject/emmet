@@ -21,10 +21,11 @@ from emmet.core.mpid import MPID
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.calc_types import TaskType
 from emmet.core.qchem.molecule import evaluate_lot
-from emmer.core.material import PropertyOrigin
+from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.molecules.bonds import metals
 from emmet.core.molecules.thermo import get_free_energy
+from emmet.core.mpid import MPID
 
 
 
@@ -40,6 +41,8 @@ class RedoxDoc(PropertyDoc):
     and oxidation potentials
     """
 
+    property_name = "redox"
+
     electron_affinity: float = Field(description="Vertical electron affinity in eV")
 
     ea_id: MPID = Field(description="MPID for electron affinity")
@@ -48,17 +51,17 @@ class RedoxDoc(PropertyDoc):
 
     ie_id: MPID = Field(description="MPID for ionization energy")
 
-    reduction_free_energy: float = Field(description="Adiabatic free energy of reduction")
+    reduction_free_energy: float = Field(None, description="Adiabatic free energy of reduction")
 
-    red_id = MPID = Field(description="MPID for adiabatic reduction")
+    red_id: MPID = Field(None, description="MPID for adiabatic reduction")
 
-    oxidation_free_energy: float = Field(description="Adiabatic free energy of oxidation")
+    oxidation_free_energy: float = Field(None, description="Adiabatic free energy of oxidation")
 
-    ox_id = MPID = Field(description="MPID for adiabatic oxidation")
+    ox_id: MPID = Field(None, description="MPID for adiabatic oxidation")
 
-    reduction_potentials: Dict[str, float] = Field(description="Reduction potentials with various reference electrodes")
+    reduction_potentials: Dict[str, float] = Field(None, description="Reduction potentials with various reference electrodes")
 
-    oxidation_potentials: Dict[str, float] = Field(description="Oxidation potentials with various reference electrodes")
+    oxidation_potentials: Dict[str, float] = Field(None, description="Oxidation potentials with various reference electrodes")
 
     @classmethod
     def from_entries(
@@ -103,7 +106,7 @@ class RedoxDoc(PropertyDoc):
                 mol_nometal.set_charge_and_spin(0)
                 mg_nometal = MoleculeGraph.with_local_env_strategy(mol_nometal, OpenBabelNN())
                 match = None
-                for i, mg in mol_graphs_nometal:
+                for i, mg in enumerate(mol_graphs_nometal):
                     if mg_nometal.isomorphic_to(mg):
                         match = i
                         break
@@ -127,12 +130,12 @@ class RedoxDoc(PropertyDoc):
                     # Sorting important because we want to make docs only from lowest-energy instances
                     ffopts = sorted(
                         [f for f in group if f["task_type"] == TaskType.frequency_flattening_geometry_optimization],
-                        key=lambda x: x.output.final_energy)
+                        key=lambda x: x["output"]["final_energy"])
 
                     charges = [f["charge"] for f in ffopts]
                     if all([c in docs_by_charge for c in charges]):
                         continue
-                    single_points = [s for s in group if s.task_type == TaskType.single_point]
+                    single_points = [s for s in group if s["task_type"] == TaskType.single_point]
 
                     for ff in ffopts:
                         d = {
@@ -148,7 +151,7 @@ class RedoxDoc(PropertyDoc):
                             "oxidations_potentials": None
                         }
 
-                        charge = ff.charge
+                        charge = ff["charge"]
 
                         # Doc already exists at a higher LOT; move on
                         if charge in docs_by_charge:
@@ -164,7 +167,7 @@ class RedoxDoc(PropertyDoc):
 
                         # Look for IE and EA SP
                         for sp in single_points:
-                            sp_mol = sp["output"]["initial_moleculue"]
+                            sp_mol = sp["output"]["initial_molecule"]
 
                             # EA
                             if sp["charge"] == charge - 1 and mm.fit(ff_mol, sp_mol):
@@ -174,7 +177,7 @@ class RedoxDoc(PropertyDoc):
                                 d["ionization_energy"] = (sp["output"]["final_energy"] - ff["output"]["final_energy"]) * 27.2114
                                 d["ie_id"] = sp["task_id"]
 
-                            if d["ea_id"] is not None and d["ie_ed"] is not None:
+                            if d["ea_id"] is not None and d["ie_id"] is not None:
                                 break
 
                         # If no vertical IE or EA, can't make complete doc; give up
@@ -197,16 +200,16 @@ class RedoxDoc(PropertyDoc):
                                 d["red_id"] = other["task_id"]
 
                             # Oxidation
-                            elif other.charge == charge + 1:
+                            elif other["charge"] == charge + 1:
                                 other_g = get_free_energy(
                                     other["output"]["final_energy"],
                                     other["output"]["enthalpy"],
                                     other["output"]["entropy"]
                                 )
                                 d["oxidation_free_energy"] = other_g - ff_g
-                                d["oxidations_potentials"] = dict()
+                                d["oxidation_potentials"] = dict()
                                 for ref, pot in reference_potentials.items():
-                                    d["oxidations_potentials"][ref] = d["oxidation_free_energy"] - pot
+                                    d["oxidation_potentials"][ref] = d["oxidation_free_energy"] - pot
 
                                 d["ox_id"] = other["task_id"]
 
@@ -217,17 +220,22 @@ class RedoxDoc(PropertyDoc):
                         if d["red_id"] is None and d["ox_id"] is None:
                             continue
 
-                        docs_by_charge[charge] = RedoxDoc.from_molecule(
-                            meta_molecule=ff_mol,
-                            molecule_id=ff.get("entry_id", ff["task_id"]),
-                            origins=[PropertyOrigin(name="redox", task_id=x) for x in [
+                        origins = list()
+                        for x in [
                                 ff["task_id"],
                                 d["ea_id"],
                                 d["ie_id"],
                                 d["red_id"],
                                 d["ox_id"]
-                            ]
-                                     ],
+                            ]:
+                            if x is not None:
+                                origins.append(PropertyOrigin(name="redox", task_id=x))
+
+                        docs_by_charge[charge] = RedoxDoc.from_molecule(
+                            meta_molecule=ff_mol,
+                            molecule_id=ff.get("entry_id", ff["task_id"]),
+                            origins=origins,
+                            deprecated=False,
                             **d,
                             **kwargs
                         )
