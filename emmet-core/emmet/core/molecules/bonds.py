@@ -235,7 +235,7 @@ class BondingDoc(PropertyDoc):
         task: TaskDocument,
         molecule_id: MPID,
         deprecated: bool=False,
-        preferred_methods: Tuple = ("NBO7", "Critic2", "OpenBabelNN + metal_edge_extender"),
+        preferred_methods: Tuple = ("Critic2", "OpenBabelNN + metal_edge_extender", "NBO7"),
         **kwargs
     ): # type: ignore[override]
         """

@@ -23,10 +23,9 @@ class SpectrumDoc(MoleculeMetadata):
 
     spectrum_name: str
 
-    material_id: MPID = Field(
+    molecule_id: MPID = Field(
         ...,
-        description="The ID of the material, used as a universal reference across proeprty documents."
-        "This comes in the form: mp-******",
+        description="The ID of the molecule, used as a universal reference across property documents."
     )
 
     spectrum_id: str = Field(
@@ -111,6 +110,7 @@ class VibrationDoc(PropertyDoc):
         cls,
         task: TaskDocument,
         molecule_id: MPID,
+        deprecated: bool=False,
         **kwargs
     ): # type: ignore[override]
         """
@@ -122,7 +122,7 @@ class VibrationDoc(PropertyDoc):
         :return:
         """
 
-        if task.output.frequencies is None or task.output.frequency_modes is None:
+        if task.output.frequencies is None:
             raise Exception("No frequencies in task!")
 
         if task.output.optimized_molecule is not None:
@@ -133,7 +133,14 @@ class VibrationDoc(PropertyDoc):
         spectrum = VibSpectrumDoc.from_task(task, molecule_id=molecule_id, **kwargs)
 
         frequencies = task.output.frequencies
-        frequency_modes =task.output.frequency_modes
+        frequency_modes = None
+        for calc in task.calcs_reversed:
+            if calc.get("frequency_mode_vectors", None) is not None:
+                frequency_modes = calc.get("frequency_mode_vectors")
+                break
+
+        if frequency_modes is None:
+            raise Exception("No frequency modes in task!")
 
         warnings = list()
         if frequencies[0] < 0.0:
@@ -147,6 +154,7 @@ class VibrationDoc(PropertyDoc):
             frequency_modes=frequency_modes,
             spectrum=spectrum,
             origins=[PropertyOrigin(name="vibrations", task_id=task.task_id)],
-            warnings=warnings
+            deprecated=deprecated,
+            warnings=warnings,
             **kwargs
         )

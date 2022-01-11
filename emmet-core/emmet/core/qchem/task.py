@@ -48,8 +48,6 @@ class OutputSummary(BaseModel):
 
     frequencies: List[float] = Field(None,
                                      description="Vibrational frequencies of the molecule (units: cm^-1)")
-    frequency_modes: List[List[List[float]]] = Field(None,
-                                               description="Vibrational frequency modes of the molecule")
 
     def as_dict(self) -> Dict[str, Any]:
         return {
@@ -62,7 +60,6 @@ class OutputSummary(BaseModel):
             "resp": self.resp,
             "nbo": self.nbo,
             "frequencies": self.frequencies,
-            "frequency_modes": self.frequency_modes
         }
 
 
