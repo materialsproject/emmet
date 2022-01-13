@@ -1,5 +1,7 @@
 from emmet.api.routes.electrodes.query_operators import (
     ElectrodeFormulaQuery,
+    ElectrodesChemsysQuery,
+    ElectrodeElementsQuery,
     VoltageStepQuery,
     InsertionVoltageStepQuery,
     WorkingIonQuery,
@@ -14,10 +16,10 @@ def test_electrode_formula_query():
 
     assert op.query(formula="BiFeO3") == {
         "criteria": {
-            "framework.Bi": 1.0,
-            "framework.Fe": 1.0,
-            "framework.O": 3.0,
-            "nelements": 3,
+            "entries_composition_summary.all_composition_reduced.Bi": 1.0,
+            "entries_composition_summary.all_composition_reduced.Fe": 1.0,
+            "entries_composition_summary.all_composition_reduced.O": 3.0,
+            "nelements": {"$in": [3, 2]},
         }
     }
 
@@ -26,10 +28,60 @@ def test_electrode_formula_query():
         new_op = loadfn("temp.json")
         assert new_op.query(formula="BiFeO3") == {
             "criteria": {
-                "framework.Bi": 1.0,
-                "framework.Fe": 1.0,
-                "framework.O": 3.0,
-                "nelements": 3,
+                "entries_composition_summary.all_composition_reduced.Bi": 1.0,
+                "entries_composition_summary.all_composition_reduced.Fe": 1.0,
+                "entries_composition_summary.all_composition_reduced.O": 3.0,
+                "nelements": {"$in": [3, 2]},
+            }
+        }
+
+
+def test_electrodes_chemsys_query():
+    op = ElectrodesChemsysQuery()
+    assert op.query("Si-O") == {
+        "criteria": {"entries_composition_summary.all_chemsys": "O-Si"}
+    }
+
+    assert op.query("Si-*") == {
+        "criteria": {
+            "nelements": {"$in": [2, 1]},
+            "entries_composition_summary.all_elements": {"$all": ["Si"]},
+        }
+    }
+
+    with ScratchDir("."):
+        dumpfn(op, "temp.json")
+        new_op = loadfn("temp.json")
+        assert new_op.query("Si-O") == {
+            "criteria": {"entries_composition_summary.all_chemsys": "O-Si"}
+        }
+
+
+def test_electrodes_elements_query():
+    eles = ["Si", "O"]
+    neles = ["N", "P"]
+
+    op = ElectrodeElementsQuery()
+    assert op.query(elements=",".join(eles), exclude_elements=",".join(neles)) == {
+        "criteria": {
+            "entries_composition_summary.all_elements": {
+                "$all": ["Si", "O"],
+                "$nin": ["N", "P"],
+            }
+        }
+    }
+
+    with ScratchDir("."):
+        dumpfn(op, "temp.json")
+        new_op = loadfn("temp.json")
+        assert new_op.query(
+            elements=",".join(eles), exclude_elements=",".join(neles)
+        ) == {
+            "criteria": {
+                "entries_composition_summary.all_elements": {
+                    "$all": ["Si", "O"],
+                    "$nin": ["N", "P"],
+                }
             }
         }
 
