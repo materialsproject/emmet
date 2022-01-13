@@ -1,6 +1,7 @@
 from pymatgen.core import Composition
 from pymatgen.core.periodic_table import DummySpecies
 from typing import Dict
+from fastapi import HTTPException
 
 
 def formula_to_criteria(formula: str) -> Dict:
@@ -59,24 +60,43 @@ def chemsys_to_criteria(chemsys: str) -> Dict:
     Santizes chemsys into a dictionary to search with wild cards
 
     Arguments:
-        formula: a chemiscal system with wildcards in it for unknown elements
+        chemsys: a chemical system with wildcards in it for unknown elements
 
     Returns:
         Mongo style search criteria for this formula
     """
 
     crit = {}  # type: dict
-    eles = chemsys.split("-")
 
-    if "*" in eles:
-        crit["nelements"] = len(eles)
-        crit["elements"] = {"$all": [ele for ele in eles if ele != "*"]}
+    chemsys_list = [chemsys_val.strip() for chemsys_val in chemsys.split(",")]
 
-        if crit["elements"]["$all"] == []:
-            del crit["elements"]
+    if "*" in chemsys:
+        if len(chemsys_list) > 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Wild cards only supported for single chemsys queries.",
+            )
+        else:
+            eles = chemsys_list[0].split("-")
 
-        return crit
+            if "*" in eles:
+                crit["nelements"] = len(eles)
+                crit["elements"] = {"$all": [ele for ele in eles if ele != "*"]}
+
+                if crit["elements"]["$all"] == []:
+                    del crit["elements"]
+
+                return crit
     else:
-        chemsys = "-".join(sorted(eles))
-        crit["chemsys"] = chemsys
+        query_vals = []
+        for chemsys_val in chemsys_list:
+            eles = chemsys_val.split("-")
+            sorted_chemsys = "-".join(sorted(eles))
+            query_vals.append(sorted_chemsys)
+
+        if len(query_vals) == 1:
+            crit["chemsys"] = query_vals[0]
+        else:
+            crit["chemsys"] = {"$in": query_vals}
+
         return crit
