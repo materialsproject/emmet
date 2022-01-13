@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from typing import List, Union
 
@@ -88,6 +89,47 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
     )
 
 
+class EntriesCompositionSummary(BaseModel):
+    """
+    Composition summary data for all material entries associated with this electrode.
+    Included to enable better searching via the API.
+    """
+
+    all_formulas: List[str] = Field(
+        None,
+        description="Reduced formulas for material entries across all voltage pairs.",
+    )
+
+    all_chemsys: List[str] = Field(
+        None,
+        description="Chemical systems for material entries across all voltage pairs.",
+    )
+
+    all_formula_anonymous: List[str] = Field(
+        None,
+        description="Anonymous formulas for material entries across all voltage pairs.",
+    )
+
+    all_elements: List[Element] = Field(
+        None, description="Elements in material entries across all voltage pairs.",
+    )
+
+    @classmethod
+    def from_formulas(cls, compositions: List[Composition]):
+
+        all_formulas = list({comp.reduced_formula for comp in compositions})
+        all_chemsys = list({comp.chemical_system for comp in compositions})
+        all_formula_anonymous = list({comp.anonymized_formula for comp in compositions})
+        all_elements = sorted(compositions)[-1].elements
+
+        return cls(
+            all_formulas=all_formulas,
+            all_chemsys=all_chemsys,
+            all_formula_anonymous=all_formula_anonymous,
+            all_elements=all_elements,
+        )
+
+
 class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     """
     Insertion electrode
@@ -162,6 +204,11 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         description="Anonymized representation of the formula (not including the working ion)",
     )
 
+    entries_composition_summary: EntriesCompositionSummary = Field(
+        None,
+        description="Composition summary data for all material in entries across all voltage pairs.",
+    )
+
     electrode_object: InsertionElectrode = Field(
         None, description="The pymatgen electrode object"
     )
@@ -210,6 +257,15 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
             Composition(d["formula_charge"]), discharge_comp, working_ion_ele,
         )
 
+        compositions = []
+        for doc in d["adj_pairs"]:
+            compositions.append(doc["formula_charge"])
+            compositions.append(doc["formula_discharge"])
+
+        entries_composition_summary = EntriesCompositionSummary.from_compositions(
+            compositions
+        )
+
         # Check if more than one working ion per transition metal and warn
         warnings = []
         transition_metal_fraction = sum(
@@ -236,6 +292,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
             nelements=len(elements),
             chemsys=chemsys,
             formula_anonymous=framework.anonymized_formula,
+            entries_composition_summary=entries_composition_summary,
             warnings=warnings,
             **d,
         )
@@ -261,7 +318,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
             (temp_reduced, n) = temp_comp.get_reduced_composition_and_factor()
 
             working_ion_subscripts.append(
-                "{:.2f}".format(working_ion_num / n).rstrip(".0")
+                re.sub(".00$", "", "{:.2f}".format(working_ion_num / n))
             )
 
         return (
