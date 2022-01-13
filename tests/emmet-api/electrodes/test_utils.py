@@ -2,6 +2,7 @@ from emmet.api.routes.electrodes.utils import (
     electrodes_chemsys_to_criteria,
     electrodes_formula_to_criteria,
 )
+import pytest
 
 
 def test_electrodes_formula_to_criteria():
@@ -32,3 +33,12 @@ def test_electrodes_chemsys_to_criteria():
         "nelements": {"$in": [2, 1]},
     }
     assert electrodes_chemsys_to_criteria("*-*-*") == {"nelements": {"$in": [3, 2]}}
+
+    assert electrodes_chemsys_to_criteria("Si-O, P-Li-Fe") == {
+        "entries_composition_summary.all_chemsys": {"$in": ["O-Si", "Fe-Li-P"]}
+    }
+
+
+@pytest.mark.xfail()
+def test_electrodes_chemsys_to_criteria_multiple_wildcard():
+    electrodes_chemsys_to_criteria("Si-O, Li-Fe-*")
