@@ -331,7 +331,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
             (temp_reduced, n) = temp_comp.get_reduced_composition_and_factor()
 
             working_ion_subscripts.append(
-                re.sub(".00$", "", "{:.2f}".format(working_ion_num / n))
+                re.sub(".00$", "", "{:.2f}".format(working_ion_num / n)).rstrip("0")
             )
 
         return (
