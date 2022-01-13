@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.21.0](https://github.com/materialsproject/emmet/tree/v0.21.0) (2022-01-13)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.20.3...v0.21.0)
+
+**Merged pull requests:**
+
+- Chemsys, electrode, provenance, and robocrys changes [\#336](https://github.com/materialsproject/emmet/pull/336) ([munrojm](https://github.com/munrojm))
+- Allow for parsing of material docs without GGA/GGA+U \(i.e. without corrections\) [\#335](https://github.com/materialsproject/emmet/pull/335) ([arosen93](https://github.com/arosen93))
+
 ## [v0.20.3](https://github.com/materialsproject/emmet/tree/v0.20.3) (2022-01-07)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.20.2...v0.20.3)
@@ -295,19 +304,19 @@
 
 ## [v0.13.0](https://github.com/materialsproject/emmet/tree/v0.13.0) (2021-09-23)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.13.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.13.0)
 
 **Merged pull requests:**
 
 - Builder bug fixes [\#272](https://github.com/materialsproject/emmet/pull/272) ([munrojm](https://github.com/munrojm))
 
-## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.12.8)
-
 ## [v0.12.7](https://github.com/materialsproject/emmet/tree/v0.12.7) (2021-09-15)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.7)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.12.7)
+
+## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.8)
 
 **Merged pull requests:**
 
