@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 from typing import List, Union, Dict
+from collections import defaultdict
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
@@ -114,19 +115,33 @@ class EntriesCompositionSummary(BaseModel):
         None, description="Elements in material entries across all voltage pairs.",
     )
 
+    all_composition_reduced: Dict = Field(
+        None,
+        description="Composition reduced data for entries across all voltage pairs.",
+    )
+
     @classmethod
-    def from_formulas(cls, compositions: List[Composition]):
+    def from_compositions(cls, compositions: List[Composition]):
 
         all_formulas = list({comp.reduced_formula for comp in compositions})
         all_chemsys = list({comp.chemical_system for comp in compositions})
         all_formula_anonymous = list({comp.anonymized_formula for comp in compositions})
         all_elements = sorted(compositions)[-1].elements
 
+        all_composition_reduced = defaultdict(set)
+
+        for comp in compositions:
+            comp_red = comp.get_reduced_composition_and_factor()[0].as_dict()
+
+            for ele, num in comp_red.items():
+                all_composition_reduced[ele].add(num)
+
         return cls(
             all_formulas=all_formulas,
             all_chemsys=all_chemsys,
             all_formula_anonymous=all_formula_anonymous,
             all_elements=all_elements,
+            all_composition_reduced=all_composition_reduced,
         )
 
 
@@ -257,8 +272,8 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
 
         compositions = []
         for doc in d["adj_pairs"]:
-            compositions.append(doc["formula_charge"])
-            compositions.append(doc["formula_discharge"])
+            compositions.append(Composition(doc["formula_charge"]))
+            compositions.append(Composition(doc["formula_discharge"]))
 
         entries_composition_summary = EntriesCompositionSummary.from_compositions(
             compositions
