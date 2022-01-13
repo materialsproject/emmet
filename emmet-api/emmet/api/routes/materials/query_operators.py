@@ -47,7 +47,9 @@ class ChemsysQuery(QueryOperator):
     def query(
         self,
         chemsys: Optional[str] = Query(
-            None, description="Query by chemsys including wild cards",
+            None,
+            description="A comma delimited string list of chemical systems. \
+Wildcards for unknown elements only supported for single chemsys queries",
         ),
     ) -> STORE_PARAMS:
 

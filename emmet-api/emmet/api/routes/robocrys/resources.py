@@ -1,16 +1,23 @@
 from maggma.api.resource import ReadOnlyResource
 from maggma.api.resource.aggregation import AggregationResource
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 
 from emmet.api.routes.robocrys.query_operators import RoboTextSearchQuery
-from emmet.core.robocrys import RobocrysDoc
+from emmet.core.robocrys import RobocrystallogapherDoc
 
 
 def robo_resource(robo_store):
     resource = ReadOnlyResource(
         robo_store,
-        RobocrysDoc,
+        RobocrystallogapherDoc,
+        query_operators=[
+            PaginationQuery(),
+            SparseFieldsQuery(
+                RobocrystallogapherDoc, default_fields=["material_id", "last_updated"]
+            ),
+        ],
         tags=["Robocrystallographer"],
-        enable_default_search=False,
+        disable_validation=True,
     )
 
     return resource
@@ -19,7 +26,7 @@ def robo_resource(robo_store):
 def robo_search_resource(robo_store):
     resource = AggregationResource(
         robo_store,
-        RobocrysDoc,
+        RobocrystallogapherDoc,
         pipeline_query_operator=RoboTextSearchQuery(),
         tags=["Robocrystallographer"],
         sub_path="/text_search/",

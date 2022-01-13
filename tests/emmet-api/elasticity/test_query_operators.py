@@ -100,6 +100,10 @@ def test_chemsys_query():
 
     assert op.query(chemsys="Fe-Bi-O") == {"criteria": {"chemsys": "Bi-Fe-O"}}
 
+    assert op.query(chemsys="Fe-Bi-O, Si-O") == {
+        "criteria": {"chemsys": {"$in": ["Bi-Fe-O", "O-Si"]}}
+    }
+
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")

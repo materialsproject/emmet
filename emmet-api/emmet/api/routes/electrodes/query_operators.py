@@ -2,7 +2,10 @@ from typing import Optional
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
-from emmet.api.routes.materials.utils import formula_to_criteria
+from emmet.api.routes.electrodes.utils import (
+    electrodes_formula_to_criteria,
+    electrodes_chemsys_to_criteria,
+)
 from pymatgen.core.periodic_table import Element
 
 from collections import defaultdict
@@ -24,18 +27,83 @@ class ElectrodeFormulaQuery(QueryOperator):
         crit = {}
 
         if formula:
-            crit.update(formula_to_criteria(formula))
-
-            for key in list(crit):
-                if "composition_reduced" in key:
-                    framework_entry = "framework.{}".format(key.split(".")[1])
-                    crit[framework_entry] = crit[key]
-                    crit.pop(key)
+            crit.update(electrodes_formula_to_criteria(formula))
 
         return {"criteria": crit}
 
     def ensure_indexes(self):  # pragma: no cover
-        return [("composition_reduced", False)]
+        return [
+            ("eentries_composition_summary.all_composition_reduced", False),
+            ("entries_composition_summary.all_formulas", False),
+        ]
+
+
+class ElectrodesChemsysQuery(QueryOperator):
+    """
+    Factory method to generate a dependency for querying by
+        chemical system with wild cards.
+    """
+
+    def query(
+        self,
+        chemsys: Optional[str] = Query(
+            None,
+            description="A comma delimited string list of chemical systems. \
+Wildcards for unknown elements only supported for single chemsys queries",
+        ),
+    ) -> STORE_PARAMS:
+
+        crit = {}
+
+        if chemsys:
+            crit.update(electrodes_chemsys_to_criteria(chemsys))
+
+        return {"criteria": crit}
+
+    def ensure_indexes(self):  # pragma: no cover
+        keys = [
+            "entries_composition_summary.all_chemsys",
+            "entries_composition_summary.all_elements",
+            "nelements",
+        ]
+        return [(key, False) for key in keys]
+
+
+class ElectrodeElementsQuery(QueryOperator):
+    """
+    Factory method to generate a dependency for querying by electrode element data
+    """
+
+    def query(
+        self,
+        elements: Optional[str] = Query(
+            None,
+            description="Query by elements in the material composition as a comma-separated list",
+        ),
+        exclude_elements: Optional[str] = Query(
+            None,
+            description="Query by excluded elements in the material composition as a comma-separated list",
+        ),
+    ) -> STORE_PARAMS:
+
+        crit = {}  # type: dict
+
+        if elements or exclude_elements:
+            crit["entries_composition_summary.all_elements"] = {}
+
+        if elements:
+            element_list = [Element(e) for e in elements.strip().split(",")]
+            crit["entries_composition_summary.all_elements"]["$all"] = [
+                str(el) for el in element_list
+            ]
+
+        if exclude_elements:
+            element_list = [Element(e) for e in exclude_elements.strip().split(",")]
+            crit["entries_composition_summary.all_elements"]["$nin"] = [
+                str(el) for el in element_list
+            ]
+
+        return {"criteria": crit}
 
 
 class VoltageStepQuery(QueryOperator):

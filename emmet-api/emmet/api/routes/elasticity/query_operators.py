@@ -165,9 +165,17 @@ class ElasticityChemsysQuery(QueryOperator):
         crit = {}  # type: dict
 
         if chemsys:
-            eles = chemsys.split("-")
-            chemsys = "-".join(sorted(eles))
+            chemsys_list = [chemsys_val.strip() for chemsys_val in chemsys.split(",")]
 
-            crit["chemsys"] = chemsys
+            query_vals = []
+            for chemsys_val in chemsys_list:
+                eles = chemsys_val.split("-")
+                sorted_chemsys = "-".join(sorted(eles))
+                query_vals.append(sorted_chemsys)
+
+            if len(query_vals) == 1:
+                crit["chemsys"] = query_vals[0]
+            else:
+                crit["chemsys"] = {"$in": query_vals}
 
         return {"criteria": crit}

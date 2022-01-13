@@ -346,6 +346,7 @@ class InsertionElectrodeBuilder(Builder):
             self.logger.debug(
                 f"Looking for {len(mat_ids)} material_id in the Thermo DB."
             )
+            self.thermo.connect()
             thermo_docs = list(
                 self.thermo.query(
                     {"$and": [{"material_id": {"$in": mat_ids}}]},
@@ -359,6 +360,7 @@ class InsertionElectrodeBuilder(Builder):
                     ],
                 )
             )
+
             self.logger.debug(f"Found for {len(thermo_docs)} Thermo Documents.")
             if len(thermo_docs) != len(mat_ids):
                 missing_ids = set(mat_ids) - set(
