@@ -12,8 +12,8 @@ from emmet.core.math import Matrix3D, Vector3D
 from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import Tensor
 
-VoigtVector = Tuple[float, float, float, float, float, float]
-PiezoTensor = Tuple[VoigtVector, VoigtVector, VoigtVector]
+Vector = List[float]
+PiezoTensor = List[Vector]
 PiezoTensor.__doc__ = "Rank 3 real space tensor in Voigt notation"  # type: ignore
 
 

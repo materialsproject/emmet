@@ -1,7 +1,7 @@
 import os
 
 from emmet.api.core.api import MAPI
-from emmet import MAPISettings
+from emmet.api.core.settings import MAPISettings
 from maggma.stores import MongoURIStore, S3Store
 
 resources = {}
@@ -481,7 +481,7 @@ from emmet.api.routes._general_store.resources import general_store_resource
 resources.update({"_general_store": [general_store_resource(general_store)]})
 
 # === MAPI setup
-from mp_api.core.documentation import description, tags_meta
+from emmet.api.core.documentation import description, tags_meta
 
 api = MAPI(
     resources=resources, debug=debug, description=description, tags_meta=tags_meta
