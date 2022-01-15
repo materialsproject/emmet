@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.21.2](https://github.com/materialsproject/emmet/tree/v0.21.2) (2022-01-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.1...v0.21.2)
+
+**Merged pull requests:**
+
+- Alter commit message in actions [\#339](https://github.com/materialsproject/emmet/pull/339) ([munrojm](https://github.com/munrojm))
+- Fix version push in actions [\#338](https://github.com/materialsproject/emmet/pull/338) ([munrojm](https://github.com/munrojm))
+
+## [v0.21.1](https://github.com/materialsproject/emmet/tree/v0.21.1) (2022-01-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.0...v0.21.1)
+
+**Merged pull requests:**
+
+- Alter how version is determined [\#337](https://github.com/materialsproject/emmet/pull/337) ([munrojm](https://github.com/munrojm))
+
 ## [v0.21.0](https://github.com/materialsproject/emmet/tree/v0.21.0) (2022-01-13)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.20.3...v0.21.0)
