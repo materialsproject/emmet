@@ -4,7 +4,7 @@ with open("../_version.py") as file:
     for line in file.readlines():
         lsplit = line.split("=")
         if lsplit[0].strip() == "__version__":
-            fallback_version = lsplit[1].strip().replace('"', "")
+            fallback_version = lsplit[1].strip().replace('"', "").split("+")[0]
 
 
 setup(
