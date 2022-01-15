@@ -28,6 +28,20 @@ jobs:
         run: python setup.py sdist bdist_wheel
         working-directory: ./${{ matrix.package }}/
 
+      - name: Commit files
+        if: ${{ matrix.package == "emmet-core" }}
+        run: |
+          git config --local user.email "feedback@materialsproject.org"
+          git config --local user.name "materialsproject"
+          mv CHANGELOG.md docs/
+          git add _version.py && git commit -m 'Updated version file'
+
+      - name: Push changes
+        if: ${{ matrix.package == "emmet-core" }}
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@master
         with:
@@ -65,7 +79,7 @@ jobs:
           git config --local user.email "feedback@materialsproject.org"
           git config --local user.name "materialsproject"
           mv CHANGELOG.md docs/
-          git add _version.py docs/CHANGELOG.md && git commit -m 'Updated CHANGELOG.md and _version.py'
+          git add docs/CHANGELOG.md && git commit -m 'Updated CHANGELOG.md'
 
       - name: Push changes
         uses: ad-m/github-push-action@master
