@@ -28,6 +28,17 @@ jobs:
         run: python setup.py sdist bdist_wheel
         working-directory: ./${{ matrix.package }}/
 
+      - name: Commit version file
+        run: |
+          git config --local user.email "feedback@materialsproject.org"
+          git config --local user.name "materialsproject"
+          git add _version.py && git commit -m 'Updated version file'
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@master
         with:

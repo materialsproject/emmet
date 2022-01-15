@@ -1,13 +1,21 @@
 # -*- coding: utf-8 -*-
 from setuptools import find_namespace_packages, setup
-from setuptools_scm import get_version
 
-version = get_version(root="..", relative_to=__file__, version_scheme="post-release")
-version = version.split(".post")[0]
+with open("../_version.py") as file:
+    for line in file.readlines():
+        lsplit = line.split("=")
+        if lsplit[0].strip() == "__version__":
+            fallback_version = lsplit[1].strip().replace('"', "")
 
 setup(
     name="emmet-api",
-    use_scm_version={"root": "..", "relative_to": __file__},
+    use_scm_version={
+        "root": "..",
+        "relative_to": __file__,
+        "write_to": "_version.py",
+        "write_to_template": '__version__ = "{version}"',
+        "fallback_version": fallback_version,
+    },
     setup_requires=["setuptools_scm"],
     description="Emmet API Library",
     author="The Materials Project",
@@ -15,7 +23,7 @@ setup(
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
     install_requires=[
-        f"emmet-core~={version}",
+        f"emmet-core~={fallback_version}",
         "fastapi",
         "maggma",
         "uvicorn",
