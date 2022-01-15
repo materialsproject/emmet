@@ -29,14 +29,14 @@ jobs:
         working-directory: ./${{ matrix.package }}/
 
       - name: Commit files
-        if: ${{ matrix.package == "emmet-core" }}
+        if: ${{ matrix.package == 'emmet-core' }}
         run: |
           git config --local user.email "feedback@materialsproject.org"
           git config --local user.name "materialsproject"
           git add _version.py && git commit -m 'Updated version file'
 
       - name: Push changes
-        if: ${{ matrix.package == "emmet-core" }}
+        if: ${{ matrix.package == 'emmet-core' }}
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
