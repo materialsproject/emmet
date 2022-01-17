@@ -30,7 +30,7 @@ setup(
     include_package_data=True,
     install_requires=[
         "pymatgen>=2021.3,<2023.0",
-        "monty~=2021.3",
+        "monty>=2021.3,<2023.0",
         "pydantic[email]~=1.8",
         "pybtex~=0.24",
         "typing-extensions>=3.7,<5.0",
