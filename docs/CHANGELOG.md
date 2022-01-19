@@ -1,5 +1,49 @@
 # Changelog
 
+## [v0.21.7](https://github.com/materialsproject/emmet/tree/v0.21.7) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.8...v0.21.7)
+
+## [v0.21.8](https://github.com/materialsproject/emmet/tree/v0.21.8) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.6...v0.21.8)
+
+**Merged pull requests:**
+
+- Git pull added to docs [\#346](https://github.com/materialsproject/emmet/pull/346) ([munrojm](https://github.com/munrojm))
+
+## [v0.21.6](https://github.com/materialsproject/emmet/tree/v0.21.6) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.5...v0.21.6)
+
+**Merged pull requests:**
+
+- Fix git pull command in workflow [\#345](https://github.com/materialsproject/emmet/pull/345) ([munrojm](https://github.com/munrojm))
+
+## [v0.21.5](https://github.com/materialsproject/emmet/tree/v0.21.5) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.4...v0.21.5)
+
+**Merged pull requests:**
+
+- Git pull to sync between namespace steps [\#344](https://github.com/materialsproject/emmet/pull/344) ([munrojm](https://github.com/munrojm))
+
+## [v0.21.4](https://github.com/materialsproject/emmet/tree/v0.21.4) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.3...v0.21.4)
+
+**Merged pull requests:**
+
+- Version file generation pushed into namespace packages [\#343](https://github.com/materialsproject/emmet/pull/343) ([munrojm](https://github.com/munrojm))
+
+## [v0.21.3](https://github.com/materialsproject/emmet/tree/v0.21.3) (2022-01-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.2...v0.21.3)
+
+**Merged pull requests:**
+
+- Revert version update to release workflow with conditionals [\#340](https://github.com/materialsproject/emmet/pull/340) ([munrojm](https://github.com/munrojm))
+
 ## [v0.21.2](https://github.com/materialsproject/emmet/tree/v0.21.2) (2022-01-15)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.1...v0.21.2)
@@ -321,19 +365,19 @@
 
 ## [v0.13.0](https://github.com/materialsproject/emmet/tree/v0.13.0) (2021-09-23)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.13.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.13.0)
 
 **Merged pull requests:**
 
 - Builder bug fixes [\#272](https://github.com/materialsproject/emmet/pull/272) ([munrojm](https://github.com/munrojm))
 
-## [v0.12.7](https://github.com/materialsproject/emmet/tree/v0.12.7) (2021-09-15)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.12.7)
-
 ## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.8)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.12.8)
+
+## [v0.12.7](https://github.com/materialsproject/emmet/tree/v0.12.7) (2021-09-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.7)
 
 **Merged pull requests:**
 
