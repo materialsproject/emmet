@@ -33,7 +33,7 @@ jobs:
           git config --local user.email "feedback@materialsproject.org"
           git config --local user.name "materialsproject"
           git pull origin main
-          git add ${{ matrix.package }}/*/*/_version.py && git commit -m 'Updated version file'
+          git add ${{ matrix.package }}/_version.py && git commit -m 'Updated version file'
 
       - name: Push changes
         uses: ad-m/github-push-action@master
