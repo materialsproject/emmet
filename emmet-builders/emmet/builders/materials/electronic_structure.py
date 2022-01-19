@@ -184,7 +184,7 @@ class ElectronicStructureBuilder(Builder):
 
                 d["warnings"].append(
                     "Regular parsed band gap and band gap from eigenvalue_band_properties do not agree. "
-                    f"Using data from eigenvalue_band_properties where appropriate."
+                    "Using data from eigenvalue_band_properties where appropriate."
                 )
 
                 d["band_gap"] = eig_values["bandgap"]
@@ -292,7 +292,7 @@ class ElectronicStructureBuilder(Builder):
                 doc.warnings = []
             doc.warnings.append(
                 "Absolute difference between blessed band gap and at least one "
-                f"line-mode or uniform calculation band gap is larger than 0.25 eV."
+                "line-mode or uniform calculation band gap is larger than 0.25 eV."
             )
 
         # Line-mode and uniform structure primitive checks
