@@ -76,6 +76,7 @@ jobs:
         run: |
           git config --local user.email "feedback@materialsproject.org"
           git config --local user.name "materialsproject"
+          git stash
           git pull origin main
           mv CHANGELOG.md docs/
           git add docs/CHANGELOG.md && git commit -m 'Updated CHANGELOG.md'
