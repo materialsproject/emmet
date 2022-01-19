@@ -26,6 +26,7 @@ setup(
         "uvicorn",
         "gunicorn",
         "boto3",
+        "maggma",
     ],
     python_requires=">=3.8",
     license="modified BSD",
