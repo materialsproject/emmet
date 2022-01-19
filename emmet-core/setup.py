@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 from setuptools import find_namespace_packages, setup
+from _version import __version__ as fallback_version
 
-with open("../_version.py") as file:
-    for line in file.readlines():
-        lsplit = line.split("=")
-        if lsplit[0].strip() == "__version__":
-            fallback_version = lsplit[1].strip().replace('"', "").split("+")[0]
+if "+" in fallback_version:
+    fallback_version = fallback_version.split("+")[0]
 
 
 setup(
@@ -13,7 +11,7 @@ setup(
     use_scm_version={
         "root": "..",
         "relative_to": __file__,
-        "write_to": "_version.py",
+        "write_to": "emmet-core/_version.py",
         "write_to_template": '__version__ = "{version}"',
         "fallback_version": fallback_version,
     },
@@ -37,6 +35,7 @@ setup(
         "robocrys>=0.2.7",
         "matminer>=0.7.3",
     ],
+    python_requires=">=3.8",
     license="modified BSD",
     zip_safe=False,
 )

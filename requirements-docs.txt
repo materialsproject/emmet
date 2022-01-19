@@ -5,3 +5,4 @@ mkdocs-minify-plugin==0.3.0
 mkdocstrings==0.13.2
 mkdocs-awesome-pages-plugin==2.2.1
 mkdocs-markdownextradata-plugin==0.1.7
+livereload==2.6.3
