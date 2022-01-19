@@ -33,7 +33,7 @@ jobs:
         run: |
           git config --local user.email "feedback@materialsproject.org"
           git config --local user.name "materialsproject"
-          git add _version.py && git commit -m 'Updated version file'
+          git add emmet-core/_version.py emmet-builders/_version.py emmet-api/_version.py && git commit -m 'Updated version files'
 
       - name: Push changes
         if: ${{ matrix.package == 'emmet-core' }}
