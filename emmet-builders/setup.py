@@ -1,6 +1,6 @@
 from setuptools import find_namespace_packages, setup
-from emmet.builders import __version__ as fallback_version
-from emmet.core import __version__ as core_version
+from emmet.builders._version import __version__ as fallback_version
+from emmet.core._version import __version__ as core_version
 
 if "+" in fallback_version:
     fallback_version = fallback_version.split("+")[0]
