@@ -16,7 +16,7 @@ class SubstratesBuilder(Builder):
         self,
         materials: Store,
         substrates: Store,
-        elasticity: Optional[Store] = None,
+        elasticity: Store,
         query: Optional[Dict] = None,
         **kwargs,
     ):
@@ -39,9 +39,7 @@ class SubstratesBuilder(Builder):
         # Enforce that we key on material_id
         self.materials.key = "material_id"
         self.substrates.key = "material_id"
-
-        if self.elasticity:
-            self.elasticity.key = "material_id"
+        self.elasticity.key = "material_id"
 
         super().__init__(
             sources=[materials, elasticity], targets=[substrates], **kwargs,
