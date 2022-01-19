@@ -32,6 +32,7 @@ jobs:
         run: |
           git config --local user.email "feedback@materialsproject.org"
           git config --local user.name "materialsproject"
+          git pull
           git add ${{ matrix.package }}/_version.py && git commit -m 'Updated version file'
 
       - name: Push changes
