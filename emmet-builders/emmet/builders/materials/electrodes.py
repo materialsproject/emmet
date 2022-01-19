@@ -407,7 +407,7 @@ class InsertionElectrodeBuilder(Builder):
         - Add the host structure
         """
         if item is None:
-            return None
+            return None  # type: ignore
         self.logger.debug(
             f"Working on {item['group_id']} with {len(item['thermo_docs'])}"
         )
@@ -436,7 +436,8 @@ class InsertionElectrodeBuilder(Builder):
             battery_id=item["group_id"],
         )
         if ie is None:
-            return None  # {"failed_reason": "unable to create InsertionElectrode document"}
+            return None  # type: ignore
+            # {"failed_reason": "unable to create InsertionElectrode document"}
         return jsanitize(ie.dict())
 
     def update_targets(self, items: List):
