@@ -6,11 +6,13 @@ from pydantic import Field, PyObject
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.sets import VaspInputSet
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.utils import DocEnum
 from emmet.core.vasp.task import TaskDocument
+
+SETTINGS = EmmetSettings()
 
 
 class DeprecationMessage(DocEnum):
