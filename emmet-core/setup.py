@@ -8,8 +8,9 @@ setup(
     use_scm_version={
         "root": "..",
         "relative_to": __file__,
-        "write_to": "emmet-core/_version.py",
+        "write_to": "_version.py",
         "write_to_template": '__version__ = "{version}"',
+        "fallback_version": fallback_version,
     },
     setup_requires=["setuptools_scm~=6.0"],
     description="Core Emmet Library",
