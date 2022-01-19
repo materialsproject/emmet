@@ -1,20 +1,16 @@
 # -*- coding: utf-8 -*-
 from setuptools import find_namespace_packages, setup
-from emmet.api import __version__ as fallback_version
-from emmet.core import __version__ as core_version
+from _version import __version__ as fallback_version
 
 if "+" in fallback_version:
     fallback_version = fallback_version.split("+")[0]
-
-if "+" in core_version:
-    core_version = core_version.split("+")[0]
 
 setup(
     name="emmet-api",
     use_scm_version={
         "root": "..",
         "relative_to": __file__,
-        "write_to": "emmet-api/emmet/api/_version.py",
+        "write_to": "emmet-api/_version.py",
         "write_to_template": '__version__ = "{version}"',
         "fallback_version": fallback_version,
     },
@@ -25,7 +21,7 @@ setup(
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
     install_requires=[
-        f"emmet-core~={core_version}",
+        "emmet-core>=0.21.9",
         "fastapi",
         "uvicorn",
         "gunicorn",
