@@ -22,9 +22,11 @@ from pymatgen.symmetry.bandstructure import HighSymmKpath
 from typing_extensions import Literal
 from enum import Enum
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
+
+SETTINGS = EmmetSettings()
 
 
 class BSPathType(Enum):

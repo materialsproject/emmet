@@ -4,8 +4,10 @@ from pydantic import BaseModel, Field
 from pymatgen.core import Structure
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer, spglib
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.utils import ValueEnum
+
+SETTINGS = EmmetSettings()
 
 
 class CrystalSystem(ValueEnum):
