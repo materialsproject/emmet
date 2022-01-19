@@ -35,6 +35,7 @@ setup(
         "robocrys>=0.2.7",
         "matminer>=0.7.3",
     ],
+    python_requires=">=3.8",
     license="modified BSD",
     zip_safe=False,
 )

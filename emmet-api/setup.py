@@ -23,11 +23,11 @@ setup(
     install_requires=[
         f"emmet-core~={fallback_version}",
         "fastapi",
-        "maggma",
         "uvicorn",
         "gunicorn",
         "boto3",
     ],
+    python_requires=">=3.8",
     license="modified BSD",
     zip_safe=False,
 )

@@ -20,6 +20,7 @@ setup(
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
     install_requires=[f"emmet-core~={fallback_version}", "maggma>=0.38.1"],
+    python_requires=">=3.8",
     license="modified BSD",
     zip_safe=False,
 )
