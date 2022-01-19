@@ -1,6 +1,8 @@
 from setuptools import find_namespace_packages, setup
 from _version import __version__ as fallback_version
 
+if "+" in fallback_version:
+    fallback_version = fallback_version.split("+")[0]
 
 setup(
     name="emmet-builders",
