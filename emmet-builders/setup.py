@@ -5,6 +5,9 @@ from emmet.core import __version__ as core_version
 if "+" in fallback_version:
     fallback_version = fallback_version.split("+")[0]
 
+if "+" in core_version:
+    core_version = core_version.split("+")[0]
+
 setup(
     name="emmet-builders",
     use_scm_version={
