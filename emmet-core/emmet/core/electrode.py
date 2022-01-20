@@ -224,7 +224,9 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         description="Composition summary data for all material in entries across all voltage pairs.",
     )
 
-    electrode_object: Dict = Field(None, description="The pymatgen electrode object")
+    electrode_object: InsertionElectrode = Field(
+        None, description="The pymatgen electrode object"
+    )
 
     warnings: List[str] = Field([], description="Any warnings related to this material")
 
