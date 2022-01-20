@@ -12,6 +12,7 @@ COPY emmet-api/emmet emmet
 COPY emmet-api/_version.py .
 COPY emmet-api/app.py .
 COPY emmet-api/setup.py .
+COPY emmet-api/gunicorn.conf.py .
 RUN pip install $PIP_FLAGS -e .[server]
 
 FROM base
@@ -29,4 +30,4 @@ ENV NUM_WORKERS 4
 ENV RELOAD ""
 
 EXPOSE 5001
-CMD gunicorn -b 0.0.0.0:$PORT -k uvicorn.workers.UvicornWorker -w $NUM_WORKERS --log-level debug --access-logfile - $RELOAD app:app
+CMD gunicorn -c gunicorn.conf.py -b 0.0.0.0:$PORT -k uvicorn.workers.UvicornWorker -w $NUM_WORKERS --log-level debug --access-logfile - $RELOAD app:app
