@@ -21,7 +21,7 @@ setup(
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
     install_requires=[
-        "emmet-core>=0.21.9",
+        "emmet-core",
         "fastapi",
         "uvicorn",
         "gunicorn",
