@@ -35,6 +35,7 @@ ENV PATH=/root/.local/bin:$PATH \
 COPY app.py .
 COPY gunicorn.conf.py .
 COPY start.sh .
+RUN chmod +x start.sh
 
 EXPOSE 5001
 CMD wait-for-it.sh $DD_TRACE_HOST -s -t 60 -- ./start.sh
