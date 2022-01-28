@@ -7,3 +7,4 @@ seekpath==2.0.1
 setuptools-scm==6.4.2
 robocrys==0.2.7
 matminer==0.7.6
+pymatgen-analysis-alloys==0.0.1
