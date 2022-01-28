@@ -169,7 +169,7 @@ class TaskDoc(BaseModel):
     composition: Composition = Field(
         None, description="Full composition for the material"
     )
-    composition_reduced: Composition = Field(
+    composition_reduced: Dict[Element, float] = Field(
         None,
         title="Reduced Composition",
         description="Simplified representation of the composition",
