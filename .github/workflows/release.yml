@@ -17,7 +17,7 @@ jobs:
 
       - uses: actions/setup-python@v2.3.1
         with:
-          python-version: 3.7
+          python-version: 3.8
 
       - name: Install dependencies
         run: |
@@ -27,6 +27,18 @@ jobs:
       - name: Build packages
         run: python setup.py sdist bdist_wheel
         working-directory: ./${{ matrix.package }}/
+
+      - name: Commit files
+        run: |
+          git config --local user.email "feedback@materialsproject.org"
+          git config --local user.name "materialsproject"
+          git pull origin main
+          git add ${{ matrix.package }}/_version.py && git commit -m 'Updated version file'
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@master
@@ -45,7 +57,7 @@ jobs:
 
       - uses: actions/setup-python@v2.3.1
         with:
-          python-version: 3.7
+          python-version: 3.8
 
       - name: Install dependencies
         run: |
@@ -64,6 +76,8 @@ jobs:
         run: |
           git config --local user.email "feedback@materialsproject.org"
           git config --local user.name "materialsproject"
+          git stash
+          git pull origin main
           mv CHANGELOG.md docs/
           git add docs/CHANGELOG.md && git commit -m 'Updated CHANGELOG.md'
 

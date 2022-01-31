@@ -1,5 +1,7 @@
+import re
 from datetime import datetime
-from typing import List, Union
+from typing import List, Union, Dict
+from collections import defaultdict
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
@@ -88,6 +90,61 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
     )
 
 
+class EntriesCompositionSummary(BaseModel):
+    """
+    Composition summary data for all material entries associated with this electrode.
+    Included to enable better searching via the API.
+    """
+
+    all_formulas: List[str] = Field(
+        None,
+        description="Reduced formulas for material entries across all voltage pairs.",
+    )
+
+    all_chemsys: List[str] = Field(
+        None,
+        description="Chemical systems for material entries across all voltage pairs.",
+    )
+
+    all_formula_anonymous: List[str] = Field(
+        None,
+        description="Anonymous formulas for material entries across all voltage pairs.",
+    )
+
+    all_elements: List[Element] = Field(
+        None, description="Elements in material entries across all voltage pairs.",
+    )
+
+    all_composition_reduced: Dict = Field(
+        None,
+        description="Composition reduced data for entries across all voltage pairs.",
+    )
+
+    @classmethod
+    def from_compositions(cls, compositions: List[Composition]):
+
+        all_formulas = list({comp.reduced_formula for comp in compositions})
+        all_chemsys = list({comp.chemical_system for comp in compositions})
+        all_formula_anonymous = list({comp.anonymized_formula for comp in compositions})
+        all_elements = sorted(compositions)[-1].elements
+
+        all_composition_reduced = defaultdict(set)
+
+        for comp in compositions:
+            comp_red = comp.get_reduced_composition_and_factor()[0].as_dict()
+
+            for ele, num in comp_red.items():
+                all_composition_reduced[ele].add(num)
+
+        return cls(
+            all_formulas=all_formulas,
+            all_chemsys=all_chemsys,
+            all_formula_anonymous=all_formula_anonymous,
+            all_elements=all_elements,
+            all_composition_reduced=all_composition_reduced,
+        )
+
+
 class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     """
     Insertion electrode
@@ -162,6 +219,11 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         description="Anonymized representation of the formula (not including the working ion)",
     )
 
+    entries_composition_summary: EntriesCompositionSummary = Field(
+        None,
+        description="Composition summary data for all material in entries across all voltage pairs.",
+    )
+
     electrode_object: InsertionElectrode = Field(
         None, description="The pymatgen electrode object"
     )
@@ -210,6 +272,15 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
             Composition(d["formula_charge"]), discharge_comp, working_ion_ele,
         )
 
+        compositions = []
+        for doc in d["adj_pairs"]:
+            compositions.append(Composition(doc["formula_charge"]))
+            compositions.append(Composition(doc["formula_discharge"]))
+
+        entries_composition_summary = EntriesCompositionSummary.from_compositions(
+            compositions
+        )
+
         # Check if more than one working ion per transition metal and warn
         warnings = []
         transition_metal_fraction = sum(
@@ -236,6 +307,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
             nelements=len(elements),
             chemsys=chemsys,
             formula_anonymous=framework.anonymized_formula,
+            entries_composition_summary=entries_composition_summary,
             warnings=warnings,
             **d,
         )
@@ -260,9 +332,11 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
 
             (temp_reduced, n) = temp_comp.get_reduced_composition_and_factor()
 
-            working_ion_subscripts.append(
-                "{:.2f}".format(working_ion_num / n).rstrip(".0")
-            )
+            new_subscript = re.sub(".00$", "", "{:.2f}".format(working_ion_num / n))
+            if new_subscript != "0":
+                new_subscript = new_subscript.rstrip("0")
+
+            working_ion_subscripts.append(new_subscript)
 
         return (
             working_ion.value

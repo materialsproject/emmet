@@ -6,14 +6,16 @@ import numpy as np
 from pydantic import Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D, Vector3D
 from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import Tensor
 
-VoigtVector = Tuple[float, float, float, float, float, float]
-PiezoTensor = Tuple[VoigtVector, VoigtVector, VoigtVector]
+SETTINGS = EmmetSettings()
+
+Vector = List[float]
+PiezoTensor = List[Vector]
 PiezoTensor.__doc__ = "Rank 3 real space tensor in Voigt notation"  # type: ignore
 
 

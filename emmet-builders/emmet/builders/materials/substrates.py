@@ -16,7 +16,7 @@ class SubstratesBuilder(Builder):
         self,
         materials: Store,
         substrates: Store,
-        elasticity: Optional[Store] = None,
+        elasticity: Store,
         query: Optional[Dict] = None,
         **kwargs,
     ):

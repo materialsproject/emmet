@@ -48,11 +48,7 @@ class ThermoBuilder(Builder):
         self.materials = materials
         self.thermo = thermo
         self.query = query if query else {}
-        self.compatibility = (
-            compatibility
-            if compatibility
-            else MaterialsProject2020Compatibility("Advanced")
-        )
+        self.compatibility = compatibility
         self.oxidation_states = oxidation_states
         self.phase_diagram = phase_diagram
         self.num_phase_diagram_eles = num_phase_diagram_eles
@@ -166,11 +162,14 @@ class ThermoBuilder(Builder):
         for entry in entries:
             material_entries[entry.entry_id][entry.data["run_type"]] = entry
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore", message="Failed to guess oxidation states.*"
-            )
-            pd_entries = self.compatibility.process_entries(entries)
+        if self.compatibility:
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore", message="Failed to guess oxidation states.*"
+                )
+                pd_entries = self.compatibility.process_entries(entries)
+        else:
+            pd_entries = entries
         self.logger.debug(f"{len(pd_entries)} remain in {chemsys} after filtering")
 
         try:

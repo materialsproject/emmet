@@ -5,8 +5,10 @@ from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
 from pymatgen.symmetry.analyzer import PointGroupAnalyzer, SpacegroupAnalyzer, spglib
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.utils import ValueEnum
+
+SETTINGS = EmmetSettings()
 
 
 class CrystalSystem(ValueEnum):

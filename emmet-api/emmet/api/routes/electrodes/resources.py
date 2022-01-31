@@ -5,9 +5,10 @@ from emmet.core.electrode import InsertionElectrodeDoc
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 from emmet.api.routes.electrodes.query_operators import (
     ElectrodeFormulaQuery,
+    ElectrodeElementsQuery,
+    ElectrodesChemsysQuery,
     WorkingIonQuery,
 )
-from emmet.api.routes.materials.query_operators import ElementsQuery, ChemsysQuery
 
 
 def insertion_electrodes_resource(insertion_electrodes_store):
@@ -16,9 +17,9 @@ def insertion_electrodes_resource(insertion_electrodes_store):
         InsertionElectrodeDoc,
         query_operators=[
             ElectrodeFormulaQuery(),
-            ChemsysQuery(),
+            ElectrodesChemsysQuery(),
             WorkingIonQuery(),
-            ElementsQuery(),
+            ElectrodeElementsQuery(),
             NumericQuery(model=InsertionElectrodeDoc),
             SortQuery(),
             PaginationQuery(),
