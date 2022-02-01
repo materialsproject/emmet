@@ -50,7 +50,7 @@ class PropertyDoc(MoleculeMetadata):
         cls: Type[S], meta_molecule: Molecule, molecule_id: MPID, **kwargs
     ) -> S:
         """
-        Builds a materials document using the minimal amount of information
+        Builds a molecule document using the minimal amount of information
         """
 
         return super().from_molecule(meta_molecule=meta_molecule, molecule_id=molecule_id, **kwargs)  # type: ignore

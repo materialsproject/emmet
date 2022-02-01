@@ -134,7 +134,8 @@ def nbo_molecule_graph(
 
             beta_bonds.add((from_ind, to_ind, bond_type))
 
-    cutoff = 3.0
+    distance_cutoff = 3.0
+    energy_cutoff = 3.0
     metal_indices = [i for i, e in enumerate(mol.species) if e in metals]
 
     poss_coord = dict()
@@ -143,7 +144,7 @@ def nbo_molecule_graph(
         poss_coord[i] = list()
         row = dist_mat[i]
         for j, val in enumerate(row):
-            if i != j and val < cutoff:
+            if i != j and val < distance_cutoff:
                 poss_coord[i].append(j)
 
     if len(nbo["perturbation_energy"]) > 0:
@@ -171,10 +172,9 @@ def nbo_molecule_graph(
             elif x_ind not in poss_coord[m_ind]:
                 continue
 
-            if coord:
-                energy = float(nbo["perturbation_energy"][0]["perturbation energy"][inter_ind])
-                if energy >= 3.0:
-                    alpha_bonds.add((x_ind, m_ind, "coordination"))
+            energy = float(nbo["perturbation_energy"][0]["perturbation energy"][inter_ind])
+            if energy >= energy_cutoff:
+                alpha_bonds.add((x_ind, m_ind, "electrostatic"))
 
     if mol.spin_multiplicity != 1 and len(nbo["perturbation_energy"]) > 1:
         for inter_ind in nbo["perturbation_energy"][1].get("donor type", list()):
@@ -201,10 +201,9 @@ def nbo_molecule_graph(
             elif x_ind not in poss_coord[m_ind]:
                 continue
 
-            if coord:
-                energy = float(nbo["perturbation_energy"][1]["perturbation energy"][inter_ind])
-                if energy >= 3.0:
-                    beta_bonds.add((x_ind, m_ind, "coordination"))
+            energy = float(nbo["perturbation_energy"][1]["perturbation energy"][inter_ind])
+            if energy >= energy_cutoff:
+                beta_bonds.add((x_ind, m_ind, "electrostatic"))
 
     sorted_alpha = set([tuple(sorted([a[0], a[1]])) for a in alpha_bonds])
     sorted_beta = set([tuple(sorted([b[0], b[1]])) for b in beta_bonds])
@@ -235,7 +234,7 @@ class BondingDoc(PropertyDoc):
 
     molecule_graph: MoleculeGraph = Field(description="Molecule graph",)
 
-    method: str = Field(description="Method used to compute structure graph")
+    method: str = Field(description="Method used to compute molecule graph")
 
     bond_types: Dict[str, List[float]] = Field(
         description="Dictionary of bond types to their length, e.g. a C-O to "
@@ -265,8 +264,8 @@ class BondingDoc(PropertyDoc):
 
         Method preferences are as follows:
         - NBO7
-        - Critic2
         - OpenBabelNN + metal_edge_extender in pymatgen
+        - Critic2 (really OpenBabelNN + metal_edge_extender + Critic2)
 
         :param task: task document from which bonding properties can be extracted
         :param molecule_id: mpid

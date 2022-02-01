@@ -38,7 +38,7 @@ def test_make_mol(test_tasks):
         MoleculeDoc.from_tasks(bad_task_group)
 
 
-def test_make_deprecated_mat(test_tasks):
+def test_make_deprecated_mol(test_tasks):
     bad_task_group = [
         task for task in test_tasks if task.task_type not in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization]
     ]

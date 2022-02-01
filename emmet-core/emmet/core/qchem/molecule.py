@@ -139,7 +139,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             task for task in task_group if task.task_type in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization] # type: ignore
         ]
 
-        # Material ID
+        # Molecule ID
         possible_mol_ids = [task.task_id for task in geometry_optimizations]
 
         molecule_id = min(possible_mol_ids)
@@ -229,7 +229,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         task_types = {task.task_id: task.task_type for task in task_group}
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
-        # Material ID
+        # Molecule ID
         molecule_id = min([task.task_id for task in task_group])
 
         # Choose any random structure for metadata

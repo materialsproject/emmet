@@ -124,7 +124,7 @@ class MoleculeDoc(MoleculeMetadata):
     deprecated_tasks: List[str] = Field([], title="Deprecated Tasks")
 
     calc_types: Mapping[str, str] = Field(
-        None, description="Calculation types for all the calculations that make up this molecule",
+        None, description="Calculation types for all the tasks that make up this molecule",
     )
 
     last_updated: datetime = Field(
@@ -137,7 +137,7 @@ class MoleculeDoc(MoleculeMetadata):
 
     origins: List[PropertyOrigin] = Field(None, description="Dictionary for tracking the provenance of properties")
 
-    warnings: List[str] = Field([], description="Any warnings related to this material")
+    warnings: List[str] = Field([], description="Any warnings related to this molecule")
 
     @classmethod
     def from_molecule(cls: Type[S], molecule: Molecule, molecule_id: MPID, **kwargs) -> S:  # type: ignore[override]
