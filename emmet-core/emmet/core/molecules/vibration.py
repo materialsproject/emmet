@@ -15,6 +15,9 @@ from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.molecule_property import PropertyDoc
 
 
+__author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
+
+
 class SpectrumDoc(MoleculeMetadata):
     """
     Base model definition for any spectra document. This should contain

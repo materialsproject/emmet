@@ -21,6 +21,9 @@ from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 
 
+__author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
+
+
 def get_free_energy(energy, enthalpy, entropy, temperature=298.15):
     """
     Helper function to calculate Gibbs free energy from electronic energy, enthalpy, and entropy

@@ -12,6 +12,10 @@ from emmet.core.qchem.calc_types.calc_types import (
     SOLVENTS
 )
 
+
+__author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
+
+
 _LOTS = list()
 
 for funct in FUNCTIONALS:

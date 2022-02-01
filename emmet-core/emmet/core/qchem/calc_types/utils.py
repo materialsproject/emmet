@@ -16,6 +16,10 @@ from emmet.core.qchem.calc_types.calc_types import (
     SMD_PARAMETERS
 )
 
+
+__author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
+
+
 functional_synonyms = {"wb97xd": "wb97x-d",
                        "wb97xd3": "wb97x-d3",
                        "wb97xv": "wb97x-v",

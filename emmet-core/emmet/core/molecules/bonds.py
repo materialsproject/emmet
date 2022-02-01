@@ -21,6 +21,9 @@ from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 
 
+__author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
+
+
 metals = ["Li", "Mg", "Ca", "Zn", "Al"]
 
 

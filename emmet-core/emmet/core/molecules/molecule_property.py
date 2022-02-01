@@ -11,6 +11,10 @@ from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import MPID
 from emmet.core.structure import MoleculeMetadata
 
+
+__author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
+
+
 S = TypeVar("S", bound="PropertyDoc")
 
 

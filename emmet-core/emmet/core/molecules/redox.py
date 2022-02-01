@@ -28,6 +28,8 @@ from emmet.core.molecules.thermo import get_free_energy
 from emmet.core.mpid import MPID
 
 
+__author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
+
 
 reference_potentials = {"H": 4.44,
                         "Li": 1.40,

@@ -18,6 +18,9 @@ from emmet.core.qchem.calc_types import (
 )
 
 
+__author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
+
+
 class Status(ValueEnum):
     """
     Q-Chem Calculation State

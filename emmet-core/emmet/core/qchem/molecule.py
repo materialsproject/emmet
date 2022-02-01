@@ -16,6 +16,9 @@ from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.task import TaskDocument
 
 
+__author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
+
+
 def evaluate_lot(
     lot: LevelOfTheory,
     funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
