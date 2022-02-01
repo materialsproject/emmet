@@ -70,7 +70,7 @@ class EmmetSettings(BaseSettings):
     )
 
     QCHEM_SOLVENT_MODEL_QUALITY_SCORES: Dict[str, int] = Field(
-        {"SMD": 5, "PCM": 3, "VACUUM": 1},
+        {"CMIRS": 7, "SMD": 5, "ISOSVP": 4, "PCM": 3, "VACUUM": 1},
         description="Dictionary mapping Q-Chem solvent models to a quality score."
     )
 

@@ -129,13 +129,13 @@ class RedoxDoc(PropertyDoc):
                 for lot, group in sorted(lot_groups.items(), key=lambda x: evaluate_lot(x[0])):
                     # Sorting important because we want to make docs only from lowest-energy instances
                     ffopts = sorted(
-                        [f for f in group if f["task_type"] == TaskType.frequency_flattening_geometry_optimization],
+                        [f for f in group if f["task_type"] == TaskType.Frequency_Flattening_Geometry_Optimization],
                         key=lambda x: x["output"]["final_energy"])
 
                     charges = [f["charge"] for f in ffopts]
                     if all([c in docs_by_charge for c in charges]):
                         continue
-                    single_points = [s for s in group if s["task_type"] == TaskType.single_point]
+                    single_points = [s for s in group if s["task_type"] == TaskType.Single_Point]
 
                     for ff in ffopts:
                         d = {

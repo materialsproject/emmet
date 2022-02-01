@@ -136,7 +136,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
         geometry_optimizations = [
-            task for task in task_group if task.task_type in [TaskType.geometry_optimization, TaskType.frequency_flattening_geometry_optimization] # type: ignore
+            task for task in task_group if task.task_type in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization] # type: ignore
         ]
 
         # Material ID

@@ -120,20 +120,20 @@ def level_of_theory(
 
 def task_type(orig: Dict[str, Any], special_run_type: Optional[str] = None) -> TaskType:
     if special_run_type == "frequency_flattener":
-        return TaskType("frequency-flattening geometry optimization")
+        return TaskType("Frequency Flattening Geometry Optimization")
     elif special_run_type == "ts_frequency_flattener":
-        return TaskType("frequency-flattening transition-state geometry optimization")
+        return TaskType("Frequency Flattening Transition State Geometry Optimization")
 
     if orig["rem"].get("job_type") == "sp":
-        return TaskType("single-point")
+        return TaskType("Single Point")
     elif orig["rem"].get("job_type") == "opt":
-        return TaskType("geometry optimization")
+        return TaskType("Geometry Optimization")
     elif orig["rem"].get("job_type") == "ts":
-        return TaskType("transition-state geometry optimization")
+        return TaskType("Transition State Geometry Optimization")
     elif orig["rem"].get("job_type") == "freq":
-        return TaskType("frequency analysis")
+        return TaskType("Frequency Analysis")
 
-    return TaskType("unknown")
+    return TaskType("Unknown")
 
 def calc_type(
     special_run_type: str,

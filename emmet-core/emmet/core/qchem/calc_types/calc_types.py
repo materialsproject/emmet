@@ -1,13 +1,14 @@
 """Task types and level of theory components for Q-Chem calculations"""
 
 TASK_TYPES = [
-    "single-point",
-    "geometry optimization",
-    "frequency analysis",
-    "frequency-flattening geometry optimization",
-    "transition-state geometry optimization",
-    "frequency-flattening transition-state geometry optimization",
-    "unknown"
+    "Single Point",
+    "Force",
+    "Geometry Optimization",
+    "Frequency Analysis",
+    "Frequency Flattening Geometry Optimization",
+    "Transition State Geometry Optimization",
+    "Frequency Flattening Transition State Geometry Optimization",
+    "Unknown"
 ]
 
 FUNCTIONAL_CLASSES = {
@@ -70,7 +71,7 @@ FUNCTIONALS = [rt for functional_class in FUNCTIONAL_CLASSES for rt in FUNCTIONA
 
 BASIS_SETS = ["6-31g*", "def2-SVPD", "def2-TZVP", "def2-TZVPD", "def2-TZVPP", "def2-TZVPPD", "def2-QZVPPD"]
 
-SOLVENT_MODELS = ["VACUUM", "PCM", "SMD"]
+SOLVENT_MODELS = ["VACUUM", "PCM", "ISOSVP", "SMD", "CMIRS"]
 
 SOLVENTS = ["WATER", "THF", "G2", "DME", "EC", "EC/EMC", "PC"]
 

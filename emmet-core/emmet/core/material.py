@@ -98,10 +98,10 @@ class MoleculeDoc(MoleculeMetadata):
     molecule_id: MPID = Field(
         ...,
         description="The ID of this molecule, used as a universal reference across property documents."
-        "This comes in the form and MPID or int",
+        "This comes in the form of an MPID or int",
     )
 
-    molecule: Molecule = Field(..., description="The best structure for this molecule")
+    molecule: Molecule = Field(..., description="The best (typically meaning lowest in energy) structure for this molecule")
 
     deprecated: bool = Field(
         True, description="Whether this molecule document is deprecated.",
@@ -132,7 +132,7 @@ class MoleculeDoc(MoleculeMetadata):
     )
 
     created_at: datetime = Field(
-        description="Timestamp for when this material document was first created", default_factory=datetime.utcnow,
+        description="Timestamp for when this document was first created", default_factory=datetime.utcnow,
     )
 
     origins: List[PropertyOrigin] = Field(None, description="Dictionary for tracking the provenance of properties")

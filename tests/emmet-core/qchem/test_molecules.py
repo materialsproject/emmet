@@ -31,7 +31,7 @@ def test_make_mol(test_tasks):
     assert len(molecule.entries) == 1
 
     bad_task_group = [
-        task for task in test_tasks if task.task_type not in [TaskType.geometry_optimization, TaskType.frequency_flattening_geometry_optimization]
+        task for task in test_tasks if task.task_type not in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization]
     ]
 
     with pytest.raises(Exception):
@@ -40,7 +40,7 @@ def test_make_mol(test_tasks):
 
 def test_make_deprecated_mat(test_tasks):
     bad_task_group = [
-        task for task in test_tasks if task.task_type not in [TaskType.geometry_optimization, TaskType.frequency_flattening_geometry_optimization]
+        task for task in test_tasks if task.task_type not in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization]
     ]
 
     molecule = MoleculeDoc.construct_deprecated_molecule(bad_task_group)

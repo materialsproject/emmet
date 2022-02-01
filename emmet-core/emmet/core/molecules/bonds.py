@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Dict, List, Any, Tuple, Union
+from typing import Dict, List, Any, Optional, Tuple, Union
 import copy
 
 from typing_extensions import Literal
@@ -24,7 +24,16 @@ from emmet.core.molecules.molecule_property import PropertyDoc
 metals = ["Li", "Mg", "Ca", "Zn", "Al"]
 
 
-def fix_C_Li_bonds(critic):
+def fix_C_Li_bonds(critic: Dict) -> Dict:
+    """
+    Adjust C-Li coordinate bonding for Critic2 calculations.
+
+    :param critic: Critic2 output dictionary
+
+    :return:
+        critic: modified Critic2 output dictionary
+
+    """
     for key in critic["bonding"]:
         if critic["bonding"][key]["atoms"] == ["Li","C"] or critic["bonding"][key]["atoms"] == ["C","Li"]:
             if critic["bonding"][key]["field"] <= 0.02 and critic["bonding"][key]["field"] > 0.012 and critic["bonding"][key]["distance"] < 2.5:
@@ -32,7 +41,20 @@ def fix_C_Li_bonds(critic):
     return critic
 
 
-def make_mol_graph(mol, critic_bonds=None):
+def make_mol_graph(mol: Molecule, critic_bonds:Optional[List[List[int]]]=None) -> MoleculeGraph:
+    """
+    Construct a MoleculeGraph using OpenBabelNN with metal_edge_extender and
+    (optionally) Critic2 bonding information.
+
+    This bonding scheme was used to define bonding for the Lithium-Ion Battery
+    Electrolyte (LIBE) dataset (DOI: 10.1038/s41597-021-00986-9)
+
+    :param mol: Molecule to be converted to MoleculeGraph
+    :param critic_bonds: (optional) List of lists [a, b], where a and b are
+        atom indices (0-indexed)
+
+    :return: mol_graph, a MoleculeGraph
+    """
     mol_graph = MoleculeGraph.with_local_env_strategy(mol,
                                                       OpenBabelNN())
     mol_graph = metal_edge_extender(mol_graph)
