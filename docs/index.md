@@ -1,10 +1,7 @@
 # ![Emmet](images/logo_w_text.svg)
 
-
 [![Pytest Status](https://github.com/materialsproject/emmet/workflows/testing/badge.svg)](https://github.com/materialsproject/emmet/actions?query=workflow%3Atesting)
-[![Code Coverage](https://codecov.io/gh/materialsproject/emmet/branch/master/graph/badge.svg)](https://codecov.io/gh/materialsproject/emmet)
-
-
+[![Code Coverage](https://codecov.io/gh/materialsproject/emmet/branch/main/graph/badge.svg)](https://codecov.io/gh/materialsproject/emmet)
 
 ## What is Emmet
 
@@ -14,21 +11,21 @@ Emmet is written in [Python](http://docs.python-guide.org/en/latest/) and suppor
 
 ## Installation from PyPI
 
-Emmet is a toolkit. Due to a refactoring, `emmet` is in alpha status with no published metapackage. Only `emmet-core` is published on the [Python Package Index](https://pypi.org/project/emmet-core/).  The preferred tool for installing
-packages from *PyPi* is **pip**.  This tool is provided with all modern
+Emmet is a toolkit. Due to a refactoring, `emmet` is in alpha status with no published metapackage. Only `emmet-core` is published on the [Python Package Index](https://pypi.org/project/emmet-core/). The preferred tool for installing
+packages from _PyPi_ is **pip**. This tool is provided with all modern
 versions of Python.
 
 Open your terminal and run the following command.
 
-``` shell
+```shell
 pip install --upgrade emmet-core
 ```
 
 ## Installation from source
 
-You can install Maggma directly from a clone of the [Git repository](https://github.com/materialsproject/maggma).  This can be done either by cloning the repo and installing from the local clone, or simply installing directly via **git**.
+You can install Maggma directly from a clone of the [Git repository](https://github.com/materialsproject/maggma). This can be done either by cloning the repo and installing from the local clone, or simply installing directly via **git**.
 
-``` shell tab="Local Clone"
+```shell tab="Local Clone"
 git clone https://github.com//materialsproject/emmet
 cd emmet
 pip install -e emmet-core/

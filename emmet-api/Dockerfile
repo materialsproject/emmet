@@ -1,4 +1,4 @@
-FROM materialsproject/devops:python-3.97.12 as base
+FROM materialsproject/devops:python-3.97.13 as base
 
 FROM base as builder
 RUN apt-get update && apt-get install -y --no-install-recommends gcc git g++ cmake make libsnappy-dev wget && apt-get clean
@@ -25,7 +25,7 @@ ENV PATH=/root/.local/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     FLASK_APP=emmet-api \
     FLASK_ENV=production \
-    PORT=5001 \
+    PORT=10001 \
     NUM_WORKERS=4 \
     RELOAD="" \
     MAX_REQUESTS=100000 \
@@ -37,5 +37,5 @@ COPY gunicorn.conf.py .
 COPY start.sh .
 RUN chmod +x start.sh
 
-EXPOSE 5001
+EXPOSE 10001
 CMD wait-for-it.sh $DD_TRACE_HOST -s -t 60 -- ./start.sh
