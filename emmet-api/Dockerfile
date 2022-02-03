@@ -33,7 +33,6 @@ ENV PATH=/root/.local/bin:$PATH \
     DD_TRACE_HOST=localhost:8126
 
 COPY app.py .
-COPY gunicorn.conf.py .
 COPY start.sh .
 RUN chmod +x start.sh
 
