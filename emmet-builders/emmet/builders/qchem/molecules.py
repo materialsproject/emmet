@@ -20,7 +20,7 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 SETTINGS = EmmetBuildSettings()
 
 
-class MoleculesBuilder(Builder):
+class MoleculesAssociationBuilder(Builder):
     """
     The MoleculesBuilder matches Q-Chem task documents by composition, charge, spin multiplicity,
     and bonding into molecules documents. The purpose of this builder is to group calculations
@@ -37,7 +37,7 @@ class MoleculesBuilder(Builder):
     def __init__(
         self,
         tasks: Store,
-        molecules: Store,
+        assoc: Store,
         query: Optional[Dict] = None,
         settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
@@ -45,18 +45,18 @@ class MoleculesBuilder(Builder):
         """
         Args:
             tasks:  Store of task documents
-            molecules: Store of molecules documents to prepare
+            assoc: Store of associated molecules documents to prepare
             query: dictionary to limit tasks to be analyzed
             settings: EmmetSettings to use in the build process
         """
 
         self.tasks = tasks
-        self.molecules = molecules
+        self.assoc = assoc
         self.query = query if query else dict()
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks], targets=[molecules])
+        super().__init__(sources=[tasks], targets=[assoc])
 
     def ensure_indexes(self):
         """
@@ -70,9 +70,9 @@ class MoleculesBuilder(Builder):
         self.tasks.ensure_index("formula_alphabetical")
 
         # Search index for molecules
-        self.molecules.ensure_index("molecule_id")
-        self.molecules.ensure_index("last_updated")
-        self.molecules.ensure_index("task_ids")
+        self.assoc.ensure_index("molecule_id")
+        self.assoc.ensure_index("last_updated")
+        self.assoc.ensure_index("task_ids")
 
     def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
         """Prechunk the molecule builder for distributed computation"""
@@ -85,7 +85,7 @@ class MoleculesBuilder(Builder):
             self.tasks.query(temp_query, [self.tasks.key, "formula_alphabetical"])
         )
 
-        processed_tasks = set(self.molecules.distinct("task_ids"))
+        processed_tasks = set(self.assoc.distinct("task_ids"))
         to_process_tasks = {d[self.tasks.key] for d in all_tasks} - processed_tasks
         to_process_forms = {
             d["formula_alphabetical"]
@@ -129,7 +129,7 @@ class MoleculesBuilder(Builder):
             self.tasks.query(temp_query, [self.tasks.key, "formula_alphabetical"])
         )
 
-        processed_tasks = set(self.molecules.distinct("task_ids"))
+        processed_tasks = set(self.assoc.distinct("task_ids"))
         to_process_tasks = {d[self.tasks.key] for d in all_tasks} - processed_tasks
         to_process_forms = {
             d["formula_alphabetical"]
@@ -225,8 +225,8 @@ class MoleculesBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(docs)} molecules")
-            self.molecules.remove_docs({self.molecules.key: {"$in": molecule_ids}})
-            self.molecules.update(
+            self.assoc.remove_docs({self.assoc.key: {"$in": molecule_ids}})
+            self.assoc.update(
                 docs=docs, key=["molecule_id"],
             )
         else:
