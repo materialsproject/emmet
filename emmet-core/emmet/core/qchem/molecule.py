@@ -8,7 +8,7 @@ from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.material import MoleculeDoc as CoreMoleculeDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.structure import MoleculeMetadata
@@ -17,6 +17,9 @@ from emmet.core.qchem.task import TaskDocument
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
+
+
+SETTINGS = EmmetSettings()
 
 
 def evaluate_lot(
@@ -52,15 +55,13 @@ def evaluate_molecule(
     """
     Helper function to order optimization calcs by
     - Level of theory
-    - Spin polarization
-    - Special Tags
-    - Energy
+    - Electronic energy
 
     :param task: Task to be evaluated
     :param funct_scores: Scores for various density functionals
     :param basis_scores: Scores for various basis sets
     :param solvent_scores: Scores for various implicit solvent models
-    :param task_quality_scores: Scores for variouus task types
+    :param task_quality_scores: Scores for various task types
     :return:
     """
 

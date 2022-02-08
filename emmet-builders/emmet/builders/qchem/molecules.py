@@ -8,7 +8,7 @@ from maggma.stores import Store
 from maggma.utils import grouper
 
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.utils import group_structures, jsanitize
+from emmet.core.utils import group_molecules, jsanitize
 from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.bonds import make_mol_graph
@@ -30,7 +30,7 @@ class MoleculesBuilder(Builder):
 
         1.) Find all documents with the same formula
         2.) Select only task documents for the task_types we can select properties from
-        3.) Aggregate task documents based on composition, bonding, charge, and spin
+        3.) Aggregate task documents based on nuclear geometry
         4.) Create a MoleculeDoc from the group of task documents
     """
 
@@ -108,7 +108,67 @@ class MoleculesBuilder(Builder):
         Returns:
             generator or list relevant tasks and molecules to process into documents
         """
-        pass
+
+        self.logger.info("Molecules builder started")
+        self.logger.info(
+            f"Allowed task types: {[task_type.value for task_type in self.settings.QCHEM_ALLOWED_TASK_TYPES]}"
+        )
+
+        self.logger.info("Setting indexes")
+        self.ensure_indexes()
+
+        # Save timestamp to mark buildtime for material documents
+        self.timestamp = datetime.utcnow()
+
+        # Get all processed tasks:
+        temp_query = dict(self.query)
+        temp_query["state"] = "successful"
+
+        self.logger.info("Finding tasks to process")
+        all_tasks = list(
+            self.tasks.query(temp_query, [self.tasks.key, "formula_alphabetical"])
+        )
+
+        processed_tasks = set(self.molecules.distinct("task_ids"))
+        to_process_tasks = {d[self.tasks.key] for d in all_tasks} - processed_tasks
+        to_process_forms = {
+            d["formula_alphabetical"]
+            for d in all_tasks
+            if d[self.tasks.key] in to_process_tasks
+        }
+
+        self.logger.info(f"Found {len(to_process_tasks)} unprocessed tasks")
+        self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
+
+        # Set total for builder bars to have a total
+        self.total = len(to_process_forms)
+
+        projected_fields = [
+            "last_updated",
+            "task_id",
+            "formula_alphabetical",
+            "orig",
+            "tags",
+            "walltime",
+            "cputime",
+            "output",
+            "calcs_reversed",
+            "special_run_type",
+            "custom_smd",
+            "critic2",
+        ]
+
+        for formula in to_process_forms:
+            tasks_query = dict(temp_query)
+            tasks_query["formula_alphabetical"] = formula
+            tasks = list(
+                self.tasks.query(criteria=tasks_query, properties=projected_fields)
+            )
+            for t in tasks:
+                # TODO: Validation
+                t["is_valid"] = True
+
+            yield tasks
 
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """
@@ -120,7 +180,33 @@ class MoleculesBuilder(Builder):
         Returns:
             [dict] : a list of new molecule docs
         """
-        pass
+
+        tasks = [TaskDocument(**task) for task in items]
+        formula = tasks[0].formula_alphabetical
+        task_ids = [task.task_id for task in tasks]
+        self.logger.debug(f"Processing {formula} : {task_ids}")
+
+        grouped_tasks = self.filter_and_group_tasks(tasks)
+        molecules = list()
+
+        for group in grouped_tasks:
+            try:
+                molecules.append(
+                    MoleculeDoc.from_tasks(group)
+                )
+            except Exception as e:
+                failed_ids = list({t_.task_id for t_ in group})
+                doc = MoleculeDoc.construct_deprecated_molecule(tasks)
+                doc.warnings.append(str(e))
+                molecules.append(doc)
+                self.logger.warn(
+                    f"Failed making material for {failed_ids}."
+                    f" Inserted as deprecated molecule: {doc.molecule_id}"
+                )
+
+        self.logger.debug(f"Produced {len(molecules)} materials for {formula}")
+
+        return jsanitize([mat.dict() for mat in molecules], allow_bson=True)
 
     def update_targets(self, items: List[Dict]):
         """
@@ -129,12 +215,55 @@ class MoleculesBuilder(Builder):
         Args:
             items [[dict]]: A list of molecules to update
         """
-        pass
+
+        docs = list(chain.from_iterable(items))  # type: ignore
+
+        for item in docs:
+            item.update({"_bt": self.timestamp})
+
+        molecule_ids = list({item["molecule_id"] for item in docs})
+
+        if len(items) > 0:
+            self.logger.info(f"Updating {len(docs)} molecules")
+            self.molecules.remove_docs({self.molecules.key: {"$in": molecule_ids}})
+            self.molecules.update(
+                docs=docs, key=["molecule_id"],
+            )
+        else:
+            self.logger.info("No items to update")
 
     def filter_and_group_tasks(
         self, tasks: List[TaskDocument]
     ) -> Iterator[List[TaskDocument]]:
         """
-        Groups tasks by matching charges, partial spins, and bonding connectivity
+        Groups tasks by identical structure
         """
-        pass
+
+        filtered_tasks = [
+            task
+            for task in tasks
+            if any(
+                allowed_type is task.task_type
+                for allowed_type in self.settings.QCHEM_ALLOWED_TASK_TYPES
+            )
+        ]
+
+        molecules = list()
+        lots = list()
+
+        for idx, task in enumerate(filtered_tasks):
+            if task.output.optimized_molecule:
+                m = task.output.optimized_molecule
+            else:
+                m = task.output.initial_molecule
+            m.index: int = idx  # type: ignore
+            molecules.append(m)
+            lots.append(task.level_of_theory.value)
+
+        grouped_molecules = group_molecules(
+            molecules,
+            lots
+        )
+        for group in grouped_molecules:
+            grouped_tasks = [filtered_tasks[mol.index] for mol in group]  # type: ignore
+            yield grouped_tasks

@@ -2,6 +2,7 @@ import datetime
 from enum import Enum
 from itertools import groupby
 from typing import Any, Iterator, List
+import copy
 
 import bson
 import numpy as np
@@ -12,7 +13,7 @@ from pymatgen.analysis.structure_matcher import (
     ElementComparator,
     StructureMatcher,
 )
-from pymatgen.core.structure import Structure
+from pymatgen.core.structure import Structure, Molecule
 
 from emmet.core.settings import EmmetSettings
 
@@ -64,6 +65,41 @@ def group_structures(
     for _, pregroup in groupby(sorted(structures, key=_get_sg), key=_get_sg):
         for group in sm.group_structures(list(pregroup)):
             yield group
+
+
+def group_molecules(
+        molecules: List[Molecule],
+        lots: List[str]
+):
+    """
+    Groups molecules according to composition, charge, environment, and equality
+    
+    Args:
+        molecules (List[Molecule])
+        lots (List[str]): string representations of Q-Chem levels of theory
+    """
+
+    def get_mol_key(mol_lot):
+        molecule, lot = mol_lot
+        key = molecule.composition.alphabetical_formula
+        key += " " + lot
+        return key
+
+    for mol_key, pregroup in groupby(sorted(zip(molecules, lots),key=get_mol_key),key=get_mol_key):
+        subgroups = list()
+        for mol, _ in pregroup:
+            mol_0 = copy.deepcopy(mol)
+            mol_0.set_charge_and_spin(0)
+            matched = False
+            for subgroup in subgroups:
+                if mol_0 == subgroup["mol"]:
+                    subgroup["mol_list"].append(mol)
+                    matched = True
+                    break
+            if not matched:
+                subgroups.append({"mol":mol_0,"mol_list":[mol]})
+        for group in subgroups:
+            yield group["mol_list"]
 
 
 def jsanitize(obj, strict=False, allow_bson=False):
