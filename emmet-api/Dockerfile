@@ -1,4 +1,4 @@
-FROM materialsproject/devops:python-3.97.12 as base
+FROM materialsproject/devops:python-3.97.13 as base
 
 FROM base as builder
 RUN apt-get update && apt-get install -y --no-install-recommends gcc git g++ cmake make libsnappy-dev wget && apt-get clean
@@ -33,7 +33,6 @@ ENV PATH=/root/.local/bin:$PATH \
     DD_TRACE_HOST=localhost:8126
 
 COPY app.py .
-COPY gunicorn.conf.py .
 COPY start.sh .
 RUN chmod +x start.sh
 
