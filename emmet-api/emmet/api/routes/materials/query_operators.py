@@ -22,7 +22,8 @@ class FormulaQuery(QueryOperator):
         self,
         formula: Optional[str] = Query(
             None,
-            description="Query by formula including anonymized formula or by including wild cards",
+            description="Query by formula including anonymized formula or by including wild cards. \
+A comma delimited string list of anonymous formulas or regular formulas can also be provided.",
         ),
     ) -> STORE_PARAMS:
 

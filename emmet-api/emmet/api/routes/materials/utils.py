@@ -4,7 +4,7 @@ from typing import Dict
 from fastapi import HTTPException
 
 
-def formula_to_criteria(formula: str) -> Dict:
+def formula_to_criteria(formulas: str) -> Dict:
     """
     Santizes formula into a dictionary to search with wild cards
 
@@ -16,43 +16,77 @@ def formula_to_criteria(formula: str) -> Dict:
     """
     dummies = "ADEGJLMQRXZ"
 
-    if "*" in formula:
-        # Wild card in formula
-        nstars = formula.count("*")
+    formula_list = [formula.strip() for formula in formulas.split(",")]
 
-        formula_dummies = formula.replace("*", "{}").format(*dummies[:nstars])
+    if "*" in formulas:
+        if len(formula_list) > 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Wild cards only supported for single formula queries.",
+            )
+        else:
+            # Wild card in formula
+            nstars = formulas.count("*")
 
-        integer_formula = Composition(formula_dummies).get_integer_formula_and_factor()[
-            0
-        ]
-        comp = Composition(integer_formula).reduced_composition
-        crit = dict()
-        crit["formula_anonymous"] = comp.anonymized_formula
-        real_elts = [
-            str(e)
-            for e in comp.elements
-            if not e.as_dict().get("element", "A") in dummies
-        ]
+            formula_dummies = formulas.replace("*", "{}").format(*dummies[:nstars])
 
-        for el, n in comp.to_reduced_dict.items():
-            if el in real_elts:
-                crit[f"composition_reduced.{el}"] = n
+            integer_formula = Composition(
+                formula_dummies
+            ).get_integer_formula_and_factor()[0]
+            comp = Composition(integer_formula).reduced_composition
+            crit = dict()
+            crit["formula_anonymous"] = comp.anonymized_formula
+            real_elts = [
+                str(e)
+                for e in comp.elements
+                if not e.as_dict().get("element", "A") in dummies
+            ]
 
-        return crit
+            for el, n in comp.to_reduced_dict.items():
+                if el in real_elts:
+                    crit[f"composition_reduced.{el}"] = n
 
-    elif any(isinstance(el, DummySpecies) for el in Composition(formula)):
+            return crit
+
+    elif any(
+        isinstance(el, DummySpecies)
+        for formula in formula_list
+        for el in Composition(formula)
+    ):
         # Assume fully anonymized formula
-        return {"formula_anonymous": Composition(formula).anonymized_formula}
+        if len(formula_list) == 1:
+            return {
+                "formula_anonymous": Composition(formula_list[0]).anonymized_formula
+            }
+        else:
+            return {
+                "formula_anonymous": {
+                    "$in": [
+                        Composition(formula).anonymized_formula
+                        for formula in formula_list
+                    ]
+                }
+            }
 
     else:
-        comp = Composition(formula)
-        # Paranoia below about floating-point "equality"
-        crit = {}
-        crit["nelements"] = len(comp)  # type: ignore
-        for el, n in comp.to_reduced_dict.items():
-            crit[f"composition_reduced.{el}"] = n
+        if len(formula_list) == 1:
 
-        return crit
+            comp = Composition(formula_list[0])
+            # Paranoia below about floating-point "equality"
+            crit = {}
+            crit["nelements"] = len(comp)  # type: ignore
+            for el, n in comp.to_reduced_dict.items():
+                crit[f"composition_reduced.{el}"] = n
+
+            return crit
+        else:
+            return {
+                "formula_pretty": {
+                    "$in": [
+                        Composition(formula).reduced_formula for formula in formula_list
+                    ]
+                }
+            }
 
 
 def chemsys_to_criteria(chemsys: str) -> Dict:

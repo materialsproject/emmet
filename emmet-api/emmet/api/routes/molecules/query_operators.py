@@ -116,16 +116,26 @@ class MoleculeFormulaQuery(QueryOperator):
     def query(
         self,
         formula: Optional[str] = Query(
-            None, description="Chemical formula of the molecule.",
+            None,
+            description="Chemical formula of the molecule. A comma-separated list of formulas is also accepted.",
         ),
     ) -> STORE_PARAMS:
 
         crit = defaultdict(dict)  # type: dict
 
         if formula:
+            formula_list = [f.strip() for f in formula.split(",")]
 
-            reduced_formula = Composition(formula).get_reduced_formula_and_factor()[0]
-            crit["formula_pretty"] = reduced_formula
+            if len(formula_list) == 1:
+                reduced_formula = Composition(formula).get_reduced_formula_and_factor()[
+                    0
+                ]
+                crit["formula_pretty"] = reduced_formula
+            else:
+                crit["formula_pretty"] = [
+                    Composition(f).get_reduced_formula_and_factor()[0]
+                    for f in formula_list
+                ]
 
         return {"criteria": crit}
 
