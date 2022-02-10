@@ -8,6 +8,7 @@ from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
+from emmet.core.mpid import MPID
 from emmet.core.settings import EmmetSettings
 from emmet.core.material import MoleculeDoc as CoreMoleculeDoc
 from emmet.core.material import PropertyOrigin
@@ -111,6 +112,10 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         None, description="Mapping for tracking the best entries at each level of theory for Q-Chem calculations"
     )
 
+    similar_molecules: List[MPID] = Field(
+        None, description="List of MPIDs with of molecules similar (by e.g. structure) to this one"
+    )
+
     @classmethod
     def from_tasks(
             cls,
@@ -122,7 +127,6 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
         Args:
             task_group: List of task document
-            quality_scores: quality scores for various density functionals
         """
         if len(task_group) == 0:
             raise Exception("Must have more than one task in the group.")
@@ -139,59 +143,101 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         task_types = {task.task_id: task.task_type for task in task_group}
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
-        geometry_optimizations = [
-            task for task in task_group if task.task_type in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization] # type: ignore
-        ]
+        mols = [task.output.initial_molecule for task in task_group]
 
-        # Molecule ID
-        possible_mol_ids = [task.task_id for task in geometry_optimizations]
+        # If we're dealing with single-atoms, process is much different
+        if all([len(m) == 1 for m in mols]):
+            sorted_tasks = sorted(task_group, key=lambda x: x.task_id)
 
-        molecule_id = min(possible_mol_ids)
+            molecule_id = sorted_tasks[0].task_id
 
-        best_molecule_calc = sorted(geometry_optimizations, key=evaluate_molecule)[0]
-        molecule = best_molecule_calc.output.optimized_molecule
+            molecule = [0].output.initial_molecule
 
-        # Initial molecules
-        initial_molecules = list()
-        for task in task_group:
-            if isinstance(task.orig["molecule"], Molecule):
-                initial_molecules.append(task.orig["molecule"])
-            else:
-                initial_molecules.append(Molecule.from_dict(task.orig["molecule"]))
+            # Initial molecules. No geometry should change for a single atom
+            initial_molecules = [molecule]
 
-        mm = MoleculeMatcher()
-        initial_molecules = [
-            group[0] for group in mm.group_molecules(initial_molecules)
-        ]
+            # Deprecated
+            deprecated = all(task.task_id in deprecated_tasks for task in task_group)
 
-        # Deprecated
-        deprecated = all(task.task_id in deprecated_tasks for task in geometry_optimizations)
-        deprecated = deprecated or best_molecule_calc.task_id in deprecated_tasks
+            # Origins
+            origins = [
+                PropertyOrigin(
+                    name="molecule",
+                    task_id=molecule_id,
+                    last_updated=sorted_tasks[0].last_updated,
+                )
+            ]
 
-        # Origins
-        origins = [
-            PropertyOrigin(
-                name="molecule",
-                task_id=best_molecule_calc.task_id,
-                last_updated=best_molecule_calc.last_updated,
-            )
-        ]
+            # entries
+            best_entries = {}
+            all_lots = set(levels_of_theory.values())
+            for lot in all_lots:
+                relevant_calcs = sorted(
+                    [doc for doc in task_group if doc.level_of_theory == lot and doc.is_valid],
+                    key=evaluate_molecule,
+                )
 
-        # entries
-        best_entries = {}
-        all_lots = set(levels_of_theory.values())
-        for lot in all_lots:
-            relevant_calcs = sorted(
-                [doc for doc in geometry_optimizations if doc.level_of_theory == lot and doc.is_valid],
-                key=evaluate_molecule,
-            )
+                if len(relevant_calcs) > 0:
+                    best_task_doc = relevant_calcs[0]
+                    entry = best_task_doc.entry
+                    entry["task_id"] = entry["entry_id"]
+                    entry["entry_id"] = molecule_id
+                    best_entries[lot] = entry
 
-            if len(relevant_calcs) > 0:
-                best_task_doc = relevant_calcs[0]
-                entry = best_task_doc.entry
-                entry["task_id"] = entry["entry_id"]
-                entry["entry_id"] = molecule_id
-                best_entries[lot] = entry
+        else:
+            geometry_optimizations = [
+                task for task in task_group if task.task_type in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization] # type: ignore
+            ]
+
+            # Molecule ID
+            possible_mol_ids = [task.task_id for task in geometry_optimizations]
+
+            molecule_id = min(possible_mol_ids)
+
+            best_molecule_calc = sorted(geometry_optimizations, key=evaluate_molecule)[0]
+            molecule = best_molecule_calc.output.optimized_molecule
+
+            # Initial molecules
+            initial_molecules = list()
+            for task in task_group:
+                if isinstance(task.orig["molecule"], Molecule):
+                    initial_molecules.append(task.orig["molecule"])
+                else:
+                    initial_molecules.append(Molecule.from_dict(task.orig["molecule"]))
+
+            mm = MoleculeMatcher()
+            initial_molecules = [
+                group[0] for group in mm.group_molecules(initial_molecules)
+            ]
+
+            # Deprecated
+            deprecated = all(task.task_id in deprecated_tasks for task in geometry_optimizations)
+            deprecated = deprecated or best_molecule_calc.task_id in deprecated_tasks
+
+            # Origins
+            origins = [
+                PropertyOrigin(
+                    name="molecule",
+                    task_id=best_molecule_calc.task_id,
+                    last_updated=best_molecule_calc.last_updated,
+                )
+            ]
+
+            # entries
+            best_entries = {}
+            all_lots = set(levels_of_theory.values())
+            for lot in all_lots:
+                relevant_calcs = sorted(
+                    [doc for doc in geometry_optimizations if doc.level_of_theory == lot and doc.is_valid],
+                    key=evaluate_molecule,
+                )
+
+                if len(relevant_calcs) > 0:
+                    best_task_doc = relevant_calcs[0]
+                    entry = best_task_doc.entry
+                    entry["task_id"] = entry["entry_id"]
+                    entry["entry_id"] = molecule_id
+                    best_entries[lot] = entry
 
         return cls.from_molecule(
             molecule=molecule,

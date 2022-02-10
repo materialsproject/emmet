@@ -146,6 +146,7 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
             "charge": charge,
             "spin_multiplicity": spin,
             "level_of_theory": self.level_of_theory,
+            "custom_smd": self.custom_smd,
             "task_type": self.task_type,
             "calc_type": self.calc_type,
             "molecule": mol,
@@ -153,6 +154,7 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
             "formula": mol.composition.alphabetical_formula,
             "energy": self.output.final_energy,
             "output": self.output.as_dict(),
+            "critic2": self.critic2,
             "orig": self.orig,
             "tags": self.tags,
             "last_updated": self.last_updated
