@@ -6,9 +6,13 @@ into MP compatible formats.
 """
 import json
 import sys
+import logging
 
 from pymatgen.core import Composition
 from pymatgen.core.composition import CompositionError
+
+
+logger = logging.getLogger(__name__)
 
 
 def string2comp(x):
@@ -28,7 +32,7 @@ def convert_recipe(recipe):
     try:
         target_comps = [string2comp(x) for x in targets_string]
     except (CompositionError, ValueError):
-        print("Cannot process materials: ", targets_string)
+        logger.error(f"Cannot process materials: {targets_string}")
         raise
 
     recipe["targets_formula"] = [x.formula for x in target_comps]
@@ -41,7 +45,7 @@ def convert_recipe(recipe):
         try:
             comp = string2comp(precursor["material_formula"])
         except (CompositionError, ValueError):
-            print("Cannot process precursor material: ", precursor["material_formula"])
+            logger.info("Cannot process precursor material: " + precursor["material_formula"])
             continue
         recipe["precursors_formula"].append(comp.formula)
         recipe["precursors_formula_s"].append(comp.reduced_formula)
@@ -57,8 +61,7 @@ def convert_json_public_repo(src_json, dst_json):
     with open(src_json) as f:
         data = json.load(f)
         recipes = data["reactions"]
-
-        print("Loaded %s recipes, version %s" % (len(recipes), data["release_date"]))
+        logger.info("Loaded %s recipes, version %s" % (len(recipes), data["release_date"]))
 
     converted = []
     for recipe in recipes:
@@ -68,7 +71,7 @@ def convert_json_public_repo(src_json, dst_json):
         except (CompositionError, ValueError, IndexError):
             pass
 
-    print("Converted %d recipes" % (len(converted),))
+    logger.info("Converted %d recipes" % (len(converted),))
     with open(dst_json, "w") as f:
         json.dump(converted, f)
 
