@@ -18,7 +18,7 @@ class SimilarityEntry(BaseModel):
     )
 
     dissimilarity: float = Field(
-        None, description="Dissimilarity measure for the matched material",
+        None, description="Dissimilarity measure for the matched material in %",
     )
 
     formula: str = Field(

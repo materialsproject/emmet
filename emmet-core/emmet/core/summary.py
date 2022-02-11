@@ -201,9 +201,9 @@ class SummaryDoc(PropertyDoc):
 
     # DOS
 
-    dos_energy_up: float = Field(None, description="Spin-up DOS band gap.")
+    dos_energy_up: float = Field(None, description="Spin-up DOS band gap in eV.")
 
-    dos_energy_down: float = Field(None, description="Spin-down DOS band gap.")
+    dos_energy_down: float = Field(None, description="Spin-down DOS band gap in eV.")
 
     # Magnetism
 
@@ -235,7 +235,9 @@ class SummaryDoc(PropertyDoc):
 
     # Elasticity
 
-    k_voigt: float = Field(None, description="Voigt average of the bulk modulus.")
+    k_voigt: float = Field(
+        None, description="Voigt average of the bulk modulus in GPa."
+    )
 
     k_reuss: float = Field(
         None, description="Reuss average of the bulk modulus in GPa."

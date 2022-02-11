@@ -8,7 +8,7 @@ class ElasticityData(BaseModel):
     """
 
     k_voigt: float = Field(
-        None, description="Voigt average of the bulk modulus.",
+        None, description="Voigt average of the bulk modulus in GPa.",
     )
 
     k_reuss: float = Field(

@@ -74,11 +74,11 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
     )
 
     stability_charge: float = Field(
-        None, description="The energy above hull of the charged material."
+        None, description="The energy above hull of the charged material in eV/atom."
     )
 
     stability_discharge: float = Field(
-        None, description="The energy above hull of the discharged material."
+        None, description="The energy above hull of the discharged material in eV/atom."
     )
 
     id_charge: Union[MPID, int, None] = Field(
