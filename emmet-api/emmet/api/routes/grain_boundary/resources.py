@@ -11,6 +11,7 @@ from maggma.api.query_operator import (
     SparseFieldsQuery,
     NumericQuery,
 )
+from emmet.api.core.global_header import GlobalHeaderProcessor
 
 
 def gb_resource(gb_store):
@@ -29,6 +30,7 @@ def gb_resource(gb_store):
                 GrainBoundaryDoc, default_fields=["task_id", "last_updated"]
             ),
         ],
+        header_processor=GlobalHeaderProcessor(),
         tags=["Grain Boundaries"],
         enable_get_by_key=False,
         disable_validation=True,

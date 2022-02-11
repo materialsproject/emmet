@@ -1,5 +1,6 @@
 from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 from maggma.api.resource import ReadOnlyResource
+from emmet.api.core.global_header import GlobalHeaderProcessor
 
 from emmet.core.similarity import SimilarityDoc
 
@@ -12,6 +13,7 @@ def similarity_resource(similarity_store):
             PaginationQuery(),
             SparseFieldsQuery(SimilarityDoc, default_fields=["material_id"]),
         ],
+        header_processor=GlobalHeaderProcessor(),
         tags=["Similarity"],
         enable_default_search=False,
         disable_validation=True,
