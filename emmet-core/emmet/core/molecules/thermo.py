@@ -53,7 +53,7 @@ class ThermoDoc(PropertyDoc):
         description="Zero-point energy of the molecule (units: eV)"
     )
 
-    rt = float = Field(
+    rt: float = Field(
         None,
         description="R*T, where R is the gas constant and T is temperature, taken "
                     "to be 298.15K (units: eV)"
