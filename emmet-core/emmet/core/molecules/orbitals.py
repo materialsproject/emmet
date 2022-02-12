@@ -186,13 +186,14 @@ class OrbitalDoc(PropertyDoc):
 
     # Always populated - closed-shell and open-shell
     open_shell: bool = Field(
+        ...,
         description="Is this molecule open-shell (spin multiplicity != 1)?"
     )
 
     population: List[NaturalPopulation] = Field(
+        ...,
         description="Natural electron populations of the molecule"
     )
-
 
     # Populated for closed-shell molecules
     lone_pairs: List[LonePair] = Field(
