@@ -18,84 +18,6 @@ from emmet.core.molecules.molecule_property import PropertyDoc
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
-class SpectrumDoc(MoleculeMetadata):
-    """
-    Base model definition for any spectra document. This should contain
-    metadata on the structure the spectra pertains to
-    """
-
-    spectrum_name: str
-
-    molecule_id: MPID = Field(
-        ...,
-        description="The ID of the molecule, used as a universal reference across property documents."
-    )
-
-    spectrum_id: str = Field(
-        ...,
-        title="Spectrum Document ID",
-        description="The unique ID for this spectrum document",
-    )
-
-    last_updated: datetime = Field(
-        description="Timestamp for the most recent calculation update for this property",
-        default_factory=datetime.utcnow,
-    )
-
-    warnings: List[str] = Field([], description="Any warnings related to this property")
-
-
-class VibSpectrumDoc(SpectrumDoc):
-
-    spectrum_name = "IR_vibrational"
-
-    frequencies: List[float] = Field(..., title="Vibrational Frequencies",
-                                     description="List of vibrational frequencies in the molecules' spectrum")
-
-    intensities: List[float] = Field(..., title="IR intensities",
-                                     description="Intensities for IR vibrational spectrum peaks")
-
-    task_id: MPID = Field(..., title="Calculation ID", description="Task ID used to make this IR spectrum")
-
-    @classmethod
-    def from_task(cls, task: TaskDocument, molecule_id: MPID, **kwargs): # type: ignore[override]
-        """
-        Construct a vibrational spectrum document
-
-        task document from which vibrational spectrum can be extracted
-        :param molecule_id: mpid
-        :param kwargs: to pass to SpectrumDoc
-        :return:
-        """
-
-        if task.output.frequencies is None:
-            raise Exception("No frequencies in task!")
-
-        if task.output.optimized_molecule is not None:
-            mol = task.output.optimized_molecule
-        else:
-            mol = task.output.initial_molecule
-
-        frequencies = task.output.frequencies
-        intensities = None
-        for calc in task.calcs_reversed:
-            if calc.get("IR_intens", None) is not None:
-                intensities = calc.get("IR_intens")
-                break
-
-        if intensities is None:
-            raise Exception("No IR intensities in task!")
-
-        return super().from_molecule(
-            meta_molecule=mol,
-            molecule_id=molecule_id,
-            frequencies=frequencies,
-            intensities=intensities,
-            spectrum_id=f"{molecule_id}-IR",
-            task_id=task.task_id,
-            **kwargs,
-        )
-
 class VibrationDoc(PropertyDoc):
 
     property_name = "vibrations"
@@ -106,7 +28,11 @@ class VibrationDoc(PropertyDoc):
 
     frequency_modes: List[List[List[float]]] = Field(description="Vibrational frequency modes of the molecule")
 
-    spectrum: VibSpectrumDoc = Field(description="Vibrational frequency spectrum, including IR intensities")
+    ir_intensities: List[float] = Field(..., title="IR intensities",
+                                        description="Intensities for IR vibrational spectrum peaks")
+
+    ir_activities: List = Field(..., title="IR activities",
+                                description="List indicating if frequency-modes are IR-active")
 
     @classmethod
     def from_task(
@@ -133,17 +59,29 @@ class VibrationDoc(PropertyDoc):
         else:
             mol = task.output.initial_molecule
 
-        spectrum = VibSpectrumDoc.from_task(task, molecule_id=molecule_id, **kwargs)
-
         frequencies = task.output.frequencies
         frequency_modes = None
+        intensities = None
+        active = None
         for calc in task.calcs_reversed:
-            if calc.get("frequency_mode_vectors", None) is not None:
+            if calc.get("frequency_mode_vectors", None) is not None and frequency_modes is None:
                 frequency_modes = calc.get("frequency_mode_vectors")
+
+            if calc.get("IR_intens", None) is not None and intensities is None:
+                intensities = calc.get("IR_intens")
+
+            if calc.get("IR_active", None) is not None and active is None:
+                active = calc.get("IR_active")
+
+            if all([x is not None for x in [frequency_modes, intensities, active]]):
                 break
 
         if frequency_modes is None:
             raise Exception("No frequency modes in task!")
+        elif intensities is None:
+            raise Exception("No IR intensities in task!")
+        elif active is None:
+            raise Exception("No IR activities in task!")
 
         warnings = list()
         if frequencies[0] < 0.0:
@@ -155,7 +93,8 @@ class VibrationDoc(PropertyDoc):
             molecule=mol,
             frequencies=frequencies,
             frequency_modes=frequency_modes,
-            spectrum=spectrum,
+            ir_intensities=intensities,
+            ir_activities=active,
             origins=[PropertyOrigin(name="vibrations", task_id=task.task_id)],
             deprecated=deprecated,
             warnings=warnings,

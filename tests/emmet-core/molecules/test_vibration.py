@@ -8,7 +8,7 @@ from monty.io import zopen
 from monty.serialization import loadfn
 
 from emmet.core.qchem.task import TaskDocument
-from emmet.core.molecules.vibration import VibrationDoc, VibSpectrumDoc
+from emmet.core.molecules.vibration import VibrationDoc
 
 
 @pytest.fixture(scope="session")
@@ -30,7 +30,7 @@ def test_vibration(test_tasks):
     assert vib_doc.property_name == "vibrations"
     assert len(vib_doc.frequencies) == 27
     assert len(vib_doc.frequency_modes) == 27
-    assert len(vib_doc.spectrum.intensities) == 27
+    assert len(vib_doc.ir_intensities) == 27
     assert vib_doc.frequencies[0] == pytest.approx(49.47)
-    assert vib_doc.frequencies == vib_doc.spectrum.frequencies
-    assert vib_doc.spectrum.intensities[0] == 93.886
+    assert vib_doc.ir_intensities[0] == 93.886
+    assert vib_doc.ir_activities[0] == "YES"
