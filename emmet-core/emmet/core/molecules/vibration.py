@@ -45,8 +45,9 @@ class VibrationDoc(PropertyDoc):
         """
         Construct a vibration document from a task document
 
-        task document from which vibrational properties can be extracted
+        :param task: document from which vibrational properties can be extracted
         :param molecule_id: mpid
+        :param deprecated: bool. Is this document deprecated?
         :param kwargs: to pass to PropertyDoc
         :return:
         """
