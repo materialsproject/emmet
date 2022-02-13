@@ -207,7 +207,7 @@ class MoleculesAssociationBuilder(Builder):
 
         self.logger.debug(f"Produced {len(molecules)} materials for {formula}")
 
-        return jsanitize([mat.dict() for mat in molecules], allow_bson=True)
+        return jsanitize([mol.dict() for mol in molecules], allow_bson=True)
 
     def update_targets(self, items: List[Dict]):
         """
@@ -395,29 +395,14 @@ class MoleculesBuilder(Builder):
         # Set total for builder bars to have a total
         self.total = len(to_process_forms)
 
-        projected_fields = [
-            "charge",
-            "spin_multiplicity",
-            "molecule_id",
-            "molecule",
-            "critic2",
-            "entries",
-            "best_entries",
-        ]
-
-        #TODO: You are here
-
         for formula in to_process_forms:
-            tasks_query = dict(temp_query)
-            tasks_query["formula_alphabetical"] = formula
-            tasks = list(
-                self.tasks.query(criteria=tasks_query, properties=projected_fields)
+            assoc_query = dict(temp_query)
+            assoc_query["formula_alphabetical"] = formula
+            assoc = list(
+                self.assoc.query(criteria=assoc_query)
             )
-            for t in tasks:
-                # TODO: Validation
-                t["is_valid"] = True
 
-            yield tasks
+            yield assoc
 
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """
@@ -430,15 +415,15 @@ class MoleculesBuilder(Builder):
             [dict] : a list of new molecule docs
         """
 
-        tasks = [TaskDocument(**task) for task in items]
-        formula = tasks[0].formula_alphabetical
-        task_ids = [task.task_id for task in tasks]
-        self.logger.debug(f"Processing {formula} : {task_ids}")
+        assoc = [MoleculeDoc(**item) for item in items]
+        formula = assoc[0].formula_alphabetical
+        mol_ids = [a.molecule_id for a in assoc]
+        self.logger.debug(f"Processing {formula} : {mol_ids}")
 
-        grouped_tasks = self.filter_and_group_tasks(tasks)
+        grouped_mols = self.group_molecules(assoc)
         molecules = list()
 
-        for group in grouped_tasks:
+        for group in grouped_mols:
             try:
                 molecules.append(
                     MoleculeDoc.from_tasks(group)
@@ -467,35 +452,38 @@ class MoleculesBuilder(Builder):
 
         docs = list(chain.from_iterable(items))  # type: ignore
 
+        # Add timestamp, add prefix to molecule id
         for item in docs:
-            item.update({"_bt": self.timestamp})
+            item.update({"_bt": self.timestamp, "molecule_id": "-".join(self.prefix, str(item["molecule_id"]))})
 
         molecule_ids = list({item["molecule_id"] for item in docs})
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(docs)} molecules")
-            self.assoc.remove_docs({self.assoc.key: {"$in": molecule_ids}})
-            self.assoc.update(
+            self.molecules.remove_docs({self.molecules.key: {"$in": molecule_ids}})
+            self.molecules.update(
                 docs=docs, key=["molecule_id"],
             )
         else:
             self.logger.info("No items to update")
 
-    def filter_and_group_tasks(
-        self, tasks: List[TaskDocument]
-    ) -> Iterator[List[TaskDocument]]:
+    def group_molecules(
+        self, assoc: List[MoleculeDoc]
+    ) -> Iterator[List[MoleculeDoc]]:
         """
-        Groups tasks by identical structure
+        Groups molecules by:
+            - highest level of theory
+            - charge
+            - spin multiplicity
+            - bonding (molecule graph isomorphism)
         """
 
-        filtered_tasks = [
-            task
-            for task in tasks
-            if any(
-                allowed_type is task.task_type
-                for allowed_type in self.settings.QCHEM_ALLOWED_TASK_TYPES
-            )
-        ]
+        # First, group by charge and spin multiplicity
+        # Then group by graph isomorphism
+        # Then, use evaluate_molecule to select best molecule based on
+        #   level of theory and electronic energy
+
+        #TODO: you are here
 
         molecules = list()
         lots = list()

@@ -147,11 +147,11 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
         # If we're dealing with single-atoms, process is much different
         if all([len(m) == 1 for m in mols]):
-            sorted_tasks = sorted(task_group, key=lambda x: x.task_id)
+            sorted_tasks = sorted(task_group, key=evaluate_molecule)
 
             molecule_id = sorted_tasks[0].task_id
 
-            molecule = [0].output.initial_molecule
+            molecule = sorted_tasks[0].output.initial_molecule
 
             # Initial molecules. No geometry should change for a single atom
             initial_molecules = [molecule]
