@@ -23,6 +23,7 @@ def open_shell(test_dir):
 
 
 def test_orbital(closed_shell, open_shell):
+    # Test closed-shell NBO parsing
     doc = OrbitalDoc.from_task(closed_shell, "test-123456", deprecated=False)
 
     assert doc.property_name == "natural bonding orbitals"
@@ -41,3 +42,16 @@ def test_orbital(closed_shell, open_shell):
     assert doc.interactions[0].donor_index == 8
     assert doc.interactions[0].acceptor_index == 19
     assert doc.interactions[0].energy_difference == pytest.approx(0.95)
+    assert doc.alpha_population is None
+    assert doc.beta_population is None
+
+    # Test open-shell NBO parsing
+    doc = OrbitalDoc.from_task(open_shell, "test-123456", deprecated=False)
+
+    assert doc.open_shell == True
+
+    assert len(doc.population) == len(open_shell.output.initial_molecule)
+    assert doc.alpha_population is not None
+    assert doc.beta_population is not None
+    assert doc.lone_pairs is None
+    assert doc.bonds is None

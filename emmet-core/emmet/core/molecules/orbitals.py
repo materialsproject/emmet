@@ -422,7 +422,7 @@ class OrbitalDoc(PropertyDoc):
             return super().from_molecule(
                 meta_molecule=mol,
                 molecule_id=molecule_id,
-                open_shell=False,
+                open_shell=True,
                 population=population_sets[0],
                 alpha_population=population_sets[1],
                 beta_population=population_sets[2],
