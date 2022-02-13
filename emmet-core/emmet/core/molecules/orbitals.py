@@ -1,6 +1,6 @@
 import warnings
 from itertools import groupby
-from typing import List, Union
+from typing import List, Union, Optional
 from datetime import datetime
 
 import numpy as np
@@ -39,11 +39,11 @@ class NaturalPopulation(MSONable):
         :param total_electrons (float): Total number of electrons on this atom
         """
 
-        self.atom_index = atom_index
-        self.core_electrons = core_electrons
-        self.valence_electrons = valence_electrons
-        self.rydberg_electrons = rydberg_electrons
-        self.total_electrons = total_electrons
+        self.atom_index = int(atom_index)
+        self.core_electrons = float(core_electrons)
+        self.valence_electrons = float(valence_electrons)
+        self.rydberg_electrons = float(rydberg_electrons)
+        self.total_electrons = float(total_electrons)
 
 
 class LonePair(MSONable):
@@ -73,14 +73,14 @@ class LonePair(MSONable):
         :param lp_type (str): Description of this lone pair (ex: "LV" for "lone valence")
         """
 
-        self.index = index
-        self.number = number
-        self.atom_index = atom_index
-        self.s_character = s_character
-        self.p_character = p_character
-        self.d_character = d_character
-        self.f_character = f_character
-        self.occupancy = occupancy
+        self.index = int(index)
+        self.number = int(number)
+        self.atom_index = int(atom_index)
+        self.s_character = float(s_character)
+        self.p_character = float(p_character)
+        self.d_character = float(d_character)
+        self.f_character = float(f_character)
+        self.occupancy = float(occupancy)
         self.type = lp_type
 
 
@@ -130,54 +130,63 @@ class Bond(MSONable):
             BD* for anti-bonding)
         """
 
-        self.index = index
-        self.number = number
-        self.atom1_index = atom1_index
-        self.atom2_index = atom2_index
-        self.atom1_s_character = atom1_s_character
-        self.atom2_s_character = atom2_s_character
-        self.atom1_p_character = atom1_p_character
-        self.atom2_p_character = atom2_p_character
-        self.atom1_d_character = atom1_d_character
-        self.atom2_d_character = atom2_d_character
-        self.atom1_f_character = atom1_f_character
-        self.atom2_f_character = atom2_f_character
-        self.atom1_polarization = atom1_polarization
-        self.atom2_polarization = atom2_polarization
-        self.atom1_polarization_coeff = atom1_polarization_coeff
-        self.atom2_polarization_coeff = atom2_polarization_coeff
-        self.occupancy = occupancy
+        self.index = int(index)
+        self.number = int(number)
+        self.atom1_index = int(atom1_index)
+        self.atom2_index = int(atom2_index)
+        self.atom1_s_character = float(atom1_s_character)
+        self.atom2_s_character = float(atom2_s_character)
+        self.atom1_p_character = float(atom1_p_character)
+        self.atom2_p_character = float(atom2_p_character)
+        self.atom1_d_character = float(atom1_d_character)
+        self.atom2_d_character = float(atom2_d_character)
+        self.atom1_f_character = float(atom1_f_character)
+        self.atom2_f_character = float(atom2_f_character)
+        self.atom1_polarization = float(atom1_polarization)
+        self.atom2_polarization = float(atom2_polarization)
+        self.atom1_polarization_coeff = float(atom1_polarization_coeff)
+        self.atom2_polarization_coeff = float(atom2_polarization_coeff)
+        self.occupancy = float(occupancy)
         self.type = bond_type
 
 
 class Interaction(MSONable):
     def __init__(self,
-                 donor: Union[LonePair, Bond],
-                 acceptor: Union[LonePair, Bond],
                  perturbation_energy: float,
                  energy_difference: float,
-                 fock_element: float
+                 fock_element: float,
+                 donor_index: int,
+                 acceptor_index: int,
+                 donor_type: str,
+                 acceptor_type: str,
+                 donor_atom1_index: int,
+                 acceptor_atom1_index: int,
+                 donor_atom2_index: Optional[int] = None,
+                 acceptor_atom2_index: Optional[int] = None
                  ):
 
-        self.donor_index = donor.index
-        self.acceptor_index = acceptor.index
+        self.donor_index = int(donor_index)
+        self.acceptor_index = int(acceptor_index)
 
-        self.donor_type = donor.type
-        self.acceptor_type = acceptor.type
+        self.donor_type = donor_type
+        self.acceptor_type = acceptor_type
 
-        if isinstance(donor, LonePair):
-            self.donor_atom_indices = (donor.atom_index, None)
+        if isinstance(donor_atom2_index, int):
+            donor2 = int(donor_atom2_index)
         else:
-            self.donor_atom_indices = (donor.atom1_index, donor.atom2_index)
+            donor2 = None
 
-        if isinstance(acceptor, LonePair):
-            self.acceptor_atom_indices = (acceptor.atom_index, None)
+        if isinstance(acceptor_atom2_index, int):
+            acceptor2 = int(acceptor_atom2_index)
         else:
-            self.acceptor_atom_indices = (acceptor.atom1_index, acceptor.atom2_index)
+            acceptor2 = None
 
-        self.perturbation_energy = perturbation_energy
-        self.energy_difference = energy_difference
-        self.fock_element = fock_element
+        self.donor_atom_indices = (int(donor_atom1_index), donor2)
+        self.acceptor_atom_indices = (int(acceptor_atom1_index), acceptor2)
+
+        self.perturbation_energy = float(perturbation_energy)
+        self.energy_difference = float(energy_difference)
+        self.fock_element = float(fock_element)
 
 
 class OrbitalDoc(PropertyDoc):
@@ -297,8 +306,6 @@ class OrbitalDoc(PropertyDoc):
         bond_sets = list()
         interaction_sets = list()
 
-        orbital_mapping = dict()
-
         for pop_ind in pops_inds:
             pops = nbo["natural_populations"][pop_ind]
             population = list()
@@ -320,8 +327,8 @@ class OrbitalDoc(PropertyDoc):
             for ind, orb_ind in lps["bond index"].items():
                 this_lp = LonePair(
                     orb_ind,
-                    lps["orbital index"],
-                    lps["atom number"][ind] - 1,
+                    lps["orbital index"][ind],
+                    int(lps["atom number"][ind]) - 1,
                     lps["s"][ind],
                     lps["p"][ind],
                     lps["d"][ind],
@@ -330,50 +337,62 @@ class OrbitalDoc(PropertyDoc):
                     lps["type"][ind]
                 )
                 lone_pairs.append(this_lp)
-                orbital_mapping[orb_ind] = this_lp
             lone_pair_sets.append(lone_pairs)
 
         for bd_ind in bds_inds:
             bds = nbo["hybridization_character"][bd_ind]
             bonds = list()
-            for ind, orb_ind in bds["bond_index"].items():
+            for ind, orb_ind in bds["bond index"].items():
                 this_bond = Bond(
                     orb_ind,
-                    lps["orbital index"],
-                    bds["atom 1 number"] - 1,
-                    bds["atom 2 number"] - 1,
-                    bds["atom 1 s"],
-                    bds["atom 2 s"],
-                    bds["atom 1 p"],
-                    bds["atom 2 p"],
-                    bds["atom 1 d"],
-                    bds["atom 2 d"],
-                    bds["atom 1 f"],
-                    bds["atom 2 f"],
-                    bds["atom 1 polarization"],
-                    bds["atom 2 polarization"],
-                    bds["atom 1 pol coeff"],
-                    bds["atom 2 pol coeff"],
-                    bds["occupancy"],
-                    bds["type"]
+                    bds["orbital index"][ind],
+                    int(bds["atom 1 number"][ind]) - 1,
+                    int(bds["atom 2 number"][ind]) - 1,
+                    bds["atom 1 s"][ind],
+                    bds["atom 2 s"][ind],
+                    bds["atom 1 p"][ind],
+                    bds["atom 2 p"][ind],
+                    bds["atom 1 d"][ind],
+                    bds["atom 2 d"][ind],
+                    bds["atom 1 f"][ind],
+                    bds["atom 2 f"][ind],
+                    bds["atom 1 polarization"][ind],
+                    bds["atom 2 polarization"][ind],
+                    bds["atom 1 pol coeff"][ind],
+                    bds["atom 2 pol coeff"][ind],
+                    bds["occupancy"][ind],
+                    bds["type"][ind]
                 )
                 bonds.append(this_bond)
-                orbital_mapping[orb_ind] = this_bond
             bond_sets.append(bonds)
 
         for pert_ind in perts_inds:
             perts = nbo["perturbation_energy"][pert_ind]
             interactions = list()
             for ind in perts["donor bond index"]:
-                donor = orbital_mapping[perts["donor bond index"][ind]]
-                acceptor = orbital_mapping[perts["acceptor bond index"][ind]]
+
+                if perts["donor atom 2 number"].get(ind) is None:
+                    donor_atom2_number = None
+                else:
+                    donor_atom2_number = int(perts["donor atom 2 number"][ind]) - 1
+
+                if perts["acceptor atom 2 number"].get(ind) is None:
+                    acceptor_atom2_number = None
+                else:
+                    acceptor_atom2_number = int(perts["acceptor atom 2 number"][ind]) - 1
 
                 this_inter = Interaction(
-                    donor,
-                    acceptor,
                     perts["perturbation energy"][ind],
                     perts["energy difference"][ind],
-                    perts["fock matrix element"][ind]
+                    perts["fock matrix element"][ind],
+                    int(perts["donor bond index"][ind]),
+                    int(perts["acceptor bond index"][ind]),
+                    perts["donor type"][ind],
+                    perts["acceptor type"][ind],
+                    int(perts["donor atom 1 number"][ind]) - 1,
+                    int(perts["acceptor atom 1 number"][ind]) - 1,
+                    donor_atom2_number,
+                    acceptor_atom2_number
                 )
 
                 interactions.append(this_inter)
