@@ -286,15 +286,20 @@ class WorkingIonQuery(QueryOperator):
 
     def query(
         self,
-        working_ion: Optional[Element] = Query(
-            None, title="Element of the working ion"
+        working_ion: Optional[str] = Query(
+            None,
+            title="Element of the working ion, or comma-delimited string list of working ion elements.",
         ),
     ) -> STORE_PARAMS:
 
         crit = defaultdict(dict)  # type: dict
 
         if working_ion:
-            crit["working_ion"] = str(working_ion)
+            element_list = [element.strip() for element in working_ion.split(",")]
+            if len(element_list) == 1:
+                crit["working_ion"] = element_list[0]
+            else:
+                crit["working_ion"] = {"$in": element_list}
 
         return {"criteria": crit}
 

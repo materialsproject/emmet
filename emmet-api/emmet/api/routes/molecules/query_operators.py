@@ -132,10 +132,12 @@ class MoleculeFormulaQuery(QueryOperator):
                 ]
                 crit["formula_pretty"] = reduced_formula
             else:
-                crit["formula_pretty"] = [
-                    Composition(f).get_reduced_formula_and_factor()[0]
-                    for f in formula_list
-                ]
+                crit["formula_pretty"] = {
+                    "$in": [
+                        Composition(f).get_reduced_formula_and_factor()[0]
+                        for f in formula_list
+                    ]
+                }
 
         return {"criteria": crit}
 
