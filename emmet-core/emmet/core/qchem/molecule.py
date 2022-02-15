@@ -47,7 +47,7 @@ def evaluate_lot(
     )
 
 
-def evaluate_molecule(
+def evaluate_task(
         task: TaskDocument,
         funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
         basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
@@ -147,7 +147,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
         # If we're dealing with single-atoms, process is much different
         if all([len(m) == 1 for m in mols]):
-            sorted_tasks = sorted(task_group, key=evaluate_molecule)
+            sorted_tasks = sorted(task_group, key=evaluate_task)
 
             molecule_id = sorted_tasks[0].task_id
 
@@ -174,7 +174,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             for lot in all_lots:
                 relevant_calcs = sorted(
                     [doc for doc in task_group if doc.level_of_theory == lot and doc.is_valid],
-                    key=evaluate_molecule,
+                    key=evaluate_task,
                 )
 
                 if len(relevant_calcs) > 0:
@@ -194,7 +194,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
             molecule_id = min(possible_mol_ids)
 
-            best_molecule_calc = sorted(geometry_optimizations, key=evaluate_molecule)[0]
+            best_molecule_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
             molecule = best_molecule_calc.output.optimized_molecule
 
             # Initial molecules
@@ -229,7 +229,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             for lot in all_lots:
                 relevant_calcs = sorted(
                     [doc for doc in geometry_optimizations if doc.level_of_theory == lot and doc.is_valid],
-                    key=evaluate_molecule,
+                    key=evaluate_task,
                 )
 
                 if len(relevant_calcs) > 0:

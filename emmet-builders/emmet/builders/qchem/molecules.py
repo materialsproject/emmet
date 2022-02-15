@@ -9,7 +9,7 @@ from maggma.utils import grouper
 
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import group_molecules, jsanitize
-from emmet.core.qchem.molecule import MoleculeDoc
+from emmet.core.qchem.molecule import evaluate_lot, MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.bonds import make_mol_graph
 
@@ -18,6 +18,39 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
 SETTINGS = EmmetBuildSettings()
+
+
+def evaluate_molecule(
+        mol_doc: MoleculeDoc,
+        funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+        basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+        solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES):
+    """
+    Helper function to order optimization calcs by
+    - Level of theory
+    - Electronic energy
+
+    :param mol_doc: Molecule to be evaluated
+    :param funct_scores: Scores for various density functionals
+    :param basis_scores: Scores for various basis sets
+    :param solvent_scores: Scores for various implicit solvent models
+    :return:
+    """
+
+    best_lot = sorted(
+        mol_doc.best_entries.keys(),
+        key=lambda x: evaluate_lot(x, funct_scores, basis_scores, solvent_scores)
+    )[0]
+
+    lot_eval = evaluate_lot(best_lot, funct_scores, basis_scores, solvent_scores)
+
+    return (
+        -1 * int(mol_doc.deprecated),
+        lot_eval[0],
+        lot_eval[1],
+        lot_eval[2],
+        mol_doc.best_entries[best_lot]["energy"],
+    )
 
 
 class MoleculesAssociationBuilder(Builder):
@@ -186,11 +219,9 @@ class MoleculesAssociationBuilder(Builder):
         formula = tasks[0].formula_alphabetical
         task_ids = [task.task_id for task in tasks]
         self.logger.debug(f"Processing {formula} : {task_ids}")
-
-        grouped_tasks = self.filter_and_group_tasks(tasks)
         molecules = list()
 
-        for group in grouped_tasks:
+        for group in self.filter_and_group_tasks(tasks):
             try:
                 molecules.append(
                     MoleculeDoc.from_tasks(group)
@@ -467,7 +498,7 @@ class MoleculesBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
-    def group_molecules(
+    def group_mol_docs(
         self, assoc: List[MoleculeDoc]
     ) -> Iterator[List[MoleculeDoc]]:
         """
@@ -478,17 +509,28 @@ class MoleculesBuilder(Builder):
             - bonding (molecule graph isomorphism)
         """
 
-        # First, group by charge and spin multiplicity
-        # Then group by graph isomorphism
+        # First, group by charge, spin multiplicity, and solvent environment
+        # Then group by graph isomorphism, using OpenBabelNN + metal_edge_extender
         # Then, use evaluate_molecule to select best molecule based on
         #   level of theory and electronic energy
 
-        #TODO: you are here
+        def form_charge_spin_solv(molecule, lot):
+            lot_comp = lot.value.split("/")
+            if lot_comp[2].upper == "VACUUM":
+                env = "VACUUM"
+            else:
+                env = lot_comp[2].split("(")[1].replace(")", "")
 
-        molecules = list()
-        lots = list()
+            key = molecule.composition.alphabetical_formula
+            key += " " + str(molecule.charge)
+            key += " " + str(molecule.spin_multiplicity)
+            key += " " + env
 
-        for idx, task in enumerate(filtered_tasks):
+            return key
+
+
+
+        for idx, doc in enumerate(assoc):
             if task.output.optimized_molecule:
                 m = task.output.optimized_molecule
             else:
@@ -504,3 +546,38 @@ class MoleculesBuilder(Builder):
         for group in grouped_molecules:
             grouped_tasks = [filtered_tasks[mol.index] for mol in group]  # type: ignore
             yield grouped_tasks
+
+
+def group(
+        molecules: List[Molecule],
+        lots: List[str]
+):
+    """
+    Groups molecules according to composition, charge, environment, and equality
+
+    Args:
+        molecules (List[Molecule])
+        lots (List[str]): string representations of Q-Chem levels of theory
+    """
+
+    def get_mol_key(mol_lot):
+        molecule, lot = mol_lot
+        key = molecule.composition.alphabetical_formula
+        key += " " + lot
+        return key
+
+    for mol_key, pregroup in groupby(sorted(zip(molecules, lots),key=get_mol_key),key=get_mol_key):
+        subgroups = list()
+        for mol, _ in pregroup:
+            mol_0 = copy.deepcopy(mol)
+            mol_0.set_charge_and_spin(0)
+            matched = False
+            for subgroup in subgroups:
+                if mol_0 == subgroup["mol"]:
+                    subgroup["mol_list"].append(mol)
+                    matched = True
+                    break
+            if not matched:
+                subgroups.append({"mol":mol_0,"mol_list":[mol]})
+        for group in subgroups:
+            yield group["mol_list"]
