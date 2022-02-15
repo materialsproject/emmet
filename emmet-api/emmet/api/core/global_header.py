@@ -5,6 +5,5 @@ from fastapi import Response, Request
 class GlobalHeaderProcessor(HeaderProcessor):
     def process_header(self, response: Response, request: Request):
         groups = request.headers.get("X-Authenticated-Groups", None)
-        if groups is not None:
-            if "staff" in groups:
-                response.headers["X-Bypass-Rate-Limit"] = "ALL"
+        if groups is not None and "all_nolimit" in groups.split(","):
+            response.headers["X-Bypass-Rate-Limit"] = "ALL"
