@@ -89,11 +89,16 @@ class XASSearchData(BaseModel):
     """
 
     edge: Edge = Field(
-        None, title="Absorption Edge", description="The interaction edge for XAS"
+        None,
+        title="Absorption Edge",
+        description="The interaction edge for XAS",
+        source="xas",
     )
-    absorbing_element: Element = Field(None, title="Absorbing Element")
+    absorbing_element: Element = Field(
+        None, description="Absorbing element.", source="xas"
+    )
 
-    spectrum_type: Type = Field(None, title="Type of XAS Spectrum")
+    spectrum_type: Type = Field(None, description="Type of XAS spectrum.", source="xas")
 
 
 class GBSearchData(BaseModel):
@@ -101,13 +106,19 @@ class GBSearchData(BaseModel):
     Fields in grain boundary sub docs in summary
     """
 
-    sigma: int = Field(None, description="Sigma value of the boundary.")
+    sigma: int = Field(
+        None, description="Sigma value of the boundary.", source="grain_boundary"
+    )
 
-    type: str = Field(None, description="Grain boundary type.")
+    type: str = Field(None, description="Grain boundary type.", source="grain_boundary")
 
-    gb_energy: float = Field(None, description="Grain boundary energy in J/m^2.")
+    gb_energy: float = Field(
+        None, description="Grain boundary energy in J/m^2.", source="grain_boundary"
+    )
 
-    rotation_angle: float = Field(None, description="Rotation angle in degrees.")
+    rotation_angle: float = Field(
+        None, description="Rotation angle in degrees.", source="grain_boundary"
+    )
 
 
 class SummaryDoc(PropertyDoc):
@@ -121,202 +132,296 @@ class SummaryDoc(PropertyDoc):
     # Materials
 
     structure: Structure = Field(
-        ..., description="The lowest energy structure for this material"
+        ...,
+        description="The lowest energy structure for this material.",
+        source="materials",
     )
 
     task_ids: List[MPID] = Field(
         [],
         title="Calculation IDs",
         description="List of Calculations IDs associated with this material.",
+        source="materials",
     )
 
     # Thermo
 
     uncorrected_energy_per_atom: float = Field(
-        None, description="The total DFT energy of this material per atom in eV/atom."
+        None,
+        description="The total DFT energy of this material per atom in eV/atom.",
+        source="thermo",
     )
 
     energy_per_atom: float = Field(
         None,
         description="The total corrected DFT energy of this material per atom in eV/atom.",
+        source="thermo",
     )
 
     formation_energy_per_atom: float = Field(
-        None, description="The formation energy per atom in eV/atom."
+        None,
+        description="The formation energy per atom in eV/atom.",
+        source="thermo",
     )
 
     energy_above_hull: float = Field(
-        None, description="The energy above the hull in eV/Atom."
+        None,
+        description="The energy above the hull in eV/Atom.",
+        source="thermo",
     )
 
     is_stable: bool = Field(
         False,
         description="Flag for whether this material is on the hull and therefore stable.",
+        source="thermo",
     )
 
     equilibrium_reaction_energy_per_atom: float = Field(
         None,
         description="The reaction energy of a stable entry from the neighboring equilibrium stable materials in eV."
         " Also known as the inverse distance to hull.",
+        source="thermo",
     )
 
     decomposes_to: List[DecompositionProduct] = Field(
         None,
         description="List of decomposition data for this material. Only valid for metastable or unstable material.",
+        source="thermo",
     )
 
     # XAS
 
-    xas: List[XASSearchData] = Field(None, description="List of xas documents.")
+    xas: List[XASSearchData] = Field(
+        None, description="List of xas documents.", source="xas"
+    )
 
     # GB
 
     grain_boundaries: List[GBSearchData] = Field(
-        None, description="List of grain boundary documents."
+        None,
+        description="List of grain boundary documents.",
+        source="grain_boundary",
     )
 
     # Electronic Structure
 
-    band_gap: float = Field(None, description="Band gap energy in eV.")
+    band_gap: float = Field(
+        None, description="Band gap energy in eV.", source="electronic_structure"
+    )
 
-    cbm: Union[float, Dict] = Field(None, description="Conduction band minimum data.")
+    cbm: Union[float, Dict] = Field(
+        None, description="Conduction band minimum data.", source="electronic_structure"
+    )
 
-    vbm: Union[float, Dict] = Field(None, description="Valence band maximum data.")
+    vbm: Union[float, Dict] = Field(
+        None, description="Valence band maximum data.", source="electronic_structure"
+    )
 
-    efermi: float = Field(None, description="Fermi energy eV.")
+    efermi: float = Field(
+        None, description="Fermi energy eV.", source="electronic_structure"
+    )
 
-    is_gap_direct: bool = Field(None, description="Whether the band gap is direct.")
+    is_gap_direct: bool = Field(
+        None,
+        description="Whether the band gap is direct.",
+        source="electronic_structure",
+    )
 
-    is_metal: bool = Field(None, description="Whether the material is a metal.")
+    is_metal: bool = Field(
+        None,
+        description="Whether the material is a metal.",
+        source="electronic_structure",
+    )
 
     es_source_calc_id: Union[MPID, int] = Field(
-        None, description="The source calculation ID for the electronic structure data."
+        None,
+        description="The source calculation ID for the electronic structure data.",
+        source="electronic_structure",
     )
 
     bandstructure: BandstructureData = Field(
-        None, description="Band structure data for the material."
+        None,
+        description="Band structure data for the material.",
+        source="electronic_structure",
     )
 
-    dos: DosData = Field(None, description="Density of states data for the material.")
+    dos: DosData = Field(
+        None,
+        description="Density of states data for the material.",
+        source="electronic_structure",
+    )
 
     # DOS
 
-    dos_energy_up: float = Field(None, description="Spin-up DOS band gap in eV.")
+    dos_energy_up: float = Field(
+        None, description="Spin-up DOS band gap in eV.", source="electronic_structure"
+    )
 
-    dos_energy_down: float = Field(None, description="Spin-down DOS band gap in eV.")
+    dos_energy_down: float = Field(
+        None, description="Spin-down DOS band gap in eV.", source="electronic_structure"
+    )
 
     # Magnetism
 
     is_magnetic: bool = Field(
-        None,
-        description="Whether the material is magnetic.",
+        None, description="Whether the material is magnetic.", source="magnetism"
     )
 
-    ordering: str = Field(None, description="Type of magnetic ordering.")
+    ordering: str = Field(
+        None, description="Type of magnetic ordering.", source="magnetism"
+    )
 
-    total_magnetization: float = Field(None, description="Total magnetization in μB.")
+    total_magnetization: float = Field(
+        None, description="Total magnetization in μB.", source="magnetism"
+    )
 
     total_magnetization_normalized_vol: float = Field(
-        None, description="Total magnetization normalized by volume in μB/Å³."
+        None,
+        description="Total magnetization normalized by volume in μB/Å³.",
+        source="magnetism",
     )
 
     total_magnetization_normalized_formula_units: float = Field(
-        None, description="Total magnetization normalized by formula unit in μB/f.u. ."
+        None,
+        description="Total magnetization normalized by formula unit in μB/f.u. .",
+        source="magnetism",
     )
 
-    num_magnetic_sites: int = Field(None, description="The number of magnetic sites.")
+    num_magnetic_sites: int = Field(
+        None, description="The number of magnetic sites.", source="magnetism"
+    )
 
     num_unique_magnetic_sites: int = Field(
-        None, description="The number of unique magnetic sites."
+        None, description="The number of unique magnetic sites.", source="magnetism"
     )
 
     types_of_magnetic_species: List[Element] = Field(
-        None, description="Magnetic specie elements."
+        None, description="Magnetic specie elements.", source="magnetism"
     )
 
     # Elasticity
 
     k_voigt: float = Field(
-        None, description="Voigt average of the bulk modulus in GPa."
+        None,
+        description="Voigt average of the bulk modulus in GPa.",
+        source="elasticity",
     )
 
     k_reuss: float = Field(
-        None, description="Reuss average of the bulk modulus in GPa."
+        None,
+        description="Reuss average of the bulk modulus in GPa.",
+        source="elasticity",
     )
 
     k_vrh: float = Field(
-        None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa."
+        None,
+        description="Voigt-Reuss-Hill average of the bulk modulus in GPa.",
+        source="elasticity",
     )
 
     g_voigt: float = Field(
-        None, description="Voigt average of the shear modulus in GPa."
+        None,
+        description="Voigt average of the shear modulus in GPa.",
+        source="elasticity",
     )
 
     g_reuss: float = Field(
-        None, description="Reuss average of the shear modulus in GPa."
+        None,
+        description="Reuss average of the shear modulus in GPa.",
+        source="elasticity",
     )
 
     g_vrh: float = Field(
-        None, description="Voigt-Reuss-Hill average of the shear modulus in GPa."
+        None,
+        description="Voigt-Reuss-Hill average of the shear modulus in GPa.",
+        source="elasticity",
     )
 
-    universal_anisotropy: float = Field(None, description="Elastic anisotropy.")
+    universal_anisotropy: float = Field(
+        None, description="Elastic anisotropy.", source="elasticity"
+    )
 
-    homogeneous_poisson: float = Field(None, description="Poisson's ratio.")
+    homogeneous_poisson: float = Field(
+        None, description="Poisson's ratio.", source="elasticity"
+    )
 
     # Dielectric and Piezo
 
-    e_total: float = Field(None, description="Total dielectric constant.")
+    e_total: float = Field(
+        None, description="Total dielectric constant.", source="dielectric"
+    )
 
     e_ionic: float = Field(
-        None, description="Ionic contributio to dielectric constant."
+        None,
+        description="Ionic contribution to dielectric constant.",
+        source="dielectric",
     )
 
     e_electronic: float = Field(
-        None, description="Electronic contribution to dielectric constant."
+        None,
+        description="Electronic contribution to dielectric constant.",
+        source="dielectric",
     )
 
-    n: float = Field(None, description="Refractive index.")
+    n: float = Field(None, description="Refractive index.", source="dielectric")
 
-    e_ij_max: float = Field(None, description="Piezoelectric modulus.")
+    e_ij_max: float = Field(
+        None, description="Piezoelectric modulus.", source="piezoelectric"
+    )
 
     # Surface Properties
 
     weighted_surface_energy_EV_PER_ANG2: float = Field(
-        None, description="Weighted surface energy in eV/Å²."
+        None,
+        description="Weighted surface energy in eV/Å².",
+        source="surface_properties",
     )
 
     weighted_surface_energy: float = Field(
-        None, description="Weighted surface energy in J/m²."
+        None,
+        description="Weighted surface energy in J/m².",
+        source="surface_properties",
     )
 
     weighted_work_function: float = Field(
-        None, description="Weighted work function in eV."
+        None, description="Weighted work function in eV.", source="surface_properties"
     )
 
-    surface_anisotropy: float = Field(None, description="Surface energy anisotropy.")
+    surface_anisotropy: float = Field(
+        None, description="Surface energy anisotropy.", source="surface_properties"
+    )
 
-    shape_factor: float = Field(None, description="Shape factor.")
+    shape_factor: float = Field(
+        None, description="Shape factor.", source="surface_properties"
+    )
 
     has_reconstructed: bool = Field(
-        None, description="Whether the material has any reconstructed surfaces."
+        None,
+        description="Whether the material has any reconstructed surfaces.",
+        source="surface_properties",
     )
 
     # Oxi States
 
     possible_species: List[str] = Field(
-        None, description="Possible charged species in this material."
+        None,
+        description="Possible charged species in this material.",
+        source="oxidation_states",
     )
 
     # Has Props
 
     has_props: List[HasProps] = Field(
-        None, description="List of properties that are available for a given material."
+        None,
+        description="List of properties that are available for a given material.",
+        source="summary",
     )
 
     # Theoretical
 
-    theoretical: bool = Field(True, description="Whether the material is theoretical.")
+    theoretical: bool = Field(
+        True, description="Whether the material is theoretical.", source="provenance"
+    )
 
     @classmethod
     def from_docs(cls, material_id: MPID, **docs: Dict[str, Dict]):
