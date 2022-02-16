@@ -36,7 +36,7 @@ class ChemEnvDoc(PropertyDoc):
 
     chemenv_iupac: List[str] = Field(description="List of Iupac names corresponding to ChemEnv symbols for unique cationic species in structure.")
 
-    #mol_from_site_environments: List[Union[Molecule,str]]=  Field(description="List of Molecule Objects describing the detected environment.")
+    mol_from_site_environments: List[Union[Molecule,str]]=  Field(description="List of Molecule Objects describing the detected environment.")
 
     wyckoff_positions: List[str] = Field(description="List of Wyckoff positions for unique cationic species in structure.")
 
@@ -54,12 +54,7 @@ class ChemEnvDoc(PropertyDoc):
         Returns:
 
         """
-        # what should be saved?
-        # distance and angle cutoff
-        # method for SimplestChemEnv
-        #
-
-        # these cutoff should be saved!
+        #standard settings
         distance_cutoff=1.4
         angle_cutoff=0.3
 
@@ -83,8 +78,7 @@ class ChemEnvDoc(PropertyDoc):
             ]
 
             # list of wyckoffs should be saved!
-            wyckoffs = symm_struct.wyckoff_symbols
-
+            wyckoffs_unique = symm_struct.wyckoff_symbols
             # We will now use ChemEnv with it's simplest strategy and only look at cation-anion bonds
             lgf = LocalGeometryFinder()
             lgf.setup_structure(structure=structure)
@@ -116,7 +110,7 @@ class ChemEnvDoc(PropertyDoc):
             list_sites_env=[]
             list_wyckoff=[]
             list_species=[]
-            for index, wyckoff in zip(inequivalent_indices, wyckoffs):
+            for index, wyckoff in zip(inequivalent_indices, wyckoffs_unique):
                 if index in inequivalent_indices_cations:
                     if not lse.neighbors_sets[index]:
                         list_chemenv.append('undefined')
@@ -143,7 +137,6 @@ class ChemEnvDoc(PropertyDoc):
                     list_chemenv_iupac.append(co.IUPAC_symbol_str)
                     list_mol.append(mol)
                     list_wyckoff.append(wyckoff)
-                    list_sites_env.append([structure[index]] + lse.neighbors_sets[index][0].neighb_sites)
                     list_species.append(unicodeify_species(structure[index].species_string))
 
 
@@ -152,16 +145,14 @@ class ChemEnvDoc(PropertyDoc):
                 "cationic_species": list_species,
                 "chemenv_symbol": list_chemenv,
                 "chemenv_iupac": list_chemenv_iupac,
-                #"mol_from_site_environments": list_mol,
+                "mol_from_site_environments": list_mol,
                 "wyckoff_positions": list_wyckoff,
                 "method": "ChemEnv with SimplestChemEnvStrategy (distance-cutoff 1.4, angle-cutoff 0.3) was used for all unique cations in the structure.",
                 "state": "successful"
             }  # type: dict
-            print(d)
         else:
             d={}
-            d["warnings"] = ["Structure has no oxidation states."]
-            d["state"] = "unsuccessful"
+
 
 
         return super().from_structure(
