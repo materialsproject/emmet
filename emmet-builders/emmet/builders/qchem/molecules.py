@@ -453,10 +453,11 @@ class MoleculesBuilder(Builder):
         mol_ids = [a.molecule_id for a in assoc]
         self.logger.debug(f"Processing {formula} : {mol_ids}")
 
-        grouped_mols = self.group_mol_docs(assoc)
         molecules = list()
 
-        for group in grouped_mols:
+        for group in self.group_mol_docs(assoc):
+
+
             try:
                 molecules.append(
                     MoleculeDoc.from_tasks(group)
@@ -519,29 +520,40 @@ class MoleculesBuilder(Builder):
         def charge_spin(mol_doc):
             return (mol_doc.charge, mol_doc.spin_multiplicity)
 
+        def environment(mol_doc):
+            mol = mol_doc.molecule
+            lot = best_lot(mol_doc,
+                           SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+                           SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+                           SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES)
+            env = form_env((mol, lot))
+            return env
+
+        # Group by charge and spin
         for c_s, pregroup in groupby(sorted(assoc, key=charge_spin), key=charge_spin):
+            # Group by formula (should already be grouped) and environment
+            for f_e, group in groupby(sorted(pregroup, key=environment), key=environment):
+                subgroups = list()
+                for mol_doc in group:
+                    mol_graph = make_mol_graph(mol_doc.molecule)
 
-            # TODO: Also pre-group by solvent environment
+                    # Finally, group by graph isomorphism
+                    # When bonding is defined by OpenBabelNN + metal_edge_extender
+                    # Unconnected molecule graphs are discarded at this step
+                    # TODO: What about molecules that would be connected under a different
+                    # TODO: bonding scheme? For now, ¯\_(ツ)_/¯
+                    if nx.is_connected(mol_graph.graph.to_undirected()):
+                        matched = False
 
-            subgroups = list()
-            for mol_doc in pregroup:
-                mol_graph = make_mol_graph(mol_doc.molecule)
+                        for subgroup in subgroups:
+                            if mol_graph.isomorphic_to(subgroup["mol_graph"]):
+                                subgroup["mol_docs"].append(mol_doc)
+                                matched = True
+                                break
 
-                # Unconnected molecule graphs are discarded at this step
-                # TODO: What about molecules that would be connected under a different
-                # TODO: bonding scheme? For now, ¯\_(ツ)_/¯
-                if nx.is_connected(mol_graph.graph.to_undirected()):
-                    matched = False
+                        if not matched:
+                            subgroups.append({"mol_graph":mol_graph,
+                                              "mol_docs":[mol_doc]})
 
-                    for subgroup in subgroups:
-                        if mol_graph.isomorphic_to(subgroup["mol_graph"]):
-                            subgroup["mol_docs"].append(mol_doc)
-                            matched = True
-                            break
-
-                    if not matched:
-                        subgroups.append({"mol_graph":mol_graph,
-                                          "mol_docs":[mol_doc]})
-
-            for subgroup in subgroups:
-                yield subgroup["mol_docs"]
+                for subgroup in subgroups:
+                    yield subgroup["mol_docs"]
