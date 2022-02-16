@@ -67,6 +67,28 @@ def group_structures(
             yield group
 
 
+def form_env(mol_lot):
+    """
+    Get the alphabetical formula and solvent environment of a calculation
+    as a string
+
+    :param mol_lot: tuple (Molecule, LevelOfTheory)
+
+    :returns key: str
+    """
+
+    molecule, lot = mol_lot
+    lot_comp = lot.value.split("/")
+    if lot_comp[2].upper == "VACUUM":
+        env = "VACUUM"
+    else:
+        env = lot_comp[2].split("(")[1].replace(")", "")
+
+    key = molecule.composition.alphabetical_formula
+    key += " " + env
+    return key
+
+
 def group_molecules(
         molecules: List[Molecule],
         lots: List[str]
@@ -79,19 +101,7 @@ def group_molecules(
         lots (List[str]): string representations of Q-Chem levels of theory
     """
 
-    def get_mol_key(mol_lot):
-        molecule, lot = mol_lot
-        lot_comp = lot.value.split("/")
-        if lot_comp[2].upper == "VACUUM":
-            env = "VACUUM"
-        else:
-            env = lot_comp[2].split("(")[1].replace(")", "")
-
-        key = molecule.composition.alphabetical_formula
-        key += " " + env
-        return key
-
-    for mol_key, pregroup in groupby(sorted(zip(molecules, lots), key=get_mol_key), key=get_mol_key):
+    for mol_key, pregroup in groupby(sorted(zip(molecules, lots), key=form_env), key=form_env):
         subgroups = list()
         for mol, _ in pregroup:
             mol_0 = copy.deepcopy(mol)

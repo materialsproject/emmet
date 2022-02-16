@@ -1,15 +1,17 @@
 from datetime import datetime
-from itertools import chain
+from itertools import chain, groupby
 from math import ceil
 from typing import Dict, Iterable, Iterator, List, Optional
+
+import networkx as nx
 
 from maggma.builders import Builder
 from maggma.stores import Store
 from maggma.utils import grouper
 
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.utils import group_molecules, jsanitize
-from emmet.core.qchem.molecule import evaluate_lot, MoleculeDoc
+from emmet.core.utils import form_env, group_molecules, jsanitize
+from emmet.core.qchem.molecule import best_lot, evaluate_lot, MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.bonds import make_mol_graph
 
@@ -37,19 +39,19 @@ def evaluate_molecule(
     :return:
     """
 
-    best_lot = sorted(
-        mol_doc.best_entries.keys(),
-        key=lambda x: evaluate_lot(x, funct_scores, basis_scores, solvent_scores)
-    )[0]
+    best = best_lot(mol_doc,
+                    funct_scores,
+                    basis_scores,
+                    solvent_scores)
 
-    lot_eval = evaluate_lot(best_lot, funct_scores, basis_scores, solvent_scores)
+    lot_eval = evaluate_lot(best, funct_scores, basis_scores, solvent_scores)
 
     return (
         -1 * int(mol_doc.deprecated),
         lot_eval[0],
         lot_eval[1],
         lot_eval[2],
-        mol_doc.best_entries[best_lot]["energy"],
+        mol_doc.best_entries[best]["energy"],
     )
 
 
@@ -451,7 +453,7 @@ class MoleculesBuilder(Builder):
         mol_ids = [a.molecule_id for a in assoc]
         self.logger.debug(f"Processing {formula} : {mol_ids}")
 
-        grouped_mols = self.group_molecules(assoc)
+        grouped_mols = self.group_mol_docs(assoc)
         molecules = list()
 
         for group in grouped_mols:
@@ -509,75 +511,37 @@ class MoleculesBuilder(Builder):
             - bonding (molecule graph isomorphism)
         """
 
-        # First, group by charge, spin multiplicity, and solvent environment
+        # Molecules are already grouped by formula
+
+        # First, group by charge, spin multiplicity
         # Then group by graph isomorphism, using OpenBabelNN + metal_edge_extender
-        # Then, use evaluate_molecule to select best molecule based on
-        #   level of theory and electronic energy
 
-        def form_charge_spin_solv(molecule, lot):
-            lot_comp = lot.value.split("/")
-            if lot_comp[2].upper == "VACUUM":
-                env = "VACUUM"
-            else:
-                env = lot_comp[2].split("(")[1].replace(")", "")
+        def charge_spin(mol_doc):
+            return (mol_doc.charge, mol_doc.spin_multiplicity)
 
-            key = molecule.composition.alphabetical_formula
-            key += " " + str(molecule.charge)
-            key += " " + str(molecule.spin_multiplicity)
-            key += " " + env
+        for c_s, pregroup in groupby(sorted(assoc, key=charge_spin), key=charge_spin):
 
-            return key
+            # TODO: Also pre-group by solvent environment
 
+            subgroups = list()
+            for mol_doc in pregroup:
+                mol_graph = make_mol_graph(mol_doc.molecule)
 
+                # Unconnected molecule graphs are discarded at this step
+                # TODO: What about molecules that would be connected under a different
+                # TODO: bonding scheme? For now, ¯\_(ツ)_/¯
+                if nx.is_connected(mol_graph.graph.to_undirected()):
+                    matched = False
 
-        for idx, doc in enumerate(assoc):
-            if task.output.optimized_molecule:
-                m = task.output.optimized_molecule
-            else:
-                m = task.output.initial_molecule
-            m.index: int = idx  # type: ignore
-            molecules.append(m)
-            lots.append(task.level_of_theory.value)
+                    for subgroup in subgroups:
+                        if mol_graph.isomorphic_to(subgroup["mol_graph"]):
+                            subgroup["mol_docs"].append(mol_doc)
+                            matched = True
+                            break
 
-        grouped_molecules = group_molecules(
-            molecules,
-            lots
-        )
-        for group in grouped_molecules:
-            grouped_tasks = [filtered_tasks[mol.index] for mol in group]  # type: ignore
-            yield grouped_tasks
+                    if not matched:
+                        subgroups.append({"mol_graph":mol_graph,
+                                          "mol_docs":[mol_doc]})
 
-
-def group(
-        molecules: List[Molecule],
-        lots: List[str]
-):
-    """
-    Groups molecules according to composition, charge, environment, and equality
-
-    Args:
-        molecules (List[Molecule])
-        lots (List[str]): string representations of Q-Chem levels of theory
-    """
-
-    def get_mol_key(mol_lot):
-        molecule, lot = mol_lot
-        key = molecule.composition.alphabetical_formula
-        key += " " + lot
-        return key
-
-    for mol_key, pregroup in groupby(sorted(zip(molecules, lots),key=get_mol_key),key=get_mol_key):
-        subgroups = list()
-        for mol, _ in pregroup:
-            mol_0 = copy.deepcopy(mol)
-            mol_0.set_charge_and_spin(0)
-            matched = False
             for subgroup in subgroups:
-                if mol_0 == subgroup["mol"]:
-                    subgroup["mol_list"].append(mol)
-                    matched = True
-                    break
-            if not matched:
-                subgroups.append({"mol":mol_0,"mol_list":[mol]})
-        for group in subgroups:
-            yield group["mol_list"]
+                yield subgroup["mol_docs"]

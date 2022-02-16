@@ -300,3 +300,28 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,
         )
+
+
+def best_lot(mol_doc: MoleculeDoc,
+             funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+             basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+             solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES
+             ) -> LevelOfTheory:
+    """
+
+    Return the best level of theory used within a MoleculeDoc
+
+    :param mol_doc: MoleculeDoc
+    :param funct_scores: Scores for various density functionals
+    :param basis_scores: Scores for various basis sets
+    :param solvent_scores: Scores for various implicit solvent models
+
+    :return: LevelOfTheory
+    """
+
+    sorted_lots = sorted(
+        mol_doc.best_entries.keys(),
+        key=lambda x: evaluate_lot(x, funct_scores, basis_scores, solvent_scores)
+    )
+
+    return sorted_lots[0]
