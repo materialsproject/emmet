@@ -218,7 +218,7 @@ class SummaryDoc(PropertyDoc):
     )
 
     efermi: float = Field(
-        None, description="Fermi energy eV.", source="electronic_structure"
+        None, description="Fermi energy in eV.", source="electronic_structure"
     )
 
     is_gap_direct: bool = Field(
