@@ -238,7 +238,7 @@ class MoleculesAssociationBuilder(Builder):
                     f" Inserted as deprecated molecule: {doc.molecule_id}"
                 )
 
-        self.logger.debug(f"Produced {len(molecules)} materials for {formula}")
+        self.logger.debug(f"Produced {len(molecules)} molecules for {formula}")
 
         return jsanitize([mol.dict() for mol in molecules], allow_bson=True)
 
@@ -456,25 +456,21 @@ class MoleculesBuilder(Builder):
         molecules = list()
 
         for group in self.group_mol_docs(assoc):
+            # Maybe all are disconnected and therefore none get grouped?
+            if len(group) == 0:
+                continue
 
+            sorted_docs = sorted(group, key=evaluate_molecule)
 
-            try:
-                molecules.append(
-                    MoleculeDoc.from_tasks(group)
-                )
-            except Exception as e:
-                failed_ids = list({t_.task_id for t_ in group})
-                doc = MoleculeDoc.construct_deprecated_molecule(tasks)
-                doc.warnings.append(str(e))
-                molecules.append(doc)
-                self.logger.warn(
-                    f"Failed making material for {failed_ids}."
-                    f" Inserted as deprecated molecule: {doc.molecule_id}"
-                )
+            best_doc = sorted_docs[0]
+            if len(sorted_docs) > 1:
+                best_doc.similar_molecules = [m.molecule_id for m in sorted_docs[1:]]
 
-        self.logger.debug(f"Produced {len(molecules)} materials for {formula}")
+            molecules.append(best_doc)
 
-        return jsanitize([mat.dict() for mat in molecules], allow_bson=True)
+        self.logger.debug(f"Produced {len(molecules)} molecules for {formula}")
+
+        return jsanitize([mol.dict() for mol in molecules], allow_bson=True)
 
     def update_targets(self, items: List[Dict]):
         """
