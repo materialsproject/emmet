@@ -10,19 +10,22 @@ class SimilarityEntry(BaseModel):
 
     task_id: str = Field(
         None,
-        description="The Materials Project ID for the matched material. This comes in the form: mp-******",
+        description="The Materials Project ID for the matched material. This comes in the form: mp-******.",
     )
 
     nelements: int = Field(
-        None, description="Number of elements in the matched material",
+        None,
+        description="Number of elements in the matched material.",
     )
 
     dissimilarity: float = Field(
-        None, description="Dissimilarity measure for the matched material in %",
+        None,
+        description="Dissimilarity measure for the matched material in %.",
     )
 
     formula: str = Field(
-        None, description="Formula of the matched material",
+        None,
+        description="Formula of the matched material.",
     )
 
 

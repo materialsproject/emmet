@@ -48,7 +48,7 @@ class SummaryStats(BaseModel):
     field: str = Field(
         None,
         title="Field",
-        description="Field name corresponding to a field in SummaryDoc",
+        description="Field name corresponding to a field in SummaryDoc.",
     )
     num_samples: Optional[int] = Field(
         None,
@@ -101,13 +101,13 @@ class GBSearchData(BaseModel):
     Fields in grain boundary sub docs in summary
     """
 
-    sigma: int = Field(None, description="Sigma value of the boundary")
+    sigma: int = Field(None, description="Sigma value of the boundary.")
 
-    type: str = Field(None, description="Grain boundary type")
+    type: str = Field(None, description="Grain boundary type.")
 
-    gb_energy: float = Field(None, description="Grain boundary energy in J/m^2")
+    gb_energy: float = Field(None, description="Grain boundary energy in J/m^2.")
 
-    rotation_angle: float = Field(None, description="Rotation angle in degrees")
+    rotation_angle: float = Field(None, description="Rotation angle in degrees.")
 
 
 class SummaryDoc(PropertyDoc):
@@ -133,25 +133,25 @@ class SummaryDoc(PropertyDoc):
     # Thermo
 
     uncorrected_energy_per_atom: float = Field(
-        None, description="The total DFT energy of this material per atom in eV/atom"
+        None, description="The total DFT energy of this material per atom in eV/atom."
     )
 
     energy_per_atom: float = Field(
         None,
-        description="The total corrected DFT energy of this material per atom in eV/atom",
+        description="The total corrected DFT energy of this material per atom in eV/atom.",
     )
 
     formation_energy_per_atom: float = Field(
-        None, description="The formation energy per atom in eV/atom"
+        None, description="The formation energy per atom in eV/atom."
     )
 
     energy_above_hull: float = Field(
-        None, description="The energy above the hull in eV/Atom"
+        None, description="The energy above the hull in eV/Atom."
     )
 
     is_stable: bool = Field(
         False,
-        description="Flag for whether this material is on the hull and therefore stable",
+        description="Flag for whether this material is on the hull and therefore stable.",
     )
 
     equilibrium_reaction_energy_per_atom: float = Field(
@@ -208,7 +208,8 @@ class SummaryDoc(PropertyDoc):
     # Magnetism
 
     is_magnetic: bool = Field(
-        None, description="Whether the material is magnetic.",
+        None,
+        description="Whether the material is magnetic.",
     )
 
     ordering: str = Field(None, description="Type of magnetic ordering.")
@@ -265,26 +266,28 @@ class SummaryDoc(PropertyDoc):
 
     # Dielectric and Piezo
 
-    e_total: float = Field(None, description="Total dielectric constant")
+    e_total: float = Field(None, description="Total dielectric constant.")
 
-    e_ionic: float = Field(None, description="Ionic contributio to dielectric constant")
-
-    e_electronic: float = Field(
-        None, description="Electronic contribution to dielectric constant"
+    e_ionic: float = Field(
+        None, description="Ionic contributio to dielectric constant."
     )
 
-    n: float = Field(None, description="Refractive index")
+    e_electronic: float = Field(
+        None, description="Electronic contribution to dielectric constant."
+    )
 
-    e_ij_max: float = Field(None, description="Piezoelectric modulus")
+    n: float = Field(None, description="Refractive index.")
+
+    e_ij_max: float = Field(None, description="Piezoelectric modulus.")
 
     # Surface Properties
 
     weighted_surface_energy_EV_PER_ANG2: float = Field(
-        None, description="Weighted surface energy in eV/Å²"
+        None, description="Weighted surface energy in eV/Å²."
     )
 
     weighted_surface_energy: float = Field(
-        None, description="Weighted surface energy in J/m²"
+        None, description="Weighted surface energy in J/m²."
     )
 
     weighted_work_function: float = Field(

@@ -10,7 +10,8 @@ class FermiDoc(BaseModel):
     """
 
     fermi_surfaces: List[dict] = Field(
-        None, description="List of IFermi FermiSurface objects.",
+        None,
+        description="List of IFermi FermiSurface objects.",
     )
 
     surface_types: List[str] = Field(
@@ -21,12 +22,12 @@ class FermiDoc(BaseModel):
 
     task_id: str = Field(
         None,
-        description="The Materials Project ID of the material. This comes in the form: mp-******",
+        description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
 
     last_updated: datetime = Field(
         None,
-        description="Timestamp for the most recent calculation for this fermi surface document",
+        description="Timestamp for the most recent calculation for this fermi surface document.",
     )
 
     # Make sure that the datetime field is properly formatted

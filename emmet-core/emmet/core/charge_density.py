@@ -19,8 +19,8 @@ class ChgcarDataDoc(BaseModel):
 
     task_id: str = Field(
         None,
-        description="The Materials Project ID of the calculation producing the charge density data. \
-            This comes in the form: mp-******",
+        description="The Materials Project ID of the calculation producing the charge density data. "
+        "This comes in the form: mp-******.",
     )
 
     data: Chgcar = Field(None, description="Pymatgen CHGCAR object.")
