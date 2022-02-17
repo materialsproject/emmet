@@ -24,9 +24,9 @@ class PartialChargesDoc(PropertyDoc):
 
     property_name = "partial_charges"
 
-    charges: List[float] = Field(description="Atomic partial charges for the molecule")
+    method: str = Field(..., description="Method used to compute atomic partial charges")
 
-    method: str = Field(None, description="Method used to compute atomic partial charges")
+    charges: List[float] = Field(..., description="Atomic partial charges for the molecule")
 
     @classmethod
     def from_task(
@@ -97,9 +97,9 @@ class PartialSpinsDoc(PropertyDoc):
 
     property_name = "partial_spins"
 
-    spins: List[float] = Field(description="Atomic partial spins for the molecule")
+    method: str = Field(...,description="Method used to compute atomic partial spins")
 
-    method: str = Field(None, description="Method used to compute atomic partial spins")
+    spins: List[float] = Field(..., description="Atomic partial spins for the molecule")
 
     @classmethod
     def from_task(

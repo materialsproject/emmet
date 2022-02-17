@@ -61,9 +61,13 @@ class RedoxDoc(PropertyDoc):
 
     ox_id: MPID = Field(None, description="MPID for adiabatic oxidation")
 
-    reduction_potentials: Dict[str, float] = Field(None, description="Reduction potentials with various reference electrodes")
+    reduction_potentials: Dict[str, float] = Field(
+        None,
+        description="Reduction potentials with various reference electrodes")
 
-    oxidation_potentials: Dict[str, float] = Field(None, description="Oxidation potentials with various reference electrodes")
+    oxidation_potentials: Dict[str, float] = Field(
+        None,
+        description="Oxidation potentials with various reference electrodes")
 
     @classmethod
     def from_entries(

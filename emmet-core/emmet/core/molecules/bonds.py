@@ -235,20 +235,23 @@ class BondingDoc(PropertyDoc):
 
     property_name = "bonding"
 
-    molecule_graph: MoleculeGraph = Field(description="Molecule graph")
+    molecule_graph: MoleculeGraph = Field(..., description="Molecule graph")
 
-    method: str = Field(description="Method used to compute molecule graph")
+    method: str = Field(..., description="Method used to compute molecule graph")
 
     bond_types: Dict[str, List[float]] = Field(
+        dict(),
         description="Dictionary of bond types to their length, e.g. C-O to "
         "a list of the lengths of C-O bonds in Angstrom."
     )
 
     bonds: List[Tuple[int, int]] = Field(
+        [],
         description="List of bonds in the form (a, b), where a and b are 0-indexed atom indices",
     )
 
     bonds_nometal: List[Tuple[int, int]] = Field(
+        [],
         description="List of bonds in the form (a, b), where a and b are 0-indexed atom indices, "
                     "with all metal ions removed",
     )

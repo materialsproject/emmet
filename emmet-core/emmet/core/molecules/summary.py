@@ -231,6 +231,29 @@ class SummaryDoc(PropertyDoc):
     )
 
     # redox properties
+    electron_affinity: float = Field(None, description="Vertical electron affinity in eV")
+
+    ea_id: MPID = Field(None, description="MPID for electron affinity")
+
+    ionization_energy: float = Field(None, description="Vertical ionization energy in eV")
+
+    ie_id: MPID = Field(None, description="MPID for ionization energy")
+
+    reduction_free_energy: float = Field(None, description="Adiabatic free energy of reduction")
+
+    red_id: MPID = Field(None, description="MPID for adiabatic reduction")
+
+    oxidation_free_energy: float = Field(None, description="Adiabatic free energy of oxidation")
+
+    ox_id: MPID = Field(None, description="MPID for adiabatic oxidation")
+
+    reduction_potentials: Dict[str, float] = Field(None,
+                                                   description="Reduction potentials with various "
+                                                               "reference electrodes")
+
+    oxidation_potentials: Dict[str, float] = Field(None,
+                                                   description="Oxidation potentials with various "
+                                                               "reference electrodes")
 
     # has props
     has_props: List[HasProps] = Field(
@@ -238,9 +261,11 @@ class SummaryDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_docs(cls, material_id: MPID, **docs: Dict[str, Dict]):
+    def from_docs(cls, material_id: MPID, **docs: Dict[str, Union[Dict, List[Dict]]]):
         """Converts a bunch of summary docs into a SummaryDoc"""
         doc = _copy_from_doc(docs)
+
+        # TODO: this
 
         # Reshape document for various sub-sections
         # Electronic Structure + Bandstructure + DOS
@@ -269,89 +294,79 @@ class SummaryDoc(PropertyDoc):
 
 # Key mapping
 summary_fields: Dict[str, list] = {
-    HasProps.materials.value: [
-        "nsites",
+    HasProps.molecules.value: [
+        "charge",
+        "spin_multiplicity",
+        "natoms",
         "elements",
         "nelements",
         "composition",
-        "composition_reduced",
-        "formula_pretty",
-        "formula_anonymous",
+        "formula_alphabetical",
         "chemsys",
-        "volume",
-        "density",
-        "density_atomic",
         "symmetry",
-        "structure",
+        "molecule",
         "deprecated",
-        "task_ids",
+        "task_ids"
     ],
     HasProps.thermo.value: [
-        "uncorrected_energy_per_atom",
-        "energy_per_atom",
-        "formation_energy_per_atom",
-        "energy_above_hull",
-        "is_stable",
-        "equilibrium_reaction_energy_per_atom",
-        "decomposes_to",
+        "electronic_energy",
+        "zero_point_energy",
+        "rt",
+        "total_enthalpy",
+        "total_entropy",
+        "translational_enthalpy",
+        "translational_entropy",
+        "rotational_enthalpy",
+        "rotational_entropy",
+        "vibrational_enthalpy",
+        "vibrational_entropy",
+        "free_energy"
     ],
-    HasProps.xas.value: ["absorbing_element", "edge", "spectrum_type", "spectrum_id"],
-    HasProps.grain_boundaries.value: [
-        "gb_energy",
-        "sigma",
-        "type",
-        "rotation_angle",
-        "w_sep",
+    HasProps.vibration.value: [
+        "frequencies",
+        "frequency_modes",
+        "ir_intensities",
+        "ir_activities"
     ],
-    HasProps.electronic_structure.value: [
-        "band_gap",
-        "efermi",
-        "cbm",
-        "vbm",
-        "is_gap_direct",
-        "is_metal",
-        "bandstructure",
-        "dos",
-        "task_id",
+    HasProps.orbitals.value: [
+        "open_shell",
+        "population",
+        "lone_pairs",
+        "bonds",
+        "interactions",
+        "alpha_population",
+        "beta_population",
+        "alpha_lone_pairs",
+        "beta_lone_pairs",
+        "alpha_bonds",
+        "beta_bonds",
+        "alpha_interactions",
+        "beta_interactions"
     ],
-    HasProps.magnetism.value: [
-        "is_magnetic",
-        "ordering",
-        "total_magnetization",
-        "total_magnetization_normalized_vol",
-        "total_magnetization_normalized_formula_units",
-        "num_magnetic_sites",
-        "num_unique_magnetic_sites",
-        "types_of_magnetic_species",
-        "is_magnetic",
+    HasProps.partial_charges.value: [
+        "charges"
     ],
-    HasProps.elasticity.value: [
-        "k_voigt",
-        "k_reuss",
-        "k_vrh",
-        "g_voigt",
-        "g_reuss",
-        "g_vrh",
-        "universal_anisotropy",
-        "homogeneous_poisson",
+    HasProps.partial_spins.value: [
+        "spins"
     ],
-    HasProps.dielectric.value: ["e_total", "e_ionic", "e_electronic", "n"],
-    HasProps.piezoelectric.value: ["e_ij_max"],
-    HasProps.surface_properties.value: [
-        "weighted_surface_energy",
-        "weighted_surface_energy_EV_PER_ANG2",
-        "shape_factor",
-        "surface_anisotropy",
-        "weighted_work_function",
-        "has_reconstructed",
+    HasProps.bonding.value: [
+        "molecule_graphs",
+        "bond_types",
+        "bonds",
+        "bonds_nometal"
     ],
-    HasProps.oxi_states.value: ["possible_species"],
-    HasProps.provenance.value: ["theoretical"],
-    HasProps.charge_density.value: [],
-    HasProps.eos.value: [],
-    HasProps.phonon.value: [],
-    HasProps.insertion_electrodes.value: [],
-    HasProps.substrates.value: [],
+    HasProps.redox.value: [
+        "electron_affinity",
+        "ea_id",
+        "ionization_energy",
+        "ie_id",
+        "reduction_free_energy",
+        "red_id",
+        "oxidation_free_energy",
+        "ox_id",
+        "reduction_potentials",
+        "oxidation_potentials"
+    ]
 }
 
 
@@ -364,14 +379,13 @@ def _copy_from_doc(doc):
         sub_doc = doc.get(doc_key, None)
         if isinstance(sub_doc, list) and len(sub_doc) > 0:
             d["has_props"].append(doc_key)
-            d[doc_key] = []
-            for sub_item in sub_doc:
-                temp_doc = {
-                    copy_key: sub_item[copy_key]
-                    for copy_key in summary_fields[doc_key]
-                    if copy_key in sub_item
-                }
-                d[doc_key].append(temp_doc)
+            for copy_key in summary_fields[doc_key]:
+                d[copy_key] = dict()
+                for sub_item in sub_doc:
+                    # In cases where multiple docs have the same properties,
+                    # they must differ by method
+                    if copy_key in sub_item and "method" in sub_item:
+                        d[copy_key][sub_item["method"]] = sub_item[copy_key]
         elif isinstance(sub_doc, dict):
             d["has_props"].append(doc_key)
             d.update(
