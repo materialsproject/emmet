@@ -1,7 +1,8 @@
 import pytest
 from maggma.stores import JSONStore, MemoryStore
 
-from emmet.builders.qchem.molecules import MoleculesAssociationBuilder
+from emmet.builders.qchem.molecules import (MoleculesAssociationBuilder,
+                                            MoleculesBuilder)
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -17,8 +18,24 @@ def assoc_store():
     return MemoryStore()
 
 
-def test_validator(tasks_store, assoc_store):
-    builder = MoleculesAssociationBuilder(tasks=tasks_store, assoc=assoc_store)
-    builder.run()
+@pytest.fixture(scope="session")
+def mol_store():
+    return MemoryStore()
+
+
+def test_molecules_builder(tasks_store, assoc_store, mol_store):
+    stage_one = MoleculesAssociationBuilder(tasks=tasks_store, assoc=assoc_store)
+    stage_one.run()
     assert assoc_store.count() == 67
     assert assoc_store.count({"deprecated": True}) == 1
+
+    assoc_store.key = "molecule_id"
+
+    stage_two = MoleculesBuilder(assoc=assoc_store,
+                                 molecules=mol_store,
+                                 prefix="libe")
+    stage_two.run()
+
+    assert mol_store.count() == 48
+    assert mol_store.count({"deprecated": True}) == 0
+    assert mol_store.count({"molecule_id": {"$regex": "libe-"}}) == 48

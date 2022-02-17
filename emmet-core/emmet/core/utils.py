@@ -1,7 +1,7 @@
 import datetime
 from enum import Enum
 from itertools import groupby
-from typing import Any, Iterator, List
+from typing import Any, Iterator, List, Tuple, Union
 import copy
 
 import bson
@@ -67,7 +67,7 @@ def group_structures(
             yield group
 
 
-def form_env(mol_lot):
+def form_env(mol_lot: Tuple[Molecule, str]) -> str:
     """
     Get the alphabetical formula and solvent environment of a calculation
     as a string
@@ -78,7 +78,7 @@ def form_env(mol_lot):
     """
 
     molecule, lot = mol_lot
-    lot_comp = lot.value.split("/")
+    lot_comp = lot.split("/")
     if lot_comp[2].upper == "VACUUM":
         env = "VACUUM"
     else:

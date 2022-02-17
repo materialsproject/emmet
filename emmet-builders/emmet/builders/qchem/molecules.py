@@ -13,6 +13,7 @@ from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import form_env, group_molecules, jsanitize
 from emmet.core.qchem.molecule import best_lot, evaluate_lot, MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
+from emmet.core.qchem.calc_types import LevelOfTheory
 from emmet.core.molecules.bonds import make_mol_graph
 
 
@@ -484,7 +485,18 @@ class MoleculesBuilder(Builder):
 
         # Add timestamp, add prefix to molecule id
         for item in docs:
-            item.update({"_bt": self.timestamp, "molecule_id": "-".join(self.prefix, str(item["molecule_id"]))})
+            if self.prefix is not None:
+                molid = "-".join([self.prefix, str(item["molecule_id"])])
+            else:
+                # No change
+                molid = item["molecule_id"]
+
+            item.update(
+                {
+                    "_bt": self.timestamp,
+                    "molecule_id": molid
+                }
+            )
 
         molecule_ids = list({item["molecule_id"] for item in docs})
 
@@ -522,6 +534,8 @@ class MoleculesBuilder(Builder):
                            SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
                            SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
                            SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES)
+            if isinstance(lot, LevelOfTheory):
+                lot = lot.value
             env = form_env((mol, lot))
             return env
 
