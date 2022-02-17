@@ -235,12 +235,12 @@ class BondingDoc(PropertyDoc):
 
     property_name = "bonding"
 
-    molecule_graph: MoleculeGraph = Field(description="Molecule graph",)
+    molecule_graph: MoleculeGraph = Field(description="Molecule graph")
 
     method: str = Field(description="Method used to compute molecule graph")
 
     bond_types: Dict[str, List[float]] = Field(
-        description="Dictionary of bond types to their length, e.g. a C-O to "
+        description="Dictionary of bond types to their length, e.g. C-O to "
         "a list of the lengths of C-O bonds in Angstrom."
     )
 
