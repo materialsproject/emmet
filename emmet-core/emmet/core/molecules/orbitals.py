@@ -223,38 +223,40 @@ class OrbitalDoc(PropertyDoc):
     # Populated for open-shell molecules
     alpha_population: List[NaturalPopulation] = Field(
         None,
-        description="Natural electron populations of the alpha electrons of the molecule"
+        description="Natural electron populations of the alpha electrons of an "
+                    "open-shell molecule"
     )
     beta_population: List[NaturalPopulation] = Field(
         None,
-        description="Natural electron populations of the beta electrons of the molecule"
+        description="Natural electron populations of the beta electrons of an "
+                    "open-shell molecule"
     )
 
     alpha_lone_pairs: List[LonePair] = Field(
         None,
-        description="Alpha electron lone pair orbitals of a closed-shell molecule"
+        description="Alpha electron lone pair orbitals of an open-shell molecule"
     )
     beta_lone_pairs: List[LonePair] = Field(
         None,
-        description="Beta electron lone pair orbitals of a closed-shell molecule"
+        description="Beta electron lone pair orbitals of an open-shell molecule"
     )
 
     alpha_bonds: List[Bond] = Field(
         None,
-        description="Alpha electron bond-like orbitals of a closed-shell molecule"
+        description="Alpha electron bond-like orbitals of an open-shell molecule"
     )
     beta_bonds: List[Bond] = Field(
         None,
-        description="Beta electron bond-like orbitals of a closed-shell molecule"
+        description="Beta electron bond-like orbitals of an open-shell molecule"
     )
 
     alpha_interactions: List[Interaction] = Field(
         None,
-        description="Alpha electron orbital-orbital interactions of a closed-shell molecule"
+        description="Alpha electron orbital-orbital interactions of an open-shell molecule"
     )
     beta_interactions: List[Interaction] = Field(
         None,
-        description="Beta electron orbital-orbital interactions of a closed-shell molecule"
+        description="Beta electron orbital-orbital interactions of an open-shell molecule"
     )
 
     @classmethod

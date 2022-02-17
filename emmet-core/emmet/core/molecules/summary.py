@@ -9,6 +9,10 @@ from pymatgen.analysis.graphs import MoleculeGraph
 
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID
+from emmet.core.molecules.orbitals import (NaturalPopulation,
+                                           LonePair,
+                                           Bond,
+                                           Interaction)
 
 T = TypeVar("T", bound="SummaryDoc")
 
@@ -107,6 +111,87 @@ class SummaryDoc(PropertyDoc):
         description="Gibbs free energy of the molecule at 298.15K (units: eV)"
     )
 
+    # vibrational properties
+    frequencies: List[float] = Field(
+        None,
+        description="List of molecular vibrational frequencies"
+    )
+
+    frequency_modes: List[List[List[float]]] = Field(
+        None,
+        description="Vibrational frequency modes of the molecule"
+    )
+
+    ir_intensities: List[float] = Field(
+        None,
+        title="IR intensities",
+        description="Intensities for IR vibrational spectrum peaks"
+    )
+
+    ir_activities: List = Field(
+        None,
+        title="IR activities",
+        description="List indicating if frequency-modes are IR-active"
+    )
+
+    # natural bonding orbitals
+    open_shell: bool = Field(
+        None,
+        description="Is this molecule open-shell (spin multiplicity != 1)?"
+    )
+
+    nbo_population: List[NaturalPopulation] = Field(
+        None,
+        description="Natural electron populations of the molecule"
+    )
+    nbo_lone_pairs: List[LonePair] = Field(
+        None,
+        description="Lone pair orbitals of a closed-shell molecule"
+    )
+    nbo_bonds: List[Bond] = Field(
+        None,
+        description="Bond-like orbitals of a closed-shell molecule"
+    )
+    nbo_interactions: List[Interaction] = Field(
+        None,
+        description="Orbital-orbital interactions of a closed-shell molecule"
+    )
+
+    alpha_population: List[NaturalPopulation] = Field(
+        None,
+        description="Natural electron populations of the alpha electrons of an "
+                    "open-shell molecule"
+    )
+    beta_population: List[NaturalPopulation] = Field(
+        None,
+        description="Natural electron populations of the beta electrons of an "
+                    "open-shell molecule"
+    )
+    alpha_lone_pairs: List[LonePair] = Field(
+        None,
+        description="Alpha electron lone pair orbitals of an open-shell molecule"
+    )
+    beta_lone_pairs: List[LonePair] = Field(
+        None,
+        description="Beta electron lone pair orbitals of an open-shell molecule"
+    )
+    alpha_bonds: List[Bond] = Field(
+        None,
+        description="Alpha electron bond-like orbitals of an open-shell molecule"
+    )
+    beta_bonds: List[Bond] = Field(
+        None,
+        description="Beta electron bond-like orbitals of an open-shell molecule"
+    )
+    alpha_interactions: List[Interaction] = Field(
+        None,
+        description="Alpha electron orbital-orbital interactions of an open-shell molecule"
+    )
+    beta_interactions: List[Interaction] = Field(
+        None,
+        description="Beta electron orbital-orbital interactions of an open-shell molecule"
+    )
+
     # partial charges
     partial_charges: Dict[str, List[float]] = Field(
         None,
@@ -144,10 +229,6 @@ class SummaryDoc(PropertyDoc):
                     "removed. Each bond takes the form in the form (a, b), where a and b are "
                     "0-indexed atom indices.",
     )
-
-    # natural bonding orbitals
-
-    # vibrational properties
 
     # redox properties
 

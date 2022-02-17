@@ -22,17 +22,32 @@ class VibrationDoc(PropertyDoc):
 
     property_name = "vibrations"
 
-    molecule: Molecule
+    molecule: Molecule = Field(
+        ...,
+        description="Molecular structure"
+    )
 
-    frequencies: List[float] = Field(description="List of molecular vibrational frequencies")
+    frequencies: List[float] = Field(
+        ...,
+        description="List of molecular vibrational frequencies"
+    )
 
-    frequency_modes: List[List[List[float]]] = Field(description="Vibrational frequency modes of the molecule")
+    frequency_modes: List[List[List[float]]] = Field(
+        ...,
+        description="Vibrational frequency modes of the molecule"
+    )
 
-    ir_intensities: List[float] = Field(..., title="IR intensities",
-                                        description="Intensities for IR vibrational spectrum peaks")
+    ir_intensities: List[float] = Field(
+        ...,
+        title="IR intensities",
+        description="Intensities for IR vibrational spectrum peaks"
+    )
 
-    ir_activities: List = Field(..., title="IR activities",
-                                description="List indicating if frequency-modes are IR-active")
+    ir_activities: List = Field(
+        ...,
+        title="IR activities",
+        description="List indicating if frequency-modes are IR-active"
+    )
 
     @classmethod
     def from_task(
