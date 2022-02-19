@@ -261,35 +261,13 @@ class SummaryDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_docs(cls, material_id: MPID, **docs: Dict[str, Union[Dict, List[Dict]]]):
+    def from_docs(cls, molecule_id: MPID, **docs: Dict[str, Union[Dict, List[Dict]]]):
         """Converts a bunch of summary docs into a SummaryDoc"""
+
         doc = _copy_from_doc(docs)
-
-        # TODO: this
-
-        # Reshape document for various sub-sections
-        # Electronic Structure + Bandstructure + DOS
-        if "bandstructure" in doc:
-            if doc["bandstructure"] is not None and list(
-                filter(lambda x: x is not None, doc["bandstructure"].values())
-            ):
-                doc["has_props"].append(HasProps.bandstructure.value)
-            else:
-                del doc["bandstructure"]
-        if "dos" in doc:
-            if doc["dos"] is not None and list(
-                filter(lambda x: x is not None, doc["dos"].values())
-            ):
-                doc["has_props"].append(HasProps.dos.value)
-            else:
-                del doc["dos"]
-        if "task_id" in doc:
-            doc["es_source_calc_id"] = doc["task_id"]
-            del doc["task_id"]
-
         doc["has_props"] = list(set(doc["has_props"]))
 
-        return SummaryDoc(material_id=material_id, **doc)
+        return SummaryDoc(molecule_id=molecule_id, **doc)
 
 
 # Key mapping
@@ -372,9 +350,10 @@ summary_fields: Dict[str, list] = {
 
 def _copy_from_doc(doc):
     """Helper function to copy the list of keys over from amalgamated document"""
+
     d = {"has_props": []}
-    # Complex function to grab the keys and put them in the root doc
-    # if the item is a list, it makes one doc per item with those corresponding keys
+
+    # Function to grab the keys and put them in the root doc
     for doc_key in summary_fields:
         sub_doc = doc.get(doc_key, None)
         if isinstance(sub_doc, list) and len(sub_doc) > 0:
@@ -386,6 +365,7 @@ def _copy_from_doc(doc):
                     # they must differ by method
                     if copy_key in sub_item and "method" in sub_item:
                         d[copy_key][sub_item["method"]] = sub_item[copy_key]
+
         elif isinstance(sub_doc, dict):
             d["has_props"].append(doc_key)
             d.update(
@@ -395,4 +375,5 @@ def _copy_from_doc(doc):
                     if copy_key in sub_doc
                 }
             )
+    
     return d
