@@ -43,6 +43,11 @@ class ThermoDoc(PropertyDoc):
 
     property_name = "thermo"
 
+    task_id: MPID = Field(
+        ...,
+        description="ID of TaskDocument from which these properties were derived"
+    )
+
     electronic_energy: float = Field(
         ...,
         description="Electronic energy of the molecule (units: eV)"
@@ -137,6 +142,7 @@ class ThermoDoc(PropertyDoc):
                     return super().from_molecule(
                         meta_molecule=mol,
                         molecule_id=molecule_id,
+                        task_id=task.task_id,
                         electronic_energy=energy * 27.2114,
                         zero_point_energy=calc["ZPE"] * 0.043363,
                         rt=calc["gas_constant"] * 0.043363,

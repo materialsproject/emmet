@@ -77,9 +77,7 @@ def evaluate_task(
 
     return (
         -1 * int(task.is_valid),
-        lot_eval[0],
-        lot_eval[1],
-        lot_eval[2],
+        sum(lot_eval),
         -1 * task_quality_scores.get(task.task_type.value, 0),
         task.output.final_energy,
     )

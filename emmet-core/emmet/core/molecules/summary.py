@@ -375,5 +375,5 @@ def _copy_from_doc(doc):
                     if copy_key in sub_doc
                 }
             )
-    
+
     return d

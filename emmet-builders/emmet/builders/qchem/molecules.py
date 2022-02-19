@@ -49,9 +49,7 @@ def evaluate_molecule(
 
     return (
         -1 * int(mol_doc.deprecated),
-        lot_eval[0],
-        lot_eval[1],
-        lot_eval[2],
+        sum(lot_eval),
         mol_doc.best_entries[best]["energy"],
     )
 
