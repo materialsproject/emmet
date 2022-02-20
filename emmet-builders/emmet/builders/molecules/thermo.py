@@ -178,10 +178,10 @@ class ThermoBuilder(Builder):
                 best = sorted(thermo_entries,
                               key=lambda x: (evaluate_lot(x["level_of_theory"]),
                                              x["energy"])
-                              )
+                              )[0]
                 task = best["task_id"]
 
-            task_doc = TaskDocument(**self.tasks.query_one({"task_id": task}))
+            task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
 
             thermo_doc = ThermoDoc.from_task(task_doc,
                                              molecule_id=mol.molecule_id,

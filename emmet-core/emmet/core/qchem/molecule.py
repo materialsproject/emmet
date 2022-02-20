@@ -1,5 +1,5 @@
 """ Core definition of a Molecule Document """
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, List, Mapping, Union
 
 from pydantic import Field
 
@@ -24,7 +24,7 @@ SETTINGS = EmmetSettings()
 
 
 def evaluate_lot(
-    lot: LevelOfTheory,
+    lot: Union[LevelOfTheory, str],
     funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
     basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
     solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
@@ -38,7 +38,10 @@ def evaluate_lot(
     :return:
     """
 
-    lot_comp = lot.value.split("/")
+    if isinstance(lot, LevelOfTheory):
+        lot_comp = lot.value.split("/")
+    else:
+        lot_comp = lot.split("/")
 
     return (
         -1 * funct_scores.get(lot_comp[0], 0),
