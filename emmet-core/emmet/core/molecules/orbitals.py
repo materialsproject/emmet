@@ -56,7 +56,7 @@ class LonePair(MSONable):
                  d_character: float,
                  f_character: float,
                  occupancy: float,
-                 lp_type: str
+                 type_code: str
                  ):
         """
         Basic description of a lone pair (LP) natural bonding orbital.
@@ -70,7 +70,7 @@ class LonePair(MSONable):
         :param d_character (float): What fraction of this orbital is d-like in nature.
         :param f_character (float): What fraction of this orbital is f-like in nature.
         :param occupancy (float): Total electron occupancy of this lone pair
-        :param lp_type (str): Description of this lone pair (ex: "LV" for "lone valence")
+        :param type_code (str): Description of this lone pair (ex: "LV" for "lone valence")
         """
 
         self.index = int(index)
@@ -81,7 +81,7 @@ class LonePair(MSONable):
         self.d_character = float(d_character)
         self.f_character = float(f_character)
         self.occupancy = float(occupancy)
-        self.type = lp_type
+        self.type_code = type_code
 
 
 class Bond(MSONable):
@@ -103,7 +103,7 @@ class Bond(MSONable):
                  atom1_polarization_coeff: float,
                  atom2_polarization_coeff: float,
                  occupancy: float,
-                 bond_type: str
+                 type_code: str
                  ):
         """
         Basic description of a bond (BD) natural bonding orbital.
@@ -126,7 +126,7 @@ class Bond(MSONable):
         :param atom1_polarization_coeff: Polarization coefficient of atom 1
         :param atom2_polarization_coeff: Polarization coefficient of atom 2
         :param occupancy: Total electron occupancy of this orbital
-        :param bond_type: Description of this bonding orbital (ex: BD for bonding,
+        :param type_code: Description of this bonding orbital (ex: BD for bonding,
             BD* for anti-bonding)
         """
 
@@ -147,7 +147,7 @@ class Bond(MSONable):
         self.atom1_polarization_coeff = float(atom1_polarization_coeff)
         self.atom2_polarization_coeff = float(atom2_polarization_coeff)
         self.occupancy = float(occupancy)
-        self.type = bond_type
+        self.type_code = type_code
 
 
 class Interaction(MSONable):
@@ -187,6 +187,33 @@ class Interaction(MSONable):
         self.perturbation_energy = float(perturbation_energy)
         self.energy_difference = float(energy_difference)
         self.fock_element = float(fock_element)
+
+    def as_dict(self):
+        return {
+            "donor_index": self.donor_index,
+            "acceptor_index": self.acceptor_index,
+            "donor_type": self.donor_type,
+            "acceptor_type": self.acceptor_type,
+            "donor_atom_indices": self.donor_atom_indices,
+            "acceptor_atom_indices": self.acceptor_atom_indices,
+            "perturbation_energy": self.perturbation_energy,
+            "energy_difference": self.energy_difference,
+            "fock_element": self.fock_element
+        }
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(d["perturbation_energy"],
+                   d["energy_difference"],
+                   d["fock_element"],
+                   d["donor_index"],
+                   d["acceptor_index"],
+                   d["donor_type"],
+                   d["acceptor_type"],
+                   d["donor_atom_indices"][0],
+                   d["acceptor_atom_indices"][0],
+                   d["donor_atom_indices"][1],
+                   d["acceptor_atom_indices"][1])
 
 
 class OrbitalDoc(PropertyDoc):
