@@ -154,6 +154,7 @@ class ThermoDoc(PropertyDoc):
                         translational_entropy=calc["trans_entropy"] * 0.000043363,
                         rotational_entropy=calc["rot_entropy"] * 0.000043363,
                         vibrational_entropy=calc["vib_entropy"] * 0.000043363,
+                        origins=[PropertyOrigin(name="thermo", task_id=task.task_id)],
                         free_energy=free_energy,
                         deprecated=deprecated,
                         **kwargs

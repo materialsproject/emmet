@@ -35,4 +35,8 @@ def thermo_store():
 
 
 def test_thermo_builder(tasks_store, mol_store, thermo_store):
-    
+    builder = ThermoBuilder(tasks_store, mol_store, thermo_store)
+    builder.run()
+
+    assert thermo_store.count() == 48
+    assert thermo_store.count({"vibrational_enthalpy": None}) == 0
