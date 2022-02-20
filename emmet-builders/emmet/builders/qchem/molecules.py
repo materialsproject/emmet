@@ -155,7 +155,7 @@ class MoleculesAssociationBuilder(Builder):
         # Save timestamp to mark buildtime for material documents
         self.timestamp = datetime.utcnow()
 
-        # Get all processed tasks:
+        # Get all processed tasks
         temp_query = dict(self.query)
         temp_query["state"] = "successful"
 
@@ -404,7 +404,7 @@ class MoleculesBuilder(Builder):
         # Save timestamp to mark buildtime for material documents
         self.timestamp = datetime.utcnow()
 
-        # Get all processed tasks:
+        # Get all processed molecules
         temp_query = dict(self.query)
         temp_query["deprecated"] = False
 

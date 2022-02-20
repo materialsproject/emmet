@@ -7,8 +7,6 @@ from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
 
-from pymatgen.core.structure import Molecule
-
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.molecule import MoleculeDoc, best_lot, evaluate_lot
 from emmet.core.molecules.thermo import ThermoDoc
@@ -28,8 +26,10 @@ class ThermoBuilder(Builder):
 
     The process is as follows:
         1. Gather MoleculeDocs by formula
-        2. For each doc, grab all relevant TaskDocs (docs for entries using
-            highest level of theory for the molecule)
+        2. For each doc, grab the best TaskDoc (doc with as much thermodynamic
+            information using the highest level of theory with lowest
+             electronic energy for the molecule)
+        3. Convert TaskDoc to ThermoDoc
     """
 
     def __init__(
@@ -115,7 +115,7 @@ class ThermoBuilder(Builder):
         # Save timestamp to mark buildtime for material documents
         self.timestamp = datetime.utcnow()
 
-        # Get all processed tasks:
+        # Get all processed molecules
         temp_query = dict(self.query)
         temp_query["deprecated"] = False
 
@@ -149,7 +149,7 @@ class ThermoBuilder(Builder):
 
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """
-        Process the tasks into a MoleculeDoc
+        Process the tasks into a ThermoDoc
 
         Args:
             tasks [dict] : a list of task docs
@@ -204,8 +204,6 @@ class ThermoBuilder(Builder):
 
         # Add timestamp
         for item in docs:
-            molid = item["molecule_id"]
-
             item.update(
                 {
                     "_bt": self.timestamp,
