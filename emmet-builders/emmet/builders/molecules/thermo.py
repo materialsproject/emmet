@@ -27,8 +27,8 @@ class ThermoBuilder(Builder):
     The process is as follows:
         1. Gather MoleculeDocs by formula
         2. For each doc, grab the best TaskDoc (doc with as much thermodynamic
-            information using the highest level of theory with lowest
-             electronic energy for the molecule)
+            information as possible using the highest level of theory with
+            lowest electronic energy for the molecule)
         3. Convert TaskDoc to ThermoDoc
     """
 
@@ -100,7 +100,7 @@ class ThermoBuilder(Builder):
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
-        Gets all items to process into molecules (and other) documents.
+        Gets all items to process into thermo documents.
         This does no datetime checking; relying on on whether
         task_ids are included in the molecules Store
 
@@ -152,7 +152,7 @@ class ThermoBuilder(Builder):
         Process the tasks into a ThermoDoc
 
         Args:
-            tasks [dict] : a list of task docs
+            items List[dict] : a list of MoleculeDocs in dict form
 
         Returns:
             [dict] : a list of new molecule docs
@@ -192,12 +192,12 @@ class ThermoBuilder(Builder):
 
         return jsanitize([doc.dict() for doc in thermo_docs], allow_bson=True)
 
-    def update_targets(self, items: List[Dict]):
+    def update_targets(self, items: List[List[Dict]]):
         """
-        Inserts the new molecules into the molecules collection
+        Inserts the new thermo docs into the thermo collection
 
         Args:
-            items [[dict]]: A list of molecules to update
+            items [[dict]]: A list of documents to update
         """
 
         docs = list(chain.from_iterable(items))  # type: ignore

@@ -441,7 +441,7 @@ class MoleculesBuilder(Builder):
         Process the tasks into a MoleculeDoc
 
         Args:
-            tasks [dict] : a list of task docs
+            tasks List[Dict] : a list of task docs
 
         Returns:
             [dict] : a list of new molecule docs
@@ -471,7 +471,7 @@ class MoleculesBuilder(Builder):
 
         return jsanitize([mol.dict() for mol in molecules], allow_bson=True)
 
-    def update_targets(self, items: List[Dict]):
+    def update_targets(self, items: List[List[Dict]]):
         """
         Inserts the new molecules into the molecules collection
 

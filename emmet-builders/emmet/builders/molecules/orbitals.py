@@ -7,7 +7,6 @@ from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
 
-
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
 from emmet.core.molecules.orbitals import OrbitalDoc
@@ -101,7 +100,7 @@ class OrbitalBuilder(Builder):
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
-        Gets all items to process into molecules (and other) documents.
+        Gets all items to process into orbital documents.
         This does no datetime checking; relying on on whether
         task_ids are included in the molecules Store
 
@@ -153,7 +152,7 @@ class OrbitalBuilder(Builder):
         Process the tasks into an OrbitalDoc
 
         Args:
-            tasks [dict] : a list of task docs
+            tasks List[Dict] : a list of MoleculeDocs in dict form
 
         Returns:
             [dict] : a list of new molecule docs
@@ -191,12 +190,12 @@ class OrbitalBuilder(Builder):
 
         return jsanitize([doc.dict() for doc in orbital_docs], allow_bson=True)
 
-    def update_targets(self, items: List[Dict]):
+    def update_targets(self, items: List[List[Dict]]):
         """
-        Inserts the new molecules into the molecules collection
+        Inserts the new documents into the orbitals collection
 
         Args:
-            items [[dict]]: A list of molecules to update
+            items [[dict]]: A list of documents to update
         """
 
         docs = list(chain.from_iterable(items))  # type: ignore
