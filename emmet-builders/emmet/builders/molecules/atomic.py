@@ -53,6 +53,7 @@ class PartialChargesBuilder(Builder):
             molecules: Store,
             charges: Store,
             query: Optional[Dict] = None,
+            methods: Optional[List] = None,
             settings: Optional[EmmetBuildSettings] = None,
             **kwargs,
     ):
@@ -61,6 +62,7 @@ class PartialChargesBuilder(Builder):
         self.molecules = molecules
         self.charges = charges
         self.query = query if query else dict()
+        self.methods = methods if methods else CHARGES_METHODS
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
@@ -186,26 +188,29 @@ class PartialChargesBuilder(Builder):
                                                                 x["energy"])
                                     )
 
-            # No documents with NBO data; no documents to be made
-            if len(orbital_entries) == 0:
-                continue
-            else:
-                best = sorted(orbital_entries,
-                              key=lambda x: (evaluate_lot(x["level_of_theory"]),
-                                             x["energy"])
-                              )[0]
-                task = best["task_id"]
+            for method in self.methods:
+                # For each method, grab entries that have the relevant data
+                relevant_entries = [e for e in sorted_entries if e.get(method) is not None or e["output"].get(method) is not None]
 
-            task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
+                if len(relevant_entries) == 0:
+                    continue
 
-            orbital_doc = OrbitalDoc.from_task(task_doc,
-                                              molecule_id=mol.molecule_id,
-                                              deprecated=False)
-            orbital_docs.append(orbital_doc)
+                # Grab task document of best entry
+                best_entry = relevant_entries[0]
+                task = best_entry["task_id"]
 
-        self.logger.debug(f"Produced {len(orbital_docs)} orbital docs for {formula}")
+                task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
 
-        return jsanitize([doc.dict() for doc in orbital_docs], allow_bson=True)
+                doc = PartialChargesDoc.from_task(task_doc,
+                                                  molecule_id=mol.molecule_id,
+                                                  preferred_methods=[method],
+                                                  deprecated=False)
+
+                charges_docs.append(doc)
+
+        self.logger.debug(f"Produced {len(charges_docs)} orbital docs for {formula}")
+
+        return jsanitize([doc.dict() for doc in charges_docs], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """
@@ -229,9 +234,10 @@ class PartialChargesBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(docs)} orbital documents")
-            self.orbitals.remove_docs({self.orbitals.key: {"$in": molecule_ids}})
-            self.orbitals.update(
-                docs=docs, key=["molecule_id"],
+            self.charges.remove_docs({self.charges.key: {"$in": molecule_ids}})
+            # Neither molecule_id nor method need to be unique, but the combination must be
+            self.charges.update(
+                docs=docs, key=["molecule_id", "method"],
             )
         else:
             self.logger.info("No items to update")
