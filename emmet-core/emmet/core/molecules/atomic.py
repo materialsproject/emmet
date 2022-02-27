@@ -18,6 +18,8 @@ from emmet.core.molecules.molecule_property import PropertyDoc
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
+CHARGES_METHODS = ["nbo", "resp", "critic2", "mulliken"]
+SPINS_METHODS = ["nbo", "mulliken"]
 
 class PartialChargesDoc(PropertyDoc):
     """Atomic partial charges of a molecule"""
@@ -33,8 +35,8 @@ class PartialChargesDoc(PropertyDoc):
             cls,
             task: TaskDocument,
             molecule_id: MPID,
+            preferred_methods: List,
             deprecated: bool=False,
-            preferred_methods: Tuple = ("NBO7", "RESP", "Critic2", "Mulliken"),
             **kwargs
     ): # type: ignore[override]
         """
@@ -56,21 +58,21 @@ class PartialChargesDoc(PropertyDoc):
             mol = task.output.initial_molecule
 
         for m in preferred_methods:
-            if m == "NBO7" and task.output.nbo is not None:
+            if m == "nbo" and task.output.nbo is not None:
                 if not task.orig["rem"].get("run_nbo6", False):
                     continue
                 method = m
                 charges = [float(task.output.nbo["natural_populations"][0]["Charge"][str(i)]) for i in range(len(mol))]
                 break
-            elif m == "RESP" and task.output.resp is not None:
+            elif m == "resp" and task.output.resp is not None:
                 method = m
                 charges = task.output.resp
                 break
-            elif m == "Critic2" and task.critic2 is not None:
+            elif m == "critic2" and task.critic2 is not None:
                 method = m
                 charges = list(task.critic2["processed"]["charges"])
                 break
-            elif m == "Mulliken" and task.output.mulliken is not None:
+            elif m == "mulliken" and task.output.mulliken is not None:
                 method = m
                 if mol.spin_multiplicity == 1:
                     charges = task.output.mulliken
@@ -106,8 +108,8 @@ class PartialSpinsDoc(PropertyDoc):
             cls,
             task: TaskDocument,
             molecule_id: MPID,
+            preferred_methods: List,
             deprecated: bool=False,
-            preferred_methods: Tuple = ("NBO7", "Mulliken"),
             **kwargs
     ): # type: ignore[override]
         """
@@ -132,13 +134,13 @@ class PartialSpinsDoc(PropertyDoc):
             raise Exception("Closed-shell molecule has no partial spins!")
 
         for m in preferred_methods:
-            if m == "NBO7" and task.output.nbo is not None:
+            if m == "nbo" and task.output.nbo is not None:
                 if not task.orig["rem"].get("run_nbo6", False):
                     continue
                 method = m
                 spins = [float(task.output.nbo["natural_populations"][0]["Density"][str(i)]) for i in range(len(mol))]
                 break
-            elif m == "Mulliken" and task.output.mulliken is not None:
+            elif m == "mulliken" and task.output.mulliken is not None:
                 method = m
                 spins = [mull[1] for mull in task.output.mulliken]
                 break

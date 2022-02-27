@@ -75,7 +75,7 @@ class OrbitalBuilder(Builder):
         self.orbitals.ensure_index("formula_alphabetical")
 
     def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
-        """Prechunk the molecule builder for distributed computation"""
+        """Prechunk the builder for distributed computation"""
 
         temp_query = dict(self.query)
         temp_query["deprecated"] = False
@@ -102,7 +102,7 @@ class OrbitalBuilder(Builder):
         """
         Gets all items to process into orbital documents.
         This does no datetime checking; relying on on whether
-        task_ids are included in the molecules Store
+        task_ids are included in the orbitals Store
 
         Returns:
             generator or list relevant tasks and molecules to process into documents
@@ -155,7 +155,7 @@ class OrbitalBuilder(Builder):
             tasks List[Dict] : a list of MoleculeDocs in dict form
 
         Returns:
-            [dict] : a list of new molecule docs
+            [dict] : a list of new orbital docs
         """
 
         mols = [MoleculeDoc(**item) for item in items]
@@ -174,7 +174,7 @@ class OrbitalBuilder(Builder):
                 continue
             else:
                 best = sorted(orbital_entries,
-                              key=lambda x: (evaluate_lot(x["level_of_theory"]),
+                              key=lambda x: (sum(evaluate_lot(x["level_of_theory"])),
                                              x["energy"])
                               )[0]
                 task = best["task_id"]

@@ -26,6 +26,8 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 metals = ["Li", "Mg", "Ca", "Zn", "Al"]
 
+BOND_METHODS = ["nbo", "critic2", "OpenBabelNN + metal_edge_extender"]
+
 
 def fix_C_Li_bonds(critic: Dict) -> Dict:
     """
@@ -261,8 +263,8 @@ class BondingDoc(PropertyDoc):
         cls,
         task: TaskDocument,
         molecule_id: MPID,
+        preferred_methods: List,
         deprecated: bool=False,
-        preferred_methods: Tuple = ("NBO7", "Critic2", "OpenBabelNN + metal_edge_extender"),
         **kwargs
     ): # type: ignore[override]
         """
@@ -294,13 +296,13 @@ class BondingDoc(PropertyDoc):
             if mg is not None:
                 break
 
-            if m == "NBO7" and task.output.nbo is not None:
+            if m == "nbo" and task.output.nbo is not None:
                 if task.orig["rem"].get("run_nbo6", False):
-                    method = "NBO7"
+                    method = "nbo"
                     mg, warnings = nbo_molecule_graph(mol, task.output.nbo)
 
-            elif m == "Critic2" and task.critic2 is not None:
-                method = "Critic2"
+            elif m == "critic2" and task.critic2 is not None:
+                method = "critic2"
                 critic = fix_C_Li_bonds(task.critic2)
                 critic_bonds = critic["processed"]["bonds"]
                 mg = make_mol_graph(mol, critic_bonds=critic_bonds)

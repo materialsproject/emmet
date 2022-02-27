@@ -79,7 +79,7 @@ class VibrationBuilder(Builder):
         self.vibes.ensure_index("formula_alphabetical")
 
     def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
-        """Prechunk the molecule builder for distributed computation"""
+        """Prechunk the builder for distributed computation"""
 
         temp_query = dict(self.query)
         temp_query["deprecated"] = False
@@ -106,7 +106,7 @@ class VibrationBuilder(Builder):
         """
         Gets all items to process into vibration documents.
         This does no datetime checking; relying on on whether
-        task_ids are included in the molecules Store
+        task_ids are included in the vibes Store
 
         Returns:
             generator or list relevant tasks and molecules to process into documents
@@ -159,7 +159,7 @@ class VibrationBuilder(Builder):
             items List[Dict] : a list of MoleculeDocs in dict form
 
         Returns:
-            [dict] : a list of new molecule docs
+            [dict] : a list of new vibration docs
         """
 
         mols = [MoleculeDoc(**item) for item in items]
@@ -178,7 +178,7 @@ class VibrationBuilder(Builder):
                 continue
             else:
                 best = sorted(vibe_entries,
-                              key=lambda x: (evaluate_lot(x["level_of_theory"]),
+                              key=lambda x: (sum(evaluate_lot(x["level_of_theory"])),
                                              x["energy"])
                               )[0]
                 task = best["task_id"]
