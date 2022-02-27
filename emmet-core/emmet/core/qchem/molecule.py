@@ -30,6 +30,8 @@ def evaluate_lot(
     solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
 ):
     """
+    Score the various components of a level of theory (functional, basis set,
+    and solvent model), where a lower score is better than a higher score.
 
     :param lot: Level of theory to be evaluated
     :param funct_scores: Scores for various density functionals
@@ -60,6 +62,8 @@ def evaluate_task(
     Helper function to order optimization calcs by
     - Level of theory
     - Electronic energy
+
+    Note that lower scores indicate a higher quality.
 
     :param task: Task to be evaluated
     :param funct_scores: Scores for various density functionals

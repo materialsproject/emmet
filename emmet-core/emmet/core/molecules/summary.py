@@ -47,7 +47,7 @@ class SummaryDoc(PropertyDoc):
     task_ids: List[MPID] = Field(
         [],
         title="Calculation IDs",
-        description="List of Calculations IDs associated with this molecule.",
+        description="List of Calculation IDs associated with this molecule.",
     )
 
     similar_molecules: List[MPID] = Field(
@@ -119,13 +119,13 @@ class SummaryDoc(PropertyDoc):
 
     frequency_modes: List[List[List[float]]] = Field(
         None,
-        description="Vibrational frequency modes of the molecule"
+        description="Vibrational frequency modes of the molecule (units: Angstrom)"
     )
 
     ir_intensities: List[float] = Field(
         None,
         title="IR intensities",
-        description="Intensities for IR vibrational spectrum peaks"
+        description="Intensities for infrared vibrational spectrum peaks"
     )
 
     ir_activities: List = Field(
@@ -262,7 +262,7 @@ class SummaryDoc(PropertyDoc):
 
     @classmethod
     def from_docs(cls, molecule_id: MPID, **docs: Dict[str, Union[Dict, List[Dict]]]):
-        """Converts a bunch of summary docs into a SummaryDoc"""
+        """Converts a bunch of property docs into a SummaryDoc"""
 
         doc = _copy_from_doc(docs)
         doc["has_props"] = list(set(doc["has_props"]))

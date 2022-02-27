@@ -72,7 +72,8 @@ def form_env(mol_lot: Tuple[Molecule, str]) -> str:
     Get the alphabetical formula and solvent environment of a calculation
     as a string
 
-    :param mol_lot: tuple (Molecule, LevelOfTheory)
+    :param mol_lot: tuple (Molecule, str), where str is the string value of
+        a LevelOfTheory object (for instance, wB97X-V/def2-TZVPPD/VACUUM)
 
     :returns key: str
     """
@@ -99,6 +100,7 @@ def group_molecules(
     Args:
         molecules (List[Molecule])
         lots (List[str]): string representations of Q-Chem levels of theory
+            (for instance, wB97X-V/def2-TZVPPD/VACUUM)
     """
 
     for mol_key, pregroup in groupby(sorted(zip(molecules, lots), key=form_env), key=form_env):
