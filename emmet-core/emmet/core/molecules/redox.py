@@ -47,19 +47,19 @@ class RedoxDoc(PropertyDoc):
 
     electron_affinity: float = Field(description="Vertical electron affinity in eV")
 
-    ea_id: MPID = Field(description="MPID for electron affinity")
+    ea_id: MPID = Field(description="Molecule ID for electron affinity")
 
     ionization_energy: float = Field(description="Vertical ionization energy in eV")
 
-    ie_id: MPID = Field(description="MPID for ionization energy")
+    ie_id: MPID = Field(description="Molecule ID for ionization energy")
 
     reduction_free_energy: float = Field(None, description="Adiabatic free energy of reduction")
 
-    red_id: MPID = Field(None, description="MPID for adiabatic reduction")
+    red_id: MPID = Field(None, description="Molecule ID for adiabatic reduction")
 
     oxidation_free_energy: float = Field(None, description="Adiabatic free energy of oxidation")
 
-    ox_id: MPID = Field(None, description="MPID for adiabatic oxidation")
+    ox_id: MPID = Field(None, description="Molecule ID for adiabatic oxidation")
 
     reduction_potentials: Dict[str, float] = Field(
         None,
