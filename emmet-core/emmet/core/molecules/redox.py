@@ -76,7 +76,8 @@ class RedoxDoc(PropertyDoc):
         **kwargs
     ) -> List["RedoxDoc"]:
         """
-        Construct documents describing molecular redox properties from task documents.
+        Construct documents describing molecular redox properties from task
+        entry dictionaries.
         Note that multiple documents may be made by this procedure.
 
         General procedure:
@@ -179,6 +180,8 @@ class RedoxDoc(PropertyDoc):
                             if sp["charge"] == charge - 1 and mm.fit(ff_mol, sp_mol):
                                 d["electron_affinity"] = (sp["output"]["final_energy"] - ff["output"]["final_energy"]) * 27.2114
                                 d["ea_id"] = sp["task_id"]
+
+                            # IE
                             elif sp["charge"] == charge + 1 and mm.fit(ff_mol, sp_mol):
                                 d["ionization_energy"] = (sp["output"]["final_energy"] - ff["output"]["final_energy"]) * 27.2114
                                 d["ie_id"] = sp["task_id"]
