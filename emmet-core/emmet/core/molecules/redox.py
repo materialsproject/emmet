@@ -1,24 +1,16 @@
-import logging
-from collections import defaultdict
-from typing import Dict, List, Any, Tuple, Union
+from typing import Dict, List, Any
 import copy
 from collections import defaultdict
 
 from typing_extensions import Literal
 
-import numpy as np
 from pydantic import Field
-import networkx as nx
 
-from pymatgen.core.periodic_table import Specie, Element
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
-from emmet.core import SETTINGS
-from emmet.core.mpid import MPID
-from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.calc_types import TaskType
 from emmet.core.qchem.molecule import evaluate_lot
 from emmet.core.material import PropertyOrigin
@@ -108,6 +100,9 @@ class RedoxDoc(PropertyDoc):
             for t in form_group:
                 mol = t["molecule"]
 
+                if isinstance(mol, dict):
+                    mol = Molecule.from_dict(mol)
+
                 mol_nometal = copy.deepcopy(mol)
                 mol_nometal.remove_species(metals)
                 mol_nometal.set_charge_and_spin(0)
@@ -165,6 +160,8 @@ class RedoxDoc(PropertyDoc):
                             continue
 
                         ff_mol = ff["output"]["optimized_molecule"]
+                        if isinstance(ff_mol, dict):
+                            ff_mol = Molecule.from_dict(ff_mol)
 
                         ff_g = get_free_energy(
                             ff["output"]["final_energy"],
@@ -175,6 +172,8 @@ class RedoxDoc(PropertyDoc):
                         # Look for IE and EA SP
                         for sp in single_points:
                             sp_mol = sp["output"]["initial_molecule"]
+                            if isinstance(sp_mol, dict):
+                                sp_mol = Molecule.from_dict(sp_mol)
 
                             # EA
                             if sp["charge"] == charge - 1 and mm.fit(ff_mol, sp_mol):

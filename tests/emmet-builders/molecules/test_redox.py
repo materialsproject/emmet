@@ -1,10 +1,9 @@
-
 import pytest
 from maggma.stores import JSONStore, MemoryStore
 
 from emmet.builders.qchem.molecules import (MoleculesAssociationBuilder,
                                             MoleculesBuilder)
-from emmet.builders.molecules.bonds import BondingBuilder
+from emmet.builders.molecules.redox import RedoxBuilder
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -31,13 +30,13 @@ def mol_store(tasks_store):
 
 
 @pytest.fixture(scope="session")
-def bonds_store():
+def redox_store():
     return MemoryStore()
 
 
-def test_bonding_builder(tasks_store, mol_store, bonds_store):
-    builder = BondingBuilder(tasks_store, mol_store, bonds_store, methods=["critic2", "OpenBabelNN + metal_edge_extender"])
+def test_redox_builder(mol_store, redox_store):
+    builder = RedoxBuilder(mol_store, redox_store)
     builder.run()
 
-    assert bonds_store.count() == 90
-    assert bonds_store.count({"deprecated": True}) == 0
+    assert redox_store.count() == 14
+    assert redox_store.count({"deprecated": True}) == 0
