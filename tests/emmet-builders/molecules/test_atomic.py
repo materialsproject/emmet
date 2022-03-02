@@ -3,7 +3,8 @@ from maggma.stores import JSONStore, MemoryStore
 
 from emmet.builders.qchem.molecules import (MoleculesAssociationBuilder,
                                             MoleculesBuilder)
-from emmet.builders.molecules.atomic import PartialChargesBuilder
+from emmet.builders.molecules.atomic import (PartialChargesBuilder,
+                                             PartialSpinsBuilder)
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -33,6 +34,10 @@ def mol_store(tasks_store):
 def charges_store():
     return MemoryStore()
 
+@pytest.fixture(scope="session")
+def spins_store():
+    return MemoryStore()
+
 
 def test_charges_builder(tasks_store, mol_store, charges_store):
     builder = PartialChargesBuilder(tasks_store, mol_store, charges_store, methods=["mulliken", "resp", "critic2"])
@@ -40,3 +45,11 @@ def test_charges_builder(tasks_store, mol_store, charges_store):
 
     assert charges_store.count() == 138
     assert charges_store.count({"deprecated": True}) == 0
+
+
+def test_spins_builder(tasks_store, mol_store, spins_store):
+    builder = PartialSpinsBuilder(tasks_store, mol_store, spins_store, methods=["mulliken"])
+    builder.run()
+
+    assert spins_store.count() == 18
+    assert spins_store.count({"deprecated": True}) == 0

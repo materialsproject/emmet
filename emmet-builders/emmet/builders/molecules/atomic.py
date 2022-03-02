@@ -184,8 +184,13 @@ class PartialChargesBuilder(Builder):
         charges_docs = list()
 
         for mol in mols:
-            sorted_entries = sorted(mol.entries, key=lambda x: (sum(evaluate_lot(x["level_of_theory"])),
-                                                                x["energy"])
+            correct_charge_spin = [e for e in mol.entries
+                                   if e["charge"] == mol.charge
+                                   and e["spin_multiplicity"] == mol.spin_multiplicity]
+
+            sorted_entries = sorted(correct_charge_spin,
+                                    key=lambda x: (sum(evaluate_lot(x["level_of_theory"])),
+                                                   x["energy"])
                                     )
 
             for method in self.methods:
@@ -401,8 +406,17 @@ class PartialSpinsBuilder(Builder):
         spins_docs = list()
 
         for mol in mols:
-            sorted_entries = sorted(mol.entries, key=lambda x: (sum(evaluate_lot(x["level_of_theory"])),
-                                                                x["energy"])
+            # Molecule with spin multiplicity 1 has no partial spins
+            if mol.spin_multiplicity == 1:
+                continue
+
+            correct_charge_spin = [e for e in mol.entries
+                                   if e["charge"] == mol.charge
+                                   and e["spin_multiplicity"] == mol.spin_multiplicity]
+
+            sorted_entries = sorted(correct_charge_spin,
+                                    key=lambda x: (sum(evaluate_lot(x["level_of_theory"])),
+                                                   x["energy"])
                                     )
 
             for method in self.methods:
