@@ -116,7 +116,7 @@ class VibrationBuilder(Builder):
         self.logger.info("Setting indexes")
         self.ensure_indexes()
 
-        # Save timestamp to mark buildtime for material documents
+        # Save timestamp to mark buildtime
         self.timestamp = datetime.utcnow()
 
         # Get all processed molecules
