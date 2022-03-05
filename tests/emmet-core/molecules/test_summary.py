@@ -81,5 +81,32 @@ def vibes(test_dir):
     return vibes
 
 
-def test_summary_doc():
-    pass
+def test_summary_doc(mols, charges, spins, bonds, orbitals, redox, thermo, vibes):
+    desired_id = "libe-120473"
+    docs = {"molecules": [e.dict() for e in mols if str(e.molecule_id) == desired_id],
+            "partial_charges": [e.dict() for e in charges if str(e.molecule_id) == desired_id],
+            "partial_spins": [e.dict() for e in spins if str(e.molecule_id) == desired_id],
+            "bonding": [e.dict() for e in bonds if str(e.molecule_id) == desired_id],
+            "orbitals": [e.dict() for e in orbitals if str(e.molecule_id) == desired_id],
+            "redox": [e.dict() for e in redox if str(e.molecule_id) == desired_id],
+            "thermo": [e.dict() for e in thermo if str(e.molecule_id) == desired_id],
+            "vibration": [e.dict() for e in vibes if str(e.molecule_id) == desired_id]}
+
+    for k, v in docs.items():
+        if len(v) == 0:
+            del docs[k]
+        elif len(v) == 1:
+            docs[k] = v[0]
+
+    summary_doc = SummaryDoc.from_docs(molecule_id=desired_id,
+                                       **docs)
+
+    assert summary_doc.property_name == "summary"
+    assert summary_doc.electronic_energy is not None
+    assert summary_doc.total_enthalpy is not None
+    assert summary_doc.frequencies is not None
+    assert summary_doc.open_shell == True
+    assert summary_doc.nbo_population is not None
+    assert summary_doc.bonds is not None
+    assert summary_doc.electron_affinity is not None
+    print(summary_doc.has_props)

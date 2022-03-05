@@ -190,6 +190,8 @@ class Interaction(MSONable):
 
     def as_dict(self):
         return {
+            "@module": self.__class__.__module__,
+            "@class": self.__class__.__name__,
             "donor_index": self.donor_index,
             "acceptor_index": self.acceptor_index,
             "donor_type": self.donor_type,
@@ -226,23 +228,23 @@ class OrbitalDoc(PropertyDoc):
         description="Is this molecule open-shell (spin multiplicity != 1)?"
     )
 
-    population: List[NaturalPopulation] = Field(
+    nbo_population: List[NaturalPopulation] = Field(
         ...,
         description="Natural electron populations of the molecule"
     )
 
     # Populated for closed-shell molecules
-    lone_pairs: List[LonePair] = Field(
+    nbo_lone_pairs: List[LonePair] = Field(
         None,
         description="Lone pair orbitals of a closed-shell molecule"
     )
 
-    bonds: List[Bond] = Field(
+    nbo_bonds: List[Bond] = Field(
         None,
         description="Bond-like orbitals of a closed-shell molecule"
     )
 
-    interactions: List[Interaction] = Field(
+    nbo_interactions: List[Interaction] = Field(
         None,
         description="Orbital-orbital interactions of a closed-shell molecule"
     )
@@ -439,10 +441,10 @@ class OrbitalDoc(PropertyDoc):
                 meta_molecule=mol,
                 molecule_id=molecule_id,
                 open_shell=False,
-                population=population_sets[0],
-                lone_pairs=lone_pair_sets[0],
-                bonds=bond_sets[0],
-                interactions=interaction_sets[0],
+                nbo_population=population_sets[0],
+                nbo_lone_pairs=lone_pair_sets[0],
+                nbo_bonds=bond_sets[0],
+                nbo_interactions=interaction_sets[0],
                 origins=[PropertyOrigin(name="natural bonding orbitals", task_id=task.task_id)],
                 deprecated=deprecated,
                 warnings=warnings,
@@ -454,7 +456,7 @@ class OrbitalDoc(PropertyDoc):
                 meta_molecule=mol,
                 molecule_id=molecule_id,
                 open_shell=True,
-                population=population_sets[0],
+                nbo_population=population_sets[0],
                 alpha_population=population_sets[1],
                 beta_population=population_sets[2],
                 alpha_lone_pairs=lone_pair_sets[0],

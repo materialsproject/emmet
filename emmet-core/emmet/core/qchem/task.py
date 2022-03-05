@@ -54,6 +54,8 @@ class OutputSummary(BaseModel):
 
     def as_dict(self) -> Dict[str, Any]:
         return {
+            "@module": self.__class__.__module__,
+            "@class": self.__class__.__name__,
             "initial_molecule": self.initial_molecule,
             "optimized_molecule": self.optimized_molecule,
             "final_energy": self.final_energy,
