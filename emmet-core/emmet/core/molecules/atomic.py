@@ -59,8 +59,6 @@ class PartialChargesDoc(PropertyDoc):
 
         for m in preferred_methods:
             if m == "nbo" and task.output.nbo is not None:
-                if not task.orig["rem"].get("run_nbo6", False):
-                    continue
                 method = m
                 charges = [float(task.output.nbo["natural_populations"][0]["Charge"][str(i)]) for i in range(len(mol))]
                 break
@@ -135,8 +133,6 @@ class PartialSpinsDoc(PropertyDoc):
 
         for m in preferred_methods:
             if m == "nbo" and task.output.nbo is not None:
-                if not task.orig["rem"].get("run_nbo6", False):
-                    continue
                 method = m
                 spins = [float(task.output.nbo["natural_populations"][0]["Density"][str(i)]) for i in range(len(mol))]
                 break

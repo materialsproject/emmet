@@ -34,6 +34,9 @@ class BondingBuilder(Builder):
         - nbo: Using Natural Bonding Orbital analysis to define bonds and other
             interatomic interactions
 
+    NOTE: Only NBO7 can be used to generate bonding. Bonding (especially when metals
+        are involved) is unreliable with earlier version of NBO!
+
     This builder will attempt to build documents for each molecule with each method.
     For each molecule-method combination, the highest-quality data available (based
     on level of theory and electronic energy) will be used.
@@ -201,6 +204,12 @@ class BondingBuilder(Builder):
                     relevant_entries = [e for e in sorted_entries
                                         if e.get(method) is not None
                                         or e["output"].get(method) is not None]
+
+                if method == "nbo":
+                    # Only allow NBO7 to be used. No earlier versions can be
+                    # relied upon for bonding
+                    relevant_entries = [e for e in relevant_entries
+                                        if e["orig"]["rem"].get("run_nbo6", False)]
 
                 if len(relevant_entries) == 0:
                     continue

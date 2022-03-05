@@ -300,6 +300,9 @@ class BondingDoc(PropertyDoc):
                 if task.orig["rem"].get("run_nbo6", False):
                     method = "nbo"
                     mg, warnings = nbo_molecule_graph(mol, task.output.nbo)
+                else:
+                    # Cannot make NBO molecule graph with NBO5
+                    continue
 
             elif m == "critic2" and task.critic2 is not None:
                 method = "critic2"
