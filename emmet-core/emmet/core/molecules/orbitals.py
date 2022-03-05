@@ -306,6 +306,8 @@ class OrbitalDoc(PropertyDoc):
 
         if task.output.nbo is None:
             raise ValueError("No NBO output in task {}!".format(task.task_id))
+        elif not task.orig["rem"].get("run_nbo6", False):
+            raise ValueError("Only NBO7 is allowed!")
 
         nbo = task.output.nbo
 
