@@ -7,14 +7,6 @@ from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
 
-from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
-from emmet.core.molecules.atomic import PartialChargesDoc, PartialSpinsDoc
-from emmet.core.molecules.bonds import BondingDoc
-from emmet.core.molecules.orbitals import OrbitalDoc
-from emmet.core.molecules.redox import RedoxDoc
-from emmet.core.molecules.thermo import ThermoDoc
-from emmet.core.molecules.vibration import VibrationDoc
 from emmet.core.molecules.summary import SummaryDoc
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
@@ -65,17 +57,10 @@ class SummaryBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[
-            molecules,
-            charges,
-            spins,
-            bonds,
-            orbitals,
-            redox,
-            thermo,
-            vibes
-        ],
-            targets=[summary])
+        super().__init__(
+            sources=[molecules, charges, spins, bonds, orbitals, redox, thermo, vibes],
+            targets=[summary],
+        )
 
     def ensure_indexes(self):
         """
@@ -242,7 +227,7 @@ class SummaryBuilder(Builder):
                 "redox": self.redox.query_one({"molecule_id": mol_id}),
                 "thermo": self.thermo.query_one({"molecule_id": mol_id}),
                 "vibration": self.vibes.query_one({"molecule_id": mol_id}),
-             }
+            }
 
             to_delete = list()
 
@@ -253,9 +238,7 @@ class SummaryBuilder(Builder):
             for td in to_delete:
                 del d[td]
 
-            summary_doc = SummaryDoc.from_docs(
-                molecule_id=mol_id, **d
-            )
+            summary_doc = SummaryDoc.from_docs(molecule_id=mol_id, **d)
             summary_docs.append(summary_doc)
 
         self.logger.debug(f"Produced {len(summary_docs)} summary docs for {formula}")

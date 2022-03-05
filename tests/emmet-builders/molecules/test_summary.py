@@ -10,16 +10,14 @@ from monty.serialization import loadfn
 from maggma.stores import JSONStore, MemoryStore
 
 from emmet.builders.qchem.molecules import MoleculesAssociationBuilder, MoleculesBuilder
-from emmet.builders.molecules.atomic import (
-    PartialChargesBuilder,
-    PartialSpinsBuilder
-)
+from emmet.builders.molecules.atomic import PartialChargesBuilder, PartialSpinsBuilder
 from emmet.builders.molecules.bonds import BondingBuilder
 from emmet.builders.molecules.orbitals import OrbitalBuilder
 from emmet.builders.molecules.redox import RedoxBuilder
 from emmet.builders.molecules.thermo import ThermoBuilder
 from emmet.builders.molecules.vibration import VibrationBuilder
 from emmet.builders.molecules.summary import SummaryBuilder
+
 
 @pytest.fixture(scope="session")
 def tasks(test_dir):
@@ -58,9 +56,11 @@ def bonds(test_dir):
 def orbitals(test_dir):
     return MemoryStore(key="molecule_id")
 
+
 @pytest.fixture(scope="session")
 def redox(test_dir):
     return MemoryStore(key="molecule_id")
+
 
 @pytest.fixture(scope="session")
 def thermo(test_dir):
@@ -71,30 +71,25 @@ def thermo(test_dir):
 def vibes(test_dir):
     return MemoryStore(key="molecule_id")
 
+
 @pytest.fixture(scope="session")
 def summary():
     return MemoryStore(key="molecule_id")
 
 
-def test_summary_doc(tasks, mols, charges, spins, bonds, orbitals, redox, thermo, vibes, summary):
-    charge_build = PartialChargesBuilder(tasks,
-                                         mols,
-                                         charges)
+def test_summary_doc(
+    tasks, mols, charges, spins, bonds, orbitals, redox, thermo, vibes, summary
+):
+    charge_build = PartialChargesBuilder(tasks, mols, charges)
     charge_build.run()
 
-    spins_build = PartialSpinsBuilder(tasks,
-                                      mols,
-                                      spins)
+    spins_build = PartialSpinsBuilder(tasks, mols, spins)
     spins_build.run()
 
-    bonds_build = BondingBuilder(tasks,
-                                 mols,
-                                 bonds)
+    bonds_build = BondingBuilder(tasks, mols, bonds)
     bonds_build.run()
 
-    orb_build = OrbitalBuilder(tasks,
-                               mols,
-                               orbitals)
+    orb_build = OrbitalBuilder(tasks, mols, orbitals)
     orb_build.run()
 
     redox_build = RedoxBuilder(mols, redox)
@@ -106,15 +101,17 @@ def test_summary_doc(tasks, mols, charges, spins, bonds, orbitals, redox, thermo
     vibe_build = VibrationBuilder(tasks, mols, vibes)
     vibe_build.run()
 
-    builder = SummaryBuilder(molecules=mols,
-                             charges=charges,
-                             spins=spins,
-                             bonds=bonds,
-                             orbitals=orbitals,
-                             redox=redox,
-                             thermo=thermo,
-                             vibes=vibes,
-                             summary=summary)
+    builder = SummaryBuilder(
+        molecules=mols,
+        charges=charges,
+        spins=spins,
+        bonds=bonds,
+        orbitals=orbitals,
+        redox=redox,
+        thermo=thermo,
+        vibes=vibes,
+        summary=summary,
+    )
     builder.run()
 
     docs = list(summary.query())
