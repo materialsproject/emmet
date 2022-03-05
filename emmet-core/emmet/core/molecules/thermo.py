@@ -164,6 +164,7 @@ class ThermoDoc(PropertyDoc):
         return super().from_molecule(
             meta_molecule=mol,
             molecule_id=molecule_id,
+            task_id=task.task_id,
             electronic_energy=energy * 27.2114,
             deprecated=deprecated,
             **kwargs
