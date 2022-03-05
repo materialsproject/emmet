@@ -213,11 +213,15 @@ class RedoxDoc(PropertyDoc):
                         for other in relevant_calcs:
                             # Reduction
                             if other["charge"] == charge - 1:
-                                other_g = get_free_energy(
-                                    other["output"]["final_energy"],
-                                    other["output"]["enthalpy"],
-                                    other["output"]["entropy"]
-                                )
+                                try:
+                                    other_g = get_free_energy(
+                                        other["output"]["final_energy"],
+                                        other["output"]["enthalpy"],
+                                        other["output"]["entropy"]
+                                    )
+                                except TypeError:
+                                    # Single atoms
+                                    other_g = other["output"]["final_energy"]
                                 d["reduction_free_energy"] = other_g - ff_g
                                 d["reduction_potentials"] = dict()
                                 for ref, pot in reference_potentials.items():
@@ -233,6 +237,7 @@ class RedoxDoc(PropertyDoc):
                                         other["output"]["entropy"]
                                     )
                                 except TypeError:
+                                    # Single atoms
                                     other_g = other["output"]["final_energy"]
                                 d["oxidation_free_energy"] = other_g - ff_g
                                 d["oxidation_potentials"] = dict()
