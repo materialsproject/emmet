@@ -104,7 +104,10 @@ class RedoxDoc(PropertyDoc):
                     mol = Molecule.from_dict(mol)
 
                 mol_nometal = copy.deepcopy(mol)
-                mol_nometal.remove_species(metals)
+
+                if mol.composition.alphabetical_formula not in [m + "1" for m in metals]:
+                    mol_nometal.remove_species(metals)
+
                 mol_nometal.set_charge_and_spin(0)
                 mg_nometal = MoleculeGraph.with_local_env_strategy(mol_nometal, OpenBabelNN())
                 match = None
@@ -130,16 +133,24 @@ class RedoxDoc(PropertyDoc):
                 # Start with highest lot; keep going down until you can make complete documents
                 for lot, group in sorted(lot_groups.items(), key=lambda x: evaluate_lot(x[0])):
                     # Sorting important because we want to make docs only from lowest-energy instances
-                    ffopts = sorted(
+                    relevant_calcs = sorted(
                         [f for f in group if f["task_type"] == TaskType.Frequency_Flattening_Geometry_Optimization],
                         key=lambda x: x["output"]["final_energy"])
 
-                    charges = [f["charge"] for f in ffopts]
+                    # For single atoms, which have no FFOpt calcs
+                    # (Can't geometry optimize a single atom)
+                    if len(relevant_calcs) == 0:
+                        relevant_calcs = sorted(
+                            [f for f in group],
+                            key=lambda x: x["output"]["final_energy"]
+                        )
+
+                    charges = [f["charge"] for f in relevant_calcs]
                     if all([c in docs_by_charge for c in charges]):
                         continue
                     single_points = [s for s in group if s["task_type"] == TaskType.Single_Point]
 
-                    for ff in ffopts:
+                    for ff in relevant_calcs:
                         d = {
                             "electron_affinity": None,
                             "ea_id": None,
@@ -160,14 +171,20 @@ class RedoxDoc(PropertyDoc):
                             continue
 
                         ff_mol = ff["output"]["optimized_molecule"]
+                        if ff_mol is None:
+                            ff_mol = ff["output"]["initial_molecule"]
                         if isinstance(ff_mol, dict):
                             ff_mol = Molecule.from_dict(ff_mol)
 
-                        ff_g = get_free_energy(
-                            ff["output"]["final_energy"],
-                            ff["output"]["enthalpy"],
-                            ff["output"]["entropy"]
-                        )
+                        try:
+                            ff_g = get_free_energy(
+                                ff["output"]["final_energy"],
+                                ff["output"]["enthalpy"],
+                                ff["output"]["entropy"]
+                            )
+                        # Single atoms won't have enthalpy and entropy
+                        except TypeError:
+                            ff_g = ff["output"]["final_energy"]
 
                         # Look for IE and EA SP
                         for sp in single_points:
@@ -193,7 +210,7 @@ class RedoxDoc(PropertyDoc):
                             continue
 
                         # Look for adiabatic reduction and oxidation calcs
-                        for other in ffopts:
+                        for other in relevant_calcs:
                             # Reduction
                             if other["charge"] == charge - 1:
                                 other_g = get_free_energy(
@@ -209,11 +226,14 @@ class RedoxDoc(PropertyDoc):
 
                             # Oxidation
                             elif other["charge"] == charge + 1:
-                                other_g = get_free_energy(
-                                    other["output"]["final_energy"],
-                                    other["output"]["enthalpy"],
-                                    other["output"]["entropy"]
-                                )
+                                try:
+                                    other_g = get_free_energy(
+                                        other["output"]["final_energy"],
+                                        other["output"]["enthalpy"],
+                                        other["output"]["entropy"]
+                                    )
+                                except TypeError:
+                                    other_g = other["output"]["final_energy"]
                                 d["oxidation_free_energy"] = other_g - ff_g
                                 d["oxidation_potentials"] = dict()
                                 for ref, pot in reference_potentials.items():
