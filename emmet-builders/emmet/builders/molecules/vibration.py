@@ -29,7 +29,7 @@ class VibrationBuilder(Builder):
         2. For each doc, grab the best TaskDoc (doc with vibrational information
             that has the highest level of theory with lowest
              electronic energy for the molecule)
-        3. Convert TaskDoc to ThermoDoc
+        3. Convert TaskDoc to VibrationDoc
 
     Note that if no tasks associated with a given MoleculeDoc have vibrational
     data associated with them, then no VibrationDoc will be made for
@@ -72,7 +72,7 @@ class VibrationBuilder(Builder):
         self.molecules.ensure_index("task_ids")
         self.molecules.ensure_index("formula_alphabetical")
 
-        # Search index for thermo
+        # Search index for vibrational properties
         self.vibes.ensure_index("molecule_id")
         self.vibes.ensure_index("task_id")
         self.vibes.ensure_index("last_updated")
@@ -153,7 +153,7 @@ class VibrationBuilder(Builder):
 
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """
-        Process the tasks into a ThermoDoc
+        Process the tasks into a VibrationDoc
 
         Args:
             items List[Dict] : a list of MoleculeDocs in dict form
@@ -215,7 +215,7 @@ class VibrationBuilder(Builder):
         molecule_ids = list({item["molecule_id"] for item in docs})
 
         if len(items) > 0:
-            self.logger.info(f"Updating {len(docs)} thermo documents")
+            self.logger.info(f"Updating {len(docs)} vibration documents")
             self.vibes.remove_docs({self.vibes.key: {"$in": molecule_ids}})
             self.vibes.update(
                 docs=docs, key=["molecule_id"],
