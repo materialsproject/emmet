@@ -3,13 +3,15 @@ from itertools import chain
 from math import ceil
 from typing import Optional, Iterable, Iterator, List, Dict
 
+from monty.serialization import loadfn
+
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
 
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.molecule import MoleculeDoc, best_lot, evaluate_lot
-from emmet.core.molecules.thermo import ThermoDoc
+from emmet.core.molecules.thermo import get_free_energy, ThermoDoc
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
@@ -17,6 +19,8 @@ from emmet.builders.settings import EmmetBuildSettings
 __author__ = "Evan Spotte-Smith"
 
 SETTINGS = EmmetBuildSettings()
+
+single_mol_thermo = loadfn("single_atom.json")
 
 
 class ThermoBuilder(Builder):
@@ -186,6 +190,22 @@ class ThermoBuilder(Builder):
             thermo_doc = ThermoDoc.from_task(task_doc,
                                              molecule_id=mol.molecule_id,
                                              deprecated=False)
+
+            initial_mol = task_doc.output.initial_molecule
+            # If single atom, try to add enthalpy and entropy
+            if len(initial_mol) == 1:
+                if thermo_doc.total_enthalpy is None or thermo_doc.total_entropy is None:
+                    formula = initial_mol.composition.alphabetical_formula
+                    if formula in single_mol_thermo:
+                        vals = single_mol_thermo[formula]
+                        thermo_doc.total_enthalpy = vals["enthalpy"] * 0.043363
+                        thermo_doc.total_entropy = vals["entropy"] * 0.000043363
+                        thermo_doc.translational_enthalpy = vals["enthalpy"] * 0.043363
+                        thermo_doc.translational_entropy = vals["entropy"] * 0.000043363
+                        thermo_doc.free_energy = get_free_energy(thermo_doc.electronic_energy,
+                                                                 vals["enthalpy"],
+                                                                 vals["entropy"])
+
             thermo_docs.append(thermo_doc)
 
         self.logger.debug(f"Produced {len(thermo_docs)} thermo docs for {formula}")
