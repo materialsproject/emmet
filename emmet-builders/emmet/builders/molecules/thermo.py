@@ -1,3 +1,5 @@
+import os
+
 from datetime import datetime
 from itertools import chain
 from math import ceil
@@ -20,7 +22,7 @@ __author__ = "Evan Spotte-Smith"
 
 SETTINGS = EmmetBuildSettings()
 
-single_mol_thermo = loadfn("single_atom.json")
+single_mol_thermo = loadfn(os.path.join(os.path.dirname(os.path.abspath(__file__)), "single_atom.json"))
 
 
 class ThermoBuilder(Builder):

@@ -355,7 +355,7 @@ class OrbitalDoc(PropertyDoc):
         for lp_ind in lps_inds:
             lps = nbo["hybridization_character"][lp_ind]
             lone_pairs = list()
-            for ind, orb_ind in lps["bond index"].items():
+            for ind, orb_ind in lps.get("bond index", dict()).items():
                 this_lp = LonePair(
                     orb_ind,
                     lps["orbital index"][ind],
@@ -373,7 +373,7 @@ class OrbitalDoc(PropertyDoc):
         for bd_ind in bds_inds:
             bds = nbo["hybridization_character"][bd_ind]
             bonds = list()
-            for ind, orb_ind in bds["bond index"].items():
+            for ind, orb_ind in bds.get("bond index", dict()).items():
                 this_bond = Bond(
                     orb_ind,
                     bds["orbital index"][ind],
@@ -400,7 +400,7 @@ class OrbitalDoc(PropertyDoc):
         for pert_ind in perts_inds:
             perts = nbo["perturbation_energy"][pert_ind]
             interactions = list()
-            for ind in perts["donor bond index"]:
+            for ind in perts.get("donor bond index", list()):
 
                 if perts["donor atom 2 number"].get(ind) is None:
                     donor_atom2_number = None
