@@ -496,6 +496,9 @@ class MoleculesBuilder(Builder):
                 }
             )
 
+            for entry in item["entries"]:
+                entry["entry_id"] = molid
+
         molecule_ids = list({item["molecule_id"] for item in docs})
 
         if len(items) > 0:
