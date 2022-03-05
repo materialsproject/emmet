@@ -1,9 +1,7 @@
-
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Dict, List, Tuple, TypeVar, Union
 
-from pydantic import BaseModel, Field
-from pymatgen.core.periodic_table import Element
+from pydantic import Field
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
 
@@ -13,6 +11,10 @@ from emmet.core.molecules.orbitals import (NaturalPopulation,
                                            LonePair,
                                            Bond,
                                            Interaction)
+
+
+__author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
+
 
 T = TypeVar("T", bound="SummaryDoc")
 
