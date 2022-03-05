@@ -1,9 +1,7 @@
-
 import pytest
 from maggma.stores import JSONStore, MemoryStore
 
-from emmet.builders.qchem.molecules import (MoleculesAssociationBuilder,
-                                            MoleculesBuilder)
+from emmet.builders.qchem.molecules import MoleculesAssociationBuilder, MoleculesBuilder
 from emmet.builders.molecules.bonds import BondingBuilder
 
 
@@ -22,9 +20,7 @@ def mol_store(tasks_store):
     stage_one.run()
 
     mol_store = MemoryStore(key="molecule_id")
-    stage_two = MoleculesBuilder(assoc=assoc_store,
-                                 molecules=mol_store,
-                                 prefix="libe")
+    stage_two = MoleculesBuilder(assoc=assoc_store, molecules=mol_store, prefix="libe")
     stage_two.run()
 
     return mol_store
@@ -36,7 +32,12 @@ def bonds_store():
 
 
 def test_bonding_builder(tasks_store, mol_store, bonds_store):
-    builder = BondingBuilder(tasks_store, mol_store, bonds_store, methods=["critic2", "OpenBabelNN + metal_edge_extender"])
+    builder = BondingBuilder(
+        tasks_store,
+        mol_store,
+        bonds_store,
+        methods=["critic2", "OpenBabelNN + metal_edge_extender"],
+    )
     builder.run()
 
     assert bonds_store.count() == 90

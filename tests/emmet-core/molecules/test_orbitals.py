@@ -16,6 +16,7 @@ def closed_shell(test_dir):
     task = TaskDocument(**loadfn((test_dir / "closed_shell_nbo_task.json.gz")))
     return task
 
+
 @pytest.fixture(scope="session")
 def open_shell(test_dir):
     task = TaskDocument(**loadfn((test_dir / "open_shell_nbo_task.json.gz")))

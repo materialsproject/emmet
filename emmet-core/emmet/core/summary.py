@@ -208,7 +208,8 @@ class SummaryDoc(PropertyDoc):
     # Magnetism
 
     is_magnetic: bool = Field(
-        None, description="Whether the material is magnetic.",
+        None,
+        description="Whether the material is magnetic.",
     )
 
     ordering: str = Field(None, description="Type of magnetic ordering.")

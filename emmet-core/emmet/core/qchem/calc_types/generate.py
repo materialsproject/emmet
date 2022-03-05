@@ -9,7 +9,7 @@ from emmet.core.qchem.calc_types.calc_types import (
     FUNCTIONALS,
     BASIS_SETS,
     SOLVENT_MODELS,
-    SOLVENTS
+    SOLVENTS,
 )
 
 
@@ -22,26 +22,32 @@ for funct in FUNCTIONALS:
     for basis in BASIS_SETS:
         for solv_model in SOLVENT_MODELS:
             if solv_model == "VACUUM":
-                _LOTS.append(f'{funct}/{basis}/{solv_model}')
+                _LOTS.append(f"{funct}/{basis}/{solv_model}")
             else:
                 for solvent in SOLVENTS:
-                    _LOTS.append(f'{funct}/{basis}/{solv_model}({solvent})')
+                    _LOTS.append(f"{funct}/{basis}/{solv_model}({solvent})")
 
 lot_enum = get_enum_source(
     "LevelOfTheory",
     "Levels of theory for calculations in Q-Chem",
     dict(
         {
-            "_".join(lot.split()).replace("+", "_").replace("-", "_").replace("(", "_").replace(")", "_").replace("/", "_").replace("*", "_d"): lot
+            "_".join(lot.split())
+            .replace("+", "_")
+            .replace("-", "_")
+            .replace("(", "_")
+            .replace(")", "_")
+            .replace("/", "_")
+            .replace("*", "_d"): lot
             for lot in _LOTS
         }
-    )
+    ),
 )
 
 task_type_enum = get_enum_source(
     "TaskType",
     "Calculation task types for Q-Chem",
-    {"_".join(tt.split()).replace("-","_"): tt for tt in TASK_TYPES}
+    {"_".join(tt.split()).replace("-", "_"): tt for tt in TASK_TYPES},
 )
 
 calc_type_enum = get_enum_source(
@@ -50,7 +56,7 @@ calc_type_enum = get_enum_source(
     {
         f"{'_'.join(lot.split()).replace('+','_').replace('-','_').replace('(', '_').replace(')', '_').replace('/', '_').replace('*', '_d')}_{'_'.join(tt.split()).replace('-', '_')}": f"{lot} {tt}"
         for lot, tt in product(_LOTS, TASK_TYPES)
-    }
+    },
 )
 
 with open(Path(__file__).parent / "enums.py", "w") as f:

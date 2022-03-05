@@ -19,11 +19,13 @@ class PhononBSDOSDoc(BaseModel):
     )
 
     ph_bs: PhononBandStructureSymmLine = Field(
-        None, description="Phonon band structure object",
+        None,
+        description="Phonon band structure object",
     )
 
     ph_dos: PhononDos = Field(
-        None, description="Phonon density of states object",
+        None,
+        description="Phonon density of states object",
     )
 
     last_updated: datetime = Field(

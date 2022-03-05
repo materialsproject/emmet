@@ -13,7 +13,7 @@ from emmet.core.molecules.atomic import (
     PartialChargesDoc,
     PartialSpinsDoc,
     CHARGES_METHODS,
-    SPINS_METHODS
+    SPINS_METHODS,
 )
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
@@ -48,14 +48,14 @@ class PartialChargesBuilder(Builder):
     """
 
     def __init__(
-            self,
-            tasks: Store,
-            molecules: Store,
-            charges: Store,
-            query: Optional[Dict] = None,
-            methods: Optional[List] = None,
-            settings: Optional[EmmetBuildSettings] = None,
-            **kwargs,
+        self,
+        tasks: Store,
+        molecules: Store,
+        charges: Store,
+        query: Optional[Dict] = None,
+        methods: Optional[List] = None,
+        settings: Optional[EmmetBuildSettings] = None,
+        **kwargs,
     ):
 
         self.tasks = tasks
@@ -100,7 +100,9 @@ class PartialChargesBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.charges.distinct("molecule_id")])
@@ -139,7 +141,9 @@ class PartialChargesBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.charges.distinct("molecule_id")])
@@ -159,9 +163,7 @@ class PartialChargesBuilder(Builder):
         for formula in to_process_forms:
             mol_query = dict(temp_query)
             mol_query["formula_alphabetical"] = formula
-            molecules = list(
-                self.molecules.query(criteria=mol_query)
-            )
+            molecules = list(self.molecules.query(criteria=mol_query))
 
             yield molecules
 
@@ -184,18 +186,25 @@ class PartialChargesBuilder(Builder):
         charges_docs = list()
 
         for mol in mols:
-            correct_charge_spin = [e for e in mol.entries
-                                   if e["charge"] == mol.charge
-                                   and e["spin_multiplicity"] == mol.spin_multiplicity]
+            correct_charge_spin = [
+                e
+                for e in mol.entries
+                if e["charge"] == mol.charge
+                and e["spin_multiplicity"] == mol.spin_multiplicity
+            ]
 
-            sorted_entries = sorted(correct_charge_spin,
-                                    key=lambda x: (sum(evaluate_lot(x["level_of_theory"])),
-                                                   x["energy"])
-                                    )
+            sorted_entries = sorted(
+                correct_charge_spin,
+                key=lambda x: (sum(evaluate_lot(x["level_of_theory"])), x["energy"]),
+            )
 
             for method in self.methods:
                 # For each method, grab entries that have the relevant data
-                relevant_entries = [e for e in sorted_entries if e.get(method) is not None or e["output"].get(method) is not None]
+                relevant_entries = [
+                    e
+                    for e in sorted_entries
+                    if e.get(method) is not None or e["output"].get(method) is not None
+                ]
 
                 if len(relevant_entries) == 0:
                     continue
@@ -206,10 +215,12 @@ class PartialChargesBuilder(Builder):
 
                 task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
 
-                doc = PartialChargesDoc.from_task(task_doc,
-                                                  molecule_id=mol.molecule_id,
-                                                  preferred_methods=[method],
-                                                  deprecated=False)
+                doc = PartialChargesDoc.from_task(
+                    task_doc,
+                    molecule_id=mol.molecule_id,
+                    preferred_methods=[method],
+                    deprecated=False,
+                )
 
                 charges_docs.append(doc)
 
@@ -242,7 +253,8 @@ class PartialChargesBuilder(Builder):
             self.charges.remove_docs({self.charges.key: {"$in": molecule_ids}})
             # Neither molecule_id nor method need to be unique, but the combination must be
             self.charges.update(
-                docs=docs, key=["molecule_id", "method"],
+                docs=docs,
+                key=["molecule_id", "method"],
             )
         else:
             self.logger.info("No items to update")
@@ -270,14 +282,14 @@ class PartialSpinsBuilder(Builder):
     """
 
     def __init__(
-            self,
-            tasks: Store,
-            molecules: Store,
-            spins: Store,
-            query: Optional[Dict] = None,
-            methods: Optional[List] = None,
-            settings: Optional[EmmetBuildSettings] = None,
-            **kwargs,
+        self,
+        tasks: Store,
+        molecules: Store,
+        spins: Store,
+        query: Optional[Dict] = None,
+        methods: Optional[List] = None,
+        settings: Optional[EmmetBuildSettings] = None,
+        **kwargs,
     ):
 
         self.tasks = tasks
@@ -322,7 +334,9 @@ class PartialSpinsBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.spins.distinct("molecule_id")])
@@ -361,7 +375,9 @@ class PartialSpinsBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.spins.distinct("molecule_id")])
@@ -381,9 +397,7 @@ class PartialSpinsBuilder(Builder):
         for formula in to_process_forms:
             mol_query = dict(temp_query)
             mol_query["formula_alphabetical"] = formula
-            molecules = list(
-                self.molecules.query(criteria=mol_query)
-            )
+            molecules = list(self.molecules.query(criteria=mol_query))
 
             yield molecules
 
@@ -410,20 +424,25 @@ class PartialSpinsBuilder(Builder):
             if mol.spin_multiplicity == 1:
                 continue
 
-            correct_charge_spin = [e for e in mol.entries
-                                   if e["charge"] == mol.charge
-                                   and e["spin_multiplicity"] == mol.spin_multiplicity]
+            correct_charge_spin = [
+                e
+                for e in mol.entries
+                if e["charge"] == mol.charge
+                and e["spin_multiplicity"] == mol.spin_multiplicity
+            ]
 
-            sorted_entries = sorted(correct_charge_spin,
-                                    key=lambda x: (sum(evaluate_lot(x["level_of_theory"])),
-                                                   x["energy"])
-                                    )
+            sorted_entries = sorted(
+                correct_charge_spin,
+                key=lambda x: (sum(evaluate_lot(x["level_of_theory"])), x["energy"]),
+            )
 
             for method in self.methods:
                 # For each method, grab entries that have the relevant data
-                relevant_entries = [e for e in sorted_entries
-                                    if e.get(method) is not None
-                                    or e["output"].get(method) is not None]
+                relevant_entries = [
+                    e
+                    for e in sorted_entries
+                    if e.get(method) is not None or e["output"].get(method) is not None
+                ]
 
                 if len(relevant_entries) == 0:
                     continue
@@ -434,14 +453,18 @@ class PartialSpinsBuilder(Builder):
 
                 task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
 
-                doc = PartialSpinsDoc.from_task(task_doc,
-                                                molecule_id=mol.molecule_id,
-                                                preferred_methods=[method],
-                                                deprecated=False)
+                doc = PartialSpinsDoc.from_task(
+                    task_doc,
+                    molecule_id=mol.molecule_id,
+                    preferred_methods=[method],
+                    deprecated=False,
+                )
 
                 spins_docs.append(doc)
 
-        self.logger.debug(f"Produced {len(spins_docs)} partial spins docs for {formula}")
+        self.logger.debug(
+            f"Produced {len(spins_docs)} partial spins docs for {formula}"
+        )
 
         return jsanitize([doc.dict() for doc in spins_docs], allow_bson=True)
 
@@ -470,7 +493,8 @@ class PartialSpinsBuilder(Builder):
             self.spins.remove_docs({self.spins.key: {"$in": molecule_ids}})
             # Neither molecule_id nor method need to be unique, but the combination must be
             self.spins.update(
-                docs=docs, key=["molecule_id", "method"],
+                docs=docs,
+                key=["molecule_id", "method"],
             )
         else:
             self.logger.info("No items to update")

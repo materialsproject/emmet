@@ -33,13 +33,13 @@ class OrbitalBuilder(Builder):
     """
 
     def __init__(
-            self,
-            tasks: Store,
-            molecules: Store,
-            orbitals: Store,
-            query: Optional[Dict] = None,
-            settings: Optional[EmmetBuildSettings] = None,
-            **kwargs,
+        self,
+        tasks: Store,
+        molecules: Store,
+        orbitals: Store,
+        query: Optional[Dict] = None,
+        settings: Optional[EmmetBuildSettings] = None,
+        **kwargs,
     ):
 
         self.tasks = tasks
@@ -82,7 +82,9 @@ class OrbitalBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.orbitals.distinct("molecule_id")])
@@ -121,7 +123,9 @@ class OrbitalBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.orbitals.distinct("molecule_id")])
@@ -141,9 +145,7 @@ class OrbitalBuilder(Builder):
         for formula in to_process_forms:
             mol_query = dict(temp_query)
             mol_query["formula_alphabetical"] = formula
-            molecules = list(
-                self.molecules.query(criteria=mol_query)
-            )
+            molecules = list(self.molecules.query(criteria=mol_query))
 
             yield molecules
 
@@ -167,25 +169,31 @@ class OrbitalBuilder(Builder):
 
         for mol in mols:
             # Must have NBO, and must specifically use NBO7
-            orbital_entries = [e for e in mol.entries
-                               if e["output"]["nbo"] is not None
-                               and e["orig"]["rem"].get("run_nbo6", False)]
+            orbital_entries = [
+                e
+                for e in mol.entries
+                if e["output"]["nbo"] is not None
+                and e["orig"]["rem"].get("run_nbo6", False)
+            ]
 
             # No documents with NBO data; no documents to be made
             if len(orbital_entries) == 0:
                 continue
             else:
-                best = sorted(orbital_entries,
-                              key=lambda x: (sum(evaluate_lot(x["level_of_theory"])),
-                                             x["energy"])
-                              )[0]
+                best = sorted(
+                    orbital_entries,
+                    key=lambda x: (
+                        sum(evaluate_lot(x["level_of_theory"])),
+                        x["energy"],
+                    ),
+                )[0]
                 task = best["task_id"]
 
             task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
 
-            orbital_doc = OrbitalDoc.from_task(task_doc,
-                                              molecule_id=mol.molecule_id,
-                                              deprecated=False)
+            orbital_doc = OrbitalDoc.from_task(
+                task_doc, molecule_id=mol.molecule_id, deprecated=False
+            )
             orbital_docs.append(orbital_doc)
 
         self.logger.debug(f"Produced {len(orbital_docs)} orbital docs for {formula}")
@@ -216,7 +224,8 @@ class OrbitalBuilder(Builder):
             self.logger.info(f"Updating {len(docs)} orbital documents")
             self.orbitals.remove_docs({self.orbitals.key: {"$in": molecule_ids}})
             self.orbitals.update(
-                docs=docs, key=["molecule_id"],
+                docs=docs,
+                key=["molecule_id"],
             )
         else:
             self.logger.info("No items to update")

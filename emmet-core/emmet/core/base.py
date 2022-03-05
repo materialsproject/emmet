@@ -31,7 +31,8 @@ class EmmetMeta(BaseModel):
     )
 
     build_date: datetime = Field(
-        default_factory=datetime.utcnow, description="The build date for this document",
+        default_factory=datetime.utcnow,
+        description="The build date for this document",
     )
 
 

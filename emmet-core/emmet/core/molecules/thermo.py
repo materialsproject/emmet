@@ -44,73 +44,59 @@ class ThermoDoc(PropertyDoc):
     property_name = "thermo"
 
     task_id: MPID = Field(
-        ...,
-        description="ID of TaskDocument from which these properties were derived"
+        ..., description="ID of TaskDocument from which these properties were derived"
     )
 
     electronic_energy: float = Field(
-        ...,
-        description="Electronic energy of the molecule (units: eV)"
+        ..., description="Electronic energy of the molecule (units: eV)"
     )
 
     zero_point_energy: float = Field(
-        None,
-        description="Zero-point energy of the molecule (units: eV)"
+        None, description="Zero-point energy of the molecule (units: eV)"
     )
 
     rt: float = Field(
         None,
         description="R*T, where R is the gas constant and T is temperature, taken "
-                    "to be 298.15K (units: eV)"
+        "to be 298.15K (units: eV)",
     )
 
     total_enthalpy: float = Field(
-        None,
-        description="Total enthalpy of the molecule at 298.15K (units: eV)"
+        None, description="Total enthalpy of the molecule at 298.15K (units: eV)"
     )
     total_entropy: float = Field(
-        None,
-        description="Total entropy of the molecule at 298.15K (units: eV/K)"
+        None, description="Total entropy of the molecule at 298.15K (units: eV/K)"
     )
 
     translational_enthalpy: float = Field(
         None,
-        description="Translational enthalpy of the molecule at 298.15K (units: eV)"
+        description="Translational enthalpy of the molecule at 298.15K (units: eV)",
     )
     translational_entropy: float = Field(
         None,
-        description="Translational entropy of the molecule at 298.15K (units: eV/K)"
+        description="Translational entropy of the molecule at 298.15K (units: eV/K)",
     )
     rotational_enthalpy: float = Field(
-        None,
-        description="Rotational enthalpy of the molecule at 298.15K (units: eV)"
+        None, description="Rotational enthalpy of the molecule at 298.15K (units: eV)"
     )
     rotational_entropy: float = Field(
-        None,
-        description="Rotational entropy of the molecule at 298.15K (units: eV/K)"
+        None, description="Rotational entropy of the molecule at 298.15K (units: eV/K)"
     )
     vibrational_enthalpy: float = Field(
-        None,
-        description="Vibrational enthalpy of the molecule at 298.15K (units: eV)"
+        None, description="Vibrational enthalpy of the molecule at 298.15K (units: eV)"
     )
     vibrational_entropy: float = Field(
-        None,
-        description="Vibrational entropy of the molecule at 298.15K (units: eV/K)"
+        None, description="Vibrational entropy of the molecule at 298.15K (units: eV/K)"
     )
 
     free_energy: float = Field(
-        None,
-        description="Gibbs free energy of the molecule at 298.15K (units: eV)"
+        None, description="Gibbs free energy of the molecule at 298.15K (units: eV)"
     )
 
     @classmethod
     def from_task(
-            cls,
-            task: TaskDocument,
-            molecule_id: MPID,
-            deprecated: bool=False,
-            **kwargs
-    ): # type: ignore[override]
+        cls, task: TaskDocument, molecule_id: MPID, deprecated: bool = False, **kwargs
+    ):  # type: ignore[override]
 
         """
         Construct a thermodynamics document from a task
@@ -135,10 +121,21 @@ class ThermoDoc(PropertyDoc):
             free_energy = get_free_energy(energy, total_enthalpy, total_entropy)
 
             for calc in task.calcs_reversed:
-                if all([calc.get(x) is not None for x in [
-                    "ZPE", "trans_enthalpy", "rot_enthalpy", "vib_enthalpy",
-                    "gas_constant", "trans_entropy", "rot_entropy", "vib_entropy"
-                ]]):
+                if all(
+                    [
+                        calc.get(x) is not None
+                        for x in [
+                            "ZPE",
+                            "trans_enthalpy",
+                            "rot_enthalpy",
+                            "vib_enthalpy",
+                            "gas_constant",
+                            "trans_entropy",
+                            "rot_entropy",
+                            "vib_entropy",
+                        ]
+                    ]
+                ):
                     return super().from_molecule(
                         meta_molecule=mol,
                         molecule_id=molecule_id,

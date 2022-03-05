@@ -28,7 +28,9 @@ def mols(test_dir):
 @pytest.fixture(scope="session")
 def charges(test_dir):
 
-    charges = [PartialChargesDoc(**x) for x in loadfn(test_dir / "builder_charges_set.json")]
+    charges = [
+        PartialChargesDoc(**x) for x in loadfn(test_dir / "builder_charges_set.json")
+    ]
 
     return charges
 
@@ -83,14 +85,18 @@ def vibes(test_dir):
 
 def test_summary_doc(mols, charges, spins, bonds, orbitals, redox, thermo, vibes):
     desired_id = "libe-120473"
-    docs = {"molecules": [e.dict() for e in mols if str(e.molecule_id) == desired_id],
-            "partial_charges": [e.dict() for e in charges if str(e.molecule_id) == desired_id],
-            "partial_spins": [e.dict() for e in spins if str(e.molecule_id) == desired_id],
-            "bonding": [e.dict() for e in bonds if str(e.molecule_id) == desired_id],
-            "orbitals": [e.dict() for e in orbitals if str(e.molecule_id) == desired_id],
-            "redox": [e.dict() for e in redox if str(e.molecule_id) == desired_id],
-            "thermo": [e.dict() for e in thermo if str(e.molecule_id) == desired_id],
-            "vibration": [e.dict() for e in vibes if str(e.molecule_id) == desired_id]}
+    docs = {
+        "molecules": [e.dict() for e in mols if str(e.molecule_id) == desired_id],
+        "partial_charges": [
+            e.dict() for e in charges if str(e.molecule_id) == desired_id
+        ],
+        "partial_spins": [e.dict() for e in spins if str(e.molecule_id) == desired_id],
+        "bonding": [e.dict() for e in bonds if str(e.molecule_id) == desired_id],
+        "orbitals": [e.dict() for e in orbitals if str(e.molecule_id) == desired_id],
+        "redox": [e.dict() for e in redox if str(e.molecule_id) == desired_id],
+        "thermo": [e.dict() for e in thermo if str(e.molecule_id) == desired_id],
+        "vibration": [e.dict() for e in vibes if str(e.molecule_id) == desired_id],
+    }
 
     for k, v in docs.items():
         if len(v) == 0:
@@ -98,8 +104,7 @@ def test_summary_doc(mols, charges, spins, bonds, orbitals, redox, thermo, vibes
         elif len(v) == 1:
             docs[k] = v[0]
 
-    summary_doc = SummaryDoc.from_docs(molecule_id=desired_id,
-                                       **docs)
+    summary_doc = SummaryDoc.from_docs(molecule_id=desired_id, **docs)
 
     assert summary_doc.property_name == "summary"
     assert summary_doc.electronic_energy is not None

@@ -22,7 +22,9 @@ __author__ = "Evan Spotte-Smith"
 
 SETTINGS = EmmetBuildSettings()
 
-single_mol_thermo = loadfn(os.path.join(os.path.dirname(os.path.abspath(__file__)), "single_atom.json"))
+single_mol_thermo = loadfn(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "single_atom.json")
+)
 
 
 class ThermoBuilder(Builder):
@@ -39,13 +41,13 @@ class ThermoBuilder(Builder):
     """
 
     def __init__(
-            self,
-            tasks: Store,
-            molecules: Store,
-            thermo: Store,
-            query: Optional[Dict] = None,
-            settings: Optional[EmmetBuildSettings] = None,
-            **kwargs,
+        self,
+        tasks: Store,
+        molecules: Store,
+        thermo: Store,
+        query: Optional[Dict] = None,
+        settings: Optional[EmmetBuildSettings] = None,
+        **kwargs,
     ):
 
         self.tasks = tasks
@@ -88,7 +90,9 @@ class ThermoBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.thermo.distinct("molecule_id")])
@@ -127,7 +131,9 @@ class ThermoBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.thermo.distinct("molecule_id")])
@@ -147,9 +153,7 @@ class ThermoBuilder(Builder):
         for formula in to_process_forms:
             mol_query = dict(temp_query)
             mol_query["formula_alphabetical"] = formula
-            molecules = list(
-                self.molecules.query(criteria=mol_query)
-            )
+            molecules = list(self.molecules.query(criteria=mol_query))
 
             yield molecules
 
@@ -172,31 +176,40 @@ class ThermoBuilder(Builder):
         thermo_docs = list()
 
         for mol in mols:
-            thermo_entries = [e for e in mol.entries
-                              if e["output"]["enthalpy"] is not None
-                              and e["output"]["entropy"] is not None]
+            thermo_entries = [
+                e
+                for e in mol.entries
+                if e["output"]["enthalpy"] is not None
+                and e["output"]["entropy"] is not None
+            ]
 
             # No documents with enthalpy and entropy
             if len(thermo_entries) == 0:
                 best = mol.best_entries[best_lot(mol)]
                 task = best["task_id"]
             else:
-                best = sorted(thermo_entries,
-                              key=lambda x: (sum(evaluate_lot(x["level_of_theory"])),
-                                             x["energy"])
-                              )[0]
+                best = sorted(
+                    thermo_entries,
+                    key=lambda x: (
+                        sum(evaluate_lot(x["level_of_theory"])),
+                        x["energy"],
+                    ),
+                )[0]
                 task = best["task_id"]
 
             task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
 
-            thermo_doc = ThermoDoc.from_task(task_doc,
-                                             molecule_id=mol.molecule_id,
-                                             deprecated=False)
+            thermo_doc = ThermoDoc.from_task(
+                task_doc, molecule_id=mol.molecule_id, deprecated=False
+            )
 
             initial_mol = task_doc.output.initial_molecule
             # If single atom, try to add enthalpy and entropy
             if len(initial_mol) == 1:
-                if thermo_doc.total_enthalpy is None or thermo_doc.total_entropy is None:
+                if (
+                    thermo_doc.total_enthalpy is None
+                    or thermo_doc.total_entropy is None
+                ):
                     formula = initial_mol.composition.alphabetical_formula
                     if formula in single_mol_thermo:
                         vals = single_mol_thermo[formula]
@@ -204,9 +217,11 @@ class ThermoBuilder(Builder):
                         thermo_doc.total_entropy = vals["entropy"] * 0.000043363
                         thermo_doc.translational_enthalpy = vals["enthalpy"] * 0.043363
                         thermo_doc.translational_entropy = vals["entropy"] * 0.000043363
-                        thermo_doc.free_energy = get_free_energy(thermo_doc.electronic_energy,
-                                                                 vals["enthalpy"],
-                                                                 vals["entropy"])
+                        thermo_doc.free_energy = get_free_energy(
+                            thermo_doc.electronic_energy,
+                            vals["enthalpy"],
+                            vals["entropy"],
+                        )
 
             thermo_docs.append(thermo_doc)
 
@@ -238,7 +253,8 @@ class ThermoBuilder(Builder):
             self.logger.info(f"Updating {len(docs)} thermo documents")
             self.thermo.remove_docs({self.thermo.key: {"$in": molecule_ids}})
             self.thermo.update(
-                docs=docs, key=["molecule_id"],
+                docs=docs,
+                key=["molecule_id"],
             )
         else:
             self.logger.info("No items to update")

@@ -22,41 +22,32 @@ class VibrationDoc(PropertyDoc):
 
     property_name = "vibrations"
 
-    molecule: Molecule = Field(
-        ...,
-        description="Molecular structure"
-    )
+    molecule: Molecule = Field(..., description="Molecular structure")
 
     frequencies: List[float] = Field(
-        ...,
-        description="List of molecular vibrational frequencies"
+        ..., description="List of molecular vibrational frequencies"
     )
 
     frequency_modes: List[List[List[float]]] = Field(
-        ...,
-        description="Vibrational frequency modes of the molecule"
+        ..., description="Vibrational frequency modes of the molecule"
     )
 
     ir_intensities: List[float] = Field(
         ...,
         title="IR intensities",
-        description="Intensities for IR vibrational spectrum peaks"
+        description="Intensities for IR vibrational spectrum peaks",
     )
 
     ir_activities: List = Field(
         ...,
         title="IR activities",
-        description="List indicating if frequency-modes are IR-active"
+        description="List indicating if frequency-modes are IR-active",
     )
 
     @classmethod
     def from_task(
-        cls,
-        task: TaskDocument,
-        molecule_id: MPID,
-        deprecated: bool=False,
-        **kwargs
-    ): # type: ignore[override]
+        cls, task: TaskDocument, molecule_id: MPID, deprecated: bool = False, **kwargs
+    ):  # type: ignore[override]
         """
         Construct a vibration document from a task document
 
@@ -80,7 +71,10 @@ class VibrationDoc(PropertyDoc):
         intensities = None
         active = None
         for calc in task.calcs_reversed:
-            if calc.get("frequency_mode_vectors", None) is not None and frequency_modes is None:
+            if (
+                calc.get("frequency_mode_vectors", None) is not None
+                and frequency_modes is None
+            ):
                 frequency_modes = calc.get("frequency_mode_vectors")
 
             if calc.get("IR_intens", None) is not None and intensities is None:

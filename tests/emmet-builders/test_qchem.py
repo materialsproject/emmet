@@ -1,8 +1,7 @@
 import pytest
 from maggma.stores import JSONStore, MemoryStore
 
-from emmet.builders.qchem.molecules import (MoleculesAssociationBuilder,
-                                            MoleculesBuilder)
+from emmet.builders.qchem.molecules import MoleculesAssociationBuilder, MoleculesBuilder
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -31,9 +30,7 @@ def test_molecules_builder(tasks_store, assoc_store, mol_store):
 
     assoc_store.key = "molecule_id"
 
-    stage_two = MoleculesBuilder(assoc=assoc_store,
-                                 molecules=mol_store,
-                                 prefix="libe")
+    stage_two = MoleculesBuilder(assoc=assoc_store, molecules=mol_store, prefix="libe")
     stage_two.run()
 
     assert mol_store.count() == 48

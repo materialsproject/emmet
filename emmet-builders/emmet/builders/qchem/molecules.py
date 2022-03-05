@@ -24,10 +24,11 @@ SETTINGS = EmmetBuildSettings()
 
 
 def evaluate_molecule(
-        mol_doc: MoleculeDoc,
-        funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
-        basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
-        solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES):
+    mol_doc: MoleculeDoc,
+    funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+    basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+    solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
+):
     """
     Helper function to order optimization calcs by
     - Level of theory
@@ -40,10 +41,7 @@ def evaluate_molecule(
     :return:
     """
 
-    best = best_lot(mol_doc,
-                    funct_scores,
-                    basis_scores,
-                    solvent_scores)
+    best = best_lot(mol_doc, funct_scores, basis_scores, solvent_scores)
 
     lot_eval = evaluate_lot(best, funct_scores, basis_scores, solvent_scores)
 
@@ -224,9 +222,7 @@ class MoleculesAssociationBuilder(Builder):
 
         for group in self.filter_and_group_tasks(tasks):
             try:
-                molecules.append(
-                    MoleculeDoc.from_tasks(group)
-                )
+                molecules.append(MoleculeDoc.from_tasks(group))
             except Exception as e:
                 failed_ids = list({t_.task_id for t_ in group})
                 doc = MoleculeDoc.construct_deprecated_molecule(tasks)
@@ -260,7 +256,8 @@ class MoleculesAssociationBuilder(Builder):
             self.logger.info(f"Updating {len(docs)} molecules")
             self.assoc.remove_docs({self.assoc.key: {"$in": molecule_ids}})
             self.assoc.update(
-                docs=docs, key=["molecule_id"],
+                docs=docs,
+                key=["molecule_id"],
             )
         else:
             self.logger.info("No items to update")
@@ -293,10 +290,7 @@ class MoleculesAssociationBuilder(Builder):
             molecules.append(m)
             lots.append(task.level_of_theory.value)
 
-        grouped_molecules = group_molecules(
-            molecules,
-            lots
-        )
+        grouped_molecules = group_molecules(molecules, lots)
         for group in grouped_molecules:
             grouped_tasks = [filtered_tasks[mol.index] for mol in group]  # type: ignore
             yield grouped_tasks
@@ -374,7 +368,9 @@ class MoleculesBuilder(Builder):
         )
 
         # int and split manipulation necessary because of MPID prefixing done during building
-        processed_docs = set([int(e.split("-")[-1]) for e in self.molecules.distinct("molecule_id")])
+        processed_docs = set(
+            [int(e.split("-")[-1]) for e in self.molecules.distinct("molecule_id")]
+        )
         to_process_docs = {d[self.assoc.key] for d in all_assoc} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -413,7 +409,9 @@ class MoleculesBuilder(Builder):
             self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical"])
         )
 
-        processed_docs = set([int(e.split("-")[-1]) for e in self.molecules.distinct("molecule_id")])
+        processed_docs = set(
+            [int(e.split("-")[-1]) for e in self.molecules.distinct("molecule_id")]
+        )
         to_process_docs = {d[self.assoc.key] for d in all_assoc} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -430,9 +428,7 @@ class MoleculesBuilder(Builder):
         for formula in to_process_forms:
             assoc_query = dict(temp_query)
             assoc_query["formula_alphabetical"] = formula
-            assoc = list(
-                self.assoc.query(criteria=assoc_query)
-            )
+            assoc = list(self.assoc.query(criteria=assoc_query))
 
             yield assoc
 
@@ -489,12 +485,7 @@ class MoleculesBuilder(Builder):
                 # No change
                 molid = item["molecule_id"]
 
-            item.update(
-                {
-                    "_bt": self.timestamp,
-                    "molecule_id": molid
-                }
-            )
+            item.update({"_bt": self.timestamp, "molecule_id": molid})
 
             for entry in item["entries"]:
                 entry["entry_id"] = molid
@@ -505,14 +496,13 @@ class MoleculesBuilder(Builder):
             self.logger.info(f"Updating {len(docs)} molecules")
             self.molecules.remove_docs({self.molecules.key: {"$in": molecule_ids}})
             self.molecules.update(
-                docs=docs, key=["molecule_id"],
+                docs=docs,
+                key=["molecule_id"],
             )
         else:
             self.logger.info("No items to update")
 
-    def group_mol_docs(
-        self, assoc: List[MoleculeDoc]
-    ) -> Iterator[List[MoleculeDoc]]:
+    def group_mol_docs(self, assoc: List[MoleculeDoc]) -> Iterator[List[MoleculeDoc]]:
         """
         Groups molecules by:
             - highest level of theory
@@ -531,10 +521,12 @@ class MoleculesBuilder(Builder):
 
         def environment(mol_doc):
             mol = mol_doc.molecule
-            lot = best_lot(mol_doc,
-                           SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
-                           SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
-                           SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES)
+            lot = best_lot(
+                mol_doc,
+                SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+                SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+                SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
+            )
             if isinstance(lot, LevelOfTheory):
                 lot = lot.value
             env = form_env((mol, lot))
@@ -543,7 +535,9 @@ class MoleculesBuilder(Builder):
         # Group by charge and spin
         for c_s, pregroup in groupby(sorted(assoc, key=charge_spin), key=charge_spin):
             # Group by formula (should already be grouped) and environment
-            for f_e, group in groupby(sorted(pregroup, key=environment), key=environment):
+            for f_e, group in groupby(
+                sorted(pregroup, key=environment), key=environment
+            ):
                 subgroups = list()
                 for mol_doc in group:
                     mol_graph = make_mol_graph(mol_doc.molecule)
@@ -563,8 +557,9 @@ class MoleculesBuilder(Builder):
                                 break
 
                         if not matched:
-                            subgroups.append({"mol_graph":mol_graph,
-                                              "mol_docs":[mol_doc]})
+                            subgroups.append(
+                                {"mol_graph": mol_graph, "mol_docs": [mol_doc]}
+                            )
 
                 for subgroup in subgroups:
                     yield subgroup["mol_docs"]

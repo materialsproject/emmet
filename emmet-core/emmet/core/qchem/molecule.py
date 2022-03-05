@@ -48,16 +48,17 @@ def evaluate_lot(
     return (
         -1 * funct_scores.get(lot_comp[0], 0),
         -1 * basis_scores.get(lot_comp[1], 0),
-        -1 * solvent_scores.get(lot_comp[2].split("(")[0], 0)
+        -1 * solvent_scores.get(lot_comp[2].split("(")[0], 0),
     )
 
 
 def evaluate_task(
-        task: TaskDocument,
-        funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
-        basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
-        solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
-        task_quality_scores: Dict[str, int] = SETTINGS.QCHEM_TASK_QUALITY_SCORES):
+    task: TaskDocument,
+    funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+    basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+    solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
+    task_quality_scores: Dict[str, int] = SETTINGS.QCHEM_TASK_QUALITY_SCORES,
+):
     """
     Helper function to order optimization calcs by
     - Level of theory
@@ -79,7 +80,7 @@ def evaluate_task(
         lot,
         funct_scores=funct_scores,
         basis_scores=basis_scores,
-        solvent_scores=solvent_scores
+        solvent_scores=solvent_scores,
     )
 
     return (
@@ -106,25 +107,29 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
     )
 
     origins: List[PropertyOrigin] = Field(
-        None, description="List of property origins for tracking the provenance of properties"
+        None,
+        description="List of property origins for tracking the provenance of properties",
     )
 
     entries: List[Dict[str, Any]] = Field(
-        None, description="Dictionary representations of all task documents for this molecule"
+        None,
+        description="Dictionary representations of all task documents for this molecule",
     )
 
     best_entries: Mapping[LevelOfTheory, Dict[str, Any]] = Field(
-        None, description="Mapping for tracking the best entries at each level of theory for Q-Chem calculations"
+        None,
+        description="Mapping for tracking the best entries at each level of theory for Q-Chem calculations",
     )
 
     similar_molecules: List[MPID] = Field(
-        None, description="List of MPIDs with of molecules similar (by e.g. structure) to this one"
+        None,
+        description="List of MPIDs with of molecules similar (by e.g. structure) to this one",
     )
 
     @classmethod
     def from_tasks(
-            cls,
-            task_group: List[TaskDocument],
+        cls,
+        task_group: List[TaskDocument],
     ) -> "MoleculeDoc":
 
         """
@@ -178,7 +183,11 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             all_lots = set(levels_of_theory.values())
             for lot in all_lots:
                 relevant_calcs = sorted(
-                    [doc for doc in task_group if doc.level_of_theory == lot and doc.is_valid],
+                    [
+                        doc
+                        for doc in task_group
+                        if doc.level_of_theory == lot and doc.is_valid
+                    ],
                     key=evaluate_task,
                 )
 
@@ -191,7 +200,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
         else:
             geometry_optimizations = [
-                task for task in task_group if task.task_type in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization] # type: ignore
+                task for task in task_group if task.task_type in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization]  # type: ignore
             ]
 
             # Molecule ID
@@ -216,7 +225,9 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             ]
 
             # Deprecated
-            deprecated = all(task.task_id in deprecated_tasks for task in geometry_optimizations)
+            deprecated = all(
+                task.task_id in deprecated_tasks for task in geometry_optimizations
+            )
             deprecated = deprecated or best_molecule_calc.task_id in deprecated_tasks
 
             # Origins
@@ -233,7 +244,11 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             all_lots = set(levels_of_theory.values())
             for lot in all_lots:
                 relevant_calcs = sorted(
-                    [doc for doc in geometry_optimizations if doc.level_of_theory == lot and doc.is_valid],
+                    [
+                        doc
+                        for doc in geometry_optimizations
+                        if doc.level_of_theory == lot and doc.is_valid
+                    ],
                     key=evaluate_task,
                 )
 
@@ -258,12 +273,13 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             deprecated_tasks=deprecated_tasks,
             origins=origins,
             entries=entries,
-            best_entries=best_entries
+            best_entries=best_entries,
         )
 
     @classmethod
     def construct_deprecated_molecule(
-        cls, task_group: List[TaskDocument],
+        cls,
+        task_group: List[TaskDocument],
     ) -> "MoleculeDoc":
         """
         Converts a group of tasks into a deprecated molecule document
@@ -307,11 +323,12 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         )
 
 
-def best_lot(mol_doc: MoleculeDoc,
-             funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
-             basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
-             solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES
-             ) -> LevelOfTheory:
+def best_lot(
+    mol_doc: MoleculeDoc,
+    funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+    basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+    solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
+) -> LevelOfTheory:
     """
 
     Return the best level of theory used within a MoleculeDoc
@@ -326,7 +343,7 @@ def best_lot(mol_doc: MoleculeDoc,
 
     sorted_lots = sorted(
         mol_doc.best_entries.keys(),
-        key=lambda x: evaluate_lot(x, funct_scores, basis_scores, solvent_scores)
+        key=lambda x: evaluate_lot(x, funct_scores, basis_scores, solvent_scores),
     )
 
     return sorted_lots[0]

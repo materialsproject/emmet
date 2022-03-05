@@ -58,13 +58,26 @@ def test_mpcomplete_post_query():
 def test_mocomplete_get_query():
     op = MPCompleteGetQuery()
 
-    assert op.query(public_name="Test Test", public_email="test@test.com",) == {
-        "criteria": {"public_name": "Test Test", "public_email": "test@test.com"}
-    }
+    assert (
+        op.query(
+            public_name="Test Test",
+            public_email="test@test.com",
+        )
+        == {"criteria": {"public_name": "Test Test", "public_email": "test@test.com"}}
+    )
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(public_name="Test Test", public_email="test@test.com",) == {
-            "criteria": {"public_name": "Test Test", "public_email": "test@test.com"}
-        }
+        assert (
+            new_op.query(
+                public_name="Test Test",
+                public_email="test@test.com",
+            )
+            == {
+                "criteria": {
+                    "public_name": "Test Test",
+                    "public_email": "test@test.com",
+                }
+            }
+        )

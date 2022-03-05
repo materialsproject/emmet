@@ -37,13 +37,13 @@ class VibrationBuilder(Builder):
     """
 
     def __init__(
-            self,
-            tasks: Store,
-            molecules: Store,
-            vibes: Store,
-            query: Optional[Dict] = None,
-            settings: Optional[EmmetBuildSettings] = None,
-            **kwargs,
+        self,
+        tasks: Store,
+        molecules: Store,
+        vibes: Store,
+        query: Optional[Dict] = None,
+        settings: Optional[EmmetBuildSettings] = None,
+        **kwargs,
     ):
 
         self.tasks = tasks
@@ -86,7 +86,9 @@ class VibrationBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.vibes.distinct("molecule_id")])
@@ -125,7 +127,9 @@ class VibrationBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.vibes.distinct("molecule_id")])
@@ -145,9 +149,7 @@ class VibrationBuilder(Builder):
         for formula in to_process_forms:
             mol_query = dict(temp_query)
             mol_query["formula_alphabetical"] = formula
-            molecules = list(
-                self.molecules.query(criteria=mol_query)
-            )
+            molecules = list(self.molecules.query(criteria=mol_query))
 
             yield molecules
 
@@ -170,24 +172,28 @@ class VibrationBuilder(Builder):
         vibe_docs = list()
 
         for mol in mols:
-            vibe_entries = [e for e in mol.entries
-                              if e["output"]["frequencies"] is not None]
+            vibe_entries = [
+                e for e in mol.entries if e["output"]["frequencies"] is not None
+            ]
 
             # No documents with enthalpy and entropy
             if len(vibe_entries) == 0:
                 continue
             else:
-                best = sorted(vibe_entries,
-                              key=lambda x: (sum(evaluate_lot(x["level_of_theory"])),
-                                             x["energy"])
-                              )[0]
+                best = sorted(
+                    vibe_entries,
+                    key=lambda x: (
+                        sum(evaluate_lot(x["level_of_theory"])),
+                        x["energy"],
+                    ),
+                )[0]
                 task = best["task_id"]
 
             task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
 
-            vibe_doc = VibrationDoc.from_task(task_doc,
-                                                molecule_id=mol.molecule_id,
-                                                deprecated=False)
+            vibe_doc = VibrationDoc.from_task(
+                task_doc, molecule_id=mol.molecule_id, deprecated=False
+            )
             vibe_docs.append(vibe_doc)
 
         self.logger.debug(f"Produced {len(vibe_docs)} vibration docs for {formula}")
@@ -218,7 +224,8 @@ class VibrationBuilder(Builder):
             self.logger.info(f"Updating {len(docs)} vibration documents")
             self.vibes.remove_docs({self.vibes.key: {"$in": molecule_ids}})
             self.vibes.update(
-                docs=docs, key=["molecule_id"],
+                docs=docs,
+                key=["molecule_id"],
             )
         else:
             self.logger.info("No items to update")

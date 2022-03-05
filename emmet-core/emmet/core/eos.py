@@ -19,7 +19,8 @@ class EOSDoc(BaseModel):
     )
 
     eos: Dict = Field(
-        None, description="Data for each type of equation of state.",
+        None,
+        description="Data for each type of equation of state.",
     )
 
     task_id: str = Field(

@@ -21,13 +21,14 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
 class NaturalPopulation(MSONable):
-    def __init__(self,
-                 atom_index: int,
-                 core_electrons: float,
-                 valence_electrons: float,
-                 rydberg_electrons: float,
-                 total_electrons: float
-                 ):
+    def __init__(
+        self,
+        atom_index: int,
+        core_electrons: float,
+        valence_electrons: float,
+        rydberg_electrons: float,
+        total_electrons: float,
+    ):
 
         """
         Basic description of an atomic electron population.
@@ -47,17 +48,18 @@ class NaturalPopulation(MSONable):
 
 
 class LonePair(MSONable):
-    def __init__(self,
-                 index: int,
-                 number: int,
-                 atom_index: int,
-                 s_character: float,
-                 p_character: float,
-                 d_character: float,
-                 f_character: float,
-                 occupancy: float,
-                 type_code: str
-                 ):
+    def __init__(
+        self,
+        index: int,
+        number: int,
+        atom_index: int,
+        s_character: float,
+        p_character: float,
+        d_character: float,
+        f_character: float,
+        occupancy: float,
+        type_code: str,
+    ):
         """
         Basic description of a lone pair (LP) natural bonding orbital.
 
@@ -85,26 +87,27 @@ class LonePair(MSONable):
 
 
 class Bond(MSONable):
-    def __init__(self,
-                 index: int,
-                 number: int,
-                 atom1_index: int,
-                 atom2_index: int,
-                 atom1_s_character: float,
-                 atom2_s_character: float,
-                 atom1_p_character: float,
-                 atom2_p_character: float,
-                 atom1_d_character: float,
-                 atom2_d_character: float,
-                 atom1_f_character: float,
-                 atom2_f_character: float,
-                 atom1_polarization: float,
-                 atom2_polarization: float,
-                 atom1_polarization_coeff: float,
-                 atom2_polarization_coeff: float,
-                 occupancy: float,
-                 type_code: str
-                 ):
+    def __init__(
+        self,
+        index: int,
+        number: int,
+        atom1_index: int,
+        atom2_index: int,
+        atom1_s_character: float,
+        atom2_s_character: float,
+        atom1_p_character: float,
+        atom2_p_character: float,
+        atom1_d_character: float,
+        atom2_d_character: float,
+        atom1_f_character: float,
+        atom2_f_character: float,
+        atom1_polarization: float,
+        atom2_polarization: float,
+        atom1_polarization_coeff: float,
+        atom2_polarization_coeff: float,
+        occupancy: float,
+        type_code: str,
+    ):
         """
         Basic description of a bond (BD) natural bonding orbital.
 
@@ -151,19 +154,20 @@ class Bond(MSONable):
 
 
 class Interaction(MSONable):
-    def __init__(self,
-                 perturbation_energy: float,
-                 energy_difference: float,
-                 fock_element: float,
-                 donor_index: int,
-                 acceptor_index: int,
-                 donor_type: str,
-                 acceptor_type: str,
-                 donor_atom1_index: int,
-                 acceptor_atom1_index: int,
-                 donor_atom2_index: Optional[int] = None,
-                 acceptor_atom2_index: Optional[int] = None
-                 ):
+    def __init__(
+        self,
+        perturbation_energy: float,
+        energy_difference: float,
+        fock_element: float,
+        donor_index: int,
+        acceptor_index: int,
+        donor_type: str,
+        acceptor_type: str,
+        donor_atom1_index: int,
+        acceptor_atom1_index: int,
+        donor_atom2_index: Optional[int] = None,
+        acceptor_atom2_index: Optional[int] = None,
+    ):
 
         self.donor_index = int(donor_index)
         self.acceptor_index = int(acceptor_index)
@@ -200,22 +204,24 @@ class Interaction(MSONable):
             "acceptor_atom_indices": self.acceptor_atom_indices,
             "perturbation_energy": self.perturbation_energy,
             "energy_difference": self.energy_difference,
-            "fock_element": self.fock_element
+            "fock_element": self.fock_element,
         }
 
     @classmethod
     def from_dict(cls, d):
-        return cls(d["perturbation_energy"],
-                   d["energy_difference"],
-                   d["fock_element"],
-                   d["donor_index"],
-                   d["acceptor_index"],
-                   d["donor_type"],
-                   d["acceptor_type"],
-                   d["donor_atom_indices"][0],
-                   d["acceptor_atom_indices"][0],
-                   d["donor_atom_indices"][1],
-                   d["acceptor_atom_indices"][1])
+        return cls(
+            d["perturbation_energy"],
+            d["energy_difference"],
+            d["fock_element"],
+            d["donor_index"],
+            d["acceptor_index"],
+            d["donor_type"],
+            d["acceptor_type"],
+            d["donor_atom_indices"][0],
+            d["acceptor_atom_indices"][0],
+            d["donor_atom_indices"][1],
+            d["acceptor_atom_indices"][1],
+        )
 
 
 class OrbitalDoc(PropertyDoc):
@@ -224,78 +230,65 @@ class OrbitalDoc(PropertyDoc):
 
     # Always populated - closed-shell and open-shell
     open_shell: bool = Field(
-        ...,
-        description="Is this molecule open-shell (spin multiplicity != 1)?"
+        ..., description="Is this molecule open-shell (spin multiplicity != 1)?"
     )
 
     nbo_population: List[NaturalPopulation] = Field(
-        ...,
-        description="Natural electron populations of the molecule"
+        ..., description="Natural electron populations of the molecule"
     )
 
     # Populated for closed-shell molecules
     nbo_lone_pairs: List[LonePair] = Field(
-        None,
-        description="Lone pair orbitals of a closed-shell molecule"
+        None, description="Lone pair orbitals of a closed-shell molecule"
     )
 
     nbo_bonds: List[Bond] = Field(
-        None,
-        description="Bond-like orbitals of a closed-shell molecule"
+        None, description="Bond-like orbitals of a closed-shell molecule"
     )
 
     nbo_interactions: List[Interaction] = Field(
-        None,
-        description="Orbital-orbital interactions of a closed-shell molecule"
+        None, description="Orbital-orbital interactions of a closed-shell molecule"
     )
 
     # Populated for open-shell molecules
     alpha_population: List[NaturalPopulation] = Field(
         None,
         description="Natural electron populations of the alpha electrons of an "
-                    "open-shell molecule"
+        "open-shell molecule",
     )
     beta_population: List[NaturalPopulation] = Field(
         None,
         description="Natural electron populations of the beta electrons of an "
-                    "open-shell molecule"
+        "open-shell molecule",
     )
 
     alpha_lone_pairs: List[LonePair] = Field(
-        None,
-        description="Alpha electron lone pair orbitals of an open-shell molecule"
+        None, description="Alpha electron lone pair orbitals of an open-shell molecule"
     )
     beta_lone_pairs: List[LonePair] = Field(
-        None,
-        description="Beta electron lone pair orbitals of an open-shell molecule"
+        None, description="Beta electron lone pair orbitals of an open-shell molecule"
     )
 
     alpha_bonds: List[Bond] = Field(
-        None,
-        description="Alpha electron bond-like orbitals of an open-shell molecule"
+        None, description="Alpha electron bond-like orbitals of an open-shell molecule"
     )
     beta_bonds: List[Bond] = Field(
-        None,
-        description="Beta electron bond-like orbitals of an open-shell molecule"
+        None, description="Beta electron bond-like orbitals of an open-shell molecule"
     )
 
     alpha_interactions: List[Interaction] = Field(
         None,
-        description="Alpha electron orbital-orbital interactions of an open-shell molecule"
+        description="Alpha electron orbital-orbital interactions of an open-shell molecule",
     )
     beta_interactions: List[Interaction] = Field(
         None,
-        description="Beta electron orbital-orbital interactions of an open-shell molecule"
+        description="Beta electron orbital-orbital interactions of an open-shell molecule",
     )
 
     @classmethod
     def from_task(
-            cls,
-            task: TaskDocument,
-            molecule_id: MPID,
-            deprecated: bool=False,
-            **kwargs
-    ): # type: ignore[override]
+        cls, task: TaskDocument, molecule_id: MPID, deprecated: bool = False, **kwargs
+    ):  # type: ignore[override]
         """
         Construct an orbital document from a task
 
@@ -349,7 +342,7 @@ class OrbitalDoc(PropertyDoc):
                         pops["Core"][ind],
                         pops["Valence"][ind],
                         pops["Rydberg"][ind],
-                        pops["Total"][ind]
+                        pops["Total"][ind],
                     )
                 )
             population_sets.append(population)
@@ -367,7 +360,7 @@ class OrbitalDoc(PropertyDoc):
                     lps["d"][ind],
                     lps["f"][ind],
                     lps["occupancy"][ind],
-                    lps["type"][ind]
+                    lps["type"][ind],
                 )
                 lone_pairs.append(this_lp)
             lone_pair_sets.append(lone_pairs)
@@ -394,7 +387,7 @@ class OrbitalDoc(PropertyDoc):
                     bds["atom 1 pol coeff"][ind],
                     bds["atom 2 pol coeff"][ind],
                     bds["occupancy"][ind],
-                    bds["type"][ind]
+                    bds["type"][ind],
                 )
                 bonds.append(this_bond)
             bond_sets.append(bonds)
@@ -412,7 +405,9 @@ class OrbitalDoc(PropertyDoc):
                 if perts["acceptor atom 2 number"].get(ind) is None:
                     acceptor_atom2_number = None
                 else:
-                    acceptor_atom2_number = int(perts["acceptor atom 2 number"][ind]) - 1
+                    acceptor_atom2_number = (
+                        int(perts["acceptor atom 2 number"][ind]) - 1
+                    )
 
                 this_inter = Interaction(
                     perts["perturbation energy"][ind],
@@ -425,7 +420,7 @@ class OrbitalDoc(PropertyDoc):
                     int(perts["donor atom 1 number"][ind]) - 1,
                     int(perts["acceptor atom 1 number"][ind]) - 1,
                     donor_atom2_number,
-                    acceptor_atom2_number
+                    acceptor_atom2_number,
                 )
 
                 interactions.append(this_inter)
@@ -445,7 +440,11 @@ class OrbitalDoc(PropertyDoc):
                 nbo_lone_pairs=lone_pair_sets[0],
                 nbo_bonds=bond_sets[0],
                 nbo_interactions=interaction_sets[0],
-                origins=[PropertyOrigin(name="natural bonding orbitals", task_id=task.task_id)],
+                origins=[
+                    PropertyOrigin(
+                        name="natural bonding orbitals", task_id=task.task_id
+                    )
+                ],
                 deprecated=deprecated,
                 warnings=warnings,
                 **kwargs
@@ -465,7 +464,11 @@ class OrbitalDoc(PropertyDoc):
                 beta_bonds=bond_sets[1],
                 alpha_interactions=interaction_sets[0],
                 beta_interactions=interaction_sets[1],
-                origins=[PropertyOrigin(name="natural bonding orbitals", task_id=task.task_id)],
+                origins=[
+                    PropertyOrigin(
+                        name="natural bonding orbitals", task_id=task.task_id
+                    )
+                ],
                 deprecated=deprecated,
                 warnings=warnings,
                 **kwargs

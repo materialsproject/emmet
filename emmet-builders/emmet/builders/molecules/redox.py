@@ -31,12 +31,12 @@ class RedoxBuilder(Builder):
     """
 
     def __init__(
-            self,
-            molecules: Store,
-            redox: Store,
-            query: Optional[Dict] = None,
-            settings: Optional[EmmetBuildSettings] = None,
-            **kwargs,
+        self,
+        molecules: Store,
+        redox: Store,
+        query: Optional[Dict] = None,
+        settings: Optional[EmmetBuildSettings] = None,
+        **kwargs,
     ):
 
         self.molecules = molecules
@@ -72,7 +72,9 @@ class RedoxBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.redox.distinct("molecule_id")])
@@ -111,7 +113,9 @@ class RedoxBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.redox.distinct("molecule_id")])
@@ -131,9 +135,7 @@ class RedoxBuilder(Builder):
         for formula in to_process_forms:
             mol_query = dict(temp_query)
             mol_query["formula_alphabetical"] = formula
-            molecules = list(
-                self.molecules.query(criteria=mol_query)
-            )
+            molecules = list(self.molecules.query(criteria=mol_query))
 
             yield molecules
 
@@ -185,7 +187,8 @@ class RedoxBuilder(Builder):
             self.logger.info(f"Updating {len(docs)} redox documents")
             self.redox.remove_docs({self.redox.key: {"$in": molecule_ids}})
             self.redox.update(
-                docs=docs, key=["molecule_id"],
+                docs=docs,
+                key=["molecule_id"],
             )
         else:
             self.logger.info("No items to update")

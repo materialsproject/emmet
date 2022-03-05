@@ -16,11 +16,15 @@ class MPCompleteDoc(BaseModel):
     )
 
     public_name: str = Field(
-        None, title="Public name", description="Public name of submitter.",
+        None,
+        title="Public name",
+        description="Public name of submitter.",
     )
 
     public_email: str = Field(
-        None, title="Public email", description="Public email of submitter.",
+        None,
+        title="Public email",
+        description="Public email of submitter.",
     )
 
 

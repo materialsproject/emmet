@@ -167,7 +167,8 @@ class PhaseDiagramDoc(BaseModel):
     )
 
     phase_diagram: PhaseDiagram = Field(
-        ..., description="Phase diagram for the chemical system.",
+        ...,
+        description="Phase diagram for the chemical system.",
     )
 
     last_updated: datetime = Field(

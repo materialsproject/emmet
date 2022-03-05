@@ -269,7 +269,8 @@ class MaterialsBuilder(Builder):
             self.logger.info(f"Updating {len(docs)} materials")
             self.materials.remove_docs({self.materials.key: {"$in": material_ids}})
             self.materials.update(
-                docs=docs, key=["material_id"],
+                docs=docs,
+                key=["material_id"],
             )
         else:
             self.logger.info("No items to update")

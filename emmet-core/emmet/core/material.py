@@ -20,9 +20,12 @@ class PropertyOrigin(BaseModel):
     """
 
     name: str = Field(..., description="The property name")
-    task_id: MPID = Field(..., description="The calculation ID this property comes from")
+    task_id: MPID = Field(
+        ..., description="The calculation ID this property comes from"
+    )
     last_updated: datetime = Field(
-        description="The timestamp when this calculation was last updated", default_factory=datetime.utcnow,
+        description="The timestamp when this calculation was last updated",
+        default_factory=datetime.utcnow,
     )
 
 
@@ -42,39 +45,51 @@ class MaterialsDoc(StructureMetadata):
         "This comes in the form and MPID or int",
     )
 
-    structure: Structure = Field(..., description="The best structure for this material")
+    structure: Structure = Field(
+        ..., description="The best structure for this material"
+    )
 
     deprecated: bool = Field(
-        True, description="Whether this materials document is deprecated.",
+        True,
+        description="Whether this materials document is deprecated.",
     )
 
     deprecation_reasons: List[Union[DeprecationMessage, str]] = Field(
-        None, description="List of deprecation tags detailing why this materials document isn't valid",
+        None,
+        description="List of deprecation tags detailing why this materials document isn't valid",
     )
 
     initial_structures: List[Structure] = Field(
-        [], description="Initial structures used in the DFT optimizations corresponding to this material",
+        [],
+        description="Initial structures used in the DFT optimizations corresponding to this material",
     )
 
     task_ids: List[MPID] = Field(
-        [], title="Calculation IDs", description="List of Calculations IDs used to make this Materials Document",
+        [],
+        title="Calculation IDs",
+        description="List of Calculations IDs used to make this Materials Document",
     )
 
     deprecated_tasks: List[str] = Field([], title="Deprecated Tasks")
 
     calc_types: Mapping[str, str] = Field(
-        None, description="Calculation types for all the calculations that make up this material",
+        None,
+        description="Calculation types for all the calculations that make up this material",
     )
 
     last_updated: datetime = Field(
-        description="Timestamp for when this document was last updated", default_factory=datetime.utcnow,
+        description="Timestamp for when this document was last updated",
+        default_factory=datetime.utcnow,
     )
 
     created_at: datetime = Field(
-        description="Timestamp for when this material document was first created", default_factory=datetime.utcnow,
+        description="Timestamp for when this material document was first created",
+        default_factory=datetime.utcnow,
     )
 
-    origins: List[PropertyOrigin] = Field(None, description="Dictionary for tracking the provenance of properties")
+    origins: List[PropertyOrigin] = Field(
+        None, description="Dictionary for tracking the provenance of properties"
+    )
 
     warnings: List[str] = Field([], description="Any warnings related to this material")
 
@@ -85,7 +100,10 @@ class MaterialsDoc(StructureMetadata):
         """
 
         return super().from_structure(  # type: ignore
-            meta_structure=structure, material_id=material_id, structure=structure, **kwargs
+            meta_structure=structure,
+            material_id=material_id,
+            structure=structure,
+            **kwargs
         )
 
 
@@ -101,41 +119,54 @@ class MoleculeDoc(MoleculeMetadata):
         "This comes in the form of an MPID or int",
     )
 
-    molecule: Molecule = Field(..., description="The best (typically meaning lowest in energy) structure for this molecule")
-
-    deprecated: bool = Field(
-        True, description="Whether this molecule document is deprecated.",
+    molecule: Molecule = Field(
+        ...,
+        description="The best (typically meaning lowest in energy) structure for this molecule",
     )
 
-    #TODO: Why might a molecule be deprecated?
+    deprecated: bool = Field(
+        True,
+        description="Whether this molecule document is deprecated.",
+    )
+
+    # TODO: Why might a molecule be deprecated?
     deprecation_reasons: List[str] = Field(
-        None, description="List of deprecation tags detailing why this molecules document isn't valid",
+        None,
+        description="List of deprecation tags detailing why this molecules document isn't valid",
     )
 
     initial_molecules: List[Molecule] = Field(
-        [], description="Initial molecules used in the DFT geometry optimizations corresponding to this molecule",
+        [],
+        description="Initial molecules used in the DFT geometry optimizations corresponding to this molecule",
     )
 
     task_ids: List[MPID] = Field(
-        [], title="Calculation IDs", description="List of Calculations IDs used to make this Molecule Document",
+        [],
+        title="Calculation IDs",
+        description="List of Calculations IDs used to make this Molecule Document",
     )
 
-    #TODO: Should this be MPID?
+    # TODO: Should this be MPID?
     deprecated_tasks: List[str] = Field([], title="Deprecated Tasks")
 
     calc_types: Mapping[str, str] = Field(
-        None, description="Calculation types for all the tasks that make up this molecule",
+        None,
+        description="Calculation types for all the tasks that make up this molecule",
     )
 
     last_updated: datetime = Field(
-        description="Timestamp for when this document was last updated", default_factory=datetime.utcnow,
+        description="Timestamp for when this document was last updated",
+        default_factory=datetime.utcnow,
     )
 
     created_at: datetime = Field(
-        description="Timestamp for when this document was first created", default_factory=datetime.utcnow,
+        description="Timestamp for when this document was first created",
+        default_factory=datetime.utcnow,
     )
 
-    origins: List[PropertyOrigin] = Field(None, description="Dictionary for tracking the provenance of properties")
+    origins: List[PropertyOrigin] = Field(
+        None, description="Dictionary for tracking the provenance of properties"
+    )
 
     warnings: List[str] = Field([], description="Any warnings related to this molecule")
 

@@ -17,5 +17,6 @@ class FindStructure(BaseModel):
         description="Volume normalized root-mean squared displacement between the structures",
     )
     max_distance_paired_sites: float = Field(
-        None, description="Maximum distance between paired sites",
+        None,
+        description="Maximum distance between paired sites",
     )

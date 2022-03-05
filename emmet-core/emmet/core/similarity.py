@@ -14,15 +14,18 @@ class SimilarityEntry(BaseModel):
     )
 
     nelements: int = Field(
-        None, description="Number of elements in the matched material",
+        None,
+        description="Number of elements in the matched material",
     )
 
     dissimilarity: float = Field(
-        None, description="Dissimilarity measure for the matched material",
+        None,
+        description="Dissimilarity measure for the matched material",
     )
 
     formula: str = Field(
-        None, description="Formula of the matched material",
+        None,
+        description="Formula of the matched material",
     )
 
 

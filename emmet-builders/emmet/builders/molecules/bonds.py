@@ -9,10 +9,7 @@ from maggma.utils import grouper
 
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
-from emmet.core.molecules.bonds import (
-    BondingDoc,
-    BOND_METHODS
-)
+from emmet.core.molecules.bonds import BondingDoc, BOND_METHODS
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
@@ -51,14 +48,14 @@ class BondingBuilder(Builder):
     """
 
     def __init__(
-            self,
-            tasks: Store,
-            molecules: Store,
-            bonds: Store,
-            query: Optional[Dict] = None,
-            methods: Optional[List] = None,
-            settings: Optional[EmmetBuildSettings] = None,
-            **kwargs,
+        self,
+        tasks: Store,
+        molecules: Store,
+        bonds: Store,
+        query: Optional[Dict] = None,
+        methods: Optional[List] = None,
+        settings: Optional[EmmetBuildSettings] = None,
+        **kwargs,
     ):
 
         self.tasks = tasks
@@ -103,7 +100,9 @@ class BondingBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.bonds.distinct("molecule_id")])
@@ -142,7 +141,9 @@ class BondingBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_mols = list(
-            self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"])
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
         )
 
         processed_docs = set([e for e in self.bonds.distinct("molecule_id")])
@@ -162,9 +163,7 @@ class BondingBuilder(Builder):
         for formula in to_process_forms:
             mol_query = dict(temp_query)
             mol_query["formula_alphabetical"] = formula
-            molecules = list(
-                self.molecules.query(criteria=mol_query)
-            )
+            molecules = list(self.molecules.query(criteria=mol_query))
 
             yield molecules
 
@@ -187,29 +186,38 @@ class BondingBuilder(Builder):
         bonding_docs = list()
 
         for mol in mols:
-            correct_charge_spin = [e for e in mol.entries
-                                   if e["charge"] == mol.charge
-                                   and e["spin_multiplicity"] == mol.spin_multiplicity]
+            correct_charge_spin = [
+                e
+                for e in mol.entries
+                if e["charge"] == mol.charge
+                and e["spin_multiplicity"] == mol.spin_multiplicity
+            ]
 
-            sorted_entries = sorted(correct_charge_spin,
-                                    key=lambda x: (sum(evaluate_lot(x["level_of_theory"])),
-                                                   x["energy"])
-                                    )
+            sorted_entries = sorted(
+                correct_charge_spin,
+                key=lambda x: (sum(evaluate_lot(x["level_of_theory"])), x["energy"]),
+            )
 
             for method in self.methods:
                 # For each method, grab entries that have the relevant data
                 if method == "OpenBabelNN + metal_edge_extender":
                     relevant_entries = sorted_entries
                 else:
-                    relevant_entries = [e for e in sorted_entries
-                                        if e.get(method) is not None
-                                        or e["output"].get(method) is not None]
+                    relevant_entries = [
+                        e
+                        for e in sorted_entries
+                        if e.get(method) is not None
+                        or e["output"].get(method) is not None
+                    ]
 
                 if method == "nbo":
                     # Only allow NBO7 to be used. No earlier versions can be
                     # relied upon for bonding
-                    relevant_entries = [e for e in relevant_entries
-                                        if e["orig"]["rem"].get("run_nbo6", False)]
+                    relevant_entries = [
+                        e
+                        for e in relevant_entries
+                        if e["orig"]["rem"].get("run_nbo6", False)
+                    ]
 
                 if len(relevant_entries) == 0:
                     continue
@@ -220,10 +228,12 @@ class BondingBuilder(Builder):
 
                 task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
 
-                doc = BondingDoc.from_task(task_doc,
-                                           molecule_id=mol.molecule_id,
-                                           preferred_methods=[method],
-                                           deprecated=False)
+                doc = BondingDoc.from_task(
+                    task_doc,
+                    molecule_id=mol.molecule_id,
+                    preferred_methods=[method],
+                    deprecated=False,
+                )
 
                 bonding_docs.append(doc)
 
@@ -256,7 +266,8 @@ class BondingBuilder(Builder):
             self.bonds.remove_docs({self.bonds.key: {"$in": molecule_ids}})
             # Neither molecule_id nor method need to be unique, but the combination must be
             self.bonds.update(
-                docs=docs, key=["molecule_id", "method"],
+                docs=docs,
+                key=["molecule_id", "method"],
             )
         else:
             self.logger.info("No items to update")

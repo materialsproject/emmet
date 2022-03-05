@@ -30,11 +30,13 @@ class PropertyDoc(StructureMetadata):
     )
 
     deprecated: bool = Field(
-        ..., description="Whether this property document is deprecated.",
+        ...,
+        description="Whether this property document is deprecated.",
     )
 
     deprecation_reasons: List[Union[DeprecationMessage, str]] = Field(
-        None, description="List of deprecation tags detailing why this document isn't valid",
+        None,
+        description="List of deprecation tags detailing why this document isn't valid",
     )
 
     last_updated: datetime = Field(
@@ -42,9 +44,13 @@ class PropertyDoc(StructureMetadata):
         default_factory=datetime.utcnow,
     )
 
-    origins: Sequence[PropertyOrigin] = Field([], description="Dictionary for tracking the provenance of properties")
+    origins: Sequence[PropertyOrigin] = Field(
+        [], description="Dictionary for tracking the provenance of properties"
+    )
 
-    warnings: Sequence[str] = Field([], description="Any warnings related to this property")
+    warnings: Sequence[str] = Field(
+        [], description="Any warnings related to this property"
+    )
 
     @classmethod
     def from_structure(  # type: ignore[override]

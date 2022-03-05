@@ -23,10 +23,8 @@ from emmet.core.mpid import MPID
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
-reference_potentials = {"H": 4.44,
-                        "Li": 1.40,
-                        "Mg": 2.06,
-                        "Ca": 1.60}
+reference_potentials = {"H": 4.44, "Li": 1.40, "Mg": 2.06, "Ca": 1.60}
+
 
 class RedoxDoc(PropertyDoc):
     """
@@ -45,28 +43,28 @@ class RedoxDoc(PropertyDoc):
 
     ie_id: MPID = Field(description="Molecule ID for ionization energy")
 
-    reduction_free_energy: float = Field(None, description="Adiabatic free energy of reduction")
+    reduction_free_energy: float = Field(
+        None, description="Adiabatic free energy of reduction"
+    )
 
     red_id: MPID = Field(None, description="Molecule ID for adiabatic reduction")
 
-    oxidation_free_energy: float = Field(None, description="Adiabatic free energy of oxidation")
+    oxidation_free_energy: float = Field(
+        None, description="Adiabatic free energy of oxidation"
+    )
 
     ox_id: MPID = Field(None, description="Molecule ID for adiabatic oxidation")
 
     reduction_potentials: Dict[str, float] = Field(
-        None,
-        description="Reduction potentials with various reference electrodes")
+        None, description="Reduction potentials with various reference electrodes"
+    )
 
     oxidation_potentials: Dict[str, float] = Field(
-        None,
-        description="Oxidation potentials with various reference electrodes")
+        None, description="Oxidation potentials with various reference electrodes"
+    )
 
     @classmethod
-    def from_entries(
-        cls,
-        entries: List[Dict[str, Any]],
-        **kwargs
-    ) -> List["RedoxDoc"]:
+    def from_entries(cls, entries: List[Dict[str, Any]], **kwargs) -> List["RedoxDoc"]:
         """
         Construct documents describing molecular redox properties from task
         entry dictionaries.
@@ -91,7 +89,7 @@ class RedoxDoc(PropertyDoc):
         tasks_by_formula = defaultdict(list)
         for t in entries:
             tasks_by_formula[t["formula"]].append(t)
-            
+
         for form_group in tasks_by_formula.values():
             mol_graphs_nometal = list()
             group_by_graph = defaultdict(list)
@@ -105,11 +103,15 @@ class RedoxDoc(PropertyDoc):
 
                 mol_nometal = copy.deepcopy(mol)
 
-                if mol.composition.alphabetical_formula not in [m + "1" for m in metals]:
+                if mol.composition.alphabetical_formula not in [
+                    m + "1" for m in metals
+                ]:
                     mol_nometal.remove_species(metals)
 
                 mol_nometal.set_charge_and_spin(0)
-                mg_nometal = MoleculeGraph.with_local_env_strategy(mol_nometal, OpenBabelNN())
+                mg_nometal = MoleculeGraph.with_local_env_strategy(
+                    mol_nometal, OpenBabelNN()
+                )
                 match = None
                 for i, mg in enumerate(mol_graphs_nometal):
                     if mg_nometal.isomorphic_to(mg):
@@ -131,24 +133,34 @@ class RedoxDoc(PropertyDoc):
                 docs_by_charge = dict()
                 # Now try to form documents
                 # Start with highest lot; keep going down until you can make complete documents
-                for lot, group in sorted(lot_groups.items(), key=lambda x: evaluate_lot(x[0])):
+                for lot, group in sorted(
+                    lot_groups.items(), key=lambda x: evaluate_lot(x[0])
+                ):
                     # Sorting important because we want to make docs only from lowest-energy instances
                     relevant_calcs = sorted(
-                        [f for f in group if f["task_type"] == TaskType.Frequency_Flattening_Geometry_Optimization],
-                        key=lambda x: x["output"]["final_energy"])
+                        [
+                            f
+                            for f in group
+                            if f["task_type"]
+                            == TaskType.Frequency_Flattening_Geometry_Optimization
+                        ],
+                        key=lambda x: x["output"]["final_energy"],
+                    )
 
                     # For single atoms, which have no FFOpt calcs
                     # (Can't geometry optimize a single atom)
                     if len(relevant_calcs) == 0:
                         relevant_calcs = sorted(
                             [f for f in group],
-                            key=lambda x: x["output"]["final_energy"]
+                            key=lambda x: x["output"]["final_energy"],
                         )
 
                     charges = [f["charge"] for f in relevant_calcs]
                     if all([c in docs_by_charge for c in charges]):
                         continue
-                    single_points = [s for s in group if s["task_type"] == TaskType.Single_Point]
+                    single_points = [
+                        s for s in group if s["task_type"] == TaskType.Single_Point
+                    ]
 
                     for ff in relevant_calcs:
                         d = {
@@ -161,7 +173,7 @@ class RedoxDoc(PropertyDoc):
                             "oxidation_free_energy": None,
                             "ox_id": None,
                             "reduction_potentials": None,
-                            "oxidations_potentials": None
+                            "oxidations_potentials": None,
                         }
 
                         charge = ff["charge"]
@@ -180,7 +192,7 @@ class RedoxDoc(PropertyDoc):
                             ff_g = get_free_energy(
                                 ff["output"]["final_energy"],
                                 ff["output"]["enthalpy"],
-                                ff["output"]["entropy"]
+                                ff["output"]["entropy"],
                             )
                         # Single atoms won't have enthalpy and entropy
                         except TypeError:
@@ -194,12 +206,18 @@ class RedoxDoc(PropertyDoc):
 
                             # EA
                             if sp["charge"] == charge - 1 and mm.fit(ff_mol, sp_mol):
-                                d["electron_affinity"] = (sp["output"]["final_energy"] - ff["output"]["final_energy"]) * 27.2114
+                                d["electron_affinity"] = (
+                                    sp["output"]["final_energy"]
+                                    - ff["output"]["final_energy"]
+                                ) * 27.2114
                                 d["ea_id"] = sp["task_id"]
 
                             # IE
                             elif sp["charge"] == charge + 1 and mm.fit(ff_mol, sp_mol):
-                                d["ionization_energy"] = (sp["output"]["final_energy"] - ff["output"]["final_energy"]) * 27.2114
+                                d["ionization_energy"] = (
+                                    sp["output"]["final_energy"]
+                                    - ff["output"]["final_energy"]
+                                ) * 27.2114
                                 d["ie_id"] = sp["task_id"]
 
                             if d["ea_id"] is not None and d["ie_id"] is not None:
@@ -217,7 +235,7 @@ class RedoxDoc(PropertyDoc):
                                     other_g = get_free_energy(
                                         other["output"]["final_energy"],
                                         other["output"]["enthalpy"],
-                                        other["output"]["entropy"]
+                                        other["output"]["entropy"],
                                     )
                                 except TypeError:
                                     # Single atoms
@@ -225,7 +243,9 @@ class RedoxDoc(PropertyDoc):
                                 d["reduction_free_energy"] = other_g - ff_g
                                 d["reduction_potentials"] = dict()
                                 for ref, pot in reference_potentials.items():
-                                    d["reduction_potentials"][ref] = -1 * d["reduction_free_energy"] - pot
+                                    d["reduction_potentials"][ref] = (
+                                        -1 * d["reduction_free_energy"] - pot
+                                    )
                                 d["red_id"] = other["task_id"]
 
                             # Oxidation
@@ -234,7 +254,7 @@ class RedoxDoc(PropertyDoc):
                                     other_g = get_free_energy(
                                         other["output"]["final_energy"],
                                         other["output"]["enthalpy"],
-                                        other["output"]["entropy"]
+                                        other["output"]["entropy"],
                                     )
                                 except TypeError:
                                     # Single atoms
@@ -242,7 +262,9 @@ class RedoxDoc(PropertyDoc):
                                 d["oxidation_free_energy"] = other_g - ff_g
                                 d["oxidation_potentials"] = dict()
                                 for ref, pot in reference_potentials.items():
-                                    d["oxidation_potentials"][ref] = d["oxidation_free_energy"] - pot
+                                    d["oxidation_potentials"][ref] = (
+                                        d["oxidation_free_energy"] - pot
+                                    )
 
                                 d["ox_id"] = other["task_id"]
 
@@ -255,12 +277,12 @@ class RedoxDoc(PropertyDoc):
 
                         origins = list()
                         for x in [
-                                ff["task_id"],
-                                d["ea_id"],
-                                d["ie_id"],
-                                d["red_id"],
-                                d["ox_id"]
-                            ]:
+                            ff["task_id"],
+                            d["ea_id"],
+                            d["ie_id"],
+                            d["red_id"],
+                            d["ox_id"],
+                        ]:
                             if x is not None:
                                 origins.append(PropertyOrigin(name="redox", task_id=x))
 

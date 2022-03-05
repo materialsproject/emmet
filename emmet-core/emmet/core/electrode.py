@@ -112,7 +112,8 @@ class EntriesCompositionSummary(BaseModel):
     )
 
     all_elements: List[Element] = Field(
-        None, description="Elements in material entries across all voltage pairs.",
+        None,
+        description="Elements in material entries across all voltage pairs.",
     )
 
     all_composition_reduced: Dict = Field(
@@ -269,7 +270,9 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         discharge_comp = Composition(d["formula_discharge"])
         working_ion_ele = Element(d["working_ion"])
         battery_formula = cls.get_battery_formula(
-            Composition(d["formula_charge"]), discharge_comp, working_ion_ele,
+            Composition(d["formula_charge"]),
+            discharge_comp,
+            working_ion_ele,
         )
 
         compositions = []

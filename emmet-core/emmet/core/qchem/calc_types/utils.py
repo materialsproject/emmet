@@ -13,21 +13,23 @@ from emmet.core.qchem.calc_types.calc_types import (
     SOLVENT_MODELS,
     SOLVENTS,
     PCM_DIELECTRICS,
-    SMD_PARAMETERS
+    SMD_PARAMETERS,
 )
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
-functional_synonyms = {"wb97xd": "wb97x-d",
-                       "wb97xd3": "wb97x-d3",
-                       "wb97xv": "wb97x-v",
-                       "wb97mv": "wb97m-v"}
+functional_synonyms = {
+    "wb97xd": "wb97x-d",
+    "wb97xd3": "wb97x-d3",
+    "wb97xv": "wb97x-v",
+    "wb97mv": "wb97m-v",
+}
+
 
 def level_of_theory(
-        parameters: Dict[str, Any],
-        custom_smd:Optional[str]=None
+    parameters: Dict[str, Any], custom_smd: Optional[str] = None
 ) -> LevelOfTheory:
     """
 
@@ -45,8 +47,9 @@ def level_of_theory(
     basis_raw = parameters["rem"].get("basis")
 
     if funct_raw is None or basis_raw is None:
-        raise ValueError('Method and basis must be included in "rem" section '
-                         'of parameters!')
+        raise ValueError(
+            'Method and basis must be included in "rem" section ' "of parameters!"
+        )
 
     disp_corr = parameters["rem"].get("dft_d")
 
@@ -101,7 +104,9 @@ def level_of_theory(
 
         if solvent == "other":
             if custom_smd is None:
-                raise ValueError("SMD calculation with solvent=other requires custom_smd!")
+                raise ValueError(
+                    "SMD calculation with solvent=other requires custom_smd!"
+                )
 
             match = False
             custom_mod = custom_smd.replace(".0,", ".00,")
@@ -125,6 +130,7 @@ def level_of_theory(
 
     return LevelOfTheory(lot)
 
+
 def task_type(orig: Dict[str, Any], special_run_type: Optional[str] = None) -> TaskType:
     if special_run_type == "frequency_flattener":
         return TaskType("Frequency Flattening Geometry Optimization")
@@ -142,10 +148,9 @@ def task_type(orig: Dict[str, Any], special_run_type: Optional[str] = None) -> T
 
     return TaskType("Unknown")
 
+
 def calc_type(
-    special_run_type: str,
-    orig: Dict[str, Any],
-    custom_smd: Optional[str] = None
+    special_run_type: str, orig: Dict[str, Any], custom_smd: Optional[str] = None
 ) -> CalcType:
     """
     Determines the calc type

@@ -1,8 +1,7 @@
 import pytest
 from maggma.stores import JSONStore, MemoryStore
 
-from emmet.builders.qchem.molecules import (MoleculesAssociationBuilder,
-                                            MoleculesBuilder)
+from emmet.builders.qchem.molecules import MoleculesAssociationBuilder, MoleculesBuilder
 from emmet.builders.molecules.orbitals import OrbitalBuilder
 
 
@@ -21,9 +20,7 @@ def mol_store(tasks_store):
     stage_one.run()
 
     mol_store = MemoryStore(key="molecule_id")
-    stage_two = MoleculesBuilder(assoc=assoc_store,
-                                 molecules=mol_store,
-                                 prefix="libe")
+    stage_two = MoleculesBuilder(assoc=assoc_store, molecules=mol_store, prefix="libe")
     stage_two.run()
 
     return mol_store

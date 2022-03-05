@@ -17,7 +17,9 @@ def test_tasks(test_dir):
         data = json.load(f)
 
     for d in data:
-        d["last_updated"] = datetime.datetime.strptime(d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f")
+        d["last_updated"] = datetime.datetime.strptime(
+            d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f"
+        )
 
     tasks = [TaskDocument(**t) for t in data]
     return tasks
@@ -31,7 +33,13 @@ def test_make_mol(test_tasks):
     assert len(molecule.entries) == 5
 
     bad_task_group = [
-        task for task in test_tasks if task.task_type not in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization]
+        task
+        for task in test_tasks
+        if task.task_type
+        not in [
+            TaskType.Geometry_Optimization,
+            TaskType.Frequency_Flattening_Geometry_Optimization,
+        ]
     ]
 
     with pytest.raises(Exception):
@@ -40,7 +48,13 @@ def test_make_mol(test_tasks):
 
 def test_make_deprecated_mol(test_tasks):
     bad_task_group = [
-        task for task in test_tasks if task.task_type not in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization]
+        task
+        for task in test_tasks
+        if task.task_type
+        not in [
+            TaskType.Geometry_Optimization,
+            TaskType.Frequency_Flattening_Geometry_Optimization,
+        ]
     ]
 
     molecule = MoleculeDoc.construct_deprecated_molecule(bad_task_group)

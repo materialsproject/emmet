@@ -90,20 +90,19 @@ def form_env(mol_lot: Tuple[Molecule, str]) -> str:
     return key
 
 
-def group_molecules(
-        molecules: List[Molecule],
-        lots: List[str]
-):
+def group_molecules(molecules: List[Molecule], lots: List[str]):
     """
     Groups molecules according to composition, charge, environment, and equality
-    
+
     Args:
         molecules (List[Molecule])
         lots (List[str]): string representations of Q-Chem levels of theory
             (for instance, wB97X-V/def2-TZVPPD/VACUUM)
     """
 
-    for mol_key, pregroup in groupby(sorted(zip(molecules, lots), key=form_env), key=form_env):
+    for mol_key, pregroup in groupby(
+        sorted(zip(molecules, lots), key=form_env), key=form_env
+    ):
         subgroups = list()
         for mol, _ in pregroup:
             mol_copy = copy.deepcopy(mol)
@@ -120,7 +119,7 @@ def group_molecules(
                     matched = True
                     break
             if not matched:
-                subgroups.append({"mol":mol_copy,"mol_list":[mol]})
+                subgroups.append({"mol": mol_copy, "mol_list": [mol]})
         for group in subgroups:
             yield group["mol_list"]
 

@@ -12,7 +12,7 @@ TASK_TYPES = [
     "Frequency Flattening Geometry Optimization",
     "Transition State Geometry Optimization",
     "Frequency Flattening Transition State Geometry Optimization",
-    "Unknown"
+    "Unknown",
 ]
 
 FUNCTIONAL_CLASSES = {
@@ -51,7 +51,7 @@ FUNCTIONAL_CLASSES = {
         # "wB97X",
         "wB97X-D",
         "wB97X-D3",
-        "wB97X-V"
+        "wB97X-V",
     ],
     "hybrid-meta-gga": [
         # "M06-2X",
@@ -71,26 +71,40 @@ FUNCTIONAL_CLASSES = {
     ],
 }
 
-FUNCTIONALS = [rt for functional_class in FUNCTIONAL_CLASSES for rt in FUNCTIONAL_CLASSES[functional_class]]
+FUNCTIONALS = [
+    rt
+    for functional_class in FUNCTIONAL_CLASSES
+    for rt in FUNCTIONAL_CLASSES[functional_class]
+]
 
-BASIS_SETS = ["6-31g*", "def2-SVPD", "def2-TZVP", "def2-TZVPD", "def2-TZVPP", "def2-TZVPPD", "def2-QZVPPD"]
+BASIS_SETS = [
+    "6-31g*",
+    "def2-SVPD",
+    "def2-TZVP",
+    "def2-TZVPD",
+    "def2-TZVPP",
+    "def2-TZVPPD",
+    "def2-QZVPPD",
+]
 
 SOLVENT_MODELS = ["VACUUM", "PCM", "ISOSVP", "SMD", "CMIRS"]
 
 SOLVENTS = ["WATER", "THF", "G2", "DME", "EC", "EC/EMC", "PC"]
 
-PCM_DIELECTRICS = {"WATER": 78.39,
-                   "THF": 7.43,
-                   "G2": 7.23,
-                   "DME": 7.2,
-                   "EC": 95.3,
-                   "EC/EMC": 18.5,
-                   "PC": 65.5}
+PCM_DIELECTRICS = {
+    "WATER": 78.39,
+    "THF": 7.43,
+    "G2": 7.23,
+    "DME": 7.2,
+    "EC": 95.3,
+    "EC/EMC": 18.5,
+    "PC": 65.5,
+}
 
 SMD_PARAMETERS = {
     "G2": "7.23,1.4097,0.00,0.859,36.83,0.00,0.00",
     "DME": "7.2,1.379,0.00,0.651,30.8,0.00,0.00",
     "EC": "90.0,1.415,0.00,0.735,20.2,0.00,0.00",
     "EC/EMC": "18.5,1.415,0.00,0.735,20.2,0.00,0.00",
-    "PC": "64.9,1.421,0.0,0.730,29.13,0.0,0.0"
+    "PC": "64.9,1.421,0.0,0.730,29.13,0.0,0.0",
 }

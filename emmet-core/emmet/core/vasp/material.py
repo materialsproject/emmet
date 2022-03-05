@@ -171,7 +171,8 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
     @classmethod
     def construct_deprecated_material(
-        cls, task_group: List[TaskDocument],
+        cls,
+        task_group: List[TaskDocument],
     ) -> "MaterialsDoc":
         """
         Converts a group of tasks into a deprecated material

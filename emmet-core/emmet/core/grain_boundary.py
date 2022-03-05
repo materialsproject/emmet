@@ -27,27 +27,33 @@ class GrainBoundaryDoc(BaseModel):
     )
 
     sigma: int = Field(
-        None, description="Sigma value of the boundary",
+        None,
+        description="Sigma value of the boundary",
     )
 
     type: GBTypeEnum = Field(
-        None, description="Grain boundary type",
+        None,
+        description="Grain boundary type",
     )
 
     rotation_axis: List[int] = Field(
-        None, description="Rotation axis",
+        None,
+        description="Rotation axis",
     )
 
     gb_plane: List[int] = Field(
-        None, description="Grain boundary plane",
+        None,
+        description="Grain boundary plane",
     )
 
     rotation_angle: float = Field(
-        None, description="Rotation angle in degrees",
+        None,
+        description="Rotation angle in degrees",
     )
 
     gb_energy: float = Field(
-        None, description="Grain boundary energy in J/m^2",
+        None,
+        description="Grain boundary energy in J/m^2",
     )
 
     initial_structure: GrainBoundary = Field(

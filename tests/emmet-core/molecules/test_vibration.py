@@ -17,7 +17,9 @@ def test_tasks(test_dir):
         data = json.load(f)
 
     for d in data:
-        d["last_updated"] = datetime.datetime.strptime(d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f")
+        d["last_updated"] = datetime.datetime.strptime(
+            d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f"
+        )
 
     tasks = [TaskDocument(**t) for t in data]
     return tasks

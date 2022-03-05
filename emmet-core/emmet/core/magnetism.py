@@ -17,43 +17,53 @@ class MagnetismDoc(PropertyDoc):
     property_name = "magnetism"
 
     ordering: str = Field(
-        None, description="Magnetic ordering.",
+        None,
+        description="Magnetic ordering.",
     )
 
     is_magnetic: bool = Field(
-        None, description="Whether the material is magnetic.",
+        None,
+        description="Whether the material is magnetic.",
     )
 
     exchange_symmetry: int = Field(
-        None, description="Exchange symmetry.",
+        None,
+        description="Exchange symmetry.",
     )
 
     num_magnetic_sites: int = Field(
-        None, description="The number of magnetic sites.",
+        None,
+        description="The number of magnetic sites.",
     )
 
     num_unique_magnetic_sites: int = Field(
-        None, description="The number of unique magnetic sites.",
+        None,
+        description="The number of unique magnetic sites.",
     )
 
     types_of_magnetic_species: List[str] = Field(
-        None, description="Magnetic specie elements.",
+        None,
+        description="Magnetic specie elements.",
     )
 
     magmoms: List[float] = Field(
-        None, description="Magnetic moments for each site.",
+        None,
+        description="Magnetic moments for each site.",
     )
 
     total_magnetization: float = Field(
-        None, description="Total magnetization in μB.",
+        None,
+        description="Total magnetization in μB.",
     )
 
     total_magnetization_normalized_vol: float = Field(
-        None, description="Total magnetization normalized by volume in μB/Å³.",
+        None,
+        description="Total magnetization normalized by volume in μB/Å³.",
     )
 
     total_magnetization_normalized_formula_units: float = Field(
-        None, description="Total magnetization normalized by formula unit in μB/f.u. .",
+        None,
+        description="Total magnetization normalized by formula unit in μB/f.u. .",
     )
 
     @classmethod

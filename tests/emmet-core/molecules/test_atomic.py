@@ -16,7 +16,9 @@ def test_tasks(test_dir):
         data = json.load(f)
 
     for d in data:
-        d["last_updated"] = datetime.datetime.strptime(d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f")
+        d["last_updated"] = datetime.datetime.strptime(
+            d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f"
+        )
 
     tasks = [TaskDocument(**t) for t in data]
     return tasks
@@ -30,42 +32,61 @@ def open_shell(test_dir):
 
 def test_partial_charges(test_tasks):
     # Test RESP
-    pcd = PartialChargesDoc.from_task(test_tasks[0], molecule_id="libe-115880", preferred_methods=["resp"])
+    pcd = PartialChargesDoc.from_task(
+        test_tasks[0], molecule_id="libe-115880", preferred_methods=["resp"]
+    )
 
     assert pcd.property_name == "partial_charges"
     assert pcd.method == "resp"
     assert pcd.charges == test_tasks[0].output.resp
 
     # Test Mulliken
-    pcd = PartialChargesDoc.from_task(test_tasks[0], molecule_id="libe-115880", preferred_methods=["mulliken"])
+    pcd = PartialChargesDoc.from_task(
+        test_tasks[0], molecule_id="libe-115880", preferred_methods=["mulliken"]
+    )
 
     assert pcd.method == "mulliken"
     assert pcd.charges == test_tasks[0].output.mulliken
 
     # Test Critic2
-    pcd = PartialChargesDoc.from_task(test_tasks[3], molecule_id="libe-115880", preferred_methods=["critic2"])
+    pcd = PartialChargesDoc.from_task(
+        test_tasks[3], molecule_id="libe-115880", preferred_methods=["critic2"]
+    )
 
     assert pcd.method == "critic2"
     assert pcd.charges == test_tasks[3].critic2["processed"]["charges"]
 
     # Test NBO
-    pcd = PartialChargesDoc.from_task(test_tasks[4], molecule_id="libe-115880", preferred_methods=["nbo"])
+    pcd = PartialChargesDoc.from_task(
+        test_tasks[4], molecule_id="libe-115880", preferred_methods=["nbo"]
+    )
 
     assert pcd.method == "nbo"
-    nbo_charges = [float(test_tasks[4].output.nbo["natural_populations"][0]["Charge"][str(i)]) for i in range(11)]
+    nbo_charges = [
+        float(test_tasks[4].output.nbo["natural_populations"][0]["Charge"][str(i)])
+        for i in range(11)
+    ]
     assert pcd.charges == nbo_charges
+
 
 def test_partial_spins(open_shell):
     # Test Mulliken
-    psd = PartialSpinsDoc.from_task(open_shell, molecule_id="libe-202098", preferred_methods=["mulliken"])
+    psd = PartialSpinsDoc.from_task(
+        open_shell, molecule_id="libe-202098", preferred_methods=["mulliken"]
+    )
 
     assert psd.property_name == "partial_spins"
     assert psd.method == "mulliken"
     assert psd.spins == [m[1] for m in open_shell.output.mulliken]
 
     # Test NBO
-    psd = PartialSpinsDoc.from_task(open_shell, molecule_id="libe-202098", preferred_methods=["nbo"])
+    psd = PartialSpinsDoc.from_task(
+        open_shell, molecule_id="libe-202098", preferred_methods=["nbo"]
+    )
 
     assert psd.method == "nbo"
-    spins = [float(open_shell.output.nbo["natural_populations"][0]["Density"][str(i)]) for i in range(11)]
+    spins = [
+        float(open_shell.output.nbo["natural_populations"][0]["Density"][str(i)])
+        for i in range(11)
+    ]
     assert psd.spins == spins
