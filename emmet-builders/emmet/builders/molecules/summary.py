@@ -244,16 +244,21 @@ class SummaryBuilder(Builder):
                 "vibration": self.vibes.query_one({"molecule_id": mol_id}),
              }
 
+            to_delete = list()
+
             for k, v in d.items():
                 if isinstance(v, list) and len(v) == 0:
-                    del d[k]
+                    to_delete.append(k)
+
+            for td in to_delete:
+                del d[td]
 
             summary_doc = SummaryDoc.from_docs(
                 molecule_id=mol_id, **d
             )
             summary_docs.append(summary_doc)
 
-        self.logger.debug(f"Produced {len(summary_docs)} orbital docs for {formula}")
+        self.logger.debug(f"Produced {len(summary_docs)} summary docs for {formula}")
 
         return jsanitize([doc.dict() for doc in summary_docs], allow_bson=True)
 
