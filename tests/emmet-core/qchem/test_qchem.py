@@ -12,12 +12,12 @@ from emmet.core.mpid import MPID
 def test_task_type():
 
     task_types = [
-        "single-point",
-        "geometry optimization",
-        "frequency analysis",
-        "frequency-flattening geometry optimization",
-        "transition-state geometry optimization",
-        "frequency-flattening transition-state geometry optimization",
+        "Single Point",
+        "Geometry Optimization",
+        "Frequency Analysis",
+        "Frequency Flattening Geometry Optimization",
+        "Transition State Geometry Optimization",
+        "Frequency Flattening Transition State Geometry Optimization",
     ]
 
     inputs = [

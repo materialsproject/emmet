@@ -28,7 +28,7 @@ def test_make_mol(test_tasks):
     molecule = MoleculeDoc.from_tasks(test_tasks)
     assert molecule.formula_alphabetical == "C3 H4 Li1 O3"
     assert len(molecule.task_ids) == 5
-    assert len(molecule.entries) == 1
+    assert len(molecule.entries) == 5
 
     bad_task_group = [
         task for task in test_tasks if task.task_type not in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization]

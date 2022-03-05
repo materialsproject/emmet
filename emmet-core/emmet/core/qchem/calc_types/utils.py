@@ -104,8 +104,11 @@ def level_of_theory(
                 raise ValueError("SMD calculation with solvent=other requires custom_smd!")
 
             match = False
+            custom_mod = custom_smd.replace(".0,", ".00,")
+            if custom_mod.endswith(".0"):
+                custom_mod += "0"
             for s, p in SMD_PARAMETERS.items():
-                if p == custom_smd:
+                if p == custom_mod:
                     solvent = s
                     match = True
                     break
