@@ -106,16 +106,21 @@ def group_molecules(
     for mol_key, pregroup in groupby(sorted(zip(molecules, lots), key=form_env), key=form_env):
         subgroups = list()
         for mol, _ in pregroup:
-            mol_0 = copy.deepcopy(mol)
-            mol_0.set_charge_and_spin(0)
+            mol_copy = copy.deepcopy(mol)
+
+            # Single atoms will always have identical structure
+            # So grouping by geometry isn't enough
+            # Need to also group by charge
+            if len(mol_copy) > 1:
+                mol_copy.set_charge_and_spin(0)
             matched = False
             for subgroup in subgroups:
-                if mol_0 == subgroup["mol"]:
+                if mol_copy == subgroup["mol"]:
                     subgroup["mol_list"].append(mol)
                     matched = True
                     break
             if not matched:
-                subgroups.append({"mol":mol_0,"mol_list":[mol]})
+                subgroups.append({"mol":mol_copy,"mol_list":[mol]})
         for group in subgroups:
             yield group["mol_list"]
 
