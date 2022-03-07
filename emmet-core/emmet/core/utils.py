@@ -103,7 +103,7 @@ def group_molecules(molecules: List[Molecule], lots: List[str]):
     for mol_key, pregroup in groupby(
         sorted(zip(molecules, lots), key=form_env), key=form_env
     ):
-        subgroups: Dict[str, Any] = list()
+        subgroups: List[Dict[str, Any]] = list()
         for mol, _ in pregroup:
             mol_copy = copy.deepcopy(mol)
 
@@ -124,7 +124,7 @@ def group_molecules(molecules: List[Molecule], lots: List[str]):
             yield group["mol_list"]
 
 
-def confirm_molecule(mol: Union[Molecule, dict]) -> Molecule:
+def confirm_molecule(mol: Union[Molecule, Dict]):
     """
     Check that something that we expect to be a molecule is actually a Molecule
     object, and not a dictionary representation.
@@ -133,7 +133,7 @@ def confirm_molecule(mol: Union[Molecule, dict]) -> Molecule:
     :return:
     """
 
-    if isinstance(mol, dict):
+    if isinstance(mol, Dict):
         return Molecule.from_dict(mol)
     else:
         return mol

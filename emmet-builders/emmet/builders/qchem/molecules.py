@@ -1,7 +1,7 @@
 from datetime import datetime
 from itertools import chain, groupby
 from math import ceil
-from typing import Dict, Iterable, Iterator, List, Optional
+from typing import Any, Dict, Iterable, Iterator, List, Optional
 
 import networkx as nx
 
@@ -538,7 +538,7 @@ class MoleculesBuilder(Builder):
             for f_e, group in groupby(
                 sorted(pregroup, key=environment), key=environment
             ):
-                subgroups = list()
+                subgroups: List[Dict[str, Any]] = list()
                 for mol_doc in group:
                     mol_graph = make_mol_graph(mol_doc.molecule)
 

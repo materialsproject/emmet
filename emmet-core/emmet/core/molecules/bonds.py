@@ -71,9 +71,9 @@ def make_mol_graph(
         for bond in critic_bonds:
             bond.sort()
             if bond[0] != bond[1]:
-                bond = (bond[0], bond[1])
-                if bond not in mg_edges:
-                    mol_graph.add_edge(bond[0], bond[1])
+                bond_tup = (bond[0], bond[1])
+                if bond_tup not in mg_edges:
+                    mol_graph.add_edge(bond_tup[0], bond_tup[1])
     return mol_graph
 
 
@@ -119,7 +119,7 @@ def _bonds_hybridization(nbo: Dict[str, Any], index: int):
     return bonds, warnings
 
 
-def _bonds_peturbation(nbo: Dict[str, Any], index: int, poss_coord: Dict[int, List[int]], energy_cutoff: float, metal_indices: List[int]):
+def _bonds_peturbation(nbo: Dict[str, Any], index: int, poss_coord: Dict[Optional[int], List[Optional[int]]], energy_cutoff: float, metal_indices: List[int]):
     """
     Extract bonds from "perturbation_energy" NBO output
     """
@@ -128,8 +128,8 @@ def _bonds_peturbation(nbo: Dict[str, Any], index: int, poss_coord: Dict[int, Li
     if len(nbo["perturbation_energy"]) > index:
         for inter_ind in nbo["perturbation_energy"][index].get("donor type", list()):
             coord = False
-            m_ind = None
-            x_ind = None
+            m_ind: Optional[int] = None
+            x_ind: Optional[int] = None
             if (
                 int(nbo["perturbation_energy"][index]["acceptor atom 1 number"][inter_ind])
                 - 1
@@ -238,7 +238,7 @@ def nbo_molecule_graph(mol: Molecule, nbo: Dict[str, Any]):
     energy_cutoff = 3.0
     metal_indices = [i for i, e in enumerate(mol.species) if e in metals]
 
-    poss_coord = dict()
+    poss_coord: Dict[Optional[int], List[Optional[int]]] = dict()
     dist_mat = mol.distance_matrix
     for i in metal_indices:
         poss_coord[i] = list()
@@ -330,7 +330,7 @@ class BondingDoc(PropertyDoc):
         :return:
         """
 
-        mg = None
+        mg_made = False
         method = None
         warnings = list()
 
@@ -340,7 +340,7 @@ class BondingDoc(PropertyDoc):
             mol = task.output.initial_molecule
 
         for m in preferred_methods:
-            if mg is not None:
+            if mg_made:
                 break
 
             if m == "nbo" and task.output.nbo is not None:
