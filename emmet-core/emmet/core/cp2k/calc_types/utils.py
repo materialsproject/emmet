@@ -54,6 +54,8 @@ def run_type(dft: Dict) -> RunType:
             ):
                 return RunType(f"{functional_class}{is_hubbard}")
 
+    if parameters.get('FRACTION'):
+        return RunType(f"HYBRID{is_hubbard}")
 
 def task_type(
     inputs: Dict

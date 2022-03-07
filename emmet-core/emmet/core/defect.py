@@ -2,13 +2,14 @@
 from datetime import datetime
 from typing import ClassVar, Dict, Tuple, Mapping, List
 from monty.json import MontyDecoder
+from monty.tempfile import ScratchDir
 from itertools import groupby
 from pydantic import Field, validator, BaseModel
 
 from pymatgen.core import Structure, Composition, Element
 from pymatgen.analysis.defects.core import DefectEntry, Defect
 from pymatgen.analysis.defects.defect_compatibility import DefectCompatibility
-from pymatgen.analysis.defects.thermodynamics import DefectPhaseDiagram, DefectPredominanceDiagram
+from pymatgen.analysis.defects.thermodynamics import DefectPhaseDiagram, BrouwerDiagram
 from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.entries.computed_entries import CompositionEnergyAdjustment
@@ -23,6 +24,8 @@ from emmet.core.cp2k.material import MaterialsDoc
 from emmet.core.cp2k.calc_types.utils import run_type
 from emmet.builders.cp2k.utils import get_mpid, matcher
 
+from pymatgen.analysis.defects.corrections import FreysoldtCorrection2d
+from pymatgen.io.vasp.outputs import VolumetricData
 
 # TODO Update DefectDoc on defect entry level so you don't re-do uncessary corrections
 class DefectDoc(StructureMetadata):
@@ -170,19 +173,9 @@ class DefectDoc(StructureMetadata):
         final_tasks = {}
         for key, tasks_for_runtype in groupby(sorted(tasks, key=_run_type), key=_run_type):
             sorted_tasks = sorted(tasks_for_runtype, key=_sort)
-
-            convergence = [
-                (
-                    t[0]['nsites'],
-                    t[0]['output']['energy'], t[1]['output']['energy'],
-                    t[0]['defect']['@class'],
-                )
-                for t in sorted_tasks
-            ]
-            #print(convergence)
-            #for t in sorted_tasks:
-            #    print('\t', TaskDocument(**t[0]).task_id)
-            #    print('\t', TaskDocument(**t[1]).task_id)
+            ents = [cls.get_defect_entry_from_tasks(t[0], t[1], t[2], query) for t in sorted_tasks]
+            for e in ents:
+                print(e.energy)
 
             best_defect_task, best_bulk_task, dielectric = sorted_tasks[0]
             best_entry = cls.get_defect_entry_from_tasks(best_defect_task, best_bulk_task, dielectric, query)
@@ -277,7 +270,7 @@ class DefectDoc(StructureMetadata):
         final_defect_structure = Structure.from_dict(defect_task['output']['structure'])
         final_bulk_structure = Structure.from_dict(bulk_task['output']['structure'])
 
-        mpid = get_mpid(init_bulk_structure)
+        #mpid = get_mpid(init_bulk_structure)
 
         parameters = {
             'defect_energy': defect_task['output']['energy'],
@@ -286,15 +279,17 @@ class DefectDoc(StructureMetadata):
             'final_defect_structure': final_defect_structure,
             'vbm': bulk_task['output']['vbm'],
             'cbm': bulk_task['output']['cbm'],
-            'material_id': mpid,
+            #'material_id': mpid,
             'entry_id': defect_task.get('task_id')
         }
 
         # TODO Should probably get these even if not needed for corrections
         if init_defect_structure.charge != 0:
-            axis_grid = [[float(x) for x in _] for _ in defect_task['output']['v_hartree_grid']]
-            bulk_planar_averages = [[float(x) for x in _] for _ in bulk_task['output']['v_hartree']]
-            defect_planar_averages = [[float(x) for x in _] for _ in defect_task['output']['v_hartree']]
+            axis_grid = [[float(x) for x in _] for _ in bulk_task['output']['v_hartree_grid']] if 'v_hartree_grid' in bulk_task['output'] else None
+            bulk_planar_averages = [[float(x) for x in _] for _ in bulk_task['output']['v_hartree_planar']] if 'v_hartree_planar' in bulk_task['output'] else None
+            defect_planar_averages = [[float(x) for x in _] for _ in defect_task['output']['v_hartree_planar']] if 'v_hartree_planar' in defect_task['output'] else None
+            bulk_site_averages = [float(x) for x in bulk_task['output']['v_hartree_sites']] if 'v_hartree_sites' in bulk_task['output'] else None
+            defect_site_averages = [float(x) for x in defect_task['output']['v_hartree_sites']] if 'v_hartree_sites' in defect_task['output'] else None
 
             dfi, site_matching_indices = matcher(
                 init_bulk_structure, init_defect_structure,
@@ -307,15 +302,60 @@ class DefectDoc(StructureMetadata):
             parameters['defect_planar_averages'] = defect_planar_averages
             parameters['defect_frac_sc_coords'] = defect_frac_sc_coords
             parameters['site_matching_indices'] = site_matching_indices
-
-        # cannot be easily queried for, so check here.
-        if 'v_hartree' in final_bulk_structure.site_properties:
-            parameters['bulk_atomic_site_averages'] = final_bulk_structure.site_properties['v_hartree']
-        if 'v_hartree' in final_defect_structure.site_properties:
-            parameters['defect_atomic_site_averages'] = final_defect_structure.site_properties['v_hartree']
+            parameters['bulk_site_averages'] = bulk_site_averages
+            parameters['defect_site_averages'] = defect_site_averages
 
         return parameters
 
+
+# TODO Some of this should be done by DefectCompatibility,
+# but it's not clear how to do that since 2d materials 
+# are not tagged in any particular way to allow defect compatibility
+# to decide which correction to apply
+class DefectDoc2d(DefectDoc):
+    """
+    DefectDoc subclass for 2D defects
+    """
+
+    @classmethod
+    def get_defect_entry_from_tasks(cls, defect_task, bulk_task, dielectric=None, query='defect'):
+        parameters = cls.get_parameters_from_tasks(defect_task=defect_task, bulk_task=bulk_task)
+        if dielectric:
+            parameters['dielectric'] = dielectric
+
+        defect_entry = DefectEntry(
+            cls.get_defect_from_task(query=query, task=defect_task),
+            uncorrected_energy=parameters['defect_energy'] - parameters['bulk_energy'],
+            parameters=parameters,
+            entry_id=parameters['entry_id']
+        )
+
+        DefectCompatibility().process_entry(defect_entry, perform_corrections=False)
+
+        if False: 
+            with ScratchDir('.'):
+                fc = FreysoldtCorrection2d(
+                    defect_entry.parameters.get('dielectric', 22), 
+                    "LOCPOT.ref", "LOCPOT.def", encut=520, buffer=2
+                ) 
+                lref = VolumetricData(
+                    structure=Structure.from_dict(bulk_task['output']['structure']), 
+                    data={'total': MontyDecoder().process_decoded(bulk_task['v_hartree'])}
+                )
+                ldef = VolumetricData(
+                    structure=Structure.from_dict(defect_task['output']['structure']), 
+                    data={'total': MontyDecoder().process_decoded(defect_task['v_hartree'])}
+                )
+                lref.write_file("LOCPOT.ref")
+                ldef.write_file("LOCPOT.def")
+                ecorr = fc.get_correction(defect_entry)
+                defect_entry.corrections.update(ecorr)
+                defect_entry.parameters['freysoldt2d_meta'] = fc.metadata
+
+        defect_entry_as_dict = defect_entry.as_dict()
+        defect_entry_as_dict['task_id'] = defect_entry_as_dict['entry_id']  # this seemed necessary for legacy db
+
+        return defect_entry
 
 class DefectThermoDoc(BaseModel):
 
@@ -330,19 +370,19 @@ class DefectThermoDoc(BaseModel):
         None, description="All task ids used in creating these phase diagrams"
     )
 
-    defect_predominance_diagrams: Mapping[RunType, DefectPredominanceDiagram] = Field(
-        None, description="Defect predominance diagrams"
+    brouwer_diagrams: Mapping[RunType, BrouwerDiagram] = Field(
+        None, description="Brouwer diagrams"
     )
 
     # TODO How can monty serialization incorporate into pydantic? It seems like VASP MatDocs dont need this
-    @validator("defect_predominance_diagrams", pre=True)
-    def decode(cls, defect_predominance_diagrams):
-        for e in defect_predominance_diagrams:
-            if isinstance(defect_predominance_diagrams[e], dict):
-                defect_predominance_diagrams[e] = MontyDecoder().process_decoded(
-                    {k: v for k, v in defect_predominance_diagrams[e].items()}
+    @validator("brouwer_diagrams", pre=True)
+    def decode(cls, brouwer_diagrams):
+        for e in brouwer_diagrams:
+            if isinstance(brouwer_diagrams[e], dict):
+                brouwer_diagrams[e] = MontyDecoder().process_decoded(
+                    {k: v for k, v in brouwer_diagrams[e].items()}
                 )
-        return defect_predominance_diagrams
+        return brouwer_diagrams
 
     @classmethod
     def from_docs(cls, defects: List[DefectDoc], materials: List[MaterialsDoc], electronic_structure: CompleteDos) -> "DefectThermoDoc":
@@ -362,7 +402,7 @@ class DefectThermoDoc(BaseModel):
         defect_phase_diagram = {}
         vbms = {}
         band_gaps = {}
-        defect_predominance_diagrams = {}
+        brouwer_diagrams = {}
         task_ids = {}
 
         dos = CompleteDos.from_dict(electronic_structure)
@@ -370,14 +410,22 @@ class DefectThermoDoc(BaseModel):
 
         for m in materials:
             for rt, ent in m.entries.items():
+                __found_chempots__ = True
+
                 # Chempot shift
                 for el, amt in ent.composition.element_composition.items():
+                    if Element(el) not in chempots:
+                        __found_chempots__ = False
+                        break
                     _rt = DEFAULT_RT if rt not in chempots[Element(el)] else rt
                     adj = CompositionEnergyAdjustment(-chempots[Element(el)][_rt],
                                                       n_atoms=amt,
                                                       name=f"Elemental shift {el} to formation energy space"
                                                       )
                     ent.energy_adjustments.append(adj)
+
+                if not __found_chempots__:
+                    continue
 
                 # Other stuff
                 band_gaps[rt] = bg
@@ -397,8 +445,7 @@ class DefectThermoDoc(BaseModel):
                         __found_chempots__ = False
                         break
                     _rt = DEFAULT_RT if rt not in chempots[Element(el)] else rt
-                    ent.corrections[f"Elemental shift {el} to formation energy space"] = -amt * chempots[Element(el)][
-                        _rt]
+                    ent.corrections[f"Elemental shift {el} to formation energy space"] = -amt * chempots[Element(el)][_rt]
 
                 if not __found_chempots__:
                     continue
@@ -420,7 +467,7 @@ class DefectThermoDoc(BaseModel):
                 band_gap=band_gaps[run_type],
                 filter_compatible=False
             )
-            defect_predominance_diagrams[run_type] = DefectPredominanceDiagram(
+            brouwer_diagrams[run_type] = BrouwerDiagram(
                 defect_phase_diagram=defect_phase_diagram[run_type],
                 bulk_dos=dos,
                 entries=[
@@ -434,7 +481,7 @@ class DefectThermoDoc(BaseModel):
         data = {
             'material_id': mpid,
             'task_ids': task_ids,
-            'defect_predominance_diagrams': defect_predominance_diagrams,
+            'brouwer_diagrams': brouwer_diagrams,
         }
 
         return cls(**{k: v for k, v in data.items()})

@@ -1,7 +1,9 @@
+from typing import List
+from copy import deepcopy
 import numpy as np
 from pymatgen.ext.matproj import MPRester
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from typing import List
+from pymatgen.analysis.structure_matcher import StructureMatcher
 
 
 def unpack(query, d):
@@ -46,7 +48,13 @@ def matcher(bulk_struc, defect_struc, final_bulk_struc=None, final_defect_struc=
                     matching_indices.append((i, j))
                     break
 
-        oxi_diff = [abs(final_defect_struc[d].specie.oxi_state - final_bulk_struc[b].specie.oxi_state) for b, d in matching_indices]
+        oxi_diff = [
+            abs(
+                final_defect_struc.site_properties['oxidation_state'][d] -
+                final_bulk_struc.site_properties['oxidation_state'][b]
+            )
+            for b, d in matching_indices
+        ]
         def_index = np.argmax(oxi_diff)
         matching_indices.pop(def_index)
         return def_index, matching_indices
@@ -70,10 +78,6 @@ def get_dielectric(mpid):
     except:
         return None
 
-
-from copy import deepcopy
-
-
 def get_mpid(s):
     struc = deepcopy(s)
     struc.remove_oxidation_states()
@@ -81,17 +85,29 @@ def get_mpid(s):
     for p in struc.site_properties:
         struc.remove_site_property(p)
     sga = SpacegroupAnalyzer(struc)
+    sm = StructureMatcher()
     with MPRester() as mp:
         dat = mp.query(
             criteria={
                 'chemsys': struc.composition.chemical_system,
                 'spacegroup.symbol': sga.get_space_group_symbol()
             },
-            properties=['material_id', 'formation_energy_per_atom']
+            properties=['material_id', 'structure']
         )
-
-    dat.sort(key=lambda x: x['formation_energy_per_atom'])
-    try:
+    dat = list(filter(lambda x: sm.fit(s, x['structure']), dat))
+    if len(dat) == 1:
         return dat[0]['material_id']
-    except:
-        return None
+    return None
+
+
+def synchronous_query(store1, store2, query, properties=None):
+    for t in store1.query(query, properties):
+        for key in t.keys():
+            if isinstance(t[key], dict) and t[key].get('gfs_id'):
+                t.update(
+                    {
+                        k: v for k,v in next(store2.query({"_id": t[key].get('gfs_id')}, properties)).items()
+                        if properties is None or k in properties
+                    }
+                    )
+        yield t
