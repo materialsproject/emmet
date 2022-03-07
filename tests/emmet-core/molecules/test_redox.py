@@ -28,10 +28,10 @@ def test_redox(test_mols):
 
     redox_docs = RedoxDoc.from_entries(entries)
 
-    assert len(redox_docs) == 17
+    assert len(redox_docs) == 18
     assert redox_docs[0].property_name == "redox"
 
-    assert redox_docs[1].electron_affinity == pytest.approx(-2.928377375046328)
-    assert str(redox_docs[1].ea_id) == "847651"
-    assert redox_docs[1].ionization_energy == pytest.approx(7.115431161042942)
-    assert str(redox_docs[1].ie_id) == "891146"
+    assert redox_docs[1].electron_affinity == pytest.approx(-1.888795786559726)
+    assert str(redox_docs[1].ea_id) == "116081"
+    assert redox_docs[1].ionization_energy == pytest.approx(2.392317962137756)
+    assert str(redox_docs[1].ie_id) == "116001"

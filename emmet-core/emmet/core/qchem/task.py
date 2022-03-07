@@ -174,9 +174,11 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
         return entry_dict
 
 
-def filter_task_type(entries: List[Dict[str, Any]],
-                     task_type: TaskType,
-                     sort_by: Optional[Callable] = None) -> List[Dict[str, Any]]:
+def filter_task_type(
+    entries: List[Dict[str, Any]],
+    task_type: TaskType,
+    sort_by: Optional[Callable] = None,
+) -> List[Dict[str, Any]]:
     """
     Filter (and sort) TaskDocument entries based on task type
 
