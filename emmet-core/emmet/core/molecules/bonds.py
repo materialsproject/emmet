@@ -91,19 +91,31 @@ def _bonds_hybridization(nbo: Dict[str, Any], index: int):
                 continue
 
             from_ind = (
-                int(nbo["hybridization_character"][index]["atom 1 number"][bond_ind]) - 1
+                int(nbo["hybridization_character"][index]["atom 1 number"][bond_ind])
+                - 1
             )
             to_ind = (
-                int(nbo["hybridization_character"][index]["atom 2 number"][bond_ind]) - 1
+                int(nbo["hybridization_character"][index]["atom 2 number"][bond_ind])
+                - 1
             )
 
-            if nbo["hybridization_character"][index]["atom 1 symbol"][bond_ind] in metals:
+            if (
+                nbo["hybridization_character"][index]["atom 1 symbol"][bond_ind]
+                in metals
+            ):
                 m_contrib = float(
-                    nbo["hybridization_character"][index]["atom 1 polarization"][bond_ind]
+                    nbo["hybridization_character"][index]["atom 1 polarization"][
+                        bond_ind
+                    ]
                 )
-            elif nbo["hybridization_character"][index]["atom 2 symbol"][bond_ind] in metals:
+            elif (
+                nbo["hybridization_character"][index]["atom 2 symbol"][bond_ind]
+                in metals
+            ):
                 m_contrib = float(
-                    nbo["hybridization_character"][index]["atom 2 polarization"][bond_ind]
+                    nbo["hybridization_character"][index]["atom 2 polarization"][
+                        bond_ind
+                    ]
                 )
             else:
                 m_contrib = None
@@ -119,7 +131,13 @@ def _bonds_hybridization(nbo: Dict[str, Any], index: int):
     return bonds, warnings
 
 
-def _bonds_peturbation(nbo: Dict[str, Any], index: int, poss_coord: Dict[Optional[int], List[Optional[int]]], energy_cutoff: float, metal_indices: List[int]):
+def _bonds_peturbation(
+    nbo: Dict[str, Any],
+    index: int,
+    poss_coord: Dict[Optional[int], List[Optional[int]]],
+    energy_cutoff: float,
+    metal_indices: List[int],
+):
     """
     Extract bonds from "perturbation_energy" NBO output
     """
@@ -131,7 +149,11 @@ def _bonds_peturbation(nbo: Dict[str, Any], index: int, poss_coord: Dict[Optiona
             m_ind: Optional[int] = None
             x_ind: Optional[int] = None
             if (
-                int(nbo["perturbation_energy"][index]["acceptor atom 1 number"][inter_ind])
+                int(
+                    nbo["perturbation_energy"][index]["acceptor atom 1 number"][
+                        inter_ind
+                    ]
+                )
                 - 1
                 in metal_indices
             ):
@@ -247,11 +269,15 @@ def nbo_molecule_graph(mol: Molecule, nbo: Dict[str, Any]):
             if i != j and val < distance_cutoff:
                 poss_coord[i].append(j)
 
-    new_alpha_bonds = _bonds_peturbation(nbo, 0, poss_coord, energy_cutoff, metal_indices)
+    new_alpha_bonds = _bonds_peturbation(
+        nbo, 0, poss_coord, energy_cutoff, metal_indices
+    )
     alpha_bonds = alpha_bonds.union(new_alpha_bonds)
 
     if mol.spin_multiplicity != 1:
-        new_beta_bonds = _bonds_peturbation(nbo, 1, poss_coord, energy_cutoff, metal_indices)
+        new_beta_bonds = _bonds_peturbation(
+            nbo, 1, poss_coord, energy_cutoff, metal_indices
+        )
         beta_bonds = beta_bonds.union(new_beta_bonds)
 
     sorted_alpha = set([tuple(sorted([a[0], a[1]])) for a in alpha_bonds])

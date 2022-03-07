@@ -52,7 +52,7 @@ def level_of_theory(
         funct_lower = functional_synonyms.get(funct_lower, funct_lower)
     else:
         # Replace Q-Chem terms for D3 tails with more common expressions
-        disp_corr = disp_corr.replace('_bj', '(bj)').replace('_zero', '(0)')
+        disp_corr = disp_corr.replace("_bj", "(bj)").replace("_zero", "(0)")
         funct_lower = f"{funct_raw}-{disp_corr}"
 
     basis_lower = basis_raw.lower()
