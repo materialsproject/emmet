@@ -57,21 +57,17 @@ def level_of_theory(
 
     basis_lower = basis_raw.lower()
 
-    functional = None
-    for f in FUNCTIONALS:
-        if f.lower() == funct_lower:
-            functional = f
-            break
-    if functional is None:
+    functional = [f for f in FUNCTIONALS if f.lower() == funct_lower]
+    if not functional:
         raise ValueError(f"Unexpected functional {funct_lower}!")
 
-    basis = None
-    for b in BASIS_SETS:
-        if b.lower() == basis_lower:
-            basis = b
-            break
-    if basis is None:
+    functional = functional[0]
+
+    basis = [b for b in BASIS_SETS if b.lower() == basis_lower]
+    if not basis:
         raise ValueError(f"Unexpected basis set {basis_lower}!")
+
+    basis = basis[0]
 
     solvent_method = parameters["rem"].get("solvent_method")
     if solvent_method is None:

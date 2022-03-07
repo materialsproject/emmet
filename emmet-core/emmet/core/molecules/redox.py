@@ -69,13 +69,33 @@ class RedoxDoc(PropertyDoc):
     )
 
     @classmethod
+    def _group_by_formula(cls: Type[T],
+                          entries: List[Dict[str, Any]]
+                          ) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Group task entries by formula
+
+        :param entries: List of entries (dicts derived from TaskDocuments)
+        :return: Grouped molecule entries
+        """
+
+        # First, group tasks by formula
+        tasks_by_formula = defaultdict(list)
+        for t in entries:
+            if not isinstance(t["output"], dict):
+                t["output"] = t["output"].as_dict()
+            tasks_by_formula[t["formula"]].append(t)
+
+        return tasks_by_formula
+
+    @classmethod
     def _group_by_graph(
-        self, entries: List[Dict[str, Any]]
+        cls: Type[T], entries: List[Dict[str, Any]]
     ) -> Dict[int, List[Dict[str, Any]]]:
         """
         Group task entries by molecular graph connectivity
 
-        :param entries: List od entries (dicts derived from TaskDocuments)
+        :param entries: List of entries (dicts derived from TaskDocuments)
         :return: Grouped molecule entries
         """
 
@@ -154,12 +174,7 @@ class RedoxDoc(PropertyDoc):
 
         mm = MoleculeMatcher()
 
-        # First, group tasks by formula
-        tasks_by_formula = defaultdict(list)
-        for t in entries:
-            if not isinstance(t["output"], dict):
-                t["output"] = t["output"].as_dict()
-            tasks_by_formula[t["formula"]].append(t)
+        tasks_by_formula = cls._group_by_formula(entries)
 
         for form_group in tasks_by_formula.values():
             # Group by molecular graph connectivity
