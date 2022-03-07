@@ -49,14 +49,11 @@ def level_of_theory(
 
     if disp_corr is None:
         funct_lower = funct_raw.lower()
-        if funct_lower in functional_synonyms:
-            funct_lower = functional_synonyms[funct_lower]
-    elif disp_corr == "d3_bj":
-        funct_lower = f"{funct_raw}-d3(bj)".lower()
-    elif disp_corr == "d3_zero":
-        funct_lower = f"{funct_raw}-d3(0)".lower()
+        funct_lower = functional_synonyms.get(funct_lower, funct_lower)
     else:
-        raise ValueError(f"Unexpected dispersion correction {disp_corr}!")
+        # Replace Q-Chem terms for D3 tails with more common expressions
+        disp_corr = disp_corr.replace('_bj', '(bj)').replace('_zero', '(0)')
+        funct_lower = f"{funct_raw}-{disp_corr}"
 
     basis_lower = basis_raw.lower()
 
@@ -74,7 +71,7 @@ def level_of_theory(
             basis = b
             break
     if basis is None:
-        raise ValueError(f"Unexpected basis set {basis}!")
+        raise ValueError(f"Unexpected basis set {basis_lower}!")
 
     solvent_method = parameters["rem"].get("solvent_method")
     if solvent_method is None:
@@ -87,14 +84,9 @@ def level_of_theory(
                 solvent = s
                 break
 
-        if solvent is None:
-            raise ValueError(f"Unknown solvent with dielectric {dielectric}")
-
-        solvation = f"PCM({solvent})"
+        solvation = f"PCM({solvent or str(dielectric)})"
     elif solvent_method == "smd":
-        solvent = parameters["smx"].get("solvent")
-        if solvent is None:
-            raise ValueError("No solvent provided for SMD calculation!")
+        solvent = parameters["smx"].get("solvent", "unknown")
 
         if solvent == "other":
             if custom_smd is None:
@@ -113,9 +105,6 @@ def level_of_theory(
                     break
             if not match:
                 raise ValueError(f"Unknown solvent with SMD parameters {custom_smd}!")
-        else:
-            if solvent.upper() not in SOLVENTS:
-                raise ValueError(f"Unexpected solvent {solvent.upper()}")
         solvation = f"SMD({solvent.upper()})"
     else:
         raise ValueError(f"Unexpected implicit solvent method {solvent_method}!")
