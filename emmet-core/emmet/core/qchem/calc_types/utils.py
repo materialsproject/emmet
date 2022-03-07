@@ -1,16 +1,10 @@
 """ Utilities to determine level of theory, task type, and calculation type for Q-Chem calculations"""
-from pathlib import Path
 from typing import Any, Dict, Optional
-
-from monty.serialization import loadfn
-from typing_extensions import Literal
 
 from emmet.core.qchem.calc_types import LevelOfTheory, CalcType, TaskType
 from emmet.core.qchem.calc_types.calc_types import (
-    TASK_TYPES,
     FUNCTIONALS,
     BASIS_SETS,
-    SOLVENT_MODELS,
     SOLVENTS,
     PCM_DIELECTRICS,
     SMD_PARAMETERS,

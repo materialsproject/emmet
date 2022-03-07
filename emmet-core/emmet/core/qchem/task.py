@@ -1,5 +1,5 @@
 """ Core definition of a Q-Chem Task Document """
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Optional, Callable
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Molecule
@@ -172,3 +172,23 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
         }
 
         return entry_dict
+
+
+def filter_task_type(entries: List[Dict[str, Any]],
+                     task_type: TaskType,
+                     sort_by: Optional[Callable] = None) -> List[Dict[str, Any]]:
+    """
+    Filter (and sort) TaskDocument entries based on task type
+
+    :param entries: List of TaskDocument entry dicts
+    :param TaskType: TaskType to accept
+    :param sorted: Function used to sort (default None)
+    :return: Filtered (sorted) list of entries
+    """
+
+    filtered = [f for f in entries if f["task_type"] == task_type]
+
+    if sort_by is not None:
+        return sorted(filtered, key=lambda x: x["output"]["final_energy"])
+    else:
+        return filtered

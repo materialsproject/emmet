@@ -1,4 +1,4 @@
-from typing import Dict, List, Any
+from typing import Any, Dict, List, Type, TypeVar, Union
 import copy
 from collections import defaultdict
 
@@ -11,7 +11,9 @@ from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
+from emmet.core.utils import confirm_molecule
 from emmet.core.qchem.calc_types import TaskType
+from emmet.core.qchem.task import filter_task_type
 from emmet.core.qchem.molecule import evaluate_lot
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
@@ -24,6 +26,9 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
 reference_potentials = {"H": 4.44, "Li": 1.40, "Mg": 2.06, "Ca": 1.60}
+
+
+T = TypeVar("T", bound="RedoxDoc")
 
 
 class RedoxDoc(PropertyDoc):
@@ -64,7 +69,71 @@ class RedoxDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_entries(cls, entries: List[Dict[str, Any]], **kwargs) -> List["RedoxDoc"]:
+    def _group_by_graph(self, entries: List[Dict[str, Any]]) -> Dict[int, List[Dict[str, Any]]]:
+        """
+        Group task entries by molecular graph connectivity
+
+        :param entries: List od entries (dicts derived from TaskDocuments)
+        :return: Grouped molecule entries
+        """
+
+        mol_graphs_nometal: List[MoleculeGraph] = list()
+        results = defaultdict(list)
+
+        # Within each group, group by the covalent molecular graph
+        for t in entries:
+            mol = confirm_molecule(t["molecule"])
+
+            mol_nometal = copy.deepcopy(mol)
+
+            if mol.composition.alphabetical_formula not in [
+                m + "1" for m in metals
+            ]:
+                mol_nometal.remove_species(metals)
+
+            mol_nometal.set_charge_and_spin(0)
+            mg_nometal = MoleculeGraph.with_local_env_strategy(
+                mol_nometal, OpenBabelNN()
+            )
+
+            match = None
+            for i, mg in enumerate(mol_graphs_nometal):
+                if mg_nometal.isomorphic_to(mg):
+                    match = i
+                    break
+
+            if match is None:
+                results[len(mol_graphs_nometal)].append(t)
+                mol_graphs_nometal.append(mg_nometal)
+            else:
+                results[match].append(t)
+
+        return results
+
+    @classmethod
+    def _g_or_e(cls: Type[T], entry: Dict[str, Any]) -> float:
+        """
+        Single atoms may not have free energies like more complex molecules do.
+        This function returns the free energy of a TaskDocument entry if
+        possible, and otherwise returns the electronic energy.
+
+        :param entry: dict representation of a TaskDocument
+        :return:
+        """
+        try:
+            result = get_free_energy(
+                entry["output"]["final_energy"],
+                entry["output"]["enthalpy"],
+                entry["output"]["entropy"],
+            )
+        # Single atoms won't have enthalpy and entropy
+        except TypeError:
+            result = entry["output"]["final_energy"]
+
+        return result
+
+    @classmethod
+    def from_entries(cls: Type[T], entries: List[Dict[str, Any]], **kwargs) -> List[T]:
         """
         Construct documents describing molecular redox properties from task
         entry dictionaries.
@@ -91,38 +160,8 @@ class RedoxDoc(PropertyDoc):
             tasks_by_formula[t["formula"]].append(t)
 
         for form_group in tasks_by_formula.values():
-            mol_graphs_nometal = list()
-            group_by_graph = defaultdict(list)
-
-            # Within each group, group by the covalent molecular graph
-            for t in form_group:
-                mol = t["molecule"]
-
-                if isinstance(mol, dict):
-                    mol = Molecule.from_dict(mol)
-
-                mol_nometal = copy.deepcopy(mol)
-
-                if mol.composition.alphabetical_formula not in [
-                    m + "1" for m in metals
-                ]:
-                    mol_nometal.remove_species(metals)
-
-                mol_nometal.set_charge_and_spin(0)
-                mg_nometal = MoleculeGraph.with_local_env_strategy(
-                    mol_nometal, OpenBabelNN()
-                )
-                match = None
-                for i, mg in enumerate(mol_graphs_nometal):
-                    if mg_nometal.isomorphic_to(mg):
-                        match = i
-                        break
-
-                if match is None:
-                    group_by_graph[len(mol_graphs_nometal)].append(t)
-                    mol_graphs_nometal.append(mg_nometal)
-                else:
-                    group_by_graph[match].append(t)
+            # Group by molecular graph connectivity
+            group_by_graph = cls._group_by_graph(form_group)
 
             # Now finally, group by level of theory
             for graph_group in group_by_graph.values():
@@ -130,37 +169,22 @@ class RedoxDoc(PropertyDoc):
                 for t in graph_group:
                     lot_groups[t["level_of_theory"]].append(t)
 
-                docs_by_charge = dict()
+                docs_by_charge: Dict[Union[int, float], T] = dict()
                 # Now try to form documents
                 # Start with highest lot; keep going down until you can make complete documents
                 for lot, group in sorted(
                     lot_groups.items(), key=lambda x: evaluate_lot(x[0])
                 ):
                     # Sorting important because we want to make docs only from lowest-energy instances
-                    relevant_calcs = sorted(
-                        [
-                            f
-                            for f in group
-                            if f["task_type"]
-                            == TaskType.Frequency_Flattening_Geometry_Optimization
-                        ],
-                        key=lambda x: x["output"]["final_energy"],
-                    )
+                    relevant_calcs = filter_task_type(group,
+                                                      TaskType.Frequency_Flattening_Geometry_Optimization,
+                                                      sort_by=lambda x: x["energy"])
 
                     # For single atoms, which have no FFOpt calcs
                     # (Can't geometry optimize a single atom)
-                    if len(relevant_calcs) == 0:
-                        relevant_calcs = sorted(
-                            [f for f in group],
-                            key=lambda x: x["output"]["final_energy"],
-                        )
+                    relevant_calcs = relevant_calcs or sorted([f for f in group], key=lambda x: x["energy"])
 
-                    charges = [f["charge"] for f in relevant_calcs]
-                    if all([c in docs_by_charge for c in charges]):
-                        continue
-                    single_points = [
-                        s for s in group if s["task_type"] == TaskType.Single_Point
-                    ]
+                    single_points = filter_task_type(group, TaskType.Single_Point)
 
                     for ff in relevant_calcs:
                         d = {
@@ -182,46 +206,27 @@ class RedoxDoc(PropertyDoc):
                         if charge in docs_by_charge:
                             continue
 
-                        ff_mol = ff["output"]["optimized_molecule"]
-                        if ff_mol is None:
-                            ff_mol = ff["output"]["initial_molecule"]
-                        if isinstance(ff_mol, dict):
-                            ff_mol = Molecule.from_dict(ff_mol)
+                        ff_mol = confirm_molecule(ff["output"]["optimized_molecule"] or ff["output"]["initial_molecule"])
 
-                        try:
-                            ff_g = get_free_energy(
-                                ff["output"]["final_energy"],
-                                ff["output"]["enthalpy"],
-                                ff["output"]["entropy"],
-                            )
-                        # Single atoms won't have enthalpy and entropy
-                        except TypeError:
-                            ff_g = ff["output"]["final_energy"]
+                        ff_g = cls._g_or_e(ff)
 
                         # Look for IE and EA SP
                         for sp in single_points:
-                            sp_mol = sp["output"]["initial_molecule"]
-                            if isinstance(sp_mol, dict):
-                                sp_mol = Molecule.from_dict(sp_mol)
+                            sp_mol = confirm_molecule(sp["output"]["initial_molecule"])
 
                             # EA
-                            if sp["charge"] == charge - 1 and mm.fit(ff_mol, sp_mol):
+                            if sp["charge"] == charge - 1 and mm.fit(ff_mol, sp_mol) and d["ea_id"] is None:
                                 d["electron_affinity"] = (
-                                    sp["output"]["final_energy"]
-                                    - ff["output"]["final_energy"]
+                                    sp["energy"] - ff["energy"]
                                 ) * 27.2114
                                 d["ea_id"] = sp["task_id"]
 
                             # IE
-                            elif sp["charge"] == charge + 1 and mm.fit(ff_mol, sp_mol):
+                            elif sp["charge"] == charge + 1 and mm.fit(ff_mol, sp_mol) and d["ie_id"] is None:
                                 d["ionization_energy"] = (
-                                    sp["output"]["final_energy"]
-                                    - ff["output"]["final_energy"]
+                                    sp["energy"] - ff["energy"]
                                 ) * 27.2114
                                 d["ie_id"] = sp["task_id"]
-
-                            if d["ea_id"] is not None and d["ie_id"] is not None:
-                                break
 
                         # If no vertical IE or EA, can't make complete doc; give up
                         if d["ea_id"] is None or d["ie_id"] is None:
@@ -230,50 +235,32 @@ class RedoxDoc(PropertyDoc):
                         # Look for adiabatic reduction and oxidation calcs
                         for other in relevant_calcs:
                             # Reduction
-                            if other["charge"] == charge - 1:
-                                try:
-                                    other_g = get_free_energy(
-                                        other["output"]["final_energy"],
-                                        other["output"]["enthalpy"],
-                                        other["output"]["entropy"],
-                                    )
-                                except TypeError:
-                                    # Single atoms
-                                    other_g = other["output"]["final_energy"]
+                            if other["charge"] == charge - 1 and d["red_id"] is None:
+                                other_g = cls._g_or_e(other)
+
                                 d["reduction_free_energy"] = other_g - ff_g
                                 d["reduction_potentials"] = dict()
+
                                 for ref, pot in reference_potentials.items():
                                     d["reduction_potentials"][ref] = (
                                         -1 * d["reduction_free_energy"] - pot
                                     )
+
                                 d["red_id"] = other["task_id"]
 
                             # Oxidation
-                            elif other["charge"] == charge + 1:
-                                try:
-                                    other_g = get_free_energy(
-                                        other["output"]["final_energy"],
-                                        other["output"]["enthalpy"],
-                                        other["output"]["entropy"],
-                                    )
-                                except TypeError:
-                                    # Single atoms
-                                    other_g = other["output"]["final_energy"]
+                            elif other["charge"] == charge + 1 and d["ox_id"] is None:
+                                other_g = cls._g_or_e(other)
+
                                 d["oxidation_free_energy"] = other_g - ff_g
                                 d["oxidation_potentials"] = dict()
+
                                 for ref, pot in reference_potentials.items():
                                     d["oxidation_potentials"][ref] = (
                                         d["oxidation_free_energy"] - pot
                                     )
 
                                 d["ox_id"] = other["task_id"]
-
-                            if d["red_id"] is not None and d["ox_id"] is not None:
-                                break
-
-                        # Need to either be able to oxidize or reduce the molecule to make a doc
-                        if d["red_id"] is None and d["ox_id"] is None:
-                            continue
 
                         origins = list()
                         for x in [
@@ -294,8 +281,6 @@ class RedoxDoc(PropertyDoc):
                             **d,
                             **kwargs
                         )
-                        if all([c in docs_by_charge for c in charges]):
-                            break
 
                 for doc in docs_by_charge.values():
                     docs.append(doc)

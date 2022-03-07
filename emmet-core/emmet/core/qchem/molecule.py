@@ -255,9 +255,10 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
                 if len(relevant_calcs) > 0:
                     best_task_doc = relevant_calcs[0]
                     entry = best_task_doc.entry
-                    entry["task_id"] = entry["entry_id"]
-                    entry["entry_id"] = molecule_id
                     best_entries[lot] = entry
+
+        for entry in entries:
+            entry["entry_id"] = molecule_id
 
         return cls.from_molecule(
             molecule=molecule,

@@ -1,7 +1,7 @@
 import datetime
 from enum import Enum
 from itertools import groupby
-from typing import Any, Iterator, List, Tuple, Union
+from typing import Any, Iterator, List, Tuple, Dict, Union
 import copy
 
 import bson
@@ -103,7 +103,7 @@ def group_molecules(molecules: List[Molecule], lots: List[str]):
     for mol_key, pregroup in groupby(
         sorted(zip(molecules, lots), key=form_env), key=form_env
     ):
-        subgroups = list()
+        subgroups: Dict[str, Any] = list()
         for mol, _ in pregroup:
             mol_copy = copy.deepcopy(mol)
 
@@ -122,6 +122,21 @@ def group_molecules(molecules: List[Molecule], lots: List[str]):
                 subgroups.append({"mol": mol_copy, "mol_list": [mol]})
         for group in subgroups:
             yield group["mol_list"]
+
+
+def confirm_molecule(mol: Union[Molecule, dict]) -> Molecule:
+    """
+    Check that something that we expect to be a molecule is actually a Molecule
+    object, and not a dictionary representation.
+
+    :param mol (Molecule):
+    :return:
+    """
+
+    if isinstance(mol, dict):
+        return Molecule.from_dict(mol)
+    else:
+        return mol
 
 
 def jsanitize(obj, strict=False, allow_bson=False):

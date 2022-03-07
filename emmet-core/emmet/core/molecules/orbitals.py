@@ -1,17 +1,10 @@
-import warnings
-from itertools import groupby
-from typing import List, Union, Optional
-from datetime import datetime
+from typing import List, Optional
 
-import numpy as np
 from pydantic import Field
 
 from monty.json import MSONable
 
-from pymatgen.core.structure import Molecule
-
 from emmet.core.mpid import MPID
-from emmet.core.structure import MoleculeMetadata
 from emmet.core.material import PropertyOrigin
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.molecule_property import PropertyDoc
