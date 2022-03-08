@@ -1,3 +1,4 @@
+from monty.dev import deprecated
 import pytest
 from pymatgen.core import Structure
 from pymatgen.util.testing import PymatgenTest
@@ -31,5 +32,5 @@ test_structures = {
 def test_robocrys(structure: Structure):
     """Very simple test to make sure this actually works"""
     print(f"Should work : {structure.composition}")
-    doc = RobocrystallogapherDoc.from_structure(structure, material_id=33)
+    doc = RobocrystallogapherDoc.from_structure(structure=structure, material_id=33, deprecated=False)
     assert doc is not None

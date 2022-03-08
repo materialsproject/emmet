@@ -26,17 +26,19 @@ class RobocrystallographerBuilder(MapBuilder):
             source=oxidation_states,
             target=robocrys,
             query=query,
-            projection=["material_id", "structure"],
+            projection=["material_id", "structure", "deprecated"],
             **kwargs
         )
 
     def unary_function(self, item):
         structure = Structure.from_dict(item["structure"])
         mpid = item["material_id"]
+        deprecated = item["deprecated"]
 
         doc = RobocrystallogapherDoc.from_structure(
             structure=structure,
             material_id=mpid,
+            deprecated=deprecated,
             fields=[],
         )
 

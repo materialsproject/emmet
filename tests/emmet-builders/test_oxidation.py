@@ -5,7 +5,7 @@ from emmet.builders.materials.oxidation_states import OxidationStatesBuilder
 
 
 @pytest.fixture(scope="session")
-def fake_materias(test_dir):
+def fake_materials(test_dir):
     entries = JSONStore(test_dir / "LiTiO2_batt.json", key="entry_id")
     entries.connect()
 
@@ -14,15 +14,19 @@ def fake_materias(test_dir):
 
     for doc in entries.query():
         materials_store.update(
-            {"material_id": doc["entry_id"], "structure": doc["structure"]}
+            {
+                "material_id": doc["entry_id"],
+                "structure": doc["structure"],
+                "deprecated": False,
+            }
         )
     return materials_store
 
 
-def test_oxidation_store(fake_materias):
+def test_oxidation_store(fake_materials):
     oxi_store = MemoryStore()
     builder = OxidationStatesBuilder(
-        materials=fake_materias, oxidation_states=oxi_store
+        materials=fake_materials, oxidation_states=oxi_store
     )
     builder.run()
 

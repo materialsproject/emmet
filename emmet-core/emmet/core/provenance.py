@@ -1,7 +1,7 @@
 """ Core definition of a Provenance Document """
 import warnings
 from datetime import datetime
-from typing import ClassVar, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from pybtex.database import BibliographyData, parse_string
 from pybtex.errors import set_strict_mode
@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, root_validator, validator
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 from emmet.core.utils import ValueEnum
+from pymatgen.core.structure import Structure
 
 
 class Database(ValueEnum):
@@ -40,10 +41,6 @@ class History(BaseModel):
     url: str
     description: Optional[Dict] = Field(
         None, description="Dictionary of exra data for this history node"
-    )
-    experimental: Optional[bool] = Field(
-        False,
-        description="Whether this node dictates this is an experimental history not",
     )
 
     @root_validator(pre=True)
@@ -104,7 +101,7 @@ class ProvenanceDoc(PropertyDoc):
     A provenance property block
     """
 
-    property_name: ClassVar[str] = "provenance"
+    property_name = "provenance"
 
     created_at: datetime = Field(
         ...,
@@ -144,9 +141,7 @@ class ProvenanceDoc(PropertyDoc):
 
     @classmethod
     def from_SNLs(
-        cls,
-        material_id: MPID,
-        snls: List[SNLDict],
+        cls, material_id: MPID, structure: Structure, snls: List[SNLDict], **kwargs
     ) -> "ProvenanceDoc":
         """
         Converts legacy Pymatgen SNLs into a single provenance document
@@ -158,7 +153,7 @@ class ProvenanceDoc(PropertyDoc):
 
         # Choose earliest created_at
         created_at = min([snl.about.created_at for snl in snls])
-        last_updated = max([snl.about.created_at for snl in snls])
+        # last_updated = max([snl.about.created_at for snl in snls])
 
         # Choose earliest history
         history = sorted(snls, key=lambda snl: snl.about.created_at)[0].about.history
@@ -187,15 +182,19 @@ class ProvenanceDoc(PropertyDoc):
         authors = [entry for snl in snls for entry in snl.about.authors]
 
         # Check if this entry is experimental
-        experimental = any(
-            history.experimental for snl in snls for history in snl.about.history
-        )
+        exp_vals = []
+        for snl in snls:
+            for entry in snl.about.history:
+                if entry.description is not None:
+                    exp_vals.append(entry.description.get("experimental", False))
+
+        experimental = any(exp_vals)
 
         # Aggregate all the database IDs
         snl_ids = {snl.snl_id for snl in snls}
         db_ids = {
             Database(db_id): [snl_id for snl_id in snl_ids if db_id in snl_id]
-            for db_id in map(str, Database)
+            for db_id in map(str, Database)  # type: ignore
         }
 
         # remove Nones and empty lists
@@ -213,6 +212,6 @@ class ProvenanceDoc(PropertyDoc):
             "history": history,
         }
 
-        return ProvenanceDoc(
-            material_id=material_id, last_updated=last_updated, **fields
+        return super().from_structure(
+            material_id=material_id, meta_structure=structure, **fields, **kwargs
         )

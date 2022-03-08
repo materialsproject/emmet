@@ -14,7 +14,9 @@ from pymatgen.analysis.structure_matcher import (
 )
 from pymatgen.core.structure import Structure
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
+
+SETTINGS = EmmetSettings()
 
 
 def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:

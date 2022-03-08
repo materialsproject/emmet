@@ -16,7 +16,7 @@ class SubstratesBuilder(Builder):
         self,
         materials: Store,
         substrates: Store,
-        elasticity: Optional[Store] = None,
+        elasticity: Store,
         query: Optional[Dict] = None,
         **kwargs,
     ):
@@ -42,12 +42,10 @@ class SubstratesBuilder(Builder):
         self.elasticity.key = "material_id"
 
         super().__init__(
-            sources=[materials, elasticity],
-            targets=[substrates],
-            **kwargs,
+            sources=[materials, elasticity], targets=[substrates], **kwargs,
         )
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:
+    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
         to_process_mat_ids = self._find_to_process()
 
         return [
@@ -83,13 +81,14 @@ class SubstratesBuilder(Builder):
             )
             mat = self.materials.query_one(
                 criteria={self.materials.key: mpid},
-                properties=["structure", "material_id", "last_updated"],
+                properties=["structure", "deprecated", "material_id", "last_updated"],
             )
 
             yield {
                 "structure": mat["structure"],
                 "material_id": mat[self.materials.key],
                 "elastic_tensor": e_tensor,
+                "deprecated": mat["deprecated"],
                 "last_updated": max(
                     mat.get("last_updated"), e_tensor.get("last_updated")
                 ),
@@ -111,6 +110,7 @@ class SubstratesBuilder(Builder):
         elastic_tensor = (
             ElasticTensor.from_voigt(elastic_tensor) if elastic_tensor else None
         )
+        deprecated = item["deprecated"]
 
         self.logger.debug("Calculating substrates for {}".format(item["task_id"]))
 
@@ -121,6 +121,7 @@ class SubstratesBuilder(Builder):
             material_id=mpid,
             structure=film,
             elastic_tensor=elastic_tensor,
+            deprecated=deprecated,
             last_updated=item["last_updated"],
         )
 

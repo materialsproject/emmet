@@ -1,5 +1,7 @@
+import re
 from datetime import datetime
-from typing import Dict, List, Union
+from typing import List, Union, Dict
+from collections import defaultdict
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
@@ -8,7 +10,7 @@ from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.core import Composition, Structure
 from pymatgen.core.periodic_table import Element
-from pymatgen.entries.computed_entries import ComputedEntry
+from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.mpid import MPID
 
@@ -88,12 +90,72 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
     )
 
 
+class EntriesCompositionSummary(BaseModel):
+    """
+    Composition summary data for all material entries associated with this electrode.
+    Included to enable better searching via the API.
+    """
+
+    all_formulas: List[str] = Field(
+        None,
+        description="Reduced formulas for material entries across all voltage pairs.",
+    )
+
+    all_chemsys: List[str] = Field(
+        None,
+        description="Chemical systems for material entries across all voltage pairs.",
+    )
+
+    all_formula_anonymous: List[str] = Field(
+        None,
+        description="Anonymous formulas for material entries across all voltage pairs.",
+    )
+
+    all_elements: List[Element] = Field(
+        None, description="Elements in material entries across all voltage pairs.",
+    )
+
+    all_composition_reduced: Dict = Field(
+        None,
+        description="Composition reduced data for entries across all voltage pairs.",
+    )
+
+    @classmethod
+    def from_compositions(cls, compositions: List[Composition]):
+
+        all_formulas = list({comp.reduced_formula for comp in compositions})
+        all_chemsys = list({comp.chemical_system for comp in compositions})
+        all_formula_anonymous = list({comp.anonymized_formula for comp in compositions})
+        all_elements = sorted(compositions)[-1].elements
+
+        all_composition_reduced = defaultdict(set)
+
+        for comp in compositions:
+            comp_red = comp.get_reduced_composition_and_factor()[0].as_dict()
+
+            for ele, num in comp_red.items():
+                all_composition_reduced[ele].add(num)
+
+        return cls(
+            all_formulas=all_formulas,
+            all_chemsys=all_chemsys,
+            all_formula_anonymous=all_formula_anonymous,
+            all_elements=all_elements,
+            all_composition_reduced=all_composition_reduced,
+        )
+
+
 class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     """
     Insertion electrode
     """
 
     battery_id: str = Field(None, description="The id for this battery document.")
+
+    battery_formula: str = Field(
+        None,
+        description="Reduced formula with working ion range produced by combining the charge and discharge formulas.",
+    )
 
     framework_formula: str = Field(
         None, description="The id for this battery document."
@@ -157,9 +219,16 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         description="Anonymized representation of the formula (not including the working ion)",
     )
 
+    entries_composition_summary: EntriesCompositionSummary = Field(
+        None,
+        description="Composition summary data for all material in entries across all voltage pairs.",
+    )
+
     electrode_object: InsertionElectrode = Field(
         None, description="The pymatgen electrode object"
     )
+
+    warnings: List[str] = Field([], description="Any warnings related to this material")
 
     # Make sure that the datetime field is properly formatted
     @validator("last_updated", pre=True)
@@ -169,10 +238,9 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     @classmethod
     def from_entries(
         cls,
-        grouped_entries: List[ComputedEntry],
+        grouped_entries: List[ComputedStructureEntry],
         working_ion_entry: ComputedEntry,
         battery_id: str,
-        host_structure: Structure,
     ) -> Union["InsertionElectrodeDoc", None]:
         try:
             ie = InsertionElectrode.from_entries(
@@ -182,23 +250,98 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
             )
         except IndexError:
             return None
+        # First get host structure
+
         d = ie.get_summary_dict()
+
+        least_wion_ent = next(
+            item for item in grouped_entries if item.entry_id == d["id_charge"]
+        )
+        host_structure = least_wion_ent.structure.copy()
+        host_structure.remove_species([d["working_ion"]])
+
         d["material_ids"] = d["stable_material_ids"] + d["unstable_material_ids"]
         d["num_steps"] = d.pop("nsteps", None)
         d["last_updated"] = datetime.utcnow()
         elements = sorted(host_structure.composition.elements)
         chemsys = "-".join(sorted(map(str, elements)))
         framework = Composition(d["framework_formula"])
+        discharge_comp = Composition(d["formula_discharge"])
+        working_ion_ele = Element(d["working_ion"])
+        battery_formula = cls.get_battery_formula(
+            Composition(d["formula_charge"]), discharge_comp, working_ion_ele,
+        )
+
+        compositions = []
+        for doc in d["adj_pairs"]:
+            compositions.append(Composition(doc["formula_charge"]))
+            compositions.append(Composition(doc["formula_discharge"]))
+
+        entries_composition_summary = EntriesCompositionSummary.from_compositions(
+            compositions
+        )
+
+        # Check if more than one working ion per transition metal and warn
+        warnings = []
+        transition_metal_fraction = sum(
+            [
+                discharge_comp.get_atomic_fraction(element)
+                for element in discharge_comp
+                if element.is_transition_metal
+            ]
+        )
+        if (
+            discharge_comp.get_atomic_fraction(working_ion_ele)
+            / transition_metal_fraction
+            > 1.0
+        ):
+            warnings.append("More than one working ion per transition metal")
+
         return cls(
             battery_id=battery_id,
             host_structure=host_structure.as_dict(),
             framework=framework,
+            battery_formula=battery_formula,
             electrode_object=ie.as_dict(),
             elements=elements,
             nelements=len(elements),
             chemsys=chemsys,
             formula_anonymous=framework.anonymized_formula,
-            **d
+            entries_composition_summary=entries_composition_summary,
+            warnings=warnings,
+            **d,
+        )
+
+    @staticmethod
+    def get_battery_formula(
+        charge_comp: Composition, discharge_comp: Composition, working_ion: Element
+    ):
+
+        working_ion_subscripts = []
+
+        for comp in [charge_comp, discharge_comp]:
+
+            comp_dict = comp.get_el_amt_dict()
+
+            working_ion_num = (
+                comp_dict.pop(working_ion.value)
+                if working_ion.value in comp_dict
+                else 0
+            )
+            temp_comp = Composition.from_dict(comp_dict)
+
+            (temp_reduced, n) = temp_comp.get_reduced_composition_and_factor()
+
+            new_subscript = re.sub(".00$", "", "{:.2f}".format(working_ion_num / n))
+            if new_subscript != "0":
+                new_subscript = new_subscript.rstrip("0")
+
+            working_ion_subscripts.append(new_subscript)
+
+        return (
+            working_ion.value
+            + "-".join(working_ion_subscripts)
+            + temp_reduced.reduced_formula
         )
 
 

@@ -10,6 +10,14 @@ class MPID(str):
     This class enables seemlessly mixing MPIDs and regular integer IDs
     Prefixed IDs are considered less than non-prefixed IDs to enable proper
     mixing with the Materials Project
+
+    Args:
+        val: Either 1) a prefixed string e.g. "mp-1234"
+                    2) an integer e.g. 1234
+                    3) a number stored as a string e.g. '1234'
+                    4) an MPID
+
+            Numbers stored as strings are coerced to ints
     """
 
     def __init__(self, val: Union["MPID", int, str]):
@@ -18,8 +26,8 @@ class MPID(str):
             self.parts = val.parts  # type: ignore
             self.string = val.string  # type: ignore
 
-        elif isinstance(val, int):
-            self.parts = (None, val)
+        elif isinstance(val, int) or (isinstance(val, str) and val.isnumeric()):
+            self.parts = ("", int(val))
             self.string = str(val)
 
         elif isinstance(val, str):
@@ -48,15 +56,24 @@ class MPID(str):
 
     def __lt__(self, other: Union["MPID", int, str]):
 
-        # Always sort MPIDs before pure integer IDs
-        if isinstance(other, int):
-            return True
-        elif isinstance(other, str):
-            other_parts = MPID(other).parts
-        else:
-            other_parts = other.parts
+        other_parts = MPID(other).parts
 
-        return self.parts < other_parts
+        if self.parts[0] != "" and other_parts[0] != "":
+            # both have prefixes; normal comparison
+            return self.parts < other_parts
+        elif self.parts[0] != "":
+            # other is a pure int, self is prefixed
+            # Always sort MPIDs before pure integer IDs
+            return True
+        elif other_parts[0] != "":
+            # self is pure int, other is prefixed
+            return False
+        else:
+            # both are pure ints; normal comparison
+            return self.parts[1] < other_parts[1]
+
+    def __gt__(self, other: Union["MPID", int, str]):
+        return not self.__lt__(other)
 
     def __hash__(self):
         return hash(self.string)

@@ -5,8 +5,8 @@ from collections import defaultdict
 from datetime import datetime
 from math import isnan
 from typing import Dict, Type, TypeVar, Union
-import numpy as np
 
+import numpy as np
 from pydantic import BaseModel, Field
 from pymatgen.analysis.magnetism.analyzer import (
     CollinearMagneticStructureAnalyzer,
@@ -20,10 +20,63 @@ from pymatgen.electronic_structure.dos import CompleteDos
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.symmetry.bandstructure import HighSymmKpath
 from typing_extensions import Literal
+from enum import Enum
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
+
+SETTINGS = EmmetSettings()
+
+
+class BSPathType(Enum):
+    setyawan_curtarolo = "setyawan_curtarolo"
+    hinuma = "hinuma"
+    latimer_munro = "latimer_munro"
+
+
+class DOSProjectionType(Enum):
+    total = "total"
+    elemental = "elemental"
+    orbital = "orbital"
+
+
+class BSObjectDoc(BaseModel):
+    """
+    Band object document.
+    """
+
+    task_id: MPID = Field(
+        None, description="The calculation ID this property comes from"
+    )
+
+    last_updated: datetime = Field(
+        description="The timestamp when this calculation was last updated",
+        default_factory=datetime.utcnow,
+    )
+
+    data: Union[Dict, BandStructureSymmLine] = Field(
+        None, description="The band structure object for the given calculation ID"
+    )
+
+
+class DOSObjectDoc(BaseModel):
+    """
+    DOS object document.
+    """
+
+    task_id: MPID = Field(
+        None, description="The calculation ID this property comes from"
+    )
+
+    last_updated: datetime = Field(
+        description="The timestamp when this calculation was last updated",
+        default_factory=datetime.utcnow,
+    )
+
+    data: CompleteDos = Field(
+        None, description="The density of states object for the given calculation ID"
+    )
 
 
 class ElectronicStructureBaseData(BaseModel):
@@ -121,6 +174,8 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     Definition for a core Electronic Structure Document
     """
 
+    property_name = "electronic_structure"
+
     bandstructure: BandstructureData = Field(
         None, description="Band structure data for the material."
     )
@@ -143,6 +198,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         setyawan_curtarolo: Dict[MPID, BandStructureSymmLine] = None,
         hinuma: Dict[MPID, BandStructureSymmLine] = None,
         latimer_munro: Dict[MPID, BandStructureSymmLine] = None,
+        **kwargs
     ) -> T:
         """
         Builds a electronic structure document using band structure and density of states data.
@@ -374,16 +430,12 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             summary_task = bs_entry.setyawan_curtarolo.task_id
             summary_band_gap = bs_gap
             summary_cbm = (
-                bs_entry.setyawan_curtarolo.cbm.get(  # type: ignore
-                    "energy", None
-                )
+                bs_entry.setyawan_curtarolo.cbm.get("energy", None)  # type: ignore
                 if bs_entry.setyawan_curtarolo.cbm is not None
                 else None
             )
             summary_vbm = (
-                bs_entry.setyawan_curtarolo.vbm.get(  # type: ignore
-                    "energy", None
-                )
+                bs_entry.setyawan_curtarolo.vbm.get("energy", None)  # type: ignore
                 if bs_entry.setyawan_curtarolo.cbm is not None
                 else None
             )  # type: ignore
@@ -403,7 +455,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         return cls.from_structure(
             material_id=MPID(material_id),
             task_id=summary_task,
-            structure=structure,
+            meta_structure=structure,
             band_gap=summary_band_gap,
             cbm=summary_cbm,
             vbm=summary_vbm,
@@ -413,4 +465,5 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             magnetic_ordering=summary_magnetic_ordering,
             bandstructure=bs_entry,
             dos=dos_entry,
+            **kwargs
         )

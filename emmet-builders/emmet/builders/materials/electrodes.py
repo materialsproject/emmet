@@ -3,15 +3,18 @@ import operator
 from datetime import datetime
 from functools import lru_cache
 from itertools import chain
-from typing import Any, Dict, Iterable, List
+from math import ceil
+from typing import Any, Iterator, Dict, List
 
 from maggma.builders import Builder
 from maggma.stores import MongoStore
+from maggma.utils import grouper
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.electrode import InsertionElectrodeDoc
 from emmet.core.structure_group import StructureGroupDoc
 from emmet.core.utils import jsanitize
+from emmet.builders.settings import EmmetBuildSettings
 
 
 def s_hash(el):
@@ -71,6 +74,9 @@ def generic_groupby(list_in, comp=operator.eq):
     return list_out
 
 
+default_build_settings = EmmetBuildSettings()
+
+
 class StructureGroupBuilder(Builder):
     def __init__(
         self,
@@ -78,9 +84,9 @@ class StructureGroupBuilder(Builder):
         sgroups: MongoStore,
         working_ion: str,
         query: dict = None,
-        ltol: float = 0.2,
-        stol: float = 0.3,
-        angle_tol: float = 5.0,
+        ltol: float = default_build_settings.LTOL,
+        stol: float = default_build_settings.STOL,
+        angle_tol: float = default_build_settings.ANGLE_TOL,
         check_newer: bool = True,
         **kwargs,
     ):
@@ -104,11 +110,35 @@ class StructureGroupBuilder(Builder):
         self.check_newer = check_newer
         super().__init__(sources=[materials], targets=[sgroups], **kwargs)
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:
+    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
         """
-        TODO can implement this for distributed runs by adding filters
+        Prechunk method to perform chunking by the key field
         """
-        pass
+        q = dict(self.query)
+
+        all_chemsys = self.materials.distinct("chemsys", criteria=q)
+
+        new_chemsys_list = []
+
+        for chemsys in all_chemsys:
+            elements = [
+                element for element in chemsys.split("-") if element != self.working_ion
+            ]
+            new_chemsys = "-".join(sorted(elements))
+            new_chemsys_list.append(new_chemsys)
+
+        N = ceil(len(new_chemsys_list) / number_splits)
+
+        for split in grouper(new_chemsys_list, N):
+            new_split_add = []
+            for chemsys in split:
+                elements = [element for element in chemsys.split("-")] + [
+                    self.working_ion
+                ]
+                new_chemsys = "-".join(sorted(elements))
+                new_split_add.append(new_chemsys)
+
+            yield {"query": {"chemsys": {"$in": new_split_add + split}}}
 
     def get_items(self):
         """
@@ -288,6 +318,18 @@ class InsertionElectrodeBuilder(Builder):
             **kwargs,
         )
 
+    def prechunk(self, number_splits: int) -> Iterator[Dict]:
+        """
+        Prechunk method to perform chunking by the key field
+        """
+        q = dict(self.query)
+
+        keys = self.grouped_materials.distinct(self.grouped_materials.key, criteria=q)
+
+        N = ceil(len(keys) / number_splits)
+        for split in grouper(keys, N):
+            yield {"query": {self.grouped_materials.key: {"$in": list(split)}}}
+
     def get_items(self):
         """
         Get items
@@ -304,13 +346,10 @@ class InsertionElectrodeBuilder(Builder):
             self.logger.debug(
                 f"Looking for {len(mat_ids)} material_id in the Thermo DB."
             )
+            self.thermo.connect()
             thermo_docs = list(
                 self.thermo.query(
-                    {
-                        "$and": [
-                            {"material_id": {"$in": mat_ids}},
-                        ]
-                    },
+                    {"$and": [{"material_id": {"$in": mat_ids}}]},
                     properties=[
                         "material_id",
                         "_sbxn",
@@ -321,6 +360,7 @@ class InsertionElectrodeBuilder(Builder):
                     ],
                 )
             )
+
             self.logger.debug(f"Found for {len(thermo_docs)} Thermo Documents.")
             if len(thermo_docs) != len(mat_ids):
                 missing_ids = set(mat_ids) - set(
@@ -367,7 +407,7 @@ class InsertionElectrodeBuilder(Builder):
         - Add the host structure
         """
         if item is None:
-            return None
+            return None  # type: ignore
         self.logger.debug(
             f"Working on {item['group_id']} with {len(item['thermo_docs'])}"
         )
@@ -375,22 +415,16 @@ class InsertionElectrodeBuilder(Builder):
         entries = [
             tdoc_["entries"][tdoc_["energy_type"]] for tdoc_ in item["thermo_docs"]
         ]
+
         entries = list(map(ComputedStructureEntry.from_dict, entries))
 
         working_ion_entry = ComputedEntry.from_dict(
             item["working_ion_doc"]["entries"][item["working_ion_doc"]["energy_type"]]
         )
-        working_ion = working_ion_entry.composition.reduced_formula
 
         decomp_energies = {
             d_["material_id"]: d_["energy_above_hull"] for d_ in item["thermo_docs"]
         }
-
-        least_wion_ent = min(
-            entries, key=lambda x: x.composition.get_atomic_fraction(working_ion)
-        )
-        host_structure = least_wion_ent.structure.copy()
-        host_structure.remove_species([item["working_ion"]])
 
         for ient in entries:
             ient.data["volume"] = ient.structure.volume
@@ -400,10 +434,10 @@ class InsertionElectrodeBuilder(Builder):
             grouped_entries=entries,
             working_ion_entry=working_ion_entry,
             battery_id=item["group_id"],
-            host_structure=host_structure,
         )
         if ie is None:
-            return None  # {"failed_reason": "unable to create InsertionElectrode document"}
+            return None  # type: ignore
+            # {"failed_reason": "unable to create InsertionElectrode document"}
         return jsanitize(ie.dict())
 
     def update_targets(self, items: List):

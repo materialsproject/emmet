@@ -4,13 +4,8 @@ These will be ingested via Drones, built by Builders, and served via the API
 """
 from pkg_resources import DistributionNotFound, get_distribution
 
-import emmet.core.stubs
-from emmet.core.settings import EmmetSettings
-
-SETTINGS = EmmetSettings()
-
 try:
     __version__ = get_distribution("emmet-core").version
-except DistributionNotFound:
+except DistributionNotFound:  # pragma: no cover
     # package is not installed
     pass

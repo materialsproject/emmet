@@ -16,6 +16,12 @@ from emmet.core.mpid import MPID
 class OxidationStateDoc(PropertyDoc):
     """Oxidation states computed from the structure"""
 
+    property_name = "oxidation"
+
+    structure: Structure = Field(
+        ...,
+        description="The structure used in the generation of the oxidation state data",
+    )
     possible_species: List[str] = Field(
         description="Possible charged species in this material"
     )
@@ -25,11 +31,21 @@ class OxidationStateDoc(PropertyDoc):
     average_oxidation_states: Dict[str, float] = Field(
         description="Average oxidation states for each unique species"
     )
-    method: str = Field(description="Method used to compute oxidation states")
+    method: str = Field(None, description="Method used to compute oxidation states")
 
     @classmethod
     def from_structure(cls, structure: Structure, material_id: MPID, **kwargs):  # type: ignore[override]
+
+        # TODO: add check for if it already has oxidation states, if so pass this along unchanged ("method": "manual")
         structure.remove_oxidation_states()
+
+        # Null document
+        d = {
+            "possible_species": [],
+            "possible_valences": [],
+            "average_oxidation_states": {},
+        }  # type: dict
+
         try:
             bva = BVAnalyzer()
             valences = bva.get_valences(structure)
@@ -87,12 +103,13 @@ class OxidationStateDoc(PropertyDoc):
 
             except Exception as e:
                 logging.error("Oxidation state guess failed with: {}".format(e))
-                raise e
+                d["warnings"] = ["Oxidation state guessing failed."]
+                d["state"] = "unsuccessful"
 
         return super().from_structure(
-            structure=structure,
+            meta_structure=structure,
             material_id=material_id,
-            include_structure=True,
+            structure=structure,
             **d,
             **kwargs
         )

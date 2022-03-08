@@ -1,32 +1,35 @@
 """ Core definition for Polar property Document """
-from typing import ClassVar, Tuple
+from typing import Tuple, List
+from emmet.core.mpid import MPID
 
 import numpy as np
 from pydantic import Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.material_property import PropertyDoc
-from emmet.core.math import Matrix3D
+from emmet.core.math import Matrix3D, Vector3D
+from pymatgen.core.structure import Structure
+from pymatgen.core.tensors import Tensor
 
-VoigtVector = Tuple[float, float, float, float, float, float]
-PiezoTensor = Tuple[VoigtVector, VoigtVector, VoigtVector]
+SETTINGS = EmmetSettings()
+
+Vector = List[float]
+PiezoTensor = List[Vector]
 PiezoTensor.__doc__ = "Rank 3 real space tensor in Voigt notation"  # type: ignore
 
 
-class Dielectric(PropertyDoc):
+class DielectricDoc(PropertyDoc):
     """
     A dielectric property block
     """
 
-    property_name: ClassVar[str] = "dielectric"
+    property_name = "dielectric"
 
-    total: Matrix3D = Field(description="Total dielectric response")
-    ionic: Matrix3D = Field(
-        description="Dielectric response due to atomic rearrangement"
-    )
+    total: Matrix3D = Field(description="Total dielectric tensor")
+    ionic: Matrix3D = Field(description="Ionic contribution to dielectric tensor")
     electronic: Matrix3D = Field(
-        description="Dielectric response due to electron rearrangement"
+        description="Electronic contribution to dielectric tensor"
     )
 
     e_total: float = Field(description="Total electric permittivity")
@@ -40,48 +43,79 @@ class Dielectric(PropertyDoc):
     n: float = Field(title="Refractive index")
 
     @classmethod
-    def from_ionic_and_electronic(cls, ionic: Matrix3D, electronic: Matrix3D):
+    def from_ionic_and_electronic(
+        cls,
+        material_id: MPID,
+        ionic: Matrix3D,
+        electronic: Matrix3D,
+        structure: Structure,
+        **kwargs,
+    ):
 
-        total = np.sum(ionic, electronic).tolist()  # type: ignore
+        ionic_tensor = Tensor(ionic).convert_to_ieee(structure)
+        electronic_tensor = Tensor(electronic).convert_to_ieee(structure)
 
-        return cls(
+        total = ionic_tensor + electronic_tensor
+
+        return super().from_structure(
+            meta_structure=structure,
+            material_id=material_id,
             **{
-                "total": total,
-                "ionic": ionic,
-                "electronic": electronic,
+                "total": total.tolist(),
+                "ionic": ionic_tensor.tolist(),
+                "electronic": electronic_tensor.tolist(),
                 "e_total": np.average(np.diagonal(total)),
-                "e_ionic": np.average(np.diagonal(ionic)),
-                "e_electronic": np.average(np.diagonal(electronic)),
-                "n": np.sqrt(np.average(np.diagonal(electronic))),
-            }
+                "e_ionic": np.average(np.diagonal(ionic_tensor)),
+                "e_electronic": np.average(np.diagonal(electronic_tensor)),
+                "n": np.sqrt(np.average(np.diagonal(electronic_tensor))),
+            },
+            **kwargs,
         )
 
 
-class Piezoelectric(PropertyDoc):
+class PiezoelectricDoc(PropertyDoc):
     """
     A dielectric package block
     """
 
-    property_name: ClassVar[str] = "piezoelectric"
+    property_name = "piezoelectric"
 
-    total: PiezoTensor = Field(None, description="")
-    ionic: PiezoTensor = Field(None, description="")
-    electronic: PiezoTensor = Field(None, description="")
-
-    e_ij_max: float = Field(None, description="")
-    max_direction: Tuple[int, int, int] = Field(
-        None, description="Miller direction for maximum piezo response"
+    total: PiezoTensor = Field(description="Total piezoelectric tensor in C/m²")
+    ionic: PiezoTensor = Field(
+        description="Ionic contribution to piezoelectric tensor in C/m²"
     )
-    strain_for_max: Matrix3D = Field(
-        None, description="Normalized strain direction for maximum piezo repsonse"
+    electronic: PiezoTensor = Field(
+        description="Electronic contribution to piezoelectric tensor in C/m²"
+    )
+
+    e_ij_max: float = Field(description="Piezoelectric modulus")
+    max_direction: List[int] = Field(
+        description="Miller direction for maximum piezo response"
+    )
+    strain_for_max: List[float] = Field(
+        description="Normalized strain direction for maximum piezo repsonse"
     )
 
     @classmethod
-    def from_ionic_and_electronic(cls, ionic: Matrix3D, electronic: Matrix3D):
+    def from_ionic_and_electronic(
+        cls,
+        material_id: MPID,
+        ionic: PiezoTensor,
+        electronic: PiezoTensor,
+        structure: Structure,
+        **kwargs,
+    ):
 
-        total = BasePiezoTensor.from_voigt(np.sum(ionic, electronic))  # type: ignore
+        ionic_tensor = BasePiezoTensor.from_vasp_voigt(ionic)
+        electronic_tensor = BasePiezoTensor.from_vasp_voigt(electronic)
+        total = ionic_tensor + electronic_tensor
 
-        directions, charges, strains = np.linalg.svd(total, full_matrices=False)
+        # Symmeterize Convert to IEEE orientation
+        total = total.convert_to_ieee(structure)
+        ionic_tensor = ionic_tensor.convert_to_ieee(structure)
+        electronic_tensor = electronic_tensor.convert_to_ieee(structure)
+
+        directions, charges, strains = np.linalg.svd(total.voigt, full_matrices=False)
         max_index = np.argmax(np.abs(charges))
 
         max_direction = directions[max_index]
@@ -91,13 +125,16 @@ class Piezoelectric(PropertyDoc):
         min_val = min_val[min_val > (np.max(min_val) / SETTINGS.MAX_PIEZO_MILLER)]
         min_val = np.min(min_val)
 
-        return cls(
+        return super().from_structure(
+            meta_structure=structure,
+            material_id=material_id,
             **{
-                "total": total.zeroed().voigt,
-                "ionic": ionic,
-                "static": electronic,
+                "total": total.zeroed().voigt.tolist(),
+                "ionic": ionic_tensor.zeroed().voigt.tolist(),
+                "electronic": electronic_tensor.zeroed().voigt.tolist(),
                 "e_ij_max": charges[max_index],
-                "max_direction": np.round(max_direction / min_val),
-                "strain_for_max": strains[max_index],
-            }
+                "max_direction": tuple(np.round(max_direction / min_val)),
+                "strain_for_max": tuple(strains[max_index]),
+            },
+            **kwargs,
         )

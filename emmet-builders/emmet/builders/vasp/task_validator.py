@@ -38,6 +38,7 @@ class TaskValidator(MapBuilder):
                 "input.hubbards",
                 "output.structure",
                 "output.bandgap",
+                "chemsys",
                 "calcs_reversed.output.ionic_steps.electronic_steps.e_fr_energy",
                 "tags",
                 # Need these two for proper run_type determination

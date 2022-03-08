@@ -1,14 +1,17 @@
 from collections import defaultdict
 from itertools import chain
 from typing import Dict, Iterable, List, Optional, Tuple
+from math import ceil
+from datetime import datetime
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
+from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
 from pymatgen.core.structure import Structure
 
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.provenance import ProvenanceDoc, SNLDict
-from emmet.core.utils import group_structures
+from emmet.core.utils import get_sg, jsanitize
 
 
 class ProvenanceBuilder(Builder):
@@ -58,16 +61,14 @@ class ProvenanceBuilder(Builder):
             s.ensure_index("snl_id")
             s.ensure_index("formula_pretty")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:
+    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
         self.ensure_indicies()
 
         # Find all formulas for materials that have been updated since this
         # builder was last ran
-        q = {**self.query, "property_name": ProvenanceDoc.property_name}
+        q = self.query
         updated_materials = self.provenance.newer_in(
-            self.materials,
-            criteria=q,
-            exhaustive=True,
+            self.materials, criteria=q, exhaustive=True
         )
         forms_to_update = set(
             self.materials.distinct(
@@ -78,21 +79,31 @@ class ProvenanceBuilder(Builder):
         # Find all new SNL formulas since the builder was last run
         for source in self.source_snls:
             new_snls = self.provenance.newer_in(source)
-            forms_to_update |= set(source.distinct("formula_pretty", new_snls))
+            forms_to_update |= set(
+                source.distinct("formula_pretty", {source.key: {"$in": new_snls}})
+            )
 
         # Now reduce to the set of formulas we actually have
         forms_avail = set(self.materials.distinct("formula_pretty", self.query))
         forms_to_update = forms_to_update & forms_avail
 
+        mat_ids = set(
+            self.materials.distinct(
+                "material_id", {"formula_pretty": {"$in": list(forms_to_update)}}
+            )
+        ) & set(updated_materials)
+
+        N = ceil(len(mat_ids) / number_splits)
+
         self.logger.info(
-            f"Found {len(forms_to_update)} new/updated systems to distribute to workers "
-            f"in chunks of {len(forms_to_update)/number_splits}"
+            f"Found {len(mat_ids)} new/updated systems to distribute to workers "
+            f"in {N} chunks."
         )
 
-        for chunk in grouper(forms_to_update, number_splits):
-            yield {"formula_pretty": {"$in": chunk}}
+        for chunk in grouper(mat_ids, N):
+            yield {"query": {"material_id": {"$in": chunk}}}
 
-    def get_items(self) -> Tuple[List[Dict], List[Dict]]:
+    def get_items(self) -> Tuple[List[Dict], List[Dict]]:  # type: ignore
         """
         Gets all materials to assocaite with SNLs
         Returns:
@@ -105,11 +116,9 @@ class ProvenanceBuilder(Builder):
 
         # Find all formulas for materials that have been updated since this
         # builder was last ran
-        q = {**self.query, "property_name": ProvenanceDoc.property_name}
+        q = self.query
         updated_materials = self.provenance.newer_in(
-            self.materials,
-            criteria=q,
-            exhaustive=True,
+            self.materials, criteria=q, exhaustive=True
         )
         forms_to_update = set(
             self.materials.distinct(
@@ -120,54 +129,59 @@ class ProvenanceBuilder(Builder):
         # Find all new SNL formulas since the builder was last run
         for source in self.source_snls:
             new_snls = self.provenance.newer_in(source)
-            forms_to_update |= set(source.distinct("formula_pretty", new_snls))
+            forms_to_update |= set(
+                source.distinct("formula_pretty", {source.key: {"$in": new_snls}})
+            )
 
         # Now reduce to the set of formulas we actually have
         forms_avail = set(self.materials.distinct("formula_pretty", self.query))
         forms_to_update = forms_to_update & forms_avail
 
-        self.logger.info(f"Found {len(forms_to_update)} new/updated systems to proces")
+        mat_ids = set(
+            self.materials.distinct(
+                "material_id", {"formula_pretty": {"$in": list(forms_to_update)}}
+            )
+        ) & set(updated_materials)
 
-        self.total = len(forms_to_update)
+        self.total = len(mat_ids)
 
-        for formulas in grouper(forms_to_update, self.chunk_size):
-            snls = []
-            for source in self.source_snls:
-                snls.extend(
-                    source.query(criteria={"formula_pretty": {"$in": formulas}})
-                )
+        self.logger.info(f"Found {self.total} new/updated systems to process")
 
-            mats = list(
-                self.materials.query(
-                    properties=[
-                        "material_id",
-                        "last_updated",
-                        "structure",
-                        "initial_structures",
-                        "formula_pretty",
-                    ],
-                    criteria={"formula_pretty": {"$in": formulas}},
-                )
+        for mat_id in mat_ids:
+
+            mat = self.materials.query_one(
+                properties=[
+                    "material_id",
+                    "last_updated",
+                    "structure",
+                    "initial_structures",
+                    "formula_pretty",
+                    "deprecated",
+                ],
+                criteria={"material_id": mat_id},
             )
 
-            form_groups = defaultdict(list)
-            for snl in snls:
-                form_groups[snl["formula_pretty"]].append(snl)
-
-            mat_groups = defaultdict(list)
-            for mat in mats:
-                mat_groups[mat["formula_pretty"]].append(mat)
-
-            for formula, snl_group in form_groups.items():
-
-                mat_group = mat_groups[formula]
-
-                self.logger.debug(
-                    f"Found {len(snl_group)} snls and {len(mat_group)} mats"
+            snls = []  # type: list
+            for source in self.source_snls:
+                snls.extend(
+                    source.query(criteria={"formula_pretty": mat["formula_pretty"]})
                 )
-                yield mat_group, snl_group
 
-    def process_item(self, item) -> List[Dict]:
+            snl_groups = defaultdict(list)
+            for snl in snls:
+                struc = Structure.from_dict(snl)
+                snl_sg = get_sg(struc)
+                struc.snl = SNLDict(**snl)
+                snl_groups[snl_sg].append(struc)
+
+            mat_sg = get_sg(Structure.from_dict(mat["structure"]))
+
+            snl_structs = snl_groups[mat_sg]
+
+            self.logger.debug(f"Found {len(snl_structs)} potential snls for {mat_id}")
+            yield mat, snl_structs
+
+    def process_item(self, item) -> Dict:
         """
         Matches SNLS and Materials
         Args:
@@ -175,32 +189,43 @@ class ProvenanceBuilder(Builder):
         Returns:
             list(dict): a list of collected snls with material ids
         """
-        mats, source_snls = item
-        formula_pretty = mats[0]["formula_pretty"]
-        snl_docs = list()
+        mat, snl_structs = item
+        formula_pretty = mat["formula_pretty"]
+        snl_doc = None
         self.logger.debug(f"Finding Provenance {formula_pretty}")
 
         # Match up SNLS with materials
-        for mat in mats:
-            matched_snls = list(self.match(source_snls, mat))
-            if len(matched_snls) > 0:
-                doc = ProvenanceDoc.from_SNLs(
-                    material_id=mat["material_id"], snls=matched_snls
-                )
 
-                doc.authors.append(self.settings.DEFAULT_AUTHOR)
-                doc.history.append(self.settings.DEFAULT_HISTORY)
-                doc.references.append(self.settings.DEFAULT_REFERENCE)
+        matched_snls = self.match(snl_structs, mat)
 
-                snl_docs.append(doc.dict(exclude_unset=True))
+        if len(matched_snls) > 0:
+            doc = ProvenanceDoc.from_SNLs(
+                material_id=mat["material_id"],
+                structure=Structure.from_dict(mat["structure"]),
+                snls=matched_snls,
+                deprecated=mat["deprecated"],
+            )
+        else:
+            doc = ProvenanceDoc(
+                material_id=mat["material_id"],
+                structure=Structure.from_dict(mat["structure"]),
+                deprecated=mat["deprecated"],
+                created_at=datetime.utcnow(),
+            )
 
-        return snl_docs
+        doc.authors.append(self.settings.DEFAULT_AUTHOR)
+        doc.history.append(self.settings.DEFAULT_HISTORY)
+        doc.references.append(self.settings.DEFAULT_REFERENCE)
 
-    def match(self, snls, mat):
+        snl_doc = jsanitize(doc.dict(exclude_none=True), allow_bson=True)
+
+        return snl_doc
+
+    def match(self, snl_structs, mat):
         """
         Finds a material doc that matches with the given snl
         Args:
-            snl ([dict]): the snls list
+            snl_structs ([dict]): the snls struct list
             mat (dict): a materials doc
         Returns:
             generator of materials doc keys
@@ -209,30 +234,25 @@ class ProvenanceBuilder(Builder):
         m_strucs = [Structure.from_dict(mat["structure"])] + [
             Structure.from_dict(init_struc) for init_struc in mat["initial_structures"]
         ]
-        snl_strucs = []
-        for snl in snls:
-            struc = Structure.from_dict(snl)
-            struc.snl = SNLDict(**snl)
-            snl_strucs.append(struc)
 
-        groups = group_structures(
-            m_strucs + snl_strucs,
+        sm = StructureMatcher(
             ltol=self.settings.LTOL,
             stol=self.settings.STOL,
             angle_tol=self.settings.ANGLE_TOL,
-            # comparator=OrderDisorderElementComparator(),
+            primitive_cell=True,
+            scale=True,
+            attempt_supercell=False,
+            allow_subset=False,
+            comparator=ElementComparator(),
         )
-        matched_groups = [
-            group
-            for group in groups
-            if any(not hasattr(struc, "snl") for struc in group)
-        ]
-        snls = [
-            struc.snl
-            for group in matched_groups
-            for struc in group
-            if hasattr(struc, "snl")
-        ]
+
+        snls = []
+
+        for s in m_strucs:
+            for snl_struc in snl_structs:
+                if sm.fit(s, snl_struc):
+                    if snl_struc.snl not in snls:
+                        snls.append(snl_struc.snl)
 
         self.logger.debug(f"Found {len(snls)} SNLs for {mat['material_id']}")
         return snls
@@ -241,8 +261,7 @@ class ProvenanceBuilder(Builder):
         """
         Inserts the new SNL docs into the SNL collection
         """
-
-        snls = list(filter(None, chain.from_iterable(items)))
+        snls = list(filter(None, items))
 
         if len(snls) > 0:
             self.logger.info(f"Found {len(snls)} SNLs to update")

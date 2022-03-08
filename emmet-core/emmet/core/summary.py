@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Dict, List, Optional, TypeVar, Union
 
 from pydantic import BaseModel, Field
@@ -11,6 +12,32 @@ from emmet.core.thermo import DecompositionProduct
 from emmet.core.xas import Edge, Type
 
 T = TypeVar("T", bound="SummaryDoc")
+
+
+class HasProps(Enum):
+    """
+    Enum of possible hasprops values.
+    """
+
+    materials = "materials"
+    thermo = "thermo"
+    xas = "xas"
+    grain_boundaries = "grain_boundaries"
+    electronic_structure = "electronic_structure"
+    bandstructure = "bandstructure"
+    dos = "dos"
+    magnetism = "magnetism"
+    elasticity = "elasticity"
+    dielectric = "dielectric"
+    piezoelectric = "piezoelectric"
+    surface_properties = "surface_properties"
+    oxi_states = "oxi_states"
+    provenance = "provenance"
+    charge_density = "charge_density"
+    eos = "eos"
+    phonon = "phonon"
+    insertion_electrodes = "insertion_electrodes"
+    substrates = "substrates"
 
 
 class SummaryStats(BaseModel):
@@ -89,13 +116,18 @@ class SummaryDoc(PropertyDoc):
     screening studies and searching.
     """
 
+    property_name = "summary"
+
     # Materials
 
-    deprecated: bool = Field(
-        ..., description="Whether the material is tagged as deprecated"
-    )
     structure: Structure = Field(
         ..., description="The lowest energy structure for this material"
+    )
+
+    task_ids: List[MPID] = Field(
+        [],
+        title="Calculation IDs",
+        description="List of Calculations IDs associated with this material.",
     )
 
     # Thermo
@@ -122,7 +154,7 @@ class SummaryDoc(PropertyDoc):
         description="Flag for whether this material is on the hull and therefore stable",
     )
 
-    equillibrium_reaction_energy_per_atom: float = Field(
+    equilibrium_reaction_energy_per_atom: float = Field(
         None,
         description="The reaction energy of a stable entry from the neighboring equilibrium stable materials in eV."
         " Also known as the inverse distance to hull.",
@@ -174,6 +206,10 @@ class SummaryDoc(PropertyDoc):
     dos_energy_down: float = Field(None, description="Spin-down DOS band gap.")
 
     # Magnetism
+
+    is_magnetic: bool = Field(
+        None, description="Whether the material is magnetic.",
+    )
 
     ordering: str = Field(None, description="Type of magnetic ordering.")
 
@@ -261,9 +297,15 @@ class SummaryDoc(PropertyDoc):
         None, description="Whether the material has any reconstructed surfaces."
     )
 
+    # Oxi States
+
+    possible_species: List[str] = Field(
+        None, description="Possible charged species in this material."
+    )
+
     # Has Props
 
-    has_props: List[str] = Field(
+    has_props: List[HasProps] = Field(
         None, description="List of properties that are available for a given material."
     )
 
@@ -279,21 +321,22 @@ class SummaryDoc(PropertyDoc):
         # Reshape document for various sub-sections
         # Electronic Structure + Bandstructure + DOS
         if "bandstructure" in doc:
-            if doc["bandstructure"] != {} and doc["bandstructure"] is not None:
-                doc["has_props"].append("bandstructure")
+            if doc["bandstructure"] is not None and list(
+                filter(lambda x: x is not None, doc["bandstructure"].values())
+            ):
+                doc["has_props"].append(HasProps.bandstructure.value)
             else:
                 del doc["bandstructure"]
         if "dos" in doc:
-            if doc["dos"] != {} and doc["dos"] is not None:
-                doc["has_props"].append("dos")
+            if doc["dos"] is not None and list(
+                filter(lambda x: x is not None, doc["dos"].values())
+            ):
+                doc["has_props"].append(HasProps.dos.value)
             else:
                 del doc["dos"]
         if "task_id" in doc:
             doc["es_source_calc_id"] = doc["task_id"]
             del doc["task_id"]
-
-        # Magnetism
-        doc["spin_polarized"] = "magnetism" in doc
 
         doc["has_props"] = list(set(doc["has_props"]))
 
@@ -302,7 +345,7 @@ class SummaryDoc(PropertyDoc):
 
 # Key mapping
 summary_fields: Dict[str, list] = {
-    "materials": [
+    HasProps.materials.value: [
         "nsites",
         "elements",
         "nelements",
@@ -317,19 +360,26 @@ summary_fields: Dict[str, list] = {
         "symmetry",
         "structure",
         "deprecated",
+        "task_ids",
     ],
-    "thermo": [
+    HasProps.thermo.value: [
         "uncorrected_energy_per_atom",
         "energy_per_atom",
         "formation_energy_per_atom",
         "energy_above_hull",
         "is_stable",
-        "equillibrium_reaction_energy_per_atom",
+        "equilibrium_reaction_energy_per_atom",
         "decomposes_to",
     ],
-    "xas": ["absorbing_element", "edge", "spectrum_type", "xas_id"],
-    "grain_boundaries": ["gb_energy", "sigma", "type", "rotation_angle", "w_sep"],
-    "electronic_structure": [
+    HasProps.xas.value: ["absorbing_element", "edge", "spectrum_type", "spectrum_id"],
+    HasProps.grain_boundaries.value: [
+        "gb_energy",
+        "sigma",
+        "type",
+        "rotation_angle",
+        "w_sep",
+    ],
+    HasProps.electronic_structure.value: [
         "band_gap",
         "efermi",
         "cbm",
@@ -340,7 +390,8 @@ summary_fields: Dict[str, list] = {
         "dos",
         "task_id",
     ],
-    "magnetism": [
+    HasProps.magnetism.value: [
+        "is_magnetic",
         "ordering",
         "total_magnetization",
         "total_magnetization_normalized_vol",
@@ -348,8 +399,9 @@ summary_fields: Dict[str, list] = {
         "num_magnetic_sites",
         "num_unique_magnetic_sites",
         "types_of_magnetic_species",
+        "is_magnetic",
     ],
-    "elasticity": [
+    HasProps.elasticity.value: [
         "k_voigt",
         "k_reuss",
         "k_vrh",
@@ -359,9 +411,9 @@ summary_fields: Dict[str, list] = {
         "universal_anisotropy",
         "homogeneous_poisson",
     ],
-    "dielectric": ["e_total", "e_ionic", "e_electronic", "n"],
-    "piezoelectric": ["e_ij_max"],
-    "surface_properties": [
+    HasProps.dielectric.value: ["e_total", "e_ionic", "e_electronic", "n"],
+    HasProps.piezoelectric.value: ["e_ij_max"],
+    HasProps.surface_properties.value: [
         "weighted_surface_energy",
         "weighted_surface_energy_EV_PER_ANG2",
         "shape_factor",
@@ -369,15 +421,18 @@ summary_fields: Dict[str, list] = {
         "weighted_work_function",
         "has_reconstructed",
     ],
-    "eos": [],
-    "phonon": [],
-    "insertion_electrodes": [],
-    "substrates": [],
+    HasProps.oxi_states.value: ["possible_species"],
+    HasProps.provenance.value: ["theoretical"],
+    HasProps.charge_density.value: [],
+    HasProps.eos.value: [],
+    HasProps.phonon.value: [],
+    HasProps.insertion_electrodes.value: [],
+    HasProps.substrates.value: [],
 }
 
 
 def _copy_from_doc(doc):
-    """Helper functin to copy the list of keys over from amalgamated document"""
+    """Helper function to copy the list of keys over from amalgamated document"""
     d = {"has_props": []}
     # Complex function to grab the keys and put them in the root doc
     # if the item is a list, it makes one doc per item with those corresponding keys

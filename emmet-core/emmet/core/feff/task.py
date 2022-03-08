@@ -1,5 +1,5 @@
 """ Core definition of a VASP Task Document """
-from typing import Any, ClassVar, Dict, List
+from typing import Any, Dict, List
 
 from pydantic import Field
 from pymatgen.analysis.xas.spectrum import XAS
@@ -7,7 +7,7 @@ from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 
 from emmet.core.structure import StructureMetadata
-from emmet.core.task import TaskDocument as BaseTaskDocument
+from emmet.core.vasp.task import TaskDocument as BaseTaskDocument
 from emmet.core.utils import ValueEnum
 
 
@@ -27,7 +27,7 @@ class CalcType(ValueEnum):
 class TaskDocument(BaseTaskDocument, StructureMetadata):
     """Task Document for a FEFF XAS Calculation. Doesn't support EELS for now"""
 
-    calc_code: ClassVar[str] = "FEFF"
+    calc_code = "FEFF"
 
     structure: Structure
     input_parameters: Dict[str, Any] = Field(
