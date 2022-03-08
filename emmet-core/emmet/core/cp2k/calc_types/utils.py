@@ -54,6 +54,8 @@ def run_type(dft: Dict) -> RunType:
             ):
                 return RunType(f"{functional_class}{is_hubbard}")
 
+    # TODO elegant way to handle this? 
+    # This is a hack to get the non-standard hybrids to work
     if parameters.get('FRACTION'):
         return RunType(f"HYBRID{is_hubbard}")
 

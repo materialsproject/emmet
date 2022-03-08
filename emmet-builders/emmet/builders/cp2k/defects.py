@@ -22,8 +22,6 @@ from emmet.core.cp2k.material import MaterialsDoc
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.builders.cp2k.utils import get_mpid, synchronous_query
 
-from line_profiler import *
-
 __author__ = "Nicholas Winner <nwinner@berkeley.edu>"
 __maintainer__ = "Jason Munro"
 
@@ -542,6 +540,9 @@ class DefectBuilder(Builder):
                     return True
             return False
 
+        # TODO This loop will terminate the match when the first bulk match for a defect is found. This should 
+        # be fine if we can ensure that the commenserate bulks are all the same given they both compare True.
+        # Need to double check that they really are the same.
         pairs = []
         for defect in defects:
             for bulk in bulks:
