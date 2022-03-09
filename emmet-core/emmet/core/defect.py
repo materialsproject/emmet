@@ -1,10 +1,14 @@
 """ Core definition for Defect property Document """
+from __future__ import annotations
+
 from datetime import datetime
 from typing import ClassVar, Dict, Tuple, Mapping, List
+from pydantic import BaseModel, Field
+from pydantic import validator
+
 from monty.json import MontyDecoder
 from monty.tempfile import ScratchDir
 from itertools import groupby
-from pydantic import Field, validator, BaseModel
 
 from pymatgen.core import Structure, Composition, Element
 from pymatgen.analysis.defects.core import DefectEntry, Defect

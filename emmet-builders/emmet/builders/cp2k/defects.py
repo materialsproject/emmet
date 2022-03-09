@@ -13,7 +13,7 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from atomate.utils.utils import load_class
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.utils import jsanitize, get_sg
 from emmet.core.defect import DefectDoc, DefectDoc2d, DefectThermoDoc
 from emmet.core.cp2k.calc_types import TaskType
@@ -21,6 +21,8 @@ from emmet.core.cp2k.calc_types.utils import run_type
 from emmet.core.cp2k.material import MaterialsDoc
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.builders.cp2k.utils import get_mpid, synchronous_query
+
+SETTINGS = EmmetSettings()
 
 __author__ = "Nicholas Winner <nwinner@berkeley.edu>"
 __maintainer__ = "Jason Munro"
@@ -617,7 +619,6 @@ class DefectBuilder2d(DefectBuilder):
         """
         defect_doc, item_bundle = items
         self.logger.info(f"Processing group of {len(item_bundle)} defects into DefectDoc")
-
         if item_bundle:
             material_id = self._get_mpid(Structure.from_dict(item_bundle[0][1]['output']['structure']))  # TODO more mpid messes..
             if defect_doc:

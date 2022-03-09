@@ -5,7 +5,7 @@ from pydantic import Field
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin as PropertyOrigin
 from emmet.core.structure import StructureMetadata
@@ -13,6 +13,7 @@ from emmet.core.cp2k.calc_types import CalcType, RunType, TaskType
 from emmet.core.cp2k.task import TaskDocument
 from emmet.builders.cp2k.utils import get_mpid
 
+SETTINGS = EmmetSettings()
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
