@@ -8,11 +8,11 @@ from maggma.stores import Store
 from emmet.builders.utils import maximal_spanning_non_intersecting_subsets
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import group_structures, jsanitize
-from emmet.core.cp2k.calc_types import TaskType
 from emmet.core.cp2k.material import MaterialsDoc
 from emmet.core.cp2k.task import TaskDocument
 
 SETTINGS = EmmetBuildSettings()
+
 __author__ = "Nicholas Winner <nwinner@berkeley.edu>"
 __maintainer__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 

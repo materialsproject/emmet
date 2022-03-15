@@ -10,14 +10,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from emmet.core.base import EmmetBaseModel
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import ValueEnum
-from emmet.core.cp2k.calc_types import (
-    CalcType,
-    RunType,
-    TaskType,
-    calc_type,
-    run_type,
-    task_type,
-)
+from emmet.core.cp2k.calc_types import calc_type, run_type, task_type, CalcType, RunType, TaskType
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.mpid import MPID
 
@@ -66,7 +59,7 @@ class InputSummary(BaseModel):
 
     atomic_kind_info: Dict = Field(None, description="Description of parameters used for each atomic kind")
 
-    cp2k_input_set: Dict = Field(None, description="The cp2k input used for this task")
+    cp2k_input: Dict = Field(None, description="The cp2k input used for this task")
 
     dft: Dict = Field(None, description="Description of the DFT parameters used in the last calc of this task")
 
@@ -175,13 +168,11 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
 
     @validator('task_type', pre=True, always=True)
     def find_task_type(cls, v, values):
-        return task_type(values.get('input').cp2k_global)
+        return task_type(values.get('input').dict())
 
     @validator('calc_type', pre=True, always=True)
     def find_calc_type(cls, v, values):
-        d = values.get('input').dft
-        d.update(values.get('input').cp2k_global)
-        return calc_type(d)
+        return calc_type(values.get("input").dict())
 
     @property
     def entry(self):

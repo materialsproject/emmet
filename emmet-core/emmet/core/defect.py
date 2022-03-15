@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from tokenize import group
 from typing import ClassVar, Dict, Tuple, Mapping, List
 from pydantic import BaseModel, Field
 from pydantic import validator
@@ -25,7 +26,7 @@ from emmet.core.mpid import MPID
 from emmet.core.cp2k.task import TaskDocument
 from emmet.core.cp2k.calc_types.enums import CalcType, TaskType, RunType
 from emmet.core.cp2k.material import MaterialsDoc
-from emmet.core.cp2k.calc_types.utils import run_type
+from emmet.core.cp2k.calc_types.utils import run_type, task_type
 from emmet.builders.cp2k.utils import get_mpid, matcher
 
 from pymatgen.analysis.defects.corrections import FreysoldtCorrection2d
@@ -88,6 +89,8 @@ class DefectDoc(StructureMetadata):
         default_factory=datetime.utcnow,
     )
 
+    metadata: Dict = Field(description="Metadata for this defect")
+
     # TODO How can monty serialization incorporate into pydantic? It seems like VASP MatDocs dont need this
     @validator("entries", pre=True)
     def decode(cls, entries):
@@ -128,7 +131,7 @@ class DefectDoc(StructureMetadata):
                 self.run_types.update({defect_task_doc.task_id: rt})
                 self.task_types.update({defect_task_doc.task_id: tt})
                 self.calc_types.update({defect_task_doc.task_id: ct})
-                entry = self.get_defect_entry_from_tasks(
+                entry = self.__class__.get_defect_entry_from_tasks(
                             defect_task=defect_task,
                             bulk_task=bulk_task,
                             dielectric=dielectric,
@@ -169,17 +172,20 @@ class DefectDoc(StructureMetadata):
         def _run_type(x):
             return run_type(x[0]['input']['dft']).value
 
+        def _task_type(x):
+            return task_type(x[0]['input']['dft']).value
+
         def _sort(x):
             # TODO return kpoint density, currently just does supercell size
             return -x[0]['nsites'], x[0]['output']['energy']
 
         entries = {}
         final_tasks = {}
+        metadata = {}
         for key, tasks_for_runtype in groupby(sorted(tasks, key=_run_type), key=_run_type):
             sorted_tasks = sorted(tasks_for_runtype, key=_sort)
             ents = [cls.get_defect_entry_from_tasks(t[0], t[1], t[2], query) for t in sorted_tasks]
-            for e in ents:
-                print(e.energy)
+            metadata[key] = {'convergence': [(sorted_tasks[i][0]['nsites'], ents[i].energy) for i in range(len(ents))]}
 
             best_defect_task, best_bulk_task, dielectric = sorted_tasks[0]
             best_entry = cls.get_defect_entry_from_tasks(best_defect_task, best_bulk_task, dielectric, query)
@@ -201,6 +207,7 @@ class DefectDoc(StructureMetadata):
                 'entry_ids': {rt: entries[rt].entry_id for rt in entries},
                 'defect': best_entry.defect,
                 'name': best_entry.defect.name,
+                'metadata': metadata,
         }
         prim = SpacegroupAnalyzer(best_entry.defect.bulk_structure).get_primitive_standard_structure()
         data.update(StructureMetadata.from_structure(prim).dict())
@@ -289,11 +296,11 @@ class DefectDoc(StructureMetadata):
 
         # TODO Should probably get these even if not needed for corrections
         if init_defect_structure.charge != 0:
-            axis_grid = [[float(x) for x in _] for _ in bulk_task['output']['v_hartree_grid']] if 'v_hartree_grid' in bulk_task['output'] else None
-            bulk_planar_averages = [[float(x) for x in _] for _ in bulk_task['output']['v_hartree_planar']] if 'v_hartree_planar' in bulk_task['output'] else None
-            defect_planar_averages = [[float(x) for x in _] for _ in defect_task['output']['v_hartree_planar']] if 'v_hartree_planar' in defect_task['output'] else None
-            bulk_site_averages = [float(x) for x in bulk_task['output']['v_hartree_sites']] if 'v_hartree_sites' in bulk_task['output'] else None
-            defect_site_averages = [float(x) for x in defect_task['output']['v_hartree_sites']] if 'v_hartree_sites' in defect_task['output'] else None
+            axis_grid = [[float(x) for x in _] for _ in bulk_task['output']['v_hartree_grid']] if bulk_task['output'].get('v_hartree_grid') else None
+            bulk_planar_averages = [[float(x) for x in _] for _ in bulk_task['output']['v_hartree_planar']] if bulk_task['output'].get('v_hartree_planar') else None
+            defect_planar_averages = [[float(x) for x in _] for _ in defect_task['output']['v_hartree_planar']] if defect_task['output'].get('v_hartree_planar') else None
+            bulk_site_averages = [float(x) for x in bulk_task['output']['v_hartree_sites']] if bulk_task['output'].get('v_hartree_sites') else None
+            defect_site_averages = [float(x) for x in defect_task['output']['v_hartree_sites']] if defect_task['output'].get('v_hartree_sites') else None
 
             dfi, site_matching_indices = matcher(
                 init_bulk_structure, init_defect_structure,
@@ -325,7 +332,9 @@ class DefectDoc2d(DefectDoc):
     def get_defect_entry_from_tasks(cls, defect_task, bulk_task, dielectric=None, query='defect'):
         parameters = cls.get_parameters_from_tasks(defect_task=defect_task, bulk_task=bulk_task)
         if dielectric:
-            parameters['dielectric'] = dielectric
+            eps_parallel = (dielectric[0][0] + dielectric[1][1]) / 2
+            eps_perp = dielectric[2][2]
+            parameters['dielectric'] = (eps_parallel - 1) / (1 - 1/eps_perp)
 
         defect_entry = DefectEntry(
             cls.get_defect_from_task(query=query, task=defect_task),
@@ -335,32 +344,30 @@ class DefectDoc2d(DefectDoc):
         )
 
         DefectCompatibility().process_entry(defect_entry, perform_corrections=False)
-
-        if False: 
-            with ScratchDir('.'):
-                fc = FreysoldtCorrection2d(
+        with ScratchDir('.'):
+            fc = FreysoldtCorrection2d(
                     defect_entry.parameters.get('dielectric', 22), 
                     "LOCPOT.ref", "LOCPOT.def", encut=520, buffer=2
                 ) 
-                lref = VolumetricData(
-                    structure=Structure.from_dict(bulk_task['output']['structure']), 
-                    data={'total': MontyDecoder().process_decoded(bulk_task['v_hartree'])}
-                )
-                ldef = VolumetricData(
-                    structure=Structure.from_dict(defect_task['output']['structure']), 
-                    data={'total': MontyDecoder().process_decoded(defect_task['v_hartree'])}
-                )
-                lref.write_file("LOCPOT.ref")
-                ldef.write_file("LOCPOT.def")
-                ecorr = fc.get_correction(defect_entry)
-                defect_entry.corrections.update(ecorr)
-                defect_entry.parameters['freysoldt2d_meta'] = fc.metadata
+            lref = VolumetricData(
+                structure=Structure.from_dict(bulk_task['input']['structure']), 
+                data={'total': MontyDecoder().process_decoded(bulk_task['v_hartree'])}
+            )
+            ldef = VolumetricData(
+                structure=Structure.from_dict(defect_task['input']['structure']), 
+                data={'total': MontyDecoder().process_decoded(defect_task['v_hartree'])}
+            )
+            lref.write_file("LOCPOT.ref")
+            ldef.write_file("LOCPOT.def")
+            ecorr = fc.get_correction(defect_entry)
+            defect_entry.corrections.update(ecorr)
+            defect_entry.parameters['freysoldt2d_meta'] = fc.metadata
 
         defect_entry_as_dict = defect_entry.as_dict()
         defect_entry_as_dict['task_id'] = defect_entry_as_dict['entry_id']  # this seemed necessary for legacy db
 
         return defect_entry
-
+    
 class DefectThermoDoc(BaseModel):
 
     class Config:

@@ -603,6 +603,7 @@ class DefectBuilder(Builder):
             return Structure.from_dict(task['transformations']['history'][0]['input_structure'])
         return Structure.from_dict(task['input']['structure'])
 
+
 # TODO This needs to be unified into one builder somehow
 class DefectBuilder2d(DefectBuilder):
 
@@ -626,6 +627,7 @@ class DefectBuilder2d(DefectBuilder):
             else:
                 defect_doc = DefectDoc2d.from_tasks(tasks=item_bundle, query=self.defect_query, material_id=material_id)
             return defect_doc.dict()
+
 
 class DefectThermoBuilder(Builder):
 

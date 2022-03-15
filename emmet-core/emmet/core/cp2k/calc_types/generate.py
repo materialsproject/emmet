@@ -1,25 +1,14 @@
 """ Module to define various calculation types as Enums for CP2K """
-import datetime
-from itertools import groupby, product
+from itertools import product
 from pathlib import Path
-from typing import Dict, Iterator, List
 
-import bson
-import numpy as np
-from monty.json import MSONable
 from monty.serialization import loadfn
-from pydantic import BaseModel
-from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher
-from pymatgen.core.structure import Structure
-from typing_extensions import Literal
-
-from emmet.core import SETTINGS
-from emmet.core.utils import ValueEnum
 
 _RUN_TYPE_DATA = loadfn(str(Path(__file__).parent.joinpath("run_types.yaml").resolve()))
 _TASK_TYPES = [
     "Static",
     "Structure Optimization",
+    "Constrained Structure Optimization"
 ]
 
 _RUN_TYPES = (

@@ -4,7 +4,9 @@ from typing import Dict
 from monty.serialization import loadfn
 from typing import Iterable
 
-from emmet.core.cp2k.calc_types.enums import RunType, TaskType, CalcType
+from pymatgen.io.cp2k.inputs import Cp2kInput
+
+from emmet.core.cp2k.calc_types import RunType, TaskType, CalcType
 
 _RUN_TYPE_DATA = loadfn(str(Path(__file__).parent.joinpath("run_types.yaml").resolve()))
 
@@ -70,8 +72,10 @@ def task_type(
     """
 
     calc_type = []
-
-    cp2k_run_type = inputs.get('Run_type', '')
+    ci = Cp2kInput.from_dict(inputs.get('cp2k_input'))
+    if ci.check("MOTION/CONSTRAINT"):
+        calc_type.append("Constrained")
+    cp2k_run_type = inputs.get('cp2k_global').get('Run_type', '')
 
     if cp2k_run_type.upper() in ['ENERGY', 'ENERGY_FORCE', 'WAVEFUNCTION_OPTIMIZATION', 'WFN_OPT']:
         calc_type.append('Static')
@@ -117,7 +121,6 @@ def task_type(
 
     return TaskType(" ".join(calc_type))
 
-
 def calc_type(
     inputs: Dict,
 ) -> CalcType:
@@ -125,9 +128,9 @@ def calc_type(
     Determines the calc type
 
     Args:
-        inputs: inputs dict with an incar, kpoints, potcar, and poscar dictionaries
-        parameters: Dictionary of VASP parameters from Vasprun.xml
+        inputs: dict from InputSummary containing necessary data for determining 
+            calc type
     """
-    rt = run_type(inputs).value
+    rt = run_type(inputs.get("dft")).value
     tt = task_type(inputs).value
     return CalcType(f"{rt} {tt}")
