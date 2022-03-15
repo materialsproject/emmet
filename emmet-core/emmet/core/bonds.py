@@ -62,7 +62,7 @@ class BondingDoc(PropertyDoc):
         """
 
         bonding_info = None
-
+        print(AVAILABLE_METHODS)
         preferred_methods = [  # type: ignore
             AVAILABLE_METHODS[method]() if isinstance(method, str) else method
             for method in preferred_methods
