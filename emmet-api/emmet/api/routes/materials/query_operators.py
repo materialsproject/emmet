@@ -326,7 +326,7 @@ class FormulaAutoCompleteQuery(QueryOperator):
 
         try:
             comp = Composition(formula)
-        except CompositionError:
+        except (CompositionError, ValueError):
             raise HTTPException(
                 status_code=400, detail="Invalid formula provided.",
             )
