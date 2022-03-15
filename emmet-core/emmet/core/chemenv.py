@@ -182,7 +182,6 @@ class ChemEnvDoc(PropertyDoc):
                 # wyckoff symbols for all inquivalent indices
                 wyckoffs_unique = symm_struct.wyckoff_symbols
 
-
                 for method in preferred_methods:
                     lgf = LocalGeometryFinder()
                     lgf.setup_structure(structure=structure)
@@ -212,7 +211,7 @@ class ChemEnvDoc(PropertyDoc):
                     list_wyckoff = []
                     list_species = []
 
-                    #TODO: we could also add connetions of polyhedra determined with ChemEnv
+                    # TODO: we could also add connetions of polyhedra determined with ChemEnv
                     for index, wyckoff in zip(inequivalent_indices, wyckoffs_unique):
                         # ONLY CATIONS
                         if index in inequivalent_indices_cations:
@@ -230,7 +229,8 @@ class ChemEnvDoc(PropertyDoc):
                             # represent the local environment as a molecule
                             # This is similar to the implementation in CrystalToolkit!
                             mol = Molecule.from_sites(
-                                [structure[index]] + lse.neighbors_sets[index][0].neighb_sites
+                                [structure[index]]
+                                + lse.neighbors_sets[index][0].neighb_sites
                             )
                             mol = mol.get_centered_molecule()
 
@@ -239,7 +239,6 @@ class ChemEnvDoc(PropertyDoc):
                             name = co.name
                             if co.alternative_names:
                                 name += f" (also known as {', '.join(co.alternative_names)})"
-
 
                             list_chemenv_text.append(name)
                             list_chemenv.append(co.ce_symbol)
@@ -262,11 +261,9 @@ class ChemEnvDoc(PropertyDoc):
                         "state": "successful",
                     }  # type: dict
             else:
-                d = {"state": "unsuccessful",
-                     "warnings": ["No oxidation states"]}
+                d = {"state": "unsuccessful", "warnings": ["No oxidation states"]}
         except:
-            d = {"state": "unsuccessful",
-                 "warnings": ["ChemEnv algorithm failed"]}
+            d = {"state": "unsuccessful", "warnings": ["ChemEnv algorithm failed"]}
 
         return super().from_structure(
             meta_structure=structure,
