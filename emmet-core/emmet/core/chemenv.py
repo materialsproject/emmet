@@ -198,16 +198,12 @@ class ChemEnvDoc(PropertyDoc):
 
                     all_ce = AllCoordinationGeometries()
 
-                    # save the environments
-                    envs = []
-                    unknown_sites = []
-
                     # TODO: what information is needed?
                     # TODO: do we want to provide molecular representations as well?
                     list_mol = []
                     list_chemenv = []
                     list_chemenv_text = []
-                    list_sites_env = []
+
                     list_wyckoff = []
                     list_species = []
 
@@ -262,7 +258,8 @@ class ChemEnvDoc(PropertyDoc):
                     }  # type: dict
             else:
                 d = {"state": "unsuccessful", "warnings": ["No oxidation states"]}
-        except:
+        except Exception as e:
+            logging.error("ChemEnv failed with: {}".format(e))
             d = {"state": "unsuccessful", "warnings": ["ChemEnv algorithm failed"]}
 
         return super().from_structure(
