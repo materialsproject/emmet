@@ -72,9 +72,6 @@ def task_type(
     """
 
     calc_type = []
-    ci = Cp2kInput.from_dict(inputs.get('cp2k_input'))
-    if ci.check("MOTION/CONSTRAINT"):
-        calc_type.append("Constrained")
     cp2k_run_type = inputs.get('cp2k_global').get('Run_type', '')
 
     if cp2k_run_type.upper() in ['ENERGY', 'ENERGY_FORCE', 'WAVEFUNCTION_OPTIMIZATION', 'WFN_OPT']:

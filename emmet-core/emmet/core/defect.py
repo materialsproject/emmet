@@ -27,7 +27,7 @@ from emmet.core.cp2k.task import TaskDocument
 from emmet.core.cp2k.calc_types.enums import CalcType, TaskType, RunType
 from emmet.core.cp2k.material import MaterialsDoc
 from emmet.core.cp2k.calc_types.utils import run_type, task_type
-from emmet.builders.cp2k.utils import get_mpid, matcher
+from emmet.builders.cp2k.utils import matcher
 
 from pymatgen.analysis.defects.corrections import FreysoldtCorrection2d
 from pymatgen.io.vasp.outputs import VolumetricData
@@ -214,7 +214,7 @@ class DefectDoc(StructureMetadata):
         return cls(**data)
 
     @classmethod
-    def get_defect_entry_from_tasks(cls, defect_task, bulk_task, dielectric=None, query='defect'):
+    def get_defect_entry_from_tasks(cls, defect_task, bulk_task, dielectric=None, query='transformations.history.0.defect'):
         """
         Extract a defect entry from a single pair (defect and bulk) of tasks.
 
@@ -281,7 +281,11 @@ class DefectDoc(StructureMetadata):
         final_defect_structure = Structure.from_dict(defect_task['output']['structure'])
         final_bulk_structure = Structure.from_dict(bulk_task['output']['structure'])
 
-        #mpid = get_mpid(init_bulk_structure)
+        dfi, site_matching_indices = matcher(
+            init_bulk_structure, init_defect_structure,
+            final_bulk_struc=final_bulk_structure, final_defect_struc=final_defect_structure
+        )
+        defect_frac_sc_coords = final_defect_structure[dfi].frac_coords
 
         parameters = {
             'defect_energy': defect_task['output']['energy'],
@@ -290,7 +294,7 @@ class DefectDoc(StructureMetadata):
             'final_defect_structure': final_defect_structure,
             'vbm': bulk_task['output']['vbm'],
             'cbm': bulk_task['output']['cbm'],
-            #'material_id': mpid,
+            'defect_frac_sc_coords': defect_frac_sc_coords,
             'entry_id': defect_task.get('task_id')
         }
 
@@ -301,12 +305,6 @@ class DefectDoc(StructureMetadata):
             defect_planar_averages = [[float(x) for x in _] for _ in defect_task['output']['v_hartree_planar']] if defect_task['output'].get('v_hartree_planar') else None
             bulk_site_averages = [float(x) for x in bulk_task['output']['v_hartree_sites']] if bulk_task['output'].get('v_hartree_sites') else None
             defect_site_averages = [float(x) for x in defect_task['output']['v_hartree_sites']] if defect_task['output'].get('v_hartree_sites') else None
-
-            dfi, site_matching_indices = matcher(
-                init_bulk_structure, init_defect_structure,
-                final_bulk_struc=final_bulk_structure, final_defect_struc=final_defect_structure
-            )
-            defect_frac_sc_coords = final_defect_structure[dfi].frac_coords
 
             parameters['axis_grid'] = axis_grid
             parameters['bulk_planar_averages'] = bulk_planar_averages
@@ -329,7 +327,16 @@ class DefectDoc2d(DefectDoc):
     """
 
     @classmethod
-    def get_defect_entry_from_tasks(cls, defect_task, bulk_task, dielectric=None, query='defect'):
+    def get_defect_entry_from_tasks(cls, defect_task, bulk_task, dielectric=None, query='transformations.history.0.defect'):
+        """
+        Get defect entry from defect and bulk tasks. 
+
+        Args:
+            defect_task: task dict for the defect calculation
+            bulk_task: task dict for the bulk calculation
+            dielectric: dielectric tensor for the defect calculation
+            query: query string for defect entry
+        """
         parameters = cls.get_parameters_from_tasks(defect_task=defect_task, bulk_task=bulk_task)
         if dielectric:
             eps_parallel = (dielectric[0][0] + dielectric[1][1]) / 2
@@ -338,15 +345,15 @@ class DefectDoc2d(DefectDoc):
 
         defect_entry = DefectEntry(
             cls.get_defect_from_task(query=query, task=defect_task),
-            uncorrected_energy=parameters['defect_energy'] - parameters['bulk_energy'],
+            uncorrected_energy=parameters.pop('defect_energy') - parameters.pop('bulk_energy'),
             parameters=parameters,
-            entry_id=parameters['entry_id']
+            entry_id=parameters.pop('entry_id')
         )
 
         DefectCompatibility().process_entry(defect_entry, perform_corrections=False)
         with ScratchDir('.'):
             fc = FreysoldtCorrection2d(
-                    defect_entry.parameters.get('dielectric', 22), 
+                    defect_entry.parameters.get('dielectric'), 
                     "LOCPOT.ref", "LOCPOT.def", encut=520, buffer=2
                 ) 
             lref = VolumetricData(
@@ -379,6 +386,13 @@ class DefectThermoDoc(BaseModel):
 
     task_ids: Dict = Field(
         None, description="All task ids used in creating these phase diagrams"
+    )
+
+    #TODO not by run type... in principle shouldn't be this way, but DOS is almost always GGA
+    bulk_dos: CompleteDos = Field(None, "Complete Density of States for the bulk Structure")
+
+    defect_phase_diagrams: Mapping[RunType, DefectPhaseDiagram] = Field(
+        None, description="Defect phase diagrams for each run type"
     )
 
     brouwer_diagrams: Mapping[RunType, BrouwerDiagram] = Field(
