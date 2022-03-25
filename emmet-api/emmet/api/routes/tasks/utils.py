@@ -17,10 +17,10 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
     trajectories = []
 
     for calculation in calcs_reversed:
+        structures = []
+        frame_props = defaultdict(list)  # type: dict
+        
         for step in calculation["output"]["ionic_steps"]:
-
-            structures = []
-            frame_props = defaultdict(list)  # type: dict
 
             structures.append(Structure.from_dict(step["structure"]))
 
