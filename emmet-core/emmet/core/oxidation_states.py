@@ -66,7 +66,7 @@ class OxidationStateDoc(PropertyDoc):
                 site_oxidation_list[site.specie.element].append(site.specie.oxi_state)
 
             oxi_state_dict = {
-                str(el): np.mean(oxi_states) # type: ignore
+                str(el): np.mean(oxi_states)  # type: ignore
                 for el, oxi_states in site_oxidation_list.items()
             }
 
