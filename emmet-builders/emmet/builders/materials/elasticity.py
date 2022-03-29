@@ -40,6 +40,7 @@ class ElasticityBuilder(Builder):
         materials: Store,
         elasticity: Store,
         query: Optional[Dict] = None,
+        fitting_method: str = "finite_difference",
         **kwargs,
     ):
         """
@@ -50,12 +51,15 @@ class ElasticityBuilder(Builder):
             materials: Store of materials properties
             elasticity: Store of elastic properties
             query: Mongo-like query to limit tasks to be analyzed
+            fitting_method: method used to fit the elastic tensor, `finite_difference` |
+                `pseudoinverse` | `independent`.
         """
 
         self.tasks = tasks
         self.materials = materials
         self.elasticity = elasticity
         self.query = query if query is not None else {}
+        self.fitting_method = fitting_method
         self.kwargs = kwargs
 
         super().__init__(sources=[tasks, materials], targets=[elasticity], **kwargs)
@@ -147,7 +151,9 @@ class ElasticityBuilder(Builder):
                 opt_task, deform_tasks, self.logger
             )
 
-            doc = analyze_elastic_data(opt_task, deform_tasks, self.logger)
+            doc = analyze_elastic_data(
+                opt_task, deform_tasks, self.logger, fitting_method=self.fitting_method
+            )
             if doc:
                 doc = jsanitize(doc.dict(), allow_bson=True)
                 elastic_docs.append(doc)
@@ -278,7 +284,7 @@ def filter_deform_tasks_by_time(
 
 
 def analyze_elastic_data(
-    opt_task: Dict, deform_tasks: List[Dict], logger
+    opt_task: Dict, deform_tasks: List[Dict], logger, fitting_method="finite_difference"
 ) -> ElasticityDoc:
     """
     Analyze optimization task and deformation tasks to fit elastic tensor.
@@ -289,6 +295,7 @@ def analyze_elastic_data(
         opt_task: task doc corresponding to optimization
         deform_tasks: task docs corresponding to deformations
         logger:
+        fitting_method: method used to fit the elastic tensor
 
     Returns:
         elastic document with fitted elastic tensor and analysis
@@ -303,7 +310,6 @@ def analyze_elastic_data(
     full_data = primary_data + derived_data
 
     # fitting elastic tensor
-    fitting_method = "finite_difference"
     pk_stresses = [d["second_pk_stress"] for d in full_data]
 
     strains = [d["strain"] for d in full_data]
