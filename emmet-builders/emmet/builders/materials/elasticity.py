@@ -1,6 +1,6 @@
 import itertools
 from datetime import datetime
-from typing import Dict, Iterator, List, Optional, Sequence, Tuple, Union
+from typing import Dict, Generator, Iterator, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from maggma.core import Builder, Store
@@ -23,7 +23,7 @@ from emmet.core.material import PropertyOrigin
 from emmet.core.math import MatrixVoigt
 from emmet.core.utils import jsanitize
 
-# TODO should these be moved to SETTINGS? (SYMPREC is alreay there)
+# TODO should these be moved to SETTINGS? (SYMPREC is already there)
 STRAIN_COMP_TOL = 0.002  # tolerance for comparing strains
 DEFORM_COMP_TOL = 1e-5  # tolerance for comparing deformations
 LATTICE_COMP_TOL = 1e-5  # tolerance for comparing lattice
@@ -75,7 +75,7 @@ class ElasticityBuilder(Builder):
         self.elasticity.ensure_index("optimization_task_id")
         self.elasticity.ensure_index("last_updated")
 
-    def get_items(self) -> List[Dict]:
+    def get_items(self) -> Generator[List[Dict], None, None]:
         """
         Gets all items to process into elastic docs.
 
@@ -158,7 +158,7 @@ class ElasticityBuilder(Builder):
                 doc = jsanitize(doc.dict(), allow_bson=True)
                 elastic_docs.append(doc)
 
-            return elastic_docs
+        return elastic_docs
 
     def update_targets(self, items: List[List[Dict]]):
         """
@@ -167,11 +167,11 @@ class ElasticityBuilder(Builder):
         Args:
             items: elastic docs
         """
-        items = list(itertools.chain.from_iterable(items))
+        items_flatten = list(itertools.chain.from_iterable(items))
 
-        self.logger.info(f"Updating {len(items)} elastic documents")
+        self.logger.info(f"Updating {len(items_flatten)} elastic documents")
 
-        self.elasticity.update(items, key="material_id")
+        self.elasticity.update(items_flatten, key="material_id")
 
 
 def filter_opt_tasks_by_time(opt_tasks: List[Dict], logger) -> Dict:
@@ -238,7 +238,7 @@ def filter_deform_tasks_by_incar(
 
 
 def filter_deform_tasks_by_time(
-    opt_task: Dict, deform_tasks: [List[Dict]], logger
+    opt_task: Dict, deform_tasks: List[Dict], logger
 ) -> List[Dict]:
     """
     For deformation tasks with the same deformation, select the latest completed one.
@@ -453,7 +453,7 @@ def generate_derived_fitting_data(
             # filter strains by those which are independent and not in primary calcs
             if (
                 d_strain.get_deformation_matrix().is_independent(tol=STRAIN_COMP_TOL)
-                and not d_strain in primary_calcs_by_strain
+                and d_strain not in primary_calcs_by_strain
             ):
                 # derived strain seen before
                 if d_strain in derived_calcs_by_strain:
@@ -554,7 +554,9 @@ def group_deform_tasks_by_opt_task(
     return tasks_by_opt_task
 
 
-def group_by_parent_lattice(docs: Union[Iterator[Dict], List[Dict]], logger):
+def group_by_parent_lattice(
+    docs: Union[Iterator[Dict], List[Dict]], logger
+) -> List[Tuple[np.ndarray, List[Dict]]]:
     """
     Groups a set of task documents by parent lattice equivalence.
 
@@ -567,7 +569,7 @@ def group_by_parent_lattice(docs: Union[Iterator[Dict], List[Dict]], logger):
         lattice before deformation
     """
 
-    docs_by_lattice = []
+    docs_by_lattice: List[Tuple[np.ndarray, List[Dict]]] = []
     for doc in docs:
 
         sim_lattice = get(doc, "output.structure.lattice.matrix")
@@ -680,7 +682,7 @@ def get_state_and_warnings(
     structure: Structure,
     elastic_doc: ElasticTensorDoc,
     derived_props: DerivedProperties,
-) -> [str, List[str]]:
+) -> Tuple[str, List[str]]:
     """
     Generates all warnings that apply to a fitted elastic tensor.
 
