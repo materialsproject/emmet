@@ -23,7 +23,7 @@ from emmet.core.material import PropertyOrigin
 from emmet.core.math import MatrixVoigt
 from emmet.core.utils import jsanitize
 
-# TODO should these be moved to SETTINGS?
+# TODO should these be moved to SETTINGS? (SYMPREC is alreay there)
 STRAIN_COMP_TOL = 0.002  # tolerance for comparing strains
 DEFORM_COMP_TOL = 1e-5  # tolerance for comparing deformations
 LATTICE_COMP_TOL = 1e-5  # tolerance for comparing lattice
@@ -40,7 +40,6 @@ class ElasticityBuilder(Builder):
         materials: Store,
         elasticity: Store,
         query: Optional[Dict] = None,
-        incremental: bool = None,
         **kwargs,
     ):
         """
@@ -50,30 +49,14 @@ class ElasticityBuilder(Builder):
             tasks: Store of tasks
             materials: Store of materials properties
             elasticity: Store of elastic properties
-            query: dictionary to limit tasks to be analyzed
-            incremental: whether to use a lu_filter based on the current datetime.
-                Set to False if target is empty, but True if not.
+            query: Mongo-like query to limit tasks to be analyzed
         """
 
         self.tasks = tasks
         self.materials = materials
         self.elasticity = elasticity
         self.query = query if query is not None else {}
-        self.incremental = incremental
         self.kwargs = kwargs
-
-        # TODO enable this
-        ## By default, incremental
-        # if incremental is None:
-        #    self.elasticity.connect()
-        #    if self.elasticity.count() > 0:
-        #        self.incremental = True
-        #    else:
-        #        self.incremental = False
-        # else:
-        #    self.incremental = incremental
-
-        self.start_date = datetime.utcnow()
 
         super().__init__(sources=[tasks, materials], targets=[elasticity], **kwargs)
 
@@ -90,10 +73,10 @@ class ElasticityBuilder(Builder):
 
     def get_items(self) -> List[Dict]:
         """
-        Gets all items to process into materials documents
+        Gets all items to process into elastic docs.
 
         Returns:
-            generator of task docs of the same material
+            generator of task docs belong to same material
         """
 
         self.logger.info("Elastic Builder Started")
@@ -133,22 +116,22 @@ class ElasticityBuilder(Builder):
 
     def process_item(self, item: List[Dict]) -> List[Dict]:
         """
-        Process all tasks belong to the same material.
+        Process all tasks belong to the same material into elastic docs
 
         There can be multiple optimization tasks for the same material due to, e.g.
         later fixes of earlier calculations. The optimization task with later completed
-        time is selected.
-
-        As a result, there can be multiple deformation tasks corresponding to the
-        same deformation, and the deformation tasks are filtered by:
-        - VASP INCAR params
-        - task completion time
+        time is selected. As a result, there can be multiple deformation tasks
+        corresponding to the same deformation, and the deformation tasks are filtered:
+        - VASP INCAR params (ensure key INCAR params of optimization tasks are the
+          same as the optimization task)
+        - task completion time (if INCAR params cannot distinguish them, they are
+          filtered by completion time)
 
         Args:
             item: a list of tasks doc that belong to the same material
 
         Returns:
-            an elasticity document, represented as a dict
+            A list of elastic docs, each represented as a dict
         """
 
         grouped = group_deform_tasks_by_opt_task(item, self.logger)
@@ -173,7 +156,7 @@ class ElasticityBuilder(Builder):
 
     def update_targets(self, items: List[List[Dict]]):
         """
-        Insert the new elasticity docs into the elasticity collection.
+        Insert the new elastic docs into the elasticity collection.
 
         Args:
             items: elastic docs
@@ -201,7 +184,7 @@ def filter_opt_tasks_by_time(opt_tasks: List[Dict], logger) -> Dict:
     if len(opt_tasks) > 1:
 
         # TODO what's the difference of `completed_at` and `last_updated` for a
-        #  task? Ask Matt or Jason
+        #  task? Use which one?
         completed = [(datetime.fromisoformat(t["completed_at"]), t) for t in opt_tasks]
         sorted_by_completed = sorted(completed, key=lambda pair: pair[0])
         latest_pair = sorted_by_completed[-1]
@@ -279,8 +262,8 @@ def filter_deform_tasks_by_time(
             opt_task_id = opt_task["task_id"]
             deform_task_id = doc["task_id"]
             logger.debug(
-                "Inequivalent calculated and stored deformations for optimization task "
-                f"{opt_task_id} and deformation task {deform_task_id}."
+                "Non-equivalent calculated and stored deformations for optimization "
+                f"task {opt_task_id} and deformation task {deform_task_id}."
             )
 
         if deform in d2t:
@@ -376,7 +359,7 @@ def analyze_elastic_data(
     # state and warnings
     state, warnings = get_state_and_warnings(structure, et_doc, derived_props)
 
-    # TODO, should material_id be something else
+    # TODO, should material_id be something else?
     elastic_doc = ElasticityDoc.from_structure_and_elastic_tensor(
         structure=structure,
         material_id=opt_task["task_id"],
