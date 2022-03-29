@@ -1,6 +1,7 @@
 """ Core definition of a Thermo Document """
 from collections import defaultdict
 from typing import Dict, List, Union
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
@@ -86,7 +87,9 @@ class ThermoDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_entries(cls, entries: List[Union[ComputedEntry, ComputedStructureEntry]]):
+    def from_entries(
+        cls, entries: List[Union[ComputedEntry, ComputedStructureEntry]], **kwargs
+    ):
 
         entries_by_comp = defaultdict(list)
         for e in entries:
@@ -109,7 +112,7 @@ class ThermoDoc(PropertyDoc):
                 "material_id": e.entry_id,
                 "uncorrected_energy_per_atom": e.uncorrected_energy
                 / e.composition.num_atoms,
-                "energy_per_atom": e.uncorrected_energy / e.composition.num_atoms,
+                "energy_per_atom": e.energy / e.composition.num_atoms,
                 "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
                 "energy_above_hull": ehull,
                 "is_stable": e in pd.stable_entries,
@@ -143,6 +146,31 @@ class ThermoDoc(PropertyDoc):
                 elif k in e.data:
                     d[k] = e.data[k]
 
-            docs.append(ThermoDoc.from_structure(structure=e.structure, **d))
+            docs.append(
+                ThermoDoc.from_structure(meta_structure=e.structure, **d, **kwargs)
+            )
 
-        return docs
+        return docs, pd
+
+
+class PhaseDiagramDoc(BaseModel):
+    """
+    A phase diagram document
+    """
+
+    property_name = "phase_diagram"
+
+    chemsys: str = Field(
+        ...,
+        title="Chemical System",
+        description="Dash-delimited string of elements in the material",
+    )
+
+    phase_diagram: PhaseDiagram = Field(
+        ..., description="Phase diagram for the chemical system.",
+    )
+
+    last_updated: datetime = Field(
+        description="Timestamp for the most recent calculation update for this property",
+        default_factory=datetime.utcnow,
+    )

@@ -71,6 +71,7 @@ def task_ldau(test_dir):
 
 
 def test_ldau(task_ldau):
+    task_ldau.input.is_hubbard = True
     assert task_ldau.run_type == RunType.GGA_U
     assert ValidationDoc.from_task_doc(task_ldau).valid is False
 

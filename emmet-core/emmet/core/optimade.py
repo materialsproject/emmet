@@ -16,10 +16,12 @@ letters = "ABCDEFGHIJKLMNOPQRSTUVXYZ"
 def optimade_form(comp: Composition):
 
     symbols = sorted([str(e) for e in comp.keys()])
+    numbers = set([comp[s] for s in symbols if comp[s]])
+
     reduced_form = []
     for s in symbols:
         reduced_form.append(s)
-        if comp[s] != 1:
+        if comp[s] != 1 and len(numbers) > 1:
             reduced_form.append(str(int(comp[s])))
 
     return "".join(reduced_form)

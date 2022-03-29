@@ -7,7 +7,7 @@ from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Element
 
 from emmet.core.structure import StructureMetadata
-from emmet.core.task import TaskDocument as BaseTaskDocument
+from emmet.core.vasp.task import TaskDocument as BaseTaskDocument
 from emmet.core.utils import ValueEnum
 
 

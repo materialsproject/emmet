@@ -14,9 +14,7 @@ class MineralData(BaseModel):
     Model for mineral data in the condensed structure robocrystallographer field
     """
 
-    type: Union[str, None] = Field(
-        description="Mineral type.",
-    )
+    type: Union[str, None] = Field(description="Mineral type.",)
 
     name: str = Field(None, description="The mineral name if found")
 
@@ -27,12 +25,20 @@ class CondensedStructureData(BaseModel):
     More details: https://hackingmaterials.lbl.gov/robocrystallographer/format.html
     """
 
-    mineral: MineralData = Field(
-        description="Matched mineral data for the material.",
+    mineral: MineralData = Field(description="Matched mineral data for the material.",)
+
+    dimensionality: int = Field(description="Dimensionality of the material.",)
+
+    formula: str = Field(
+        None, description="Formula for the material.",
     )
 
-    dimensionality: int = Field(
-        description="Dimensionality of the material.",
+    spg_symbol: str = Field(
+        None, description="Space group symbol of the material.",
+    )
+
+    crystal_system: str = Field(
+        None, description="Crystal system of the material.",
     )
 
 
@@ -46,9 +52,7 @@ class RobocrystallogapherDoc(PropertyDoc):
 
     property_name = "robocrys"
 
-    description: str = Field(
-        description="Decription text from robocrytallographer.",
-    )
+    description: str = Field(description="Decription text from robocrytallographer.",)
 
     condensed_structure: CondensedStructureData = Field(
         description="Condensed structure data from robocrytallographer.",
@@ -66,8 +70,8 @@ class RobocrystallogapherDoc(PropertyDoc):
             describe_symmetry_labels=False, fmt="unicode", return_parts=False
         ).describe(condensed_structure=condensed_structure)
 
-        return cls(
-            structure=structure,
+        return super().from_structure(
+            meta_structure=structure,
             material_id=material_id,
             condensed_structure=condensed_structure,
             description=description,

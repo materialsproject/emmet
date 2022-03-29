@@ -1,9 +1,9 @@
-from typing import Tuple
+from typing import Tuple, List
 
-Vector3D = Tuple[float, float, float]
+Vector3D = List[float]
 Vector3D.__doc__ = "Real space vector"  # type: ignore
 
-Matrix3D = Tuple[Vector3D, Vector3D, Vector3D]
+Matrix3D = List[Vector3D]
 Matrix3D.__doc__ = "Real space Matrix"  # type: ignore
 
 Vector6D = Tuple[float, float, float, float, float, float]

@@ -6,11 +6,13 @@ from pydantic import Field, PyObject
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.sets import VaspInputSet
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.utils import DocEnum
 from emmet.core.vasp.task import TaskDocument
+
+SETTINGS = EmmetSettings()
 
 
 class DeprecationMessage(DocEnum):
@@ -76,6 +78,7 @@ class ValidationDoc(EmmetBaseModel):
         calc_type = task_doc.calc_type
         inputs = task_doc.orig_inputs
         bandgap = task_doc.output.bandgap
+        chemsys = task_doc.chemsys
 
         reasons = []
         data = {}
@@ -138,10 +141,10 @@ class ValidationDoc(EmmetBaseModel):
             if data["encut_ratio"] < 1:
                 reasons.append(DeprecationMessage.ENCUT)
 
+            # U-value checks
             # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
             input_hubbards = task_doc.input.hubbards
 
-            # Checking U-values
             if valid_input_set.incar.get("LDAU", False) or len(input_hubbards) > 0:
                 # Assemble required input_set LDAU params into dictionary
                 input_set_hubbards = dict(
@@ -167,7 +170,7 @@ class ValidationDoc(EmmetBaseModel):
                     warnings.extend(
                         [
                             f"U-value for {el} should be {good} but was {bad}"
-                            for el, (bad, good) in diff_ldau_params.items()
+                            for el, (good, bad) in diff_ldau_params.items()
                         ]
                     )
 
@@ -189,6 +192,11 @@ class ValidationDoc(EmmetBaseModel):
                     "Not enough electronic steps to compute valid gradient"
                     " and compare with max SCF gradient tolerance"
                 )
+
+            # Check for Am and Po elements. These currently do not have proper elemental entries
+            # and will not get treated properly by the thermo builder.
+            if ("Am" in chemsys) or ("Po" in chemsys):
+                reasons.append(DeprecationMessage.MANUAL)
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,

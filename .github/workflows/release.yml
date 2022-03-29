@@ -8,50 +8,62 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     strategy:
-        max-parallel: 6
-        matrix:
-          package: ["emmet-core","emmet-builders"]
+      max-parallel: 6
+      matrix:
+        package: ["emmet-core", "emmet-builders", "emmet-api"]
 
     steps:
-    - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
-    - uses: actions/setup-python@v2.2.2
-      with:
-        python-version: 3.7
+      - uses: actions/setup-python@v3
+        with:
+          python-version: 3.8
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools setuptools_scm wheel
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools setuptools_scm wheel
 
-    - name: Build packages
-      run: python setup.py sdist bdist_wheel
-      working-directory: ./${{ matrix.package }}/
+      - name: Build packages
+        run: python setup.py sdist bdist_wheel
+        working-directory: ./${{ matrix.package }}/
 
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@master
-      with:
-        user: __token__
-        password: ${{ secrets.PYPY_API_TOKEN }}
-        packages_dir: ./${{ matrix.package }}/dist/
+      - name: Commit files
+        run: |
+          git config --local user.email "feedback@materialsproject.org"
+          git config --local user.name "materialsproject"
+          git pull origin main
+          git add ${{ matrix.package }}/_version.py && git commit -m 'Updated version file'
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPY_API_TOKEN }}
+          packages_dir: ./${{ matrix.package }}/dist/
 
   docs:
     runs-on: ubuntu-latest
     needs:
-    - deploy
+      - deploy
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v2.2.2
+      - uses: actions/setup-python@v3
         with:
-          python-version: 3.7
+          python-version: 3.8
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install emmet-core emmet-builders
+          pip install emmet-core emmet-builders emmet-api
           pip install -r requirements-docs.txt
 
       - name: Generate changelog
@@ -64,6 +76,8 @@ jobs:
         run: |
           git config --local user.email "feedback@materialsproject.org"
           git config --local user.name "materialsproject"
+          git stash
+          git pull origin main
           mv CHANGELOG.md docs/
           git add docs/CHANGELOG.md && git commit -m 'Updated CHANGELOG.md'
 

@@ -6,12 +6,15 @@ from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 from emmet.core.vasp.task import TaskDocument
+
+
+SETTINGS = EmmetSettings()
 
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
@@ -66,9 +69,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
         structure_optimizations = [
-            task
-            for task in task_group
-            if task.task_type == TaskType.Structure_Optimization  # type: ignore
+            task for task in task_group if task.task_type == TaskType.Structure_Optimization  # type: ignore
         ]
         statics = [task for task in task_group if task.task_type == TaskType.Static]  # type: ignore
         structure_calcs = (
@@ -79,6 +80,10 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
         # Material ID
         possible_mat_ids = [task.task_id for task in structure_optimizations]
+
+        if use_statics:
+            possible_mat_ids += [task.task_id for task in statics]
+
         material_id = min(possible_mat_ids)
 
         # Always prefer a static over a structure opt
@@ -166,8 +171,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
     @classmethod
     def construct_deprecated_material(
-        cls,
-        task_group: List[TaskDocument],
+        cls, task_group: List[TaskDocument],
     ) -> "MaterialsDoc":
         """
         Converts a group of tasks into a deprecated material

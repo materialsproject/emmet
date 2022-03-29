@@ -15,13 +15,13 @@ jobs:
     strategy:
       max-parallel: 6
       matrix:
-        package: ["emmet-core", "emmet-builders"]
+        package: ["emmet-core", "emmet-builders", "emmet-api"]
 
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Set up Python 3.8
-        uses: actions/setup-python@v2.2.2
+        uses: actions/setup-python@v3
         with:
           python-version: 3.8
 
@@ -43,16 +43,16 @@ jobs:
     strategy:
       max-parallel: 6
       matrix:
-        package: ["emmet-core", "emmet-builders"]
-        python_version: [3.7, 3.8]
+        package: ["emmet-core", "emmet-builders", "emmet-api"]
+        python_version: [3.8, 3.9]
 
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python_version }}
-        uses: actions/setup-python@v2.2.2
+        uses: actions/setup-python@v3
         with:
-          python-version:  ${{ matrix.python_version }}
+          python-version: ${{ matrix.python_version }}
 
       - name: Install Python dependencies
         run: |
@@ -64,6 +64,7 @@ jobs:
         run: |
           pip install -e emmet-core
           pip install -e emmet-builders
+          pip install -e emmet-api
 
       - name: Lint with mypy
         run: mypy --namespace-package ${{ matrix.package }}/emmet
@@ -72,7 +73,7 @@ jobs:
         run: |
           pytest --cov=emmet --cov-report=xml tests/${{ matrix.package }}
 
-      - uses: codecov/codecov-action@v2.0.2
+      - uses: codecov/codecov-action@v2.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
@@ -81,19 +82,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
-    - uses: actions/setup-python@v2.2.2
-      with:
-        python-version: 3.8
+      - uses: actions/setup-python@v3
+        with:
+          python-version: 3.8
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install -e emmet-core/
-        pip install -e emmet-builders/
-        pip install -r requirements-docs.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e emmet-core/
+          pip install -e emmet-builders/
+          pip install -e emmet-api/
+          pip install -r requirements-docs.txt
 
-    - name: Build
-      run: mkdocs build
+      - name: Build
+        run: mkdocs build
