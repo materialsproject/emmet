@@ -1,6 +1,6 @@
 import itertools
 from datetime import datetime
-from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from maggma.core import Builder, Store
@@ -24,13 +24,13 @@ from emmet.core.math import MatrixVoigt
 from emmet.core.utils import jsanitize
 
 # TODO should these be moved to SETTINGS?
-DEFORM_TASK_LABEL = "elastic deformation"
-OPTIM_TASK_LABEL = "elastic structure optimization"
-
 STRAIN_COMP_TOL = 0.002  # tolerance for comparing strains
 DEFORM_COMP_TOL = 1e-5  # tolerance for comparing deformations
 LATTICE_COMP_TOL = 1e-5  # tolerance for comparing lattice
 SYMPREC = 0.1  # symmetry precision
+
+DEFORM_TASK_LABEL = "elastic deformation"
+OPTIM_TASK_LABEL = "elastic structure optimization"
 
 
 class ElasticityBuilder(Builder):
@@ -236,7 +236,7 @@ def filter_deform_tasks_by_incar(
     Returns:
         selected deformation tasks
     """
-    # TODO what is the difference of `incar` and `orig_incar` for a task? which to use?
+    # TODO what is the difference of `input` and `orig_inputs` for a task? which to use?
     opt_incar_values = {k: opt_task["input"]["incar"][k] for k in fields}
 
     selected = []
