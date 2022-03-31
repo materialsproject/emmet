@@ -3,14 +3,12 @@ from datetime import datetime
 from pymatgen.io.vasp import Chgcar
 
 
-class ChgcarDataDoc(BaseModel):
+class ChgcarMetaDataDoc(BaseModel):
     """
-    Electron charge density for selected materials.
+    Electron charge density metadata for selected materials.
     """
 
-    fs_id: str = Field(
-        None, description="Unique object ID for the charge density data."
-    )
+    fs_id: str = Field(None, description="Unique object ID for the charge density data.")
 
     last_updated: datetime = Field(
         None,
@@ -22,5 +20,11 @@ class ChgcarDataDoc(BaseModel):
         description="The Materials Project ID of the calculation producing the charge density data. \
             This comes in the form: mp-******",
     )
+
+
+class ChgcarDataDoc(ChgcarMetaDataDoc):
+    """
+    Electron charge density data for selected materials.
+    """
 
     data: Chgcar = Field(None, description="Pymatgen CHGCAR object.")
