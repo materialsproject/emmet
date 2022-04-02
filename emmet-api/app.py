@@ -253,6 +253,18 @@ if db_uri:
         searchable_fields=["task_id", "fs_id"],
     )
 
+    minio_chgcar = S3Store(
+        index=s3_chgcar_index,
+        bucket="phuck",
+        sub_dir="atomate_chgcar_fs/",
+        s3_profile="minio",
+        endpoint_url="https://minio.materialsproject.org",
+        compress=True,
+        key="fs_id",
+        unpack_data=False,
+        searchable_fields=["task_id", "fs_id"],
+    )
+
     mpcomplete_store = MongoURIStore(
         uri=f"mongodb+srv://{db_uri}",
         database="mp_consumers",
@@ -396,7 +408,9 @@ resources.update({"surface_properties": [surface_props_resource(surface_props_st
 # Robocrystallographer
 from emmet.api.routes.robocrys.resources import robo_resource, robo_search_resource
 
-resources.update({"robocrys": [robo_search_resource(robo_store), robo_resource(robo_store)]})
+resources.update(
+    {"robocrys": [robo_search_resource(robo_store), robo_resource(robo_store)]}
+)
 
 # Synthesis
 from emmet.api.routes.synthesis.resources import synth_resource
@@ -406,7 +420,13 @@ resources.update({"synthesis": [synth_resource(synth_store)]})
 # Electrodes
 from emmet.api.routes.electrodes.resources import insertion_electrodes_resource
 
-resources.update({"insertion_electrodes": [insertion_electrodes_resource(insertion_electrodes_store)]})
+resources.update(
+    {
+        "insertion_electrodes": [
+            insertion_electrodes_resource(insertion_electrodes_store)
+        ]
+    }
+)
 
 # Molecules
 from emmet.api.routes.molecules.resources import molecules_resource
@@ -423,9 +443,19 @@ from emmet.api.routes.provenance.resources import provenance_resource
 resources.update({"provenance": [provenance_resource(provenance_store)]})
 
 # Charge Density
-from emmet.api.routes.charge_density.resources import charge_density_resource, charge_density_obj_resource
+from emmet.api.routes.charge_density.resources import (
+    charge_density_resource,
+    charge_density_obj_url_resource,
+)
 
-resources.update({"charge_density": [charge_density_resource(s3_chgcar), charge_density_obj_resource(s3_chgcar)]})
+resources.update(
+    {
+        "charge_density": [
+            charge_density_resource(s3_chgcar),
+            charge_density_obj_url_resource(minio_chgcar),
+        ]
+    }
+)
 
 # Summary
 from emmet.api.routes.summary.resources import summary_resource, summary_stats_resource
@@ -477,5 +507,7 @@ resources.update({"_general_store": [general_store_resource(general_store)]})
 # === MAPI setup
 from emmet.api.core.documentation import description, tags_meta
 
-api = MAPI(resources=resources, debug=debug, description=description, tags_meta=tags_meta)
+api = MAPI(
+    resources=resources, debug=debug, description=description, tags_meta=tags_meta
+)
 app = api.app
