@@ -57,7 +57,7 @@ class TrajectoryQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def post_process(self, docs):
+    def post_process(self, docs, query):
         """
         Post processing to generatore trajectory data
         """
@@ -96,7 +96,7 @@ class DeprecationQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def post_process(self, docs):
+    def post_process(self, docs, **kwargs):
         """
         Post processing to generatore deprecation data
         """

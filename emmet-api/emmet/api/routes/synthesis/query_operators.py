@@ -192,7 +192,7 @@ class SynthesisSearchQuery(QueryOperator):
 
         return {"pipeline": pipeline}
 
-    def post_process(self, docs):
+    def post_process(self, docs, query):
         self.total_doc = 0
 
         if len(docs) > 0:

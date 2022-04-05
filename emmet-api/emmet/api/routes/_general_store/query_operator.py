@@ -22,9 +22,15 @@ class GeneralStorePostQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def post_process(self, written):
+    def post_process(self, docs, query):
 
-        d = [{"kind": self.kind, "markdown": self.markdown, "meta": self.metadata}]
+        d = [
+            {
+                "kind": query["criteria"]["kind"],
+                "markdown": query["criteria"]["markdown"],
+                "meta": query["criteria"]["meta"],
+            }
+        ]
 
         return d
 

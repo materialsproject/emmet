@@ -26,13 +26,13 @@ class MPCompletePostQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def post_process(self, written):
+    def post_process(self, docs, query):
 
         d = [
             {
-                "structure": self.structure,
-                "public_email": self.public_email,
-                "public_name": self.public_name,
+                "structure": query["criteria"]["structure"],
+                "public_email": query["criteria"]["public_email"],
+                "public_name": query["criteria"]["public_name"],
             }
         ]
 

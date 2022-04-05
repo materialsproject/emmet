@@ -8,9 +8,7 @@ class UserSettingsPostQuery(QueryOperator):
     """Query operators to provide user settings information to post"""
 
     def query(
-        self,
-        consumer_id: str = Query(..., title="Consumer ID",),
-        settings: Dict = Body(..., title="User settings",),
+        self, consumer_id: str = Query(..., title="Consumer ID",), settings: Dict = Body(..., title="User settings",),
     ) -> STORE_PARAMS:
 
         self.cid = consumer_id
@@ -20,9 +18,12 @@ class UserSettingsPostQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def post_process(self, written):
+    def post_process(self, docs, query):
 
-        d = [{"consumer_id": self.cid, "settings": self.settings}]
+        cid = query["criteria"]["consumer_id"]
+        settings = query["criteria"]["settings"]
+
+        d = [{"consumer_id": cid, "settings": settings}]
 
         return d
 
@@ -30,9 +31,7 @@ class UserSettingsPostQuery(QueryOperator):
 class UserSettingsGetQuery(QueryOperator):
     """Query operators to provide user settings information"""
 
-    def query(
-        self, consumer_id: str = Query(..., title="Consumer ID",),
-    ) -> STORE_PARAMS:
+    def query(self, consumer_id: str = Query(..., title="Consumer ID",),) -> STORE_PARAMS:
 
         crit = {"consumer_id": consumer_id}
 
