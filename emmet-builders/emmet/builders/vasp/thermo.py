@@ -254,7 +254,7 @@ class ThermoBuilder(Builder):
                 d["material_id"]: d.get("average_oxidation_states", {})
                 for d in self.oxidation_states.query(
                     properties=["material_id", "average_oxidation_states"],
-                    criteria={"material_id": {"$in": material_ids}, "state": "successful",},
+                    criteria={"material_id": {"$in": material_ids}, "state": "successful"},
                 )
             }
 
