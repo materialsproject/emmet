@@ -85,11 +85,24 @@ class ElementsQuery(QueryOperator):
             crit["elements"] = {}
 
         if elements:
-            element_list = [Element(e) for e in elements.strip().split(",")]
+            try:
+                element_list = [Element(e) for e in elements.strip().split(",")]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Please provide a comma-seperated list of elements",
+                )
+
             crit["elements"]["$all"] = [str(el) for el in element_list]
 
         if exclude_elements:
-            element_list = [Element(e) for e in exclude_elements.strip().split(",")]
+            try:
+                element_list = [Element(e) for e in exclude_elements.strip().split(",")]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Please provide a comma-seperated list of elements",
+                )
             crit["elements"]["$nin"] = [str(el) for el in element_list]
 
         return {"criteria": crit}

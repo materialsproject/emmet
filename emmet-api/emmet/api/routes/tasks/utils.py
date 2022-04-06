@@ -24,11 +24,11 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
 
             structures.append(Structure.from_dict(step["structure"]))
 
-            frame_props["e_fr_energy"].append(step["e_fr_energy"])
-            frame_props["e_wo_entrp"].append(step["e_wo_entrp"])
-            frame_props["e_0_energy"].append(step["e_wo_entrp"])
-            frame_props["forces"].append(step["forces"])
-            frame_props["stresses"].append(step["stress"])
+            frame_props["e_fr_energy"].append(step.get("e_fr_energy", None))
+            frame_props["e_wo_entrp"].append(step.get("e_wo_entrp", None))
+            frame_props["e_0_energy"].append(step.get("e_0_energy", None))
+            frame_props["forces"].append(step.get("forces", None))
+            frame_props["stresses"].append(step.get("stress", None))
 
         traj = Trajectory.from_structures(
             structures, frame_properties=frame_props, time_step=None
