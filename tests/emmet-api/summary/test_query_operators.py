@@ -111,7 +111,7 @@ def test_search_stats_query():
 
     docs = [{"band_gap": 1}, {"band_gap": 2}, {"band_gap": 3}]
 
-    assert isinstance(op.post_process(docs)[0], SummaryStats)
+    assert isinstance(op.post_process(docs, {"pipeline": pipeline})[0], SummaryStats)
 
 
 def test_search_es_query():
