@@ -11,9 +11,6 @@ class UserSettingsPostQuery(QueryOperator):
         self, consumer_id: str = Query(..., title="Consumer ID",), settings: Dict = Body(..., title="User settings",),
     ) -> STORE_PARAMS:
 
-        self.cid = consumer_id
-        self.settings = settings
-
         crit = {"consumer_id": consumer_id, "settings": settings}
 
         return {"criteria": crit}

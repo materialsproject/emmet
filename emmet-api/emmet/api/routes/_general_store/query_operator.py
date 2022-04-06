@@ -14,10 +14,6 @@ class GeneralStorePostQuery(QueryOperator):
         meta: Dict = Body(None, title="Metadata"),
     ) -> STORE_PARAMS:
 
-        self.kind = kind
-        self.markdown = markdown
-        self.metadata = meta
-
         crit = {"kind": kind, "markdown": markdown, "meta": meta}
 
         return {"criteria": crit}
@@ -27,8 +23,8 @@ class GeneralStorePostQuery(QueryOperator):
         d = [
             {
                 "kind": query["criteria"]["kind"],
-                "markdown": query["criteria"]["markdown"],
-                "meta": query["criteria"]["meta"],
+                "markdown": query["criteria"].get("markdown", None),
+                "meta": query["criteria"].get("meta", None),
             }
         ]
 
