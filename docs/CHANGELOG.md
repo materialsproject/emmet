@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.21.25](https://github.com/materialsproject/emmet/tree/v0.21.25) (2022-04-07)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.24...v0.21.25)
+
+**Merged pull requests:**
+
+- Fix structure key handling in trajectory endpoint [\#388](https://github.com/materialsproject/emmet/pull/388) ([munrojm](https://github.com/munrojm))
+
 ## [v0.21.24](https://github.com/materialsproject/emmet/tree/v0.21.24) (2022-04-06)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.23...v0.21.24)
