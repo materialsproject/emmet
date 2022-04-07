@@ -21,16 +21,11 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
         structures = []
         frame_props = defaultdict(list)  # type: dict
 
-
         steps = calculation.get("output", {}).get("ionic_steps", None)
 
         if steps is None:
-            raise HTTPException(
-                    status_code=404,
-                    detail="No ionic step data found for task",
-                )
+            raise HTTPException(status_code=404, detail="No ionic step data found for task")
         else:
-
             for step in steps:
 
                 structure_dict = step.get("structure", None)
