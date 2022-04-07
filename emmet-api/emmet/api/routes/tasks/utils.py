@@ -29,7 +29,9 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
             for step in steps:
 
                 structure_dict = step.get("structure", None)
-                structure = Structure.from_dict(structure_dict) if structure_dict is not None else None
+
+                if structure_dict is not None:
+                    structure = Structure.from_dict(structure_dict)
 
                 structures.append(structure)
 
@@ -38,10 +40,9 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
                 frame_props["e_0_energy"].append(step.get("e_0_energy", None))
                 frame_props["forces"].append(step.get("forces", None))
                 frame_props["stresses"].append(step.get("stress", None))
+                frame_props["electronic_steps"].append(step.get("electronic_steps", None))
 
-            traj = Trajectory.from_structures(
-                structures, frame_properties=frame_props, time_step=None
-            ).as_dict()
+            traj = Trajectory.from_structures(structures, frame_properties=frame_props, time_step=None).as_dict()
             trajectories.append(traj)
 
     return trajectories
