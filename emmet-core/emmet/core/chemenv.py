@@ -27,10 +27,6 @@ AVAILABLE_METHODS = {
     ),
 }
 
-ONLY_CATIONS = {
-    "DefaultSimplestChemenvStrategy": True,
-    "DefaultSimplestChemenvStrategy_all_bonds": False,
-}
 
 DEFAULTSIMPLESTCHEMENVSTRATEGY = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4, angle_cutoff=0.3, additional_condition=1, continuous_symmetry_measure_cutoff=10.0"
 SIMPLESTCHEMENVSTRATEGY_ALL_BONDS = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4, angle_cutoff=0.3, additional_condition=0, continuous_symmetry_measure_cutoff=10.0"
@@ -503,7 +499,7 @@ class ChemEnvDoc(PropertyDoc):
                     "warnings": warnings,
                 }  # type: dict
 
-        except Exception as e:
+        except Exception:
             d.update({"warnings": "ChemEnv algorithm failed"})
 
         return super().from_structure(
