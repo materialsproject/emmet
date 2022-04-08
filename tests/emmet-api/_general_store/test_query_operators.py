@@ -23,18 +23,19 @@ def test_user_settings_post_query():
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(
-            kind="test", meta={"test": "test", "test2": 10}, markdown="test"
-        ) == {
+        query = {
             "criteria": {
                 "kind": "test",
                 "meta": {"test": "test", "test2": 10},
                 "markdown": "test",
             }
         }
+        assert new_op.query(
+            kind="test", meta={"test": "test", "test2": 10}, markdown="test"
+        ) == query
 
     docs = [{"kind": "test", "meta": {"test": "test", "test2": 10}, "markdown": "test"}]
-    assert op.post_process(docs) == docs
+    assert op.post_process(docs, query) == docs
 
 
 def test_user_settings_get_query():

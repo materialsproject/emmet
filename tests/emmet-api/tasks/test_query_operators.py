@@ -37,14 +37,15 @@ def test_trajectory_query():
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-
-        assert new_op.query(task_ids=" mp-149, mp-13") == {
+        query = {
             "criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}
         }
 
+        assert new_op.query(task_ids=" mp-149, mp-13") == query
+
     with open(os.path.join(MAPISettings().TEST_FILES, "tasks_Li_Fe_V.json")) as file:
         tasks = load(file)
-    docs = op.post_process(tasks)
+    docs = op.post_process(tasks, query)
     assert docs[0]["trajectories"][0]["@class"] == "Trajectory"
 
 
@@ -58,16 +59,17 @@ def test_deprecation_query():
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-
-        assert new_op.query(task_ids=" mp-149, mp-13") == {
+        query = {
             "criteria": {"deprecated_tasks": {"$in": ["mp-149", "mp-13"]}}
         }
+
+        assert new_op.query(task_ids=" mp-149, mp-13") == query
 
     docs = [
         {"task_id": "mp-149", "deprecated_tasks": ["mp-149"]},
         {"task_id": "mp-13", "deprecated_tasks": ["mp-1234"]},
     ]
-    r = op.post_process(docs)
+    r = op.post_process(docs, query)
 
     assert r[0] == {
         "task_id": "mp-149",

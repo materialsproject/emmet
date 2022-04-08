@@ -1,4 +1,4 @@
-FROM materialsproject/devops:python-3.97.14 as base
+FROM materialsproject/devops:python-3.97.16 as base
 
 FROM base as builder
 RUN apt-get update && apt-get install -y --no-install-recommends gcc git g++ cmake make libsnappy-dev wget && apt-get clean
@@ -21,6 +21,7 @@ COPY --from=builder /root/.local/bin /root/.local/bin
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libsnappy* /usr/lib/x86_64-linux-gnu/
 COPY --from=builder /emmet-api /emmet-api
 WORKDIR /emmet-api
+ARG VERSION
 ENV PATH=/root/.local/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     FLASK_APP=emmet-api \
@@ -33,7 +34,7 @@ ENV PATH=/root/.local/bin:$PATH \
     DD_TRACE_HOST=localhost:8126 \
     DD_SERVICE=next-gen-api \
     DD_ENV=prod \
-    DD_VERSION=dev
+    DD_VERSION=$VERSION
 
 COPY app.py .
 COPY start.sh .

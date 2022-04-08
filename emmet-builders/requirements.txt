@@ -1,2 +1,2 @@
-maggma>=0.41.0
+maggma>=0.44.2
 emmet-core>=0.21.19
