@@ -36,16 +36,18 @@ def test_has_props_query():
 def test_material_ids_query():
     op = MaterialIDsSearchQuery()
 
-    assert op.query(material_ids="mp-149, mp-13") == {
-        "criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}
-    }
+    query = {"criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}}
+
+    assert op.query(material_ids="mp-149, mp-13") == query
+
+    docs = [{"material_id": "mp-13"}, {"material_id": "mp-149"}]
+
+    assert op.post_process(docs, query)[0] == docs[1]
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(material_ids="mp-149, mp-13") == {
-            "criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}
-        }
+        assert new_op.query(material_ids="mp-149, mp-13") == query
 
 
 def test_is_stable_query():
@@ -73,16 +75,12 @@ def test_magnetic_query():
 def test_has_reconstructed_query():
     op = SearchHasReconstructedQuery()
 
-    assert op.query(has_reconstructed=False) == {
-        "criteria": {"has_reconstructed": False}
-    }
+    assert op.query(has_reconstructed=False) == {"criteria": {"has_reconstructed": False}}
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(has_reconstructed=False) == {
-            "criteria": {"has_reconstructed": False}
-        }
+        assert new_op.query(has_reconstructed=False) == {"criteria": {"has_reconstructed": False}}
 
 
 def test_is_theoretical_query():
@@ -105,18 +103,14 @@ def test_search_stats_query():
         {"$project": {"band_gap": 1, "_id": 0}},
     ]
 
-    assert op.query(
-        field="band_gap", num_samples=10, min_val=0, max_val=5, num_points=100
-    ) == {"pipeline": pipeline}
+    assert op.query(field="band_gap", num_samples=10, min_val=0, max_val=5, num_points=100) == {"pipeline": pipeline}
 
     docs = [{"band_gap": 1}, {"band_gap": 2}, {"band_gap": 3}]
 
-    assert isinstance(op.post_process(docs)[0], SummaryStats)
+    assert isinstance(op.post_process(docs, {"pipeline": pipeline})[0], SummaryStats)
 
 
 def test_search_es_query():
     op = SearchESQuery()
 
-    assert op.query(is_gap_direct=False, is_metal=False) == {
-        "criteria": {"is_gap_direct": False, "is_metal": False}
-    }
+    assert op.query(is_gap_direct=False, is_metal=False) == {"criteria": {"is_gap_direct": False, "is_metal": False}}
