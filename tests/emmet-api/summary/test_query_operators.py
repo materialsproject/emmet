@@ -36,13 +36,13 @@ def test_has_props_query():
 def test_material_ids_query():
     op = MaterialIDsSearchQuery()
 
-    query = {"criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}, "properties": ["material_id"]}
+    query = {"criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}}
 
     assert op.query(material_ids="mp-149, mp-13") == query
 
     docs = [{"material_id": "mp-13"}, {"material_id": "mp-149"}]
 
-    assert op.post_process(docs, query)[0] == docs[1]
+    assert op.post_process(docs, {**query, "properties": ["material_id"]})[0] == docs[1]
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
