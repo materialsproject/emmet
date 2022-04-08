@@ -11,7 +11,8 @@ from pymatgen.analysis.chemenv.coordination_environments.coordination_geometry_f
     LocalGeometryFinder,
 )
 from pymatgen.analysis.chemenv.coordination_environments.structure_environments import (
-    LightStructureEnvironments, StructureEnvironments
+    LightStructureEnvironments,
+    StructureEnvironments,
 )
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.core.structure import Molecule
@@ -359,7 +360,9 @@ class ChemEnvDoc(PropertyDoc):
         description="List of Molecule Objects describing the detected environment."
     )
 
-    structure_environment: StructureEnvironments= Field(description="Structure environment object")
+    structure_environment: StructureEnvironments = Field(
+        description="Structure environment object"
+    )
 
     wyckoff_positions: List[str] = Field(
         description="List of Wyckoff positions for unique (cationic) species in structure."
