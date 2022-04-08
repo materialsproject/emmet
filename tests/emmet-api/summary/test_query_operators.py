@@ -42,7 +42,7 @@ def test_material_ids_query():
 
     docs = [{"material_id": "mp-13"}, {"material_id": "mp-149"}]
 
-    assert op.post_process(docs, query)[0] == docs[1]
+    assert op.post_process(docs, {**query, "properties": ["material_id"]})[0] == docs[1]
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
