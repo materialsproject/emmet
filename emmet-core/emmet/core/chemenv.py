@@ -11,7 +11,7 @@ from pymatgen.analysis.chemenv.coordination_environments.coordination_geometry_f
     LocalGeometryFinder,
 )
 from pymatgen.analysis.chemenv.coordination_environments.structure_environments import (
-    LightStructureEnvironments,
+    LightStructureEnvironments, StructureEnvironments
 )
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.core.structure import Molecule
@@ -28,8 +28,8 @@ AVAILABLE_METHODS = {
 }
 
 
-DEFAULTSIMPLESTCHEMENVSTRATEGY = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4, angle_cutoff=0.3, additional_condition=1, continuous_symmetry_measure_cutoff=10.0"
-SIMPLESTCHEMENVSTRATEGY_ALL_BONDS = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4, angle_cutoff=0.3, additional_condition=0, continuous_symmetry_measure_cutoff=10.0"
+DEFAULTSIMPLESTCHEMENVSTRATEGY = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4 angle_cutoff=0.3 additional_condition=1 continuous_symmetry_measure_cutoff=10.0"
+SIMPLESTCHEMENVSTRATEGY_ALL_BONDS = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4 angle_cutoff=0.3 additional_condition=0 continuous_symmetry_measure_cutoff=10.0"
 
 
 METHODS_DESCRIPTION = {
@@ -37,9 +37,6 @@ METHODS_DESCRIPTION = {
     "DefaultSimplestChemenvStrategy_all_bonds": SIMPLESTCHEMENVSTRATEGY_ALL_BONDS,
 }
 
-METHODS_DESCRIPTION_TEXT = Literal[
-    DEFAULTSIMPLESTCHEMENVSTRATEGY, SIMPLESTCHEMENVSTRATEGY_ALL_BONDS
-]
 
 COORDINATION_GEOMETRIES = Literal[
     "S:1",
@@ -103,7 +100,7 @@ COORDINATION_GEOMETRIES = Literal[
     "HA:12",
     "SH:13",
     "DD:20",
-    "undefined",
+    "None",
 ]
 
 COORDINATION_GEOMETRIES_IUPAC = Literal[
@@ -354,13 +351,15 @@ class ChemEnvDoc(PropertyDoc):
         description="Saves the continous symmetry measures for unique (cationic) species in structure"
     )
 
-    method: Union[METHODS_DESCRIPTION_TEXT, None] = Field(
+    method: Union[str, None] = Field(
         description="Method used to compute chemical environments"
     )
 
     mol_from_site_environments: List[Union[Molecule, None]] = Field(
         description="List of Molecule Objects describing the detected environment."
     )
+
+    structure_environment: StructureEnvironments= Field(description="Structure environment object")
 
     wyckoff_positions: List[str] = Field(
         description="List of Wyckoff positions for unique (cationic) species in structure."
@@ -482,22 +481,23 @@ class ChemEnvDoc(PropertyDoc):
                     list_species.append(structure[index].species_string)
                     list_csm.append(env[0]["csm"])
 
-                # TODO: decide whether structure environment and LightStructureEnvironment are also saved
-
-                d = {
-                    "valences": valences,
-                    "species": list_species,
-                    "chemenv_symbol": list_chemenv,
-                    "chemenv_iupac": list_chemenv_iupac,
-                    "chemenv_iucr": list_chemenv_iucr,
-                    "chemenv_name": list_chemenv_text,
-                    "chemenv_name_with_alternatives": list_chemenv_text_with_alternatives,
-                    "csm": list_csm,
-                    "mol_from_site_environments": list_mol,
-                    "wyckoff_positions": list_wyckoff,
-                    "method": METHODS_DESCRIPTION[method_description],
-                    "warnings": warnings,
-                }  # type: dict
+                d.update(
+                    {
+                        "valences": valences,
+                        "species": list_species,
+                        "chemenv_symbol": list_chemenv,
+                        "chemenv_iupac": list_chemenv_iupac,
+                        "chemenv_iucr": list_chemenv_iucr,
+                        "chemenv_name": list_chemenv_text,
+                        "chemenv_name_with_alternatives": list_chemenv_text_with_alternatives,
+                        "csm": list_csm,
+                        "mol_from_site_environments": list_mol,
+                        "wyckoff_positions": list_wyckoff,
+                        "structure_environment": se,
+                        "method": METHODS_DESCRIPTION[method_description],
+                        "warnings": warnings,
+                    }
+                )
 
         except Exception:
             d.update({"warnings": "ChemEnv algorithm failed"})
