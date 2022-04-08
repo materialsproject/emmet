@@ -397,6 +397,7 @@ class ChemEnvDoc(PropertyDoc):
             "wyckoff_positions": [],
             "method": None,
             "warnings": None,
+            "structure_environment": None,
         }  # type: dict
 
         try:
