@@ -360,9 +360,9 @@ class ChemEnvDoc(PropertyDoc):
         description="List of Molecule Objects describing the detected environment."
     )
 
-    structure_environment: Union[StructureEnvironments, None] = Field(
-        description="Structure environment object"
-    )
+    # structure_environment: Union[StructureEnvironments, None] = Field(
+    #     description="Structure environment object"
+    # )
 
     wyckoff_positions: List[str] = Field(
         description="List of Wyckoff positions for unique (cationic) species in structure."
@@ -400,7 +400,7 @@ class ChemEnvDoc(PropertyDoc):
             "wyckoff_positions": [],
             "method": None,
             "warnings": None,
-            "structure_environment": None,
+            # "structure_environment": None,
         }  # type: dict
 
         try:
@@ -497,7 +497,7 @@ class ChemEnvDoc(PropertyDoc):
                         "csm": list_csm,
                         "mol_from_site_environments": list_mol,
                         "wyckoff_positions": list_wyckoff,
-                        "structure_environment": se,
+                        # "structure_environment": se,
                         "method": METHODS_DESCRIPTION[method_description],
                         "warnings": warnings,
                     }
