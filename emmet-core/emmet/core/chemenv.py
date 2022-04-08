@@ -360,7 +360,7 @@ class ChemEnvDoc(PropertyDoc):
         description="List of Molecule Objects describing the detected environment."
     )
 
-    structure_environment: StructureEnvironments = Field(
+    structure_environment: Union[StructureEnvironments, None] = Field(
         description="Structure environment object"
     )
 
