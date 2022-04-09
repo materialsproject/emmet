@@ -74,10 +74,12 @@ class ElementsQuery(QueryOperator):
     def query(
         self,
         elements: Optional[str] = Query(
-            None, description="Query by elements in the material composition as a comma-separated list",
+            None,
+            description="Query by elements in the material composition as a comma-separated list",
         ),
         exclude_elements: Optional[str] = Query(
-            None, description="Query by excluded elements in the material composition as a comma-separated list",
+            None,
+            description="Query by excluded elements in the material composition as a comma-separated list",
         ),
     ) -> STORE_PARAMS:
 
@@ -119,7 +121,10 @@ class DeprecationQuery(QueryOperator):
     """
 
     def query(
-        self, deprecated: Optional[bool] = Query(False, description="Whether the material is marked as deprecated",),
+        self,
+        deprecated: Optional[bool] = Query(
+            False, description="Whether the material is marked as deprecated",
+        ),
     ) -> STORE_PARAMS:
 
         crit = {}
@@ -137,9 +142,15 @@ class SymmetryQuery(QueryOperator):
 
     def query(
         self,
-        crystal_system: Optional[CrystalSystem] = Query(None, description="Crystal system of the material",),
-        spacegroup_number: Optional[int] = Query(None, description="Space group number of the material",),
-        spacegroup_symbol: Optional[str] = Query(None, description="Space group symbol of the material",),
+        crystal_system: Optional[CrystalSystem] = Query(
+            None, description="Crystal system of the material",
+        ),
+        spacegroup_number: Optional[int] = Query(
+            None, description="Space group number of the material",
+        ),
+        spacegroup_symbol: Optional[str] = Query(
+            None, description="Space group symbol of the material",
+        ),
     ) -> STORE_PARAMS:
 
         crit = {}  # type: dict
@@ -166,13 +177,22 @@ class MultiTaskIDQuery(QueryOperator):
     """
 
     def query(
-        self, task_ids: Optional[str] = Query(None, description="Comma-separated list of task_ids to query on"),
+        self,
+        task_ids: Optional[str] = Query(
+            None, description="Comma-separated list of task_ids to query on"
+        ),
     ) -> STORE_PARAMS:
 
         crit = {}
 
         if task_ids:
-            crit.update({"task_ids": {"$in": [task_id.strip() for task_id in task_ids.split(",")]}})
+            crit.update(
+                {
+                    "task_ids": {
+                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
+                    }
+                }
+            )
 
         return {"criteria": crit}
 
@@ -187,13 +207,24 @@ class MultiMaterialIDQuery(QueryOperator):
 
     def query(
         self,
-        material_ids: Optional[str] = Query(None, description="Comma-separated list of material_id values to query on"),
+        material_ids: Optional[str] = Query(
+            None, description="Comma-separated list of material_id values to query on"
+        ),
     ) -> STORE_PARAMS:
 
         crit = {}
 
         if material_ids:
-            crit.update({"material_id": {"$in": [material_id.strip() for material_id in material_ids.split(",")]}})
+            crit.update(
+                {
+                    "material_id": {
+                        "$in": [
+                            material_id.strip()
+                            for material_id in material_ids.split(",")
+                        ]
+                    }
+                }
+            )
 
         return {"criteria": crit}
 
@@ -205,16 +236,23 @@ class FindStructureQuery(QueryOperator):
 
     def query(
         self,
-        structure: Structure = Body(..., description="Pymatgen structure object to query with",),
-        ltol: float = Query(0.2, description="Fractional length tolerance. Default is 0.2.",),
+        structure: Structure = Body(
+            ..., description="Pymatgen structure object to query with",
+        ),
+        ltol: float = Query(
+            0.2, description="Fractional length tolerance. Default is 0.2.",
+        ),
         stol: float = Query(
             0.3,
             description="Site tolerance. Defined as the fraction of the average free \
                     length per atom := ( V / Nsites ) ** (1/3). Default is 0.3.",
         ),
-        angle_tol: float = Query(5, description="Angle tolerance in degrees. Default is 5 degrees.",),
+        angle_tol: float = Query(
+            5, description="Angle tolerance in degrees. Default is 5 degrees.",
+        ),
         limit: int = Query(
-            1, description="Maximum number of matches to show. Defaults to 1, only showing the best match.",
+            1,
+            description="Maximum number of matches to show. Defaults to 1, only showing the best match.",
         ),
     ) -> STORE_PARAMS:
 
@@ -230,7 +268,8 @@ class FindStructureQuery(QueryOperator):
             s = Structure.from_dict(structure)
         except Exception:
             raise HTTPException(
-                status_code=404, detail="Body cannot be converted to a pymatgen structure object.",
+                status_code=404,
+                detail="Body cannot be converted to a pymatgen structure object.",
             )
 
         crit.update({"composition_reduced": dict(s.composition.to_reduced_dict)})
@@ -270,7 +309,11 @@ class FindStructureQuery(QueryOperator):
                 )
 
         response = sorted(
-            matches[: self.limit], key=lambda x: (x["normalized_rms_displacement"], x["max_distance_paired_sites"],),
+            matches[: self.limit],
+            key=lambda x: (
+                x["normalized_rms_displacement"],
+                x["max_distance_paired_sites"],
+            ),
         )
 
         return response
@@ -287,7 +330,9 @@ class FormulaAutoCompleteQuery(QueryOperator):
     def query(
         self,
         formula: str = Query(..., description="Human readable chemical formula.",),
-        limit: int = Query(10, description="Maximum number of matches to show. Defaults to 10.",),
+        limit: int = Query(
+            10, description="Maximum number of matches to show. Defaults to 10.",
+        ),
     ) -> STORE_PARAMS:
 
         self.formula = formula
@@ -326,9 +371,26 @@ class FormulaAutoCompleteQuery(QueryOperator):
         final_terms = ["".join(entry) for entry in permutations(ind_str)]
 
         pipeline = [
-            {"$search": {"index": "formula_autocomplete", "text": {"path": "formula_pretty", "query": final_terms}}},
-            {"$project": {"_id": 0, "formula_pretty": 1, "elements": 1, "length": {"$strLenCP": "$formula_pretty"}}},
-            {"$match": {"length": {"$gte": len(final_terms[0])}, "elements": {"$all": eles}}},
+            {
+                "$search": {
+                    "index": "formula_autocomplete",
+                    "text": {"path": "formula_pretty", "query": final_terms},
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "formula_pretty": 1,
+                    "elements": 1,
+                    "length": {"$strLenCP": "$formula_pretty"},
+                }
+            },
+            {
+                "$match": {
+                    "length": {"$gte": len(final_terms[0])},
+                    "elements": {"$all": eles},
+                }
+            },
             {"$limit": limit},
             {"$sort": {"length": 1}},
             {"$project": {"elements": 0, "length": 0}},
