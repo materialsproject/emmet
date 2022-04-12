@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 from pymatgen.core import Composition
 from pymatgen.core.periodic_table import DummySpecies
 from typing import Dict
@@ -30,9 +31,16 @@ def formula_to_criteria(formulas: str) -> Dict:
 
             formula_dummies = formulas.replace("*", "{}").format(*dummies[:nstars])
 
-            integer_formula = Composition(
-                formula_dummies
-            ).get_integer_formula_and_factor()[0]
+            try:
+                integer_formula = Composition(
+                    formula_dummies
+                ).get_integer_formula_and_factor()[0]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Problem processing formula with wild cards.",
+                )
+
             comp = Composition(integer_formula).reduced_composition
             crit = dict()
             crit["formula_anonymous"] = comp.anonymized_formula
@@ -48,45 +56,46 @@ def formula_to_criteria(formulas: str) -> Dict:
 
             return crit
 
-    elif any(
-        isinstance(el, DummySpecies)
-        for formula in formula_list
-        for el in Composition(formula)
-    ):
-        # Assume fully anonymized formula
-        if len(formula_list) == 1:
-            return {
-                "formula_anonymous": Composition(formula_list[0]).anonymized_formula
-            }
-        else:
-            return {
-                "formula_anonymous": {
-                    "$in": [
-                        Composition(formula).anonymized_formula
-                        for formula in formula_list
-                    ]
-                }
-            }
-
     else:
-        if len(formula_list) == 1:
+        try:
+            composition_list = [Composition(formula) for formula in formula_list]
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Problem processing one or more provided formulas.",
+            )
 
-            comp = Composition(formula_list[0])
-            # Paranoia below about floating-point "equality"
-            crit = {}
-            crit["nelements"] = len(comp)  # type: ignore
-            for el, n in comp.to_reduced_dict.items():
-                crit[f"composition_reduced.{el}"] = n
-
-            return crit
-        else:
-            return {
-                "formula_pretty": {
-                    "$in": [
-                        Composition(formula).reduced_formula for formula in formula_list
-                    ]
+        if any(
+            isinstance(el, DummySpecies) for comp in composition_list for el in comp
+        ):
+            # Assume fully anonymized formula
+            if len(formula_list) == 1:
+                return {"formula_anonymous": composition_list[0].anonymized_formula}
+            else:
+                return {
+                    "formula_anonymous": {
+                        "$in": [comp.anonymized_formula for comp in composition_list]
+                    }
                 }
-            }
+
+        else:
+
+            if len(formula_list) == 1:
+
+                comp = composition_list[0]
+                # Paranoia below about floating-point "equality"
+                crit = {}
+                crit["nelements"] = len(comp)  # type: ignore
+                for el, n in comp.to_reduced_dict.items():
+                    crit[f"composition_reduced.{el}"] = n
+
+                return crit
+            else:
+                return {
+                    "formula_pretty": {
+                        "$in": [comp.reduced_formula for comp in composition_list]
+                    }
+                }
 
 
 def chemsys_to_criteria(chemsys: str) -> Dict:
