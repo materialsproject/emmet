@@ -115,7 +115,10 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
         None, description="Special workflow name (if applicable)"
     )
 
-    tags: Dict[str, Any] = Field(None, description="Metadata tags")
+    # TODO - type of `tags` field seems to differ among task databases
+    # sometimes List, sometimes Dict
+    # left as Any here to ensure tags don't cause validation to fail.
+    tags: Any = Field(None, description="Metadata tags")
 
     warnings: Dict[str, bool] = Field(
         None, description="Any warnings related to this task document"

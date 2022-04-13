@@ -80,7 +80,7 @@ def form_env(mol_lot: Tuple[Molecule, str]) -> str:
 
     molecule, lot = mol_lot
     lot_comp = lot.split("/")
-    if lot_comp[2].upper == "VACUUM":
+    if lot_comp[2].upper() == "VACUUM":
         env = "VACUUM"
     else:
         env = lot_comp[2].split("(")[1].replace(")", "")
@@ -99,7 +99,7 @@ def group_molecules(molecules: List[Molecule], lots: List[str]):
         lots (List[str]): string representations of Q-Chem levels of theory
             (for instance, wB97X-V/def2-TZVPPD/VACUUM)
     """
-
+    print(lots)
     for mol_key, pregroup in groupby(
         sorted(zip(molecules, lots), key=form_env), key=form_env
     ):

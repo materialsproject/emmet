@@ -199,7 +199,14 @@ class MoleculesAssociationBuilder(Builder):
             )
             for t in tasks:
                 # TODO: Validation
-                t["is_valid"] = True
+                # basic validation here ensures that tasks with invalid levels of
+                # theory don't halt the build pipeline
+                try:
+                    TaskDocument(**t).level_of_theory
+                    t["is_valid"] = True
+                except Exception as e:
+                    self.logger.info(f"Processing task {t['task_id']} failed with Exception - {e}")
+                    t["is_valid"] = False
 
             yield tasks
 
@@ -214,7 +221,7 @@ class MoleculesAssociationBuilder(Builder):
             [dict] : a list of new molecule docs
         """
 
-        tasks = [TaskDocument(**task) for task in items]
+        tasks = [TaskDocument(**task) for task in items if task["is_valid"]]
         formula = tasks[0].formula_alphabetical
         task_ids = [task.task_id for task in tasks]
         self.logger.debug(f"Processing {formula} : {task_ids}")
