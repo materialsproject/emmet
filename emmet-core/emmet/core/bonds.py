@@ -22,7 +22,9 @@ class BondingDoc(PropertyDoc):
 
     property_name = "bonding"
 
-    structure_graph: StructureGraph = Field(description="Structure graph",)
+    structure_graph: StructureGraph = Field(
+        description="Structure graph",
+    )
 
     method: str = Field(description="Method used to compute structure graph")
 
@@ -47,7 +49,10 @@ class BondingDoc(PropertyDoc):
         cls,
         structure,
         material_id,
-        preferred_methods=("CrystalNN", "MinimumDistanceNN",),
+        preferred_methods=(
+            "CrystalNN",
+            "MinimumDistanceNN",
+        ),
         **kwargs
     ):
         """
@@ -62,7 +67,6 @@ class BondingDoc(PropertyDoc):
         """
 
         bonding_info = None
-
         preferred_methods = [  # type: ignore
             AVAILABLE_METHODS[method]() if isinstance(method, str) else method
             for method in preferred_methods

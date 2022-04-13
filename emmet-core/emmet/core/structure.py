@@ -21,9 +21,13 @@ class StructureMetadata(EmmetBaseModel):
 
     # Structure metadata
     nsites: int = Field(None, description="Total number of sites in the structure")
-    elements: List[Element] = Field(None, description="List of elements in the material")
+    elements: List[Element] = Field(
+        None, description="List of elements in the material"
+    )
     nelements: int = Field(None, title="Number of Elements")
-    composition: Composition = Field(None, description="Full composition for the material")
+    composition: Composition = Field(
+        None, description="Full composition for the material"
+    )
     composition_reduced: Composition = Field(
         None,
         title="Reduced Composition",
@@ -50,7 +54,9 @@ class StructureMetadata(EmmetBaseModel):
         description="Total volume for this structure in Angstroms^3",
     )
 
-    density: float = Field(None, title="Density", description="Density in grams per cm^3")
+    density: float = Field(
+        None, title="Density", description="Density in grams per cm^3"
+    )
 
     density_atomic: float = Field(
         None,
@@ -61,7 +67,12 @@ class StructureMetadata(EmmetBaseModel):
     symmetry: SymmetryData = Field(None, description="Symmetry data for this material")
 
     @classmethod
-    def from_composition(cls: Type[T], composition: Composition, fields: Optional[List[str]] = None, **kwargs) -> T:
+    def from_composition(
+        cls: Type[T],
+        composition: Composition,
+        fields: Optional[List[str]] = None,
+        **kwargs,
+    ) -> T:
 
         fields = (
             [
@@ -93,7 +104,12 @@ class StructureMetadata(EmmetBaseModel):
         return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
 
     @classmethod
-    def from_structure(cls: Type[T], meta_structure: Structure, fields: Optional[List[str]] = None, **kwargs) -> T:
+    def from_structure(
+        cls: Type[T],
+        meta_structure: Structure,
+        fields: Optional[List[str]] = None,
+        **kwargs,
+    ) -> T:
 
         fields = (
             [
@@ -131,5 +147,4 @@ class StructureMetadata(EmmetBaseModel):
             "density_atomic": meta_structure.volume / meta_structure.num_sites,
             "symmetry": symmetry,
         }
-
         return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
