@@ -497,7 +497,7 @@ class ChemEnvDoc(PropertyDoc):
                         "csm": list_csm,
                         "mol_from_site_environments": list_mol,
                         "wyckoff_positions": list_wyckoff,
-                        # "structure_environment": se,
+                        # "structure_environment": se.as_dict(),
                         "method": METHODS_DESCRIPTION[method_description],
                         "warnings": warnings,
                     }
