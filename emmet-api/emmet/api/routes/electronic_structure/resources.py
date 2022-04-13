@@ -101,7 +101,7 @@ def dos_resource(es_store):
                 default_fields=["material_id", "last_updated", "dos"],
             ),
         ],
-        header_processor=GlobalHeaderProcessor,
+        header_processor=GlobalHeaderProcessor(),
         tags=["Electronic Structure"],
         enable_get_by_key=False,
         sub_path="/dos/",
