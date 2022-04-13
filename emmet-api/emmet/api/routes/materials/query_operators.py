@@ -250,7 +250,7 @@ class FindStructureQuery(QueryOperator):
         angle_tol: float = Query(
             5, description="Angle tolerance in degrees. Default is 5 degrees.",
         ),
-        limit: int = Query(
+        _limit: int = Query(
             1,
             description="Maximum number of matches to show. Defaults to 1, only showing the best match.",
         ),
@@ -259,7 +259,7 @@ class FindStructureQuery(QueryOperator):
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol
-        self.limit = limit
+        self._limit = _limit
         self.structure = structure
 
         crit = {}
@@ -309,7 +309,7 @@ class FindStructureQuery(QueryOperator):
                 )
 
         response = sorted(
-            matches[: self.limit],
+            matches[: self._limit],
             key=lambda x: (
                 x["normalized_rms_displacement"],
                 x["max_distance_paired_sites"],
