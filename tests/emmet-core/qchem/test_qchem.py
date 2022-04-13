@@ -135,7 +135,7 @@ def test_unexpected_lots():
                     "basis": "def2-tzvppd",
                     "solvent_method": "smd",
                 },
-                "smx": {"solvent": "methanol"},
+                "smx": {"solvent": "cyclohexane"},
             }
         )
 
