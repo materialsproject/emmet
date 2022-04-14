@@ -48,7 +48,7 @@ def test_robocrys_search_query():
         {"$limit": 10},
     ]
 
-    assert op.query(keywords="cubic, octahedra", skip=0, limit=10) == {
+    assert op.query(keywords="cubic, octahedra", _skip=0, _limit=10) == {
         "pipeline": pipeline
     }
 
