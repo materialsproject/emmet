@@ -8,6 +8,7 @@ from emmet.api.routes.molecules.query_operators import (
     MoleculeFormulaQuery,
 )
 from emmet.api.routes.tasks.query_operators import MultipleTaskIDsQuery
+from emmet.api.core.global_header import GlobalHeaderProcessor
 
 
 def molecules_resource(molecules_store):
@@ -23,6 +24,7 @@ def molecules_resource(molecules_store):
             PaginationQuery(),
             SparseFieldsQuery(MoleculesDoc, default_fields=["task_id"]),
         ],
+        header_processor=GlobalHeaderProcessor(),
         tags=["Molecules"],
         disable_validation=True,
     )

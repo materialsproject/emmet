@@ -9,6 +9,7 @@ from maggma.api.query_operator import (
     SparseFieldsQuery,
 )
 from emmet.api.routes.thermo.query_operators import IsStableQuery
+from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.routes.materials.query_operators import (
     MultiMaterialIDQuery,
     FormulaQuery,
@@ -24,6 +25,7 @@ def phase_diagram_resource(phase_diagram_store):
         sub_path="/phase_diagram/",
         disable_validation=True,
         enable_default_search=False,
+        header_processor=GlobalHeaderProcessor(),
     )
 
     return resource
@@ -45,6 +47,7 @@ def thermo_resource(thermo_store):
                 ThermoDoc, default_fields=["material_id", "last_updated"]
             ),
         ],
+        header_processor=GlobalHeaderProcessor(),
         tags=["Thermo"],
         disable_validation=True,
     )

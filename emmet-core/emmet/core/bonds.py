@@ -24,9 +24,10 @@ class BondingDoc(PropertyDoc):
 
     structure_graph: StructureGraph = Field(
         description="Structure graph",
+
     )
 
-    method: str = Field(description="Method used to compute structure graph")
+    method: str = Field(description="Method used to compute structure graph.")
 
     bond_types: Dict[str, List[float]] = Field(
         description="Dictionary of bond types to their length, e.g. a Fe-O to "
@@ -37,11 +38,11 @@ class BondingDoc(PropertyDoc):
         "with keys all_weights, min, max, mean and variance."
     )
     coordination_envs: List[str] = Field(
-        description="List of co-ordination environments, e.g. ['Mo-S(6)', 'S-Mo(3)']"
+        description="List of co-ordination environments, e.g. ['Mo-S(6)', 'S-Mo(3)']."
     )
     coordination_envs_anonymous: List[str] = Field(
         description="List of co-ordination environments without elements "
-        "present, e.g. ['A-B(6)', 'A-B(3)']"
+        "present, e.g. ['A-B(6)', 'A-B(3)']."
     )
 
     @classmethod

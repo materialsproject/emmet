@@ -30,29 +30,29 @@ class SymmetryData(BaseModel):
     """
 
     crystal_system: CrystalSystem = Field(
-        None, title="Crystal System", description="The crystal system for this lattice"
+        None, title="Crystal System", description="The crystal system for this lattice."
     )
 
     symbol: str = Field(
         None,
         title="Space Group Symbol",
-        description="The spacegroup symbol for the lattice",
+        description="The spacegroup symbol for the lattice.",
     )
 
     number: int = Field(
         None,
         title="Space Group Number",
-        description="The spacegroup number for the lattice",
+        description="The spacegroup number for the lattice.",
     )
 
     point_group: str = Field(
-        None, title="Point Group Symbol", description="The point group for the lattice"
+        None, title="Point Group Symbol", description="The point group for the lattice."
     )
 
     symprec: float = Field(
         None,
         title="Symmetry Finding Precision",
-        description="The precision given to spglib to determine the symmetry of this lattice",
+        description="The precision given to spglib to determine the symmetry of this lattice.",
     )
 
     version: str = Field(None, title="SPGLib version")

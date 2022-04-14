@@ -17,6 +17,7 @@ from emmet.api.routes.electronic_structure.query_operators import (
     ObjectQuery,
 )
 from emmet.core.electronic_structure import BSObjectDoc, DOSObjectDoc
+from emmet.api.core.global_header import GlobalHeaderProcessor
 
 
 def es_resource(es_store):
@@ -36,6 +37,7 @@ def es_resource(es_store):
                 ElectronicStructureDoc, default_fields=["material_id", "last_updated"]
             ),
         ],
+        header_processor=GlobalHeaderProcessor(),
         tags=["Electronic Structure"],
         disable_validation=True,
     )
@@ -57,6 +59,7 @@ def bs_resource(es_store):
                 default_fields=["material_id", "last_updated", "bandstructure"],
             ),
         ],
+        header_processor=GlobalHeaderProcessor(),
         tags=["Electronic Structure"],
         enable_get_by_key=False,
         sub_path="/bandstructure/",
@@ -74,6 +77,7 @@ def bs_obj_resource(s3_store):
             ObjectQuery(),
             SparseFieldsQuery(BSObjectDoc, default_fields=["task_id", "last_updated"]),
         ],
+        header_processor=GlobalHeaderProcessor(),
         tags=["Electronic Structure"],
         enable_get_by_key=False,
         enable_default_search=True,
@@ -97,6 +101,7 @@ def dos_resource(es_store):
                 default_fields=["material_id", "last_updated", "dos"],
             ),
         ],
+        header_processor=GlobalHeaderProcessor(),
         tags=["Electronic Structure"],
         enable_get_by_key=False,
         sub_path="/dos/",
@@ -114,6 +119,7 @@ def dos_obj_resource(s3_store):
             ObjectQuery(),
             SparseFieldsQuery(DOSObjectDoc, default_fields=["task_id", "last_updated"]),
         ],
+        header_processor=GlobalHeaderProcessor(),
         tags=["Electronic Structure"],
         enable_get_by_key=False,
         enable_default_search=True,
