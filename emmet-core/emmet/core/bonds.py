@@ -23,7 +23,8 @@ class BondingDoc(PropertyDoc):
     property_name = "bonding"
 
     structure_graph: StructureGraph = Field(
-        description="Structure graph.",
+        description="Structure graph",
+
     )
 
     method: str = Field(description="Method used to compute structure graph.")
@@ -67,7 +68,6 @@ class BondingDoc(PropertyDoc):
         """
 
         bonding_info = None
-
         preferred_methods = [  # type: ignore
             AVAILABLE_METHODS[method]() if isinstance(method, str) else method
             for method in preferred_methods
