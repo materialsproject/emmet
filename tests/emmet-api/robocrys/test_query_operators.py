@@ -55,10 +55,8 @@ def test_robocrys_search_query():
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        query = {
-            "pipeline": pipeline
-        }
-        assert new_op.query(keywords="cubic, octahedra", skip=0, limit=10) == query
+        query = {"pipeline": pipeline}
+        assert new_op.query(keywords="cubic, octahedra", _skip=0, _limit=10) == query
 
     assert op.post_process([{"total_doc": 10}], query) == [{"total_doc": 10}]
     assert op.meta() == {"total_doc": 10}
