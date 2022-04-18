@@ -1,4 +1,4 @@
-from maggma.api.resource import ReadOnlyResource, S3URLResource
+from maggma.api.resource import ReadOnlyResource
 from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 from emmet.core.charge_density import ChgcarDataDoc
 from emmet.api.routes.charge_density.query_operators import ChgcarTaskIDQuery
@@ -24,9 +24,15 @@ def charge_density_resource(s3_store):
     return resource
 
 
-def charge_density_obj_url_resource(s3_store):
-    resource = S3URLResource(
-        s3_store, url_lifetime=3600, tags=["Charge Density"], disable_validation=True,
+def charge_density_url_resource(s3_store):
+    resource = ReadOnlyResource(
+        s3_store,
+        ChgcarDataDoc,
+        key_fields=["task_id", "fs_id", "url", "requested_datetime", "expiry_datetime"],
+        tags=["Charge Density"],
+        enable_default_search=False,
+        enable_get_by_key=True,
+        disable_validation=True,
     )
 
     return resource

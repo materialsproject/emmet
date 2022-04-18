@@ -253,16 +253,11 @@ if db_uri:
         searchable_fields=["task_id", "fs_id"],
     )
 
-    minio_chgcar = S3Store(
-        index=s3_chgcar_index,
-        bucket="phuck",
-        sub_dir="atomate_chgcar_fs/",
-        s3_profile="minio",
-        endpoint_url="https://minio.materialsproject.org",
-        compress=True,
+    chgcar_url = MongoURIStore(
+        uri=f"mongodb+srv://{db_uri}",
+        database="mp_core",
         key="fs_id",
-        unpack_data=False,
-        searchable_fields=["task_id", "fs_id"],
+        collection_name="chgcar_s3_urls",
     )
 
     mpcomplete_store = MongoURIStore(
@@ -445,14 +440,14 @@ resources.update({"provenance": [provenance_resource(provenance_store)]})
 # Charge Density
 from emmet.api.routes.charge_density.resources import (
     charge_density_resource,
-    charge_density_obj_url_resource,
+    charge_density_url_resource,
 )
 
 resources.update(
     {
         "charge_density": [
             charge_density_resource(s3_chgcar),
-            charge_density_obj_url_resource(minio_chgcar),
+            charge_density_url_resource(chgcar_url),
         ]
     }
 )
