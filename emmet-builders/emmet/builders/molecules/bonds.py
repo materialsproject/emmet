@@ -181,7 +181,7 @@ class BondingBuilder(Builder):
         mols = [MoleculeDoc(**item) for item in items]
         formula = mols[0].formula_alphabetical
         mol_ids = [m.molecule_id for m in mols]
-        self.logger.debug(f"Processing {formula} : {mol_ids}")
+        self.logger.info(f"Processing {formula} : {mol_ids}")
 
         bonding_docs = list()
 
@@ -237,7 +237,7 @@ class BondingBuilder(Builder):
 
                 bonding_docs.append(doc)
 
-        self.logger.debug(f"Produced {len(bonding_docs)} charges docs for {formula}")
+        self.logger.debug(f"Produced {len(bonding_docs)} bonding docs for {formula}")
 
         return jsanitize([doc.dict() for doc in bonding_docs], allow_bson=True)
 

@@ -163,7 +163,7 @@ class OrbitalBuilder(Builder):
         mols = [MoleculeDoc(**item) for item in items]
         formula = mols[0].formula_alphabetical
         mol_ids = [m.molecule_id for m in mols]
-        self.logger.debug(f"Processing {formula} : {mol_ids}")
+        self.logger.info(f"Processing {formula} : {mol_ids}")
 
         orbital_docs = list()
 
