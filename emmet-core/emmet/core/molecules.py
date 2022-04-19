@@ -10,27 +10,33 @@ class MoleculesDoc(BaseModel):
     """
 
     elements: List[Element] = Field(
-        None, description="List of elements in the molecule.",
+        None,
+        description="List of elements in the molecule.",
     )
 
     nelements: int = Field(
-        None, description="Number of elements in the molecule.",
+        None,
+        description="Number of elements in the molecule.",
     )
 
     EA: float = Field(
-        None, description="Electron affinity of the molecule in eV.",
+        None,
+        description="Electron affinity of the molecule in eV.",
     )
 
     IE: float = Field(
-        None, description="Ionization energy of the molecule in eV.",
+        None,
+        description="Ionization energy of the molecule in eV.",
     )
 
     charge: int = Field(
-        None, description="Charge of the molecule in +e.",
+        None,
+        description="Charge of the molecule in +e.",
     )
 
     pointgroup: str = Field(
-        None, description="Point group of the molecule in Schoenflies notation.",
+        None,
+        description="Point group of the molecule in Schoenflies notation.",
     )
 
     smiles: str = Field(
@@ -41,17 +47,20 @@ class MoleculesDoc(BaseModel):
 
     task_id: str = Field(
         None,
-        description="Materials Project molecule ID. This takes the form mol-*****",
+        description="Materials Project molecule ID. This takes the form mol-*****.",
     )
 
     molecule: Molecule = Field(
-        None, description="Pymatgen molecule object.",
+        None,
+        description="Pymatgen molecule object.",
     )
 
     formula_pretty: str = Field(
-        None, description="Chemical formula of the molecule.",
+        None,
+        description="Chemical formula of the molecule.",
     )
 
     svg: str = Field(
-        None, description="String representation of the SVG image of the molecule.",
+        None,
+        description="String representation of the SVG image of the molecule.",
     )

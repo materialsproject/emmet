@@ -12,6 +12,10 @@ def test_electrodes_formula_to_criteria():
         "entries_composition_summary.all_composition_reduced.O": 3.0,
         "nelements": {"$in": [2, 1]},
     }
+
+    assert electrodes_formula_to_criteria("Cr2O3, FeLiO4P") == {
+        "entries_composition_summary.all_formulas": {"$in": ["Cr2O3", "LiFePO4"]}
+    }
     # Add wildcard
     assert electrodes_formula_to_criteria("Cr2*3") == {
         "entries_composition_summary.all_composition_reduced.Cr": 2.0,
@@ -20,6 +24,10 @@ def test_electrodes_formula_to_criteria():
     # Anonymous element
     assert electrodes_formula_to_criteria("A2B3") == {
         "entries_composition_summary.all_formula_anonymous": "A2B3"
+    }
+
+    assert electrodes_formula_to_criteria("A2B3, ABC3") == {
+        "entries_composition_summary.all_formula_anonymous": {"$in": ["A2B3", "ABC3"]}
     }
 
 
@@ -42,3 +50,8 @@ def test_electrodes_chemsys_to_criteria():
 @pytest.mark.xfail()
 def test_electrodes_chemsys_to_criteria_multiple_wildcard():
     electrodes_chemsys_to_criteria("Si-O, Li-Fe-*")
+
+
+@pytest.mark.xfail()
+def test_electrodes_formula_to_criteria_multiple_wildcard():
+    electrodes_formula_to_criteria("SiO, LiFe*")

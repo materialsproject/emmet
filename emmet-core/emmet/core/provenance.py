@@ -40,7 +40,7 @@ class History(BaseModel):
     name: str
     url: str
     description: Optional[Dict] = Field(
-        None, description="Dictionary of exra data for this history node"
+        None, description="Dictionary of exra data for this history node."
     )
 
     @root_validator(pre=True)
@@ -54,29 +54,29 @@ class SNLAbout(BaseModel):
     """A data dictionary definining extra fields in a SNL"""
 
     references: str = Field(
-        "", description="Bibtex reference strings for this material"
+        "", description="Bibtex reference strings for this material."
     )
 
-    authors: List[Author] = Field([], description="List of authors for this material")
+    authors: List[Author] = Field([], description="List of authors for this material.")
 
     remarks: List[str] = Field(
-        [], description="List of remarks for the provenance of this material"
+        [], description="List of remarks for the provenance of this material."
     )
 
     tags: List[str] = Field([])
 
     database_IDs: Dict[Database, List[str]] = Field(
-        dict(), description="Database IDs corresponding to this material"
+        dict(), description="Database IDs corresponding to this material."
     )
 
     history: List[History] = Field(
         [],
         description="List of history nodes specifying the transformations or orignation"
-        " of this material for the entry closest matching the material input",
+        " of this material for the entry closest matching the material input.",
     )
 
     created_at: datetime = Field(
-        default_factory=datetime.utcnow, description="The creation date for this SNL"
+        default_factory=datetime.utcnow, description="The creation date for this SNL."
     )
 
     @validator("created_at", pre=True)

@@ -35,22 +35,22 @@ HF:
   HSE03:
     AEXX: 0.25
     AGGAC: 1.0
-    AGGAX: 1.0
-    ALDCAC: 1.0
+    AGGAX: 0.75
+    ALDAC: 1.0
     HFSCREEN: 0.3
     LHFCALC: true
   HSE06:
     AEXX: 0.25
     AGGAC: 1.0
-    AGGAX: 1.0
-    ALDCAC: 1.0
+    AGGAX: 0.75
+    ALDAC: 1.0
     HFSCREEN: 0.2
     LHFCALC: true
-  PB0:
+  PBE0:
     AEXX: 0.25
     AGGAC: 1.0
-    AGGAX: 1.0
-    ALDCAC: 1.0
+    AGGAX: 0.75
+    ALDAC: 1.0
     LHFCALC: true
 METAGGA:
   M06L:

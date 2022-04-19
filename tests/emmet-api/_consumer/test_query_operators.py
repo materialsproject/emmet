@@ -17,17 +17,15 @@ def test_user_settings_post_query():
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(
-            consumer_id="test", settings={"test": "test", "test2": 10}
-        ) == {
-            "criteria": {
-                "consumer_id": "test",
-                "settings": {"test": "test", "test2": 10},
-            }
+        query = {
+            "criteria": {"consumer_id": "test", "settings": {"test": "test", "test2": 10},}
+        }
+        assert new_op.query(consumer_id="test", settings={"test": "test", "test2": 10}) == {
+            "criteria": {"consumer_id": "test", "settings": {"test": "test", "test2": 10},}
         }
 
     docs = [{"consumer_id": "test", "settings": {"test": "test", "test2": 10}}]
-    assert op.post_process(docs) == docs
+    assert op.post_process(docs, query) == docs
 
 
 def test_user_settings_get_query():

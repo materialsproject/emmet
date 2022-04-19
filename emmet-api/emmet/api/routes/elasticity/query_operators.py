@@ -158,7 +158,7 @@ class ElasticityChemsysQuery(QueryOperator):
     def query(
         self,
         chemsys: Optional[str] = Query(
-            None, description="Dash-delimited list of elements in the material.",
+            None, description="A comma delimited string list of chemical systems.",
         ),
     ):
 

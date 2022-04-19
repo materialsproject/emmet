@@ -71,6 +71,20 @@ class MaterialIDsSearchQuery(QueryOperator):
 
         return {"criteria": crit}
 
+    def post_process(self, docs, query):
+
+        if not query.get("sort", None):
+            mpid_list = (
+                query.get("criteria", {}).get("material_id", {}).get("$in", None)
+            )
+
+            if mpid_list is not None and "material_id" in query.get("properties", []):
+                mpid_mapping = {mpid: ind for ind, mpid in enumerate(mpid_list)}
+
+                docs = sorted(docs, key=lambda d: mpid_mapping[d["material_id"]])
+
+        return docs
+
 
 class SearchIsStableQuery(QueryOperator):
     """
@@ -256,7 +270,7 @@ class SearchStatsQuery(QueryOperator):
         " Stub query function for abstract class "
         pass
 
-    def post_process(self, docs):
+    def post_process(self, docs, query):
 
         if docs:
             field = list(docs[0].keys())[0]

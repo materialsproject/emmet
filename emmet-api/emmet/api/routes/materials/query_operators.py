@@ -22,7 +22,8 @@ class FormulaQuery(QueryOperator):
         self,
         formula: Optional[str] = Query(
             None,
-            description="Query by formula including anonymized formula or by including wild cards",
+            description="Query by formula including anonymized formula or by including wild cards. \
+A comma delimited string list of anonymous formulas or regular formulas can also be provided.",
         ),
     ) -> STORE_PARAMS:
 
@@ -88,11 +89,24 @@ class ElementsQuery(QueryOperator):
             crit["elements"] = {}
 
         if elements:
-            element_list = [Element(e) for e in elements.strip().split(",")]
+            try:
+                element_list = [Element(e) for e in elements.strip().split(",")]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Please provide a comma-seperated list of elements",
+                )
+
             crit["elements"]["$all"] = [str(el) for el in element_list]
 
         if exclude_elements:
-            element_list = [Element(e) for e in exclude_elements.strip().split(",")]
+            try:
+                element_list = [Element(e) for e in exclude_elements.strip().split(",")]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Please provide a comma-seperated list of elements",
+                )
             crit["elements"]["$nin"] = [str(el) for el in element_list]
 
         return {"criteria": crit}
@@ -236,7 +250,7 @@ class FindStructureQuery(QueryOperator):
         angle_tol: float = Query(
             5, description="Angle tolerance in degrees. Default is 5 degrees.",
         ),
-        limit: int = Query(
+        _limit: int = Query(
             1,
             description="Maximum number of matches to show. Defaults to 1, only showing the best match.",
         ),
@@ -245,7 +259,7 @@ class FindStructureQuery(QueryOperator):
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol
-        self.limit = limit
+        self._limit = _limit
         self.structure = structure
 
         crit = {}
@@ -262,7 +276,7 @@ class FindStructureQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def post_process(self, docs):
+    def post_process(self, docs, query):
 
         s1 = Structure.from_dict(self.structure)
 
@@ -295,7 +309,7 @@ class FindStructureQuery(QueryOperator):
                 )
 
         response = sorted(
-            matches[: self.limit],
+            matches[: self._limit],
             key=lambda x: (
                 x["normalized_rms_displacement"],
                 x["max_distance_paired_sites"],
