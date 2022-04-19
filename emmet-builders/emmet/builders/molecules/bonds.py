@@ -186,6 +186,7 @@ class BondingBuilder(Builder):
         bonding_docs = list()
 
         for mol in mols:
+            self.logger.info(f"Processing {mol.molecule_id}")
             correct_charge_spin = [
                 e
                 for e in mol.entries

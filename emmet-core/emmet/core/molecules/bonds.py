@@ -86,7 +86,7 @@ def _bonds_hybridization(nbo: Dict[str, Any], index: int):
     warnings = set()
 
     if len(nbo["hybridization_character"]) > index:
-        for bond_ind in nbo["hybridization_character"][1].get("type", list()):
+        for bond_ind in nbo["hybridization_character"][index].get("type", list()):
             if nbo["hybridization_character"][index]["type"][bond_ind] != "BD":
                 continue
 
