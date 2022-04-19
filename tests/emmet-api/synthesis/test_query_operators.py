@@ -152,8 +152,8 @@ def test_synthesis_search_query():
             condition_heating_atmosphere=["air"],
             condition_mixing_device=["zirconia"],
             condition_mixing_media=["water"],
-            skip=0,
-            limit=10,
+            _skip=0,
+            _limit=10,
         )
 
         assert q["pipeline"] == pipeline
@@ -174,7 +174,7 @@ def test_synthesis_search_query():
                 condition_heating_atmosphere=["air"],
                 condition_mixing_device=["zirconia"],
                 condition_mixing_media=["water"],
-                skip=0,
-                limit=10,
+                _skip=0,
+                _limit=10,
             )
             assert q == {"pipeline": pipeline}

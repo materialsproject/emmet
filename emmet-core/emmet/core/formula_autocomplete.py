@@ -7,5 +7,6 @@ class FormulaAutocomplete(BaseModel):
     """
 
     formula_pretty: str = Field(
-        None, description="Human readable chemical formula",
+        None,
+        description="Human readable chemical formula.",
     )

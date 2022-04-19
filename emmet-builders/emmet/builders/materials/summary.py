@@ -197,7 +197,7 @@ class SummaryBuilder(Builder):
 
         material_id = MPID(item[HasProps.materials.value]["material_id"])
         doc = SummaryDoc.from_docs(material_id=material_id, **item)
-        return jsanitize(doc.dict(exclude_none=True), allow_bson=True)
+        return jsanitize(doc.dict(exclude_none=False), allow_bson=True)
 
     def update_targets(self, items):
         """

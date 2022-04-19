@@ -20,48 +20,59 @@ class StructureMetadata(EmmetBaseModel):
     """
 
     # Structure metadata
-    nsites: int = Field(None, description="Total number of sites in the structure")
-    elements: List[Element] = Field(None, description="List of elements in the material")
-    nelements: int = Field(None, title="Number of Elements")
-    composition: Composition = Field(None, description="Full composition for the material")
+    nsites: int = Field(None, description="Total number of sites in the structure.")
+    elements: List[Element] = Field(
+        None, description="List of elements in the material."
+    )
+    nelements: int = Field(None, description="Number of elements.")
+    composition: Composition = Field(
+        None, description="Full composition for the material."
+    )
     composition_reduced: Composition = Field(
         None,
         title="Reduced Composition",
-        description="Simplified representation of the composition",
+        description="Simplified representation of the composition.",
     )
     formula_pretty: str = Field(
         None,
         title="Pretty Formula",
-        description="Cleaned representation of the formula",
+        description="Cleaned representation of the formula.",
     )
     formula_anonymous: str = Field(
         None,
         title="Anonymous Formula",
-        description="Anonymized representation of the formula",
+        description="Anonymized representation of the formula.",
     )
     chemsys: str = Field(
         None,
         title="Chemical System",
-        description="dash-delimited string of elements in the material",
+        description="dash-delimited string of elements in the material.",
     )
     volume: float = Field(
         None,
         title="Volume",
-        description="Total volume for this structure in Angstroms^3",
+        description="Total volume for this structure in Angstroms^3.",
     )
 
-    density: float = Field(None, title="Density", description="Density in grams per cm^3")
+    density: float = Field(
+        None, title="Density", description="Density in grams per cm^3."
+    )
 
     density_atomic: float = Field(
         None,
         title="Packing Density",
-        description="The atomic packing density in atoms per cm^3",
+        description="The atomic packing density in atoms per cm^3.",
     )
 
-    symmetry: SymmetryData = Field(None, description="Symmetry data for this material")
+    symmetry: SymmetryData = Field(None, description="Symmetry data for this material.")
 
     @classmethod
-    def from_composition(cls: Type[T], composition: Composition, fields: Optional[List[str]] = None, **kwargs) -> T:
+    def from_composition(
+        cls: Type[T],
+        composition: Composition,
+        fields: Optional[List[str]] = None,
+        **kwargs,
+    ) -> T:
 
         fields = (
             [
@@ -93,7 +104,12 @@ class StructureMetadata(EmmetBaseModel):
         return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
 
     @classmethod
-    def from_structure(cls: Type[T], meta_structure: Structure, fields: Optional[List[str]] = None, **kwargs) -> T:
+    def from_structure(
+        cls: Type[T],
+        meta_structure: Structure,
+        fields: Optional[List[str]] = None,
+        **kwargs,
+    ) -> T:
 
         fields = (
             [
@@ -131,5 +147,4 @@ class StructureMetadata(EmmetBaseModel):
             "density_atomic": meta_structure.volume / meta_structure.num_sites,
             "symmetry": symmetry,
         }
-
         return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
