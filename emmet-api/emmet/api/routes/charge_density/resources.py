@@ -11,14 +11,28 @@ def charge_density_resource(s3_store):
         ChgcarDataDoc,
         query_operators=[
             ChgcarTaskIDQuery(),
-            PaginationQuery(default_limit=5, max_limit=10),
+            PaginationQuery(),
             SparseFieldsQuery(
-                ChgcarDataDoc, default_fields=["task_id", "last_updated"],
+                ChgcarDataDoc, default_fields=["task_id", "last_updated", "fs_id"]
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Charge Density"],
         enable_default_search=True,
+        enable_get_by_key=False,
+        disable_validation=True,
+    )
+
+    return resource
+
+
+def charge_density_url_resource(s3_store):
+    resource = ReadOnlyResource(
+        s3_store,
+        ChgcarDataDoc,
+        key_fields=["task_id", "fs_id", "url", "requested_datetime", "expiry_datetime"],
+        tags=["Charge Density"],
+        enable_default_search=False,
         enable_get_by_key=True,
         disable_validation=True,
     )
