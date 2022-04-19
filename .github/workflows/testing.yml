@@ -39,6 +39,7 @@ jobs:
           flake8 --count --exit-zero --max-complexity=20 --statistics ${{ matrix.package }}
 
   test:
+    needs: lint
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 6
