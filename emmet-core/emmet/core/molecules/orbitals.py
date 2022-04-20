@@ -320,11 +320,16 @@ class OrbitalDoc(PropertyDoc):
             bds_inds = [1, 3]
             perts_inds = [0, 1]
 
+        for dset, inds in [("natural_populations", pops_inds),
+                           ("hybridization_character", bds_inds),
+                           ("perturbation_energy", perts_inds)]:
+            if len(nbo[dset]) < inds[-1]:
+                return
+
         population_sets = list()
         lone_pair_sets = list()
         bond_sets = list()
         interaction_sets = list()
-
         for pop_ind in pops_inds:
             pops = nbo["natural_populations"][pop_ind]
             population = list()
