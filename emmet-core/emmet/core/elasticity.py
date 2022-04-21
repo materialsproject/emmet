@@ -9,7 +9,7 @@ class ElasticityData(BaseModel):
 
     k_voigt: float = Field(
         None,
-        description="Voigt average of the bulk modulus.",
+        description="Voigt average of the bulk modulus in GPa.",
     )
 
     k_reuss: float = Field(
@@ -70,15 +70,15 @@ class ElasticityDoc(BaseModel):
 
     chemsys: str = Field(
         None,
-        description="Dash-delimited string of elements in the material",
+        description="Dash-delimited string of elements in the material.",
     )
 
     elasticity: ElasticityData = Field(
         None,
-        description="Elasticity data for the material",
+        description="Elasticity data for the material.",
     )
 
     task_id: str = Field(
         None,
-        description="The Materials Project ID of the material. This comes in the form: mp-******",
+        description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )

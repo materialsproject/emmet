@@ -18,7 +18,7 @@ class MineralData(BaseModel):
         description="Mineral type.",
     )
 
-    name: str = Field(None, description="The mineral name if found")
+    name: str = Field(None, description="The mineral name if found.")
 
 
 class CondensedStructureData(BaseModel):
@@ -71,7 +71,7 @@ class RobocrystallogapherDoc(PropertyDoc):
 
     robocrys_version: str = Field(
         __robocrys_version__,
-        description="The version of Robocrystallographer used to generate this document",
+        description="The version of Robocrystallographer used to generate this document.",
     )
 
     @classmethod

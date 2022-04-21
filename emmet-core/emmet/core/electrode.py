@@ -25,7 +25,7 @@ class VoltagePairDoc(BaseModel):
     max_delta_volume: float = Field(
         None,
         description="Volume changes in % for a particular voltage step using: "
-        "max(charge, discharge) / min(charge, discharge) - 1",
+        "max(charge, discharge) / min(charge, discharge) - 1.",
     )
 
     average_voltage: float = Field(
@@ -74,19 +74,19 @@ class InsertionVoltagePairDoc(VoltagePairDoc):
     )
 
     stability_charge: float = Field(
-        None, description="The energy above hull of the charged material."
+        None, description="The energy above hull of the charged material in eV/atom."
     )
 
     stability_discharge: float = Field(
-        None, description="The energy above hull of the discharged material."
+        None, description="The energy above hull of the discharged material in eV/atom."
     )
 
     id_charge: Union[MPID, int, None] = Field(
-        None, description="The material-id of the charged structure."
+        None, description="The Materials Project ID of the charged structure."
     )
 
     id_discharge: Union[MPID, int, None] = Field(
-        None, description="The material-id of the discharged structure."
+        None, description="The Materials Project ID of the discharged structure."
     )
 
 
@@ -163,34 +163,34 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     )
 
     host_structure: Structure = Field(
-        None, description="Host structure (structure without the working ion)"
+        None, description="Host structure (structure without the working ion)."
     )
 
     adj_pairs: List[InsertionVoltagePairDoc] = Field(
-        None, description="Returns all the Voltage Steps"
+        None, description="Returns all of the voltage steps material pairs."
     )
 
     working_ion: Element = Field(
-        None, description="The working ion as an Element object"
+        None, description="The working ion as an Element object."
     )
 
     num_steps: int = Field(
         None,
         description="The number of distinct voltage steps in from fully charge to "
-        "discharge based on the stable intermediate states",
+        "discharge based on the stable intermediate states.",
     )
 
     max_voltage_step: float = Field(
-        None, description="Maximum absolute difference in adjacent voltage steps"
+        None, description="Maximum absolute difference in adjacent voltage steps."
     )
 
     last_updated: datetime = Field(
         None,
-        description="Timestamp for the most recent calculation for this Material document",
+        description="Timestamp for the most recent calculation for this Material document.",
     )
 
     framework: Composition = Field(
-        None, description="The chemical compositions of the host framework"
+        None, description="The chemical compositions of the host framework."
     )
 
     elements: List[Element] = Field(
@@ -205,7 +205,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
 
     chemsys: str = Field(
         None,
-        description="The chemical system this electrode belongs to (not including the working ion)",
+        description="The chemical system this electrode belongs to (not including the working ion).",
     )
 
     material_ids: List[MPID] = Field(
@@ -217,7 +217,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     formula_anonymous: str = Field(
         None,
         title="Anonymous Formula",
-        description="Anonymized representation of the formula (not including the working ion)",
+        description="Anonymized representation of the formula (not including the working ion).",
     )
 
     entries_composition_summary: EntriesCompositionSummary = Field(
@@ -226,10 +226,12 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     )
 
     electrode_object: InsertionElectrode = Field(
-        None, description="The pymatgen electrode object"
+        None, description="The Pymatgen electrode object."
     )
 
-    warnings: List[str] = Field([], description="Any warnings related to this material")
+    warnings: List[str] = Field(
+        [], description="Any warnings related to this electrode data."
+    )
 
     # Make sure that the datetime field is properly formatted
     @validator("last_updated", pre=True)

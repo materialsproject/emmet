@@ -47,7 +47,7 @@ class MoleculesDoc(BaseModel):
 
     task_id: str = Field(
         None,
-        description="Materials Project molecule ID. This takes the form mol-*****",
+        description="Materials Project molecule ID. This takes the form mol-*****.",
     )
 
     molecule: Molecule = Field(

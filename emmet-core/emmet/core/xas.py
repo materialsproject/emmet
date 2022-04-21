@@ -58,10 +58,10 @@ class XASDoc(SpectrumDoc):
         description="List of Calculations IDs used to make this XAS spectrum.",
     )
 
-    absorbing_element: Element = Field(..., title="Absoring Element")
-    spectrum_type: Type = Field(..., title="XAS Spectrum Type")
+    absorbing_element: Element = Field(..., description="Absoring element.")
+    spectrum_type: Type = Field(..., description="XAS spectrum type.")
     edge: Edge = Field(
-        ..., title="Absorption Edge", description="The interaction edge for XAS"
+        ..., title="Absorption Edge", description="The interaction edge for XAS."
     )
 
     @classmethod

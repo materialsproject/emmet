@@ -42,22 +42,22 @@ class Potcar(BaseModel):
 class OrigInputs(BaseModel):
     incar: Incar = Field(
         None,
-        description="Pymatgen object representing the INCAR file",
+        description="Pymatgen object representing the INCAR file.",
     )
 
     poscar: Poscar = Field(
         None,
-        description="Pymatgen object representing the POSCAR file",
+        description="Pymatgen object representing the POSCAR file.",
     )
 
     kpoints: Kpoints = Field(
         None,
-        description="Pymatgen object representing the KPOINTS file",
+        description="Pymatgen object representing the KPOINTS file.",
     )
 
     potcar: Potcar = Field(
         None,
-        description="Pymatgen object representing the POTCAR file",
+        description="Pymatgen object representing the POTCAR file.",
     )
 
 
@@ -65,16 +65,16 @@ class OutputDoc(BaseModel):
     structure: Structure = Field(
         None,
         title="Output Structure",
-        description="Output Structure from the VASP calculation",
+        description="Output Structure from the VASP calculation.",
     )
 
-    density: float = Field(..., description="Density of in units of g/cc")
-    energy: float = Field(..., description="Total Energy in units of eV")
+    density: float = Field(..., description="Density of in units of g/cc.")
+    energy: float = Field(..., description="Total Energy in units of eV.")
     forces: List[List[float]] = Field(
-        None, description="The force on each atom in units of eV/AA"
+        None, description="The force on each atom in units of eV/A^2."
     )
     stress: List[List[float]] = Field(
-        None, description="The stress on the cell in units of kB"
+        None, description="The stress on the cell in units of kB."
     )
 
 
@@ -82,7 +82,7 @@ class InputDoc(BaseModel):
     structure: Structure = Field(
         None,
         title="Input Structure",
-        description="Output Structure from the VASP calculation",
+        description="Output Structure from the VASP calculation.",
     )
 
 
@@ -153,7 +153,7 @@ class TaskDoc(BaseModel):
     """
 
     tags: List[str] = Field(
-        None, title="tag", description="Metadata tagged to a given task"
+        None, title="tag", description="Metadata tagged to a given task."
     )
 
     calcs_reversed: List[CalcsReversedDoc] = Field(
@@ -162,42 +162,42 @@ class TaskDoc(BaseModel):
         description="Detailed data for each VASP calculation contributing to the task document.",
     )
 
-    task_type: TaskType = Field(None, description="The type of calculation")
+    task_type: TaskType = Field(None, description="The type of calculation.")
 
     task_id: str = Field(
         None,
-        description="The ID of this calculation, used as a universal reference across property documents."
-        "This comes in the form: mp-******",
+        description="The (task) ID of this calculation, used as a universal reference across property documents."
+        "This comes in the form: mp-******.",
     )
 
     # Structure metadata
-    nsites: int = Field(None, description="Total number of sites in the structure")
+    nsites: int = Field(None, description="Total number of sites in the structure.")
     elements: List[Element] = Field(
-        None, description="List of elements in the material"
+        None, description="List of elements in the material."
     )
-    nelements: int = Field(None, title="Number of Elements")
+    nelements: int = Field(None, description="Number of elements.")
     composition: Composition = Field(
-        None, description="Full composition for the material"
+        None, description="Full composition for the material."
     )
     composition_reduced: Dict[Element, float] = Field(
         None,
         title="Reduced Composition",
-        description="Simplified representation of the composition",
+        description="Simplified representation of the composition.",
     )
     formula_pretty: str = Field(
         None,
         title="Pretty Formula",
-        description="Cleaned representation of the formula",
+        description="Cleaned representation of the formula.",
     )
     formula_anonymous: str = Field(
         None,
         title="Anonymous Formula",
-        description="Anonymized representation of the formula",
+        description="Anonymized representation of the formula.",
     )
     chemsys: str = Field(
         None,
         title="Chemical System",
-        description="dash-delimited string of elements in the material",
+        description="dash-delimited string of elements in the material.",
     )
 
     orig_inputs: OrigInputs = Field(
@@ -245,14 +245,13 @@ class TrajectoryDoc(BaseModel):
 
     task_id: str = Field(
         None,
-        description="The ID of this calculation, used as a universal reference across property documents."
-        "This comes in the form: mp-******",
+        description="The (task) ID of this calculation, used as a universal reference across property documents."
+        "This comes in the form: mp-******.",
     )
 
     trajectories: List[Trajectory] = Field(
         None,
-        title="Trajectory data for calculations associated with a task doc",
-        description="Trajectory data for calculations associated with a task doc",
+        description="Trajectory data for calculations associated with a task doc.",
     )
 
 
@@ -263,8 +262,8 @@ class DeprecationDoc(BaseModel):
 
     task_id: str = Field(
         None,
-        description="The ID of this calculation, used as a universal reference across property documents."
-        "This comes in the form: mp-******",
+        description="The (task) ID of this calculation, used as a universal reference across property documents."
+        "This comes in the form: mp-******.",
     )
 
     deprecated: bool = Field(

@@ -16,23 +16,23 @@ class EmmetMeta(BaseModel):
     """
 
     emmet_version: str = Field(
-        __version__, description="The version of emmet this document was built with"
+        __version__, description="The version of emmet this document was built with."
     )
     pymatgen_version: str = Field(
-        pmg_version, description="The version of pymatgen this document was built with"
+        pmg_version, description="The version of pymatgen this document was built with."
     )
 
     pull_request: int = Field(
-        None, description="The pull request number associated with this data build"
+        None, description="The pull request number associated with this data build."
     )
 
     database_version: str = Field(
-        None, description="The database version for the built data"
+        None, description="The database version for the built data."
     )
 
     build_date: datetime = Field(
         default_factory=datetime.utcnow,
-        description="The build date for this document",
+        description="The build date for this document.",
     )
 
 
@@ -42,5 +42,5 @@ class EmmetBaseModel(BaseModel):
     """
 
     builder_meta: EmmetMeta = Field(
-        default_factory=EmmetMeta, description="Builder metadata"
+        default_factory=EmmetMeta, description="Builder metadata."
     )

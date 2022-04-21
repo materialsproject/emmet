@@ -102,7 +102,7 @@ class SurfacePropDoc(BaseModel):
 
     task_id: str = Field(
         None,
-        description="The Materials Project ID of the material. This comes in the form: mp-******",
+        description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
 
     structure: Structure = Field(

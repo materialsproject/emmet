@@ -19,18 +19,20 @@ class SpectrumDoc(StructureMetadata):
     material_id: MPID = Field(
         ...,
         description="The ID of the material, used as a universal reference across proeprty documents."
-        "This comes in the form: mp-******",
+        "This comes in the form: mp-******.",
     )
 
     spectrum_id: str = Field(
         ...,
         title="Spectrum Document ID",
-        description="The unique ID for this spectrum document",
+        description="The unique ID for this spectrum document.",
     )
 
     last_updated: datetime = Field(
-        description="Timestamp for the most recent calculation update for this property",
+        description="Timestamp for the most recent calculation update for this property.",
         default_factory=datetime.utcnow,
     )
 
-    warnings: List[str] = Field([], description="Any warnings related to this property")
+    warnings: List[str] = Field(
+        [], description="Any warnings related to this property."
+    )

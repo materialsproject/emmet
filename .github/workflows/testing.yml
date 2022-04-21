@@ -39,6 +39,7 @@ jobs:
           flake8 --count --exit-zero --max-complexity=20 --statistics ${{ matrix.package }}
 
   test:
+    needs: lint
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 6
@@ -81,7 +82,7 @@ jobs:
         run: |
           pytest --cov=emmet --cov-report=xml tests/${{ matrix.package }}
 
-      - uses: codecov/codecov-action@v2.1.0
+      - uses: codecov/codecov-action@v3.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml

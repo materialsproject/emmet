@@ -34,11 +34,11 @@ class XRDDoc(SpectrumDoc):
     spectrum: DiffractionPattern
     min_two_theta: float
     max_two_theta: float
-    wavelength: float = Field(..., description="Wavelength for the diffraction source")
+    wavelength: float = Field(..., description="Wavelength for the diffraction source.")
     target: Element = Field(
-        None, description="Target element for the diffraction source"
+        None, description="Target element for the diffraction source."
     )
-    edge: Edge = Field(None, description="Atomic edge for the diffraction source")
+    edge: Edge = Field(None, description="Atomic edge for the diffraction source.")
 
     @root_validator(pre=True)
     def get_target_and_edge(cls, values: Dict):

@@ -149,9 +149,12 @@ def test_find_structure_query():
     query = {
         "criteria": {"composition_reduced": dict(structure.composition.to_reduced_dict)}
     }
-    assert op.query(
-        structure=structure.as_dict(), ltol=0.2, stol=0.3, angle_tol=5, limit=1
-    ) == query
+    assert (
+        op.query(
+            structure=structure.as_dict(), ltol=0.2, stol=0.3, angle_tol=5, _limit=1
+        )
+        == query
+    )
 
     docs = [{"structure": structure.as_dict(), "material_id": "mp-149"}]
 
