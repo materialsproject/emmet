@@ -163,7 +163,7 @@ class OrbitalBuilder(Builder):
         mols = [MoleculeDoc(**item) for item in items]
         formula = mols[0].formula_alphabetical
         mol_ids = [m.molecule_id for m in mols]
-        self.logger.debug(f"Processing {formula} : {mol_ids}")
+        self.logger.info(f"Processing {formula} : {mol_ids}")
 
         orbital_docs = list()
 
@@ -180,21 +180,25 @@ class OrbitalBuilder(Builder):
             if len(orbital_entries) == 0:
                 continue
             else:
-                best = sorted(
+                sorted_entries = sorted(
                     orbital_entries,
                     key=lambda x: (
                         sum(evaluate_lot(x["level_of_theory"])),
                         x["energy"],
                     ),
-                )[0]
-                task = best["task_id"]
+                )
 
-            task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
+                for best in sorted_entries:
+                    task = best["task_id"]
 
-            orbital_doc = OrbitalDoc.from_task(
-                task_doc, molecule_id=mol.molecule_id, deprecated=False
-            )
-            orbital_docs.append(orbital_doc)
+                    task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
+
+                    orbital_doc = OrbitalDoc.from_task(
+                        task_doc, molecule_id=mol.molecule_id, deprecated=False
+                    )
+
+                    if orbital_doc is not None:
+                        orbital_docs.append(orbital_doc)
 
         self.logger.debug(f"Produced {len(orbital_docs)} orbital docs for {formula}")
 

@@ -237,7 +237,7 @@ class BondingBuilder(Builder):
 
                 bonding_docs.append(doc)
 
-        self.logger.debug(f"Produced {len(bonding_docs)} charges docs for {formula}")
+        self.logger.debug(f"Produced {len(bonding_docs)} bonding docs for {formula}")
 
         return jsanitize([doc.dict() for doc in bonding_docs], allow_bson=True)
 
