@@ -38,7 +38,7 @@ def test_partial_charges(test_tasks):
 
     assert pcd.property_name == "partial_charges"
     assert pcd.method == "resp"
-    assert pcd.charges == test_tasks[0].output.resp
+    assert pcd.partial_charges == test_tasks[0].output.resp
 
     # Test Mulliken
     pcd = PartialChargesDoc.from_task(
@@ -46,7 +46,7 @@ def test_partial_charges(test_tasks):
     )
 
     assert pcd.method == "mulliken"
-    assert pcd.charges == test_tasks[0].output.mulliken
+    assert pcd.partial_charges == test_tasks[0].output.mulliken
 
     # Test Critic2
     pcd = PartialChargesDoc.from_task(
@@ -54,7 +54,7 @@ def test_partial_charges(test_tasks):
     )
 
     assert pcd.method == "critic2"
-    assert pcd.charges == test_tasks[3].critic2["processed"]["charges"]
+    assert pcd.partial_charges == test_tasks[3].critic2["processed"]["charges"]
 
     # Test NBO
     pcd = PartialChargesDoc.from_task(
@@ -66,7 +66,7 @@ def test_partial_charges(test_tasks):
         float(test_tasks[4].output.nbo["natural_populations"][0]["Charge"][str(i)])
         for i in range(11)
     ]
-    assert pcd.charges == nbo_charges
+    assert pcd.partial_charges == nbo_charges
 
 
 def test_partial_spins(open_shell):
@@ -77,7 +77,7 @@ def test_partial_spins(open_shell):
 
     assert psd.property_name == "partial_spins"
     assert psd.method == "mulliken"
-    assert psd.spins == [m[1] for m in open_shell.output.mulliken]
+    assert psd.partial_spins == [m[1] for m in open_shell.output.mulliken]
 
     # Test NBO
     psd = PartialSpinsDoc.from_task(
@@ -89,4 +89,4 @@ def test_partial_spins(open_shell):
         float(open_shell.output.nbo["natural_populations"][0]["Density"][str(i)])
         for i in range(11)
     ]
-    assert psd.spins == spins
+    assert psd.partial_spins == spins
