@@ -31,7 +31,7 @@ class PartialChargesDoc(PropertyDoc):
         ..., description="Method used to compute atomic partial charges"
     )
 
-    charges: List[float] = Field(
+    partial_charges: List[float] = Field(
         ..., description="Atomic partial charges for the molecule"
     )
 
@@ -92,7 +92,7 @@ class PartialChargesDoc(PropertyDoc):
         return super().from_molecule(
             meta_molecule=mol,
             molecule_id=molecule_id,
-            charges=charges,
+            partial_charges=charges,
             method=method,
             deprecated=deprecated,
             origins=[PropertyOrigin(name="partial_charges", task_id=task.task_id)],
@@ -107,7 +107,7 @@ class PartialSpinsDoc(PropertyDoc):
 
     method: str = Field(..., description="Method used to compute atomic partial spins")
 
-    spins: List[float] = Field(..., description="Atomic partial spins for the molecule")
+    partial_spins: List[float] = Field(..., description="Atomic partial spins for the molecule")
 
     @classmethod
     def from_task(
@@ -159,7 +159,7 @@ class PartialSpinsDoc(PropertyDoc):
             meta_molecule=mol,
             deprecated=deprecated,
             molecule_id=molecule_id,
-            spins=spins,
+            partial_spins=spins,
             method=method,
             origins=[PropertyOrigin(name="partial_spins", task_id=task.task_id)],
             **kwargs

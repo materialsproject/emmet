@@ -308,8 +308,8 @@ summary_fields: Dict[str, list] = {
         "alpha_interactions",
         "beta_interactions",
     ],
-    HasProps.partial_charges.value: ["charges"],
-    HasProps.partial_spins.value: ["spins"],
+    HasProps.partial_charges.value: ["partial_charges"],
+    HasProps.partial_spins.value: ["partial_spins"],
     HasProps.bonding.value: ["molecule_graphs", "bond_types", "bonds", "bonds_nometal"],
     HasProps.redox.value: [
         "electron_affinity",
