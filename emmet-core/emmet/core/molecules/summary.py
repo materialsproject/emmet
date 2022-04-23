@@ -186,7 +186,7 @@ class SummaryDoc(PropertyDoc):
     )
 
     # bonding
-    molecule_graphs: Dict[str, MoleculeGraph] = Field(
+    molecule_graph: Dict[str, MoleculeGraph] = Field(
         None,
         description="Molecular graph representations of the molecule using different "
         "definitions of bonding.",
