@@ -18,9 +18,9 @@ SETTINGS = EmmetSettings()
 class DeprecationMessage(DocEnum):
     MANUAL = "M", "manual deprecation"
     KPTS = "C001", "Too few KPoints"
-    KSPACING = "C002", "KSpacing not high enough"
     ENCUT = "C002", "ENCUT too low"
     FORCES = "C003", "Forces too large"
+    KSPACING = "C004", "KSPACING not high enough"
     CONVERGENCE = "E001", "Calculation did not converge"
     MAX_SCF = "E002", "Max SCF gradient too large"
     LDAU = "I001", "LDAU Parameters don't match the inputset"
@@ -113,16 +113,16 @@ class ValidationDoc(EmmetBaseModel):
                     data["kspacing_delta"] = (
                         inputs["incar"].get("KSPACING") - valid_kspacing
                     )
-                    # larger KSPACING means fewer k-points
+                    # invalidate if KSPACING is larger by more than tolerance (fewer k-points)
                     if data["kspacing_delta"] > kspacing_tolerance:
+                        reasons.append(DeprecationMessage.KSPACING)
                         warnings.append(
-                            f"KSPACING is greater than input set: {data['kspacing_delta']}"
-                            f" lower than {kspacing_tolerance} ",
+                            f"KSPACING is greater than input set by {data['kspacing_delta']}",
                         )
-                    elif data["kspacing_delta"] < kspacing_tolerance:
+                    # warn but don't invalidate if KSPACING is smaller by more than tolerance (more k-points)
+                    elif data["kspacing_delta"] < -1 * kspacing_tolerance:
                         warnings.append(
-                            f"KSPACING is lower than input set: {data['kspacing_delta']}"
-                            f" lower than {kspacing_tolerance} ",
+                            f"KSPACING is lower than input set by {data['kspacing_delta']}"
                         )
 
             # warn, but don't invalidate if wrong ISMEAR
