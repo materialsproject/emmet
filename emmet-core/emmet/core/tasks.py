@@ -1,7 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from json import decoder
 from typing import List, Dict
+
+from emmet.core.vasp.task_valid import Status
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
@@ -155,6 +156,8 @@ class TaskDoc(BaseModel):
     tags: List[str] = Field(
         None, title="tag", description="Metadata tagged to a given task."
     )
+
+    state: Status = Field(None, description="State of this calculation")
 
     calcs_reversed: List[CalcsReversedDoc] = Field(
         None,

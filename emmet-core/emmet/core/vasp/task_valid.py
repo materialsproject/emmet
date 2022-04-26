@@ -48,6 +48,7 @@ class Status(ValueEnum):
 
     SUCESS = "successful"
     FAILED = "failed"
+    ERROR = "error"
 
 
 class InputSummary(BaseModel):
