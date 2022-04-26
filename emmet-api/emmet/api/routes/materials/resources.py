@@ -3,7 +3,7 @@ from maggma.api.resource.post_resource import PostOnlyResource
 from maggma.api.resource.aggregation import AggregationResource
 
 
-from emmet.core.material import MaterialsDoc
+from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.find_structure import FindStructure
 from emmet.core.formula_autocomplete import FormulaAutocomplete
 
