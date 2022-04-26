@@ -118,8 +118,14 @@ class EmmetSettings(BaseSettings):
         {
             "GGA Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
             "GGA+U Structure Optimization": "pymatgen.io.vasp.sets.MPRelaxSet",
+            "R2SCAN Structure Optimization": "pymatgen.io.vasp.sets.MPScanRelaxSet",
+            "SCAN Structure Optimization": "pymatgen.io.vasp.sets.MPScanRelaxSet",
+            "PBESol Structure Optimization": "pymatgen.io.vasp.sets.MPScanRelaxSet",
             "GGA Static": "pymatgen.io.vasp.sets.MPStaticSet",
             "GGA+U Static": "pymatgen.io.vasp.sets.MPStaticSet",
+            "R2SCAN Static": "pymatgen.io.vasp.sets.MPScanStaticSet",
+            "SCAN Static": "pymatgen.io.vasp.sets.MPScanStaticSet",
+            "PBESol Static": "pymatgen.io.vasp.sets.MPScanStaticSet",
         },
         description="Default input sets for task validation",
     )
