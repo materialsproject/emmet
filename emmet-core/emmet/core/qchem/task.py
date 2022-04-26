@@ -6,7 +6,7 @@ from pymatgen.core.structure import Molecule
 
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.structure import MoleculeMetadata
-from emmet.core.task import TaskDocument as BaseTaskDocument
+from emmet.core.vasp.task_valid import BaseTaskDocument
 from emmet.core.utils import ValueEnum
 from emmet.core.qchem.calc_types import (
     LevelOfTheory,
