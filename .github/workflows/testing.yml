@@ -80,6 +80,7 @@ jobs:
           file: ./coverage.xml
 
   docs:
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
