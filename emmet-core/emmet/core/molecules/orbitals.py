@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from pydantic import Field
 
@@ -278,6 +278,158 @@ class OrbitalDoc(PropertyDoc):
         description="Beta electron orbital-orbital interactions of an open-shell molecule",
     )
 
+    @staticmethod
+    def get_populations(nbo: Dict[str, Any], indices: List[int]):
+        """
+        Helper function to extract natural population information
+        from NBO output
+
+        :param nbo: Dictionary of NBO output data
+        :param indices: Data subsets from which to extract natural populations
+        :return: population_sets (list of lists of NaturalPopulation)
+        """
+
+        population_sets = list()
+
+        for pop_ind in indices:
+            pops = nbo["natural_populations"][pop_ind]
+            population = list()
+            for ind, atom_num in pops["No"].items():
+                population.append(
+                    NaturalPopulation(
+                        atom_num - 1,
+                        pops["Core"][ind],
+                        pops["Valence"][ind],
+                        pops["Rydberg"][ind],
+                        pops["Total"][ind],
+                    )
+                )
+            population_sets.append(population)
+
+        return population_sets
+
+    @staticmethod
+    def get_lone_pairs(nbo: Dict[str, Any], indices: List[int]):
+        """
+        Helper function to extract lone pair information from NBO output
+
+        :param nbo: Dictionary of NBO output data
+        :param indices: Data subsets from which to extract lone pair information
+        :return: lone_pairs (list of LonePairs)
+        """
+
+        lone_pair_sets = list()
+
+        for lp_ind in indices:
+            lps = nbo["hybridization_character"][lp_ind]
+            lone_pairs = list()
+            for ind, orb_ind in lps.get("bond index", dict()).items():
+                this_lp = LonePair(
+                    orb_ind,
+                    lps["orbital index"][ind],
+                    int(lps["atom number"][ind]) - 1,
+                    lps["s"][ind],
+                    lps["p"][ind],
+                    lps["d"][ind],
+                    lps["f"][ind],
+                    lps["occupancy"][ind],
+                    lps["type"][ind],
+                )
+                lone_pairs.append(this_lp)
+            lone_pair_sets.append(lone_pairs)
+
+        return lone_pair_sets
+
+    @staticmethod
+    def get_bonds(nbo: Dict[str, Any], indices: List[int]):
+        """
+        Helper function to extract bonding information from NBO output
+
+        :param nbo: Dictionary of NBO output data
+        :param indices: Data subsets from which to extract bonds
+        :return: bonds (list of Bonds)
+        """
+
+        bond_sets = list()
+
+        for bd_ind in indices:
+            bds = nbo["hybridization_character"][bd_ind]
+            bonds = list()
+            for ind, orb_ind in bds.get("bond index", dict()).items():
+                this_bond = Bond(
+                    orb_ind,
+                    bds["orbital index"][ind],
+                    int(bds["atom 1 number"][ind]) - 1,
+                    int(bds["atom 2 number"][ind]) - 1,
+                    bds["atom 1 s"][ind],
+                    bds["atom 2 s"][ind],
+                    bds["atom 1 p"][ind],
+                    bds["atom 2 p"][ind],
+                    bds["atom 1 d"][ind],
+                    bds["atom 2 d"][ind],
+                    bds["atom 1 f"][ind],
+                    bds["atom 2 f"][ind],
+                    bds["atom 1 polarization"][ind],
+                    bds["atom 2 polarization"][ind],
+                    bds["atom 1 pol coeff"][ind],
+                    bds["atom 2 pol coeff"][ind],
+                    bds["occupancy"][ind],
+                    bds["type"][ind],
+                )
+                bonds.append(this_bond)
+            bond_sets.append(bonds)
+
+        return bond_sets
+
+    @staticmethod
+    def get_interactions(nbo: Dict[str, Any], indices: List[int]):
+        """
+        Helper function to extract orbital interaction information
+        from NBO output
+
+        :param nbo: Dictionary of NBO output data
+        :param indices: Data subsets from which to extract interactions
+        :return: interactions (list of Interactions)
+        """
+
+        interaction_sets = list()
+
+        for pert_ind in indices:
+            perts = nbo["perturbation_energy"][pert_ind]
+            interactions = list()
+            for ind in perts.get("donor bond index", list()):
+
+                if perts["donor atom 2 number"].get(ind) is None:
+                    donor_atom2_number = None
+                else:
+                    donor_atom2_number = int(perts["donor atom 2 number"][ind]) - 1
+
+                if perts["acceptor atom 2 number"].get(ind) is None:
+                    acceptor_atom2_number = None
+                else:
+                    acceptor_atom2_number = (
+                        int(perts["acceptor atom 2 number"][ind]) - 1
+                    )
+
+                this_inter = Interaction(
+                    perts["perturbation energy"][ind],
+                    perts["energy difference"][ind],
+                    perts["fock matrix element"][ind],
+                    int(perts["donor bond index"][ind]),
+                    int(perts["acceptor bond index"][ind]),
+                    perts["donor type"][ind],
+                    perts["acceptor type"][ind],
+                    int(perts["donor atom 1 number"][ind]) - 1,
+                    int(perts["acceptor atom 1 number"][ind]) - 1,
+                    donor_atom2_number,
+                    acceptor_atom2_number,
+                )
+
+                interactions.append(this_inter)
+            interaction_sets.append(interactions)
+
+        return interaction_sets
+
     @classmethod
     def from_task(
         cls, task: TaskDocument, molecule_id: MPID, deprecated: bool = False, **kwargs
@@ -326,103 +478,10 @@ class OrbitalDoc(PropertyDoc):
             if len(nbo[dset]) < inds[-1]:
                 return
 
-        population_sets = list()
-        lone_pair_sets = list()
-        bond_sets = list()
-        interaction_sets = list()
-        for pop_ind in pops_inds:
-            pops = nbo["natural_populations"][pop_ind]
-            population = list()
-            for ind, atom_num in pops["No"].items():
-                population.append(
-                    NaturalPopulation(
-                        atom_num - 1,
-                        pops["Core"][ind],
-                        pops["Valence"][ind],
-                        pops["Rydberg"][ind],
-                        pops["Total"][ind],
-                    )
-                )
-            population_sets.append(population)
-
-        for lp_ind in lps_inds:
-            lps = nbo["hybridization_character"][lp_ind]
-            lone_pairs = list()
-            for ind, orb_ind in lps.get("bond index", dict()).items():
-                this_lp = LonePair(
-                    orb_ind,
-                    lps["orbital index"][ind],
-                    int(lps["atom number"][ind]) - 1,
-                    lps["s"][ind],
-                    lps["p"][ind],
-                    lps["d"][ind],
-                    lps["f"][ind],
-                    lps["occupancy"][ind],
-                    lps["type"][ind],
-                )
-                lone_pairs.append(this_lp)
-            lone_pair_sets.append(lone_pairs)
-
-        for bd_ind in bds_inds:
-            bds = nbo["hybridization_character"][bd_ind]
-            bonds = list()
-            for ind, orb_ind in bds.get("bond index", dict()).items():
-                this_bond = Bond(
-                    orb_ind,
-                    bds["orbital index"][ind],
-                    int(bds["atom 1 number"][ind]) - 1,
-                    int(bds["atom 2 number"][ind]) - 1,
-                    bds["atom 1 s"][ind],
-                    bds["atom 2 s"][ind],
-                    bds["atom 1 p"][ind],
-                    bds["atom 2 p"][ind],
-                    bds["atom 1 d"][ind],
-                    bds["atom 2 d"][ind],
-                    bds["atom 1 f"][ind],
-                    bds["atom 2 f"][ind],
-                    bds["atom 1 polarization"][ind],
-                    bds["atom 2 polarization"][ind],
-                    bds["atom 1 pol coeff"][ind],
-                    bds["atom 2 pol coeff"][ind],
-                    bds["occupancy"][ind],
-                    bds["type"][ind],
-                )
-                bonds.append(this_bond)
-            bond_sets.append(bonds)
-
-        for pert_ind in perts_inds:
-            perts = nbo["perturbation_energy"][pert_ind]
-            interactions = list()
-            for ind in perts.get("donor bond index", list()):
-
-                if perts["donor atom 2 number"].get(ind) is None:
-                    donor_atom2_number = None
-                else:
-                    donor_atom2_number = int(perts["donor atom 2 number"][ind]) - 1
-
-                if perts["acceptor atom 2 number"].get(ind) is None:
-                    acceptor_atom2_number = None
-                else:
-                    acceptor_atom2_number = (
-                        int(perts["acceptor atom 2 number"][ind]) - 1
-                    )
-
-                this_inter = Interaction(
-                    perts["perturbation energy"][ind],
-                    perts["energy difference"][ind],
-                    perts["fock matrix element"][ind],
-                    int(perts["donor bond index"][ind]),
-                    int(perts["acceptor bond index"][ind]),
-                    perts["donor type"][ind],
-                    perts["acceptor type"][ind],
-                    int(perts["donor atom 1 number"][ind]) - 1,
-                    int(perts["acceptor atom 1 number"][ind]) - 1,
-                    donor_atom2_number,
-                    acceptor_atom2_number,
-                )
-
-                interactions.append(this_inter)
-            interaction_sets.append(interactions)
+        population_sets = cls.get_populations(nbo, pops_inds)
+        lone_pair_sets = cls.get_lone_pairs(nbo, lps_inds)
+        bond_sets = cls.get_bonds(nbo, bds_inds)
+        interaction_sets = cls.get_interactions(nbo, perts_inds)
 
         if not task.orig["rem"].get("run_nbo6"):
             warnings = ["Using NBO5"]
