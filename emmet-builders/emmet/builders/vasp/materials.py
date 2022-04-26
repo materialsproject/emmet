@@ -10,7 +10,7 @@ from maggma.utils import grouper
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import group_structures, jsanitize
 from emmet.core.vasp.material import MaterialsDoc
-from emmet.core.vasp.task import TaskDocument
+from emmet.core.vasp.task_valid import TaskDocument
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 

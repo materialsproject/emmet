@@ -40,7 +40,7 @@ FILE_FILTERS = [
 FILE_FILTERS_DEFAULT = [
     f"{d}{os.sep}{f}" if d else f
     for f in FILE_FILTERS
-    for d in ["", "relax1", "relax2"]
+    for d in [""]#, "relax1", "relax2"]
 ]
 STORE_VOLUMETRIC_DATA = []
 
@@ -379,8 +379,9 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data):  # noqa: C901
     tag = os.path.basename(directory)
     target = ctx.obj["CLIENT"]
     snl_collection = target.db.snls_user
+    collection_count = target.collection.count_documents({})
     logger.info(
-        f"Connected to {target.collection.full_name} with {target.collection.count()} tasks."
+        f"Connected to {target.collection.full_name} with {collection_count} tasks."
     )
     ensure_indexes(
         ["task_id", "tags", "dir_name", "retired_task_id"], [target.collection]
@@ -420,7 +421,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data):  # noqa: C901
 
         if run:
             sep_tid = f"mp-{next_tid + nmax}"
-            target.collection.insert({"task_id": sep_tid})
+            target.collection.insert_one({"task_id": sep_tid})
             logger.info(f"Inserted separator task with task_id {sep_tid}.")
             logger.info(f"Reserved {len(lst)} task ID(s).")
         else:
@@ -481,7 +482,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data):  # noqa: C901
             f"Successfully parsed and inserted {count}/{gen.value} tasks in {directory}."
         )
         if sep_tid:
-            target.collection.remove({"task_id": sep_tid})
+            target.collection.delete_one({"task_id": sep_tid})
             logger.info(f"Removed separator task {sep_tid}.")
         if sep_snlid:
             snl_collection.remove({"snl_id": sep_snlid})
