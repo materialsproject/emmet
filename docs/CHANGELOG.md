@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.24.4](https://github.com/materialsproject/emmet/tree/v0.24.4) (2022-04-26)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.24.3...v0.24.4)
+
+**Merged pull requests:**
+
+- Only run doc build after tests pass [\#401](https://github.com/materialsproject/emmet/pull/401) ([munrojm](https://github.com/munrojm))
+
 ## [v0.24.3](https://github.com/materialsproject/emmet/tree/v0.24.3) (2022-04-25)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.24.2...v0.24.3)
