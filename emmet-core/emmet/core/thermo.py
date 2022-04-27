@@ -76,7 +76,7 @@ class ThermoDoc(PropertyDoc):
         None,
         description="Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen."
     )
-    
+
     decomposition_enthalpy_entries: Dict[MPID, float] = Field(
         None,
         description="Entries associated with decomposition_enthalpy, as a dictionary of material_id to amount."
@@ -151,8 +151,8 @@ class ThermoDoc(PropertyDoc):
                 decomp, energy = pd.get_decomp_and_phase_separation_energy(e)
                 d["decomposition_enthalpy"] = energy
                 d["decomposition_enthalpy_entries"] = {de.entry_id: amt for de, amt in decomp.items()}
-            except:
-                # bare except so this quantity does not take down the builder if it fails:
+            except ValueError:
+                # try/except so this quantity does not take down the builder if it fails:
                 # it includes an optimization step that can be fragile in some instances,
                 # most likely failure is ValueError, "invalid value encountered in true_divide"
                 d["warnings"] = ["Could not calculate decomposition enthalpy for this entry."]
