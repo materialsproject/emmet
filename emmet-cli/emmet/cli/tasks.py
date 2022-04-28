@@ -282,6 +282,16 @@ def restore(inputfile, file_filter):  # noqa: C901
 
     nfiles_restore_total, max_args = 0, 14000
     for block, files in block_launchers.items():
+        # check if index file exists for block
+        idxfile = f"{GARDEN}/{block}.tar.idx"
+        args = shlex.split(f"hsi -q ls -l {idxfile}")
+        try:
+            for line in run_command(args, []):
+                logger.debug(line)
+        except subprocess.CalledProcessError as e:
+            logger.error(f"{idxfile} does not exist!")
+            continue
+
         # get full list of matching files in archive and check against existing files
         args = shlex.split(f"htar -tf {GARDEN}/{block}.tar")
         filelist = [os.path.join(block, f) for f in files]
