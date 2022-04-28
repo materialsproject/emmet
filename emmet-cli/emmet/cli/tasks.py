@@ -36,11 +36,14 @@ FILE_FILTERS = [
     "POTCAR*",
     "vasprun.xml*",
     "OUTCAR*",
+    "AECCAR*",
+    "ELFCAR*",
+    "CHGCAR*",
 ]
 FILE_FILTERS_DEFAULT = [
     f"{d}{os.sep}{f}" if d else f
     for f in FILE_FILTERS
-    for d in [""]#, "relax1", "relax2"]
+    for d in ["", "relax1", "relax2"]
 ]
 STORE_VOLUMETRIC_DATA = []
 
