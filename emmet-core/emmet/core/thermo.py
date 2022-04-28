@@ -77,7 +77,7 @@ class ThermoDoc(PropertyDoc):
         description="Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen."
     )
 
-    decomposition_enthalpy_decomposes_to: DecompositionProduct = Field(
+    decomposition_enthalpy_decomposes_to: List[DecompositionProduct] = Field(
         None,
         description="List of decomposition data associated with the decomposition_enthalpy quantity."
     )
