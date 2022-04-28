@@ -77,9 +77,9 @@ class ThermoDoc(PropertyDoc):
         description="Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen."
     )
 
-    decomposition_enthalpy_entries: Dict[MPID, float] = Field(
+    decomposition_enthalpy_decomposes_to: DecompositionProduct = Field(
         None,
-        description="Entries associated with decomposition_enthalpy, as a dictionary of material_id to amount."
+        description="List of decomposition data associated with the decomposition_enthalpy quantity."
     )
 
     energy_type: str = Field(
@@ -150,7 +150,14 @@ class ThermoDoc(PropertyDoc):
             try:
                 decomp, energy = pd.get_decomp_and_phase_separation_energy(e)
                 d["decomposition_enthalpy"] = energy
-                d["decomposition_enthalpy_entries"] = {de.entry_id: amt for de, amt in decomp.items()}
+                d["decomposition_enthalpy_decomposes_to"] = [
+                    {
+                        "material_id": de.entry_id,
+                        "formula": de.composition.formula,
+                        "amount": amt,
+                    }
+                    for de, amt in decomp.items()
+                ]
             except ValueError:
                 # try/except so this quantity does not take down the builder if it fails:
                 # it includes an optimization step that can be fragile in some instances,
