@@ -280,7 +280,9 @@ def get_vasp_dirs():
                     with open(fn, "rb") as fo, mgzip.open(fn_gz, "wb", thread=0) as fw:
                         fw.write(fo.read())
 
-                    os.remove(fn)  # remove original
+                    if os.path.exists(fn):
+                        os.remove(fn)  # remove original
+
                     shutil.chown(fn_gz, group="matgen")
                     gzipped = True
 
