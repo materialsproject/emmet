@@ -1,6 +1,7 @@
 from maggma.api.resource import AggregationResource
 
 from emmet.api.routes.synthesis.query_operators import SynthesisSearchQuery
+from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.core.synthesis.core import SynthesisSearchResultModel
 
 synth_indexes = [
@@ -23,6 +24,7 @@ def synth_resource(synth_store):
         SynthesisSearchResultModel,
         tags=["Synthesis"],
         pipeline_query_operator=SynthesisSearchQuery(),
+        header_processor=GlobalHeaderProcessor(),
     )
 
     return resource

@@ -18,10 +18,10 @@ jobs:
         package: ["emmet-core", "emmet-builders", "emmet-api"]
 
     steps:
-      - uses: actions/checkout@v2.4.0
+      - uses: actions/checkout@v3
 
       - name: Set up Python 3.8
-        uses: actions/setup-python@v2.3.1
+        uses: actions/setup-python@v3
         with:
           python-version: 3.8
 
@@ -39,6 +39,7 @@ jobs:
           flake8 --count --exit-zero --max-complexity=20 --statistics ${{ matrix.package }}
 
   test:
+    needs: lint
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 6
@@ -47,10 +48,10 @@ jobs:
         python_version: [3.8, 3.9]
 
     steps:
-      - uses: actions/checkout@v2.4.0
+      - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python_version }}
-        uses: actions/setup-python@v2.3.1
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python_version }}
 
@@ -73,29 +74,30 @@ jobs:
         run: |
           pytest --cov=emmet --cov-report=xml tests/${{ matrix.package }}
 
-      - uses: codecov/codecov-action@v2.1.0
+      - uses: codecov/codecov-action@v3.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
 
   docs:
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2.4.0
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v2.3.1
+      - uses: actions/setup-python@v3
         with:
           python-version: 3.8
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install -r requirements-docs.txt
           pip install -r requirements.txt
           pip install -e emmet-core/
           pip install -e emmet-builders/
           pip install -e emmet-api/
-          pip install -r requirements-docs.txt
 
       - name: Build
         run: mkdocs build

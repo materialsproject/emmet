@@ -28,6 +28,8 @@ from emmet.api.routes.summary.query_operators import (
     SearchESQuery,
 )
 
+from emmet.api.core.global_header import GlobalHeaderProcessor
+
 
 def summary_resource(summary_store):
     resource = ReadOnlyResource(
@@ -53,6 +55,7 @@ def summary_resource(summary_store):
             SparseFieldsQuery(SummaryDoc, default_fields=["material_id"]),
         ],
         hint_scheme=SummaryHintScheme(),
+        header_processor=GlobalHeaderProcessor(),
         tags=["Summary"],
         disable_validation=True,
     )
@@ -67,6 +70,7 @@ def summary_stats_resource(summary_store):
         pipeline_query_operator=SearchStatsQuery(SummaryDoc),
         tags=["Summary"],
         sub_path="/stats/",
+        header_processor=GlobalHeaderProcessor(),
     )
 
     return resource

@@ -6,9 +6,12 @@ formats.
 import json
 import os
 import re
+import logging
 
 from pymatgen.core.composition import CompositionError, Composition
 from pymongo import MongoClient
+
+logger = logging.getLogger(__name__)
 
 
 def convert_value(val):
@@ -182,7 +185,7 @@ def main():
     with open("synthesis_recipes.json", "w") as f:
         json.dump(synthesis_recipes, f)
 
-    print("All possible operation types", all_posible_ops)
+    logger.info(f"All possible operation types {all_posible_ops}")
 
 
 if __name__ == "__main__":

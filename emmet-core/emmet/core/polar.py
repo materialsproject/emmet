@@ -26,21 +26,21 @@ class DielectricDoc(PropertyDoc):
 
     property_name = "dielectric"
 
-    total: Matrix3D = Field(description="Total dielectric tensor")
-    ionic: Matrix3D = Field(description="Ionic contribution to dielectric tensor")
+    total: Matrix3D = Field(description="Total dielectric tensor.")
+    ionic: Matrix3D = Field(description="Ionic contribution to dielectric tensor.")
     electronic: Matrix3D = Field(
-        description="Electronic contribution to dielectric tensor"
+        description="Electronic contribution to dielectric tensor."
     )
 
-    e_total: float = Field(description="Total electric permittivity")
+    e_total: float = Field(description="Total electric permittivity.")
     e_ionic: float = Field(
-        description="Electric permittivity from atomic rearrangement"
+        description="Electric permittivity from atomic rearrangement."
     )
     e_electronic: float = Field(
-        description="Electric permittivity due to electrons rearrangement"
+        description="Electric permittivity due to electrons rearrangement."
     )
 
-    n: float = Field(title="Refractive index")
+    n: float = Field(description="Refractive index.")
 
     @classmethod
     def from_ionic_and_electronic(
