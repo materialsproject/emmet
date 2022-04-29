@@ -11,6 +11,7 @@ import sys
 from collections import defaultdict, deque
 from fnmatch import fnmatch
 from pathlib import Path
+from datetime import datetime
 
 import click
 from hpsspy import HpssOSError
@@ -154,7 +155,8 @@ def extract_filename(line):
 @sbatch
 @click.option("--clean", is_flag=True, help="Remove original launchers.")
 @click.option("--check", is_flag=True, help="Check backup consistency.")
-def backup(clean, check):  # noqa: C901
+@click.option("--force-new", is_flag=True, help="Generate new backup.")
+def backup(clean, check, force_new):  # noqa: C901
     """Backup directory to HPSS"""
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
@@ -176,6 +178,14 @@ def backup(clean, check):  # noqa: C901
         logger.info(f"{block} with {len(launchers)} launcher(s)")
         try:
             isfile(f"{GARDEN}/{block}.tar")
+            if force_new and run:
+                ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+                tarfile = f"{GARDEN}/{block}.tar"
+                for suf in ["", ".idx"]:
+                    args = shlex.split(f"hsi -q mv -v {tarfile}{suf} {tarfile}{suf}.bkp_{ts}")
+                    for line in run_command(args, []):
+                        logger.info(line.strip())
+                raise HpssOSError
         except HpssOSError:  # block not in HPSS
             if run:
                 filelist = [os.path.join(block, l) for l in launchers]
