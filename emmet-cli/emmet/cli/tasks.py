@@ -291,6 +291,13 @@ def restore(inputfile, file_filter):  # noqa: C901
                         block_launchers[block].append(
                             os.path.join(launcher.strip(), ff)
                         )
+                    # also try restoring unnested block_/launcher_ (result of --reorg flag)
+                    if os.sep in launcher:
+                        launcher = launcher.strip().split(os.sep)[-1]
+                        for ff in file_filter:
+                            block_launchers[block].append(
+                                os.path.join(launcher.strip(), ff)
+                            )
                     nlaunchers += 1
 
     nblocks = len(block_launchers)
