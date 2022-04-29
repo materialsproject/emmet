@@ -7,8 +7,10 @@ import shlex
 import shutil
 import subprocess
 import sys
+
 from collections import defaultdict, deque
 from fnmatch import fnmatch
+from pathlib import Path
 
 import click
 from hpsspy import HpssOSError
@@ -108,9 +110,12 @@ def run_command(args, filelist):
 
 def recursive_chown(path, group):
     for dirpath, dirnames, filenames in os.walk(path):
-        shutil.chown(dirpath, group=group)
+        if Path(dirpath).group() != group:
+            shutil.chown(dirpath, group=group)
         for filename in filenames:
-            shutil.chown(os.path.join(dirpath, filename), group=group)
+            fullpath = os.path.join(dirpath, filename)
+            if Path(fullpath).group() != group:
+                shutil.chown(fullpath, group=group)
 
 
 def check_pattern(nested_allowed=False):
@@ -256,7 +261,9 @@ def restore(inputfile, file_filter):  # noqa: C901
         os.makedirs(directory)
 
     check_pattern(nested_allowed=True)
-    shutil.chown(directory, group="matgen")
+    if Path(directory).group() != "matgen":
+        shutil.chown(directory, group="matgen")
+
     block_launchers = defaultdict(list)
     nlaunchers = 0
     with open(inputfile, "r") as infile:
