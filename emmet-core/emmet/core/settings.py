@@ -40,6 +40,7 @@ class EmmetSettings(BaseSettings):
 
     CP2K_DEFAULT_INPUT_SETS: Dict = Field(
         {
+            "Static DFT": "pymatgen.io.cp2k.sets.StaticSet",
             "GGA Structure Optimization": "pymatgen.io.cp2k.sets.RelaxSet",
             "GGA+U Structure Optimization": "pymatgen.io.cp2k.sets.RelaxSet",
         },

@@ -74,7 +74,6 @@ class DielectricBuilder(Builder):
 
         for mat in mats:
             doc = self._get_processed_doc(mat)
-
             if doc is not None:
                 yield doc
             else:
@@ -151,7 +150,7 @@ class DielectricBuilder(Builder):
                     "output.epsilon_ionic",
                     "output.bandgap",
                 ],
-                criteria={self.tasks.key: str(task_id)},
+                criteria={self.tasks.key: int(task_id)},
             )
 
             if task_query["output"]["bandgap"] > 0:

@@ -13,6 +13,8 @@ from emmet.core.cp2k.calc_types import CalcType, RunType, TaskType
 from emmet.core.cp2k.task import TaskDocument
 from emmet.builders.cp2k.utils import get_mpid
 
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+
 SETTINGS = EmmetSettings()
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
@@ -70,18 +72,8 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         statics = [task for task in task_group if task.task_type == TaskType.Static]  # type: ignore
 
         # Material ID
-        possible_mat_ids = [task.task_id for task in structure_optimizations + statics]  # TODO remove + statics ?
-        possible_mat_ids = sorted(possible_mat_ids, key=ID_to_int)
-
-        matched_id = get_mpid([task.output.structure for task in structure_optimizations + statics][0])
-
-        if matched_id:
-            possible_mat_ids.insert(0, matched_id)
-
-        if len(possible_mat_ids) == 0:
-            raise Exception(f"Could not find a material ID for {task_ids}")
-        else:
-            material_id = possible_mat_ids[0]
+        possible_mat_ids = [task.task_id for task in structure_optimizations + statics]
+        material_id = min(possible_mat_ids)
 
         def _structure_eval(task: TaskDocument):
             """
@@ -176,6 +168,54 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             origins=origins,
             entries=entries,
         )
+
+    @classmethod
+    def construct_deprecated_material(
+        cls, task_group: List[TaskDocument],
+    ) -> "MaterialsDoc":
+        """
+        Converts a group of tasks into a deprecated material
+
+        Args:
+            task_group: List of task document
+        """
+        if len(task_group) == 0:
+            raise Exception("Must have more than one task in the group.")
+
+        # Metadata
+        last_updated = max(task.last_updated for task in task_group)
+        created_at = min(task.completed_at for task in task_group)
+        task_ids = list({task.task_id for task in task_group})
+
+        deprecated_tasks = {task.task_id for task in task_group}
+        run_types = {task.task_id: task.run_type for task in task_group}
+        task_types = {task.task_id: task.task_type for task in task_group}
+        calc_types = {task.task_id: task.calc_type for task in task_group}
+
+        # Material ID
+        material_id = min([task.task_id for task in task_group])
+
+        # Choose any random structure for metadata
+        structure = SpacegroupAnalyzer(
+            task_group[0].output.structure, symprec=0.1
+        ).get_conventional_standard_structure()
+
+        # Deprecated
+        deprecated = True
+
+        return cls.from_structure(
+            structure=structure,
+            material_id=material_id,
+            last_updated=last_updated,
+            created_at=created_at,
+            task_ids=task_ids,
+            calc_types=calc_types,
+            run_types=run_types,
+            task_types=task_types,
+            deprecated=deprecated,
+            deprecated_tasks=deprecated_tasks,
+        )
+
 
 
 def ID_to_int(s_id: str) -> Tuple[str, int]:

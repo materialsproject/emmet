@@ -1,5 +1,6 @@
 from datetime import datetime
 from itertools import chain, groupby, combinations
+from tkinter import W
 from typing import Dict, Iterator, List, Optional
 from copy import deepcopy
 from monty.json import MontyDecoder
@@ -14,14 +15,19 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from atomate.utils.utils import load_class
 
 from emmet.core.settings import EmmetSettings
+from emmet.core.thermo import ThermoDoc
+from emmet.core.material import MaterialsDoc
+
 from emmet.core.utils import jsanitize, get_sg
 from emmet.core.defect import DefectDoc, DefectDoc2d, DefectThermoDoc
 from emmet.core.cp2k.calc_types import TaskType
 from emmet.core.cp2k.calc_types.utils import run_type
-from emmet.core.cp2k.material import MaterialsDoc
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.builders.cp2k.utils import get_mpid, synchronous_query
 from maggma.stores.gridfs import GridFSStore
+
+from emmet.core.electronic_structure import ElectronicStructureDoc
+
 SETTINGS = EmmetSettings()
 
 __author__ = "Nicholas Winner <nwinner@berkeley.edu>"
@@ -261,7 +267,7 @@ d        """
 
         # Get defect tasks
         temp_query = self.query.copy()
-        temp_query.update({d: {'$exists': True} for d in self.required_defect_properties})
+        temp_query.update({d: {'$exists': True, "$ne": None} for d in self.required_defect_properties})
         temp_query.update({self.defect_query: {'$exists': True}, "state": "successful"})
         defect_tasks = {
             doc[self.tasks.key]
@@ -285,7 +291,7 @@ d        """
                     {}, [self.task_validation.key]        
                 )
             }
-            
+
             defect_tasks = defect_tasks.intersection(validated)
             bulk_tasks = bulk_tasks.intersection(validated)
 
@@ -315,7 +321,7 @@ d        """
         unprocessed_defect_tasks = defect_tasks - processed_defect_tasks
 
         if not unprocessed_defect_tasks:
-            self.logger.info("No unprocessed to tasks. Exiting")
+            self.logger.info("No unprocessed defect tasks. Exiting")
             return
         elif not bulk_tasks:
             self.logger.info("No compatible bulk calculations. Exiting.")
@@ -526,7 +532,7 @@ d        """
                         self.electrostatic_potentials, 
                         query={'task_id': bulk_tasks_id}, properties=self.required_bulk_properties)
                         ),
-                self.__get_dielectric(bulk_tasks_id),
+                self.__get_dielectric(self._mpid_map[bulk_tasks_id]),
             )
             for defect_tasks_id, bulk_tasks_id in task_ids
         ]
@@ -597,7 +603,7 @@ d        """
             angle_tol=SETTINGS.ANGLE_TOL,
             primitive_cell=False,
             scale=True,
-            attempt_supercell=True,
+            attempt_supercell=False,
             allow_subset=False,
             comparator=ElementComparator(),
         )
@@ -675,6 +681,9 @@ d        """
         return Structure.from_dict(task['input']['structure'])
 
 
+#TODO Major problem with this builder. materials store is used to sync the diel, elec, and pd with a single material id
+#TODO This is a problem because the material id in vasp store is not synced to cp2k store
+#TODO Also the chempots needed to adjust entries must come from cp2k, but you need to give vasp to sync the others
 class DefectThermoBuilder(Builder):
 
     """
@@ -691,7 +700,9 @@ class DefectThermoBuilder(Builder):
             defects: Store,
             defect_thermos: Store,
             materials: Store,
+            thermo: Store,
             electronic_structures: Store,
+            dos: Store,
             query: Optional[Dict] = None,
             **kwargs,
     ):
@@ -707,13 +718,15 @@ class DefectThermoBuilder(Builder):
         self.defects = defects
         self.defect_thermos = defect_thermos
         self.materials = materials
+        self.thermo = thermo
+        self.dos = dos
         self.electronic_structures = electronic_structures
 
         self.query = query if query else {}
         self.timestamp = None
         self.kwargs = kwargs
 
-        super().__init__(sources=[defects, materials, electronic_structures], targets=[defect_thermos], **kwargs)
+        super().__init__(sources=[defects, materials, thermo, electronic_structures, dos], targets=[defect_thermos], **kwargs)
 
     def ensure_indexes(self):
         """
@@ -761,15 +774,13 @@ class DefectThermoBuilder(Builder):
         def filterfunc(x):
             # material for defect x exists
             if not list(self.materials.query(criteria={'material_id': x['material_id']}, properties=None)):
+                self.logger.debug(f"No material with MPID={x['material_id']} in the material store")
                 return False
 
-            # All chempots exist in material store
-            if not all(
-                bool(list(self.materials.query(criteria={'chemsys': str(el)}, properties=None)))
-                for el in
-                load_class(x['defect']['@module'], x['defect']['@class']).from_dict(x['defect']).defect_composition
-            ):
-                return False
+            for el in load_class(x['defect']['@module'], x['defect']['@class']).from_dict(x['defect']).defect_composition:
+                if not list(self.thermo.query(criteria={'chemsys': str(el)}, properties=None)):
+                    self.logger.debug(f"No entry for {el} in Thermo Store")
+                    return False
 
             return True
 
@@ -781,11 +792,10 @@ class DefectThermoBuilder(Builder):
         ):
             group = [g for g in group]
             try:
-                yield (
-                    group, 
-                    self.__get_materials(key), 
-                    self.__get_electronic_structure(group[0]['material_id']),
-                    )
+                mat = self.__get_materials(key)
+                thermo = self.__get_thermos(mat.composition)
+                elec = self.__get_electronic_structure(group[0]['material_id'])
+                yield (group, mat, thermo, elec)
             except LookupError as exception:
                 raise exception
 
@@ -794,10 +804,10 @@ class DefectThermoBuilder(Builder):
         Process a group of defects belonging to the same material into a defect thermo doc
         """
         self.logger.info(f"Processing defects")
-        defects, materials, elec_struc = docs
+        defects, material, thermos, elec_struc = docs
         defects = [DefectDoc(**d) for d in defects]
-        materials = [MaterialsDoc(**m) for m in materials]
-        defect_thermo_doc = DefectThermoDoc.from_docs(defects, materials=materials, electronic_structure=elec_struc)
+        thermos = [ThermoDoc(**t) for t in thermos]
+        defect_thermo_doc = DefectThermoDoc.from_docs(defects, thermos=thermos, electronic_structure=elec_struc)
         return defect_thermo_doc.dict()
 
     def update_targets(self, items):
@@ -826,28 +836,28 @@ class DefectThermoBuilder(Builder):
         # TODO This is updated to return the whole query because a.t.m. the
         # DOS part of the electronic builder isn't working, so I'm using
         # this to pull direct from the store of dos objects with no processing.
-        dosdoc = self.electronic_structures.query(
+        dosdoc = self.electronic_structures.query_one(
             criteria={self.electronic_structures.key: material_id},
             properties=None,
-        )[0]
-        return dosdoc
+        )
+        t_id = ElectronicStructureDoc(**dosdoc).dos.total['1'].task_id
+        dos = self.dos.query_one(criteria={'task_id': int(t_id)}, properties=None) #TODO MPID str/int issues
+        return dos
 
     def __get_materials(self, key) -> List:
         """
         Given a group of DefectDocs, use the bulk material_id to get materials in the chemsys from the
         materials store.
         """
-        bulk = list(self.materials.query(criteria={'material_id': key}, properties=None))
+        bulk = self.materials.query_one(criteria={'material_id': key}, properties=None)
         if not bulk:
             raise LookupError(
                 f"The bulk material ({key}) for these defects cannot be found in the materials store"
             )
-        elements = bulk[0]['chemsys']
+        return MaterialsDoc(**bulk)
 
-        if isinstance(elements, str):
-            elements = elements.split("-")
-
-        return list(chain(self.materials.query(criteria={"chemsys": {"$in": elements}}, properties=None), bulk))
+    def __get_thermos(self, composition) -> List:
+        return list(self.thermo.query(criteria={"elements": {"$in": jsanitize(composition.elements)}}))
 
 
 def unpack(query, d):

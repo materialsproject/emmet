@@ -30,12 +30,17 @@ class EmmetBuildSettings(EmmetSettings):
         [], description="Tags for calculations to deprecate"
     )
 
-    VASP_ALLOWED_VASP_TYPES: List[TaskType] = Field(
+    ALLOWED_CALC_CODES: List[str] = Field(
+        ['VASP', 'CP2K'],
+        description="Calculation codes to allow in the build pipeline"
+    )
+
+    VASP_ALLOWED_TASK_TYPES: List[TaskType] = Field(
         [t.value for t in TaskType],
         description="Allowed task_types to build materials from",
     )
 
-    CP2K_ALLOWED_CP2K_TYPES: List[Cp2kTaskType] = Field(
+    CP2K_ALLOWED_TASK_TYPES: List[Cp2kTaskType] = Field(
         [t.value for t in Cp2kTaskType],
         description="Allowed task_types to build materials from",
     )

@@ -126,7 +126,7 @@ class MaterialsBuilder(Builder):
 
         self.logger.info("Materials builder started")
         self.logger.info(
-            f"Allowed task types: {[task_type.value for task_type in self.settings.VASP_ALLOWED_VASP_TYPES]}"
+            f"Allowed task types: {[task_type.value for task_type in self.settings.VASP_ALLOWED_TASK_TYPES]}"
         )
 
         self.logger.info("Setting indexes")
@@ -286,7 +286,7 @@ class MaterialsBuilder(Builder):
             for task in tasks
             if any(
                 allowed_type is task.task_type
-                for allowed_type in self.settings.VASP_ALLOWED_VASP_TYPES
+                for allowed_type in self.settings.VASP_ALLOWED_TASK_TYPES
             )
         ]
 

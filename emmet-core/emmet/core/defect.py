@@ -23,6 +23,7 @@ from pymatgen.ext.matproj import MPRester
 
 from emmet.core.structure import StructureMetadata
 from emmet.core.mpid import MPID
+from emmet.core.thermo import ThermoDoc
 from emmet.core.cp2k.task import TaskDocument
 from emmet.core.cp2k.calc_types.enums import CalcType, TaskType, RunType
 from emmet.core.cp2k.material import MaterialsDoc
@@ -389,16 +390,17 @@ class DefectThermoDoc(BaseModel):
     )
 
     #TODO not by run type... in principle shouldn't be this way, but DOS is almost always GGA
-    bulk_dos: CompleteDos = Field(None, "Complete Density of States for the bulk Structure")
+    bulk_dos: CompleteDos = Field(None, description="Complete Density of States for the bulk Structure")
 
     defect_phase_diagrams: Mapping[RunType, DefectPhaseDiagram] = Field(
         None, description="Defect phase diagrams for each run type"
     )
 
-    brouwer_diagrams: Mapping[RunType, BrouwerDiagram] = Field(
-        None, description="Brouwer diagrams"
-    )
+    #brouwer_diagrams: Mapping[RunType, BrouwerDiagram] = Field(
+    #    None, description="Brouwer diagrams"
+    #)
 
+    '''
     # TODO How can monty serialization incorporate into pydantic? It seems like VASP MatDocs dont need this
     @validator("brouwer_diagrams", pre=True)
     def decode(cls, brouwer_diagrams):
@@ -408,20 +410,27 @@ class DefectThermoDoc(BaseModel):
                     {k: v for k, v in brouwer_diagrams[e].items()}
                 )
         return brouwer_diagrams
-
+    '''
     @classmethod
-    def from_docs(cls, defects: List[DefectDoc], materials: List[MaterialsDoc], electronic_structure: CompleteDos) -> "DefectThermoDoc":
+    def from_docs(cls, defects: List[DefectDoc], thermos: List[ThermoDoc], electronic_structure: CompleteDos) -> "DefectThermoDoc":
 
         DEFAULT_RT = RunType('GGA')  # TODO NEED A procedure for getting all GGA or GGA+U keys
         DEFAULT_RT_U = RunType('GGA+U')
 
         mpid = defects[0].material_id
 
+        #chempots = {
+        #    m.structure.composition.elements[0]:
+        #        {rt: m.entries[rt].energy_per_atom for rt in m.entries}
+        #    for m in materials if m.structure.composition.is_element
+        #}
+
         chempots = {
-            m.structure.composition.elements[0]:
-                {rt: m.entries[rt].energy_per_atom for rt in m.entries}
-            for m in materials if m.structure.composition.is_element
+           td.composition.elements[0]: td.energy_per_atom 
+           for td in thermos if td.composition.is_element
         }
+        print("!!!!!!!")
+        print(chempots)
 
         defect_entries = {}
         defect_phase_diagram = {}
@@ -433,6 +442,7 @@ class DefectThermoDoc(BaseModel):
         dos = CompleteDos.from_dict(electronic_structure)
         bg = dos.get_gap()
 
+        """
         for m in materials:
             for rt, ent in m.entries.items():
                 __found_chempots__ = True
@@ -458,7 +468,7 @@ class DefectThermoDoc(BaseModel):
                 ent.structure.remove_spin()
                 ent.structure.remove_oxidation_states()
                 MaterialsProject2020Compatibility().process_entry(ent)
-
+        """
         for d in defects:
             for rt, ent in d.entries.items():
                 # Chempot shift
@@ -469,8 +479,7 @@ class DefectThermoDoc(BaseModel):
                     if Element(el) not in chempots:
                         __found_chempots__ = False
                         break
-                    _rt = DEFAULT_RT if rt not in chempots[Element(el)] else rt
-                    ent.corrections[f"Elemental shift {el} to formation energy space"] = -amt * chempots[Element(el)][_rt]
+                    ent.corrections[f"Elemental shift {el} to formation energy space"] = -amt * chempots[Element(el)]
 
                 if not __found_chempots__:
                     continue
@@ -489,9 +498,10 @@ class DefectThermoDoc(BaseModel):
             defect_phase_diagram[run_type] = DefectPhaseDiagram(
                 entries=defect_entries[run_type],
                 vbm=vbms[run_type],
-                band_gap=band_gaps[run_type],
+                band_gap=bg, #band_gaps[run_type], # TODO Need to do rt dependent band gap
                 filter_compatible=False
             )
+            """
             brouwer_diagrams[run_type] = BrouwerDiagram(
                 defect_phase_diagram=defect_phase_diagram[run_type],
                 bulk_dos=dos,
@@ -502,11 +512,13 @@ class DefectThermoDoc(BaseModel):
                     for m in materials
                 ]
             )
+            """
 
         data = {
             'material_id': mpid,
             'task_ids': task_ids,
-            'brouwer_diagrams': brouwer_diagrams,
+            'bulk_dos': dos,
+            'defect_phase_diagrams': defect_phase_diagram,
         }
 
         return cls(**{k: v for k, v in data.items()})

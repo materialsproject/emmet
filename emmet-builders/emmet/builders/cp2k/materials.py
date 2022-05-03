@@ -102,7 +102,7 @@ class MaterialsBuilder(Builder):
         self.logger.info("Materials builder started")
         # TODO make a cp2k allowed type setting
         self.logger.info(
-            f"Allowed task types: {[task_type.value for task_type in self.settings.VASP_ALLOWED_VASP_TYPES]}"
+            f"Allowed task types: {[task_type.value for task_type in self.settings.CP2K_ALLOWED_TASK_TYPES]}"
         )
 
         self.logger.info("Setting indexes")
@@ -245,14 +245,10 @@ class MaterialsBuilder(Builder):
         Groups tasks by structure matching
         """
 
-        """
-        Groups tasks by structure matching
-        """
-
         # TODO why did the way vasp builder did it not work here?
         filtered_tasks = []
         for task in tasks:
-            for allowed_type in self.settings.CP2K_ALLOWED_CP2K_TYPES:
+            for allowed_type in self.settings.CP2K_ALLOWED_TASK_TYPES:
                 if task.task_type is allowed_type:
                     filtered_tasks.append(task)
                     continue

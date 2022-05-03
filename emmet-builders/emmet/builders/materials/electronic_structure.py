@@ -17,7 +17,7 @@ from pymatgen.io.vasp.sets import MPStaticSet
 from emmet.core.settings import EmmetSettings
 from emmet.core.electronic_structure import ElectronicStructureDoc
 from emmet.core.utils import jsanitize
-
+import bson
 SETTINGS = EmmetSettings()
 
 
@@ -201,7 +201,6 @@ class ElectronicStructureBuilder(Builder):
             doc = ElectronicStructureDoc.from_structure(**d)
 
         else:
-
             try:
                 doc = ElectronicStructureDoc.from_bsdos(
                     material_id=mat[self.materials.key],
@@ -367,7 +366,6 @@ class ElectronicStructureBuilder(Builder):
             if "NSCF Line" in mat["task_types"][task_id]:
 
                 bs_type = None
-
                 task_query = self.tasks.query_one(
                     properties=[
                         "calcs_reversed",
@@ -378,7 +376,7 @@ class ElectronicStructureBuilder(Builder):
                         "input.parameters",
                         "output.structure",
                     ],
-                    criteria={"task_id": str(task_id)},
+                    criteria={"task_id": int(task_id)},
                 )
 
                 fs_id = str(task_query["calcs_reversed"][0]["bandstructure_fs_id"])
@@ -441,7 +439,7 @@ class ElectronicStructureBuilder(Builder):
                         "input.parameters",
                         "output.structure",
                     ],
-                    criteria={"task_id": str(task_id)},
+                    criteria={"task_id": int(task_id)},
                 )
 
                 fs_id = str(task_query["calcs_reversed"][0]["dos_fs_id"])
@@ -493,7 +491,7 @@ class ElectronicStructureBuilder(Builder):
                         "calcs_reversed",
                         "output.structure",
                     ],
-                    criteria={"task_id": str(task_id)},
+                    criteria={"task_id": int(task_id)},
                 )
 
                 structure = Structure.from_dict(task_query["output"]["structure"])
@@ -566,11 +564,11 @@ class ElectronicStructureBuilder(Builder):
                 ]
 
                 bs_obj = self.bandstructure_fs.query_one(
-                    criteria={"fs_id": sorted_bs_data[0]["fs_id"]}
+                    criteria={"_id": bson.ObjectId(sorted_bs_data[0]["fs_id"])}
                 )
 
                 materials_doc["bandstructure"][bs_type]["object"] = (
-                    bs_obj["data"] if bs_obj is not None else None
+                    bs_obj if bs_obj is not None else None
                 )
 
                 materials_doc["bandstructure"][bs_type][
@@ -593,12 +591,11 @@ class ElectronicStructureBuilder(Builder):
             materials_doc["dos"]["task_id"] = sorted_dos_data[0]["task_id"]
 
             materials_doc["dos"]["lmaxmix"] = sorted_dos_data[0]["lmaxmix"]
-
             dos_obj = self.dos_fs.query_one(
-                criteria={"fs_id": sorted_dos_data[0]["fs_id"]}
+                criteria={"_id": bson.ObjectId(sorted_dos_data[0]["fs_id"])}
             )
             materials_doc["dos"]["object"] = (
-                dos_obj["data"] if dos_obj is not None else None
+                dos_obj if dos_obj is not None else None
             )
 
             materials_doc["dos"]["output_structure"] = sorted_dos_data[0][

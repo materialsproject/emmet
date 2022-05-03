@@ -31,6 +31,8 @@ class ValidationDoc(EmmetBaseModel):
     Validation document for a VASP calculation
     """
 
+    calc_code = "vasp"
+
     task_id: MPID = Field(..., description="The task_id for this validation document")
     valid: bool = Field(False, description="Whether this task is valid or not")
     last_updated: datetime = Field(

@@ -8,7 +8,7 @@ from emmet.core.settings import EmmetSettings
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.utils import DocEnum
-from emmet.core.vasp.task import TaskDocument
+from emmet.core.cp2k.task import TaskDocument
 
 SETTINGS = EmmetSettings()
 
@@ -22,6 +22,7 @@ class ValidationDoc(EmmetBaseModel):
     """
     Validation document for a VASP calculation
     """
+    calc_code = "cp2k"
 
     task_id: MPID = Field(..., description="The task_id for this validation document")
     valid: bool = Field(False, description="Whether this task is valid or not")
