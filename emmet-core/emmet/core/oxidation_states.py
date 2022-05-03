@@ -20,18 +20,18 @@ class OxidationStateDoc(PropertyDoc):
 
     structure: Structure = Field(
         ...,
-        description="The structure used in the generation of the oxidation state data",
+        description="The structure used in the generation of the oxidation state data.",
     )
     possible_species: List[str] = Field(
-        description="Possible charged species in this material"
+        description="Possible charged species in this material."
     )
     possible_valences: List[float] = Field(
-        description="List of valences for each site in this material"
+        description="List of valences for each site in this material."
     )
     average_oxidation_states: Dict[str, float] = Field(
-        description="Average oxidation states for each unique species"
+        description="Average oxidation states for each unique species."
     )
-    method: str = Field(None, description="Method used to compute oxidation states")
+    method: str = Field(None, description="Method used to compute oxidation states.")
 
     @classmethod
     def from_structure(cls, structure: Structure, material_id: MPID, **kwargs):  # type: ignore[override]
@@ -66,7 +66,7 @@ class OxidationStateDoc(PropertyDoc):
                 site_oxidation_list[site.specie.element].append(site.specie.oxi_state)
 
             oxi_state_dict = {
-                str(el): np.mean(oxi_states)
+                str(el): np.mean(oxi_states)  # type: ignore
                 for el, oxi_states in site_oxidation_list.items()
             }
 

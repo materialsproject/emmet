@@ -10,7 +10,7 @@ from maggma.utils import grouper
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import group_structures, jsanitize
 from emmet.core.vasp.material import MaterialsDoc
-from emmet.core.vasp.task import TaskDocument
+from emmet.core.vasp.task_valid import TaskDocument
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -269,7 +269,8 @@ class MaterialsBuilder(Builder):
             self.logger.info(f"Updating {len(docs)} materials")
             self.materials.remove_docs({self.materials.key: {"$in": material_ids}})
             self.materials.update(
-                docs=docs, key=["material_id"],
+                docs=docs,
+                key=["material_id"],
             )
         else:
             self.logger.info("No items to update")

@@ -12,22 +12,13 @@ class MultipleTaskIDsQuery(QueryOperator):
     """
 
     def query(
-        self,
-        task_ids: Optional[str] = Query(
-            None, description="Comma-separated list of task_ids to query on"
-        ),
+        self, task_ids: Optional[str] = Query(None, description="Comma-separated list of task_ids to query on"),
     ) -> STORE_PARAMS:
 
         crit = {}
 
         if task_ids:
-            crit.update(
-                {
-                    "task_id": {
-                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
-                    }
-                }
-            )
+            crit.update({"task_id": {"$in": [task_id.strip() for task_id in task_ids.split(",")]}})
 
         return {"criteria": crit}
 
@@ -38,37 +29,23 @@ class TrajectoryQuery(QueryOperator):
     """
 
     def query(
-        self,
-        task_ids: Optional[str] = Query(
-            None, description="Comma-separated list of task_ids to query on"
-        ),
+        self, task_ids: Optional[str] = Query(None, description="Comma-separated list of task_ids to query on"),
     ) -> STORE_PARAMS:
 
         crit = {}
 
         if task_ids:
-            crit.update(
-                {
-                    "task_id": {
-                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
-                    }
-                }
-            )
+            crit.update({"task_id": {"$in": [task_id.strip() for task_id in task_ids.split(",")]}})
 
         return {"criteria": crit}
 
-    def post_process(self, docs):
+    def post_process(self, docs, query):
         """
         Post processing to generatore trajectory data
         """
 
         d = [
-            {
-                "task_id": doc["task_id"],
-                "trajectories": jsanitize(
-                    calcs_reversed_to_trajectory(doc["calcs_reversed"])
-                ),
-            }
+            {"task_id": doc["task_id"], "trajectories": jsanitize(calcs_reversed_to_trajectory(doc["calcs_reversed"]))}
             for doc in docs
         ]
 
@@ -81,10 +58,7 @@ class DeprecationQuery(QueryOperator):
     """
 
     def query(
-        self,
-        task_ids: str = Query(
-            ..., description="Comma-separated list of task_ids to query on"
-        ),
+        self, task_ids: str = Query(..., description="Comma-separated list of task_ids to query on"),
     ) -> STORE_PARAMS:
 
         self.task_ids = [task_id.strip() for task_id in task_ids.split(",")]
@@ -96,7 +70,7 @@ class DeprecationQuery(QueryOperator):
 
         return {"criteria": crit}
 
-    def post_process(self, docs):
+    def post_process(self, docs, query):
         """
         Post processing to generatore deprecation data
         """

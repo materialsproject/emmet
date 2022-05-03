@@ -15,20 +15,22 @@ class PhononBSDOSDoc(BaseModel):
 
     material_id: MPID = Field(
         None,
-        description="The Materials Project ID of the material. This comes in the form: mp-******",
+        description="The Materials Project ID of the material. This comes in the form: mp-******.",
     )
 
     ph_bs: PhononBandStructureSymmLine = Field(
-        None, description="Phonon band structure object",
+        None,
+        description="Phonon band structure object.",
     )
 
     ph_dos: PhononDos = Field(
-        None, description="Phonon density of states object",
+        None,
+        description="Phonon density of states object.",
     )
 
     last_updated: datetime = Field(
         None,
-        description="Timestamp for the most recent calculation for this Material document",
+        description="Timestamp for the most recent calculation for this Material document.",
     )
 
     # Make sure that the datetime field is properly formatted

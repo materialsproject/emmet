@@ -41,13 +41,14 @@ class BaseTaskDocument(EmmetBaseModel):
     )
 
 
-class Status(ValueEnum):
+class TaskState(ValueEnum):
     """
     VASP Calculation State
     """
 
-    SUCESS = "successful"
+    SUCCESS = "successful"
     FAILED = "failed"
+    ERROR = "error"
 
 
 class InputSummary(BaseModel):
@@ -133,7 +134,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     input: InputSummary = Field(InputSummary())
     output: OutputSummary = Field(OutputSummary())
 
-    state: Status = Field(None, description="State of this calculation")
+    state: TaskState = Field(None, description="State of this calculation")
 
     orig_inputs: Dict[str, Any] = Field(
         {}, description="Summary of the original VASP inputs"

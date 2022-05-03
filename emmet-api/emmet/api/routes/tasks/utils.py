@@ -2,6 +2,7 @@ from pymatgen.core import Structure
 from pymatgen.core.trajectory import Trajectory
 from collections import defaultdict
 from typing import List
+from fastapi import HTTPException
 
 
 def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
@@ -17,22 +18,31 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
     trajectories = []
 
     for calculation in calcs_reversed:
-        for step in calculation["output"]["ionic_steps"]:
+        structures = []
+        frame_props = defaultdict(list)  # type: dict
 
-            structures = []
-            frame_props = defaultdict(list)  # type: dict
+        steps = calculation.get("output", {}).get("ionic_steps", None)
 
-            structures.append(Structure.from_dict(step["structure"]))
+        if steps is None:
+            raise HTTPException(status_code=404, detail="No ionic step data found for task")
+        else:
+            for step in steps:
 
-            frame_props["e_fr_energy"].append(step["e_fr_energy"])
-            frame_props["e_wo_entrp"].append(step["e_wo_entrp"])
-            frame_props["e_0_energy"].append(step["e_wo_entrp"])
-            frame_props["forces"].append(step["forces"])
-            frame_props["stresses"].append(step["stress"])
+                structure_dict = step.get("structure", None)
 
-        traj = Trajectory.from_structures(
-            structures, frame_properties=frame_props, time_step=None
-        ).as_dict()
-        trajectories.append(traj)
+                if structure_dict is not None:
+                    structure = Structure.from_dict(structure_dict)
+
+                structures.append(structure)
+
+                frame_props["e_fr_energy"].append(step.get("e_fr_energy", None))
+                frame_props["e_wo_entrp"].append(step.get("e_wo_entrp", None))
+                frame_props["e_0_energy"].append(step.get("e_0_energy", None))
+                frame_props["forces"].append(step.get("forces", None))
+                frame_props["stresses"].append(step.get("stress", None))
+                frame_props["electronic_steps"].append(step.get("electronic_steps", None))
+
+            traj = Trajectory.from_structures(structures, frame_properties=frame_props, time_step=None).as_dict()
+            trajectories.append(traj)
 
     return trajectories

@@ -146,15 +146,19 @@ def test_find_structure_query():
     structure = Structure.from_file(
         os.path.join(MAPISettings().TEST_FILES, "Si_mp_149.cif")
     )
-    assert op.query(
-        structure=structure.as_dict(), ltol=0.2, stol=0.3, angle_tol=5, limit=1
-    ) == {
+    query = {
         "criteria": {"composition_reduced": dict(structure.composition.to_reduced_dict)}
     }
+    assert (
+        op.query(
+            structure=structure.as_dict(), ltol=0.2, stol=0.3, angle_tol=5, _limit=1
+        )
+        == query
+    )
 
     docs = [{"structure": structure.as_dict(), "material_id": "mp-149"}]
 
-    assert op.post_process(docs) == [
+    assert op.post_process(docs, query) == [
         {
             "material_id": "mp-149",
             "normalized_rms_displacement": 0,

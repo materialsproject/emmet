@@ -1,11 +1,12 @@
 from fastapi import Query
 from maggma.api.query_operator.core import QueryOperator
 from maggma.api.utils import STORE_PARAMS
+from emmet.core.mpid import MPID
 
 
 class ChgcarTaskIDQuery(QueryOperator):
     """
-    Method to generate a query on CHGCAR data with calculation (task) ID
+    Method to generate a query on CHGCAR metadata with calculation (task) ID
     """
 
     def query(
@@ -19,12 +20,6 @@ class ChgcarTaskIDQuery(QueryOperator):
         crit = {}
 
         if task_ids:
-            crit.update(
-                {
-                    "task_id": {
-                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
-                    }
-                }
-            )
+            crit.update({"task_id": {"$in": [task_id.strip() for task_id in task_ids.split(",")]}})
 
         return {"criteria": crit}

@@ -7,6 +7,7 @@ from emmet.api.routes.materials.query_operators import (
     FormulaQuery,
     ChemsysQuery,
 )
+from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.routes.xas.query_operators import XASQuery, XASTaskIDQuery
 
 
@@ -35,6 +36,7 @@ def xas_resource(xas_store):
                 ],
             ),
         ],
+        header_processor=GlobalHeaderProcessor(),
         tags=["XAS"],
         disable_validation=True,
     )

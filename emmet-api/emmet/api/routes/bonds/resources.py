@@ -7,6 +7,7 @@ from emmet.api.routes.bonds.query_operators import (
     BondLengthQuery,
     CoordinationEnvsQuery,
 )
+from emmet.api.core.global_header import GlobalHeaderProcessor
 
 
 def bonds_resource(bonds_store):
@@ -22,6 +23,7 @@ def bonds_resource(bonds_store):
                 BondingDoc, default_fields=["material_id", "last_updated"],
             ),
         ],
+        header_processor=GlobalHeaderProcessor(),
         tags=["Bonds"],
         disable_validation=True,
     )
