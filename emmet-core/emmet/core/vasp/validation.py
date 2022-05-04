@@ -198,14 +198,21 @@ class ValidationDoc(EmmetBaseModel):
             # and will not get treated properly by the thermo builder.
             if ("Am" in chemsys) or ("Po" in chemsys):
                 reasons.append(DeprecationMessage.MANUAL)
-                
+
             # Check for magmom anomalies for specific elements
             eles_max_vals = {"Cr": 5}
 
             for ele, max_val in eles_max_vals.items():
                 if ele in chemsys:
-                    for site_num, mag in enumerate(task_doc.calcs_reversed[0]["output"]["outcar"]["magnetization"])
-                        if task_doc.calcs_reversed[0]["output"]["structure"]["sites"][site_num]["label"] == ele:
+                    for site_num, mag in enumerate(
+                        task_doc.calcs_reversed[0]["output"]["outcar"]["magnetization"]
+                    ):
+                        if (
+                            task_doc.calcs_reversed[0]["output"]["structure"]["sites"][
+                                site_num
+                            ]["label"]
+                            == ele
+                        ):
                             if mag["tot"] > max_val:
                                 reasons.append(DeprecationMessage.MAG)
 
