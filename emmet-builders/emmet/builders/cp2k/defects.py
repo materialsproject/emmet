@@ -857,7 +857,7 @@ class DefectThermoBuilder(Builder):
         return MaterialsDoc(**bulk)
 
     def __get_thermos(self, composition) -> List:
-        return list(self.thermo.query(criteria={"elements": {"$in": jsanitize(composition.elements)}}))
+        return list(self.thermo.query(criteria={'elements': {"$size": 1}}, properties=None))
 
 
 def unpack(query, d):

@@ -186,10 +186,9 @@ class DefectDoc(StructureMetadata):
         for key, tasks_for_runtype in groupby(sorted(tasks, key=_run_type), key=_run_type):
             sorted_tasks = sorted(tasks_for_runtype, key=_sort)
             ents = [cls.get_defect_entry_from_tasks(t[0], t[1], t[2], query) for t in sorted_tasks]
-            metadata[key] = {'convergence': [(sorted_tasks[i][0]['nsites'], ents[i].energy) for i in range(len(ents))]}
-
+            best_entry = ents[0]
             best_defect_task, best_bulk_task, dielectric = sorted_tasks[0]
-            best_entry = cls.get_defect_entry_from_tasks(best_defect_task, best_bulk_task, dielectric, query)
+            metadata[key] = {'convergence': [(sorted_tasks[i][0]['nsites'], ents[i].energy) for i in range(len(ents))]}
             best_defect_task, best_bulk_task = TaskDocument(**best_defect_task), TaskDocument(**best_bulk_task)
             entries[best_defect_task.run_type] = best_entry
             final_tasks[best_defect_task.run_type] = (best_defect_task, best_bulk_task)
@@ -429,8 +428,6 @@ class DefectThermoDoc(BaseModel):
            td.composition.elements[0]: td.energy_per_atom 
            for td in thermos if td.composition.is_element
         }
-        print("!!!!!!!")
-        print(chempots)
 
         defect_entries = {}
         defect_phase_diagram = {}
