@@ -200,21 +200,8 @@ class ValidationDoc(EmmetBaseModel):
                 reasons.append(DeprecationMessage.MANUAL)
 
             # Check for magmom anomalies for specific elements
-            eles_max_vals = {"Cr": 5}
-
-            for ele, max_val in eles_max_vals.items():
-                if ele in chemsys:
-                    for site_num, mag in enumerate(
-                        task_doc.calcs_reversed[0]["output"]["outcar"]["magnetization"]
-                    ):
-                        if (
-                            task_doc.calcs_reversed[0]["output"]["structure"]["sites"][
-                                site_num
-                            ]["label"]
-                            == ele
-                        ):
-                            if mag["tot"] > max_val:
-                                reasons.append(DeprecationMessage.MAG)
+            if _magmom_check(task_doc, chemsys):
+                reasons.append(DeprecationMessage.MAG)
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,
@@ -226,6 +213,30 @@ class ValidationDoc(EmmetBaseModel):
             warnings=warnings,
         )
         return doc
+
+
+def _magmom_check(task_doc, chemsys):
+    """
+    Checks for maximum magnetization values for specific elements.
+    Returns True if the maximum value outlined below is exceded for the associated element.
+    """
+    eles_max_vals = {"Cr": 5}
+
+    for ele, max_val in eles_max_vals.items():
+        if ele in chemsys:
+            for site_num, mag in enumerate(
+                task_doc.calcs_reversed[0]["output"]["outcar"]["magnetization"]
+            ):
+                if (
+                    task_doc.calcs_reversed[0]["output"]["structure"]["sites"][
+                        site_num
+                    ]["label"]
+                    == ele
+                ):
+                    if mag["tot"] > max_val:
+                        return True
+
+    return False
 
 
 def _get_unsorted_symbol_set(structure: Structure):
