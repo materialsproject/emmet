@@ -33,47 +33,43 @@ class ComplianceTensorDoc(BaseModel):
     )
 
 
-class DerivedProperties(BaseModel):
-    """
-    Derived elastic properties.
+class BulkModulus(BaseModel):
+    voigt: float = Field(None, description="Bulk modulus Voigt average")
+    reuss: float = Field(None, description="Bulk modulus Reuss average")
+    vrh: float = Field(None, description="Bulk modulus Voigt-Reuss-Hill average")
 
-    For more explanation of the properties, see
-    `pymatgen.analysis.elasticity.elastic.py`.
-    """
 
-    # derived properties from elastic tensor
-    k_voigt: float = Field(None, description="Bulk modulus Voigt average")
-    k_reuss: float = Field(None, description="Bulk modulus Reuss average")
-    k_vrh: float = Field(None, description="Bulk modulus Voigt-Reuss-Hill average")
-    g_voigt: float = Field(None, description="Shear modulus Voigt average")
-    g_reuss: float = Field(None, description="Shear modulus Reuss average")
-    g_vrh: float = Field(None, description="Shear modulus Voigt-Reuss-Hill average")
-    universal_anisotropy: float = Field(
-        None, description="Universal elastic anisotropy"
+class ShearModulus(BaseModel):
+    voigt: float = Field(None, description="Shear modulus Voigt average")
+    reuss: float = Field(None, description="Shear modulus Reuss average")
+    vrh: float = Field(None, description="Shear modulus Voigt-Reuss-Hill average")
+
+
+class SoundVelocity(BaseModel):
+
+    transverse: float = Field(
+        None, description="Transverse sound velocity (in SI units)"
     )
-    homogeneous_poisson: float = Field(None, description="Isotropic Poisson ratio")
-    y_mod: float = Field(None, description="Young's modulus")
-
-    # derived properties from elastic tensor and structure
-    trans_v: float = Field(None, description="Transverse sound velocity (in SI units)")
-    long_v: float = Field(None, description="Longitudinal sound velocity (in SI units)")
-    snyder_ac: float = Field(
+    longitudinal: float = Field(
+        None, description="Longitudinal sound velocity (in SI units)"
+    )
+    snyder_acoustic: float = Field(
         None, description="Snyder's acoustic sound velocity (in SI units)"
     )
-    snyder_opt: float = Field(
+    snyder_optical: float = Field(
         None, description="Snyder's optical sound velocity (in SI units)"
     )
     snyder_total: float = Field(
         None, description="Snyder's total sound velocity (in SI units)"
     )
-    clarke_thermalcond: float = Field(
+
+
+class ThermalConductivity(BaseModel):
+    clarke: float = Field(
         None, description="Clarke's thermal conductivity (in SI units)"
     )
-    cahill_thermalcond: float = Field(
+    cahill: float = Field(
         None, description="Cahill's thermal conductivity (in SI units)"
-    )
-    debye_temperature: float = Field(
-        None, description="Debye temperature (in SI units)"
     )
 
 
@@ -134,8 +130,18 @@ class ElasticityDoc(PropertyDoc):
         default=2, description="Order of the expansion of the elastic tensor"
     )
 
-    derived_properties: DerivedProperties = Field(
-        None, description="Derived elastic properties"
+    # derived properties
+    k: BulkModulus = Field(None, description="Bulk modulus")
+    g: ShearModulus = Field(None, description="Shear modulus")
+    v: SoundVelocity = Field(None, description="Sound velocity")
+    kappa: ThermalConductivity = Field(None, description="Thermal conductivity")
+    y_mod: float = Field(None, description="Young's modulus")
+    universal_anisotropy: float = Field(
+        None, description="Universal elastic anisotropy"
+    )
+    homogeneous_poisson: float = Field(None, description="Isotropic Poisson ratio")
+    debye_temperature: float = Field(
+        None, description="Debye temperature (in SI units)"
     )
 
     fitting_data: FittingData = Field(
