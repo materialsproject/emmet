@@ -8,10 +8,10 @@ from pymatgen.core import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.base import EmmetBaseModel
+from emmet.core.common import Status
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
-from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types import RunType, calc_type, run_type, task_type
 
 
@@ -39,15 +39,6 @@ class BaseTaskDocument(EmmetBaseModel):
     warnings: List[str] = Field(
         None, description="Any warnings related to this property"
     )
-
-
-class Status(ValueEnum):
-    """
-    VASP Calculation State
-    """
-
-    SUCESS = "successful"
-    FAILED = "failed"
 
 
 class InputSummary(BaseModel):
@@ -159,7 +150,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
         params = self.calcs_reversed[0].get("input", {}).get("parameters", {})
         incar = self.calcs_reversed[0].get("input", {}).get("incar", {})
 
-        return calc_type(self.orig_inputs, {**params, **incar},)
+        return calc_type(self.orig_inputs, {**params, **incar})
 
     @property
     def entry(self) -> ComputedEntry:
