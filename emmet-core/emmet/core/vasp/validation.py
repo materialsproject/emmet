@@ -10,17 +10,18 @@ from emmet.core.settings import EmmetSettings
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.utils import DocEnum
-from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.vasp.task import TaskDocument
 
 SETTINGS = EmmetSettings()
 
 
 class DeprecationMessage(DocEnum):
-    MANUAL = "M", "manual deprecation"
+    MANUAL = "M", "Manual deprecation"
     KPTS = "C001", "Too few KPoints"
+    KSPACING = "C002", "KSpacing not high enough"
     ENCUT = "C002", "ENCUT too low"
     FORCES = "C003", "Forces too large"
-    KSPACING = "C004", "KSPACING not high enough"
+    MAG = "C004", "At least one site magnetization is too large"
     CONVERGENCE = "E001", "Calculation did not converge"
     MAX_SCF = "E002", "Max SCF gradient too large"
     LDAU = "I001", "LDAU Parameters don't match the inputset"
@@ -113,16 +114,16 @@ class ValidationDoc(EmmetBaseModel):
                     data["kspacing_delta"] = (
                         inputs["incar"].get("KSPACING") - valid_kspacing
                     )
-                    # invalidate if KSPACING is larger by more than tolerance (fewer k-points)
+                    # larger KSPACING means fewer k-points
                     if data["kspacing_delta"] > kspacing_tolerance:
-                        reasons.append(DeprecationMessage.KSPACING)
                         warnings.append(
-                            f"KSPACING is greater than input set by {data['kspacing_delta']}",
+                            f"KSPACING is greater than input set: {data['kspacing_delta']}"
+                            f" lower than {kspacing_tolerance} ",
                         )
-                    # warn but don't invalidate if KSPACING is smaller by more than tolerance (more k-points)
-                    elif data["kspacing_delta"] < -1 * kspacing_tolerance:
+                    elif data["kspacing_delta"] < kspacing_tolerance:
                         warnings.append(
-                            f"KSPACING is lower than input set by {data['kspacing_delta']}"
+                            f"KSPACING is lower than input set: {data['kspacing_delta']}"
+                            f" lower than {kspacing_tolerance} ",
                         )
 
             # warn, but don't invalidate if wrong ISMEAR
@@ -197,6 +198,16 @@ class ValidationDoc(EmmetBaseModel):
             # and will not get treated properly by the thermo builder.
             if ("Am" in chemsys) or ("Po" in chemsys):
                 reasons.append(DeprecationMessage.MANUAL)
+                
+            # Check for magmom anomalies for specific elements
+            eles_max_vals = {"Cr": 5}
+
+            for ele, max_val in eles_max_vals.items():
+                if ele in chemsys:
+                    for site_num, mag in enumerate(task_doc.calcs_reversed[0]["output"]["outcar"]["magnetization"])
+                        if task_doc.calcs_reversed[0]["output"]["structure"]["sites"][site_num]["label"] == ele:
+                            if mag["tot"] > max_val:
+                                reasons.append(DeprecationMessage.MAG)
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,
