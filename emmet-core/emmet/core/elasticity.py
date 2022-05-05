@@ -230,29 +230,39 @@ class ElasticityDoc(PropertyDoc):
         )
 
         # elastic and compliance tensors, only round ieee format ones
-        ieee_et = elastic_tensor.voigt_symmetrized.conver_to_ieee(structure)
+        ieee_et = elastic_tensor.voigt_symmetrized.convert_to_ieee(structure)
         et_doc = ElasticTensorDoc(
             raw=elastic_tensor.voigt.tolist(),
             ieee_format=ieee_et.round(0).voigt.tolist(),
         )
 
-        compliance = elastic_tensor.compliance_tensor
-        compliance_ieee = ieee_et.compliance_tensor
+        try:
+            compliance = elastic_tensor.compliance_tensor
+            compliance_ieee = ieee_et.compliance_tensor
 
-        # compliance tensor, *1000 to convert units to TPa^-1, i.e. 10^-12 Pa,
-        # assuming elastic tensor in units of GPa
-        ct_doc = ComplianceTensorDoc(
-            raw=(compliance * 1000).voigt.tolist(),
-            ieee_format=(compliance_ieee * 1000).round(0).voigt.tolist(),
-        )
+            # compliance tensor, *1000 to convert units to TPa^-1, i.e. 10^-12 Pa,
+            # assuming elastic tensor in units of GPa
+            ct_doc = ComplianceTensorDoc(
+                raw=(compliance * 1000).voigt.tolist(),
+                ieee_format=(compliance_ieee * 1000).round(0).voigt.tolist(),
+            )
 
-        # derived properties
-        derived_props = get_derived_properties(structure, elastic_tensor)
+            # derived properties
+            # (should put it here since some derived properties also dependent on
+            # compliance tensor)
+            derived_props = get_derived_properties(structure, elastic_tensor)
 
-        # check all
-        state, warnings = sanity_check(
-            structure, et_doc, p_strains + d_strains, derived_props
-        )
+            # check all
+            state, warnings = sanity_check(
+                structure, et_doc, p_strains + d_strains, derived_props
+            )
+        except np.linalg.LinAlgError as e:
+            ct_doc = None
+            derived_props = {}
+            state = Status("failed")
+            warnings = [
+                f"Critical: cannot invert elastic tensor to get compliance tensor: {e}"
+            ]
 
         return cls.from_structure(
             structure,
@@ -264,6 +274,7 @@ class ElasticityDoc(PropertyDoc):
             fitting_data=fitting_data,
             fitting_method=fitting_method,
             warnings=warnings,
+            deprecated=False,
             **derived_props,
             **kwargs,
         )
@@ -555,7 +566,7 @@ def sanity_check(
     for mod in ["bulk_modulus", "shear_modulus"]:
         doc = derived_props[mod]
         doc = doc.dict()
-        for name in ["voigt", "reuss", "g_vrh"]:
+        for name in ["voigt", "reuss", "vrh"]:
             if doc[name] < 0:
                 failed = True
                 warnings.append(f"Critical: negative {name} {mod}")
