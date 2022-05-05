@@ -35,7 +35,11 @@ owners = [
 
 
 pets = [
-    Pet(name=f"Pet{i}", pet_type=choice(list(PetType)), owner_name=choice(owners).name,)
+    Pet(
+        name=f"Pet{i}",
+        pet_type=choice(list(PetType)),
+        owner_name=choice(owners).name,
+    )
     for i in list(range(40))
 ]
 

@@ -35,7 +35,7 @@ class Type(ValueEnum):
     The type of XAS Spectrum
     XANES - Just the near-edge region
     EXAFS - Just the extended region
-    XAFS - Fully stitchted XANES + EXAFS
+    XAFS - Fully stitched XANES + EXAFS
     """
 
     XANES = "XANES"

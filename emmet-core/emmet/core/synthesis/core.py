@@ -20,7 +20,8 @@ class SynthesisRecipe(BaseModel):
 
     # Basic facts about this recipe:
     doi: str = Field(
-        ..., description="DOI of the journal article.",
+        ...,
+        description="DOI of the journal article.",
     )
     paragraph_string: str = Field(
         "", description="The paragraph from which this recipe is extracted."
@@ -65,8 +66,10 @@ class SynthesisSearchResultModel(SynthesisRecipe):
     """
 
     search_score: Optional[float] = Field(
-        None, description="Search score.",
+        None,
+        description="Search score.",
     )
     highlights: Optional[List[Any]] = Field(
-        None, description="Search highlights.",
+        None,
+        description="Search highlights.",
     )

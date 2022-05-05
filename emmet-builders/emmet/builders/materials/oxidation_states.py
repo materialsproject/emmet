@@ -9,7 +9,11 @@ from emmet.core.utils import jsanitize
 
 class OxidationStatesBuilder(MapBuilder):
     def __init__(
-        self, materials: Store, oxidation_states: Store, query=None, **kwargs,
+        self,
+        materials: Store,
+        oxidation_states: Store,
+        query=None,
+        **kwargs,
     ):
         """
         Creates Oxidation State documents from materials

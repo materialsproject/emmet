@@ -7,7 +7,8 @@ from pydantic.fields import Field
 
 from emmet.core.provenance import Author, History
 from emmet.core.settings import EmmetSettings
-from emmet.core.vasp.calc_types import TaskType
+from emmet.core.vasp.calc_types import TaskType as VaspTaskType
+from emmet.core.qchem.calc_types import TaskType as QChemTaskType
 
 
 class EmmetBuildSettings(EmmetSettings):
@@ -29,9 +30,14 @@ class EmmetBuildSettings(EmmetSettings):
         [], description="Tags for calculations to deprecate"
     )
 
-    VASP_ALLOWED_VASP_TYPES: List[TaskType] = Field(
-        [t.value for t in TaskType],
+    VASP_ALLOWED_VASP_TYPES: List[VaspTaskType] = Field(
+        [t.value for t in VaspTaskType],
         description="Allowed task_types to build materials from",
+    )
+
+    QCHEM_ALLOWED_TASK_TYPES: List[QChemTaskType] = Field(
+        [t.value for t in QChemTaskType],
+        description="Allowed task_types to build molecules from",
     )
 
     DEFAULT_REFERENCE: str = Field(

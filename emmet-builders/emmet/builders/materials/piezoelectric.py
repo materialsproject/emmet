@@ -31,7 +31,9 @@ class PiezoelectricBuilder(Builder):
         self.piezoelectric.key = "material_id"
 
         super().__init__(
-            sources=[materials, tasks], targets=[piezoelectric], **kwargs,
+            sources=[materials, tasks],
+            targets=[piezoelectric],
+            **kwargs,
         )
 
     def prechunk(self, number_splits: int):  # pragma: no cover
