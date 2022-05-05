@@ -180,7 +180,7 @@ class ElasticityDoc(PropertyDoc):
         deformations: List[Deformation],
         stresses: List[Stress],
         deformation_task_ids: Optional[List[MPID]] = None,
-        deformation_dir_names: Optional[str] = None,
+        deformation_dir_names: Optional[List[str]] = None,
         equilibrium_stress: Optional[Stress] = None,
         optimization_task_id: Optional[MPID] = None,
         optimization_dir_name: Optional[str] = None,
