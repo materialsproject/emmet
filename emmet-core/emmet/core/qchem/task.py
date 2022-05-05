@@ -21,7 +21,7 @@ from emmet.core.qchem.calc_types import (
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
-class Status(ValueEnum):
+class QChemStatus(ValueEnum):
     """
     Q-Chem Calculation State
     """
@@ -90,7 +90,7 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     is_valid: bool = Field(
         True, description="Whether this task document passed validation or not"
     )
-    state: Status = Field(None, description="State of this calculation")
+    state: QChemStatus = Field(None, description="State of this calculation")
 
     cputime: float = Field(None, description="The system CPU time in seconds")
     walltime: float = Field(None, description="The real elapsed time in seconds")
