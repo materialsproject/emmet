@@ -6,19 +6,22 @@ from pydantic import Field, PyObject
 from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.sets import VaspInputSet
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.utils import DocEnum
-from emmet.core.vasp.task import TaskDocument
+from emmet.core.vasp.task_valid import TaskDocument
+
+SETTINGS = EmmetSettings()
 
 
 class DeprecationMessage(DocEnum):
-    MANUAL = "M", "manual deprecation"
+    MANUAL = "M", "Manual deprecation"
     KPTS = "C001", "Too few KPoints"
     KSPACING = "C002", "KSpacing not high enough"
     ENCUT = "C002", "ENCUT too low"
     FORCES = "C003", "Forces too large"
+    MAG = "C004", "At least one site magnetization is too large"
     CONVERGENCE = "E001", "Calculation did not converge"
     MAX_SCF = "E002", "Max SCF gradient too large"
     LDAU = "I001", "LDAU Parameters don't match the inputset"
@@ -196,6 +199,10 @@ class ValidationDoc(EmmetBaseModel):
             if ("Am" in chemsys) or ("Po" in chemsys):
                 reasons.append(DeprecationMessage.MANUAL)
 
+            # Check for magmom anomalies for specific elements
+            if _magmom_check(task_doc, chemsys):
+                reasons.append(DeprecationMessage.MAG)
+
         doc = ValidationDoc(
             task_id=task_doc.task_id,
             calc_type=calc_type,
@@ -206,6 +213,30 @@ class ValidationDoc(EmmetBaseModel):
             warnings=warnings,
         )
         return doc
+
+
+def _magmom_check(task_doc, chemsys):
+    """
+    Checks for maximum magnetization values for specific elements.
+    Returns True if the maximum value outlined below is exceded for the associated element.
+    """
+    eles_max_vals = {"Cr": 5}
+
+    for ele, max_val in eles_max_vals.items():
+        if ele in chemsys:
+            for site_num, mag in enumerate(
+                task_doc.calcs_reversed[0]["output"]["outcar"]["magnetization"]
+            ):
+                if (
+                    task_doc.calcs_reversed[0]["output"]["structure"]["sites"][
+                        site_num
+                    ]["label"]
+                    == ele
+                ):
+                    if mag["tot"] > max_val:
+                        return True
+
+    return False
 
 
 def _get_unsorted_symbol_set(structure: Structure):

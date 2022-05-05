@@ -1,7 +1,8 @@
 import datetime
 from enum import Enum
 from itertools import groupby
-from typing import Any, Iterator, List
+from typing import Any, Iterator, List, Tuple, Dict, Union
+import copy
 
 import bson
 import numpy as np
@@ -12,9 +13,11 @@ from pymatgen.analysis.structure_matcher import (
     ElementComparator,
     StructureMatcher,
 )
-from pymatgen.core.structure import Structure
+from pymatgen.core.structure import Structure, Molecule
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
+
+SETTINGS = EmmetSettings()
 
 
 def get_sg(struc, symprec=SETTINGS.SYMPREC) -> int:
@@ -62,6 +65,78 @@ def group_structures(
     for _, pregroup in groupby(sorted(structures, key=_get_sg), key=_get_sg):
         for group in sm.group_structures(list(pregroup)):
             yield group
+
+
+def form_env(mol_lot: Tuple[Molecule, str]) -> str:
+    """
+    Get the alphabetical formula and solvent environment of a calculation
+    as a string
+
+    :param mol_lot: tuple (Molecule, str), where str is the string value of
+        a LevelOfTheory object (for instance, wB97X-V/def2-TZVPPD/VACUUM)
+
+    :returns key: str
+    """
+
+    molecule, lot = mol_lot
+    lot_comp = lot.split("/")
+    if lot_comp[2].upper() == "VACUUM":
+        env = "VACUUM"
+    else:
+        env = lot_comp[2].split("(")[1].replace(")", "")
+
+    key = molecule.composition.alphabetical_formula
+    key += " " + env
+    return key
+
+
+def group_molecules(molecules: List[Molecule], lots: List[str]):
+    """
+    Groups molecules according to composition, charge, environment, and equality
+
+    Args:
+        molecules (List[Molecule])
+        lots (List[str]): string representations of Q-Chem levels of theory
+            (for instance, wB97X-V/def2-TZVPPD/VACUUM)
+    """
+    print(lots)
+    for mol_key, pregroup in groupby(
+        sorted(zip(molecules, lots), key=form_env), key=form_env
+    ):
+        subgroups: List[Dict[str, Any]] = list()
+        for mol, _ in pregroup:
+            mol_copy = copy.deepcopy(mol)
+
+            # Single atoms will always have identical structure
+            # So grouping by geometry isn't enough
+            # Need to also group by charge
+            if len(mol_copy) > 1:
+                mol_copy.set_charge_and_spin(0)
+            matched = False
+            for subgroup in subgroups:
+                if mol_copy == subgroup["mol"]:
+                    subgroup["mol_list"].append(mol)
+                    matched = True
+                    break
+            if not matched:
+                subgroups.append({"mol": mol_copy, "mol_list": [mol]})
+        for group in subgroups:
+            yield group["mol_list"]
+
+
+def confirm_molecule(mol: Union[Molecule, Dict]):
+    """
+    Check that something that we expect to be a molecule is actually a Molecule
+    object, and not a dictionary representation.
+
+    :param mol (Molecule):
+    :return:
+    """
+
+    if isinstance(mol, Dict):
+        return Molecule.from_dict(mol)
+    else:
+        return mol
 
 
 def jsanitize(obj, strict=False, allow_bson=False):
@@ -169,3 +244,13 @@ class DocEnum(ValueEnum):
         if doc is not None:
             self.__doc__ = doc
         return self
+
+
+def get_enum_source(enum_name, doc, items):
+    header = f"""
+class {enum_name}(ValueEnum):
+    \"\"\" {doc} \"\"\"\n
+"""
+    items = [f'    {const} = "{val}"' for const, val in items.items()]
+
+    return header + "\n".join(items)

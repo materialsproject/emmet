@@ -1,10 +1,9 @@
-pymatgen==2022.0.16
-monty==2021.12.1
+monty==2022.4.26
+pymatgen==2022.4.26
 pydantic==1.8.2
 pybtex==0.24.0
-typing-extensions==4.0.1
+typing-extensions==4.2.0
 seekpath==2.0.1
-setuptools-scm==6.3.2
+setuptools-scm==6.4.2
 robocrys==0.2.7
-matminer==0.7.4
-optimade==0.16.2
+matminer==0.7.6

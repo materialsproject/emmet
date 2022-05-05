@@ -6,14 +6,16 @@ import numpy as np
 from pydantic import Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.material_property import PropertyDoc
 from emmet.core.math import Matrix3D, Vector3D
 from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import Tensor
 
-VoigtVector = Tuple[float, float, float, float, float, float]
-PiezoTensor = Tuple[VoigtVector, VoigtVector, VoigtVector]
+SETTINGS = EmmetSettings()
+
+Vector = List[float]
+PiezoTensor = List[Vector]
 PiezoTensor.__doc__ = "Rank 3 real space tensor in Voigt notation"  # type: ignore
 
 
@@ -24,21 +26,21 @@ class DielectricDoc(PropertyDoc):
 
     property_name = "dielectric"
 
-    total: Matrix3D = Field(description="Total dielectric tensor")
-    ionic: Matrix3D = Field(description="Ionic contribution to dielectric tensor")
+    total: Matrix3D = Field(description="Total dielectric tensor.")
+    ionic: Matrix3D = Field(description="Ionic contribution to dielectric tensor.")
     electronic: Matrix3D = Field(
-        description="Electronic contribution to dielectric tensor"
+        description="Electronic contribution to dielectric tensor."
     )
 
-    e_total: float = Field(description="Total electric permittivity")
+    e_total: float = Field(description="Total electric permittivity.")
     e_ionic: float = Field(
-        description="Electric permittivity from atomic rearrangement"
+        description="Electric permittivity from atomic rearrangement."
     )
     e_electronic: float = Field(
-        description="Electric permittivity due to electrons rearrangement"
+        description="Electric permittivity due to electrons rearrangement."
     )
 
-    n: float = Field(title="Refractive index")
+    n: float = Field(description="Refractive index.")
 
     @classmethod
     def from_ionic_and_electronic(

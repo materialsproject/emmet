@@ -6,12 +6,15 @@ from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
-from emmet.core.vasp.task import TaskDocument
+from emmet.core.vasp.task_valid import TaskDocument
+
+
+SETTINGS = EmmetSettings()
 
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
@@ -134,9 +137,16 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
             )
         ]
 
-        # entries
+        # Entries
+        # **current materials docs must contain at last one GGA or GGA+U entry
         entries = {}
         all_run_types = set(run_types.values())
+
+        if RunType.GGA not in all_run_types and RunType.GGA_U not in all_run_types:
+            raise ValueError(
+                "Ensure the task group contains at least one GGA or GGA+U calculation"
+            )
+
         for rt in all_run_types:
             relevant_calcs = sorted(
                 [doc for doc in structure_calcs if doc.run_type == rt and doc.is_valid],

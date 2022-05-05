@@ -14,9 +14,11 @@ from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.io.vasp.sets import MPStaticSet
 
-from emmet.core import SETTINGS
+from emmet.core.settings import EmmetSettings
 from emmet.core.electronic_structure import ElectronicStructureDoc
 from emmet.core.utils import jsanitize
+
+SETTINGS = EmmetSettings()
 
 
 class ElectronicStructureBuilder(Builder):
@@ -184,7 +186,7 @@ class ElectronicStructureBuilder(Builder):
 
                 d["warnings"].append(
                     "Regular parsed band gap and band gap from eigenvalue_band_properties do not agree. "
-                    f"Using data from eigenvalue_band_properties where appropriate."
+                    "Using data from eigenvalue_band_properties where appropriate."
                 )
 
                 d["band_gap"] = eig_values["bandgap"]
@@ -292,7 +294,7 @@ class ElectronicStructureBuilder(Builder):
                 doc.warnings = []
             doc.warnings.append(
                 "Absolute difference between blessed band gap and at least one "
-                f"line-mode or uniform calculation band gap is larger than 0.25 eV."
+                "line-mode or uniform calculation band gap is larger than 0.25 eV."
             )
 
         # Line-mode and uniform structure primitive checks
