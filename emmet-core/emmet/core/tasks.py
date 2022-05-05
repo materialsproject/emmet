@@ -284,4 +284,3 @@ class DeprecationDoc(BaseModel):
     deprecation_reason: str = Field(
         None, description="Reason for deprecation.",
     )
-
