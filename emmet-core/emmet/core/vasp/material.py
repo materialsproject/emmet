@@ -142,7 +142,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         entries = {}
         all_run_types = set(run_types.values())
 
-        if "GGA" not in all_run_types and "GGA+U" not in all_run_types:
+        if RunType.GGA not in all_run_types and RunType.GGA_U not in all_run_types:
             raise ValueError(
                 "Ensure the task group contains at least one GGA or GGA+U calculation"
             )
