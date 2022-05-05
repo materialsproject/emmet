@@ -106,7 +106,7 @@ class EntryQuery(QueryOperator):
         """
 
         d = [
-            {"task_id": doc["task_id"], "entry": jsanitize(task_to_entry(doc)),}
+            {"task_id": doc["task_id"], "entry": jsanitize(task_to_entry(doc))}
             for doc in docs
         ]
 
