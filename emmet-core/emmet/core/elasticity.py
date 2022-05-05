@@ -534,8 +534,7 @@ def sanity_check(
         failed = True
         warnings.append(
             f"Critical: insufficient number of valid strains. Expect the matrix of all "
-            f"strains "
-            f"to be of 6, but got {rank}."
+            f"strains to be of 6, but got {rank}."
         )
 
     # if any([s.is_rare_earth_metal for s in structure.species]):
