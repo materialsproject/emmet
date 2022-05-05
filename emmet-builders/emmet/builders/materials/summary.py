@@ -147,7 +147,8 @@ class SummaryBuilder(Builder):
                 ),
                 HasProps.insertion_electrodes.value: list(
                     self.insertion_electrodes.query(
-                        {"material_ids": entry}, [self.insertion_electrodes.key],
+                        {"material_ids": entry},
+                        [self.insertion_electrodes.key],
                     )
                 ),
                 HasProps.surface_properties.value: self.surfaces.query_one(

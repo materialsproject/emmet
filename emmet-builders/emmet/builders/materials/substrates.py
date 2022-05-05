@@ -42,7 +42,9 @@ class SubstratesBuilder(Builder):
         self.elasticity.key = "material_id"
 
         super().__init__(
-            sources=[materials, elasticity], targets=[substrates], **kwargs,
+            sources=[materials, elasticity],
+            targets=[substrates],
+            **kwargs,
         )
 
     def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
