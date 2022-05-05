@@ -22,9 +22,17 @@ __author__ = "Evan Spotte-Smith"
 
 SETTINGS = EmmetBuildSettings()
 
-single_mol_thermo = loadfn(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "single_atom.json")
-)
+single_mol_thermo = {
+    "C1": {"enthalpy": 1.481, "entropy": 33.398},
+    "F1": {"enthalpy": 1.481, "entropy": 34.767},
+    "H1": {"enthalpy": 1.481, "entropy": 26.014},
+    "Li1": {"enthalpy": 1.481, "entropy": 31.798},
+    "Mg1": {"enthalpy": 1.481, "entropy": 35.462},
+    "N1": {"enthalpy": 1.481, "entropy": 33.858},
+    "O1": {"enthalpy": 1.481, "entropy": 34.254},
+    "P1": {"enthalpy": 1.481, "entropy": 36.224},
+    "S1": {"enthalpy": 1.481, "entropy": 36.319},
+}
 
 
 class ThermoBuilder(Builder):

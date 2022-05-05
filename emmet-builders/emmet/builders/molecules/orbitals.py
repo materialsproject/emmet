@@ -191,7 +191,9 @@ class OrbitalBuilder(Builder):
                 for best in sorted_entries:
                     task = best["task_id"]
 
-                    task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
+                    task_doc = TaskDocument(
+                        **self.tasks.query_one({"task_id": int(task)})
+                    )
 
                     orbital_doc = OrbitalDoc.from_task(
                         task_doc, molecule_id=mol.molecule_id, deprecated=False
