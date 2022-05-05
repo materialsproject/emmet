@@ -11,9 +11,10 @@ from emmet.api.routes.tasks.query_operators import (
     DeprecationQuery,
     MultipleTaskIDsQuery,
     TrajectoryQuery,
+    EntryQuery,
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
-from emmet.core.tasks import DeprecationDoc, TaskDoc, TrajectoryDoc
+from emmet.core.tasks import DeprecationDoc, TaskDoc, TrajectoryDoc, EntryDoc
 
 
 def task_resource(task_store):
@@ -62,6 +63,20 @@ def trajectory_resource(task_store):
         key_fields=["task_id", "calcs_reversed"],
         tags=["Tasks"],
         sub_path="/trajectory/",
+        header_processor=GlobalHeaderProcessor(),
+    )
+
+    return resource
+
+
+def entries_resource(task_store):
+    resource = ReadOnlyResource(
+        task_store,
+        EntryDoc,
+        query_operators=[EntryQuery(), PaginationQuery()],
+        key_fields=["task_id", "input", "output", "run_type", "task_type", "completed_at",  "last_updated"],
+        tags=["Tasks"],
+        sub_path="/entries/",
         header_processor=GlobalHeaderProcessor(),
     )
 
