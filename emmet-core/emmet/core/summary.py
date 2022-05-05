@@ -7,6 +7,10 @@ from pymatgen.core.structure import Structure
 
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
+from emmet.core.chemenv import (
+    COORDINATION_GEOMETRIES_IUPAC,
+    COORDINATION_GEOMETRIES_IUCR,
+)
 from emmet.core.mpid import MPID
 from emmet.core.thermo import DecompositionProduct
 from emmet.core.xas import Edge, Type
@@ -38,6 +42,7 @@ class HasProps(Enum):
     phonon = "phonon"
     insertion_electrodes = "insertion_electrodes"
     substrates = "substrates"
+    chemenv = "chemenv"
 
 
 class SummaryStats(BaseModel):
@@ -159,15 +164,11 @@ class SummaryDoc(PropertyDoc):
     )
 
     formation_energy_per_atom: float = Field(
-        None,
-        description="The formation energy per atom in eV/atom.",
-        source="thermo",
+        None, description="The formation energy per atom in eV/atom.", source="thermo",
     )
 
     energy_above_hull: float = Field(
-        None,
-        description="The energy above the hull in eV/Atom.",
-        source="thermo",
+        None, description="The energy above the hull in eV/Atom.", source="thermo",
     )
 
     is_stable: bool = Field(
@@ -189,6 +190,18 @@ class SummaryDoc(PropertyDoc):
         source="thermo",
     )
 
+    # Chemenv
+
+    chemenv_iupac: List[COORDINATION_GEOMETRIES_IUPAC] = Field(
+        None,
+        description="List of symbols for unique (cationic) species in structure in IUPAC format",
+    )
+
+    chemenv_iucr: List[COORDINATION_GEOMETRIES_IUCR] = Field(
+        None,
+        description="List of symbols for unique (cationic) species in structure in IUPAC format",
+    )
+
     # XAS
 
     xas: List[XASSearchData] = Field(
@@ -198,9 +211,7 @@ class SummaryDoc(PropertyDoc):
     # GB
 
     grain_boundaries: List[GBSearchData] = Field(
-        None,
-        description="List of grain boundary documents.",
-        source="grain_boundary",
+        None, description="List of grain boundary documents.", source="grain_boundary",
     )
 
     # Electronic Structure
@@ -481,6 +492,7 @@ summary_fields: Dict[str, list] = {
         "equilibrium_reaction_energy_per_atom",
         "decomposes_to",
     ],
+    HasProps.chemenv.value: ["chemenv_iupac", "chemenv_iucr"],
     HasProps.xas.value: ["absorbing_element", "edge", "spectrum_type", "spectrum_id"],
     HasProps.grain_boundaries.value: [
         "gb_energy",

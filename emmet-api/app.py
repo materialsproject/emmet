@@ -309,6 +309,7 @@ resources.update({"bonds": [bonds_resource(bonds_store)]})
 from emmet.api.routes.tasks.resources import (
     task_resource,
     trajectory_resource,
+    entries_resource,
     task_deprecation_resource,
 )
 
@@ -316,6 +317,7 @@ resources.update(
     {
         "tasks": [
             trajectory_resource(task_store),
+            entries_resource(task_store),
             task_deprecation_resource(materials_store),
             task_resource(task_store),
         ]
