@@ -1,14 +1,18 @@
 # Changelog
 
-## [Unreleased](https://github.com/materialsproject/emmet/tree/HEAD)
+## [v0.26.1](https://github.com/materialsproject/emmet/tree/v0.26.1) (2022-05-05)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.26.0...HEAD)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.26.0...v0.26.1)
 
 **Closed issues:**
 
 - Rename `Status` enum for molecule tasks [\#412](https://github.com/materialsproject/emmet/issues/412)
 - Deprecation rule for unphysical magnetic moments [\#410](https://github.com/materialsproject/emmet/issues/410)
 - Update emmet-builders requirements.txt [\#329](https://github.com/materialsproject/emmet/issues/329)
+
+**Merged pull requests:**
+
+- Single atom fix [\#413](https://github.com/materialsproject/emmet/pull/413) ([espottesmith](https://github.com/espottesmith))
 
 ## [v0.26.0](https://github.com/materialsproject/emmet/tree/v0.26.0) (2022-05-05)
 
@@ -605,19 +609,19 @@
 
 ## [v0.13.0](https://github.com/materialsproject/emmet/tree/v0.13.0) (2021-09-23)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.13.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.13.0)
 
 **Merged pull requests:**
 
 - Builder bug fixes [\#272](https://github.com/materialsproject/emmet/pull/272) ([munrojm](https://github.com/munrojm))
 
-## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.12.8)
-
 ## [v0.12.7](https://github.com/materialsproject/emmet/tree/v0.12.7) (2021-09-15)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.7)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.12.7)
+
+## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.8)
 
 **Merged pull requests:**
 
