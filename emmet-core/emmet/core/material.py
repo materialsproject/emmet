@@ -5,10 +5,12 @@ from datetime import datetime
 from typing import List, Mapping, Type, TypeVar, Union
 
 from pydantic import BaseModel, Field
+
 from pymatgen.core import Structure
+from pymatgen.core.structure import Molecule
 
 from emmet.core.mpid import MPID
-from emmet.core.structure import StructureMetadata
+from emmet.core.structure import MoleculeMetadata, StructureMetadata
 from emmet.core.vasp.validation import DeprecationMessage
 
 
@@ -28,6 +30,7 @@ class PropertyOrigin(BaseModel):
 
 
 T = TypeVar("T", bound="MaterialsDoc")
+S = TypeVar("S", bound="MoleculeDoc")
 
 
 class MaterialsDoc(StructureMetadata):
@@ -103,4 +106,78 @@ class MaterialsDoc(StructureMetadata):
             material_id=material_id,
             structure=structure,
             **kwargs,
+        )
+
+
+class MoleculeDoc(MoleculeMetadata):
+    """
+    Definition for a core Molecule Document
+    """
+
+    # Only molecule_id is required for all documents
+    molecule_id: MPID = Field(
+        ...,
+        description="The ID of this molecule, used as a universal reference across property documents."
+        "This comes in the form of an MPID or int",
+    )
+
+    molecule: Molecule = Field(
+        ...,
+        description="The best (typically meaning lowest in energy) structure for this molecule",
+    )
+
+    deprecated: bool = Field(
+        True,
+        description="Whether this molecule document is deprecated.",
+    )
+
+    # TODO: Why might a molecule be deprecated?
+    deprecation_reasons: List[str] = Field(
+        None,
+        description="List of deprecation tags detailing why this molecules document isn't valid",
+    )
+
+    initial_molecules: List[Molecule] = Field(
+        [],
+        description="Initial molecules used in the DFT geometry optimizations corresponding to this molecule",
+    )
+
+    task_ids: List[MPID] = Field(
+        [],
+        title="Calculation IDs",
+        description="List of Calculations IDs used to make this Molecule Document",
+    )
+
+    # TODO: Should this be MPID?
+    deprecated_tasks: List[str] = Field([], title="Deprecated Tasks")
+
+    calc_types: Mapping[str, str] = Field(
+        None,
+        description="Calculation types for all the tasks that make up this molecule",
+    )
+
+    last_updated: datetime = Field(
+        description="Timestamp for when this document was last updated",
+        default_factory=datetime.utcnow,
+    )
+
+    created_at: datetime = Field(
+        description="Timestamp for when this document was first created",
+        default_factory=datetime.utcnow,
+    )
+
+    origins: List[PropertyOrigin] = Field(
+        None, description="Dictionary for tracking the provenance of properties"
+    )
+
+    warnings: List[str] = Field([], description="Any warnings related to this molecule")
+
+    @classmethod
+    def from_molecule(cls: Type[S], molecule: Molecule, molecule_id: MPID, **kwargs) -> S:  # type: ignore[override]
+        """
+        Builds a molecule document using the minimal amount of information
+        """
+
+        return super().from_molecule(  # type: ignore
+            meta_molecule=molecule, molecule_id=molecule_id, molecule=molecule, **kwargs
         )

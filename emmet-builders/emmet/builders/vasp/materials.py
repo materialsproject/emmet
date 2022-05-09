@@ -27,7 +27,7 @@ class MaterialsBuilder(Builder):
 
         1.) Find all documents with the same formula
         2.) Select only task documents for the task_types we can select properties from
-        3.) Aggregate task documents based on strucutre similarity
+        3.) Aggregate task documents based on structure similarity
         4.) Create a MaterialDoc from the group of task documents
         5.) Validate material document
 

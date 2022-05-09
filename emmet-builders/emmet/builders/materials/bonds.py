@@ -10,7 +10,10 @@ from emmet.core.utils import jsanitize
 
 class BondingBuilder(MapBuilder):
     def __init__(
-        self, oxidation_states: Store, bonding: Store, **kwargs,
+        self,
+        oxidation_states: Store,
+        bonding: Store,
+        **kwargs,
     ):
         """
         Creates Bonding documents from structures, ideally with

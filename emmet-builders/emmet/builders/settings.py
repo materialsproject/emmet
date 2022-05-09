@@ -7,7 +7,8 @@ from pydantic.fields import Field
 
 from emmet.core.provenance import Author, History
 from emmet.core.settings import EmmetSettings
-from emmet.core.vasp.calc_types import TaskType
+from emmet.core.vasp.calc_types import TaskType as VaspTastType
+from emmet.core.qchem.calc_types import TaskType as QChemTaskType
 from emmet.core.cp2k.calc_types import TaskType as Cp2kTaskType
 
 
@@ -35,14 +36,19 @@ class EmmetBuildSettings(EmmetSettings):
         description="Calculation codes to allow in the build pipeline"
     )
 
-    VASP_ALLOWED_TASK_TYPES: List[TaskType] = Field(
-        [t.value for t in TaskType],
+    VASP_ALLOWED_TASK_TYPES: List[VaspTaskType] = Field(
+        [t.value for t in VaspTaskType],
         description="Allowed task_types to build materials from",
+    )
+
+    QCHEM_ALLOWED_TASK_TYPES: List[QChemTaskType] = Field(
+        [t.value for t in QChemTaskType],
+        description="Allowed task_types to build molecules from",
     )
 
     CP2K_ALLOWED_TASK_TYPES: List[Cp2kTaskType] = Field(
         [t.value for t in Cp2kTaskType],
-        description="Allowed task_types to build materials from",
+        description="Allowed CP2K task_types to build materials from",
     )
 
     DEFAULT_REFERENCE: str = Field(
