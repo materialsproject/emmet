@@ -1,6 +1,16 @@
 import itertools
 from datetime import datetime
-from typing import Dict, Generator, Iterator, List, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 from maggma.core import Builder, Store
@@ -13,6 +23,7 @@ from pymatgen.core.tensors import TensorMapping
 from emmet.core.elasticity import ElasticityDoc
 from emmet.core.mpid import MPID
 from emmet.core.utils import jsanitize
+from emmet.core.vasp.calc_types import CalcType
 
 DEFORM_TASK_LABEL = "elastic deformation"
 OPTIM_TASK_LABEL = "elastic structure optimization"
@@ -36,11 +47,11 @@ class ElasticityBuilder(Builder):
 
         Args:
             tasks: Store of tasks
-            materials: Store of materials properties
-            elasticity: Store of elastic properties
-            query: Mongo-like query to limit tasks to be analyzed
-            fitting_method: method used to fit the elastic tensor, `finite_difference` |
-                `pseudoinverse` | `independent`.
+            materials: Store of materials
+            elasticity: Store of elasticity
+            query: Mongo-like query to limit the tasks to be analyzed
+            fitting_method: method to fit the elastic tensor: `finite_difference`,
+                `pseudoinverse` or `independent`.
         """
 
         self.tasks = tasks
@@ -60,15 +71,18 @@ class ElasticityBuilder(Builder):
         self.materials.ensure_index("material_id")
         self.materials.ensure_index("last_updated")
 
+        # TODO optimization_task_id?
         self.elasticity.ensure_index("optimization_task_id")
         self.elasticity.ensure_index("last_updated")
 
-    def get_items(self) -> Generator[List[Dict], None, None]:
+    def get_items(self) -> Generator[Tuple[str, List[str], List[Dict]], None, None]:
         """
         Gets all items to process into elastic docs.
 
         Returns:
-            generator of task docs belong to same material
+            material_id: material id for the tasks
+            calc_type: calculation type of the tasks
+            tasks: a list task docs belong to the same material
         """
 
         self.logger.info("Elastic Builder Started")
@@ -76,21 +90,22 @@ class ElasticityBuilder(Builder):
         self.ensure_index()
 
         cursor = self.materials.query(
-            criteria=self.query, properties=["material_id", "task_ids"]
+            criteria=self.query, properties=["material_id", "calc_type", "task_ids"]
         )
 
-        # TODO BETTER NOT QUERY USING task_label
         # query for tasks
         query = self.query.copy()
-        query["task_label"] = {"$regex": f"({DEFORM_TASK_LABEL})|({OPTIM_TASK_LABEL})"}
+        # query["task_label"] = {"$regex": f"({DEFORM_TASK_LABEL})|({OPTIM_TASK_LABEL})"}
 
         for n, doc in enumerate(cursor):
+
             material_id = doc["material_id"]
-            self.logger.debug(f"Getting material {n} with material_id {material_id}")
+            calc_type = doc["calc_type"]
+
+            self.logger.debug(f"Getting tasks {n} with material_id {material_id}")
 
             # update query with task_ids
-            task_ids = [int(i) for i in doc["task_ids"]]
-            query["task_id"] = {"$in": task_ids}
+            query["task_id"] = {"$in": [int(i) for i in doc["task_ids"]]}
 
             projections = [
                 "output",
@@ -98,7 +113,7 @@ class ElasticityBuilder(Builder):
                 "completed_at",
                 "transmuter",
                 "task_id",
-                "task_label",
+                # "task_label",
                 "formula_pretty",
                 "dir_name",
             ]
@@ -106,13 +121,9 @@ class ElasticityBuilder(Builder):
             task_cursor = self.tasks.query(criteria=query, properties=projections)
             tasks = list(task_cursor)
 
-            # TODO, should pass material_id to be used below by ElasticityDoc
-            #  Also, need to carefully test whether the material builder can group
-            #  necessary materials together
+            yield material_id, calc_type, tasks
 
-            yield tasks
-
-    def process_item(self, item: List[Dict]) -> List[Dict]:
+    def process_item(self, item: Tuple[str, List[str], List[Dict]]) -> Dict:
         """
         Process all tasks belong to the same material into elastic docs
 
@@ -126,71 +137,99 @@ class ElasticityBuilder(Builder):
           filtered by completion time)
 
         Args:
-            item: a list of tasks doc that belong to the same material
+            item:
+                material id:
+                calc_type:
+                tasks: list of task docs that belong to the same material
 
         Returns:
-            A list of elastic docs, each represented as a dict
+            elastic doc obtained from the list of task docs
         """
 
-        # group tasks having the same lattice
-        grouped = group_deform_tasks_by_opt_task(item, self.logger)
+        # TODO Since the material id is assigned as the `smallest` task id of a set
+        #  of tasks, the material id may not correspond to the selected optimization
+        #  task. What to do here? reassign material id?
+        material_id, calc_type, tasks = item
 
-        # TODO, this for loop is a bit suscipious: for the same material (i.e.
-        #  material with the same material_id) there would only be one elastic doc;
-        #  then why we end up with multiple?
-        #  Basically, this is a question about `group_deform_tasks_by_opt_task`,
-        #  which groups the reactions by lattices. Although these lattice values can be
-        #  different, they are the same material upon symmetry operation.
-        #  Check the atomate1 implementation to see whether there is misunderstanding.
-        #  NOTE, the grouping by lattice achieved above should be used as filter to
-        #  decide which set of
-
-        elastic_docs = []
-        for opt_tasks, deform_tasks in grouped:
-
-            # filter opt and deform tasks such that there is only one opt task and
-            # the deformation tasks are independent
-            opt_task = filter_opt_tasks_by_time(opt_tasks, self.logger)
-            deform_tasks = filter_deform_tasks_by_incar(opt_task, deform_tasks)
-            deform_tasks = filter_deform_tasks_by_time(
-                opt_task, deform_tasks, self.logger
+        if len(tasks) != len(calc_type):
+            self.logger.error(
+                f"Number of tasks ({len(tasks)}) is not equal to number of calculation "
+                f"types ({len(calc_type)}) for material with material id "
+                f"{material_id}. Cannot proceed."
             )
+            return None
 
-            structure = Structure.from_dict(opt_task["output"]["structure"])
+        opt_tasks = filter_opt_tasks(tasks, calc_type)
+        deform_tasks = filter_deform_tasks(tasks, calc_type)
 
-            deformations = []
-            stresses = []
-            deformation_task_ids = []
-            deformation_dir_names = []
-            for doc in deform_tasks:
-                deformations.append(
-                    Deformation(
-                        doc["transmuter"]["transformation_params"][0]["deformation"]
-                    )
-                )
-                # -0.1 to convert to GPa from kBar and s
-                stresses.append(-0.1 * Stress(doc["output"]["stress"]))
-                deformation_task_ids.append(doc["task_id"])
-                deformation_dir_names.append(doc["dir_name"])
+        opt_tasks = filter_incar_settings(opt_tasks)
+        deform_tasks = filter_incar_settings(deform_tasks)
 
-            doc = ElasticityDoc.from_deformations_and_stresses(
-                structure=structure,
-                material_id=MPID(1),  # TODO
-                deformations=deformations,
-                stresses=stresses,
-                deformation_task_ids=deformation_task_ids,
-                deformation_dir_names=deformation_dir_names,
-                equilibrium_stress=-0.1 * Stress(opt_task["output"]["stress"]),
-                optimization_task_id=opt_task["task_id"],
-                optimization_dir_name=opt_task["dir_name"],
-                fitting_method="finite_difference",
-            )
+        #
+        #
+        #
+        #
+        #
 
-            if doc:
-                doc = jsanitize(doc.dict(), allow_bson=True)
-                elastic_docs.append(doc)
-
-        return elastic_docs
+        # # group tasks having the same lattice
+        # grouped = group_deform_tasks_by_opt_task(tasks, self.logger)
+        #
+        # # TODO, this for loop is a bit suscipious: for the same material (i.e.
+        # #  material with the same material_id) there would only be one elastic doc;
+        # #  then why we end up with multiple?
+        # #  Basically, this is a question about `group_deform_tasks_by_opt_task`,
+        # #  which groups the reactions by lattices. Although these lattice values can be
+        # #  different, they are the same material upon symmetry operation.
+        # #  Check the atomate1 implementation to see whether there is misunderstanding.
+        # #  NOTE, the grouping by lattice achieved above should be used as filter to
+        # #  decide which set of
+        #
+        # elastic_docs = []
+        # for opt_tasks, deform_tasks in grouped:
+        #
+        #     # filter opt and deform tasks such that there is only one opt task and
+        #     # the deformation tasks are independent
+        #     opt_task = filter_opt_tasks_by_time(opt_tasks, self.logger)
+        #     deform_tasks = filter_deform_tasks_by_incar(opt_task, deform_tasks)
+        #     deform_tasks = filter_deform_tasks_by_time(
+        #         opt_task, deform_tasks, self.logger
+        #     )
+        #
+        #     structure = Structure.from_dict(opt_task["output"]["structure"])
+        #
+        #     deformations = []
+        #     stresses = []
+        #     deformation_task_ids = []
+        #     deformation_dir_names = []
+        #     for doc in deform_tasks:
+        #         deformations.append(
+        #             Deformation(
+        #                 doc["transmuter"]["transformation_params"][0]["deformation"]
+        #             )
+        #         )
+        #         # -0.1 to convert to GPa from kBar and s
+        #         stresses.append(-0.1 * Stress(doc["output"]["stress"]))
+        #         deformation_task_ids.append(doc["task_id"])
+        #         deformation_dir_names.append(doc["dir_name"])
+        #
+        #     doc = ElasticityDoc.from_deformations_and_stresses(
+        #         structure=structure,
+        #         material_id=MPID(np.random.randint(1, 10000)),  # TODO
+        #         deformations=deformations,
+        #         stresses=stresses,
+        #         deformation_task_ids=deformation_task_ids,
+        #         deformation_dir_names=deformation_dir_names,
+        #         equilibrium_stress=-0.1 * Stress(opt_task["output"]["stress"]),
+        #         optimization_task_id=opt_task["task_id"],
+        #         optimization_dir_name=opt_task["dir_name"],
+        #         fitting_method="finite_difference",
+        #     )
+        #
+        #     if doc:
+        #         doc = jsanitize(doc.dict(), allow_bson=True)
+        #         elastic_docs.append(doc)
+        #
+        # return elastic_docs
 
     def update_targets(self, items: List[List[Dict]]):
         """
@@ -204,6 +243,81 @@ class ElasticityBuilder(Builder):
         self.logger.info(f"Updating {len(items_flatten)} elastic documents")
 
         self.elasticity.update(items_flatten, key="material_id")
+
+
+def filter_opt_tasks(
+    tasks: List[Dict],
+    calc_type: List[str],
+    target_calc_type: str = CalcType.GGA_Structure_Optimization,
+) -> List[Dict]:
+    """
+    Filter out optimization tasks, by
+        - calculation type
+    """
+    opt_tasks = [t for t, c in zip(tasks, calc_type) if c == target_calc_type]
+
+    # TODO additional check? e.g. max force, stress ...
+
+    return opt_tasks
+
+
+def filter_deform_tasks(
+    tasks: List[Dict],
+    calc_type: List[str],
+    target_calc_type: str = CalcType.GGA_Deformation,
+) -> List[Dict]:
+    """
+    Filter out deformation tasks, by
+        -  calculation type
+        - number of deformations (transformations)
+    """
+    deform_tasks = []
+    for t, c in zip(tasks, calc_type):
+        transforms = t["transmuter"]["transformation_params"]
+        if c == target_calc_type and len(transforms) == 1:
+            deform_tasks.append(t)
+
+    return deform_tasks
+
+
+def filter_incar_settings(
+    tasks: List[Dict], incar_settings: Dict[str, Any] = None
+) -> List[Dict]:
+    """
+    Filter the tasks by incar parameters.
+    """
+    # TODO do we want to check kpoint schema?
+
+    if incar_settings is None:
+        incar_settings = {
+            "LREAL": False,
+            "ENCUT": 700,
+            "PREC": "Accurate",
+            "EDIFF": 1e-6,
+        }
+
+    selected = []
+    for t in tasks:
+        incar = t["orig_input"]["incar"]
+        ok = True
+        for k, v in incar_settings.items():
+            if k not in incar:
+                ok = False
+                break
+
+            if isinstance(incar[k], str):
+                if incar[k].lower() != v.lower():
+                    ok = False
+                    break
+            else:
+                if incar[k].lower() != v.lower():
+                    ok = False
+                    break
+
+        if ok:
+            selected.append(t)
+
+    return selected
 
 
 def filter_opt_tasks_by_time(opt_tasks: List[Dict], logger) -> Dict:
