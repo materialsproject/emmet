@@ -28,9 +28,6 @@ from emmet.core.vasp.calc_types import CalcType
 DEFORM_TASK_LABEL = "elastic deformation"
 OPTIM_TASK_LABEL = "elastic structure optimization"
 
-DEFORM_COMP_TOL = 1e-5
-LATTICE_COMP_TOL = 1e-5
-
 
 class ElasticityBuilder(Builder):
     def __init__(
@@ -123,7 +120,7 @@ class ElasticityBuilder(Builder):
 
             yield material_id, calc_type, tasks
 
-    def process_item(self, item: Tuple[str, List[str], List[Dict]]) -> Dict:
+    def process_item(self, item: Tuple[MPID, List[str], List[Dict]]) -> Dict:
         """
         Process all tasks belong to the same material into elastic docs
 
@@ -143,7 +140,7 @@ class ElasticityBuilder(Builder):
                 tasks: list of task docs that belong to the same material
 
         Returns:
-            elastic doc obtained from the list of task docs
+            Elastic doc obtained from the list of task docs.
         """
 
         # TODO Since the material id is assigned as the `smallest` task id of a set
@@ -159,90 +156,76 @@ class ElasticityBuilder(Builder):
             )
             return None
 
+        # filter by calc type
         opt_tasks = filter_opt_tasks(tasks, calc_type)
         deform_tasks = filter_deform_tasks(tasks, calc_type)
 
-        opt_tasks = filter_incar_settings(opt_tasks)
-        deform_tasks = filter_incar_settings(deform_tasks)
+        # filter by incar
+        opt_tasks = filter_by_incar_settings(opt_tasks)
+        deform_tasks = filter_by_incar_settings(deform_tasks)
 
-        #
-        #
-        #
-        #
-        #
+        # select one task for each set of optimization tasks with the same lattice
+        opt_grouped = group_by_parent_lattice(opt_tasks, mode="opt")
+        opt_grouped = [
+            (lattice, filter_opt_tasks_by_time(tasks, self.logger))
+            for lattice, tasks in opt_grouped
+        ]
 
-        # # group tasks having the same lattice
-        # grouped = group_deform_tasks_by_opt_task(tasks, self.logger)
-        #
-        # # TODO, this for loop is a bit suscipious: for the same material (i.e.
-        # #  material with the same material_id) there would only be one elastic doc;
-        # #  then why we end up with multiple?
-        # #  Basically, this is a question about `group_deform_tasks_by_opt_task`,
-        # #  which groups the reactions by lattices. Although these lattice values can be
-        # #  different, they are the same material upon symmetry operation.
-        # #  Check the atomate1 implementation to see whether there is misunderstanding.
-        # #  NOTE, the grouping by lattice achieved above should be used as filter to
-        # #  decide which set of
-        #
-        # elastic_docs = []
-        # for opt_tasks, deform_tasks in grouped:
-        #
-        #     # filter opt and deform tasks such that there is only one opt task and
-        #     # the deformation tasks are independent
-        #     opt_task = filter_opt_tasks_by_time(opt_tasks, self.logger)
-        #     deform_tasks = filter_deform_tasks_by_incar(opt_task, deform_tasks)
-        #     deform_tasks = filter_deform_tasks_by_time(
-        #         opt_task, deform_tasks, self.logger
-        #     )
-        #
-        #     structure = Structure.from_dict(opt_task["output"]["structure"])
-        #
-        #     deformations = []
-        #     stresses = []
-        #     deformation_task_ids = []
-        #     deformation_dir_names = []
-        #     for doc in deform_tasks:
-        #         deformations.append(
-        #             Deformation(
-        #                 doc["transmuter"]["transformation_params"][0]["deformation"]
-        #             )
-        #         )
-        #         # -0.1 to convert to GPa from kBar and s
-        #         stresses.append(-0.1 * Stress(doc["output"]["stress"]))
-        #         deformation_task_ids.append(doc["task_id"])
-        #         deformation_dir_names.append(doc["dir_name"])
-        #
-        #     doc = ElasticityDoc.from_deformations_and_stresses(
-        #         structure=structure,
-        #         material_id=MPID(np.random.randint(1, 10000)),  # TODO
-        #         deformations=deformations,
-        #         stresses=stresses,
-        #         deformation_task_ids=deformation_task_ids,
-        #         deformation_dir_names=deformation_dir_names,
-        #         equilibrium_stress=-0.1 * Stress(opt_task["output"]["stress"]),
-        #         optimization_task_id=opt_task["task_id"],
-        #         optimization_dir_name=opt_task["dir_name"],
-        #         fitting_method="finite_difference",
-        #     )
-        #
-        #     if doc:
-        #         doc = jsanitize(doc.dict(), allow_bson=True)
-        #         elastic_docs.append(doc)
-        #
-        # return elastic_docs
+        # for deformed tasks with the same lattice, select one if there are multiple
+        # tasks with the same deformation
+        deform_grouped = group_by_parent_lattice(deform_tasks, mode="deform")
+        deform_grouped = [
+            (lattice, filter_deform_tasks_by_time(tasks))
+            for lattice, tasks in deform_grouped
+        ]
 
-    def update_targets(self, items: List[List[Dict]]):
+        # select the opt and deform tasks for fitting
+        final_opt, final_deform = select_final_opt_deform_tasks(
+            opt_grouped, deform_grouped, self.logger
+        )
+
+        # convert to elasticity doc
+        deforms = []
+        stresses = []
+        deform_task_ids = []
+        deform_dir_names = []
+        for doc in final_deform:
+            deforms.append(
+                Deformation(
+                    doc["transmuter"]["transformation_params"][0]["deformation"]
+                )
+            )
+            # -0.1 to convert to GPa from kBar and s
+            stresses.append(-0.1 * Stress(doc["output"]["stress"]))
+            deform_task_ids.append(doc["task_id"])
+            deform_dir_names.append(doc["dir_name"])
+
+        doc = ElasticityDoc.from_deformations_and_stresses(
+            structure=Structure.from_dict(final_opt["output"]["structure"]),
+            material_id=material_id,
+            deformations=deforms,
+            stresses=stresses,
+            deformation_task_ids=deform_task_ids,
+            deformation_dir_names=deform_dir_names,
+            equilibrium_stress=-0.1 * Stress(final_opt["output"]["stress"]),
+            optimization_task_id=final_opt["task_id"],
+            optimization_dir_name=final_opt["dir_name"],
+            fitting_method="finite_difference",
+        )
+        doc = jsanitize(doc.dict(), allow_bson=True)
+
+        return doc
+
+    def update_targets(self, items: List[Dict]):
         """
         Insert the new elastic docs into the elasticity collection.
 
         Args:
             items: elastic docs
         """
-        items_flatten = list(itertools.chain.from_iterable(items))
+        self.logger.info(f"Updating {len(items)} elastic documents")
 
-        self.logger.info(f"Updating {len(items_flatten)} elastic documents")
-
-        self.elasticity.update(items_flatten, key="material_id")
+        self.elasticity.update(items, key="material_id")
 
 
 def filter_opt_tasks(
@@ -280,7 +263,7 @@ def filter_deform_tasks(
     return deform_tasks
 
 
-def filter_incar_settings(
+def filter_by_incar_settings(
     tasks: List[Dict], incar_settings: Dict[str, Any] = None
 ) -> List[Dict]:
     """
@@ -309,8 +292,14 @@ def filter_incar_settings(
                 if incar[k].lower() != v.lower():
                     ok = False
                     break
+
+            elif isinstance(incar[k], float):
+                if not np.allclose(incar[k], v, atol=1e-10):
+                    ok = False
+                    break
+
             else:
-                if incar[k].lower() != v.lower():
+                if incar[k] != v:
                     ok = False
                     break
 
@@ -320,38 +309,137 @@ def filter_incar_settings(
     return selected
 
 
-def filter_opt_tasks_by_time(opt_tasks: List[Dict], logger) -> Dict:
+def filter_opt_tasks_by_time(tasks: List[Dict], logger) -> Dict:
     """
-    If there are more than one optimization tasks with the same lattice, select the
-    latest completed one.
+    Filter a set of tasks to select the latest completed one.
 
     Args:
-        opt_tasks: the optimization tasks
+        tasks: the set of tasks to filer
         logger:
 
     Returns:
-        latest optimization task
+        selected latest task
     """
-
-    if len(opt_tasks) > 1:
-
-        # TODO what's the difference of `completed_at` and `last_updated` for a
-        #  task? Use which one?
-        completed = [(datetime.fromisoformat(t["completed_at"]), t) for t in opt_tasks]
+    if len(tasks) == 0:
+        raise RuntimeError("Cannot select latest from 0 tasks")
+    elif len(tasks) == 1:
+        return tasks[0]
+    else:
+        completed = [(datetime.fromisoformat(t["completed_at"]), t) for t in tasks]
         sorted_by_completed = sorted(completed, key=lambda pair: pair[0])
         latest_pair = sorted_by_completed[-1]
-        result = latest_pair[1]
+        selected = latest_pair[1]
 
-        task_ids = [t["task_id"] for t in opt_tasks]
+        task_ids = [t["task_id"] for t in tasks]
         logger.warning(
-            f"{len(opt_tasks)} optimization tasks {task_ids} have the same "
-            f"lattice; the latest one {result['task_id']} selected."
+            f"Select the latest task {selected['task_id']} completed at "
+            f"{selected['completed_at']} from a set of tasks: {task_ids}."
         )
 
-    else:
-        result = opt_tasks[0]
+        return selected
 
-    return result
+
+def filter_deform_tasks_by_time(
+    tasks: List[Dict], deform_comp_tol: float = 1e-5
+) -> List[Dict]:
+    """
+    For deformation tasks with the same deformation, select the latest completed one.
+
+    Args:
+        tasks: the deformation tasks
+        deform_comp_tol: tolerance for comparing deformation equivalence
+
+    Returns:
+        filtered deformation tasks
+    """
+
+    mapping = TensorMapping(tol=deform_comp_tol)
+
+    for doc in tasks:
+
+        # assume only one deformation, should be checked in `filter_deform_tasks()`
+        deform = doc["transmuter"]["transformation_params"][0]["deformation"]
+
+        # if not np.allclose(deform, stored_deform, atol=DEFORM_COMP_TOL):
+        #     opt_task_id = opt_task["task_id"]
+        #     deform_task_id = doc["task_id"]
+        #     logger.debug(
+        #         "Non-equivalent calculated and stored deformations for optimization "
+        #         f"task {opt_task_id} and deformation task {deform_task_id}."
+        #     )
+
+        if deform in mapping:
+            current = datetime.fromisoformat(doc["completed_at"])
+            exist = datetime.fromisoformat(mapping[deform]["completed_at"])
+            # TODO check the type of completed_at, do we need to convert to datetime
+            if current > exist:
+                mapping[deform] = doc
+        else:
+            mapping[deform] = doc
+
+    selected = list(mapping.values())
+
+    return selected
+
+
+def select_final_opt_deform_tasks(
+    opt_tasks: List[Tuple[np.ndaray, Dict]],
+    deform_tasks: List[Tuple[np.ndaray, List[Dict]]],
+    logger,
+    lattice_comp_tol: float = 1e-5,
+) -> Tuple[Dict, List[Dict]]:
+    """
+    Select the final opt and deform tasks.
+
+    This is achieved by selecting the opt--deform pairs with the same lattice,
+    and also with the most number of deform tasks.
+
+    Args:
+        opt_tasks:
+        deform_tasks:
+        lattice_comp_tol:
+
+    Returns:
+        final_opt_task:
+        final_deform_tasks:
+    """
+
+    # group by lattice
+    mapping = TensorMapping(tol=lattice_comp_tol)
+    for lat, t in opt_tasks:
+        mapping[lat] = {"opt_task": t}
+
+    for lat, t in deform_tasks:
+        if lat in mapping:
+            mapping[lat]["deform_tasks"] = t
+        else:
+            mapping[lat] = {"deform_tasks": t}
+
+    # select the opt deform paris with the most number of deform tasks
+    selected = None
+    num_deform_tasks = -1
+    for lat, tasks in mapping.items():
+        if "deform_tasks" not in tasks:
+            logger.debug(
+                f"No deformation tasks found for optimization task "
+                f"{tasks['opt_task']['task_id']}"
+            )
+        elif "opt_task" not in tasks:
+            pass
+        else:
+            n = len(tasks["deform_tasks"])
+            if n > num_deform_tasks:
+                selected = (tasks["opt_task"], tasks["deform_tasks"])
+                num_deform_tasks = n
+
+    if selected is None:
+        raise RuntimeError(
+            "Cannot find optimization and deformation tasks that match by lattice."
+        )
+    else:
+        final_opt_task, final_deform_tasks = selected
+
+    return final_opt_task, final_deform_tasks
 
 
 def filter_deform_tasks_by_incar(
@@ -381,52 +469,6 @@ def filter_deform_tasks_by_incar(
             selected.append(task)
 
     return selected
-
-
-def filter_deform_tasks_by_time(
-    opt_task: Dict, deform_tasks: List[Dict], logger
-) -> List[Dict]:
-    """
-    For deformation tasks with the same deformation, select the latest completed one.
-
-    Args:
-        opt_task: optimization task
-        deform_tasks: the deformation tasks
-        logger:
-
-    Returns:
-        filtered deformation tasks
-    """
-
-    structure = Structure.from_dict(opt_task["output"]["structure"])
-
-    d2t = TensorMapping(tol=DEFORM_COMP_TOL)
-
-    for doc in deform_tasks:
-        deformed_structure = Structure.from_dict(doc["output"]["structure"])
-        deform = Deformation(get_deformation(structure, deformed_structure))
-
-        # assume only one deformation, should already be checked in
-        # `group_by_parent_lattice()`
-        stored_deform = doc["transmuter"]["transformation_params"][0]["deformation"]
-
-        if not np.allclose(deform, stored_deform, atol=DEFORM_COMP_TOL):
-            opt_task_id = opt_task["task_id"]
-            deform_task_id = doc["task_id"]
-            logger.debug(
-                "Non-equivalent calculated and stored deformations for optimization "
-                f"task {opt_task_id} and deformation task {deform_task_id}."
-            )
-
-        if deform in d2t:
-            current = datetime.fromisoformat(doc["completed_at"])
-            exist = datetime.fromisoformat(d2t[deform]["completed_at"])
-            if current > exist:
-                d2t[deform] = doc
-        else:
-            d2t[deform] = doc
-
-    return list(d2t.values())
 
 
 def group_deform_tasks_by_opt_task(
@@ -470,40 +512,41 @@ def group_deform_tasks_by_opt_task(
 
 
 def group_by_parent_lattice(
-    docs: Union[Iterator[Dict], List[Dict]], logger
+    tasks: List[Dict], mode: str, lattice_comp_tol: float = 1e-5
 ) -> List[Tuple[np.ndarray, List[Dict]]]:
     """
-    Groups a set of task documents by parent lattice equivalence.
+    Groups a set of task docs by parent lattice equivalence.
 
     Args:
-        docs: task docs
-        logger:
+        tasks: task docs
+        mode: determines which lattice to use. If `opt`, use the lattice of the
+            output structure, and this is intended for optimization tasks. If
+            `deform`, use the lattice of the output structure and transform it by the
+            deformation in transmuter, and this is intended for deformation tasks.
+        lattice_comp_tol: tolerance for comparing lattice equivalence.
 
     Returns:
-        [(lattice, List[tasks])], tuple of lattice and a list of tasks with the same
-        lattice before deformation
+        [(lattice, List[tasks])]. Each tuple gives the lattice and a list of tasks
+            with the same lattice before deformation.
     """
 
     docs_by_lattice: List[Tuple[np.ndarray, List[Dict]]] = []
-    for doc in docs:
 
+    for doc in tasks:
         sim_lattice = get(doc, "output.structure.lattice.matrix")
 
-        if DEFORM_TASK_LABEL in doc["task_label"]:
+        if mode == "deform":
             transform_params = doc["transmuter"]["transformation_params"]
-            if len(transform_params) != 1:
-                logger.warning(
-                    f"Expect only one transformations; got {len(transform_params)} "
-                    f"for task {doc['task_id']}."
-                )
             deform = transform_params[0]["deformation"]
             parent_lattice = np.dot(sim_lattice, np.transpose(np.linalg.inv(deform)))
-        else:
+        elif mode == "opt":
             parent_lattice = np.array(sim_lattice)
+        else:
+            raise ValueError(f"Unsupported mode {mode}")
 
         match = False
         for unique_lattice, lattice_docs in docs_by_lattice:
-            match = np.allclose(unique_lattice, parent_lattice, atol=LATTICE_COMP_TOL)
+            match = np.allclose(unique_lattice, parent_lattice, atol=lattice_comp_tol)
             if match:
                 lattice_docs.append(doc)
                 break
@@ -513,15 +556,16 @@ def group_by_parent_lattice(
     return docs_by_lattice
 
 
-def get_deformation(structure, deformed_structure) -> np.ndarray:
-    """
-    Args:
-        structure (Structure): undeformed structure
-        deformed_structure (Structure): deformed structure
-
-    Returns:
-        deformation matrix
-    """
-    ulatt = structure.lattice.matrix
-    dlatt = deformed_structure.lattice.matrix
-    return np.transpose(np.dot(np.linalg.inv(ulatt), dlatt))
+#
+# def get_deformation(structure, deformed_structure) -> np.ndarray:
+#     """
+#     Args:
+#         structure (Structure): undeformed structure
+#         deformed_structure (Structure): deformed structure
+#
+#     Returns:
+#         deformation matrix
+#     """
+#     ulatt = structure.lattice.matrix
+#     dlatt = deformed_structure.lattice.matrix
+#     return np.transpose(np.dot(np.linalg.inv(ulatt), dlatt))
