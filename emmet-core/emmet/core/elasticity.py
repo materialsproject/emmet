@@ -15,9 +15,6 @@ from emmet.core.math import Matrix3D, MatrixVoigt
 from emmet.core.mpid import MPID
 from emmet.core.settings import EmmetSettings
 
-STRAIN_COMP_TOL = 0.002
-
-
 SETTINGS = EmmetSettings()
 
 
@@ -25,12 +22,12 @@ class ElasticTensorDoc(BaseModel):
     raw: MatrixVoigt = Field(
         None,
         description="Elastic tensor corresponding to POSCAR (conventional standard "
-        "cell) orientation, unsymmetrized. (in GPa)",
+        "cell) orientation, unsymmetrized. (GPa)",
     )
     ieee_format: MatrixVoigt = Field(
         None,
         description="Elastic tensor corresponding to IEEE orientation, symmetrized to "
-        "crystal structure. (in GPa)",
+        "crystal structure. (GPa)",
     )
 
 
@@ -38,24 +35,24 @@ class ComplianceTensorDoc(BaseModel):
     raw: MatrixVoigt = Field(
         None,
         description="Compliance tensor corresponding to POSCAR (conventional standard "
-        "cell). (in TPa^-1)",
+        "cell). (TPa^-1)",
     )
     ieee_format: MatrixVoigt = Field(
         None,
-        description="Compliance tensor corresponding to IEEE orientation (in TPa^-1)",
+        description="Compliance tensor corresponding to IEEE orientation (TPa^-1)",
     )
 
 
 class BulkModulus(BaseModel):
-    voigt: float = Field(None, description="Bulk modulus Voigt average")
-    reuss: float = Field(None, description="Bulk modulus Reuss average")
-    vrh: float = Field(None, description="Bulk modulus Voigt-Reuss-Hill average")
+    voigt: float = Field(None, description="Bulk modulus Voigt average (GPa)")
+    reuss: float = Field(None, description="Bulk modulus Reuss average (Gpa)")
+    vrh: float = Field(None, description="Bulk modulus Voigt-Reuss-Hill average (GPa)")
 
 
 class ShearModulus(BaseModel):
-    voigt: float = Field(None, description="Shear modulus Voigt average")
-    reuss: float = Field(None, description="Shear modulus Reuss average")
-    vrh: float = Field(None, description="Shear modulus Voigt-Reuss-Hill average")
+    voigt: float = Field(None, description="Shear modulus Voigt average (GPa)")
+    reuss: float = Field(None, description="Shear modulus Reuss average (GPa)")
+    vrh: float = Field(None, description="Shear modulus Voigt-Reuss-Hill average (GPa)")
 
 
 class SoundVelocity(BaseModel):
@@ -126,6 +123,22 @@ class FittingData(BaseModel):
     )
 
 
+class Critical(BaseModel):
+    N_STRAINS = (
+        "Critical: insufficient number of valid strains. Expect the matrix of all "
+        "strains to be of rank 6, but got rank {}."
+    )
+    NEGATIVE_MODULUS = "Critical: Negative modulus. {} {} is {}."
+
+
+class Warnings(BaseModel):
+    LARGE_COMPONENT = "Elastic tensor has component larger than {}"
+    NEGATIVE_EIGVAL = "Elastic tensor has negative eigenvalue"
+    SMALL_MODULUS = "Small modulus. {} {} is {}; smaller than {}."
+    LARGE_MODULUS = "Large modulus. {} {} is {}; larger than {}."
+    LARGE_YOUNG_MODULUS = "Large Young's modulus {}; larger than {}."
+
+
 class ElasticityDoc(PropertyDoc):
     """
     Elasticity doc.
@@ -150,7 +163,7 @@ class ElasticityDoc(PropertyDoc):
     thermal_conductivity: ThermalConductivity = Field(
         None, description="Thermal conductivity"
     )
-    young_modulus: float = Field(None, description="Young's modulus")
+    young_modulus: float = Field(None, description="Young's modulus (GPa)")
     universal_anisotropy: float = Field(
         None, description="Universal elastic anisotropy"
     )
@@ -532,10 +545,7 @@ def sanity_check(
     rank = np.linalg.matrix_rank(voigt_strains)
     if rank != 6:
         failed = True
-        warnings.append(
-            f"Critical: insufficient number of valid strains. Expect the matrix of all "
-            f"strains to be of 6, but got {rank}."
-        )
+        warnings.append(Critical().N_STRAINS.format(rank))
 
     # if any([s.is_rare_earth_metal for s in structure.species]):
     #     warnings.append("Structure contains a rare earth element")
@@ -543,12 +553,13 @@ def sanity_check(
     # elastic tensor component, eigenvalues...
     et = np.asarray(elastic_doc.ieee_format)
 
-    if np.any(et > 1e6):
-        warnings.append("Elastic tensor has component larger than 1e6")
+    tol = 1e6
+    if np.any(et > tol):
+        warnings.append(Warnings().LARGE_COMPONENT.format(tol))
 
     eig_vals, _ = np.linalg.eig(et)
     if np.any(eig_vals < 0.0):
-        warnings.append("Elastic tensor has negative eigenvalue")
+        warnings.append(Warnings().NEGATIVE_EIGVAL)
 
     # TODO: these should be revisited. Are they complete, or only apply to materials
     #  with certain symmetry?
@@ -562,17 +573,26 @@ def sanity_check(
         warnings.append("c11 and c23 are within 5% or c23 is greater than c11")
 
     # modulus
-    for mod in ["bulk_modulus", "shear_modulus"]:
-        doc = derived_props[mod]
+    low = 2
+    high = 1000
+    for p in ["bulk_modulus", "shear_modulus"]:
+        doc = derived_props[p]
         doc = doc.dict()
+        p = p.replace("_", " ")
         for name in ["voigt", "reuss", "vrh"]:
-            if doc[name] < 0:
+            v = doc[name]
+            if v < 0:
                 failed = True
-                warnings.append(f"Critical: negative {name} {mod}")
-            elif doc[name] < 2:
-                warnings.append(f"{name} {mod} below 2 GPa.")
-            elif doc[name] > 1000:
-                warnings.append(f"{name} {mod} above 1000 GPa.")
+                warnings.append(Critical().NEGATIVE_MODULUS.format(name, p, v))
+            elif v < low:
+                warnings.append(Warnings().SMALL_MODULUS.format(name, p, v, low))
+            elif v > high:
+                warnings.append(Warnings().LARGE_MODULUS.format(name, p, v, high))
+
+    # young's modulus
+    high = 1000
+    if derived_props["young_modulus"] > high:
+        warnings.append(Warnings().LARGE_YOUNG_MODULUS.format(v, high))
 
     if failed:
         state = Status("failed")
