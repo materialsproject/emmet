@@ -1,15 +1,5 @@
 from datetime import datetime
-from typing import (
-    Any,
-    Dict,
-    Generator,
-    Iterator,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
 import numpy as np
 from maggma.core import Builder, Store
@@ -23,9 +13,6 @@ from emmet.core.elasticity import ElasticityDoc
 from emmet.core.mpid import MPID
 from emmet.core.utils import jsanitize
 from emmet.core.vasp.calc_types import CalcType
-
-DEFORM_TASK_LABEL = "elastic deformation"
-OPTIM_TASK_LABEL = "elastic structure optimization"
 
 
 class ElasticityBuilder(Builder):
@@ -110,7 +97,6 @@ class ElasticityBuilder(Builder):
                 "completed_at",
                 "transmuter",
                 "task_id",
-                # "formula_pretty",
                 "dir_name",
             ]
 
@@ -356,18 +342,9 @@ def filter_deform_tasks_by_time(
         # assume only one deformation, should be checked in `filter_deform_tasks()`
         deform = doc["transmuter"]["transformation_params"][0]["deformation"]
 
-        # if not np.allclose(deform, stored_deform, atol=DEFORM_COMP_TOL):
-        #     opt_task_id = opt_task["task_id"]
-        #     deform_task_id = doc["task_id"]
-        #     logger.debug(
-        #         "Non-equivalent calculated and stored deformations for optimization "
-        #         f"task {opt_task_id} and deformation task {deform_task_id}."
-        #     )
-
         if deform in mapping:
             current = datetime.fromisoformat(doc["completed_at"])
             exist = datetime.fromisoformat(mapping[deform]["completed_at"])
-            # TODO check the type of completed_at, do we need to convert to datetime
             if current > exist:
                 mapping[deform] = doc
         else:
@@ -445,75 +422,6 @@ def select_final_opt_deform_tasks(
     return final_opt_task, final_deform_tasks
 
 
-def filter_deform_tasks_by_incar(
-    opt_task: Dict,
-    deform_tasks: List[Dict],
-    fields: Sequence[str] = ("LREAL", "ENCUT"),
-) -> List[Dict]:
-    """
-    Filter deformation tasks by matching INCAR fields to those of the optimization
-    tasks.
-
-    Args:
-        opt_task: optimization task
-        deform_tasks: deformation tasks
-        fields: the INCAR fields to match
-
-    Returns:
-        selected deformation tasks
-    """
-    # TODO what is the difference of `input` and `orig_inputs` for a task? which to use?
-    opt_incar_values = {k: opt_task["orig_inputs"]["incar"][k] for k in fields}
-
-    selected = []
-    for task in deform_tasks:
-        incar_values = {k: task["input"]["incar"][k] for k in fields}
-        if incar_values == opt_incar_values:
-            selected.append(task)
-
-    return selected
-
-
-def group_deform_tasks_by_opt_task(
-    docs: Union[Iterator[Dict], List[Dict]], logger
-) -> List[Tuple[List[Dict], List[Dict]]]:
-    """
-    Group deformation tasks by equivalent lattices to optimization task(s).
-
-    Because of repeated calculations, multiple optimization tasks may be grouped
-    together.
-
-    Basically the same as group_by_parent_lattice(), except two additional steps:
-        - find the optimization and using that as the grouping parameter
-        - filter docs that don't include an optimization and deformations
-
-    Args:
-        docs: task docs
-        logger:
-
-    Returns:
-        [([optimization_task], [deformation_task])]
-    """
-
-    tasks_by_lattice = group_by_parent_lattice(docs, logger)
-
-    tasks_by_opt_task = []
-    for _, task_set in tasks_by_lattice:
-        opt_tasks = [t for t in task_set if OPTIM_TASK_LABEL in t["task_label"]]
-        deform_tasks = [t for t in task_set if DEFORM_TASK_LABEL in t["task_label"]]
-
-        if opt_tasks and deform_tasks:
-            tasks_by_opt_task.append((opt_tasks, deform_tasks))
-        else:
-            task_ids = [t["task_id"] for t in task_set]
-            if not opt_tasks:
-                logger.debug(f"No structure optimization task among tasks {task_ids}")
-            else:
-                logger.debug(f"No deformation tasks among tasks {task_ids}")
-
-    return tasks_by_opt_task
-
-
 def group_by_parent_lattice(
     tasks: List[Dict], mode: str, lattice_comp_tol: float = 1e-5
 ) -> List[Tuple[np.ndarray, List[Dict]]]:
@@ -557,18 +465,3 @@ def group_by_parent_lattice(
             docs_by_lattice.append((parent_lattice, [doc]))
 
     return docs_by_lattice
-
-
-#
-# def get_deformation(structure, deformed_structure) -> np.ndarray:
-#     """
-#     Args:
-#         structure (Structure): undeformed structure
-#         deformed_structure (Structure): deformed structure
-#
-#     Returns:
-#         deformation matrix
-#     """
-#     ulatt = structure.lattice.matrix
-#     dlatt = deformed_structure.lattice.matrix
-#     return np.transpose(np.dot(np.linalg.inv(ulatt), dlatt))
