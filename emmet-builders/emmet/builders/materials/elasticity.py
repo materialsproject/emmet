@@ -1,4 +1,3 @@
-import itertools
 from datetime import datetime
 from typing import (
     Any,
@@ -72,14 +71,16 @@ class ElasticityBuilder(Builder):
         self.elasticity.ensure_index("optimization_task_id")
         self.elasticity.ensure_index("last_updated")
 
-    def get_items(self) -> Generator[Tuple[str, List[str], List[Dict]], None, None]:
+    def get_items(
+        self,
+    ) -> Generator[Tuple[str, Dict[str, str], List[Dict]], None, None]:
         """
         Gets all items to process into elastic docs.
 
         Returns:
             material_id: material id for the tasks
-            calc_type: calculation type of the tasks
-            tasks: a list task docs belong to the same material
+            calc_types: calculation type of the tasks
+            tasks: task docs belong to the same material
         """
 
         self.logger.info("Elastic Builder Started")
@@ -87,17 +88,16 @@ class ElasticityBuilder(Builder):
         self.ensure_index()
 
         cursor = self.materials.query(
-            criteria=self.query, properties=["material_id", "calc_type", "task_ids"]
+            criteria=self.query, properties=["material_id", "calc_types", "task_ids"]
         )
 
         # query for tasks
         query = self.query.copy()
-        # query["task_label"] = {"$regex": f"({DEFORM_TASK_LABEL})|({OPTIM_TASK_LABEL})"}
 
         for n, doc in enumerate(cursor):
 
             material_id = doc["material_id"]
-            calc_type = doc["calc_type"]
+            calc_types = {str(k): v for k, v in doc["calc_types"].items()}
 
             self.logger.debug(f"Getting tasks {n} with material_id {material_id}")
 
@@ -106,59 +106,52 @@ class ElasticityBuilder(Builder):
 
             projections = [
                 "output",
-                "input",
+                "orig_inputs",
                 "completed_at",
                 "transmuter",
                 "task_id",
-                # "task_label",
-                "formula_pretty",
+                # "formula_pretty",
                 "dir_name",
             ]
 
             task_cursor = self.tasks.query(criteria=query, properties=projections)
             tasks = list(task_cursor)
 
-            yield material_id, calc_type, tasks
+            yield material_id, calc_types, tasks
 
-    def process_item(self, item: Tuple[MPID, List[str], List[Dict]]) -> Dict:
+    def process_item(
+        self, item: Tuple[MPID, Dict[str, str], List[Dict]]
+    ) -> Union[Dict, None]:
         """
-        Process all tasks belong to the same material into elastic docs
-
-        There can be multiple optimization tasks for the same material due to, e.g.
-        later fixes of earlier calculations. The optimization task with later completed
-        time is selected. As a result, there can be multiple deformation tasks
-        corresponding to the same deformation, and the deformation tasks are filtered:
-        - VASP INCAR params (ensure key INCAR params of optimization tasks are the
-          same as the optimization task)
-        - task completion time (if INCAR params cannot distinguish them, they are
-          filtered by completion time)
+        Process all tasks belong to the same material into elastic doc.
 
         Args:
             item:
-                material id:
-                calc_type:
-                tasks: list of task docs that belong to the same material
+                material_id: material id for the tasks
+                calc_types: {task_id: task_type} calculation type of the tasks
+                tasks: task docs belong to the same material
 
         Returns:
-            Elastic doc obtained from the list of task docs.
+            Elastic doc obtained from the list of task docs. `None` if not tasks
+            satisfying the needs can be found.
         """
 
         # TODO Since the material id is assigned as the `smallest` task id of a set
         #  of tasks, the material id may not correspond to the selected optimization
         #  task. What to do here? reassign material id?
-        material_id, calc_type, tasks = item
+        material_id, calc_types, tasks = item
 
-        if len(tasks) != len(calc_type):
+        if len(tasks) != len(calc_types):
             self.logger.error(
                 f"Number of tasks ({len(tasks)}) is not equal to number of calculation "
-                f"types ({len(calc_type)}) for material with material id "
+                f"types ({len(calc_types)}) for material with material id "
                 f"{material_id}. Cannot proceed."
             )
             return None
 
         # filter by calc type
-        opt_tasks = filter_opt_tasks(tasks, calc_type)
-        deform_tasks = filter_deform_tasks(tasks, calc_type)
+        opt_tasks = filter_opt_tasks(tasks, calc_types)
+        deform_tasks = filter_deform_tasks(tasks, calc_types)
 
         # filter by incar
         opt_tasks = filter_by_incar_settings(opt_tasks)
@@ -183,6 +176,8 @@ class ElasticityBuilder(Builder):
         final_opt, final_deform = select_final_opt_deform_tasks(
             opt_grouped, deform_grouped, self.logger
         )
+        if final_deform is None or final_deform is None:
+            return None
 
         # convert to elasticity doc
         deforms = []
@@ -230,14 +225,14 @@ class ElasticityBuilder(Builder):
 
 def filter_opt_tasks(
     tasks: List[Dict],
-    calc_type: List[str],
+    calc_types: Dict[str, str],
     target_calc_type: str = CalcType.GGA_Structure_Optimization,
 ) -> List[Dict]:
     """
     Filter out optimization tasks, by
         - calculation type
     """
-    opt_tasks = [t for t, c in zip(tasks, calc_type) if c == target_calc_type]
+    opt_tasks = [t for t in tasks if calc_types[str(t["task_id"])] == target_calc_type]
 
     # TODO additional check? e.g. max force, stress ...
 
@@ -246,19 +241,20 @@ def filter_opt_tasks(
 
 def filter_deform_tasks(
     tasks: List[Dict],
-    calc_type: List[str],
+    calc_types: Dict[str, str],
     target_calc_type: str = CalcType.GGA_Deformation,
 ) -> List[Dict]:
     """
     Filter out deformation tasks, by
-        -  calculation type
+        - calculation type
         - number of deformations (transformations)
     """
     deform_tasks = []
-    for t, c in zip(tasks, calc_type):
-        transforms = t["transmuter"]["transformation_params"]
-        if c == target_calc_type and len(transforms) == 1:
-            deform_tasks.append(t)
+    for t in tasks:
+        if calc_types[str(t["task_id"])] == target_calc_type:
+            transforms = t["transmuter"]["transformation_params"]
+            if len(transforms) == 1:
+                deform_tasks.append(t)
 
     return deform_tasks
 
@@ -281,7 +277,7 @@ def filter_by_incar_settings(
 
     selected = []
     for t in tasks:
-        incar = t["orig_input"]["incar"]
+        incar = t["orig_inputs"]["incar"]
         ok = True
         for k, v in incar_settings.items():
             if k not in incar:
@@ -383,8 +379,8 @@ def filter_deform_tasks_by_time(
 
 
 def select_final_opt_deform_tasks(
-    opt_tasks: List[Tuple[np.ndaray, Dict]],
-    deform_tasks: List[Tuple[np.ndaray, List[Dict]]],
+    opt_tasks: List[Tuple[np.ndarray, Dict]],
+    deform_tasks: List[Tuple[np.ndarray, List[Dict]]],
     logger,
     lattice_comp_tol: float = 1e-5,
 ) -> Tuple[Dict, List[Dict]]:
@@ -433,9 +429,16 @@ def select_final_opt_deform_tasks(
                 num_deform_tasks = n
 
     if selected is None:
-        raise RuntimeError(
-            "Cannot find optimization and deformation tasks that match by lattice."
+        tasks = [pair[1] for pair in opt_tasks]
+        for pair in deform_tasks:
+            tasks.extend(pair[1])
+        ids = [t["task_id"] for t in tasks]
+        logger.error(
+            f"Cannot find optimization and deformation tasks that match by lattice "
+            f"for tasks {ids}"
         )
+        final_opt_task = None
+        final_deform_tasks = None
     else:
         final_opt_task, final_deform_tasks = selected
 
@@ -460,7 +463,7 @@ def filter_deform_tasks_by_incar(
         selected deformation tasks
     """
     # TODO what is the difference of `input` and `orig_inputs` for a task? which to use?
-    opt_incar_values = {k: opt_task["input"]["incar"][k] for k in fields}
+    opt_incar_values = {k: opt_task["orig_inputs"]["incar"][k] for k in fields}
 
     selected = []
     for task in deform_tasks:
