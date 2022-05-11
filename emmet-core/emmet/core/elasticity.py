@@ -124,6 +124,10 @@ class FittingData(BaseModel):
 
 
 class Critical(BaseModel):
+    FITTING = "Critical: cannot fit elastic tensor. Error: {}."
+    COMPLIANCE = (
+        "Critical: cannot invert elastic tensor to get compliance tensor. Error: {}."
+    )
     N_STRAINS = (
         "Critical: insufficient number of valid strains. Expect the matrix of all "
         "strains to be of rank 6, but got rank {}."
@@ -221,61 +225,69 @@ class ElasticityDoc(PropertyDoc):
             d_dir_names,
         ) = generate_derived_fitting_data(structure, p_deforms, p_stresses)
 
-        elastic_tensor = fit_elastic_tensor(
-            p_strains + d_strains,
-            p_pk_stresses + d_pk_stress,
-            eq_stress=equilibrium_stress,
-            fitting_method=fitting_method,
-        )
+        try:
+            elastic_tensor = fit_elastic_tensor(
+                p_strains + d_strains,
+                p_pk_stresses + d_pk_stress,
+                eq_stress=equilibrium_stress,
+                fitting_method=fitting_method,
+            )
 
+            # elastic and compliance tensors, only round ieee format ones
+            ieee_et = elastic_tensor.voigt_symmetrized.convert_to_ieee(structure)
+            et_doc = ElasticTensorDoc(
+                raw=elastic_tensor.voigt.tolist(),
+                ieee_format=ieee_et.round(0).voigt.tolist(),
+            )
+
+        except np.linalg.LinAlgError as e:
+            et_doc = None
+            ct_doc = None
+            derived_props = {}
+            state = Status("failed")
+            warnings = [Critical().FITTING.format(e)]
+
+        else:
+            try:
+                compliance = elastic_tensor.compliance_tensor
+                compliance_ieee = ieee_et.compliance_tensor
+
+                # compliance tensor, *1000 to convert units to TPa^-1, i.e. 10^-12 Pa,
+                # assuming elastic tensor in units of GPa
+                ct_doc = ComplianceTensorDoc(
+                    raw=(compliance * 1000).voigt.tolist(),
+                    ieee_format=(compliance_ieee * 1000).round(0).voigt.tolist(),
+                )
+
+                # derived properties
+                # (should put it here since some derived properties also dependent on
+                # compliance tensor)
+                derived_props = get_derived_properties(structure, elastic_tensor)
+
+                # check all
+                state, warnings = sanity_check(
+                    structure, et_doc, p_strains + d_strains, derived_props
+                )
+
+            except np.linalg.LinAlgError as e:
+                ct_doc = None
+                derived_props = {}
+                state = Status("failed")
+                warnings = [Critical().COMPLIANCE.format(e)]
+
+        # fitting data
         eq_stress = None if equilibrium_stress is None else equilibrium_stress.tolist()
-
         fitting_data = FittingData(
-            deformations=[x.tolist() for x in p_deforms],
-            strains=[x.tolist() for x in p_strains],
-            cauchy_stresses=[x.tolist() for x in p_stresses],
-            second_pk_stresses=[x.tolist() for x in p_pk_stresses],
+            deformations=[x.tolist() for x in p_deforms],  # type: ignore
+            strains=[x.tolist() for x in p_strains],  # type: ignore
+            cauchy_stresses=[x.tolist() for x in p_stresses],  # type: ignore
+            second_pk_stresses=[x.tolist() for x in p_pk_stresses],  # type: ignore
             deformation_tasks=deformation_task_ids,
             deformation_dir_names=d_dir_names,
             equilibrium_cauchy_stress=eq_stress,
             optimization_task=optimization_task_id,
             optimization_dir_name=optimization_dir_name,
         )
-
-        # elastic and compliance tensors, only round ieee format ones
-        ieee_et = elastic_tensor.voigt_symmetrized.convert_to_ieee(structure)
-        et_doc = ElasticTensorDoc(
-            raw=elastic_tensor.voigt.tolist(),
-            ieee_format=ieee_et.round(0).voigt.tolist(),
-        )
-
-        try:
-            compliance = elastic_tensor.compliance_tensor
-            compliance_ieee = ieee_et.compliance_tensor
-
-            # compliance tensor, *1000 to convert units to TPa^-1, i.e. 10^-12 Pa,
-            # assuming elastic tensor in units of GPa
-            ct_doc = ComplianceTensorDoc(
-                raw=(compliance * 1000).voigt.tolist(),
-                ieee_format=(compliance_ieee * 1000).round(0).voigt.tolist(),
-            )
-
-            # derived properties
-            # (should put it here since some derived properties also dependent on
-            # compliance tensor)
-            derived_props = get_derived_properties(structure, elastic_tensor)
-
-            # check all
-            state, warnings = sanity_check(
-                structure, et_doc, p_strains + d_strains, derived_props
-            )
-        except np.linalg.LinAlgError as e:
-            ct_doc = None
-            derived_props = {}
-            state = Status("failed")
-            warnings = [
-                f"Critical: cannot invert elastic tensor to get compliance tensor: {e}"
-            ]
 
         return cls.from_structure(
             structure,
