@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.26.3](https://github.com/materialsproject/emmet/tree/v0.26.3) (2022-05-11)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.26.2...v0.26.3)
+
+**Merged pull requests:**
+
+- Take absolute value for magnetic moment validation [\#415](https://github.com/materialsproject/emmet/pull/415) ([munrojm](https://github.com/munrojm))
+
 ## [v0.26.2](https://github.com/materialsproject/emmet/tree/v0.26.2) (2022-05-11)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.26.1...v0.26.2)
@@ -246,19 +254,19 @@
 
 ## [v0.21.9](https://github.com/materialsproject/emmet/tree/v0.21.9) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.7...v0.21.9)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.8...v0.21.9)
 
 **Merged pull requests:**
 
 - Git stash added to docs step [\#347](https://github.com/materialsproject/emmet/pull/347) ([munrojm](https://github.com/munrojm))
 
-## [v0.21.7](https://github.com/materialsproject/emmet/tree/v0.21.7) (2022-01-19)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.8...v0.21.7)
-
 ## [v0.21.8](https://github.com/materialsproject/emmet/tree/v0.21.8) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.6...v0.21.8)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.7...v0.21.8)
+
+## [v0.21.7](https://github.com/materialsproject/emmet/tree/v0.21.7) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.6...v0.21.7)
 
 **Merged pull requests:**
 
