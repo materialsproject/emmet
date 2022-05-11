@@ -150,6 +150,10 @@ class ElasticityDoc(PropertyDoc):
 
     property_name: str = "elasticity"
 
+    optimized_structure: Structure = Field(
+        None, description="Optimized structure to compute the elasticity"
+    )
+
     elastic_tensor: ElasticTensorDoc = Field(None, description="Elastic tensor")
 
     compliance_tensor: ComplianceTensorDoc = Field(
@@ -220,7 +224,7 @@ class ElasticityDoc(PropertyDoc):
             d_deforms,
             d_strains,
             d_stresses,
-            d_pk_stress,
+            d_pk_stresses,
             d_task_ids,
             d_dir_names,
         ) = generate_derived_fitting_data(structure, p_deforms, p_stresses)
@@ -228,7 +232,7 @@ class ElasticityDoc(PropertyDoc):
         try:
             elastic_tensor = fit_elastic_tensor(
                 p_strains + d_strains,
-                p_pk_stresses + d_pk_stress,
+                p_pk_stresses + d_pk_stresses,
                 eq_stress=equilibrium_stress,
                 fitting_method=fitting_method,
             )
@@ -292,6 +296,7 @@ class ElasticityDoc(PropertyDoc):
         return cls.from_structure(
             structure,
             material_id,
+            optimized_structure=structure,
             order=2,
             state=state,
             elastic_tensor=et_doc,
@@ -439,9 +444,9 @@ def _generate_fitting_data(
         assert len(dir_names) == size
 
     strains = [d.green_lagrange_strain for d in deforms]
-    second_pk_stress = [s.piola_kirchoff_2(d) for (s, d) in zip(stresses, deforms)]
+    second_pk_stresses = [s.piola_kirchoff_2(d) for (s, d) in zip(stresses, deforms)]
 
-    return deforms, strains, stresses, second_pk_stress, task_ids, dir_names
+    return deforms, strains, stresses, second_pk_stresses, task_ids, dir_names
 
 
 def fit_elastic_tensor(
@@ -603,7 +608,8 @@ def sanity_check(
 
     # young's modulus
     high = 1000
-    if derived_props["young_modulus"] > high:
+    v = derived_props["young_modulus"]
+    if v > high:
         warnings.append(Warnings().LARGE_YOUNG_MODULUS.format(v, high))
 
     if failed:
