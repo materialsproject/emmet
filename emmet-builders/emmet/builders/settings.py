@@ -7,7 +7,7 @@ from pydantic.fields import Field
 
 from emmet.core.provenance import Author, History
 from emmet.core.settings import EmmetSettings
-from emmet.core.vasp.calc_types import TaskType as VaspTastType
+from emmet.core.vasp.calc_types import TaskType as VaspTaskType
 from emmet.core.qchem.calc_types import TaskType as QChemTaskType
 from emmet.core.cp2k.calc_types import TaskType as Cp2kTaskType
 

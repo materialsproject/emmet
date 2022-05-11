@@ -1,12 +1,15 @@
 from datetime import datetime
 from itertools import chain, groupby, combinations
+from re import A
 from tkinter import W
 from typing import Dict, Iterator, List, Optional
 from copy import deepcopy
+from math import ceil
 from monty.json import MontyDecoder
 
 from maggma.builders import Builder
 from maggma.stores import Store
+from maggma.utils import grouper
 
 from pymatgen.core import Structure
 from pymatgen.analysis.structure_matcher import ElementComparator, StructureMatcher, PointDefectComparator
@@ -23,8 +26,7 @@ from emmet.core.defect import DefectDoc, DefectDoc2d, DefectThermoDoc
 from emmet.core.cp2k.calc_types import TaskType
 from emmet.core.cp2k.calc_types.utils import run_type
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.builders.cp2k.utils import get_mpid, synchronous_query
-from maggma.stores.gridfs import GridFSStore
+from emmet.builders.cp2k.utils import synchronous_query
 
 from emmet.core.electronic_structure import ElectronicStructureDoc
 
@@ -79,6 +81,7 @@ class DefectBuilder(Builder):
         electrostatic_potentials: Store,
         task_validation: Optional[Store] = None,
         query: Optional[Dict] = None,
+        bulk_query: Optional[Dict] = None,
         allowed_task_types: Optional[List[str]] = DEFAULT_ALLOWED_TASKS,
         settings: Optional[EmmetBuildSettings] = None,
         defects_2d: Optional[bool] = False,
@@ -111,6 +114,7 @@ class DefectBuilder(Builder):
         self._allowed_task_types = {TaskType(t) for t in self.allowed_task_types}
         self.settings = EmmetBuildSettings.autoload(settings)
         self.query = query if query else {}
+        self.bulk_query = bulk_query if bulk_query else {}
         self.timestamp = None
         self._mpid_map = {}
         self.defects_2d = defects_2d
@@ -193,6 +197,10 @@ class DefectBuilder(Builder):
         """
         return self._optional_bulk_properties
 
+    @property
+    def mpid_map(self) -> Dict:
+        return self._mpid_map
+
     def ensure_indexes(self):
         """
         Ensures indicies on the tasks and materials collections
@@ -218,12 +226,40 @@ class DefectBuilder(Builder):
             self.task_validation.ensure_index("task_id")
             self.task_validation.ensure_index("valid")
 
-    # TODO this is tricky to implement.
-    # Prechunking normally chunks all of the tasks, and then runs get_items on each
-    # chunk. This is a problem when we need to do defect matching, where the first chiunk
-    # may not contain the defect that we are trying to match. 
     def prechunk(self, number_splits: int) -> Iterator[Dict]:
-        raise NotImplementedError
+
+        tag_query = {} 
+        if len(self.settings.BUILD_TAGS) > 0 and len(self.settings.EXCLUDED_TAGS) > 0:
+            tag_query["$and"] = [
+                {"tags": {"$in": self.settings.BUILD_TAGS}},
+                {"tags": {"$nin": self.settings.EXCLUDED_TAGS}},
+            ]
+        elif len(self.settings.BUILD_TAGS) > 0:
+            tag_query["tags"] = {"$in": self.settings.BUILD_TAGS}
+
+        # Get defect tasks
+        temp_query = self.query.copy()
+        temp_query.update(tag_query)
+        temp_query.update({d: {'$exists': True, "$ne": None} for d in self.required_defect_properties})
+        temp_query.update({self.defect_query: {'$exists': True}, "state": "successful"})
+        defect_tasks = {
+            doc[self.tasks.key]
+            for doc in self.tasks.query(criteria=temp_query, properties=[self.tasks.key])
+        }
+
+        # Get bulk tasks
+        temp_query = self.bulk_query.copy()
+        temp_query.update(tag_query)
+        temp_query.update({d: {'$exists': True} for d in self.required_bulk_properties})
+        temp_query.update({self.defect_query: {'$exists': False}, "state": "successful"})
+        bulk_tasks = {
+            doc[self.tasks.key]
+            for doc in self.tasks.query(criteria=temp_query, properties=[self.tasks.key])
+        }
+
+        N = ceil(len(defect_tasks) / number_splits)
+        for task_chunk in grouper(defect_tasks, N):
+            yield {"query": {"task_id": {"$in": task_chunk + list(bulk_tasks)}}}
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
@@ -275,7 +311,8 @@ d        """
         }
 
         # Get bulk tasks
-        temp_query = {d: {'$exists': True} for d in self.required_bulk_properties}
+        temp_query = self.bulk_query.copy()
+        temp_query.update({d: {'$exists': True} for d in self.required_bulk_properties})
         temp_query.update({self.defect_query: {'$exists': False}, "state": "successful"})
         bulk_tasks = {
             doc[self.tasks.key]
@@ -337,8 +374,11 @@ d        """
         self.logger.info(f"Starting defect matching.")
 
         for defect, defect_task_group in self.__filter_and_group_tasks(unprocessed_defect_tasks):
-            #yield self.__get_defect_doc(defect), self.__get_item_bundle(bulk_tasks, defect_task_group)
-            yield defect, self.__match_defects_to_bulks(bulk_tasks, defect_task_group)
+            task_ids = self.__match_defects_to_bulks(bulk_tasks, defect_task_group)
+            doc = self.__get_defect_doc(defect)
+            item_bundle = self.__get_item_bundle(task_ids)
+            material_id = self.mpid_map[item_bundle[0][1]['task_id']]
+            yield doc, item_bundle, material_id
 
     def process_item(self, items):
         """
@@ -351,11 +391,9 @@ d        """
 
         returns: the defect document as a dictionary
         """
-        defect, task_ids = items
-        defect_doc, item_bundle = self.__get_defect_doc(defect), self.__get_item_bundle(task_ids) 
+        defect_doc, item_bundle, material_id = items
         self.logger.info(f"Processing group of {len(item_bundle)} defects into DefectDoc")
         if item_bundle:
-            material_id = self._mpid_map[item_bundle[0][1]['task_id']]
             tags = item_bundle[0][0].get('tags', [])
             # TODO: This is a hack to get the 2d doc
             DEFECT_DOC = DefectDoc2d if '2d' in tags else DefectDoc
@@ -364,6 +402,7 @@ d        """
             else:
                 defect_doc = DEFECT_DOC.from_tasks(tasks=item_bundle, query=self.defect_query, material_id=material_id)
             return defect_doc.dict()
+        return {}
 
     def update_targets(self, items):
         """
