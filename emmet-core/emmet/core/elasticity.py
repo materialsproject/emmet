@@ -6,7 +6,7 @@ from pymatgen.analysis.elasticity.elastic import ElasticTensor, ElasticTensorExp
 from pymatgen.analysis.elasticity.strain import Deformation, Strain
 from pymatgen.analysis.elasticity.stress import Stress
 from pymatgen.core.structure import Structure
-from pymatgen.core.tensors import TensorMapping
+from pymatgen.core.tensors import SquareTensor, TensorMapping
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.common import Status
@@ -225,8 +225,8 @@ class ElasticityDoc(PropertyDoc):
             d_strains,
             d_stresses,
             d_pk_stresses,
-            d_task_ids,
-            d_dir_names,
+            _,
+            _,
         ) = generate_derived_fitting_data(structure, p_deforms, p_stresses)
 
         try:
@@ -286,8 +286,8 @@ class ElasticityDoc(PropertyDoc):
             strains=[x.tolist() for x in p_strains],  # type: ignore
             cauchy_stresses=[x.tolist() for x in p_stresses],  # type: ignore
             second_pk_stresses=[x.tolist() for x in p_pk_stresses],  # type: ignore
-            deformation_tasks=deformation_task_ids,
-            deformation_dir_names=d_dir_names,
+            deformation_tasks=p_task_ids,
+            deformation_dir_names=p_dir_names,
             equilibrium_cauchy_stress=eq_stress,
             optimization_task=optimization_task_id,
             optimization_dir_name=optimization_dir_name,
@@ -331,6 +331,14 @@ def generate_primary_fitting_data(
         stresses: stresses on the structure
         task_ids: ids of the tasks that generate the data
         dir_names: dir names in which the calculations are performed
+
+    Returns:
+        deforms: primary deformations
+        strains: primary strains
+        stresses: primary Cauchy stresses
+        second_pk_stresses: primary second Piola-Kirchhoff stresses
+        task_ids: ids of the primary tasks
+        dir_names: directory names of the primary tasks
     """
     return _generate_fitting_data(deforms, stresses, task_ids, dir_names)
 
@@ -340,6 +348,7 @@ def generate_derived_fitting_data(
     deforms: List[Deformation],
     stresses: List[Stress],
     symprec=SETTINGS.SYMPREC,
+    tol: float = 0.002,
 ) -> Tuple[
     List[Deformation],
     List[Strain],
@@ -365,20 +374,27 @@ def generate_derived_fitting_data(
         deforms: primary deformations
         stresses: stresses corresponding to structure subject to primary deformations
         symprec: symmetry operation precision
+        tol: tolerance for determining whether a strain is independent
+
+    Returns:
+        derived_deforms: derived deformations
+        derived_strains: derived strains
+        derived_stresses: derived Cauchy stresses
+        derived_second_pk_stresses: derived second Piola-Kirchhoff stresses
+        derived_task_ids: None
+        derived_dir_names: None
     """
 
     sga = SpacegroupAnalyzer(structure, symprec=symprec)
     symmops = sga.get_symmetry_operations(cartesian=True)
 
     # primary deformation mapping (used only for checking purpose below)
-    p_mapping = TensorMapping()
-    for d in deforms:
-        p_mapping[d] = d
+    p_mapping = TensorMapping(deforms, deforms)
 
     #
     # generated derived deforms
     #
-    mapping = TensorMapping()
+    mapping = TensorMapping()  # key: strain, value: list of (symop, index_of_p_deform)
     for i, p_deform in enumerate(deforms):
         for op in symmops:
             d_deform = p_deform.transform(op)
@@ -388,7 +404,12 @@ def generate_derived_fitting_data(
                 continue
 
             # sym op generates a non-independent deform
-            if not d_deform.is_independent():
+            if not d_deform.is_independent(tol=tol):
+                continue
+
+            # generate a non upper triangular deformation, not what we want since the
+            # workflow only generates upper triangular ones before symmetry reduction
+            if not is_upper_triangular(d_deform):
                 continue
 
             # seen this derived deform before
@@ -618,3 +639,15 @@ def sanity_check(
         state = Status("successful")
 
     return state, warnings
+
+
+def is_upper_triangular(t: SquareTensor, tol: float = 1e-8) -> bool:
+    """
+    Check whether a square tensor is an upper triangular one.
+    """
+    for i in range(1, len(t)):
+        for j in range(i):
+            if abs(t[i, j]) > tol:
+                return False
+
+    return True
