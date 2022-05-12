@@ -81,12 +81,12 @@ class ElasticityBuilder(Builder):
         # query for tasks
         query = self.query.copy()
 
-        for n, doc in enumerate(cursor):
+        for i, doc in enumerate(cursor):
 
             material_id = doc["material_id"]
             calc_types = {str(k): v for k, v in doc["calc_types"].items()}
 
-            self.logger.debug(f"Getting tasks {n} with material_id {material_id}")
+            self.logger.debug(f"Querying tasks for material {material_id} (index {i}).")
 
             # update query with task_ids
             query["task_id"] = {"$in": [int(i) for i in doc["task_ids"]]}
@@ -138,6 +138,8 @@ class ElasticityBuilder(Builder):
         # filter by calc type
         opt_tasks = filter_opt_tasks(tasks, calc_types)
         deform_tasks = filter_deform_tasks(tasks, calc_types)
+        if not opt_tasks or not deform_tasks:
+            return None
 
         # filter by incar
         opt_tasks = filter_by_incar_settings(opt_tasks)
@@ -162,7 +164,7 @@ class ElasticityBuilder(Builder):
         final_opt, final_deform = select_final_opt_deform_tasks(
             opt_grouped, deform_grouped, self.logger
         )
-        if final_deform is None or final_deform is None:
+        if final_opt is None or final_deform is None:
             return None
 
         # convert to elasticity doc
@@ -370,6 +372,7 @@ def select_final_opt_deform_tasks(
     Args:
         opt_tasks:
         deform_tasks:
+        logger:
         lattice_comp_tol:
 
     Returns:
@@ -377,7 +380,7 @@ def select_final_opt_deform_tasks(
         final_deform_tasks:
     """
 
-    # group by lattice
+    # group opt and deform tasks by lattice
     mapping = TensorMapping(tol=lattice_comp_tol)
     for lat, t in opt_tasks:
         mapping[lat] = {"opt_task": t}
@@ -388,18 +391,11 @@ def select_final_opt_deform_tasks(
         else:
             mapping[lat] = {"deform_tasks": t}
 
-    # select the opt deform paris with the most number of deform tasks
+    # select opt--deform paris with the most number of deform tasks
     selected = None
     num_deform_tasks = -1
     for lat, tasks in mapping.items():
-        if "deform_tasks" not in tasks:
-            logger.debug(
-                f"No deformation tasks found for optimization task "
-                f"{tasks['opt_task']['task_id']}"
-            )
-        elif "opt_task" not in tasks:
-            pass
-        else:
+        if "opt_task" in tasks and "deform_tasks" in tasks:
             n = len(tasks["deform_tasks"])
             if n > num_deform_tasks:
                 selected = (tasks["opt_task"], tasks["deform_tasks"])
@@ -409,11 +405,13 @@ def select_final_opt_deform_tasks(
         tasks = [pair[1] for pair in opt_tasks]
         for pair in deform_tasks:
             tasks.extend(pair[1])
+
         ids = [t["task_id"] for t in tasks]
-        logger.error(
+        logger.warning(
             f"Cannot find optimization and deformation tasks that match by lattice "
             f"for tasks {ids}"
         )
+
         final_opt_task = None
         final_deform_tasks = None
     else:
