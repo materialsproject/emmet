@@ -374,7 +374,8 @@ def generate_derived_fitting_data(
         deforms: primary deformations
         stresses: stresses corresponding to structure subject to primary deformations
         symprec: symmetry operation precision
-        tol: tolerance for determining whether a strain is independent
+        tol: tolerance for comparing deformations and also for determining whether a
+            deformation is independent
 
     Returns:
         derived_deforms: derived deformations
@@ -389,12 +390,12 @@ def generate_derived_fitting_data(
     symmops = sga.get_symmetry_operations(cartesian=True)
 
     # primary deformation mapping (used only for checking purpose below)
-    p_mapping = TensorMapping(deforms, deforms)
+    p_mapping = TensorMapping(deforms, deforms, tol=tol)
 
     #
     # generated derived deforms
     #
-    mapping = TensorMapping()  # key: strain, value: list of (symop, index_of_p_deform)
+    mapping = TensorMapping(tol=tol)
     for i, p_deform in enumerate(deforms):
         for op in symmops:
             d_deform = p_deform.transform(op)
