@@ -57,30 +57,24 @@ class ShearModulus(BaseModel):
 
 class SoundVelocity(BaseModel):
 
-    transverse: float = Field(
-        None, description="Transverse sound velocity (in SI units)"
-    )
+    transverse: float = Field(None, description="Transverse sound velocity (SI units)")
     longitudinal: float = Field(
-        None, description="Longitudinal sound velocity (in SI units)"
+        None, description="Longitudinal sound velocity (SI units)"
     )
     snyder_acoustic: float = Field(
-        None, description="Snyder's acoustic sound velocity (in SI units)"
+        None, description="Snyder's acoustic sound velocity (SI units)"
     )
     snyder_optical: float = Field(
-        None, description="Snyder's optical sound velocity (in SI units)"
+        None, description="Snyder's optical sound velocity (SI units)"
     )
     snyder_total: float = Field(
-        None, description="Snyder's total sound velocity (in SI units)"
+        None, description="Snyder's total sound velocity (SI units)"
     )
 
 
 class ThermalConductivity(BaseModel):
-    clarke: float = Field(
-        None, description="Clarke's thermal conductivity (in SI units)"
-    )
-    cahill: float = Field(
-        None, description="Cahill's thermal conductivity (in SI units)"
-    )
+    clarke: float = Field(None, description="Clarke's thermal conductivity (SI units)")
+    cahill: float = Field(None, description="Cahill's thermal conductivity (SI units)")
 
 
 class FittingData(BaseModel):
@@ -171,14 +165,12 @@ class ElasticityDoc(PropertyDoc):
     thermal_conductivity: ThermalConductivity = Field(
         None, description="Thermal conductivity"
     )
-    young_modulus: float = Field(None, description="Young's modulus (GPa)")
+    young_modulus: float = Field(None, description="Young's modulus (SI units)")
     universal_anisotropy: float = Field(
         None, description="Universal elastic anisotropy"
     )
-    homogeneous_poisson: float = Field(None, description="Isotropic Poisson ratio")
-    debye_temperature: float = Field(
-        None, description="Debye temperature (in SI units)"
-    )
+    homogeneous_poisson: float = Field(None, description="Homogeneous Poisson ratio")
+    debye_temperature: float = Field(None, description="Debye temperature (SI units)")
 
     fitting_data: FittingData = Field(
         None, description="Data used to fit the elastic tensor"
@@ -524,21 +516,21 @@ def get_derived_properties(structure: Structure, tensor: ElasticTensor):
         prop_dict = tensor.property_dict
         structure_prop_computed = False
 
-    dec = 3
+    decimals = 3
     derived_prop = {
         "bulk_modulus": BulkModulus(
-            voigt=np.round(prop_dict["k_voigt"], dec),
-            reuss=np.round(prop_dict["k_reuss"], dec),
-            vrh=np.round(prop_dict["k_vrh"], dec),
+            voigt=np.round(prop_dict["k_voigt"], decimals),
+            reuss=np.round(prop_dict["k_reuss"], decimals),
+            vrh=np.round(prop_dict["k_vrh"], decimals),
         ),
         "shear_modulus": ShearModulus(
-            voigt=np.round(prop_dict["g_voigt"], dec),
-            reuss=np.round(prop_dict["g_reuss"], dec),
-            vrh=np.round(prop_dict["g_vrh"], dec),
+            voigt=np.round(prop_dict["g_voigt"], decimals),
+            reuss=np.round(prop_dict["g_reuss"], decimals),
+            vrh=np.round(prop_dict["g_vrh"], decimals),
         ),
-        "young_modulus": np.round(prop_dict["y_mod"], dec),
-        "homogeneous_poisson": np.round(prop_dict["homogeneous_poisson"], dec),
-        "universal_anisotropy": np.round(prop_dict["universal_anisotropy"], dec),
+        "young_modulus": np.round(prop_dict["y_mod"], 0),
+        "homogeneous_poisson": np.round(prop_dict["homogeneous_poisson"], decimals),
+        "universal_anisotropy": np.round(prop_dict["universal_anisotropy"], decimals),
     }
 
     if structure_prop_computed:
@@ -629,7 +621,7 @@ def sanity_check(
                 warnings.append(Warnings().LARGE_MODULUS.format(name, p, v, high))
 
     # young's modulus
-    high = 1000
+    high = 1e12
     v = derived_props["young_modulus"]
     if v > high:
         warnings.append(Warnings().LARGE_YOUNG_MODULUS.format(v, high))

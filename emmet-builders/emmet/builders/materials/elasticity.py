@@ -422,6 +422,10 @@ def select_final_opt_deform_tasks(
     return final_opt_task, final_deform_tasks
 
 
+# TODO, lattice_comp_tol can be relaxed, especially for `mode = deform`. Since the
+#  lattice are computed from different deformation matrices, which may introduce
+#  errors in lattice. It may then group lattice that should be the same as different.
+#  Ask Jason what they use in materials doc builder.
 def group_by_parent_lattice(
     tasks: List[Dict], mode: str, lattice_comp_tol: float = 1e-5
 ) -> List[Tuple[np.ndarray, List[Dict]]]:
@@ -440,7 +444,7 @@ def group_by_parent_lattice(
         [(lattice, List[tasks])]. Each tuple gives the lattice and a list of tasks
             with the same lattice before deformation.
     """
-
+    # TODO use TensorMapping
     docs_by_lattice: List[Tuple[np.ndarray, List[Dict]]] = []
 
     for doc in tasks:
