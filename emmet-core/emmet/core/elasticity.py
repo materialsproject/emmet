@@ -116,6 +116,14 @@ class FittingData(BaseModel):
         None, description="Path to the optimization task running directory"
     )
 
+    # derived strains stresses
+    num_total_strain_stress_states: int = Field(
+        None,
+        description="Number of total strain--stress states used for fitting, i.e. the "
+        "sum of explicitly calculated deformations and derived deformations from "
+        "symmetry.",
+    )
+
 
 class Critical(BaseModel):
     FITTING = "Critical: cannot fit elastic tensor. Error: {}."
@@ -283,6 +291,7 @@ class ElasticityDoc(PropertyDoc):
             equilibrium_cauchy_stress=eq_stress,
             optimization_task=optimization_task_id,
             optimization_dir_name=optimization_dir_name,
+            num_total_strain_stress_states=len(p_deforms) + len(d_deforms),
         )
 
         return cls.from_structure(
