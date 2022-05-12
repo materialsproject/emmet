@@ -158,7 +158,7 @@ class ElasticityBuilder(Builder):
             for lattice, tasks in deform_grouped
         ]
 
-        # select the opt and deform tasks for fitting
+        # select opt and deform tasks for fitting
         final_opt, final_deform = select_final_opt_deform_tasks(
             opt_grouped, deform_grouped, self.logger
         )
@@ -441,10 +441,10 @@ def group_by_parent_lattice(
         lattice_comp_tol: tolerance for comparing lattice equivalence.
 
     Returns:
-        [(lattice, List[tasks])]. Each tuple gives the lattice and a list of tasks
-            with the same lattice before deformation.
+        [(lattice, List[tasks])]: each tuple gives the common parent lattice of a
+            list of the structures before deformation (if any), and the list tasks
+            from which the structures are taken.
     """
-    # TODO use TensorMapping
     docs_by_lattice: List[Tuple[np.ndarray, List[Dict]]] = []
 
     for doc in tasks:
