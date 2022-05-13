@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.27.1](https://github.com/materialsproject/emmet/tree/v0.27.1) (2022-05-13)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.27.0...v0.27.1)
+
+**Merged pull requests:**
+
+- Fix validation projection [\#416](https://github.com/materialsproject/emmet/pull/416) ([munrojm](https://github.com/munrojm))
+
 ## [v0.27.0](https://github.com/materialsproject/emmet/tree/v0.27.0) (2022-05-12)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.26.3...v0.27.0)
