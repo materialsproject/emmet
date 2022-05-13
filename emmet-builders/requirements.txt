@@ -1,2 +1,2 @@
 maggma>=0.46.1
-emmet-core>=0.24.1
+emmet-core>=0.26.2

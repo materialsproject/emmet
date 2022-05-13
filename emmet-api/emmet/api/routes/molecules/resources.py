@@ -1,5 +1,5 @@
 from maggma.api.resource import ReadOnlyResource
-from emmet.core.molecules import MoleculesDoc
+from emmet.core.molecules_old import MoleculesDoc
 
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 from emmet.api.routes.molecules.query_operators import (
