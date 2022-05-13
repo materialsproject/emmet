@@ -125,7 +125,7 @@ class FittingData(BaseModel):
     )
 
 
-class Critical(BaseModel):
+class CriticalMessage(BaseModel):
     FITTING = "Critical: cannot fit elastic tensor. Error: {}."
     COMPLIANCE = (
         "Critical: cannot invert elastic tensor to get compliance tensor. Error: {}."
@@ -134,15 +134,18 @@ class Critical(BaseModel):
         "Critical: insufficient number of valid strains. Expect the matrix of all "
         "strains to be of rank 6, but got rank {}."
     )
+    # TODO, discuss with Jason and Matt whether to put these two as warnings
     NEGATIVE_MODULUS = "Critical: Negative modulus. {} {} is {}."
+    NEGATIVE_EIGVAL = "Critical: Elastic tensor has negative eigenvalue."
 
 
-class Warnings(BaseModel):
-    LARGE_COMPONENT = "Elastic tensor has component larger than {}"
-    NEGATIVE_EIGVAL = "Elastic tensor has negative eigenvalue"
+class WarningMessage(BaseModel):
+    LARGE_COMPONENT = "Elastic tensor has component larger than {}."
     SMALL_MODULUS = "Small modulus. {} {} is {}; smaller than {}."
     LARGE_MODULUS = "Large modulus. {} {} is {}; larger than {}."
     LARGE_YOUNG_MODULUS = "Large Young's modulus {}; larger than {}."
+    SMALL_C11 = "Small C11 {}; smaller than {}."
+    RATIO_C11 = "C11 and {0} are within 5%, or C11 smaller than {0}."
 
 
 class ElasticityDoc(PropertyDoc):
@@ -250,7 +253,7 @@ class ElasticityDoc(PropertyDoc):
             ct_doc = None
             derived_props = {}
             state = Status("failed")
-            warnings = [Critical().FITTING.format(e)]
+            warnings = [CriticalMessage().FITTING.format(e)]
 
         else:
             try:
@@ -278,7 +281,7 @@ class ElasticityDoc(PropertyDoc):
                 ct_doc = None
                 derived_props = {}
                 state = Status("failed")
-                warnings = [Critical().COMPLIANCE.format(e)]
+                warnings = [CriticalMessage().COMPLIANCE.format(e)]
 
         # fitting data
         eq_stress = None if equilibrium_stress is None else equilibrium_stress.tolist()
@@ -554,38 +557,43 @@ def sanity_check(
     """
     failed = False
     warnings = []
+    CM = CriticalMessage()
+    WM = WarningMessage()
 
     # rank of all strains < 6?
     voigt_strains = [s.voigt for s in strains]
     rank = np.linalg.matrix_rank(voigt_strains)
     if rank != 6:
         failed = True
-        warnings.append(Critical().N_STRAINS.format(rank))
+        warnings.append(CM.N_STRAINS.format(rank))
 
-    # if any([s.is_rare_earth_metal for s in structure.species]):
-    #     warnings.append("Structure contains a rare earth element")
+    # elastic tensor eigenvalues
+    eig_vals, _ = np.linalg.eig(elastic_doc.raw)
+    if np.any(eig_vals < 0.0):
+        warnings.append(CM.NEGATIVE_EIGVAL)
 
-    # elastic tensor component, eigenvalues...
+    # elastic tensor individual components
     et = np.asarray(elastic_doc.ieee_format)
 
     tol = 1e6
     if np.any(et > tol):
-        warnings.append(Warnings().LARGE_COMPONENT.format(tol))
-
-    eig_vals, _ = np.linalg.eig(et)
-    if np.any(eig_vals < 0.0):
-        warnings.append(Warnings().NEGATIVE_EIGVAL)
+        warnings.append(WM.LARGE_COMPONENT.format(tol))
 
     # TODO: these should be revisited. Are they complete, or only apply to materials
     #  with certain symmetry?
     c11, c12, c13 = et[0, 0:3]
     c23 = et[1, 2]
-    if abs((c11 - c12) / c11) < 0.05 or c11 < c12:
-        warnings.append("c11 and c12 are within 5% or c12 is greater than c11")
-    if abs((c11 - c13) / c11) < 0.05 or c11 < c13:
-        warnings.append("c11 and c13 are within 5% or c13 is greater than c11")
-    if abs((c11 - c23) / c11) < 0.05 or c11 < c23:
-        warnings.append("c11 and c23 are within 5% or c23 is greater than c11")
+
+    small = 1e-6
+    if c11 < small:
+        warnings.append(WM.SMALL_C11.format(c11, small))
+    else:
+        if abs((c11 - c12) / c11) < 0.05 or c11 < c12:
+            warnings.append(WM.RATIO_C11.format("C12"))
+        if abs((c11 - c13) / c11) < 0.05 or c11 < c13:
+            warnings.append(WM.RATIO_C11.format("C13"))
+        if abs((c11 - c23) / c11) < 0.05 or c11 < c23:
+            warnings.append(WM.RATIO_C11.format("C23"))
 
     # modulus
     low = 2
@@ -598,17 +606,17 @@ def sanity_check(
             v = doc[name]
             if v < 0:
                 failed = True
-                warnings.append(Critical().NEGATIVE_MODULUS.format(name, p, v))
+                warnings.append(CM.NEGATIVE_MODULUS.format(name, p, v))
             elif v < low:
-                warnings.append(Warnings().SMALL_MODULUS.format(name, p, v, low))
+                warnings.append(WM.SMALL_MODULUS.format(name, p, v, low))
             elif v > high:
-                warnings.append(Warnings().LARGE_MODULUS.format(name, p, v, high))
+                warnings.append(WM.LARGE_MODULUS.format(name, p, v, high))
 
-    # young's modulus
+    # young's modulus (note it is in Pa, not GPa)
     high = 1e12
     v = derived_props["young_modulus"]
     if v > high:
-        warnings.append(Warnings().LARGE_YOUNG_MODULUS.format(v, high))
+        warnings.append(WM.LARGE_YOUNG_MODULUS.format(v, high))
 
     if failed:
         state = Status("failed")
