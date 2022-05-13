@@ -315,7 +315,7 @@ def filter_opt_tasks_by_time(tasks: List[Dict], logger) -> Dict:
 
         task_ids = [t["task_id"] for t in tasks]
         logger.warning(
-            f"Select the latest task {selected['task_id']} completed at "
+            f"Select the latest optimization task {selected['task_id']} completed at "
             f"{selected['completed_at']} from a set of tasks: {task_ids}."
         )
 
