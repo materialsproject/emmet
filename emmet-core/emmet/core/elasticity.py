@@ -6,7 +6,7 @@ from pymatgen.analysis.elasticity.elastic import ElasticTensor, ElasticTensorExp
 from pymatgen.analysis.elasticity.strain import Deformation, Strain
 from pymatgen.analysis.elasticity.stress import Stress
 from pymatgen.core.structure import Structure
-from pymatgen.core.tensors import SquareTensor, TensorMapping
+from pymatgen.core.tensors import TensorMapping
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 from emmet.core.common import Status
@@ -209,26 +209,27 @@ class ElasticityDoc(PropertyDoc):
         **kwargs,
     ):
 
+        # primary fitting data
+        p_deforms = deformations
+        p_stresses = stresses
         (
-            p_deforms,
             p_strains,
-            p_stresses,
             p_pk_stresses,
             p_task_ids,
             p_dir_names,
         ) = generate_primary_fitting_data(
-            deformations, stresses, deformation_task_ids, deformation_dir_names
+            p_deforms, p_stresses, deformation_task_ids, deformation_dir_names
         )
 
+        # derived fitting data
         (
             d_deforms,
             d_strains,
             d_stresses,
             d_pk_stresses,
-            _,
-            _,
-        ) = generate_derived_fitting_data(structure, p_deforms, p_stresses)
+        ) = generate_derived_fitting_data(structure, p_strains, p_stresses)
 
+        # fitting elastic tensor
         try:
             elastic_tensor = fit_elastic_tensor(
                 p_strains + d_strains,
@@ -317,9 +318,7 @@ def generate_primary_fitting_data(
     task_ids: List[MPID] = None,
     dir_names: List[str] = None,
 ) -> Tuple[
-    List[Deformation],
     List[Strain],
-    List[Stress],
     List[Stress],
     Union[List[MPID], None],
     Union[List[str], None],
@@ -328,36 +327,37 @@ def generate_primary_fitting_data(
     Get the primary fitting data, i.e. data explicitly computed from a calculation.
 
     Args:
-        deforms: deformations on the structure
-        stresses: stresses on the structure
+        deforms: primary deformations
+        stresses: primary stresses
         task_ids: ids of the tasks that generate the data
         dir_names: dir names in which the calculations are performed
 
     Returns:
-        deforms: primary deformations
         strains: primary strains
-        stresses: primary Cauchy stresses
         second_pk_stresses: primary second Piola-Kirchhoff stresses
         task_ids: ids of the primary tasks
         dir_names: directory names of the primary tasks
     """
-    return _generate_fitting_data(deforms, stresses, task_ids, dir_names)
+    size = len(deforms)
+    assert len(stresses) == size
+    if task_ids is not None:
+        assert len(task_ids) == size
+    if dir_names is not None:
+        assert len(dir_names) == size
+
+    strains = [d.green_lagrange_strain for d in deforms]
+    second_pk_stresses = [s.piola_kirchoff_2(d) for (s, d) in zip(stresses, deforms)]
+
+    return strains, second_pk_stresses, task_ids, dir_names
 
 
 def generate_derived_fitting_data(
     structure: Structure,
-    deforms: List[Deformation],
+    strains: List[Strain],
     stresses: List[Stress],
     symprec=SETTINGS.SYMPREC,
     tol: float = 0.002,
-) -> Tuple[
-    List[Deformation],
-    List[Strain],
-    List[Stress],
-    List[Stress],
-    Union[List[MPID], None],
-    Union[List[str], None],
-]:
+) -> Tuple[List[Deformation], List[Strain], List[Stress], List[Stress]]:
     """
     Get the derived fitting data from symmetry operations on the primary fitting data.
 
@@ -372,104 +372,79 @@ def generate_derived_fitting_data(
 
     Args:
         structure: equilibrium structure
-        deforms: primary deformations
-        stresses: stresses corresponding to structure subject to primary deformations
+        strains: primary strains
+        stresses: primary stresses
         symprec: symmetry operation precision
         tol: tolerance for comparing deformations and also for determining whether a
-            deformation is independent
+            deformation is independent. The elastic workflow use a minimum strain of
+            0.005, so the default tolerance of 0.002 should be able to distinguish
+            different strain states.
 
     Returns:
         derived_deforms: derived deformations
         derived_strains: derived strains
         derived_stresses: derived Cauchy stresses
-        derived_second_pk_stresses: derived second Piola-Kirchhoff stresses
-        derived_task_ids: None
-        derived_dir_names: None
+        derived_pk_stresses: derived second Piola-Kirchhoff stresses
     """
 
     sga = SpacegroupAnalyzer(structure, symprec=symprec)
     symmops = sga.get_symmetry_operations(cartesian=True)
 
-    # primary deformation mapping (used only for checking purpose below)
-    p_mapping = TensorMapping(deforms, deforms, tol=tol)
+    # primary strain mapping (used only for checking purpose below)
+    p_mapping = TensorMapping(strains, strains, tol=tol)
 
     #
     # generated derived deforms
     #
     mapping = TensorMapping(tol=tol)
-    for i, p_deform in enumerate(deforms):
+    for i, p_strain in enumerate(strains):
         for op in symmops:
-            d_deform = p_deform.transform(op)
+            d_strain = p_strain.transform(op)
 
-            # sym op generates another primary deform
-            if d_deform in p_mapping:
+            # sym op generates another primary strain
+            if d_strain in p_mapping:
                 continue
 
             # sym op generates a non-independent deform
-            if not d_deform.is_independent(tol=tol):
-                continue
-
-            # generate a non upper triangular deformation, not what we want since the
-            # workflow only generates upper triangular ones before symmetry reduction
-            if not is_upper_triangular(d_deform):
+            if not d_strain.get_deformation_matrix().is_independent(tol=tol):
                 continue
 
             # seen this derived deform before
-            if d_deform in mapping:
+            if d_strain in mapping:
 
                 # all the existing `i`
-                current = [t[1] for t in mapping[d_deform]]
+                current = [t[1] for t in mapping[d_strain]]
 
                 if i not in current:
-                    mapping[d_deform].append((op, i))
+                    mapping[d_strain].append((op, i))
 
             # not seen this derived deform before
             else:
-                mapping[d_deform] = [(op, i)]
+                mapping[d_strain] = [(op, i)]
 
     #
     # get average stress from derived deforms
     #
-    derived_deforms = []
+    derived_strains = []
     derived_stresses = []
+    derived_deforms = []
+    derived_pk_stresses = []
 
-    for d_deform, op_set in mapping.items():
+    for d_strain, op_set in mapping.items():
         symmops, p_indices = zip(*op_set)
 
         p_stresses = [stresses[i] for i in p_indices]
         d_stresses = [s.transform(op) for s, op in zip(p_stresses, symmops)]
         d_stress = Stress(np.average(d_stresses, axis=0))
 
-        derived_deforms.append(d_deform)
+        derived_strains.append(d_strain)
         derived_stresses.append(d_stress)
 
-    return _generate_fitting_data(derived_deforms, derived_stresses)
+        deform = d_strain.get_deformation_matrix()
+        derived_deforms.append(deform)
+        derived_pk_stresses.append(d_stress.piola_kirchoff_2(deform))
 
-
-def _generate_fitting_data(
-    deforms: List[Deformation],
-    stresses: List[Stress],
-    task_ids: List[MPID] = None,
-    dir_names: List[str] = None,
-) -> Tuple[
-    List[Deformation],
-    List[Strain],
-    List[Stress],
-    List[Stress],
-    Union[List[MPID], None],
-    Union[List[str], None],
-]:
-    size = len(deforms)
-    assert len(stresses) == size
-    if task_ids is not None:
-        assert len(task_ids) == size
-    if dir_names is not None:
-        assert len(dir_names) == size
-
-    strains = [d.green_lagrange_strain for d in deforms]
-    second_pk_stresses = [s.piola_kirchoff_2(d) for (s, d) in zip(stresses, deforms)]
-
-    return deforms, strains, stresses, second_pk_stresses, task_ids, dir_names
+    return derived_deforms, derived_strains, derived_stresses, derived_pk_stresses
 
 
 def fit_elastic_tensor(
@@ -641,15 +616,3 @@ def sanity_check(
         state = Status("successful")
 
     return state, warnings
-
-
-def is_upper_triangular(t: SquareTensor, tol: float = 1e-8) -> bool:
-    """
-    Check whether a square tensor is an upper triangular one.
-    """
-    for i in range(1, len(t)):
-        for j in range(i):
-            if abs(t[i, j]) > tol:
-                return False
-
-    return True

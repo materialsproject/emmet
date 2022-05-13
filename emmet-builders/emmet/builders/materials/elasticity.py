@@ -47,6 +47,7 @@ class ElasticityBuilder(Builder):
         super().__init__(sources=[tasks, materials], targets=[elasticity], **kwargs)
 
     def ensure_index(self):
+        # TODO this should be reconsidered
         self.tasks.ensure_index("nsites")
         self.tasks.ensure_index("formula_pretty")
         self.tasks.ensure_index("last_updated")
@@ -54,8 +55,6 @@ class ElasticityBuilder(Builder):
         self.materials.ensure_index("material_id")
         self.materials.ensure_index("last_updated")
 
-        # TODO optimization_task_id?
-        self.elasticity.ensure_index("optimization_task_id")
         self.elasticity.ensure_index("last_updated")
 
     def get_items(
