@@ -930,6 +930,20 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#emmet.core.thermo.ThermoDoc.decomposition_enthalpy" class="md-nav__link">
+    decomposition_enthalpy
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#emmet.core.thermo.ThermoDoc.decomposition_enthalpy_decomposes_to" class="md-nav__link">
+    decomposition_enthalpy_decomposes_to
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#emmet.core.thermo.ThermoDoc.energy_above_hull" class="md-nav__link">
     energy_above_hull
   </a>
@@ -1958,6 +1972,20 @@
           <li class="md-nav__item">
   <a href="#emmet.core.thermo.ThermoDoc.decomposes_to" class="md-nav__link">
     decomposes_to
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#emmet.core.thermo.ThermoDoc.decomposition_enthalpy" class="md-nav__link">
+    decomposition_enthalpy
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#emmet.core.thermo.ThermoDoc.decomposition_enthalpy_decomposes_to" class="md-nav__link">
+    decomposition_enthalpy_decomposes_to
   </a>
   
 </li>
@@ -5037,6 +5065,16 @@ ThermoDoc            (<span title="emmet.core.material_property.PropertyDoc">Pro
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of decomposition data for this material. Only valid for metastable or unstable material.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
+    <span class="n">decomposition_enthalpy</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">decomposition_enthalpy_decomposes_to</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DecompositionProduct</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of decomposition data associated with the decomposition_enthalpy quantity.&quot;</span>
+    <span class="p">)</span>
+
     <span class="n">energy_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="o">...</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The type of calculation this energy evaluation comes from.&quot;</span><span class="p">,</span>
@@ -5102,6 +5140,23 @@ ThermoDoc            (<span title="emmet.core.material_property.PropertyDoc">Pro
                     <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                 <span class="p">]</span>
 
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">decomp</span><span class="p">,</span> <span class="n">energy</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_phase_separation_energy</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposition_enthalpy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span>
+                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposition_enthalpy_decomposes_to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">entry_id</span><span class="p">,</span>
+                        <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span>
+                        <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">,</span>
+                    <span class="p">}</span>
+                    <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="p">]</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="c1"># try/except so this quantity does not take down the builder if it fails:</span>
+                <span class="c1"># it includes an optimization step that can be fragile in some instances,</span>
+                <span class="c1"># most likely failure is ValueError, &quot;invalid value encountered in true_divide&quot;</span>
+                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Could not calculate decomposition enthalpy for this entry.&quot;</span><span class="p">]</span>
+
             <span class="n">d</span><span class="p">[</span><span class="s2">&quot;energy_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">)</span>
             <span class="n">d</span><span class="p">[</span><span class="s2">&quot;entry_types&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">)]</span>
             <span class="n">d</span><span class="p">[</span><span class="s2">&quot;entries&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span> <span class="n">e</span><span class="p">}</span>
@@ -5145,6 +5200,50 @@ ThermoDoc            (<span title="emmet.core.material_property.PropertyDoc">Pro
     <div class="doc doc-contents ">
 
       <p>List of decomposition data for this material. Only valid for metastable or unstable material.</p>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="emmet.core.thermo.ThermoDoc.decomposition_enthalpy" class="doc doc-heading">
+<code class="codehilite language-python"><span class="n">decomposition_enthalpy</span><span class="p">:</span> <span class="nb">float</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-pydantic-field"><code>pydantic-field</code></small>
+  </span>
+
+<a href="#emmet.core.thermo.ThermoDoc.decomposition_enthalpy" class="headerlink" title="Permanent link">&para;</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Decomposition enthalpy as defined by <code>get_decomp_and_phase_separation_energy</code> in pymatgen.</p>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="emmet.core.thermo.ThermoDoc.decomposition_enthalpy_decomposes_to" class="doc doc-heading">
+<code class="codehilite language-python"><span class="n">decomposition_enthalpy_decomposes_to</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">emmet</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">thermo</span><span class="o">.</span><span class="n">DecompositionProduct</span><span class="p">]</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-pydantic-field"><code>pydantic-field</code></small>
+  </span>
+
+<a href="#emmet.core.thermo.ThermoDoc.decomposition_enthalpy_decomposes_to" class="headerlink" title="Permanent link">&para;</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>List of decomposition data associated with the decomposition_enthalpy quantity.</p>
     </div>
 
   </div>
