@@ -193,17 +193,20 @@ class SummaryDoc(PropertyDoc):
     )
 
     bond_types: Dict[str, Dict[str, List[float]]] = Field(
+        None,
         description="Dictionaries of bond types to their length under different "
         "definitions of bonding, e.g. C-O to a list of the lengths of "
         "C-O bonds in Angstrom."
     )
 
     bonds: Dict[str, List[Tuple[int, int]]] = Field(
+        None,
         description="List of bonds under different definitions of bonding. Each bond takes "
         "the form (a, b), where a and b are 0-indexed atom indices",
     )
 
     bonds_nometal: Dict[str, List[Tuple[int, int]]] = Field(
+        None,
         description="List of bonds under different definitions of bonding with all metal ions "
         "removed. Each bond takes the form in the form (a, b), where a and b are "
         "0-indexed atom indices.",
