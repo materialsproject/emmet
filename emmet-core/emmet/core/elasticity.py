@@ -130,16 +130,17 @@ class CriticalMessage(BaseModel):
     COMPLIANCE = (
         "Critical: cannot invert elastic tensor to get compliance tensor. Error: {}."
     )
-    N_STRAINS = (
+    STRAIN_RANK = (
         "Critical: insufficient number of valid strains. Expect the matrix of all "
         "strains to be of rank 6, but got rank {}."
     )
-    # TODO, discuss with Jason and Matt whether to put these two as warnings
+    N_STATES = "Critical: Expect 24 total (primary plus derived) strain stress states "
+    "to fit the data; but got {}."
     NEGATIVE_MODULUS = "Critical: Negative modulus. {} {} is {}."
-    NEGATIVE_EIGVAL = "Critical: Elastic tensor has negative eigenvalue."
 
 
 class WarningMessage(BaseModel):
+    NEGATIVE_EIGVAL = "Elastic tensor has negative eigenvalue(s)."
     LARGE_COMPONENT = "Elastic tensor has component larger than {}."
     SMALL_MODULUS = "Small modulus. {} {} is {}; smaller than {}."
     LARGE_MODULUS = "Large modulus. {} {} is {}; larger than {}."
@@ -155,8 +156,8 @@ class ElasticityDoc(PropertyDoc):
 
     property_name: str = "elasticity"
 
-    optimized_structure: Structure = Field(
-        None, description="Optimized structure to compute the elasticity"
+    structure: Structure = Field(
+        None, description="Structure to compute the elasticity"
     )
 
     elastic_tensor: ElasticTensorDoc = Field(None, description="Elastic tensor")
@@ -212,6 +213,8 @@ class ElasticityDoc(PropertyDoc):
         **kwargs,
     ):
 
+        CM = CriticalMessage()
+
         # primary fitting data
         p_deforms = deformations
         p_stresses = stresses
@@ -253,7 +256,7 @@ class ElasticityDoc(PropertyDoc):
             ct_doc = None
             derived_props = {}
             state = Status("failed")
-            warnings = [CriticalMessage().FITTING.format(e)]
+            warnings = [CM.FITTING.format(e)]
 
         else:
             try:
@@ -281,10 +284,15 @@ class ElasticityDoc(PropertyDoc):
                 ct_doc = None
                 derived_props = {}
                 state = Status("failed")
-                warnings = [CriticalMessage().COMPLIANCE.format(e)]
+                warnings = [CM.COMPLIANCE.format(e)]
 
         # fitting data
         eq_stress = None if equilibrium_stress is None else equilibrium_stress.tolist()
+        n_states = len(p_deforms) + len(d_deforms)
+        if n_states != 24:
+            warnings.append(CM.N_STATES.format(n_states))
+            state = Status("failed")
+
         fitting_data = FittingData(
             deformations=[x.tolist() for x in p_deforms],  # type: ignore
             strains=[x.tolist() for x in p_strains],  # type: ignore
@@ -295,21 +303,21 @@ class ElasticityDoc(PropertyDoc):
             equilibrium_cauchy_stress=eq_stress,
             optimization_task=optimization_task_id,
             optimization_dir_name=optimization_dir_name,
-            num_total_strain_stress_states=len(p_deforms) + len(d_deforms),
+            num_total_strain_stress_states=n_states,
         )
 
         return cls.from_structure(
             structure,
             material_id,
-            optimized_structure=structure,
+            structure=structure,
             order=2,
-            state=state,
             elastic_tensor=et_doc,
             compliance_tensor=ct_doc,
             fitting_data=fitting_data,
             fitting_method=fitting_method,
             warnings=warnings,
-            deprecated=False,
+            state=state,
+            deprecated=state == Status("failed"),
             **derived_props,
             **kwargs,
         )
@@ -565,12 +573,12 @@ def sanity_check(
     rank = np.linalg.matrix_rank(voigt_strains)
     if rank != 6:
         failed = True
-        warnings.append(CM.N_STRAINS.format(rank))
+        warnings.append(CM.STRAIN_RANK.format(rank))
 
     # elastic tensor eigenvalues
     eig_vals, _ = np.linalg.eig(elastic_doc.raw)
     if np.any(eig_vals < 0.0):
-        warnings.append(CM.NEGATIVE_EIGVAL)
+        warnings.append(WM.NEGATIVE_EIGVAL)
 
     # elastic tensor individual components
     et = np.asarray(elastic_doc.ieee_format)
