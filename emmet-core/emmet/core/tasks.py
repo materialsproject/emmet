@@ -145,7 +145,7 @@ class TaskDoc(BaseModel):
     """
 
     tags: List[str] = Field(
-        None, title="tag", description="Metadata tagged to a given task."
+        [], title="tag", description="Metadata tagged to a given task."
     )
 
     state: TaskState = Field(None, description="State of this calculation")
