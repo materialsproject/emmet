@@ -1,6 +1,6 @@
 """ Core definition of a VASP Task Document """
 from datetime import datetime
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Literal
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import oxide_type
@@ -34,7 +34,7 @@ class BaseTaskDocument(EmmetBaseModel):
         description="Timestamp for this task document was last updateed",
     )
 
-    tags: List[str] = Field([], description="Metadata tags for this task document")
+    tags: Union[List[str], Literal[None]] = Field([], description="Metadata tags for this task document")
 
     warnings: List[str] = Field(
         None, description="Any warnings related to this property"
