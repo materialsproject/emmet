@@ -1,11 +1,10 @@
-""" Utilities to determine level of theory, task type, and calculation type for Q-Chem calculations"""
-from typing import Any, Dict, Optional
+""" Utilities to determine level of theory, task type, and calculation type for Jaguar calculations"""
+from typing import Any, Dict
 
 from emmet.core.jaguar.calc_types import LevelOfTheory, CalcType, TaskType
 from emmet.core.jaguar.calc_types.calc_types import (
     FUNCTIONALS,
     BASIS_SETS,
-    SOLVENTS,
     PCM_DIELECTRICS,
     SMD_PARAMETERS,
 )
@@ -54,7 +53,7 @@ def level_of_theory(parameters: Dict[str, Any]) -> LevelOfTheory:
     else:
         solvent_method = f"PCM(WATER)"
 
-    lot = f"{functional}/{basis}/{solvation}"
+    lot = f"{functional}/{basis}/{solvent_method}"
 
     return LevelOfTheory(lot)
 
@@ -77,15 +76,15 @@ def task_type(job_type: str) -> TaskType:
 
 
 def calc_type(
-    special_run_type: str, orig: Dict[str, Any], custom_smd: Optional[str] = None
+    parameters: Dict[str, Any], job_type: str
 ) -> CalcType:
     """
     Determines the calc type
 
     Args:
-        inputs: inputs dict with an incar, kpoints, potcar, and poscar dictionaries
-        parameters: Dictionary of VASP parameters from Vasprun.xml
+        parameters: Dictionary of Jaguar input parameters
+        job_type: Job type from MPCat
     """
-    rt = level_of_theory(orig, custom_smd=custom_smd).value
-    tt = task_type(orig, special_run_type=special_run_type).value
+    rt = level_of_theory(parameters).value
+    tt = task_type(job_type).value
     return CalcType(f"{rt} {tt}")
