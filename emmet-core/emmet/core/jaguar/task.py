@@ -1,5 +1,5 @@
-""" Core definition of a Q-Chem Task Document """
-from typing import Any, Dict, List, Union, Optional, Callable
+""" Core definition of a Jaguar Task Document """
+from typing import Any, Dict, List, Optional, Callable
 
 from datetime import datetime
 
@@ -7,11 +7,9 @@ from pydantic import BaseModel, Field
 from pymatgen.core.structure import Molecule
 
 from emmet.core.mpid import MPID
-from emmet.core.math import Matrix3D, Vector3D
+from emmet.core.math import Matrix3D
 from emmet.core.structure import MoleculeMetadata
-from emmet.core.vasp.task_valid import BaseTaskDocument
-from emmet.core.utils import ValueEnum
-from emmet.core.qchem.calc_types import (
+from emmet.core.jaguar.calc_types import (
     LevelOfTheory,
     CalcType,
     TaskType,
@@ -77,7 +75,7 @@ class OutputSummary(BaseModel):
     frequencies: List[float] = Field(
         None, description="Vibrational frequencies of the molecule (units: cm^-1)"
     )
-    vibrational_frequency_modes: List[List[List[float]]] = Field(
+    vibrational_frequency_modes: List[Matrix3D] = Field(
         None, description="Normal mode vectors of the molecule (units: Angstrom)"
     )
 
@@ -94,7 +92,7 @@ class OutputSummary(BaseModel):
         }
 
 
-class TaskDocument(BaseTaskDocument, MoleculeMetadata):
+class TaskDocument(MoleculeMetadata):
     """
     Definition of a Jaguar task document
     """
@@ -116,6 +114,9 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     )
     job_id: str = Field(
         None, description="Internal JobDB ID for this Jaguar calculation"
+    )
+    job_type: str = Field(
+        None, description="Type of calculation (single-point, optimization, etc.)"
     )
 
     is_valid: bool = Field(
@@ -147,23 +148,24 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
     @property
     def level_of_theory(self) -> LevelOfTheory:
-        return level_of_theory(self.orig, custom_smd=self.custom_smd)
+        return level_of_theory(self.input)
 
     @property
     def task_type(self) -> TaskType:
-        return task_type(self.orig, special_run_type=self.special_run_type)
+        return task_type(self.job_type)
 
     @property
     def calc_type(self) -> CalcType:
-        return calc_type(self.special_run_type, self.orig, custom_smd=self.custom_smd)
+        return calc_type(self.input, self.job_type)
 
     @property
     def entry(self) -> Dict[str, Any]:
 
-        if self.output.optimized_molecule is not None:
-            mol = self.output.optimized_molecule
+        if self.output.molecule is not None:
+            mol = self.output.molecule
         else:
-            mol = self.output.initial_molecule
+            # TODO: Does this need to be converted dict -> Molecule?
+            mol = self.input["molecule"]
 
         if self.charge is None:
             charge = mol.charge
@@ -175,22 +177,26 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
         else:
             spin = self.spin_multiplicity
 
+        if self.nelectrons is None:
+            nelectrons = mol._nelectrons
+        else:
+            nelectrons = self.nelectrons
+
         entry_dict = {
-            "entry_id": self.task_id,
-            "task_id": self.task_id,
+            "entry_id": self.calcid,
+            "task_id": self.calcid,
             "charge": charge,
             "spin_multiplicity": spin,
+            "nelectrons": nelectrons,
             "level_of_theory": self.level_of_theory,
-            "custom_smd": self.custom_smd,
             "task_type": self.task_type,
             "calc_type": self.calc_type,
             "molecule": mol,
             "composition": mol.composition,
             "formula": mol.composition.alphabetical_formula,
-            "energy": self.output.final_energy,
+            "energy": self.output.energy,
             "output": self.output.as_dict(),
-            "critic2": self.critic2,
-            "orig": self.orig,
+            "input": self.input,
             "tags": self.tags,
             "last_updated": self.last_updated,
         }
@@ -214,7 +220,7 @@ def filter_task_type(
 
     filtered = [f for f in entries if f["task_type"] == task_type]
 
-    if sort_by is not None:
-        return sorted(filtered, key=lambda x: x["output"]["final_energy"])
+    if sort_by is None:
+        return sorted(filtered, key=lambda x: x["energy"])
     else:
-        return filtered
+        return sorted(filtered, key=sort_by)
