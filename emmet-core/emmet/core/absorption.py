@@ -1,0 +1,91 @@
+
+from typing import Dict, List, Any, Union
+from pydantic import Field
+from emmet.core.material_property import PropertyDoc
+import numpy as np
+from emmet.core.mpid import MPID
+from pymatgen.core import Structure
+
+
+class AbsorptionDoc(PropertyDoc):
+    """Absorption spectrum based on frequency dependent dielectric function calculations."""
+
+    property_name = "absorption spectrum"
+
+    task_id: str = Field(
+        None,
+        description="The Materials Project ID of the material. This comes in the form: mp-******",
+    )
+
+    energies: List[float] = Field(description="absorption energy in eV starting from 0")
+
+    energy_max: float = Field(description="maximum energy")
+
+    absorption_coefficient: List[float] = Field(description="Absorption coefficient in cm^-1")
+
+    average_imaginary_dielectric: List[float] = Field(description="imaginary part of the dielectric function corresponding to the "
+                                                   "energies")
+
+    average_real_dielectric: List[float] = Field(description="real part of the dielectric function corresponding to the energies")
+    
+    bandgap: float = Field(description="the electronic band gap from a band structure calculation")
+      
+    nkpoints: float = Field(description="the number of kpoints used in the calculation") 
+    
+    is_hubbard: bool = Field(description="whether the material is hubbard") 
+
+
+    @classmethod
+    def _convert_list_to_tensor(cls, l):
+        l = np.array(l) 
+        a = np.array(
+            [[l[0],l[3],l[4]],
+            [l[3],l[1], l[5]],
+            [l[4],l[5],l[2]]]
+        )
+        return a
+        
+
+    @classmethod
+    def from_structure(
+        cls,
+        material_id: MPID,
+        energies: List,
+        real_d: List[np.array],
+        imag_d: List[np.array],
+        absorption_co: List,
+        bandgap: float,
+        structure: Structure,
+        nkpoints: float,
+        is_hubbard: bool,
+        **kwargs,
+    ):
+        
+
+             
+        real_d_average = [np.average(np.diagonal(cls._convert_list_to_tensor(t))) for t in real_d]
+        imag_d_average = [np.average(np.diagonal(cls._convert_list_to_tensor(t))) for t in imag_d]
+        energies = list(np.array(energies)*(5.31e-12))
+        # this is needed for pymatgen before absorption branch, because the coefficient was wrong! 
+        
+        for i, ab_co in enumerate(absorption_co):     #optical_bandgap, at the energy where absorption_co > 0
+            if ab_co > 0.01: 
+                optical_bandgap = energies[i]
+                break
+                
+        
+        return super().from_structure(
+            meta_structure=structure,
+            material_id=material_id,
+            **{
+                "energies": energies,
+                "energy_max": np.array(energies).max(),
+                "absorption_coefficient": absorption_co,
+                "average_imaginary_dielectric": imag_d_average,
+                "average_real_dielectric": real_d_average,
+                "bandgap": bandgap,
+                "nkpoints": nkpoints,
+                "is_hubbard": is_hubbard
+                            },
+            **kwargs,
+        )
