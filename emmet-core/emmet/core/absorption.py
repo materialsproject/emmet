@@ -66,14 +66,8 @@ class AbsorptionDoc(PropertyDoc):
         real_d_average = [np.average(np.diagonal(cls._convert_list_to_tensor(t))) for t in real_d]
         imag_d_average = [np.average(np.diagonal(cls._convert_list_to_tensor(t))) for t in imag_d]
         energies = list(np.array(energies)*(5.31e-12))
-        # this is needed for pymatgen before absorption branch, because the coefficient was wrong! 
-        
-        for i, ab_co in enumerate(absorption_co):     #optical_bandgap, at the energy where absorption_co > 0
-            if ab_co > 0.01: 
-                optical_bandgap = energies[i]
-                break
-                
-        
+        # this is needed for pymatgen before absorption branch, for the right unit in cm-1 
+
         return super().from_structure(
             meta_structure=structure,
             material_id=material_id,
