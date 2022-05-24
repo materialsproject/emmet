@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.27.5](https://github.com/materialsproject/emmet/tree/v0.27.5) (2022-05-24)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.27.4...v0.27.5)
+
+**Merged pull requests:**
+
+- Rename `molecules_old` to `molecules_jcesr` [\#423](https://github.com/materialsproject/emmet/pull/423) ([munrojm](https://github.com/munrojm))
+
 ## [v0.27.4](https://github.com/materialsproject/emmet/tree/v0.27.4) (2022-05-20)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.27.3...v0.27.4)
