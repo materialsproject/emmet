@@ -25,8 +25,6 @@ SETTINGS = EmmetSettings()
 # Notes:
 # - Reactions should be defined in the exergonic direction
 #   That is, products should always be lower in (free) energy than reactants
-# - TS bonding is poorly defined essentially by its nature
-#   But, should PESMinimumDocs have bonding information?
 
 
 class ReactionDoc(MoleculeMetadata):
@@ -52,12 +50,13 @@ class ReactionDoc(MoleculeMetadata):
     )
     reactant_bonds: List[Tuple[int, int]] = Field(
         [],
-        description="List of bonds in the reactants in the form (a, b), where a and b are 0-indexed atom indices",
+        description="List of bonds in the reactants in the form (a, b), where a and b are 0-indexed "
+                    "atom indices",
     )
     reactant_bonds_nometal: List[Tuple[int, int]] = Field(
         [],
-        description="List of bonds in the reactants in the form (a, b), where a and b are 0-indexed atom indices, "
-        "with all metal ions removed",
+        description="List of bonds in the reactants in the form (a, b), where a and b are 0-indexed "
+                    "atom indices, with all metal ions removed",
     )
     reactant_energy: float = Field(
         None,
@@ -88,12 +87,13 @@ class ReactionDoc(MoleculeMetadata):
     )
     product_bonds: List[Tuple[int, int]] = Field(
         [],
-        description="List of bonds in the products in the form (a, b), where a and b are 0-indexed atom indices",
+        description="List of bonds in the products in the form (a, b), where a and b are 0-indexed "
+                    "atom indices",
     )
     product_bonds_nometal: List[Tuple[int, int]] = Field(
         [],
-        description="List of bonds in the products in the form (a, b), where a and b are 0-indexed atom indices, "
-        "with all metal ions removed",
+        description="List of bonds in the products in the form (a, b), where a and b are 0-indexed "
+                    "atom indices, with all metal ions removed",
     )
     product_energy: float = Field(
         None,
@@ -150,18 +150,67 @@ class ReactionDoc(MoleculeMetadata):
     )
     dG: float = Field(None, description="Gibbs free energy (units: eV).")
 
+    # Reaction barrier
+    dE_barrier: float = Field(
+        None, description="Electronic energy barrier (TS - reactant) of this reaction (units: eV)."
+    )
+    dH_barrier: float = Field(None, description="Enthalpy barrier (TS - reactant) of this reaction "
+                                                "(units: eV).")
+    dS_barrier: float = Field(
+        None, description="Entropy barrier (TS - reactant) of this reaction (units: eV/K)."
+    )
+    dG_barrier: float = Field(None, description="Gibbs free energy barrier (TS - reactant) "
+                                                "(units: eV).")
+
+    # Bonding changes
+    bonds_broken: List[Tuple[int, int]] = Field(
+        [],
+        description="List of bonds broken during the reaction in the form (a, b), where a and b are"
+                    "0-indexed atom indices.",
+    )
+    bonds_broken_nometal: List[Tuple[int, int]] = Field(
+        [],
+        description="List of bonds broken during the reaction in the form (a, b), where a and b are"
+                    "0-indexed atom indices, with all metal ions removed.",
+    )
+    bonds_formed: List[Tuple[int, int]] = Field(
+        [],
+        description="List of bonds formed during the reaction in the form (a, b), where a and b are"
+                    "0-indexed atom indices",
+    )
+    bonds_formed_nometal: List[Tuple[int, int]] = Field(
+        [],
+        description="List of bonds formed during the reaction in the form (a, b), where a and b are"
+                    "0-indexed atom indices, with all metal ions removed",
+    )
+
     @classmethod
     def from_docs(
         cls,
-        reactants: PESMinimumDoc,
-        products: PESMinimumDoc,
+        endpoint1: PESMinimumDoc,
+        endpoint2: PESMinimumDoc,
         transition_state: TransitionStateDoc,
         deprecated: bool = False,
         **kwargs
     ):  # type: ignore[override]
+        """
+        Define a reaction based on reactant & product complexes and a
+        transition-state
+
+        :param endpoint1: PESMinimumDoc describing one endpoint of this reaction
+        :param products: PESMinimumDOc describing the other endpoint of this
+            reaction
+        :param transition_state: TransitionStateDoc describing the TS of this
+            reaction
+        :param deprecated: Bool. Is this reaction deprecated?
+        :param kwargs:
+        :return: ReactionDoc
+        """
+
         # Extract basic information (IDs, structures)
         # Make MoleculeGraphs
         # Find best common LevelOfTheory
         # Use that LOT to calculate thermodynamic properties
         # Take deltas of everything
-        pass
+
+        
