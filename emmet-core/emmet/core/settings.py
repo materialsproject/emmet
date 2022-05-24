@@ -94,6 +94,30 @@ class EmmetSettings(BaseSettings):
         description="Dictionary mapping Q-Chem solvent models to a quality score.",
     )
 
+    JAGUAR_FUNCTIONAL_QUALITY_SCORES: Dict[str, int] = Field(
+        {
+            "wb97x-v": 4,
+            "wb97x-d": 3,
+            "CAM-B3LYP-D3": 3,
+            "M11": 1,
+            "PBE0": 1,
+        },
+        description="Dictionary mapping Jaguar density functionals to a quality score.",
+    )
+
+    JAGUAR_BASIS_QUALITY_SCORES: Dict[str, int] = Field(
+        {
+            "def2-svpd(-f)": 1,
+            "def2-tzvppd(-g)": 3,
+        },
+        description="Dictionary mapping Jaguar basis sets to a quality score.",
+    )
+
+    JAGUAR_SOLVENT_MODEL_QUALITY_SCORES: Dict[str, int] = Field(
+        {"PCM": 3, "VACUUM": 1},
+        description="Dictionary mapping Jaguar solvent models to a quality score.",
+    )
+
     QCHEM_TASK_QUALITY_SCORES: Dict[str, int] = Field(
         {"geometry optimization": 1, "frequency-flattening geometry optimization": 2},
         description="Dictionary mapping Q-Chem task type to a quality score",

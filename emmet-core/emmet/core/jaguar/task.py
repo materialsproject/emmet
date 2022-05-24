@@ -184,7 +184,7 @@ class TaskDocument(MoleculeMetadata):
 
         entry_dict = {
             "entry_id": self.calcid,
-            "task_id": self.calcid,
+            "calcid": self.calcid,
             "charge": charge,
             "spin_multiplicity": spin,
             "nelectrons": nelectrons,
