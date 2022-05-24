@@ -6,7 +6,7 @@ from emmet.core.utils import ValueEnum
 
 
 class LevelOfTheory(ValueEnum):
-    """ Levels of theory for calculations in Jaguar """
+    """Levels of theory for calculations in Jaguar"""
 
     PBE0_def2_svpd__f__VACUUM = "PBE0/def2-svpd(-f)/VACUUM"
     PBE0_def2_svpd__f__PCM_WATER_ = "PBE0/def2-svpd(-f)/PCM(WATER)"
@@ -31,7 +31,7 @@ class LevelOfTheory(ValueEnum):
 
 
 class TaskType(ValueEnum):
-    """ Calculation task types for Jaguar """
+    """Calculation task types for Jaguar"""
 
     Single_Point = "Single Point"
     Geometry_Optimization = "Geometry Optimization"
@@ -43,145 +43,395 @@ class TaskType(ValueEnum):
 
 
 class CalcType(ValueEnum):
-    """ Calculation types (LOT + task type) for Jaguar """
+    """Calculation types (LOT + task type) for Jaguar"""
 
     PBE0_def2_svpd__f__VACUUM_Single_Point = "PBE0/def2-svpd(-f)/VACUUM Single Point"
-    PBE0_def2_svpd__f__VACUUM_Geometry_Optimization = "PBE0/def2-svpd(-f)/VACUUM Geometry Optimization"
-    PBE0_def2_svpd__f__VACUUM_Frequency_Analysis = "PBE0/def2-svpd(-f)/VACUUM Frequency Analysis"
-    PBE0_def2_svpd__f__VACUUM_Transition_State_Geometry_Optimization = "PBE0/def2-svpd(-f)/VACUUM Transition State Geometry Optimization"
-    PBE0_def2_svpd__f__VACUUM_Intrinsic_Reaction_Coordinate = "PBE0/def2-svpd(-f)/VACUUM Intrinsic Reaction Coordinate"
-    PBE0_def2_svpd__f__VACUUM_Potential_Energy_Surface_Scan = "PBE0/def2-svpd(-f)/VACUUM Potential Energy Surface Scan"
+    PBE0_def2_svpd__f__VACUUM_Geometry_Optimization = (
+        "PBE0/def2-svpd(-f)/VACUUM Geometry Optimization"
+    )
+    PBE0_def2_svpd__f__VACUUM_Frequency_Analysis = (
+        "PBE0/def2-svpd(-f)/VACUUM Frequency Analysis"
+    )
+    PBE0_def2_svpd__f__VACUUM_Transition_State_Geometry_Optimization = (
+        "PBE0/def2-svpd(-f)/VACUUM Transition State Geometry Optimization"
+    )
+    PBE0_def2_svpd__f__VACUUM_Intrinsic_Reaction_Coordinate = (
+        "PBE0/def2-svpd(-f)/VACUUM Intrinsic Reaction Coordinate"
+    )
+    PBE0_def2_svpd__f__VACUUM_Potential_Energy_Surface_Scan = (
+        "PBE0/def2-svpd(-f)/VACUUM Potential Energy Surface Scan"
+    )
     PBE0_def2_svpd__f__VACUUM_Unknown = "PBE0/def2-svpd(-f)/VACUUM Unknown"
-    PBE0_def2_svpd__f__PCM_WATER__Single_Point = "PBE0/def2-svpd(-f)/PCM(WATER) Single Point"
-    PBE0_def2_svpd__f__PCM_WATER__Geometry_Optimization = "PBE0/def2-svpd(-f)/PCM(WATER) Geometry Optimization"
-    PBE0_def2_svpd__f__PCM_WATER__Frequency_Analysis = "PBE0/def2-svpd(-f)/PCM(WATER) Frequency Analysis"
-    PBE0_def2_svpd__f__PCM_WATER__Transition_State_Geometry_Optimization = "PBE0/def2-svpd(-f)/PCM(WATER) Transition State Geometry Optimization"
-    PBE0_def2_svpd__f__PCM_WATER__Intrinsic_Reaction_Coordinate = "PBE0/def2-svpd(-f)/PCM(WATER) Intrinsic Reaction Coordinate"
-    PBE0_def2_svpd__f__PCM_WATER__Potential_Energy_Surface_Scan = "PBE0/def2-svpd(-f)/PCM(WATER) Potential Energy Surface Scan"
+    PBE0_def2_svpd__f__PCM_WATER__Single_Point = (
+        "PBE0/def2-svpd(-f)/PCM(WATER) Single Point"
+    )
+    PBE0_def2_svpd__f__PCM_WATER__Geometry_Optimization = (
+        "PBE0/def2-svpd(-f)/PCM(WATER) Geometry Optimization"
+    )
+    PBE0_def2_svpd__f__PCM_WATER__Frequency_Analysis = (
+        "PBE0/def2-svpd(-f)/PCM(WATER) Frequency Analysis"
+    )
+    PBE0_def2_svpd__f__PCM_WATER__Transition_State_Geometry_Optimization = (
+        "PBE0/def2-svpd(-f)/PCM(WATER) Transition State Geometry Optimization"
+    )
+    PBE0_def2_svpd__f__PCM_WATER__Intrinsic_Reaction_Coordinate = (
+        "PBE0/def2-svpd(-f)/PCM(WATER) Intrinsic Reaction Coordinate"
+    )
+    PBE0_def2_svpd__f__PCM_WATER__Potential_Energy_Surface_Scan = (
+        "PBE0/def2-svpd(-f)/PCM(WATER) Potential Energy Surface Scan"
+    )
     PBE0_def2_svpd__f__PCM_WATER__Unknown = "PBE0/def2-svpd(-f)/PCM(WATER) Unknown"
-    PBE0_def2_tzvppd__g__VACUUM_Single_Point = "PBE0/def2-tzvppd(-g)/VACUUM Single Point"
-    PBE0_def2_tzvppd__g__VACUUM_Geometry_Optimization = "PBE0/def2-tzvppd(-g)/VACUUM Geometry Optimization"
-    PBE0_def2_tzvppd__g__VACUUM_Frequency_Analysis = "PBE0/def2-tzvppd(-g)/VACUUM Frequency Analysis"
-    PBE0_def2_tzvppd__g__VACUUM_Transition_State_Geometry_Optimization = "PBE0/def2-tzvppd(-g)/VACUUM Transition State Geometry Optimization"
-    PBE0_def2_tzvppd__g__VACUUM_Intrinsic_Reaction_Coordinate = "PBE0/def2-tzvppd(-g)/VACUUM Intrinsic Reaction Coordinate"
-    PBE0_def2_tzvppd__g__VACUUM_Potential_Energy_Surface_Scan = "PBE0/def2-tzvppd(-g)/VACUUM Potential Energy Surface Scan"
+    PBE0_def2_tzvppd__g__VACUUM_Single_Point = (
+        "PBE0/def2-tzvppd(-g)/VACUUM Single Point"
+    )
+    PBE0_def2_tzvppd__g__VACUUM_Geometry_Optimization = (
+        "PBE0/def2-tzvppd(-g)/VACUUM Geometry Optimization"
+    )
+    PBE0_def2_tzvppd__g__VACUUM_Frequency_Analysis = (
+        "PBE0/def2-tzvppd(-g)/VACUUM Frequency Analysis"
+    )
+    PBE0_def2_tzvppd__g__VACUUM_Transition_State_Geometry_Optimization = (
+        "PBE0/def2-tzvppd(-g)/VACUUM Transition State Geometry Optimization"
+    )
+    PBE0_def2_tzvppd__g__VACUUM_Intrinsic_Reaction_Coordinate = (
+        "PBE0/def2-tzvppd(-g)/VACUUM Intrinsic Reaction Coordinate"
+    )
+    PBE0_def2_tzvppd__g__VACUUM_Potential_Energy_Surface_Scan = (
+        "PBE0/def2-tzvppd(-g)/VACUUM Potential Energy Surface Scan"
+    )
     PBE0_def2_tzvppd__g__VACUUM_Unknown = "PBE0/def2-tzvppd(-g)/VACUUM Unknown"
-    PBE0_def2_tzvppd__g__PCM_WATER__Single_Point = "PBE0/def2-tzvppd(-g)/PCM(WATER) Single Point"
-    PBE0_def2_tzvppd__g__PCM_WATER__Geometry_Optimization = "PBE0/def2-tzvppd(-g)/PCM(WATER) Geometry Optimization"
-    PBE0_def2_tzvppd__g__PCM_WATER__Frequency_Analysis = "PBE0/def2-tzvppd(-g)/PCM(WATER) Frequency Analysis"
-    PBE0_def2_tzvppd__g__PCM_WATER__Transition_State_Geometry_Optimization = "PBE0/def2-tzvppd(-g)/PCM(WATER) Transition State Geometry Optimization"
-    PBE0_def2_tzvppd__g__PCM_WATER__Intrinsic_Reaction_Coordinate = "PBE0/def2-tzvppd(-g)/PCM(WATER) Intrinsic Reaction Coordinate"
-    PBE0_def2_tzvppd__g__PCM_WATER__Potential_Energy_Surface_Scan = "PBE0/def2-tzvppd(-g)/PCM(WATER) Potential Energy Surface Scan"
+    PBE0_def2_tzvppd__g__PCM_WATER__Single_Point = (
+        "PBE0/def2-tzvppd(-g)/PCM(WATER) Single Point"
+    )
+    PBE0_def2_tzvppd__g__PCM_WATER__Geometry_Optimization = (
+        "PBE0/def2-tzvppd(-g)/PCM(WATER) Geometry Optimization"
+    )
+    PBE0_def2_tzvppd__g__PCM_WATER__Frequency_Analysis = (
+        "PBE0/def2-tzvppd(-g)/PCM(WATER) Frequency Analysis"
+    )
+    PBE0_def2_tzvppd__g__PCM_WATER__Transition_State_Geometry_Optimization = (
+        "PBE0/def2-tzvppd(-g)/PCM(WATER) Transition State Geometry Optimization"
+    )
+    PBE0_def2_tzvppd__g__PCM_WATER__Intrinsic_Reaction_Coordinate = (
+        "PBE0/def2-tzvppd(-g)/PCM(WATER) Intrinsic Reaction Coordinate"
+    )
+    PBE0_def2_tzvppd__g__PCM_WATER__Potential_Energy_Surface_Scan = (
+        "PBE0/def2-tzvppd(-g)/PCM(WATER) Potential Energy Surface Scan"
+    )
     PBE0_def2_tzvppd__g__PCM_WATER__Unknown = "PBE0/def2-tzvppd(-g)/PCM(WATER) Unknown"
-    CAM_B3LYP_D3_def2_svpd__f__VACUUM_Single_Point = "CAM-B3LYP-D3/def2-svpd(-f)/VACUUM Single Point"
-    CAM_B3LYP_D3_def2_svpd__f__VACUUM_Geometry_Optimization = "CAM-B3LYP-D3/def2-svpd(-f)/VACUUM Geometry Optimization"
-    CAM_B3LYP_D3_def2_svpd__f__VACUUM_Frequency_Analysis = "CAM-B3LYP-D3/def2-svpd(-f)/VACUUM Frequency Analysis"
-    CAM_B3LYP_D3_def2_svpd__f__VACUUM_Transition_State_Geometry_Optimization = "CAM-B3LYP-D3/def2-svpd(-f)/VACUUM Transition State Geometry Optimization"
-    CAM_B3LYP_D3_def2_svpd__f__VACUUM_Intrinsic_Reaction_Coordinate = "CAM-B3LYP-D3/def2-svpd(-f)/VACUUM Intrinsic Reaction Coordinate"
-    CAM_B3LYP_D3_def2_svpd__f__VACUUM_Potential_Energy_Surface_Scan = "CAM-B3LYP-D3/def2-svpd(-f)/VACUUM Potential Energy Surface Scan"
-    CAM_B3LYP_D3_def2_svpd__f__VACUUM_Unknown = "CAM-B3LYP-D3/def2-svpd(-f)/VACUUM Unknown"
-    CAM_B3LYP_D3_def2_svpd__f__PCM_WATER__Single_Point = "CAM-B3LYP-D3/def2-svpd(-f)/PCM(WATER) Single Point"
-    CAM_B3LYP_D3_def2_svpd__f__PCM_WATER__Geometry_Optimization = "CAM-B3LYP-D3/def2-svpd(-f)/PCM(WATER) Geometry Optimization"
-    CAM_B3LYP_D3_def2_svpd__f__PCM_WATER__Frequency_Analysis = "CAM-B3LYP-D3/def2-svpd(-f)/PCM(WATER) Frequency Analysis"
-    CAM_B3LYP_D3_def2_svpd__f__PCM_WATER__Transition_State_Geometry_Optimization = "CAM-B3LYP-D3/def2-svpd(-f)/PCM(WATER) Transition State Geometry Optimization"
-    CAM_B3LYP_D3_def2_svpd__f__PCM_WATER__Intrinsic_Reaction_Coordinate = "CAM-B3LYP-D3/def2-svpd(-f)/PCM(WATER) Intrinsic Reaction Coordinate"
-    CAM_B3LYP_D3_def2_svpd__f__PCM_WATER__Potential_Energy_Surface_Scan = "CAM-B3LYP-D3/def2-svpd(-f)/PCM(WATER) Potential Energy Surface Scan"
-    CAM_B3LYP_D3_def2_svpd__f__PCM_WATER__Unknown = "CAM-B3LYP-D3/def2-svpd(-f)/PCM(WATER) Unknown"
-    CAM_B3LYP_D3_def2_tzvppd__g__VACUUM_Single_Point = "CAM-B3LYP-D3/def2-tzvppd(-g)/VACUUM Single Point"
-    CAM_B3LYP_D3_def2_tzvppd__g__VACUUM_Geometry_Optimization = "CAM-B3LYP-D3/def2-tzvppd(-g)/VACUUM Geometry Optimization"
-    CAM_B3LYP_D3_def2_tzvppd__g__VACUUM_Frequency_Analysis = "CAM-B3LYP-D3/def2-tzvppd(-g)/VACUUM Frequency Analysis"
-    CAM_B3LYP_D3_def2_tzvppd__g__VACUUM_Transition_State_Geometry_Optimization = "CAM-B3LYP-D3/def2-tzvppd(-g)/VACUUM Transition State Geometry Optimization"
-    CAM_B3LYP_D3_def2_tzvppd__g__VACUUM_Intrinsic_Reaction_Coordinate = "CAM-B3LYP-D3/def2-tzvppd(-g)/VACUUM Intrinsic Reaction Coordinate"
-    CAM_B3LYP_D3_def2_tzvppd__g__VACUUM_Potential_Energy_Surface_Scan = "CAM-B3LYP-D3/def2-tzvppd(-g)/VACUUM Potential Energy Surface Scan"
-    CAM_B3LYP_D3_def2_tzvppd__g__VACUUM_Unknown = "CAM-B3LYP-D3/def2-tzvppd(-g)/VACUUM Unknown"
-    CAM_B3LYP_D3_def2_tzvppd__g__PCM_WATER__Single_Point = "CAM-B3LYP-D3/def2-tzvppd(-g)/PCM(WATER) Single Point"
-    CAM_B3LYP_D3_def2_tzvppd__g__PCM_WATER__Geometry_Optimization = "CAM-B3LYP-D3/def2-tzvppd(-g)/PCM(WATER) Geometry Optimization"
-    CAM_B3LYP_D3_def2_tzvppd__g__PCM_WATER__Frequency_Analysis = "CAM-B3LYP-D3/def2-tzvppd(-g)/PCM(WATER) Frequency Analysis"
-    CAM_B3LYP_D3_def2_tzvppd__g__PCM_WATER__Transition_State_Geometry_Optimization = "CAM-B3LYP-D3/def2-tzvppd(-g)/PCM(WATER) Transition State Geometry Optimization"
-    CAM_B3LYP_D3_def2_tzvppd__g__PCM_WATER__Intrinsic_Reaction_Coordinate = "CAM-B3LYP-D3/def2-tzvppd(-g)/PCM(WATER) Intrinsic Reaction Coordinate"
-    CAM_B3LYP_D3_def2_tzvppd__g__PCM_WATER__Potential_Energy_Surface_Scan = "CAM-B3LYP-D3/def2-tzvppd(-g)/PCM(WATER) Potential Energy Surface Scan"
-    CAM_B3LYP_D3_def2_tzvppd__g__PCM_WATER__Unknown = "CAM-B3LYP-D3/def2-tzvppd(-g)/PCM(WATER) Unknown"
-    wb97x_d_def2_svpd__f__VACUUM_Single_Point = "wb97x-d/def2-svpd(-f)/VACUUM Single Point"
-    wb97x_d_def2_svpd__f__VACUUM_Geometry_Optimization = "wb97x-d/def2-svpd(-f)/VACUUM Geometry Optimization"
-    wb97x_d_def2_svpd__f__VACUUM_Frequency_Analysis = "wb97x-d/def2-svpd(-f)/VACUUM Frequency Analysis"
-    wb97x_d_def2_svpd__f__VACUUM_Transition_State_Geometry_Optimization = "wb97x-d/def2-svpd(-f)/VACUUM Transition State Geometry Optimization"
-    wb97x_d_def2_svpd__f__VACUUM_Intrinsic_Reaction_Coordinate = "wb97x-d/def2-svpd(-f)/VACUUM Intrinsic Reaction Coordinate"
-    wb97x_d_def2_svpd__f__VACUUM_Potential_Energy_Surface_Scan = "wb97x-d/def2-svpd(-f)/VACUUM Potential Energy Surface Scan"
+    CAM_B3LYP_D3_def2_svpd__f__VACUUM_Single_Point = (
+        "CAM-B3LYP-D3/def2-svpd(-f)/VACUUM Single Point"
+    )
+    CAM_B3LYP_D3_def2_svpd__f__VACUUM_Geometry_Optimization = (
+        "CAM-B3LYP-D3/def2-svpd(-f)/VACUUM Geometry Optimization"
+    )
+    CAM_B3LYP_D3_def2_svpd__f__VACUUM_Frequency_Analysis = (
+        "CAM-B3LYP-D3/def2-svpd(-f)/VACUUM Frequency Analysis"
+    )
+    CAM_B3LYP_D3_def2_svpd__f__VACUUM_Transition_State_Geometry_Optimization = (
+        "CAM-B3LYP-D3/def2-svpd(-f)/VACUUM Transition State Geometry Optimization"
+    )
+    CAM_B3LYP_D3_def2_svpd__f__VACUUM_Intrinsic_Reaction_Coordinate = (
+        "CAM-B3LYP-D3/def2-svpd(-f)/VACUUM Intrinsic Reaction Coordinate"
+    )
+    CAM_B3LYP_D3_def2_svpd__f__VACUUM_Potential_Energy_Surface_Scan = (
+        "CAM-B3LYP-D3/def2-svpd(-f)/VACUUM Potential Energy Surface Scan"
+    )
+    CAM_B3LYP_D3_def2_svpd__f__VACUUM_Unknown = (
+        "CAM-B3LYP-D3/def2-svpd(-f)/VACUUM Unknown"
+    )
+    CAM_B3LYP_D3_def2_svpd__f__PCM_WATER__Single_Point = (
+        "CAM-B3LYP-D3/def2-svpd(-f)/PCM(WATER) Single Point"
+    )
+    CAM_B3LYP_D3_def2_svpd__f__PCM_WATER__Geometry_Optimization = (
+        "CAM-B3LYP-D3/def2-svpd(-f)/PCM(WATER) Geometry Optimization"
+    )
+    CAM_B3LYP_D3_def2_svpd__f__PCM_WATER__Frequency_Analysis = (
+        "CAM-B3LYP-D3/def2-svpd(-f)/PCM(WATER) Frequency Analysis"
+    )
+    CAM_B3LYP_D3_def2_svpd__f__PCM_WATER__Transition_State_Geometry_Optimization = (
+        "CAM-B3LYP-D3/def2-svpd(-f)/PCM(WATER) Transition State Geometry Optimization"
+    )
+    CAM_B3LYP_D3_def2_svpd__f__PCM_WATER__Intrinsic_Reaction_Coordinate = (
+        "CAM-B3LYP-D3/def2-svpd(-f)/PCM(WATER) Intrinsic Reaction Coordinate"
+    )
+    CAM_B3LYP_D3_def2_svpd__f__PCM_WATER__Potential_Energy_Surface_Scan = (
+        "CAM-B3LYP-D3/def2-svpd(-f)/PCM(WATER) Potential Energy Surface Scan"
+    )
+    CAM_B3LYP_D3_def2_svpd__f__PCM_WATER__Unknown = (
+        "CAM-B3LYP-D3/def2-svpd(-f)/PCM(WATER) Unknown"
+    )
+    CAM_B3LYP_D3_def2_tzvppd__g__VACUUM_Single_Point = (
+        "CAM-B3LYP-D3/def2-tzvppd(-g)/VACUUM Single Point"
+    )
+    CAM_B3LYP_D3_def2_tzvppd__g__VACUUM_Geometry_Optimization = (
+        "CAM-B3LYP-D3/def2-tzvppd(-g)/VACUUM Geometry Optimization"
+    )
+    CAM_B3LYP_D3_def2_tzvppd__g__VACUUM_Frequency_Analysis = (
+        "CAM-B3LYP-D3/def2-tzvppd(-g)/VACUUM Frequency Analysis"
+    )
+    CAM_B3LYP_D3_def2_tzvppd__g__VACUUM_Transition_State_Geometry_Optimization = (
+        "CAM-B3LYP-D3/def2-tzvppd(-g)/VACUUM Transition State Geometry Optimization"
+    )
+    CAM_B3LYP_D3_def2_tzvppd__g__VACUUM_Intrinsic_Reaction_Coordinate = (
+        "CAM-B3LYP-D3/def2-tzvppd(-g)/VACUUM Intrinsic Reaction Coordinate"
+    )
+    CAM_B3LYP_D3_def2_tzvppd__g__VACUUM_Potential_Energy_Surface_Scan = (
+        "CAM-B3LYP-D3/def2-tzvppd(-g)/VACUUM Potential Energy Surface Scan"
+    )
+    CAM_B3LYP_D3_def2_tzvppd__g__VACUUM_Unknown = (
+        "CAM-B3LYP-D3/def2-tzvppd(-g)/VACUUM Unknown"
+    )
+    CAM_B3LYP_D3_def2_tzvppd__g__PCM_WATER__Single_Point = (
+        "CAM-B3LYP-D3/def2-tzvppd(-g)/PCM(WATER) Single Point"
+    )
+    CAM_B3LYP_D3_def2_tzvppd__g__PCM_WATER__Geometry_Optimization = (
+        "CAM-B3LYP-D3/def2-tzvppd(-g)/PCM(WATER) Geometry Optimization"
+    )
+    CAM_B3LYP_D3_def2_tzvppd__g__PCM_WATER__Frequency_Analysis = (
+        "CAM-B3LYP-D3/def2-tzvppd(-g)/PCM(WATER) Frequency Analysis"
+    )
+    CAM_B3LYP_D3_def2_tzvppd__g__PCM_WATER__Transition_State_Geometry_Optimization = (
+        "CAM-B3LYP-D3/def2-tzvppd(-g)/PCM(WATER) Transition State Geometry Optimization"
+    )
+    CAM_B3LYP_D3_def2_tzvppd__g__PCM_WATER__Intrinsic_Reaction_Coordinate = (
+        "CAM-B3LYP-D3/def2-tzvppd(-g)/PCM(WATER) Intrinsic Reaction Coordinate"
+    )
+    CAM_B3LYP_D3_def2_tzvppd__g__PCM_WATER__Potential_Energy_Surface_Scan = (
+        "CAM-B3LYP-D3/def2-tzvppd(-g)/PCM(WATER) Potential Energy Surface Scan"
+    )
+    CAM_B3LYP_D3_def2_tzvppd__g__PCM_WATER__Unknown = (
+        "CAM-B3LYP-D3/def2-tzvppd(-g)/PCM(WATER) Unknown"
+    )
+    wb97x_d_def2_svpd__f__VACUUM_Single_Point = (
+        "wb97x-d/def2-svpd(-f)/VACUUM Single Point"
+    )
+    wb97x_d_def2_svpd__f__VACUUM_Geometry_Optimization = (
+        "wb97x-d/def2-svpd(-f)/VACUUM Geometry Optimization"
+    )
+    wb97x_d_def2_svpd__f__VACUUM_Frequency_Analysis = (
+        "wb97x-d/def2-svpd(-f)/VACUUM Frequency Analysis"
+    )
+    wb97x_d_def2_svpd__f__VACUUM_Transition_State_Geometry_Optimization = (
+        "wb97x-d/def2-svpd(-f)/VACUUM Transition State Geometry Optimization"
+    )
+    wb97x_d_def2_svpd__f__VACUUM_Intrinsic_Reaction_Coordinate = (
+        "wb97x-d/def2-svpd(-f)/VACUUM Intrinsic Reaction Coordinate"
+    )
+    wb97x_d_def2_svpd__f__VACUUM_Potential_Energy_Surface_Scan = (
+        "wb97x-d/def2-svpd(-f)/VACUUM Potential Energy Surface Scan"
+    )
     wb97x_d_def2_svpd__f__VACUUM_Unknown = "wb97x-d/def2-svpd(-f)/VACUUM Unknown"
-    wb97x_d_def2_svpd__f__PCM_WATER__Single_Point = "wb97x-d/def2-svpd(-f)/PCM(WATER) Single Point"
-    wb97x_d_def2_svpd__f__PCM_WATER__Geometry_Optimization = "wb97x-d/def2-svpd(-f)/PCM(WATER) Geometry Optimization"
-    wb97x_d_def2_svpd__f__PCM_WATER__Frequency_Analysis = "wb97x-d/def2-svpd(-f)/PCM(WATER) Frequency Analysis"
-    wb97x_d_def2_svpd__f__PCM_WATER__Transition_State_Geometry_Optimization = "wb97x-d/def2-svpd(-f)/PCM(WATER) Transition State Geometry Optimization"
-    wb97x_d_def2_svpd__f__PCM_WATER__Intrinsic_Reaction_Coordinate = "wb97x-d/def2-svpd(-f)/PCM(WATER) Intrinsic Reaction Coordinate"
-    wb97x_d_def2_svpd__f__PCM_WATER__Potential_Energy_Surface_Scan = "wb97x-d/def2-svpd(-f)/PCM(WATER) Potential Energy Surface Scan"
-    wb97x_d_def2_svpd__f__PCM_WATER__Unknown = "wb97x-d/def2-svpd(-f)/PCM(WATER) Unknown"
-    wb97x_d_def2_tzvppd__g__VACUUM_Single_Point = "wb97x-d/def2-tzvppd(-g)/VACUUM Single Point"
-    wb97x_d_def2_tzvppd__g__VACUUM_Geometry_Optimization = "wb97x-d/def2-tzvppd(-g)/VACUUM Geometry Optimization"
-    wb97x_d_def2_tzvppd__g__VACUUM_Frequency_Analysis = "wb97x-d/def2-tzvppd(-g)/VACUUM Frequency Analysis"
-    wb97x_d_def2_tzvppd__g__VACUUM_Transition_State_Geometry_Optimization = "wb97x-d/def2-tzvppd(-g)/VACUUM Transition State Geometry Optimization"
-    wb97x_d_def2_tzvppd__g__VACUUM_Intrinsic_Reaction_Coordinate = "wb97x-d/def2-tzvppd(-g)/VACUUM Intrinsic Reaction Coordinate"
-    wb97x_d_def2_tzvppd__g__VACUUM_Potential_Energy_Surface_Scan = "wb97x-d/def2-tzvppd(-g)/VACUUM Potential Energy Surface Scan"
+    wb97x_d_def2_svpd__f__PCM_WATER__Single_Point = (
+        "wb97x-d/def2-svpd(-f)/PCM(WATER) Single Point"
+    )
+    wb97x_d_def2_svpd__f__PCM_WATER__Geometry_Optimization = (
+        "wb97x-d/def2-svpd(-f)/PCM(WATER) Geometry Optimization"
+    )
+    wb97x_d_def2_svpd__f__PCM_WATER__Frequency_Analysis = (
+        "wb97x-d/def2-svpd(-f)/PCM(WATER) Frequency Analysis"
+    )
+    wb97x_d_def2_svpd__f__PCM_WATER__Transition_State_Geometry_Optimization = (
+        "wb97x-d/def2-svpd(-f)/PCM(WATER) Transition State Geometry Optimization"
+    )
+    wb97x_d_def2_svpd__f__PCM_WATER__Intrinsic_Reaction_Coordinate = (
+        "wb97x-d/def2-svpd(-f)/PCM(WATER) Intrinsic Reaction Coordinate"
+    )
+    wb97x_d_def2_svpd__f__PCM_WATER__Potential_Energy_Surface_Scan = (
+        "wb97x-d/def2-svpd(-f)/PCM(WATER) Potential Energy Surface Scan"
+    )
+    wb97x_d_def2_svpd__f__PCM_WATER__Unknown = (
+        "wb97x-d/def2-svpd(-f)/PCM(WATER) Unknown"
+    )
+    wb97x_d_def2_tzvppd__g__VACUUM_Single_Point = (
+        "wb97x-d/def2-tzvppd(-g)/VACUUM Single Point"
+    )
+    wb97x_d_def2_tzvppd__g__VACUUM_Geometry_Optimization = (
+        "wb97x-d/def2-tzvppd(-g)/VACUUM Geometry Optimization"
+    )
+    wb97x_d_def2_tzvppd__g__VACUUM_Frequency_Analysis = (
+        "wb97x-d/def2-tzvppd(-g)/VACUUM Frequency Analysis"
+    )
+    wb97x_d_def2_tzvppd__g__VACUUM_Transition_State_Geometry_Optimization = (
+        "wb97x-d/def2-tzvppd(-g)/VACUUM Transition State Geometry Optimization"
+    )
+    wb97x_d_def2_tzvppd__g__VACUUM_Intrinsic_Reaction_Coordinate = (
+        "wb97x-d/def2-tzvppd(-g)/VACUUM Intrinsic Reaction Coordinate"
+    )
+    wb97x_d_def2_tzvppd__g__VACUUM_Potential_Energy_Surface_Scan = (
+        "wb97x-d/def2-tzvppd(-g)/VACUUM Potential Energy Surface Scan"
+    )
     wb97x_d_def2_tzvppd__g__VACUUM_Unknown = "wb97x-d/def2-tzvppd(-g)/VACUUM Unknown"
-    wb97x_d_def2_tzvppd__g__PCM_WATER__Single_Point = "wb97x-d/def2-tzvppd(-g)/PCM(WATER) Single Point"
-    wb97x_d_def2_tzvppd__g__PCM_WATER__Geometry_Optimization = "wb97x-d/def2-tzvppd(-g)/PCM(WATER) Geometry Optimization"
-    wb97x_d_def2_tzvppd__g__PCM_WATER__Frequency_Analysis = "wb97x-d/def2-tzvppd(-g)/PCM(WATER) Frequency Analysis"
-    wb97x_d_def2_tzvppd__g__PCM_WATER__Transition_State_Geometry_Optimization = "wb97x-d/def2-tzvppd(-g)/PCM(WATER) Transition State Geometry Optimization"
-    wb97x_d_def2_tzvppd__g__PCM_WATER__Intrinsic_Reaction_Coordinate = "wb97x-d/def2-tzvppd(-g)/PCM(WATER) Intrinsic Reaction Coordinate"
-    wb97x_d_def2_tzvppd__g__PCM_WATER__Potential_Energy_Surface_Scan = "wb97x-d/def2-tzvppd(-g)/PCM(WATER) Potential Energy Surface Scan"
-    wb97x_d_def2_tzvppd__g__PCM_WATER__Unknown = "wb97x-d/def2-tzvppd(-g)/PCM(WATER) Unknown"
-    wb97x_v_def2_svpd__f__VACUUM_Single_Point = "wb97x-v/def2-svpd(-f)/VACUUM Single Point"
-    wb97x_v_def2_svpd__f__VACUUM_Geometry_Optimization = "wb97x-v/def2-svpd(-f)/VACUUM Geometry Optimization"
-    wb97x_v_def2_svpd__f__VACUUM_Frequency_Analysis = "wb97x-v/def2-svpd(-f)/VACUUM Frequency Analysis"
-    wb97x_v_def2_svpd__f__VACUUM_Transition_State_Geometry_Optimization = "wb97x-v/def2-svpd(-f)/VACUUM Transition State Geometry Optimization"
-    wb97x_v_def2_svpd__f__VACUUM_Intrinsic_Reaction_Coordinate = "wb97x-v/def2-svpd(-f)/VACUUM Intrinsic Reaction Coordinate"
-    wb97x_v_def2_svpd__f__VACUUM_Potential_Energy_Surface_Scan = "wb97x-v/def2-svpd(-f)/VACUUM Potential Energy Surface Scan"
+    wb97x_d_def2_tzvppd__g__PCM_WATER__Single_Point = (
+        "wb97x-d/def2-tzvppd(-g)/PCM(WATER) Single Point"
+    )
+    wb97x_d_def2_tzvppd__g__PCM_WATER__Geometry_Optimization = (
+        "wb97x-d/def2-tzvppd(-g)/PCM(WATER) Geometry Optimization"
+    )
+    wb97x_d_def2_tzvppd__g__PCM_WATER__Frequency_Analysis = (
+        "wb97x-d/def2-tzvppd(-g)/PCM(WATER) Frequency Analysis"
+    )
+    wb97x_d_def2_tzvppd__g__PCM_WATER__Transition_State_Geometry_Optimization = (
+        "wb97x-d/def2-tzvppd(-g)/PCM(WATER) Transition State Geometry Optimization"
+    )
+    wb97x_d_def2_tzvppd__g__PCM_WATER__Intrinsic_Reaction_Coordinate = (
+        "wb97x-d/def2-tzvppd(-g)/PCM(WATER) Intrinsic Reaction Coordinate"
+    )
+    wb97x_d_def2_tzvppd__g__PCM_WATER__Potential_Energy_Surface_Scan = (
+        "wb97x-d/def2-tzvppd(-g)/PCM(WATER) Potential Energy Surface Scan"
+    )
+    wb97x_d_def2_tzvppd__g__PCM_WATER__Unknown = (
+        "wb97x-d/def2-tzvppd(-g)/PCM(WATER) Unknown"
+    )
+    wb97x_v_def2_svpd__f__VACUUM_Single_Point = (
+        "wb97x-v/def2-svpd(-f)/VACUUM Single Point"
+    )
+    wb97x_v_def2_svpd__f__VACUUM_Geometry_Optimization = (
+        "wb97x-v/def2-svpd(-f)/VACUUM Geometry Optimization"
+    )
+    wb97x_v_def2_svpd__f__VACUUM_Frequency_Analysis = (
+        "wb97x-v/def2-svpd(-f)/VACUUM Frequency Analysis"
+    )
+    wb97x_v_def2_svpd__f__VACUUM_Transition_State_Geometry_Optimization = (
+        "wb97x-v/def2-svpd(-f)/VACUUM Transition State Geometry Optimization"
+    )
+    wb97x_v_def2_svpd__f__VACUUM_Intrinsic_Reaction_Coordinate = (
+        "wb97x-v/def2-svpd(-f)/VACUUM Intrinsic Reaction Coordinate"
+    )
+    wb97x_v_def2_svpd__f__VACUUM_Potential_Energy_Surface_Scan = (
+        "wb97x-v/def2-svpd(-f)/VACUUM Potential Energy Surface Scan"
+    )
     wb97x_v_def2_svpd__f__VACUUM_Unknown = "wb97x-v/def2-svpd(-f)/VACUUM Unknown"
-    wb97x_v_def2_svpd__f__PCM_WATER__Single_Point = "wb97x-v/def2-svpd(-f)/PCM(WATER) Single Point"
-    wb97x_v_def2_svpd__f__PCM_WATER__Geometry_Optimization = "wb97x-v/def2-svpd(-f)/PCM(WATER) Geometry Optimization"
-    wb97x_v_def2_svpd__f__PCM_WATER__Frequency_Analysis = "wb97x-v/def2-svpd(-f)/PCM(WATER) Frequency Analysis"
-    wb97x_v_def2_svpd__f__PCM_WATER__Transition_State_Geometry_Optimization = "wb97x-v/def2-svpd(-f)/PCM(WATER) Transition State Geometry Optimization"
-    wb97x_v_def2_svpd__f__PCM_WATER__Intrinsic_Reaction_Coordinate = "wb97x-v/def2-svpd(-f)/PCM(WATER) Intrinsic Reaction Coordinate"
-    wb97x_v_def2_svpd__f__PCM_WATER__Potential_Energy_Surface_Scan = "wb97x-v/def2-svpd(-f)/PCM(WATER) Potential Energy Surface Scan"
-    wb97x_v_def2_svpd__f__PCM_WATER__Unknown = "wb97x-v/def2-svpd(-f)/PCM(WATER) Unknown"
-    wb97x_v_def2_tzvppd__g__VACUUM_Single_Point = "wb97x-v/def2-tzvppd(-g)/VACUUM Single Point"
-    wb97x_v_def2_tzvppd__g__VACUUM_Geometry_Optimization = "wb97x-v/def2-tzvppd(-g)/VACUUM Geometry Optimization"
-    wb97x_v_def2_tzvppd__g__VACUUM_Frequency_Analysis = "wb97x-v/def2-tzvppd(-g)/VACUUM Frequency Analysis"
-    wb97x_v_def2_tzvppd__g__VACUUM_Transition_State_Geometry_Optimization = "wb97x-v/def2-tzvppd(-g)/VACUUM Transition State Geometry Optimization"
-    wb97x_v_def2_tzvppd__g__VACUUM_Intrinsic_Reaction_Coordinate = "wb97x-v/def2-tzvppd(-g)/VACUUM Intrinsic Reaction Coordinate"
-    wb97x_v_def2_tzvppd__g__VACUUM_Potential_Energy_Surface_Scan = "wb97x-v/def2-tzvppd(-g)/VACUUM Potential Energy Surface Scan"
+    wb97x_v_def2_svpd__f__PCM_WATER__Single_Point = (
+        "wb97x-v/def2-svpd(-f)/PCM(WATER) Single Point"
+    )
+    wb97x_v_def2_svpd__f__PCM_WATER__Geometry_Optimization = (
+        "wb97x-v/def2-svpd(-f)/PCM(WATER) Geometry Optimization"
+    )
+    wb97x_v_def2_svpd__f__PCM_WATER__Frequency_Analysis = (
+        "wb97x-v/def2-svpd(-f)/PCM(WATER) Frequency Analysis"
+    )
+    wb97x_v_def2_svpd__f__PCM_WATER__Transition_State_Geometry_Optimization = (
+        "wb97x-v/def2-svpd(-f)/PCM(WATER) Transition State Geometry Optimization"
+    )
+    wb97x_v_def2_svpd__f__PCM_WATER__Intrinsic_Reaction_Coordinate = (
+        "wb97x-v/def2-svpd(-f)/PCM(WATER) Intrinsic Reaction Coordinate"
+    )
+    wb97x_v_def2_svpd__f__PCM_WATER__Potential_Energy_Surface_Scan = (
+        "wb97x-v/def2-svpd(-f)/PCM(WATER) Potential Energy Surface Scan"
+    )
+    wb97x_v_def2_svpd__f__PCM_WATER__Unknown = (
+        "wb97x-v/def2-svpd(-f)/PCM(WATER) Unknown"
+    )
+    wb97x_v_def2_tzvppd__g__VACUUM_Single_Point = (
+        "wb97x-v/def2-tzvppd(-g)/VACUUM Single Point"
+    )
+    wb97x_v_def2_tzvppd__g__VACUUM_Geometry_Optimization = (
+        "wb97x-v/def2-tzvppd(-g)/VACUUM Geometry Optimization"
+    )
+    wb97x_v_def2_tzvppd__g__VACUUM_Frequency_Analysis = (
+        "wb97x-v/def2-tzvppd(-g)/VACUUM Frequency Analysis"
+    )
+    wb97x_v_def2_tzvppd__g__VACUUM_Transition_State_Geometry_Optimization = (
+        "wb97x-v/def2-tzvppd(-g)/VACUUM Transition State Geometry Optimization"
+    )
+    wb97x_v_def2_tzvppd__g__VACUUM_Intrinsic_Reaction_Coordinate = (
+        "wb97x-v/def2-tzvppd(-g)/VACUUM Intrinsic Reaction Coordinate"
+    )
+    wb97x_v_def2_tzvppd__g__VACUUM_Potential_Energy_Surface_Scan = (
+        "wb97x-v/def2-tzvppd(-g)/VACUUM Potential Energy Surface Scan"
+    )
     wb97x_v_def2_tzvppd__g__VACUUM_Unknown = "wb97x-v/def2-tzvppd(-g)/VACUUM Unknown"
-    wb97x_v_def2_tzvppd__g__PCM_WATER__Single_Point = "wb97x-v/def2-tzvppd(-g)/PCM(WATER) Single Point"
-    wb97x_v_def2_tzvppd__g__PCM_WATER__Geometry_Optimization = "wb97x-v/def2-tzvppd(-g)/PCM(WATER) Geometry Optimization"
-    wb97x_v_def2_tzvppd__g__PCM_WATER__Frequency_Analysis = "wb97x-v/def2-tzvppd(-g)/PCM(WATER) Frequency Analysis"
-    wb97x_v_def2_tzvppd__g__PCM_WATER__Transition_State_Geometry_Optimization = "wb97x-v/def2-tzvppd(-g)/PCM(WATER) Transition State Geometry Optimization"
-    wb97x_v_def2_tzvppd__g__PCM_WATER__Intrinsic_Reaction_Coordinate = "wb97x-v/def2-tzvppd(-g)/PCM(WATER) Intrinsic Reaction Coordinate"
-    wb97x_v_def2_tzvppd__g__PCM_WATER__Potential_Energy_Surface_Scan = "wb97x-v/def2-tzvppd(-g)/PCM(WATER) Potential Energy Surface Scan"
-    wb97x_v_def2_tzvppd__g__PCM_WATER__Unknown = "wb97x-v/def2-tzvppd(-g)/PCM(WATER) Unknown"
+    wb97x_v_def2_tzvppd__g__PCM_WATER__Single_Point = (
+        "wb97x-v/def2-tzvppd(-g)/PCM(WATER) Single Point"
+    )
+    wb97x_v_def2_tzvppd__g__PCM_WATER__Geometry_Optimization = (
+        "wb97x-v/def2-tzvppd(-g)/PCM(WATER) Geometry Optimization"
+    )
+    wb97x_v_def2_tzvppd__g__PCM_WATER__Frequency_Analysis = (
+        "wb97x-v/def2-tzvppd(-g)/PCM(WATER) Frequency Analysis"
+    )
+    wb97x_v_def2_tzvppd__g__PCM_WATER__Transition_State_Geometry_Optimization = (
+        "wb97x-v/def2-tzvppd(-g)/PCM(WATER) Transition State Geometry Optimization"
+    )
+    wb97x_v_def2_tzvppd__g__PCM_WATER__Intrinsic_Reaction_Coordinate = (
+        "wb97x-v/def2-tzvppd(-g)/PCM(WATER) Intrinsic Reaction Coordinate"
+    )
+    wb97x_v_def2_tzvppd__g__PCM_WATER__Potential_Energy_Surface_Scan = (
+        "wb97x-v/def2-tzvppd(-g)/PCM(WATER) Potential Energy Surface Scan"
+    )
+    wb97x_v_def2_tzvppd__g__PCM_WATER__Unknown = (
+        "wb97x-v/def2-tzvppd(-g)/PCM(WATER) Unknown"
+    )
     M11_def2_svpd__f__VACUUM_Single_Point = "M11/def2-svpd(-f)/VACUUM Single Point"
-    M11_def2_svpd__f__VACUUM_Geometry_Optimization = "M11/def2-svpd(-f)/VACUUM Geometry Optimization"
-    M11_def2_svpd__f__VACUUM_Frequency_Analysis = "M11/def2-svpd(-f)/VACUUM Frequency Analysis"
-    M11_def2_svpd__f__VACUUM_Transition_State_Geometry_Optimization = "M11/def2-svpd(-f)/VACUUM Transition State Geometry Optimization"
-    M11_def2_svpd__f__VACUUM_Intrinsic_Reaction_Coordinate = "M11/def2-svpd(-f)/VACUUM Intrinsic Reaction Coordinate"
-    M11_def2_svpd__f__VACUUM_Potential_Energy_Surface_Scan = "M11/def2-svpd(-f)/VACUUM Potential Energy Surface Scan"
+    M11_def2_svpd__f__VACUUM_Geometry_Optimization = (
+        "M11/def2-svpd(-f)/VACUUM Geometry Optimization"
+    )
+    M11_def2_svpd__f__VACUUM_Frequency_Analysis = (
+        "M11/def2-svpd(-f)/VACUUM Frequency Analysis"
+    )
+    M11_def2_svpd__f__VACUUM_Transition_State_Geometry_Optimization = (
+        "M11/def2-svpd(-f)/VACUUM Transition State Geometry Optimization"
+    )
+    M11_def2_svpd__f__VACUUM_Intrinsic_Reaction_Coordinate = (
+        "M11/def2-svpd(-f)/VACUUM Intrinsic Reaction Coordinate"
+    )
+    M11_def2_svpd__f__VACUUM_Potential_Energy_Surface_Scan = (
+        "M11/def2-svpd(-f)/VACUUM Potential Energy Surface Scan"
+    )
     M11_def2_svpd__f__VACUUM_Unknown = "M11/def2-svpd(-f)/VACUUM Unknown"
-    M11_def2_svpd__f__PCM_WATER__Single_Point = "M11/def2-svpd(-f)/PCM(WATER) Single Point"
-    M11_def2_svpd__f__PCM_WATER__Geometry_Optimization = "M11/def2-svpd(-f)/PCM(WATER) Geometry Optimization"
-    M11_def2_svpd__f__PCM_WATER__Frequency_Analysis = "M11/def2-svpd(-f)/PCM(WATER) Frequency Analysis"
-    M11_def2_svpd__f__PCM_WATER__Transition_State_Geometry_Optimization = "M11/def2-svpd(-f)/PCM(WATER) Transition State Geometry Optimization"
-    M11_def2_svpd__f__PCM_WATER__Intrinsic_Reaction_Coordinate = "M11/def2-svpd(-f)/PCM(WATER) Intrinsic Reaction Coordinate"
-    M11_def2_svpd__f__PCM_WATER__Potential_Energy_Surface_Scan = "M11/def2-svpd(-f)/PCM(WATER) Potential Energy Surface Scan"
+    M11_def2_svpd__f__PCM_WATER__Single_Point = (
+        "M11/def2-svpd(-f)/PCM(WATER) Single Point"
+    )
+    M11_def2_svpd__f__PCM_WATER__Geometry_Optimization = (
+        "M11/def2-svpd(-f)/PCM(WATER) Geometry Optimization"
+    )
+    M11_def2_svpd__f__PCM_WATER__Frequency_Analysis = (
+        "M11/def2-svpd(-f)/PCM(WATER) Frequency Analysis"
+    )
+    M11_def2_svpd__f__PCM_WATER__Transition_State_Geometry_Optimization = (
+        "M11/def2-svpd(-f)/PCM(WATER) Transition State Geometry Optimization"
+    )
+    M11_def2_svpd__f__PCM_WATER__Intrinsic_Reaction_Coordinate = (
+        "M11/def2-svpd(-f)/PCM(WATER) Intrinsic Reaction Coordinate"
+    )
+    M11_def2_svpd__f__PCM_WATER__Potential_Energy_Surface_Scan = (
+        "M11/def2-svpd(-f)/PCM(WATER) Potential Energy Surface Scan"
+    )
     M11_def2_svpd__f__PCM_WATER__Unknown = "M11/def2-svpd(-f)/PCM(WATER) Unknown"
     M11_def2_tzvppd__g__VACUUM_Single_Point = "M11/def2-tzvppd(-g)/VACUUM Single Point"
-    M11_def2_tzvppd__g__VACUUM_Geometry_Optimization = "M11/def2-tzvppd(-g)/VACUUM Geometry Optimization"
-    M11_def2_tzvppd__g__VACUUM_Frequency_Analysis = "M11/def2-tzvppd(-g)/VACUUM Frequency Analysis"
-    M11_def2_tzvppd__g__VACUUM_Transition_State_Geometry_Optimization = "M11/def2-tzvppd(-g)/VACUUM Transition State Geometry Optimization"
-    M11_def2_tzvppd__g__VACUUM_Intrinsic_Reaction_Coordinate = "M11/def2-tzvppd(-g)/VACUUM Intrinsic Reaction Coordinate"
-    M11_def2_tzvppd__g__VACUUM_Potential_Energy_Surface_Scan = "M11/def2-tzvppd(-g)/VACUUM Potential Energy Surface Scan"
+    M11_def2_tzvppd__g__VACUUM_Geometry_Optimization = (
+        "M11/def2-tzvppd(-g)/VACUUM Geometry Optimization"
+    )
+    M11_def2_tzvppd__g__VACUUM_Frequency_Analysis = (
+        "M11/def2-tzvppd(-g)/VACUUM Frequency Analysis"
+    )
+    M11_def2_tzvppd__g__VACUUM_Transition_State_Geometry_Optimization = (
+        "M11/def2-tzvppd(-g)/VACUUM Transition State Geometry Optimization"
+    )
+    M11_def2_tzvppd__g__VACUUM_Intrinsic_Reaction_Coordinate = (
+        "M11/def2-tzvppd(-g)/VACUUM Intrinsic Reaction Coordinate"
+    )
+    M11_def2_tzvppd__g__VACUUM_Potential_Energy_Surface_Scan = (
+        "M11/def2-tzvppd(-g)/VACUUM Potential Energy Surface Scan"
+    )
     M11_def2_tzvppd__g__VACUUM_Unknown = "M11/def2-tzvppd(-g)/VACUUM Unknown"
-    M11_def2_tzvppd__g__PCM_WATER__Single_Point = "M11/def2-tzvppd(-g)/PCM(WATER) Single Point"
-    M11_def2_tzvppd__g__PCM_WATER__Geometry_Optimization = "M11/def2-tzvppd(-g)/PCM(WATER) Geometry Optimization"
-    M11_def2_tzvppd__g__PCM_WATER__Frequency_Analysis = "M11/def2-tzvppd(-g)/PCM(WATER) Frequency Analysis"
-    M11_def2_tzvppd__g__PCM_WATER__Transition_State_Geometry_Optimization = "M11/def2-tzvppd(-g)/PCM(WATER) Transition State Geometry Optimization"
-    M11_def2_tzvppd__g__PCM_WATER__Intrinsic_Reaction_Coordinate = "M11/def2-tzvppd(-g)/PCM(WATER) Intrinsic Reaction Coordinate"
-    M11_def2_tzvppd__g__PCM_WATER__Potential_Energy_Surface_Scan = "M11/def2-tzvppd(-g)/PCM(WATER) Potential Energy Surface Scan"
+    M11_def2_tzvppd__g__PCM_WATER__Single_Point = (
+        "M11/def2-tzvppd(-g)/PCM(WATER) Single Point"
+    )
+    M11_def2_tzvppd__g__PCM_WATER__Geometry_Optimization = (
+        "M11/def2-tzvppd(-g)/PCM(WATER) Geometry Optimization"
+    )
+    M11_def2_tzvppd__g__PCM_WATER__Frequency_Analysis = (
+        "M11/def2-tzvppd(-g)/PCM(WATER) Frequency Analysis"
+    )
+    M11_def2_tzvppd__g__PCM_WATER__Transition_State_Geometry_Optimization = (
+        "M11/def2-tzvppd(-g)/PCM(WATER) Transition State Geometry Optimization"
+    )
+    M11_def2_tzvppd__g__PCM_WATER__Intrinsic_Reaction_Coordinate = (
+        "M11/def2-tzvppd(-g)/PCM(WATER) Intrinsic Reaction Coordinate"
+    )
+    M11_def2_tzvppd__g__PCM_WATER__Potential_Energy_Surface_Scan = (
+        "M11/def2-tzvppd(-g)/PCM(WATER) Potential Energy Surface Scan"
+    )
     M11_def2_tzvppd__g__PCM_WATER__Unknown = "M11/def2-tzvppd(-g)/PCM(WATER) Unknown"

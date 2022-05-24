@@ -43,19 +43,23 @@ class Potcar(BaseModel):
 
 class OrigInputs(BaseModel):
     incar: Incar = Field(
-        None, description="Pymatgen object representing the INCAR file.",
+        None,
+        description="Pymatgen object representing the INCAR file.",
     )
 
     poscar: Poscar = Field(
-        None, description="Pymatgen object representing the POSCAR file.",
+        None,
+        description="Pymatgen object representing the POSCAR file.",
     )
 
     kpoints: Kpoints = Field(
-        None, description="Pymatgen object representing the KPOINTS file.",
+        None,
+        description="Pymatgen object representing the KPOINTS file.",
     )
 
     potcar: Potcar = Field(
-        None, description="Pymatgen object representing the POTCAR file.",
+        None,
+        description="Pymatgen object representing the POTCAR file.",
     )
 
 
@@ -109,13 +113,17 @@ class CustodianDoc(BaseModel):
         description="List of custodian correction data for calculation.",
     )
     job: dict = Field(
-        None, title="Cusotodian Job Data", description="Job data logged by custodian.",
+        None,
+        title="Cusotodian Job Data",
+        description="Job data logged by custodian.",
     )
 
 
 class AnalysisDoc(BaseModel):
     delta_volume: float = Field(
-        None, title="Volume Change", description="Volume change for the calculation.",
+        None,
+        title="Volume Change",
+        description="Volume change for the calculation.",
     )
     delta_volume_percent: float = Field(
         None,
@@ -135,7 +143,9 @@ class AnalysisDoc(BaseModel):
     )
 
     errors: List[str] = Field(
-        None, title="Calculation Errors", description="Errors issued after analysis.",
+        None,
+        title="Calculation Errors",
+        description="Errors issued after analysis.",
     )
 
 
@@ -278,9 +288,11 @@ class DeprecationDoc(BaseModel):
     )
 
     deprecated: bool = Field(
-        None, description="Whether the ID corresponds to a deprecated calculation.",
+        None,
+        description="Whether the ID corresponds to a deprecated calculation.",
     )
 
     deprecation_reason: str = Field(
-        None, description="Reason for deprecation.",
+        None,
+        description="Reason for deprecation.",
     )

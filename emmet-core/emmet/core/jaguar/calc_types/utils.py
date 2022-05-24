@@ -46,7 +46,6 @@ def level_of_theory(parameters: Dict[str, Any]) -> LevelOfTheory:
 
     basis = basis[0]
 
-
     solvation = parameters.get("solvation", False)
     if not solvation:
         solvent_method = "VACUUM"
@@ -75,9 +74,7 @@ def task_type(job_type: str) -> TaskType:
     return TaskType("Unknown")
 
 
-def calc_type(
-    parameters: Dict[str, Any], job_type: str
-) -> CalcType:
+def calc_type(parameters: Dict[str, Any], job_type: str) -> CalcType:
     """
     Determines the calc type
 

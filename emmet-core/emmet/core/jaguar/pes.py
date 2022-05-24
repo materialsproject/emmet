@@ -200,8 +200,13 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
 
         else:
             geometry_optimizations = [
-                task for task in task_group if task.task_type in [TaskType.Geometry_Optimization,
-                                                                  TaskType.Transition_State_Geometry_Optimization]  # type: ignore
+                task
+                for task in task_group
+                if task.task_type
+                in [
+                    TaskType.Geometry_Optimization,
+                    TaskType.Transition_State_Geometry_Optimization,
+                ]  # type: ignore
             ]
 
             # Molecule ID

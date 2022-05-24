@@ -19,15 +19,8 @@ TASK_TYPES = [
 FUNCTIONAL_CLASSES = {
     "gga": [],
     "meta-gga": [],
-    "hybrid-gga": [
-        "PBE0",
-        "CAM-B3LYP-D3",
-        "wb97x-d",
-        "wb97x-v"
-    ],
-    "hybrid-meta-gga": [
-        "M11"
-    ],
+    "hybrid-gga": ["PBE0", "CAM-B3LYP-D3", "wb97x-d", "wb97x-v"],
+    "hybrid-meta-gga": ["M11"],
 }
 
 FUNCTIONALS = [
@@ -36,10 +29,7 @@ FUNCTIONALS = [
     for rt in FUNCTIONAL_CLASSES[functional_class]
 ]
 
-BASIS_SETS = [
-    "def2-svpd(-f)",
-    "def2-tzvppd(-g)"
-]
+BASIS_SETS = ["def2-svpd(-f)", "def2-tzvppd(-g)"]
 
 SOLVENT_MODELS = ["VACUUM", "PCM"]
 

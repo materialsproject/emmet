@@ -31,7 +31,8 @@ class OutputSummary(BaseModel):
 
     atom_properties: List[Dict[str, Any]] = Field(
         None,
-        description="Atomic properties, including partial charges and forces (units: various)")
+        description="Atomic properties, including partial charges and forces (units: various)",
+    )
 
     energy: float = Field(
         None, description="Final electronic energy for the calculation (units: Hartree)"
@@ -40,10 +41,12 @@ class OutputSummary(BaseModel):
         None, description="Gas-phase energy for the calculation (units: Hartree)"
     )
     one_electron_energy: float = Field(
-        None, description="Energy contribution from one-electron integrals (units: Hartree)"
+        None,
+        description="Energy contribution from one-electron integrals (units: Hartree)",
     )
     two_electron_energy: float = Field(
-        None, description="Energy contribution from two-electron integrals (units: Hartree)"
+        None,
+        description="Energy contribution from two-electron integrals (units: Hartree)",
     )
     a_posteriori_correction: float = Field(
         None, description="Energy correction made a posteriori (units: Hartree)"
@@ -56,20 +59,25 @@ class OutputSummary(BaseModel):
     )
 
     homo_alpha: float = Field(
-        None, description="Relative energy of the alpha-electron Highest Occupied Molecular Orbital (HOMO) (units: Hartree)"
+        None,
+        description="Relative energy of the alpha-electron Highest Occupied Molecular Orbital (HOMO) (units: Hartree)",
     )
     homo_beta: float = Field(
-        None, description="Relative energy of the beta-electron Highest Occupied Molecular Orbital (HOMO) (units: Hartree)"
+        None,
+        description="Relative energy of the beta-electron Highest Occupied Molecular Orbital (HOMO) (units: Hartree)",
     )
     lumo_alpha: float = Field(
-        None, description="Relative energy of the alpha-electron Lowest Unoccupied Molecular Orbital (LUMO) (units: Hartree)"
+        None,
+        description="Relative energy of the alpha-electron Lowest Unoccupied Molecular Orbital (LUMO) (units: Hartree)",
     )
     lumo_beta: float = Field(
-        None, description="Relative energy of the alpha-electron Lowest Unoccupied Molecular Orbital (LUMO) (units: Hartree)"
+        None,
+        description="Relative energy of the alpha-electron Lowest Unoccupied Molecular Orbital (LUMO) (units: Hartree)",
     )
 
     thermo: List[Dict[str, Any]] = Field(
-        None, description="Thermodynamic information (energy, enthalpy, entropy, etc.) at various temperatures (units: various)"
+        None,
+        description="Thermodynamic information (energy, enthalpy, entropy, etc.) at various temperatures (units: various)",
     )
 
     frequencies: List[float] = Field(
@@ -88,7 +96,7 @@ class OutputSummary(BaseModel):
             "energy": self.energy,
             "thermo": self.thermo,
             "frequencies": self.frequencies,
-            "vibrational_frequency_modes": self.vibrational_frequency_modes
+            "vibrational_frequency_modes": self.vibrational_frequency_modes,
         }
 
 
@@ -109,9 +117,7 @@ class TaskDocument(MoleculeMetadata):
         description="Timestamp for this task document was last updated",
     )
 
-    name: str = Field(
-        None, description="Name of this calculation"
-    )
+    name: str = Field(None, description="Name of this calculation")
     job_id: str = Field(
         None, description="Internal JobDB ID for this Jaguar calculation"
     )
@@ -131,7 +137,6 @@ class TaskDocument(MoleculeMetadata):
     )
     output = Field(OutputSummary())
 
-
     tags: Dict[str, Any] = Field(None, description="Metadata tags")
 
     errors: Dict[str, Any] = Field(
@@ -142,9 +147,7 @@ class TaskDocument(MoleculeMetadata):
         None, description="Additional data about this calculation"
     )
 
-    nelectrons: int = Field(
-        None, description="Number of electrons in this calculation"
-    )
+    nelectrons: int = Field(None, description="Number of electrons in this calculation")
 
     @property
     def level_of_theory(self) -> LevelOfTheory:

@@ -69,9 +69,9 @@ class RedoxDoc(PropertyDoc):
     )
 
     @classmethod
-    def _group_by_formula(cls: Type[T],
-                          entries: List[Dict[str, Any]]
-                          ) -> Dict[str, List[Dict[str, Any]]]:
+    def _group_by_formula(
+        cls: Type[T], entries: List[Dict[str, Any]]
+    ) -> Dict[str, List[Dict[str, Any]]]:
         """
         Group task entries by formula
 

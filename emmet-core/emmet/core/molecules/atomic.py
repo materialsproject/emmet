@@ -107,7 +107,9 @@ class PartialSpinsDoc(PropertyDoc):
 
     method: str = Field(..., description="Method used to compute atomic partial spins")
 
-    partial_spins: List[float] = Field(..., description="Atomic partial spins for the molecule")
+    partial_spins: List[float] = Field(
+        ..., description="Atomic partial spins for the molecule"
+    )
 
     @classmethod
     def from_task(
