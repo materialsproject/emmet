@@ -134,8 +134,11 @@ class CriticalMessage(BaseModel):
         "Critical: insufficient number of valid strains. Expect the matrix of all "
         "strains to be of rank 6, but got rank {}."
     )
-    N_STATES = "Critical: Expect 24 total (primary plus derived) strain stress states "
-    "to fit the data; but got {}."
+    N_STATES = (
+        "Critical: Expect 24 total (primary plus derived) strain stress states "
+        "to fit the data; but got {}."
+    )
+
     NEGATIVE_MODULUS = "Critical: Negative modulus. {} {} is {}."
 
 
@@ -212,6 +215,30 @@ class ElasticityDoc(PropertyDoc):
         fitting_method: str = "finite_difference",
         **kwargs,
     ):
+        """
+        Fitting the elastic tensor from deformation and stresses.
+
+        Note, the elastic tensor are obtained by fitting to the Lagrangian strains
+        and second Piola-Kirchhoff stresses. In continuum mechanics nomenclature,
+        it's the `material elasticity tensor`. For more, see Section 6.5 of
+        `Continuum Mechanics and Thermodynamics -- From Fundamental Concepts to
+        Governing Equations` Tadmor, Miller, and Elliott, Cambridge University Press,
+        2012.
+
+        Args:
+            structure: optimized structure.
+            material_id:
+            deformations: deformations applied to the optimized structure that generate
+                the strains.
+            stresses: Cauchy stresses on the deformed structures. Expect units: GPa.
+            deformation_task_ids: id of the deformation tasks.
+            deformation_dir_names: directories where the deformation tasks are run.
+            equilibrium_stress: Cauchy stress on the optimized structure.
+            optimization_task_id: id of the optmization task.
+            optimization_dir_name: directory where the optmization task run.
+            fitting_method: method used to fit the elastic tensor:
+            {`finite_difference`, `pseudoinverse`, `independent`}.
+        """
 
         CM = CriticalMessage()
 
