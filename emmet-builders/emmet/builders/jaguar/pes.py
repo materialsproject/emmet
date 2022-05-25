@@ -77,6 +77,7 @@ class PESMinimumBuilder(Builder):
         minima: Store,
         query: Optional[Dict] = None,
         settings: Optional[EmmetBuildSettings] = None,
+        negative_threshold: float = -75.0,
         **kwargs,
     ):
         """
@@ -85,12 +86,16 @@ class PESMinimumBuilder(Builder):
             minima: Store of PESMinimumDocs to prepare
             query: dictionary to limit tasks to be analyzed
             settings: EmmetSettings to use in the build process
+            negative_threshold: Threshold for imaginary frequencies. Points
+                with one imaginary frequency >= this value will be considered
+                as valid.
         """
 
         self.tasks = tasks
         self.minima = minima
         self.query = query if query else dict()
         self.settings = EmmetBuildSettings.autoload(settings)
+        self.negative_threshold = negative_threshold
         self.kwargs = kwargs
 
         super().__init__(sources=[tasks], targets=[minima])
@@ -262,16 +267,27 @@ class PESMinimumBuilder(Builder):
 
         docs = list(chain.from_iterable(items))  # type: ignore
 
+        true_minima = list()
+
         for item in docs:
             item.update({"_bt": self.timestamp})
+            frequencies = item.get("frequencies")
+            # Assume a species with no frequencies is a valid minimum
+            if frequencies is None or len(frequencies) < 2:
+                true_minima.append(item)
+            # All positive, or one small negative frequency
+            elif frequencies[0] >= self.negative_threshold and frequencies[1] > 0:
+                true_minima.append(item)
+            else:
+                continue
 
-        molecule_ids = list({item["molecule_id"] for item in docs})
+        molecule_ids = list({item["molecule_id"] for item in true_minima})
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(docs)} molecules")
             self.minima.remove_docs({self.minima.key: {"$in": molecule_ids}})
             self.minima.update(
-                docs=docs,
+                docs=true_minima,
                 key=["molecule_id"],
             )
         else:
