@@ -80,7 +80,7 @@ class OutputSummary(BaseModel):
         description="Thermodynamic information (energy, enthalpy, entropy, etc.) at various temperatures (units: various)",
     )
 
-    frequencies: List[float] = Field(
+    frequencies: List[Optional[float]] = Field(
         None, description="Vibrational frequencies of the molecule (units: cm^-1)"
     )
     vibrational_frequency_modes: List[Matrix3D] = Field(

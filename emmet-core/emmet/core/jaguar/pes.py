@@ -275,7 +275,7 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
         )
 
     @classmethod
-    def construct_deprecated_molecule(
+    def construct_deprecated_pes_point(
         cls,
         task_group: List[TaskDocument],
     ) -> "PESPointDoc":
