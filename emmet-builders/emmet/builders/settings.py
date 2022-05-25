@@ -9,6 +9,7 @@ from emmet.core.provenance import Author, History
 from emmet.core.settings import EmmetSettings
 from emmet.core.vasp.calc_types import TaskType as VaspTaskType
 from emmet.core.qchem.calc_types import TaskType as QChemTaskType
+from emmet.core.jaguar.calc_types import TaskType as JaguarTaskType
 
 
 class EmmetBuildSettings(EmmetSettings):
@@ -37,6 +38,11 @@ class EmmetBuildSettings(EmmetSettings):
 
     QCHEM_ALLOWED_TASK_TYPES: List[QChemTaskType] = Field(
         [t.value for t in QChemTaskType],
+        description="Allowed task_types to build molecules from",
+    )
+
+    JAGUAR_ALLOWED_TASK_TYPES: List[JaguarTaskType] = Field(
+        [t.value for t in JaguarTaskType],
         description="Allowed task_types to build molecules from",
     )
 

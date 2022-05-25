@@ -1,5 +1,5 @@
 """ Core definition of document describing points on a Potential Energy Surface """
-from typing import Any, Dict, List, Mapping, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 from pydantic import Field
 
@@ -121,6 +121,16 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
         description="List of IDs with of points on a PES that are similar (by e.g. structure, type [TS, minimum, etc.]) to this one",
     )
 
+    frequencies: List[Optional[float]] = Field(
+        None, description="Vibrational frequencies of this point on the PES (units: cm^-1)"
+    )
+
+    freq_entry: Dict[str, Any] = Field(
+        None,
+        description="Dictionary representation of the task document used to obtain characteristic vibrational "
+                    "frequencies for this point on a PES",
+    )
+
     @classmethod
     def from_tasks(
         cls,
@@ -217,6 +227,18 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
             best_structure_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
             molecule = best_structure_calc.output.molecule
 
+            freq_tasks = sorted([
+                task for task in task_group
+                if task.input["gen_variables"].get("ifreq", 0) != 0
+                and task.success
+            ], key=evaluate_task)
+            if len(freq_tasks) == 0:
+                frequencies = None
+                freq_entry = None
+            else:
+                frequencies = freq_tasks[0].output.frequencies
+                freq_entry = freq_tasks[0].entry
+
             mm = MoleculeMatcher()
             initial_molecules = [
                 group[0] for group in mm.group_molecules(initial_structures)
@@ -260,6 +282,8 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
 
         return cls.from_molecule(
             molecule=molecule,
+            freq_entry=freq_entry,
+            frequencies=frequencies,
             molecule_id=point_id,
             initial_molecules=initial_molecules,
             last_updated=last_updated,

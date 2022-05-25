@@ -111,8 +111,6 @@ class TaskDocument(MoleculeMetadata):
     path: str = Field(None, description="The directory for this calculation")
     calcid: MPID = Field(None, description="the calculation ID For this document")
 
-    completed: bool = Field(False, description="Whether this calculation completed")
-
     last_updated: datetime = Field(
         default_factory=datetime.utcnow,
         description="Timestamp for this task document was last updated",
