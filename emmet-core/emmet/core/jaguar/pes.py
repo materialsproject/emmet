@@ -212,7 +212,7 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
             # Molecule ID
             possible_mol_ids = [task.calcid for task in geometry_optimizations]
 
-            molecule_id = min(possible_mol_ids)
+            point_id = min(possible_mol_ids)
 
             best_structure_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
             molecule = best_structure_calc.output.molecule

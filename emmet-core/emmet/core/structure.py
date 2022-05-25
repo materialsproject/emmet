@@ -201,6 +201,7 @@ class MoleculeMetadata(EmmetBaseModel):
                 "composition",
                 "formula_alphabetical",
                 "chemsys",
+                "species",
                 "symmetry",
             ]
             if fields is None
@@ -219,6 +220,7 @@ class MoleculeMetadata(EmmetBaseModel):
             "composition": comp,
             "formula_alphabetical": comp.alphabetical_formula,
             "chemsys": "-".join(elsyms),
+            "species": meta_molecule.species,
             "symmetry": symmetry,
         }
 
