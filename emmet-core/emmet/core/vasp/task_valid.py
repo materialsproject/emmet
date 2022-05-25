@@ -34,7 +34,9 @@ class BaseTaskDocument(EmmetBaseModel):
         description="Timestamp for this task document was last updateed",
     )
 
-    tags: Union[List[str], Literal[None]] = Field([], description="Metadata tags for this task document")
+    tags: Union[List[str], None] = Field(
+        [], description="Metadata tags for this task document"
+    )
 
     warnings: List[str] = Field(
         None, description="Any warnings related to this property"

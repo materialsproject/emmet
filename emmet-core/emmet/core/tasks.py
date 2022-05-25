@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Dict, Union, Literal
+from typing import List, Dict, Union
 
 from emmet.core.vasp.task_valid import TaskState
 
@@ -144,7 +144,7 @@ class TaskDoc(BaseModel):
     Calculation-level details about VASP calculations that power Materials Project.
     """
 
-    tags: Union[List[str], Literal[None]] = Field(
+    tags: Union[List[str], None] = Field(
         [], title="tag", description="Metadata tagged to a given task."
     )
 
