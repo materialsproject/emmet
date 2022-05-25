@@ -34,7 +34,7 @@ class OutputSummary(BaseModel):
         description="Atomic properties, including partial charges and forces (units: various)",
     )
 
-    energy: float = Field(
+    scf_energy: float = Field(
         None, description="Final electronic energy for the calculation (units: Hartree)"
     )
     gas_phase_energy: float = Field(
@@ -93,7 +93,8 @@ class OutputSummary(BaseModel):
             "@class": self.__class__.__name__,
             "molecule": self.molecule,
             "atom_properties": self.atom_properties,
-            "energy": self.energy,
+            "energy": self.scf_energy,
+            "zero_point_energy": self.zero_point_energy,
             "thermo": self.thermo,
             "frequencies": self.frequencies,
             "vibrational_frequency_modes": self.vibrational_frequency_modes,
@@ -197,7 +198,7 @@ class TaskDocument(MoleculeMetadata):
             "molecule": mol,
             "composition": mol.composition,
             "formula": mol.composition.alphabetical_formula,
-            "energy": self.output.energy,
+            "energy": self.output.scf_energy,
             "output": self.output.as_dict(),
             "input": self.input,
             "tags": self.tags,

@@ -82,7 +82,7 @@ def evaluate_task(
     return (
         -1 * int(task.is_valid),
         sum(lot_eval),
-        task.output.energy,
+        task.output.scf_energy,
     )
 
 

@@ -68,9 +68,9 @@ def find_common_reaction_lot_sp(
     :return: String representation of the best common level of theory.
     """
 
-    sp_end1 = filter_task_type(endpoint1["entries"], TaskType.Single_Point)
-    sp_end2 = filter_task_type(endpoint2["entries"], TaskType.Single_Point)
-    sp_ts = filter_task_type(transition_state["entries"], TaskType.Single_Point)
+    sp_end1 = filter_task_type(endpoint1.entries, TaskType.Single_Point)
+    sp_end2 = filter_task_type(endpoint2.entries, TaskType.Single_Point)
+    sp_ts = filter_task_type(transition_state.entries, TaskType.Single_Point)
 
     lots_end1 = sorted(
         list({e["level_of_theory"] for e in sp_end1}), key=lambda x: evaluate_lot(x)
@@ -104,7 +104,7 @@ def bonds_metal_nometal(mg: MoleculeGraph):
 
     bonds = list()
     for bond in mg.graph.edges():
-        bonds.append(sorted([bond[0], bond[1]]))
+        bonds.append(tuple(sorted([bond[0], bond[1]])))
 
     m_inds = [e for e in range(len(mg.molecule)) if str(mg.molecule.species[e]) in metals]
 
@@ -128,7 +128,7 @@ def bond_species (
     :return:
     """
 
-    return "-".join(sorted([mol.species[bond[0]], mol.species[bond[1]]]))
+    return "-".join(sorted([str(mol.species[bond[0]]), str(mol.species[bond[1]])]))
 
 
 class ReactionDoc(MoleculeMetadata):
@@ -348,9 +348,9 @@ class ReactionDoc(MoleculeMetadata):
             endpoint1, endpoint2, transition_state
         )
 
-        end1_best = endpoint1["best_entries"][chosen_lot_opt]
-        end2_best = endpoint2["best_entries"][chosen_lot_opt]
-        ts_best = transition_state["best_entries"][chosen_lot_opt]
+        end1_best = endpoint1.best_entries[chosen_lot_opt]
+        end2_best = endpoint2.best_entries[chosen_lot_opt]
+        ts_best = transition_state.best_entries[chosen_lot_opt]
 
         if chosen_lot_opt is None:
             raise ValueError(
@@ -367,17 +367,17 @@ class ReactionDoc(MoleculeMetadata):
             chosen_lot_opt
         ):
             end1_sp = filter_task_type(
-                endpoint1["entries"],
+                endpoint1.entries,
                 TaskType.Single_Point,
                 sort_by=lambda x: (x["level_of_theory"] != chosen_lot_sp, x["energy"]),
             )
             end2_sp = filter_task_type(
-                endpoint2["entries"],
+                endpoint2.entries,
                 TaskType.Single_Point,
                 sort_by=lambda x: (x["level_of_theory"] != chosen_lot_sp, x["energy"]),
             )
             ts_sp = filter_task_type(
-                transition_state["entries"],
+                transition_state.entries,
                 TaskType.Single_Point,
                 sort_by=lambda x: (x["level_of_theory"] != chosen_lot_sp, x["energy"]),
             )
@@ -504,6 +504,7 @@ class ReactionDoc(MoleculeMetadata):
 
         return cls.from_molecule(
             meta_molecule=ts_structure,
+            deprecated=deprecated,
             reaction_id=reaction_id,
             reactant_id=rct_id,
             product_id=pro_id,
@@ -547,5 +548,6 @@ class ReactionDoc(MoleculeMetadata):
             bonds_formed=bonds_formed,
             bond_types_formed=bond_types_formed,
             bonds_formed_nometal=bonds_formed_nometal,
-            bond_types_formed_nometal=bond_types_formed_nometal
+            bond_types_formed_nometal=bond_types_formed_nometal,
+            **kwargs
         )
