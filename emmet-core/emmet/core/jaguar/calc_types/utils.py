@@ -2,12 +2,7 @@
 from typing import Any, Dict
 
 from emmet.core.jaguar.calc_types import LevelOfTheory, CalcType, TaskType
-from emmet.core.jaguar.calc_types.calc_types import (
-    FUNCTIONALS,
-    BASIS_SETS,
-    PCM_DIELECTRICS,
-    SMD_PARAMETERS,
-)
+from emmet.core.jaguar.calc_types.calc_types import FUNCTIONALS, BASIS_SETS
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
