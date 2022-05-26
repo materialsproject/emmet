@@ -188,13 +188,13 @@ class MaterialsBuilder(Builder):
             "calcs_reversed.input.parameters",
             "calcs_reversed.input.incar",
             "orig_inputs",
+            "input.structure",
             # needed for entry from task_doc
             "output.energy",
             "input.is_hubbard",
             "input.hubbards",
             "input.potcar_spec",
             # misc info for materials doc
-            "input.structure",
             "tags",
         ]
 
