@@ -15,7 +15,8 @@ from emmet.core.jaguar.pes import (
     evaluate_lot,
     PESPointDoc,
     PESMinimumDoc,
-    TransitionStateDoc)
+    TransitionStateDoc,
+)
 from emmet.core.jaguar.task import TaskDocument
 
 
@@ -54,8 +55,8 @@ def evaluate_point(
     )
 
 
-def filter_and_group_tasks(tasks: List[TaskDocument],
-                           settings: EmmetBuildSettings
+def filter_and_group_tasks(
+    tasks: List[TaskDocument], settings: EmmetBuildSettings
 ) -> Iterator[List[TaskDocument]]:
     """
     Groups tasks by identical structure
@@ -233,7 +234,7 @@ class PESMinimumBuilder(Builder):
             "output",
             "last_updated",
             "job_type",
-            "formula_alphabetical"
+            "formula_alphabetical",
         ]
 
         for formula in to_process_forms:
@@ -473,7 +474,7 @@ class TransitionStateBuilder(Builder):
             "output",
             "last_updated",
             "job_type",
-            "formula_alphabetical"
+            "formula_alphabetical",
         ]
 
         for formula in to_process_forms:
@@ -570,7 +571,9 @@ class TransitionStateBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(docs)} molecules")
-            self.transition_states.remove_docs({self.transition_states.key: {"$in": molecule_ids}})
+            self.transition_states.remove_docs(
+                {self.transition_states.key: {"$in": molecule_ids}}
+            )
             self.transition_states.update(
                 docs=true_ts,
                 key=["molecule_id"],

@@ -17,7 +17,8 @@ from emmet.core.jaguar.pes import (
     evaluate_lot,
     PESPointDoc,
     PESMinimumDoc,
-    TransitionStateDoc)
+    TransitionStateDoc,
+)
 from emmet.core.jaguar.task import TaskDocument
 from emmet.core.jaguar.reactions import ReactionDoc
 
@@ -121,8 +122,9 @@ class ReactionAssociationBuilder(Builder):
 
         self.logger.info("Finding tasks to process")
         all_ts = list(
-            self.transition_states.query(temp_query, [self.transition_states.key,
-                                                      "formula_alphabetical"])
+            self.transition_states.query(
+                temp_query, [self.transition_states.key, "formula_alphabetical"]
+            )
         )
 
         processed_ts = set(self.assoc.distinct("transition_state_id"))
@@ -160,8 +162,9 @@ class ReactionAssociationBuilder(Builder):
 
         self.logger.info("Finding tasks to process")
         all_ts = list(
-            self.transition_states.query(temp_query, [self.transition_states.key,
-                                                      "formula_alphabetical"])
+            self.transition_states.query(
+                temp_query, [self.transition_states.key, "formula_alphabetical"]
+            )
         )
 
         processed_ts = set(self.assoc.distinct("transition_state_id"))
@@ -181,17 +184,17 @@ class ReactionAssociationBuilder(Builder):
         for formula in to_process_forms:
             ts_query = dict(temp_query)
             ts_query["formula_alphabetical"] = formula
-            tss = list(
-                self.transition_states.query(criteria=ts_query)
-            )
+            tss = list(self.transition_states.query(criteria=ts_query))
 
-            #TODO: Do I need to do validation?
+            # TODO: Do I need to do validation?
             # Presumably if these TS have already been turned into documents
             # using another builder, they should be fine?
 
             yield tss
 
-    def identify_endpoints(self, ts: TransitionStateDoc) -> Optional[Tuple[PESMinimumDoc, PESMinimumDoc]]:
+    def identify_endpoints(
+        self, ts: TransitionStateDoc
+    ) -> Optional[Tuple[PESMinimumDoc, PESMinimumDoc]]:
         """
         Identify the minima associated with a TS.
 
@@ -209,12 +212,20 @@ class ReactionAssociationBuilder(Builder):
         ts_mol_coords = ts_mol.cart_coords
         transition_mode = ts.vibrational_frequency_modes[0]
         transition_array = np.array(transition_mode)
-        transition_mode_normalized = transition_array / transition_array.sum(axis=1)[:, np.newaxis]
+        transition_mode_normalized = (
+            transition_array / transition_array.sum(axis=1)[:, np.newaxis]
+        )
         ts_freq_lot = ts.freq_entry["level_of_theory"]
 
-        possible_minima = list(self.minima.query({"formula_alphabetical": ts.formula_alphabetical,
-                                                  "charge": ts.charge,
-                                                  "spin_multiplicity": ts.spin_multiplicity}))
+        possible_minima = list(
+            self.minima.query(
+                {
+                    "formula_alphabetical": ts.formula_alphabetical,
+                    "charge": ts.charge,
+                    "spin_multiplicity": ts.spin_multiplicity,
+                }
+            )
+        )
         poss_min_docs = [PESMinimumDoc(**d) for d in possible_minima]
 
         reverse_minima = list()
@@ -251,8 +262,14 @@ class ReactionAssociationBuilder(Builder):
         if len(reverse_minima) == 0 or len(forward_minima) == 0:
             return None
 
-        return (sorted(reverse_minima, key=lambda x: x.best_entries[ts_freq_lot]["energy"])[0],
-                sorted(forward_minima, key=lambda x: x.best_entries[ts_freq_lot]["energy"])[0])
+        return (
+            sorted(reverse_minima, key=lambda x: x.best_entries[ts_freq_lot]["energy"])[
+                0
+            ],
+            sorted(forward_minima, key=lambda x: x.best_entries[ts_freq_lot]["energy"])[
+                0
+            ],
+        )
 
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """
