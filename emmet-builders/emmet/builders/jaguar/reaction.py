@@ -265,61 +265,48 @@ class ReactionAssociationBuilder(Builder):
             [dict] : a list of new ReactionDocs
         """
 
-        tasks = [TaskDocument(**task) for task in items if task["is_valid"]]
-        formula = tasks[0].formula_alphabetical
-        task_ids = [task.calcid for task in tasks]
-        self.logger.debug(f"Processing {formula} : {task_ids}")
-        minima = list()
+        tss = [TransitionStateDoc(**item) for item in items]
+        formula = tss[0].formula_alphabetical
+        ids = [ts.molecule_id for ts in tss]
 
-        for group in filter_and_group_tasks(tasks, self.settings):
-            try:
-                minima.append(PESMinimumDoc.from_tasks(group))
-            except Exception as e:
-                failed_ids = list({t_.calcid for t_ in group})
-                doc = PESPointDoc.construct_deprecated_pes_point(tasks)
-                doc.warnings.append(str(e))
-                minima.append(doc)
+        self.logger.debug(f"Processing {formula} : {ids}")
+        reactions = list()
+
+        for ts in tss:
+            endpoints = self.identify_endpoints(ts)
+            if endpoints is None:
                 self.logger.warn(
-                    f"Failed making PESMinimum for {failed_ids}."
-                    f" Inserted as deprecated molecule: {doc.molecule_id}"
+                    f"Failed making ReactionDoc for {ts.molecule_id} "
+                    f"because endpoints could not be found."
                 )
+            doc = ReactionDoc.from_docs(endpoints[0], endpoints[1], ts)
+            reactions.append(doc)
 
-        self.logger.debug(f"Produced {len(minima)} molecules for {formula}")
+        self.logger.debug(f"Produced {len(reactions)} reactions for {formula}")
 
-        return jsanitize([doc.dict() for doc in minima], allow_bson=True)
+        return jsanitize([doc.dict() for doc in reactions], allow_bson=True)
 
     def update_targets(self, items: List[Dict]):
         """
-        Inserts the new minima into the minima collection
+        Inserts the new reactions into the reactions collection
 
         Args:
-            items [[dict]]: A list of PESMinimumDocs to update
+            items [dict]: A list of ReactionDocs to update
         """
 
         docs = list(chain.from_iterable(items))  # type: ignore
 
-        true_minima = list()
-
         for item in docs:
             item.update({"_bt": self.timestamp})
-            frequencies = item.get("frequencies")
-            # Assume a species with no frequencies is a valid minimum
-            if frequencies is None or len(frequencies) < 2:
-                true_minima.append(item)
-            # All positive, or one small negative frequency
-            elif frequencies[0] >= self.negative_threshold and frequencies[1] > 0:
-                true_minima.append(item)
-            else:
-                continue
 
-        molecule_ids = list({item["molecule_id"] for item in true_minima})
+        rxn_ids = list({item["reaction_id"] for item in docs})
 
-        if len(items) > 0:
-            self.logger.info(f"Updating {len(docs)} molecules")
-            self.minima.remove_docs({self.minima.key: {"$in": molecule_ids}})
-            self.minima.update(
-                docs=true_minima,
-                key=["molecule_id"],
+        if len(docs) > 0:
+            self.logger.info(f"Updating {len(docs)} reactions")
+            self.assoc.remove_docs({self.assoc.key: {"$in": rxn_ids}})
+            self.assoc.update(
+                docs=docs,
+                key=["reaction_id"],
             )
         else:
             self.logger.info("No items to update")
