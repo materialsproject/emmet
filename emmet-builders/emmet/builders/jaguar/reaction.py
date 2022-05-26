@@ -29,6 +29,11 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 SETTINGS = EmmetBuildSettings()
 
 
+def group_reactions(reactions:List[ReactionDoc]):
+    #TODO: THIS
+    pass
+
+
 class ReactionAssociationBuilder(Builder):
     """
     The ReactionAssociationBuilder connects transition-states (TS) with their
@@ -77,7 +82,7 @@ class ReactionAssociationBuilder(Builder):
             transition_states:  Store of TransitionStateDocs
             minima: Store of PESMinimumDocs
             assoc: Store to be populated with ReactionDocs
-            query: dictionary to limit tasks to be analyzed
+            query: dictionary to limit PES points to be analyzed
             settings: EmmetSettings to use in the build process
         """
 
@@ -120,7 +125,7 @@ class ReactionAssociationBuilder(Builder):
         temp_query = dict(self.query)
         temp_query["success"] = True
 
-        self.logger.info("Finding tasks to process")
+        self.logger.info("Finding transition-states to process")
         all_ts = list(
             self.transition_states.query(
                 temp_query, [self.transition_states.key, "formula_alphabetical"]
@@ -156,11 +161,11 @@ class ReactionAssociationBuilder(Builder):
         # Save timestamp to mark buildtime
         self.timestamp = datetime.utcnow()
 
-        # Get all processed tasks
+        # Get all processed transition-states
         temp_query = dict(self.query)
         temp_query["deprecated"] = False
 
-        self.logger.info("Finding tasks to process")
+        self.logger.info("Finding transition-states to process")
         all_ts = list(
             self.transition_states.query(
                 temp_query, [self.transition_states.key, "formula_alphabetical"]
@@ -270,6 +275,209 @@ class ReactionAssociationBuilder(Builder):
                 0
             ],
         )
+
+    def process_item(self, items: List[Dict]) -> List[Dict]:
+        """
+        Process the into a ReactionDoc
+
+        Args:
+            tasks [dict] : a list of TransitionStateDocs
+
+        Returns:
+            [dict] : a list of new ReactionDocs
+        """
+
+        tss = [TransitionStateDoc(**item) for item in items]
+        formula = tss[0].formula_alphabetical
+        ids = [ts.molecule_id for ts in tss]
+
+        self.logger.debug(f"Processing {formula} : {ids}")
+        reactions = list()
+
+        for ts in tss:
+            endpoints = self.identify_endpoints(ts)
+            if endpoints is None:
+                self.logger.warn(
+                    f"Failed making ReactionDoc for {ts.molecule_id} "
+                    f"because endpoints could not be found."
+                )
+            doc = ReactionDoc.from_docs(endpoints[0], endpoints[1], ts)
+            reactions.append(doc)
+
+        self.logger.debug(f"Produced {len(reactions)} reactions for {formula}")
+
+        return jsanitize([doc.dict() for doc in reactions], allow_bson=True)
+
+    def update_targets(self, items: List[Dict]):
+        """
+        Inserts the new reactions into the reactions collection
+
+        Args:
+            items [dict]: A list of ReactionDocs to update
+        """
+
+        docs = list(chain.from_iterable(items))  # type: ignore
+
+        for item in docs:
+            item.update({"_bt": self.timestamp})
+
+        rxn_ids = list({item["reaction_id"] for item in docs})
+
+        if len(docs) > 0:
+            self.logger.info(f"Updating {len(docs)} reactions")
+            self.assoc.remove_docs({self.assoc.key: {"$in": rxn_ids}})
+            self.assoc.update(
+                docs=docs,
+                key=["reaction_id"],
+            )
+        else:
+            self.logger.info("No items to update")
+
+
+class ReactionBuilder(Builder):
+    """
+    The ReactionBuilder collects ReactionDocs that describe the same reaction,
+    meaning that the endpoints (reactants and products) have the same connectivity,
+    and the same types of bonds break and form. This account for the fact that
+    different transition-states may be found at multiple conformations, leading
+    to slightly different endpoints.
+
+    When determining the properties of the overall ReactionDoc, the reaction
+    with the lowest electronic energy barrier dE_barrier is preferred.
+
+    The process is as follows:
+
+        1.) Separate ReactionDocs by overall formula, charge, and then spin
+            multiplicity
+        2.) Group reactions based on the connectivity of the endpoints and
+            the bonds broken/formed (in both directions)
+        3.) Insert the combined ReactionDocs into the reactions collection
+    """
+
+    def __init__(
+        self,
+        assoc: Store,
+        reactions: Store,
+        query: Optional[Dict] = None,
+        consider_metal_bonds: bool = False,
+        settings: Optional[EmmetBuildSettings] = None,
+        **kwargs,
+    ):
+        """
+        Args:
+            assoc: Store of associated ReactionDocs
+            reactions: Store of reactions to be populated
+            query: dictionary to limit reactions to be analyzed
+            consider_metal_bonds: when determining if two reactions are the
+                same, should metal bonding be taken into account?
+            settings: EmmetSettings to use in the build process
+        """
+
+        self.assoc = assoc
+        self.reactions = reactions
+        self.query = query if query else dict()
+        self.consider_metal_bonding = consider_metal_bonds
+        self.settings = EmmetBuildSettings.autoload(settings)
+        self.kwargs = kwargs
+
+        super().__init__(sources=[assoc], targets=[reactions])
+
+    def ensure_indexes(self):
+        """
+        Ensures indices on the collections needed for building
+        """
+
+        # Search index for reactions
+        self.assoc.ensure_index("reaction_id")
+        self.assoc.ensure_index("transition_state_id")
+        self.assoc.ensure_index("reactant_id")
+        self.assoc.ensure_index("product_id")
+        self.assoc.ensure_index("formla_alphabetical")
+
+        # Search index for reactions
+        self.reactions.ensure_index("reaction_id")
+        self.reactions.ensure_index("transition_state_id")
+        self.reactions.ensure_index("reactant_id")
+        self.reactions.ensure_index("product_id")
+        self.reactions.ensure_index("formla_alphabetical")
+
+    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
+        """Prechunk the ReactionBuilder for distributed computation"""
+
+        temp_query = dict(self.query)
+        temp_query["success"] = True
+
+        self.logger.info("Finding reactions to process")
+        all_rxns = list(
+            self.assoc.query(
+                temp_query, [self.assoc.key, "formula_alphabetical"]
+            )
+        )
+
+        processed_rxns = set(self.reactions.distinct("reaction_id"))
+        to_process_rxns = {d[self.assoc.key] for d in all_rxns} - processed_rxns
+        to_process_forms = {
+            d["formula_alphabetical"]
+            for d in all_rxns
+            if d[self.assoc.key] in to_process_rxns
+        }
+
+        N = ceil(len(to_process_forms) / number_splits)
+
+        for formula_chunk in grouper(to_process_forms, N):
+            yield {"query": {"formula_alphabetical": {"$in": list(formula_chunk)}}}
+
+    def get_items(self) -> Iterator[List[Dict]]:
+        """
+        Gets all reactions to process.
+
+        Returns:
+            generator or list relevant reactions to process into new ReactionDocs
+        """
+
+        self.logger.info("Reaction Builder started")
+
+        self.logger.info("Setting indexes")
+        self.ensure_indexes()
+
+        # Save timestamp to mark buildtime
+        self.timestamp = datetime.utcnow()
+
+        # Get all processed reactions
+        temp_query = dict(self.query)
+        temp_query["deprecated"] = False
+
+        self.logger.info("Finding reactions to process")
+        all_rxns = list(
+            self.assoc.query(
+                temp_query, [self.assoc.key, "formula_alphabetical"]
+            )
+        )
+
+        processed_rxns = set(self.reactions.distinct("reaction_id"))
+        to_process_rxns = {d[self.assoc.key] for d in all_rxns} - processed_rxns
+        to_process_forms = {
+            d["formula_alphabetical"]
+            for d in all_rxns
+            if d[self.assoc.key] in to_process_rxns
+        }
+
+        self.logger.info(f"Found {len(to_process_rxns)} unprocessed reactions")
+        self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
+
+        # Set total for builder bars to have a total
+        self.total = len(to_process_forms)
+
+        for formula in to_process_forms:
+            rxn_query = dict(temp_query)
+            rxn_query["formula_alphabetical"] = formula
+            rxns = list(self.assoc.query(criteria=rxn_query))
+
+            # TODO: Do I need to do validation?
+            # Presumably if these TS have already been turned into documents
+            # using another builder, they should be fine?
+
+            yield rxns
 
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """

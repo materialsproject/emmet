@@ -313,6 +313,12 @@ class ReactionDoc(MoleculeMetadata):
                     "carbon-oxygen bond. This excludes bonds involving metal ions."
     )
 
+    similar_reactions: List[MPID] = Field(
+        None,
+        description="Reactions that are similar to this one (for instance, because the same types "
+                    "of bonds are broken or formed)"
+    )
+
     @classmethod
     def from_docs(
         cls,
