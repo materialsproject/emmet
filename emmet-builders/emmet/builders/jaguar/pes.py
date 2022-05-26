@@ -54,8 +54,8 @@ def evaluate_point(
     )
 
 
-def filter_and_group_tasks(
-    self, tasks: List[TaskDocument]
+def filter_and_group_tasks(tasks: List[TaskDocument],
+                           settings: EmmetBuildSettings
 ) -> Iterator[List[TaskDocument]]:
     """
     Groups tasks by identical structure
@@ -66,7 +66,7 @@ def filter_and_group_tasks(
         for task in tasks
         if any(
             allowed_type is task.task_type
-            for allowed_type in self.settings.JAGUAR_ALLOWED_TASK_TYPES
+            for allowed_type in settings.JAGUAR_ALLOWED_TASK_TYPES
         )
     ]
 
@@ -74,10 +74,10 @@ def filter_and_group_tasks(
     lots = list()
 
     for idx, task in enumerate(filtered_tasks):
-        if task.output.optimized_molecule:
-            m = task.output.optimized_molecule
+        if task.output.molecule:
+            m = task.output.molecule
         else:
-            m = task.output.initial_molecule
+            m = task.input.molecule
         m.index: int = idx  # type: ignore
         molecules.append(m)
         lots.append(task.level_of_theory.value)
@@ -274,12 +274,12 @@ class PESMinimumBuilder(Builder):
         self.logger.debug(f"Processing {formula} : {task_ids}")
         minima = list()
 
-        for group in filter_and_group_tasks(tasks):
+        for group in filter_and_group_tasks(tasks, self.settings):
             try:
                 minima.append(PESMinimumDoc.from_tasks(group))
             except Exception as e:
                 failed_ids = list({t_.calcid for t_ in group})
-                doc = PESPointDoc.construct_deprecated_molecule(tasks)
+                doc = PESPointDoc.construct_deprecated_pes_point(tasks)
                 doc.warnings.append(str(e))
                 minima.append(doc)
                 self.logger.warn(
@@ -514,12 +514,12 @@ class TransitionStateBuilder(Builder):
         self.logger.debug(f"Processing {formula} : {task_ids}")
         transition_states = list()
 
-        for group in filter_and_group_tasks(tasks):
+        for group in filter_and_group_tasks(tasks, self.settings):
             try:
                 transition_states.append(TransitionStateDoc.from_tasks(group))
             except Exception as e:
                 failed_ids = list({t_.calcid for t_ in group})
-                doc = PESPointDoc.construct_deprecated_molecule(tasks)
+                doc = PESPointDoc.construct_deprecated_pes_point(tasks)
                 doc.warnings.append(str(e))
                 transition_states.append(doc)
                 self.logger.warn(
@@ -533,10 +533,10 @@ class TransitionStateBuilder(Builder):
 
     def update_targets(self, items: List[Dict]):
         """
-        Inserts the new minima into the minima collection
+        Inserts the new transition-states into the transition_states collection
 
         Args:
-            items [[dict]]: A list of PESMinimumDocs to update
+            items [dict]: A list of TransitionStateDocs to update
         """
 
         docs = list(chain.from_iterable(items))  # type: ignore
@@ -570,7 +570,7 @@ class TransitionStateBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(docs)} molecules")
-            self.transition_states.remove_docs({self.minima.key: {"$in": molecule_ids}})
+            self.transition_states.remove_docs({self.transition_states.key: {"$in": molecule_ids}})
             self.transition_states.update(
                 docs=true_ts,
                 key=["molecule_id"],
