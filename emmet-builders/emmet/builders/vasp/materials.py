@@ -9,6 +9,7 @@ from maggma.utils import grouper
 
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import group_structures, jsanitize
+from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.vasp.task import TaskDocument
 
@@ -268,9 +269,7 @@ class MaterialsBuilder(Builder):
         if len(items) > 0:
             self.logger.info(f"Updating {len(docs)} materials")
             self.materials.remove_docs({self.materials.key: {"$in": material_ids}})
-            self.materials.update(
-                docs=docs, key=["material_id"],
-            )
+            self.materials.update(docs=docs, key=["material_id"])
         else:
             self.logger.info("No items to update")
 
@@ -285,7 +284,7 @@ class MaterialsBuilder(Builder):
             task
             for task in tasks
             if any(
-                allowed_type is task.task_type
+                allowed_type == task.task_type
                 for allowed_type in self.settings.VASP_ALLOWED_VASP_TYPES
             )
         ]
@@ -293,7 +292,10 @@ class MaterialsBuilder(Builder):
         structures = []
 
         for idx, task in enumerate(filtered_tasks):
-            s = task.output.structure
+            if task.task_type == TaskType.Deformation:
+                s = task.input.structure
+            else:
+                s = task.output.structure
             s.index: int = idx  # type: ignore
             structures.append(s)
 
