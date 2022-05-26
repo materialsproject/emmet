@@ -8,6 +8,7 @@ from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
 from emmet.core.mpid import MPID
 from emmet.core.settings import EmmetSettings
+from emmet.core.math import Matrix3D
 from emmet.core.material import MoleculeDoc as CoreMoleculeDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.structure import MoleculeMetadata
@@ -125,6 +126,10 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
         None, description="Vibrational frequencies of this point on the PES (units: cm^-1)"
     )
 
+    vibrational_frequency_modes: List[Matrix3D] = Field(
+        None, description="Normal mode vectors of the molecule (units: Angstrom)"
+    )
+
     freq_entry: Dict[str, Any] = Field(
         None,
         description="Dictionary representation of the task document used to obtain characteristic vibrational "
@@ -188,6 +193,11 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
                 )
             ]
 
+            # No frequencies for single atom
+            freq_entry = None
+            frequencies = None
+            frequency_modes = None
+
             # entries
             best_entries = {}
             all_lots = set(levels_of_theory.values())
@@ -234,9 +244,11 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
             ], key=evaluate_task)
             if len(freq_tasks) == 0:
                 frequencies = None
+                frequency_modes = None
                 freq_entry = None
             else:
                 frequencies = freq_tasks[0].output.frequencies
+                frequency_modes = freq_tasks[0].output.vibrational_frequency_modes
                 freq_entry = freq_tasks[0].entry
 
             mm = MoleculeMatcher()
@@ -284,6 +296,7 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
             molecule=molecule,
             freq_entry=freq_entry,
             frequencies=frequencies,
+            vibrational_frequency_modes=frequency_modes,
             molecule_id=point_id,
             initial_molecules=initial_molecules,
             last_updated=last_updated,
