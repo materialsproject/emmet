@@ -2,7 +2,7 @@ import os
 from json import load
 
 from emmet.api.core.settings import MAPISettings
-from emmet.api.routes.tasks.utils import calcs_reversed_to_trajectory
+from emmet.api.routes.tasks.utils import calcs_reversed_to_trajectory, task_to_entry
 
 
 def test_calcs_reversed_to_trajectory():
@@ -18,3 +18,12 @@ def test_calcs_reversed_to_trajectory():
         [0.0, 4.500098, 0.0],
         [0.0, 0.0, 4.500098],
     ]
+
+
+def test_task_to_entry():
+    with open(os.path.join(MAPISettings().TEST_FILES, "test_task.json")) as file:
+        doc = load(file)
+
+    entry_dict = task_to_entry(doc)
+    assert entry_dict["@class"] == "ComputedStructureEntry"
+

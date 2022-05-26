@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Dict
+from typing import List, Dict, Union
 
 from emmet.core.vasp.task_valid import TaskState
 
@@ -12,6 +12,7 @@ from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.io.vasp import Incar, Poscar, Kpoints
 from pymatgen.core.trajectory import Trajectory
+from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 monty_decoder = MontyDecoder()
 
@@ -42,23 +43,19 @@ class Potcar(BaseModel):
 
 class OrigInputs(BaseModel):
     incar: Incar = Field(
-        None,
-        description="Pymatgen object representing the INCAR file.",
+        None, description="Pymatgen object representing the INCAR file.",
     )
 
     poscar: Poscar = Field(
-        None,
-        description="Pymatgen object representing the POSCAR file.",
+        None, description="Pymatgen object representing the POSCAR file.",
     )
 
     kpoints: Kpoints = Field(
-        None,
-        description="Pymatgen object representing the KPOINTS file.",
+        None, description="Pymatgen object representing the KPOINTS file.",
     )
 
     potcar: Potcar = Field(
-        None,
-        description="Pymatgen object representing the POTCAR file.",
+        None, description="Pymatgen object representing the POTCAR file.",
     )
 
 
@@ -112,17 +109,13 @@ class CustodianDoc(BaseModel):
         description="List of custodian correction data for calculation.",
     )
     job: dict = Field(
-        None,
-        title="Cusotodian Job Data",
-        description="Job data logged by custodian.",
+        None, title="Cusotodian Job Data", description="Job data logged by custodian.",
     )
 
 
 class AnalysisDoc(BaseModel):
     delta_volume: float = Field(
-        None,
-        title="Volume Change",
-        description="Volume change for the calculation.",
+        None, title="Volume Change", description="Volume change for the calculation.",
     )
     delta_volume_percent: float = Field(
         None,
@@ -142,9 +135,7 @@ class AnalysisDoc(BaseModel):
     )
 
     errors: List[str] = Field(
-        None,
-        title="Calculation Errors",
-        description="Errors issued after analysis.",
+        None, title="Calculation Errors", description="Errors issued after analysis.",
     )
 
 
@@ -153,8 +144,8 @@ class TaskDoc(BaseModel):
     Calculation-level details about VASP calculations that power Materials Project.
     """
 
-    tags: List[str] = Field(
-        None, title="tag", description="Metadata tagged to a given task."
+    tags: Union[List[str], None] = Field(
+        [], title="tag", description="Metadata tagged to a given task."
     )
 
     state: TaskState = Field(None, description="State of this calculation")
@@ -258,6 +249,23 @@ class TrajectoryDoc(BaseModel):
     )
 
 
+class EntryDoc(BaseModel):
+    """
+    Model for task entry data
+    """
+
+    task_id: str = Field(
+        None,
+        description="The (task) ID of this calculation, used as a universal reference across property documents."
+        "This comes in the form: mp-******.",
+    )
+
+    entry: ComputedStructureEntry = Field(
+        None,
+        description="Computed structure entry for the calculation associated with the task doc.",
+    )
+
+
 class DeprecationDoc(BaseModel):
     """
     Model for task deprecation data
@@ -270,11 +278,9 @@ class DeprecationDoc(BaseModel):
     )
 
     deprecated: bool = Field(
-        None,
-        description="Whether the ID corresponds to a deprecated calculation.",
+        None, description="Whether the ID corresponds to a deprecated calculation.",
     )
 
     deprecation_reason: str = Field(
-        None,
-        description="Reason for deprecation.",
+        None, description="Reason for deprecation.",
     )
