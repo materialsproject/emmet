@@ -29,7 +29,7 @@ class OutputSummary(BaseModel):
 
     molecule: Molecule = Field(None, description="Final Molecule object")
 
-    atom_properties: List[Dict[str, Any]] = Field(
+    atoms: List[Dict[str, Any]] = Field(
         None,
         description="Atomic properties, including partial charges and forces (units: various)",
     )
@@ -92,7 +92,7 @@ class OutputSummary(BaseModel):
             "@module": self.__class__.__module__,
             "@class": self.__class__.__name__,
             "molecule": self.molecule,
-            "atom_properties": self.atom_properties,
+            "atom_properties": self.atoms,
             "energy": self.scf_energy,
             "zero_point_energy": self.zero_point_energy,
             "thermo": self.thermo,

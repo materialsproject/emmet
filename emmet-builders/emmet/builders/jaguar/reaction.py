@@ -1,13 +1,15 @@
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Dict, Iterable, Iterator, List, Optional
+from typing import Dict, Iterable, Iterator, List, Optional, Tuple
 
+import numpy as np
 
 from maggma.builders import Builder
 from maggma.stores import Store
 from maggma.utils import grouper
 
+from emmet.core.math import normalize_matrix
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import group_molecules, jsanitize
 from emmet.core.jaguar.pes import (
@@ -189,9 +191,72 @@ class ReactionAssociationBuilder(Builder):
 
             yield tss
 
+    def identify_endpoints(self, ts: TransitionStateDoc) -> Optional[Tuple[PESMinimumDoc, PESMinimumDoc]]:
+        """
+        Identify the minima associated with a TS.
+
+        :param ts: TransitionStateDoc
+        :return: Tuple (PESMinimumDoc, PESMinimumDoc), representing the two
+            endpoints of the reaction associated with ts.
+            If one or both endpoints cannot be found, returns None
+        """
+
+        # We use this molecule, rather than simply ts.molecule, to ensure that
+        # the structure is EXACTLY the one that would be perturbed to optimize
+        # to the endpoints
+
+        ts_mol = ts.freq_entry["output"]["molecule"]
+        ts_mol_coords = ts_mol.cart_coords
+        transition_mode = ts.vibrational_frequency_modes[0]
+        transition_array = np.array(transition_mode)
+        transition_mode_normalized = transition_array / transition_array.sum(axis=1)[:, np.newaxis]
+        ts_freq_lot = ts.freq_entry["level_of_theory"]
+
+        possible_minima = list(self.minima.query({"formula_alphabetical": ts.formula_alphabetical,
+                                                  "charge": ts.charge,
+                                                  "spin_multiplicity": ts.spin_multiplicity}))
+        poss_min_docs = [PESMinimumDoc(**d) for d in possible_minima]
+
+        reverse_minima = list()
+        forward_minima = list()
+
+        for poss_min in poss_min_docs:
+            # Level of theory for optimization must match level of theory for
+            # TS frequency calculation
+            if ts_freq_lot not in poss_min.best_entries.keys():
+                continue
+
+            poss_opt_entry = poss_min.best_entries[ts_freq_lot]
+            initial_mol = poss_opt_entry["input"].get("molecule")
+            final_mol = poss_opt_entry["output"].get("molecule")
+            # Should never be the case, but for safety...
+            if initial_mol is None or final_mol is None:
+                continue
+
+            # Endpoint is the same as TS
+            if np.allclose(final_mol.cart_coords, ts_mol_coords):
+                continue
+
+            init_mol_coords = initial_mol.cart_coords
+            diff = init_mol_coords - ts_mol_coords
+            diff_norm = diff / diff.sum(axis=1)[:, np.newaxis]
+
+            if np.allclose(diff_norm, transition_mode_normalized):
+                if np.sum(diff) < 0:
+                    reverse_minima.append(poss_min)
+                else:
+                    forward_minima.append(poss_min)
+
+        # One or both endpoints could not be found
+        if len(reverse_minima) == 0 or len(forward_minima) == 0:
+            return None
+
+        return (sorted(reverse_minima, key=lambda x: x.best_entries[ts_freq_lot]["energy"])[0],
+                sorted(forward_minima, key=lambda x: x.best_entries[ts_freq_lot]["energy"])[0])
+
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """
-        Process the tasks into a ReactionDoc
+        Process the into a ReactionDoc
 
         Args:
             tasks [dict] : a list of TransitionStateDocs

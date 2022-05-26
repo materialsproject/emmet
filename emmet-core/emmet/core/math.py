@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import List
 
 Vector3D = List[float]
 Vector3D.__doc__ = "Real space vector."  # type: ignore
