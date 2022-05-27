@@ -87,6 +87,7 @@ def find_common_reaction_lot_sp(
 
     return None
 
+
 def bonds_metal_nometal(mg: MoleculeGraph):
     """
     Extract the bonds (with and without counting metal coordination) from a
@@ -106,7 +107,9 @@ def bonds_metal_nometal(mg: MoleculeGraph):
     for bond in mg.graph.edges():
         bonds.append(tuple(sorted([bond[0], bond[1]])))
 
-    m_inds = [e for e in range(len(mg.molecule)) if str(mg.molecule.species[e]) in metals]
+    m_inds = [
+        e for e in range(len(mg.molecule)) if str(mg.molecule.species[e]) in metals
+    ]
 
     bonds_nometal = list()
     for bond in bonds:
@@ -116,10 +119,7 @@ def bonds_metal_nometal(mg: MoleculeGraph):
     return (bonds, bonds_nometal)
 
 
-def bond_species (
-        mol: Molecule,
-        bond: Tuple[int, int]
-):
+def bond_species(mol: Molecule, bond: Tuple[int, int]):
     """
     Get the elements involved in a bond
     :param mol: Molecule
@@ -157,7 +157,7 @@ class ReactionDoc(MoleculeMetadata):
     reactant_molecule_graph_nometal: MoleculeGraph = Field(
         None,
         description="Structural and bonding information for the reactants of this reaction, "
-                    "removing all metals."
+        "removing all metals.",
     )
     reactant_bonds: List[Tuple[int, int]] = Field(
         [],
@@ -199,7 +199,7 @@ class ReactionDoc(MoleculeMetadata):
     product_molecule_graph_nometal: MoleculeGraph = Field(
         None,
         description="Structural and bonding information for the products of this reaction, "
-                    "removing all metals."
+        "removing all metals.",
     )
     product_bonds: List[Tuple[int, int]] = Field(
         [],
@@ -292,7 +292,7 @@ class ReactionDoc(MoleculeMetadata):
     bond_types_broken: List[str] = Field(
         [],
         description="List of types of bonds being broken during the reaction, e.g. C-O for a "
-                    "carbon-oxygen bond."
+        "carbon-oxygen bond.",
     )
     bonds_broken_nometal: List[Tuple[int, int]] = Field(
         [],
@@ -302,7 +302,7 @@ class ReactionDoc(MoleculeMetadata):
     bond_types_broken_nometal: List[str] = Field(
         [],
         description="List of types of bonds being broken during the reaction, e.g. C-O for a "
-                    "carbon-oxygen bond. This excludes bonds involving metal ions."
+        "carbon-oxygen bond. This excludes bonds involving metal ions.",
     )
     bonds_formed: List[Tuple[int, int]] = Field(
         [],
@@ -312,7 +312,7 @@ class ReactionDoc(MoleculeMetadata):
     bond_types_formed: List[str] = Field(
         [],
         description="List of types of bonds being formed during the reaction, e.g. C-O for a "
-                    "carbon-oxygen bond."
+        "carbon-oxygen bond.",
     )
     bonds_formed_nometal: List[Tuple[int, int]] = Field(
         [],
@@ -322,13 +322,13 @@ class ReactionDoc(MoleculeMetadata):
     bond_types_formed_nometal: List[str] = Field(
         [],
         description="List of types of bonds being formed during the reaction, e.g. C-O for a "
-                    "carbon-oxygen bond. This excludes bonds involving metal ions."
+        "carbon-oxygen bond. This excludes bonds involving metal ions.",
     )
 
     similar_reactions: List[MPID] = Field(
         None,
         description="Reactions that are similar to this one (for instance, because the same types "
-                    "of bonds are broken or formed)"
+        "of bonds are broken or formed)",
     )
 
     @classmethod
@@ -495,10 +495,14 @@ class ReactionDoc(MoleculeMetadata):
             dG_barrier = None
 
         # Bonding information
-        rct_mg = metal_edge_extender(MoleculeGraph.with_local_env_strategy(rct_structure, OpenBabelNN()))
+        rct_mg = metal_edge_extender(
+            MoleculeGraph.with_local_env_strategy(rct_structure, OpenBabelNN())
+        )
         rct_bonds, rct_bonds_nometal = bonds_metal_nometal(rct_mg)
 
-        pro_mg = metal_edge_extender(MoleculeGraph.with_local_env_strategy(pro_structure, OpenBabelNN()))
+        pro_mg = metal_edge_extender(
+            MoleculeGraph.with_local_env_strategy(pro_structure, OpenBabelNN())
+        )
         pro_bonds, pro_bonds_nometal = bonds_metal_nometal(pro_mg)
 
         #  Use set differences to identify which bonds are not present in rct/pro
@@ -513,13 +517,25 @@ class ReactionDoc(MoleculeMetadata):
         bonds_broken_nometal = sorted(rct_bond_nometal_set - pro_bond_nometal_set)
 
         # Get bond types, as in C-O or Li-F
-        bond_types_formed = sorted(set(map(lambda x: bond_species(ts_structure, x), bonds_formed)))
-        bond_types_broken = sorted(set(map(lambda x: bond_species(ts_structure, x), bonds_broken)))
-        bond_types_formed_nometal = sorted(set(map(lambda x: bond_species(ts_structure, x), bonds_formed_nometal)))
-        bond_types_broken_nometal = sorted(set(map(lambda x: bond_species(ts_structure, x), bonds_broken_nometal)))
+        bond_types_formed = sorted(
+            set(map(lambda x: bond_species(ts_structure, x), bonds_formed))
+        )
+        bond_types_broken = sorted(
+            set(map(lambda x: bond_species(ts_structure, x), bonds_broken))
+        )
+        bond_types_formed_nometal = sorted(
+            set(map(lambda x: bond_species(ts_structure, x), bonds_formed_nometal))
+        )
+        bond_types_broken_nometal = sorted(
+            set(map(lambda x: bond_species(ts_structure, x), bonds_broken_nometal))
+        )
 
-        rct_mg_nometal = MoleculeGraph.with_edges(rct_structure, {e: dict() for e in rct_bonds_nometal})
-        pro_mg_nometal = MoleculeGraph.with_edges(pro_structure, {e: dict() for e in pro_bonds_nometal})
+        rct_mg_nometal = MoleculeGraph.with_edges(
+            rct_structure, {e: dict() for e in rct_bonds_nometal}
+        )
+        pro_mg_nometal = MoleculeGraph.with_edges(
+            pro_structure, {e: dict() for e in pro_bonds_nometal}
+        )
 
         reaction_id = "-".join([str(rct_id), str(ts_id), str(pro_id)])
 

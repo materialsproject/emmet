@@ -45,7 +45,7 @@ def level_of_theory(parameters: Dict[str, Any]) -> LevelOfTheory:
     if not solvation:
         solvent_method = "VACUUM"
     else:
-        solvent_method = f"PCM(WATER)"
+        solvent_method = "PCM(WATER)"
 
     lot = f"{functional}/{basis}/{solvent_method}"
 

@@ -123,7 +123,8 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
     )
 
     frequencies: List[Optional[float]] = Field(
-        None, description="Vibrational frequencies of this point on the PES (units: cm^-1)"
+        None,
+        description="Vibrational frequencies of this point on the PES (units: cm^-1)",
     )
 
     vibrational_frequency_modes: List[Matrix3D] = Field(
@@ -133,7 +134,7 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
     freq_entry: Dict[str, Any] = Field(
         None,
         description="Dictionary representation of the task document used to obtain characteristic vibrational "
-                    "frequencies for this point on a PES",
+        "frequencies for this point on a PES",
     )
 
     @classmethod
@@ -237,11 +238,14 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
             best_structure_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
             molecule = best_structure_calc.output.molecule
 
-            freq_tasks = sorted([
-                task for task in task_group
-                if task.input["gen_variables"].get("ifreq", 0) != 0
-                and task.success
-            ], key=evaluate_task)
+            freq_tasks = sorted(
+                [
+                    task
+                    for task in task_group
+                    if task.input["gen_variables"].get("ifreq", 0) != 0 and task.success
+                ],
+                key=evaluate_task,
+            )
             if len(freq_tasks) == 0:
                 frequencies = None
                 frequency_modes = None
