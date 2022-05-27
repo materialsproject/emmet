@@ -1,3 +1,19 @@
+"""
+Builder to generate elasticity docs.
+
+The build proceeds in the below steps:
+1. Use materials builder to group tasks according the formula, space group,
+   structure matching
+2. Filter opt and deform tasks using calc type
+3. Filter opt and deform tasks to match prescribed INCAR params
+4. Group opt and deform tasks by parent lattice, i.e. lattice before deformation
+5. For each group, select the one with the latest completed time (all tasks in a
+   group are regarded as the same after going through all the filters)
+6. For all opt-deform tasks groups with the same parent lattice, select the group with
+   the most number of deformation tasks as the final data fot fitting the elastic tensor
+7. Fit the elastic tensor
+"""
+
 from datetime import datetime
 from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
@@ -33,8 +49,8 @@ class ElasticityBuilder(Builder):
             materials: Store of materials
             elasticity: Store of elasticity
             query: Mongo-like query to limit the tasks to be analyzed
-            fitting_method: method to fit the elastic tensor: `finite_difference`,
-                `pseudoinverse` or `independent`.
+            fitting_method: method to fit the elastic tensor: {`finite_difference`,
+                `pseudoinverse`, `independent`}
         """
 
         self.tasks = tasks
@@ -61,11 +77,11 @@ class ElasticityBuilder(Builder):
         self,
     ) -> Generator[Tuple[str, Dict[str, str], List[Dict]], None, None]:
         """
-        Gets all items to process into elastic docs.
+        Gets all items to process into elasticity docs.
 
         Returns:
             material_id: material id for the tasks
-            calc_types: calculation type of the tasks
+            calc_types: calculation types of the tasks
             tasks: task docs belong to the same material
         """
 
@@ -108,22 +124,19 @@ class ElasticityBuilder(Builder):
         self, item: Tuple[MPID, Dict[str, str], List[Dict]]
     ) -> Union[Dict, None]:
         """
-        Process all tasks belong to the same material into elastic doc.
+        Process all tasks belong to the same material into an elasticity doc.
 
         Args:
             item:
                 material_id: material id for the tasks
-                calc_types: {task_id: task_type} calculation type of the tasks
+                calc_types: {task_id: task_type} calculation types of the tasks
                 tasks: task docs belong to the same material
 
         Returns:
-            Elastic doc obtained from the list of task docs. `None` if not tasks
-            satisfying the needs can be found.
+            Elasticity doc obtained from the list of tasks. `None` if failed to
+            obtain the elasticity doc from the tasks.
         """
 
-        # TODO Since the material id is assigned as the `smallest` task id of a set
-        #  of tasks, the material id may not correspond to the selected optimization
-        #  task. What to do here? reassign material id?
         material_id, calc_types, tasks = item
 
         if len(tasks) != len(calc_types):
@@ -143,6 +156,8 @@ class ElasticityBuilder(Builder):
         # filter by incar
         opt_tasks = filter_by_incar_settings(opt_tasks)
         deform_tasks = filter_by_incar_settings(deform_tasks)
+        if not opt_tasks or not deform_tasks:
+            return None
 
         # select one task for each set of optimization tasks with the same lattice
         opt_grouped = group_by_parent_lattice(opt_tasks, mode="opt")
@@ -182,6 +197,15 @@ class ElasticityBuilder(Builder):
             deform_task_ids.append(doc["task_id"])
             deform_dir_names.append(doc["dir_name"])
 
+        # TODO check with Jason
+        # In MaterialsBuilder, the material id is obtained as the smallest task id
+        # of the tasks. However, here we've performed all kinds of filtering,
+        # and thus the task corresponding the material id may not be among the tasks
+        # used for fitting the elastic tensor.
+        # Anyway, for elastic tensor, the material id should correspond to the
+        # relaxed structure.
+        material_id = MPID(final_opt["task_id"])
+
         doc = ElasticityDoc.from_deformations_and_stresses(
             structure=Structure.from_dict(final_opt["output"]["structure"]),
             material_id=material_id,
@@ -200,12 +224,12 @@ class ElasticityBuilder(Builder):
 
     def update_targets(self, items: List[Dict]):
         """
-        Insert the new elastic docs into the elasticity collection.
+        Insert the new elasticity docs into the elasticity collection.
 
         Args:
-            items: elastic docs
+            items: elasticity docs
         """
-        self.logger.info(f"Updating {len(items)} elastic documents")
+        self.logger.info(f"Updating {len(items)} elasticity documents")
 
         self.elasticity.update(items, key="material_id")
 
@@ -216,12 +240,10 @@ def filter_opt_tasks(
     target_calc_type: str = CalcType.GGA_Structure_Optimization,
 ) -> List[Dict]:
     """
-    Filter out optimization tasks, by
+    Filter optimization tasks, by
         - calculation type
     """
     opt_tasks = [t for t in tasks if calc_types[str(t["task_id"])] == target_calc_type]
-
-    # TODO additional check? e.g. max force, stress ...
 
     return opt_tasks
 
@@ -232,7 +254,7 @@ def filter_deform_tasks(
     target_calc_type: str = CalcType.GGA_Deformation,
 ) -> List[Dict]:
     """
-    Filter out deformation tasks, by
+    Filter deformation tasks, by
         - calculation type
         - number of deformations (transformations)
     """
@@ -250,7 +272,7 @@ def filter_by_incar_settings(
     tasks: List[Dict], incar_settings: Dict[str, Any] = None
 ) -> List[Dict]:
     """
-    Filter the tasks by incar parameters.
+    Filter tasks by incar parameters.
     """
     # TODO do we want to check kpoint schema?
 
@@ -363,20 +385,14 @@ def select_final_opt_deform_tasks(
     lattice_comp_tol: float = 1e-5,
 ) -> Tuple[Dict, List[Dict]]:
     """
-    Select the final opt and deform tasks.
+    Select the final opt task and deform tasks for fitting.
 
     This is achieved by selecting the opt--deform pairs with the same lattice,
-    and also with the most number of deform tasks.
-
-    Args:
-        opt_tasks:
-        deform_tasks:
-        logger:
-        lattice_comp_tol:
+    and also with the most deform tasks.
 
     Returns:
-        final_opt_task:
-        final_deform_tasks:
+        final_opt_task: selected opt task
+        final_deform_tasks: selected deform tasks
     """
 
     # group opt and deform tasks by lattice
@@ -390,7 +406,7 @@ def select_final_opt_deform_tasks(
         else:
             mapping[lat] = {"deform_tasks": t}
 
-    # select opt--deform paris with the most number of deform tasks
+    # select opt--deform paris with the most deform tasks
     selected = None
     num_deform_tasks = -1
     for lat, tasks in mapping.items():
@@ -419,10 +435,6 @@ def select_final_opt_deform_tasks(
     return final_opt_task, final_deform_tasks
 
 
-# TODO, lattice_comp_tol can be relaxed, especially for `mode = deform`. Since the
-#  lattice are computed from different deformation matrices, which may introduce
-#  errors in lattice. It may then group lattice that should be the same as different.
-#  Ask Jason what they use in materials doc builder.
 def group_by_parent_lattice(
     tasks: List[Dict], mode: str, lattice_comp_tol: float = 1e-5
 ) -> List[Tuple[np.ndarray, List[Dict]]]:

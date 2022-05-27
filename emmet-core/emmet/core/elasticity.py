@@ -426,6 +426,13 @@ def generate_derived_fitting_data(
     # primary strain mapping (used only for checking purpose below)
     p_mapping = TensorMapping(strains, strains, tol=tol)
 
+    # Warnings:
+    # Do not use deformations to replace strains in generating the derived fitting
+    # data. More specifically, do not create TensorMapping using deformation. This is
+    # because the Lagrangian strain is symmetric, but the deformation gradient is not.
+    # Then, more derived data can be generated than enough/necessary, due to the
+    # asymmetry of the deformation gradient.
+
     # generated derived deforms
     mapping = TensorMapping(tol=tol)
     for i, p_strain in enumerate(strains):
