@@ -152,6 +152,11 @@ class ReactionDoc(MoleculeMetadata):
         None,
         description="Structural and bonding information for the reactants of this reaction.",
     )
+    reactant_molecule_graph_nometal: MoleculeGraph = Field(
+        None,
+        description="Structural and bonding information for the reactants of this reaction, "
+                    "removing all metals."
+    )
     reactant_bonds: List[Tuple[int, int]] = Field(
         [],
         description="List of bonds in the reactants in the form (a, b), where a and b are 0-indexed "
@@ -188,6 +193,11 @@ class ReactionDoc(MoleculeMetadata):
     product_molecule_graph: MoleculeGraph = Field(
         None,
         description="Structural and bonding information for the products of this reaction.",
+    )
+    product_molecule_graph_nometal: MoleculeGraph = Field(
+        None,
+        description="Structural and bonding information for the products of this reaction, "
+                    "removing all metals."
     )
     product_bonds: List[Tuple[int, int]] = Field(
         [],
@@ -495,16 +505,19 @@ class ReactionDoc(MoleculeMetadata):
         pro_bond_set = set(pro_bonds)
         pro_bond_nometal_set = set(pro_bonds_nometal)
 
-        bonds_formed = list(pro_bond_set - rct_bond_set)
-        bonds_broken = list(rct_bond_set - pro_bond_set)
-        bonds_formed_nometal = list(pro_bond_nometal_set - rct_bond_nometal_set)
-        bonds_broken_nometal = list(rct_bond_nometal_set - pro_bond_nometal_set)
+        bonds_formed = sorted(pro_bond_set - rct_bond_set)
+        bonds_broken = sorted(rct_bond_set - pro_bond_set)
+        bonds_formed_nometal = sorted(pro_bond_nometal_set - rct_bond_nometal_set)
+        bonds_broken_nometal = sorted(rct_bond_nometal_set - pro_bond_nometal_set)
 
         # Get bond types, as in C-O or Li-F
-        bond_types_formed = list(set(map(lambda x: bond_species(ts_structure, x), bonds_formed)))
-        bond_types_broken = list(set(map(lambda x: bond_species(ts_structure, x), bonds_broken)))
-        bond_types_formed_nometal = list(set(map(lambda x: bond_species(ts_structure, x), bonds_formed_nometal)))
-        bond_types_broken_nometal = list(set(map(lambda x: bond_species(ts_structure, x), bonds_broken_nometal)))
+        bond_types_formed = sorted(set(map(lambda x: bond_species(ts_structure, x), bonds_formed)))
+        bond_types_broken = sorted(set(map(lambda x: bond_species(ts_structure, x), bonds_broken)))
+        bond_types_formed_nometal = sorted(set(map(lambda x: bond_species(ts_structure, x), bonds_formed_nometal)))
+        bond_types_broken_nometal = sorted(set(map(lambda x: bond_species(ts_structure, x), bonds_broken_nometal)))
+
+        rct_mg_nometal = MoleculeGraph.with_edges(rct_structure, rct_bonds_nometal)
+        pro_mg_nometal = MoleculeGraph.with_edges(pro_structure, pro_bonds_nometal)
 
         reaction_id = "-".join([str(rct_id), str(ts_id), str(pro_id)])
 
@@ -517,6 +530,7 @@ class ReactionDoc(MoleculeMetadata):
             transition_state_id=ts_id,
             reactant_structure=rct_structure,
             reactant_molecule_graph=rct_mg,
+            reactant_molecule_graph_nometal=rct_mg_nometal,
             reactant_bonds=rct_bonds,
             reactant_bonds_nometal=rct_bonds_nometal,
             reactant_energy=rct_e,
@@ -526,6 +540,7 @@ class ReactionDoc(MoleculeMetadata):
             reactant_free_energy=rct_g,
             product_structure=pro_structure,
             product_molecule_graph=pro_mg,
+            product_molecule_graph_nometal=pro_mg_nometal,
             product_bonds=pro_bonds,
             product_bonds_nometal=pro_bonds_nometal,
             product_energy=pro_e,

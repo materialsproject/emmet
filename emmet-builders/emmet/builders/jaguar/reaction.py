@@ -1,9 +1,11 @@
 from datetime import datetime
-from itertools import chain
+from itertools import chain, groupby
 from math import ceil
 from typing import Dict, Iterable, Iterator, List, Optional, Tuple
 
 import numpy as np
+
+from pymatgen.analysis.graphs import MoleculeGraph
 
 from maggma.builders import Builder
 from maggma.stores import Store
@@ -29,9 +31,81 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 SETTINGS = EmmetBuildSettings()
 
 
-def group_reactions(reactions:List[ReactionDoc]):
-    #TODO: THIS
-    pass
+def group_reactions(reactions: List[ReactionDoc], consider_metal_bonds: bool = False):
+    """
+    Collect reactions based on their charges, spin multiplicities, endpoint
+    connectivities, and bonds broken/formed
+
+    :param reactions: list of ReactionDocs to be grouped
+    :param consider_metal_bonds: Should metal bonds be considered when
+        determining if two reactions are the same?
+    :return: lists of grouped ReactionDocs
+    """
+
+    def charge_spin(doc):
+        return (doc.charge, doc.spin_multiplicity)
+
+    for c_s, pregroup in groupby(sorted(reactions, key=charge_spin), key=charge_spin):
+        groups = list()
+
+        for doc in pregroup:
+            for group in groups:
+                rep = group[0]
+                if consider_metal_bonds:
+                    if doc.reactant_molecule_graph.isomorphic_to(
+                        rep.reactant_molecule_graph
+                    ) and doc.product_molecule_graph.isomorphic_to(
+                        rep.product_molecule_graph
+                    ):
+                        if (
+                            doc.bond_types_broken == rep.bond_types_broken
+                            and doc.bond_types_formed == rep.bond_types_formed
+                        ):
+                            group.append(doc)
+                            break
+
+                    elif doc.reactant_molecule_graph.isomorphic_to(
+                        rep.product_molecule_graph
+                    ) and doc.product_molecule_graph.isomorphic_to(
+                        rep.reactant_molecule_graph
+                    ):
+                        if (
+                            doc.bond_types_broken == rep.bond_types_formed
+                            and doc.bond_types_formed == rep.bond_types_broken
+                        ):
+                            group.append(doc)
+                            break
+
+                else:
+                    if doc.reactant_molecule_graph_nometal.isomorphic_to(
+                        rep.reactant_molecule_graph_nometal
+                    ) and doc.product_molecule_graph_nometal.isomorphic_to(
+                        rep.product_molecule_graph_nometal
+                    ):
+                        if (
+                            doc.bond_types_broken_nometal
+                            == rep.bond_types_broken_nometal
+                            and doc.bond_types_formed_nometal
+                            == rep.bond_types_formed_nometal
+                        ):
+                            group.append(doc)
+                            break
+                    elif doc.reactant_molecule_graph_nometal.isomorphic_to(
+                        rep.product_molecule_graph_nometal
+                    ) and doc.product_molecule_graph_nometal.isomorphic_to(
+                        rep.reactant_molecule_graph_nometal
+                    ):
+                        if (
+                            doc.bond_types_broken_nometal
+                            == rep.bond_types_formed_nometal
+                            and doc.bond_types_formed_nometal
+                            == rep.bond_types_broken_nometal
+                        ):
+                            group.append(doc)
+                            break
+
+        for group in groups:
+            yield group
 
 
 class ReactionAssociationBuilder(Builder):
@@ -409,9 +483,7 @@ class ReactionBuilder(Builder):
 
         self.logger.info("Finding reactions to process")
         all_rxns = list(
-            self.assoc.query(
-                temp_query, [self.assoc.key, "formula_alphabetical"]
-            )
+            self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical"])
         )
 
         processed_rxns = set(self.reactions.distinct("reaction_id"))
@@ -449,9 +521,7 @@ class ReactionBuilder(Builder):
 
         self.logger.info("Finding reactions to process")
         all_rxns = list(
-            self.assoc.query(
-                temp_query, [self.assoc.key, "formula_alphabetical"]
-            )
+            self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical"])
         )
 
         processed_rxns = set(self.reactions.distinct("reaction_id"))
@@ -481,35 +551,38 @@ class ReactionBuilder(Builder):
 
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """
-        Process the into a ReactionDoc
+        Process reactions and compile them into ReactionDocs
 
         Args:
-            tasks [dict] : a list of TransitionStateDocs
+            tasks [dict] : a list of ReactionDocs
 
         Returns:
             [dict] : a list of new ReactionDocs
         """
 
-        tss = [TransitionStateDoc(**item) for item in items]
-        formula = tss[0].formula_alphabetical
-        ids = [ts.molecule_id for ts in tss]
+        rxns = [ReactionDoc(**item) for item in items]
+        formula = rxns[0].formula_alphabetical
+        ids = [rxn.reaction_id for rxn in rxns]
 
         self.logger.debug(f"Processing {formula} : {ids}")
-        reactions = list()
+        new_reactions = list()
 
-        for ts in tss:
-            endpoints = self.identify_endpoints(ts)
-            if endpoints is None:
-                self.logger.warn(
-                    f"Failed making ReactionDoc for {ts.molecule_id} "
-                    f"because endpoints could not be found."
-                )
-            doc = ReactionDoc.from_docs(endpoints[0], endpoints[1], ts)
-            reactions.append(doc)
+        for group in group_reactions(rxns, self.consider_metal_bonding):
+            # Maybe somehow none get grouped?
+            if len(group) == 0:
+                continue
 
-        self.logger.debug(f"Produced {len(reactions)} reactions for {formula}")
+            sorted_docs = sorted(group, key=lambda x: x.dE_barrier)
 
-        return jsanitize([doc.dict() for doc in reactions], allow_bson=True)
+            best_doc = sorted_docs[0]
+            if len(sorted_docs) > 1:
+                best_doc.similar_reactions = [r.reaction_id for r in sorted_docs[1:]]
+
+            new_reactions.append(best_doc)
+
+        self.logger.debug(f"Produced {len(new_reactions)} reactions for {formula}")
+
+        return jsanitize([doc.dict() for doc in new_reactions], allow_bson=True)
 
     def update_targets(self, items: List[Dict]):
         """
@@ -528,8 +601,8 @@ class ReactionBuilder(Builder):
 
         if len(docs) > 0:
             self.logger.info(f"Updating {len(docs)} reactions")
-            self.assoc.remove_docs({self.assoc.key: {"$in": rxn_ids}})
-            self.assoc.update(
+            self.reactions.remove_docs({self.reactions.key: {"$in": rxn_ids}})
+            self.reactions.update(
                 docs=docs,
                 key=["reaction_id"],
             )
