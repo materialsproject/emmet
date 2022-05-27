@@ -494,11 +494,11 @@ class ReactionDoc(MoleculeMetadata):
             dH = pro_H - rct_H
             dH_barrier = ts_H - rct_H
 
-            dS = pro_s - rct_s
-            dS_barrier = ts_s - rct_s
+            dS = pro_s - rct_s  # type: ignore
+            dS_barrier = ts_s - rct_s  # type: ignore
 
-            dG = pro_g - rct_g
-            dG_barrier = ts_g - rct_g
+            dG = pro_g - rct_g  # type: ignore
+            dG_barrier = ts_g - rct_g  # type: ignore
 
         # Bonding information
         rct_mg = metal_edge_extender(

@@ -292,7 +292,7 @@ class ReactionAssociationBuilder(Builder):
         # to the endpoints
 
         ts_mol = Molecule.from_dict(ts.freq_entry["output"]["molecule"])  # type: ignore
-        ts_mol_coords = ts_mol.cart_coords
+        ts_mol_coords = ts_mol.cart_coords  # type: ignore
         transition_mode = ts.vibrational_frequency_modes[0]
         transition_array = np.array(transition_mode)
         transition_mode_normalized = (

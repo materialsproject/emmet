@@ -170,7 +170,7 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
                 initial_structures.append(task.input["molecule"])
             else:
                 mol = Molecule.from_dict(task.input["molecule"])
-                initial_structures.append(mol)
+                initial_structures.append(mol)  # type: ignore
 
         # If we're dealing with single-atoms, process is much different
         if all([len(m) == 1 for m in initial_structures]):
