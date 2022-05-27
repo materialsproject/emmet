@@ -21,21 +21,18 @@ SETTINGS = EmmetSettings()
 class ElasticTensorDoc(BaseModel):
     raw: MatrixVoigt = Field(
         None,
-        description="Elastic tensor corresponding to POSCAR (conventional standard "
-        "cell) orientation, unsymmetrized. (GPa)",
+        description="Elastic tensor corresponding to structure orientation (GPa)",
     )
     ieee_format: MatrixVoigt = Field(
         None,
-        description="Elastic tensor corresponding to IEEE orientation, symmetrized to "
-        "crystal structure. (GPa)",
+        description="Elastic tensor corresponding to IEEE orientation (GPa)",
     )
 
 
 class ComplianceTensorDoc(BaseModel):
     raw: MatrixVoigt = Field(
         None,
-        description="Compliance tensor corresponding to POSCAR (conventional standard "
-        "cell). (TPa^-1)",
+        description="Compliance tensor corresponding to structure orientation (TPa^-1)",
     )
     ieee_format: MatrixVoigt = Field(
         None,
@@ -79,10 +76,11 @@ class ThermalConductivity(BaseModel):
 
 class FittingData(BaseModel):
     """
-    Data to fit the elastic tensor.
+    Data used to fit the elastic tensor.
 
-    These are intended for the explicitly calculated primary data, not containing
-    derived data from symmetry operations.
+    Note, this only consists of the explicitly calculated primary data.
+    With the data here, one can redo the fitting to regenerate the elastic data,
+    e.g. using `ElasticityDoc.from_deformations_and_stresses()`.
     """
 
     # data of strained structures
@@ -99,21 +97,22 @@ class FittingData(BaseModel):
         description="Second Piola–Kirchhoff stress tensors on structures"
     )
     deformation_tasks: List[MPID] = Field(
-        None, description="Deformation tasks corresponding to the strained structures"
+        None,
+        description="Deformation task ids corresponding to the strained structures",
     )
     deformation_dir_names: List[str] = Field(
-        None, description="Paths to the deformation tasks running directories"
+        None, description="Paths to the running directories of deformation tasks"
     )
 
     # data of equilibrium structure
     equilibrium_cauchy_stress: Matrix3D = Field(
-        None, description="Cauchy stress tensor of the equilibrium (relaxed) structure"
+        None, description="Cauchy stress tensor of the relaxed structure"
     )
     optimization_task: MPID = Field(
         None, description="Optimization task corresponding to the relaxed structure"
     )
     optimization_dir_name: str = Field(
-        None, description="Path to the optimization task running directory"
+        None, description="Path to the running directory of the optimization task"
     )
 
     # derived strains stresses
@@ -132,11 +131,11 @@ class CriticalMessage(BaseModel):
     )
     STRAIN_RANK = (
         "Critical: insufficient number of valid strains. Expect the matrix of all "
-        "strains to be of rank 6, but got rank {}."
+        "strains to be of rank 6; got rank {}."
     )
     N_STATES = (
-        "Critical: Expect 24 total (primary plus derived) strain stress states "
-        "to fit the data; but got {}."
+        "Critical: Expect 24 total (primary plus derived) strain--stress states "
+        "to fit the data; got {}."
     )
 
     NEGATIVE_MODULUS = "Critical: Negative modulus. {} {} is {}."
@@ -153,9 +152,6 @@ class WarningMessage(BaseModel):
 
 
 class ElasticityDoc(PropertyDoc):
-    """
-    Elasticity doc.
-    """
 
     property_name: str = "elasticity"
 
@@ -163,14 +159,14 @@ class ElasticityDoc(PropertyDoc):
         None, description="Structure to compute the elasticity"
     )
 
+    order: int = Field(
+        default=2, description="Order of the expansion of the elastic tensor"
+    )
+
     elastic_tensor: ElasticTensorDoc = Field(None, description="Elastic tensor")
 
     compliance_tensor: ComplianceTensorDoc = Field(
         None, description="Compliance tensor"
-    )
-
-    order: int = Field(
-        default=2, description="Order of the expansion of the elastic tensor"
     )
 
     # derived properties
@@ -197,7 +193,7 @@ class ElasticityDoc(PropertyDoc):
 
     state: Status = Field(
         None,
-        description="State of the elasticity calculation, " "`successful` or `failed`",
+        description="State of the fitting/analysis: `successful` or `failed`",
     )
 
     @classmethod
@@ -226,18 +222,18 @@ class ElasticityDoc(PropertyDoc):
         2012.
 
         Args:
-            structure: optimized structure.
-            material_id:
-            deformations: deformations applied to the optimized structure that generate
-                the strains.
-            stresses: Cauchy stresses on the deformed structures. Expect units: GPa.
+            structure: relaxed structure.
+            material_id: material id.
+            deformations: deformations applied to the relaxed structure that generate
+                the strained structures.
+            stresses: Cauchy stresses on the deformed structures. Expected units: GPa.
             deformation_task_ids: id of the deformation tasks.
             deformation_dir_names: directories where the deformation tasks are run.
-            equilibrium_stress: Cauchy stress on the optimized structure.
-            optimization_task_id: id of the optmization task.
-            optimization_dir_name: directory where the optmization task run.
+            equilibrium_stress: Cauchy stress on the relaxed structure.
+            optimization_task_id: id of the optimization task to relax the structure.
+            optimization_dir_name: directory where the optimization task run.
             fitting_method: method used to fit the elastic tensor:
-            {`finite_difference`, `pseudoinverse`, `independent`}.
+                {`finite_difference`, `pseudoinverse`, `independent`}.
         """
 
         CM = CriticalMessage()
@@ -362,19 +358,19 @@ def generate_primary_fitting_data(
     Union[List[str], None],
 ]:
     """
-    Get the primary fitting data, i.e. data explicitly computed from a calculation.
+    Get the primary fitting data, i.e. data obtained from a calculation.
 
     Args:
         deforms: primary deformations
         stresses: primary stresses
         task_ids: ids of the tasks that generate the data
-        dir_names: dir names in which the calculations are performed
+        dir_names: directories where the calculations are performed
 
     Returns:
         strains: primary strains
         second_pk_stresses: primary second Piola-Kirchhoff stresses
-        task_ids: ids of the primary tasks
-        dir_names: directory names of the primary tasks
+        task_ids: ids of the tasks that generate the data
+        dir_names: directories where the calculations are performed
     """
     size = len(deforms)
     assert len(stresses) == size
@@ -402,21 +398,20 @@ def generate_derived_fitting_data(
     It can happen that multiple primary deformations can be mapped to the same derived
     deformation from different symmetry operations. In such cases, the stress for a
     derived deformation is the average of all derived stresses, each corresponding to a
-    primary calculation. In doing so, we also check that:
-
-    1. only independent derived strains are used
-    2. for a specific derived strain, a primary deformation is only used once to
-       obtain the average
+    primary calculation. In doing so, we also check to ensure that:
+    1. only independent derived deformations are used
+    2. for a specific derived strain, a primary deformation is only used (mapped)
+       once to obtain the average
 
     Args:
-        structure: equilibrium structure
+        structure: relaxed structure
         strains: primary strains
         stresses: primary stresses
         symprec: symmetry operation precision
-        tol: tolerance for comparing deformations and also for determining whether a
-            deformation is independent. The elastic workflow use a minimum strain of
-            0.005, so the default tolerance of 0.002 should be able to distinguish
-            different strain states.
+        tol: tolerance for comparing strains and also for determining whether the
+            deformation corresponds to the train is independent. The elastic workflow
+            use a minimum strain of 0.005, so the default tolerance of 0.002 should be
+            able to distinguish different strain states.
 
     Returns:
         derived_deforms: derived deformations
@@ -431,9 +426,7 @@ def generate_derived_fitting_data(
     # primary strain mapping (used only for checking purpose below)
     p_mapping = TensorMapping(strains, strains, tol=tol)
 
-    #
     # generated derived deforms
-    #
     mapping = TensorMapping(tol=tol)
     for i, p_strain in enumerate(strains):
         for op in symmops:
@@ -460,9 +453,7 @@ def generate_derived_fitting_data(
             else:
                 mapping[d_strain] = [(op, i)]
 
-    #
     # get average stress from derived deforms
-    #
     derived_strains = []
     derived_stresses = []
     derived_deforms = []
@@ -496,8 +487,8 @@ def fit_elastic_tensor(
     Fitting the elastic tensor.
 
     Args:
-        strains: strains to fit the elastic tensor
-        stresses: stresses to fit the elastic tensor
+        strains: strains (primary and derived) to fit the elastic tensor
+        stresses: stresses (primary and derived) to fit the elastic tensor
         eq_stress: equilibrium stress, i.e. stress on the relaxed structure
         fitting_method: method used to fit the elastic tensor:
             {`finite_difference`, `pseudoinverse`, `independent`}
@@ -527,7 +518,19 @@ def fit_elastic_tensor(
     return result
 
 
-def get_derived_properties(structure: Structure, tensor: ElasticTensor):
+def get_derived_properties(
+    structure: Structure, tensor: ElasticTensor
+) -> Dict[str, Any]:
+    """
+    Get derived elasticity properties.
+
+    Args:
+        structure: relaxed structure
+        tensor: elastic tensor corresponding to the structure
+
+    Returns:
+        a dict of derived elasticity properties
+    """
 
     try:
         prop_dict = tensor.get_structure_property_dict(structure)
@@ -583,7 +586,7 @@ def sanity_check(
     derived_props: Dict[str, Any],
 ) -> Tuple[Status, List[str]]:
     """
-    Generates all warnings that apply to a fitted elastic tensor.
+    Post analysis to generate warnings if any.
 
     Returns:
         state: state of the calculation
