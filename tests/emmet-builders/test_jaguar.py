@@ -1,7 +1,6 @@
 import pytest
 from maggma.stores import JSONStore, MemoryStore
 
-from emmet.core.jaguar.task import TaskDocument
 from emmet.builders.jaguar.pes import PESMinimumBuilder, TransitionStateBuilder
 
 

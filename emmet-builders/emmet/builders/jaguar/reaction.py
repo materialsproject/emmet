@@ -45,6 +45,7 @@ def group_reactions(reactions: List[ReactionDoc], consider_metal_bonds: bool = F
         groups = list()
 
         for doc in pregroup:
+            match = False
             for group in groups:
                 rep = group[0]
                 if consider_metal_bonds:
@@ -58,6 +59,7 @@ def group_reactions(reactions: List[ReactionDoc], consider_metal_bonds: bool = F
                             and doc.bond_types_formed == rep.bond_types_formed
                         ):
                             group.append(doc)
+                            match = True
                             break
 
                     elif doc.reactant_molecule_graph.isomorphic_to(
@@ -70,6 +72,7 @@ def group_reactions(reactions: List[ReactionDoc], consider_metal_bonds: bool = F
                             and doc.bond_types_formed == rep.bond_types_broken
                         ):
                             group.append(doc)
+                            match = True
                             break
 
                 else:
@@ -85,6 +88,7 @@ def group_reactions(reactions: List[ReactionDoc], consider_metal_bonds: bool = F
                             == rep.bond_types_formed_nometal
                         ):
                             group.append(doc)
+                            match = True
                             break
                     elif doc.reactant_molecule_graph_nometal.isomorphic_to(
                         rep.product_molecule_graph_nometal
@@ -98,7 +102,11 @@ def group_reactions(reactions: List[ReactionDoc], consider_metal_bonds: bool = F
                             == rep.bond_types_broken_nometal
                         ):
                             group.append(doc)
+                            match = True
                             break
+
+            if not match:
+                groups.append([doc])
 
         for group in groups:
             yield group
