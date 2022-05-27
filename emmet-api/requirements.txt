@@ -5,4 +5,4 @@ fastapi==0.72.0
 emmet-core>=0.21.19
 maggma>=0.46.1
 ddtrace==1.1.4
-setproctitle==1.2.2
+setproctitle==1.2.3
