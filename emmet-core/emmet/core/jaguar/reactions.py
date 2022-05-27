@@ -1,5 +1,5 @@
 """ Core definition of document describing molecular chemical reactions """
-from typing import Any, Dict, List, Mapping, Tuple, Union
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 from pydantic import Field
 
@@ -27,7 +27,7 @@ def find_common_reaction_lot_opt(
     endpoint1: PESMinimumDoc,
     endpoint2: PESMinimumDoc,
     transition_state: TransitionStateDoc,
-) -> str:
+) -> Optional[str]:
     """
     Identify the highest level of theory (LOT) used in two PESMinimumDocs
     (reaction endpoints) and one TransitionStateDoc for geometry optimization.
@@ -55,7 +55,7 @@ def find_common_reaction_lot_sp(
     endpoint1: PESMinimumDoc,
     endpoint2: PESMinimumDoc,
     transition_state: TransitionStateDoc,
-) -> str:
+) -> Optional[str]:
     """
     Identify the highest level of theory (LOT) used by two PESMinimumDocs
     (reaction endpoints) and one TransitionStateDoc for single-point energy
@@ -473,7 +473,20 @@ class ReactionDoc(MoleculeMetadata):
         dE = pro_e - rct_e
         dE_barrier = ts_e - rct_e
 
-        try:
+        if any(
+            [
+                x is None
+                for x in [rct_h, rct_s, rct_g, pro_h, pro_s, pro_g, ts_h, ts_s, ts_g]
+            ]
+        ):
+            dH = None
+            dH_barrier = None
+            dS = None
+            dS_barrier = None
+            dG = None
+            dG_barrier = None
+
+        else:
             rct_H = rct_e + rct_zpe + rct_h
             ts_H = ts_e + ts_zpe + ts_h
             pro_H = pro_e + pro_zpe + pro_h
@@ -486,13 +499,6 @@ class ReactionDoc(MoleculeMetadata):
 
             dG = pro_g - rct_g
             dG_barrier = ts_g - rct_g
-        except TypeError:
-            dH = None
-            dH_barrier = None
-            dS = None
-            dS_barrier = None
-            dG = None
-            dG_barrier = None
 
         # Bonding information
         rct_mg = metal_edge_extender(

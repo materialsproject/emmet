@@ -169,7 +169,8 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
             if isinstance(task.input["molecule"], Molecule):
                 initial_structures.append(task.input["molecule"])
             else:
-                initial_structures.append(Molecule.from_dict(task.input["molecule"]))
+                mol = Molecule.from_dict(task.input["molecule"])
+                initial_structures.append(mol)
 
         # If we're dealing with single-atoms, process is much different
         if all([len(m) == 1 for m in initial_structures]):
@@ -343,10 +344,10 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
         point_id = min([task.calcid for task in task_group])
 
         # Choose any random structure for metadata
-        if isinstance(task_group[0].input["molecule"], Molecule):
-            molecule = task_group[0].input["molecule"]
-        else:
+        if isinstance(task_group[0].input["molecule"], dict):
             molecule = Molecule.from_dict(task_group[0].input["molecule"])
+        else:
+            molecule = task_group[0].input["molecule"]
 
         # Deprecated
         deprecated = True

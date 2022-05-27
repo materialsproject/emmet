@@ -42,7 +42,7 @@ def group_reactions(reactions: List[ReactionDoc], consider_metal_bonds: bool = F
         return (doc.charge, doc.spin_multiplicity)
 
     for c_s, pregroup in groupby(sorted(reactions, key=charge_spin), key=charge_spin):
-        groups = list()
+        groups = list()  # type: ignore
 
         for doc in pregroup:
             match = False
@@ -291,7 +291,7 @@ class ReactionAssociationBuilder(Builder):
         # the structure is EXACTLY the one that would be perturbed to optimize
         # to the endpoints
 
-        ts_mol = Molecule.from_dict(ts.freq_entry["output"]["molecule"])
+        ts_mol = Molecule.from_dict(ts.freq_entry["output"]["molecule"])  # type: ignore
         ts_mol_coords = ts_mol.cart_coords
         transition_mode = ts.vibrational_frequency_modes[0]
         transition_array = np.array(transition_mode)
