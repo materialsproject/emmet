@@ -1,11 +1,16 @@
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Dict, Iterable, Iterator, List, Optional
+from typing import Dict, Iterable, Iterator, List, Optional, Union
 
 from maggma.builders import Builder
 from maggma.stores import Store
 from maggma.utils import grouper
+from pymatgen.analysis.elasticity.strain import Deformation
+from pymatgen.core.structure import Structure
+from pymatgen.transformations.standard_transformations import (
+    DeformStructureTransformation,
+)
 
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import group_structures, jsanitize
@@ -194,6 +199,8 @@ class MaterialsBuilder(Builder):
             "input.is_hubbard",
             "input.hubbards",
             "input.potcar_spec",
+            # needed for transform deformation structure back for grouping
+            "transmuter",
             # misc info for materials doc
             "tags",
         ]
@@ -223,9 +230,13 @@ class MaterialsBuilder(Builder):
         tasks = [TaskDocument(**task) for task in items]
         formula = tasks[0].formula_pretty
         task_ids = [task.task_id for task in tasks]
+
+        # not all tasks contains transmuter
+        transmuters = [task.get("transmuter", None) for task in items]
+
         self.logger.debug(f"Processing {formula} : {task_ids}")
 
-        grouped_tasks = self.filter_and_group_tasks(tasks)
+        grouped_tasks = self.filter_and_group_tasks(tasks, transmuters)
         materials = []
         for group in grouped_tasks:
             try:
@@ -274,26 +285,28 @@ class MaterialsBuilder(Builder):
             self.logger.info("No items to update")
 
     def filter_and_group_tasks(
-        self, tasks: List[TaskDocument]
+        self, tasks: List[TaskDocument], transmuters: List[Union[Dict, None]]
     ) -> Iterator[List[TaskDocument]]:
         """
         Groups tasks by structure matching
         """
 
-        filtered_tasks = [
-            task
-            for task in tasks
+        filtered_tasks = []
+        filtered_transmuters = []
+        for task, transmuter in zip(tasks, transmuters):
             if any(
                 allowed_type == task.task_type
                 for allowed_type in self.settings.VASP_ALLOWED_VASP_TYPES
-            )
-        ]
+            ):
+                filtered_tasks.append(task)
+                filtered_transmuters.append(transmuter)
 
         structures = []
-
-        for idx, task in enumerate(filtered_tasks):
+        for idx, (task, transmuter) in enumerate(
+            zip(filtered_tasks, filtered_transmuters)
+        ):
             if task.task_type == TaskType.Deformation:
-                s = task.input.structure
+                s = undeform_structure(task.input.structure, transmuter)
             else:
                 s = task.output.structure
             s.index: int = idx  # type: ignore
@@ -309,3 +322,38 @@ class MaterialsBuilder(Builder):
         for group in grouped_structures:
             grouped_tasks = [filtered_tasks[struc.index] for struc in group]  # type: ignore
             yield grouped_tasks
+
+
+def undeform_structure(structure: Structure, transmuter: Dict) -> Structure:
+    """
+    Inverse transform a deformed structure to get it back to its undeformed state.
+
+    Args:
+        structure: deformed structure
+        transmuter: transformation that deforms the structure
+
+    Returns:
+        undeformed structure
+    """
+
+    for i, (trans, params) in enumerate(
+        zip(transmuter["transformations"], transmuter["transformation_params"])
+    ):
+
+        # The transmuter only stores the transformation class and parameter, without
+        # module info and such. Therefore, there is no general way to reconstruct it,
+        # and has to do if else check.
+        if trans == "DeformStructureTransformation":
+            deform = Deformation(params["deformation"])
+            dst = DeformStructureTransformation(deform.inv)
+            structure = dst.apply_transformation(structure)
+        else:
+            raise RuntimeError(
+                "Expect transformation to be `DeformStructureTransformation`; "
+                f"got {trans}"
+            )
+
+        # TODO what if there are multiple deformations in transmuter?
+        #  Is the order correct?
+
+    return structure

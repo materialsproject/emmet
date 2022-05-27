@@ -256,13 +256,17 @@ def filter_deform_tasks(
     """
     Filter deformation tasks, by
         - calculation type
-        - number of deformations (transformations)
+        - number of transformations
+        - transformation class
     """
     deform_tasks = []
     for t in tasks:
         if calc_types[str(t["task_id"])] == target_calc_type:
-            transforms = t["transmuter"]["transformation_params"]
-            if len(transforms) == 1:
+            transforms = t["transmuter"]["transformations"]
+            if (
+                len(transforms) == 1
+                and transforms[0] == "DeformStructureTransformation"
+            ):
                 deform_tasks.append(t)
 
     return deform_tasks
