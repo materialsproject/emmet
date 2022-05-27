@@ -291,7 +291,6 @@ class ReactionAssociationBuilder(Builder):
             transition_array / transition_array.sum(axis=1)[:, np.newaxis]
         )
         ts_freq_lot = ts.freq_entry["level_of_theory"]
-        self.logger.warn("TS FREQ LOT", ts_freq_lot)
 
         possible_minima = list(
             self.minima.query(
@@ -312,7 +311,6 @@ class ReactionAssociationBuilder(Builder):
             # Level of theory for optimization must match level of theory for
             # TS frequency calculation
             if poss_min.best_entries is None:
-                self.logger.warn("SKIP 1")
                 continue
 
             if ts_freq_lot in poss_min.best_entries.keys():
@@ -321,14 +319,12 @@ class ReactionAssociationBuilder(Builder):
                 ts_freq_lot = LevelOfTheory(ts_freq_lot)
                 poss_opt_entry = poss_min.best_entries[ts_freq_lot]
             else:
-                self.logger.warn("SKIP 2")
                 continue
 
             initial_mol = poss_opt_entry["input"].get("molecule")
             final_mol = poss_opt_entry["output"].get("molecule")
             # Should never be the case, but for safety...
             if initial_mol is None or final_mol is None:
-                self.logger.warn("SKIP 3")
                 continue
 
             if not isinstance(initial_mol, Molecule):
@@ -338,7 +334,6 @@ class ReactionAssociationBuilder(Builder):
 
             # Endpoint is the same as TS
             if np.allclose(final_mol.cart_coords, ts_mol_coords):
-                self.logger.warn("SKIP 4")
                 continue
 
             init_mol_coords = initial_mol.cart_coords
@@ -348,17 +343,13 @@ class ReactionAssociationBuilder(Builder):
             if np.allclose(diff_norm, transition_mode_normalized):
                 if np.sum(diff) < 0:
                     reverse_minima.append(poss_min)
-                    self.logger.warn("IN REVERSE")
                 else:
                     forward_minima.append(poss_min)
-                    self.logger.warn("IN FORWARDS")
 
         # One or both endpoints could not be found
         if len(reverse_minima) == 0 or len(forward_minima) == 0:
-            self.logger.warn("RETURNING NONE")
             return None
 
-        self.logger.warn("DONE")
         return (
             sorted(reverse_minima, key=lambda x: x.best_entries[ts_freq_lot]["energy"])[
                 0
@@ -498,7 +489,7 @@ class ReactionBuilder(Builder):
         """Prechunk the ReactionBuilder for distributed computation"""
 
         temp_query = dict(self.query)
-        temp_query["success"] = True
+        temp_query["deprecated"] = False
 
         self.logger.info("Finding reactions to process")
         all_rxns = list(

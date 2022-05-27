@@ -145,6 +145,8 @@ class ReactionDoc(MoleculeMetadata):
         ..., description="Unique ID of the transition-state for this reaction."
     )
 
+    deprecated: bool = Field(False, description="Is this reaction deprecated?")
+
     reactant_structure: Molecule = Field(
         None, description="Molecule object describing the reactants of this reaction."
     )
