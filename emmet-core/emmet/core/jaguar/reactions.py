@@ -516,8 +516,8 @@ class ReactionDoc(MoleculeMetadata):
         bond_types_formed_nometal = sorted(set(map(lambda x: bond_species(ts_structure, x), bonds_formed_nometal)))
         bond_types_broken_nometal = sorted(set(map(lambda x: bond_species(ts_structure, x), bonds_broken_nometal)))
 
-        rct_mg_nometal = MoleculeGraph.with_edges(rct_structure, rct_bonds_nometal)
-        pro_mg_nometal = MoleculeGraph.with_edges(pro_structure, pro_bonds_nometal)
+        rct_mg_nometal = MoleculeGraph.with_edges(rct_structure, {e: dict() for e in rct_bonds_nometal})
+        pro_mg_nometal = MoleculeGraph.with_edges(pro_structure, {e: dict() for e in pro_bonds_nometal})
 
         reaction_id = "-".join([str(rct_id), str(ts_id), str(pro_id)])
 

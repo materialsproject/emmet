@@ -5,23 +5,19 @@ from typing import Dict, Iterable, Iterator, List, Optional, Tuple
 
 import numpy as np
 
-from pymatgen.analysis.graphs import MoleculeGraph
+from pymatgen.core.structure import Molecule
 
 from maggma.builders import Builder
 from maggma.stores import Store
 from maggma.utils import grouper
 
-from emmet.core.math import normalize_matrix
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.utils import group_molecules, jsanitize
+from emmet.core.utils import jsanitize
+from emmet.core.jaguar.calc_types import LevelOfTheory
 from emmet.core.jaguar.pes import (
-    best_lot,
-    evaluate_lot,
-    PESPointDoc,
     PESMinimumDoc,
     TransitionStateDoc,
 )
-from emmet.core.jaguar.task import TaskDocument
 from emmet.core.jaguar.reactions import ReactionDoc
 
 
@@ -287,7 +283,7 @@ class ReactionAssociationBuilder(Builder):
         # the structure is EXACTLY the one that would be perturbed to optimize
         # to the endpoints
 
-        ts_mol = ts.freq_entry["output"]["molecule"]
+        ts_mol = Molecule.from_dict(ts.freq_entry["output"]["molecule"])
         ts_mol_coords = ts_mol.cart_coords
         transition_mode = ts.vibrational_frequency_modes[0]
         transition_array = np.array(transition_mode)
@@ -295,6 +291,7 @@ class ReactionAssociationBuilder(Builder):
             transition_array / transition_array.sum(axis=1)[:, np.newaxis]
         )
         ts_freq_lot = ts.freq_entry["level_of_theory"]
+        self.logger.warn("TS FREQ LOT", ts_freq_lot)
 
         possible_minima = list(
             self.minima.query(
@@ -302,6 +299,7 @@ class ReactionAssociationBuilder(Builder):
                     "formula_alphabetical": ts.formula_alphabetical,
                     "charge": ts.charge,
                     "spin_multiplicity": ts.spin_multiplicity,
+                    "deprecated": False
                 }
             )
         )
@@ -313,18 +311,34 @@ class ReactionAssociationBuilder(Builder):
         for poss_min in poss_min_docs:
             # Level of theory for optimization must match level of theory for
             # TS frequency calculation
-            if ts_freq_lot not in poss_min.best_entries.keys():
+            if poss_min.best_entries is None:
+                self.logger.warn("SKIP 1")
                 continue
 
-            poss_opt_entry = poss_min.best_entries[ts_freq_lot]
+            if ts_freq_lot in poss_min.best_entries.keys():
+                poss_opt_entry = poss_min.best_entries[ts_freq_lot]
+            elif LevelOfTheory(ts_freq_lot) in poss_min.best_entries.keys():
+                ts_freq_lot = LevelOfTheory(ts_freq_lot)
+                poss_opt_entry = poss_min.best_entries[ts_freq_lot]
+            else:
+                self.logger.warn("SKIP 2")
+                continue
+
             initial_mol = poss_opt_entry["input"].get("molecule")
             final_mol = poss_opt_entry["output"].get("molecule")
             # Should never be the case, but for safety...
             if initial_mol is None or final_mol is None:
+                self.logger.warn("SKIP 3")
                 continue
+
+            if not isinstance(initial_mol, Molecule):
+                initial_mol = Molecule.from_dict(initial_mol)
+            if not isinstance(final_mol, Molecule):
+                final_mol = Molecule.from_dict(final_mol)
 
             # Endpoint is the same as TS
             if np.allclose(final_mol.cart_coords, ts_mol_coords):
+                self.logger.warn("SKIP 4")
                 continue
 
             init_mol_coords = initial_mol.cart_coords
@@ -334,13 +348,17 @@ class ReactionAssociationBuilder(Builder):
             if np.allclose(diff_norm, transition_mode_normalized):
                 if np.sum(diff) < 0:
                     reverse_minima.append(poss_min)
+                    self.logger.warn("IN REVERSE")
                 else:
                     forward_minima.append(poss_min)
+                    self.logger.warn("IN FORWARDS")
 
         # One or both endpoints could not be found
         if len(reverse_minima) == 0 or len(forward_minima) == 0:
+            self.logger.warn("RETURNING NONE")
             return None
 
+        self.logger.warn("DONE")
         return (
             sorted(reverse_minima, key=lambda x: x.best_entries[ts_freq_lot]["energy"])[
                 0
@@ -375,6 +393,7 @@ class ReactionAssociationBuilder(Builder):
                     f"Failed making ReactionDoc for {ts.molecule_id} "
                     f"because endpoints could not be found."
                 )
+                continue
             doc = ReactionDoc.from_docs(endpoints[0], endpoints[1], ts)
             reactions.append(doc)
 
