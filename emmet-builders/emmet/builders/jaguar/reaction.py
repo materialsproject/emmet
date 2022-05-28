@@ -306,7 +306,8 @@ class ReactionAssociationBuilder(Builder):
                     "formula_alphabetical": ts.formula_alphabetical,
                     "charge": ts.charge,
                     "spin_multiplicity": ts.spin_multiplicity,
-                    "deprecated": False
+                    "deprecated": False,
+                    "freq_entry": {"$ne": None}
                 }
             )
         )

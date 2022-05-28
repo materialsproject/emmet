@@ -12,7 +12,7 @@ from emmet.core.settings import EmmetSettings
 from emmet.core.structure import MoleculeMetadata
 from emmet.core.jaguar.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.jaguar.task import TaskDocument, filter_task_type
-from emmet.core.jaguar.pes import evaluate_lot, PESMinimumDoc, TransitionStateDoc
+from emmet.core.jaguar.pes import evaluate_lot, PESPointDoc, PESMinimumDoc, TransitionStateDoc
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -86,6 +86,39 @@ def find_common_reaction_lot_sp(
             return lot
 
     return None
+
+
+def find_freq_entry(doc:PESPointDoc, lot: Union[LevelOfTheory, str]):
+    """
+    Find an entry in a PESPointDoc (minimum or transition-state) with frequency
+    information.
+
+    :param doc: PESPointDoc to be searched through
+    :param lot: level of theory. Only entries in doc with this LOT will be
+        accepted
+    :return: entry dict, or None
+    """
+
+    if isinstance(lot, LevelOfTheory):
+        lot_value = lot.value
+    else:
+        lot_value = lot
+
+    possible_entries = list()
+    for e in doc.entries:
+        if e["level_of_theory"] != lot_value:
+            continue
+        elif e["input"]["gen_variables"]["ifreq"] != 1:
+            continue
+        elif e["output"]["zero_point_energy"] is None:
+            continue
+
+        possible_entries.append(e)
+
+    if len(possible_entries) == 0:
+        return None
+
+    return sorted(possible_entries, key=lambda x: x["energy"])[0]
 
 
 def bonds_metal_nometal(mg: MoleculeGraph):
@@ -366,14 +399,32 @@ class ReactionDoc(MoleculeMetadata):
             endpoint1, endpoint2, transition_state
         )
 
-        end1_best = endpoint1.best_entries[chosen_lot_opt]
-        end2_best = endpoint2.best_entries[chosen_lot_opt]
-        ts_best = transition_state.best_entries[chosen_lot_opt]
-
         if chosen_lot_opt is None:
             raise ValueError(
                 "Endpoints and Transition-State have no LevelOfTheory in common! Cannot compare."
             )
+
+        end1_best = endpoint1.best_entries[chosen_lot_opt]
+        end2_best = endpoint2.best_entries[chosen_lot_opt]
+        ts_best = transition_state.best_entries[chosen_lot_opt]
+
+        # If possible, find an entry with frequency information
+        # This includes ZPE, H, S
+        # This can be the same as the x_best entries above!
+        end1_freq = find_freq_entry(endpoint1, chosen_lot_opt)
+        end2_freq = find_freq_entry(endpoint2, chosen_lot_opt)
+        ts_freq = find_freq_entry(transition_state, chosen_lot_opt)
+
+        add_freq = True
+        if any([x is None for x in [end1_freq, end2_freq, ts_freq]]):
+            add_freq = False
+        else:
+            for freq in [end1_freq, end2_freq, ts_freq]:
+                temps = [t["temperature"] for t in freq["output"]["thermo"]]
+                if 298.15 not in temps:
+                    add_freq = False
+                    break
+
 
         # Find best level of theory - single-point
         chosen_lot_sp = find_common_reaction_lot_sp(
@@ -411,17 +462,6 @@ class ReactionDoc(MoleculeMetadata):
         # TS thermo and structural information
         ts_id = transition_state.molecule_id
         ts_structure = transition_state.molecule
-        ts_zpe = ts_best["output"]["zero_point_energy"] * 0.043363
-
-        ts_h = None
-        ts_s = None
-        ts_g = None
-        for thermo in ts_best["output"]["thermo"]:
-            if thermo["temperature"] == 298.15:
-                ts_h = thermo["enthalpy"]["total_enthalpy"] * 0.043363
-                ts_s = thermo["entropy"]["total_entropy"] * 0.000043363
-                ts_g = ts_e + ts_zpe + ts_h - 298.15 * ts_s
-                break
 
         # Endpoint thermo and structural information
         # endpoint_1 is the reactant
@@ -429,76 +469,86 @@ class ReactionDoc(MoleculeMetadata):
             rct_id = endpoint1.molecule_id
             rct_structure = endpoint1.molecule
             rct_e = end1_e
-            rct_best = end1_best
+            rct_freq = end1_freq
 
             pro_id = endpoint2.molecule_id
             pro_structure = endpoint2.molecule
             pro_e = end2_e
-            pro_best = end2_best
+            pro_freq = end2_freq
         # endpoint_2 is the reactant
         else:
             rct_id = endpoint2.molecule_id
             rct_structure = endpoint2.molecule
             rct_e = end2_e
-            rct_best = end2_best
+            rct_freq = end2_freq
 
             pro_id = endpoint1.molecule_id
             pro_structure = endpoint1.molecule
             pro_e = end1_e
-            pro_best = end1_best
-
-        # Get thermo (at 298.15K, where relevant)
-        rct_zpe = rct_best["output"]["zero_point_energy"] * 0.043363
-        rct_h = None
-        rct_s = None
-        rct_g = None
-        for thermo in rct_best["output"]["thermo"]:
-            if thermo["temperature"] == 298.15:
-                rct_h = thermo["enthalpy"]["total_enthalpy"] * 0.043363
-                rct_s = thermo["entropy"]["total_entropy"] * 0.000043363
-                rct_g = rct_e + rct_zpe + rct_h - 298.15 * rct_s
-                break
-
-        pro_zpe = pro_best["output"]["zero_point_energy"] * 0.043363
-        pro_h = None
-        pro_s = None
-        pro_g = None
-        for thermo in pro_best["output"]["thermo"]:
-            if thermo["temperature"] == 298.15:
-                pro_h = thermo["enthalpy"]["total_enthalpy"] * 0.043363
-                pro_s = thermo["entropy"]["total_entropy"] * 0.000043363
-                pro_g = pro_e + pro_zpe + pro_h - 298.15 * pro_s
-                break
+            pro_freq = end1_freq
 
         dE = pro_e - rct_e
         dE_barrier = ts_e - rct_e
 
-        if any(
-            [
-                x is None
-                for x in [rct_h, rct_s, rct_g, pro_h, pro_s, pro_g, ts_h, ts_s, ts_g]
-            ]
-        ):
-            dH = None
-            dH_barrier = None
-            dS = None
-            dS_barrier = None
-            dG = None
-            dG_barrier = None
+        ts_zpe = None
+        ts_h = None
+        ts_s = None
+        ts_g = None
+        rct_zpe = None
+        rct_h = None
+        rct_s = None
+        rct_g = None
+        pro_zpe = None
+        pro_h = None
+        pro_s = None
+        pro_g = None
 
-        else:
-            rct_H = rct_e + rct_zpe + rct_h
-            ts_H = ts_e + ts_zpe + ts_h
-            pro_H = pro_e + pro_zpe + pro_h
+        # Get thermo (at 298.15K, where relevant)
+        if add_freq:
+            ts_zpe = ts_freq["output"]["zero_point_energy"] * 0.043363
+            for thermo in ts_freq["output"]["thermo"]:
+                if thermo["temperature"] == 298.15:
+                    ts_h = thermo["enthalpy"]["total_enthalpy"] * 0.043363
+                    ts_s = thermo["entropy"]["total_entropy"] * 0.000043363
+                    ts_g = ts_e + ts_zpe + ts_h - 298.15 * ts_s
+                    break
 
-            dH = pro_H - rct_H
-            dH_barrier = ts_H - rct_H
+            rct_zpe = rct_freq["output"]["zero_point_energy"] * 0.043363
+            for thermo in rct_freq["output"]["thermo"]:
+                if thermo["temperature"] == 298.15:
+                    rct_h = thermo["enthalpy"]["total_enthalpy"] * 0.043363
+                    rct_s = thermo["entropy"]["total_entropy"] * 0.000043363
+                    rct_g = rct_e + rct_zpe + rct_h - 298.15 * rct_s
+                    break
+
+            pro_zpe = pro_freq["output"]["zero_point_energy"] * 0.043363
+            for thermo in pro_freq["output"]["thermo"]:
+                if thermo["temperature"] == 298.15:
+                    pro_h = thermo["enthalpy"]["total_enthalpy"] * 0.043363
+                    pro_s = thermo["entropy"]["total_entropy"] * 0.000043363
+                    pro_g = pro_e + pro_zpe + pro_h - 298.15 * pro_s
+                    break
+
+            rct_H = rct_e + rct_zpe + rct_h  # type: ignore
+            ts_H = ts_e + ts_zpe + ts_h  # type: ignore
+            pro_H = pro_e + pro_zpe + pro_h  # type: ignore
+
+            dH = pro_H - rct_H  # type: ignore
+            dH_barrier = ts_H - rct_H  # type: ignore
 
             dS = pro_s - rct_s  # type: ignore
             dS_barrier = ts_s - rct_s  # type: ignore
 
             dG = pro_g - rct_g  # type: ignore
             dG_barrier = ts_g - rct_g  # type: ignore
+
+        else:
+            dH = None
+            dH_barrier = None
+            dS = None
+            dS_barrier = None
+            dG = None
+            dG_barrier = None
 
         # Bonding information
         rct_mg = metal_edge_extender(
