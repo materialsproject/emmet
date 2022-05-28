@@ -11,6 +11,7 @@ def task_ts(test_dir):
     task = loadfn((test_dir / "jaguar" / "test_ts_39.json").as_posix())
     return TaskDocument(**task)
 
+
 @pytest.fixture(scope="session")
 def task_sp(test_dir):
     task = loadfn((test_dir / "jaguar" / "test_sp_36810.json").as_posix())

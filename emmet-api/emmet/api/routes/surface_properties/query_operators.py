@@ -13,7 +13,8 @@ class ReconstructedQuery(QueryOperator):
     def query(
         self,
         has_reconstructed: Optional[bool] = Query(
-            None, description="Whether the entry has a reconstructed surface.",
+            None,
+            description="Whether the entry has a reconstructed surface.",
         ),
     ) -> STORE_PARAMS:
 

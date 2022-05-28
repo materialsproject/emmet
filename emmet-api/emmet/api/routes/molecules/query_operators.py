@@ -41,31 +41,40 @@ class MoleculeBaseQuery(QueryOperator):
     def query(
         self,
         nelements_max: Optional[float] = Query(
-            None, description="Maximum value for the number of elements.",
+            None,
+            description="Maximum value for the number of elements.",
         ),
         nelements_min: Optional[float] = Query(
-            None, description="Minimum value for the number of elements.",
+            None,
+            description="Minimum value for the number of elements.",
         ),
         EA_max: Optional[float] = Query(
-            None, description="Maximum value for the electron affinity in eV.",
+            None,
+            description="Maximum value for the electron affinity in eV.",
         ),
         EA_min: Optional[float] = Query(
-            None, description="Minimum value for the electron affinity in eV.",
+            None,
+            description="Minimum value for the electron affinity in eV.",
         ),
         IE_max: Optional[float] = Query(
-            None, description="Maximum value for the ionization energy in eV.",
+            None,
+            description="Maximum value for the ionization energy in eV.",
         ),
         IE_min: Optional[float] = Query(
-            None, description="Minimum value for the ionization energy in eV.",
+            None,
+            description="Minimum value for the ionization energy in eV.",
         ),
         charge_max: Optional[int] = Query(
-            None, description="Maximum value for the charge in +e.",
+            None,
+            description="Maximum value for the charge in +e.",
         ),
         charge_min: Optional[int] = Query(
-            None, description="Minimum value for the charge in +e.",
+            None,
+            description="Minimum value for the charge in +e.",
         ),
         pointgroup: Optional[str] = Query(
-            None, description="Point of the molecule in Schoenflies notation.",
+            None,
+            description="Point of the molecule in Schoenflies notation.",
         ),
         smiles: Optional[str] = Query(
             None,

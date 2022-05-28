@@ -29,7 +29,8 @@ def task_resource(task_store):
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
-                TaskDoc, default_fields=["task_id", "formula_pretty", "last_updated"],
+                TaskDoc,
+                default_fields=["task_id", "formula_pretty", "last_updated"],
             ),
         ],
         header_processor=GlobalHeaderProcessor(),

@@ -123,7 +123,8 @@ class DeprecationQuery(QueryOperator):
     def query(
         self,
         deprecated: Optional[bool] = Query(
-            False, description="Whether the material is marked as deprecated",
+            False,
+            description="Whether the material is marked as deprecated",
         ),
     ) -> STORE_PARAMS:
 
@@ -143,13 +144,16 @@ class SymmetryQuery(QueryOperator):
     def query(
         self,
         crystal_system: Optional[CrystalSystem] = Query(
-            None, description="Crystal system of the material",
+            None,
+            description="Crystal system of the material",
         ),
         spacegroup_number: Optional[int] = Query(
-            None, description="Space group number of the material",
+            None,
+            description="Space group number of the material",
         ),
         spacegroup_symbol: Optional[str] = Query(
-            None, description="Space group symbol of the material",
+            None,
+            description="Space group symbol of the material",
         ),
     ) -> STORE_PARAMS:
 
@@ -237,10 +241,12 @@ class FindStructureQuery(QueryOperator):
     def query(
         self,
         structure: Structure = Body(
-            ..., description="Pymatgen structure object to query with",
+            ...,
+            description="Pymatgen structure object to query with",
         ),
         ltol: float = Query(
-            0.2, description="Fractional length tolerance. Default is 0.2.",
+            0.2,
+            description="Fractional length tolerance. Default is 0.2.",
         ),
         stol: float = Query(
             0.3,
@@ -248,7 +254,8 @@ class FindStructureQuery(QueryOperator):
                     length per atom := ( V / Nsites ) ** (1/3). Default is 0.3.",
         ),
         angle_tol: float = Query(
-            5, description="Angle tolerance in degrees. Default is 5 degrees.",
+            5,
+            description="Angle tolerance in degrees. Default is 5 degrees.",
         ),
         _limit: int = Query(
             1,
@@ -329,9 +336,13 @@ class FormulaAutoCompleteQuery(QueryOperator):
 
     def query(
         self,
-        formula: str = Query(..., description="Human readable chemical formula.",),
+        formula: str = Query(
+            ...,
+            description="Human readable chemical formula.",
+        ),
         limit: int = Query(
-            10, description="Maximum number of matches to show. Defaults to 10.",
+            10,
+            description="Maximum number of matches to show. Defaults to 10.",
         ),
     ) -> STORE_PARAMS:
 
@@ -342,7 +353,8 @@ class FormulaAutoCompleteQuery(QueryOperator):
             comp = Composition(formula)
         except (CompositionError, ValueError):
             raise HTTPException(
-                status_code=400, detail="Invalid formula provided.",
+                status_code=400,
+                detail="Invalid formula provided.",
             )
 
         ind_str = []

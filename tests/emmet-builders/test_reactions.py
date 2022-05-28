@@ -22,9 +22,11 @@ def minima_store():
 def ts_store():
     return MemoryStore(key="molecule_id")
 
+
 @pytest.fixture(scope="session")
 def assoc_store():
     return MemoryStore(key="reaction_id")
+
 
 @pytest.fixture(scope="session")
 def reaction_store():
@@ -32,21 +34,18 @@ def reaction_store():
 
 
 def test_pes_builders(tasks_store, minima_store, ts_store, assoc_store, reaction_store):
-    min_builder = PESMinimumBuilder(tasks=tasks_store,
-                                    minima=minima_store)
+    min_builder = PESMinimumBuilder(tasks=tasks_store, minima=minima_store)
     min_builder.run()
 
-    ts_builder = TransitionStateBuilder(tasks=tasks_store,
-                                        transition_states=ts_store)
+    ts_builder = TransitionStateBuilder(tasks=tasks_store, transition_states=ts_store)
     ts_builder.run()
 
-    assoc_builder = ReactionAssociationBuilder(minima=minima_store,
-                                               transition_states=ts_store,
-                                               assoc=assoc_store)
+    assoc_builder = ReactionAssociationBuilder(
+        minima=minima_store, transition_states=ts_store, assoc=assoc_store
+    )
     assoc_builder.run()
     assert assoc_store.count() == 6
 
-    rxn_builder = ReactionBuilder(assoc=assoc_store,
-                                  reactions=reaction_store)
+    rxn_builder = ReactionBuilder(assoc=assoc_store, reactions=reaction_store)
     rxn_builder.run()
     assert reaction_store.count() == 2

@@ -22,7 +22,8 @@ def elasticity_resource(elasticity_store):
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
-                ElasticityDoc, default_fields=["task_id", "pretty_formula"],
+                ElasticityDoc,
+                default_fields=["task_id", "pretty_formula"],
             ),
         ],
         header_processor=GlobalHeaderProcessor(),

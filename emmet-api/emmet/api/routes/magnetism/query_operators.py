@@ -19,10 +19,12 @@ class MagneticQuery(QueryOperator):
             None, description="Magnetic ordering of the material."
         ),
         total_magnetization_max: Optional[float] = Query(
-            None, description="Maximum value for the total magnetization.",
+            None,
+            description="Maximum value for the total magnetization.",
         ),
         total_magnetization_min: Optional[float] = Query(
-            None, description="Minimum value for the total magnetization.",
+            None,
+            description="Minimum value for the total magnetization.",
         ),
         total_magnetization_normalized_vol_max: Optional[float] = Query(
             None,
@@ -41,10 +43,12 @@ class MagneticQuery(QueryOperator):
             description="Minimum value for the total magnetization normalized with formula units.",
         ),
         num_magnetic_sites_max: Optional[int] = Query(
-            None, description="Maximum value for the total number of magnetic sites.",
+            None,
+            description="Maximum value for the total number of magnetic sites.",
         ),
         num_magnetic_sites_min: Optional[int] = Query(
-            None, description="Minimum value for the total number of magnetic sites.",
+            None,
+            description="Minimum value for the total number of magnetic sites.",
         ),
         num_unique_magnetic_sites_max: Optional[int] = Query(
             None,

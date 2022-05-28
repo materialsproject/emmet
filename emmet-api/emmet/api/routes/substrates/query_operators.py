@@ -59,10 +59,12 @@ class EnergyAreaQuery(QueryOperator):
             description="Minimum value for the minimum coincident interface area in Å².",
         ),
         energy_max: Optional[float] = Query(
-            None, description="Maximum value for the energy in meV.",
+            None,
+            description="Maximum value for the energy in meV.",
         ),
         energy_min: Optional[float] = Query(
-            None, description="Minimum value for the energy in meV.",
+            None,
+            description="Minimum value for the energy in meV.",
         ),
     ) -> STORE_PARAMS:
 

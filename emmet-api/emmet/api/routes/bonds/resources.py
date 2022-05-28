@@ -20,7 +20,8 @@ def bonds_resource(bonds_store):
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
-                BondingDoc, default_fields=["material_id", "last_updated"],
+                BondingDoc,
+                default_fields=["material_id", "last_updated"],
             ),
         ],
         header_processor=GlobalHeaderProcessor(),

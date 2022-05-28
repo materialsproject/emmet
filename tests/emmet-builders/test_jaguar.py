@@ -23,14 +23,12 @@ def ts_store():
 
 
 def test_pes_builders(tasks_store, minima_store, ts_store):
-    min_builder = PESMinimumBuilder(tasks=tasks_store,
-                                    minima=minima_store)
+    min_builder = PESMinimumBuilder(tasks=tasks_store, minima=minima_store)
     min_builder.run()
     assert minima_store.count() == 43
     assert minima_store.count({"deprecated": True}) == 1
 
-    ts_builder = TransitionStateBuilder(tasks=tasks_store,
-                                        transition_states=ts_store)
+    ts_builder = TransitionStateBuilder(tasks=tasks_store, transition_states=ts_store)
     ts_builder.run()
     assert ts_store.count() == 36
     assert ts_store.count({"deprecated": True}) == 0

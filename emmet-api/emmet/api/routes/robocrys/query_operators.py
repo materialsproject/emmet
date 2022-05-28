@@ -23,7 +23,8 @@ class RoboTextSearchQuery(QueryOperator):
 
         if not keywords.strip():
             raise HTTPException(
-                status_code=400, detail="Must provide search keywords.",
+                status_code=400,
+                detail="Must provide search keywords.",
             )
 
         pipeline = [

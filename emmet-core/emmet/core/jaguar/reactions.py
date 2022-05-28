@@ -12,7 +12,12 @@ from emmet.core.settings import EmmetSettings
 from emmet.core.structure import MoleculeMetadata
 from emmet.core.jaguar.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.jaguar.task import TaskDocument, filter_task_type
-from emmet.core.jaguar.pes import evaluate_lot, PESPointDoc, PESMinimumDoc, TransitionStateDoc
+from emmet.core.jaguar.pes import (
+    evaluate_lot,
+    PESPointDoc,
+    PESMinimumDoc,
+    TransitionStateDoc,
+)
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -88,7 +93,7 @@ def find_common_reaction_lot_sp(
     return None
 
 
-def find_freq_entry(doc:PESPointDoc, lot: Union[LevelOfTheory, str]):
+def find_freq_entry(doc: PESPointDoc, lot: Union[LevelOfTheory, str]):
     """
     Find an entry in a PESPointDoc (minimum or transition-state) with frequency
     information.
@@ -424,7 +429,6 @@ class ReactionDoc(MoleculeMetadata):
                 if 298.15 not in temps:
                     add_freq = False
                     break
-
 
         # Find best level of theory - single-point
         chosen_lot_sp = find_common_reaction_lot_sp(

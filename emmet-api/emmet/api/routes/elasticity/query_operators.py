@@ -117,16 +117,20 @@ class PoissonQuery(QueryOperator):
     def query(
         self,
         elastic_anisotropy_max: Optional[float] = Query(
-            None, description="Maximum value for the elastic anisotropy.",
+            None,
+            description="Maximum value for the elastic anisotropy.",
         ),
         elastic_anisotropy_min: Optional[float] = Query(
-            None, description="Maximum value for the elastic anisotropy.",
+            None,
+            description="Maximum value for the elastic anisotropy.",
         ),
         poisson_max: Optional[float] = Query(
-            None, description="Maximum value for Poisson's ratio.",
+            None,
+            description="Maximum value for Poisson's ratio.",
         ),
         poisson_min: Optional[float] = Query(
-            None, description="Minimum value for Poisson's ratio.",
+            None,
+            description="Minimum value for Poisson's ratio.",
         ),
     ) -> STORE_PARAMS:
 
@@ -158,7 +162,8 @@ class ElasticityChemsysQuery(QueryOperator):
     def query(
         self,
         chemsys: Optional[str] = Query(
-            None, description="A comma delimited string list of chemical systems.",
+            None,
+            description="A comma delimited string list of chemical systems.",
         ),
     ):
 

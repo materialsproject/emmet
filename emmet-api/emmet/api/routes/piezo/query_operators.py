@@ -14,10 +14,12 @@ class PiezoelectricQuery(QueryOperator):
     def query(
         self,
         piezo_modulus_max: Optional[float] = Query(
-            None, description="Maximum value for the piezoelectric modulus in C/m².",
+            None,
+            description="Maximum value for the piezoelectric modulus in C/m².",
         ),
         piezo_modulus_min: Optional[float] = Query(
-            None, description="Minimum value for the piezoelectric modulus in C/m².",
+            None,
+            description="Minimum value for the piezoelectric modulus in C/m².",
         ),
     ) -> STORE_PARAMS:
 

@@ -227,7 +227,8 @@ class SearchStatsQuery(QueryOperator):
                 f"choose from: {', '.join(valid_numeric_fields)}",
             ),
             num_samples: Optional[int] = Query(
-                None, title="If specified, will only sample this number of documents.",
+                None,
+                title="If specified, will only sample this number of documents.",
             ),
             min_val: Optional[float] = Query(
                 None,
@@ -267,7 +268,7 @@ class SearchStatsQuery(QueryOperator):
         self.query = query
 
     def query(self):
-        " Stub query function for abstract class "
+        "Stub query function for abstract class"
         pass
 
     def post_process(self, docs, query):
@@ -297,7 +298,11 @@ class SearchStatsQuery(QueryOperator):
 
             distribution = list(
                 kernel(
-                    np.arange(min_val, max_val, step=(max_val - min_val) / num_points,)  # type: ignore
+                    np.arange(
+                        min_val,
+                        max_val,
+                        step=(max_val - min_val) / num_points,
+                    )  # type: ignore
                 )
             )
 

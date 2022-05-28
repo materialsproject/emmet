@@ -182,7 +182,9 @@ def backup(clean, check, force_new):  # noqa: C901
                 ts = datetime.now().strftime("%Y%m%d-%H%M%S")
                 tarfile = f"{GARDEN}/{block}.tar"
                 for suf in ["", ".idx"]:
-                    args = shlex.split(f"hsi -q mv -v {tarfile}{suf} {tarfile}{suf}.bkp_{ts}")
+                    args = shlex.split(
+                        f"hsi -q mv -v {tarfile}{suf} {tarfile}{suf}.bkp_{ts}"
+                    )
                     for line in run_command(args, []):
                         logger.info(line.strip())
                 raise HpssOSError
