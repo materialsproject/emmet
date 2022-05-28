@@ -113,9 +113,9 @@ def find_freq_entry(doc: PESPointDoc, lot: Union[LevelOfTheory, str]):
     for e in doc.entries:
         if e["level_of_theory"] != lot_value:
             continue
-        elif e["input"]["gen_variables"]["ifreq"] != 1:
+        elif e["input"]["gen_variables"].get("ifreq", 0) != 1:
             continue
-        elif e["output"]["zero_point_energy"] is None:
+        elif e["output"].get("zero_point_energy") is None:
             continue
 
         possible_entries.append(e)
