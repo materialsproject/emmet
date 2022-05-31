@@ -234,7 +234,7 @@ class MaterialsBuilder(Builder):
         # not all tasks contains transmuter
         transmuters = [task.get("transmuter", None) for task in items]
 
-        self.logger.debug(f"Processing {formula} : {task_ids}")
+        self.logger.debug(f"Processing {formula}: {task_ids}")
 
         grouped_tasks = self.filter_and_group_tasks(tasks, transmuters)
         materials = []
