@@ -217,7 +217,7 @@ class ProvenanceBuilder(Builder):
         doc.history.append(self.settings.DEFAULT_HISTORY)
         doc.references.append(self.settings.DEFAULT_REFERENCE)
 
-        snl_doc = jsanitize(doc.dict(exclude_none=True), allow_bson=True)
+        snl_doc = jsanitize(doc.dict(exclude_none=False), allow_bson=True)
 
         return snl_doc
 

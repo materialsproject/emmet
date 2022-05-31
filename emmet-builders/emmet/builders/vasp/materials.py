@@ -16,7 +16,7 @@ from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import group_structures, jsanitize
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
-from emmet.core.vasp.task import TaskDocument
+from emmet.core.vasp.task_valid import TaskDocument
 
 __author__ = "Shyam Dwaraknath <shyamd@lbl.gov>"
 
@@ -33,7 +33,7 @@ class MaterialsBuilder(Builder):
 
         1.) Find all documents with the same formula
         2.) Select only task documents for the task_types we can select properties from
-        3.) Aggregate task documents based on strucutre similarity
+        3.) Aggregate task documents based on structure similarity
         4.) Create a MaterialDoc from the group of task documents
         5.) Validate material document
 

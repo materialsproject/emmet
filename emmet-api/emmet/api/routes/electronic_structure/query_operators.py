@@ -28,15 +28,9 @@ class ESSummaryDataQuery(QueryOperator):
 
     def query(
         self,
-        magnetic_ordering: Optional[Ordering] = Query(
-            None, description="Magnetic ordering associated with the data."
-        ),
-        is_gap_direct: Optional[bool] = Query(
-            None, description="Whether a band gap is direct or not."
-        ),
-        is_metal: Optional[bool] = Query(
-            None, description="Whether the material is considered a metal."
-        ),
+        magnetic_ordering: Optional[Ordering] = Query(None, description="Magnetic ordering associated with the data."),
+        is_gap_direct: Optional[bool] = Query(None, description="Whether a band gap is direct or not."),
+        is_metal: Optional[bool] = Query(None, description="Whether the material is considered a metal."),
     ) -> STORE_PARAMS:
 
         crit = defaultdict(dict)  # type: dict
@@ -67,29 +61,16 @@ class BSDataQuery(QueryOperator):
     def query(
         self,
         path_type: Optional[BSPathType] = Query(
-            None, description="k-path selection convention for the band structure.",
+            None,
+            description="k-path selection convention for the band structure.",
         ),
-        band_gap_max: Optional[float] = Query(
-            None, description="Maximum value for the band gap energy in eV."
-        ),
-        band_gap_min: Optional[float] = Query(
-            None, description="Minimum value for the band gap energy in eV."
-        ),
-        efermi_max: Optional[float] = Query(
-            None, description="Maximum value for the fermi energy in eV."
-        ),
-        efermi_min: Optional[float] = Query(
-            None, description="Minimum value for the fermi energy in eV."
-        ),
-        magnetic_ordering: Optional[Ordering] = Query(
-            None, description="Magnetic ordering associated with the data."
-        ),
-        is_gap_direct: Optional[bool] = Query(
-            None, description="Whether a band gap is direct or not."
-        ),
-        is_metal: Optional[bool] = Query(
-            None, description="Whether the material is considered a metal."
-        ),
+        band_gap_max: Optional[float] = Query(None, description="Maximum value for the band gap energy in eV."),
+        band_gap_min: Optional[float] = Query(None, description="Minimum value for the band gap energy in eV."),
+        efermi_max: Optional[float] = Query(None, description="Maximum value for the fermi energy in eV."),
+        efermi_min: Optional[float] = Query(None, description="Minimum value for the fermi energy in eV."),
+        magnetic_ordering: Optional[Ordering] = Query(None, description="Magnetic ordering associated with the data."),
+        is_gap_direct: Optional[bool] = Query(None, description="Whether a band gap is direct or not."),
+        is_metal: Optional[bool] = Query(None, description="Whether the material is considered a metal."),
     ) -> STORE_PARAMS:
 
         crit = defaultdict(dict)  # type: dict
@@ -112,9 +93,7 @@ class BSDataQuery(QueryOperator):
                     crit[entry]["$lte"] = d[entry][1]
 
             if magnetic_ordering:
-                crit[
-                    f"bandstructure.{path_type.value}.magnetic_ordering"
-                ] = magnetic_ordering.value
+                crit[f"bandstructure.{path_type.value}.magnetic_ordering"] = magnetic_ordering.value
 
             if is_gap_direct is not None:
                 crit[f"bandstructure.{path_type.value}.is_gap_direct"] = is_gap_direct
@@ -143,33 +122,26 @@ class DOSDataQuery(QueryOperator):
     def query(
         self,
         projection_type: Optional[DOSProjectionType] = Query(
-            None, description="Projection type for the density of states data.",
+            None,
+            description="Projection type for the density of states data.",
         ),
         spin: Optional[Union[Literal["1", "-1"], Spin]] = Query(
             None,
             description="Spin channel for density of states data. '1' corresponds to spin up.",
         ),
         element: Optional[Element] = Query(
-            None, description="Element type for projected density of states data.",
+            None,
+            description="Element type for projected density of states data.",
         ),
         orbital: Optional[OrbitalType] = Query(
-            None, description="Orbital type for projected density of states data.",
+            None,
+            description="Orbital type for projected density of states data.",
         ),
-        band_gap_max: Optional[float] = Query(
-            None, description="Maximum value for the band gap energy in eV."
-        ),
-        band_gap_min: Optional[float] = Query(
-            None, description="Minimum value for the band gap energy in eV."
-        ),
-        efermi_max: Optional[float] = Query(
-            None, description="Maximum value for the fermi energy in eV."
-        ),
-        efermi_min: Optional[float] = Query(
-            None, description="Minimum value for the fermi energy in eV."
-        ),
-        magnetic_ordering: Optional[Ordering] = Query(
-            None, description="Magnetic ordering associated with the data."
-        ),
+        band_gap_max: Optional[float] = Query(None, description="Maximum value for the band gap energy in eV."),
+        band_gap_min: Optional[float] = Query(None, description="Minimum value for the band gap energy in eV."),
+        efermi_max: Optional[float] = Query(None, description="Maximum value for the fermi energy in eV."),
+        efermi_min: Optional[float] = Query(None, description="Minimum value for the fermi energy in eV."),
+        magnetic_ordering: Optional[Ordering] = Query(None, description="Magnetic ordering associated with the data."),
     ) -> STORE_PARAMS:
 
         crit = defaultdict(dict)  # type: dict
@@ -243,7 +215,7 @@ class DOSDataQuery(QueryOperator):
 
 class ObjectQuery(QueryOperator):
     """
-    Method to generate a query on electronic structure object data.
+    Method to generate a query on object data by task_id.
     """
 
     def query(

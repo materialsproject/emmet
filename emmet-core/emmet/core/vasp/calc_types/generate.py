@@ -4,6 +4,8 @@ from pathlib import Path
 
 from monty.serialization import loadfn
 
+from emmet.core.utils import get_enum_source
+
 _RUN_TYPE_DATA = loadfn(str(Path(__file__).parent.joinpath("run_types.yaml").resolve()))
 _TASK_TYPES = [
     "NSCF Line",
@@ -32,16 +34,6 @@ _RUN_TYPES = (
     ]
     + ["LDA", "LDA+U"]
 )
-
-
-def get_enum_source(enum_name, doc, items):
-    header = f"""
-class {enum_name}(ValueEnum):
-    \"\"\" {doc} \"\"\"\n
-"""
-    items = [f'    {const} = "{val}"' for const, val in items.items()]
-
-    return header + "\n".join(items)
 
 
 run_type_enum = get_enum_source(

@@ -280,7 +280,9 @@ def get_vasp_dirs():
                     with open(fn, "rb") as fo, mgzip.open(fn_gz, "wb", thread=0) as fw:
                         fw.write(fo.read())
 
-                    os.remove(fn)  # remove original
+                    if os.path.exists(fn):
+                        os.remove(fn)  # remove original
+
                     shutil.chown(fn_gz, group="matgen")
                     gzipped = True
 
@@ -436,7 +438,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                     #            new_calc[k] = existing_calc[k]
 
                     #        print(fs_id_key, task_doc["calcs_reversed"][0][fs_id_key])  # TODO CHECK
-                    target.collection.remove({"task_id": task_id})
+                    target.collection.delete_one({"task_id": task_id})
                     logger.warning(f"Removed previously parsed task {task_id}!")
 
                 # return count  # TODO remove
@@ -466,7 +468,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                         logger.warning(f"{name} failed to reduce document size")
                         continue
 
-                if target.collection.count(query):
+                if target.collection.count_documents(query):
                     if snl_dct:
                         result = snl_collection.insert_one(snl_dct)
                         logger.info(

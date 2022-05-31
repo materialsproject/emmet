@@ -25,26 +25,32 @@ class PropertyDoc(StructureMetadata):
     property_name: str
     material_id: MPID = Field(
         ...,
-        description="The ID of the material, used as a universal reference across proeprty documents."
-        "This comes in the form of an MPID or int",
+        description="The Materials Project ID of the material, used as a universal reference across property documents."
+        "This comes in the form: mp-******.",
     )
 
     deprecated: bool = Field(
-        ..., description="Whether this property document is deprecated.",
+        ...,
+        description="Whether this property document is deprecated.",
     )
 
     deprecation_reasons: List[Union[DeprecationMessage, str]] = Field(
-        None, description="List of deprecation tags detailing why this document isn't valid",
+        None,
+        description="List of deprecation tags detailing why this document isn't valid.",
     )
 
     last_updated: datetime = Field(
-        description="Timestamp for the most recent calculation update for this property",
+        description="Timestamp for the most recent calculation update for this property.",
         default_factory=datetime.utcnow,
     )
 
-    origins: Sequence[PropertyOrigin] = Field([], description="Dictionary for tracking the provenance of properties")
+    origins: Sequence[PropertyOrigin] = Field(
+        [], description="Dictionary for tracking the provenance of properties."
+    )
 
-    warnings: Sequence[str] = Field([], description="Any warnings related to this property")
+    warnings: Sequence[str] = Field(
+        [], description="Any warnings related to this property."
+    )
 
     @classmethod
     def from_structure(  # type: ignore[override]
