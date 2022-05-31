@@ -159,7 +159,7 @@ class SynthesisSearchQuery(QueryOperator):
 
         if crit:
             if keywords:
-                pipeline.insert(1, {"$match": crit})
+                pipeline.insert(2, {"$match": crit})
             else:
                 pipeline.insert(0, {"$match": crit})
 

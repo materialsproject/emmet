@@ -77,6 +77,24 @@ def test_synthesis_search_query():
                     }
                 },
                 {
+                    "$project": {
+                        "_id": 0,
+                        "doi": 1,
+                        "highlights": {"$meta": "searchHighlights"},
+                        "synthesis_type": 1,
+                        "reaction": 1,
+                        "reaction_string": 1,
+                        "search_score": {"$meta": "searchScore"},
+                        "operations": 1,
+                        "target": 1,
+                        "targets_formula": 1,
+                        "targets_formula_s": 1,
+                        "precursors": 1,
+                        "precursors_formula_s": 1,
+                        "paragraph_string": 1,
+                    }
+                },
+                {
                     "$match": {
                         "synthesis_type": {"$in": ["solid-state"]},
                         "targets_formula_s": "SiO2",
@@ -91,22 +109,6 @@ def test_synthesis_search_query():
                         "operations.conditions.heating_atmosphere": {"$all": ["air"]},
                         "operations.conditions.mixing_device": {"$all": ["zirconia"]},
                         "operations.conditions.mixing_media": {"$all": ["water"]},
-                    }
-                },
-                {
-                    "$project": {
-                        "_id": 0,
-                        "doi": 1,
-                        "synthesis_type": 1,
-                        "reaction": 1,
-                        "reaction_string": 1,
-                        "operations": 1,
-                        "target": 1,
-                        "targets_formula": 1,
-                        "targets_formula_s": 1,
-                        "precursors": 1,
-                        "precursors_formula_s": 1,
-                        "paragraph_string": 1,
                     }
                 },
                 {
