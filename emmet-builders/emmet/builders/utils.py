@@ -31,8 +31,8 @@ def maximal_spanning_non_intersecting_subsets(sets) -> Set[Set]:
 
 
 def chemsys_permutations(chemsys) -> Set:
-    # Fancy way of getting every unique permutation of elements for all
-    # possible number of elements:
+    # Function to get all relevant chemical subsystems
+    # e.g. for Li-Mn-O returns Li, Li-Mn, Li-Mn-O, Li-O, Mn, Mn-O, O
     elements = chemsys.split("-")
     return {
         "-".join(sorted(c))

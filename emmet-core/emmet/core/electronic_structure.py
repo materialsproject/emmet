@@ -47,7 +47,9 @@ class BSObjectDoc(BaseModel):
     """
 
     task_id: MPID = Field(
-        None, description="The calculation ID this property comes from"
+        None,
+        description="The source calculation (task) ID that this band structure comes from. "
+        "This has the same form as a Materials Project ID.",
     )
 
     last_updated: datetime = Field(
@@ -66,23 +68,26 @@ class DOSObjectDoc(BaseModel):
     """
 
     task_id: MPID = Field(
-        None, description="The calculation ID this property comes from"
+        None,
+        description="The source calculation (task) ID that this density of states comes from. "
+        "This has the same form as a Materials Project ID.",
     )
 
     last_updated: datetime = Field(
-        description="The timestamp when this calculation was last updated",
+        description="The timestamp when this calculation was last updated.",
         default_factory=datetime.utcnow,
     )
 
     data: CompleteDos = Field(
-        None, description="The density of states object for the given calculation ID"
+        None, description="The density of states object for the given calculation ID."
     )
 
 
 class ElectronicStructureBaseData(BaseModel):
     task_id: MPID = Field(
         ...,
-        description="The source calculation (task) ID for the electronic structure data.",
+        description="The source calculation (task) ID for the electronic structure data. "
+        "This has the same form as a Materials Project ID.",
     )
 
     band_gap: float = Field(..., description="Band gap energy in eV.")
@@ -91,7 +96,7 @@ class ElectronicStructureBaseData(BaseModel):
 
     vbm: Union[float, Dict] = Field(None, description="Valence band maximum data.")
 
-    efermi: float = Field(None, description="Fermi energy eV.")
+    efermi: float = Field(None, description="Fermi energy in eV.")
 
 
 class ElectronicStructureSummary(ElectronicStructureBaseData):
@@ -183,7 +188,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     dos: DosData = Field(None, description="Density of states data for the material.")
 
     last_updated: datetime = Field(
-        description="Timestamp for when this document was last updated",
+        description="Timestamp for when this document was last updated.",
         default_factory=datetime.utcnow,
     )
 
@@ -198,7 +203,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         setyawan_curtarolo: Dict[MPID, BandStructureSymmLine] = None,
         hinuma: Dict[MPID, BandStructureSymmLine] = None,
         latimer_munro: Dict[MPID, BandStructureSymmLine] = None,
-        **kwargs
+        **kwargs,
     ) -> T:
         """
         Builds a electronic structure document using band structure and density of states data.
@@ -465,5 +470,5 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             magnetic_ordering=summary_magnetic_ordering,
             bandstructure=bs_entry,
             dos=dos_entry,
-            **kwargs
+            **kwargs,
         )

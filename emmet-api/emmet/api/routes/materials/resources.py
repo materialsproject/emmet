@@ -3,7 +3,7 @@ from maggma.api.resource.post_resource import PostOnlyResource
 from maggma.api.resource.aggregation import AggregationResource
 
 
-from emmet.core.material import MaterialsDoc
+from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.find_structure import FindStructure
 from emmet.core.formula_autocomplete import FormulaAutocomplete
 
@@ -25,6 +25,7 @@ from emmet.api.routes.materials.query_operators import (
     FindStructureQuery,
     FormulaAutoCompleteQuery,
 )
+from emmet.api.core.global_header import GlobalHeaderProcessor
 
 
 def find_structure_resource(materials_store):
@@ -47,6 +48,7 @@ def formula_autocomplete_resource(formula_autocomplete_store):
         pipeline_query_operator=FormulaAutoCompleteQuery(),
         tags=["Materials"],
         sub_path="/formula_autocomplete/",
+        header_processor=GlobalHeaderProcessor(),
     )
 
     return resource
@@ -72,6 +74,7 @@ def materials_resource(materials_store):
                 default_fields=["material_id", "formula_pretty", "last_updated"],
             ),
         ],
+        header_processor=GlobalHeaderProcessor(),
         hint_scheme=MaterialsHintScheme(),
         tags=["Materials"],
         disable_validation=True,

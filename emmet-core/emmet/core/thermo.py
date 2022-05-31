@@ -17,15 +17,16 @@ class DecompositionProduct(BaseModel):
     """
 
     material_id: MPID = Field(
-        None, description="The material this decomposition points to"
+        None,
+        description="The Materials Project ID for the material this decomposition points to.",
     )
     formula: str = Field(
         None,
-        description="The formula of the decomposed material this material decomposes to",
+        description="The formula of the decomposed material this material decomposes to.",
     )
     amount: float = Field(
         None,
-        description="The amount of the decomposed material by formula units this this material decomposes to",
+        description="The amount of the decomposed material by formula units this this material decomposes to.",
     )
 
 
@@ -37,27 +38,27 @@ class ThermoDoc(PropertyDoc):
     property_name = "thermo"
 
     uncorrected_energy_per_atom: float = Field(
-        ..., description="The total DFT energy of this material per atom in eV/atom"
+        ..., description="The total DFT energy of this material per atom in eV/atom."
     )
 
     energy_per_atom: float = Field(
         ...,
-        description="The total corrected DFT energy of this material per atom in eV/atom",
+        description="The total corrected DFT energy of this material per atom in eV/atom.",
     )
 
     energy_uncertainy_per_atom: float = Field(None, description="")
 
     formation_energy_per_atom: float = Field(
-        None, description="The formation energy per atom in eV/atom"
+        None, description="The formation energy per atom in eV/atom."
     )
 
     energy_above_hull: float = Field(
-        ..., description="The energy above the hull in eV/Atom"
+        ..., description="The energy above the hull in eV/Atom."
     )
 
     is_stable: bool = Field(
         False,
-        description="Flag for whether this material is on the hull and therefore stable",
+        description="Flag for whether this material is on the hull and therefore stable.",
     )
 
     equilibrium_reaction_energy_per_atom: float = Field(
@@ -71,19 +72,29 @@ class ThermoDoc(PropertyDoc):
         description="List of decomposition data for this material. Only valid for metastable or unstable material.",
     )
 
+    decomposition_enthalpy: float = Field(
+        None,
+        description="Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen."
+    )
+
+    decomposition_enthalpy_decomposes_to: List[DecompositionProduct] = Field(
+        None,
+        description="List of decomposition data associated with the decomposition_enthalpy quantity."
+    )
+
     energy_type: str = Field(
         ...,
-        description="The type of calculation this energy evaluation comes from. TODO: Convert to enum?",
+        description="The type of calculation this energy evaluation comes from.",
     )
 
     entry_types: List[str] = Field(
-        description="List of available energy types computed for this material"
+        description="List of available energy types computed for this material."
     )
 
     entries: Dict[str, Union[ComputedEntry, ComputedStructureEntry]] = Field(
         ...,
         description="List of all entries that are valid for this material."
-        " The keys for this dictionary are names of various calculation types",
+        " The keys for this dictionary are names of various calculation types.",
     )
 
     @classmethod
@@ -136,6 +147,23 @@ class ThermoDoc(PropertyDoc):
                     for de, amt in decomp.items()
                 ]
 
+            try:
+                decomp, energy = pd.get_decomp_and_phase_separation_energy(e)
+                d["decomposition_enthalpy"] = energy
+                d["decomposition_enthalpy_decomposes_to"] = [
+                    {
+                        "material_id": de.entry_id,
+                        "formula": de.composition.formula,
+                        "amount": amt,
+                    }
+                    for de, amt in decomp.items()
+                ]
+            except ValueError:
+                # try/except so this quantity does not take down the builder if it fails:
+                # it includes an optimization step that can be fragile in some instances,
+                # most likely failure is ValueError, "invalid value encountered in true_divide"
+                d["warnings"] = ["Could not calculate decomposition enthalpy for this entry."]
+
             d["energy_type"] = e.parameters.get("run_type", "Unknown")
             d["entry_types"] = [e.parameters.get("run_type", "Unknown")]
             d["entries"] = {e.parameters.get("run_type", ""): e}
@@ -167,7 +195,8 @@ class PhaseDiagramDoc(BaseModel):
     )
 
     phase_diagram: PhaseDiagram = Field(
-        ..., description="Phase diagram for the chemical system.",
+        ...,
+        description="Phase diagram for the chemical system.",
     )
 
     last_updated: datetime = Field(

@@ -223,6 +223,7 @@ if db_uri:
         bucket="mp-bandstructures",
         compress=True,
         key="fs_id",
+        unpack_data=False,
         searchable_fields=["task_id", "fs_id"],
     )
 
@@ -231,6 +232,7 @@ if db_uri:
         bucket="mp-dos",
         compress=True,
         key="fs_id",
+        unpack_data=False,
         searchable_fields=["task_id", "fs_id"],
     )
 
@@ -247,7 +249,15 @@ if db_uri:
         sub_dir="atomate_chgcar_fs/",
         compress=True,
         key="fs_id",
+        unpack_data=False,
         searchable_fields=["task_id", "fs_id"],
+    )
+
+    chgcar_url = MongoURIStore(
+        uri=f"mongodb+srv://{db_uri}",
+        database="mp_core",
+        key="fs_id",
+        collection_name="chgcar_s3_urls",
     )
 
     mpcomplete_store = MongoURIStore(
@@ -299,6 +309,7 @@ resources.update({"bonds": [bonds_resource(bonds_store)]})
 from emmet.api.routes.tasks.resources import (
     task_resource,
     trajectory_resource,
+    entries_resource,
     task_deprecation_resource,
 )
 
@@ -306,6 +317,7 @@ resources.update(
     {
         "tasks": [
             trajectory_resource(task_store),
+            entries_resource(task_store),
             task_deprecation_resource(materials_store),
             task_resource(task_store),
         ]
@@ -422,16 +434,25 @@ resources.update({"molecules": [molecules_resource(molecules_store)]})
 from emmet.api.routes.oxidation_states.resources import oxi_states_resource
 
 resources.update({"oxidation_states": [oxi_states_resource(oxi_states_store)]})
-
 # Provenance
 from emmet.api.routes.provenance.resources import provenance_resource
 
 resources.update({"provenance": [provenance_resource(provenance_store)]})
 
 # Charge Density
-from emmet.api.routes.charge_density.resources import charge_density_resource
+from emmet.api.routes.charge_density.resources import (
+    charge_density_resource,
+    charge_density_url_resource,
+)
 
-resources.update({"charge_density": [charge_density_resource(s3_chgcar)]})
+resources.update(
+    {
+        "charge_density": [
+            charge_density_resource(s3_chgcar),
+            charge_density_url_resource(chgcar_url),
+        ]
+    }
+)
 
 # Summary
 from emmet.api.routes.summary.resources import summary_resource, summary_stats_resource

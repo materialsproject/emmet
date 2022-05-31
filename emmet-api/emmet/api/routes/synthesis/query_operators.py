@@ -51,8 +51,8 @@ class SynthesisSearchQuery(QueryOperator):
         condition_mixing_media: Optional[List[str]] = Query(
             None, description='Required mixing media, such as "alcohol", "water".'
         ),
-        skip: int = Query(0, description="Number of entries to skip in the search"),
-        limit: int = Query(
+        _skip: int = Query(0, description="Number of entries to skip in the search"),
+        _limit: int = Query(
             10,
             description="Max number of entries to return in a single query. Limited to 10.",
         ),
@@ -107,7 +107,7 @@ class SynthesisSearchQuery(QueryOperator):
             )
         else:
             pipeline[-1]["$facet"]["results"].extend(
-                [{"$skip": skip}, {"$limit": limit}]
+                [{"$skip": _skip}, {"$limit": _limit}]
             )
 
         pipeline[-1]["$facet"]["results"].append({"$project": project_dict})
@@ -187,12 +187,12 @@ class SynthesisSearchQuery(QueryOperator):
 
         if keywords is not None:
             pipeline.extend(
-                [{"$sort": {"search_score": -1}}, {"$skip": skip}, {"$limit": limit}]
+                [{"$sort": {"search_score": -1}}, {"$skip": _skip}, {"$limit": _limit}]
             )
 
         return {"pipeline": pipeline}
 
-    def post_process(self, docs):
+    def post_process(self, docs, query):
         self.total_doc = 0
 
         if len(docs) > 0:

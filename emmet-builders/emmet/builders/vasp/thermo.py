@@ -217,8 +217,6 @@ class ThermoBuilder(Builder):
             items ([[tuple(List[dict],List[dict])]]): a list of list of thermo dictionaries to update
         """
 
-        # print(len(items))
-
         thermo_docs = [item[0] for item in items]
         phase_diagram_docs = [item[1] for item in items]
 
@@ -317,7 +315,9 @@ class ThermoBuilder(Builder):
 
         return all_entries
 
-    def get_updated_chemsys(self,) -> Set:
+    def get_updated_chemsys(
+        self,
+    ) -> Set:
         """Gets updated chemical system as defined by the updating of an existing material"""
 
         updated_mats = self.thermo.newer_in(self.materials, criteria=self.query)

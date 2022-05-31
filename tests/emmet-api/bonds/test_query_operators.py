@@ -68,4 +68,3 @@ def test_coordination_envs_query():
                 "coordination_envs_anonymous": {"$all": ["A-B(6)", "A-B(3)"]},
             }
         }
-

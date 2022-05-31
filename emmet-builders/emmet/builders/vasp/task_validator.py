@@ -4,7 +4,7 @@ from maggma.builders import MapBuilder
 from maggma.core import Store
 
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.vasp.task import TaskDocument
+from emmet.core.vasp.task_valid import TaskDocument
 from emmet.core.vasp.validation import DeprecationMessage, ValidationDoc
 
 
@@ -39,11 +39,7 @@ class TaskValidator(MapBuilder):
                 "output.structure",
                 "output.bandgap",
                 "chemsys",
-                "calcs_reversed.output.ionic_steps.electronic_steps.e_fr_energy",
-                "tags",
-                # Need these two for proper run_type determination
-                "calcs_reversed.input.parameters",
-                "calcs_reversed.input.incar",
+                "calcs_reversed",
             ],
             query=query,
             **kwargs,

@@ -29,7 +29,7 @@ setup(
     install_requires=[
         "pymatgen>=2021.3,<2023.0",
         "monty>=2021.3,<2023.0",
-        "pydantic==1.8.2",
+        "pydantic==1.9.1",
         "pybtex~=0.24",
         "typing-extensions>=3.7,<5.0",
         "robocrys>=0.2.7",
