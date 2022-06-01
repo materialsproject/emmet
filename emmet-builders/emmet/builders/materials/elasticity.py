@@ -71,6 +71,7 @@ class ElasticityBuilder(Builder):
         self.materials.ensure_index("material_id")
         self.materials.ensure_index("last_updated")
 
+        self.elasticity.ensure_index("material_id")
         self.elasticity.ensure_index("last_updated")
 
     def get_items(
