@@ -63,7 +63,6 @@ class ElasticityBuilder(Builder):
         super().__init__(sources=[tasks, materials], targets=[elasticity], **kwargs)
 
     def ensure_index(self):
-        # TODO this should be reconsidered
         self.tasks.ensure_index("nsites")
         self.tasks.ensure_index("formula_pretty")
         self.tasks.ensure_index("last_updated")
@@ -198,15 +197,6 @@ class ElasticityBuilder(Builder):
             deform_task_ids.append(doc["task_id"])
             deform_dir_names.append(doc["dir_name"])
 
-        # TODO check with Jason
-        # In MaterialsBuilder, the material id is obtained as the smallest task id
-        # of the tasks. However, here we've performed all kinds of filtering,
-        # and thus the task corresponding the material id may not be among the tasks
-        # used for fitting the elastic tensor.
-        # Anyway, for elastic tensor, the material id should correspond to the
-        # relaxed structure.
-        material_id = MPID(final_opt["task_id"])
-
         doc = ElasticityDoc.from_deformations_and_stresses(
             structure=Structure.from_dict(final_opt["output"]["structure"]),
             material_id=material_id,
@@ -279,7 +269,6 @@ def filter_by_incar_settings(
     """
     Filter tasks by incar parameters.
     """
-    # TODO do we want to check kpoint schema?
 
     if incar_settings is None:
         incar_settings = {
