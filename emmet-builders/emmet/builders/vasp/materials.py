@@ -25,9 +25,9 @@ SETTINGS = EmmetBuildSettings()
 
 class MaterialsBuilder(Builder):
     """
-    The Materials Builder matches VASP task documents by structure similarity into materials
-    document. The purpose of this builder is group calculations and determine the best structure.
-    All other properties are derived from other builders.
+    The Materials Builder matches VASP task documents by structure similarity into
+    materials document. The purpose of this builder is group calculations and determine
+    the best structure. All other properties are derived from other builders.
 
     The process is as follows:
 
@@ -123,17 +123,17 @@ class MaterialsBuilder(Builder):
     def get_items(self) -> Iterator[List[Dict]]:
         """
         Gets all items to process into materials documents.
-        This does no datetime checking; relying on on whether
-        task_ids are included in the Materials Colection
+        This does no datetime checking; relying on whether
+        task_ids are included in the Materials Collection
 
         Returns:
-            generator or list relevant tasks and materials to process into materials documents
+            generator or list relevant tasks and materials to process into materials
+            documents
         """
 
+        task_types = [t.value for t in self.settings.VASP_ALLOWED_VASP_TYPES]
         self.logger.info("Materials builder started")
-        self.logger.info(
-            f"Allowed task types: {[task_type.value for task_type in self.settings.VASP_ALLOWED_VASP_TYPES]}"
-        )
+        self.logger.info(f"Allowed task types: {task_types}")
 
         self.logger.info("Setting indexes")
         self.ensure_indexes()
@@ -221,10 +221,11 @@ class MaterialsBuilder(Builder):
         Process the tasks into a list of materials
 
         Args:
-            tasks [dict] : a list of task docs
+            tasks [dict]: a list of task docs
 
         Returns:
-            ([dict],list) : a list of new materials docs and a list of task_ids that were processsed
+            ([dict],list): a list of new materials docs and a list of task_ids that
+                were processsed
         """
 
         tasks = [TaskDocument(**task) for task in items]
@@ -266,8 +267,8 @@ class MaterialsBuilder(Builder):
         Inserts the new task_types into the task_types collection
 
         Args:
-            items ([([dict],[int])]): A list of tuples of materials to update and the corresponding
-                processed task_ids
+            items ([([dict],[int])]): A list of tuples of materials to update and the
+                corresponding processed task_ids
         """
 
         docs = list(chain.from_iterable(items))  # type: ignore
@@ -326,7 +327,7 @@ class MaterialsBuilder(Builder):
 
 def undeform_structure(structure: Structure, transmuter: Dict) -> Structure:
     """
-    Inverse transform a deformed structure to get it back to its undeformed state.
+    Get the undeformed structure by applying the transformations in a reverse order.
 
     Args:
         structure: deformed structure
@@ -336,8 +337,8 @@ def undeform_structure(structure: Structure, transmuter: Dict) -> Structure:
         undeformed structure
     """
 
-    for i, (trans, params) in enumerate(
-        zip(transmuter["transformations"], transmuter["transformation_params"])
+    for trans, params in reversed(
+        list(zip(transmuter["transformations"], transmuter["transformation_params"]))
     ):
 
         # The transmuter only stores the transformation class and parameter, without
@@ -352,8 +353,5 @@ def undeform_structure(structure: Structure, transmuter: Dict) -> Structure:
                 "Expect transformation to be `DeformStructureTransformation`; "
                 f"got {trans}"
             )
-
-        # TODO what if there are multiple deformations in transmuter?
-        #  Is the order correct?
 
     return structure
