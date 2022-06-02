@@ -138,17 +138,20 @@ class CriticalMessage(BaseModel):
         "to fit the data; got {}."
     )
 
-    NEGATIVE_MODULUS = "Critical: Negative modulus. {} {} is {}."
-
 
 class WarningMessage(BaseModel):
-    NEGATIVE_EIGVAL = "Elastic tensor has negative eigenvalue(s)."
-    LARGE_COMPONENT = "Elastic tensor has component larger than {}."
+    NEGATIVE_EIGVAL = (
+        "Elastic tensor has negative eigenvalue(s), indicating that the structure is "
+        "mechanically unstable."
+    )  # https://doi.org/10.1103/PhysRevB.90.224104
+    NEGATIVE_MODULUS = (
+        "Negative modulus: {} {} is {}, indicating that the structure is mechanically "
+        "unstable."
+    )
     SMALL_MODULUS = "Small modulus. {} {} is {}; smaller than {}."
     LARGE_MODULUS = "Large modulus. {} {} is {}; larger than {}."
     LARGE_YOUNG_MODULUS = "Large Young's modulus {}; larger than {}."
-    SMALL_C11 = "Small C11 {}; smaller than {}."
-    RATIO_C11 = "C11 and {0} are within 5%, or C11 smaller than {0}."
+    LARGE_COMPONENT = "Elastic tensor has component larger than {}."
 
 
 class ElasticityDoc(PropertyDoc):
@@ -624,22 +627,6 @@ def sanity_check(
     if np.any(et > tol):
         warnings.append(WM.LARGE_COMPONENT.format(tol))
 
-    # TODO: these should be revisited. Are they complete, or only apply to materials
-    #  with certain symmetry?
-    c11, c12, c13 = et[0, 0:3]
-    c23 = et[1, 2]
-
-    small = 1e-6
-    if c11 < small:
-        warnings.append(WM.SMALL_C11.format(c11, small))
-    else:
-        if abs((c11 - c12) / c11) < 0.05 or c11 < c12:
-            warnings.append(WM.RATIO_C11.format("C12"))
-        if abs((c11 - c13) / c11) < 0.05 or c11 < c13:
-            warnings.append(WM.RATIO_C11.format("C13"))
-        if abs((c11 - c23) / c11) < 0.05 or c11 < c23:
-            warnings.append(WM.RATIO_C11.format("C23"))
-
     # modulus
     low = 2
     high = 1000
@@ -651,7 +638,7 @@ def sanity_check(
             v = doc[name]
             if v < 0:
                 failed = True
-                warnings.append(CM.NEGATIVE_MODULUS.format(name, p, v))
+                warnings.append(WM.NEGATIVE_MODULUS.format(name, p, v))
             elif v < low:
                 warnings.append(WM.SMALL_MODULUS.format(name, p, v, low))
             elif v > high:
