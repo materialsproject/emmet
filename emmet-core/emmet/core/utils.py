@@ -140,7 +140,7 @@ def confirm_molecule(mol: Union[Molecule, Dict]):
         return mol
 
 
-def perturb(mol: Molecule, mode: Matrix3D, scale: float=0.6):
+def perturb(mol: Molecule, mode: Matrix3D, scale: float = 0.6):
     """
     Perturb a molecular structure along a particular direction
 
