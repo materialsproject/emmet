@@ -44,8 +44,8 @@ def test_pes_builders(tasks_store, minima_store, ts_store, assoc_store, reaction
         minima=minima_store, transition_states=ts_store, assoc=assoc_store
     )
     assoc_builder.run()
-    assert assoc_store.count() == 6
+    assert assoc_store.count() == 10
 
     rxn_builder = ReactionBuilder(assoc=assoc_store, reactions=reaction_store)
     rxn_builder.run()
-    assert reaction_store.count() == 2
+    assert reaction_store.count() == 6

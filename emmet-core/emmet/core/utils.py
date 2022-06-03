@@ -16,6 +16,7 @@ from pymatgen.analysis.structure_matcher import (
 from pymatgen.core.structure import Structure, Molecule
 
 from emmet.core.settings import EmmetSettings
+from emmet.core.math import Matrix3D
 
 SETTINGS = EmmetSettings()
 
@@ -137,6 +138,22 @@ def confirm_molecule(mol: Union[Molecule, Dict]):
         return Molecule.from_dict(mol)
     else:
         return mol
+
+
+def perturb(mol: Molecule, mode: Matrix3D, scale: float=0.6):
+    """
+    Perturb a molecular structure along a particular direction
+
+    :param mol: Molecule to be perturbed
+    :param mode: Translational mode along which to perturb the molecule
+    :param scale: Scaling factor for the perturbation; default is 0.6
+    :return:
+    """
+    mol_copy = copy.deepcopy(mol)
+    for ii in range(len(mol)):
+        vec = np.array(mode[ii])
+        mol_copy.translate_sites(indices=[ii], vector=vec * scale)
+    return mol_copy
 
 
 def jsanitize(obj, strict=False, allow_bson=False):

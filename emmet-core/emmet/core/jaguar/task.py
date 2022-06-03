@@ -200,6 +200,7 @@ class TaskDocument(MoleculeMetadata):
             "output": self.output.as_dict(),
             "input": self.input,
             "tags": self.tags,
+            "additional_data": self.additional_data,
             "last_updated": self.last_updated,
         }
 
