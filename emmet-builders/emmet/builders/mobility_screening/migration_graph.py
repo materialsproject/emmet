@@ -28,7 +28,8 @@ class MigrationGraphBuilder(MapBuilder):
             tds = list(self.tasks.query({"task_id":{"$in":item["material_ids"]}}))
             item.update({"task_docs":tds})
             yield item
-    
+
+	#get structure entry from task store and attach migration graph dict to item    
     def unary_function(self, item):
         new_item = dict(item)
         task_documents = [TaskDocument.parse_obj(td) for td in new_item["task_docs"]]
