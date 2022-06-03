@@ -1,24 +1,21 @@
 class MigrationGraphBuilder(MapBuilder):
     def __init__(
         self,
-        materials: MongoStore,
         electrodes: MongoStore,
         tasks: MongoStore,
         target: MongoStore,
-        working_ion_entry: ComputedEntry,
         ltol: float = 0.4,
         stol: float = 0.6,
         angle_tol: float = 15,
         **kwargs
     ):
-        self.materials = materials
         self.electrodes = electrodes
         self.tasks = tasks
-        self.working_ion_entry = working_ion_entry
         self.ltol = ltol
         self.stol = stol
         self.angle_tol = angle_tol
         self.target = target
+        self.wi_entries = {}
         
         super().__init__(source=electrodes, target=target, **kwargs)
         self.sources.append(tasks)
@@ -28,14 +25,19 @@ class MigrationGraphBuilder(MapBuilder):
             tds = list(self.tasks.query({"task_id":{"$in":item["material_ids"]}}))
             item.update({"task_docs":tds})
             yield item
-
-	#get structure entry from task store and attach migration graph dict to item    
+    
+    #get structure entry from task store and attach migration graph dict to item
     def unary_function(self, item):
         new_item = dict(item)
         task_documents = [TaskDocument.parse_obj(td) for td in new_item["task_docs"]]
         entries = [task_doc.structure_entry for task_doc in task_documents]
+        #get entry is working_ion is new. limit MPRester calls
+        if new_item["working_ion"] not in self.wi_entries.keys():
+            self.wi_entries[new_item["working_ion"]] = min(compatibility.process_entries(
+                mpr.get_entries_in_chemsys([new_item["working_ion"]])), 
+                                                           key = lambda x : x.energy_per_atom)
         mg = get_migration_graph(compatibility.process_entries(entries), 
-                                 self.working_ion_entry, 
+                                 self.wi_entries[new_item["working_ion"]], 
                                  ltol=self.ltol, stol=self.stol, angle_tol=self.angle_tol)
         new_item["mg"] = mg
         return new_item
