@@ -36,13 +36,13 @@ class MigrationGraphBuilder(MapBuilder):
             self.wi_entries[new_item["working_ion"]] = min(compatibility.process_entries(
                 mpr.get_entries_in_chemsys([new_item["working_ion"]])),
                                                            key = lambda x : x.energy_per_atom)
-        mg = get_migration_graph(compatibility.process_entries(entries),
+        mg = self.get_migration_graph(compatibility.process_entries(entries),
                                  self.wi_entries[new_item["working_ion"]],
                                  ltol=self.ltol, stol=self.stol, angle_tol=self.angle_tol)
         new_item["mg"] = mg
         return new_item
 
-    def get_migration_graph(cses: [ComputedEntry], wi_entry: [ComputedEntry], max_distance_min=0.1, max_distance_max=10, ltol=0.4, stol=0.6, angle_tol=15) -> dict:
+    def get_migration_graph(self, cses: [ComputedEntry], wi_entry: [ComputedEntry], max_distance_min=0.1, max_distance_max=10, ltol=0.4, stol=0.6, angle_tol=15) -> dict:
         wi = wi_entry.composition.chemical_system
         try:
             mg_structures = MigrationGraph.get_structure_from_entries(entries=cses, migrating_ion_entry=wi_entry, ltol=ltol, stol=stol, angle_tol=angle_tol)
