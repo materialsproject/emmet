@@ -7,6 +7,7 @@ from emmet.api.routes.electrodes.utils import (
     electrodes_chemsys_to_criteria,
 )
 from pymatgen.core.periodic_table import Element
+from fastapi import HTTPException
 
 from collections import defaultdict
 
@@ -93,13 +94,25 @@ class ElectrodeElementsQuery(QueryOperator):
             crit["entries_composition_summary.all_elements"] = {}
 
         if elements:
-            element_list = [Element(e) for e in elements.strip().split(",")]
+            try:
+                element_list = [Element(e) for e in elements.strip().split(",")]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Problem processing one or more provided elements.",
+                )
             crit["entries_composition_summary.all_elements"]["$all"] = [
                 str(el) for el in element_list
             ]
 
         if exclude_elements:
-            element_list = [Element(e) for e in exclude_elements.strip().split(",")]
+            try:
+                element_list = [Element(e) for e in exclude_elements.strip().split(",")]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Problem processing one or more provided elements.",
+                )
             crit["entries_composition_summary.all_elements"]["$nin"] = [
                 str(el) for el in element_list
             ]
