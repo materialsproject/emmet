@@ -12,27 +12,24 @@ class AbsorptionDoc(PropertyDoc):
 
     property_name = "absorption spectrum"
 
-    task_id: str = Field(
-        None,
-        description="The Materials Project ID of the material. This comes in the form: mp-******",
-    )
+    task_id: str = Field(..., description="Calculation id")
 
-    energies: List[float] = Field(description="absorption energy in eV starting from 0")
+    energies: List[float] = Field(..., description="absorption energy in eV starting from 0")
 
-    energy_max: float = Field(description="maximum energy")
+    energy_max: float = Field(...,description="maximum energy")
 
-    absorption_coefficient: List[float] = Field(description="Absorption coefficient in cm^-1")
+    absorption_coefficient: List[float] = Field(..., description="Absorption coefficient in cm^-1")
 
-    average_imaginary_dielectric: List[float] = Field(description="imaginary part of the dielectric function corresponding to the "
+    average_imaginary_dielectric: List[float] = Field(..., description="imaginary part of the dielectric function corresponding to the "
                                                    "energies")
 
-    average_real_dielectric: List[float] = Field(description="real part of the dielectric function corresponding to the energies")
+    average_real_dielectric: List[float] = Field(..., description="real part of the dielectric function corresponding to the energies")
     
-    bandgap: float = Field(description="the electronic band gap from a band structure calculation")
+    bandgap: float = Field(..., description="the electronic band gap from a band structure calculation")
       
-    nkpoints: float = Field(description="the number of kpoints used in the calculation") 
+    nkpoints: float = Field(..., description="the number of kpoints used in the calculation")
     
-    is_hubbard: bool = Field(description="whether the material is hubbard") 
+    is_hubbard: bool = Field(..., description="whether the material is hubbard")
 
 
     @classmethod
@@ -60,12 +57,12 @@ class AbsorptionDoc(PropertyDoc):
         is_hubbard: bool,
         **kwargs,
     ):
-        
 
              
         real_d_average = [np.average(np.diagonal(cls._convert_list_to_tensor(t))) for t in real_d]
         imag_d_average = [np.average(np.diagonal(cls._convert_list_to_tensor(t))) for t in imag_d]
         absorption_co = list(np.array(absorption_co)*(5.31e-12))
+        energy_max = np.array(energies).max()
         # this is needed for pymatgen before absorption branch, for the right unit in cm-1 
 
         return super().from_structure(
@@ -73,7 +70,7 @@ class AbsorptionDoc(PropertyDoc):
             material_id=material_id,
             **{
                 "energies": energies,
-                "energy_max": np.array(energies).max(),
+                "energy_max": energy_max,
                 "absorption_coefficient": absorption_co,
                 "average_imaginary_dielectric": imag_d_average,
                 "average_real_dielectric": real_d_average,
