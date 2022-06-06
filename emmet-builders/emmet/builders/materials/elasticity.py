@@ -377,7 +377,7 @@ def select_final_opt_deform_tasks(
     deform_tasks: List[Tuple[np.ndarray, List[Dict]]],
     logger,
     lattice_comp_tol: float = 1e-5,
-) -> Tuple[Dict, List[Dict]]:
+) -> Tuple[Union[Dict, None], Union[List[Dict], None]]:
     """
     Select the final opt task and deform tasks for fitting.
 
