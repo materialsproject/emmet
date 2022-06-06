@@ -74,7 +74,6 @@ def test_absorption_doc(absorption_test_data):
 
         assert doc is not None
         assert doc.property_name == "absorption spectrum"
-        assert doc.material_id == "mp-571222"
         assert doc.energies[0:10] == energies
         assert doc.absorption_coefficient[0:10] == absorption_coeff
         assert doc.average_real_dielectric[0:10] == real_dielectric
