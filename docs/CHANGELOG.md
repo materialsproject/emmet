@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.28.0](https://github.com/materialsproject/emmet/tree/v0.28.0) (2022-06-07)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.27.8...v0.28.0)
+
+**Merged pull requests:**
+
+-  Elasticity doc and builder [\#326](https://github.com/materialsproject/emmet/pull/326) ([mjwen](https://github.com/mjwen))
+
 ## [v0.27.8](https://github.com/materialsproject/emmet/tree/v0.27.8) (2022-06-07)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.27.7...v0.27.8)
