@@ -11,7 +11,6 @@ from emmet.core.absorption import AbsorptionDoc
 from emmet.core.utils import jsanitize
 
 
-
 class AbsorptionBuilder(Builder):
     def __init__(
         self,
@@ -89,20 +88,19 @@ class AbsorptionBuilder(Builder):
             "last_updated": item["task_updated"],
         }
 
-
         doc = AbsorptionDoc.from_structure(
             structure=structure,
             material_id=mpid,
             origins=[origin_entry],
             deprecated=False,
-            energies=item['energies'],
-            real_d=item['real_dielectric'],
-            imag_d=item['imag_dielectric'],
-            absorption_co=item['optical_absorption_coeff'],
-            bandgap=item['bandgap'],
-            nkpoints=item['nkpoints'],
-            is_hubbard = item['is_hubbard'],
-            last_updated=item["updated_on"]
+            energies=item["energies"],
+            real_d=item["real_dielectric"],
+            imag_d=item["imag_dielectric"],
+            absorption_co=item["optical_absorption_coeff"],
+            bandgap=item["bandgap"],
+            nkpoints=item["nkpoints"],
+            is_hubbard=item["is_hubbard"],
+            last_updated=item["updated_on"],
         )
 
         return jsanitize(doc.dict(), allow_bson=True)
@@ -122,19 +120,19 @@ class AbsorptionBuilder(Builder):
     def _get_processed_doc(self, mat):
 
         mat_doc = self.materials.query_one(
-            criteria = {self.materials.key: mat},
+            criteria={self.materials.key: mat},
             properties=[
                 self.materials.key,
                 "structure",
                 "task_label",
                 "last_updated",
-                "task_id"
-            ]
+                "task_id",
+            ],
         )
 
         task_label = mat_doc["task_label"]
         task_id = mat_doc["task_id"]
-        
+
         final_docs = []
 
         if "frequency dependent dielectrics IPA" in task_label:
@@ -150,13 +148,11 @@ class AbsorptionBuilder(Builder):
                     "output.dielectric.real",
                     "output.dielectric.imag",
                     "output.optical_absorption_coeff",
-                    "output.bandgap"
+                    "output.bandgap",
                 ],
                 criteria={self.tasks.key: task_id},
             )
-            
 
-            
             if task_query["output"]["optical_absorption_coeff"] is not None:
 
                 try:
@@ -187,15 +183,17 @@ class AbsorptionBuilder(Builder):
                         "task_id": task_id,
                         "is_hubbard": int(is_hubbard),
                         "nkpoints": int(nkpoints),
-                        "energies": task_query['output']['dielectric']['energy'],
-                        "real_dielectric": task_query['output']['dielectric']['real'],
-                        "imag_dielectric": task_query['output']['dielectric']['imag'],
-                        "optical_absorption_coeff": task_query['output']['optical_absorption_coeff'],
-                        "bandgap": task_query['output']['bandgap'],
+                        "energies": task_query["output"]["dielectric"]["energy"],
+                        "real_dielectric": task_query["output"]["dielectric"]["real"],
+                        "imag_dielectric": task_query["output"]["dielectric"]["imag"],
+                        "optical_absorption_coeff": task_query["output"][
+                            "optical_absorption_coeff"
+                        ],
+                        "bandgap": task_query["output"]["bandgap"],
                         "structure": structure,
                         "updated_on": lu_dt,
                         "task_updated": task_updated,
-                        self.materials.key: mat_doc[self.materials.key]
+                        self.materials.key: mat_doc[self.materials.key],
                     }
                 )
 

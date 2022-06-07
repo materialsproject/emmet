@@ -1,4 +1,3 @@
-
 from typing import Dict, List, Any, Union
 from pydantic import Field
 from emmet.core.material_property import PropertyDoc
@@ -14,34 +13,42 @@ class AbsorptionDoc(PropertyDoc):
 
     task_id: str = Field(..., description="Calculation id")
 
-    energies: List[float] = Field(..., description="absorption energy in eV starting from 0")
+    energies: List[float] = Field(
+        ..., description="absorption energy in eV starting from 0"
+    )
 
-    energy_max: float = Field(...,description="maximum energy")
+    energy_max: float = Field(..., description="maximum energy")
 
-    absorption_coefficient: List[float] = Field(..., description="Absorption coefficient in cm^-1")
+    absorption_coefficient: List[float] = Field(
+        ..., description="Absorption coefficient in cm^-1"
+    )
 
-    average_imaginary_dielectric: List[float] = Field(..., description="imaginary part of the dielectric function corresponding to the "
-                                                   "energies")
+    average_imaginary_dielectric: List[float] = Field(
+        ...,
+        description="imaginary part of the dielectric function corresponding to the "
+        "energies",
+    )
 
-    average_real_dielectric: List[float] = Field(..., description="real part of the dielectric function corresponding to the energies")
-    
-    bandgap: float = Field(..., description="the electronic band gap from a band structure calculation")
-      
-    nkpoints: float = Field(..., description="the number of kpoints used in the calculation")
-    
+    average_real_dielectric: List[float] = Field(
+        ...,
+        description="real part of the dielectric function corresponding to the energies",
+    )
+
+    bandgap: float = Field(
+        ..., description="the electronic band gap from a band structure calculation"
+    )
+
+    nkpoints: float = Field(
+        ..., description="the number of kpoints used in the calculation"
+    )
+
     is_hubbard: bool = Field(..., description="whether the material is hubbard")
-
 
     @classmethod
     def _convert_list_to_tensor(cls, l):
-        l = np.array(l) 
-        a = np.array(
-            [[l[0],l[3],l[4]],
-            [l[3],l[1], l[5]],
-            [l[4],l[5],l[2]]]
-        )
+        l = np.array(l)
+        a = np.array([[l[0], l[3], l[4]], [l[3], l[1], l[5]], [l[4], l[5], l[2]]])
         return a
-        
 
     @classmethod
     def from_structure(
@@ -58,12 +65,15 @@ class AbsorptionDoc(PropertyDoc):
         **kwargs,
     ):
 
-             
-        real_d_average = [np.average(np.diagonal(cls._convert_list_to_tensor(t))) for t in real_d]
-        imag_d_average = [np.average(np.diagonal(cls._convert_list_to_tensor(t))) for t in imag_d]
-        absorption_co = list(np.array(absorption_co)*(5.31e-12))
+        real_d_average = [
+            np.average(np.diagonal(cls._convert_list_to_tensor(t))) for t in real_d
+        ]
+        imag_d_average = [
+            np.average(np.diagonal(cls._convert_list_to_tensor(t))) for t in imag_d
+        ]
+        absorption_co = list(np.array(absorption_co) * (5.31e-12))
         energy_max = np.array(energies).max()
-        # this is needed for pymatgen before absorption branch, for the right unit in cm-1 
+        # this is needed for pymatgen before absorption branch, for the right unit in cm-1
 
         return super().from_structure(
             meta_structure=structure,
@@ -76,7 +86,7 @@ class AbsorptionDoc(PropertyDoc):
                 "average_real_dielectric": real_d_average,
                 "bandgap": bandgap,
                 "nkpoints": nkpoints,
-                "is_hubbard": is_hubbard
-                            },
+                "is_hubbard": is_hubbard,
+            },
             **kwargs,
         )
