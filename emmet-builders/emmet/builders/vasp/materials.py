@@ -307,7 +307,10 @@ class MaterialsBuilder(Builder):
             zip(filtered_tasks, filtered_transmuters)
         ):
             if task.task_type == TaskType.Deformation:
-                s = undeform_structure(task.input.structure, transmuter)
+                if transmuter is None:
+                    raise RuntimeError("Cannot find transmuter for deformation task")
+                else:
+                    s = undeform_structure(task.input.structure, transmuter)
             else:
                 s = task.output.structure
             s.index: int = idx  # type: ignore

@@ -160,10 +160,10 @@ class ElasticityBuilder(Builder):
             return None
 
         # select one task for each set of optimization tasks with the same lattice
-        opt_grouped = group_by_parent_lattice(opt_tasks, mode="opt")
+        opt_grouped_tmp = group_by_parent_lattice(opt_tasks, mode="opt")
         opt_grouped = [
             (lattice, filter_opt_tasks_by_time(tasks, self.logger))
-            for lattice, tasks in opt_grouped
+            for lattice, tasks in opt_grouped_tmp
         ]
 
         # for deformed tasks with the same lattice, select one if there are multiple
@@ -197,7 +197,7 @@ class ElasticityBuilder(Builder):
             deform_task_ids.append(doc["task_id"])
             deform_dir_names.append(doc["dir_name"])
 
-        doc = ElasticityDoc.from_deformations_and_stresses(
+        elasticity_doc = ElasticityDoc.from_deformations_and_stresses(
             structure=Structure.from_dict(final_opt["output"]["structure"]),
             material_id=material_id,
             deformations=deforms,
@@ -209,9 +209,9 @@ class ElasticityBuilder(Builder):
             optimization_dir_name=final_opt["dir_name"],
             fitting_method="finite_difference",
         )
-        doc = jsanitize(doc.dict(), allow_bson=True)
+        elasticity_doc = jsanitize(elasticity_doc.dict(), allow_bson=True)
 
-        return doc
+        return elasticity_doc
 
     def update_targets(self, items: List[Dict]):
         """
@@ -391,14 +391,14 @@ def select_final_opt_deform_tasks(
 
     # group opt and deform tasks by lattice
     mapping = TensorMapping(tol=lattice_comp_tol)
-    for lat, t in opt_tasks:
-        mapping[lat] = {"opt_task": t}
+    for lat, ot in opt_tasks:
+        mapping[lat] = {"opt_task": ot}
 
-    for lat, t in deform_tasks:
+    for lat, dt in deform_tasks:
         if lat in mapping:
-            mapping[lat]["deform_tasks"] = t
+            mapping[lat]["deform_tasks"] = dt
         else:
-            mapping[lat] = {"deform_tasks": t}
+            mapping[lat] = {"deform_tasks": dt}
 
     # select opt--deform paris with the most deform tasks
     selected = None

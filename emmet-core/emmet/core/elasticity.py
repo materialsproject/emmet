@@ -302,8 +302,9 @@ class ElasticityDoc(PropertyDoc):
                 derived_props = get_derived_properties(structure, elastic_tensor)
 
                 # check all
+                all_strains = p_strains + d_strains
                 state, warnings = sanity_check(
-                    structure, et_doc, p_strains + d_strains, derived_props
+                    structure, et_doc, all_strains, derived_props  # type: ignore
                 )
 
             except np.linalg.LinAlgError as e:
@@ -628,8 +629,8 @@ def sanity_check(
         warnings.append(WM.LARGE_COMPONENT.format(tol))
 
     # modulus
-    low = 2
-    high = 1000
+    low = 2.0
+    high = 1000.0
     for p in ["bulk_modulus", "shear_modulus"]:
         doc = derived_props[p]
         doc = doc.dict()
