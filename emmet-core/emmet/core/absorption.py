@@ -42,7 +42,7 @@ class AbsorptionDoc(PropertyDoc):
         ..., description="the number of kpoints used in the calculation"
     )
 
-    is_hubbard: bool = Field(..., description="whether the material is hubbard")
+    is_hubbard: bool = Field(None, description="whether the material is hubbard")
 
     @classmethod
     def _convert_list_to_tensor(cls, l):
