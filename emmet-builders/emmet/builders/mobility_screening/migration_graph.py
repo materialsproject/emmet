@@ -3,7 +3,8 @@ from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from maggma.stores import MongoStore
 from maggma.builders import MapBuilder
-
+from pymatgen.ext.matproj import MPRester
+from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 
 class MigrationGraphBuilder(MapBuilder):
     def __init__(
@@ -38,26 +39,24 @@ class MigrationGraphBuilder(MapBuilder):
         self.angle_tol = angle_tol
         self.migration_graphs = migration_graphs
         self.wi_entries = {}
-        from pymatgen.ext.matproj import MPRester
-        from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
-
         self.mpr = MPRester()
         self.compatibility = MaterialsProject2020Compatibility()
         super().__init__(source=electrodes, target=migration_graphs, **kwargs)
         self.sources.append(tasks)
 
+    # get structure entry from task store
     def get_items(self) -> dict:
         for item in super(MigrationGraphBuilder, self).get_items():
             tds = list(self.tasks.query({"task_id": {"$in": item["material_ids"]}}))
             item.update({"task_docs": tds})
             yield item
 
-    # get structure entry from task store and attach migration graph dict to item
+    # attach migration graph dict to item
     def unary_function(self, item: dict) -> dict:
         new_item = dict(item)
         task_documents = [TaskDocument.parse_obj(td) for td in new_item["task_docs"]]
         entries = [task_doc.structure_entry for task_doc in task_documents]
-        # get entry is working_ion is new. limit MPRester calls
+        # get entry iff working_ion is new to limit MPRester calls
         if new_item["working_ion"] not in self.wi_entries.keys():
             self.wi_entries[new_item["working_ion"]] = min(
                 self.compatibility.process_entries(
