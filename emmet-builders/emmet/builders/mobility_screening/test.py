@@ -18,7 +18,9 @@ electrodes_store.connect()
 sandbox_store = MongoStore(database= "local_dev",collection_name= "sandbox", key="battery_id")
 sandbox_store.connect()
 
-battery_ids = ["js-47173_Mg","js-43005_Mg","js-18_Mg"]
+battery_ids = ["js-47173_Mg","js-43005_Mg","js-18_Mg"] # "good” candidates from 1st iteration
+battery_ids.extend(["11221_Mg","11823_Mg","9167_Mg","8697_Mg","9006_Mg"]) #  stable, variety of voltages
+battery_ids.extend(["22355_Mg","21312_Mg","24083_Mg","22142_Mg","8861_Mg"])# unstable, varierty of voltages
 mapbuilder = MigrationGraphBuilder(
     electrodes=electrodes_store,
     tasks=tasks_store,
