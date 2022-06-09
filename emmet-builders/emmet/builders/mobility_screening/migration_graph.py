@@ -6,6 +6,7 @@ from maggma.builders import MapBuilder
 from pymatgen.ext.matproj import MPRester
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 
+
 class MigrationGraphBuilder(MapBuilder):
     def __init__(
         self,
@@ -44,13 +45,23 @@ class MigrationGraphBuilder(MapBuilder):
         super().__init__(source=electrodes, target=migration_graphs, **kwargs)
         self.sources.append(tasks)
 
-
     def get_items(self) -> dict:
         """
         get structure entry from task store
         """
         for item in super(MigrationGraphBuilder, self).get_items():
-            tds = list(self.tasks.query({"task_id": {"$in": item["material_ids"]}}))
+            tds = list(
+                self.tasks.query(
+                    {
+                        "task_id": {
+                            "$in": [
+                                i if i[:2] == "js" else int(i)
+                                for i in item["material_ids"]
+                            ]
+                        }
+                    }
+                )
+            )
             item.update({"task_docs": tds})
             yield item
 
@@ -76,7 +87,7 @@ class MigrationGraphBuilder(MapBuilder):
             stol=self.stol,
             angle_tol=self.angle_tol,
         )
-        new_item["mg"] = mg
+        new_item["migration_graph"] = mg
         return new_item
 
     def get_migration_graph(
