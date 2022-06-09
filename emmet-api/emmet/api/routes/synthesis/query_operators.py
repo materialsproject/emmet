@@ -51,8 +51,8 @@ class SynthesisSearchQuery(QueryOperator):
         condition_mixing_media: Optional[List[str]] = Query(
             None, description='Required mixing media, such as "alcohol", "water".'
         ),
-        skip: int = Query(0, description="Number of entries to skip in the search"),
-        limit: int = Query(
+        _skip: int = Query(0, description="Number of entries to skip in the search"),
+        _limit: int = Query(
             10,
             description="Max number of entries to return in a single query. Limited to 10.",
         ),
@@ -73,7 +73,7 @@ class SynthesisSearchQuery(QueryOperator):
         }
 
         pipeline: List[Any] = []
-        pipeline.append({"$facet": {"results": [], "total_doc": []}})
+
         if keywords:
             pipeline.insert(
                 0,
@@ -105,12 +105,8 @@ class SynthesisSearchQuery(QueryOperator):
                     "highlights": {"$meta": "searchHighlights"},
                 }
             )
-        else:
-            pipeline[-1]["$facet"]["results"].extend(
-                [{"$skip": skip}, {"$limit": limit}]
-            )
 
-        pipeline[-1]["$facet"]["results"].append({"$project": project_dict})
+        pipeline.append({"$project": project_dict})
 
         crit: Dict[str, Any] = {}
 
@@ -163,11 +159,25 @@ class SynthesisSearchQuery(QueryOperator):
 
         if crit:
             if keywords:
-                pipeline.insert(1, {"$match": crit})
+                pipeline.insert(2, {"$match": crit})
             else:
                 pipeline.insert(0, {"$match": crit})
 
-        pipeline[-1]["$facet"]["total_doc"].append({"$count": "count"})
+        pipeline.append(
+            {
+                "$facet": {
+                    "results": [{"$skip": _skip}, {"$limit": _limit}]
+                    if not keywords
+                    else [
+                        {"$sort": {"search_score": -1}},
+                        {"$skip": _skip},
+                        {"$limit": _limit},
+                    ],
+                    "total_doc": [{"$count": "count"}],
+                }
+            }
+        )
+
         pipeline.extend(
             [
                 {"$unwind": "$results"},
@@ -185,14 +195,10 @@ class SynthesisSearchQuery(QueryOperator):
             ]
         )
 
-        if keywords is not None:
-            pipeline.extend(
-                [{"$sort": {"search_score": -1}}, {"$skip": skip}, {"$limit": limit}]
-            )
-
         return {"pipeline": pipeline}
 
     def post_process(self, docs, query):
+
         self.total_doc = 0
 
         if len(docs) > 0:

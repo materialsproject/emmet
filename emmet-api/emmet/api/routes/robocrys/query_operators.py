@@ -14,8 +14,8 @@ class RoboTextSearchQuery(QueryOperator):
             ...,
             description="Comma delimited string keywords to search robocrystallographer description text with",
         ),
-        skip: int = Query(0, description="Number of entries to skip in the search"),
-        limit: int = Query(
+        _skip: int = Query(0, description="Number of entries to skip in the search"),
+        _limit: int = Query(
             100,
             description="Max number of entries to return in a single query. Limited to 100",
         ),
@@ -64,8 +64,8 @@ class RoboTextSearchQuery(QueryOperator):
                 }
             },
             {"$sort": {"search_score": -1}},
-            {"$skip": skip},
-            {"$limit": limit},
+            {"$skip": _skip},
+            {"$limit": _limit},
         ]
         return {"pipeline": pipeline}
 

@@ -4,7 +4,7 @@ from typing import Dict
 from fastapi import HTTPException
 
 
-def electrodes_formula_to_criteria(formula: str) -> Dict:
+def electrodes_formula_to_criteria(formulas: str) -> Dict:
     """
     Santizes formula into a dictionary to search with wild cards
     over electrodes data
@@ -17,51 +17,102 @@ def electrodes_formula_to_criteria(formula: str) -> Dict:
     """
     dummies = "ADEGJLMQRXZ"
 
-    if "*" in formula:
-        # Wild card in formula
-        nstars = formula.count("*")
+    formula_list = [formula.strip() for formula in formulas.split(",")]
 
-        formula_dummies = formula.replace("*", "{}").format(*dummies[:nstars])
+    if "*" in formulas:
+        if len(formula_list) > 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Wild cards only supported for single formula queries.",
+            )
+        else:
+            # Wild card in formula
+            nstars = formulas.count("*")
 
-        integer_formula = Composition(formula_dummies).get_integer_formula_and_factor()[
-            0
-        ]
-        comp = Composition(integer_formula).reduced_composition
-        crit = dict()  # type: dict
-        crit[
-            "entries_composition_summary.all_formula_anonymous"
-        ] = comp.anonymized_formula
+            formula_dummies = formulas.replace("*", "{}").format(*dummies[:nstars])
 
-        real_elts = [
-            str(e)
-            for e in comp.elements
-            if not e.as_dict().get("element", "A") in dummies
-        ]
+            try:
+                integer_formula = Composition(
+                    formula_dummies
+                ).get_integer_formula_and_factor()[0]
+            except (ValueError, IndexError):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Problem processing one or more provided formulas.",
+                )
 
-        for el, n in comp.to_reduced_dict.items():
-            if el in real_elts:
-                crit[f"entries_composition_summary.all_composition_reduced.{el}"] = n
+            comp = Composition(integer_formula).reduced_composition
+            crit = dict()  # type: dict
+            crit[
+                "entries_composition_summary.all_formula_anonymous"
+            ] = comp.anonymized_formula
 
-        return crit
+            real_elts = [
+                str(e)
+                for e in comp.elements
+                if not e.as_dict().get("element", "A") in dummies
+            ]
 
-    elif any(isinstance(el, DummySpecies) for el in Composition(formula)):
-        # Assume fully anonymized formula
-        return {
-            "entries_composition_summary.all_formula_anonymous": Composition(
-                formula
-            ).anonymized_formula
-        }
+            for el, n in comp.to_reduced_dict.items():
+                if el in real_elts:
+                    crit[
+                        f"entries_composition_summary.all_composition_reduced.{el}"
+                    ] = n
+
+            return crit
 
     else:
-        comp = Composition(formula)
-        nele = len(comp)
-        # Paranoia below about floating-point "equality"
-        crit = {}
-        crit["nelements"] = {"$in": [nele, nele - 1]}  # type: ignore
-        for el, n in comp.to_reduced_dict.items():
-            crit[f"entries_composition_summary.all_composition_reduced.{el}"] = n
+        try:
+            if any(
+                isinstance(el, DummySpecies)
+                for formula in formula_list
+                for el in Composition(formula)
+            ):
+                # Assume fully anonymized formula
+                if len(formula_list) == 1:
+                    return {
+                        "entries_composition_summary.all_formula_anonymous": Composition(
+                            formula_list[0]
+                        ).anonymized_formula
+                    }
+                else:
+                    return {
+                        "entries_composition_summary.all_formula_anonymous": {
+                            "$in": [
+                                Composition(formula).anonymized_formula
+                                for formula in formula_list
+                            ]
+                        }
+                    }
 
-        return crit
+            else:
+                if len(formula_list) == 1:
+                    comp = Composition(formula_list[0])
+                    nele = len(comp)
+                    # Paranoia below about floating-point "equality"
+                    crit = {}
+                    crit["nelements"] = {"$in": [nele, nele - 1]}  # type: ignore
+
+                    for el, n in comp.to_reduced_dict.items():
+                        crit[
+                            f"entries_composition_summary.all_composition_reduced.{el}"
+                        ] = n
+
+                    return crit
+                else:
+                    return {
+                        "entries_composition_summary.all_formulas": {
+                            "$in": [
+                                Composition(formula).reduced_formula
+                                for formula in formula_list
+                            ]
+                        }
+                    }
+        except (ValueError, IndexError):
+            raise HTTPException(
+                status_code=400,
+                detail="Problem processing one or more provided formulas.",
+            )
 
 
 def electrodes_chemsys_to_criteria(chemsys: str) -> Dict:

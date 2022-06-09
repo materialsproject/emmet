@@ -4,7 +4,7 @@ import pytest
 from monty.io import zopen
 
 from emmet.core.vasp.calc_types import RunType, TaskType, run_type, task_type
-from emmet.core.vasp.task import TaskDocument
+from emmet.core.vasp.task_valid import TaskDocument
 from emmet.core.vasp.validation import ValidationDoc
 
 

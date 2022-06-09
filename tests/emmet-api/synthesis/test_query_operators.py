@@ -30,27 +30,24 @@ def test_synthesis_search_query():
                     }
                 },
                 {
+                    "$project": {
+                        "_id": 0,
+                        "doi": 1,
+                        "synthesis_type": 1,
+                        "reaction": 1,
+                        "reaction_string": 1,
+                        "operations": 1,
+                        "target": 1,
+                        "targets_formula": 1,
+                        "targets_formula_s": 1,
+                        "precursors": 1,
+                        "precursors_formula_s": 1,
+                        "paragraph_string": 1,
+                    }
+                },
+                {
                     "$facet": {
-                        "results": [
-                            {"$skip": 0},
-                            {"$limit": 10},
-                            {
-                                "$project": {
-                                    "_id": 0,
-                                    "doi": 1,
-                                    "synthesis_type": 1,
-                                    "reaction": 1,
-                                    "reaction_string": 1,
-                                    "operations": 1,
-                                    "target": 1,
-                                    "targets_formula": 1,
-                                    "targets_formula_s": 1,
-                                    "precursors": 1,
-                                    "precursors_formula_s": 1,
-                                    "paragraph_string": 1,
-                                }
-                            },
-                        ],
+                        "results": [{"$skip": 0}, {"$limit": 10}],
                         "total_doc": [{"$count": "count"}],
                     }
                 },
@@ -80,6 +77,24 @@ def test_synthesis_search_query():
                     }
                 },
                 {
+                    "$project": {
+                        "_id": 0,
+                        "doi": 1,
+                        "highlights": {"$meta": "searchHighlights"},
+                        "synthesis_type": 1,
+                        "reaction": 1,
+                        "reaction_string": 1,
+                        "search_score": {"$meta": "searchScore"},
+                        "operations": 1,
+                        "target": 1,
+                        "targets_formula": 1,
+                        "targets_formula_s": 1,
+                        "precursors": 1,
+                        "precursors_formula_s": 1,
+                        "paragraph_string": 1,
+                    }
+                },
+                {
                     "$match": {
                         "synthesis_type": {"$in": ["solid-state"]},
                         "targets_formula_s": "SiO2",
@@ -99,24 +114,9 @@ def test_synthesis_search_query():
                 {
                     "$facet": {
                         "results": [
-                            {
-                                "$project": {
-                                    "_id": 0,
-                                    "doi": 1,
-                                    "synthesis_type": 1,
-                                    "reaction": 1,
-                                    "reaction_string": 1,
-                                    "operations": 1,
-                                    "target": 1,
-                                    "targets_formula": 1,
-                                    "targets_formula_s": 1,
-                                    "precursors": 1,
-                                    "precursors_formula_s": 1,
-                                    "paragraph_string": 1,
-                                    "search_score": {"$meta": "searchScore"},
-                                    "highlights": {"$meta": "searchHighlights"},
-                                }
-                            }
+                            {"$sort": {"search_score": -1}},
+                            {"$skip": 0},
+                            {"$limit": 10},
                         ],
                         "total_doc": [{"$count": "count"}],
                     }
@@ -133,9 +133,6 @@ def test_synthesis_search_query():
                         }
                     }
                 },
-                {"$sort": {"search_score": -1}},
-                {"$skip": 0},
-                {"$limit": 10},
             ]
         )
 
@@ -152,8 +149,8 @@ def test_synthesis_search_query():
             condition_heating_atmosphere=["air"],
             condition_mixing_device=["zirconia"],
             condition_mixing_media=["water"],
-            skip=0,
-            limit=10,
+            _skip=0,
+            _limit=10,
         )
 
         assert q["pipeline"] == pipeline
@@ -174,7 +171,7 @@ def test_synthesis_search_query():
                 condition_heating_atmosphere=["air"],
                 condition_mixing_device=["zirconia"],
                 condition_mixing_media=["water"],
-                skip=0,
-                limit=10,
+                _skip=0,
+                _limit=10,
             )
             assert q == {"pipeline": pipeline}

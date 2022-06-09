@@ -8,14 +8,16 @@ def test_mpid():
     assert MPID("mp-3") < MPID("np-3")
     assert MPID("mp-3") > MPID("mp-2")
     assert 3 > MPID("mp-3")
-    assert MPID(MPID('mp-1234')) < MPID(1234)
-    assert 'mp-1234' < MPID(1234)
-    assert MPID('1234') > MPID('mp-1234')
-    assert MPID('1234') == MPID(1234)
-    assert MPID('1234') == '1234'
-    assert MPID("mp-12345") > MPID('mp-1234')
+    assert MPID(MPID("mp-1234")) < MPID(1234)
+    assert "mp-1234" < MPID(1234)
+    assert MPID("1234") > MPID("mp-1234")
+    assert MPID("1234") == MPID(1234)
+    assert MPID("1234") == "1234"
+    assert MPID("mp-12345") > MPID("mp-1234")
 
-    assert min([MPID("mp-44545"), MPID("mp-33"), MPID("mp-2134234"), MPID(33), MPID('33')]) == MPID("mp-33")
+    assert min(
+        [MPID("mp-44545"), MPID("mp-33"), MPID("mp-2134234"), MPID(33), MPID("33")]
+    ) == MPID("mp-33")
 
     assert (
         len(set([MPID("mp-33"), MPID("mp-44545"), MPID("mp-33"), MPID("mp-2134234")]))

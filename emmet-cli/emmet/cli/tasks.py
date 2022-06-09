@@ -7,8 +7,11 @@ import shlex
 import shutil
 import subprocess
 import sys
+
 from collections import defaultdict, deque
 from fnmatch import fnmatch
+from pathlib import Path
+from datetime import datetime
 
 import click
 from hpsspy import HpssOSError
@@ -36,13 +39,17 @@ FILE_FILTERS = [
     "POTCAR*",
     "vasprun.xml*",
     "OUTCAR*",
+    "AECCAR*",
+    "ELFCAR*",
+    "CHGCAR*",
+    "LOCPOT*",
 ]
 FILE_FILTERS_DEFAULT = [
     f"{d}{os.sep}{f}" if d else f
     for f in FILE_FILTERS
     for d in ["", "relax1", "relax2"]
 ]
-STORE_VOLUMETRIC_DATA = []
+STORE_VOLUMETRIC_DATA = ["CHGCAR", "LOCPOT", "AECCAR0", "AECCAR1", "AECCAR2", "ELFCAR"]
 
 
 @click.group()
@@ -105,9 +112,12 @@ def run_command(args, filelist):
 
 def recursive_chown(path, group):
     for dirpath, dirnames, filenames in os.walk(path):
-        shutil.chown(dirpath, group=group)
+        if Path(dirpath).group() != group:
+            shutil.chown(dirpath, group=group)
         for filename in filenames:
-            shutil.chown(os.path.join(dirpath, filename), group=group)
+            fullpath = os.path.join(dirpath, filename)
+            if Path(fullpath).group() != group:
+                shutil.chown(fullpath, group=group)
 
 
 def check_pattern(nested_allowed=False):
@@ -146,7 +156,8 @@ def extract_filename(line):
 @sbatch
 @click.option("--clean", is_flag=True, help="Remove original launchers.")
 @click.option("--check", is_flag=True, help="Check backup consistency.")
-def backup(clean, check):  # noqa: C901
+@click.option("--force-new", is_flag=True, help="Generate new backup.")
+def backup(clean, check, force_new):  # noqa: C901
     """Backup directory to HPSS"""
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
@@ -168,6 +179,14 @@ def backup(clean, check):  # noqa: C901
         logger.info(f"{block} with {len(launchers)} launcher(s)")
         try:
             isfile(f"{GARDEN}/{block}.tar")
+            if force_new and run:
+                ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+                tarfile = f"{GARDEN}/{block}.tar"
+                for suf in ["", ".idx"]:
+                    args = shlex.split(f"hsi -q mv -v {tarfile}{suf} {tarfile}{suf}.bkp_{ts}")
+                    for line in run_command(args, []):
+                        logger.info(line.strip())
+                raise HpssOSError
         except HpssOSError:  # block not in HPSS
             if run:
                 filelist = [os.path.join(block, l) for l in launchers]
@@ -253,7 +272,9 @@ def restore(inputfile, file_filter):  # noqa: C901
         os.makedirs(directory)
 
     check_pattern(nested_allowed=True)
-    shutil.chown(directory, group="matgen")
+    if Path(directory).group() != "matgen":
+        shutil.chown(directory, group="matgen")
+
     block_launchers = defaultdict(list)
     nlaunchers = 0
     with open(inputfile, "r") as infile:
@@ -271,6 +292,13 @@ def restore(inputfile, file_filter):  # noqa: C901
                         block_launchers[block].append(
                             os.path.join(launcher.strip(), ff)
                         )
+                    # also try restoring unnested block_/launcher_ (result of --reorg flag)
+                    if os.sep in launcher:
+                        launcher = launcher.strip().split(os.sep)[-1]
+                        for ff in file_filter:
+                            block_launchers[block].append(
+                                os.path.join(launcher.strip(), ff)
+                            )
                     nlaunchers += 1
 
     nblocks = len(block_launchers)
@@ -282,6 +310,13 @@ def restore(inputfile, file_filter):  # noqa: C901
 
     nfiles_restore_total, max_args = 0, 14000
     for block, files in block_launchers.items():
+        # check if block exists in HPSS
+        try:
+            isfile(f"{GARDEN}/{block}.tar")
+        except HpssOSError:
+            logger.error(f"{block} does not exist in HPSS!")
+            continue
+
         # get full list of matching files in archive and check against existing files
         args = shlex.split(f"htar -tf {GARDEN}/{block}.tar")
         filelist = [os.path.join(block, f) for f in files]
@@ -379,8 +414,9 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data):  # noqa: C901
     tag = os.path.basename(directory)
     target = ctx.obj["CLIENT"]
     snl_collection = target.db.snls_user
+    collection_count = target.collection.count_documents({})
     logger.info(
-        f"Connected to {target.collection.full_name} with {target.collection.count()} tasks."
+        f"Connected to {target.collection.full_name} with {collection_count} tasks."
     )
     ensure_indexes(
         ["task_id", "tags", "dir_name", "retired_task_id"], [target.collection]
@@ -420,7 +456,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data):  # noqa: C901
 
         if run:
             sep_tid = f"mp-{next_tid + nmax}"
-            target.collection.insert({"task_id": sep_tid})
+            target.collection.insert_one({"task_id": sep_tid})
             logger.info(f"Inserted separator task with task_id {sep_tid}.")
             logger.info(f"Reserved {len(lst)} task ID(s).")
         else:
@@ -481,7 +517,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data):  # noqa: C901
             f"Successfully parsed and inserted {count}/{gen.value} tasks in {directory}."
         )
         if sep_tid:
-            target.collection.remove({"task_id": sep_tid})
+            target.collection.delete_one({"task_id": sep_tid})
             logger.info(f"Removed separator task {sep_tid}.")
         if sep_snlid:
             snl_collection.remove({"snl_id": sep_snlid})

@@ -1,5 +1,6 @@
+from multiprocessing.sharedctypes import Value
 from typing import Optional
-from fastapi import Query
+from fastapi import Query, HTTPException
 from pymatgen.core.periodic_table import Element
 from pymatgen.core import Composition
 from maggma.api.query_operator import QueryOperator
@@ -24,7 +25,13 @@ class MoleculeElementsQuery(QueryOperator):
         crit = {}
 
         if elements:
-            element_list = [Element(e.strip()) for e in elements.split(",")]
+            try:
+                element_list = [Element(e.strip()) for e in elements.split(",")]
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Problem processing one or more provided elements.",
+                )
             crit["elements"] = {"$all": [str(el) for el in element_list]}
 
         return {"criteria": crit}
@@ -116,16 +123,35 @@ class MoleculeFormulaQuery(QueryOperator):
     def query(
         self,
         formula: Optional[str] = Query(
-            None, description="Chemical formula of the molecule.",
+            None,
+            description="Chemical formula of the molecule. A comma-separated list of formulas is also accepted.",
         ),
     ) -> STORE_PARAMS:
 
         crit = defaultdict(dict)  # type: dict
 
         if formula:
+            formula_list = [f.strip() for f in formula.split(",")]
 
-            reduced_formula = Composition(formula).get_reduced_formula_and_factor()[0]
-            crit["formula_pretty"] = reduced_formula
+            try:
+
+                if len(formula_list) == 1:
+                    reduced_formula = Composition(
+                        formula
+                    ).get_reduced_formula_and_factor()[0]
+                    crit["formula_pretty"] = reduced_formula
+                else:
+                    crit["formula_pretty"] = {
+                        "$in": [
+                            Composition(f).get_reduced_formula_and_factor()[0]
+                            for f in formula_list
+                        ]
+                    }
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Problem processing one or more provided formulas.",
+                )
 
         return {"criteria": crit}
 
