@@ -44,15 +44,20 @@ class MigrationGraphBuilder(MapBuilder):
         super().__init__(source=electrodes, target=migration_graphs, **kwargs)
         self.sources.append(tasks)
 
-    # get structure entry from task store
+
     def get_items(self) -> dict:
+        """
+        get structure entry from task store
+        """
         for item in super(MigrationGraphBuilder, self).get_items():
             tds = list(self.tasks.query({"task_id": {"$in": item["material_ids"]}}))
             item.update({"task_docs": tds})
             yield item
 
-    # attach migration graph dict to item
     def unary_function(self, item: dict) -> dict:
+        """
+        attach migration graph dict to item
+        """
         new_item = dict(item)
         task_documents = [TaskDocument.parse_obj(td) for td in new_item["task_docs"]]
         entries = [task_doc.structure_entry for task_doc in task_documents]
