@@ -248,7 +248,7 @@ class MoleculesAssociationBuilder(Builder):
 
         return jsanitize([mol.dict() for mol in molecules], allow_bson=True)
 
-    def update_targets(self, items: List[Dict]):
+    def update_targets(self, items: List[List[Dict]]):
         """
         Inserts the new molecules into the molecules collection
 
