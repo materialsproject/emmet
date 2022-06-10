@@ -224,6 +224,8 @@ class MoleculesAssociationBuilder(Builder):
         """
 
         tasks = [TaskDocument(**task) for task in items if task["is_valid"]]
+        if len(tasks) == 0:
+            return list()
         formula = tasks[0].formula_alphabetical
         task_ids = [task.task_id for task in tasks]
         self.logger.debug(f"Processing {formula} : {task_ids}")
