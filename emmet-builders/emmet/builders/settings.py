@@ -36,7 +36,11 @@ class EmmetBuildSettings(EmmetSettings):
     )
 
     QCHEM_ALLOWED_TASK_TYPES: List[QChemTaskType] = Field(
-        [t.value for t in QChemTaskType],
+        ["Single Point",
+         "Force",
+         "Geometry Optimization",
+         "Frequency Analysis",
+         "Frequency Flattening Geometry Optimization"],
         description="Allowed task_types to build molecules from",
     )
 
