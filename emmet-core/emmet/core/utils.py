@@ -1,11 +1,13 @@
 import datetime
 from enum import Enum
 from itertools import groupby
-from typing import Any, Iterator, List, Tuple, Dict, Union
+from typing import Any, Iterator, List, Tuple, Dict, Optional, Union
 import copy
 
 import bson
 import numpy as np
+import networkx as nx
+
 from monty.json import MSONable
 from pydantic import BaseModel
 from pymatgen.analysis.structure_matcher import (
@@ -13,6 +15,8 @@ from pymatgen.analysis.structure_matcher import (
     ElementComparator,
     StructureMatcher,
 )
+from pymatgen.analysis.graphs import MoleculeGraph
+from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.core.structure import Structure, Molecule
 
 from emmet.core.settings import EmmetSettings
@@ -137,6 +141,50 @@ def confirm_molecule(mol: Union[Molecule, Dict]):
         return Molecule.from_dict(mol)
     else:
         return mol
+
+
+def make_mol_graph(
+    mol: Molecule, critic_bonds: Optional[List[List[int]]] = None
+) -> MoleculeGraph:
+    """
+    Construct a MoleculeGraph using OpenBabelNN with metal_edge_extender and
+    (optionally) Critic2 bonding information.
+
+    This bonding scheme was used to define bonding for the Lithium-Ion Battery
+    Electrolyte (LIBE) dataset (DOI: 10.1038/s41597-021-00986-9)
+
+    :param mol: Molecule to be converted to MoleculeGraph
+    :param critic_bonds: (optional) List of lists [a, b], where a and b are
+        atom indices (0-indexed)
+
+    :return: mol_graph, a MoleculeGraph
+    """
+    mol_graph = MoleculeGraph.with_local_env_strategy(mol, OpenBabelNN())
+    mol_graph = metal_edge_extender(mol_graph)
+    if critic_bonds:
+        mg_edges = mol_graph.graph.edges()
+        for bond in critic_bonds:
+            bond.sort()
+            if bond[0] != bond[1]:
+                bond_tup = (bond[0], bond[1])
+                if bond_tup not in mg_edges:
+                    mol_graph.add_edge(bond_tup[0], bond_tup[1])
+    return mol_graph
+
+
+def get_graph_hash(mol: Molecule, node_attr: Optional[str]=None):
+    """
+    Return the Weisfeiler Lehman (WL) graph hash of the MoleculeGraph described
+    by this molecule, using the OpenBabelNN strategy with extension for
+    metal coordinate bonds
+
+    :param mol: Molecule
+    :param node_attr: Node attribute to be used to compute the WL hash
+    :return: string of the WL graph hash
+    """
+
+    mg = make_mol_graph(mol)
+    return nx.weisfeiler_lehman_graph_hash(mg.graph, node_attr=node_attr)
 
 
 def jsanitize(obj, strict=False, allow_bson=False):

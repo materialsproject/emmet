@@ -6,10 +6,9 @@ import networkx as nx
 
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
-
 
 from emmet.core.mpid import MPID
+from emmet.core.utils import make_mol_graph
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
@@ -46,35 +45,6 @@ def fix_C_Li_bonds(critic: Dict) -> Dict:
                     [int(entry) - 1 for entry in critic["bonding"][key]["atom_ids"]]
                 )
     return critic
-
-
-def make_mol_graph(
-    mol: Molecule, critic_bonds: Optional[List[List[int]]] = None
-) -> MoleculeGraph:
-    """
-    Construct a MoleculeGraph using OpenBabelNN with metal_edge_extender and
-    (optionally) Critic2 bonding information.
-
-    This bonding scheme was used to define bonding for the Lithium-Ion Battery
-    Electrolyte (LIBE) dataset (DOI: 10.1038/s41597-021-00986-9)
-
-    :param mol: Molecule to be converted to MoleculeGraph
-    :param critic_bonds: (optional) List of lists [a, b], where a and b are
-        atom indices (0-indexed)
-
-    :return: mol_graph, a MoleculeGraph
-    """
-    mol_graph = MoleculeGraph.with_local_env_strategy(mol, OpenBabelNN())
-    mol_graph = metal_edge_extender(mol_graph)
-    if critic_bonds:
-        mg_edges = mol_graph.graph.edges()
-        for bond in critic_bonds:
-            bond.sort()
-            if bond[0] != bond[1]:
-                bond_tup = (bond[0], bond[1])
-                if bond_tup not in mg_edges:
-                    mol_graph.add_edge(bond_tup[0], bond_tup[1])
-    return mol_graph
 
 
 def _bonds_hybridization(nbo: Dict[str, Any], index: int):

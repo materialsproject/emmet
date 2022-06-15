@@ -9,6 +9,7 @@ from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
 from emmet.core.mpid import MPID
+from emmet.core.utils import get_graph_hash, make_mol_graph
 from emmet.core.settings import EmmetSettings
 from emmet.core.material import MoleculeDoc as CoreMoleculeDoc
 from emmet.core.material import PropertyOrigin
@@ -92,6 +93,17 @@ def evaluate_task(
 
 
 class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
+
+    species_hash: str = Field(
+        None,
+        description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
+                    "node attribute."
+    )
+    coord_hash: str = Field(
+        None,
+        description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph "
+                    "node attribute."
+    )
 
     calc_types: Mapping[str, CalcType] = Field(  # type: ignore
         None,
@@ -260,9 +272,14 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         for entry in entries:
             entry["entry_id"] = molecule_id
 
+        species_hash = get_graph_hash(molecule, node_attr="specie")
+        coord_hash = get_graph_hash(molecule, node_attr="coords")
+
         return cls.from_molecule(
             molecule=molecule,
             molecule_id=molecule_id,
+            species_hash=species_hash,
+            coord_hash=coord_hash,
             initial_molecules=initial_molecules,
             last_updated=last_updated,
             created_at=created_at,
