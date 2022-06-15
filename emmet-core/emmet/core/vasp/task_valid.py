@@ -34,7 +34,9 @@ class BaseTaskDocument(EmmetBaseModel):
         description="Timestamp for this task document was last updateed",
     )
 
-    tags: List[str] = Field([], description="Metadata tags for this task document")
+    tags: Union[List[str], None] = Field(
+        [], description="Metadata tags for this task document"
+    )
 
     warnings: List[str] = Field(
         None, description="Any warnings related to this property"
@@ -160,7 +162,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
         params = self.calcs_reversed[0].get("input", {}).get("parameters", {})
         incar = self.calcs_reversed[0].get("input", {}).get("incar", {})
 
-        return calc_type(self.orig_inputs, {**params, **incar},)
+        return calc_type(self.orig_inputs, {**params, **incar})
 
     @property
     def entry(self) -> ComputedEntry:
