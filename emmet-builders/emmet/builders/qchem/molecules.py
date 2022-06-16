@@ -234,7 +234,7 @@ class MoleculesAssociationBuilder(Builder):
             try:
                 doc = MoleculeDoc.from_tasks(group)
                 molecule_id = "{}-{}-{}".format(doc.coord_hash,
-                                                str(doc.charge).replace("-", "m"),
+                                                str(int(doc.charge)).replace("-", "m"),
                                                 doc.spin_multiplicity)
                 doc.molecule_id = molecule_id
                 molecules.append(doc)
@@ -244,7 +244,7 @@ class MoleculesAssociationBuilder(Builder):
                 doc.warnings.append(str(e))
                 molecules.append(doc)
                 self.logger.warn(
-                    f"Failed making material for {failed_ids}."
+                    f"Failed making molecule for {failed_ids}."
                     f" Inserted as deprecated molecule: {doc.molecule_id}"
                 )
 
@@ -301,13 +301,13 @@ class MoleculesAssociationBuilder(Builder):
                 m = task.output.optimized_molecule
             else:
                 m = task.output.initial_molecule
-            m.index: int = idx  # type: ignore
+            m.ind: int = idx  # type: ignore
             molecules.append(m)
             lots.append(task.level_of_theory.value)
 
         grouped_molecules = group_molecules(molecules, lots)
         for group in grouped_molecules:
-            grouped_tasks = [filtered_tasks[mol.index] for mol in group]  # type: ignore
+            grouped_tasks = [filtered_tasks[mol.ind] for mol in group]  # type: ignore
             yield grouped_tasks
 
 
@@ -477,7 +477,7 @@ class MoleculesBuilder(Builder):
                 best_doc.similar_molecules = [m.molecule_id for m in sorted_docs]
 
             molecule_id = "{}-{}-{}".format(best_doc.species_hash,
-                                            str(best_doc.charge).replace("-", "m"),
+                                            str(int(best_doc.charge)).replace("-", "m"),
                                             best_doc.spin_multiplicity)
             best_doc.molecule_id = molecule_id
             molecules.append(best_doc)

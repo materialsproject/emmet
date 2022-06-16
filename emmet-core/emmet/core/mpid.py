@@ -1,7 +1,9 @@
 import re
 from typing import Union
 
+
 mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
+mpculeid_regex = re.compile(r"^([A-Za-z]+-)?([A-Fa-f0-9]+)(-m?[0-9]+)(-[0-9]+)$")
 
 
 class MPID(str):
@@ -100,3 +102,95 @@ class MPID(str):
             return MPID(v)
 
         raise ValueError("Invalid MPID Format")
+
+
+class MPculeID(str):
+    """
+    A Materials Project Molecule ID with a prefix, hash, and two integer values
+        representing the charge and spin of the molecule
+    Unlike the MPID, you cannot compare raw hashes or raw integers to MPculeIDs
+
+    Args:
+        val: Either 1) an MPculeID
+                    2) a prefixed string of format "prefix-hash-charge-spin"
+                    3) a non-prefixed string of format "hash-charge-spin"
+
+            Numbers stored as strings are coerced to ints
+    """
+
+    def __init__(self, val: Union["MPculeID", str]):
+
+        if isinstance(val, MPculeID):
+            self.parts = val.parts  # type: ignore
+            self.string = val.string  # type: ignore
+
+        elif isinstance(val, str):
+            parts = val.split("-")
+            if len(parts) == 3:
+                parts[1] = int(parts[1].replace('m', '-'))
+                parts[2] = int(parts[2])
+            elif len(parts) == 4:
+                parts[2] = int(parts[2].replace('m', '-'))
+                parts[3] = int(parts[3])
+            else:
+                raise ValueError("MPculeID string representation must follow the "
+                                 "format prefix-hash-charge-spin or hash-charge-spin.")
+
+            self.parts = tuple(parts)
+            self.string = val
+
+        else:
+
+            raise ValueError(
+                "Must provide an MPculeID, or string of the format prefix-hash-charge-spin "
+                "or hash-charge-spin"
+            )
+
+    def __eq__(self, other: object):
+        if isinstance(other, MPculeID):
+            return self.string == other.string
+        elif isinstance(other, str):
+            return self.string == MPculeID(other).string
+
+    def __str__(self):
+        return self.string
+
+    def __repr__(self):
+        return f"MPculeID({self})"
+
+    def __lt__(self, other: Union["MPculeID", str]):
+
+        other_parts = MPculeID(other).parts
+
+        return "-".join([str(x) for x in self.parts[-3:]]) < "-".join([str(x) for x in other_parts[-3:]])
+
+    def __gt__(self, other: Union["MPculeID", int, str]):
+        return not self.__lt__(other)
+
+    def __hash__(self):
+        return hash(self.string)
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def __modify_schema__(cls, field_schema):
+        field_schema.update(
+            pattern=r"^([A-Za-z]+-)?([A-Fa-f0-9]+)(-m?[0-9]+)(-[0-9]+)$",
+            examples=[
+                "1a525231bdac3f13e2fac0962fe8d053-0-1",
+                "22b40b99719ac570fc7e6225e855ec6e-m1-2"
+                "mpcule-b9ba54febc77d2a9177accf4605767db-1-2"
+            ],
+        )
+
+    @classmethod
+    def validate(cls, v):
+
+        if isinstance(v, MPculeID):
+            return v
+        elif isinstance(v, str) and mpid_regex.fullmatch(v):
+            return MPculeID(v)
+
+        raise ValueError("Invalid MPculeID Format")

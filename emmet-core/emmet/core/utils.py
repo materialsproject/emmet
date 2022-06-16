@@ -103,7 +103,6 @@ def group_molecules(molecules: List[Molecule], lots: List[str]):
         lots (List[str]): string representations of Q-Chem levels of theory
             (for instance, wB97X-V/def2-TZVPPD/VACUUM)
     """
-    print(lots)
     for mol_key, pregroup in groupby(
         sorted(zip(molecules, lots), key=form_env), key=form_env
     ):

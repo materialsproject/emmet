@@ -4,12 +4,10 @@ from typing import Any, Dict, List, Mapping, Union
 from pydantic import Field
 
 from pymatgen.core.structure import Molecule
-from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
 from emmet.core.mpid import MPID
-from emmet.core.utils import get_graph_hash, make_mol_graph
+from emmet.core.utils import get_graph_hash
 from emmet.core.settings import EmmetSettings
 from emmet.core.material import MoleculeDoc as CoreMoleculeDoc
 from emmet.core.material import PropertyOrigin
@@ -272,8 +270,8 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         for entry in entries:
             entry["entry_id"] = molecule_id
 
-        species_hash = get_graph_hash(molecule, node_attr="specie")
-        coord_hash = get_graph_hash(molecule, node_attr="coords")
+        species_hash = get_graph_hash(molecule, "specie")
+        coord_hash = get_graph_hash(molecule, "coords")
 
         return cls.from_molecule(
             molecule=molecule,
