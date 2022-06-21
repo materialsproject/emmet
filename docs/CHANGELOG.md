@@ -1,5 +1,54 @@
 # Changelog
 
+## [v0.28.2](https://github.com/materialsproject/emmet/tree/v0.28.2) (2022-06-10)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.28.1...v0.28.2)
+
+**Merged pull requests:**
+
+- Add back legacy elasticity model [\#435](https://github.com/materialsproject/emmet/pull/435) ([munrojm](https://github.com/munrojm))
+
+## [v0.28.1](https://github.com/materialsproject/emmet/tree/v0.28.1) (2022-06-08)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.28.0...v0.28.1)
+
+**Merged pull requests:**
+
+- Better handle formula and element issues [\#434](https://github.com/materialsproject/emmet/pull/434) ([munrojm](https://github.com/munrojm))
+
+## [v0.28.0](https://github.com/materialsproject/emmet/tree/v0.28.0) (2022-06-07)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.27.8...v0.28.0)
+
+**Merged pull requests:**
+
+-  Elasticity doc and builder [\#326](https://github.com/materialsproject/emmet/pull/326) ([mjwen](https://github.com/mjwen))
+
+## [v0.27.8](https://github.com/materialsproject/emmet/tree/v0.27.8) (2022-06-07)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.27.7...v0.27.8)
+
+**Merged pull requests:**
+
+- Bump maggma [\#432](https://github.com/materialsproject/emmet/pull/432) ([munrojm](https://github.com/munrojm))
+
+## [v0.27.7](https://github.com/materialsproject/emmet/tree/v0.27.7) (2022-06-06)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.27.6...v0.27.7)
+
+**Merged pull requests:**
+
+- Handle element and formula processing errors [\#431](https://github.com/materialsproject/emmet/pull/431) ([munrojm](https://github.com/munrojm))
+
+## [v0.27.6](https://github.com/materialsproject/emmet/tree/v0.27.6) (2022-05-31)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.27.5...v0.27.6)
+
+**Merged pull requests:**
+
+- Fix facet memory issue with synthesis aggregation pipeline [\#430](https://github.com/materialsproject/emmet/pull/430) ([munrojm](https://github.com/munrojm))
+- Update the description for chemsys\_permutations [\#424](https://github.com/materialsproject/emmet/pull/424) ([acrutt](https://github.com/acrutt))
+
 ## [v0.27.5](https://github.com/materialsproject/emmet/tree/v0.27.5) (2022-05-24)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.27.4...v0.27.5)
@@ -253,20 +302,20 @@
 
 ## [v0.21.16](https://github.com/materialsproject/emmet/tree/v0.21.16) (2022-01-20)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.14...v0.21.16)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.15...v0.21.16)
 
 **Merged pull requests:**
 
 - Remove version req in setup [\#354](https://github.com/materialsproject/emmet/pull/354) ([munrojm](https://github.com/munrojm))
 - Fix setup for workflow [\#353](https://github.com/materialsproject/emmet/pull/353) ([munrojm](https://github.com/munrojm))
 
-## [v0.21.14](https://github.com/materialsproject/emmet/tree/v0.21.14) (2022-01-19)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.15...v0.21.14)
-
 ## [v0.21.15](https://github.com/materialsproject/emmet/tree/v0.21.15) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.13...v0.21.15)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.14...v0.21.15)
+
+## [v0.21.14](https://github.com/materialsproject/emmet/tree/v0.21.14) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.13...v0.21.14)
 
 **Merged pull requests:**
 

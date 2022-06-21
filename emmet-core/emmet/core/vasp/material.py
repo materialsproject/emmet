@@ -6,13 +6,12 @@ from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
-from emmet.core.settings import EmmetSettings
 from emmet.core.material import MaterialsDoc as CoreMaterialsDoc
 from emmet.core.material import PropertyOrigin
+from emmet.core.settings import EmmetSettings
 from emmet.core.structure import StructureMetadata
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 from emmet.core.vasp.task_valid import TaskDocument
-
 
 SETTINGS = EmmetSettings()
 
@@ -91,7 +90,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
         def _structure_eval(task: TaskDocument):
             """
-            Helper function to order structures optimziation and statics calcs by
+            Helper function to order structures optimization and statics calcs by
             - Functional Type
             - Spin polarization
             - Special Tags
@@ -178,7 +177,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
     @classmethod
     def construct_deprecated_material(
-        cls, task_group: List[TaskDocument],
+        cls, task_group: List[TaskDocument]
     ) -> "MaterialsDoc":
         """
         Converts a group of tasks into a deprecated material
