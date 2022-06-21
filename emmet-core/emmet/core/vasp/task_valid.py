@@ -1,6 +1,6 @@
 """ Core definition of a VASP Task Document """
 from datetime import datetime
-from typing import Any, Dict, List, Union, Literal
+from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import oxide_type
