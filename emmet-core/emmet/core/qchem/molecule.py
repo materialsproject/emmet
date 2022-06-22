@@ -6,8 +6,8 @@ from pydantic import Field
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
-from emmet.core.mpid import MPID
-from emmet.core.utils import get_graph_hash
+from emmet.core.mpid import MPculeID
+from emmet.core.utils import get_graph_hash, get_molecule_id
 from emmet.core.settings import EmmetSettings
 from emmet.core.material import MoleculeDoc as CoreMoleculeDoc
 from emmet.core.material import PropertyOrigin
@@ -131,9 +131,9 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         description="Mapping for tracking the best entries at each level of theory for Q-Chem calculations",
     )
 
-    similar_molecules: List[MPID] = Field(
+    similar_molecules: List[MPculeID] = Field(
         None,
-        description="List of MPIDs with of molecules similar (by e.g. structure) to this one",
+        description="List of MPIDs or MPculeIDs with of molecules similar (by e.g. structure) to this one",
     )
 
     @classmethod
@@ -169,9 +169,9 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         if all([len(m) == 1 for m in mols]):
             sorted_tasks = sorted(task_group, key=evaluate_task)
 
-            molecule_id = sorted_tasks[0].task_id
-
             molecule = sorted_tasks[0].output.initial_molecule
+
+            molecule_id = get_molecule_id(molecule, node_attr="coords")
 
             # Initial molecules. No geometry should change for a single atom
             initial_molecules = [molecule]
@@ -216,10 +216,9 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             # Molecule ID
             possible_mol_ids = [task.task_id for task in geometry_optimizations]
 
-            molecule_id = min(possible_mol_ids)
-
             best_molecule_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
             molecule = best_molecule_calc.output.optimized_molecule
+            molecule_id = get_molecule_id(molecule, node_attr="coords")
 
             # Initial molecules
             initial_molecules = list()
@@ -316,14 +315,11 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         task_types = {task.task_id: task.task_type for task in task_group}
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
-        # Molecule ID
-        molecule_id = min([task.task_id for task in task_group])
-
         # Choose any random structure for metadata
         molecule = task_group[0].output.initial_molecule
 
-        # Deprecated
-        deprecated = True
+        # Molecule ID
+        molecule_id = get_molecule_id(molecule, "coords")
 
         return cls.from_molecule(
             molecule=molecule,
@@ -334,7 +330,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             calc_types=calc_types,
             levels_of_theory=levels_of_theory,
             task_types=task_types,
-            deprecated=deprecated,
+            deprecated=True,
             deprecated_tasks=deprecated_tasks,
         )
 

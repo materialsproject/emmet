@@ -190,7 +190,7 @@ class MPculeID(str):
 
         if isinstance(v, MPculeID):
             return v
-        elif isinstance(v, str) and mpid_regex.fullmatch(v):
+        elif isinstance(v, str) and mpculeid_regex.fullmatch(v):
             return MPculeID(v)
 
         raise ValueError("Invalid MPculeID Format")

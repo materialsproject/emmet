@@ -20,6 +20,7 @@ from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.core.structure import Structure, Molecule
 
 from emmet.core.settings import EmmetSettings
+from emmet.core.mpid import MPculeID
 
 SETTINGS = EmmetSettings()
 
@@ -184,6 +185,25 @@ def get_graph_hash(mol: Molecule, node_attr: Optional[str]=None):
 
     mg = make_mol_graph(mol)
     return nx.weisfeiler_lehman_graph_hash(mg.graph, node_attr=node_attr)
+
+
+def get_molecule_id(mol: Molecule, node_attr: Optional[str]=None):
+    """
+    Return an MPculeID for a molecule, with the hash component
+    based on a particular attribute of the molecule graph representation.
+
+    :param mol: Molecule
+    :param node_attr:Node attribute to be used to compute the WL hash
+
+    :return: MPculeID
+    """
+
+    graph_hash = get_graph_hash(mol, node_attr=node_attr)
+    return MPculeID("{}-{}-{}".format(graph_hash,
+                             str(int(mol.charge)).replace("-", "m"),
+                             str(mol.spin_multiplicity)
+                             )
+                    )
 
 
 def jsanitize(obj, strict=False, allow_bson=False):

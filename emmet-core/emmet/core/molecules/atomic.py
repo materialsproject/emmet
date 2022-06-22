@@ -1,16 +1,8 @@
-import logging
-from collections import defaultdict
-from typing import Dict, List, Optional, Tuple
+from typing import List, Union
 
-from typing_extensions import Literal
-
-import numpy as np
 from pydantic import Field
 
-from pymatgen.core.structure import Molecule
-from pymatgen.core.periodic_table import Specie, Element
-
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPID, MPculeID
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
@@ -39,7 +31,7 @@ class PartialChargesDoc(PropertyDoc):
     def from_task(
         cls,
         task: TaskDocument,
-        molecule_id: MPID,
+        molecule_id: MPculeID,
         preferred_methods: List,
         deprecated: bool = False,
         **kwargs
@@ -48,7 +40,7 @@ class PartialChargesDoc(PropertyDoc):
         Determine partial charges from a task document
 
         :param task: task document from which partial charges can be extracted
-        :param molecule_id: mpid
+        :param molecule_id: mpid or mpculeid
         :param preferred_methods: list of methods; by default, NBO7, RESP, Critic2, and Mulliken, in that order
         :param kwargs: to pass to PropertyDoc
         :return:
@@ -113,7 +105,7 @@ class PartialSpinsDoc(PropertyDoc):
     def from_task(
         cls,
         task: TaskDocument,
-        molecule_id: MPID,
+        molecule_id: MPculeID,
         preferred_methods: List,
         deprecated: bool = False,
         **kwargs
@@ -122,7 +114,7 @@ class PartialSpinsDoc(PropertyDoc):
         Determine partial spins from a task document
 
         :param task: task document from which partial spins can be extracted
-        :param molecule_id: mpid
+        :param molecule_id: mpid or mpculeid
         :param preferred_methods: list of methods; by default, NBO7 and Mulliken, in that order
         :param kwargs: to pass to PropertyDoc
         :return:

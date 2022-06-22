@@ -6,7 +6,7 @@ from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
 
 from emmet.core.molecules.molecule_property import PropertyDoc
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPID, MPculeID
 from emmet.core.molecules.orbitals import NaturalPopulation, LonePair, Bond, Interaction
 
 
@@ -251,7 +251,7 @@ class SummaryDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_docs(cls, molecule_id: MPID, **docs: Dict[str, Union[Dict, List[Dict]]]):
+    def from_docs(cls, molecule_id: MPculeID, **docs: Dict[str, Union[Dict, List[Dict]]]):
         """Converts a bunch of property docs into a SummaryDoc"""
 
         doc = _copy_from_doc(docs)

@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Sequence, Type, TypeVar, Union, List
+from typing import Sequence, Type, TypeVar, List
 
 from pydantic import Field
 from pymatgen.core.structure import Molecule
 
 from emmet.core.material import PropertyOrigin
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPculeID
 from emmet.core.structure import MoleculeMetadata
 
 
@@ -26,10 +26,10 @@ class PropertyDoc(MoleculeMetadata):
     """
 
     property_name: str
-    molecule_id: MPID = Field(
+    molecule_id: MPculeID = Field(
         ...,
         description="The ID of the molecule, used as a universal reference across property documents."
-        "This comes in the form of an MPID or int",
+        "This comes in the form of an MPID (or int) or MPculeID (or str)",
     )
 
     deprecated: bool = Field(
@@ -57,7 +57,7 @@ class PropertyDoc(MoleculeMetadata):
 
     @classmethod
     def from_molecule(  # type: ignore[override]
-        cls: Type[S], meta_molecule: Molecule, molecule_id: MPID, **kwargs
+        cls: Type[S], meta_molecule: Molecule, molecule_id: MPculeID, **kwargs
     ) -> S:
         """
         Builds a molecule document using the minimal amount of information

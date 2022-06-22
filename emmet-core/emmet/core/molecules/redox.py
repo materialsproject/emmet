@@ -2,16 +2,13 @@ from typing import Any, Dict, List, Type, TypeVar, Union
 import copy
 from collections import defaultdict
 
-from typing_extensions import Literal
-
 from pydantic import Field
 
-from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
-from emmet.core.utils import confirm_molecule
+from emmet.core.utils import confirm_molecule, get_graph_hash
 from emmet.core.qchem.calc_types import TaskType
 from emmet.core.qchem.task import filter_task_type
 from emmet.core.qchem.molecule import evaluate_lot
@@ -19,7 +16,7 @@ from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.molecules.bonds import metals
 from emmet.core.molecules.thermo import get_free_energy
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPculeID
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -42,23 +39,23 @@ class RedoxDoc(PropertyDoc):
 
     electron_affinity: float = Field(description="Vertical electron affinity in eV")
 
-    ea_id: MPID = Field(description="Molecule ID for electron affinity")
+    ea_id: MPculeID = Field(description="Molecule ID for electron affinity")
 
     ionization_energy: float = Field(description="Vertical ionization energy in eV")
 
-    ie_id: MPID = Field(description="Molecule ID for ionization energy")
+    ie_id: MPculeID = Field(description="Molecule ID for ionization energy")
 
     reduction_free_energy: float = Field(
         None, description="Adiabatic free energy of reduction"
     )
 
-    red_id: MPID = Field(None, description="Molecule ID for adiabatic reduction")
+    red_id: MPculeID = Field(None, description="Molecule ID for adiabatic reduction")
 
     oxidation_free_energy: float = Field(
         None, description="Adiabatic free energy of oxidation"
     )
 
-    ox_id: MPID = Field(None, description="Molecule ID for adiabatic oxidation")
+    ox_id: MPculeID = Field(None, description="Molecule ID for adiabatic oxidation")
 
     reduction_potentials: Dict[str, float] = Field(
         None, description="Reduction potentials with various reference electrodes"
@@ -248,7 +245,7 @@ class RedoxDoc(PropertyDoc):
                                 d["electron_affinity"] = (
                                     sp["energy"] - ff["energy"]
                                 ) * 27.2114
-                                d["ea_id"] = sp["task_id"]
+                                d["ea_id"] = get_graph_hash(sp_mol, node_attr="coords")
 
                             # IE
                             elif (
@@ -259,7 +256,7 @@ class RedoxDoc(PropertyDoc):
                                 d["ionization_energy"] = (
                                     sp["energy"] - ff["energy"]
                                 ) * 27.2114
-                                d["ie_id"] = sp["task_id"]
+                                d["ie_id"] = get_graph_hash(sp_mol, node_attr="coords")
 
                         # If no vertical IE or EA, can't make complete doc; give up
                         if d["ea_id"] is None or d["ie_id"] is None:

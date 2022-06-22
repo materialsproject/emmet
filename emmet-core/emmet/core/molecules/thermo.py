@@ -1,21 +1,8 @@
-import logging
-from collections import defaultdict
-from typing import Dict, List, Any, Tuple, Union
-import copy
+from typing import Union
 
-from typing_extensions import Literal
-
-import numpy as np
 from pydantic import Field
-import networkx as nx
 
-from pymatgen.core.structure import Molecule
-from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
-
-from pymatgen.core.periodic_table import Specie, Element
-
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPID, MPculeID
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
@@ -95,7 +82,7 @@ class ThermoDoc(PropertyDoc):
 
     @classmethod
     def from_task(
-        cls, task: TaskDocument, molecule_id: MPID, deprecated: bool = False, **kwargs
+        cls, task: TaskDocument, molecule_id: MPculeID, deprecated: bool = False, **kwargs
     ):  # type: ignore[override]
 
         """

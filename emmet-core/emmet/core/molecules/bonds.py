@@ -1,4 +1,4 @@
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional, Tuple, Union
 import copy
 
 from pydantic import Field
@@ -7,7 +7,7 @@ import networkx as nx
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
 
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPID, MPculeID
 from emmet.core.utils import make_mol_graph
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.material import PropertyOrigin
@@ -305,7 +305,7 @@ class BondingDoc(PropertyDoc):
     def from_task(
         cls,
         task: TaskDocument,
-        molecule_id: MPID,
+        molecule_id: MPculeID,
         preferred_methods: List,
         deprecated: bool = False,
         **kwargs,

@@ -1,10 +1,10 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 
 from pydantic import Field
 
 from monty.json import MSONable
 
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPID, MPculeID
 from emmet.core.material import PropertyOrigin
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.molecule_property import PropertyDoc
@@ -432,7 +432,7 @@ class OrbitalDoc(PropertyDoc):
 
     @classmethod
     def from_task(
-        cls, task: TaskDocument, molecule_id: MPID, deprecated: bool = False, **kwargs
+        cls, task: TaskDocument, molecule_id: MPculeID, deprecated: bool = False, **kwargs
     ):  # type: ignore[override]
         """
         Construct an orbital document from a task

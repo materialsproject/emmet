@@ -35,7 +35,7 @@ def sp(test_dir):
 
 def test_thermo(test_tasks, sp):
     # Just energy; no free energy information
-    doc = ThermoDoc.from_task(task=sp, molecule_id="test-123456", deprecated=False)
+    doc = ThermoDoc.from_task(task=sp, molecule_id="b9ba54febc77d2a9177accf4605767db-1-2", deprecated=False)
 
     assert doc.property_name == "thermo"
     assert doc.electronic_energy == sp.output.final_energy * 27.2114
@@ -43,7 +43,7 @@ def test_thermo(test_tasks, sp):
 
     # With all thermodynamic information
     task = test_tasks[0]
-    doc = ThermoDoc.from_task(task, molecule_id="test-123456", deprecated=False)
+    doc = ThermoDoc.from_task(task, molecule_id="b9ba54febc77d2a9177accf4605767db-1-2", deprecated=False)
 
     assert doc.electronic_energy == task.output.final_energy * 27.2114
     assert doc.total_enthalpy == task.output.enthalpy * 0.043363

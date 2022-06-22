@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from pymatgen.core import Structure
 from pymatgen.core.structure import Molecule
 
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPID, MPculeID
 from emmet.core.structure import MoleculeMetadata, StructureMetadata
 from emmet.core.vasp.validation import DeprecationMessage
 
@@ -115,10 +115,10 @@ class MoleculeDoc(MoleculeMetadata):
     """
 
     # Only molecule_id is required for all documents
-    molecule_id: MPID = Field(
+    molecule_id: MPculeID = Field(
         ...,
         description="The ID of this molecule, used as a universal reference across property documents."
-        "This comes in the form of an MPID or int",
+        "This comes in the form of an MPID (or int) or MPculeID (or str)",
     )
 
     molecule: Molecule = Field(
@@ -173,7 +173,7 @@ class MoleculeDoc(MoleculeMetadata):
     warnings: List[str] = Field([], description="Any warnings related to this molecule")
 
     @classmethod
-    def from_molecule(cls: Type[S], molecule: Molecule, molecule_id: MPID, **kwargs) -> S:  # type: ignore[override]
+    def from_molecule(cls: Type[S], molecule: Molecule, molecule_id: MPculeID, **kwargs) -> S:  # type: ignore[override]
         """
         Builds a molecule document using the minimal amount of information
         """

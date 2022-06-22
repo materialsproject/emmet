@@ -1,10 +1,10 @@
-from typing import List
+from typing import List, Union
 
 from pydantic import Field
 
 from pymatgen.core.structure import Molecule
 
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPID, MPculeID
 from emmet.core.material import PropertyOrigin
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.molecule_property import PropertyDoc
@@ -41,7 +41,7 @@ class VibrationDoc(PropertyDoc):
 
     @classmethod
     def from_task(
-        cls, task: TaskDocument, molecule_id: MPID, deprecated: bool = False, **kwargs
+        cls, task: TaskDocument, molecule_id: MPculeID, deprecated: bool = False, **kwargs
     ):  # type: ignore[override]
         """
         Construct a vibration document from a task document
