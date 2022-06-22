@@ -432,7 +432,11 @@ class OrbitalDoc(PropertyDoc):
 
     @classmethod
     def from_task(
-        cls, task: TaskDocument, molecule_id: MPculeID, deprecated: bool = False, **kwargs
+        cls,
+        task: TaskDocument,
+        molecule_id: MPculeID,
+        deprecated: bool = False,
+        **kwargs
     ):  # type: ignore[override]
         """
         Construct an orbital document from a task
@@ -472,9 +476,11 @@ class OrbitalDoc(PropertyDoc):
             bds_inds = [1, 3]
             perts_inds = [0, 1]
 
-        for dset, inds in [("natural_populations", pops_inds),
-                           ("hybridization_character", bds_inds),
-                           ("perturbation_energy", perts_inds)]:
+        for dset, inds in [
+            ("natural_populations", pops_inds),
+            ("hybridization_character", bds_inds),
+            ("perturbation_energy", perts_inds),
+        ]:
             if len(nbo[dset]) < inds[-1]:
                 return
 

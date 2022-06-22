@@ -95,12 +95,12 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
     species_hash: str = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
-                    "node attribute."
+        "node attribute.",
     )
     coord_hash: str = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph "
-                    "node attribute."
+        "node attribute.",
     )
 
     calc_types: Mapping[str, CalcType] = Field(  # type: ignore

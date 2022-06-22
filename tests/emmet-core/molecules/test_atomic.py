@@ -33,7 +33,9 @@ def open_shell(test_dir):
 def test_partial_charges(test_tasks):
     # Test RESP
     pcd = PartialChargesDoc.from_task(
-        test_tasks[0], molecule_id="b9ba54febc77d2a9177accf4605767db-1-2", preferred_methods=["resp"]
+        test_tasks[0],
+        molecule_id="b9ba54febc77d2a9177accf4605767db-1-2",
+        preferred_methods=["resp"],
     )
 
     assert pcd.property_name == "partial_charges"
@@ -42,7 +44,9 @@ def test_partial_charges(test_tasks):
 
     # Test Mulliken
     pcd = PartialChargesDoc.from_task(
-        test_tasks[0], molecule_id="b9ba54febc77d2a9177accf4605767db-1-2", preferred_methods=["mulliken"]
+        test_tasks[0],
+        molecule_id="b9ba54febc77d2a9177accf4605767db-1-2",
+        preferred_methods=["mulliken"],
     )
 
     assert pcd.method == "mulliken"
@@ -50,7 +54,9 @@ def test_partial_charges(test_tasks):
 
     # Test Critic2
     pcd = PartialChargesDoc.from_task(
-        test_tasks[3], molecule_id="b9ba54febc77d2a9177accf4605767db-1-2", preferred_methods=["critic2"]
+        test_tasks[3],
+        molecule_id="b9ba54febc77d2a9177accf4605767db-1-2",
+        preferred_methods=["critic2"],
     )
 
     assert pcd.method == "critic2"
@@ -58,7 +64,9 @@ def test_partial_charges(test_tasks):
 
     # Test NBO
     pcd = PartialChargesDoc.from_task(
-        test_tasks[4], molecule_id="b9ba54febc77d2a9177accf4605767db-1-2", preferred_methods=["nbo"]
+        test_tasks[4],
+        molecule_id="b9ba54febc77d2a9177accf4605767db-1-2",
+        preferred_methods=["nbo"],
     )
 
     assert pcd.method == "nbo"
@@ -72,7 +80,9 @@ def test_partial_charges(test_tasks):
 def test_partial_spins(open_shell):
     # Test Mulliken
     psd = PartialSpinsDoc.from_task(
-        open_shell, molecule_id="b9ba54febc77d2a9177accf4605767db-1-2", preferred_methods=["mulliken"]
+        open_shell,
+        molecule_id="b9ba54febc77d2a9177accf4605767db-1-2",
+        preferred_methods=["mulliken"],
     )
 
     assert psd.property_name == "partial_spins"
@@ -81,7 +91,9 @@ def test_partial_spins(open_shell):
 
     # Test NBO
     psd = PartialSpinsDoc.from_task(
-        open_shell, molecule_id="b9ba54febc77d2a9177accf4605767db-1-2", preferred_methods=["nbo"]
+        open_shell,
+        molecule_id="b9ba54febc77d2a9177accf4605767db-1-2",
+        preferred_methods=["nbo"],
     )
 
     assert psd.method == "nbo"

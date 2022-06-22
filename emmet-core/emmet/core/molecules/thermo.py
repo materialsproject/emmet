@@ -82,7 +82,11 @@ class ThermoDoc(PropertyDoc):
 
     @classmethod
     def from_task(
-        cls, task: TaskDocument, molecule_id: MPculeID, deprecated: bool = False, **kwargs
+        cls,
+        task: TaskDocument,
+        molecule_id: MPculeID,
+        deprecated: bool = False,
+        **kwargs
     ):  # type: ignore[override]
 
         """

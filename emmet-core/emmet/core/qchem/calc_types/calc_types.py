@@ -90,7 +90,19 @@ BASIS_SETS = [
 
 SOLVENT_MODELS = ["VACUUM", "PCM", "ISOSVP", "SMD", "CMIRS"]
 
-SOLVENTS = ["WATER", "THF", "G2", "DME", "EC", "EC/EMC", "PC", "DMSO", "ACETONITRILE", "BENZENE", "METHANOL"]
+SOLVENTS = [
+    "WATER",
+    "THF",
+    "G2",
+    "DME",
+    "EC",
+    "EC/EMC",
+    "PC",
+    "DMSO",
+    "ACETONITRILE",
+    "BENZENE",
+    "METHANOL",
+]
 
 PCM_DIELECTRICS = {
     "WATER": 78.39,

@@ -125,7 +125,6 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
         None, description="Any warnings related to this property"
     )
 
-
     @property
     def run_type(self) -> RunType:
         params = self.calcs_reversed[0].get("input", {}).get("parameters", {})

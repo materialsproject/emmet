@@ -172,7 +172,7 @@ def make_mol_graph(
     return mol_graph
 
 
-def get_graph_hash(mol: Molecule, node_attr: Optional[str]=None):
+def get_graph_hash(mol: Molecule, node_attr: Optional[str] = None):
     """
     Return the Weisfeiler Lehman (WL) graph hash of the MoleculeGraph described
     by this molecule, using the OpenBabelNN strategy with extension for
@@ -187,7 +187,7 @@ def get_graph_hash(mol: Molecule, node_attr: Optional[str]=None):
     return nx.weisfeiler_lehman_graph_hash(mg.graph, node_attr=node_attr)
 
 
-def get_molecule_id(mol: Molecule, node_attr: Optional[str]=None):
+def get_molecule_id(mol: Molecule, node_attr: Optional[str] = None):
     """
     Return an MPculeID for a molecule, with the hash component
     based on a particular attribute of the molecule graph representation.
@@ -199,11 +199,13 @@ def get_molecule_id(mol: Molecule, node_attr: Optional[str]=None):
     """
 
     graph_hash = get_graph_hash(mol, node_attr=node_attr)
-    return MPculeID("{}-{}-{}".format(graph_hash,
-                             str(int(mol.charge)).replace("-", "m"),
-                             str(mol.spin_multiplicity)
-                             )
-                    )
+    return MPculeID(
+        "{}-{}-{}".format(
+            graph_hash,
+            str(int(mol.charge)).replace("-", "m"),
+            str(mol.spin_multiplicity),
+        )
+    )
 
 
 def jsanitize(obj, strict=False, allow_bson=False):

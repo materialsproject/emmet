@@ -164,11 +164,15 @@ class SummaryDoc(PropertyDoc):
     )
 
     formation_energy_per_atom: float = Field(
-        None, description="The formation energy per atom in eV/atom.", source="thermo",
+        None,
+        description="The formation energy per atom in eV/atom.",
+        source="thermo",
     )
 
     energy_above_hull: float = Field(
-        None, description="The energy above the hull in eV/Atom.", source="thermo",
+        None,
+        description="The energy above the hull in eV/Atom.",
+        source="thermo",
     )
 
     is_stable: bool = Field(
@@ -211,7 +215,9 @@ class SummaryDoc(PropertyDoc):
     # GB
 
     grain_boundaries: List[GBSearchData] = Field(
-        None, description="List of grain boundary documents.", source="grain_boundary",
+        None,
+        description="List of grain boundary documents.",
+        source="grain_boundary",
     )
 
     # Electronic Structure

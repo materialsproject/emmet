@@ -127,14 +127,16 @@ class MPculeID(str):
         elif isinstance(val, str):
             parts = val.split("-")
             if len(parts) == 3:
-                parts[1] = int(parts[1].replace('m', '-'))
+                parts[1] = int(parts[1].replace("m", "-"))
                 parts[2] = int(parts[2])
             elif len(parts) == 4:
-                parts[2] = int(parts[2].replace('m', '-'))
+                parts[2] = int(parts[2].replace("m", "-"))
                 parts[3] = int(parts[3])
             else:
-                raise ValueError("MPculeID string representation must follow the "
-                                 "format prefix-hash-charge-spin or hash-charge-spin.")
+                raise ValueError(
+                    "MPculeID string representation must follow the "
+                    "format prefix-hash-charge-spin or hash-charge-spin."
+                )
 
             self.parts = tuple(parts)
             self.string = val
@@ -162,7 +164,9 @@ class MPculeID(str):
 
         other_parts = MPculeID(other).parts
 
-        return "-".join([str(x) for x in self.parts[-3:]]) < "-".join([str(x) for x in other_parts[-3:]])
+        return "-".join([str(x) for x in self.parts[-3:]]) < "-".join(
+            [str(x) for x in other_parts[-3:]]
+        )
 
     def __gt__(self, other: Union["MPculeID", int, str]):
         return not self.__lt__(other)
@@ -181,7 +185,7 @@ class MPculeID(str):
             examples=[
                 "1a525231bdac3f13e2fac0962fe8d053-0-1",
                 "22b40b99719ac570fc7e6225e855ec6e-m1-2"
-                "mpcule-b9ba54febc77d2a9177accf4605767db-1-2"
+                "mpcule-b9ba54febc77d2a9177accf4605767db-1-2",
             ],
         )
 

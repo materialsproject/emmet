@@ -26,14 +26,29 @@ def test_mpid():
 
     MPID(3)
 
+
 def test_mpculeid():
-    assert MPculeID("b9ba54febc77d2a9177accf4605767db-1-2") == MPculeID("b9ba54febc77d2a9177accf4605767db-1-2")
-    assert MPculeID("b9ba54febc77d2a9177accf4605767db-1-2") == "b9ba54febc77d2a9177accf4605767db-1-2"
-    assert MPculeID("b9ba54febc77d2a9177accf4605767db-1-2") < MPculeID("b9ba54febc77d2a9177accf4605767db-2-1")
-    assert MPculeID("b9ba54febc77d2a9177accf4605767db-2-1") > MPculeID("b9ba54febc77d2a9177accf4605767db-1-2")
-    assert MPculeID("mpcule-98bab8f3795eae3fd8e28f5ff2d476e8-0-1") < MPculeID("b9ba54febc77d2a9177accf4605767db-1-2")
+    assert MPculeID("b9ba54febc77d2a9177accf4605767db-1-2") == MPculeID(
+        "b9ba54febc77d2a9177accf4605767db-1-2"
+    )
+    assert (
+        MPculeID("b9ba54febc77d2a9177accf4605767db-1-2")
+        == "b9ba54febc77d2a9177accf4605767db-1-2"
+    )
+    assert MPculeID("b9ba54febc77d2a9177accf4605767db-1-2") < MPculeID(
+        "b9ba54febc77d2a9177accf4605767db-2-1"
+    )
+    assert MPculeID("b9ba54febc77d2a9177accf4605767db-2-1") > MPculeID(
+        "b9ba54febc77d2a9177accf4605767db-1-2"
+    )
+    assert MPculeID("mpcule-98bab8f3795eae3fd8e28f5ff2d476e8-0-1") < MPculeID(
+        "b9ba54febc77d2a9177accf4605767db-1-2"
+    )
 
 
 def test_to_str():
     assert str(MPID("mp-149")) == "mp-149"
-    assert str(MPculeID("b9ba54febc77d2a9177accf4605767db-1-2")) == "b9ba54febc77d2a9177accf4605767db-1-2"
+    assert (
+        str(MPculeID("b9ba54febc77d2a9177accf4605767db-1-2"))
+        == "b9ba54febc77d2a9177accf4605767db-1-2"
+    )

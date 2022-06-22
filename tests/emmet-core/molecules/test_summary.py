@@ -46,7 +46,7 @@ def spins(test_dir):
 @pytest.fixture(scope="session")
 def bonds(test_dir):
 
-    bonds = [BondingDoc(**x) for x in loadfn(test_dir / "builder_bonding_set.json")]
+    bonds = [BondingDoc(**x) for x in loadfn(test_dir / "builder_bonds_set.json")]
 
     return bonds
 
@@ -84,7 +84,7 @@ def vibes(test_dir):
 
 
 def test_summary_doc(mols, charges, spins, bonds, orbitals, redox, thermo, vibes):
-    desired_id = "libe-120473"
+    desired_id = "c517fa1173ff781351469a55fb78253e-m1-2"
     docs = {
         "molecules": [e.dict() for e in mols if str(e.molecule_id) == desired_id],
         "partial_charges": [

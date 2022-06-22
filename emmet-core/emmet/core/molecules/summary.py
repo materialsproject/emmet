@@ -196,7 +196,7 @@ class SummaryDoc(PropertyDoc):
         None,
         description="Dictionaries of bond types to their length under different "
         "definitions of bonding, e.g. C-O to a list of the lengths of "
-        "C-O bonds in Angstrom."
+        "C-O bonds in Angstrom.",
     )
 
     bonds: Dict[str, List[Tuple[int, int]]] = Field(
@@ -251,7 +251,9 @@ class SummaryDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_docs(cls, molecule_id: MPculeID, **docs: Dict[str, Union[Dict, List[Dict]]]):
+    def from_docs(
+        cls, molecule_id: MPculeID, **docs: Dict[str, Union[Dict, List[Dict]]]
+    ):
         """Converts a bunch of property docs into a SummaryDoc"""
 
         doc = _copy_from_doc(docs)

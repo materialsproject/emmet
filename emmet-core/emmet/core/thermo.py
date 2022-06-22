@@ -74,12 +74,12 @@ class ThermoDoc(PropertyDoc):
 
     decomposition_enthalpy: float = Field(
         None,
-        description="Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen."
+        description="Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.",
     )
 
     decomposition_enthalpy_decomposes_to: List[DecompositionProduct] = Field(
         None,
-        description="List of decomposition data associated with the decomposition_enthalpy quantity."
+        description="List of decomposition data associated with the decomposition_enthalpy quantity.",
     )
 
     energy_type: str = Field(
@@ -162,7 +162,9 @@ class ThermoDoc(PropertyDoc):
                 # try/except so this quantity does not take down the builder if it fails:
                 # it includes an optimization step that can be fragile in some instances,
                 # most likely failure is ValueError, "invalid value encountered in true_divide"
-                d["warnings"] = ["Could not calculate decomposition enthalpy for this entry."]
+                d["warnings"] = [
+                    "Could not calculate decomposition enthalpy for this entry."
+                ]
 
             d["energy_type"] = e.parameters.get("run_type", "Unknown")
             d["entry_types"] = [e.parameters.get("run_type", "Unknown")]

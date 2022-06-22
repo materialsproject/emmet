@@ -24,7 +24,6 @@ class BondingDoc(PropertyDoc):
 
     structure_graph: StructureGraph = Field(
         description="Structure graph",
-
     )
 
     method: str = Field(description="Method used to compute structure graph.")
