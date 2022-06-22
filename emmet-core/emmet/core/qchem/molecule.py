@@ -213,9 +213,6 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
                 task for task in task_group if task.task_type in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization]  # type: ignore
             ]
 
-            # Molecule ID
-            possible_mol_ids = [task.task_id for task in geometry_optimizations]
-
             best_molecule_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
             molecule = best_molecule_calc.output.optimized_molecule
             molecule_id = get_molecule_id(molecule, node_attr="coords")
