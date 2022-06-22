@@ -1,11 +1,4 @@
-import json
-import datetime
-import copy
-
 import pytest
-
-from monty.io import zopen
-from monty.serialization import loadfn
 
 from maggma.stores import JSONStore, MemoryStore
 
@@ -114,6 +107,4 @@ def test_summary_doc(
     )
     builder.run()
 
-    docs = list(summary.query())
-
-    assert len(docs) == 46
+    assert summary.count() == 53
