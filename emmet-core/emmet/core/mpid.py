@@ -127,11 +127,11 @@ class MPculeID(str):
         elif isinstance(val, str):
             parts = val.split("-")
             if len(parts) == 3:
-                parts[1] = int(parts[1].replace("m", "-"))
-                parts[2] = int(parts[2])
+                parts[1] = int(parts[1].replace("m", "-"))  # type: ignore
+                parts[2] = int(parts[2])  # type: ignore
             elif len(parts) == 4:
-                parts[2] = int(parts[2].replace("m", "-"))
-                parts[3] = int(parts[3])
+                parts[2] = int(parts[2].replace("m", "-"))  # type: ignore
+                parts[3] = int(parts[3])  # type: ignore
             else:
                 raise ValueError(
                     "MPculeID string representation must follow the "
@@ -168,7 +168,7 @@ class MPculeID(str):
             [str(x) for x in other_parts[-3:]]
         )
 
-    def __gt__(self, other: Union["MPculeID", int, str]):
+    def __gt__(self, other: Union["MPculeID", str]):
         return not self.__lt__(other)
 
     def __hash__(self):
