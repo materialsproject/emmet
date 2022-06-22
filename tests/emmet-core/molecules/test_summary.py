@@ -84,7 +84,7 @@ def vibes(test_dir):
 
 
 def test_summary_doc(mols, charges, spins, bonds, orbitals, redox, thermo, vibes):
-    desired_id = "b9ba54febc77d2a9177accf4605767db-1-2"
+    desired_id = "libe-120473"
     docs = {
         "molecules": [e.dict() for e in mols if str(e.molecule_id) == desired_id],
         "partial_charges": [

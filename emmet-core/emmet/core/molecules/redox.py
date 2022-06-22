@@ -8,7 +8,7 @@ from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
-from emmet.core.utils import confirm_molecule, get_graph_hash
+from emmet.core.utils import confirm_molecule, get_molecule_id
 from emmet.core.qchem.calc_types import TaskType
 from emmet.core.qchem.task import filter_task_type
 from emmet.core.qchem.molecule import evaluate_lot
@@ -245,7 +245,7 @@ class RedoxDoc(PropertyDoc):
                                 d["electron_affinity"] = (
                                     sp["energy"] - ff["energy"]
                                 ) * 27.2114
-                                d["ea_id"] = get_graph_hash(sp_mol, node_attr="coords")
+                                d["ea_id"] = get_molecule_id(sp_mol, node_attr="coords")
 
                             # IE
                             elif (
@@ -256,7 +256,7 @@ class RedoxDoc(PropertyDoc):
                                 d["ionization_energy"] = (
                                     sp["energy"] - ff["energy"]
                                 ) * 27.2114
-                                d["ie_id"] = get_graph_hash(sp_mol, node_attr="coords")
+                                d["ie_id"] = get_molecule_id(sp_mol, node_attr="coords")
 
                         # If no vertical IE or EA, can't make complete doc; give up
                         if d["ea_id"] is None or d["ie_id"] is None:
@@ -264,6 +264,7 @@ class RedoxDoc(PropertyDoc):
 
                         # Look for adiabatic reduction and oxidation calcs
                         for other in relevant_calcs:
+                            mol = confirm_molecule(other["molecule"])
                             # Reduction
                             if other["charge"] == charge - 1 and d["red_id"] is None:
                                 other_g = cls._g_or_e(other)
@@ -276,7 +277,7 @@ class RedoxDoc(PropertyDoc):
                                         -1 * d["reduction_free_energy"] - pot
                                     )
 
-                                d["red_id"] = other["task_id"]
+                                d["red_id"] = get_molecule_id(mol, node_attr="coords")
 
                             # Oxidation
                             elif other["charge"] == charge + 1 and d["ox_id"] is None:
@@ -290,7 +291,7 @@ class RedoxDoc(PropertyDoc):
                                         d["oxidation_free_energy"] - pot
                                     )
 
-                                d["ox_id"] = other["task_id"]
+                                d["ox_id"] = get_molecule_id(mol, node_attr="coords")
 
                         origins = list()
                         for x in [

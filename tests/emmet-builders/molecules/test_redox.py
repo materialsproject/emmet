@@ -20,7 +20,7 @@ def mol_store(tasks_store):
     stage_one.run()
 
     mol_store = MemoryStore(key="molecule_id")
-    stage_two = MoleculesBuilder(assoc=assoc_store, molecules=mol_store, prefix="libe")
+    stage_two = MoleculesBuilder(assoc=assoc_store, molecules=mol_store)
     stage_two.run()
 
     return mol_store

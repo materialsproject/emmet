@@ -49,7 +49,7 @@ class SummaryDoc(PropertyDoc):
         description="List of Calculation IDs associated with this molecule.",
     )
 
-    similar_molecules: List[MPID] = Field(
+    similar_molecules: List[MPculeID] = Field(
         [], description="IDs associated with similar molecules"
     )
 
@@ -217,25 +217,25 @@ class SummaryDoc(PropertyDoc):
         None, description="Vertical electron affinity in eV"
     )
 
-    ea_id: MPID = Field(None, description="Molecule ID for electron affinity")
+    ea_id: MPculeID = Field(None, description="Molecule ID for electron affinity")
 
     ionization_energy: float = Field(
         None, description="Vertical ionization energy in eV"
     )
 
-    ie_id: MPID = Field(None, description="Molecule ID for ionization energy")
+    ie_id: MPculeID = Field(None, description="Molecule ID for ionization energy")
 
     reduction_free_energy: float = Field(
         None, description="Adiabatic free energy of reduction"
     )
 
-    red_id: MPID = Field(None, description="Molecule ID for adiabatic reduction")
+    red_id: MPculeID = Field(None, description="Molecule ID for adiabatic reduction")
 
     oxidation_free_energy: float = Field(
         None, description="Adiabatic free energy of oxidation"
     )
 
-    ox_id: MPID = Field(None, description="Molecule ID for adiabatic oxidation")
+    ox_id: MPculeID = Field(None, description="Molecule ID for adiabatic oxidation")
 
     reduction_potentials: Dict[str, float] = Field(
         None, description="Reduction potentials with various " "reference electrodes"

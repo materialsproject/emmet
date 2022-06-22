@@ -20,7 +20,7 @@ class PropertyOrigin(BaseModel):
     """
 
     name: str = Field(..., description="The property name")
-    task_id: MPID = Field(
+    task_id: Union[MPID, MPculeID] = Field(
         ..., description="The calculation ID this property comes from"
     )
     last_updated: datetime = Field(

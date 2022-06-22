@@ -35,4 +35,4 @@ def test_molecules_builder(tasks_store, assoc_store, mol_store):
 
     assert mol_store.count() == 48
     assert mol_store.count({"deprecated": True}) == 0
-    assert mol_store.count({"molecule_id": {"$regex": "libe-"}}) == 48
+    assert mol_store.count({"molecule_id": {"$regex": "mpmol-"}}) == 48
