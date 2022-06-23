@@ -9,6 +9,7 @@ from emmet.core.qchem.calc_types import (
     TaskType,
     level_of_theory,
     task_type,
+    solvent
 )
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.mpid import MPID
@@ -49,8 +50,8 @@ def test_task_type():
 
 def test_level_of_theory():
     lots = [
-        "wB97X-V/def2-TZVPPD/SMD(EC/EMC)",
-        "wB97X-D/def2-SVPD/PCM(WATER)",
+        "wB97X-V/def2-TZVPPD/SMD",
+        "wB97X-D/def2-SVPD/PCM",
         "wB97M-V/6-31g*/VACUUM",
     ]
 
@@ -71,10 +72,69 @@ def test_level_of_theory():
         {"rem": {"method": "wb97mv", "basis": "6-31g*"}},
     ]
 
-    custom_smd = ["18.5,1.415,0.0,0.735,20.2,0.0,0.0", None, None]
+    for lot, params in zip(lots, parameters):
+        assert level_of_theory(params) == LevelOfTheory(lot)
 
-    for lot, params, custom in zip(lots, parameters, custom_smd):
-        assert level_of_theory(params, custom_smd=custom) == LevelOfTheory(lot)
+
+def test_solvent():
+    # Vacuum calc
+    assert solvent({"rem": {"method": "wb97mv", "basis": "6-31g*"}}) == "NONE"
+
+    # PCM - non-default
+    assert solvent({
+            "rem": {"method": "wb97xd", "basis": "def2-svpd", "solvent_method": "pcm"},
+            "pcm": {"theory": "cpcm"},
+            "solvent": {"dielectric": 20},
+        }) == "DIELECTRIC=20.00"
+
+    # PCM - default
+    assert solvent({
+            "rem": {"method": "wb97xd", "basis": "def2-svpd", "solvent_method": "pcm"},
+            "pcm": {"theory": "cpcm"},
+        }) == "DIELECTRIC=78.39"
+
+    # SMD - custom solvent
+    assert solvent({
+            "rem": {
+                "method": "wb97xv",
+                "basis": "def2-tzvppd",
+                "solvent_method": "smd",
+            },
+            "smx": {"solvent": "other"},
+        },
+        custom_smd="4.9,1.558,0.0,0.576,49.94,0.667,0.0") == 'DIELECTRIC=4.900,N=1.558,ALPHA=0.000,BETA=0.576,GAMMA=49.940,PHI=0.667,PSI=0.000'
+
+    # SMD - missing custom_solvent
+    with pytest.raises(ValueError):
+        solvent(
+            {
+                "rem": {
+                    "method": "wb97xv",
+                    "basis": "def2-tzvppd",
+                    "solvent_method": "smd",
+                },
+                "smx": {"solvent": "other"},
+            }
+        )
+
+    # SMD - existing solvent
+    assert solvent({
+            "rem": {
+                "method": "wb97xv",
+                "basis": "def2-tzvppd",
+                "solvent_method": "smd",
+            },
+            "smx": {"solvent": "ethanol"},
+        }) == 'SOLVENT=ETHANOL'
+
+    # SMD - unknown solvent
+    assert solvent({
+            "rem": {
+                "method": "wb97xv",
+                "basis": "def2-tzvppd",
+                "solvent_method": "smd",
+            },
+        }) == 'SOLVENT=WATER'
 
 
 def test_unexpected_lots():
@@ -97,60 +157,6 @@ def test_unexpected_lots():
     # Unknown basis
     with pytest.raises(ValueError):
         level_of_theory({"rem": {"method": "wb97xd3", "basis": "aug-cc-pVTZ"}})
-
-    # Unknown solvent for PCM
-    with pytest.raises(ValueError):
-        level_of_theory(
-            {
-                "rem": {
-                    "method": "wb97xd",
-                    "basis": "def2-svpd",
-                    "solvent_method": "pcm",
-                },
-                "pcm": {"theory": "cpcm"},
-                "solvent": {"dielectric": 3.2},
-            }
-        )
-
-    # Unknown solvent for SMD, based on custom parameters
-    with pytest.raises(ValueError):
-        level_of_theory(
-            {
-                "rem": {
-                    "method": "wb97xv",
-                    "basis": "def2-tzvppd",
-                    "solvent_method": "smd",
-                },
-                "smx": {"solvent": "other"},
-            },
-            custom_smd="4.9,1.558,0.0,0.576,49.94,0.667,0.0",
-        )
-
-    # Unexpected solvent with given name
-    with pytest.raises(ValueError):
-        level_of_theory(
-            {
-                "rem": {
-                    "method": "wb97xv",
-                    "basis": "def2-tzvppd",
-                    "solvent_method": "smd",
-                },
-                "smx": {"solvent": "cyclohexane"},
-            }
-        )
-
-    # solvent=other for SMD, but no custom_smd provided
-    with pytest.raises(ValueError):
-        level_of_theory(
-            {
-                "rem": {
-                    "method": "wb97xv",
-                    "basis": "def2-tzvppd",
-                    "solvent_method": "smd",
-                },
-                "smx": {"solvent": "other"},
-            }
-        )
 
 
 @pytest.fixture(scope="session")

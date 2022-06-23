@@ -2,14 +2,12 @@
 from itertools import product
 from pathlib import Path
 
-from monty.serialization import loadfn
 from emmet.core.utils import get_enum_source
 from emmet.core.qchem.calc_types.calc_types import (
     TASK_TYPES,
     FUNCTIONALS,
     BASIS_SETS,
     SOLVENT_MODELS,
-    SOLVENTS,
 )
 
 
@@ -21,11 +19,7 @@ _LOTS = list()
 for funct in FUNCTIONALS:
     for basis in BASIS_SETS:
         for solv_model in SOLVENT_MODELS:
-            if solv_model == "VACUUM":
-                _LOTS.append(f"{funct}/{basis}/{solv_model}")
-            else:
-                for solvent in SOLVENTS:
-                    _LOTS.append(f"{funct}/{basis}/{solv_model}({solvent})")
+            _LOTS.append(f"{funct}/{basis}/{solv_model}")
 
 lot_enum = get_enum_source(
     "LevelOfTheory",

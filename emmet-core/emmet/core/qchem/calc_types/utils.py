@@ -1,13 +1,10 @@
 """ Utilities to determine level of theory, task type, and calculation type for Q-Chem calculations"""
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 from emmet.core.qchem.calc_types import LevelOfTheory, CalcType, TaskType
 from emmet.core.qchem.calc_types.calc_types import (
     FUNCTIONALS,
     BASIS_SETS,
-    SOLVENTS,
-    PCM_DIELECTRICS,
-    SMD_PARAMETERS,
 )
 
 
@@ -23,7 +20,7 @@ functional_synonyms = {
 
 
 def level_of_theory(
-    parameters: Dict[str, Any], custom_smd: Optional[str] = None
+    parameters: Dict[str, Any]
 ) -> LevelOfTheory:
     """
 
@@ -32,8 +29,6 @@ def level_of_theory(
 
     Args:
         parameters: Dict of Q-Chem input parameters
-        custom_smd: (Optional) string representing SMD parameters for a
-        non-stadard solvent
 
     """
 
@@ -69,45 +64,89 @@ def level_of_theory(
 
     basis = basis[0]
 
-    solvent_method = parameters["rem"].get("solvent_method")
-    if solvent_method is None:
+    solvent_method = parameters["rem"].get("solvent_method", "").lower()
+    if solvent_method == "":
         solvation = "VACUUM"
-    elif solvent_method in ["pcm", "isosvp", "cosmo"]:
-        dielectric = float(parameters["solvent"].get("dielectric", 78.39))
-        solvent = None
-        for s, d in PCM_DIELECTRICS.items():
-            if round(d, 2) == round(dielectric, 2):
-                solvent = s
-                break
-
-        solvation = f"PCM({solvent or str(dielectric)})"
+    elif solvent_method in ["pcm", "cosmo"]:
+        solvation = "PCM"
+    #TODO: Add this once added into pymatgen and atomate
+    # elif solvent_method == "isosvp":
+    #     if parameters.get("svp", {}).get("idefesr", 0):
+    #         solvation = "CMIRS"
+    #     else:
+    #         solvation = "ISOSVP"
     elif solvent_method == "smd":
-        solvent = parameters["smx"].get("solvent", "unknown")
-
-        if solvent == "other":
-            if custom_smd is None:
-                raise ValueError(
-                    "SMD calculation with solvent=other requires custom_smd!"
-                )
-
-            match = False
-            custom_mod = custom_smd.replace(".0,", ".00,")
-            if custom_mod.endswith(".0"):
-                custom_mod += "0"
-            for s, p in SMD_PARAMETERS.items():
-                if p == custom_mod:
-                    solvent = s
-                    match = True
-                    break
-            if not match:
-                raise ValueError(f"Unknown solvent with SMD parameters {custom_smd}!")
-        solvation = f"SMD({solvent.upper()})"
+        solvation = "SMD"
     else:
         raise ValueError(f"Unexpected implicit solvent method {solvent_method}!")
 
     lot = f"{functional}/{basis}/{solvation}"
 
     return LevelOfTheory(lot)
+
+
+def solvent(
+    parameters: Dict[str, Any],
+    custom_smd: Optional[str] = None
+) -> str:
+    """
+    Returns the solvent used for this calculation.
+
+    Args:
+        parameters: Dict of Q-Chem input parameters
+        custom_smd: (Optional) string representing SMD parameters for a
+        non-standard solvent
+    """
+
+    lot = level_of_theory(parameters)
+    solvation = lot.value.split("/")[-1]
+
+    if solvation == "PCM":
+        dielectric = float(parameters.get("solvent", {}).get("dielectric", 78.39))
+        return f"DIELECTRIC={dielectric:.2f}"
+    #TODO: Add this once added into pymatgen and atomate
+    # elif solvation == "ISOSVP":
+    #     dielectric = float(parameters.get("svp", {}).get("dielst", 78.39))
+    #     rho = float(parameters.get("svp", {}).get("rhoiso", 0.001))
+    #     return f"DIELECTRIC={round(dielectric, 2)},RHO={round(rho, 4)}"
+    # elif solvation == "CMIRS":
+    #     dielectric = float(parameters.get("svp", {}).get("dielst", 78.39))
+    #     rho = float(parameters.get("svp", {}).get("rhoiso", 0.001))
+    #     a = parameters.get("pcm_nonels", {}).get("a")
+    #     b = parameters.get("pcm_nonels", {}).get("b")
+    #     c = parameters.get("pcm_nonels", {}).get("c")
+    #     d = parameters.get("pcm_nonels", {}).get("d")
+    #     solvrho = parameters.get("pcm_nonels", {}).get("solvrho")
+    #     gamma = parameters.get("pcm_nonels", {}).get("gamma")
+    #
+    #     string = f"DIELECTRIC={round(dielectric, 2)},RHO={round(rho, 4)}"
+    #     for name, (piece, digits) in {"A": (a, 6), "B": (b, 6), "C": (c, 1), "D": (d, 3),
+    #                                   "SOLVRHO": (solvrho, 2), "GAMMA": (gamma, 1)}.items():
+    #         if piece is None:
+    #             piecestring = "NONE"
+    #         else:
+    #             piecestring = f"{name}={round(float(piece), digits)}"
+    #         string += "," + piecestring
+    #     return string
+    elif solvation == "SMD":
+        solvent = parameters.get("smx", {}).get("solvent", "water")
+        if solvent == "other":
+            if custom_smd is None:
+                raise ValueError(
+                    "SMD calculation with solvent=other requires custom_smd!"
+                )
+
+            names = ["DIELECTRIC", "N", "ALPHA", "BETA", "GAMMA", "PHI", "PSI"]
+            numbers = [float(x) for x in custom_smd.split(",")]
+
+            string = ""
+            for name, number in zip(names, numbers):
+                string += f"{name}={number:.3f},"
+            return string.rstrip(",")
+        else:
+            return f"SOLVENT={solvent.upper()}"
+    else:
+        return "NONE"
 
 
 def task_type(orig: Dict[str, Any], special_run_type: Optional[str] = None) -> TaskType:
@@ -129,7 +168,7 @@ def task_type(orig: Dict[str, Any], special_run_type: Optional[str] = None) -> T
 
 
 def calc_type(
-    special_run_type: str, orig: Dict[str, Any], custom_smd: Optional[str] = None
+    special_run_type: str, orig: Dict[str, Any]
 ) -> CalcType:
     """
     Determines the calc type
@@ -138,6 +177,6 @@ def calc_type(
         inputs: inputs dict with an incar, kpoints, potcar, and poscar dictionaries
         parameters: Dictionary of VASP parameters from Vasprun.xml
     """
-    rt = level_of_theory(orig, custom_smd=custom_smd).value
+    rt = level_of_theory(orig).value
     tt = task_type(orig, special_run_type=special_run_type).value
     return CalcType(f"{rt} {tt}")

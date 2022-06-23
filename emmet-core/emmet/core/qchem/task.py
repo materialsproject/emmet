@@ -15,6 +15,7 @@ from emmet.core.qchem.calc_types import (
     calc_type,
     level_of_theory,
     task_type,
+    solvent
 )
 
 
@@ -126,7 +127,11 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
     @property
     def level_of_theory(self) -> LevelOfTheory:
-        return level_of_theory(self.orig, custom_smd=self.custom_smd)
+        return level_of_theory(self.orig)
+
+    @property
+    def solvent(self) -> str:
+        return solvent(self.orig, custom_smd=self.custom_smd)
 
     @property
     def task_type(self) -> TaskType:
@@ -134,7 +139,7 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
     @property
     def calc_type(self) -> CalcType:
-        return calc_type(self.special_run_type, self.orig, custom_smd=self.custom_smd)
+        return calc_type(self.special_run_type, self.orig)
 
     @property
     def entry(self) -> Dict[str, Any]:
@@ -160,6 +165,7 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
             "charge": charge,
             "spin_multiplicity": spin,
             "level_of_theory": self.level_of_theory,
+            "solvent": self.solvent,
             "custom_smd": self.custom_smd,
             "task_type": self.task_type,
             "calc_type": self.calc_type,

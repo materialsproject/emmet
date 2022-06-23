@@ -88,36 +88,5 @@ BASIS_SETS = [
     "def2-QZVPPD",
 ]
 
-SOLVENT_MODELS = ["VACUUM", "PCM", "ISOSVP", "SMD", "CMIRS"]
-
-SOLVENTS = [
-    "WATER",
-    "THF",
-    "G2",
-    "DME",
-    "EC",
-    "EC/EMC",
-    "PC",
-    "DMSO",
-    "ACETONITRILE",
-    "BENZENE",
-    "METHANOL",
-]
-
-PCM_DIELECTRICS = {
-    "WATER": 78.39,
-    "THF": 7.43,
-    "G2": 7.23,
-    "DME": 7.2,
-    "EC": 95.3,
-    "EC/EMC": 18.5,
-    "PC": 65.5,
-}
-
-SMD_PARAMETERS = {
-    "G2": "7.23,1.4097,0,0.859,36.83,0.00,0.00",
-    "DME": "7.2,1.379,0.00,0.651,30.8,0.00,0.00",
-    "EC": "90.0,1.415,0.00,0.735,20.2,0.00,0.00",
-    "EC/EMC": "18.5,1.415,0.00,0.735,20.2,0.00,0.00",
-    "PC": "64.9,1.421,0.0,0.730,29.13,0.0,0.0",
-}
+#TODO: add ISOSVP and CMIRS once these are implemented in pymatgen and atomate/atomate2
+SOLVENT_MODELS = ["VACUUM", "PCM", "SMD"]
