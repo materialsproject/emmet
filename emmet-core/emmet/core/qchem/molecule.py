@@ -47,7 +47,7 @@ def evaluate_lot(
     return (
         -1 * funct_scores.get(lot_comp[0], 0),
         -1 * basis_scores.get(lot_comp[1], 0),
-        -1 * solvent_scores.get(lot_comp[2].split("(")[0], 0),
+        -1 * solvent_scores.get(lot_comp[2], 0),
     )
 
 
@@ -113,7 +113,11 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
     )
     levels_of_theory: Mapping[str, LevelOfTheory] = Field(
         None,
-        description="Levels of theory types for all the calculations that make up this material",
+        description="Levels of theory types for all the calculations that make up this molecule",
+    )
+    solvents: Mapping[str, str] = Field(
+        None,
+        description="Solvents (solvent parameters) for all the calculations that make up this molecule"
     )
 
     origins: List[PropertyOrigin] = Field(
@@ -126,9 +130,9 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         description="Dictionary representations of all task documents for this molecule",
     )
 
-    best_entries: Mapping[LevelOfTheory, Dict[str, Any]] = Field(
+    best_entries: Mapping[str, Dict[str, Any]] = Field(
         None,
-        description="Mapping for tracking the best entries at each level of theory for Q-Chem calculations",
+        description="Mapping for tracking the best entries at each level of theory (+ solvent) for Q-Chem calculations",
     )
 
     similar_molecules: List[MPculeID] = Field(
@@ -160,6 +164,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
         deprecated_tasks = {task.task_id for task in task_group if not task.is_valid}
         levels_of_theory = {task.task_id: task.level_of_theory for task in task_group}
+        solvents = {task.task_id: task.solvent for task in task_group}
         task_types = {task.task_id: task.task_type for task in task_group}
         calc_types = {task.task_id: task.calc_type for task in task_group}
 

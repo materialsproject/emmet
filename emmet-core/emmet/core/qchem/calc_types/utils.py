@@ -149,6 +149,24 @@ def solvent(
         return "NONE"
 
 
+def lot_solvent_string(
+    parameters: Dict[str, Any],
+    custom_smd: Optional[str] = None
+) -> str:
+    """
+    Returns a string representation of the level of theory and solvent used for this calculation.
+
+    Args:
+        parameters: Dict of Q-Chem input parameters
+        custom_smd: (Optional) string representing SMD parameters for a
+        non-standard solvent
+    """
+
+    lot = level_of_theory(parameters).value
+    solv = solvent(parameters, custom_smd=custom_smd)
+    return f"{lot}({solv})"
+
+
 def task_type(orig: Dict[str, Any], special_run_type: Optional[str] = None) -> TaskType:
     if special_run_type == "frequency_flattener":
         return TaskType("Frequency Flattening Geometry Optimization")

@@ -1,10 +1,9 @@
 """ Core definition of a Q-Chem Task Document """
-from typing import Any, Dict, List, Union, Optional, Callable
+from typing import Any, Dict, List, Optional, Callable
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Molecule
 
-from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.structure import MoleculeMetadata
 from emmet.core.task import BaseTaskDocument
 from emmet.core.utils import ValueEnum
@@ -15,7 +14,8 @@ from emmet.core.qchem.calc_types import (
     calc_type,
     level_of_theory,
     task_type,
-    solvent
+    solvent,
+    lot_solvent_string
 )
 
 
@@ -134,6 +134,10 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
         return solvent(self.orig, custom_smd=self.custom_smd)
 
     @property
+    def lot_solvent(self) -> str:
+        return lot_solvent_string(self.orig, custom_smd=self.custom_smd)
+
+    @property
     def task_type(self) -> TaskType:
         return task_type(self.orig, special_run_type=self.special_run_type)
 
@@ -166,6 +170,7 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
             "spin_multiplicity": spin,
             "level_of_theory": self.level_of_theory,
             "solvent": self.solvent,
+            "lot_solvent": self.lot_solvent,
             "custom_smd": self.custom_smd,
             "task_type": self.task_type,
             "calc_type": self.calc_type,
