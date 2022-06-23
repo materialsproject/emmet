@@ -119,6 +119,10 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         None,
         description="Solvents (solvent parameters) for all the calculations that make up this molecule"
     )
+    lot_solvents: Mapping[str, str] = Field(
+        None,
+        description="Combinations of level of theory and solvent for all calculations that make up this molecule"
+    )
 
     origins: List[PropertyOrigin] = Field(
         None,
@@ -165,6 +169,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         deprecated_tasks = {task.task_id for task in task_group if not task.is_valid}
         levels_of_theory = {task.task_id: task.level_of_theory for task in task_group}
         solvents = {task.task_id: task.solvent for task in task_group}
+        lot_solvents = {task.task_id: task.lot_solvent for task in task_group}
         task_types = {task.task_id: task.task_type for task in task_group}
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
@@ -194,14 +199,14 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             ]
 
             # entries
-            best_entries = {}
-            all_lots = set(levels_of_theory.values())
-            for lot in all_lots:
+            best_entries = dict()
+            all_lot_solvs = set(lot_solvents.values())
+            for lot_solv in all_lot_solvs:
                 relevant_calcs = sorted(
                     [
                         doc
                         for doc in task_group
-                        if doc.level_of_theory == lot and doc.is_valid
+                        if doc.lot_solvent == lot_solv and doc.is_valid
                     ],
                     key=evaluate_task,
                 )
@@ -209,9 +214,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
                 if len(relevant_calcs) > 0:
                     best_task_doc = relevant_calcs[0]
                     entry = best_task_doc.entry
-                    entry["task_id"] = entry["entry_id"]
-                    entry["entry_id"] = molecule_id
-                    best_entries[lot] = entry
+                    best_entries[lot_solv] = entry
 
         else:
             geometry_optimizations = [
@@ -251,14 +254,14 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             ]
 
             # entries
-            best_entries = {}
-            all_lots = set(levels_of_theory.values())
-            for lot in all_lots:
+            best_entries = dict()
+            all_lot_solvs = set(lot_solvents.values())
+            for lot_solv in all_lot_solvs:
                 relevant_calcs = sorted(
                     [
                         doc
                         for doc in geometry_optimizations
-                        if doc.level_of_theory == lot and doc.is_valid
+                        if doc.lot_solvent == lot_solv and doc.is_valid
                     ],
                     key=evaluate_task,
                 )
@@ -266,7 +269,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
                 if len(relevant_calcs) > 0:
                     best_task_doc = relevant_calcs[0]
                     entry = best_task_doc.entry
-                    best_entries[lot] = entry
+                    best_entries[lot_solv] = entry
 
         for entry in entries:
             entry["entry_id"] = molecule_id
@@ -285,6 +288,8 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             task_ids=task_ids,
             calc_types=calc_types,
             levels_of_theory=levels_of_theory,
+            solvents=solvents,
+            lot_solvents=lot_solvents,
             task_types=task_types,
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,
@@ -314,11 +319,13 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
         deprecated_tasks = {task.task_id for task in task_group}
         levels_of_theory = {task.task_id: task.level_of_theory for task in task_group}
+        solvents = {task.task_id: task.solvent for task in task_group}
+        lot_solvents = {task.task_id: task.lot_solvent for task in task_group}
         task_types = {task.task_id: task.task_type for task in task_group}
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
-        # Choose any random structure for metadata
-        molecule = task_group[0].output.initial_molecule
+        # Arbitrarily choose task with lowest ID
+        molecule = sorted(task_group, key=lambda x: x.task_id)[0].output.initial_molecule
 
         # Molecule ID
         molecule_id = get_molecule_id(molecule, "coords")
@@ -331,6 +338,8 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             task_ids=task_ids,
             calc_types=calc_types,
             levels_of_theory=levels_of_theory,
+            solvents=solvents,
+            lot_solvents=lot_solvents,
             task_types=task_types,
             deprecated=True,
             deprecated_tasks=deprecated_tasks,
@@ -342,7 +351,7 @@ def best_lot(
     funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
     basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
     solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
-) -> LevelOfTheory:
+) -> str:
     """
 
     Return the best level of theory used within a MoleculeDoc
@@ -352,7 +361,7 @@ def best_lot(
     :param basis_scores: Scores for various basis sets
     :param solvent_scores: Scores for various implicit solvent models
 
-    :return: LevelOfTheory
+    :return: string representation of LevelOfTheory
     """
 
     sorted_lots = sorted(
@@ -360,4 +369,8 @@ def best_lot(
         key=lambda x: evaluate_lot(x, funct_scores, basis_scores, solvent_scores),
     )
 
-    return sorted_lots[0]
+    best = sorted_lots[0]
+    if isinstance(best, LevelOfTheory):
+        return best.value
+    else:
+        return best

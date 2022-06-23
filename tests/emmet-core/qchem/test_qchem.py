@@ -9,7 +9,8 @@ from emmet.core.qchem.calc_types import (
     TaskType,
     level_of_theory,
     task_type,
-    solvent
+    solvent,
+    lot_solvent_string
 )
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.mpid import MPID
@@ -135,6 +136,16 @@ def test_solvent():
                 "solvent_method": "smd",
             },
         }) == 'SOLVENT=WATER'
+
+
+def test_lot_solv():
+    answer = "wB97X-D/def2-SVPD/PCM(DIELECTRIC=78.39)"
+    params = {
+            "rem": {"method": "wb97xd", "basis": "def2-svpd", "solvent_method": "pcm"},
+            "pcm": {"theory": "cpcm"},
+            "solvent": {"dielectric": 78.39},
+        }
+    assert lot_solvent_string(params) == answer
 
 
 def test_unexpected_lots():
