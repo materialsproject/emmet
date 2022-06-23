@@ -1,8 +1,8 @@
-from typing import List, Union
+from typing import List
 
 from pydantic import Field
 
-from emmet.core.mpid import MPID, MPculeID
+from emmet.core.mpid import MPculeID
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
@@ -32,7 +32,7 @@ class PartialChargesDoc(PropertyDoc):
         cls,
         task: TaskDocument,
         molecule_id: MPculeID,
-        preferred_methods: List,
+        preferred_methods: List[str],
         deprecated: bool = False,
         **kwargs
     ):  # type: ignore[override]
@@ -40,7 +40,7 @@ class PartialChargesDoc(PropertyDoc):
         Determine partial charges from a task document
 
         :param task: task document from which partial charges can be extracted
-        :param molecule_id: mpid or mpculeid
+        :param molecule_id: MPculeID
         :param preferred_methods: list of methods; by default, NBO7, RESP, Critic2, and Mulliken, in that order
         :param kwargs: to pass to PropertyDoc
         :return:
@@ -108,7 +108,7 @@ class PartialSpinsDoc(PropertyDoc):
         cls,
         task: TaskDocument,
         molecule_id: MPculeID,
-        preferred_methods: List,
+        preferred_methods: List[str],
         deprecated: bool = False,
         **kwargs
     ):  # type: ignore[override]
@@ -116,7 +116,7 @@ class PartialSpinsDoc(PropertyDoc):
         Determine partial spins from a task document
 
         :param task: task document from which partial spins can be extracted
-        :param molecule_id: mpid or mpculeid
+        :param molecule_id: MPculeID
         :param preferred_methods: list of methods; by default, NBO7 and Mulliken, in that order
         :param kwargs: to pass to PropertyDoc
         :return:

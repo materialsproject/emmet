@@ -1,10 +1,10 @@
-from typing import List, Union
+from typing import List
 
 from pydantic import Field
 
 from pymatgen.core.structure import Molecule
 
-from emmet.core.mpid import MPID, MPculeID
+from emmet.core.mpid import MPculeID
 from emmet.core.material import PropertyOrigin
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.molecule_property import PropertyDoc
@@ -51,7 +51,7 @@ class VibrationDoc(PropertyDoc):
         Construct a vibration document from a task document
 
         :param task: document from which vibrational properties can be extracted
-        :param molecule_id: mpid
+        :param molecule_id: MPculeID
         :param deprecated: bool. Is this document deprecated?
         :param kwargs: to pass to PropertyDoc
         :return:

@@ -1,4 +1,4 @@
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Dict, List, Any, Optional, Tuple
 import copy
 
 from pydantic import Field
@@ -7,7 +7,7 @@ import networkx as nx
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
 
-from emmet.core.mpid import MPID, MPculeID
+from emmet.core.mpid import MPculeID
 from emmet.core.utils import make_mol_graph
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.material import PropertyOrigin
@@ -306,7 +306,7 @@ class BondingDoc(PropertyDoc):
         cls,
         task: TaskDocument,
         molecule_id: MPculeID,
-        preferred_methods: List,
+        preferred_methods: List[str],
         deprecated: bool = False,
         **kwargs,
     ):  # type: ignore[override]
@@ -319,7 +319,7 @@ class BondingDoc(PropertyDoc):
         - Critic2 (really OpenBabelNN + metal_edge_extender + Critic2)
 
         :param task: task document from which bonding properties can be extracted
-        :param molecule_id: mpid
+        :param molecule_id: MPculeID
         :param preferred_methods: list of methods; by default, NBO7, Critic2, and the combination
             of OpenBabelNN and metal_edge_extender in pymatgen, in that order
         :param kwargs: to pass to PropertyDoc

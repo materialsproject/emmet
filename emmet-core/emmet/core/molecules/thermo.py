@@ -1,5 +1,3 @@
-from typing import Union
-
 from pydantic import Field
 
 from emmet.core.mpid import MPID, MPculeID
@@ -93,7 +91,7 @@ class ThermoDoc(PropertyDoc):
         Construct a thermodynamics document from a task
 
         :param task: document from which thermodynamic properties can be extracted
-        :param molecule_id: mpid
+        :param molecule_id: MPculeID
         :param deprecated: bool. Is this document deprecated?
         :param kwargs: to pass to PropertyDoc
         :return:

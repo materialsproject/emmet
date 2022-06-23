@@ -29,7 +29,7 @@ class PropertyDoc(MoleculeMetadata):
     molecule_id: MPculeID = Field(
         ...,
         description="The ID of the molecule, used as a universal reference across property documents."
-        "This comes in the form of an MPID (or int) or MPculeID (or str)",
+        "This comes in the form of an MPculeID (or appropriately formatted string)",
     )
 
     deprecated: bool = Field(

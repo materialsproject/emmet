@@ -442,7 +442,7 @@ class OrbitalDoc(PropertyDoc):
         Construct an orbital document from a task
 
         :param task: document from which vibrational properties can be extracted
-        :param molecule_id: mpid
+        :param molecule_id: MPculeID
         :param deprecated: bool. Is this document deprecated?
         :param kwargs: to pass to PropertyDoc
         :return:
