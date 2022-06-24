@@ -3,7 +3,7 @@ from itertools import chain
 from pymatgen.core import Structure
 from pymatgen.analysis.diffusion.utils.supercells import get_sc_fromstruct
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
-from emmet.builders.mobility_screening.migration_graph import MigrationGraphBuilder
+from emmet.builders.mobility_screening.migration_graph_2 import MigrationGraphBuilder
 
 
 def convert_unique_hops(unique_hop_dict, P_inv=None):
