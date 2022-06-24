@@ -220,7 +220,7 @@ class ValidationDoc(EmmetBaseModel):
 def _magmom_check(task_doc, chemsys):
     """
     Checks for maximum magnetization values for specific elements.
-    Returns True if the maximum value outlined below is exceded for the associated element.
+    Returns True if the maximum absolute value outlined below is exceded for the associated element.
     """
     eles_max_vals = {"Cr": 5}
 
@@ -229,13 +229,13 @@ def _magmom_check(task_doc, chemsys):
             for site_num, mag in enumerate(
                 task_doc.calcs_reversed[0]["output"]["outcar"]["magnetization"]
             ):
-                if (
-                    task_doc.calcs_reversed[0]["output"]["structure"]["sites"][
-                        site_num
-                    ]["label"]
-                    == ele
-                ):
-                    if mag["tot"] > max_val:
+                if "structure" in task_doc.calcs_reversed[0]["output"]:
+                    output_structure = task_doc.calcs_reversed[0]["output"]["structure"]
+                else:
+                    output_structure = task_doc.output.structure.as_dict()
+
+                if output_structure["sites"][site_num]["label"] == ele:
+                    if abs(mag["tot"]) > max_val:
                         return True
 
     return False

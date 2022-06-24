@@ -1,14 +1,20 @@
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Dict, Iterable, Iterator, List, Optional
+from typing import Dict, Iterable, Iterator, List, Optional, Union
 
 from maggma.builders import Builder
 from maggma.stores import Store
 from maggma.utils import grouper
+from pymatgen.analysis.elasticity.strain import Deformation
+from pymatgen.core.structure import Structure
+from pymatgen.transformations.standard_transformations import (
+    DeformStructureTransformation,
+)
 
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import group_structures, jsanitize
+from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.material import MaterialsDoc
 from emmet.core.vasp.task_valid import TaskDocument
 
@@ -19,9 +25,9 @@ SETTINGS = EmmetBuildSettings()
 
 class MaterialsBuilder(Builder):
     """
-    The Materials Builder matches VASP task documents by structure similarity into materials
-    document. The purpose of this builder is group calculations and determine the best structure.
-    All other properties are derived from other builders.
+    The Materials Builder matches VASP task documents by structure similarity into
+    materials document. The purpose of this builder is group calculations and determine
+    the best structure. All other properties are derived from other builders.
 
     The process is as follows:
 
@@ -117,17 +123,17 @@ class MaterialsBuilder(Builder):
     def get_items(self) -> Iterator[List[Dict]]:
         """
         Gets all items to process into materials documents.
-        This does no datetime checking; relying on on whether
-        task_ids are included in the Materials Colection
+        This does no datetime checking; relying on whether
+        task_ids are included in the Materials Collection
 
         Returns:
-            generator or list relevant tasks and materials to process into materials documents
+            generator or list relevant tasks and materials to process into materials
+            documents
         """
 
+        task_types = [t.value for t in self.settings.VASP_ALLOWED_VASP_TYPES]
         self.logger.info("Materials builder started")
-        self.logger.info(
-            f"Allowed task types: {[task_type.value for task_type in self.settings.VASP_ALLOWED_TASK_TYPES]}"
-        )
+        self.logger.info(f"Allowed task types: {task_types}")
 
         self.logger.info("Setting indexes")
         self.ensure_indexes()
@@ -187,13 +193,15 @@ class MaterialsBuilder(Builder):
             "calcs_reversed.input.parameters",
             "calcs_reversed.input.incar",
             "orig_inputs",
+            "input.structure",
             # needed for entry from task_doc
             "output.energy",
             "input.is_hubbard",
             "input.hubbards",
             "input.potcar_spec",
+            # needed for transform deformation structure back for grouping
+            "transmuter",
             # misc info for materials doc
-            "input.structure",
             "tags",
         ]
 
@@ -213,18 +221,23 @@ class MaterialsBuilder(Builder):
         Process the tasks into a list of materials
 
         Args:
-            tasks [dict] : a list of task docs
+            tasks [dict]: a list of task docs
 
         Returns:
-            ([dict],list) : a list of new materials docs and a list of task_ids that were processsed
+            ([dict],list): a list of new materials docs and a list of task_ids that
+                were processsed
         """
 
         tasks = [TaskDocument(**task) for task in items]
         formula = tasks[0].formula_pretty
         task_ids = [task.task_id for task in tasks]
-        self.logger.debug(f"Processing {formula} : {task_ids}")
 
-        grouped_tasks = self.filter_and_group_tasks(tasks)
+        # not all tasks contains transmuter
+        transmuters = [task.get("transmuter", None) for task in items]
+
+        self.logger.debug(f"Processing {formula}: {task_ids}")
+
+        grouped_tasks = self.filter_and_group_tasks(tasks, transmuters)
         materials = []
         for group in grouped_tasks:
             try:
@@ -254,8 +267,8 @@ class MaterialsBuilder(Builder):
         Inserts the new task_types into the task_types collection
 
         Args:
-            items ([([dict],[int])]): A list of tuples of materials to update and the corresponding
-                processed task_ids
+            items ([([dict],[int])]): A list of tuples of materials to update and the
+                corresponding processed task_ids
         """
 
         docs = list(chain.from_iterable(items))  # type: ignore
@@ -268,33 +281,38 @@ class MaterialsBuilder(Builder):
         if len(items) > 0:
             self.logger.info(f"Updating {len(docs)} materials")
             self.materials.remove_docs({self.materials.key: {"$in": material_ids}})
-            self.materials.update(
-                docs=docs,
-                key=["material_id"],
-            )
+            self.materials.update(docs=docs, key=["material_id"])
         else:
             self.logger.info("No items to update")
 
     def filter_and_group_tasks(
-        self, tasks: List[TaskDocument]
+        self, tasks: List[TaskDocument], transmuters: List[Union[Dict, None]]
     ) -> Iterator[List[TaskDocument]]:
         """
         Groups tasks by structure matching
         """
 
-        filtered_tasks = [
-            task
-            for task in tasks
+        filtered_tasks = []
+        filtered_transmuters = []
+        for task, transmuter in zip(tasks, transmuters):
             if any(
-                allowed_type is task.task_type
-                for allowed_type in self.settings.VASP_ALLOWED_TASK_TYPES
-            )
-        ]
+                allowed_type == task.task_type
+                for allowed_type in self.settings.VASP_ALLOWED_VASP_TYPES
+            ):
+                filtered_tasks.append(task)
+                filtered_transmuters.append(transmuter)
 
         structures = []
-
-        for idx, task in enumerate(filtered_tasks):
-            s = task.output.structure
+        for idx, (task, transmuter) in enumerate(
+            zip(filtered_tasks, filtered_transmuters)
+        ):
+            if task.task_type == TaskType.Deformation:
+                if transmuter is None:
+                    raise RuntimeError("Cannot find transmuter for deformation task")
+                else:
+                    s = undeform_structure(task.input.structure, transmuter)
+            else:
+                s = task.output.structure
             s.index: int = idx  # type: ignore
             structures.append(s)
 
@@ -308,3 +326,35 @@ class MaterialsBuilder(Builder):
         for group in grouped_structures:
             grouped_tasks = [filtered_tasks[struc.index] for struc in group]  # type: ignore
             yield grouped_tasks
+
+
+def undeform_structure(structure: Structure, transmuter: Dict) -> Structure:
+    """
+    Get the undeformed structure by applying the transformations in a reverse order.
+
+    Args:
+        structure: deformed structure
+        transmuter: transformation that deforms the structure
+
+    Returns:
+        undeformed structure
+    """
+
+    for trans, params in reversed(
+        list(zip(transmuter["transformations"], transmuter["transformation_params"]))
+    ):
+
+        # The transmuter only stores the transformation class and parameter, without
+        # module info and such. Therefore, there is no general way to reconstruct it,
+        # and has to do if else check.
+        if trans == "DeformStructureTransformation":
+            deform = Deformation(params["deformation"])
+            dst = DeformStructureTransformation(deform.inv)
+            structure = dst.apply_transformation(structure)
+        else:
+            raise RuntimeError(
+                "Expect transformation to be `DeformStructureTransformation`; "
+                f"got {trans}"
+            )
+
+    return structure
