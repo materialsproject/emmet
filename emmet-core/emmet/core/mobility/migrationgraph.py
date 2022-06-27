@@ -11,11 +11,10 @@ class MigrationGraphDoc(EmmetBaseModel):
     """
     MigrationGraph Doc.
     Stores MigrationGraph and info such as ComputedStructureEntries (ComputedEntry can be used for working ion) and cutoff distance that are used to generated the object.
-    WIP: Also stores information needed to launch migration calculations (supercells & supercell site info).
     Note: this doc is not self-contained within pymatgen, as it has dependence on pymatgen.analysis.diffusion, a namespace package aka pymatgen-diffusion.
     """
 
-    battery_id: str = Field(None, description="The battery id for this MigrationGraphDoc")
+    battery_id: str=Field(None, description="The battery id for this MigrationGraphDoc")
 
     last_updated: datetime = Field(
         None,
@@ -60,7 +59,7 @@ class MigrationGraphDoc(EmmetBaseModel):
                 entries=grouped_entries
             )
             max_sites_struct = ranked_structures[0]
-        except:
+        except IndexError:
             return None
 
         migration_graph = MigrationGraph.with_distance(
@@ -70,9 +69,9 @@ class MigrationGraphDoc(EmmetBaseModel):
         )
 
         return cls(
-            battery_id = battery_id,
-            hop_cutoff = hop_cutoff,
-            entries_for_generation = grouped_entries,
-            working_ion_entry = working_ion_entry,
-            migration_graph = migration_graph
+            battery_id=battery_id,
+            hop_cutoff=hop_cutoff,
+            entries_for_generation=grouped_entries,
+            working_ion_entry=working_ion_entry,
+            migration_graph=migration_graph
         )
