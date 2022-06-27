@@ -4,6 +4,6 @@ pymatgen==2022.5.26
 pybtex==0.24.0
 typing-extensions==4.2.0
 seekpath==2.0.1
-setuptools-scm==6.4.2
+setuptools-scm==7.0.2
 robocrys==0.2.7
 matminer==0.7.8

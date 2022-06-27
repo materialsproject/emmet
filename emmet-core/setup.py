@@ -15,7 +15,7 @@ setup(
         "write_to_template": '__version__ = "{version}"',
         "fallback_version": fallback_version,
     },
-    setup_requires=["setuptools_scm~=6.0"],
+    setup_requires=["setuptools_scm>=6,<8"],
     description="Core Emmet Library",
     author="The Materials Project",
     author_email="feedback@materialsproject.org",
