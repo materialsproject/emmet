@@ -305,12 +305,14 @@ class InsertionElectrodeBuilder(Builder):
         thermo: MongoStore,
         insertion_electrode: MongoStore,
         query: dict = None,
+        strip_structures: bool = False,
         **kwargs,
     ):
         self.grouped_materials = grouped_materials
         self.insertion_electrode = insertion_electrode
         self.thermo = thermo
         self.query = query if query else {}
+        self.strip_structures = strip_structures
 
         super().__init__(
             sources=[self.grouped_materials, self.thermo],
@@ -434,6 +436,7 @@ class InsertionElectrodeBuilder(Builder):
             grouped_entries=entries,
             working_ion_entry=working_ion_entry,
             battery_id=item["group_id"],
+            strip_structures=self.strip_structures,
         )
         if ie is None:
             return None  # type: ignore
