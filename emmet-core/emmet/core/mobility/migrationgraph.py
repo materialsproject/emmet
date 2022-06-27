@@ -10,7 +10,7 @@ from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 class MigrationGraphDoc(EmmetBaseModel):
     """
     MigrationGraph Doc.
-    Stores MigrationGraph and info such as ComputedStructureEntries and cutoff distance that are used to generated the object.
+    Stores MigrationGraph and info such as ComputedStructureEntries (ComputedEntry can be used for working ion) and cutoff distance that are used to generated the object.
     WIP: Also stores information needed to launch migration calculations (supercells & supercell site info).
     Note: this doc is not self-contained within pymatgen, as it has dependence on pymatgen.analysis.diffusion, a namespace package aka pymatgen-diffusion.
     """
@@ -32,7 +32,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="A list of ComputedStructureEntries used to generate the structure with all working ion sites."
     )
 
-    working_ion_entry: ComputedEntry = Field(
+    working_ion_entry: Union[ComputedEntry, ComputedStructureEntry] = Field(
         None,
         description="The ComputedStructureEntry of the working ion."
     )
@@ -47,18 +47,21 @@ class MigrationGraphDoc(EmmetBaseModel):
         cls,
         battery_id: str,
         grouped_entries: List[ComputedStructureEntry],
-        working_ion_entry: ComputedEntry,
+        working_ion_entry: Union[ComputedEntry, ComputedStructureEntry],
         hop_cutoff: float
     ) -> Union["MigrationGraphDoc", None]:
         """
-        This classmethod takes a group of ComputedStructureEntries and generates a full site structure.
+        This classmethod takes a group of ComputedStructureEntries (can also use ComputedEntry for wi) and generates a full sites structure.
         Then a MigrationGraph object is generated with with_distance() method with a designated cutoff.
         """
 
-        ranked_structures = MigrationGraph.get_structure_from_entries(
-            entries=grouped_entries
-        )
-        max_sites_struct = ranked_structures[0]
+        try:
+            ranked_structures = MigrationGraph.get_structure_from_entries(
+                entries=grouped_entries
+            )
+            max_sites_struct = ranked_structures[0]
+        except:
+            return None
 
         migration_graph = MigrationGraph.with_distance(
             structure=max_sites_struct,
