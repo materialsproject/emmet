@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.28.4](https://github.com/materialsproject/emmet/tree/v0.28.4) (2022-06-27)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.28.3...v0.28.4)
+
+**Merged pull requests:**
+
+- Ensure electrode groups only pull non-deprecated materials [\#443](https://github.com/materialsproject/emmet/pull/443) ([munrojm](https://github.com/munrojm))
+
 ## [v0.28.3](https://github.com/materialsproject/emmet/tree/v0.28.3) (2022-06-27)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.28.2...v0.28.3)
