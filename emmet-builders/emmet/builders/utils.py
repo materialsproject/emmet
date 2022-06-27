@@ -3,6 +3,8 @@ from itertools import chain, combinations
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.ext.matproj import MPRester
 from emmet.builders.materials.electrodes import WORKING_IONS
+from pymatgen.core import Structure
+from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 
 
 def maximal_spanning_non_intersecting_subsets(sets) -> Set[Set]:
@@ -83,3 +85,62 @@ def get_working_ion_entries(
             [working_ions], inc_structure=inc_structure
         )
         return min(all_entries, key=lambda k: k.energy_per_atom)
+
+
+def get_hop_cutoff(
+    migration_graph_struct: Structure,
+    mobile_specie: str,
+    algorithm: str = "min_distance",
+    min_hop_distance: float = 1,
+    max_hop_distance: float = 7,
+) -> Union[float, None]:
+    """
+    A function to get an appropriate hop distance cutoff for a given migration
+    graph structure which can be used for MigrationGraph.with_distance()
+
+    migration_graph_struct (Structure): the host structure with all working ion
+        sites for consideration filled.
+        Can get via MigrationGraph.get_structure_from_entries()
+    mobile_specie (str): specifies the mobile specie in migration_graph_struct
+        (e.g. "Li", "Mg").
+    algorithm (str): specify the algorithm to use for getting the hop cutoff.
+        "min_distance" =  incrementally increases the hop cutoff to get the
+            minimum cutoff value that results in finding a path
+        "hops_based" = incrementally increases the hop cutoff until either
+            1) the cutoff exceeds 2x the smallest hop length or
+            2) the next incremental increase of the cutoff results in the total
+            number of unique hops to exceeding more than 1.5x the previous
+            number of unique hops
+    """
+    d = min_hop_distance
+    mg = MigrationGraph.with_distance(
+        structure=migration_graph_struct,
+        migrating_specie=mobile_specie,
+        max_distance=d,
+    )
+    mg.assign_cost_to_graph(["hop_distance"])
+    paths = list(mg.get_path())
+    try:
+        if algorithm == "min_distance":
+            while len(paths) == 0 and d < max_hop_distance:
+                d = d * 1.1
+                mg = MigrationGraph.with_distance(
+                    structure=migration_graph_struct,
+                    migrating_specie=mobile_specie,
+                    max_distance=d,
+                )
+                mg.assign_cost_to_graph(["hop_distance"])
+                paths = list(mg.get_path())
+            if d > max_hop_distance:
+                return 0
+            else:
+                return d
+        elif algorithm == "hops_based":
+            # To Do: add Alex's algorithm here
+            smallest_hop_distance = min(
+                [v["hop_distance"] for v in mg.unique_hops.values()]
+            )
+            num_unique_hops = len(mg.unique_hops)
+            return d
+    except:
+        return None
