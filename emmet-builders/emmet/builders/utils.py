@@ -71,7 +71,7 @@ def get_working_ion_entries(
             output.update({wi: min(all_entries, key=lambda k: k.energy_per_atom)})
         return output
 
-    elif type(working_ions) == List:
+    elif type(working_ions) == list:
         output = {}
         for wi in working_ions:
             all_entries = mpr.get_entries_in_chemsys([wi], inc_structure=inc_structure)
