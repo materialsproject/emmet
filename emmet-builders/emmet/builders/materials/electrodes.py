@@ -109,7 +109,7 @@ class StructureGroupBuilder(Builder):
         self.angle_tol = angle_tol
         self.check_newer = check_newer
 
-        self.query["deprecated"] = False # Ensure only non-deprecated materials are chosen
+        self.query["deprecated"] = False  # Ensure only non-deprecated materials are chosen
 
         super().__init__(sources=[materials], targets=[sgroups], **kwargs)
 
