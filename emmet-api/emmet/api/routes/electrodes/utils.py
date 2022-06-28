@@ -31,9 +31,16 @@ def electrodes_formula_to_criteria(formulas: str) -> Dict:
 
             formula_dummies = formulas.replace("*", "{}").format(*dummies[:nstars])
 
-            integer_formula = Composition(
-                formula_dummies
-            ).get_integer_formula_and_factor()[0]
+            try:
+                integer_formula = Composition(
+                    formula_dummies
+                ).get_integer_formula_and_factor()[0]
+            except (ValueError, IndexError):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Problem processing one or more provided formulas.",
+                )
+
             comp = Composition(integer_formula).reduced_composition
             crit = dict()  # type: dict
             crit[
@@ -83,8 +90,16 @@ def electrodes_formula_to_criteria(formulas: str) -> Dict:
             # Paranoia below about floating-point "equality"
             crit = {}
             crit["nelements"] = {"$in": [nele, nele - 1]}  # type: ignore
-            for el, n in comp.to_reduced_dict.items():
-                crit[f"entries_composition_summary.all_composition_reduced.{el}"] = n
+            try:
+                for el, n in comp.to_reduced_dict.items():
+                    crit[
+                        f"entries_composition_summary.all_composition_reduced.{el}"
+                    ] = n
+            except (ValueError, IndexError):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Problem processing one or more provided formulas.",
+                )
 
             return crit
         else:
