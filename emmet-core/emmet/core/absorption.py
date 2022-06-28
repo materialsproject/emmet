@@ -1,12 +1,13 @@
 from typing import Dict, List, Any, Union
 from pydantic import Field
 from emmet.core.material_property import PropertyDoc
+from emmet.core.spectrum import SpectrumDoc
 import numpy as np
 from emmet.core.mpid import MPID
 from pymatgen.core import Structure
 
 
-class AbsorptionDoc(PropertyDoc):
+class AbsorptionDoc(SpectrumDoc):
     """Absorption spectrum based on frequency dependent dielectric function calculations."""
 
     property_name = "absorption spectrum"
