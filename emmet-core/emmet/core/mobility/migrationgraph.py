@@ -14,7 +14,7 @@ class MigrationGraphDoc(EmmetBaseModel):
     Note: this doc is not self-contained within pymatgen, as it has dependence on pymatgen.analysis.diffusion, a namespace package aka pymatgen-diffusion.
     """
 
-    battery_id: str=Field(None, description="The battery id for this MigrationGraphDoc")
+    battery_id: str = Field(None, description="The battery id for this MigrationGraphDoc")
 
     last_updated: datetime = Field(
         None,
@@ -56,7 +56,8 @@ class MigrationGraphDoc(EmmetBaseModel):
 
         try:
             ranked_structures = MigrationGraph.get_structure_from_entries(
-                entries=grouped_entries
+                entries=grouped_entries,
+                migrating_ion_entry=working_ion_entry
             )
             max_sites_struct = ranked_structures[0]
         except IndexError:
