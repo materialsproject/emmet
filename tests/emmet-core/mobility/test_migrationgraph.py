@@ -1,6 +1,3 @@
-from cmath import exp
-from matplotlib.pyplot import get
-from pyparsing import rest_of_line
 import pytest
 from monty.serialization import loadfn
 from pymatgen.entries.computed_entries import ComputedEntry
