@@ -1,7 +1,6 @@
 import pytest
 from monty.serialization import loadfn
 from pymatgen.entries.computed_entries import ComputedEntry
-from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 from emmet.core.mobility.migrationgraph import MigrationGraphDoc
 
 
