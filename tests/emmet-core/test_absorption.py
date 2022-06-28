@@ -7,7 +7,7 @@ from emmet.core.utils import jsanitize
 
 @pytest.fixture(scope="session")
 def absorption_test_data(test_dir):
-    return loadfn(test_dir / "absorption_sample.json")
+    return loadfn(test_dir / "sample_absorptions.json")
 
 
 def test_absorption_doc(absorption_test_data):
