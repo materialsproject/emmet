@@ -7,10 +7,10 @@ from emmet.core.mpid import MPID
 from pymatgen.core import Structure
 
 
-class AbsorptionDoc(SpectrumDoc):
+class AbsorptionDoc(PropertyDoc):
     """Absorption spectrum based on frequency dependent dielectric function calculations."""
 
-    property_name = "absorption spectrum"
+    property_name = "Optical absorption spectrum"
 
     task_id: str = Field(..., description="Calculation id")
 
@@ -56,6 +56,7 @@ class AbsorptionDoc(SpectrumDoc):
         cls,
         material_id: MPID,
         energies: List,
+        task_id: int,
         real_d: List[np.ndarray],
         imag_d: List[np.ndarray],
         absorption_co: List,
@@ -79,6 +80,7 @@ class AbsorptionDoc(SpectrumDoc):
         return super().from_structure(
             meta_structure=structure,
             material_id=material_id,
+            deprecated = False,
             **{
                 "energies": energies,
                 "energy_max": energy_max,

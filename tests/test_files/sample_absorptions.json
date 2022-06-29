@@ -1,5 +1,4 @@
 {
-    "_id" : ObjectId("618784b30f940d8798bd27fe"),
     "dir_name" : "nid05344:/global/cscratch1/sd/rxyang/absorption/high_throughput/launcher_2021-11-05-03-30-53-146488/launcher_2021-11-05-22-25-32-404736/block_2021-11-06-00-27-35-513207/launcher_2021-11-07-00-38-48-685998/launcher_2021-11-07-04-42-22-718166",
     "analysis" : {
         "delta_volume" : 0.0,
@@ -37775,7 +37774,6 @@
             "CSHIFT" : 0.1
         }
     },
-    "last_updated" : ISODate("2021-11-07T07:49:30.904Z"),
     "nelements" : 2,
     "nsites" : 2,
     "orig_inputs" : {
