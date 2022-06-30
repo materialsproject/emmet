@@ -103,7 +103,7 @@ def task_type(
 
     elif incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
         calc_type.append("Deformation")
-        
+
     elif incar.get("LOPTICS", True) or incar.get("ALGO" == "CHI"):
         calc_type.append("Optic")
 
