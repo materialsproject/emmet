@@ -1,5 +1,45 @@
 # Changelog
 
+## [v0.28.4](https://github.com/materialsproject/emmet/tree/v0.28.4) (2022-06-27)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.28.3...v0.28.4)
+
+**Merged pull requests:**
+
+- Ensure electrode groups only pull non-deprecated materials [\#443](https://github.com/materialsproject/emmet/pull/443) ([munrojm](https://github.com/munrojm))
+
+## [v0.28.3](https://github.com/materialsproject/emmet/tree/v0.28.3) (2022-06-27)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.28.2...v0.28.3)
+
+**Merged pull requests:**
+
+- Add strip\_structures to Insertion Electrode Doc and Builder [\#439](https://github.com/materialsproject/emmet/pull/439) ([acrutt](https://github.com/acrutt))
+
+## [v0.28.2](https://github.com/materialsproject/emmet/tree/v0.28.2) (2022-06-10)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.28.1...v0.28.2)
+
+**Merged pull requests:**
+
+- Add back legacy elasticity model [\#435](https://github.com/materialsproject/emmet/pull/435) ([munrojm](https://github.com/munrojm))
+
+## [v0.28.1](https://github.com/materialsproject/emmet/tree/v0.28.1) (2022-06-08)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.28.0...v0.28.1)
+
+**Merged pull requests:**
+
+- Better handle formula and element issues [\#434](https://github.com/materialsproject/emmet/pull/434) ([munrojm](https://github.com/munrojm))
+
+## [v0.28.0](https://github.com/materialsproject/emmet/tree/v0.28.0) (2022-06-07)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.27.8...v0.28.0)
+
+**Merged pull requests:**
+
+-  Elasticity doc and builder [\#326](https://github.com/materialsproject/emmet/pull/326) ([mjwen](https://github.com/mjwen))
+
 ## [v0.27.8](https://github.com/materialsproject/emmet/tree/v0.27.8) (2022-06-07)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.27.7...v0.27.8)
@@ -698,19 +738,19 @@
 
 ## [v0.13.0](https://github.com/materialsproject/emmet/tree/v0.13.0) (2021-09-23)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.13.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.13.0)
 
 **Merged pull requests:**
 
 - Builder bug fixes [\#272](https://github.com/materialsproject/emmet/pull/272) ([munrojm](https://github.com/munrojm))
 
-## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.12.8)
-
 ## [v0.12.7](https://github.com/materialsproject/emmet/tree/v0.12.7) (2021-09-15)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.7)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.12.7)
+
+## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.8)
 
 **Merged pull requests:**
 
