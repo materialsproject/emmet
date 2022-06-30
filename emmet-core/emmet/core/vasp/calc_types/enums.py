@@ -88,6 +88,7 @@ class TaskType(ValueEnum):
     Structure_Optimization = "Structure Optimization"
     Deformation = "Deformation"
     Unrecognized = "Unrecognized"
+    Optic = "Optic"
 
 
 class CalcType(ValueEnum):
