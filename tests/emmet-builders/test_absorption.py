@@ -10,7 +10,7 @@ from emmet.builders.vasp.materials import MaterialsBuilder
 
 @pytest.fixture(scope="session")
 def tasks_store(test_dir):
-    return JSONStore(test_dir / "sample_absorption.json")
+    return JSONStore(test_dir / "sample_absorptions.json")
 
 
 @pytest.fixture(scope="session")
@@ -29,7 +29,7 @@ def absorption_store():
 def test_absorption_builder(tasks_store, absorption_store, materials_store):
 
     builder = AbsorptionBuilder(
-        tasks=tasks_store, dielectric=absorption_store, materials=materials_store
+        tasks=tasks_store, absorption=absorption_store, materials=materials_store
     )
     builder.run()
 

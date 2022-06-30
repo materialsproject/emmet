@@ -68,7 +68,7 @@ class AbsorptionBuilder(Builder):
         self.logger.info(
             "Processing {} materials for absorption data".format(len(mats))
         )
-
+        
         self.total = len(mats)
 
         for mat in mats:
@@ -84,14 +84,13 @@ class AbsorptionBuilder(Builder):
         mpid = item[self.materials.key]
         origin_entry = {
             "name": "absorption",
-            "task_id": item["task_id"],
-            "last_updated": item["task_updated"],
+            "task_id": item["task_id"]
         }
 
         doc = AbsorptionDoc.from_structure(
             structure=structure,
             material_id=mpid,
-            origins=[origin_entry],
+            task_id = item['task_id'],
             deprecated=False,
             energies=item["energies"],
             real_d=item["real_dielectric"],
@@ -99,7 +98,6 @@ class AbsorptionBuilder(Builder):
             absorption_co=item["optical_absorption_coeff"],
             bandgap=item["bandgap"],
             nkpoints=item["nkpoints"],
-            is_hubbard=item["is_hubbard"],
             last_updated=item["updated_on"],
         )
 
@@ -120,26 +118,30 @@ class AbsorptionBuilder(Builder):
     def _get_processed_doc(self, mat):
 
         mat_doc = self.materials.query_one(
-            criteria={self.materials.key: mat},
-            properties=[
+            {self.materials.key: mat},
+            [
                 self.materials.key,
                 "structure",
-                "task_label",
-                "last_updated",
-                "task_id",
+                "task_types",
+                "run_types",
+                "last_updated"
             ],
         )
 
-        task_label = mat_doc["task_label"]
-        task_id = mat_doc["task_id"]
+        task_types = mat_doc["task_types"].items()
+        
+        potential_task_ids = []
+        
 
+        for task_id, task_type in task_types:
+            if task_type == "Optic":
+                potential_task_ids.append(task_id)
+        
         final_docs = []
 
-        if "frequency dependent dielectrics IPA" in task_label:
+        for task_id in potential_task_ids: 
             task_query = self.tasks.query_one(
                 properties=[
-                    "last_updated",
-                    "input.is_hubbard",
                     "orig_inputs.kpoints",
                     "orig_inputs.poscar.structure",
                     "input.parameters",
@@ -152,6 +154,7 @@ class AbsorptionBuilder(Builder):
                 ],
                 criteria={self.tasks.key: task_id},
             )
+            
 
             if task_query["output"]["optical_absorption_coeff"] is not None:
 
@@ -159,8 +162,6 @@ class AbsorptionBuilder(Builder):
                     structure = task_query["orig_inputs"]["poscar"]["structure"]
                 except KeyError:
                     structure = task_query["input"]["structure"]
-
-                is_hubbard = task_query["input"]["is_hubbard"]
 
                 if (
                     task_query["orig_inputs"]["kpoints"]["generation_style"]
@@ -176,12 +177,10 @@ class AbsorptionBuilder(Builder):
                     nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
 
                 lu_dt = mat_doc["last_updated"]
-                task_updated = task_query["last_updated"]
-
+                
                 final_docs.append(
                     {
                         "task_id": task_id,
-                        "is_hubbard": int(is_hubbard),
                         "nkpoints": int(nkpoints),
                         "energies": task_query["output"]["dielectric"]["energy"],
                         "real_dielectric": task_query["output"]["dielectric"]["real"],
@@ -192,7 +191,6 @@ class AbsorptionBuilder(Builder):
                         "bandgap": task_query["output"]["bandgap"],
                         "structure": structure,
                         "updated_on": lu_dt,
-                        "task_updated": task_updated,
                         self.materials.key: mat_doc[self.materials.key],
                     }
                 )

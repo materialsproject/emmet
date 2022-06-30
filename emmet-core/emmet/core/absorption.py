@@ -15,10 +15,10 @@ class AbsorptionDoc(PropertyDoc):
     task_id: str = Field(..., description="Calculation id")
 
     energies: List[float] = Field(
-        ..., description="absorption energy in eV starting from 0"
+        ..., description="Absorption energy in eV starting from 0"
     )
 
-    energy_max: float = Field(..., description="maximum energy")
+    energy_max: float = Field(..., description="Maximum energy")
 
     absorption_coefficient: List[float] = Field(
         ..., description="Absorption coefficient in cm^-1"
@@ -26,25 +26,23 @@ class AbsorptionDoc(PropertyDoc):
 
     average_imaginary_dielectric: List[float] = Field(
         ...,
-        description="imaginary part of the dielectric function corresponding to the "
+        description="Imaginary part of the dielectric function corresponding to the "
         "energies",
     )
 
     average_real_dielectric: List[float] = Field(
         ...,
-        description="real part of the dielectric function corresponding to the energies",
+        description="Real part of the dielectric function corresponding to the energies",
     )
 
     bandgap: float = Field(
-        ..., description="the electronic band gap from a band structure calculation"
+        None, description="The electronic band gap"
     )
 
     nkpoints: float = Field(
-        ..., description="the number of kpoints used in the calculation"
+        None, description="The number of kpoints used in the calculation"
     )
-
-    is_hubbard: bool = Field(None, description="whether the material is hubbard")
-
+    
     @classmethod
     def _convert_list_to_tensor(cls, l):
         l = np.array(l)
@@ -56,14 +54,13 @@ class AbsorptionDoc(PropertyDoc):
         cls,
         material_id: MPID,
         energies: List,
-        task_id: int,
+        task_id: str,
         real_d: List[np.ndarray],
         imag_d: List[np.ndarray],
         absorption_co: List,
         bandgap: float,
         structure: Structure,
         nkpoints: float,
-        is_hubbard: bool,
         **kwargs,
     ):
 
@@ -80,7 +77,6 @@ class AbsorptionDoc(PropertyDoc):
         return super().from_structure(
             meta_structure=structure,
             material_id=material_id,
-            deprecated = False,
             **{
                 "energies": energies,
                 "energy_max": energy_max,
@@ -89,7 +85,7 @@ class AbsorptionDoc(PropertyDoc):
                 "average_real_dielectric": real_d_average,
                 "bandgap": bandgap,
                 "nkpoints": nkpoints,
-                "is_hubbard": is_hubbard,
+                "task_id": task_id
             },
-            **kwargs,
+            **kwargs
         )
