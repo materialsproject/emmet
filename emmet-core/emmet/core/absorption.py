@@ -42,7 +42,7 @@ class AbsorptionDoc(PropertyDoc):
     nkpoints: float = Field(
         None, description="The number of kpoints used in the calculation"
     )
-    
+
     @classmethod
     def _convert_list_to_tensor(cls, l):
         l = np.array(l)

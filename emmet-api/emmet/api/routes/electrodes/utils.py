@@ -61,55 +61,58 @@ def electrodes_formula_to_criteria(formulas: str) -> Dict:
 
             return crit
 
-    elif any(
-        isinstance(el, DummySpecies)
-        for formula in formula_list
-        for el in Composition(formula)
-    ):
-        # Assume fully anonymized formula
-        if len(formula_list) == 1:
-            return {
-                "entries_composition_summary.all_formula_anonymous": Composition(
-                    formula_list[0]
-                ).anonymized_formula
-            }
-        else:
-            return {
-                "entries_composition_summary.all_formula_anonymous": {
-                    "$in": [
-                        Composition(formula).anonymized_formula
-                        for formula in formula_list
-                    ]
-                }
-            }
-
     else:
-        if len(formula_list) == 1:
-            comp = Composition(formula_list[0])
-            nele = len(comp)
-            # Paranoia below about floating-point "equality"
-            crit = {}
-            crit["nelements"] = {"$in": [nele, nele - 1]}  # type: ignore
-            try:
-                for el, n in comp.to_reduced_dict.items():
-                    crit[
-                        f"entries_composition_summary.all_composition_reduced.{el}"
-                    ] = n
-            except (ValueError, IndexError):
-                raise HTTPException(
-                    status_code=400,
-                    detail="Problem processing one or more provided formulas.",
-                )
+        try:
+            if any(
+                isinstance(el, DummySpecies)
+                for formula in formula_list
+                for el in Composition(formula)
+            ):
+                # Assume fully anonymized formula
+                if len(formula_list) == 1:
+                    return {
+                        "entries_composition_summary.all_formula_anonymous": Composition(
+                            formula_list[0]
+                        ).anonymized_formula
+                    }
+                else:
+                    return {
+                        "entries_composition_summary.all_formula_anonymous": {
+                            "$in": [
+                                Composition(formula).anonymized_formula
+                                for formula in formula_list
+                            ]
+                        }
+                    }
 
-            return crit
-        else:
-            return {
-                "entries_composition_summary.all_formulas": {
-                    "$in": [
-                        Composition(formula).reduced_formula for formula in formula_list
-                    ]
-                }
-            }
+            else:
+                if len(formula_list) == 1:
+                    comp = Composition(formula_list[0])
+                    nele = len(comp)
+                    # Paranoia below about floating-point "equality"
+                    crit = {}
+                    crit["nelements"] = {"$in": [nele, nele - 1]}  # type: ignore
+
+                    for el, n in comp.to_reduced_dict.items():
+                        crit[
+                            f"entries_composition_summary.all_composition_reduced.{el}"
+                        ] = n
+
+                    return crit
+                else:
+                    return {
+                        "entries_composition_summary.all_formulas": {
+                            "$in": [
+                                Composition(formula).reduced_formula
+                                for formula in formula_list
+                            ]
+                        }
+                    }
+        except (ValueError, IndexError):
+            raise HTTPException(
+                status_code=400,
+                detail="Problem processing one or more provided formulas.",
+            )
 
 
 def electrodes_chemsys_to_criteria(chemsys: str) -> Dict:

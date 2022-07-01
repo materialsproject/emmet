@@ -68,7 +68,7 @@ class AbsorptionBuilder(Builder):
         self.logger.info(
             "Processing {} materials for absorption data".format(len(mats))
         )
-        
+
         self.total = len(mats)
 
         for mat in mats:
@@ -90,7 +90,7 @@ class AbsorptionBuilder(Builder):
         doc = AbsorptionDoc.from_structure(
             structure=structure,
             material_id=mpid,
-            task_id = item['task_id'],
+            task_id=item['task_id'],
             deprecated=False,
             energies=item["energies"],
             real_d=item["real_dielectric"],
@@ -99,6 +99,7 @@ class AbsorptionBuilder(Builder):
             bandgap=item["bandgap"],
             nkpoints=item["nkpoints"],
             last_updated=item["updated_on"],
+            origins=[origin_entry]
         )
 
         return jsanitize(doc.dict(), allow_bson=True)
@@ -129,17 +130,16 @@ class AbsorptionBuilder(Builder):
         )
 
         task_types = mat_doc["task_types"].items()
-        
+
         potential_task_ids = []
-        
 
         for task_id, task_type in task_types:
             if task_type == "Optic":
                 potential_task_ids.append(task_id)
-        
+
         final_docs = []
 
-        for task_id in potential_task_ids: 
+        for task_id in potential_task_ids:
             task_query = self.tasks.query_one(
                 properties=[
                     "orig_inputs.kpoints",
@@ -154,7 +154,6 @@ class AbsorptionBuilder(Builder):
                 ],
                 criteria={self.tasks.key: task_id},
             )
-            
 
             if task_query["output"]["optical_absorption_coeff"] is not None:
 
@@ -177,7 +176,7 @@ class AbsorptionBuilder(Builder):
                     nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
 
                 lu_dt = mat_doc["last_updated"]
-                
+
                 final_docs.append(
                     {
                         "task_id": task_id,
