@@ -99,9 +99,9 @@ class EmmetSettings(BaseSettings):
         description="Dictionary mapping Q-Chem task type to a quality score",
     )
 
-    VASP_QUALITY_SCORES: Dict[str, int] = Field(
+    VASP_STRUCTURE_QUALITY_SCORES: Dict[str, int] = Field(
         {"SCAN": 3, "GGA+U": 2, "GGA": 1},
-        description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builders",
+        description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builder structure data",
     )
 
     VASP_KPTS_TOLERANCE: float = Field(
