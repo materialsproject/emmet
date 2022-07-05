@@ -86,6 +86,9 @@ def get_working_ion_entries(
         )
         return min(all_entries, key=lambda k: k.energy_per_atom)
 
+    else:
+        return None
+
 
 def get_hop_cutoff(
     migration_graph_struct: Structure,
@@ -182,3 +185,6 @@ def get_hop_cutoff(
             num_unique_hops = len(mg.unique_hops)
 
         return d
+
+    else:
+        return None
