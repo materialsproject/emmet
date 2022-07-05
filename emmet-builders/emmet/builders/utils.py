@@ -120,68 +120,65 @@ def get_hop_cutoff(
     )
     mg.assign_cost_to_graph(["hop_distance"])
     paths = list(mg.get_path())
-    try:
-        if algorithm == "min_distance":
-            while len(paths) == 0 and d < max_hop_distance:
-                d = d * 1.1
-                mg = MigrationGraph.with_distance(
-                    structure=migration_graph_struct,
-                    migrating_specie=mobile_specie,
-                    max_distance=d,
-                )
-                mg.assign_cost_to_graph(["hop_distance"])
-                paths = list(mg.get_path())
-            if d > max_hop_distance:
-                return 0
-            else:
-                return d
-        elif algorithm == "hops_based":
-            # Thank you to Alex Nguyen Ngoc (alexnguyen0512) for their initial
-            # work in developing this algorithm
 
-            # incrementally increase d until at least one path is found
-            # this sets d at the minimum distance that results in a path
-            while len(paths) == 0 and d < max_hop_distance:
-                d = d * 1.1
-                mg = MigrationGraph.with_distance(
-                    structure=migration_graph_struct,
-                    migrating_specie=mobile_specie,
-                    max_distance=d,
-                )
-                mg.assign_cost_to_graph(["hop_distance"])
-                paths = list(mg.get_path())
-            if d > max_hop_distance:
-                return 0
-
-            # once a path is found, get the smallest hop distance and
-            # the number of unique hops
-            smallest_hop_distance = min(
-                [v["hop_distance"] for v in mg.unique_hops.values()]
+    if algorithm == "min_distance":
+        while len(paths) == 0 and d < max_hop_distance:
+            d = d * 1.1
+            mg = MigrationGraph.with_distance(
+                structure=migration_graph_struct,
+                migrating_specie=mobile_specie,
+                max_distance=d,
             )
+            mg.assign_cost_to_graph(["hop_distance"])
+            paths = list(mg.get_path())
+        if d > max_hop_distance:
+            return 0
+        else:
+            return d
+    elif algorithm == "hops_based":
+        # Thank you to Alex Nguyen Ngoc (alexnguyen0512) for their initial
+        # work in developing this algorithm
+
+        # incrementally increase d until at least one path is found
+        # this sets d at the minimum distance that results in a path
+        while len(paths) == 0 and d < max_hop_distance:
+            d = d * 1.1
+            mg = MigrationGraph.with_distance(
+                structure=migration_graph_struct,
+                migrating_specie=mobile_specie,
+                max_distance=d,
+            )
+            mg.assign_cost_to_graph(["hop_distance"])
+            paths = list(mg.get_path())
+        if d > max_hop_distance:
+            return 0
+
+        # once a path is found, get the smallest hop distance and
+        # the number of unique hops
+        smallest_hop_distance = min(
+            [v["hop_distance"] for v in mg.unique_hops.values()]
+        )
+        num_unique_hops = len(mg.unique_hops)
+
+        # continually incrementally increase d until either...
+        # 1) the largest hop distance exceeds 2x the smallest hop distance
+        # 2) the number of unique hops spikes (increases by more than 1.5x)
+        while (
+            max([v["hop_distance"] for v in mg.unique_hops.values()])
+            <= smallest_hop_distance * 2
+            and d < max_hop_distance
+        ):
+            d = d * 1.1
+            mg = MigrationGraph.with_distance(
+                structure=migration_graph_struct,
+                migrating_specie=mobile_specie,
+                max_distance=d,
+            )
+
+            # check for spike in number of hops
+            if len(mg.unique_hops) >= 1.5 * num_unique_hops and num_unique_hops >= 4:
+                return d / 1.1  # return value of d before the number of hops spiked
+
             num_unique_hops = len(mg.unique_hops)
 
-            # continually incrementally increase d until either...
-            # 1) the largest hop distance exceeds 2x the smallest hop distance
-            # 2) the number of unique hops spikes (increases by more than 1.5x)
-            while (
-                max([v["hop_distance"] for v in mg.unique_hops.values()])
-                <= smallest_hop_distance * 2
-                and d < max_hop_distance
-            ):
-                d = d * 1.1
-                mg = MigrationGraph.with_distance(
-                    structure=migration_graph_struct,
-                    migrating_specie=mobile_specie,
-                    max_distance=d,
-                )
-
-                # check for spike in number of hops
-                if len(mg.unique_hops) >= 1.5 * num_unique_hops and num_unique_hops >= 4:
-                    return d / 1.1  # return value of d before the number of hops spiked
-
-                num_unique_hops = len(mg.unique_hops)
-
-            return d
-
-    except:
-        return None
+        return d
