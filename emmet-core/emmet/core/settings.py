@@ -100,7 +100,7 @@ class EmmetSettings(BaseSettings):
     )
 
     VASP_STRUCTURE_QUALITY_SCORES: Dict[str, int] = Field(
-        {"SCAN": 3, "GGA+U": 2, "GGA": 1},
+        {"PBESol": 5, "R2SCAN": 4, "SCAN": 3, "GGA+U": 2, "GGA": 1},
         description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builder structure data",
     )
 
