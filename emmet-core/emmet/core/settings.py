@@ -130,6 +130,10 @@ class EmmetSettings(BaseSettings):
         description="Default input sets for task validation",
     )
 
+    VASP_PSEUDO_DIR: str = Field(
+        None, description="Pymatgen compatible directory of VASP pseudopotentials.",
+    )
+
     VASP_CHECKED_LDAU_FIELDS: List[str] = Field(
         ["LDAUU", "LDAUJ", "LDAUL"], description="LDAU fields to validate for tasks"
     )
@@ -181,6 +185,19 @@ class EmmetSettings(BaseSettings):
         if isinstance(value, dict):
             return {k: MontyDecoder().process_decoded(v) for k, v in value.items()}
         return value
+
+    @validator("VASP_PSEUDO_DIR", pre=True, always=True)
+    def get_default_dir(cls, value):
+        if value is not None:
+            return value
+        else:
+            try:
+                from pymatgen.core import SETTINGS
+
+                directory = SETTINGS.get("PMG_VASP_PSP_DIR", None)
+                return directory
+            except ImportError:
+                return None
 
     def as_dict(self):
         """

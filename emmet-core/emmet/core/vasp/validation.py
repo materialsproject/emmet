@@ -22,6 +22,7 @@ class DeprecationMessage(DocEnum):
     ENCUT = "C002", "ENCUT too low"
     FORCES = "C003", "Forces too large"
     MAG = "C004", "At least one site magnetization is too large"
+    PSEUDO = "C005", "The has of at least one pseudopotential used is not correct"
     CONVERGENCE = "E001", "Calculation did not converge"
     MAX_SCF = "E002", "Max SCF gradient too large"
     LDAU = "I001", "LDAU Parameters don't match the inputset"
@@ -59,6 +60,7 @@ class ValidationDoc(EmmetBaseModel):
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
         kspacing_tolerance: float = SETTINGS.VASP_KSPACING_TOLERANCE,
         input_sets: Dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
+        pseudo_dir: str = SETTINGS.VASP_PSEUDO_DIR,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
     ) -> "ValidationDoc":
@@ -70,6 +72,7 @@ class ValidationDoc(EmmetBaseModel):
             kpts_tolerance: the tolerance to allow kpts to lag behind the input set settings
             kspacing_tolerance:  the tolerance to allow kspacing to lag behind the input set settings
             input_sets: a dictionary of task_types -> pymatgen input set for validation
+            pseudo_dir: directory of pseudopotential directory to ensure correct hashes
             LDAU_fields: LDAU fields to check for consistency
             max_allowed_scf_gradient: maximum uphill gradient allowed for SCF steps after the
                 initial equillibriation period
@@ -94,6 +97,11 @@ class ValidationDoc(EmmetBaseModel):
                 )
             except TypeError:
                 valid_input_set = input_sets[str(calc_type)](structure)
+
+            # Checking POTCAR hashes if a directory is supplied
+            if pseudo_dir:
+                if _pseudo_hash_check(task_doc, valid_input_set):
+                    reasons.append(DeprecationMessage.PSEUDO)
 
             # Checking K-Points
             # Calculations that use KSPACING will not have a .kpoints attr
@@ -213,6 +221,34 @@ class ValidationDoc(EmmetBaseModel):
             warnings=warnings,
         )
         return doc
+
+
+def _pseudo_hash_check(task_doc, input_set):
+    """
+    Checks to make sure the pseudopotential hash is equal to the correct value from the
+    pymatgen input set.
+    """
+
+    potcar_details = task_doc.calcs_reversed[0]["input"]["potcar_spec"]
+
+    all_match = True
+
+    for potcar in input_set.potcar:
+        symbol = potcar.symbol
+        hash_val = potcar.get_potcar_hash()
+        match = False
+        for spec in potcar_details:
+            if symbol in spec["titel"] and hash_val == spec["hash"]:
+                match = True
+                break
+
+        if not match:
+            all_match = False
+
+    if all_match:
+        return False
+
+    return True
 
 
 def _magmom_check(task_doc, chemsys):
