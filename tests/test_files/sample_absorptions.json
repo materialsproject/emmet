@@ -465,25 +465,7 @@
                         }
                     ]
                 },
-                "nkpoints" : 47,
-                "potcar" : [
-                    "Cs_sv",
-                    "Br"
-                ],
-                "potcar_spec" : [
-                    {
-                        "titel" : "PAW_PBE Cs_sv 08Apr2002",
-                        "hash" : "096b53a7d80cc0086976bcda50d536e5"
-                    },
-                    {
-                        "titel" : "PAW_PBE Br 06Sep2000",
-                        "hash" : "40f9594b4506684a69158c8975cfb9d6"
-                    }
-                ],
-                "potcar_type" : [
-                    "PAW_PBE",
-                    "PAW_PBE"
-                ],
+                "nkpoints" : 4,
                 "parameters" : {
                     "SYSTEM" : "unknown system",
                     "LCOMPAT" : false,
@@ -37369,25 +37351,7 @@
         "is_hubbard" : false,
         "hubbards" : {},
         "is_lasph" : false,
-        "potcar_spec" : [
-            {
-                "titel" : "PAW_PBE Cs_sv 08Apr2002",
-                "hash" : "096b53a7d80cc0086976bcda50d536e5"
-            },
-            {
-                "titel" : "PAW_PBE Br 06Sep2000",
-                "hash" : "40f9594b4506684a69158c8975cfb9d6"
-            }
-        ],
         "xc_override" : null,
-        "pseudo_potential" : {
-            "functional" : "pbe",
-            "pot_type" : "paw",
-            "labels" : [
-                "Cs_sv",
-                "Br"
-            ]
-        },
         "parameters" : {
             "SYSTEM" : "unknown system",
             "LCOMPAT" : false,
@@ -37874,15 +37838,6 @@
             "SIGMA" : 0.01,
             "@module" : "pymatgen.io.vasp.inputs",
             "@class" : "Incar"
-        },
-        "potcar" : {
-            "functional" : "PBE",
-            "symbols" : [
-                "Cs_sv",
-                "Br"
-            ],
-            "@module" : "pymatgen.io.vasp.inputs",
-            "@class" : "Potcar"
         }
     },
     "output" : {
