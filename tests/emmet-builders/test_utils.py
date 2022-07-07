@@ -2,8 +2,12 @@ from emmet.builders.utils import (
     chemsys_permutations,
     maximal_spanning_non_intersecting_subsets,
     get_working_ion_entries,
+    get_hop_cutoff,
 )
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
+from numpy.testing import assert_almost_equal
+from monty.serialization import loadfn
 
 
 def test_maximal_spanning_non_intersecting_subsets():
@@ -41,3 +45,32 @@ def test_get_working_ion_entries():
     assert len(sub_wi.keys()) == 3
     assert type(sub_wi["Li"]) == ComputedEntry
     assert type(single_wi) == ComputedEntry
+
+
+def test_get_hop_cutoff(test_dir):
+    spinel_mg = loadfn(test_dir / "migration_graph_spinel_MgMn2O4.json")
+    nasicon_mg = loadfn(test_dir / "migration_graph_nasicon_MgV2(PO4)3.json")
+
+    # tests for "min_distance" algorithm
+    assert_almost_equal(
+        get_hop_cutoff(spinel_mg.structure, "Mg", algorithm="min_distance"),
+        1.95,
+        decimal=2,
+    )
+    assert_almost_equal(
+        get_hop_cutoff(nasicon_mg.structure, "Mg", algorithm="min_distance"),
+        3.80,
+        decimal=2,
+    )
+
+    # test for "hops_based" algorithm, terminated by number of unique hops condition
+    d = get_hop_cutoff(spinel_mg.structure, "Mg", algorithm="hops_based")
+    check_mg = MigrationGraph.with_distance(spinel_mg.structure, "Mg", d)
+    assert_almost_equal(d, 4.18, decimal=2)
+    assert len(check_mg.unique_hops) == 5
+
+    # test for "hops_based" algorithm, terminated by the largest hop length condition
+    d = get_hop_cutoff(nasicon_mg.structure, "Mg", algorithm="hops_based")
+    check_mg = MigrationGraph.with_distance(nasicon_mg.structure, "Mg", d)
+    assert_almost_equal(d, 4.59, decimal=2)
+    assert len(check_mg.unique_hops) == 6
