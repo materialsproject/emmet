@@ -47,49 +47,6 @@ def chemsys_permutations(chemsys) -> Set:
     }
 
 
-def get_working_ion_entries(
-    working_ions: Union[str, List[str]] = "all",
-    inc_structure: Union[str, None] = None,
-) -> Union[ComputedEntry, ComputedStructureEntry, Dict]:
-    """
-    working_ions (str, List): If single working ion string is provided
-        (e.g. "Li" or "Na"), a single ComputedEntry or ComputedStructureEntry
-        will be returned. If a list of working ion strings are provided,
-        (e.g. ["Li","Na"]), a dictionary will be returned where working ion
-        strings are the keys and the values are corresponding ComputedEntries
-        or ComputedStructureEntries. By default a dictionary will be returned
-        based on WORKING_IONS from emmet.builders.materials.electrodes
-    inc_structure (str): If None, entries returned are ComputedEntries.
-        If inc_structure="initial", ComputedStructureEntries with initial
-        structures are returned. Otherwise, ComputedStructureEntries with
-        final structures are returned.
-    """
-    mpr = MPRester()
-
-    if working_ions == "all":
-        output = {}
-        for wi in WORKING_IONS:
-            all_entries = mpr.get_entries_in_chemsys([wi], inc_structure=inc_structure)
-            output.update({wi: min(all_entries, key=lambda k: k.energy_per_atom)})
-        return output
-
-    elif type(working_ions) == list:
-        output = {}
-        for wi in working_ions:
-            all_entries = mpr.get_entries_in_chemsys([wi], inc_structure=inc_structure)
-            output.update({wi: min(all_entries, key=lambda k: k.energy_per_atom)})
-        return output
-
-    elif type(working_ions) == str:
-        all_entries = mpr.get_entries_in_chemsys(
-            [working_ions], inc_structure=inc_structure
-        )
-        return min(all_entries, key=lambda k: k.energy_per_atom)
-
-    else:
-        return None
-
-
 def get_hop_cutoff(
     migration_graph_struct: Structure,
     mobile_specie: str,

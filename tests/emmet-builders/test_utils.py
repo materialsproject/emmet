@@ -31,22 +31,6 @@ def test_chemsys_permutations(test_dir):
     assert len(chemsys_permutations("Sr-Hf-O")) == 7
 
 
-def test_get_working_ion_entries():
-    all_wi = get_working_ion_entries(working_ions="all")
-    all_with_struct = get_working_ion_entries(working_ions="all", inc_structure="final")
-    sub_wi = get_working_ion_entries(working_ions=["Li", "Na", "Mg"])
-    single_wi = get_working_ion_entries(working_ions="Li")
-
-    assert type(all_wi) == dict
-    assert type(all_wi["Li"]) == ComputedEntry
-    assert type(all_with_struct) == dict
-    assert type(all_with_struct["Li"]) == ComputedStructureEntry
-    assert type(sub_wi) == dict
-    assert len(sub_wi.keys()) == 3
-    assert type(sub_wi["Li"]) == ComputedEntry
-    assert type(single_wi) == ComputedEntry
-
-
 def test_get_hop_cutoff(test_dir):
     spinel_mg = loadfn(test_dir / "migration_graph_spinel_MgMn2O4.json")
     nasicon_mg = loadfn(test_dir / "migration_graph_nasicon_MgV2(PO4)3.json")
