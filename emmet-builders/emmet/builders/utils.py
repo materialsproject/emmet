@@ -1,8 +1,5 @@
-from typing import Set, List, Union, Dict
+from typing import Set, Union
 from itertools import chain, combinations
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
-from pymatgen.ext.matproj import MPRester
-from emmet.builders.materials.electrodes import WORKING_IONS
 from pymatgen.core import Structure
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 

@@ -1,10 +1,8 @@
 from emmet.builders.utils import (
     chemsys_permutations,
     maximal_spanning_non_intersecting_subsets,
-    get_working_ion_entries,
     get_hop_cutoff,
 )
-from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 from numpy.testing import assert_almost_equal
 from monty.serialization import loadfn
