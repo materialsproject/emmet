@@ -2,6 +2,7 @@
 Settings for defaults in the core definitions of Materials Project Documents
 """
 import json
+import os
 from pathlib import Path
 from typing import Dict, List, Type, TypeVar, Union
 
@@ -189,6 +190,7 @@ class EmmetSettings(BaseSettings):
     @validator("VASP_PSEUDO_DIR", pre=True, always=True)
     def get_default_dir(cls, value):
         if value is not None:
+            os.environ["PMG_VASP_PSP_DIR"] = value
             return value
         else:
             try:
