@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.29.3](https://github.com/materialsproject/emmet/tree/v0.29.3) (2022-07-07)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.29.2...v0.29.3)
+
+**Merged pull requests:**
+
+- Fix builder settings [\#449](https://github.com/materialsproject/emmet/pull/449) ([munrojm](https://github.com/munrojm))
+
 ## [v0.29.2](https://github.com/materialsproject/emmet/tree/v0.29.2) (2022-07-07)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.29.1...v0.29.2)
