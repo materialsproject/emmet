@@ -248,7 +248,7 @@ class ThermoBuilder(Builder):
 
     def get_entries(self, chemsys: str) -> List[Dict]:
         """
-        Gets a entries from the tasks collection for the corresponding chemical systems
+        Gets entries from the materials collection for the corresponding chemical systems
         Args:
             chemsys(str): a chemical system represented by string elements seperated by a dash (-)
         Returns:
@@ -275,6 +275,12 @@ class ThermoBuilder(Builder):
         new_q = dict(self.query)
         new_q["chemsys"] = {"$in": list(query_chemsys)}
         new_q["deprecated"] = False
+
+        # only build with materials that have a GGA or GGA+U entry
+        new_q["$or"] = [
+            {"entries.GGA": {"$exists": True}},
+            {"entries.GGA+U": {"$exists": True}},
+        ]
         materials_docs = list(
             self.materials.query(
                 criteria=new_q, properties=["material_id", "entries", "deprecated"]
@@ -300,24 +306,23 @@ class ThermoBuilder(Builder):
             f"Got {len(materials_docs)} entries from DB for {len(query_chemsys)} sub-chemsys for {chemsys}"
         )
 
-        # Convert the entries into ComputedEntries and store
+        # Convert GGA and GGA+U entries into ComputedEntries and store
         for doc in materials_docs:
             for r_type, entry_dict in doc.get("entries", {}).items():
-                entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
-                    entry_dict["entry_id"], {}
-                )
-                entry_dict["data"]["run_type"] = r_type
-                elsyms = sorted(set([el for el in entry_dict["composition"]]))
-                self._entries_cache["-".join(elsyms)].append(entry_dict)
-                all_entries.append(entry_dict)
+                if r_type == "GGA" or r_type == "GGA+U":
+                    entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
+                        entry_dict["entry_id"], {}
+                    )
+                    entry_dict["data"]["run_type"] = r_type
+                    elsyms = sorted(set([el for el in entry_dict["composition"]]))
+                    self._entries_cache["-".join(elsyms)].append(entry_dict)
+                    all_entries.append(entry_dict)
 
         self.logger.info(f"Total entries in {chemsys} : {len(all_entries)}")
 
         return all_entries
 
-    def get_updated_chemsys(
-        self,
-    ) -> Set:
+    def get_updated_chemsys(self,) -> Set:
         """Gets updated chemical system as defined by the updating of an existing material"""
 
         updated_mats = self.thermo.newer_in(self.materials, criteria=self.query)
