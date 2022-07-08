@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.29.4](https://github.com/materialsproject/emmet/tree/v0.29.4) (2022-07-08)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.29.3...v0.29.4)
+
+**Merged pull requests:**
+
+- Properly set potcar dir in validation [\#450](https://github.com/materialsproject/emmet/pull/450) ([munrojm](https://github.com/munrojm))
+
 ## [v0.29.3](https://github.com/materialsproject/emmet/tree/v0.29.3) (2022-07-07)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.29.2...v0.29.3)
