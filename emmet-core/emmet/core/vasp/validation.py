@@ -4,6 +4,7 @@ from typing import Dict, List, Union
 import numpy as np
 from pydantic import Field, PyObject
 from pymatgen.core.structure import Structure
+from pymatgen.core import SETTINGS as pmg_settings
 from pymatgen.io.vasp.sets import VaspInputSet
 
 from emmet.core.settings import EmmetSettings
@@ -22,7 +23,7 @@ class DeprecationMessage(DocEnum):
     ENCUT = "C002", "ENCUT too low"
     FORCES = "C003", "Forces too large"
     MAG = "C004", "At least one site magnetization is too large"
-    POTCAR = "C005", "The has of at least one POTCAR used is not correct"
+    POTCAR = "C005", "The hash of at least one POTCAR used is not correct"
     CONVERGENCE = "E001", "Calculation did not converge"
     MAX_SCF = "E002", "Max SCF gradient too large"
     LDAU = "I001", "LDAU Parameters don't match the inputset"
@@ -100,6 +101,7 @@ class ValidationDoc(EmmetBaseModel):
 
             # Checking POTCAR hashes if a directory is supplied
             if pseudo_dir:
+                pmg_settings["PMG_VASP_PSP_DIR"] = pseudo_dir
                 if _potcar_hash_check(task_doc, valid_input_set):
                     reasons.append(DeprecationMessage.POTCAR)
 
