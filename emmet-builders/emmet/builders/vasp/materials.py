@@ -244,7 +244,7 @@ class MaterialsBuilder(Builder):
                 materials.append(
                     MaterialsDoc.from_tasks(
                         group,
-                        quality_scores=self.settings.VASP_QUALITY_SCORES,
+                        structure_quality_scores=self.settings.VASP_STRUCTURE_QUALITY_SCORES,
                         use_statics=self.settings.VASP_USE_STATICS,
                     )
                 )
