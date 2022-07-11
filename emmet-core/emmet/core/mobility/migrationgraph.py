@@ -54,14 +54,12 @@ class MigrationGraphDoc(EmmetBaseModel):
         Then a MigrationGraph object is generated with with_distance() method with a designated cutoff.
         """
 
-        try:
-            ranked_structures = MigrationGraph.get_structure_from_entries(
-                entries=grouped_entries,
-                migrating_ion_entry=working_ion_entry
-            )
-            max_sites_struct = ranked_structures[0]
-        except IndexError:
-            return None
+
+        ranked_structures = MigrationGraph.get_structure_from_entries(
+            entries=grouped_entries,
+            migrating_ion_entry=working_ion_entry
+        )
+        max_sites_struct = ranked_structures[0]
 
         migration_graph = MigrationGraph.with_distance(
             structure=max_sites_struct,
