@@ -1,6 +1,6 @@
 monty==2022.4.26
 pydantic==1.8.2
-pymatgen==2022.5.26
+pymatgen==2022.7.8
 pybtex==0.24.0
 typing-extensions==4.3.0
 seekpath==2.0.1
