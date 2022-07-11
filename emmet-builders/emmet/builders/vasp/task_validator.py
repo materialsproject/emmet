@@ -58,6 +58,7 @@ class TaskValidator(MapBuilder):
             kpts_tolerance=self.settings.VASP_KPTS_TOLERANCE,
             kspacing_tolerance=self.settings.VASP_KSPACING_TOLERANCE,
             input_sets=self.settings.VASP_DEFAULT_INPUT_SETS,
+            pseudo_dir=self.settings.VASP_PSEUDO_DIR,
             LDAU_fields=self.settings.VASP_CHECKED_LDAU_FIELDS,
             max_allowed_scf_gradient=self.settings.VASP_MAX_SCF_GRADIENT,
         )
