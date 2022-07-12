@@ -27,6 +27,11 @@ class DeprecationMessage(DocEnum):
     CONVERGENCE = "E001", "Calculation did not converge"
     MAX_SCF = "E002", "Max SCF gradient too large"
     LDAU = "I001", "LDAU Parameters don't match the inputset"
+    SET = (
+        "I002",
+        "Cannot validate due to missing input set for calculation type in builder settings",
+    )
+    UNKNOWN = "U001", "Cannot validate due to unknown calc type"
 
 
 class ValidationDoc(EmmetBaseModel):
@@ -194,6 +199,11 @@ class ValidationDoc(EmmetBaseModel):
             # Check for magmom anomalies for specific elements
             if _magmom_check(task_doc, chemsys):
                 reasons.append(DeprecationMessage.MAG)
+        else:
+            if "Unrecognized" in calc_type.value:
+                reasons.append(DeprecationMessage.UNKNOWN)
+            else:
+                reasons.append(DeprecationMessage.SET)
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,
@@ -204,6 +214,7 @@ class ValidationDoc(EmmetBaseModel):
             data=data,
             warnings=warnings,
         )
+
         return doc
 
 
