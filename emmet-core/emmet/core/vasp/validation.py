@@ -26,7 +26,10 @@ class DeprecationMessage(DocEnum):
     CONVERGENCE = "E001", "Calculation did not converge"
     MAX_SCF = "E002", "Max SCF gradient too large"
     LDAU = "I001", "LDAU Parameters don't match the inputset"
-    SET = "I002", "Input set for calculation type not defined in builder settings"
+    SET = (
+        "I002",
+        "Cannot validate due to missing input set for calculation type in builder settings",
+    )
     UNKNOWN = "U001", "Cannot validate due to unknown calc type"
 
 
