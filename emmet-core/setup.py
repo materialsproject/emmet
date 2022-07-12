@@ -34,6 +34,7 @@ setup(
         "typing-extensions>=3.7,<5.0",
         "robocrys>=0.2.7",
         "matminer>=0.7.3",
+        "pymatgen-analysis-diffusion>=2022.1.15"
     ],
     python_requires=">=3.8",
     license="modified BSD",
