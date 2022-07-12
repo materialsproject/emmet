@@ -194,24 +194,23 @@ class ValidationDoc(EmmetBaseModel):
             # Check for magmom anomalies for specific elements
             if _magmom_check(task_doc, chemsys):
                 reasons.append(DeprecationMessage.MAG)
-
-            doc = ValidationDoc(
-                task_id=task_doc.task_id,
-                calc_type=calc_type,
-                run_type=task_doc.run_type,
-                valid=len(reasons) == 0,
-                reasons=reasons,
-                data=data,
-                warnings=warnings,
-            )
-
-            return doc
         else:
             if "Unrecognized" in calc_type.value:
                 reasons.append(DeprecationMessage.UNKNOWN)
-
             else:
                 reasons.append(DeprecationMessage.SET)
+
+        doc = ValidationDoc(
+            task_id=task_doc.task_id,
+            calc_type=calc_type,
+            run_type=task_doc.run_type,
+            valid=len(reasons) == 0,
+            reasons=reasons,
+            data=data,
+            warnings=warnings,
+        )
+
+        return doc
 
 
 def _kpoint_check(input_set, inputs, data, kpts_tolerance):
