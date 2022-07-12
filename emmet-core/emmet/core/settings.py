@@ -127,6 +127,7 @@ class EmmetSettings(BaseSettings):
             "R2SCAN Static": "pymatgen.io.vasp.sets.MPScanStaticSet",
             "SCAN Static": "pymatgen.io.vasp.sets.MPScanStaticSet",
             "PBESol Static": "pymatgen.io.vasp.sets.MPScanStaticSet",
+            "HSE06 Static": "pymatgen.io.vasp.sets.MPScanStaticSet",
             "GGA NSCF Uniform": "pymatgen.io.vasp.sets.MPNonSCFSet",
             "GGA+U NSCF Uniform": "pymatgen.io.vasp.sets.MPNonSCFSet",
             "GGA NSCF Line": "pymatgen.io.vasp.sets.MPNonSCFSet",
