@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.30.1](https://github.com/materialsproject/emmet/tree/v0.30.1) (2022-07-12)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.30.0...v0.30.1)
+
+**Merged pull requests:**
+
+- Fix handling deformation tasks in materials builder [\#453](https://github.com/materialsproject/emmet/pull/453) ([munrojm](https://github.com/munrojm))
+
 ## [v0.30.0](https://github.com/materialsproject/emmet/tree/v0.30.0) (2022-07-12)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.29.5...v0.30.0)
