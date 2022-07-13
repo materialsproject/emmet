@@ -1,10 +1,9 @@
 from datetime import datetime
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 import numpy as np
 from pydantic import Field, PyObject
 from pymatgen.core.structure import Structure
-from pymatgen.core import SETTINGS as pmg_settings
 from pymatgen.io.vasp.sets import VaspInputSet
 
 from emmet.core.settings import EmmetSettings
@@ -12,6 +11,7 @@ from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.utils import DocEnum
 from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.vasp.calc_types.enums import CalcType
 
 SETTINGS = EmmetSettings()
 
@@ -66,9 +66,9 @@ class ValidationDoc(EmmetBaseModel):
         kpts_tolerance: float = SETTINGS.VASP_KPTS_TOLERANCE,
         kspacing_tolerance: float = SETTINGS.VASP_KSPACING_TOLERANCE,
         input_sets: Dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
-        pseudo_dir: str = SETTINGS.VASP_PSEUDO_DIR,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
+        potcar_hashes: Optional[Dict[CalcType, Dict[str, str]]] = None,
     ) -> "ValidationDoc":
         """
         Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
@@ -82,6 +82,7 @@ class ValidationDoc(EmmetBaseModel):
             LDAU_fields: LDAU fields to check for consistency
             max_allowed_scf_gradient: maximum uphill gradient allowed for SCF steps after the
                 initial equillibriation period
+            potcar_hashes: Dictionary of potcar hash data. Mapping is calculation type -> potcar symbol -> hash value.
         """
 
         structure = task_doc.output.structure
@@ -105,9 +106,8 @@ class ValidationDoc(EmmetBaseModel):
                 valid_input_set = input_sets[str(calc_type)](structure)
 
             # Checking POTCAR hashes if a directory is supplied
-            if pseudo_dir:
-                pmg_settings["PMG_VASP_PSP_DIR"] = pseudo_dir
-                if _potcar_hash_check(task_doc, valid_input_set):
+            if potcar_hashes:
+                if _potcar_hash_check(task_doc, potcar_hashes):
                     reasons.append(DeprecationMessage.POTCAR)
 
             # Checking K-Points
@@ -200,7 +200,7 @@ class ValidationDoc(EmmetBaseModel):
             if _magmom_check(task_doc, chemsys):
                 reasons.append(DeprecationMessage.MAG)
         else:
-            if "Unrecognized" in calc_type.value:
+            if "Unrecognized" in str(calc_type):
                 reasons.append(DeprecationMessage.UNKNOWN)
             else:
                 reasons.append(DeprecationMessage.SET)
@@ -250,7 +250,7 @@ def _kspacing_warnings(input_set, inputs, data, warnings, kspacing_tolerance):
             )
 
 
-def _potcar_hash_check(task_doc, input_set):
+def _potcar_hash_check(task_doc, potcar_hashes):
     """
     Checks to make sure the POTCAR hash is equal to the correct value from the
     pymatgen input set.
@@ -260,17 +260,12 @@ def _potcar_hash_check(task_doc, input_set):
 
     all_match = True
 
-    for potcar in input_set.potcar:
-        symbol = potcar.symbol
-        hash_val = potcar.get_potcar_hash()
-        match = False
-        for spec in potcar_details:
-            if symbol in spec["titel"] and hash_val == spec["hash"]:
-                match = True
-                break
+    for symbol, task_data in potcar_details.items():
+        hash = potcar_hashes[str(task_doc.calc_type)].get(symbol, None)
 
-        if not match:
+        if not hash or hash != task_data["hash"]:
             all_match = False
+            break
 
     return not all_match
 
