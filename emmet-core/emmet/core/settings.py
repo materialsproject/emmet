@@ -144,8 +144,8 @@ class EmmetSettings(BaseSettings):
         description="Default input sets for task validation",
     )
 
-    VASP_PSEUDO_DIR: str = Field(
-        None, description="Pymatgen compatible directory of VASP pseudopotentials.",
+    VASP_VALIDATE_POTCAR_HASHES: bool = Field(
+        True, description="Whether to validate POTCAR hash values."
     )
 
     VASP_CHECKED_LDAU_FIELDS: List[str] = Field(
