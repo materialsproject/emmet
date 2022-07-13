@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.30.5](https://github.com/materialsproject/emmet/tree/v0.30.5) (2022-07-13)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.30.4...v0.30.5)
+
+**Merged pull requests:**
+
+- Speed up `TaskValidation` [\#458](https://github.com/materialsproject/emmet/pull/458) ([munrojm](https://github.com/munrojm))
+
 ## [v0.30.4](https://github.com/materialsproject/emmet/tree/v0.30.4) (2022-07-13)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.30.3...v0.30.4)
