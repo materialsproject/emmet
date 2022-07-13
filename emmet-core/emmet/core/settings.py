@@ -200,20 +200,6 @@ class EmmetSettings(BaseSettings):
             return {k: MontyDecoder().process_decoded(v) for k, v in value.items()}
         return value
 
-    @validator("VASP_PSEUDO_DIR", pre=True, always=True)
-    def get_default_dir(cls, value):
-        if value is not None:
-            os.environ["PMG_VASP_PSP_DIR"] = value
-            return value
-        else:
-            try:
-                from pymatgen.core import SETTINGS
-
-                directory = SETTINGS.get("PMG_VASP_PSP_DIR", None)
-                return directory
-            except ImportError:
-                return None
-
     def as_dict(self):
         """
         HotPatch to enable serializing EmmetSettings via Monty
