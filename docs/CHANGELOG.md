@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.30.3](https://github.com/materialsproject/emmet/tree/v0.30.3) (2022-07-13)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.30.2...v0.30.3)
+
+**Merged pull requests:**
+
+- Build POTCAR hash cache in validation builder [\#456](https://github.com/materialsproject/emmet/pull/456) ([munrojm](https://github.com/munrojm))
+
 ## [v0.30.2](https://github.com/materialsproject/emmet/tree/v0.30.2) (2022-07-12)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.30.1...v0.30.2)
