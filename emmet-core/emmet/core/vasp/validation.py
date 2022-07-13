@@ -260,10 +260,11 @@ def _potcar_hash_check(task_doc, potcar_hashes):
 
     all_match = True
 
-    for symbol, task_data in potcar_details.items():
+    for entry in potcar_details:
+        symbol = entry["titel"].split(" ")[1]
         hash = potcar_hashes[str(task_doc.calc_type)].get(symbol, None)
 
-        if not hash or hash != task_data["hash"]:
+        if not hash or hash != entry["hash"]:
             all_match = False
             break
 
