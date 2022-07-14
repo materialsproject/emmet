@@ -1,9 +1,6 @@
 from datetime import datetime
 from email.mime import base
-from tarfile import FIFOTYPE
 from typing import List, Union, Dict, Tuple
-from attr import fields_dict
-from pandas import describe_option
 
 from pydantic import BaseModel, Field, validator
 from emmet.core.base import EmmetBaseModel
@@ -11,7 +8,6 @@ from pymatgen.core import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
 from pymatgen.analysis.diffusion.utils.supercells import get_sc_fromstruct
-from pyparsing import unicode_set
 
 
 class MigrationGraphDoc(EmmetBaseModel):
