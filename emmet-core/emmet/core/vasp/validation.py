@@ -144,7 +144,7 @@ class ValidationDoc(EmmetBaseModel):
                     reasons.append(DeprecationMessage.ENCUT)
 
                 # U-value checks
-                if _u_value_checks(task_doc, valid_input_set):
+                if _u_value_checks(task_doc, valid_input_set, warnings):
                     reasons.append(DeprecationMessage.LDAU)
 
                 # Check the max upwards SCF step
