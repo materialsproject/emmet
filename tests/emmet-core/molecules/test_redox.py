@@ -1,15 +1,12 @@
-import json
-import datetime
-import copy
-import pickle
-
 import pytest
 
-from monty.io import zopen
 from monty.serialization import loadfn
 
 from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.molecules.redox import RedoxDoc
+
+
+#TODO: REGENERATE AND FIX
 
 
 @pytest.fixture(scope="session")

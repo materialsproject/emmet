@@ -1,10 +1,5 @@
-import json
-import datetime
-import copy
-
 import pytest
 
-from monty.io import zopen
 from monty.serialization import loadfn
 
 from emmet.core.qchem.molecule import MoleculeDoc
@@ -15,6 +10,9 @@ from emmet.core.molecules.redox import RedoxDoc
 from emmet.core.molecules.thermo import ThermoDoc
 from emmet.core.molecules.vibration import VibrationDoc
 from emmet.core.molecules.summary import SummaryDoc
+
+
+#TODO: REGENERATE AND FIX
 
 
 @pytest.fixture(scope="session")
