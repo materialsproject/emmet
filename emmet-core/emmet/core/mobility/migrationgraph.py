@@ -113,20 +113,20 @@ class MigrationGraphDoc(EmmetBaseModel):
         entries: List[ComputedStructureEntry],
         min_length: float,
         min_max_num_atoms: Tuple[int]
-    )
+    ):
 
-    min_length = min_length,
-    min_max_num_atoms = min_max_num_atoms
+        min_length = min_length,
+        min_max_num_atoms = min_max_num_atoms
 
-    host_sc = get_sc_fromstruct(
-        base_struct=uc_struct,
-        min_atoms=min_max_num_atoms[0],
-        max_atoms=min_max_num_atoms[1],
-        min_length=min_length
-    )
+        host_sc = get_sc_fromstruct(
+            base_struct=uc_struct,
+            min_atoms=min_max_num_atoms[0],
+            max_atoms=min_max_num_atoms[1],
+            min_length=min_length
+        )
 
-    coords = []
+        coords = []
 
-    combo = []
+        combo = []
 
-    return host_sc, conversion_matrix, min_length, min_max_num_atoms, coords, combo
+        return host_sc, conversion_matrix, min_length, min_max_num_atoms, coords, combo
