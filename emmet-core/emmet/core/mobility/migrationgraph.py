@@ -1,10 +1,17 @@
 from datetime import datetime
-from typing import List, Union, Dict
+from email.mime import base
+from tarfile import FIFOTYPE
+from typing import List, Union, Dict, Tuple
+from attr import fields_dict
+from pandas import describe_option
 
 from pydantic import BaseModel, Field, validator
 from emmet.core.base import EmmetBaseModel
+from pymatgen.core import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
+from pymatgen.analysis.diffusion.utils.supercells import get_sc_fromstruct
+from pyparsing import unicode_set
 
 
 class MigrationGraphDoc(EmmetBaseModel):
@@ -41,6 +48,36 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="The MigrationGraph object as defined in pymatgen.analysis.diffusion."
     )
 
+    matrix_supercell_structure: Structure = Field(
+        None,
+        description="The matrix suprcell structure that does not contain the mobile ions for the purpose of migration analysis."
+    )
+
+    conversion_matrix: List = Field(
+        None,
+        description="The conversion matrix used to convert unit cell to supercell."
+    )
+
+    min_length_sc: float = Field(
+        None,
+        description="The minimum length used to generate supercell using pymatgen."
+    )
+
+    min_max_num_atoms: Tuple[int] = Field(
+        None,
+        description="The min/max number of atoms used to genreate supercell using pymatgen."
+    )
+
+    inserted_ion_coords: Dict = Field(
+        None,
+        description="A dictionary containing all mobile ion fractional coordinates in terms of supercell."
+    )
+
+    insert_coords_combo: List[str] = Field(
+        None,
+        description="A list of combinations 'a+b' to designate hops in the supercell. Each combo should correspond to one unique hop in MigrationGraph."
+    )
+
     @classmethod
     def from_entries_and_distance(
         cls,
@@ -73,3 +110,27 @@ class MigrationGraphDoc(EmmetBaseModel):
             working_ion_entry=working_ion_entry,
             migration_graph=migration_graph
         )
+
+    @staticmethod
+    def generate_sc_fields(
+        uc_struct: Structure,
+        entries: List[ComputedStructureEntry],
+        min_length: float,
+        min_max_num_atoms: Tuple[int]
+    )
+
+    min_length = min_length,
+    min_max_num_atoms = min_max_num_atoms
+
+    host_sc = get_sc_fromstruct(
+        base_struct=uc_struct,
+        min_atoms=min_max_num_atoms[0],
+        max_atoms=min_max_num_atoms[1],
+        min_length=min_length
+    )
+
+    coords = []
+
+    combo = []
+
+    return host_sc, conversion_matrix, min_length, min_max_num_atoms, coords, combo
