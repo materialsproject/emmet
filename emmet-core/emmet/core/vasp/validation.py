@@ -102,7 +102,9 @@ class ValidationDoc(EmmetBaseModel):
         if str(calc_type) in input_sets:
 
             try:
-                valid_input_set = _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandgap)
+                valid_input_set = _get_input_set(
+                    run_type, task_type, calc_type, structure, input_sets, bandgap
+                )
 
             except (TypeError, KeyError, ValueError):
                 reasons.append(DeprecationMessage.SET)
@@ -116,16 +118,20 @@ class ValidationDoc(EmmetBaseModel):
 
                 # Checking K-Points
                 # Calculations that use KSPACING will not have a .kpoints attr
-                if valid_input_set.kpoints is not None:
 
-                    if _kpoint_check(valid_input_set, inputs, data, kpts_tolerance):
-                        reasons.append(DeprecationMessage.KPTS)
+                if task_type != task_type.NSCF_Line:
+                    # Not validating k-point data for line-mode calculations as constructing
+                    # the k-path is too costly for the builder and the uniform input set is used.
+                    if valid_input_set.kpoints is not None:
 
-                else:
-                    # warnings
-                    _kspacing_warnings(
-                        valid_input_set, inputs, data, warnings, kspacing_tolerance
-                    )
+                        if _kpoint_check(valid_input_set, inputs, data, kpts_tolerance):
+                            reasons.append(DeprecationMessage.KPTS)
+
+                    else:
+                        # warnings
+                        _kspacing_warnings(
+                            valid_input_set, inputs, data, warnings, kspacing_tolerance
+                        )
 
                 # warn, but don't invalidate if wrong ISMEAR
                 valid_ismear = valid_input_set.incar.get("ISMEAR", 1)
@@ -148,7 +154,9 @@ class ValidationDoc(EmmetBaseModel):
                     reasons.append(DeprecationMessage.LDAU)
 
                 # Check the max upwards SCF step
-                if _scf_upward_check(calcs_reversed, inputs, data, max_allowed_scf_gradient, warnings):
+                if _scf_upward_check(
+                    calcs_reversed, inputs, data, max_allowed_scf_gradient, warnings
+                ):
                     reasons.append(DeprecationMessage.MAX_SCF)
 
                 # Check for Am and Po elements. These currently do not have proper elemental entries
@@ -185,7 +193,9 @@ def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandga
         valid_input_set: VaspInputSet = input_sets[str(calc_type)](
             structure, bandgap=bandgap
         )
-    elif task_type == TaskType.NSCF_Uniform:
+    elif task_type == TaskType.NSCF_Uniform or task_type == TaskType.NSCF_Line:
+        # Constructing the k-path for line-mode calculations is too costly, so
+        # the uniform input set is used instead and k-points are not checked.
         valid_input_set = input_sets[str(calc_type)](structure, mode="uniform")
 
     elif task_type == TaskType.NMR_Electric_Field_Gradient:
@@ -201,9 +211,7 @@ def _scf_upward_check(calcs_reversed, inputs, data, max_allowed_scf_gradient, wa
     skip = abs(inputs.get("incar", {}).get("NLEMDL", -5)) - 1
     energies = [
         d["e_fr_energy"]
-        for d in calcs_reversed[0]["output"]["ionic_steps"][-1][
-            "electronic_steps"
-        ]
+        for d in calcs_reversed[0]["output"]["ionic_steps"][-1]["electronic_steps"]
     ]
     if len(energies) > skip:
         max_gradient = np.max(np.gradient(energies)[skip:])
@@ -231,15 +239,11 @@ def _u_value_checks(task_doc, valid_input_set, warnings):
             )
         )
 
-        all_elements = list(
-            set(input_set_hubbards.keys()) | set(input_hubbards.keys())
-        )
+        all_elements = list(set(input_set_hubbards.keys()) | set(input_hubbards.keys()))
         diff_ldau_params = {
             el: (input_set_hubbards.get(el, 0), input_hubbards.get(el, 0))
             for el in all_elements
-            if not np.allclose(
-                input_set_hubbards.get(el, 0), input_hubbards.get(el, 0)
-            )
+            if not np.allclose(input_set_hubbards.get(el, 0), input_hubbards.get(el, 0))
         }
 
         if len(diff_ldau_params) > 0:
