@@ -12,7 +12,7 @@ from mp_api.routes.alloys.query_operators import (
 
 def alloys_resource(alloys_store):
     resource = ReadOnlyResource(
-        alloys_store,
+        alloy_pairs_store,
         AlloyPairDoc,
         query_operators=[
             MaterialIDsSearchQuery(),
