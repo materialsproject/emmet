@@ -13,206 +13,211 @@ db_version = default_settings.DB_VERSION
 db_suffix = os.environ.get("MAPI_DB_NAME_SUFFIX", db_version)
 debug = default_settings.DEBUG
 
+# allow db_uri to be set with a different protocol scheme
+# but prepend with mongodb+srv:// if not otherwise specified
+if not urlparse(db_uri).scheme:
+    db_uri = "mongodb+srv://" + db_uri
+
 if db_uri:
 
     materials_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="material_id",
         collection_name="materials",
     )
 
     bonds_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="material_id",
         collection_name="bonds",
     )
 
     formula_autocomplete_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="_id",
         collection_name="formula_autocomplete",
     )
 
     task_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="task_id",
         collection_name="tasks",
     )
 
     thermo_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="material_id",
         collection_name="thermo",
     )
 
     phase_diagram_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="chemsys",
         collection_name="phase_diagram",
     )
 
     dielectric_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="material_id",
         collection_name="dielectric",
     )
 
     piezoelectric_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="material_id",
         collection_name="piezoelectric",
     )
 
     magnetism_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="material_id",
         collection_name="magnetism",
     )
 
     phonon_bs_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="material_id",
         collection_name="pmg_ph_bs",
     )
 
     eos_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="task_id",
         collection_name="eos",
     )
 
     similarity_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="material_id",
         collection_name="similarity",
     )
 
     xas_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="spectrum_id",
         collection_name="xas",
     )
 
     gb_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="task_id",
         collection_name="grain_boundaries",
     )
 
     fermi_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="task_id",
         collection_name="fermi_surface",
     )
 
     elasticity_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="task_id",
         collection_name="elasticity",
     )
 
     doi_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="task_id",
         collection_name="dois",
     )
 
     substrates_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="film_id",
         collection_name="substrates",
     )
 
     surface_props_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="task_id",
         collection_name="surface_properties",
     )
 
     robo_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="material_id",
         collection_name="robocrys",
     )
 
     synth_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="_id",
         collection_name="synth_descriptions",
     )
 
     insertion_electrodes_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="battery_id",
         collection_name="insertion_electrodes",
     )
 
     molecules_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="task_id",
         collection_name="molecules",
     )
 
     oxi_states_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="material_id",
         collection_name="oxi_states",
     )
 
     provenance_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="material_id",
         collection_name="provenance",
     )
 
     summary_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="material_id",
         collection_name="summary",
     )
 
     es_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database=f"mp_core_{db_suffix}",
         key="material_id",
         collection_name="electronic_structure",
     )
 
     s3_bs_index = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="fs_id",
         collection_name="s3_bandstructure_index",
     )
 
     s3_dos_index = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="fs_id",
         collection_name="s3_dos_index",
@@ -237,7 +242,7 @@ if db_uri:
     )
 
     s3_chgcar_index = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="fs_id",
         collection_name="atomate_chgcar_fs_index",
@@ -254,28 +259,28 @@ if db_uri:
     )
 
     chgcar_url = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_core",
         key="fs_id",
         collection_name="chgcar_s3_urls",
     )
 
     mpcomplete_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_consumers",
         key="submission_id",
         collection_name="mpcomplete",
     )
 
     consumer_settings_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_consumers",
         key="consumer_id",
         collection_name="settings",
     )
 
     general_store = MongoURIStore(
-        uri=f"mongodb+srv://{db_uri}",
+        uri=db_uri,
         database="mp_consumers",
         key="submission_id",
         collection_name="general_store",
