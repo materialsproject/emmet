@@ -87,11 +87,13 @@ class ValidationDoc(EmmetBaseModel):
         """
 
         structure = task_doc.output.structure
+        bandgap = task_doc.output.bandgap
         calc_type = task_doc.calc_type
         task_type = task_doc.task_type
         run_type = task_doc.run_type
         inputs = task_doc.orig_inputs
         chemsys = task_doc.chemsys
+        calcs_reversed = task_doc.calcs_reversed
 
         reasons = []
         data = {}  # type: ignore
@@ -100,27 +102,12 @@ class ValidationDoc(EmmetBaseModel):
         if str(calc_type) in input_sets:
 
             try:
-                # Ensure inputsets get proper additional input values
-                if "SCAN" in run_type.value:
-                    bandgap = task_doc.output.bandgap
+                valid_input_set = _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandgap)
 
-                    valid_input_set: VaspInputSet = input_sets[str(calc_type)](
-                        structure, bandgap=bandgap
-                    )
-                elif task_type == TaskType.NSCF_Uniform:
-                    valid_input_set = input_sets[str(calc_type)](structure, mode="uniform")
-
-                elif task_type == TaskType.NMR_Electric_Field_Gradient:
-                    valid_input_set = input_sets[str(calc_type)](structure, mode="efg")
-
-                else:
-                    valid_input_set = input_sets[str(calc_type)](structure)
-            
             except (TypeError, KeyError, ValueError):
                 reasons.append(DeprecationMessage.SET)
                 valid_input_set = None
 
-            
             if valid_input_set:
                 # Checking POTCAR hashes if a directory is supplied
                 if potcar_hashes:
@@ -157,56 +144,12 @@ class ValidationDoc(EmmetBaseModel):
                     reasons.append(DeprecationMessage.ENCUT)
 
                 # U-value checks
-                # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
-                input_hubbards = task_doc.input.hubbards
-
-                if valid_input_set.incar.get("LDAU", False) or len(input_hubbards) > 0:
-                    # Assemble required input_set LDAU params into dictionary
-                    input_set_hubbards = dict(
-                        zip(
-                            valid_input_set.poscar.site_symbols,
-                            valid_input_set.incar.get("LDAUU", []),
-                        )
-                    )
-
-                    all_elements = list(
-                        set(input_set_hubbards.keys()) | set(input_hubbards.keys())
-                    )
-                    diff_ldau_params = {
-                        el: (input_set_hubbards.get(el, 0), input_hubbards.get(el, 0))
-                        for el in all_elements
-                        if not np.allclose(
-                            input_set_hubbards.get(el, 0), input_hubbards.get(el, 0)
-                        )
-                    }
-
-                    if len(diff_ldau_params) > 0:
-                        reasons.append(DeprecationMessage.LDAU)
-                        warnings.extend(
-                            [
-                                f"U-value for {el} should be {good} but was {bad}"
-                                for el, (good, bad) in diff_ldau_params.items()
-                            ]
-                        )
+                if _u_value_checks(task_doc, valid_input_set):
+                    reasons.append(DeprecationMessage.LDAU)
 
                 # Check the max upwards SCF step
-                skip = abs(inputs.get("incar", {}).get("NLEMDL", -5)) - 1
-                energies = [
-                    d["e_fr_energy"]
-                    for d in task_doc.calcs_reversed[0]["output"]["ionic_steps"][-1][
-                        "electronic_steps"
-                    ]
-                ]
-                if len(energies) > skip:
-                    max_gradient = np.max(np.gradient(energies)[skip:])
-                    data["max_gradient"] = max_gradient
-                    if max_gradient > max_allowed_scf_gradient:
-                        reasons.append(DeprecationMessage.MAX_SCF)
-                else:
-                    warnings.append(
-                        "Not enough electronic steps to compute valid gradient"
-                        " and compare with max SCF gradient tolerance"
-                    )
+                if _scf_upward_check(calcs_reversed, inputs, data, max_allowed_scf_gradient, warnings):
+                    reasons.append(DeprecationMessage.MAX_SCF)
 
                 # Check for Am and Po elements. These currently do not have proper elemental entries
                 # and will not get treated properly by the thermo builder.
@@ -233,6 +176,82 @@ class ValidationDoc(EmmetBaseModel):
         )
 
         return doc
+
+
+def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandgap):
+    # Ensure inputsets get proper additional input values
+    if "SCAN" in run_type.value:
+
+        valid_input_set: VaspInputSet = input_sets[str(calc_type)](
+            structure, bandgap=bandgap
+        )
+    elif task_type == TaskType.NSCF_Uniform:
+        valid_input_set = input_sets[str(calc_type)](structure, mode="uniform")
+
+    elif task_type == TaskType.NMR_Electric_Field_Gradient:
+        valid_input_set = input_sets[str(calc_type)](structure, mode="efg")
+
+    else:
+        valid_input_set = input_sets[str(calc_type)](structure)
+
+    return valid_input_set
+
+
+def _scf_upward_check(calcs_reversed, inputs, data, max_allowed_scf_gradient, warnings):
+    skip = abs(inputs.get("incar", {}).get("NLEMDL", -5)) - 1
+    energies = [
+        d["e_fr_energy"]
+        for d in calcs_reversed[0]["output"]["ionic_steps"][-1][
+            "electronic_steps"
+        ]
+    ]
+    if len(energies) > skip:
+        max_gradient = np.max(np.gradient(energies)[skip:])
+        data["max_gradient"] = max_gradient
+        if max_gradient > max_allowed_scf_gradient:
+            return True
+    else:
+        warnings.append(
+            "Not enough electronic steps to compute valid gradient"
+            " and compare with max SCF gradient tolerance"
+        )
+        return False
+
+
+def _u_value_checks(task_doc, valid_input_set, warnings):
+    # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
+    input_hubbards = task_doc.input.hubbards
+
+    if valid_input_set.incar.get("LDAU", False) or len(input_hubbards) > 0:
+        # Assemble required input_set LDAU params into dictionary
+        input_set_hubbards = dict(
+            zip(
+                valid_input_set.poscar.site_symbols,
+                valid_input_set.incar.get("LDAUU", []),
+            )
+        )
+
+        all_elements = list(
+            set(input_set_hubbards.keys()) | set(input_hubbards.keys())
+        )
+        diff_ldau_params = {
+            el: (input_set_hubbards.get(el, 0), input_hubbards.get(el, 0))
+            for el in all_elements
+            if not np.allclose(
+                input_set_hubbards.get(el, 0), input_hubbards.get(el, 0)
+            )
+        }
+
+        if len(diff_ldau_params) > 0:
+            warnings.extend(
+                [
+                    f"U-value for {el} should be {good} but was {bad}"
+                    for el, (good, bad) in diff_ldau_params.items()
+                ]
+            )
+            return True
+
+    return False
 
 
 def _kpoint_check(input_set, inputs, data, kpts_tolerance):
