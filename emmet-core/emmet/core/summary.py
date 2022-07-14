@@ -14,6 +14,7 @@ from emmet.core.chemenv import (
 from emmet.core.mpid import MPID
 from emmet.core.thermo import DecompositionProduct
 from emmet.core.xas import Edge, Type
+from emmet.core.elasticity import BulkModulus, ShearModulus
 
 T = TypeVar("T", bound="SummaryDoc")
 
@@ -312,41 +313,15 @@ class SummaryDoc(PropertyDoc):
 
     # Elasticity
 
-    k_voigt: float = Field(
-        None,
-        description="Voigt average of the bulk modulus in GPa.",
-        source="elasticity",
+    bulk_modulus: BulkModulus = Field(
+        None, description="Bulk modulus data in in GPa.", source="elasticity",
     )
 
-    k_reuss: float = Field(
-        None,
-        description="Reuss average of the bulk modulus in GPa.",
-        source="elasticity",
+    shear_modulus: ShearModulus = Field(
+        None, description="Shear modulus in GPa.", source="elasticity",
     )
 
-    k_vrh: float = Field(
-        None,
-        description="Voigt-Reuss-Hill average of the bulk modulus in GPa.",
-        source="elasticity",
-    )
-
-    g_voigt: float = Field(
-        None,
-        description="Voigt average of the shear modulus in GPa.",
-        source="elasticity",
-    )
-
-    g_reuss: float = Field(
-        None,
-        description="Reuss average of the shear modulus in GPa.",
-        source="elasticity",
-    )
-
-    g_vrh: float = Field(
-        None,
-        description="Voigt-Reuss-Hill average of the shear modulus in GPa.",
-        source="elasticity",
-    )
+    young_modulus: float = Field(None, description="Young's modulus (SI units)")
 
     universal_anisotropy: float = Field(
         None, description="Elastic anisotropy.", source="elasticity"
@@ -524,12 +499,9 @@ summary_fields: Dict[str, list] = {
         "is_magnetic",
     ],
     HasProps.elasticity.value: [
-        "k_voigt",
-        "k_reuss",
-        "k_vrh",
-        "g_voigt",
-        "g_reuss",
-        "g_vrh",
+        "bulk_modulus",
+        "shear_modulus",
+        "young_modulus",
         "universal_anisotropy",
         "homogeneous_poisson",
     ],

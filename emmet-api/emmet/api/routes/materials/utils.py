@@ -85,8 +85,15 @@ def formula_to_criteria(formulas: str) -> Dict:
                 # Paranoia below about floating-point "equality"
                 crit = {}
                 crit["nelements"] = len(comp)  # type: ignore
-                for el, n in comp.to_reduced_dict.items():
-                    crit[f"composition_reduced.{el}"] = n
+
+                try:
+                    for el, n in comp.to_reduced_dict.items():
+                        crit[f"composition_reduced.{el}"] = n
+                except IndexError:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Problem processing one or more provided formulas.",
+                    )
 
                 return crit
             else:

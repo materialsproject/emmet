@@ -244,12 +244,13 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         grouped_entries: List[ComputedStructureEntry],
         working_ion_entry: ComputedEntry,
         battery_id: str,
+        strip_structures: bool = False,
     ) -> Union["InsertionElectrodeDoc", None]:
         try:
             ie = InsertionElectrode.from_entries(
                 entries=grouped_entries,
                 working_ion_entry=working_ion_entry,
-                strip_structures=True,
+                strip_structures=strip_structures,
             )
         except IndexError:
             return None

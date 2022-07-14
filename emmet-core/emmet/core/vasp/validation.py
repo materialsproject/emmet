@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 import numpy as np
 from pydantic import Field, PyObject
@@ -11,6 +11,7 @@ from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.utils import DocEnum
 from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.vasp.calc_types.enums import CalcType
 
 SETTINGS = EmmetSettings()
 
@@ -22,9 +23,15 @@ class DeprecationMessage(DocEnum):
     ENCUT = "C002", "ENCUT too low"
     FORCES = "C003", "Forces too large"
     MAG = "C004", "At least one site magnetization is too large"
+    POTCAR = "C005", "The hash of at least one POTCAR used is not correct"
     CONVERGENCE = "E001", "Calculation did not converge"
     MAX_SCF = "E002", "Max SCF gradient too large"
     LDAU = "I001", "LDAU Parameters don't match the inputset"
+    SET = (
+        "I002",
+        "Cannot validate due to missing input set for calculation type in builder settings",
+    )
+    UNKNOWN = "U001", "Cannot validate due to unknown calc type"
 
 
 class ValidationDoc(EmmetBaseModel):
@@ -61,6 +68,7 @@ class ValidationDoc(EmmetBaseModel):
         input_sets: Dict[str, PyObject] = SETTINGS.VASP_DEFAULT_INPUT_SETS,
         LDAU_fields: List[str] = SETTINGS.VASP_CHECKED_LDAU_FIELDS,
         max_allowed_scf_gradient: float = SETTINGS.VASP_MAX_SCF_GRADIENT,
+        potcar_hashes: Optional[Dict[CalcType, Dict[str, str]]] = None,
     ) -> "ValidationDoc":
         """
         Determines if a calculation is valid based on expected input parameters from a pymatgen inputset
@@ -70,9 +78,11 @@ class ValidationDoc(EmmetBaseModel):
             kpts_tolerance: the tolerance to allow kpts to lag behind the input set settings
             kspacing_tolerance:  the tolerance to allow kspacing to lag behind the input set settings
             input_sets: a dictionary of task_types -> pymatgen input set for validation
+            pseudo_dir: directory of pseudopotential directory to ensure correct hashes
             LDAU_fields: LDAU fields to check for consistency
             max_allowed_scf_gradient: maximum uphill gradient allowed for SCF steps after the
                 initial equillibriation period
+            potcar_hashes: Dictionary of potcar hash data. Mapping is calculation type -> potcar symbol -> hash value.
         """
 
         structure = task_doc.output.structure
@@ -82,8 +92,8 @@ class ValidationDoc(EmmetBaseModel):
         chemsys = task_doc.chemsys
 
         reasons = []
-        data = {}
-        warnings = []
+        data = {}  # type: ignore
+        warnings: List[str] = []
 
         if str(calc_type) in input_sets:
 
@@ -95,36 +105,23 @@ class ValidationDoc(EmmetBaseModel):
             except TypeError:
                 valid_input_set = input_sets[str(calc_type)](structure)
 
+            # Checking POTCAR hashes if a directory is supplied
+            if potcar_hashes:
+                if _potcar_hash_check(task_doc, potcar_hashes):
+                    reasons.append(DeprecationMessage.POTCAR)
+
             # Checking K-Points
             # Calculations that use KSPACING will not have a .kpoints attr
             if valid_input_set.kpoints is not None:
-                valid_num_kpts = valid_input_set.kpoints.num_kpts or np.prod(
-                    valid_input_set.kpoints.kpts[0]
-                )
-                num_kpts = inputs.get("kpoints", {}).get("nkpoints", 0) or np.prod(
-                    inputs.get("kpoints", {}).get("kpoints", [1, 1, 1])
-                )
-                data["kpts_ratio"] = num_kpts / valid_num_kpts
-                if data["kpts_ratio"] < kpts_tolerance:
+
+                if _kpoint_check(valid_input_set, inputs, data, kpts_tolerance):
                     reasons.append(DeprecationMessage.KPTS)
 
             else:
-                valid_kspacing = valid_input_set.incar.get("KSPACING", 0)
-                if inputs.get("incar", {}).get("KSPACING"):
-                    data["kspacing_delta"] = (
-                        inputs["incar"].get("KSPACING") - valid_kspacing
-                    )
-                    # larger KSPACING means fewer k-points
-                    if data["kspacing_delta"] > kspacing_tolerance:
-                        warnings.append(
-                            f"KSPACING is greater than input set: {data['kspacing_delta']}"
-                            f" lower than {kspacing_tolerance} ",
-                        )
-                    elif data["kspacing_delta"] < kspacing_tolerance:
-                        warnings.append(
-                            f"KSPACING is lower than input set: {data['kspacing_delta']}"
-                            f" lower than {kspacing_tolerance} ",
-                        )
+                # warnings
+                _kspacing_warnings(
+                    valid_input_set, inputs, data, warnings, kspacing_tolerance
+                )
 
             # warn, but don't invalidate if wrong ISMEAR
             valid_ismear = valid_input_set.incar.get("ISMEAR", 1)
@@ -202,6 +199,11 @@ class ValidationDoc(EmmetBaseModel):
             # Check for magmom anomalies for specific elements
             if _magmom_check(task_doc, chemsys):
                 reasons.append(DeprecationMessage.MAG)
+        else:
+            if "Unrecognized" in str(calc_type):
+                reasons.append(DeprecationMessage.UNKNOWN)
+            else:
+                reasons.append(DeprecationMessage.SET)
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,
@@ -212,7 +214,61 @@ class ValidationDoc(EmmetBaseModel):
             data=data,
             warnings=warnings,
         )
+
         return doc
+
+
+def _kpoint_check(input_set, inputs, data, kpts_tolerance):
+    """
+    Checks to make sure the total number of kpoints is correct
+    """
+    valid_num_kpts = input_set.kpoints.num_kpts or np.prod(input_set.kpoints.kpts[0])
+    num_kpts = inputs.get("kpoints", {}).get("nkpoints", 0) or np.prod(
+        inputs.get("kpoints", {}).get("kpoints", [1, 1, 1])
+    )
+    data["kpts_ratio"] = num_kpts / valid_num_kpts
+    return data["kpts_ratio"] < kpts_tolerance
+
+
+def _kspacing_warnings(input_set, inputs, data, warnings, kspacing_tolerance):
+    """
+    Issues warnings based on KSPACING values
+    """
+    valid_kspacing = input_set.incar.get("KSPACING", 0)
+    if inputs.get("incar", {}).get("KSPACING"):
+        data["kspacing_delta"] = inputs["incar"].get("KSPACING") - valid_kspacing
+        # larger KSPACING means fewer k-points
+        if data["kspacing_delta"] > kspacing_tolerance:
+            warnings.append(
+                f"KSPACING is greater than input set: {data['kspacing_delta']}"
+                f" lower than {kspacing_tolerance} ",
+            )
+        elif data["kspacing_delta"] < kspacing_tolerance:
+            warnings.append(
+                f"KSPACING is lower than input set: {data['kspacing_delta']}"
+                f" lower than {kspacing_tolerance} ",
+            )
+
+
+def _potcar_hash_check(task_doc, potcar_hashes):
+    """
+    Checks to make sure the POTCAR hash is equal to the correct value from the
+    pymatgen input set.
+    """
+
+    potcar_details = task_doc.calcs_reversed[0]["input"]["potcar_spec"]
+
+    all_match = True
+
+    for entry in potcar_details:
+        symbol = entry["titel"].split(" ")[1]
+        hash = potcar_hashes[str(task_doc.calc_type)].get(symbol, None)
+
+        if not hash or hash != entry["hash"]:
+            all_match = False
+            break
+
+    return not all_match
 
 
 def _magmom_check(task_doc, chemsys):
