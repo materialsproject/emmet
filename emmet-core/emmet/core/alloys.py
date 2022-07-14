@@ -6,6 +6,7 @@ from typing import Dict
 
 import pydantic
 
+
 class AlloyPairDoc(EmmetBaseModel):
 
     alloy_pair: AlloyPair
