@@ -8,3 +8,4 @@ setuptools-scm==7.0.5
 robocrys==0.2.7
 matminer==0.7.8
 pymatgen-analysis-diffusion==2022.1.15
+pymatgen-analysis-alloys==0.01
