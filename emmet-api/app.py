@@ -195,6 +195,13 @@ if db_uri:
         collection_name="provenance",
     )
 
+    alloy_pairs_store = MongoURIStore(
+        uri=db_uri,
+        database=f"mp_core_{db_suffix}",
+        key="material_id",
+        collection_name="summary",
+    )
+
     summary_store = MongoURIStore(
         uri=db_uri,
         database=f"mp_core_{db_suffix}",
@@ -286,7 +293,7 @@ if db_uri:
         collection_name="general_store",
     )
 else:
-    raise RuntimeError("Must specify MongoDB Atlas URI")
+    raise RuntimeError("Must specify MongoDB URI containing inputs.")
 
 # Materials
 from emmet.api.routes.materials.resources import (
