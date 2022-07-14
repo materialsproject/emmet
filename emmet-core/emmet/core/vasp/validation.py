@@ -1,3 +1,4 @@
+from asyncio import Task
 from datetime import datetime
 from typing import Dict, List, Union, Optional
 
@@ -11,7 +12,7 @@ from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 from emmet.core.utils import DocEnum
 from emmet.core.vasp.task_valid import TaskDocument
-from emmet.core.vasp.calc_types.enums import CalcType
+from emmet.core.vasp.calc_types.enums import CalcType, RunType, TaskType
 
 SETTINGS = EmmetSettings()
 
@@ -87,8 +88,9 @@ class ValidationDoc(EmmetBaseModel):
 
         structure = task_doc.output.structure
         calc_type = task_doc.calc_type
+        task_type = task_doc.task_type
+        run_type = task_doc.run_type
         inputs = task_doc.orig_inputs
-        bandgap = task_doc.output.bandgap
         chemsys = task_doc.chemsys
 
         reasons = []
@@ -97,12 +99,20 @@ class ValidationDoc(EmmetBaseModel):
 
         if str(calc_type) in input_sets:
 
-            # Ensure inputsets that need the bandgap get it
-            try:
+            # Ensure inputsets get proper additional input values
+            if "SCAN" in run_type.value:
+                bandgap = task_doc.output.bandgap
+
                 valid_input_set: VaspInputSet = input_sets[str(calc_type)](
                     structure, bandgap=bandgap
                 )
-            except TypeError:
+            elif task_type == TaskType.NSCF_Uniform:
+                valid_input_set = input_sets[str(calc_type)](structure, mode="uniform")
+
+            elif task_type == TaskType.NMR_Electric_Field_Gradient:
+                valid_input_set = input_sets[str(calc_type)](structure, mode="efg")
+
+            else:
                 valid_input_set = input_sets[str(calc_type)](structure)
 
             # Checking POTCAR hashes if a directory is supplied
@@ -256,19 +266,24 @@ def _potcar_hash_check(task_doc, potcar_hashes):
     pymatgen input set.
     """
 
-    potcar_details = task_doc.calcs_reversed[0]["input"]["potcar_spec"]
+    try:
+        potcar_details = task_doc.calcs_reversed[0]["input"]["potcar_spec"]
 
-    all_match = True
+        all_match = True
 
-    for entry in potcar_details:
-        symbol = entry["titel"].split(" ")[1]
-        hash = potcar_hashes[str(task_doc.calc_type)].get(symbol, None)
+        for entry in potcar_details:
+            symbol = entry["titel"].split(" ")[1]
+            hash = potcar_hashes[str(task_doc.calc_type)].get(symbol, None)
 
-        if not hash or hash != entry["hash"]:
-            all_match = False
-            break
+            if not hash or hash != entry["hash"]:
+                all_match = False
+                break
 
-    return not all_match
+        return not all_match
+
+    except KeyError:
+        # Assume it is an old calculation without potcar_spec data and treat it as passing POTCAR hash check
+        return False
 
 
 def _magmom_check(task_doc, chemsys):
