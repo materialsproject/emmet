@@ -30,7 +30,7 @@ class DeprecationMessage(DocEnum):
     LDAU = "I001", "LDAU Parameters don't match the inputset"
     SET = (
         "I002",
-        "Cannot validate due to missing input set for calculation type in builder settings",
+        "Cannot validate due to missing or problematic input set",
     )
     UNKNOWN = "U001", "Cannot validate due to unknown calc type"
 
@@ -99,121 +99,128 @@ class ValidationDoc(EmmetBaseModel):
 
         if str(calc_type) in input_sets:
 
-            # Ensure inputsets get proper additional input values
-            if "SCAN" in run_type.value:
-                bandgap = task_doc.output.bandgap
+            try:
+                # Ensure inputsets get proper additional input values
+                if "SCAN" in run_type.value:
+                    bandgap = task_doc.output.bandgap
 
-                valid_input_set: VaspInputSet = input_sets[str(calc_type)](
-                    structure, bandgap=bandgap
-                )
-            elif task_type == TaskType.NSCF_Uniform:
-                valid_input_set = input_sets[str(calc_type)](structure, mode="uniform")
-
-            elif task_type == TaskType.NMR_Electric_Field_Gradient:
-                valid_input_set = input_sets[str(calc_type)](structure, mode="efg")
-
-            else:
-                valid_input_set = input_sets[str(calc_type)](structure)
-
-            # Checking POTCAR hashes if a directory is supplied
-            if potcar_hashes:
-                if _potcar_hash_check(task_doc, potcar_hashes):
-                    reasons.append(DeprecationMessage.POTCAR)
-
-            # Checking K-Points
-            # Calculations that use KSPACING will not have a .kpoints attr
-            if valid_input_set.kpoints is not None:
-
-                if _kpoint_check(valid_input_set, inputs, data, kpts_tolerance):
-                    reasons.append(DeprecationMessage.KPTS)
-
-            else:
-                # warnings
-                _kspacing_warnings(
-                    valid_input_set, inputs, data, warnings, kspacing_tolerance
-                )
-
-            # warn, but don't invalidate if wrong ISMEAR
-            valid_ismear = valid_input_set.incar.get("ISMEAR", 1)
-            curr_ismear = inputs.get("incar", {}).get("ISMEAR", 1)
-            if curr_ismear != valid_ismear:
-                warnings.append(
-                    f"Inappropriate smearing settings. Set to {curr_ismear},"
-                    f" but should be {valid_ismear}"
-                )
-
-            # Checking ENCUT
-            encut = inputs.get("incar", {}).get("ENCUT")
-            valid_encut = valid_input_set.incar["ENCUT"]
-            data["encut_ratio"] = float(encut) / valid_encut  # type: ignore
-            if data["encut_ratio"] < 1:
-                reasons.append(DeprecationMessage.ENCUT)
-
-            # U-value checks
-            # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
-            input_hubbards = task_doc.input.hubbards
-
-            if valid_input_set.incar.get("LDAU", False) or len(input_hubbards) > 0:
-                # Assemble required input_set LDAU params into dictionary
-                input_set_hubbards = dict(
-                    zip(
-                        valid_input_set.poscar.site_symbols,
-                        valid_input_set.incar.get("LDAUU", []),
+                    valid_input_set: VaspInputSet = input_sets[str(calc_type)](
+                        structure, bandgap=bandgap
                     )
-                )
+                elif task_type == TaskType.NSCF_Uniform:
+                    valid_input_set = input_sets[str(calc_type)](structure, mode="uniform")
 
-                all_elements = list(
-                    set(input_set_hubbards.keys()) | set(input_hubbards.keys())
-                )
-                diff_ldau_params = {
-                    el: (input_set_hubbards.get(el, 0), input_hubbards.get(el, 0))
-                    for el in all_elements
-                    if not np.allclose(
-                        input_set_hubbards.get(el, 0), input_hubbards.get(el, 0)
-                    )
-                }
+                elif task_type == TaskType.NMR_Electric_Field_Gradient:
+                    valid_input_set = input_sets[str(calc_type)](structure, mode="efg")
 
-                if len(diff_ldau_params) > 0:
-                    reasons.append(DeprecationMessage.LDAU)
-                    warnings.extend(
-                        [
-                            f"U-value for {el} should be {good} but was {bad}"
-                            for el, (good, bad) in diff_ldau_params.items()
-                        ]
-                    )
-
-            # Check the max upwards SCF step
-            skip = abs(inputs.get("incar", {}).get("NLEMDL", -5)) - 1
-            energies = [
-                d["e_fr_energy"]
-                for d in task_doc.calcs_reversed[0]["output"]["ionic_steps"][-1][
-                    "electronic_steps"
-                ]
-            ]
-            if len(energies) > skip:
-                max_gradient = np.max(np.gradient(energies)[skip:])
-                data["max_gradient"] = max_gradient
-                if max_gradient > max_allowed_scf_gradient:
-                    reasons.append(DeprecationMessage.MAX_SCF)
-            else:
-                warnings.append(
-                    "Not enough electronic steps to compute valid gradient"
-                    " and compare with max SCF gradient tolerance"
-                )
-
-            # Check for Am and Po elements. These currently do not have proper elemental entries
-            # and will not get treated properly by the thermo builder.
-            if ("Am" in chemsys) or ("Po" in chemsys):
-                reasons.append(DeprecationMessage.MANUAL)
-
-            # Check for magmom anomalies for specific elements
-            if _magmom_check(task_doc, chemsys):
-                reasons.append(DeprecationMessage.MAG)
-        else:
-            if "Unrecognized" in str(calc_type):
-                reasons.append(DeprecationMessage.UNKNOWN)
-            else:
+                else:
+                    valid_input_set = input_sets[str(calc_type)](structure)
+            
+            except (TypeError, KeyError, ValueError):
                 reasons.append(DeprecationMessage.SET)
+                valid_input_set = None
+
+            
+            if valid_input_set:
+                # Checking POTCAR hashes if a directory is supplied
+                if potcar_hashes:
+                    if _potcar_hash_check(task_doc, potcar_hashes):
+                        reasons.append(DeprecationMessage.POTCAR)
+
+                # Checking K-Points
+                # Calculations that use KSPACING will not have a .kpoints attr
+                if valid_input_set.kpoints is not None:
+
+                    if _kpoint_check(valid_input_set, inputs, data, kpts_tolerance):
+                        reasons.append(DeprecationMessage.KPTS)
+
+                else:
+                    # warnings
+                    _kspacing_warnings(
+                        valid_input_set, inputs, data, warnings, kspacing_tolerance
+                    )
+
+                # warn, but don't invalidate if wrong ISMEAR
+                valid_ismear = valid_input_set.incar.get("ISMEAR", 1)
+                curr_ismear = inputs.get("incar", {}).get("ISMEAR", 1)
+                if curr_ismear != valid_ismear:
+                    warnings.append(
+                        f"Inappropriate smearing settings. Set to {curr_ismear},"
+                        f" but should be {valid_ismear}"
+                    )
+
+                # Checking ENCUT
+                encut = inputs.get("incar", {}).get("ENCUT")
+                valid_encut = valid_input_set.incar["ENCUT"]
+                data["encut_ratio"] = float(encut) / valid_encut  # type: ignore
+                if data["encut_ratio"] < 1:
+                    reasons.append(DeprecationMessage.ENCUT)
+
+                # U-value checks
+                # NOTE: Reverting to old method of just using input.hubbards which is wrong in many instances
+                input_hubbards = task_doc.input.hubbards
+
+                if valid_input_set.incar.get("LDAU", False) or len(input_hubbards) > 0:
+                    # Assemble required input_set LDAU params into dictionary
+                    input_set_hubbards = dict(
+                        zip(
+                            valid_input_set.poscar.site_symbols,
+                            valid_input_set.incar.get("LDAUU", []),
+                        )
+                    )
+
+                    all_elements = list(
+                        set(input_set_hubbards.keys()) | set(input_hubbards.keys())
+                    )
+                    diff_ldau_params = {
+                        el: (input_set_hubbards.get(el, 0), input_hubbards.get(el, 0))
+                        for el in all_elements
+                        if not np.allclose(
+                            input_set_hubbards.get(el, 0), input_hubbards.get(el, 0)
+                        )
+                    }
+
+                    if len(diff_ldau_params) > 0:
+                        reasons.append(DeprecationMessage.LDAU)
+                        warnings.extend(
+                            [
+                                f"U-value for {el} should be {good} but was {bad}"
+                                for el, (good, bad) in diff_ldau_params.items()
+                            ]
+                        )
+
+                # Check the max upwards SCF step
+                skip = abs(inputs.get("incar", {}).get("NLEMDL", -5)) - 1
+                energies = [
+                    d["e_fr_energy"]
+                    for d in task_doc.calcs_reversed[0]["output"]["ionic_steps"][-1][
+                        "electronic_steps"
+                    ]
+                ]
+                if len(energies) > skip:
+                    max_gradient = np.max(np.gradient(energies)[skip:])
+                    data["max_gradient"] = max_gradient
+                    if max_gradient > max_allowed_scf_gradient:
+                        reasons.append(DeprecationMessage.MAX_SCF)
+                else:
+                    warnings.append(
+                        "Not enough electronic steps to compute valid gradient"
+                        " and compare with max SCF gradient tolerance"
+                    )
+
+                # Check for Am and Po elements. These currently do not have proper elemental entries
+                # and will not get treated properly by the thermo builder.
+                if ("Am" in chemsys) or ("Po" in chemsys):
+                    reasons.append(DeprecationMessage.MANUAL)
+
+                # Check for magmom anomalies for specific elements
+                if _magmom_check(task_doc, chemsys):
+                    reasons.append(DeprecationMessage.MAG)
+            else:
+                if "Unrecognized" in str(calc_type):
+                    reasons.append(DeprecationMessage.UNKNOWN)
+                else:
+                    reasons.append(DeprecationMessage.SET)
 
         doc = ValidationDoc(
             task_id=task_doc.task_id,
