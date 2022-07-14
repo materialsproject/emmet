@@ -14,7 +14,7 @@ from pymatgen.analysis.alloys.core import (
     InvalidAlloy,
     KNOWN_ANON_FORMULAS,
     AlloyMember,
-    AlloySystem
+    AlloySystem,
 )
 
 # rough sort of ANON_FORMULAS by "complexity"
@@ -26,6 +26,7 @@ LOOSE_SPACEGROUP_SYMPREC = 0.5
 
 # A source of effective masses, should be replaced with MP-provided effective masses.
 BOLTZTRAP_DF = load_dataset("boltztrap_mp")
+
 
 class AlloyPairBuilder(Builder):
     """
@@ -260,15 +261,15 @@ class AlloyPairMemberBuilder(Builder):
             for db_id, structure in structures.items():
                 try:
                     if pair.is_member(structure):
-                            db, _ = db_id.split("-")
-                            member = AlloyMember(
-                                id_=db_id,
-                                db=db,
-                                composition=structure.composition,
-                                is_ordered=structure.is_ordered,
-                                x=pair.get_x(structure.composition)
-                            )
-                            pair_members["members"].append(member.as_dict())
+                        db, _ = db_id.split("-")
+                        member = AlloyMember(
+                            id_=db_id,
+                            db=db,
+                            composition=structure.composition,
+                            is_ordered=structure.is_ordered,
+                            x=pair.get_x(structure.composition),
+                        )
+                        pair_members["members"].append(member.as_dict())
                 except Exception as exc:
                     print(f"Exception for {db_id}: {exc}")
             if pair_members["members"]:
@@ -282,6 +283,7 @@ class AlloyPairMemberBuilder(Builder):
         if docs:
             self.alloy_pair_members.update(docs)
 
+
 class AlloySystemBuilder(Builder):
     """
     This builder stitches together the results of
@@ -290,7 +292,9 @@ class AlloySystemBuilder(Builder):
     It also builds AlloySystem.
     """
 
-    def __init__(self, alloy_pairs, alloy_pair_members, alloy_pairs_merged, alloy_systems):
+    def __init__(
+        self, alloy_pairs, alloy_pair_members, alloy_pairs_merged, alloy_systems
+    ):
 
         self.alloy_pairs = alloy_pairs
         self.alloy_pair_members = alloy_pair_members
@@ -298,7 +302,8 @@ class AlloySystemBuilder(Builder):
         self.alloy_systems = alloy_systems
 
         super().__init__(
-            sources=[alloy_pairs, alloy_pair_members], targets=[alloy_pairs_merged, alloy_systems],
+            sources=[alloy_pairs, alloy_pair_members],
+            targets=[alloy_pairs_merged, alloy_systems],
             chunk_size=8,
         )
 
@@ -312,7 +317,10 @@ class AlloySystemBuilder(Builder):
 
             docs = list(self.alloy_pairs.query({"alloy_pair.anonymous_formula": af}))
             pair_ids = [d["pair_id"] for d in docs]
-            members = {d["pair_id"]: d for d in self.alloy_pair_members.query({"pair_id": {"$in": pair_ids}})}
+            members = {
+                d["pair_id"]: d
+                for d in self.alloy_pair_members.query({"pair_id": {"$in": pair_ids}})
+            }
 
             if docs:
                 yield docs, members
@@ -324,7 +332,9 @@ class AlloySystemBuilder(Builder):
         for doc in pair_docs:
             if doc["pair_id"] in members:
                 doc["alloy_pair"]["members"] = members[doc["pair_id"]]["members"]
-                doc["_search"]["member_ids"] = [m["id_"] for m in members[doc["pair_id"]]["members"]]
+                doc["_search"]["member_ids"] = [
+                    m["id_"] for m in members[doc["pair_id"]]["members"]
+                ]
             else:
                 doc["alloy_pair"]["members"] = []
                 doc["_search"]["member_ids"] = []
@@ -336,8 +346,9 @@ class AlloySystemBuilder(Builder):
             {
                 "alloy_system": system.as_dict(),
                 "alloy_id": system.alloy_id,
-                "_search": {"member_ids": [m.id_ for m in system.members]}
-            } for system in systems
+                "_search": {"member_ids": [m.id_ for m in system.members]},
+            }
+            for system in systems
         ]
 
         for system_doc in system_docs:
