@@ -24,7 +24,10 @@ class DeprecationMessage(DocEnum):
     ENCUT = "C002", "ENCUT too low"
     FORCES = "C003", "Forces too large"
     MAG = "C004", "At least one site magnetization is too large"
-    POTCAR = "C005", "The hash of at least one POTCAR used is not correct"
+    POTCAR = (
+        "C005",
+        "At least one POTCAR used does not agree with the pymatgen input set",
+    )
     CONVERGENCE = "E001", "Calculation did not converge"
     MAX_SCF = "E002", "Max SCF gradient too large"
     LDAU = "I001", "LDAU Parameters don't match the inputset"
@@ -114,7 +117,10 @@ class ValidationDoc(EmmetBaseModel):
                 # Checking POTCAR hashes if a directory is supplied
                 if potcar_hashes:
                     if _potcar_hash_check(task_doc, potcar_hashes):
-                        reasons.append(DeprecationMessage.POTCAR)
+                        if task_type in [TaskType.NSCF_Line, TaskType.NSCF_Uniform]:
+                            warnings.append(DeprecationMessage.POTCAR.__doc__)  # type: ignore
+                        else:
+                            reasons.append(DeprecationMessage.POTCAR)
 
                 # Checking K-Points
                 # Calculations that use KSPACING will not have a .kpoints attr
