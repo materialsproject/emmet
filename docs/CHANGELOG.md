@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.30.9](https://github.com/materialsproject/emmet/tree/v0.30.9) (2022-07-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.30.8...v0.30.9)
+
+**Merged pull requests:**
+
+- Warn for POTCAR hash issues and NSCF calculations [\#463](https://github.com/materialsproject/emmet/pull/463) ([munrojm](https://github.com/munrojm))
+
 ## [v0.30.8](https://github.com/materialsproject/emmet/tree/v0.30.8) (2022-07-14)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.30.7...v0.30.8)
