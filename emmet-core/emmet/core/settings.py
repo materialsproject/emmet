@@ -2,6 +2,7 @@
 Settings for defaults in the core definitions of Materials Project Documents
 """
 import json
+import os
 from pathlib import Path
 from typing import Dict, List, Type, TypeVar, Union
 
@@ -99,9 +100,9 @@ class EmmetSettings(BaseSettings):
         description="Dictionary mapping Q-Chem task type to a quality score",
     )
 
-    VASP_QUALITY_SCORES: Dict[str, int] = Field(
-        {"SCAN": 3, "GGA+U": 2, "GGA": 1},
-        description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builders",
+    VASP_STRUCTURE_QUALITY_SCORES: Dict[str, int] = Field(
+        {"R2SCAN": 5, "SCAN": 4, "GGA+U": 3, "GGA": 2, "PBESol": 1},
+        description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builder structure data",
     )
 
     VASP_KPTS_TOLERANCE: float = Field(
@@ -126,8 +127,25 @@ class EmmetSettings(BaseSettings):
             "R2SCAN Static": "pymatgen.io.vasp.sets.MPScanStaticSet",
             "SCAN Static": "pymatgen.io.vasp.sets.MPScanStaticSet",
             "PBESol Static": "pymatgen.io.vasp.sets.MPScanStaticSet",
+            "HSE06 Static": "pymatgen.io.vasp.sets.MPScanStaticSet",
+            "GGA NSCF Uniform": "pymatgen.io.vasp.sets.MPNonSCFSet",
+            "GGA+U NSCF Uniform": "pymatgen.io.vasp.sets.MPNonSCFSet",
+            "GGA NSCF Line": "pymatgen.io.vasp.sets.MPNonSCFSet",
+            "GGA+U NSCF Line": "pymatgen.io.vasp.sets.MPNonSCFSet",
+            "GGA NMR Electric Field Gradient": "pymatgen.io.vasp.sets.MPNMRSet",
+            "GGA NMR Nuclear Shielding": "pymatgen.io.vasp.sets.MPNMRSet",
+            "GGA+U NMR Electric Field Gradient": "pymatgen.io.vasp.sets.MPNMRSet",
+            "GGA+U NMR Nuclear Shielding": "pymatgen.io.vasp.sets.MPNMRSet",
+            "GGA Deformation": "pymatgen.io.vasp.sets.MPStaticSet",
+            "GGA+U Deformation": "pymatgen.io.vasp.sets.MPStaticSet",
+            "GGA DFPT Dielectric": "pymatgen.io.vasp.sets.MPStaticSet",
+            "GGA+U DFPT Dielectric": "pymatgen.io.vasp.sets.MPStaticSet",
         },
         description="Default input sets for task validation",
+    )
+
+    VASP_VALIDATE_POTCAR_HASHES: bool = Field(
+        True, description="Whether to validate POTCAR hash values."
     )
 
     VASP_CHECKED_LDAU_FIELDS: List[str] = Field(
