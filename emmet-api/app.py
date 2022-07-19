@@ -1,5 +1,7 @@
 import os
 
+from urllib.parse import urlparse
+
 from emmet.api.core.api import MAPI
 from emmet.api.core.settings import MAPISettings
 from maggma.stores import MongoURIStore, S3Store
