@@ -250,4 +250,10 @@ tags_meta = [
         "description": "Route for submitting structures to the Materials Project. If calculations are run with the \
             submitted structure, the submitter will be credited with the submitted public name and email.",
     },
+    {
+        "name": "Alloys",
+        "description": "Route for retrevial of information about which hypothetical alloy(s) a given material might "
+                       "belong to, following the methodolgy discussed by "
+                       "[Woods-Robinson, Horton and Persson](https://arxiv.org/pdf/2206.10715)."
+    }
 ]
