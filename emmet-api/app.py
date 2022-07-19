@@ -448,6 +448,12 @@ resources.update({"molecules": [molecules_resource(molecules_store)]})
 from emmet.api.routes.oxidation_states.resources import oxi_states_resource
 
 resources.update({"oxidation_states": [oxi_states_resource(oxi_states_store)]})
+
+# Alloys
+from emmet.api.routes.alloys.resources import alloy_pairs_resource
+
+resources.update({"alloys": [alloy_pairs_resource(alloy_pairs_store)]})
+
 # Provenance
 from emmet.api.routes.provenance.resources import provenance_resource
 
