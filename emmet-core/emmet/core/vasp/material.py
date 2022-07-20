@@ -164,26 +164,28 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
                 task.output.energy_per_atom,
             )
 
+        # Entries
+        # **current materials docs must contain at last one GGA or GGA+U entry
         entries = {}
         all_run_types = set(run_types.values())
-
-        if RunType.GGA not in all_run_types and RunType.GGA_U not in all_run_types:
-            raise ValueError(
-                "Ensure the task group contains at least one GGA or GGA+U calculation"
-            )
 
         for rt in all_run_types:
             relevant_calcs = sorted(
                 [doc for doc in structure_calcs if doc.run_type == rt and doc.is_valid],
-                key=_entry_eval,
+                key=_structure_eval,
             )
 
             if len(relevant_calcs) > 0:
                 best_task_doc = relevant_calcs[0]
                 entry = best_task_doc.structure_entry
                 entry.data["task_id"] = entry.entry_id
-                entry.entry_id = material_id
+                entry.entry_id = "{}-{}".format(material_id, rt.value)
                 entries[rt] = entry
+
+        if RunType.GGA not in entries and RunType.GGA_U not in entries:
+            raise ValueError(
+                "Individual material entry must contain at least one GGA or GGA+U calculation"
+            )
 
         return cls.from_structure(
             structure=structure,
