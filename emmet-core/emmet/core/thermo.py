@@ -116,16 +116,9 @@ class ThermoDoc(PropertyDoc):
 
         docs = []
 
-        # First group all entries by material_id
-        # Make a score for which is chosen for the energy (R2SCAN > GGA+U > GGA)
-        # ** Make sure to populate origin the same way as the materials builder
-        # Populate entry_types and entries
-
         entries_by_mpid = defaultdict(list)
         for e in entries:
             entries_by_mpid[e.data["material_id"]].append(e)
-
-        print(entries_by_mpid["mp-862690"])
 
         entry_quality_scores = {"GGA": 1, "GGA+U": 2, "SCAN": 3, "R2SCAN": 4}
 
@@ -205,7 +198,7 @@ class ThermoDoc(PropertyDoc):
             d["entry_types"] = []
             d["entries"] = {}
 
-            # Currently, each entry group contains a single entry
+            # Currently, each entry group contains a single entry due to how the compatability scheme works
             for entry in entry_group:
 
                 d["entry_types"].append(entry.parameters.get("run_type", "Unknown"))
@@ -225,7 +218,14 @@ class ThermoDoc(PropertyDoc):
                 )
             )
 
-        return docs, pd
+        # Construct new phase diagram with all of the entries, not just those on the hull
+        pd_computed_data = pd._compute()
+        pd_computed_data["all_entries"] = entries
+        new_pd = PhaseDiagram(
+            entries, elements=pd.elements, computed_data=pd_computed_data
+        )
+
+        return docs, new_pd
 
 
 class PhaseDiagramDoc(BaseModel):
