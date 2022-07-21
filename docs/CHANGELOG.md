@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.31.2](https://github.com/materialsproject/emmet/tree/v0.31.2) (2022-07-21)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.31.1...v0.31.2)
+
+**Merged pull requests:**
+
+- Bump `pymatgen-analysis-alloys` [\#469](https://github.com/materialsproject/emmet/pull/469) ([mkhorton](https://github.com/mkhorton))
+
 ## [v0.31.1](https://github.com/materialsproject/emmet/tree/v0.31.1) (2022-07-19)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.31.0...v0.31.1)
@@ -463,20 +471,20 @@
 
 ## [v0.21.16](https://github.com/materialsproject/emmet/tree/v0.21.16) (2022-01-20)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.15...v0.21.16)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.14...v0.21.16)
 
 **Merged pull requests:**
 
 - Remove version req in setup [\#354](https://github.com/materialsproject/emmet/pull/354) ([munrojm](https://github.com/munrojm))
 - Fix setup for workflow [\#353](https://github.com/materialsproject/emmet/pull/353) ([munrojm](https://github.com/munrojm))
 
-## [v0.21.15](https://github.com/materialsproject/emmet/tree/v0.21.15) (2022-01-19)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.14...v0.21.15)
-
 ## [v0.21.14](https://github.com/materialsproject/emmet/tree/v0.21.14) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.13...v0.21.14)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.15...v0.21.14)
+
+## [v0.21.15](https://github.com/materialsproject/emmet/tree/v0.21.15) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.13...v0.21.15)
 
 **Merged pull requests:**
 
