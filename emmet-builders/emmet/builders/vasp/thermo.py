@@ -160,7 +160,7 @@ class ThermoBuilder(Builder):
         )
         pd_entries = []
         for entry in entries:
-            material_entries[entry.entry_id][entry.data["run_type"]] = entry
+            material_entries[entry.data["material_id"]][entry.data["run_type"]] = entry
 
         if self.compatibility:
             with warnings.catch_warnings():
@@ -174,9 +174,10 @@ class ThermoBuilder(Builder):
 
         try:
             docs, pd = ThermoDoc.from_entries(pd_entries, deprecated=False)
-            for doc in docs:
-                doc.entries = material_entries[doc.material_id]
-                doc.entry_types = list(material_entries[doc.material_id].keys())
+
+            # for doc in docs:
+            #     doc.entries = material_entries[doc.material_id]
+            #     doc.entry_types = list(material_entries[doc.material_id].keys())
 
             pd_data = None
 
@@ -305,7 +306,7 @@ class ThermoBuilder(Builder):
         for doc in materials_docs:
             for r_type, entry_dict in doc.get("entries", {}).items():
                 entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
-                    entry_dict["entry_id"], {}
+                    entry_dict["data"]["material_id"], {}
                 )
                 entry_dict["data"]["run_type"] = r_type
                 elsyms = sorted(set([el for el in entry_dict["composition"]]))
