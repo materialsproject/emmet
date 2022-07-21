@@ -49,6 +49,7 @@ def entries(
                 "energy": -382.146593528,
                 "composition": {"Fe": 24.0, "O": 32.0},
                 "name": "Fe3O4",
+                "data":{"material_id": "mp-1"}
                 "attribute": None,
                 "@version": "2020.4.29",
             },
@@ -61,6 +62,7 @@ def entries(
                 "energy": -270.38765404,
                 "composition": {"Fe": 16.0, "O": 24.0},
                 "name": "Fe2O3",
+                "data":{"material_id": "mp-2"}
                 "attribute": None,
                 "@version": "2020.4.29",
             },
@@ -73,6 +75,7 @@ def entries(
                 "energy": -92.274692568,
                 "composition": {"O": 24.0},
                 "name": "O",
+                "data":{"material_id": "mp-3"}
                 "attribute": None,
                 "@version": "2020.4.29",
             },
@@ -85,6 +88,7 @@ def entries(
                 "energy": -13.00419661,
                 "composition": {"Fe": 2.0},
                 "name": "Fe",
+                "data":{"material_id": "mp-4"}
                 "attribute": None,
                 "@version": "2020.4.29",
             },
@@ -98,6 +102,7 @@ def entries(
                 "composition": {"Fe": 64.0, "O": 96.0},
                 "name": "Fe2O3",
                 "attribute": None,
+                "data":{"material_id": "mp-5"}
                 "@version": "2020.4.29",
             },
         ]
