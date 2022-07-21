@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.32.0](https://github.com/materialsproject/emmet/tree/v0.32.0) (2022-07-21)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.31.2...v0.32.0)
+
+**Merged pull requests:**
+
+- Fully incorporate new mixing scheme into the `ThermoBuilder` [\#467](https://github.com/materialsproject/emmet/pull/467) ([munrojm](https://github.com/munrojm))
+
 ## [v0.31.2](https://github.com/materialsproject/emmet/tree/v0.31.2) (2022-07-21)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.31.1...v0.31.2)
