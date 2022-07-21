@@ -43,7 +43,6 @@ class HasProps(Enum):
     phonon = "phonon"
     insertion_electrodes = "insertion_electrodes"
     substrates = "substrates"
-    #chemenv = "chemenv"
 
 
 class SummaryStats(BaseModel):
@@ -190,19 +189,6 @@ class SummaryDoc(PropertyDoc):
         description="List of decomposition data for this material. Only valid for metastable or unstable material.",
         source="thermo",
     )
-
-    # Chemenv
-
-    # Temporary removal
-    # chemenv_iupac: List[COORDINATION_GEOMETRIES_IUPAC] = Field(
-    #     None,
-    #     description="List of symbols for unique (cationic) species in structure in IUPAC format",
-    # )
-
-    # chemenv_iucr: List[COORDINATION_GEOMETRIES_IUCR] = Field(
-    #     None,
-    #     description="List of symbols for unique (cationic) species in structure in IUPAC format",
-    # )
 
     # XAS
 
@@ -476,7 +462,6 @@ summary_fields: Dict[str, list] = {
         "equilibrium_reaction_energy_per_atom",
         "decomposes_to",
     ],
-    #HasProps.chemenv.value: ["chemenv_iupac", "chemenv_iucr"],
     HasProps.xas.value: ["absorbing_element", "edge", "spectrum_type", "spectrum_id"],
     HasProps.grain_boundaries.value: [
         "gb_energy",
