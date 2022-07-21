@@ -6,3 +6,4 @@ emmet-core>=0.27.5
 maggma>=0.47.3
 ddtrace==1.2.2
 setproctitle==1.2.3
+shapely==1.8.2
