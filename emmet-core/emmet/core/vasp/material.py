@@ -172,13 +172,14 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         for rt in all_run_types:
             relevant_calcs = sorted(
                 [doc for doc in structure_calcs if doc.run_type == rt and doc.is_valid],
-                key=_structure_eval,
+                key=_entry_eval,
             )
 
             if len(relevant_calcs) > 0:
                 best_task_doc = relevant_calcs[0]
                 entry = best_task_doc.structure_entry
                 entry.data["task_id"] = entry.entry_id
+                entry.data["material_id"] = material_id
                 entry.entry_id = "{}-{}".format(material_id, rt.value)
                 entries[rt] = entry
 
