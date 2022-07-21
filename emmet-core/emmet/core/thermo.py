@@ -208,7 +208,7 @@ class ThermoDoc(PropertyDoc):
                 PropertyOrigin(
                     name="energy",
                     task_id=blessed_entry.data["task_id"],
-                    last_updated=d.get("last_updated", None),
+                    last_updated=d.get("last_updated", datetime.utcnow()),
                 )
             ]
 
