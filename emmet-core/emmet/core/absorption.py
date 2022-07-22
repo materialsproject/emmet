@@ -73,7 +73,6 @@ class AbsorptionDoc(PropertyDoc):
         absorption_co = list(np.array(absorption_co))
         energy_max = np.array(energies).max()
         
-
         return super().from_structure(
             meta_structure=structure,
             material_id=material_id,
