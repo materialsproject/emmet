@@ -70,9 +70,9 @@ class AbsorptionDoc(PropertyDoc):
         imag_d_average = [
             np.average(np.diagonal(cls._convert_list_to_tensor(t))) for t in imag_d
         ]
-        absorption_co = list(np.array(absorption_co) * (5.31e-12))
+        absorption_co = list(np.array(absorption_co))
         energy_max = np.array(energies).max()
-        # this is needed for pymatgen before absorption branch, for the right unit in cm-1
+        
 
         return super().from_structure(
             meta_structure=structure,
