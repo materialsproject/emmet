@@ -23,7 +23,7 @@ def test_absorption_doc(absorption_test_data):
         230913400825.579,
         285790460873.292,
         371002598552.062
-    ]) * (5.31e-12)
+    ]) 
 
     imag_dielectric = [
         0.0,
