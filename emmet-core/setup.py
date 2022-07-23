@@ -35,7 +35,7 @@ setup(
         "robocrys>=0.2.7",
         "matminer>=0.7.3",
         "pymatgen-analysis-diffusion>=2022.1.15",
-        "pymatgen-analysis-alloys==0.0.2"
+        "pymatgen-analysis-alloys>=0.0.3"
     ],
     python_requires=">=3.8",
     license="modified BSD",
