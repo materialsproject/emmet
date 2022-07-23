@@ -4897,8 +4897,7 @@ PhaseDiagramDoc            (<span title="pydantic.main.BaseModel">BaseModel</spa
     <span class="p">)</span>
 
     <span class="n">phase_diagram</span><span class="p">:</span> <span class="n">PhaseDiagram</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Phase diagram for the chemical system.&quot;</span><span class="p">,</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Phase diagram for the chemical system.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">last_updated</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -5067,17 +5066,16 @@ ThermoDoc            (<span title="emmet.core.material_property.PropertyDoc">Pro
 
     <span class="n">decomposition_enthalpy</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.&quot;</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">decomposition_enthalpy_decomposes_to</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DecompositionProduct</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of decomposition data associated with the decomposition_enthalpy quantity.&quot;</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of decomposition data associated with the decomposition_enthalpy quantity.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">energy_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The type of calculation this energy evaluation comes from.&quot;</span><span class="p">,</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The type of calculation this energy evaluation comes from.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">entry_types</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -5109,31 +5107,57 @@ ThermoDoc            (<span title="emmet.core.material_property.PropertyDoc">Pro
 
         <span class="n">docs</span> <span class="o">=</span> <span class="p">[]</span>
 
+        <span class="n">entries_by_mpid</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
-            <span class="p">(</span><span class="n">decomp</span><span class="p">,</span> <span class="n">ehull</span><span class="p">)</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_e_above_hull</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">entries_by_mpid</span><span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="n">entry_quality_scores</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;GGA&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;GGA+U&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;SCAN&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;R2SCAN&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
+
+        <span class="k">def</span> <span class="nf">_energy_eval</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="n">ComputedStructureEntry</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Helper function to order entries for thermo energy data selection</span>
+<span class="sd">            - Run type</span>
+<span class="sd">            - LASPH</span>
+<span class="sd">            - Energy</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">entry_quality_scores</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;run_type&quot;</span><span class="p">],</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;aspherical&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
+                <span class="n">entry</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">material_id</span><span class="p">,</span> <span class="n">entry_group</span> <span class="ow">in</span> <span class="n">entries_by_mpid</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+            <span class="n">sorted_entries</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">entry_group</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_energy_eval</span><span class="p">)</span>
+
+            <span class="n">blessed_entry</span> <span class="o">=</span> <span class="n">sorted_entries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="p">(</span><span class="n">decomp</span><span class="p">,</span> <span class="n">ehull</span><span class="p">)</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_e_above_hull</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>
 
             <span class="n">d</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">entry_id</span><span class="p">,</span>
-                <span class="s2">&quot;uncorrected_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">uncorrected_energy</span>
-                <span class="o">/</span> <span class="n">e</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
-                <span class="s2">&quot;energy_per_atom&quot;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">energy</span> <span class="o">/</span> <span class="n">e</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
-                <span class="s2">&quot;formation_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_form_energy_per_atom</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+                <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">material_id</span><span class="p">,</span>
+                <span class="s2">&quot;uncorrected_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">uncorrected_energy</span>
+                <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
+                <span class="s2">&quot;energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">energy</span>
+                <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
+                <span class="s2">&quot;formation_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_form_energy_per_atom</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">),</span>
                 <span class="s2">&quot;energy_above_hull&quot;</span><span class="p">:</span> <span class="n">ehull</span><span class="p">,</span>
-                <span class="s2">&quot;is_stable&quot;</span><span class="p">:</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">stable_entries</span><span class="p">,</span>
+                <span class="s2">&quot;is_stable&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">stable_entries</span><span class="p">,</span>
             <span class="p">}</span>
 
-            <span class="k">if</span> <span class="s2">&quot;last_updated&quot;</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
-                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;last_updated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;last_updated&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;last_updated&quot;</span> <span class="ow">in</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;last_updated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;last_updated&quot;</span><span class="p">]</span>
 
             <span class="c1"># Store different info if stable vs decomposes</span>
             <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;is_stable&quot;</span><span class="p">]:</span>
                 <span class="n">d</span><span class="p">[</span>
                     <span class="s2">&quot;equilibrium_reaction_energy_per_atom&quot;</span>
-                <span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_equilibrium_reaction_energy</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_equilibrium_reaction_energy</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposes_to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="p">{</span>
-                        <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">entry_id</span><span class="p">,</span>
+                        <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>
                         <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span>
                         <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">,</span>
                     <span class="p">}</span>
@@ -5141,11 +5165,13 @@ ThermoDoc            (<span title="emmet.core.material_property.PropertyDoc">Pro
                 <span class="p">]</span>
 
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">decomp</span><span class="p">,</span> <span class="n">energy</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_phase_separation_energy</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">decomp</span><span class="p">,</span> <span class="n">energy</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_phase_separation_energy</span><span class="p">(</span>
+                    <span class="n">blessed_entry</span>
+                <span class="p">)</span>
                 <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposition_enthalpy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span>
                 <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposition_enthalpy_decomposes_to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="p">{</span>
-                        <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">entry_id</span><span class="p">,</span>
+                        <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>
                         <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span>
                         <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">,</span>
                     <span class="p">}</span>
@@ -5155,23 +5181,42 @@ ThermoDoc            (<span title="emmet.core.material_property.PropertyDoc">Pro
                 <span class="c1"># try/except so this quantity does not take down the builder if it fails:</span>
                 <span class="c1"># it includes an optimization step that can be fragile in some instances,</span>
                 <span class="c1"># most likely failure is ValueError, &quot;invalid value encountered in true_divide&quot;</span>
-                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Could not calculate decomposition enthalpy for this entry.&quot;</span><span class="p">]</span>
+                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s2">&quot;Could not calculate decomposition enthalpy for this entry.&quot;</span>
+                <span class="p">]</span>
 
-            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;energy_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">)</span>
-            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;entry_types&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">)]</span>
-            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;entries&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span> <span class="n">e</span><span class="p">}</span>
+            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;energy_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">)</span>
+            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;entry_types&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;entries&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
-            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;last_updated&quot;</span><span class="p">]:</span>
-                <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
-                    <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
-                <span class="k">elif</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
-                    <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="c1"># Currently, each entry group contains a single entry due to how the compatability scheme works</span>
+            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entry_group</span><span class="p">:</span>
+
+                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;entry_types&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">))</span>
+                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;entries&quot;</span><span class="p">][</span><span class="n">entry</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">entry</span>
+
+            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;origins&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">PropertyOrigin</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+                    <span class="n">task_id</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;task_id&quot;</span><span class="p">],</span>
+                    <span class="n">last_updated</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;last_updated&quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()),</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
 
             <span class="n">docs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">ThermoDoc</span><span class="o">.</span><span class="n">from_structure</span><span class="p">(</span><span class="n">meta_structure</span><span class="o">=</span><span class="n">e</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">ThermoDoc</span><span class="o">.</span><span class="n">from_structure</span><span class="p">(</span>
+                    <span class="n">meta_structure</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                <span class="p">)</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">docs</span><span class="p">,</span> <span class="n">pd</span>
+        <span class="c1"># Construct new phase diagram with all of the entries, not just those on the hull</span>
+        <span class="n">pd_computed_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">_compute</span><span class="p">()</span>
+        <span class="n">pd_computed_data</span><span class="p">[</span><span class="s2">&quot;all_entries&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entries</span>
+        <span class="n">new_pd</span> <span class="o">=</span> <span class="n">PhaseDiagram</span><span class="p">(</span>
+            <span class="n">entries</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span> <span class="n">computed_data</span><span class="o">=</span><span class="n">pd_computed_data</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">docs</span><span class="p">,</span> <span class="n">new_pd</span>
 </code></pre></div>
         </details>
 
