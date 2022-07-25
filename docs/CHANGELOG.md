@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.32.5](https://github.com/materialsproject/emmet/tree/v0.32.5) (2022-07-25)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.4...v0.32.5)
+
+**Merged pull requests:**
+
+- Limit run types in thermo builder [\#479](https://github.com/materialsproject/emmet/pull/479) ([munrojm](https://github.com/munrojm))
+
 ## [v0.32.4](https://github.com/materialsproject/emmet/tree/v0.32.4) (2022-07-23)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.3...v0.32.4)
@@ -511,20 +519,20 @@
 
 ## [v0.21.16](https://github.com/materialsproject/emmet/tree/v0.21.16) (2022-01-20)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.15...v0.21.16)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.14...v0.21.16)
 
 **Merged pull requests:**
 
 - Remove version req in setup [\#354](https://github.com/materialsproject/emmet/pull/354) ([munrojm](https://github.com/munrojm))
 - Fix setup for workflow [\#353](https://github.com/materialsproject/emmet/pull/353) ([munrojm](https://github.com/munrojm))
 
-## [v0.21.15](https://github.com/materialsproject/emmet/tree/v0.21.15) (2022-01-19)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.14...v0.21.15)
-
 ## [v0.21.14](https://github.com/materialsproject/emmet/tree/v0.21.14) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.13...v0.21.14)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.15...v0.21.14)
+
+## [v0.21.15](https://github.com/materialsproject/emmet/tree/v0.21.15) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.13...v0.21.15)
 
 **Merged pull requests:**
 
@@ -560,19 +568,19 @@
 
 ## [v0.21.9](https://github.com/materialsproject/emmet/tree/v0.21.9) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.7...v0.21.9)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.8...v0.21.9)
 
 **Merged pull requests:**
 
 - Git stash added to docs step [\#347](https://github.com/materialsproject/emmet/pull/347) ([munrojm](https://github.com/munrojm))
 
-## [v0.21.7](https://github.com/materialsproject/emmet/tree/v0.21.7) (2022-01-19)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.8...v0.21.7)
-
 ## [v0.21.8](https://github.com/materialsproject/emmet/tree/v0.21.8) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.6...v0.21.8)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.7...v0.21.8)
+
+## [v0.21.7](https://github.com/materialsproject/emmet/tree/v0.21.7) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.6...v0.21.7)
 
 **Merged pull requests:**
 
