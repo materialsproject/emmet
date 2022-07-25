@@ -401,7 +401,7 @@ class SummaryDoc(PropertyDoc):
     # Theoretical
 
     theoretical: bool = Field(
-        True, description="Whether the material is theoretical.", source="provenance"
+        None, description="Whether the material is theoretical.", source="provenance"
     )
 
     @classmethod

@@ -121,7 +121,7 @@ class ProvenanceDoc(PropertyDoc):
     tags: List[str] = Field([])
 
     theoretical: bool = Field(
-        True, description="If this material has any experimental provenance or not"
+        None, description="If this material has any experimental provenance or not"
     )
 
     database_IDs: Dict[Database, List[str]] = Field(
