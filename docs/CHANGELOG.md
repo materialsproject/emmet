@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.32.4](https://github.com/materialsproject/emmet/tree/v0.32.4) (2022-07-23)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.3...v0.32.4)
+
+**Merged pull requests:**
+
+- Update absorption.py [\#471](https://github.com/materialsproject/emmet/pull/471) ([yang-ruoxi](https://github.com/yang-ruoxi))
+
 ## [v0.32.3](https://github.com/materialsproject/emmet/tree/v0.32.3) (2022-07-23)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.2...v0.32.3)
