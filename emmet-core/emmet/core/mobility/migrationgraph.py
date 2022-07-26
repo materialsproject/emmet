@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import List, Union, Dict, Tuple, Sequence
+from numpy.typing import ArrayLike
 import numpy as np
 
 from pydantic import BaseModel, Field, validator
@@ -56,7 +57,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="The matrix suprcell structure that does not contain the mobile ions for the purpose of migration analysis."
     )
 
-    conversion_matrix: List[List[Union[int, float]]] = Field(
+    conversion_matrix: List = Field(
         None,
         description="The conversion matrix used to convert unit cell to supercell."
     )
@@ -66,7 +67,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="The minimum length used to generate supercell using pymatgen."
     )
 
-    min_max_num_atoms: Tuple[int] = Field(
+    minmax_num_atoms: Tuple[int, int] = Field(
         None,
         description="The min/max number of atoms used to genreate supercell using pymatgen."
     )
@@ -88,7 +89,9 @@ class MigrationGraphDoc(EmmetBaseModel):
         grouped_entries: List[ComputedStructureEntry],
         working_ion_entry: Union[ComputedEntry, ComputedStructureEntry],
         hop_cutoff: float,
-        sm: StructureMatcher
+        sm: StructureMatcher,
+        min_length: float,
+        minmax_num_atoms: Tuple[int, int]
     ) -> Union["MigrationGraphDoc", None]:
         """
         This classmethod takes a group of ComputedStructureEntries (can also use ComputedEntry for wi) and generates a full sites structure.
@@ -107,12 +110,14 @@ class MigrationGraphDoc(EmmetBaseModel):
             max_distance=hop_cutoff
         )
 
-        host_sc, sc_mat, min_length, min_max_num_atoms, coords_dict, combo = MigrationGraphDoc.generate_sc_fields(
+        host_sc, sc_mat, min_length, minmax_num_atoms, coords_dict, combo = MigrationGraphDoc.generate_sc_fields(
             mg=migration_graph,
             min_length=min_length,
-            min_max_num_atoms=min_max_num_atoms,
+            minmax_num_atoms=minmax_num_atoms,
             sm=sm
         )
+
+        print(">>>>>>>>>>>>>>>>>>>>>>>>>>", combo)
 
         return cls(
             battery_id=battery_id,
@@ -123,7 +128,7 @@ class MigrationGraphDoc(EmmetBaseModel):
             matrix_supercell_structure=host_sc,
             conversion_matrix=sc_mat,
             min_length_sc=min_length,
-            min_max_num_atoms=min_max_num_atoms,
+            minmax_num_atoms=minmax_num_atoms,
             insertion_ion_coords=coords_dict,
             insert_coords_combo=combo
         )
@@ -132,27 +137,28 @@ class MigrationGraphDoc(EmmetBaseModel):
     def generate_sc_fields(
         mg: MigrationGraph,
         min_length: float,
-        min_max_num_atoms: Tuple[int],
+        minmax_num_atoms: Tuple[int, int],
         sm: StructureMatcher
     ):
         min_length = min_length
-        min_max_num_atoms = min_max_num_atoms
+        minmax_num_atoms = minmax_num_atoms
 
         sc_mat = get_sc_fromstruct(
             base_struct=mg.structure,
-            min_atoms=min_max_num_atoms[0],
-            max_atoms=min_max_num_atoms[1],
+            min_atoms=minmax_num_atoms[0],
+            max_atoms=minmax_num_atoms[1],
             min_length=min_length
         )
+        sc_mat = list(sc_mat)
 
         host_sc = mg.host_structure * sc_mat
 
         coords_dict = MigrationGraphDoc.ordered_sc_site_dict(mg.only_sites, sc_mat)
         # coords = [v["site"] for v in coords.values()]
 
-        combo = MigrationGraphDoc.get_hop_sc_combo(mg.unique_hops, sc_mat, sm, host_sc, coords_dict)
+        combo, coords_list = MigrationGraphDoc.get_hop_sc_combo(mg.unique_hops, sc_mat, sm, host_sc, coords_dict)
 
-        return host_sc, sc_mat, min_length, min_max_num_atoms, coords_dict, combo
+        return host_sc, sc_mat, min_length, minmax_num_atoms, coords_dict, combo
 
     def ordered_sc_site_dict(
         uc_sites_only: Structure,
@@ -225,4 +231,4 @@ class MigrationGraphDoc(EmmetBaseModel):
         return False
 
     def append_new_site(ordered_sc_site_dict, one_hop, sc_mat):
-        return "", ordered_sc_site_dict
+        return "new_combo", ordered_sc_site_dict

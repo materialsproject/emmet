@@ -1,5 +1,7 @@
+from struct import Struct
 import pytest
 from monty.serialization import loadfn
+from pymatgen.analysis.structure_matcher import StructureMatcher
 from pymatgen.entries.computed_entries import ComputedEntry
 from emmet.core.mobility.migrationgraph import MigrationGraphDoc
 
@@ -29,11 +31,15 @@ def migration_graph(test_dir):
 
 def test_from_entries_and_distance(migration_graph, get_entries):
     for expected in migration_graph.values():
+        sm = StructureMatcher()
         mgdoc = MigrationGraphDoc.from_entries_and_distance(
             battery_id="mp-1234",
             grouped_entries=get_entries[0],
             working_ion_entry=get_entries[1],
-            hop_cutoff=5
+            hop_cutoff=5,
+            sm=sm,
+            min_length=7,
+            minmax_num_atoms=(80, 240)
         )
 
         mg = mgdoc.migration_graph
