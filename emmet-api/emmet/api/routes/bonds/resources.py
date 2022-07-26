@@ -7,6 +7,7 @@ from emmet.api.routes.bonds.query_operators import (
     BondLengthQuery,
     CoordinationEnvsQuery,
 )
+from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
 
@@ -26,6 +27,7 @@ def bonds_resource(bonds_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Bonds"],
         disable_validation=True,
+        timeout=MAPISettings().TIMEOUT,
     )
 
     return resource

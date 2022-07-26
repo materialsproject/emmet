@@ -9,6 +9,7 @@ from emmet.api.routes.materials.query_operators import (
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.routes.xas.query_operators import XASQuery, XASTaskIDQuery
+from emmet.api.core.settings import MAPISettings
 
 
 def xas_resource(xas_store):
@@ -39,6 +40,7 @@ def xas_resource(xas_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["XAS"],
         disable_validation=True,
+        timeout=MAPISettings().TIMEOUT,
     )
 
     return resource

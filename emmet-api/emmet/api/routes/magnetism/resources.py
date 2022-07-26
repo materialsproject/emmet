@@ -4,6 +4,7 @@ from emmet.core.magnetism import MagnetismDoc
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 from emmet.api.routes.magnetism.query_operators import MagneticQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 
 
 def magnetism_resource(magnetism_store):
@@ -21,6 +22,7 @@ def magnetism_resource(magnetism_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Magnetism"],
         disable_validation=True,
+        timeout=MAPISettings().TIMEOUT
     )
 
     return resource

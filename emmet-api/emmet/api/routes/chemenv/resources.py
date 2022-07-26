@@ -3,6 +3,7 @@ from emmet.core.chemenv import ChemEnvDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 from emmet.api.routes.materials.query_operators import MultiMaterialIDQuery
+from emmet.api.core.settings import MAPISettings
 
 
 def chemenv_resource(chemenv_store):
@@ -21,6 +22,7 @@ def chemenv_resource(chemenv_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Chemical Environment"],
         disable_validation=True,
+        timeout=MAPISettings().TIMEOUT
     )
 
     return resource
