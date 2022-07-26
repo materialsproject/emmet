@@ -29,6 +29,9 @@ from emmet.api.routes.summary.query_operators import (
 )
 
 from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
+
+timeout = MAPISettings().TIMEOUT
 
 
 def summary_resource(summary_store):
@@ -58,6 +61,7 @@ def summary_resource(summary_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Summary"],
         disable_validation=True,
+        timeout=timeout
     )
 
     return resource
@@ -71,6 +75,7 @@ def summary_stats_resource(summary_store):
         tags=["Summary"],
         sub_path="/stats/",
         header_processor=GlobalHeaderProcessor(),
+        timeout=timeout
     )
 
     return resource

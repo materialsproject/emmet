@@ -9,6 +9,8 @@ from emmet.api.routes.elasticity.query_operators import (
     PoissonQuery,
 )
 
+from emmet.api.core.settings import MAPISettings
+
 
 def elasticity_resource(elasticity_store):
     resource = ReadOnlyResource(
@@ -28,6 +30,7 @@ def elasticity_resource(elasticity_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Elasticity"],
         disable_validation=False,
+        timeout=MAPISettings().TIMEOUT
     )
 
     return resource
