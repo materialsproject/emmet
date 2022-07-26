@@ -43,7 +43,6 @@ class HasProps(Enum):
     phonon = "phonon"
     insertion_electrodes = "insertion_electrodes"
     substrates = "substrates"
-    chemenv = "chemenv"
 
 
 class SummaryStats(BaseModel):
@@ -191,18 +190,6 @@ class SummaryDoc(PropertyDoc):
         source="thermo",
     )
 
-    # Chemenv
-
-    chemenv_iupac: List[COORDINATION_GEOMETRIES_IUPAC] = Field(
-        None,
-        description="List of symbols for unique (cationic) species in structure in IUPAC format",
-    )
-
-    chemenv_iucr: List[COORDINATION_GEOMETRIES_IUCR] = Field(
-        None,
-        description="List of symbols for unique (cationic) species in structure in IUPAC format",
-    )
-
     # XAS
 
     xas: List[XASSearchData] = Field(
@@ -313,23 +300,31 @@ class SummaryDoc(PropertyDoc):
 
     # Elasticity
 
-    bulk_modulus: BulkModulus = Field(
-        None, description="Bulk modulus data in in GPa.", source="elasticity",
+    k_voigt: float = Field(None, description="Voigt average of the bulk modulus.")
+
+    k_reuss: float = Field(
+        None, description="Reuss average of the bulk modulus in GPa."
     )
 
-    shear_modulus: ShearModulus = Field(
-        None, description="Shear modulus in GPa.", source="elasticity",
+    k_vrh: float = Field(
+        None, description="Voigt-Reuss-Hill average of the bulk modulus in GPa."
     )
 
-    young_modulus: float = Field(None, description="Young's modulus (SI units)")
-
-    universal_anisotropy: float = Field(
-        None, description="Elastic anisotropy.", source="elasticity"
+    g_voigt: float = Field(
+        None, description="Voigt average of the shear modulus in GPa."
     )
 
-    homogeneous_poisson: float = Field(
-        None, description="Poisson's ratio.", source="elasticity"
+    g_reuss: float = Field(
+        None, description="Reuss average of the shear modulus in GPa."
     )
+
+    g_vrh: float = Field(
+        None, description="Voigt-Reuss-Hill average of the shear modulus in GPa."
+    )
+
+    universal_anisotropy: float = Field(None, description="Elastic anisotropy.")
+
+    homogeneous_poisson: float = Field(None, description="Poisson's ratio.")
 
     # Dielectric and Piezo
 
@@ -467,7 +462,6 @@ summary_fields: Dict[str, list] = {
         "equilibrium_reaction_energy_per_atom",
         "decomposes_to",
     ],
-    HasProps.chemenv.value: ["chemenv_iupac", "chemenv_iucr"],
     HasProps.xas.value: ["absorbing_element", "edge", "spectrum_type", "spectrum_id"],
     HasProps.grain_boundaries.value: [
         "gb_energy",
@@ -499,9 +493,12 @@ summary_fields: Dict[str, list] = {
         "is_magnetic",
     ],
     HasProps.elasticity.value: [
-        "bulk_modulus",
-        "shear_modulus",
-        "young_modulus",
+        "k_voigt",
+        "k_reuss",
+        "k_vrh",
+        "g_voigt",
+        "g_reuss",
+        "g_vrh",
         "universal_anisotropy",
         "homogeneous_poisson",
     ],

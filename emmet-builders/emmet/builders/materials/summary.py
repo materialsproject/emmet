@@ -14,7 +14,6 @@ class SummaryBuilder(Builder):
         materials,
         thermo,
         xas,
-        chemenv,
         grain_boundaries,
         electronic_structure,
         magnetism,
@@ -38,7 +37,6 @@ class SummaryBuilder(Builder):
         self.materials = materials
         self.thermo = thermo
         self.xas = xas
-        self.chemenv = chemenv
         self.grain_boundaries = grain_boundaries
         self.electronic_structure = electronic_structure
         self.magnetism = magnetism
@@ -63,7 +61,6 @@ class SummaryBuilder(Builder):
                 materials,
                 thermo,
                 xas,
-                chemenv,
                 grain_boundaries,
                 electronic_structure,
                 magnetism,
@@ -121,9 +118,6 @@ class SummaryBuilder(Builder):
                 HasProps.materials.value: materials_doc,
                 HasProps.thermo.value: self.thermo.query_one({self.thermo.key: entry}),
                 HasProps.xas.value: list(self.xas.query({self.xas.key: entry})),
-                HasProps.chemenv.value: self.chemenv.query_one(
-                    {self.chemenv.key: entry}
-                ),
                 HasProps.grain_boundaries.value: list(
                     self.grain_boundaries.query({self.grain_boundaries.key: entry})
                 ),

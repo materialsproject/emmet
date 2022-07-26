@@ -1,7 +1,5 @@
 import os
 
-from urllib.parse import urlparse
-
 from emmet.api.core.api import MAPI
 from emmet.api.core.settings import MAPISettings
 from maggma.stores import MongoURIStore, S3Store
@@ -17,7 +15,7 @@ debug = default_settings.DEBUG
 
 # allow db_uri to be set with a different protocol scheme
 # but prepend with mongodb+srv:// if not otherwise specified
-if not urlparse(db_uri).scheme:
+if len(db_uri.split("://", 1)) < 2:
     db_uri = "mongodb+srv://" + db_uri
 
 if db_uri:

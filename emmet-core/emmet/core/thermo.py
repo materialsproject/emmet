@@ -8,6 +8,7 @@ from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.material_property import PropertyDoc
+from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import MPID
 
 
@@ -74,17 +75,16 @@ class ThermoDoc(PropertyDoc):
 
     decomposition_enthalpy: float = Field(
         None,
-        description="Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen."
+        description="Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.",
     )
 
     decomposition_enthalpy_decomposes_to: List[DecompositionProduct] = Field(
         None,
-        description="List of decomposition data associated with the decomposition_enthalpy quantity."
+        description="List of decomposition data associated with the decomposition_enthalpy quantity.",
     )
 
     energy_type: str = Field(
-        ...,
-        description="The type of calculation this energy evaluation comes from.",
+        ..., description="The type of calculation this energy evaluation comes from.",
     )
 
     entry_types: List[str] = Field(
@@ -116,31 +116,57 @@ class ThermoDoc(PropertyDoc):
 
         docs = []
 
+        entries_by_mpid = defaultdict(list)
         for e in entries:
-            (decomp, ehull) = pd.get_decomp_and_e_above_hull(e)
+            entries_by_mpid[e.data["material_id"]].append(e)
+
+        entry_quality_scores = {"GGA": 1, "GGA+U": 2, "SCAN": 3, "R2SCAN": 4}
+
+        def _energy_eval(entry: ComputedStructureEntry):
+            """
+            Helper function to order entries for thermo energy data selection
+            - Run type
+            - LASPH
+            - Energy
+            """
+
+            return (
+                -1 * entry_quality_scores.get(entry.data["run_type"], 0),
+                -1 * int(entry.data.get("aspherical", False)),
+                entry.energy,
+            )
+
+        for material_id, entry_group in entries_by_mpid.items():
+
+            sorted_entries = sorted(entry_group, key=_energy_eval)
+
+            blessed_entry = sorted_entries[0]
+
+            (decomp, ehull) = pd.get_decomp_and_e_above_hull(blessed_entry)
 
             d = {
-                "material_id": e.entry_id,
-                "uncorrected_energy_per_atom": e.uncorrected_energy
-                / e.composition.num_atoms,
-                "energy_per_atom": e.energy / e.composition.num_atoms,
-                "formation_energy_per_atom": pd.get_form_energy_per_atom(e),
+                "material_id": material_id,
+                "uncorrected_energy_per_atom": blessed_entry.uncorrected_energy
+                / blessed_entry.composition.num_atoms,
+                "energy_per_atom": blessed_entry.energy
+                / blessed_entry.composition.num_atoms,
+                "formation_energy_per_atom": pd.get_form_energy_per_atom(blessed_entry),
                 "energy_above_hull": ehull,
-                "is_stable": e in pd.stable_entries,
+                "is_stable": blessed_entry in pd.stable_entries,
             }
 
-            if "last_updated" in e.data:
-                d["last_updated"] = e.data["last_updated"]
+            if "last_updated" in blessed_entry.data:
+                d["last_updated"] = blessed_entry.data["last_updated"]
 
             # Store different info if stable vs decomposes
             if d["is_stable"]:
                 d[
                     "equilibrium_reaction_energy_per_atom"
-                ] = pd.get_equilibrium_reaction_energy(e)
+                ] = pd.get_equilibrium_reaction_energy(blessed_entry)
             else:
                 d["decomposes_to"] = [
                     {
-                        "material_id": de.entry_id,
+                        "material_id": de.data["material_id"],
                         "formula": de.composition.formula,
                         "amount": amt,
                     }
@@ -148,11 +174,13 @@ class ThermoDoc(PropertyDoc):
                 ]
 
             try:
-                decomp, energy = pd.get_decomp_and_phase_separation_energy(e)
+                decomp, energy = pd.get_decomp_and_phase_separation_energy(
+                    blessed_entry
+                )
                 d["decomposition_enthalpy"] = energy
                 d["decomposition_enthalpy_decomposes_to"] = [
                     {
-                        "material_id": de.entry_id,
+                        "material_id": de.data["material_id"],
                         "formula": de.composition.formula,
                         "amount": amt,
                     }
@@ -162,23 +190,42 @@ class ThermoDoc(PropertyDoc):
                 # try/except so this quantity does not take down the builder if it fails:
                 # it includes an optimization step that can be fragile in some instances,
                 # most likely failure is ValueError, "invalid value encountered in true_divide"
-                d["warnings"] = ["Could not calculate decomposition enthalpy for this entry."]
+                d["warnings"] = [
+                    "Could not calculate decomposition enthalpy for this entry."
+                ]
 
-            d["energy_type"] = e.parameters.get("run_type", "Unknown")
-            d["entry_types"] = [e.parameters.get("run_type", "Unknown")]
-            d["entries"] = {e.parameters.get("run_type", ""): e}
+            d["energy_type"] = blessed_entry.parameters.get("run_type", "Unknown")
+            d["entry_types"] = []
+            d["entries"] = {}
 
-            for k in ["last_updated"]:
-                if k in e.parameters:
-                    d[k] = e.parameters[k]
-                elif k in e.data:
-                    d[k] = e.data[k]
+            # Currently, each entry group contains a single entry due to how the compatability scheme works
+            for entry in entry_group:
+
+                d["entry_types"].append(entry.parameters.get("run_type", "Unknown"))
+                d["entries"][entry.parameters.get("run_type", "Unknown")] = entry
+
+            d["origins"] = [
+                PropertyOrigin(
+                    name="energy",
+                    task_id=blessed_entry.data["task_id"],
+                    last_updated=d.get("last_updated", datetime.utcnow()),
+                )
+            ]
 
             docs.append(
-                ThermoDoc.from_structure(meta_structure=e.structure, **d, **kwargs)
+                ThermoDoc.from_structure(
+                    meta_structure=blessed_entry.structure, **d, **kwargs
+                )
             )
 
-        return docs, pd
+        # Construct new phase diagram with all of the entries, not just those on the hull
+        pd_computed_data = pd._compute()
+        pd_computed_data["all_entries"] = entries
+        new_pd = PhaseDiagram(
+            entries, elements=pd.elements, computed_data=pd_computed_data
+        )
+
+        return docs, new_pd
 
 
 class PhaseDiagramDoc(BaseModel):
@@ -195,8 +242,7 @@ class PhaseDiagramDoc(BaseModel):
     )
 
     phase_diagram: PhaseDiagram = Field(
-        ...,
-        description="Phase diagram for the chemical system.",
+        ..., description="Phase diagram for the chemical system.",
     )
 
     last_updated: datetime = Field(

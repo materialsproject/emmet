@@ -136,7 +136,6 @@ def test_summary_builder(
     builder = SummaryBuilder(
         materials=materials,
         electronic_structure=electronic_structure,
-        chemenv=chemenv,
         thermo=thermo,
         magnetism=magnetism,
         dielectric=dielectric,
@@ -161,7 +160,6 @@ def test_summary_builder(
 
 def test_serialization(tmpdir):
     builder = SummaryBuilder(
-        MemoryStore(),
         MemoryStore(),
         MemoryStore(),
         MemoryStore(),

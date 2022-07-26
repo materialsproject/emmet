@@ -1,5 +1,69 @@
 # Changelog
 
+## [v0.32.6](https://github.com/materialsproject/emmet/tree/v0.32.6) (2022-07-25)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.5...v0.32.6)
+
+**Merged pull requests:**
+
+- Remove `matminer` as a dependency [\#480](https://github.com/materialsproject/emmet/pull/480) ([mkhorton](https://github.com/mkhorton))
+
+## [v0.32.5](https://github.com/materialsproject/emmet/tree/v0.32.5) (2022-07-25)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.4...v0.32.5)
+
+**Merged pull requests:**
+
+- Limit run types in thermo builder [\#479](https://github.com/materialsproject/emmet/pull/479) ([munrojm](https://github.com/munrojm))
+
+## [v0.32.4](https://github.com/materialsproject/emmet/tree/v0.32.4) (2022-07-23)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.3...v0.32.4)
+
+**Merged pull requests:**
+
+- Update absorption.py [\#471](https://github.com/materialsproject/emmet/pull/471) ([yang-ruoxi](https://github.com/yang-ruoxi))
+
+## [v0.32.3](https://github.com/materialsproject/emmet/tree/v0.32.3) (2022-07-23)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.2...v0.32.3)
+
+**Merged pull requests:**
+
+- Unpin `pymatgen-analysis-alloys` dependency [\#474](https://github.com/materialsproject/emmet/pull/474) ([mkhorton](https://github.com/mkhorton))
+
+## [v0.32.2](https://github.com/materialsproject/emmet/tree/v0.32.2) (2022-07-22)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.1...v0.32.2)
+
+**Merged pull requests:**
+
+- Bump pmg analysis alloys in setup [\#473](https://github.com/materialsproject/emmet/pull/473) ([munrojm](https://github.com/munrojm))
+
+## [v0.32.1](https://github.com/materialsproject/emmet/tree/v0.32.1) (2022-07-21)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.0...v0.32.1)
+
+**Merged pull requests:**
+
+- Revert elasticity and chemenv data fields in `SummaryDoc` [\#470](https://github.com/materialsproject/emmet/pull/470) ([munrojm](https://github.com/munrojm))
+
+## [v0.32.0](https://github.com/materialsproject/emmet/tree/v0.32.0) (2022-07-21)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.31.2...v0.32.0)
+
+**Merged pull requests:**
+
+- Fully incorporate new mixing scheme into the `ThermoBuilder` [\#467](https://github.com/materialsproject/emmet/pull/467) ([munrojm](https://github.com/munrojm))
+
+## [v0.31.2](https://github.com/materialsproject/emmet/tree/v0.31.2) (2022-07-21)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.31.1...v0.31.2)
+
+**Merged pull requests:**
+
+- Bump `pymatgen-analysis-alloys` [\#469](https://github.com/materialsproject/emmet/pull/469) ([mkhorton](https://github.com/mkhorton))
+
 ## [v0.31.1](https://github.com/materialsproject/emmet/tree/v0.31.1) (2022-07-19)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.31.0...v0.31.1)
@@ -463,20 +527,20 @@
 
 ## [v0.21.16](https://github.com/materialsproject/emmet/tree/v0.21.16) (2022-01-20)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.15...v0.21.16)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.14...v0.21.16)
 
 **Merged pull requests:**
 
 - Remove version req in setup [\#354](https://github.com/materialsproject/emmet/pull/354) ([munrojm](https://github.com/munrojm))
 - Fix setup for workflow [\#353](https://github.com/materialsproject/emmet/pull/353) ([munrojm](https://github.com/munrojm))
 
-## [v0.21.15](https://github.com/materialsproject/emmet/tree/v0.21.15) (2022-01-19)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.14...v0.21.15)
-
 ## [v0.21.14](https://github.com/materialsproject/emmet/tree/v0.21.14) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.13...v0.21.14)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.15...v0.21.14)
+
+## [v0.21.15](https://github.com/materialsproject/emmet/tree/v0.21.15) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.13...v0.21.15)
 
 **Merged pull requests:**
 
@@ -512,19 +576,19 @@
 
 ## [v0.21.9](https://github.com/materialsproject/emmet/tree/v0.21.9) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.7...v0.21.9)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.8...v0.21.9)
 
 **Merged pull requests:**
 
 - Git stash added to docs step [\#347](https://github.com/materialsproject/emmet/pull/347) ([munrojm](https://github.com/munrojm))
 
-## [v0.21.7](https://github.com/materialsproject/emmet/tree/v0.21.7) (2022-01-19)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.8...v0.21.7)
-
 ## [v0.21.8](https://github.com/materialsproject/emmet/tree/v0.21.8) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.6...v0.21.8)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.7...v0.21.8)
+
+## [v0.21.7](https://github.com/materialsproject/emmet/tree/v0.21.7) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.6...v0.21.7)
 
 **Merged pull requests:**
 
