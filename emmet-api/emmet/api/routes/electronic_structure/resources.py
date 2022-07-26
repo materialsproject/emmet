@@ -20,7 +20,7 @@ from emmet.core.electronic_structure import BSObjectDoc, DOSObjectDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 
-timeout=MAPISettings().TIMEOUT
+timeout = MAPISettings().TIMEOUT
 
 
 def es_resource(es_store):

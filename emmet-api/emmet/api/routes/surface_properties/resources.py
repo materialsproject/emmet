@@ -9,7 +9,6 @@ from emmet.api.routes.surface_properties.query_operators import ReconstructedQue
 from emmet.core.surface_properties import SurfacePropDoc
 
 
-
 def surface_props_resource(surface_prop_store):
     resource = ReadOnlyResource(
         surface_prop_store,
@@ -24,7 +23,7 @@ def surface_props_resource(surface_prop_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Surface Properties"],
         disable_validation=True,
-        timeout=MAPISettings().TIMEOUT
+        timeout=MAPISettings().TIMEOUT,
     )
 
     return resource

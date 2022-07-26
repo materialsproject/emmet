@@ -6,7 +6,6 @@ from emmet.api.core.settings import MAPISettings
 from emmet.core.similarity import SimilarityDoc
 
 
-
 def similarity_resource(similarity_store):
     resource = ReadOnlyResource(
         similarity_store,
