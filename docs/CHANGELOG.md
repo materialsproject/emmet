@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.32.6](https://github.com/materialsproject/emmet/tree/v0.32.6) (2022-07-25)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.5...v0.32.6)
+
+**Merged pull requests:**
+
+- Remove `matminer` as a dependency [\#480](https://github.com/materialsproject/emmet/pull/480) ([mkhorton](https://github.com/mkhorton))
+
 ## [v0.32.5](https://github.com/materialsproject/emmet/tree/v0.32.5) (2022-07-25)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.4...v0.32.5)
@@ -939,19 +947,19 @@
 
 ## [v0.13.0](https://github.com/materialsproject/emmet/tree/v0.13.0) (2021-09-23)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.13.0)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.13.0)
 
 **Merged pull requests:**
 
 - Builder bug fixes [\#272](https://github.com/materialsproject/emmet/pull/272) ([munrojm](https://github.com/munrojm))
 
-## [v0.12.7](https://github.com/materialsproject/emmet/tree/v0.12.7) (2021-09-15)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.8...v0.12.7)
-
 ## [v0.12.8](https://github.com/materialsproject/emmet/tree/v0.12.8) (2021-09-15)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.8)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.7...v0.12.8)
+
+## [v0.12.7](https://github.com/materialsproject/emmet/tree/v0.12.7) (2021-09-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.12.6...v0.12.7)
 
 **Merged pull requests:**
 
