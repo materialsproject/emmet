@@ -34,14 +34,11 @@ class MigrationGraphBuilder(MapBuilder):
         # get migration graph structure
         struct = MigrationGraph.get_structure_from_entries(entries, wi_entry)
         if type(struct) == list:
-            if len(struct) == 1:
-                struct = struct[0]
-            else:
-                # ToDo: Handling ambiguous migration graphs
+            if len(struct) > 1:
                 self.logger.warn(
                     f"migration graph ambiguous: {len(struct)} possible options"
                 )
-                struct = struct[0]
+            struct = struct[0]
 
         # get hop cutoff distance
         d = get_hop_cutoff(
