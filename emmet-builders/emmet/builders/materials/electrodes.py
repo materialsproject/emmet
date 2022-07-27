@@ -32,6 +32,7 @@ REDOX_ELEMENTS = [
     "Cu",
     "Nb",
     "Mo",
+    "Ag",
     "Sn",
     "Sb",
     "W",
