@@ -200,7 +200,7 @@ class ThermoBuilder(Builder):
                         self.num_phase_diagram_eles is None
                         or len(elements) <= self.num_phase_diagram_eles
                     ):
-                        pd_id = "{}_{}".format(chemsys, thermo_type.value)
+                        pd_id = "{}_{}".format(chemsys, str(thermo_type))
                         pd_doc = PhaseDiagramDoc(
                             phase_diagram_id=pd_id,
                             chemsys=chemsys,

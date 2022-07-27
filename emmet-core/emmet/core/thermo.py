@@ -2,7 +2,7 @@
 from collections import defaultdict
 from typing import Dict, List, Union
 from datetime import datetime
-from enum import Enum
+from emmet.core.utils import ValueEnum
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
@@ -33,7 +33,7 @@ class DecompositionProduct(BaseModel):
     )
 
 
-class ThermoType(Enum):
+class ThermoType(ValueEnum):
     GGA_GGA_U = "GGA/GGA+U"
     GGA_GGA_U_R2SCAN = "GGA/GGA+U/R2SCAN"
     UNKNOWN = "UNKNOWN"
@@ -166,7 +166,7 @@ class ThermoDoc(PropertyDoc):
             (decomp, ehull) = pd.get_decomp_and_e_above_hull(blessed_entry)
 
             d = {
-                "thermo_id": "{}_{}".format(material_id, thermo_type.value),
+                "thermo_id": "{}_{}".format(material_id, str(thermo_type)),
                 "material_id": material_id,
                 "thermo_type": thermo_type,
                 "uncorrected_energy_per_atom": blessed_entry.uncorrected_energy
