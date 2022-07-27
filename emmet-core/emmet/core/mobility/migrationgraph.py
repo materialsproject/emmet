@@ -30,7 +30,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="Any warnings related to this property."
     )
 
-    deprecated:bool = Field(
+    deprecated: bool = Field(
         None,
         description="Indicates whether a migration graph can be constructed from the provided entries"
     )
