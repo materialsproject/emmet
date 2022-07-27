@@ -173,7 +173,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         uc_no_site = uc_sites_only.copy()
         uc_no_site.remove_sites(range(len(uc_sites_only)))
         working_ion = uc_sites_only[0].species_string
-        sc_site_dict = {}
+        sc_site_dict = {} # type: dict
 
         for i, e in enumerate(uc_sites_only):
             uc_one_set = uc_no_site.copy()
