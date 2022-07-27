@@ -32,13 +32,13 @@ REDOX_ELEMENTS = [
     "Cu",
     "Nb",
     "Mo",
+    "Ag",
     "Sn",
     "Sb",
     "W",
     "Re",
     "Bi",
     "C",
-    "Hf",
 ]
 
 WORKING_IONS = ["Li", "Be", "Na", "Mg", "K", "Ca", "Rb", "Sr", "Cs", "Ba"]
