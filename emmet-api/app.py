@@ -198,7 +198,7 @@ if db_uri:
     alloy_pairs_store = MongoURIStore(
         uri=db_uri,
         database=f"mp_core_{db_suffix}",
-        key="material_id",
+        key="pair_id",
         collection_name="alloy_pairs",
     )
 
