@@ -178,7 +178,7 @@ class MigrationGraphDoc(EmmetBaseModel):
                 sc_site_dict[index + count] = {"uc_site_type": i, "site": sc_one_set[index]}
             count += len(sc_one_set)
 
-        ordered_site_dict = {i: e for i, e in enumerate(sorted(sc_site_dict.values(), key=lambda v: np.linalg.norm(v["site"].frac_coords)))}
+        ordered_site_dict = {i: e for i, e in enumerate(sorted(sc_site_dict.values(), key=lambda v: float(np.linalg.norm(v["site"].frac_coords))))}
         return ordered_site_dict
 
     def get_hop_sc_combo(
@@ -230,5 +230,5 @@ class MigrationGraphDoc(EmmetBaseModel):
                 return False
         return False
 
-    def append_new_site(ordered_sc_site_dict, one_hop, sc_mat):
+    def append_new_site(ordered_sc_site_dict: Dict, one_hop, sc_mat):
         return "new_combo", ordered_sc_site_dict
