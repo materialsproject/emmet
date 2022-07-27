@@ -41,7 +41,7 @@ REDOX_ELEMENTS = [
     "C",
 ]
 
-WORKING_IONS = ["Li", "Be", "Na", "Mg", "K", "Ca", "Rb", "Sr", "Cs", "Ba"]
+WORKING_IONS = ["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"]
 
 MAT_PROPS = ["structure", "material_id", "formula_pretty", "entries"]
 
@@ -154,14 +154,12 @@ class StructureGroupBuilder(Builder):
             - get the oldest timestamp for the target documents (min_target_time)
             - if min_target_time is < max_mat_time then nuke all the target documents
         """
-        other_wions = list(set(WORKING_IONS) - {self.working_ion})
         # All potentially interesting chemsys must contain the working ion
         base_query = {
             "$and": [
                 self.query.copy(),
                 {"elements": {"$in": REDOX_ELEMENTS}},
                 {"elements": {"$in": [self.working_ion]}},
-                {"elements": {"$nin": other_wions}},
             ]
         }
         self.logger.debug(f"Initial Chemsys QUERY: {base_query}")
