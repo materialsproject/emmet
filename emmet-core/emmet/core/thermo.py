@@ -10,6 +10,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from emmet.core.material_property import PropertyDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.mpid import MPID
+from emmet.core.vasp.calc_types.enums import RunType
 
 
 class DecompositionProduct(BaseModel):
@@ -31,12 +32,28 @@ class DecompositionProduct(BaseModel):
     )
 
 
+class ThermoType(RunType):
+    GGA_GGA_U = "GGA/GGA+U"
+    GGA_GGA_U_R2SCAN = "GGA/GGA+U/R2SCAN"
+    UNKNOWN = "UNKNOWN"
+
+
 class ThermoDoc(PropertyDoc):
     """
     A thermo entry document
     """
 
     property_name = "thermo"
+
+    thermo_type: ThermoType = Field(
+        ...,
+        description="Functional types of calculations involved in the energy mixing scheme.",
+    )
+
+    thermo_id: str = Field(
+        ...,
+        description="Unique document ID which is composed of the Material ID and thermo data type.",
+    )
 
     uncorrected_energy_per_atom: float = Field(
         ..., description="The total DFT energy of this material per atom in eV/atom."
@@ -99,7 +116,10 @@ class ThermoDoc(PropertyDoc):
 
     @classmethod
     def from_entries(
-        cls, entries: List[Union[ComputedEntry, ComputedStructureEntry]], **kwargs
+        cls,
+        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+        thermo_type: ThermoType,
+        **kwargs
     ):
 
         entries_by_comp = defaultdict(list)
@@ -145,7 +165,9 @@ class ThermoDoc(PropertyDoc):
             (decomp, ehull) = pd.get_decomp_and_e_above_hull(blessed_entry)
 
             d = {
+                "thermo_id": "{}_{}".format(material_id, thermo_type),
                 "material_id": material_id,
+                "thermo_type": thermo_type,
                 "uncorrected_energy_per_atom": blessed_entry.uncorrected_energy
                 / blessed_entry.composition.num_atoms,
                 "energy_per_atom": blessed_entry.energy
@@ -236,9 +258,12 @@ class PhaseDiagramDoc(BaseModel):
     property_name = "phase_diagram"
 
     chemsys: str = Field(
+        ..., description="Dash-delimited string of elements in the material",
+    )
+
+    thermo_type: ThermoType = Field(
         ...,
-        title="Chemical System",
-        description="Dash-delimited string of elements in the material",
+        description="Functional types of calculations involved in the energy mixing scheme.",
     )
 
     phase_diagram: PhaseDiagram = Field(

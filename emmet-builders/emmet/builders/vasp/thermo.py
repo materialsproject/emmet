@@ -1,18 +1,18 @@
 import warnings
 from collections import defaultdict
 from itertools import chain
-from typing import Dict, Iterable, Iterator, List, Optional, Set
+from typing import Dict, Iterable, Iterator, List, Optional, Set, Union
 from math import ceil
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
 from monty.json import MontyDecoder
 from pymatgen.analysis.phase_diagram import PhaseDiagramError
-from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.entries.computed_entries import ComputedStructureEntry
+from pymatgen.entries.compatibility import Compatibility
 
 from emmet.builders.utils import chemsys_permutations
-from emmet.core.thermo import ThermoDoc, PhaseDiagramDoc
+from emmet.core.thermo import ThermoDoc, PhaseDiagramDoc, ThermoType
 from emmet.core.utils import jsanitize
 
 
@@ -24,7 +24,7 @@ class ThermoBuilder(Builder):
         phase_diagram: Optional[Store] = None,
         oxidation_states: Optional[Store] = None,
         query: Optional[Dict] = None,
-        compatibility=None,
+        compatibility: Optional[List[Compatibility]] = None,
         num_phase_diagram_eles: Optional[int] = None,
         **kwargs,
     ):
@@ -39,7 +39,7 @@ class ThermoBuilder(Builder):
             phase_diagram (Store): Store of phase diagram data for each unique chemical system
             oxidation_states (Store): Store of oxidation state data to use in correction scheme application
             query (dict): dictionary to limit materials to be analyzed
-            compatibility (PymatgenCompatability): Compatability module
+            compatibility ([Compatability]): Compatability module
                 to ensure energies are compatible
             num_phase_diagram_eles (int): Maximum number of elements to use in phase diagram construction
                 for data within the separate phase_diagram collection
@@ -48,7 +48,7 @@ class ThermoBuilder(Builder):
         self.materials = materials
         self.thermo = thermo
         self.query = query if query else {}
-        self.compatibility = compatibility
+        self.compatibility = compatibility or [None]
         self.oxidation_states = oxidation_states
         self.phase_diagram = phase_diagram
         self.num_phase_diagram_eles = num_phase_diagram_eles
@@ -155,61 +155,74 @@ class ThermoBuilder(Builder):
 
         self.logger.debug(f"Processing {len(entries)} entries for {chemsys}")
 
-        material_entries: Dict[str, Dict[str, ComputedStructureEntry]] = defaultdict(
-            dict
-        )
-        pd_entries = []
-        for entry in entries:
-            material_entries[entry.data["material_id"]][entry.data["run_type"]] = entry
+        docs_pd_pair_list = []
 
-        if self.compatibility:
-            with warnings.catch_warnings():
-                warnings.filterwarnings(
-                    "ignore", message="Failed to guess oxidation states.*"
+        for compatability in self.compatibility:
+
+            pd_entries = []
+
+            if compatability:
+                if compatability.name == "MP DFT mixing scheme":
+                    thermo_type = ThermoType.GGA_GGA_U_R2SCAN
+                elif compatability.name == "MP2020":
+                    thermo_type = ThermoType.GGA_GGA_U
+                else:
+                    thermo_type = ThermoType.UNKNOWN
+
+                with warnings.catch_warnings():
+                    warnings.filterwarnings(
+                        "ignore", message="Failed to guess oxidation states.*"
+                    )
+                    pd_entries = compatability.process_entries(entries)
+            else:
+                all_entry_types = {e.data["run_type"] for e in entries}
+                if len(all_entry_types) > 1:
+                    raise ValueError(
+                        "More than one functional type has been provided without a mixing scheme!"
+                    )
+                else:
+                    thermo_type = all_entry_types.pop()
+                pd_entries = entries
+            self.logger.debug(f"{len(pd_entries)} remain in {chemsys} after filtering")
+
+            try:
+                docs, pd = ThermoDoc.from_entries(
+                    pd_entries, thermo_type, deprecated=False
                 )
-                pd_entries = self.compatibility.process_entries(entries)
-        else:
-            pd_entries = entries
-        self.logger.debug(f"{len(pd_entries)} remain in {chemsys} after filtering")
 
-        try:
-            docs, pd = ThermoDoc.from_entries(pd_entries, deprecated=False)
+                pd_data = None
 
-            # for doc in docs:
-            #     doc.entries = material_entries[doc.material_id]
-            #     doc.entry_types = list(material_entries[doc.material_id].keys())
+                if self.phase_diagram:
+                    if (
+                        self.num_phase_diagram_eles is None
+                        or len(elements) <= self.num_phase_diagram_eles
+                    ):
+                        pd_doc = PhaseDiagramDoc(chemsys=chemsys, phase_diagram=pd)
+                        pd_data = jsanitize(pd_doc.dict(), allow_bson=True)
 
-            pd_data = None
+                docs_pd_pair = (
+                    jsanitize([d.dict() for d in docs], allow_bson=True),
+                    [pd_data],
+                )
 
-            if self.phase_diagram:
-                if (
-                    self.num_phase_diagram_eles is None
-                    or len(elements) <= self.num_phase_diagram_eles
-                ):
-                    pd_doc = PhaseDiagramDoc(chemsys=chemsys, phase_diagram=pd)
-                    pd_data = jsanitize(pd_doc.dict(), allow_bson=True)
+                docs_pd_pair_list.append(docs_pd_pair)
 
-            docs_pd_pair = (
-                jsanitize([d.dict() for d in docs], allow_bson=True),
-                [pd_data],
-            )
+            except PhaseDiagramError as p:
+                elsyms = []
+                for e in entries:
+                    elsyms.extend([el.symbol for el in e.composition.elements])
 
-        except PhaseDiagramError as p:
-            elsyms = []
-            for e in entries:
-                elsyms.extend([el.symbol for el in e.composition.elements])
+                self.logger.warning(
+                    f"Phase diagram error in chemsys {'-'.join(sorted(set(elsyms)))}: {p}"
+                )
+                return []
+            except Exception as e:
+                self.logger.error(
+                    f"Got unexpected error while processing {[ent_.entry_id for ent_ in entries]}: {e}"
+                )
+                return []
 
-            self.logger.warning(
-                f"Phase diagram error in chemsys {'-'.join(sorted(set(elsyms)))}: {p}"
-            )
-            return []
-        except Exception as e:
-            self.logger.error(
-                f"Got unexpected error while processing {[ent_.entry_id for ent_ in entries]}: {e}"
-            )
-            return []
-
-        return docs_pd_pair
+        return docs_pd_pair_list
 
     def update_targets(self, items):
         """
@@ -218,8 +231,8 @@ class ThermoBuilder(Builder):
             items ([[tuple(List[dict],List[dict])]]): a list of list of thermo dictionaries to update
         """
 
-        thermo_docs = [item[0] for item in items]
-        phase_diagram_docs = [item[1] for item in items]
+        thermo_docs = [item[0] for pair_list in items for item in pair_list]
+        phase_diagram_docs = [item[1] for pair_list in items for item in pair_list]
 
         # flatten out lists
         thermo_docs = list(filter(None, chain.from_iterable(thermo_docs)))
@@ -302,17 +315,16 @@ class ThermoBuilder(Builder):
             f"Got {len(materials_docs)} entries from DB for {len(query_chemsys)} sub-chemsys for {chemsys}"
         )
 
-        # Convert GGA, GGA+U, R2SCAN entries into ComputedEntries and store
+        # Convert entries into ComputedEntries and store
         for doc in materials_docs:
             for r_type, entry_dict in doc.get("entries", {}).items():
-                if r_type in ["GGA", "GGA+U", "R2SCAN"]:
-                    entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
-                        entry_dict["data"]["material_id"], {}
-                    )
-                    entry_dict["data"]["run_type"] = r_type
-                    elsyms = sorted(set([el for el in entry_dict["composition"]]))
-                    self._entries_cache["-".join(elsyms)].append(entry_dict)
-                    all_entries.append(entry_dict)
+                entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
+                    entry_dict["data"]["material_id"], {}
+                )
+                entry_dict["data"]["run_type"] = r_type
+                elsyms = sorted(set([el for el in entry_dict["composition"]]))
+                self._entries_cache["-".join(elsyms)].append(entry_dict)
+                all_entries.append(entry_dict)
 
         self.logger.info(f"Total entries in {chemsys} : {len(all_entries)}")
 
