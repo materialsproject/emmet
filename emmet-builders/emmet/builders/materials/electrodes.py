@@ -41,7 +41,7 @@ REDOX_ELEMENTS = [
     "Hf",
 ]
 
-WORKING_IONS = ["Li", "Be", "Na", "Mg", "K", "Ca", "Rb", "Sr", "Cs", "Ba"]
+WORKING_IONS = ["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"]
 
 MAT_PROPS = ["structure", "material_id", "formula_pretty", "entries"]
 
