@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.32.8](https://github.com/materialsproject/emmet/tree/v0.32.8) (2022-07-27)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.7...v0.32.8)
+
+**Merged pull requests:**
+
+- Fix for incorrect collection name, require `db_suffix` to be set [\#485](https://github.com/materialsproject/emmet/pull/485) ([mkhorton](https://github.com/mkhorton))
+
 ## [v0.32.7](https://github.com/materialsproject/emmet/tree/v0.32.7) (2022-07-26)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.6...v0.32.7)
