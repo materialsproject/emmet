@@ -38,7 +38,6 @@ REDOX_ELEMENTS = [
     "Re",
     "Bi",
     "C",
-    "Hf",
 ]
 
 WORKING_IONS = ["Li", "Be", "Na", "Mg", "K", "Ca", "Rb", "Sr", "Cs", "Ba"]
