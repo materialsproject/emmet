@@ -2,6 +2,7 @@
 from collections import defaultdict
 from typing import Dict, List, Union
 from datetime import datetime
+from enum import Enum
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.phase_diagram import PhaseDiagram
@@ -32,7 +33,7 @@ class DecompositionProduct(BaseModel):
     )
 
 
-class ThermoType(RunType):
+class ThermoType(Enum):
     GGA_GGA_U = "GGA/GGA+U"
     GGA_GGA_U_R2SCAN = "GGA/GGA+U/R2SCAN"
     UNKNOWN = "UNKNOWN"
@@ -45,7 +46,7 @@ class ThermoDoc(PropertyDoc):
 
     property_name = "thermo"
 
-    thermo_type: ThermoType = Field(
+    thermo_type: Union[ThermoType, RunType] = Field(
         ...,
         description="Functional types of calculations involved in the energy mixing scheme.",
     )
@@ -118,7 +119,7 @@ class ThermoDoc(PropertyDoc):
     def from_entries(
         cls,
         entries: List[Union[ComputedEntry, ComputedStructureEntry]],
-        thermo_type: ThermoType,
+        thermo_type: Union[ThermoType, RunType],
         **kwargs
     ):
 
@@ -165,7 +166,7 @@ class ThermoDoc(PropertyDoc):
             (decomp, ehull) = pd.get_decomp_and_e_above_hull(blessed_entry)
 
             d = {
-                "thermo_id": "{}_{}".format(material_id, thermo_type),
+                "thermo_id": "{}_{}".format(material_id, thermo_type.value),
                 "material_id": material_id,
                 "thermo_type": thermo_type,
                 "uncorrected_energy_per_atom": blessed_entry.uncorrected_energy
@@ -257,11 +258,16 @@ class PhaseDiagramDoc(BaseModel):
 
     property_name = "phase_diagram"
 
+    phase_diagram_id: str = Field(
+        ...,
+        description="Phase diagram ID consisting of the chemical system and thermo type",
+    )
+
     chemsys: str = Field(
         ..., description="Dash-delimited string of elements in the material",
     )
 
-    thermo_type: ThermoType = Field(
+    thermo_type: Union[ThermoType, RunType] = Field(
         ...,
         description="Functional types of calculations involved in the energy mixing scheme.",
     )

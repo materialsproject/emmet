@@ -77,11 +77,14 @@ class ThermoBuilder(Builder):
 
         # Search index for thermo
         self.thermo.ensure_index("material_id")
+        self.thermo.ensure_index("thermo_id")
+        self.thermo.ensure_index("thermo_type")
         self.thermo.ensure_index("last_updated")
 
         # Search index for phase_diagram
         if self.phase_diagram:
             self.phase_diagram.ensure_index("chemsys")
+            self.phase_diagram.ensure_index("phase_diagram_id")
 
     def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
         updated_chemsys = self.get_updated_chemsys()
@@ -197,7 +200,13 @@ class ThermoBuilder(Builder):
                         self.num_phase_diagram_eles is None
                         or len(elements) <= self.num_phase_diagram_eles
                     ):
-                        pd_doc = PhaseDiagramDoc(chemsys=chemsys, phase_diagram=pd)
+                        pd_id = "{}_{}".format(chemsys, thermo_type.value)
+                        pd_doc = PhaseDiagramDoc(
+                            phase_diagram_id=pd_id,
+                            chemsys=chemsys,
+                            phase_diagram=pd,
+                            thermo_type=thermo_type,
+                        )
                         pd_data = jsanitize(pd_doc.dict(), allow_bson=True)
 
                 docs_pd_pair = (
@@ -240,10 +249,10 @@ class ThermoBuilder(Builder):
 
         # Check if already updated this run
         thermo_docs = [
-            i for i in thermo_docs if i["material_id"] not in self._completed_tasks
+            i for i in thermo_docs if i["thermo_id"] not in self._completed_tasks
         ]
 
-        self._completed_tasks |= {i["material_id"] for i in thermo_docs}
+        self._completed_tasks |= {i["thermo_id"] for i in thermo_docs}
 
         for item in thermo_docs:
             if isinstance(item["last_updated"], dict):
@@ -256,7 +265,7 @@ class ThermoBuilder(Builder):
 
         if len(thermo_docs) > 0:
             self.logger.info(f"Updating {len(thermo_docs)} thermo documents")
-            self.thermo.update(docs=thermo_docs, key=["material_id"])
+            self.thermo.update(docs=thermo_docs, key=["thermo_id"])
         else:
             self.logger.info("No thermo items to update")
 
