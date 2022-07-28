@@ -64,19 +64,24 @@ class ThermoBuilder(Builder):
             self.materials.key = "material_id"
 
         sources = [materials]
-        if oxidation_states is not None:
-            sources.append(oxidation_states)
-            if self.oxidation_states.key != "material_id":
+
+        if self.oxidation_states is not None:
+
+            if oxidation_states.key != "material_id":
                 warnings.warn(f"Key for the oxidation states store is incorrect and has been changed from {self.oxidation_states.key} to material_id!")
                 self.oxidation_states.key = "material_id"
 
+            sources.append(oxidation_states)
+
         targets = [thermo]
-        if phase_diagram is not None:
-            targets.append(phase_diagram)
+
+        if self.phase_diagram is not None:
 
             if self.phase_diagram.key != "phase_diagram_id":
                 warnings.warn(f"Key for the phase diagram store is incorrect and has been changed from {self.thphase_diagramermo.key} to phase_diagram_id!")
                 self.phase_diagram.key = "phase_diagram_id"
+
+            targets.append(phase_diagram)
 
         super().__init__(sources=sources, targets=targets, **kwargs)
 
