@@ -62,7 +62,6 @@ def test_from_entries_and_distance(migration_graph_prop, get_entries):
             "minmax_num_atoms": mgdoc.minmax_num_atoms
         }
         for k, v in expected.items():
-            print(res_d[k], pytest.approx(v, 0.01))
             assert res_d[k] == pytest.approx(v, 0.01)
 
 
