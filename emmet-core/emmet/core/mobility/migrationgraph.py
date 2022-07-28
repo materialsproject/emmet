@@ -96,7 +96,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         min_length: float,
         minmax_num_atoms: Tuple[int, int],
         warnings: Sequence[str] = [""],
-        deprecated: bool = False,
+        deprecated: bool = True,
     ) -> Union["MigrationGraphDoc", None]:
         """
         This classmethod takes a group of ComputedStructureEntries (can also use ComputedEntry for wi) and generates a full sites structure.
