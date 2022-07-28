@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Union, Dict, Tuple, Sequence
+from typing import List, Type, Union, Dict, Tuple, Sequence
 
 from pydantic import BaseModel, Field, validator
 import numpy as np
@@ -18,7 +18,7 @@ class MigrationGraphDoc(EmmetBaseModel):
     Note: this doc is not self-contained within pymatgen, as it has dependence on pymatgen.analysis.diffusion, a namespace package aka pymatgen-diffusion.
     """
 
-    battery_id: str = Field(None, description="The battery id for this MigrationGraphDoc")
+    battery_id: str = Field(..., description="The battery id for this MigrationGraphDoc")
 
     last_updated: datetime = Field(
         None,
@@ -26,13 +26,13 @@ class MigrationGraphDoc(EmmetBaseModel):
     )
 
     warnings: Sequence[str] = Field(
-        None,
+        [],
         description="Any warnings related to this property."
     )
 
     deprecated: bool = Field(
-        None,
-        description="Indicates whether a migration graph can be constructed from the provided entries"
+        False,
+        description="Indicates whether a migration graph fails to be constructed from the provided entries. Defaults to False, indicating mg can be constructed from entries."
     )
 
     hop_cutoff: float = Field(
@@ -51,18 +51,13 @@ class MigrationGraphDoc(EmmetBaseModel):
     )
 
     migration_graph: MigrationGraph = Field(
-        None,
+        ...,
         description="The MigrationGraph object as defined in pymatgen.analysis.diffusion."
     )
 
-    matrix_supercell_structure: Structure = Field(
-        None,
-        description="The matrix suprcell structure that does not contain the mobile ions for the purpose of migration analysis."
-    )
-
-    conversion_matrix: List[List[Union[int, float]]] = Field(
-        None,
-        description="The conversion matrix used to convert unit cell to supercell."
+    populate_sc_fields: bool = Field(
+        True,
+        description="Flag indicating whether this document has populated the supercell fields"
     )
 
     min_length_sc: float = Field(
@@ -73,6 +68,16 @@ class MigrationGraphDoc(EmmetBaseModel):
     minmax_num_atoms: Tuple[int, int] = Field(
         None,
         description="The min/max number of atoms used to genreate supercell using pymatgen."
+    )
+
+    matrix_supercell_structure: Structure = Field(
+        None,
+        description="The matrix suprcell structure that does not contain the mobile ions for the purpose of migration analysis."
+    )
+
+    conversion_matrix: List[List[Union[int, float]]] = Field(
+        None,
+        description="The conversion matrix used to convert unit cell to supercell."
     )
 
     inserted_ion_coords: Dict = Field(
@@ -92,15 +97,16 @@ class MigrationGraphDoc(EmmetBaseModel):
         grouped_entries: List[ComputedStructureEntry],
         working_ion_entry: Union[ComputedEntry, ComputedStructureEntry],
         hop_cutoff: float,
-        sm: StructureMatcher,
-        min_length: float,
-        minmax_num_atoms: Tuple[int, int],
-        warnings: Sequence[str] = [],
-        deprecated: bool = True,
+        populate_sc_fields: bool = True,
+        ltol: float = 0.2,
+        stol: float = 0.3,
+        angle_tol: float = 5,
+        **kwargs,
     ) -> Union["MigrationGraphDoc", None]:
         """
         This classmethod takes a group of ComputedStructureEntries (can also use ComputedEntry for wi) and generates a full sites structure.
         Then a MigrationGraph object is generated with with_distance() method with a designated cutoff.
+        If populate_sc_fields set to True, this method will populate the supercell related fields. Required kwargs are min_length_sc and minmax_num_atoms.
         """
 
         ranked_structures = MigrationGraph.get_structure_from_entries(
@@ -115,56 +121,67 @@ class MigrationGraphDoc(EmmetBaseModel):
             max_distance=hop_cutoff
         )
 
-        host_sc, sc_mat, min_length, minmax_num_atoms, coords_dict, combo = MigrationGraphDoc.generate_sc_fields(
-            mg=migration_graph,
-            min_length=min_length,
-            minmax_num_atoms=minmax_num_atoms,
-            sm=sm
-        )
-        print(coords_dict)
+        if not populate_sc_fields:
+            return cls(
+                battery_id=battery_id,
+                hop_cutoff=hop_cutoff,
+                entries_for_generation=grouped_entries,
+                working_ion_entry=working_ion_entry,
+                migration_graph=migration_graph,
+                **kwargs
+            )
 
-        return cls(
-            battery_id=battery_id,
-            warnings=warnings,
-            deprecated=deprecated,
-            hop_cutoff=hop_cutoff,
-            entries_for_generation=grouped_entries,
-            working_ion_entry=working_ion_entry,
-            migration_graph=migration_graph,
-            matrix_supercell_structure=host_sc,
-            conversion_matrix=sc_mat,
-            min_length_sc=min_length,
-            minmax_num_atoms=minmax_num_atoms,
-            inserted_ion_coords=coords_dict,
-            insert_coords_combo=combo
-        )
+        else:
+
+            if all(arg in kwargs for arg in ["min_length_sc", "minmax_num_atoms"]):
+                sm = StructureMatcher(ltol, stol, angle_tol)
+                host_sc, sc_mat, min_length_sc, minmax_num_atoms, coords_dict, combo = MigrationGraphDoc.generate_sc_fields(
+                    mg=migration_graph,
+                    min_length_sc=kwargs["min_length_sc"],
+                    minmax_num_atoms=kwargs["minmax_num_atoms"],
+                    sm=sm
+                )
+
+                return cls(
+                    battery_id=battery_id,
+                    hop_cutoff=hop_cutoff,
+                    entries_for_generation=grouped_entries,
+                    working_ion_entry=working_ion_entry,
+                    migration_graph=migration_graph,
+                    matrix_supercell_structure=host_sc,
+                    conversion_matrix=sc_mat,
+                    inserted_ion_coords=coords_dict,
+                    insert_coords_combo=combo,
+                    **kwargs
+                )
+
+            else:
+                raise TypeError("Please make sure to have kwargs min_length_sc and minmax_num_atoms if populate_sc_fields is set to True.")
 
     @staticmethod
     def generate_sc_fields(
         mg: MigrationGraph,
-        min_length: float,
+        min_length_sc: float,
         minmax_num_atoms: Tuple[int, int],
         sm: StructureMatcher
     ):
-        min_length = min_length
+        min_length_sc = min_length_sc
         minmax_num_atoms = minmax_num_atoms
 
         sc_mat = get_sc_fromstruct(
             base_struct=mg.structure,
             min_atoms=minmax_num_atoms[0],
             max_atoms=minmax_num_atoms[1],
-            min_length=min_length
+            min_length=min_length_sc
         )
 
         sc_mat = sc_mat.tolist()
-
         host_sc = mg.host_structure * sc_mat
 
         coords_dict = MigrationGraphDoc.ordered_sc_site_dict(mg.only_sites, sc_mat)
-
         combo, coords_dict = MigrationGraphDoc.get_hop_sc_combo(mg.unique_hops, sc_mat, sm, host_sc, coords_dict)
 
-        return host_sc, sc_mat, min_length, minmax_num_atoms, coords_dict, combo
+        return host_sc, sc_mat, min_length_sc, minmax_num_atoms, coords_dict, combo
 
     def ordered_sc_site_dict(
         uc_sites_only: Structure,

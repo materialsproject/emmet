@@ -23,7 +23,9 @@ def migration_graph_prop():
             "max_distance": 5,
             "num_uhops": 8,
             "longest_hop": 4.92647,
-            "shortest_hop": 2.77240
+            "shortest_hop": 2.77240,
+            "min_length_sc": 7,
+            "minmax_num_atoms": (80, 160)
         }
     }
     return expected_properties
@@ -40,14 +42,13 @@ def mg_for_sc_fields(test_dir):
 
 def test_from_entries_and_distance(migration_graph_prop, get_entries):
     for expected in migration_graph_prop.values():
-        sm = StructureMatcher()
         mgdoc = MigrationGraphDoc.from_entries_and_distance(
             battery_id="mp-1234",
             grouped_entries=get_entries[0],
             working_ion_entry=get_entries[1],
             hop_cutoff=5,
-            sm=sm,
-            min_length=7,
+            populate_sc_fields=True,
+            min_length_sc=7,
             minmax_num_atoms=(80, 160)
         )
 
@@ -56,7 +57,9 @@ def test_from_entries_and_distance(migration_graph_prop, get_entries):
             "max_distance": mgdoc.hop_cutoff,
             "num_uhops": len(mg.unique_hops),
             "longest_hop": sorted(mg.unique_hops.items(), key=lambda x: x[1]["hop_distance"])[-1][1]["hop_distance"],
-            "shortest_hop": sorted(mg.unique_hops.items(), key=lambda x: x[1]["hop_distance"])[0][1]["hop_distance"]
+            "shortest_hop": sorted(mg.unique_hops.items(), key=lambda x: x[1]["hop_distance"])[0][1]["hop_distance"],
+            "min_length_sc": mgdoc.min_length_sc,
+            "minmax_num_atoms": mgdoc.minmax_num_atoms
         }
         for k, v in expected.items():
             print(res_d[k], pytest.approx(v, 0.01))
