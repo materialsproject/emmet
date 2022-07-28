@@ -95,7 +95,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         sm: StructureMatcher,
         min_length: float,
         minmax_num_atoms: Tuple[int, int],
-        warnings: Sequence[str] = [""],
+        warnings: Sequence[str] = [],
         deprecated: bool = True,
     ) -> Union["MigrationGraphDoc", None]:
         """
