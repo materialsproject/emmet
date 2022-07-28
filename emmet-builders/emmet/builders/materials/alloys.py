@@ -57,6 +57,13 @@ class AlloyPairBuilder(Builder):
             chunk_size=8,
         )
 
+    def ensure_indexes(self):
+
+        self.alloy_pairs.ensure_index("pair_id")
+        self.alloy_pairs.ensure_index("_search.id")
+        self.alloy_pairs.ensure_index("_search.formula")
+        self.alloy_pairs.ensure_index("_search.member_ids")
+
     def get_items(self):
 
         for idx, af in enumerate(ANON_FORMULAS):
