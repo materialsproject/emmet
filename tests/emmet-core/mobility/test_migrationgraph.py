@@ -12,13 +12,14 @@ def get_entries(test_dir):
     entries = loadfn(test_dir / "mobility/LiMnP2O7_batt.json")
     return (entries, entry_Li)
 
+
 @pytest.fixture(scope="session")
 def migration_graph_prop():
     """
     set the expected parameters for the migrationgraph
     """
     expected_properties = {
-        "LiMnP2O7":{
+        "LiMnP2O7": {
             "max_distance": 5,
             "num_uhops": 8,
             "longest_hop": 4.92647,
@@ -26,6 +27,7 @@ def migration_graph_prop():
         }
     }
     return expected_properties
+
 
 @pytest.fixture(scope="session")
 def mg_for_sc_fields(test_dir):
@@ -60,6 +62,7 @@ def test_from_entries_and_distance(migration_graph_prop, get_entries):
             print(res_d[k], pytest.approx(v, 0.01))
             assert res_d[k] == pytest.approx(v, 0.01)
 
+
 def test_generate_sc_fields(mg_for_sc_fields):
     sm = StructureMatcher()
     host_sc, sc_mat, min_length, min_max_num_atoms, coords_dict, combo = MigrationGraphDoc.generate_sc_fields(mg_for_sc_fields, 7, (80, 160), sm)
@@ -71,7 +74,6 @@ def test_generate_sc_fields(mg_for_sc_fields):
         host_sc_insert.insert(0, "Li", np.dot(one_hop["ipos"], sc_mat_inv))
         host_sc_insert.insert(0, "Li", np.dot(one_hop["epos"], sc_mat_inv))
         expected_sc_list.append(host_sc_insert)
-
 
     for one_combo in combo:
         hop_sc = host_sc.copy()
