@@ -56,7 +56,7 @@ class AlloyPairBuilder(Builder):
             targets=[alloy_pairs],
             chunk_size=8,
         )
-        
+
     def ensure_indexes(self):
 
         self.alloy_pairs.ensure_index("pair_id")
