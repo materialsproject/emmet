@@ -55,13 +55,30 @@ class ThermoBuilder(Builder):
         self._completed_tasks: Set[str] = set()
         self._entries_cache: Dict[str, List[ComputedStructureEntry]] = defaultdict(list)
 
+        if self.thermo.key != "thermo_id":
+            warnings.warn(f"Key for the thermo store is incorrect and has been changed from {self.thermo.key} to thermo_id!")
+            self.thermo.key = "thermo_id"
+            
+        if self.materials.key != "material_id":
+            warnings.warn(f"Key for the materials store is incorrect and has been changed from {self.materials.key} to material_id!")
+            self.materials.key = "material_id"
+            
+
         sources = [materials]
         if oxidation_states is not None:
             sources.append(oxidation_states)
-
+            if self.oxidation_states.key != "material_id":
+                warnings.warn(f"Key for the oxidation states store is incorrect and has been changed from {self.oxidation_states.key} to material_id!")
+                self.oxidation_states.key = "material_id"
+                
         targets = [thermo]
         if phase_diagram is not None:
             targets.append(phase_diagram)
+
+            if self.phase_diagram.key != "phase_diagram_id":
+                warnings.warn(f"Key for the phase diagram store is incorrect and has been changed from {self.thphase_diagramermo.key} to phase_diagram_id!")
+                self.phase_diagram.key = "phase_diagram_id"
+                
 
         super().__init__(sources=sources, targets=targets, **kwargs)
 
