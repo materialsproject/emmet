@@ -160,7 +160,7 @@ class ThermoBuilder(Builder):
         )
         pd_entries = []
         for entry in entries:
-            material_entries[entry.entry_id][entry.data["run_type"]] = entry
+            material_entries[entry.data["material_id"]][entry.data["run_type"]] = entry
 
         if self.compatibility:
             with warnings.catch_warnings():
@@ -174,9 +174,10 @@ class ThermoBuilder(Builder):
 
         try:
             docs, pd = ThermoDoc.from_entries(pd_entries, deprecated=False)
-            for doc in docs:
-                doc.entries = material_entries[doc.material_id]
-                doc.entry_types = list(material_entries[doc.material_id].keys())
+
+            # for doc in docs:
+            #     doc.entries = material_entries[doc.material_id]
+            #     doc.entry_types = list(material_entries[doc.material_id].keys())
 
             pd_data = None
 
@@ -276,11 +277,6 @@ class ThermoBuilder(Builder):
         new_q["chemsys"] = {"$in": list(query_chemsys)}
         new_q["deprecated"] = False
 
-        # only build with materials that have a GGA or GGA+U entry
-        new_q["$or"] = [
-            {"entries.GGA": {"$exists": True}},
-            {"entries.GGA+U": {"$exists": True}},
-        ]
         materials_docs = list(
             self.materials.query(
                 criteria=new_q, properties=["material_id", "entries", "deprecated"]
@@ -306,12 +302,12 @@ class ThermoBuilder(Builder):
             f"Got {len(materials_docs)} entries from DB for {len(query_chemsys)} sub-chemsys for {chemsys}"
         )
 
-        # Convert GGA and GGA+U entries into ComputedEntries and store
+        # Convert GGA, GGA+U, R2SCAN entries into ComputedEntries and store
         for doc in materials_docs:
             for r_type, entry_dict in doc.get("entries", {}).items():
-                if r_type == "GGA" or r_type == "GGA+U":
+                if r_type in ["GGA", "GGA+U", "R2SCAN"]:
                     entry_dict["data"]["oxidation_states"] = oxi_states_data.get(
-                        entry_dict["entry_id"], {}
+                        entry_dict["data"]["material_id"], {}
                     )
                     entry_dict["data"]["run_type"] = r_type
                     elsyms = sorted(set([el for el in entry_dict["composition"]]))

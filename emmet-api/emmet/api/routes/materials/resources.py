@@ -26,6 +26,9 @@ from emmet.api.routes.materials.query_operators import (
     FormulaAutoCompleteQuery,
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
+
+timeout = MAPISettings().TIMEOUT
 
 
 def find_structure_resource(materials_store):
@@ -36,6 +39,7 @@ def find_structure_resource(materials_store):
         query_operators=[FindStructureQuery()],
         tags=["Materials"],
         sub_path="/find_structure/",
+        timeout=timeout,
     )
 
     return resource
@@ -49,6 +53,7 @@ def formula_autocomplete_resource(formula_autocomplete_store):
         tags=["Materials"],
         sub_path="/formula_autocomplete/",
         header_processor=GlobalHeaderProcessor(),
+        timeout=timeout,
     )
 
     return resource
@@ -78,6 +83,7 @@ def materials_resource(materials_store):
         hint_scheme=MaterialsHintScheme(),
         tags=["Materials"],
         disable_validation=True,
+        timeout=MAPISettings().TIMEOUT,
     )
 
     return resource

@@ -23,8 +23,8 @@ class MAPISettings(BaseSettings):
 
     DB_NAME_SUFFIX: Literal["blue", "green"] = Field(None, description="Database name suffix. Either blue or green.")
 
-    REQUESTS_PER_MIN: int = Field(
-        100, description="Number of requests per minute to for rate limit."
+    TIMEOUT: int = Field(
+        20, description="Number of seconds to wait for pymongo operations before raising a timeout error."
     )
 
     class Config:

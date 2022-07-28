@@ -11,6 +11,8 @@ from emmet.api.routes.electrodes.query_operators import (
     WorkingIonQuery,
 )
 
+from emmet.api.core.settings import MAPISettings
+
 
 def insertion_electrodes_resource(insertion_electrodes_store):
     resource = ReadOnlyResource(
@@ -31,6 +33,7 @@ def insertion_electrodes_resource(insertion_electrodes_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Electrodes"],
         disable_validation=True,
+        timeout=MAPISettings().TIMEOUT
     )
 
     return resource
