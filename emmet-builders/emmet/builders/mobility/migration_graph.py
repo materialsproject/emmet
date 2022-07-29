@@ -38,21 +38,22 @@ class MigrationGraphBuilder(MapBuilder):
         self.connect()
 
     def unary_function(self, item):
+        warnings = []
+
         # get entries and info from insertion electrode
         ie = InsertionElectrode.from_dict(item["electrode_object"])
         entries = ie.get_all_entries()
+        print(len(entries))
         wi_entry = ie.working_ion_entry
 
         # get migration graph structure
         structs = MigrationGraph.get_structure_from_entries(entries, wi_entry)
         if len(structs) == 0:
-            self.logger.error(
-                f"cannot generate migration graph: {len(structs)} possible options"
-            )
+            warnings.append("cannot generate migration graph from entries")
             d = None
         else:
             if len(structs) > 1:
-                self.logger.warn(
+                warnings.append(
                     f"migration graph ambiguous: {len(structs)} possible options"
                 )
             # get hop cutoff distance
@@ -64,7 +65,7 @@ class MigrationGraphBuilder(MapBuilder):
                 max_hop_distance=self.max_hop_distance,
             )
 
-        # get migration graph
+        # get migration graph doc
         try:
             mg_doc = MigrationGraphDoc.from_entries_and_distance(
                 battery_id=item["battery_id"],
@@ -77,15 +78,24 @@ class MigrationGraphBuilder(MapBuilder):
                 ltol=self.ltol,
                 stol=self.stol,
                 angle_tol=self.angle_tol,
+                warnings=warnings,
             )
         except Exception as e:
-            mg_doc = {
-                "battery_id": item["battery_id"],
-                "entries_for_generation": entries,
-                "working_ion_entry": wi_entry,
-                "hop_cutoff": d,
-                "migration_graph": None,
-            }
+            mg_doc = MigrationGraphDoc(
+                battery_id=item["battery_id"],
+                entries_for_generation=entries,
+                working_ion_entry=wi_entry,
+                hop_cutoff=d,
+                migration_graph=None,
+                populate_sc_fields=self.populate_sc_fields,
+                min_length_sc=self.min_length_sc,
+                minmax_num_atoms=self.minmax_num_atoms,
+                ltol=self.ltol,
+                stol=self.stol,
+                angle_tol=self.angle_tol,
+                warnings=warnings,
+                deprecated=True,
+            )
             self.logger.error(f"error getting MigrationGraphDoc: {e}")
             return jsanitize(mg_doc)
 
