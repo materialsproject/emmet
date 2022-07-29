@@ -15,6 +15,12 @@ class MigrationGraphBuilder(MapBuilder):
         algorithm: str = "hops_based",
         min_hop_distance: float = 1,
         max_hop_distance: float = 7,
+        populate_sc_fields: bool = True,
+        min_length_sc: float = 8,
+        minmax_num_atoms: tuple[int, int] = (80, 120),
+        ltol: float = 0.2,
+        stol: float = 0.3,
+        angle_tol: float = 5,
         **kwargs,
     ):
         self.insertion_electode = insertion_electrode
@@ -22,6 +28,12 @@ class MigrationGraphBuilder(MapBuilder):
         self.algorithm = algorithm
         self.min_hop_distance = min_hop_distance
         self.max_hop_distance = max_hop_distance
+        self.populate_sc_fields = populate_sc_fields
+        self.min_length_sc = min_length_sc
+        self.minmax_num_atoms = minmax_num_atoms
+        self.ltol = ltol
+        self.stol = stol
+        self.angle_tol = angle_tol
         super().__init__(source=insertion_electrode, target=migration_graph, **kwargs)
         self.connect()
 
@@ -59,6 +71,12 @@ class MigrationGraphBuilder(MapBuilder):
                 grouped_entries=entries,
                 working_ion_entry=wi_entry,
                 hop_cutoff=d,
+                populate_sc_fields=self.populate_sc_fields,
+                min_length_sc=self.min_length_sc,
+                minmax_num_atoms=self.minmax_num_atoms,
+                ltol=self.ltol,
+                stol=self.stol,
+                angle_tol=self.angle_tol,
             )
         except Exception as e:
             mg_doc = {
