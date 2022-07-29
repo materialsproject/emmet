@@ -130,7 +130,7 @@ def entries(
 
 
 def test_from_entries(entries):
-    docs, pd = ThermoDoc.from_entries(entries, deprecated=False)
+    docs, pd = ThermoDoc.from_entries(entries, thermo_type="UNKNOWN", deprecated=False)
 
     assert len(docs) == len(entries)
 

@@ -1,5 +1,55 @@
 # Changelog
 
+## [v0.33.1](https://github.com/materialsproject/emmet/tree/v0.33.1) (2022-07-28)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.33.0...v0.33.1)
+
+**Merged pull requests:**
+
+- \[WIP\] add supercell fields to MigrationGraphDoc [\#459](https://github.com/materialsproject/emmet/pull/459) ([hmlli](https://github.com/hmlli))
+
+## [v0.33.0](https://github.com/materialsproject/emmet/tree/v0.33.0) (2022-07-28)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.9...v0.33.0)
+
+**Fixed bugs:**
+
+- Memory errors for some sorting requests [\#433](https://github.com/materialsproject/emmet/issues/433)
+
+**Closed issues:**
+
+- Usability: `material_id` could be stored in entry.data alongside `task_id` [\#369](https://github.com/materialsproject/emmet/issues/369)
+
+**Merged pull requests:**
+
+- Allow `ThermoBuilder` to build with multiple compatibility schemes [\#486](https://github.com/materialsproject/emmet/pull/486) ([munrojm](https://github.com/munrojm))
+
+## [v0.32.9](https://github.com/materialsproject/emmet/tree/v0.32.9) (2022-07-27)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.8...v0.32.9)
+
+**Merged pull requests:**
+
+- Permit electrodes with non-TM redox active species [\#484](https://github.com/materialsproject/emmet/pull/484) ([acrutt](https://github.com/acrutt))
+- Permitting Electrodes with Extractable Ions [\#483](https://github.com/materialsproject/emmet/pull/483) ([acrutt](https://github.com/acrutt))
+- Update Redox Elements [\#482](https://github.com/materialsproject/emmet/pull/482) ([acrutt](https://github.com/acrutt))
+
+## [v0.32.8](https://github.com/materialsproject/emmet/tree/v0.32.8) (2022-07-27)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.7...v0.32.8)
+
+**Merged pull requests:**
+
+- Fix for incorrect collection name, require `db_suffix` to be set [\#485](https://github.com/materialsproject/emmet/pull/485) ([mkhorton](https://github.com/mkhorton))
+
+## [v0.32.7](https://github.com/materialsproject/emmet/tree/v0.32.7) (2022-07-26)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.6...v0.32.7)
+
+**Merged pull requests:**
+
+- Add timeout to `MAPISettings` class and pass to API resources [\#481](https://github.com/materialsproject/emmet/pull/481) ([munrojm](https://github.com/munrojm))
+
 ## [v0.32.6](https://github.com/materialsproject/emmet/tree/v0.32.6) (2022-07-25)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.32.5...v0.32.6)
@@ -576,19 +626,19 @@
 
 ## [v0.21.9](https://github.com/materialsproject/emmet/tree/v0.21.9) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.8...v0.21.9)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.7...v0.21.9)
 
 **Merged pull requests:**
 
 - Git stash added to docs step [\#347](https://github.com/materialsproject/emmet/pull/347) ([munrojm](https://github.com/munrojm))
 
-## [v0.21.8](https://github.com/materialsproject/emmet/tree/v0.21.8) (2022-01-19)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.7...v0.21.8)
-
 ## [v0.21.7](https://github.com/materialsproject/emmet/tree/v0.21.7) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.6...v0.21.7)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.8...v0.21.7)
+
+## [v0.21.8](https://github.com/materialsproject/emmet/tree/v0.21.8) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.6...v0.21.8)
 
 **Merged pull requests:**
 

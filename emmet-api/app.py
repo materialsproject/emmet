@@ -10,7 +10,7 @@ default_settings = MAPISettings()
 
 db_uri = os.environ.get("MPCONTRIBS_MONGO_HOST", None)
 db_version = default_settings.DB_VERSION
-db_suffix = os.environ.get("MAPI_DB_NAME_SUFFIX", db_version)
+db_suffix = os.environ["MAPI_DB_NAME_SUFFIX"]
 debug = default_settings.DEBUG
 
 # allow db_uri to be set with a different protocol scheme
@@ -198,8 +198,8 @@ if db_uri:
     alloy_pairs_store = MongoURIStore(
         uri=db_uri,
         database=f"mp_core_{db_suffix}",
-        key="material_id",
-        collection_name="summary",
+        key="pair_id",
+        collection_name="alloy_pairs",
     )
 
     summary_store = MongoURIStore(

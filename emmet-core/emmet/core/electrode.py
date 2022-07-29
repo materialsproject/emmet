@@ -289,19 +289,22 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
 
         # Check if more than one working ion per transition metal and warn
         warnings = []
-        transition_metal_fraction = sum(
-            [
-                discharge_comp.get_atomic_fraction(element)
-                for element in discharge_comp
-                if element.is_transition_metal
-            ]
-        )
-        if (
-            discharge_comp.get_atomic_fraction(working_ion_ele)
-            / transition_metal_fraction
-            > 1.0
-        ):
-            warnings.append("More than one working ion per transition metal")
+        if any([element.is_transition_metal for element in discharge_comp]):
+            transition_metal_fraction = sum(
+                [
+                    discharge_comp.get_atomic_fraction(element)
+                    for element in discharge_comp
+                    if element.is_transition_metal
+                ]
+            )
+            if (
+                discharge_comp.get_atomic_fraction(working_ion_ele)
+                / transition_metal_fraction
+                > 1.0
+            ):
+                warnings.append("More than one working ion per transition metal")
+        else:
+            warnings.append("Transition metal not found")
 
         return cls(
             battery_id=battery_id,

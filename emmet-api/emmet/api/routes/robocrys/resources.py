@@ -5,6 +5,9 @@ from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 from emmet.api.routes.robocrys.query_operators import RoboTextSearchQuery
 from emmet.core.robocrys import RobocrystallogapherDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
+
+timeout = MAPISettings().TIMEOUT
 
 
 def robo_resource(robo_store):
@@ -20,6 +23,7 @@ def robo_resource(robo_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Robocrystallographer"],
         disable_validation=True,
+        timeout=timeout,
     )
 
     return resource
@@ -33,6 +37,7 @@ def robo_search_resource(robo_store):
         tags=["Robocrystallographer"],
         sub_path="/text_search/",
         header_processor=GlobalHeaderProcessor(),
+        timeout=timeout,
     )
 
     return resource

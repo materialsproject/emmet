@@ -12,6 +12,7 @@ from maggma.api.query_operator import (
     NumericQuery,
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 
 
 def gb_resource(gb_store):
@@ -34,6 +35,7 @@ def gb_resource(gb_store):
         tags=["Grain Boundaries"],
         enable_get_by_key=False,
         disable_validation=True,
+        timeout=MAPISettings().TIMEOUT
     )
 
     return resource
