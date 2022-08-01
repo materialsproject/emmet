@@ -288,7 +288,7 @@ class StructureGroupBuilder(Builder):
         entries = [*map(self._entry_from_mat_doc, item["materials"])]
         s_groups = StructureGroupDoc.from_ungrouped_structure_entries(
             entries=entries,
-            ignored_species=[self.working_ion],
+            ignored_specie=self.working_ion,
             ltol=self.ltol,
             stol=self.stol,
             angle_tol=self.angle_tol,
@@ -392,13 +392,13 @@ class InsertionElectrodeBuilder(Builder):
         q_ = {"$and": [self.query, {"has_distinct_compositions": True}]}
         self.total = self.grouped_materials.count(q_)
         for group_doc in self.grouped_materials.query(q_):
-            working_ion_doc = get_working_ion_entry(group_doc["ignored_species"][0])
+            working_ion_doc = get_working_ion_entry(group_doc["ignored_specie"])
             thermo_docs = get_thermo_docs(group_doc["material_ids"])
             if thermo_docs:
                 yield {
                     "group_id": group_doc["group_id"],
                     "working_ion_doc": working_ion_doc,
-                    "working_ion": group_doc["ignored_species"][0],
+                    "working_ion": group_doc["ignored_specie"],
                     "thermo_docs": thermo_docs,
                 }
             else:
