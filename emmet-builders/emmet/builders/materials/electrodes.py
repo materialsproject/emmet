@@ -1,4 +1,3 @@
-import math
 import operator
 from datetime import datetime
 from functools import lru_cache
@@ -63,7 +62,7 @@ def generic_groupby(list_in, comp=operator.eq):
         if ls1 is not None:
             continue
         list_out[i1] = label_num
-        for i2, ls2 in list(enumerate(list_out))[i1 + 1 :]:
+        for i2, ls2 in list(enumerate(list_out))[i1 + 1:]:
             if comp(list_in[i1], list_in[i2]):
                 if list_out[i2] is None:
                     list_out[i2] = list_out[i1]
@@ -79,20 +78,21 @@ default_build_settings = EmmetBuildSettings()
 
 class StructureGroupBuilder(Builder):
     def __init__(
-        self,
-        materials: MongoStore,
-        sgroups: MongoStore,
-        working_ion: str,
-        query: dict = None,
-        ltol: float = default_build_settings.LTOL,
-        stol: float = default_build_settings.STOL,
-        angle_tol: float = default_build_settings.ANGLE_TOL,
-        check_newer: bool = True,
-        **kwargs,
+            self,
+            materials: MongoStore,
+            sgroups: MongoStore,
+            working_ion: str,
+            query: dict = None,
+            ltol: float = default_build_settings.LTOL,
+            stol: float = default_build_settings.STOL,
+            angle_tol: float = default_build_settings.ANGLE_TOL,
+            check_newer: bool = True,
+            **kwargs,
     ):
         """
         Aggregate materials entries into sgroups that are topotactically similar to each other.
-        This is an incremental builder that makes ensures that each materials id belongs to one StructureGroupDoc document
+        This is an incremental builder that makes ensures that each materials id belongs to one StructureGroupDoc
+        document
         Args:
             materials (Store): Store of materials documents that contains the structures
             sgroups (Store): Store of grouped material ids
@@ -176,7 +176,7 @@ class StructureGroupBuilder(Builder):
         ]
 
         self.logger.debug(
-            f"Performing initial checks on {len(all_chemsys)} chemical systems containing redox elements with or without the Working Ion."
+            f"Performing initial checks on {len(all_chemsys)} chemical systems containing redox elements w/ or w/o wion"
         )
         self.total = len(all_chemsys)
 
@@ -242,7 +242,7 @@ class StructureGroupBuilder(Builder):
                     target_ids |= set(g_doc["material_ids"])
 
                 self.logger.debug(
-                    f"There are {len(mat_ids)} material ids in the source database vs {len(target_ids)} in the target database."
+                    f"There are {len(mat_ids)} material ids in source database vs {len(target_ids)} in target database."
                 )
                 if mat_ids == target_ids and max_mat_time < min_target_time:
                     self.logger.info(f"Skipping chemsys {chemsys}.")
@@ -301,13 +301,13 @@ class StructureGroupBuilder(Builder):
 
 class InsertionElectrodeBuilder(Builder):
     def __init__(
-        self,
-        grouped_materials: MongoStore,
-        thermo: MongoStore,
-        insertion_electrode: MongoStore,
-        query: dict = None,
-        strip_structures: bool = False,
-        **kwargs,
+            self,
+            grouped_materials: MongoStore,
+            thermo: MongoStore,
+            insertion_electrode: MongoStore,
+            query: dict = None,
+            strip_structures: bool = False,
+            **kwargs,
     ):
         self.grouped_materials = grouped_materials
         self.insertion_electrode = insertion_electrode

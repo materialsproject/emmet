@@ -130,15 +130,15 @@ class StructureGroupDoc(BaseModel):
         ids = [ient.entry_id for ient in entries]
         lowest_id = min(ids, key=_get_id_num)
         sub_script = "_".join([ignored_specie])
-        host_id, insertion_ids = StructureGroupDoc.get_host_and_insertion_ids(
+        host_and_insertion_ids = StructureGroupDoc.get_host_and_insertion_ids(
             entries=entries,
             ignored_specie=ignored_specie
         )
         fields = {
             "group_id": f"{lowest_id}_{sub_script}",
             "material_ids": ids,
-            "host_material_id": host_id,
-            "insertion_material_ids": insertion_ids,
+            "host_material_id": host_and_insertion_ids["host_id"],
+            "insertion_material_ids": host_and_insertion_ids["insertion_ids"],
             "framework_formula": framework_str,
             "ignored_specie": ignored_specie,
             "chemsys": "-".join(sorted(all_atoms | set([ignored_specie]))),
@@ -218,7 +218,7 @@ class StructureGroupDoc(BaseModel):
     def get_host_and_insertion_ids(
             entries: List[Union[ComputedEntry, ComputedStructureEntry]],
             ignored_specie: str,
-    ):
+    ) -> dict:
         host_and_insertion_ids = {"host_id": None, "host_entries": [], "insertion_ids": []}
         ignored_specie_min_fraction = min([e.composition.get_atomic_fraction(ignored_specie) for e in entries])
 
@@ -230,7 +230,7 @@ class StructureGroupDoc(BaseModel):
         host_and_insertion_ids["host_id"] = min(host_and_insertion_ids["host_entries"],
                                                 key=lambda x: x.energy_per_atom).entry_id
 
-        return host_and_insertion_ids["host_id"], host_and_insertion_ids["insertion_ids"]
+        return host_and_insertion_ids
 
 
 def group_entries_with_structure_matcher(
