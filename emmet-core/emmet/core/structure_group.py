@@ -29,7 +29,7 @@ def generic_groupby(list_in, comp=operator.eq) -> List[int]:
         if ls1 is not None:
             continue
         list_out[i1] = label_num
-        for i2, ls2 in list(enumerate(list_out))[i1 + 1 :]:
+        for i2, ls2 in list(enumerate(list_out))[i1 + 1:]:
             if comp(list_in[i1], list_in[i2]):
                 if list_out[i2] is None:
                     list_out[i2] = list_out[i1]
@@ -52,7 +52,7 @@ class StructureGroupDoc(BaseModel):
     group_id: str = Field(
         None,
         description="The combined material_id of the grouped document is given by the numerically smallest "
-        "material_id, you can also append the followed by the ignored species at the end.",
+                    "material_id, you can also append the followed by the ignored species at the end.",
     )
 
     has_distinct_compositions: bool = Field(
@@ -68,8 +68,8 @@ class StructureGroupDoc(BaseModel):
     host_material_id: str = Field(
         None,
         description="Material id that corresponds to the host structure, which is defined as the structure with the"
-        "lowest concentration of ignored specie and lowest energy if there are multiple structures with the host"
-        "concentration."
+                    "lowest concentration of ignored specie and lowest energy if there are multiple structures with the"
+                    "host concentration."
     )
 
     insertion_material_ids: list = Field(
@@ -89,7 +89,7 @@ class StructureGroupDoc(BaseModel):
     chemsys: str = Field(
         None,
         description="The chemical system this group belongs to, if the atoms for the ignored species is "
-        "present the chemsys will also include the ignored species."
+                    "present the chemsys will also include the ignored species."
     )
 
     last_updated: datetime = Field(
@@ -104,9 +104,9 @@ class StructureGroupDoc(BaseModel):
 
     @classmethod
     def from_grouped_entries(
-        cls,
-        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
-        ignored_specie: str,
+            cls,
+            entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+            ignored_specie: str,
     ) -> "StructureGroupDoc":
         """ "
         Assuming a list of entries are already grouped together, create a StructureGroupDoc
@@ -149,12 +149,12 @@ class StructureGroupDoc(BaseModel):
 
     @classmethod
     def from_ungrouped_structure_entries(
-        cls,
-        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
-        ignored_specie: str,
-        ltol: float = 0.2,
-        stol: float = 0.3,
-        angle_tol: float = 5.0,
+            cls,
+            entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+            ignored_specie: str,
+            ltol: float = 0.2,
+            stol: float = 0.3,
+            angle_tol: float = 5.0,
     ) -> List["StructureGroupDoc"]:
         """
         Create a list of StructureGroupDocs from a list of ungrouped entries.
@@ -216,26 +216,27 @@ class StructureGroupDoc(BaseModel):
 
     @staticmethod
     def get_host_and_insertion_ids(
-        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
-        ignored_specie: str,
+            entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+            ignored_specie: str,
     ):
-        host_and_insertion_ids = {"host_id":None, "host_entries":[], "insertion_ids":[]}
+        host_and_insertion_ids = {"host_id": None, "host_entries": [], "insertion_ids": []}
         ignored_specie_min_fraction = min([e.composition.get_atomic_fraction(ignored_specie) for e in entries])
 
         for e in entries:
-            if e.composition.get_atomic_fraction(ignored_specie)==ignored_specie_min_fraction:
+            if e.composition.get_atomic_fraction(ignored_specie) == ignored_specie_min_fraction:
                 host_and_insertion_ids["host_entries"].append(e)
             else:
                 host_and_insertion_ids["insertion_ids"].append(e.entry_id)
-        host_and_insertion_ids["host_id"] = min(host_and_insertion_ids["host_entries"], key = lambda x : x.energy_per_atom).entry_id
+        host_and_insertion_ids["host_id"] = min(host_and_insertion_ids["host_entries"],
+                                                key=lambda x: x.energy_per_atom).entry_id
 
         return host_and_insertion_ids["host_id"], host_and_insertion_ids["insertion_ids"]
 
 
 def group_entries_with_structure_matcher(
-    g,
-    struct_matcher: StructureMatcher,
-    working_ion: str = None,
+        g,
+        struct_matcher: StructureMatcher,
+        working_ion: str = None,
 ) -> Iterable[List[Union[ComputedStructureEntry]]]:
     """
     Group the entries together based on similarity of the  primitive cells

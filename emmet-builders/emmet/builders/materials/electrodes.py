@@ -277,8 +277,8 @@ class StructureGroupBuilder(Builder):
         d_ = {
             "entry_id": mdoc["material_id"],
             "structure": mdoc["structure"],
-            "energy": list(mdoc['entries'].values())[0]['energy'],
-            "correction": list(mdoc['entries'].values())[0]['correction']
+            "energy": list(mdoc["entries"].values())[0]["energy"],
+            "correction": list(mdoc["entries"].values())[0]["correction"]
         }
         return ComputedStructureEntry.from_dict(d_)
 
