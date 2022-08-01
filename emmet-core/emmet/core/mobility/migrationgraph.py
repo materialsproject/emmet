@@ -51,7 +51,7 @@ class MigrationGraphDoc(EmmetBaseModel):
     )
 
     migration_graph: MigrationGraph = Field(
-        ...,
+        None,
         description="The MigrationGraph object as defined in pymatgen.analysis.diffusion."
     )
 
