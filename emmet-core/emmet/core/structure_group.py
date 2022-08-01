@@ -235,7 +235,7 @@ def group_entries_with_structure_matcher(
         subgroups: subgroups that are grouped together based on structure similarity
     """
     if working_ion is None:
-        wion = struct_matcher.as_dict()["ignored_species"]
+        wion = struct_matcher.as_dict()["ignored_species"][0]
 
     # Sort the entries by symmetry and by working ion fraction
     def get_num_sym_ops(ent):
