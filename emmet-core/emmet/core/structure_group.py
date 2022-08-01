@@ -206,7 +206,6 @@ class StructureGroupDoc(BaseModel):
         entries: List[Union[ComputedEntry, ComputedStructureEntry]],
         ignored_specie: str,
     ):
-
         host_and_insertion_ids = {'host_id':None, 'host_entries':[], 'insertion_ids':[]}
         ignored_specie_min_fraction = min([e.composition.get_atomic_fraction(ignored_specie) for e in entries])
 
@@ -236,7 +235,7 @@ def group_entries_with_structure_matcher(
         subgroups: subgroups that are grouped together based on structure similarity
     """
     if working_ion is None:
-        wion = struct_matcher.as_dict()["ignored_specie"]
+        wion = struct_matcher.as_dict()["ignored_species"]
 
     # Sort the entries by symmetry and by working ion fraction
     def get_num_sym_ops(ent):
