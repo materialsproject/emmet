@@ -34,8 +34,8 @@ class DecompositionProduct(BaseModel):
 
 
 class ThermoType(ValueEnum):
-    GGA_GGA_U = "GGA/GGA+U"
-    GGA_GGA_U_R2SCAN = "GGA/GGA+U/R2SCAN"
+    GGA_GGA_U = "GGA_GGA+U"
+    GGA_GGA_U_R2SCAN = "GGA_GGA+U_R2SCAN"
     UNKNOWN = "UNKNOWN"
 
 
