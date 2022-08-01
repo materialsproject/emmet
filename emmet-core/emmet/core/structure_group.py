@@ -56,17 +56,30 @@ class StructureGroupDoc(BaseModel):
     )
 
     has_distinct_compositions: bool = Field(
-        None, description="True if multiple compositions are present in the group."
+        None,
+        description="True if multiple compositions are present in the group."
     )
 
     material_ids: list = Field(
         None,
-        description="A list of materials ids for all of the materials that were grouped together.",
+        description="A list of materials ids for all of the materials that were grouped together."
+    )
+
+    host_material_id: str = Field(
+        None,
+        description="Material id that corresponds to the host structure, which is defined as the structure with the"
+        "lowest concentration of ignored specie and lowest energy if there are multiple structures with the host"
+        "concentration."
+    )
+
+    insertion_material_ids: list = Field(
+        None,
+        description="Material ids that correspond to the non-host structures identified in a given structure group."
     )
 
     framework_formula: str = Field(
         None,
-        description="The chemical formula for the framework (the materials system without the ignored species).",
+        description="The chemical formula for the framework (the materials system without the ignored species)."
     )
 
     ignored_specie: str = Field(
@@ -76,12 +89,12 @@ class StructureGroupDoc(BaseModel):
     chemsys: str = Field(
         None,
         description="The chemical system this group belongs to, if the atoms for the ignored species is "
-        "present the chemsys will also include the ignored species.",
+        "present the chemsys will also include the ignored species."
     )
 
     last_updated: datetime = Field(
         None,
-        description="Timestamp when this document was built.",
+        description="Timestamp when this document was built."
     )
 
     # Make sure that the datetime field is properly formatted
@@ -206,17 +219,17 @@ class StructureGroupDoc(BaseModel):
         entries: List[Union[ComputedEntry, ComputedStructureEntry]],
         ignored_specie: str,
     ):
-        host_and_insertion_ids = {'host_id':None, 'host_entries':[], 'insertion_ids':[]}
+        host_and_insertion_ids = {"host_id":None, "host_entries":[], "insertion_ids":[]}
         ignored_specie_min_fraction = min([e.composition.get_atomic_fraction(ignored_specie) for e in entries])
 
         for e in entries:
-            if e.composition.get(ignored_specie)==ignored_specie_min_fraction:
-                host_and_insertion_ids['host_entries'].append(e)
+            if e.composition.get_atomic_fraction(ignored_specie)==ignored_specie_min_fraction:
+                host_and_insertion_ids["host_entries"].append(e)
             else:
-                host_and_insertion_ids['insertion_ids'].append(e.entry_id)
-        host_and_insertion_ids['host_id'] = min(host_and_insertion_ids['host_entries'], key = lambda x : x.energy_per_atom).entry_id
+                host_and_insertion_ids["insertion_ids"].append(e.entry_id)
+        host_and_insertion_ids["host_id"] = min(host_and_insertion_ids["host_entries"], key = lambda x : x.energy_per_atom).entry_id
 
-        return host_and_insertion_ids['host_id'], host_and_insertion_ids['insertion_ids']
+        return host_and_insertion_ids["host_id"], host_and_insertion_ids["insertion_ids"]
 
 
 def group_entries_with_structure_matcher(
