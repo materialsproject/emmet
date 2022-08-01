@@ -219,7 +219,7 @@ class StructureGroupDoc(BaseModel):
             entries: List[Union[ComputedEntry, ComputedStructureEntry]],
             ignored_specie: str,
     ) -> dict:
-        host_and_insertion_ids = {"host_id": None, "host_entries": [], "insertion_ids": []}
+        host_and_insertion_ids = {"host_id": None, "host_entries": [], "insertion_ids": []}  # type: dict
         ignored_specie_min_fraction = min([e.composition.get_atomic_fraction(ignored_specie) for e in entries])
 
         for e in entries:
