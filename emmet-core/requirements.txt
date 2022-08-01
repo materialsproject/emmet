@@ -7,4 +7,4 @@ seekpath==2.0.1
 setuptools-scm==7.0.5
 robocrys==0.2.7
 pymatgen-analysis-diffusion==2022.7.21
-pymatgen-analysis-alloys==0.0.3
+pymatgen-analysis-alloys==0.0.4
