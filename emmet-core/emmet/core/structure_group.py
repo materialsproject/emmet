@@ -158,7 +158,7 @@ class StructureGroupDoc(BaseModel):
         sm = StructureMatcher(
             comparator=ElementComparator(),
             primitive_cell=True,
-            ignored_specie=ignored_specie,
+            ignored_species=[ignored_specie],
             ltol=ltol,
             stol=stol,
             angle_tol=angle_tol,
