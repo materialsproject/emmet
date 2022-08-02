@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.34.1](https://github.com/materialsproject/emmet/tree/v0.34.1) (2022-08-02)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.34.0...v0.34.1)
+
+**Merged pull requests:**
+
+- Fix summary to work with new thermo doc [\#492](https://github.com/materialsproject/emmet/pull/492) ([munrojm](https://github.com/munrojm))
+
 ## [v0.34.0](https://github.com/materialsproject/emmet/tree/v0.34.0) (2022-08-01)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.33.2...v0.34.0)
