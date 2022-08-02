@@ -128,16 +128,15 @@ class StructureGroupDoc(BaseModel):
             framework_comp = Composition.from_dict(comp_d)
             framework_str = framework_comp.reduced_formula
         ids = [ient.entry_id for ient in entries]
-        lowest_id = min(ids, key=_get_id_num)
         sub_script = "_".join([ignored_specie])
         host_and_insertion_ids = StructureGroupDoc.get_host_and_insertion_ids(
             entries=entries,
             ignored_specie=ignored_specie
         )
         fields = {
-            "group_id": f"{lowest_id}_{sub_script}",
+            "group_id": f"{host_and_insertion_ids['host_id']}_{sub_script}",
             "material_ids": ids,
-            "host_material_id": host_and_insertion_ids["host_id"],
+            "host_material_ids": host_and_insertion_ids["host_ids"],
             "insertion_material_ids": host_and_insertion_ids["insertion_ids"],
             "framework_formula": framework_str,
             "ignored_specie": ignored_specie,
@@ -219,12 +218,13 @@ class StructureGroupDoc(BaseModel):
             entries: List[Union[ComputedEntry, ComputedStructureEntry]],
             ignored_specie: str,
     ) -> dict:
-        host_and_insertion_ids = {"host_id": None, "host_entries": [], "insertion_ids": []}  # type: dict
+        host_and_insertion_ids = {"host_id": None, "host_ids": [], "host_entries": [], "insertion_ids": []}  # type:dict
         ignored_specie_min_fraction = min([e.composition.get_atomic_fraction(ignored_specie) for e in entries])
 
         for e in entries:
             if e.composition.get_atomic_fraction(ignored_specie) == ignored_specie_min_fraction:
                 host_and_insertion_ids["host_entries"].append(e)
+                host_and_insertion_ids["host_ids"].append(e.entry_id)
             else:
                 host_and_insertion_ids["insertion_ids"].append(e.entry_id)
         host_and_insertion_ids["host_id"] = min(host_and_insertion_ids["host_entries"],
