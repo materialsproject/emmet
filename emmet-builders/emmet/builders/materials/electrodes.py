@@ -9,6 +9,7 @@ from maggma.builders import Builder
 from maggma.stores import MongoStore
 from maggma.utils import grouper
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 
 from emmet.core.electrode import InsertionElectrodeDoc
 from emmet.core.structure_group import StructureGroupDoc
@@ -286,8 +287,10 @@ class StructureGroupBuilder(Builder):
         if item is None:
             return None
         entries = [*map(self._entry_from_mat_doc, item["materials"])]
+        compatibility = MaterialsProject2020Compatibility()
+        processed_entries = compatibility.process_entries(entries=entries)
         s_groups = StructureGroupDoc.from_ungrouped_structure_entries(
-            entries=entries,
+            entries=processed_entries,
             ignored_specie=self.working_ion,
             ltol=self.ltol,
             stol=self.stol,
