@@ -116,7 +116,9 @@ class SummaryBuilder(Builder):
 
             data = {
                 HasProps.materials.value: materials_doc,
-                HasProps.thermo.value: self.thermo.query_one({self.thermo.key: entry}),
+                HasProps.thermo.value: self.thermo.query_one(
+                    {self.materials.key: entry, "thermo_type": "GGA_GGA+U"}
+                ),
                 HasProps.xas.value: list(self.xas.query({self.xas.key: entry})),
                 HasProps.grain_boundaries.value: list(
                     self.grain_boundaries.query({self.grain_boundaries.key: entry})
@@ -141,8 +143,7 @@ class SummaryBuilder(Builder):
                 ),
                 HasProps.insertion_electrodes.value: list(
                     self.insertion_electrodes.query(
-                        {"material_ids": entry},
-                        [self.insertion_electrodes.key],
+                        {"material_ids": entry}, [self.insertion_electrodes.key],
                     )
                 ),
                 HasProps.surface_properties.value: self.surfaces.query_one(
