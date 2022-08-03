@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.34.3](https://github.com/materialsproject/emmet/tree/v0.34.3) (2022-08-03)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.34.2...v0.34.3)
+
+**Merged pull requests:**
+
+- Mute thermo compatibility printing [\#493](https://github.com/materialsproject/emmet/pull/493) ([munrojm](https://github.com/munrojm))
+
 ## [v0.34.2](https://github.com/materialsproject/emmet/tree/v0.34.2) (2022-08-03)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.34.1...v0.34.2)
