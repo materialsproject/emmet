@@ -1,5 +1,6 @@
 from typing import Set, Union
-import sys, os
+import sys
+import os
 from itertools import chain, combinations
 from pymatgen.core import Structure
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
