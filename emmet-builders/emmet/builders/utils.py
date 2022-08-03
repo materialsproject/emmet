@@ -1,4 +1,6 @@
 from typing import Set, Union
+import sys
+import os
 from itertools import chain, combinations
 from pymatgen.core import Structure
 from pymatgen.analysis.diffusion.neb.full_path_mapper import MigrationGraph
@@ -142,3 +144,14 @@ def get_hop_cutoff(
 
     else:
         return None
+
+
+# From: https://stackoverflow.com/a/45669280
+class HiddenPrints:
+    def __enter__(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, "w")
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout.close()
+        sys.stdout = self._original_stdout

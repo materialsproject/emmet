@@ -11,7 +11,7 @@ from pymatgen.analysis.phase_diagram import PhaseDiagramError
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 from pymatgen.entries.compatibility import Compatibility
 
-from emmet.builders.utils import chemsys_permutations
+from emmet.builders.utils import chemsys_permutations, HiddenPrints
 from emmet.core.thermo import ThermoDoc, PhaseDiagramDoc, ThermoType
 from emmet.core.utils import jsanitize
 
@@ -201,10 +201,9 @@ class ThermoBuilder(Builder):
                     thermo_type = ThermoType.UNKNOWN
 
                 with warnings.catch_warnings():
-                    warnings.filterwarnings(
-                        "ignore", message="Failed to guess oxidation states.*"
-                    )
-                    pd_entries = compatability.process_entries(entries)
+                    warnings.simplefilter("ignore")
+                    with HiddenPrints():
+                        pd_entries = compatability.process_entries(entries)
             else:
                 all_entry_types = {e.data["run_type"] for e in entries}
                 if len(all_entry_types) > 1:
