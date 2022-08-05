@@ -283,6 +283,8 @@ class StructureGroupBuilder(Builder):
                 return ComputedStructureEntry.from_dict(mdoc["entries"]["GGA+U"])
             elif "GGA" in mdoc["entries"].keys():
                 return ComputedStructureEntry.from_dict(mdoc["entries"]["GGA"])
+            else:
+                return None
 
     def process_item(self, item: Any) -> Any:
         if item is None:
