@@ -13,9 +13,9 @@ def get_aneb_wf_inputs(
         raise TypeError("Please make sure that the MGDoc passed in has inserted_ion_coords and inserted_coords_combo fields filled.")
 
     else:
-        mgdoc_sites_mapping = {}
         anebwf_sites_list = []
         aneb_combo_list = []
+        mgdoc_sites_mapping = {}  # type: dict
         combo_mapping = {}
 
         for one_combo in mgdoc.insert_coords_combo:
@@ -24,13 +24,13 @@ def get_aneb_wf_inputs(
             if ini in mgdoc_sites_mapping.keys():
                 aneb_ini = mgdoc_sites_mapping[ini]
             else:
-                anebwf_sites_list.append(mgdoc.inserted_ion_coords[ini])
+                anebwf_sites_list.append(list(mgdoc.inserted_ion_coords[ini]["site"].frac_coords))
                 aneb_ini = len(anebwf_sites_list) - 1
                 mgdoc_sites_mapping[ini] = aneb_ini
             if end in mgdoc_sites_mapping.keys():
                 aneb_end = mgdoc_sites_mapping[end]
             else:
-                anebwf_sites_list.append(mgdoc.inserted_ion_coords[end])
+                anebwf_sites_list.append(list(mgdoc.inserted_ion_coords[end]["site"].frac_coords))
                 aneb_end = len(anebwf_sites_list) - 1
                 mgdoc_sites_mapping[end] = aneb_end
 
@@ -39,4 +39,3 @@ def get_aneb_wf_inputs(
             combo_mapping[aneb_combo] = one_combo
 
         return anebwf_sites_list, aneb_combo_list, combo_mapping
-
