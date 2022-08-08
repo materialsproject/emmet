@@ -275,13 +275,16 @@ class StructureGroupBuilder(Builder):
     def _entry_from_mat_doc(self, mdoc):
         # Note since we are just structure grouping we don't need to be careful with energy or correction
         # All of the energy analysis is left to other builders
-        d_ = {
-            "entry_id": mdoc["material_id"],
-            "structure": mdoc["structure"],
-            "energy": list(mdoc["entries"].values())[0]["energy"],
-            "correction": list(mdoc["entries"].values())[0]["correction"]
-        }
-        return ComputedStructureEntry.from_dict(d_)
+        entries = [ComputedStructureEntry.from_dict(v) for v in mdoc["entries"].values()]
+        if len(entries) == 1:
+            return entries[0]
+        else:
+            if "GGA+U" in mdoc["entries"].keys():
+                return ComputedStructureEntry.from_dict(mdoc["entries"]["GGA+U"])
+            elif "GGA" in mdoc["entries"].keys():
+                return ComputedStructureEntry.from_dict(mdoc["entries"]["GGA"])
+            else:
+                return None
 
     def process_item(self, item: Any) -> Any:
         if item is None:
