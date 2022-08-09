@@ -3,7 +3,7 @@ from typing import Union
 
 
 mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
-mpculeid_regex = re.compile(r"^([A-Za-z]+-)?([A-Fa-f0-9]+)(-m?[0-9]+)(-[0-9]+)$")
+mpculeid_regex = re.compile(r"^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$")
 
 
 class MPID(str):
@@ -112,8 +112,8 @@ class MPculeID(str):
 
     Args:
         val: Either 1) an MPculeID
-                    2) a prefixed string of format "prefix-hash-charge-spin"
-                    3) a non-prefixed string of format "hash-charge-spin"
+                    2) a prefixed string of format "prefix-hash-formula-charge-spin"
+                    3) a non-prefixed string of format "hash-formula-charge-spin"
 
             Numbers stored as strings are coerced to ints
     """
@@ -126,16 +126,16 @@ class MPculeID(str):
 
         elif isinstance(val, str):
             parts = val.split("-")
-            if len(parts) == 3:
-                parts[1] = int(parts[1].replace("m", "-"))  # type: ignore
-                parts[2] = int(parts[2])  # type: ignore
-            elif len(parts) == 4:
-                parts[2] = int(parts[2].replace("m", "-"))  # type: ignore
-                parts[3] = int(parts[3])  # type: ignore
+            if len(parts) == 4:
+                parts[1] = int(parts[2].replace("m", "-"))  # type: ignore
+                parts[2] = int(parts[3])  # type: ignore
+            elif len(parts) == 5:
+                parts[3] = int(parts[3].replace("m", "-"))  # type: ignore
+                parts[4] = int(parts[4])  # type: ignore
             else:
                 raise ValueError(
                     "MPculeID string representation must follow the "
-                    "format prefix-hash-charge-spin or hash-charge-spin."
+                    "format prefix-hash-formula-charge-spin or hash-formula-charge-spin."
                 )
 
             self.parts = tuple(parts)
@@ -144,8 +144,8 @@ class MPculeID(str):
         else:
 
             raise ValueError(
-                "Must provide an MPculeID, or string of the format prefix-hash-charge-spin "
-                "or hash-charge-spin"
+                "Must provide an MPculeID, or string of the format prefix-hash-formula-charge-spin "
+                "or hash-formula-charge-spin"
             )
 
     def __eq__(self, other: object):
@@ -164,8 +164,8 @@ class MPculeID(str):
 
         other_parts = MPculeID(other).parts
 
-        return "-".join([str(x) for x in self.parts[-3:]]) < "-".join(
-            [str(x) for x in other_parts[-3:]]
+        return "-".join([str(x) for x in self.parts[-4:]]) < "-".join(
+            [str(x) for x in other_parts[-4:]]
         )
 
     def __gt__(self, other: Union["MPculeID", str]):
@@ -181,11 +181,11 @@ class MPculeID(str):
     @classmethod
     def __modify_schema__(cls, field_schema):
         field_schema.update(
-            pattern=r"^([A-Za-z]+-)?([A-Fa-f0-9]+)(-m?[0-9]+)(-[0-9]+)$",
+            pattern=r"^^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$",
             examples=[
-                "1a525231bdac3f13e2fac0962fe8d053-0-1",
-                "22b40b99719ac570fc7e6225e855ec6e-m1-2"
-                "mpcule-b9ba54febc77d2a9177accf4605767db-1-2",
+                "1a525231bdac3f13e2fac0962fe8d053-Mg1-0-1",
+                "22b40b99719ac570fc7e6225e855ec6e-F5Li1P1-m1-2"
+                "mpcule-b9ba54febc77d2a9177accf4605767db-C1H41-2",
             ],
         )
 
