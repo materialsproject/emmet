@@ -92,6 +92,11 @@ def evaluate_task(
 
 class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
+    species: List[str] = Field(
+        None,
+        description="Ordered list of elements/species in this Molecule."
+    )
+
     species_hash: str = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
@@ -180,6 +185,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             sorted_tasks = sorted(task_group, key=evaluate_task)
 
             molecule = sorted_tasks[0].output.initial_molecule
+            species = [e.symbol for e in molecule.species]
 
             molecule_id = get_molecule_id(molecule, node_attr="coords")
 
@@ -223,6 +229,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
             best_molecule_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
             molecule = best_molecule_calc.output.optimized_molecule
+            species = [e.symbol for e in molecule.species]
             molecule_id = get_molecule_id(molecule, node_attr="coords")
 
             # Initial molecules
@@ -280,6 +287,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         return cls.from_molecule(
             molecule=molecule,
             molecule_id=molecule_id,
+            species=species,
             species_hash=species_hash,
             coord_hash=coord_hash,
             initial_molecules=initial_molecules,
@@ -326,6 +334,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
         # Arbitrarily choose task with lowest ID
         molecule = sorted(task_group, key=lambda x: x.task_id)[0].output.initial_molecule
+        species = [e.symbol for e in molecule.species]
 
         # Molecule ID
         molecule_id = get_molecule_id(molecule, "coords")
@@ -333,6 +342,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         return cls.from_molecule(
             molecule=molecule,
             molecule_id=molecule_id,
+            species=species,
             last_updated=last_updated,
             created_at=created_at,
             task_ids=task_ids,

@@ -43,6 +43,11 @@ class SummaryDoc(PropertyDoc):
         ..., description="The lowest energy structure for this molecule"
     )
 
+    species: List[str] = Field(
+        None,
+        description="Ordered list of elements/species in this Molecule."
+    )
+
     task_ids: List[MPID] = Field(
         [],
         title="Calculation IDs",
@@ -275,6 +280,7 @@ summary_fields: Dict[str, list] = {
         "chemsys",
         "symmetry",
         "molecule",
+        "species",
         "deprecated",
         "task_ids",
     ],
