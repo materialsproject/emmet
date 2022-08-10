@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.34.5](https://github.com/materialsproject/emmet/tree/v0.34.5) (2022-08-10)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.34.4...v0.34.5)
+
+**Merged pull requests:**
+
+- MGDoc instance method get\_distinct\_hop\_sites [\#498](https://github.com/materialsproject/emmet/pull/498) ([hmlli](https://github.com/hmlli))
+
 ## [v0.34.4](https://github.com/materialsproject/emmet/tree/v0.34.4) (2022-08-08)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.34.3...v0.34.4)
