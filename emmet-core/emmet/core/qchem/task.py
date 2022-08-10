@@ -198,13 +198,13 @@ def filter_task_type(
 
     :param entries: List of TaskDocument entry dicts
     :param TaskType: TaskType to accept
-    :param sorted: Function used to sort (default None)
+    :param sort_by: Function used to sort (default None)
     :return: Filtered (sorted) list of entries
     """
 
     filtered = [f for f in entries if f["task_type"] == task_type]
 
     if sort_by is not None:
-        return sorted(filtered, key=lambda x: x["output"]["final_energy"])
+        return sorted(filtered, key=sort_by)
     else:
         return filtered
