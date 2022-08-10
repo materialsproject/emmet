@@ -42,5 +42,5 @@ RUN chmod +x start.sh
 
 LABEL com.datadoghq.ad.logs='[{"source": "gunicorn", "service": "next-gen-api"}]'
 
-EXPOSE 10001
+EXPOSE 10001 20001
 CMD wait-for-it.sh $DD_TRACE_HOST -q -s -t 60 -- ./start.sh

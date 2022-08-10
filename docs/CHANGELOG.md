@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.34.4](https://github.com/materialsproject/emmet/tree/v0.34.4) (2022-08-08)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.34.3...v0.34.4)
+
+**Merged pull requests:**
+
+- StructureGroupBuilder and StructureGroupDoc minor fixes [\#494](https://github.com/materialsproject/emmet/pull/494) ([kim-jiyoon](https://github.com/kim-jiyoon))
+
 ## [v0.34.3](https://github.com/materialsproject/emmet/tree/v0.34.3) (2022-08-03)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.34.2...v0.34.3)

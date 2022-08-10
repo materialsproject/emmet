@@ -65,11 +65,10 @@ class StructureGroupDoc(BaseModel):
         description="A list of materials ids for all of the materials that were grouped together."
     )
 
-    host_material_id: str = Field(
+    host_material_ids: list = Field(
         None,
-        description="Material id that corresponds to the host structure, which is defined as the structure with the"
-                    "lowest concentration of ignored specie and lowest energy if there are multiple structures with the"
-                    "host concentration."
+        description="Material id(s) that correspond(s) to the host structure(s), which has/have the lowest"
+                    "concentration of ignored specie."
     )
 
     insertion_material_ids: list = Field(
