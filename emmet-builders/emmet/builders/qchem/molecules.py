@@ -201,7 +201,7 @@ class MoleculesAssociationBuilder(Builder):
                 # basic validation here ensures that tasks with invalid levels of
                 # theory don't halt the build pipeline
                 try:
-                    TaskDocument(**t).level_of_theory
+                    _ = TaskDocument(**t).level_of_theory
                     t["is_valid"] = True
                 except Exception as e:
                     self.logger.info(
@@ -233,12 +233,6 @@ class MoleculesAssociationBuilder(Builder):
         for group in self.filter_and_group_tasks(tasks):
             try:
                 doc = MoleculeDoc.from_tasks(group)
-                molecule_id = "{}-{}-{}".format(
-                    doc.coord_hash,
-                    str(int(doc.charge)).replace("-", "m"),
-                    doc.spin_multiplicity,
-                )
-                doc.molecule_id = molecule_id
                 molecules.append(doc)
             except Exception as e:
                 failed_ids = list({t_.task_id for t_ in group})
@@ -296,7 +290,6 @@ class MoleculesAssociationBuilder(Builder):
         ]
 
         molecules = list()
-        lots = list()
 
         for idx, task in enumerate(filtered_tasks):
             if task.output.optimized_molecule:
@@ -305,9 +298,8 @@ class MoleculesAssociationBuilder(Builder):
                 m = task.output.initial_molecule
             m.ind: int = idx  # type: ignore
             molecules.append(m)
-            lots.append(task.level_of_theory.value)
 
-        grouped_molecules = group_molecules(molecules, lots)
+        grouped_molecules = group_molecules(molecules)
         for group in grouped_molecules:
             grouped_tasks = [filtered_tasks[mol.ind] for mol in group]  # type: ignore
             yield grouped_tasks
