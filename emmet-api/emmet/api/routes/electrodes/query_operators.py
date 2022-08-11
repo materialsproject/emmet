@@ -331,4 +331,3 @@ class MultiBatteryIDQuery(QueryOperator):
                 crit.update({"battery_id": {"$in": battery_id_list}})
 
         return {"criteria": crit}
-
