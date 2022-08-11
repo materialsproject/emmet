@@ -1,4 +1,3 @@
-import math
 import operator
 from datetime import datetime
 from functools import lru_cache
@@ -10,6 +9,7 @@ from maggma.builders import Builder
 from maggma.stores import MongoStore
 from maggma.utils import grouper
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
+from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 
 from emmet.core.electrode import InsertionElectrodeDoc
 from emmet.core.structure_group import StructureGroupDoc
@@ -32,16 +32,16 @@ REDOX_ELEMENTS = [
     "Cu",
     "Nb",
     "Mo",
+    "Ag",
     "Sn",
     "Sb",
     "W",
     "Re",
     "Bi",
     "C",
-    "Hf",
 ]
 
-WORKING_IONS = ["Li", "Be", "Na", "Mg", "K", "Ca", "Rb", "Sr", "Cs", "Ba"]
+WORKING_IONS = ["Li", "Na", "K", "Mg", "Ca", "Zn", "Al"]
 
 MAT_PROPS = ["structure", "material_id", "formula_pretty", "entries"]
 
@@ -63,7 +63,7 @@ def generic_groupby(list_in, comp=operator.eq):
         if ls1 is not None:
             continue
         list_out[i1] = label_num
-        for i2, ls2 in list(enumerate(list_out))[i1 + 1 :]:
+        for i2, ls2 in list(enumerate(list_out))[i1 + 1:]:
             if comp(list_in[i1], list_in[i2]):
                 if list_out[i2] is None:
                     list_out[i2] = list_out[i1]
@@ -79,20 +79,21 @@ default_build_settings = EmmetBuildSettings()
 
 class StructureGroupBuilder(Builder):
     def __init__(
-        self,
-        materials: MongoStore,
-        sgroups: MongoStore,
-        working_ion: str,
-        query: dict = None,
-        ltol: float = default_build_settings.LTOL,
-        stol: float = default_build_settings.STOL,
-        angle_tol: float = default_build_settings.ANGLE_TOL,
-        check_newer: bool = True,
-        **kwargs,
+            self,
+            materials: MongoStore,
+            sgroups: MongoStore,
+            working_ion: str,
+            query: dict = None,
+            ltol: float = default_build_settings.LTOL,
+            stol: float = default_build_settings.STOL,
+            angle_tol: float = default_build_settings.ANGLE_TOL,
+            check_newer: bool = True,
+            **kwargs,
     ):
         """
         Aggregate materials entries into sgroups that are topotactically similar to each other.
-        This is an incremental builder that makes ensures that each materials id belongs to one StructureGroupDoc document
+        This is an incremental builder that makes ensures that each materials id belongs to one StructureGroupDoc
+        document
         Args:
             materials (Store): Store of materials documents that contains the structures
             sgroups (Store): Store of grouped material ids
@@ -154,14 +155,12 @@ class StructureGroupBuilder(Builder):
             - get the oldest timestamp for the target documents (min_target_time)
             - if min_target_time is < max_mat_time then nuke all the target documents
         """
-        other_wions = list(set(WORKING_IONS) - {self.working_ion})
         # All potentially interesting chemsys must contain the working ion
         base_query = {
             "$and": [
                 self.query.copy(),
                 {"elements": {"$in": REDOX_ELEMENTS}},
                 {"elements": {"$in": [self.working_ion]}},
-                {"elements": {"$nin": other_wions}},
             ]
         }
         self.logger.debug(f"Initial Chemsys QUERY: {base_query}")
@@ -178,7 +177,7 @@ class StructureGroupBuilder(Builder):
         ]
 
         self.logger.debug(
-            f"Performing initial checks on {len(all_chemsys)} chemical systems containing redox elements with or without the Working Ion."
+            f"Performing initial checks on {len(all_chemsys)} chemical systems containing redox elements w/ or w/o wion"
         )
         self.total = len(all_chemsys)
 
@@ -244,7 +243,7 @@ class StructureGroupBuilder(Builder):
                     target_ids |= set(g_doc["material_ids"])
 
                 self.logger.debug(
-                    f"There are {len(mat_ids)} material ids in the source database vs {len(target_ids)} in the target database."
+                    f"There are {len(mat_ids)} material ids in source database vs {len(target_ids)} in target database."
                 )
                 if mat_ids == target_ids and max_mat_time < min_target_time:
                     self.logger.info(f"Skipping chemsys {chemsys}.")
@@ -276,21 +275,26 @@ class StructureGroupBuilder(Builder):
     def _entry_from_mat_doc(self, mdoc):
         # Note since we are just structure grouping we don't need to be careful with energy or correction
         # All of the energy analysis is left to other builders
-        d_ = {
-            "entry_id": mdoc["material_id"],
-            "structure": mdoc["structure"],
-            "energy": -math.inf,
-            "correction": -math.inf,
-        }
-        return ComputedStructureEntry.from_dict(d_)
+        entries = [ComputedStructureEntry.from_dict(v) for v in mdoc["entries"].values()]
+        if len(entries) == 1:
+            return entries[0]
+        else:
+            if "GGA+U" in mdoc["entries"].keys():
+                return ComputedStructureEntry.from_dict(mdoc["entries"]["GGA+U"])
+            elif "GGA" in mdoc["entries"].keys():
+                return ComputedStructureEntry.from_dict(mdoc["entries"]["GGA"])
+            else:
+                return None
 
     def process_item(self, item: Any) -> Any:
         if item is None:
             return None
         entries = [*map(self._entry_from_mat_doc, item["materials"])]
+        compatibility = MaterialsProject2020Compatibility()
+        processed_entries = compatibility.process_entries(entries=entries)
         s_groups = StructureGroupDoc.from_ungrouped_structure_entries(
-            entries=entries,
-            ignored_species=[self.working_ion],
+            entries=processed_entries,
+            ignored_specie=self.working_ion,
             ltol=self.ltol,
             stol=self.stol,
             angle_tol=self.angle_tol,
@@ -303,13 +307,13 @@ class StructureGroupBuilder(Builder):
 
 class InsertionElectrodeBuilder(Builder):
     def __init__(
-        self,
-        grouped_materials: MongoStore,
-        thermo: MongoStore,
-        insertion_electrode: MongoStore,
-        query: dict = None,
-        strip_structures: bool = False,
-        **kwargs,
+            self,
+            grouped_materials: MongoStore,
+            thermo: MongoStore,
+            insertion_electrode: MongoStore,
+            query: dict = None,
+            strip_structures: bool = False,
+            **kwargs,
     ):
         self.grouped_materials = grouped_materials
         self.insertion_electrode = insertion_electrode
@@ -394,13 +398,13 @@ class InsertionElectrodeBuilder(Builder):
         q_ = {"$and": [self.query, {"has_distinct_compositions": True}]}
         self.total = self.grouped_materials.count(q_)
         for group_doc in self.grouped_materials.query(q_):
-            working_ion_doc = get_working_ion_entry(group_doc["ignored_species"][0])
+            working_ion_doc = get_working_ion_entry(group_doc["ignored_specie"])
             thermo_docs = get_thermo_docs(group_doc["material_ids"])
             if thermo_docs:
                 yield {
                     "group_id": group_doc["group_id"],
                     "working_ion_doc": working_ion_doc,
-                    "working_ion": group_doc["ignored_species"][0],
+                    "working_ion": group_doc["ignored_specie"],
                     "thermo_docs": thermo_docs,
                 }
             else:

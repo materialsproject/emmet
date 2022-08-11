@@ -1,4 +1,4 @@
-FROM materialsproject/devops:python-3.97.19 as base
+FROM materialsproject/devops:python-3.913.3 as base
 
 FROM base as builder
 RUN apt-get update && apt-get install -y --no-install-recommends gcc git g++ cmake make libsnappy-dev wget && apt-get clean
@@ -42,5 +42,5 @@ RUN chmod +x start.sh
 
 LABEL com.datadoghq.ad.logs='[{"source": "gunicorn", "service": "next-gen-api"}]'
 
-EXPOSE 10001
+EXPOSE 10001 20001
 CMD wait-for-it.sh $DD_TRACE_HOST -q -s -t 60 -- ./start.sh

@@ -29,7 +29,7 @@ def generic_groupby(list_in, comp=operator.eq) -> List[int]:
         if ls1 is not None:
             continue
         list_out[i1] = label_num
-        for i2, ls2 in list(enumerate(list_out))[i1 + 1 :]:
+        for i2, ls2 in list(enumerate(list_out))[i1 + 1:]:
             if comp(list_in[i1], list_in[i2]):
                 if list_out[i2] is None:
                     list_out[i2] = list_out[i1]
@@ -52,34 +52,48 @@ class StructureGroupDoc(BaseModel):
     group_id: str = Field(
         None,
         description="The combined material_id of the grouped document is given by the numerically smallest "
-        "material_id, you can also append the followed by the ignored species at the end.",
+                    "material_id, you can also append the followed by the ignored species at the end.",
     )
 
     has_distinct_compositions: bool = Field(
-        None, description="True if multiple compositions are present in the group."
+        None,
+        description="True if multiple compositions are present in the group."
     )
 
     material_ids: list = Field(
         None,
-        description="A list of materials ids for all of the materials that were grouped together.",
+        description="A list of materials ids for all of the materials that were grouped together."
+    )
+
+    host_material_ids: list = Field(
+        None,
+        description="Material id(s) that correspond(s) to the host structure(s), which has/have the lowest"
+                    "concentration of ignored specie."
+    )
+
+    insertion_material_ids: list = Field(
+        None,
+        description="Material ids that correspond to the non-host structures identified in a given structure group."
     )
 
     framework_formula: str = Field(
         None,
-        description="The chemical formula for the framework (the materials system without the ignored species).",
+        description="The chemical formula for the framework (the materials system without the ignored species)."
     )
 
-    ignored_species: list = Field(None, description="List of ignored atomic species.")
+    ignored_specie: str = Field(
+        None,
+        description="Ignored atomic specie which is usually the working ion (ex: Li, Mg, or Ca).")
 
     chemsys: str = Field(
         None,
         description="The chemical system this group belongs to, if the atoms for the ignored species is "
-        "present the chemsys will also include the ignored species.",
+                    "present the chemsys will also include the ignored species."
     )
 
     last_updated: datetime = Field(
         None,
-        description="Timestamp when this document was built.",
+        description="Timestamp when this document was built."
     )
 
     # Make sure that the datetime field is properly formatted
@@ -89,15 +103,15 @@ class StructureGroupDoc(BaseModel):
 
     @classmethod
     def from_grouped_entries(
-        cls,
-        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
-        ignored_species: List[str],
+            cls,
+            entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+            ignored_specie: str,
     ) -> "StructureGroupDoc":
         """ "
         Assuming a list of entries are already grouped together, create a StructureGroupDoc
         Args:
             entries: A list of entries that is already grouped together.
-            ignored_species: The species that are ignored during structure matching
+            ignored_specie: The specie that is ignored during structure matching
         """
         all_atoms = set()
         all_comps = set()
@@ -105,7 +119,7 @@ class StructureGroupDoc(BaseModel):
             all_atoms |= set(ient.composition.as_dict().keys())
             all_comps.add(ient.composition.reduced_formula)
 
-        common_atoms = all_atoms - set(ignored_species)
+        common_atoms = all_atoms - set([ignored_specie])
         if len(common_atoms) == 0:
             framework_str = "ignored"
         else:
@@ -113,14 +127,19 @@ class StructureGroupDoc(BaseModel):
             framework_comp = Composition.from_dict(comp_d)
             framework_str = framework_comp.reduced_formula
         ids = [ient.entry_id for ient in entries]
-        lowest_id = min(ids, key=_get_id_num)
-        sub_script = "_".join(ignored_species)
+        sub_script = "_".join([ignored_specie])
+        host_and_insertion_ids = StructureGroupDoc.get_host_and_insertion_ids(
+            entries=entries,
+            ignored_specie=ignored_specie
+        )
         fields = {
-            "group_id": f"{lowest_id}_{sub_script}",
+            "group_id": f"{host_and_insertion_ids['host_id']}_{sub_script}",
             "material_ids": ids,
+            "host_material_ids": host_and_insertion_ids["host_ids"],
+            "insertion_material_ids": host_and_insertion_ids["insertion_ids"],
             "framework_formula": framework_str,
-            "ignored_species": sorted(ignored_species),
-            "chemsys": "-".join(sorted(all_atoms | set(ignored_species))),
+            "ignored_specie": ignored_specie,
+            "chemsys": "-".join(sorted(all_atoms | set([ignored_specie]))),
             "has_distinct_compositions": len(all_comps) > 1,
         }
 
@@ -128,19 +147,19 @@ class StructureGroupDoc(BaseModel):
 
     @classmethod
     def from_ungrouped_structure_entries(
-        cls,
-        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
-        ignored_species: List[str],
-        ltol: float = 0.2,
-        stol: float = 0.3,
-        angle_tol: float = 5.0,
+            cls,
+            entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+            ignored_specie: str,
+            ltol: float = 0.2,
+            stol: float = 0.3,
+            angle_tol: float = 5.0,
     ) -> List["StructureGroupDoc"]:
         """
         Create a list of StructureGroupDocs from a list of ungrouped entries.
 
         Args:
-            entries: The list of ComputedStructureEntries to process.
-            ignored_species: the list of ignored species for the structure matcher
+            entries: the list of ComputedStructureEntries to process.
+            ignored_specie: the ignored specie for the structure matcher
             ltol: length tolerance for the structure matcher
             stol: site position tolerance for the structure matcher
             angle_tol: angel tolerance for the structure matcher
@@ -150,7 +169,7 @@ class StructureGroupDoc(BaseModel):
         sm = StructureMatcher(
             comparator=ElementComparator(),
             primitive_cell=True,
-            ignored_species=ignored_species,
+            ignored_species=[ignored_specie],
             ltol=ltol,
             stol=stol,
             angle_tol=angle_tol,
@@ -159,7 +178,7 @@ class StructureGroupDoc(BaseModel):
         # Add a framework field to each entry's data attribute
         for ient in entries:
             ient.data["framework"] = _get_framework(
-                ient.composition.reduced_formula, ignored_species
+                ient.composition.reduced_formula, ignored_specie
             )
 
         # split into groups for each framework, must sort before grouping
@@ -172,7 +191,7 @@ class StructureGroupDoc(BaseModel):
             f_group_l = list(f_group)
             if framework == "ignored":
                 struct_group = cls.from_grouped_entries(
-                    f_group_l, ignored_species=ignored_species
+                    f_group_l, ignored_specie=ignored_specie
                 )
                 cnt_ += len(struct_group.material_ids)
                 continue
@@ -182,7 +201,7 @@ class StructureGroupDoc(BaseModel):
             )
             for g in group_entries_with_structure_matcher(f_group_l, sm):
                 struct_group = cls.from_grouped_entries(
-                    g, ignored_species=ignored_species
+                    g, ignored_specie=ignored_specie
                 )
                 cnt_ += len(struct_group.material_ids)
                 results.append(struct_group)
@@ -193,11 +212,30 @@ class StructureGroupDoc(BaseModel):
             )
         return results
 
+    @staticmethod
+    def get_host_and_insertion_ids(
+            entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+            ignored_specie: str,
+    ) -> dict:
+        host_and_insertion_ids = {"host_id": None, "host_ids": [], "host_entries": [], "insertion_ids": []}  # type:dict
+        ignored_specie_min_fraction = min([e.composition.get_atomic_fraction(ignored_specie) for e in entries])
+
+        for e in entries:
+            if e.composition.get_atomic_fraction(ignored_specie) == ignored_specie_min_fraction:
+                host_and_insertion_ids["host_entries"].append(e)
+                host_and_insertion_ids["host_ids"].append(e.entry_id)
+            else:
+                host_and_insertion_ids["insertion_ids"].append(e.entry_id)
+        host_and_insertion_ids["host_id"] = min(host_and_insertion_ids["host_entries"],
+                                                key=lambda x: x.energy_per_atom).entry_id
+
+        return host_and_insertion_ids
+
 
 def group_entries_with_structure_matcher(
-    g,
-    struct_matcher: StructureMatcher,
-    working_ion: str = None,
+        g,
+        struct_matcher: StructureMatcher,
+        working_ion: str = None,
 ) -> Iterable[List[Union[ComputedStructureEntry]]]:
     """
     Group the entries together based on similarity of the  primitive cells
@@ -238,15 +276,14 @@ def _get_id_num(task_id) -> Union[int, str]:
         raise ValueError("TaskID needs to be either a number or of the form xxx-#####")
 
 
-def _get_framework(formula, ignored_species) -> str:
+def _get_framework(formula, ignored_specie) -> str:
     """
     Return the reduced formula of the entry without any of the ignored species
     Return 'ignored' if the all the atoms are ignored
     """
     dd_ = Composition(formula).as_dict()
-    if dd_.keys() == set(ignored_species):
+    if dd_.keys() == set([ignored_specie]):
         return "ignored"
-    for ignored_sp in ignored_species:
-        if ignored_sp in dd_:
-            dd_.pop(ignored_sp)
+    if ignored_specie in dd_:
+        dd_.pop(ignored_specie)
     return Composition.from_dict(dd_).reduced_formula
