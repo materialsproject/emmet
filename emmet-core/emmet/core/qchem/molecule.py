@@ -199,7 +199,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             origins = [
                 PropertyOrigin(
                     name="molecule",
-                    task_id=molecule_id,
+                    task_id=sorted_tasks[0].task_id,
                     last_updated=sorted_tasks[0].last_updated,
                 )
             ]
