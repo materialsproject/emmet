@@ -10,7 +10,9 @@
       "O": 8.0,
       "Li": 2.0
     },
-    "data": {},
+    "data": {
+      "material_id": "mp-1"
+    },
     "energy": -114.92282305,
     "structure": {
       "lattice": {
@@ -772,7 +774,9 @@
       "O": 8.0,
       "Li": 4.0
     },
-    "data": {},
+    "data": {
+      "material_id": "mp-2"
+    },
     "energy": -120.53193305,
     "structure": {
       "lattice": {
@@ -1635,7 +1639,9 @@
       "O": 8.0,
       "Ti": 4.0
     },
-    "data": {},
+    "data": {
+      "material_id": "mp-3"
+    },
     "energy": -105.53608265,
     "structure": {
       "lattice": {
@@ -2294,7 +2300,9 @@
       "O": 8.0,
       "Ti": 4.0
     },
-    "data": {},
+    "data": {
+      "material_id": "mp-4"
+    },
     "energy": -105.53538843,
     "structure": {
       "lattice": {
@@ -2953,7 +2961,9 @@
       "O": 8.0,
       "Ti": 4.0
     },
-    "data": {},
+    "data": {
+      "material_id": "mp-5"
+    },
     "energy": -105.53571656,
     "structure": {
       "lattice": {
@@ -3612,7 +3622,9 @@
       "O": 8.0,
       "Ti": 4.0
     },
-    "data": {},
+    "data": {
+      "material_id": "mp-6"
+    },
     "energy": -105.53596712,
     "structure": {
       "lattice": {
