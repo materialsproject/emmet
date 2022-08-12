@@ -437,7 +437,7 @@ class InsertionElectrodeBuilder(Builder):
 
         for ient in entries:
             ient.data["volume"] = ient.structure.volume
-            ient.data["decomposition_energy"] = decomp_energies[ient.entry_id]
+            ient.data["decomposition_energy"] = decomp_energies[ient.data["material_id"]]
 
         ie = InsertionElectrodeDoc.from_entries(
             grouped_entries=entries,

@@ -126,7 +126,7 @@ class StructureGroupDoc(BaseModel):
             comp_d = {k: entries[0].composition.as_dict()[k] for k in common_atoms}
             framework_comp = Composition.from_dict(comp_d)
             framework_str = framework_comp.reduced_formula
-        ids = [ient.entry_id for ient in entries]
+        ids = [ient.data["material_id"] for ient in entries]
         sub_script = "_".join([ignored_specie])
         host_and_insertion_ids = StructureGroupDoc.get_host_and_insertion_ids(
             entries=entries,
@@ -223,11 +223,11 @@ class StructureGroupDoc(BaseModel):
         for e in entries:
             if e.composition.get_atomic_fraction(ignored_specie) == ignored_specie_min_fraction:
                 host_and_insertion_ids["host_entries"].append(e)
-                host_and_insertion_ids["host_ids"].append(e.entry_id)
+                host_and_insertion_ids["host_ids"].append(e.data["material_id"])
             else:
-                host_and_insertion_ids["insertion_ids"].append(e.entry_id)
+                host_and_insertion_ids["insertion_ids"].append(e.data["material_id"])
         host_and_insertion_ids["host_id"] = min(host_and_insertion_ids["host_entries"],
-                                                key=lambda x: x.energy_per_atom).entry_id
+                                                key=lambda x: x.energy_per_atom).data["material_id"]
 
         return host_and_insertion_ids
 
