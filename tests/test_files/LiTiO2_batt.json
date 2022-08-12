@@ -1,7 +1,7 @@
 [
   {
     "parameters": {},
-    "entry_id": "mp-1",
+    "entry_id": "mp-0",
     "correction": 0.0,
     "@module": "pymatgen.entries.computed_entries",
     "@class": "ComputedStructureEntry",
@@ -11,7 +11,7 @@
       "Li": 2.0
     },
     "data": {
-      "material_id": "mp-1"
+      "material_id": "mp-0"
     },
     "energy": -114.92282305,
     "structure": {
@@ -765,7 +765,7 @@
   },
   {
     "parameters": {},
-    "entry_id": "mp-2",
+    "entry_id": "mp-1",
     "correction": 0.0,
     "@module": "pymatgen.entries.computed_entries",
     "@class": "ComputedStructureEntry",
@@ -775,7 +775,7 @@
       "Li": 4.0
     },
     "data": {
-      "material_id": "mp-2"
+      "material_id": "mp-1"
     },
     "energy": -120.53193305,
     "structure": {
@@ -1631,7 +1631,7 @@
   },
   {
     "parameters": {},
-    "entry_id": "mp-3",
+    "entry_id": "mp-2",
     "correction": 0.0,
     "@module": "pymatgen.entries.computed_entries",
     "@class": "ComputedStructureEntry",
@@ -1640,7 +1640,7 @@
       "Ti": 4.0
     },
     "data": {
-      "material_id": "mp-3"
+      "material_id": "mp-2"
     },
     "energy": -105.53608265,
     "structure": {
@@ -2292,7 +2292,7 @@
   },
   {
     "parameters": {},
-    "entry_id": "mp-4",
+    "entry_id": "mp-3",
     "correction": 0.0,
     "@module": "pymatgen.entries.computed_entries",
     "@class": "ComputedStructureEntry",
@@ -2301,7 +2301,7 @@
       "Ti": 4.0
     },
     "data": {
-      "material_id": "mp-4"
+      "material_id": "mp-3"
     },
     "energy": -105.53538843,
     "structure": {
@@ -2953,7 +2953,7 @@
   },
   {
     "parameters": {},
-    "entry_id": "mp-5",
+    "entry_id": "mp-4",
     "correction": 0.0,
     "@module": "pymatgen.entries.computed_entries",
     "@class": "ComputedStructureEntry",
@@ -2962,7 +2962,7 @@
       "Ti": 4.0
     },
     "data": {
-      "material_id": "mp-5"
+      "material_id": "mp-4"
     },
     "energy": -105.53571656,
     "structure": {
@@ -3614,7 +3614,7 @@
   },
   {
     "parameters": {},
-    "entry_id": "mp-6",
+    "entry_id": "mp-5",
     "correction": 0.0,
     "@module": "pymatgen.entries.computed_entries",
     "@class": "ComputedStructureEntry",
@@ -3623,7 +3623,7 @@
       "Ti": 4.0
     },
     "data": {
-      "material_id": "mp-6"
+      "material_id": "mp-5"
     },
     "energy": -105.53596712,
     "structure": {
