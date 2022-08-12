@@ -35,9 +35,7 @@ class AbsorptionDoc(PropertyDoc):
         description="Real part of the dielectric function corresponding to the energies",
     )
 
-    bandgap: float = Field(
-        None, description="The electronic band gap"
-    )
+    bandgap: float = Field(None, description="The electronic band gap")
 
     nkpoints: float = Field(
         None, description="The number of kpoints used in the calculation"
@@ -84,7 +82,7 @@ class AbsorptionDoc(PropertyDoc):
                 "average_real_dielectric": real_d_average,
                 "bandgap": bandgap,
                 "nkpoints": nkpoints,
-                "task_id": task_id
+                "task_id": task_id,
             },
-            **kwargs
+            **kwargs,
         )

@@ -102,7 +102,8 @@ class ThermoDoc(PropertyDoc):
     )
 
     energy_type: str = Field(
-        ..., description="The type of calculation this energy evaluation comes from.",
+        ...,
+        description="The type of calculation this energy evaluation comes from.",
     )
 
     entry_types: List[str] = Field(
@@ -264,7 +265,8 @@ class PhaseDiagramDoc(BaseModel):
     )
 
     chemsys: str = Field(
-        ..., description="Dash-delimited string of elements in the material",
+        ...,
+        description="Dash-delimited string of elements in the material",
     )
 
     thermo_type: Union[ThermoType, RunType] = Field(
@@ -273,7 +275,8 @@ class PhaseDiagramDoc(BaseModel):
     )
 
     phase_diagram: PhaseDiagram = Field(
-        ..., description="Phase diagram for the chemical system.",
+        ...,
+        description="Phase diagram for the chemical system.",
     )
 
     last_updated: datetime = Field(

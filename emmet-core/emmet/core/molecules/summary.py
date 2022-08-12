@@ -44,8 +44,7 @@ class SummaryDoc(PropertyDoc):
     )
 
     species: List[str] = Field(
-        None,
-        description="Ordered list of elements/species in this Molecule."
+        None, description="Ordered list of elements/species in this Molecule."
     )
 
     task_ids: List[MPID] = Field(

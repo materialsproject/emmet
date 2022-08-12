@@ -19,9 +19,7 @@ functional_synonyms = {
 }
 
 
-def level_of_theory(
-    parameters: Dict[str, Any]
-) -> LevelOfTheory:
+def level_of_theory(parameters: Dict[str, Any]) -> LevelOfTheory:
     """
 
     Returns the level of theory for a calculation,
@@ -69,7 +67,7 @@ def level_of_theory(
         solvation = "VACUUM"
     elif solvent_method in ["pcm", "cosmo"]:
         solvation = "PCM"
-    #TODO: Add this once added into pymatgen and atomate
+    # TODO: Add this once added into pymatgen and atomate
     # elif solvent_method == "isosvp":
     #     if parameters.get("svp", {}).get("idefesr", 0):
     #         solvation = "CMIRS"
@@ -85,10 +83,7 @@ def level_of_theory(
     return LevelOfTheory(lot)
 
 
-def solvent(
-    parameters: Dict[str, Any],
-    custom_smd: Optional[str] = None
-) -> str:
+def solvent(parameters: Dict[str, Any], custom_smd: Optional[str] = None) -> str:
     """
     Returns the solvent used for this calculation.
 
@@ -104,7 +99,7 @@ def solvent(
     if solvation == "PCM":
         dielectric = float(parameters.get("solvent", {}).get("dielectric", 78.39))
         return f"DIELECTRIC={dielectric:.2f}"
-    #TODO: Add this once added into pymatgen and atomate
+    # TODO: Add this once added into pymatgen and atomate
     # elif solvation == "ISOSVP":
     #     dielectric = float(parameters.get("svp", {}).get("dielst", 78.39))
     #     rho = float(parameters.get("svp", {}).get("rhoiso", 0.001))
@@ -150,8 +145,7 @@ def solvent(
 
 
 def lot_solvent_string(
-    parameters: Dict[str, Any],
-    custom_smd: Optional[str] = None
+    parameters: Dict[str, Any], custom_smd: Optional[str] = None
 ) -> str:
     """
     Returns a string representation of the level of theory and solvent used for this calculation.
@@ -185,9 +179,7 @@ def task_type(orig: Dict[str, Any], special_run_type: Optional[str] = None) -> T
     return TaskType("Unknown")
 
 
-def calc_type(
-    special_run_type: str, orig: Dict[str, Any]
-) -> CalcType:
+def calc_type(special_run_type: str, orig: Dict[str, Any]) -> CalcType:
     """
     Determines the calc type
 

@@ -88,5 +88,5 @@ BASIS_SETS = [
     "def2-QZVPPD",
 ]
 
-#TODO: add ISOSVP and CMIRS once these are implemented in pymatgen and atomate/atomate2
+# TODO: add ISOSVP and CMIRS once these are implemented in pymatgen and atomate/atomate2
 SOLVENT_MODELS = ["VACUUM", "PCM", "SMD"]

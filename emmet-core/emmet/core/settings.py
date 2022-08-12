@@ -96,7 +96,11 @@ class EmmetSettings(BaseSettings):
     )
 
     QCHEM_TASK_QUALITY_SCORES: Dict[str, int] = Field(
-        {"single_point": 1, "geometry optimization": 2, "frequency-flattening geometry optimization": 3},
+        {
+            "single_point": 1,
+            "geometry optimization": 2,
+            "frequency-flattening geometry optimization": 3,
+        },
         description="Dictionary mapping Q-Chem task type to a quality score",
     )
 

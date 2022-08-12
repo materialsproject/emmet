@@ -126,10 +126,7 @@ def group_molecules(molecules: List[Molecule]):
 
     # First, group by formula
     # Hopefully this step is unnecessary - builders should already be doing this
-    for mol_key, pregroup in groupby(
-        sorted(molecules, key=_mol_form),
-        key=_mol_form
-    ):
+    for mol_key, pregroup in groupby(sorted(molecules, key=_mol_form), key=_mol_form):
         groups = list()
         for mol, solv, tt in pregroup:
             mol_copy = copy.deepcopy(mol)
@@ -143,7 +140,10 @@ def group_molecules(molecules: List[Molecule]):
 
             # Group by structure
             for group in groups:
-                if mm.fit(mol_copy, group["mol"]) and mol_copy.charge == group["mol"].charge:
+                if (
+                    mm.fit(mol_copy, group["mol"])
+                    and mol_copy.charge == group["mol"].charge
+                ):
                     group["mol_list"].append(mol)
                     matched = True
                     break

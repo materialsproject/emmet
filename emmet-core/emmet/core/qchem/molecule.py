@@ -93,8 +93,7 @@ def evaluate_task(
 class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
     species: List[str] = Field(
-        None,
-        description="Ordered list of elements/species in this Molecule."
+        None, description="Ordered list of elements/species in this Molecule."
     )
 
     species_hash: str = Field(
@@ -122,11 +121,11 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
     )
     solvents: Mapping[str, str] = Field(
         None,
-        description="Solvents (solvent parameters) for all the calculations that make up this molecule"
+        description="Solvents (solvent parameters) for all the calculations that make up this molecule",
     )
     lot_solvents: Mapping[str, str] = Field(
         None,
-        description="Combinations of level of theory and solvent for all calculations that make up this molecule"
+        description="Combinations of level of theory and solvent for all calculations that make up this molecule",
     )
 
     origins: List[PropertyOrigin] = Field(
@@ -333,7 +332,9 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
         # Arbitrarily choose task with lowest ID
-        molecule = sorted(task_group, key=lambda x: x.task_id)[0].output.initial_molecule
+        molecule = sorted(task_group, key=lambda x: x.task_id)[
+            0
+        ].output.initial_molecule
         species = [e.symbol for e in molecule.species]
 
         # Molecule ID

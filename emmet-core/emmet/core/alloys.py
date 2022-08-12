@@ -1,4 +1,3 @@
-
 from pymatgen.analysis.alloys.core import AlloyPair, SupportedProperties, AlloySystem
 
 from emmet.core.base import EmmetBaseModel

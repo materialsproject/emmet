@@ -15,7 +15,7 @@ from emmet.core.qchem.calc_types import (
     level_of_theory,
     task_type,
     solvent,
-    lot_solvent_string
+    lot_solvent_string,
 )
 
 
