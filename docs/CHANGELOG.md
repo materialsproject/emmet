@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.34.7](https://github.com/materialsproject/emmet/tree/v0.34.7) (2022-08-12)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.34.6...v0.34.7)
+
+**Merged pull requests:**
+
+- StructureGroupDoc Pulling Correct Material Id [\#500](https://github.com/materialsproject/emmet/pull/500) ([kim-jiyoon](https://github.com/kim-jiyoon))
+
 ## [v0.34.6](https://github.com/materialsproject/emmet/tree/v0.34.6) (2022-08-11)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.34.5...v0.34.6)
@@ -690,19 +698,19 @@
 
 ## [v0.21.9](https://github.com/materialsproject/emmet/tree/v0.21.9) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.8...v0.21.9)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.7...v0.21.9)
 
 **Merged pull requests:**
 
 - Git stash added to docs step [\#347](https://github.com/materialsproject/emmet/pull/347) ([munrojm](https://github.com/munrojm))
 
-## [v0.21.8](https://github.com/materialsproject/emmet/tree/v0.21.8) (2022-01-19)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.7...v0.21.8)
-
 ## [v0.21.7](https://github.com/materialsproject/emmet/tree/v0.21.7) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.6...v0.21.7)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.8...v0.21.7)
+
+## [v0.21.8](https://github.com/materialsproject/emmet/tree/v0.21.8) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.6...v0.21.8)
 
 **Merged pull requests:**
 
