@@ -30,7 +30,7 @@ def test_StructureGroupDoc_from_grouped_entries(entries_lto):
         entries_lto,
         ignored_specie="Li",
     )
-    assert sgroup_doc.group_id == "mp-3_Li"
+    assert sgroup_doc.group_id == "mp-2_Li"
     assert sgroup_doc.material_ids == ["mp-0", "mp-1", "mp-2", "mp-3", "mp-4", "mp-5"]
     assert sgroup_doc.framework_formula == "TiO2"
     assert sgroup_doc.ignored_specie == "Li"
