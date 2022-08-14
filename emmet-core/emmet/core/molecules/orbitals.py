@@ -451,7 +451,7 @@ class OrbitalDoc(PropertyDoc):
 
         if task.output.nbo is None:
             raise ValueError("No NBO output in task {}!".format(task.task_id))
-        elif not task.orig["rem"].get("run_nbo6", False):
+        elif not (task.orig["rem"].get("run_nbo6", False) or task.orig["rem"].get("nbo_external", False)):
             raise ValueError("Only NBO7 is allowed!")
 
         nbo = task.output.nbo
@@ -490,7 +490,7 @@ class OrbitalDoc(PropertyDoc):
         bond_sets = cls.get_bonds(nbo, bds_inds)
         interaction_sets = cls.get_interactions(nbo, perts_inds)
 
-        if not task.orig["rem"].get("run_nbo6"):
+        if not (task.orig["rem"].get("run_nbo6") or task.orig["rem"].get("nbo_external", False)):
             warnings = ["Using NBO5"]
         else:
             warnings = list()

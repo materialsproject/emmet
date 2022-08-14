@@ -173,7 +173,8 @@ class OrbitalBuilder(Builder):
                 e
                 for e in mol.entries
                 if e["output"]["nbo"] is not None
-                and e["orig"]["rem"].get("run_nbo6", False)
+                and (e["orig"]["rem"].get("run_nbo6", False)
+                or e["orig"]["rem"].get("nbo_external", False))
             ]
 
             # No documents with NBO data; no documents to be made

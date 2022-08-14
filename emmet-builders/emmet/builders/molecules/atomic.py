@@ -1,6 +1,6 @@
+from collections import defaultdict
 from datetime import datetime
 from itertools import chain
-from collections import defaultdict
 from math import ceil
 from typing import Optional, Iterable, Iterator, List, Dict
 
