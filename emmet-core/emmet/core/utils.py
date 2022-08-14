@@ -114,7 +114,7 @@ def group_molecules(molecules: List[Molecule]):
     """
 
     def _mol_form(mol_solv):
-        return mol_solv[0].composition.formula_alphabetical
+        return mol_solv.composition.alphabetical_formula
 
     # Extremely tight tolerance is desirable
     # We want to match only calculations that are EXACTLY the same
@@ -128,7 +128,7 @@ def group_molecules(molecules: List[Molecule]):
     # Hopefully this step is unnecessary - builders should already be doing this
     for mol_key, pregroup in groupby(sorted(molecules, key=_mol_form), key=_mol_form):
         groups = list()
-        for mol, solv, tt in pregroup:
+        for mol in pregroup:
             mol_copy = copy.deepcopy(mol)
 
             # Single atoms could always have identical structure
@@ -229,7 +229,7 @@ def get_molecule_id(mol: Molecule, node_attr: Optional[str] = None):
     return MPculeID(
         "{}-{}-{}-{}".format(
             graph_hash,
-            mol.composition.formula_alphabetical.replace(" ", ""),
+            mol.composition.alphabetical_formula.replace(" ", ""),
             str(int(mol.charge)).replace("-", "m"),
             str(mol.spin_multiplicity),
         )
