@@ -1,5 +1,6 @@
 from typing import Dict, List, Any, Optional, Tuple
 import copy
+from hashlib import blake2b
 
 from pydantic import Field
 import networkx as nx
@@ -340,11 +341,12 @@ class BondingDoc(PropertyDoc):
                 break
 
             if m == "nbo" and task.output.nbo is not None:
-                if task.orig["rem"].get("run_nbo6", False):
+                if task.orig["rem"].get("run_nbo6", False) \
+                        or task.orig["rem"].get("nbo_external", False):
                     method = "nbo"
                     mg, warnings = nbo_molecule_graph(mol, task.output.nbo)
                 else:
-                    # Cannot make NBO molecule graph with NBO5
+                    # Will not make NBO molecule graph with NBO5
                     continue
 
             elif m == "critic2" and task.critic2 is not None:
@@ -383,16 +385,25 @@ class BondingDoc(PropertyDoc):
             if not any([m in bond for m in m_inds]):
                 bonds_nometal.append(bond)
 
+        id_string = f"bonding-{molecule_id}-{task.task_id}-{task.lot_solvent}-{method}"
+        h = blake2b()
+        h.update(id_string)
+        property_id = h.hexdigest()
+
         return super().from_molecule(
             meta_molecule=mol,
+            property_id=property_id,
             molecule_id=molecule_id,
+            level_of_theory=task.level_of_theory,
+            solvent=task.solvent,
+            lot_solvent=task.lot_solvent,
             method=method,
             warnings=warnings,
             molecule_graph=mg,
             bond_types=bond_types,
             bonds=bonds,
             bonds_nometal=bonds_nometal,
-            deprecated=deprecated,
             origins=[PropertyOrigin(name="bonding", task_id=task.task_id)],
+            deprecated=deprecated,
             **kwargs,
         )

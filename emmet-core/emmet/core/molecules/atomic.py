@@ -1,4 +1,5 @@
 from typing import List
+from hashlib import blake2b
 
 from pydantic import Field
 
@@ -78,16 +79,25 @@ class PartialChargesDoc(PropertyDoc):
                     charges = [mull[0] for mull in task.output.mulliken]
                 break
 
+        id_string = f"partial_charges-{molecule_id}-{task.task_id}-{task.lot_solvent}-{method}"
+        h = blake2b()
+        h.update(id_string)
+        property_id = h.hexdigest()
+
         if charges is None:
             raise Exception("No valid partial charge information!")
 
         return super().from_molecule(
             meta_molecule=mol,
+            property_id=property_id,
             molecule_id=molecule_id,
+            level_of_theory=task.level_of_theory,
+            solvent=task.solvent,
+            lot_solvent=task.lot_solvent,
             partial_charges=charges,
             method=method,
-            deprecated=deprecated,
             origins=[PropertyOrigin(name="partial_charges", task_id=task.task_id)],
+            deprecated=deprecated,
             **kwargs
         )
 
@@ -146,15 +156,24 @@ class PartialSpinsDoc(PropertyDoc):
                 spins = [mull[1] for mull in task.output.mulliken]
                 break
 
+        id_string = f"partial_spins-{molecule_id}-{task.task_id}-{task.lot_solvent}-{method}"
+        h = blake2b()
+        h.update(id_string)
+        property_id = h.hexdigest()
+
         if spins is None:
             raise Exception("No valid partial spin information!")
 
         return super().from_molecule(
             meta_molecule=mol,
-            deprecated=deprecated,
+            property_id=property_id,
             molecule_id=molecule_id,
+            level_of_theory=task.level_of_theory,
+            solvent=task.solvent,
+            lot_solvent=task.lot_solvent,
             partial_spins=spins,
             method=method,
             origins=[PropertyOrigin(name="partial_spins", task_id=task.task_id)],
+            deprecated=deprecated,
             **kwargs
         )

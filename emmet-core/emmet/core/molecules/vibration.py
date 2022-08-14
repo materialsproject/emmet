@@ -1,4 +1,5 @@
 from typing import List
+from hashlib import blake2b
 
 from pydantic import Field
 
@@ -96,16 +97,25 @@ class VibrationDoc(PropertyDoc):
         if frequencies[0] < 0.0:
             warnings.append("Imaginary frequencies")
 
+        id_string = f"vibrations-{molecule_id}-{task.task_id}-{task.lot_solvent}"
+        h = blake2b()
+        h.update(id_string)
+        property_id = h.hexdigest()
+
         return super().from_molecule(
             meta_molecule=mol,
+            property_id=property_id,
             molecule_id=molecule_id,
+            level_of_theory=task.level_of_theory,
+            solvent=task.solvent,
+            lot_solvent=task.lot_solvent,
             molecule=mol,
             frequencies=frequencies,
             frequency_modes=frequency_modes,
             ir_intensities=intensities,
             ir_activities=active,
+            warnings=warnings,
             origins=[PropertyOrigin(name="vibrations", task_id=task.task_id)],
             deprecated=deprecated,
-            warnings=warnings,
             **kwargs
         )
