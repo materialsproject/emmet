@@ -1,11 +1,8 @@
-import os
-
+from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
 from typing import Optional, Iterable, Iterator, List, Dict
-
-from monty.serialization import loadfn
 
 from maggma.builders import Builder
 from maggma.core import Store

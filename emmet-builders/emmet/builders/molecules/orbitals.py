@@ -154,7 +154,7 @@ class OrbitalBuilder(Builder):
 
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """
-        Process the tasks into an OrbitalDoc
+        Process the tasks into a OrbitalDocs
 
         Args:
             tasks List[Dict] : a list of MoleculeDocs in dict form
