@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.34.8](https://github.com/materialsproject/emmet/tree/v0.34.8) (2022-08-15)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.34.7...v0.34.8)
+
+**Merged pull requests:**
+
+- Fix spin `isnan` detection for density of states processing [\#503](https://github.com/materialsproject/emmet/pull/503) ([munrojm](https://github.com/munrojm))
+
 ## [v0.34.7](https://github.com/materialsproject/emmet/tree/v0.34.7) (2022-08-12)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.34.6...v0.34.7)
@@ -678,19 +686,19 @@
 
 ## [v0.21.12](https://github.com/materialsproject/emmet/tree/v0.21.12) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.11...v0.21.12)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.10...v0.21.12)
 
 **Merged pull requests:**
 
 - Revert to `get_distribution` in init [\#349](https://github.com/materialsproject/emmet/pull/349) ([munrojm](https://github.com/munrojm))
 
-## [v0.21.11](https://github.com/materialsproject/emmet/tree/v0.21.11) (2022-01-19)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.10...v0.21.11)
-
 ## [v0.21.10](https://github.com/materialsproject/emmet/tree/v0.21.10) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.9...v0.21.10)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.11...v0.21.10)
+
+## [v0.21.11](https://github.com/materialsproject/emmet/tree/v0.21.11) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.9...v0.21.11)
 
 **Merged pull requests:**
 
