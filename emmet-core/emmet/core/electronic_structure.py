@@ -263,7 +263,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
             try:
                 spin_polarization = dos_obj.spin_polarization
-                if isnan(spin_polarization):
+                if spin_polarization is None or isnan(spin_polarization):
                     spin_polarization = None
             except KeyError:
                 spin_polarization = None

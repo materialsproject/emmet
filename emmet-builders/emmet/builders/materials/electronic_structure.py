@@ -201,8 +201,8 @@ class ElectronicStructureBuilder(Builder):
             doc = ElectronicStructureDoc.from_structure(**d)
 
         else:
-
             try:
+
                 doc = ElectronicStructureDoc.from_bsdos(
                     material_id=mat[self.materials.key],
                     structures=structures,
