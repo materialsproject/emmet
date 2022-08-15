@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
@@ -22,14 +23,16 @@ SETTINGS = EmmetBuildSettings()
 class OrbitalBuilder(Builder):
     """
     The OrbitalBuilder extracts the highest-quality natural bonding orbital data
-    from a MoleculeDoc (lowest electronic energy, highest level of theory).
+    from a MoleculeDoc (lowest electronic energy, highest level of theory for
+    each solvent available).
 
     The process is as follows:
         1. Gather MoleculeDocs by formula
-        2. For each doc, grab the best TaskDoc (doc including NBO data using
+        2. For each doc, sort tasks by solvent
+        3. For each solvent, grab the best TaskDoc (including NBO data using
             the highest level of theory with lowest electronic energy for the
             molecule)
-        3. Convert TaskDoc to OrbitalDoc
+        4. Convert TaskDoc to OrbitalDoc
     """
 
     def __init__(
@@ -168,40 +171,53 @@ class OrbitalBuilder(Builder):
         orbital_docs = list()
 
         for mol in mols:
+            correct_charge_spin = [
+                e
+                for e in mol.entries
+                if e["charge"] == mol.charge
+                and e["spin_multiplicity"] == mol.spin_multiplicity
+            ]
+
             # Must have NBO, and must specifically use NBO7
             orbital_entries = [
                 e
-                for e in mol.entries
+                for e in correct_charge_spin
                 if e["output"]["nbo"] is not None
                 and (e["orig"]["rem"].get("run_nbo6", False)
                 or e["orig"]["rem"].get("nbo_external", False))
             ]
 
-            # No documents with NBO data; no documents to be made
-            if len(orbital_entries) == 0:
-                continue
-            else:
-                sorted_entries = sorted(
-                    orbital_entries,
-                    key=lambda x: (
-                        sum(evaluate_lot(x["level_of_theory"])),
-                        x["energy"],
-                    ),
-                )
+            # Organize by solvent environment
+            by_solvent = defaultdict(list)
+            for entry in orbital_entries:
+                by_solvent[entry["solvent"]].append(entry)
 
-                for best in sorted_entries:
-                    task = best["task_id"]
-
-                    task_doc = TaskDocument(
-                        **self.tasks.query_one({"task_id": int(task)})
+            for solvent, entries in by_solvent.items():
+                # No documents with NBO data; no documents to be made
+                if len(entries) == 0:
+                    continue
+                else:
+                    sorted_entries = sorted(
+                        entries,
+                        key=lambda x: (
+                            sum(evaluate_lot(x["level_of_theory"])),
+                            x["energy"],
+                        ),
                     )
 
-                    orbital_doc = OrbitalDoc.from_task(
-                        task_doc, molecule_id=mol.molecule_id, deprecated=False
-                    )
+                    for best in sorted_entries:
+                        task = best["task_id"]
 
-                    if orbital_doc is not None:
-                        orbital_docs.append(orbital_doc)
+                        task_doc = TaskDocument(
+                            **self.tasks.query_one({"task_id": int(task)})
+                        )
+
+                        orbital_doc = OrbitalDoc.from_task(
+                            task_doc, molecule_id=mol.molecule_id, deprecated=False
+                        )
+
+                        if orbital_doc is not None:
+                            orbital_docs.append(orbital_doc)
 
         self.logger.debug(f"Produced {len(orbital_docs)} orbital docs for {formula}")
 
