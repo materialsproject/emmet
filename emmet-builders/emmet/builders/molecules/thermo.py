@@ -11,6 +11,7 @@ from maggma.utils import grouper
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.molecule import MoleculeDoc, best_lot, evaluate_lot
 from emmet.core.molecules.thermo import get_free_energy, ThermoDoc
+from emmet.core.qchem.calc_types import TaskType
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
@@ -20,67 +21,94 @@ __author__ = "Evan Spotte-Smith"
 SETTINGS = EmmetBuildSettings()
 
 single_mol_thermo = {
-    'Zn': {'enthalpy': 1.481, 'entropy': 38.384},
-    'Xe': {'enthalpy': 1.481, 'entropy': 40.543},
-    'Tl': {'enthalpy': 1.481, 'entropy': 41.857},
-    'Ti': {'enthalpy': 1.481, 'entropy': 37.524},
-    'Te': {'enthalpy': 1.481, 'entropy': 40.498},
-    'Sr': {'enthalpy': 1.481, 'entropy': 39.334},
-    'Sn': {'enthalpy': 1.481, 'entropy': 40.229},
-    'Si': {'enthalpy': 1.481, 'entropy': 35.921},
-    'Sb': {'enthalpy': 1.481, 'entropy': 40.284},
-    'Se': {'enthalpy': 1.481, 'entropy': 39.05},
-    'S': {'enthalpy': 1.481, 'entropy': 36.319},
-    'Rn': {'enthalpy': 1.481, 'entropy': 42.095},
-    'Pt': {'enthalpy': 1.481, 'entropy': 41.708},
-    'Rb': {'enthalpy': 1.481, 'entropy': 39.23},
-    'Po': {'enthalpy': 1.481, 'entropy': 41.915},
-    'Pb': {'enthalpy': 1.481, 'entropy': 41.901},
-    'P': {'enthalpy': 1.481, 'entropy': 36.224},
-    'O': {'enthalpy': 1.481, 'entropy': 34.254},
-    'Ne': {'enthalpy': 1.481, 'entropy': 34.919},
-    'N': {'enthalpy': 1.481, 'entropy': 33.858},
-    'Na': {'enthalpy': 1.481, 'entropy': 35.336},
-    'Mg': {'enthalpy': 1.481, 'entropy': 35.462},
-    'Li': {'enthalpy': 1.481, 'entropy': 31.798},
-    'Kr': {'enthalpy': 1.481, 'entropy': 39.191},
-    'K': {'enthalpy': 1.481, 'entropy': 36.908},
-    'In': {'enthalpy': 1.481, 'entropy': 40.132},
-    'I': {'enthalpy': 1.481, 'entropy': 40.428},
-    'H': {'enthalpy': 1.481, 'entropy': 26.014},
-    'He': {'enthalpy': 1.481, 'entropy': 30.125},
-    'Ge': {'enthalpy': 1.481, 'entropy': 38.817},
-    'Ga': {'enthalpy': 1.481, 'entropy': 38.609},
-    'F': {'enthalpy': 1.481, 'entropy': 34.767},
-    'Cu': {'enthalpy': 1.481, 'entropy': 38.337},
-    'Cl': {'enthalpy': 1.481, 'entropy': 36.586},
-    'Ca': {'enthalpy': 1.481, 'entropy': 36.984},
-    'C': {'enthalpy': 1.481, 'entropy': 33.398},
-    'Br': {'enthalpy': 1.481, 'entropy': 39.012},
-    'Bi': {'enthalpy': 1.481, 'entropy': 41.915},
-    'Be': {'enthalpy': 1.481, 'entropy': 32.544},
-    'Ba': {'enthalpy': 1.481, 'entropy': 40.676},
-    'B': {'enthalpy': 1.481, 'entropy': 33.141},
-    'Au': {'enthalpy': 1.481, 'entropy': 41.738},
-    'At': {'enthalpy': 1.481, 'entropy': 41.929},
-    'As': {'enthalpy': 1.481, 'entropy': 38.857},
-    'Ar': {'enthalpy': 1.481, 'entropy': 36.983},
-    'Al': {'enthalpy': 1.481, 'entropy': 35.813},
-    'Ag': {'enthalpy': 1.481, 'entropy': 39.917}
+    "Zn": {"enthalpy": 1.481, "entropy": 38.384},
+    "Xe": {"enthalpy": 1.481, "entropy": 40.543},
+    "Tl": {"enthalpy": 1.481, "entropy": 41.857},
+    "Ti": {"enthalpy": 1.481, "entropy": 37.524},
+    "Te": {"enthalpy": 1.481, "entropy": 40.498},
+    "Sr": {"enthalpy": 1.481, "entropy": 39.334},
+    "Sn": {"enthalpy": 1.481, "entropy": 40.229},
+    "Si": {"enthalpy": 1.481, "entropy": 35.921},
+    "Sb": {"enthalpy": 1.481, "entropy": 40.284},
+    "Se": {"enthalpy": 1.481, "entropy": 39.05},
+    "S": {"enthalpy": 1.481, "entropy": 36.319},
+    "Rn": {"enthalpy": 1.481, "entropy": 42.095},
+    "Pt": {"enthalpy": 1.481, "entropy": 41.708},
+    "Rb": {"enthalpy": 1.481, "entropy": 39.23},
+    "Po": {"enthalpy": 1.481, "entropy": 41.915},
+    "Pb": {"enthalpy": 1.481, "entropy": 41.901},
+    "P": {"enthalpy": 1.481, "entropy": 36.224},
+    "O": {"enthalpy": 1.481, "entropy": 34.254},
+    "Ne": {"enthalpy": 1.481, "entropy": 34.919},
+    "N": {"enthalpy": 1.481, "entropy": 33.858},
+    "Na": {"enthalpy": 1.481, "entropy": 35.336},
+    "Mg": {"enthalpy": 1.481, "entropy": 35.462},
+    "Li": {"enthalpy": 1.481, "entropy": 31.798},
+    "Kr": {"enthalpy": 1.481, "entropy": 39.191},
+    "K": {"enthalpy": 1.481, "entropy": 36.908},
+    "In": {"enthalpy": 1.481, "entropy": 40.132},
+    "I": {"enthalpy": 1.481, "entropy": 40.428},
+    "H": {"enthalpy": 1.481, "entropy": 26.014},
+    "He": {"enthalpy": 1.481, "entropy": 30.125},
+    "Ge": {"enthalpy": 1.481, "entropy": 38.817},
+    "Ga": {"enthalpy": 1.481, "entropy": 38.609},
+    "F": {"enthalpy": 1.481, "entropy": 34.767},
+    "Cu": {"enthalpy": 1.481, "entropy": 38.337},
+    "Cl": {"enthalpy": 1.481, "entropy": 36.586},
+    "Ca": {"enthalpy": 1.481, "entropy": 36.984},
+    "C": {"enthalpy": 1.481, "entropy": 33.398},
+    "Br": {"enthalpy": 1.481, "entropy": 39.012},
+    "Bi": {"enthalpy": 1.481, "entropy": 41.915},
+    "Be": {"enthalpy": 1.481, "entropy": 32.544},
+    "Ba": {"enthalpy": 1.481, "entropy": 40.676},
+    "B": {"enthalpy": 1.481, "entropy": 33.141},
+    "Au": {"enthalpy": 1.481, "entropy": 41.738},
+    "At": {"enthalpy": 1.481, "entropy": 41.929},
+    "As": {"enthalpy": 1.481, "entropy": 38.857},
+    "Ar": {"enthalpy": 1.481, "entropy": 36.983},
+    "Al": {"enthalpy": 1.481, "entropy": 35.813},
+    "Ag": {"enthalpy": 1.481, "entropy": 39.917},
 }
 
 
 class ThermoBuilder(Builder):
     """
     The ThermoBuilder extracts the highest-quality thermodynamic data from a
-    MoleculeDoc (lowest electronic energy, highest level of theory).
+    MoleculeDoc (lowest electronic energy, highest level of theory for each
+    solvent available).
 
-    The process is as follows:
+    This builder constructs ThermoDocs in two different ways: with and without
+    single-point energy corrections.
+
+    Before any documents are constructed, the following steps are taken:
         1. Gather MoleculeDocs by formula
-        2. For each doc, grab the best TaskDoc (doc with as much thermodynamic
-            information as possible using the highest level of theory with
-            lowest electronic energy for the molecule)
-        3. Convert TaskDoc to ThermoDoc
+        2. For each doc, identify tasks with thermodynamic information such as
+            zero-point energy, enthalpy, and entropy. Collect these "documents
+             including complete thermodynamics" (DICTs).
+        3. Separately, collect single-point energy calculations (SPECs).
+        4. Sort both sets of collected tasks (DICT and SPEC) by solvent
+
+    The first type of doc - those without corrections - can be constructed in
+    a straightforward fashion:
+        5. For each solvent, grab the best DICT (where "best" is defined as the
+            task generated using the highest level of theory with the lowest
+            electronic energy)
+        6. Convert this TaskDoc to ThermoDoc
+
+    The second type - those involving single-point energy corrections - are
+    generated differently and in a slightly more involved process:
+        7. For each of the "best" DICT docs identified in step 5 above:
+            7.1 For each solvent, grab the best SPEC
+            7.2 Try to match each best SPEC with a matching DICT (meaning that
+                the DICT and the SPEC have identical structure) where the DICT
+                is calculated at a lower or the same level of theory than the
+                SPEC
+            7.3 Convert each DICT-SPEC combination to create a ThermoDoc
+
+    In the case where there are multiple ThermoDocs made for a given solvent,
+    the different ThermoDocs will be ranked, first by level of theory (for
+    a doc made with an energy correction, the scores of the DICT and the SPEC
+    levels of theory will be averaged) and then by electronic energy.
     """
 
     def __init__(
@@ -211,6 +239,25 @@ class ThermoBuilder(Builder):
             [dict] : a list of new thermo docs
         """
 
+        def _add_single_atom_enthalpy_entropy(task: TaskDocument, doc: ThermoDoc):
+            initial_mol = task.output.initial_molecule
+            # If single atom, try to add enthalpy and entropy
+            if len(initial_mol) == 1:
+                if doc.total_enthalpy is None or doc.total_entropy is None:
+                    formula = initial_mol.composition.alphabetical_formula
+                    if formula in single_mol_thermo:
+                        vals = single_mol_thermo[formula]
+                        doc.total_enthalpy = vals["enthalpy"] * 0.043363
+                        doc.total_entropy = vals["entropy"] * 0.000043363
+                        doc.translational_enthalpy = vals["enthalpy"] * 0.043363
+                        doc.translational_entropy = vals["entropy"] * 0.000043363
+                        doc.free_energy = get_free_energy(
+                            doc.electronic_energy,
+                            vals["enthalpy"],
+                            vals["entropy"],
+                        )
+            return doc
+
         mols = [MoleculeDoc(**item) for item in items]
         formula = mols[0].formula_alphabetical
         mol_ids = [m.molecule_id for m in mols]
@@ -219,20 +266,42 @@ class ThermoBuilder(Builder):
         thermo_docs = list()
 
         for mol in mols:
+            # Collect DICTs and SPECs
             thermo_entries = [
                 e
                 for e in mol.entries
                 if e["output"]["enthalpy"] is not None
                 and e["output"]["entropy"] is not None
+                and e["charge"] == mol.charge
+                and e["spin_multiplicity"] == mol.spin_multiplicity
             ]
 
-            # No documents with enthalpy and entropy
-            if len(thermo_entries) == 0:
-                best = mol.best_entries[best_lot(mol)]
-                task = best["task_id"]
-            else:
+            sp_entries = list()
+            for entry in mol.entries:
+                if isinstance(entry["job_type"], TaskType):
+                    job_type = entry["job_type"].value
+                else:
+                    job_type = entry["job_type"]
+
+                if (
+                    job_type == "Single Point"
+                    and entry["charge"] == mol.charge
+                    and entry["spin_multiplicity"] == mol.spin_multiplicity
+                ):
+                    sp_entries.append(entry)
+
+            # Group both DICTs and SPECs by solvent environment
+            by_solvent_dict = defaultdict(list)
+            by_solvent_spec = defaultdict(list)
+            for entry in thermo_entries:
+                by_solvent_dict[entry["solvent"]].append(entry)
+            for entry in sp_entries:
+                by_solvent_spec[entry["solvent"]].append(entry)
+
+            # Construct without corrections
+            for solvent, entries in by_solvent_dict.items():
                 best = sorted(
-                    thermo_entries,
+                    entries,
                     key=lambda x: (
                         sum(evaluate_lot(x["level_of_theory"])),
                         x["energy"],
@@ -240,33 +309,15 @@ class ThermoBuilder(Builder):
                 )[0]
                 task = best["task_id"]
 
-            task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
+                task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
 
-            thermo_doc = ThermoDoc.from_task(
-                task_doc, molecule_id=mol.molecule_id, deprecated=False
-            )
+                thermo_doc = ThermoDoc.from_task(
+                    task_doc, molecule_id=mol.molecule_id, deprecated=False
+                )
+                thermo_doc = _add_single_atom_enthalpy_entropy(task_doc, thermo_doc)
+                thermo_docs.append(thermo_doc)
 
-            initial_mol = task_doc.output.initial_molecule
-            # If single atom, try to add enthalpy and entropy
-            if len(initial_mol) == 1:
-                if (
-                    thermo_doc.total_enthalpy is None
-                    or thermo_doc.total_entropy is None
-                ):
-                    formula = initial_mol.composition.alphabetical_formula
-                    if formula in single_mol_thermo:
-                        vals = single_mol_thermo[formula]
-                        thermo_doc.total_enthalpy = vals["enthalpy"] * 0.043363
-                        thermo_doc.total_entropy = vals["entropy"] * 0.000043363
-                        thermo_doc.translational_enthalpy = vals["enthalpy"] * 0.043363
-                        thermo_doc.translational_entropy = vals["entropy"] * 0.000043363
-                        thermo_doc.free_energy = get_free_energy(
-                            thermo_doc.electronic_energy,
-                            vals["enthalpy"],
-                            vals["entropy"],
-                        )
-
-            thermo_docs.append(thermo_doc)
+            # Construct with corrections
 
         self.logger.debug(f"Produced {len(thermo_docs)} thermo docs for {formula}")
 

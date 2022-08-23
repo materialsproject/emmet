@@ -82,15 +82,12 @@ class AbsorptionBuilder(Builder):
     def process_item(self, item):
         structure = Structure.from_dict(item["structure"])
         mpid = item[self.materials.key]
-        origin_entry = {
-            "name": "absorption",
-            "task_id": item["task_id"]
-        }
+        origin_entry = {"name": "absorption", "task_id": item["task_id"]}
 
         doc = AbsorptionDoc.from_structure(
             structure=structure,
             material_id=mpid,
-            task_id=item['task_id'],
+            task_id=item["task_id"],
             deprecated=False,
             energies=item["energies"],
             real_d=item["real_dielectric"],
@@ -99,7 +96,7 @@ class AbsorptionBuilder(Builder):
             bandgap=item["bandgap"],
             nkpoints=item["nkpoints"],
             last_updated=item["updated_on"],
-            origins=[origin_entry]
+            origins=[origin_entry],
         )
 
         return jsanitize(doc.dict(), allow_bson=True)
@@ -125,7 +122,7 @@ class AbsorptionBuilder(Builder):
                 "structure",
                 "task_types",
                 "run_types",
-                "last_updated"
+                "last_updated",
             ],
         )
 

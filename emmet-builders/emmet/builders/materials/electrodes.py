@@ -63,7 +63,7 @@ def generic_groupby(list_in, comp=operator.eq):
         if ls1 is not None:
             continue
         list_out[i1] = label_num
-        for i2, ls2 in list(enumerate(list_out))[i1 + 1:]:
+        for i2, ls2 in list(enumerate(list_out))[i1 + 1 :]:
             if comp(list_in[i1], list_in[i2]):
                 if list_out[i2] is None:
                     list_out[i2] = list_out[i1]
@@ -79,16 +79,16 @@ default_build_settings = EmmetBuildSettings()
 
 class StructureGroupBuilder(Builder):
     def __init__(
-            self,
-            materials: MongoStore,
-            sgroups: MongoStore,
-            working_ion: str,
-            query: dict = None,
-            ltol: float = default_build_settings.LTOL,
-            stol: float = default_build_settings.STOL,
-            angle_tol: float = default_build_settings.ANGLE_TOL,
-            check_newer: bool = True,
-            **kwargs,
+        self,
+        materials: MongoStore,
+        sgroups: MongoStore,
+        working_ion: str,
+        query: dict = None,
+        ltol: float = default_build_settings.LTOL,
+        stol: float = default_build_settings.STOL,
+        angle_tol: float = default_build_settings.ANGLE_TOL,
+        check_newer: bool = True,
+        **kwargs,
     ):
         """
         Aggregate materials entries into sgroups that are topotactically similar to each other.
@@ -110,7 +110,9 @@ class StructureGroupBuilder(Builder):
         self.angle_tol = angle_tol
         self.check_newer = check_newer
 
-        self.query["deprecated"] = False  # Ensure only non-deprecated materials are chosen
+        self.query[
+            "deprecated"
+        ] = False  # Ensure only non-deprecated materials are chosen
 
         super().__init__(sources=[materials], targets=[sgroups], **kwargs)
 
@@ -275,7 +277,9 @@ class StructureGroupBuilder(Builder):
     def _entry_from_mat_doc(self, mdoc):
         # Note since we are just structure grouping we don't need to be careful with energy or correction
         # All of the energy analysis is left to other builders
-        entries = [ComputedStructureEntry.from_dict(v) for v in mdoc["entries"].values()]
+        entries = [
+            ComputedStructureEntry.from_dict(v) for v in mdoc["entries"].values()
+        ]
         if len(entries) == 1:
             return entries[0]
         else:
@@ -307,13 +311,13 @@ class StructureGroupBuilder(Builder):
 
 class InsertionElectrodeBuilder(Builder):
     def __init__(
-            self,
-            grouped_materials: MongoStore,
-            thermo: MongoStore,
-            insertion_electrode: MongoStore,
-            query: dict = None,
-            strip_structures: bool = False,
-            **kwargs,
+        self,
+        grouped_materials: MongoStore,
+        thermo: MongoStore,
+        insertion_electrode: MongoStore,
+        query: dict = None,
+        strip_structures: bool = False,
+        **kwargs,
     ):
         self.grouped_materials = grouped_materials
         self.insertion_electrode = insertion_electrode

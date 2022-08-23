@@ -473,8 +473,11 @@ class MoleculesBuilder(Builder):
 
             best_doc = sorted_docs[0]
             if len(sorted_docs) > 1:
-                best_doc.similar_molecules = [m.molecule_id for m in sorted_docs
-                                              if m.molecule_id != best_doc.molecule_id]
+                best_doc.similar_molecules = [
+                    m.molecule_id
+                    for m in sorted_docs
+                    if m.molecule_id != best_doc.molecule_id
+                ]
             molecules.append(best_doc)
 
         self.logger.debug(f"Produced {len(molecules)} molecules for {formula}")

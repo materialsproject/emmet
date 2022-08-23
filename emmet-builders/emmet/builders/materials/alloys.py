@@ -220,7 +220,8 @@ class AlloyPairMemberBuilder(Builder):
         self.alloy_pair_members = alloy_pair_members
 
         super().__init__(
-            sources=[alloy_pairs, materials, snls], targets=[alloy_pair_members],
+            sources=[alloy_pairs, materials, snls],
+            targets=[alloy_pair_members],
         )
 
     def get_items(self):
@@ -249,7 +250,9 @@ class AlloyPairMemberBuilder(Builder):
                 d["material_id"]: Structure.from_dict(d["structure"]) for d in mp_docs
             }
 
-            snl_docs = self.snls.query({"chemsys": chemsys},)
+            snl_docs = self.snls.query(
+                {"chemsys": chemsys},
+            )
             snl_structures = {d["snl_id"]: Structure.from_dict(d) for d in snl_docs}
 
             structures = mp_structures

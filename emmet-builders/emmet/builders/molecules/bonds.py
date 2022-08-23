@@ -203,7 +203,10 @@ class BondingBuilder(Builder):
             for solvent, entries in by_solvent.items():
                 sorted_entries = sorted(
                     entries,
-                    key=lambda x: (sum(evaluate_lot(x["level_of_theory"])), x["energy"]),
+                    key=lambda x: (
+                        sum(evaluate_lot(x["level_of_theory"])),
+                        x["energy"],
+                    ),
                 )
 
                 for method in self.methods:
@@ -241,7 +244,9 @@ class BondingBuilder(Builder):
                     best_entry = relevant_entries[0]
                     task = best_entry["task_id"]
 
-                    task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
+                    task_doc = TaskDocument(
+                        **self.tasks.query_one({"task_id": int(task)})
+                    )
 
                     doc = BondingDoc.from_task(
                         task_doc,

@@ -204,7 +204,10 @@ class PartialChargesBuilder(Builder):
             for solvent, entries in by_solvent.items():
                 sorted_entries = sorted(
                     entries,
-                    key=lambda x: (sum(evaluate_lot(x["level_of_theory"])), x["energy"]),
+                    key=lambda x: (
+                        sum(evaluate_lot(x["level_of_theory"])),
+                        x["energy"],
+                    ),
                 )
 
                 for method in self.methods:
@@ -212,7 +215,8 @@ class PartialChargesBuilder(Builder):
                     relevant_entries = [
                         e
                         for e in sorted_entries
-                        if e.get(method) is not None or e["output"].get(method) is not None
+                        if e.get(method) is not None
+                        or e["output"].get(method) is not None
                     ]
 
                     if len(relevant_entries) == 0:
@@ -222,7 +226,9 @@ class PartialChargesBuilder(Builder):
                     best_entry = relevant_entries[0]
                     task = best_entry["task_id"]
 
-                    task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
+                    task_doc = TaskDocument(
+                        **self.tasks.query_one({"task_id": int(task)})
+                    )
 
                     doc = PartialChargesDoc.from_task(
                         task_doc,
@@ -449,7 +455,10 @@ class PartialSpinsBuilder(Builder):
             for solvent, entries in by_solvent.items():
                 sorted_entries = sorted(
                     entries,
-                    key=lambda x: (sum(evaluate_lot(x["level_of_theory"])), x["energy"]),
+                    key=lambda x: (
+                        sum(evaluate_lot(x["level_of_theory"])),
+                        x["energy"],
+                    ),
                 )
 
                 for method in self.methods:
@@ -457,7 +466,8 @@ class PartialSpinsBuilder(Builder):
                     relevant_entries = [
                         e
                         for e in sorted_entries
-                        if e.get(method) is not None or e["output"].get(method) is not None
+                        if e.get(method) is not None
+                        or e["output"].get(method) is not None
                     ]
 
                     if len(relevant_entries) == 0:
@@ -467,7 +477,9 @@ class PartialSpinsBuilder(Builder):
                     best_entry = relevant_entries[0]
                     task = best_entry["task_id"]
 
-                    task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
+                    task_doc = TaskDocument(
+                        **self.tasks.query_one({"task_id": int(task)})
+                    )
 
                     doc = PartialSpinsDoc.from_task(
                         task_doc,

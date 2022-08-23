@@ -183,8 +183,10 @@ class OrbitalBuilder(Builder):
                 e
                 for e in correct_charge_spin
                 if e["output"]["nbo"] is not None
-                and (e["orig"]["rem"].get("run_nbo6", False)
-                or e["orig"]["rem"].get("nbo_external", False))
+                and (
+                    e["orig"]["rem"].get("run_nbo6", False)
+                    or e["orig"]["rem"].get("nbo_external", False)
+                )
             ]
 
             # Organize by solvent environment
