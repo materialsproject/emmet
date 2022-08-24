@@ -26,6 +26,7 @@ class ThermoBuilder(Builder):
         query: Optional[Dict] = None,
         compatibility: Optional[List[Compatibility]] = None,
         num_phase_diagram_eles: Optional[int] = None,
+        chunk_size: Optional[int] = 1000,
         **kwargs,
     ):
         """
@@ -43,6 +44,7 @@ class ThermoBuilder(Builder):
                 to ensure energies are compatible
             num_phase_diagram_eles (int): Maximum number of elements to use in phase diagram construction
                 for data within the separate phase_diagram collection
+            chunk_size (int): Size of chemsys chunks to process at any one time.
         """
 
         self.materials = materials
