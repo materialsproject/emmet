@@ -1,5 +1,5 @@
 from maggma.api.resource import AggregationResource
-
+from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.synthesis.query_operators import SynthesisSearchQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.core.synthesis.core import SynthesisSearchResultModel
@@ -25,6 +25,7 @@ def synth_resource(synth_store):
         tags=["Synthesis"],
         pipeline_query_operator=SynthesisSearchQuery(),
         header_processor=GlobalHeaderProcessor(),
+        timeout=MAPISettings().TIMEOUT
     )
 
     return resource

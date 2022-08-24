@@ -3,6 +3,7 @@ from maggma.api.resource import ReadOnlyResource
 
 from emmet.core.phonon import PhononBSDOSDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 
 
 def phonon_bsdos_resource(phonon_bs_store):
@@ -19,6 +20,7 @@ def phonon_bsdos_resource(phonon_bs_store):
         tags=["Phonon"],
         enable_default_search=False,
         disable_validation=True,
+        timeout=MAPISettings().TIMEOUT
     )
 
     return resource

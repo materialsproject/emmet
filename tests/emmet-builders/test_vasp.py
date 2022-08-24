@@ -1,6 +1,7 @@
 import pytest
 from maggma.stores import JSONStore, MemoryStore
 
+from emmet.builders.settings import EmmetBuildSettings
 from emmet.builders.vasp.task_validator import TaskValidator
 
 intermediate_stores = ["validation"]
@@ -17,7 +18,10 @@ def validation_store():
 
 
 def test_validator(tasks_store, validation_store):
-    builder = TaskValidator(tasks=tasks_store, task_validation=validation_store)
+    settings = EmmetBuildSettings(VASP_VALIDATE_POTCAR_HASHES=False)
+    builder = TaskValidator(
+        tasks=tasks_store, task_validation=validation_store, settings=settings
+    )
     builder.run()
     assert validation_store.count() == tasks_store.count()
     assert validation_store.count({"valid": True}) == tasks_store.count()

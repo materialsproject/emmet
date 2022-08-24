@@ -9,6 +9,7 @@ from emmet.api.routes.molecules.query_operators import (
 )
 from emmet.api.routes.tasks.query_operators import MultipleTaskIDsQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 
 
 def molecules_resource(molecules_store):
@@ -27,6 +28,7 @@ def molecules_resource(molecules_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Molecules"],
         disable_validation=True,
+        timeout=MAPISettings().TIMEOUT
     )
 
     return resource

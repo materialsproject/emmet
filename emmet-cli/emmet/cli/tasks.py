@@ -42,13 +42,14 @@ FILE_FILTERS = [
     "AECCAR*",
     "ELFCAR*",
     "CHGCAR*",
+    "LOCPOT*",
 ]
 FILE_FILTERS_DEFAULT = [
     f"{d}{os.sep}{f}" if d else f
     for f in FILE_FILTERS
     for d in ["", "relax1", "relax2"]
 ]
-STORE_VOLUMETRIC_DATA = []
+STORE_VOLUMETRIC_DATA = ["CHGCAR", "LOCPOT", "AECCAR0", "AECCAR1", "AECCAR2", "ELFCAR"]
 
 
 @click.group()

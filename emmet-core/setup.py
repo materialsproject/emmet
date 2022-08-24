@@ -15,7 +15,7 @@ setup(
         "write_to_template": '__version__ = "{version}"',
         "fallback_version": fallback_version,
     },
-    setup_requires=["setuptools_scm~=6.0"],
+    setup_requires=["setuptools_scm>=6,<8"],
     description="Core Emmet Library",
     author="The Materials Project",
     author_email="feedback@materialsproject.org",
@@ -33,7 +33,8 @@ setup(
         "pybtex~=0.24",
         "typing-extensions>=3.7,<5.0",
         "robocrys>=0.2.7",
-        "matminer>=0.7.3",
+        "pymatgen-analysis-diffusion>=2022.1.15",
+        "pymatgen-analysis-alloys>=0.0.3"
     ],
     python_requires=">=3.8",
     license="modified BSD",

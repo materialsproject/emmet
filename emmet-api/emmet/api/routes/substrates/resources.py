@@ -10,6 +10,7 @@ from maggma.api.resource import ReadOnlyResource
 from emmet.api.routes.substrates.query_operators import SubstrateStructureQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.core.substrates import SubstratesDoc
+from emmet.api.core.settings import MAPISettings
 
 
 def substrates_resource(substrates_store):
@@ -30,6 +31,7 @@ def substrates_resource(substrates_store):
         tags=["Substrates"],
         enable_get_by_key=False,
         disable_validation=True,
+        timeout=MAPISettings().TIMEOUT
     )
 
     return resource

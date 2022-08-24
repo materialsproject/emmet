@@ -19,6 +19,7 @@ _TASK_TYPES = [
     "Structure Optimization",
     "Deformation",
     "Unrecognized",
+    "Optic"
 ]
 
 _RUN_TYPES = (
