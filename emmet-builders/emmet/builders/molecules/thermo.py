@@ -4,6 +4,8 @@ from itertools import chain
 from math import ceil
 from typing import Optional, Iterable, Iterator, List, Dict
 
+from pymatgen.analysis.molecule_matcher import MoleculeMatcher
+
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
@@ -265,6 +267,8 @@ class ThermoBuilder(Builder):
 
         thermo_docs = list()
 
+        mm = MoleculeMatcher()
+
         for mol in mols:
             # Collect DICTs and SPECs
             thermo_entries = [
@@ -318,6 +322,44 @@ class ThermoBuilder(Builder):
                 thermo_docs.append(thermo_doc)
 
             # Construct with corrections
+            for solvent, entries in by_solvent_spec.items():
+                best_spec = sorted(
+                    entries,
+                    key=lambda x: (
+                        sum(evaluate_lot(x["level_of_theory"])),
+                        x["energy"],
+                    ),
+                )[0]
+                task_spec = best_spec["task_id"]
+
+                matching_structures = list()
+                for entry in thermo_entries:
+                    if mm.fit(entry["molecule"], best_spec["molecule"]):
+                         matching_structures.append(entry)
+
+                best_dict = sorted(
+                    matching_structures,
+                    key=lambda x: (
+                        sum(evaluate_lot(x["level_of_theory"])),
+                        x["energy"],
+                    ),
+                )[0]
+                task_dict = best_dict["task_id"]
+
+                task_doc_dict = TaskDocument(**self.tasks.query_one({"task_id": int(task_dict)}))
+                task_doc_spec = TaskDocument(**self.tasks.query_one({"task_id": int(task_spec)}))
+                thermo_doc = ThermoDoc.from_task(
+                    task_doc_dict,
+                    correction_task=task_doc_spec,
+                    molecule_id=mol.molecule_id,
+                    deprecated=False
+                )
+                thermo_doc = _add_single_atom_enthalpy_entropy(task_doc_dict, thermo_doc)
+                thermo_docs.append(thermo_doc)
+
+            # TODO: you are here
+            # If multiple thermodocs with same solvent, pick best one
+
 
         self.logger.debug(f"Produced {len(thermo_docs)} thermo docs for {formula}")
 
