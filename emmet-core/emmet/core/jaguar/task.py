@@ -83,7 +83,7 @@ class OutputSummary(BaseModel):
     frequencies: List[Optional[float]] = Field(
         None, description="Vibrational frequencies of the molecule (units: cm^-1)"
     )
-    vibrational_frequency_modes: List[Matrix3D] = Field(
+    vibrational_frequency_modes: List[List[List[Optional[float]]]] = Field(
         None, description="Normal mode vectors of the molecule (units: Angstrom)"
     )
 

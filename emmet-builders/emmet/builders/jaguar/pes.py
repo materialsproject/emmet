@@ -78,8 +78,8 @@ def filter_and_group_tasks(
         if task.output.molecule:
             m = task.output.molecule
         else:
-            m = task.input.molecule
-        m.index: int = idx  # type: ignore
+            m = task.input["molecule"]
+        m.index = idx  # type: ignore
         molecules.append(m)
         lots.append(task.level_of_theory.value)
 

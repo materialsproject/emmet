@@ -292,12 +292,13 @@ class ReactionAssociationBuilder(Builder):
         # to the endpoints
 
         ts_mol = Molecule.from_dict(ts.freq_entry["output"]["molecule"])  # type: ignore
+        ts_mol_coords = ts_mol.cart_coords  # type: ignore
         transition_mode = ts.vibrational_frequency_modes[0]
+        transition_array = np.array(transition_mode)
+        transition_mode_normalized = (
+            transition_array / transition_array.sum(axis=1)[:, np.newaxis]
+        )
 
-        additional_data = ts.freq_entry.get("additional_data", dict()) or dict()
-        scale = additional_data.get("perturb_scale", 0.6)
-        for_mol = perturb(ts_mol, transition_mode, scale=scale)
-        rev_mol = perturb(ts_mol, transition_mode, scale=-1 * scale)
         ts_freq_lot = ts.freq_entry["level_of_theory"]
 
         possible_minima = list(
@@ -322,6 +323,7 @@ class ReactionAssociationBuilder(Builder):
             if poss_min.best_entries is None:
                 continue
 
+            # TODO: Should I be searching all entries instead of only best entries?
             if ts_freq_lot in poss_min.best_entries.keys():
                 poss_opt_entry = poss_min.best_entries[ts_freq_lot]
             elif LevelOfTheory(ts_freq_lot) in poss_min.best_entries.keys():
@@ -342,13 +344,18 @@ class ReactionAssociationBuilder(Builder):
                 final_mol = Molecule.from_dict(final_mol)
 
             # Endpoint is the same as TS
-            if np.allclose(final_mol.cart_coords, ts_mol.cart_coords):
+            if np.allclose(final_mol.cart_coords, ts_mol_coords):
                 continue
 
-            if np.all(np.abs(initial_mol.cart_coords - for_mol.cart_coords) < 0.1):
-                forward_minima.append(poss_min)
-            elif np.all(np.abs(initial_mol.cart_coords - rev_mol.cart_coords) < 0.1):
-                reverse_minima.append(poss_min)
+            init_mol_coords = initial_mol.cart_coords
+            diff = init_mol_coords - ts_mol_coords
+            diff_norm = diff / diff.sum(axis=1)[:, np.newaxis]
+
+            if np.allclose(diff_norm, transition_mode_normalized, atol=1e-05):
+                if np.sum(diff) < 0:
+                    reverse_minima.append(poss_min)
+                else:
+                    forward_minima.append(poss_min)
 
         # One or both endpoints could not be found
         if len(reverse_minima) == 0 or len(forward_minima) == 0:

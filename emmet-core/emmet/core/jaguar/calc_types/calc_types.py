@@ -16,9 +16,9 @@ TASK_TYPES = [
     "Unknown",
 ]
 
-FUNCTIONALS = ["PBE0", "CAM-B3LYP-D3", "wb97x-d", "wb97x-v", "M11"]
+FUNCTIONALS = ["PBE0", "CAM-B3LYP-D3", "wb97x-d", "wb97x-v", "wb97m-v", "M11"]
 
-BASIS_SETS = ["def2-svpd(-f)", "def2-tzvppd(-g)"]
+BASIS_SETS = ["def2-svpd(-f)", "def2-svpd", "def2-tzvpd", "def2-tzvppd(-g)"]
 
 SOLVENT_MODELS = ["VACUUM", "PCM"]
 

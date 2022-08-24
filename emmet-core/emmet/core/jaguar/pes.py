@@ -127,7 +127,7 @@ class PESPointDoc(CoreMoleculeDoc, MoleculeMetadata):
         description="Vibrational frequencies of this point on the PES (units: cm^-1)",
     )
 
-    vibrational_frequency_modes: List[Matrix3D] = Field(
+    vibrational_frequency_modes: List[List[List[Optional[float]]]] = Field(
         None, description="Normal mode vectors of the molecule (units: Angstrom)"
     )
 
