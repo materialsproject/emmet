@@ -54,6 +54,7 @@ class ThermoBuilder(Builder):
         self.oxidation_states = oxidation_states
         self.phase_diagram = phase_diagram
         self.num_phase_diagram_eles = num_phase_diagram_eles
+        self.chunk_size = chunk_size
         self._completed_tasks: Set[str] = set()
         self._entries_cache: Dict[str, List[ComputedStructureEntry]] = defaultdict(list)
 
@@ -93,7 +94,7 @@ class ThermoBuilder(Builder):
 
             targets.append(phase_diagram)  # type: ignore
 
-        super().__init__(sources=sources, targets=targets, **kwargs)
+        super().__init__(sources=sources, targets=targets, chunk_size=chunk_size, **kwargs)
 
     def ensure_indexes(self):
         """
