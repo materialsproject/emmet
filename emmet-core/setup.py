@@ -29,8 +29,9 @@ setup(
     install_requires=[
         "pymatgen>=2021.3,<2023.0",
         "monty>=2021.3,<2023.0",
-        "pydantic==1.9.2",
+        "pydantic>=1.8.2",
         "pybtex~=0.24",
+        "spglib<2.0.0",
         "typing-extensions>=3.7,<5.0",
         "robocrys>=0.2.7",
         "pymatgen-analysis-diffusion>=2022.1.15",
