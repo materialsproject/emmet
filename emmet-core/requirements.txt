@@ -9,3 +9,4 @@ robocrys==0.2.7
 matminer==0.7.8
 pymatgen-analysis-diffusion==2022.7.21
 pymatgen-analysis-alloys==0.0.4
+spglib==1.16.5
