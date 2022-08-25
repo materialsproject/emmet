@@ -26,7 +26,7 @@ class ThermoBuilder(Builder):
         query: Optional[Dict] = None,
         compatibility: Optional[List[Compatibility]] = None,
         num_phase_diagram_eles: Optional[int] = None,
-        chunk_size: Optional[int] = 1000,
+        chunk_size: int = 1000,
         **kwargs,
     ):
         """
