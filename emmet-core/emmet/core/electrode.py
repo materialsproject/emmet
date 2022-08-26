@@ -259,7 +259,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         d = ie.get_summary_dict()
 
         least_wion_ent = next(
-            item for item in grouped_entries if item.entry_id == d["id_charge"]
+            item for item in grouped_entries if item.data["material_id"] == d["id_charge"]
         )
         host_structure = least_wion_ent.structure.copy()
         host_structure.remove_species([d["working_ion"]])
