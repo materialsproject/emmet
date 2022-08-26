@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
-from itertools import chain
+from itertools import chain, groupby
 from math import ceil
 from typing import Optional, Iterable, Iterator, List, Dict
 
@@ -11,7 +11,7 @@ from maggma.core import Store
 from maggma.utils import grouper
 
 from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc, best_lot, evaluate_lot
+from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
 from emmet.core.molecules.thermo import get_free_energy, ThermoDoc
 from emmet.core.qchem.calc_types import TaskType
 from emmet.core.utils import jsanitize
@@ -270,6 +270,7 @@ class ThermoBuilder(Builder):
         mm = MoleculeMatcher()
 
         for mol in mols:
+            this_thermo_docs = list()
             # Collect DICTs and SPECs
             thermo_entries = [
                 e
@@ -319,7 +320,7 @@ class ThermoBuilder(Builder):
                     task_doc, molecule_id=mol.molecule_id, deprecated=False
                 )
                 thermo_doc = _add_single_atom_enthalpy_entropy(task_doc, thermo_doc)
-                thermo_docs.append(thermo_doc)
+                this_thermo_docs.append(thermo_doc)
 
             # Construct with corrections
             for solvent, entries in by_solvent_spec.items():
@@ -355,11 +356,27 @@ class ThermoBuilder(Builder):
                     deprecated=False
                 )
                 thermo_doc = _add_single_atom_enthalpy_entropy(task_doc_dict, thermo_doc)
-                thermo_docs.append(thermo_doc)
+                this_thermo_docs.append(thermo_doc)
 
-            # TODO: you are here
-            # If multiple thermodocs with same solvent, pick best one
+            docs_by_solvent = defaultdict(list)
+            for doc in this_thermo_docs:
+                if doc.correction_solvent is not None:
+                    docs_by_solvent[doc.correction_solvent].append(doc)
+                else:
+                    docs_by_solvent[doc.solvent].append(doc)
 
+            # If multiple documents exist for the same solvent, grab the best one
+            for _, collection in docs_by_solvent.items():
+                with_eval_e = list()
+                for member in collection:
+                    if member.correction_level_of_theory is None:
+                        with_eval_e.append((member, evaluate_lot(member.level_of_theory), member.electronic_energy))
+                    else:
+                        dict_lot = evaluate_lot(member.level_of_theory)
+                        spec_lot = evaluate_lot(member.correction_level_of_theory)
+                        with_eval_e.append((member, (dict_lot + spec_lot) / 2, member.electronic_energy))
+
+                thermo_docs.append(sorted(with_eval_e, key=lambda x: (x[1], x[2]))[0][0])
 
         self.logger.debug(f"Produced {len(thermo_docs)} thermo docs for {formula}")
 
