@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.34.10](https://github.com/materialsproject/emmet/tree/v0.34.10) (2022-08-26)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.34.9...v0.34.10)
+
+**Merged pull requests:**
+
+- Update materials and summary hints on `composition_reduced`  [\#513](https://github.com/materialsproject/emmet/pull/513) ([munrojm](https://github.com/munrojm))
+
 ## [v0.34.9](https://github.com/materialsproject/emmet/tree/v0.34.9) (2022-08-25)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.34.8...v0.34.9)
@@ -694,19 +702,19 @@
 
 ## [v0.21.12](https://github.com/materialsproject/emmet/tree/v0.21.12) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.10...v0.21.12)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.11...v0.21.12)
 
 **Merged pull requests:**
 
 - Revert to `get_distribution` in init [\#349](https://github.com/materialsproject/emmet/pull/349) ([munrojm](https://github.com/munrojm))
 
-## [v0.21.10](https://github.com/materialsproject/emmet/tree/v0.21.10) (2022-01-19)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.11...v0.21.10)
-
 ## [v0.21.11](https://github.com/materialsproject/emmet/tree/v0.21.11) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.9...v0.21.11)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.10...v0.21.11)
+
+## [v0.21.10](https://github.com/materialsproject/emmet/tree/v0.21.10) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.9...v0.21.10)
 
 **Merged pull requests:**
 
