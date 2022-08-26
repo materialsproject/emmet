@@ -14,5 +14,5 @@ class MaterialsHintScheme(HintScheme):
                 return {"hint": {"composition_reduced.$**": 1}}
             elif "nelements" in param:
                 return {"hint": {"nelements": 1}}
-            
+
         return {"hint": {}}
