@@ -8,6 +8,7 @@ from emmet.api.routes.materials.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     DeprecationQuery,
+    MultiMaterialIDQuery
 )
 
 from emmet.api.routes.electronic_structure.query_operators import (
@@ -28,6 +29,7 @@ def es_resource(es_store):
         es_store,
         ElectronicStructureDoc,
         query_operators=[
+            MultiMaterialIDQuery(),
             ESSummaryDataQuery(),
             FormulaQuery(),
             ChemsysQuery(),

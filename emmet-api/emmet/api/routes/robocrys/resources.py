@@ -3,6 +3,7 @@ from maggma.api.resource.aggregation import AggregationResource
 from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 
 from emmet.api.routes.robocrys.query_operators import RoboTextSearchQuery
+from emmet.api.routes.materials.query_operators import MultiMaterialIDQuery
 from emmet.core.robocrys import RobocrystallogapherDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
@@ -15,6 +16,7 @@ def robo_resource(robo_store):
         robo_store,
         RobocrystallogapherDoc,
         query_operators=[
+            MultiMaterialIDQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
                 RobocrystallogapherDoc, default_fields=["material_id", "last_updated"]
