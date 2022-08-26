@@ -8,7 +8,11 @@ class MaterialsHintScheme(HintScheme):
 
     def generate_hints(self, query):
 
-        if "nelements" in query["criteria"]:
-            return {"hint": {"nelements": 1}}
-        else:
-            return {"hint": {}}
+        for param in query["criteria"]:
+
+            if "composition_reduced" in param:
+                return {"hint": {"composition_reduced.$**": 1}}
+            elif "nelements" in param:
+                return {"hint": {"nelements": 1}}
+
+        return {"hint": {}}
