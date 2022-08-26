@@ -24,7 +24,7 @@ class MigrationGraphBuilder(MapBuilder):
         angle_tol: float = 5,
         **kwargs,
     ):
-        self.insertion_electode = insertion_electrode
+        self.insertion_electrode = insertion_electrode
         self.migration_graph = migration_graph
         self.algorithm = algorithm
         self.min_hop_distance = min_hop_distance
