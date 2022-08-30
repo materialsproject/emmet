@@ -254,5 +254,3 @@ class {enum_name}(ValueEnum):
     items = [f'    {const} = "{val}"' for const, val in items.items()]
 
     return header + "\n".join(items)
-
-def get_elec_material_ids():
