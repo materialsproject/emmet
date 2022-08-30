@@ -170,8 +170,8 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         None, description="Returns all of the voltage steps material pairs."
     )
 
-    working_ion: str = Field(
-        None, description="The working ion as a string."
+    working_ion: Element = Field(
+        None, description="The working ion as an Element object."
     )
 
     num_steps: int = Field(
@@ -438,8 +438,8 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
         None, description="Returns all the adjacent Voltage Steps"
     )
 
-    working_ion: str = Field(
-        None, description="The working ion as a string"
+    working_ion: Element = Field(
+        None, description="The working ion as an Element object"
     )
 
     num_steps: int = Field(
