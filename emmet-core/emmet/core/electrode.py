@@ -254,28 +254,20 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
             )
         except IndexError:
             return None
-        # First get host structure
 
-        d = ie.get_summary_dict()
-
-        least_wion_ent = next(
-            item for item in grouped_entries if item.data["material_id"] == d["id_charge"]
-        )
-        host_structure = least_wion_ent.structure.copy()
-        host_structure.remove_species([d["working_ion"]])
-
-        d["material_ids"] = d["stable_material_ids"] + d["unstable_material_ids"]
-        d["num_steps"] = d.pop("nsteps", None)
+        d = cls.get_elec_doc(ie)
         d["last_updated"] = datetime.utcnow()
-        elements = sorted(host_structure.composition.elements)
-        chemsys = "-".join(sorted(map(str, elements)))
+
+        stripped_host = ie.fully_charged_entry.structure.copy()
+        stripped_host.remove_species([d["working_ion"]])
+        elements = stripped_host.composition.elements
+        chemsys = stripped_host.composition.chemical_system
         framework = Composition(d["framework_formula"])
-        discharge_comp = Composition(d["formula_discharge"])
-        working_ion_ele = Element(d["working_ion"])
+        dchg_comp = Composition(d["formula_discharge"])
         battery_formula = cls.get_battery_formula(
             Composition(d["formula_charge"]),
-            discharge_comp,
-            working_ion_ele,
+            dchg_comp,
+            ie.working_ion,
         )
 
         compositions = []
@@ -289,16 +281,16 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
 
         # Check if more than one working ion per transition metal and warn
         warnings = []
-        if any([element.is_transition_metal for element in discharge_comp]):
+        if any([element.is_transition_metal for element in dchg_comp]):
             transition_metal_fraction = sum(
                 [
-                    discharge_comp.get_atomic_fraction(element)
-                    for element in discharge_comp
-                    if element.is_transition_metal
+                    dchg_comp.get_atomic_fraction(elem)
+                    for elem in dchg_comp
+                    if elem.is_transition_metal
                 ]
             )
             if (
-                discharge_comp.get_atomic_fraction(working_ion_ele)
+                dchg_comp.get_atomic_fraction(ie.working_ion)
                 / transition_metal_fraction
                 > 1.0
             ):
@@ -308,7 +300,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
 
         return cls(
             battery_id=battery_id,
-            host_structure=host_structure.as_dict(),
+            host_structure=stripped_host.as_dict(),
             framework=framework,
             battery_formula=battery_formula,
             electrode_object=ie.as_dict(),
@@ -352,6 +344,80 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
             + "-".join(working_ion_subscripts)
             + temp_reduced.reduced_formula
         )
+
+    @staticmethod
+    def get_elec_doc(ie: InsertionElectrode) -> dict:
+        """
+        Gets a summary doc for an InsertionElectrode object.
+        Similar to InsertionElectrode.get_summary_dict() with modifications specific
+        to the Materials Project.
+        Args:
+            ie (pymatgen InsertionElectrode): electrode_object
+        Returns:
+            summary doc
+        """
+        entries = ie.get_all_entries()
+
+        def get_dict_from_elec(ie):
+            d = {
+                "average_voltage": ie.get_average_voltage(),
+                "max_voltage": ie.max_voltage,
+                "min_voltage": ie.min_voltage,
+                "max_delta_volume": ie.max_delta_volume,
+                "max_voltage_step": ie.max_voltage_step,
+                "capacity_grav": ie.get_capacity_grav(),
+                "capacity_vol": ie.get_capacity_vol(),
+                "energy_grav": ie.get_specific_energy(),
+                "energy_vol": ie.get_energy_density(),
+                "working_ion": ie.working_ion.symbol,
+                "num_steps": ie.num_steps,
+                "fracA_charge": ie.voltage_pairs[0].frac_charge,
+                "fracA_discharge": ie.voltage_pairs[-1].frac_discharge,
+                "framework_formula": ie.framework_formula,
+                "id_charge": ie.fully_charged_entry.data["material_id"],
+                "formula_charge": ie.fully_charged_entry.composition.reduced_formula,
+                "id_discharge": ie.fully_discharged_entry.data["material_id"],
+                "formula_discharge": ie.fully_discharged_entry.composition.reduced_formula,
+                "max_instability": ie.get_max_instability(),
+                "min_instability": ie.get_min_instability(),
+                "material_ids": [itr_ent.data["material_id"] for itr_ent in entries],
+                "stable_material_ids": [
+                    itr_ent.data["material_id"] for itr_ent in ie.get_stable_entries()
+                ],
+                "unstable_material_ids": [
+                    itr_ent.data["material_id"] for itr_ent in ie.get_unstable_entries()
+                ],
+            }
+
+            if all("decomposition_energy" in e.data for e in entries):
+                thermo_data = {
+                    "stability_charge": ie.fully_charged_entry.data[
+                        "decomposition_energy"
+                    ],
+                    "stability_discharge": ie.fully_discharged_entry.data[
+                        "decomposition_energy"
+                    ],
+                    "stability_data": {
+                        e.entry_id: e.data["decomposition_energy"] for e in entries
+                    },
+                }
+            else:
+                thermo_data = {
+                    "stability_charge": None,
+                    "stability_discharge": None,
+                    "stability_data": {},
+                }
+            d.update(thermo_data)
+
+            return d
+
+        d = get_dict_from_elec(ie)
+
+        d["adj_pairs"] = list(
+            map(get_dict_from_elec, ie.get_sub_electrodes(adjacent_only=True))
+        )
+
+        return d
 
 
 class ConversionVoltagePairDoc(VoltagePairDoc):
