@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.34.13](https://github.com/materialsproject/emmet/tree/v0.34.13) (2022-08-29)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.34.12...v0.34.13)
+
+**Merged pull requests:**
+
+- Ignore dielectric calculations in potcar hash validation [\#519](https://github.com/materialsproject/emmet/pull/519) ([munrojm](https://github.com/munrojm))
+
 ## [v0.34.12](https://github.com/materialsproject/emmet/tree/v0.34.12) (2022-08-29)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.34.11...v0.34.12)
