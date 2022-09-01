@@ -32,6 +32,7 @@ setup(
         "pydantic==1.8.2",
         "pybtex~=0.24",
         "typing-extensions>=3.7,<5.0",
+        "spglib<2.0.0",
     ],
     extras_require={
         "all": [
