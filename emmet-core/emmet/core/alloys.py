@@ -10,7 +10,7 @@ try:
         AlloySystem,
     )
 except ImportError:
-    raise ("Install pymatgen-analysis-alloys to use AlloyPairDoc or AlloySystemDoc")
+    raise ImportError("Install pymatgen-analysis-alloys to use AlloyPairDoc or AlloySystemDoc")
 
 
 class AlloyPairDoc(EmmetBaseModel):
