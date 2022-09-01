@@ -31,12 +31,13 @@ setup(
         "monty>=2021.3,<2023.0",
         "pydantic==1.8.2",
         "pybtex~=0.24",
-        "spglib<2.0.0",
         "typing-extensions>=3.7,<5.0",
-        "robocrys>=0.2.7",
-        "pymatgen-analysis-diffusion>=2022.1.15",
-        "pymatgen-analysis-alloys>=0.0.3"
     ],
+    extras_require={
+        "robocrys": ["robocrys>=0.2.7"],
+        "diffusion": ["pymatgen-analysis-diffusion>=2022.1.15"],
+        "alloys": ["pymatgen-analysis-alloys>=0.0.3"],
+    },
     python_requires=">=3.8",
     license="modified BSD",
     zip_safe=False,
