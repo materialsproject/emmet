@@ -34,9 +34,11 @@ setup(
         "typing-extensions>=3.7,<5.0",
     ],
     extras_require={
-        "robocrys": ["robocrys>=0.2.7"],
-        "diffusion": ["pymatgen-analysis-diffusion>=2022.1.15"],
-        "alloys": ["pymatgen-analysis-alloys>=0.0.3"],
+        "all": [
+            "robocrys>=0.2.7",
+            "pymatgen-analysis-diffusion>=2022.1.15",
+            "pymatgen-analysis-alloys>=0.0.3",
+        ],
     },
     python_requires=">=3.8",
     license="modified BSD",
