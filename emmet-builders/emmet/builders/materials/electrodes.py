@@ -101,6 +101,7 @@ class StructureGroupBuilder(Builder):
             query (dict): dictionary to limit materials to be analyzed ---
                             only applied to the materials when we need to group structures
                             the phase diagram is still constructed with the entire set
+            chunk_size (int): Size of chemsys chunks to process at any one time.
         """
         self.materials = materials
         self.sgroups = sgroups
