@@ -88,6 +88,7 @@ class StructureGroupBuilder(Builder):
             stol: float = default_build_settings.STOL,
             angle_tol: float = default_build_settings.ANGLE_TOL,
             check_newer: bool = True,
+            chunk_size: int = 1000,
             **kwargs,
     ):
         """
@@ -100,6 +101,7 @@ class StructureGroupBuilder(Builder):
             query (dict): dictionary to limit materials to be analyzed ---
                             only applied to the materials when we need to group structures
                             the phase diagram is still constructed with the entire set
+            chunk_size (int): Size of chemsys chunks to process at any one time.
         """
         self.materials = materials
         self.sgroups = sgroups
@@ -109,10 +111,11 @@ class StructureGroupBuilder(Builder):
         self.stol = stol
         self.angle_tol = angle_tol
         self.check_newer = check_newer
+        self.chunk_size = chunk_size
 
         self.query["deprecated"] = False  # Ensure only non-deprecated materials are chosen
 
-        super().__init__(sources=[materials], targets=[sgroups], **kwargs)
+        super().__init__(sources=[materials], targets=[sgroups], chunk_size=chunk_size, **kwargs)
 
     def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
         """
