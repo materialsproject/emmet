@@ -44,7 +44,6 @@ class MigrationGraphBuilder(MapBuilder):
         # get entries and info from insertion electrode
         ie = InsertionElectrode.from_dict(item["electrode_object"])
         entries = ie.get_all_entries()
-        print(len(entries))
         wi_entry = ie.working_ion_entry
 
         # get migration graph structure
