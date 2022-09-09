@@ -1,3 +1,4 @@
+from this import d
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 from maggma.api.resource import ReadOnlyResource
 
@@ -38,7 +39,8 @@ def task_resource(task_store):
         header_processor=GlobalHeaderProcessor(),
         hint_scheme=TasksHintScheme(),
         tags=["Tasks"],
-        timeout=timeout
+        timeout=timeout,
+        disable_validation=True,
     )
 
     return resource
@@ -54,7 +56,7 @@ def task_deprecation_resource(materials_store):
         enable_default_search=True,
         sub_path="/deprecation/",
         header_processor=GlobalHeaderProcessor(),
-        timeout=timeout
+        timeout=timeout,
     )
 
     return resource
@@ -69,7 +71,8 @@ def trajectory_resource(task_store):
         tags=["Tasks"],
         sub_path="/trajectory/",
         header_processor=GlobalHeaderProcessor(),
-        timeout=timeout
+        timeout=timeout,
+        disable_validation=True,
     )
 
     return resource
@@ -92,7 +95,8 @@ def entries_resource(task_store):
         tags=["Tasks"],
         sub_path="/entries/",
         header_processor=GlobalHeaderProcessor(),
-        timeout=timeout
+        timeout=timeout,
+        disable_validation=True,
     )
 
     return resource
