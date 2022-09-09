@@ -31,6 +31,18 @@ class MultipleTaskIDsQuery(QueryOperator):
 
         return {"criteria": crit}
 
+    def post_process(self, docs, query):
+        """
+        Post processing to remove unwanted fields from all task queries
+        """
+
+        for doc in docs:
+            doc.pop("tags")
+            doc.pop("sbxn")
+            doc.pop("dir_name")
+
+        return docs
+
 
 class TrajectoryQuery(QueryOperator):
     """
