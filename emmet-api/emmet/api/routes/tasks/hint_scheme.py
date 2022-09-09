@@ -8,9 +8,14 @@ class TasksHintScheme(HintScheme):
 
     def generate_hints(self, query):
 
-        hints = {"hint": {}}
-
         if query["criteria"] == {}:
-            hints["hint"]["_id"] = 1
+            return {"hint": {"_id": 1}}
 
-        return hints
+        for param in query["criteria"]:
+
+            if "composition_reduced" in param:
+                return {"hint": {"composition_reduced.$**": 1}}
+            elif "nelements" in param:
+                return {"hint": {"nelements": 1}}
+
+        return {"hint": {}}
