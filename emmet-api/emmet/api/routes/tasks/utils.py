@@ -22,7 +22,7 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
 
     for calculation in calcs_reversed:
         structures = []
-        frame_props = defaultdict(list)  # type: dict
+        frame_props = []
 
         steps = calculation.get("output", {}).get("ionic_steps", None)
 
@@ -33,6 +33,8 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
         else:
             for step in steps:
 
+                step_dict = {}
+
                 structure_dict = step.get("structure", None)
 
                 if structure_dict is not None:
@@ -40,14 +42,14 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
 
                 structures.append(structure)
 
-                frame_props["e_fr_energy"].append(step.get("e_fr_energy", None))
-                frame_props["e_wo_entrp"].append(step.get("e_wo_entrp", None))
-                frame_props["e_0_energy"].append(step.get("e_0_energy", None))
-                frame_props["forces"].append(step.get("forces", None))
-                frame_props["stresses"].append(step.get("stress", None))
-                frame_props["electronic_steps"].append(
-                    step.get("electronic_steps", None)
-                )
+                step_dict["e_fr_energy"] = step.get("e_fr_energy", None)
+                step_dict["e_wo_entrp"] = step.get("e_wo_entrp", None)
+                step_dict["e_0_energy"] = step.get("e_0_energy", None)
+                step_dict["forces"] = step.get("forces", None)
+                step_dict["stresses"] = step.get("stress", None)
+                step_dict["electronic_steps"] = step.get("electronic_steps", None)
+
+                frame_props.append(step_dict)
 
             traj = Trajectory.from_structures(
                 structures, frame_properties=frame_props, time_step=None
