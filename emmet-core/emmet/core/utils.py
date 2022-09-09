@@ -4,7 +4,6 @@ from itertools import groupby
 from typing import Any, Iterator, List, Tuple, Dict, Union
 import copy
 
-import bson
 import numpy as np
 from monty.json import MSONable
 from pydantic import BaseModel
@@ -16,6 +15,11 @@ from pymatgen.analysis.structure_matcher import (
 from pymatgen.core.structure import Structure, Molecule
 
 from emmet.core.settings import EmmetSettings
+
+try:
+    import bson
+except ImportError:
+    bson = None  # type: ignore
 
 SETTINGS = EmmetSettings()
 
@@ -165,6 +169,7 @@ def jsanitize(obj, strict=False, allow_bson=False):
         or (bson is not None and isinstance(obj, bson.objectid.ObjectId))
     ):
         return obj
+
     if isinstance(obj, (list, tuple, set)):
         return [jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj]
     if np is not None and isinstance(obj, np.ndarray):
