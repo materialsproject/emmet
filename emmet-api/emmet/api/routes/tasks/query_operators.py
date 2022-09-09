@@ -37,9 +37,9 @@ class MultipleTaskIDsQuery(QueryOperator):
         """
 
         for doc in docs:
-            doc.pop("tags")
-            doc.pop("sbxn")
-            doc.pop("dir_name")
+            doc.pop("tags", None)
+            doc.pop("sbxn", None)
+            doc.pop("dir_name", None)
 
         return docs
 
