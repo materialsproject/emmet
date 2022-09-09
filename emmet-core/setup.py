@@ -32,13 +32,14 @@ setup(
         "pydantic==1.10.1",
         "pybtex~=0.24",
         "typing-extensions>=3.7,<5.0",
-        "spglib<3.0.0",
+        "spglib<2.0.0",
     ],
     extras_require={
         "all": [
             "robocrys>=0.2.7",
             "pymatgen-analysis-diffusion>=2022.1.15",
             "pymatgen-analysis-alloys>=0.0.3",
+            "bson",
         ],
     },
     python_requires=">=3.8",
