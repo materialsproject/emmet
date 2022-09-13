@@ -77,6 +77,12 @@ class MaterialsDoc(StructureMetadata):
         description="Calculation types for all the calculations that make up this material.",
     )
 
+    entries: Mapping[str, Union[ComputedEntry, ComputedStructureEntry]] = Field(
+        None,
+        description="List of all entries that are valid for this material."
+        " The keys for this dictionary are names of various calculation types.",
+    )
+
     last_updated: datetime = Field(
         description="Timestamp for when this document was last updated.",
         default_factory=datetime.utcnow,
