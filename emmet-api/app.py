@@ -62,7 +62,7 @@ if db_uri:
     phase_diagram_store = (
         S3Store(
             index=s3_phase_diagram_index,
-            bucket="mp-volumetric",
+            bucket="mp-phase-diagrams",
             s3_workers=24,
             key="phase_diagram_id",
             searchable_fields=["chemsys", "thermo_type", "phase_diagram_id"],
