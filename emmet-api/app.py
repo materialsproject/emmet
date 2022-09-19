@@ -59,15 +59,13 @@ if db_uri:
         collection_name="s3_phase_diagram_fs_index",
     )
 
-    phase_diagram_store = (
-        S3Store(
-            index=s3_phase_diagram_index,
-            bucket="mp-phase-diagrams",
-            s3_workers=24,
-            key="phase_diagram_id",
-            searchable_fields=["chemsys", "thermo_type", "phase_diagram_id"],
-            compress=True,
-        ),
+    phase_diagram_store = S3Store(
+        index=s3_phase_diagram_index,
+        bucket="mp-phase-diagrams",
+        s3_workers=24,
+        key="phase_diagram_id",
+        searchable_fields=["chemsys", "thermo_type", "phase_diagram_id"],
+        compress=True,
     )
 
     dielectric_store = MongoURIStore(
