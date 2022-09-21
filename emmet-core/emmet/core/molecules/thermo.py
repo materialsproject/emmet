@@ -151,7 +151,7 @@ class ThermoDoc(PropertyDoc):
         if correction:
             id_string += f"-{correction_task.task_id}-{correction_task.lot_solvent}"
         h = blake2b()
-        h.update(id_string)
+        h.update(id_string.encode("utf-8"))
         property_id = h.hexdigest()
 
         if total_enthalpy is not None and total_entropy is not None:

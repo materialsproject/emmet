@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Dict, List, Tuple, TypeVar, Union
+from hashlib import blake2b
 
 from pydantic import Field
 from pymatgen.core.structure import Molecule
@@ -261,6 +262,13 @@ class SummaryDoc(PropertyDoc):
         """Converts a bunch of property docs into a SummaryDoc"""
 
         doc = _copy_from_doc(docs)
+
+        id_string = f"summary-{molecule_id}"
+        h = blake2b()
+        h.update(id_string.encode("utf-8"))
+        property_id = h.hexdigest()
+        doc["property_id"] = property_id
+
         doc["has_props"] = list(set(doc["has_props"]))
 
         return SummaryDoc(molecule_id=molecule_id, **doc)

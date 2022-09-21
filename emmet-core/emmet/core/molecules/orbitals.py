@@ -497,7 +497,7 @@ class OrbitalDoc(PropertyDoc):
 
         id_string = f"natural_bonding_orbitals-{molecule_id}-{task.task_id}-{task.lot_solvent}"
         h = blake2b()
-        h.update(id_string)
+        h.update(id_string.encode("utf-8"))
         property_id = h.hexdigest()
 
         if int(spin) == 1:

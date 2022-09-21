@@ -4,6 +4,7 @@ from itertools import chain, groupby
 from math import ceil
 from typing import Optional, Iterable, Iterator, List, Dict
 
+from pymatgen.core.structure import Molecule
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
 from maggma.builders import Builder
@@ -283,13 +284,13 @@ class ThermoBuilder(Builder):
 
             sp_entries = list()
             for entry in mol.entries:
-                if isinstance(entry["job_type"], TaskType):
-                    job_type = entry["job_type"].value
+                if isinstance(entry["task_type"], TaskType):
+                    task_type = entry["task_type"].value
                 else:
-                    job_type = entry["job_type"]
+                    task_type = entry["task_type"]
 
                 if (
-                    job_type == "Single Point"
+                    task_type == "Single Point"
                     and entry["charge"] == mol.charge
                     and entry["spin_multiplicity"] == mol.spin_multiplicity
                 ):
@@ -335,7 +336,8 @@ class ThermoBuilder(Builder):
 
                 matching_structures = list()
                 for entry in thermo_entries:
-                    if mm.fit(entry["molecule"], best_spec["molecule"]):
+                    if mm.fit(Molecule.from_dict(entry["molecule"]),
+                              Molecule.from_dict(best_spec["molecule"])):
                          matching_structures.append(entry)
 
                 best_dict = sorted(
@@ -370,10 +372,10 @@ class ThermoBuilder(Builder):
                 with_eval_e = list()
                 for member in collection:
                     if member.correction_level_of_theory is None:
-                        with_eval_e.append((member, evaluate_lot(member.level_of_theory), member.electronic_energy))
+                        with_eval_e.append((member, sum(evaluate_lot(member.level_of_theory)), member.electronic_energy))
                     else:
-                        dict_lot = evaluate_lot(member.level_of_theory)
-                        spec_lot = evaluate_lot(member.correction_level_of_theory)
+                        dict_lot = sum(evaluate_lot(member.level_of_theory))
+                        spec_lot = sum(evaluate_lot(member.correction_level_of_theory))
                         with_eval_e.append((member, (dict_lot + spec_lot) / 2, member.electronic_energy))
 
                 thermo_docs.append(sorted(with_eval_e, key=lambda x: (x[1], x[2]))[0][0])

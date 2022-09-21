@@ -389,7 +389,7 @@ class BondingDoc(PropertyDoc):
 
         id_string = f"bonding-{molecule_id}-{task.task_id}-{task.lot_solvent}-{method}"
         h = blake2b()
-        h.update(id_string)
+        h.update(id_string.encode("utf-8"))
         property_id = h.hexdigest()
 
         return super().from_molecule(

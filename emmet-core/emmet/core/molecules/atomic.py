@@ -81,7 +81,7 @@ class PartialChargesDoc(PropertyDoc):
 
         id_string = f"partial_charges-{molecule_id}-{task.task_id}-{task.lot_solvent}-{method}"
         h = blake2b()
-        h.update(id_string)
+        h.update(id_string.encode("utf-8"))
         property_id = h.hexdigest()
 
         if charges is None:
@@ -158,7 +158,7 @@ class PartialSpinsDoc(PropertyDoc):
 
         id_string = f"partial_spins-{molecule_id}-{task.task_id}-{task.lot_solvent}-{method}"
         h = blake2b()
-        h.update(id_string)
+        h.update(id_string.encode("utf-8"))
         property_id = h.hexdigest()
 
         if spins is None:
