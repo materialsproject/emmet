@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.36.2](https://github.com/materialsproject/emmet/tree/v0.36.2) (2022-09-23)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.36.1...v0.36.2)
+
+**Merged pull requests:**
+
+- Add external database IDs to summary [\#544](https://github.com/materialsproject/emmet/pull/544) ([munrojm](https://github.com/munrojm))
+- Revert "Add entries field to materials document model" [\#539](https://github.com/materialsproject/emmet/pull/539) ([munrojm](https://github.com/munrojm))
+- Add entries field to materials document model [\#538](https://github.com/materialsproject/emmet/pull/538) ([munrojm](https://github.com/munrojm))
+
 ## [v0.36.1](https://github.com/materialsproject/emmet/tree/v0.36.1) (2022-09-13)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.36.0...v0.36.1)
