@@ -14,7 +14,7 @@ from emmet.core.chemenv import (
 from emmet.core.mpid import MPID
 from emmet.core.thermo import DecompositionProduct
 from emmet.core.xas import Edge, Type
-from emmet.core.elasticity import BulkModulus, ShearModulus
+from emmet.core.provenance import Database
 
 T = TypeVar("T", bound="SummaryDoc")
 
@@ -406,8 +406,8 @@ class SummaryDoc(PropertyDoc):
 
     # External Database IDs
 
-    database_IDs: bool = Field(
-        None, description="External database IDs for this material.", source="provenance"
+    database_IDs: Dict[Database, List[str]] = Field(
+        {}, description="External database IDs corresponding to this material."
     )
 
     @classmethod
