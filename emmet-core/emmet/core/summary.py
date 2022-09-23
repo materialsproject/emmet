@@ -404,6 +404,12 @@ class SummaryDoc(PropertyDoc):
         True, description="Whether the material is theoretical.", source="provenance"
     )
 
+    # External Database IDs
+
+    database_IDs: bool = Field(
+        None, description="External database IDs for this material.", source="provenance"
+    )
+
     @classmethod
     def from_docs(cls, material_id: MPID, **docs: Dict[str, Dict]):
         """Converts a bunch of summary docs into a SummaryDoc"""
@@ -513,7 +519,7 @@ summary_fields: Dict[str, list] = {
         "has_reconstructed",
     ],
     HasProps.oxi_states.value: ["possible_species"],
-    HasProps.provenance.value: ["theoretical"],
+    HasProps.provenance.value: ["theoretical", "database_IDs"],
     HasProps.charge_density.value: [],
     HasProps.eos.value: [],
     HasProps.phonon.value: [],
