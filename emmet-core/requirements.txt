@@ -1,5 +1,5 @@
 monty==2022.9.9
-pymatgen==2022.9.8
+pymatgen==2022.9.21
 pydantic==1.10.2
 pybtex==0.24.0
 typing-extensions==4.3.0
