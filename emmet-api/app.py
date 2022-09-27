@@ -56,7 +56,7 @@ if db_uri:
         uri=db_uri,
         database="mp_core",
         key="phase_diagram_id",
-        collection_name="s3_phase_diagram_fs_index",
+        collection_name="s3_phase_diagram_index",
     )
 
     phase_diagram_store = S3Store(
