@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import TypeVar, Dict
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from pymatgen.core import __version__ as pmg_version
 
 from emmet.core import __version__
