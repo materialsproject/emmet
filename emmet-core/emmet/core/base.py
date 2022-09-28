@@ -4,11 +4,13 @@ from typing import TypeVar, Dict
 
 from pydantic import BaseModel, Field, validator
 from pymatgen.core import __version__ as pmg_version
+from monty.json import MontyDecoder
 
 from emmet.core import __version__
 
 T = TypeVar("T", bound="EmmetBaseModel")
 
+monty_decoder = MontyDecoder()
 
 class EmmetMeta(BaseModel):
     """
