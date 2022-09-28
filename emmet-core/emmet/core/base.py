@@ -12,6 +12,7 @@ T = TypeVar("T", bound="EmmetBaseModel")
 
 monty_decoder = MontyDecoder()
 
+
 class EmmetMeta(BaseModel):
     """
     Default emmet metadata
