@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.36.4](https://github.com/materialsproject/emmet/tree/v0.36.4) (2022-09-27)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.36.3...v0.36.4)
+
+**Merged pull requests:**
+
+- Ensure proper de-serialization of orig\_inputs data [\#549](https://github.com/materialsproject/emmet/pull/549) ([munrojm](https://github.com/munrojm))
+
 ## [v0.36.3](https://github.com/materialsproject/emmet/tree/v0.36.3) (2022-09-23)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.36.2...v0.36.3)
