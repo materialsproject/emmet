@@ -41,7 +41,6 @@ class EmmetMeta(BaseModel):
         return monty_decoder.process_decoded(v)
 
 
-
 class EmmetBaseModel(BaseModel):
     """
     Base Model for default emmet data
