@@ -37,20 +37,23 @@ FILE_FILTERS = [
     "KPOINTS*",
     "POSCAR*",
     "POTCAR*",
-    "vasprun.xml*",
     "OUTCAR*",
-    "AECCAR*",
-    "ELFCAR*",
-    "CHGCAR*",
-    "LOCPOT*",
+    "vasprun.xml*",
+    "transformation*",
 ]
+
+STORE_VOLUMETRIC_DATA = []
+#STORE_VOLUMETRIC_DATA = ["CHGCAR", "LOCPOT", "AECCAR0", "AECCAR1", "AECCAR2", "ELFCAR"]
+
+for v in STORE_VOLUMETRIC_DATA:
+    FILE_FILTERS.append(f"{v}*")
+
+
 FILE_FILTERS_DEFAULT = [
     f"{d}{os.sep}{f}" if d else f
     for f in FILE_FILTERS
     for d in ["", "relax1", "relax2"]
 ]
-STORE_VOLUMETRIC_DATA = ["CHGCAR", "LOCPOT", "AECCAR0", "AECCAR1", "AECCAR2", "ELFCAR"]
-
 
 @click.group()
 @click.option(

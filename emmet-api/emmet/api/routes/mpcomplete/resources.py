@@ -5,6 +5,7 @@ from emmet.api.routes.mpcomplete.query_operator import (
     MPCompletePostQuery,
     MPCompleteGetQuery,
 )
+from emmet.api.core.settings import MAPISettings
 
 
 def mpcomplete_resource(mpcomplete_store):
@@ -18,6 +19,7 @@ def mpcomplete_resource(mpcomplete_store):
         default_state=MPCompleteDataStatus.submitted.value,
         calculate_submission_id=True,
         include_in_schema=True,
+        timeout=MAPISettings().TIMEOUT,
     )
 
     return resource

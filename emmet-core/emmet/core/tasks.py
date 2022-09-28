@@ -11,6 +11,8 @@ from pymatgen.core.structure import Structure
 from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.io.vasp import Incar, Poscar, Kpoints
+from pymatgen.io.vasp import Potcar as VaspPotcar
+from pymatgen.io.vasp import PotcarSingle as VaspPotcarSingle
 from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
@@ -42,7 +44,7 @@ class Potcar(BaseModel):
 
 
 class OrigInputs(BaseModel):
-    incar: Incar = Field(
+    incar: Union[Incar, Dict] = Field(
         None, description="Pymatgen object representing the INCAR file.",
     )
 
@@ -54,9 +56,12 @@ class OrigInputs(BaseModel):
         None, description="Pymatgen object representing the KPOINTS file.",
     )
 
-    potcar: Potcar = Field(
+    potcar: Union[Potcar, List[VaspPotcarSingle], VaspPotcar] = Field(
         None, description="Pymatgen object representing the POTCAR file.",
     )
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class OutputDoc(BaseModel):

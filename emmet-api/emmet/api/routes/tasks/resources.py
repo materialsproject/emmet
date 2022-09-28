@@ -1,3 +1,4 @@
+from this import d
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 from maggma.api.resource import ReadOnlyResource
 
@@ -14,7 +15,10 @@ from emmet.api.routes.tasks.query_operators import (
     EntryQuery,
 )
 from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
 from emmet.core.tasks import DeprecationDoc, TaskDoc, TrajectoryDoc, EntryDoc
+
+timeout = MAPISettings().TIMEOUT
 
 
 def task_resource(task_store):
@@ -35,6 +39,8 @@ def task_resource(task_store):
         header_processor=GlobalHeaderProcessor(),
         hint_scheme=TasksHintScheme(),
         tags=["Tasks"],
+        timeout=timeout,
+        disable_validation=True,
     )
 
     return resource
@@ -50,6 +56,7 @@ def task_deprecation_resource(materials_store):
         enable_default_search=True,
         sub_path="/deprecation/",
         header_processor=GlobalHeaderProcessor(),
+        timeout=timeout,
     )
 
     return resource
@@ -64,6 +71,8 @@ def trajectory_resource(task_store):
         tags=["Tasks"],
         sub_path="/trajectory/",
         header_processor=GlobalHeaderProcessor(),
+        timeout=timeout,
+        disable_validation=True,
     )
 
     return resource
@@ -86,6 +95,8 @@ def entries_resource(task_store):
         tags=["Tasks"],
         sub_path="/entries/",
         header_processor=GlobalHeaderProcessor(),
+        timeout=timeout,
+        disable_validation=True,
     )
 
     return resource

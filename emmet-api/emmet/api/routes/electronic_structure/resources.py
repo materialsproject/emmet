@@ -8,6 +8,7 @@ from emmet.api.routes.materials.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     DeprecationQuery,
+    MultiMaterialIDQuery
 )
 
 from emmet.api.routes.electronic_structure.query_operators import (
@@ -18,6 +19,9 @@ from emmet.api.routes.electronic_structure.query_operators import (
 )
 from emmet.core.electronic_structure import BSObjectDoc, DOSObjectDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
+from emmet.api.core.settings import MAPISettings
+
+timeout = MAPISettings().TIMEOUT
 
 
 def es_resource(es_store):
@@ -25,6 +29,7 @@ def es_resource(es_store):
         es_store,
         ElectronicStructureDoc,
         query_operators=[
+            MultiMaterialIDQuery(),
             ESSummaryDataQuery(),
             FormulaQuery(),
             ChemsysQuery(),
@@ -40,6 +45,7 @@ def es_resource(es_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Electronic Structure"],
         disable_validation=True,
+        timeout=timeout,
     )
 
     return resource
@@ -64,6 +70,7 @@ def bs_resource(es_store):
         enable_get_by_key=False,
         sub_path="/bandstructure/",
         disable_validation=True,
+        timeout=timeout,
     )
 
     return resource
@@ -106,6 +113,7 @@ def dos_resource(es_store):
         enable_get_by_key=False,
         sub_path="/dos/",
         disable_validation=True,
+        timeout=timeout
     )
 
     return resource

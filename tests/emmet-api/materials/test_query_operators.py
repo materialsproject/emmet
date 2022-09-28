@@ -132,11 +132,19 @@ def test_multi_material_id_query():
         "criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}
     }
 
+    assert op.query(material_ids="mp-149") == {
+        "criteria": {"material_id": "mp-149"}
+    }
+
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
         assert new_op.query(material_ids="mp-149, mp-13") == {
             "criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}
+        }
+
+        assert op.query(material_ids="mp-149") == {
+            "criteria": {"material_id": "mp-149"}
         }
 
 

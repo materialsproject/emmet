@@ -15,6 +15,7 @@ from emmet.api.routes.materials.query_operators import (
     FormulaQuery,
     ChemsysQuery,
 )
+from emmet.api.core.settings import MAPISettings
 
 
 def phase_diagram_resource(phase_diagram_store):
@@ -50,6 +51,7 @@ def thermo_resource(thermo_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Thermo"],
         disable_validation=True,
+        timeout=MAPISettings().TIMEOUT
     )
 
     return resource

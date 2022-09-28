@@ -7,6 +7,8 @@ from emmet.api.routes.bonds.query_operators import (
     BondLengthQuery,
     CoordinationEnvsQuery,
 )
+from emmet.api.routes.materials.query_operators import MultiMaterialIDQuery
+from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
 
@@ -15,17 +17,17 @@ def bonds_resource(bonds_store):
         bonds_store,
         BondingDoc,
         query_operators=[
+            MultiMaterialIDQuery(),
             BondLengthQuery(),
             CoordinationEnvsQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(
-                BondingDoc, default_fields=["material_id", "last_updated"],
-            ),
+            SparseFieldsQuery(BondingDoc, default_fields=["material_id", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Bonds"],
         disable_validation=True,
+        timeout=MAPISettings().TIMEOUT,
     )
 
     return resource

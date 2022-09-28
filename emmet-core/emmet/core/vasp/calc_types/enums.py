@@ -88,6 +88,7 @@ class TaskType(ValueEnum):
     Structure_Optimization = "Structure Optimization"
     Deformation = "Deformation"
     Unrecognized = "Unrecognized"
+    Optic = "Optic"
 
 
 class CalcType(ValueEnum):
@@ -813,5 +814,6 @@ class CalcType(ValueEnum):
     LDA_U_NMR_Electric_Field_Gradient = "LDA+U NMR Electric Field Gradient"
     LDA_U_Static = "LDA+U Static"
     LDA_U_Structure_Optimization = "LDA+U Structure Optimization"
+    GGA_Optic = "GGA Optic"
     LDA_U_Deformation = "LDA+U Deformation"
     LDA_U_Unrecognized = "LDA+U Unrecognized"

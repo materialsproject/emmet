@@ -43,7 +43,9 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
     def from_tasks(
         cls,
         task_group: List[TaskDocument],
-        quality_scores: Dict[str, int] = SETTINGS.VASP_QUALITY_SCORES,
+        structure_quality_scores: Dict[
+            str, int
+        ] = SETTINGS.VASP_STRUCTURE_QUALITY_SCORES,
         use_statics: bool = SETTINGS.VASP_USE_STATICS,
     ) -> "MaterialsDoc":
         """
@@ -51,7 +53,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
         Args:
             task_group: List of task document
-            quality_scores: quality scores for various calculation types
+            structure_quality_scores: quality scores for various calculation types
             use_statics: Use statics to define a material
         """
         if len(task_group) == 0:
@@ -86,7 +88,7 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
         material_id = min(possible_mat_ids)
 
         # Always prefer a static over a structure opt
-        task_quality_scores = {"Structure Optimization": 1, "Static": 2}
+        structure_task_quality_scores = {"Structure Optimization": 1, "Static": 2}
 
         def _structure_eval(task: TaskDocument):
             """
@@ -105,8 +107,8 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
             return (
                 -1 * int(task.is_valid),
-                -1 * quality_scores.get(task_run_type.value, 0),
-                -1 * task_quality_scores.get(task.task_type.value, 0),
+                -1 * structure_quality_scores.get(task_run_type.value, 0),
+                -1 * structure_task_quality_scores.get(task.task_type.value, 0),
                 -1 * special_tags,
                 task.output.energy_per_atom,
             )
@@ -138,26 +140,53 @@ class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
 
         # Entries
         # **current materials docs must contain at last one GGA or GGA+U entry
+
+        # Always prefer a static over a structure opt
+        entry_task_quality_scores = {"Structure Optimization": 1, "Static": 2}
+
+        def _entry_eval(task: TaskDocument):
+            """
+            Helper function to order entries and statics calcs by
+            - Spin polarization
+            - Special Tags
+            - Energy
+            """
+
+            _SPECIAL_TAGS = ["LASPH", "ISPIN"]
+            special_tags = sum(
+                task.input.parameters.get(tag, False) for tag in _SPECIAL_TAGS
+            )
+
+            return (
+                -1 * int(task.is_valid),
+                -1 * entry_task_quality_scores.get(task.task_type.value, 0),
+                -1 * special_tags,
+                task.output.energy_per_atom,
+            )
+
+        # Entries
+        # **current materials docs must contain at last one GGA or GGA+U entry
         entries = {}
         all_run_types = set(run_types.values())
-
-        if RunType.GGA not in all_run_types and RunType.GGA_U not in all_run_types:
-            raise ValueError(
-                "Ensure the task group contains at least one GGA or GGA+U calculation"
-            )
 
         for rt in all_run_types:
             relevant_calcs = sorted(
                 [doc for doc in structure_calcs if doc.run_type == rt and doc.is_valid],
-                key=_structure_eval,
+                key=_entry_eval,
             )
 
             if len(relevant_calcs) > 0:
                 best_task_doc = relevant_calcs[0]
                 entry = best_task_doc.structure_entry
                 entry.data["task_id"] = entry.entry_id
-                entry.entry_id = material_id
+                entry.data["material_id"] = material_id
+                entry.entry_id = "{}-{}".format(material_id, rt.value)
                 entries[rt] = entry
+
+        if RunType.GGA not in entries and RunType.GGA_U not in entries:
+            raise ValueError(
+                "Individual material entry must contain at least one GGA or GGA+U calculation"
+            )
 
         return cls.from_structure(
             structure=structure,

@@ -9,7 +9,11 @@ from emmet.api.routes.electrodes.query_operators import (
     ElectrodeElementsQuery,
     ElectrodesChemsysQuery,
     WorkingIonQuery,
+    ElectrodeMultiMaterialIDQuery,
+    MultiBatteryIDQuery
 )
+
+from emmet.api.core.settings import MAPISettings
 
 
 def insertion_electrodes_resource(insertion_electrodes_store):
@@ -17,6 +21,8 @@ def insertion_electrodes_resource(insertion_electrodes_store):
         insertion_electrodes_store,
         InsertionElectrodeDoc,
         query_operators=[
+            MultiBatteryIDQuery(),
+            ElectrodeMultiMaterialIDQuery(),
             ElectrodeFormulaQuery(),
             ElectrodesChemsysQuery(),
             WorkingIonQuery(),
@@ -31,6 +37,7 @@ def insertion_electrodes_resource(insertion_electrodes_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["Electrodes"],
         disable_validation=True,
+        timeout=MAPISettings().TIMEOUT
     )
 
     return resource
