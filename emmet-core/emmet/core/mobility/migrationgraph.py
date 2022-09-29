@@ -1,8 +1,7 @@
-from ast import Import
 from datetime import datetime
-from typing import List, Type, Union, Dict, Tuple, Sequence
+from typing import List, Iterable, Union, Dict, Tuple, Sequence, Any
 
-from pydantic import BaseModel, Field, validator
+from pydantic import Field, validator
 import numpy as np
 from emmet.core.base import EmmetBaseModel
 from pymatgen.core import Structure
@@ -85,7 +84,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         description="The conversion matrix used to convert unit cell to supercell.",
     )
 
-    inserted_ion_coords: Dict = Field(
+    inserted_ion_coords: List[Dict[str, Union[List[float], str, int]]] = Field(
         None,
         description="A dictionary containing all mobile ion fractional coordinates in terms of supercell.",
     )
@@ -144,7 +143,7 @@ class MigrationGraphDoc(EmmetBaseModel):
                     sc_mat,
                     min_length_sc,
                     minmax_num_atoms,
-                    coords_dict,
+                    coords_list,
                     combo,
                 ) = MigrationGraphDoc.generate_sc_fields(
                     mg=migration_graph,
@@ -161,7 +160,7 @@ class MigrationGraphDoc(EmmetBaseModel):
                     migration_graph=migration_graph,
                     matrix_supercell_structure=host_sc,
                     conversion_matrix=sc_mat,
-                    inserted_ion_coords=coords_dict,
+                    inserted_ion_coords=coords_list,
                     insert_coords_combo=combo,
                     **kwargs,
                 )
@@ -190,16 +189,17 @@ class MigrationGraphDoc(EmmetBaseModel):
 
         sc_mat = sc_mat.tolist()
         host_sc = mg.host_structure * sc_mat
+        working_ion = mg.only_sites[0].species_string
 
-        coords_dict = MigrationGraphDoc.ordered_sc_site_dict(mg.only_sites, sc_mat)
-        combo, coords_dict = MigrationGraphDoc.get_hop_sc_combo(
-            mg.unique_hops, sc_mat, sm, host_sc, coords_dict
+        coords_list = MigrationGraphDoc.ordered_sc_site_list(mg.only_sites, sc_mat)
+        combo, coords_list = MigrationGraphDoc.get_hop_sc_combo(
+            mg.unique_hops, sc_mat, sm, host_sc, working_ion, coords_list
         )
 
-        return host_sc, sc_mat, min_length_sc, minmax_num_atoms, coords_dict, combo
+        return host_sc, sc_mat, min_length_sc, minmax_num_atoms, coords_list, combo
 
     @staticmethod
-    def ordered_sc_site_dict(
+    def ordered_sc_site_list(
         uc_sites_only: Structure, sc_mat: List[List[Union[int, float]]]
     ):
         uc_no_site = uc_sites_only.copy()
@@ -214,19 +214,20 @@ class MigrationGraphDoc(EmmetBaseModel):
             for index in range(len(sc_one_set)):
                 sc_site_dict[len(sc_site_dict) + 1] = {
                     "uc_site_type": i,
-                    "site": sc_one_set[index],
+                    "site_frac_coords": list(sc_one_set[index].frac_coords),
+                    # "extra_site": False
                 }
 
-        ordered_site_dict = {
-            i: e
+        ordered_site_list = [
+            e
             for i, e in enumerate(
                 sorted(
                     sc_site_dict.values(),
-                    key=lambda v: float(np.linalg.norm(v["site"].frac_coords)),
+                    key=lambda v: float(np.linalg.norm(v["site_frac_coords"])),
                 )
             )
-        }
-        return ordered_site_dict
+        ]
+        return ordered_site_list
 
     @staticmethod
     def get_hop_sc_combo(
@@ -234,29 +235,29 @@ class MigrationGraphDoc(EmmetBaseModel):
         sc_mat: List[List[Union[int, float]]],
         sm: StructureMatcher,
         host_sc: Structure,
-        ordered_sc_site_dict: dict,
+        working_ion: str,
+        ordered_sc_site_list: list,
     ):
         combo = []
-        working_ion = ordered_sc_site_dict[0]["site"].species_string
 
         unique_hops = {k: v for k, v in sorted(unique_hops.items())}
         for one_hop in unique_hops.values():
             added = False
             sc_isite_set = {
                 k: v
-                for k, v in ordered_sc_site_dict.items()
+                for k, v in enumerate(ordered_sc_site_list)
                 if v["uc_site_type"] == one_hop["iindex"]
             }
             sc_esite_set = {
                 k: v
-                for k, v in ordered_sc_site_dict.items()
+                for k, v in enumerate(ordered_sc_site_list)
                 if v["uc_site_type"] == one_hop["eindex"]
             }
             for sc_iindex, sc_isite in sc_isite_set.items():
                 for sc_eindex, sc_esite in sc_esite_set.items():
                     sc_check = host_sc.copy()
-                    sc_check.insert(0, working_ion, sc_isite["site"].frac_coords)
-                    sc_check.insert(1, working_ion, sc_esite["site"].frac_coords)
+                    sc_check.insert(0, working_ion, sc_isite["site_frac_coords"])
+                    sc_check.insert(1, working_ion, sc_esite["site_frac_coords"])
                     if MigrationGraphDoc.compare_sc_one_hop(
                         one_hop,
                         sc_mat,
@@ -273,12 +274,12 @@ class MigrationGraphDoc(EmmetBaseModel):
                     break
 
             if not added:
-                new_combo, ordered_sc_site_dict = MigrationGraphDoc.append_new_site(
-                    host_sc, ordered_sc_site_dict, one_hop, sc_mat
+                new_combo, ordered_sc_site_list = MigrationGraphDoc.append_new_site(
+                    host_sc, ordered_sc_site_list, one_hop, sc_mat, working_ion
                 )
                 combo.append(new_combo)
 
-        return combo, ordered_sc_site_dict
+        return combo, ordered_sc_site_list
 
     @staticmethod
     def compare_sc_one_hop(
@@ -312,9 +313,10 @@ class MigrationGraphDoc(EmmetBaseModel):
     @staticmethod
     def append_new_site(
         host_sc: Structure,
-        ordered_sc_site_dict: Dict,
+        ordered_sc_site_list: list,
         one_hop: Dict,
         sc_mat: List[List[Union[int, float]]],
+        working_ion: str
     ):
         sc_mat_inv = np.linalg.inv(sc_mat)
         sc_ipos = np.dot(one_hop["ipos"], sc_mat_inv)
@@ -322,34 +324,34 @@ class MigrationGraphDoc(EmmetBaseModel):
         sc_iindex, sc_eindex = None, None
         host_sc_insert = host_sc.copy()
 
-        for k, v in ordered_sc_site_dict.items():
-            if np.allclose(sc_ipos, v["site"].frac_coords, rtol=0.1, atol=0.1):
+        for k, v in enumerate(ordered_sc_site_list):
+            if np.allclose(sc_ipos, v["site_frac_coords"], rtol=0.1, atol=0.1):
                 sc_iindex = k
-            if np.allclose(sc_epos, v["site"].frac_coords, rtol=0.1, atol=0.1):
+            if np.allclose(sc_epos, v["site_frac_coords"], rtol=0.1, atol=0.1):
                 sc_eindex = k
 
         if sc_iindex is None:
             host_sc_insert.insert(
-                0, ordered_sc_site_dict[0]["site"].species_string, sc_ipos
+                0, working_ion, sc_ipos
             )
-            ordered_sc_site_dict[len(ordered_sc_site_dict)] = {
+            ordered_sc_site_list.append({
                 "uc_site_type": one_hop["iindex"],
-                "site": host_sc_insert[0],
+                "site_frac_coords": list(host_sc_insert[0].frac_coords),
                 "extra_site": True,
-            }
-            sc_iindex = len(ordered_sc_site_dict) - 1
+            })
+            sc_iindex = len(ordered_sc_site_list) - 1
         if sc_eindex is None:
             host_sc_insert.insert(
-                0, ordered_sc_site_dict[0]["site"].species_string, sc_epos
+                0, working_ion, sc_epos
             )
-            ordered_sc_site_dict[len(ordered_sc_site_dict)] = {
+            ordered_sc_site_list.append({
                 "uc_site_type": one_hop["eindex"],
-                "site": host_sc_insert[0],
+                "site_frac_coords": list(host_sc_insert[0].frac_coords),
                 "extra_site": True,
-            }
-            sc_eindex = len(ordered_sc_site_dict) - 1
+            })
+            sc_eindex = len(ordered_sc_site_list) - 1
 
-        return f"{sc_iindex}+{sc_eindex}", ordered_sc_site_dict
+        return f"{sc_iindex}+{sc_eindex}", ordered_sc_site_list
 
     def get_distinct_hop_sites(self) -> Tuple[List, List[str], Dict]:
         """
@@ -373,7 +375,7 @@ class MigrationGraphDoc(EmmetBaseModel):
                     dis_ini = mgdoc_sites_mapping[ini]
                 else:
                     dis_sites_list.append(
-                        list(self.inserted_ion_coords[ini]["site"].frac_coords)
+                        list(self.inserted_ion_coords[ini]["site_frac_coords"])  # type: ignore
                     )
                     dis_ini = len(dis_sites_list) - 1
                     mgdoc_sites_mapping[ini] = dis_ini
@@ -381,7 +383,7 @@ class MigrationGraphDoc(EmmetBaseModel):
                     dis_end = mgdoc_sites_mapping[end]
                 else:
                     dis_sites_list.append(
-                        list(self.inserted_ion_coords[end]["site"].frac_coords)
+                        list(self.inserted_ion_coords[end]["site_frac_coords"])  # type: ignore
                     )
                     dis_end = len(dis_sites_list) - 1
                     mgdoc_sites_mapping[end] = dis_end

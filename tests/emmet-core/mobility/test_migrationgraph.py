@@ -1,3 +1,4 @@
+from math import comb
 import numpy as np
 import pytest
 from monty.serialization import loadfn
@@ -80,10 +81,10 @@ def test_generate_sc_fields(mg_for_sc_fields):
     for one_combo in combo:
         hop_sc = host_sc.copy()
         sc_iindex, sc_eindex = list(map(int, one_combo.split("+")))
-        sc_isite = coords_dict[sc_iindex]["site"]
-        sc_esite = coords_dict[sc_eindex]["site"]
-        hop_sc.insert(0, "Li", sc_isite.frac_coords)
-        hop_sc.insert(0, "Li", sc_esite.frac_coords)
+        sc_isite = coords_dict[sc_iindex]["site_frac_coords"]
+        sc_esite = coords_dict[sc_eindex]["site_frac_coords"]
+        hop_sc.insert(0, "Li", sc_isite)
+        hop_sc.insert(0, "Li", sc_esite)
         check_sc_list = [sm.fit(hop_sc, check_sc) for check_sc in expected_sc_list]
         assert sum(check_sc_list) >= 1
 
@@ -99,6 +100,7 @@ def test_get_distinct_hop_sites(get_entries):
         minmax_num_atoms=(80, 160)
     )
     dis_sites_list, dis_combo_list, combo_mapping = mgdoc.get_distinct_hop_sites()
+    print(combo_mapping)
     for one_test_combo in ['0+1', '0+2', '0+3', '0+4', '0+5', '0+6', '1+7', '1+2']:
         assert one_test_combo in dis_combo_list
     assert combo_mapping == {
