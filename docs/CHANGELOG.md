@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.36.6](https://github.com/materialsproject/emmet/tree/v0.36.6) (2022-09-29)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.36.5...v0.36.6)
+
+**Merged pull requests:**
+
+- \[WIP\] MGDoc typing change [\#543](https://github.com/materialsproject/emmet/pull/543) ([hmlli](https://github.com/hmlli))
+
 ## [v0.36.5](https://github.com/materialsproject/emmet/tree/v0.36.5) (2022-09-29)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.36.4...v0.36.5)
