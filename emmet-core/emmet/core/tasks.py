@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Any
 
 from emmet.core.vasp.task_valid import TaskState
 
@@ -56,9 +56,17 @@ class OrigInputs(BaseModel):
         None, description="Pymatgen object representing the KPOINTS file.",
     )
 
-    potcar: Union[Potcar, List[VaspPotcarSingle], VaspPotcar] = Field(
+    potcar: Union[Potcar, VaspPotcar, List[Any]] = Field(
         None, description="Pymatgen object representing the POTCAR file.",
     )
+
+    # Make sure that the datetime field is properly formatted
+    @validator("potcar", pre=True)
+    def potcar_ok(cls, v):
+        if isinstance(v, list):
+            return [i for i in v]
+
+        return v
 
     class Config:
         arbitrary_types_allowed = True
