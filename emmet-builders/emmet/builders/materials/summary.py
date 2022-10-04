@@ -106,7 +106,7 @@ class SummaryBuilder(Builder):
 
             materials_doc = self.materials.query_one({self.materials.key: entry})
 
-            static_tasks = set(
+            valid_static_tasks = set(
                 [
                     task_id
                     for task_id, task_type in materials_doc["task_types"].items()
@@ -114,12 +114,16 @@ class SummaryBuilder(Builder):
                 ]
             ) - set(materials_doc["deprecated_tasks"])
 
+            all_tasks = list(materials_doc["task_types"].keys())
+
             data = {
                 HasProps.materials.value: materials_doc,
                 HasProps.thermo.value: self.thermo.query_one(
                     {self.materials.key: entry, "thermo_type": "GGA_GGA+U"}
                 ),
-                HasProps.xas.value: list(self.xas.query({self.xas.key: entry})),
+                HasProps.xas.value: list(
+                    self.xas.query({self.xas.key: {"$in": all_tasks}})
+                ),
                 HasProps.grain_boundaries.value: list(
                     self.grain_boundaries.query({self.grain_boundaries.key: entry})
                 ),
@@ -130,7 +134,7 @@ class SummaryBuilder(Builder):
                     {self.magnetism.key: entry}
                 ),
                 HasProps.elasticity.value: self.elasticity.query_one(
-                    {self.elasticity.key: entry}
+                    {self.elasticity.key: {"$in": all_tasks}}
                 ),
                 HasProps.dielectric.value: self.dielectric.query_one(
                     {self.dielectric.key: entry}
@@ -139,7 +143,7 @@ class SummaryBuilder(Builder):
                     {self.piezoelectric.key: entry}
                 ),
                 HasProps.phonon.value: self.phonon.query_one(
-                    {self.phonon.key: entry}, [self.phonon.key]
+                    {self.phonon.key: {"$in": all_tasks}}, [self.phonon.key],
                 ),
                 HasProps.insertion_electrodes.value: list(
                     self.insertion_electrodes.query(
@@ -147,24 +151,24 @@ class SummaryBuilder(Builder):
                     )
                 ),
                 HasProps.surface_properties.value: self.surfaces.query_one(
-                    {self.surfaces.key: entry}
+                    {self.surfaces.key: {"$in": all_tasks}}
                 ),
                 HasProps.substrates.value: list(
                     self.substrates.query(
-                        {self.substrates.key: entry}, [self.substrates.key]
+                        {self.substrates.key: {"$in": all_tasks}}, [self.substrates.key]
                     )
                 ),
                 HasProps.oxi_states.value: self.oxi_states.query_one(
                     {self.oxi_states.key: entry}
                 ),
                 HasProps.eos.value: self.eos.query_one(
-                    {self.eos.key: entry}, [self.eos.key]
+                    {self.eos.key: {"$in": all_tasks}}, [self.eos.key]
                 ),
                 HasProps.provenance.value: self.provenance.query_one(
                     {self.provenance.key: entry}
                 ),
                 HasProps.charge_density.value: self.charge_density_index.query_one(
-                    {"task_id": {"$in": list(static_tasks)}}, ["task_id"]
+                    {"task_id": {"$in": list(valid_static_tasks)}}, ["task_id"]
                 ),
             }
 
