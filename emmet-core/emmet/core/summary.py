@@ -14,7 +14,7 @@ from emmet.core.chemenv import (
 from emmet.core.mpid import MPID
 from emmet.core.thermo import DecompositionProduct
 from emmet.core.xas import Edge, Type
-from emmet.core.elasticity import BulkModulus, ShearModulus
+from emmet.core.provenance import Database
 
 T = TypeVar("T", bound="SummaryDoc")
 
@@ -410,6 +410,12 @@ class SummaryDoc(PropertyDoc):
         True, description="Whether the material is theoretical.", source="provenance"
     )
 
+    # External Database IDs
+
+    database_IDs: Dict[Database, List[str]] = Field(
+        {}, description="External database IDs corresponding to this material."
+    )
+
     @classmethod
     def from_docs(cls, material_id: MPID, **docs: Dict[str, Dict]):
         """Converts a bunch of summary docs into a SummaryDoc"""
@@ -519,7 +525,7 @@ summary_fields: Dict[str, list] = {
         "has_reconstructed",
     ],
     HasProps.oxi_states.value: ["possible_species"],
-    HasProps.provenance.value: ["theoretical"],
+    HasProps.provenance.value: ["theoretical", "database_IDs"],
     HasProps.charge_density.value: [],
     HasProps.eos.value: [],
     HasProps.phonon.value: [],

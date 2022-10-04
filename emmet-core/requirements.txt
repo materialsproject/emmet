@@ -1,6 +1,6 @@
-monty==2022.4.26
-pymatgen==2022.8.23
-pydantic==1.8.2
+monty==2022.9.9
+pymatgen==2022.9.21
+pydantic==1.10.2
 pybtex==0.24.0
 typing-extensions==4.3.0
 seekpath==2.0.1
@@ -9,3 +9,4 @@ robocrys==0.2.7
 matminer==0.7.8
 pymatgen-analysis-diffusion==2022.7.21
 pymatgen-analysis-alloys==0.0.5
+spglib<3.0.0

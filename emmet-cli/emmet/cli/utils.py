@@ -9,6 +9,7 @@ from datetime import datetime
 from enum import Enum
 from fnmatch import fnmatch
 from glob import glob
+from pathlib import Path
 
 import click
 import mgzip
@@ -149,10 +150,14 @@ def get_timestamp_dir(prefix="launcher"):
     return "_".join([prefix, time_now])
 
 
-def is_vasp_dir(list_of_files):
+def get_dir_type(list_of_files):
     for f in list_of_files:
         if f.startswith("INCAR"):
-            return True
+            return "vasp"
+        elif f.startswith("feff.inp"):
+            return "feff"
+    else:
+        return None
 
 
 def make_block(base_path):
@@ -188,17 +193,24 @@ def get_symlinked_path(root, base_path_index):
         launch_dir = os.path.join(block_dir, root_split[-1])
         if not os.path.exists(launch_dir):
             if run:
-                os.rename(root, launch_dir)
+                rename_dir(root, launch_dir)
             logger.debug(f"{root} -> {launch_dir}")
     else:
         launch = get_timestamp_dir(prefix="launcher")
         launch_dir = os.path.join(block_dir, launch)
         if run:
-            os.rename(root, launch_dir)
-            os.symlink(launch_dir, root)
+            rename_dir(root, launch_dir)
         logger.debug(f"{root} -> {launch_dir}")
 
     return launch_dir
+
+
+def rename_dir(root, launch_dir):
+    fn = "ORIG_PATH"
+    with Path(os.sep.join([root, fn])).open("w") as f:
+        f.write(root)
+
+    os.rename(root, launch_dir)
 
 
 def create_orig_inputs(vaspdir):
@@ -254,7 +266,9 @@ def get_vasp_dirs():
             if not bool(st.st_mode & perms):
                 raise EmmetCliError(f"Insufficient permissions {st.st_mode} for {dn}.")
 
-        if is_vasp_dir(files):
+        dir_type = get_dir_type(files)
+
+        if dir_type:
             gzipped = False
             for f in files:
                 fn = os.path.join(root, f)
@@ -272,7 +286,7 @@ def get_vasp_dirs():
                         f"Insufficient permissions {st.st_mode} for {fn}."
                     )
 
-                if run and not f.endswith(".gz"):
+                if run and dir_type == "vasp" and not f.endswith(".gz"):
                     fn_gz = fn + ".gz"
                     if os.path.exists(fn_gz):
                         os.remove(fn_gz)  # remove left-over gz (cancelled job)
@@ -288,7 +302,9 @@ def get_vasp_dirs():
 
             # NOTE skip symlink'ing on MP calculations from the early days
             vasp_dir = get_symlinked_path(root, base_path_index) if reorg else root
-            create_orig_inputs(vasp_dir)
+            if dir_type == "vasp":
+                create_orig_inputs(vasp_dir)
+
             dirs[:] = []  # don't descend further (i.e. ignore relax1/2)
             logger.log(logging.INFO if gzipped else logging.DEBUG, vasp_dir)
             yield vasp_dir

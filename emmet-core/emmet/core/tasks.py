@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Any
 
 from emmet.core.vasp.task_valid import TaskState
 
@@ -11,6 +11,8 @@ from pymatgen.core.structure import Structure
 from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.io.vasp import Incar, Poscar, Kpoints
+from pymatgen.io.vasp import Potcar as VaspPotcar
+from pymatgen.io.vasp import PotcarSingle as VaspPotcarSingle
 from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
@@ -42,9 +44,8 @@ class Potcar(BaseModel):
 
 
 class OrigInputs(BaseModel):
-    incar: Incar = Field(
-        None,
-        description="Pymatgen object representing the INCAR file.",
+    incar: Union[Incar, Dict] = Field(
+        None, description="Pymatgen object representing the INCAR file.",
     )
 
     poscar: Poscar = Field(
@@ -57,10 +58,20 @@ class OrigInputs(BaseModel):
         description="Pymatgen object representing the KPOINTS file.",
     )
 
-    potcar: Potcar = Field(
-        None,
-        description="Pymatgen object representing the POTCAR file.",
+    potcar: Union[Potcar, VaspPotcar, List[Any]] = Field(
+        None, description="Pymatgen object representing the POTCAR file.",
     )
+
+    # Make sure that the datetime field is properly formatted
+    @validator("potcar", pre=True)
+    def potcar_ok(cls, v):
+        if isinstance(v, list):
+            return [i for i in v]
+
+        return v
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class OutputDoc(BaseModel):

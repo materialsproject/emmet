@@ -82,7 +82,7 @@ jobs:
         run: |
           pytest --cov=emmet --cov-report=xml tests/${{ matrix.package }}
 
-      - uses: codecov/codecov-action@v3.1.0
+      - uses: codecov/codecov-action@v3.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml

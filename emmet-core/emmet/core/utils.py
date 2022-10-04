@@ -4,7 +4,6 @@ from itertools import groupby
 from typing import Any, Iterator, List, Tuple, Dict, Optional, Union
 import copy
 
-import bson
 import numpy as np
 import networkx as nx
 
@@ -23,6 +22,11 @@ from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 
 from emmet.core.settings import EmmetSettings
 from emmet.core.mpid import MPculeID
+
+try:
+    import bson
+except ImportError:
+    bson = None  # type: ignore
 
 SETTINGS = EmmetSettings()
 
@@ -262,6 +266,7 @@ def jsanitize(obj, strict=False, allow_bson=False):
         or (bson is not None and isinstance(obj, bson.objectid.ObjectId))
     ):
         return obj
+
     if isinstance(obj, (list, tuple, set)):
         return [jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj]
     if np is not None and isinstance(obj, np.ndarray):

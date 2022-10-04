@@ -117,7 +117,12 @@ class ValidationDoc(EmmetBaseModel):
                 # Checking POTCAR hashes if a directory is supplied
                 if potcar_hashes:
                     if _potcar_hash_check(task_doc, potcar_hashes):
-                        if task_type in [TaskType.NSCF_Line, TaskType.NSCF_Uniform]:
+                        if task_type in [
+                            TaskType.NSCF_Line,
+                            TaskType.NSCF_Uniform,
+                            TaskType.DFPT_Dielectric,
+                            TaskType.Dielectric,
+                        ]:
                             warnings.append(DeprecationMessage.POTCAR.__doc__)  # type: ignore
                         else:
                             reasons.append(DeprecationMessage.POTCAR)
