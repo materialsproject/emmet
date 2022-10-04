@@ -1,19 +1,12 @@
-from collections import defaultdict
-import copy
 from hashlib import blake2b
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import Any, Dict, Optional, Type, TypeVar
 
 from pydantic import Field
 
-from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
-
-from emmet.core.utils import confirm_molecule
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
-from emmet.core.molecules.bonds import metals
 from emmet.core.molecules.thermo import get_free_energy, ThermoDoc
 from emmet.core.mpid import MPID, MPculeID
 
@@ -80,68 +73,6 @@ class RedoxDoc(PropertyDoc):
     oxidation_potentials: Dict[str, float] = Field(
         None, description="Oxidation potentials with various reference electrodes (units: V)"
     )
-
-    @classmethod
-    def _group_by_formula(
-        cls: Type[T], entries: List[Dict[str, Any]]
-    ) -> Dict[str, List[Dict[str, Any]]]:
-        """
-        Group task entries by formula
-
-        :param entries: List of entries (dicts derived from TaskDocuments)
-        :return: Grouped molecule entries
-        """
-
-        # First, group tasks by formula
-        tasks_by_formula = defaultdict(list)
-        for t in entries:
-            if not isinstance(t["output"], dict):
-                t["output"] = t["output"].as_dict()
-            tasks_by_formula[t["formula"]].append(t)
-
-        return tasks_by_formula
-
-    @classmethod
-    def _group_by_graph(
-        cls: Type[T], entries: List[Dict[str, Any]]
-    ) -> Dict[int, List[Dict[str, Any]]]:
-        """
-        Group task entries by molecular graph connectivity
-
-        :param entries: List of entries (dicts derived from TaskDocuments)
-        :return: Grouped molecule entries
-        """
-
-        mol_graphs_nometal: List[MoleculeGraph] = list()
-        results = defaultdict(list)
-
-        # Within each group, group by the covalent molecular graph
-        for t in entries:
-            mol = confirm_molecule(t["molecule"])
-
-            mol_nometal = copy.deepcopy(mol)
-
-            if mol.composition.alphabetical_formula not in [m + "1" for m in metals]:
-                mol_nometal.remove_species(metals)
-
-            mol_nometal.set_charge_and_spin(0)
-            mg_nometal = MoleculeGraph.with_local_env_strategy(
-                mol_nometal, OpenBabelNN()
-            )
-
-            match = None
-            for i, mg in enumerate(mol_graphs_nometal):
-                if mg_nometal.isomorphic_to(mg):
-                    match = i
-                    break
-
-            if match is None:
-                results[len(mol_graphs_nometal)].append(t)
-                mol_graphs_nometal.append(mg_nometal)
-            else:
-                results[match].append(t)
-
-        return results
 
     @classmethod
     def _g_or_e(cls: Type[T], entry: Dict[str, Any]) -> float:

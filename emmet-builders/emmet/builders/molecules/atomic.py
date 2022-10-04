@@ -90,8 +90,10 @@ class PartialChargesBuilder(Builder):
 
         # Search index for charges
         self.charges.ensure_index("molecule_id")
-        self.charges.ensure_index("method")
         self.charges.ensure_index("task_id")
+        self.charges.ensure_index("method")
+        self.charges.ensure_index("lot_solvent")
+        self.charges.ensure_index("property_id")
         self.charges.ensure_index("last_updated")
         self.charges.ensure_index("formula_alphabetical")
 
@@ -337,8 +339,10 @@ class PartialSpinsBuilder(Builder):
 
         # Search index for charges
         self.spins.ensure_index("molecule_id")
-        self.spins.ensure_index("method")
         self.spins.ensure_index("task_id")
+        self.spins.ensure_index("method")
+        self.spins.ensure_index("lot_solvent")
+        self.spins.ensure_index("property_id")
         self.spins.ensure_index("last_updated")
         self.spins.ensure_index("formula_alphabetical")
 
