@@ -342,24 +342,26 @@ class BondingDoc(PropertyDoc):
             if mg_made:
                 break
 
-            if m == "nbo" and task.output.nbo is not None:
-                if task.orig["rem"].get("run_nbo6", False) \
-                        or task.orig["rem"].get("nbo_external", False):
-                    method = "nbo"
-                    mg, warnings = nbo_molecule_graph(mol, task.output.nbo)
-                else:
-                    # Will not make NBO molecule graph with NBO5
-                    continue
+            if m == "nbo" and task.output.nbo is not None and (
+                    task.orig["rem"].get("run_nbo6", False)
+                    or task.orig["rem"].get("nbo_external", False)
+            ):
+                method = "nbo"
+                mg, warnings = nbo_molecule_graph(mol, task.output.nbo)
+                mg_made = True
 
             elif m == "critic2" and task.critic2 is not None:
                 method = "critic2"
                 critic = fix_C_Li_bonds(task.critic2)
                 critic_bonds = critic["processed"]["bonds"]
                 mg = make_mol_graph(mol, critic_bonds=critic_bonds)
+                mg_made = True
 
             else:
                 method = "OpenBabelNN + metal_edge_extender"
                 mg = make_mol_graph(mol)
+                mg_made = True
+
 
         bonds = list()
         for bond in mg.graph.edges():
