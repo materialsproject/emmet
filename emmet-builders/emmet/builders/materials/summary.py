@@ -118,9 +118,7 @@ class SummaryBuilder(Builder):
 
             data = {
                 HasProps.materials.value: materials_doc,
-                HasProps.thermo.value: self.thermo.query_one(
-                    {self.materials.key: entry, "thermo_type": "GGA_GGA+U"}
-                ),
+                HasProps.thermo.value: self.thermo.query_one({self.thermo.key: entry}),
                 HasProps.xas.value: list(
                     self.xas.query({self.xas.key: {"$in": all_tasks}})
                 ),
