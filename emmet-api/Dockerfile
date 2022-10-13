@@ -1,4 +1,4 @@
-FROM materialsproject/devops:python-3.913.10 as base
+FROM materialsproject/devops:python-3.913.11 as base
 
 FROM base as builder
 RUN apt-get update && apt-get install -y --no-install-recommends gcc git g++ cmake make libsnappy-dev wget && apt-get clean
