@@ -1,9 +1,9 @@
 from collections import defaultdict
 import copy
 from datetime import datetime
-from itertools import chain
+from itertools import chain, groupby
 from math import ceil
-from typing import Optional, Iterable, Iterator, List, Dict
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Union
 
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
@@ -193,18 +193,7 @@ class RedoxBuilder(Builder):
         mol_ids = [m.molecule_id for m in mols]
         self.logger.debug(f"Processing {formula} : {mol_ids}")
 
-        # The process is as follows:
-        #     3. For each MoleculeDoc:
-        #         3a. Identify relevant ThermoDocs
-        #         3b. Look for single-point energy calculations conducted at the
-        #         molecule's charge +- 1. These will be used to calculation
-        #         vertical electron affinities and ionization energies
-        #         3c. Group ThermoDocs and single-point calculations based on solvent
-        #         and level of theory
-        #     4. Construct RedoxDocs by looking for molecules (with associated
-        #         calculations) that:
-        #         - Have charges that differ by +- 1
-        #         - Use the same solvent and level of theory
+        redox_docs = list()
 
         # Group by (covalent) molecular graph connectivity
         group_by_graph = self._group_by_graph(mols)
@@ -225,6 +214,7 @@ class RedoxBuilder(Builder):
                     e["task_id"] for e in gg.entries
                     if e["charge"] == gg.charge + 1
                        and e["task_type"] == "Single Point"
+                       and e["output"].get("final_energy")
                 ]
                 ie_tasks = [TaskDocument(**e) for e in self.tasks.query({"task_id": {"$in": ie_sp_task_ids}})]
 
@@ -232,24 +222,65 @@ class RedoxBuilder(Builder):
                     e["task_id"] for e in gg.entries
                     if e["charge"] == gg.charge - 1
                        and e["task_type"] == "Single Point"
+                       and e["output"].get("final_energy")
                 ]
                 ea_tasks = [TaskDocument(**e) for e in self.tasks.query({"task_id": {"$in": ea_sp_task_ids}})]
 
-        # TODO:
-        # 1. Create new function RedoxBuilder._collect_by_lot_solvent
-        #   - Create tuples (
-        #       MoleculeDoc,
-        #       {<lot_solvent>: {"thermo_doc": ThermoDoc, "ie_doc": TaskDoc, "ea_doc": Task_Doc}
-        #       }
-        #      )
-        # 2. Call this function for gg in graph_group, and add the result to charges dict
-        # 3. For charge, collection in charges.items():
-        #   - For each lot_solvent in dict:
-        #       - Look for docs in neighboring charges with same lot_solvent
-        #       - Sort these possible neighbors by (free) energy
-        #       - Make a RedoxDoc
+                grouped_docs = self._collect_by_lot_solvent(thermo_docs, ie_tasks, ea_tasks)
+                charges[gg.charge].append((gg, grouped_docs))
 
-        redox_docs = RedoxDoc.from_entries(entries)
+            for charge, collection in charges.items():
+                for mol, docs in collection:
+                    # Get all possible molecules for adiabatic oxidation and reduction
+                    red_coll = charges[charge - 1]
+                    ox_coll = charges[charge + 1]
+
+                    for lot_solv, docset in docs.items():
+                        # Collect other molecules that have ThermoDocs at the
+                        # exact same level of theory
+
+                        combined = docset["thermo_doc"].combined_lot_solvent
+
+                        relevant_red = list()
+                        relevant_ox = list()
+
+                        for rmol, rdocs in red_coll:
+                            if lot_solv in rdocs:
+                                if rdocs[lot_solv]["thermo_doc"].combined_lot_solvent == combined:
+                                    relevant_red.append(rdocs)
+
+                        for omol, odocs in ox_coll:
+                            if lot_solv in odocs:
+                                if odocs[lot_solv]["thermo_doc"].combined_lot_solvent == combined:
+                                    relevant_ox.append(odocs)
+
+                        # Take best options (based on electronic energy), where available
+                        if len(relevant_red) == 0:
+                            red_doc = None
+                        else:
+                            red_doc = sorted(
+                                relevant_red,
+                                key=lambda x: x["thermo_doc"].electronic_energy
+                            )[0]["thermo_doc"]
+
+                        if len(relevant_ox) == 0:
+                            ox_doc = None
+                        else:
+                            ox_doc = sorted(
+                                relevant_ox,
+                                key=lambda x: x["thermo_doc"].electronic_energy
+                            )[0]["thermo_doc"]
+
+                        redox_docs.append(
+                            RedoxDoc.from_docs(
+                                base_molecule_doc=mol,
+                                base_thermo_doc=docset["thermo_doc"],
+                                red_doc=red_doc,
+                                ox_doc=ox_doc,
+                                ea_doc=docset.get("ea_doc"),
+                                ie_doc=docset.get("ie_doc")
+                            )
+                        )
 
         self.logger.debug(f"Produced {len(redox_docs)} redox docs for {formula}")
 
@@ -324,3 +355,74 @@ class RedoxBuilder(Builder):
                 results[match].append(t)
 
         return results
+
+    @staticmethod
+    def _collect_by_lot_solvent(thermo_docs: List[ThermoDoc],
+                                ie_docs: List[TaskDocument],
+                                ea_docs: List[TaskDocument]) -> Dict[str, Any]:
+        """
+        For a given MoleculeDoc, group potential ThermoDocs and TaskDocs for
+        IE/EA calculations based on level of theory and solvent.
+
+        Args:
+            thermo_docs (list of ThermoDocs): List of ThermoDocs for this MoleculeDoc
+            ie_docs (list of TaskDocuments): List of TaskDocs which could be used
+                to calculate vertical ionization energies for this MoleculeDoc
+            ea_docs (list of TaskDocuments): List of TaskDocs which could be used
+                to calculate vertical electron affinities for this MoleculeDoc:
+
+        Returns:
+            dict {<lot_solvent>: {
+                        "thermo_doc": ThermoDoc, "ie_doc": TaskDocument, "ea_doc": TaskDocument
+                    }
+                 }
+        """
+
+        def _lot_solv(doc: Union[ThermoDoc, TaskDocument]):
+            if isinstance(doc, ThermoDoc):
+                if doc.correction:
+                    return doc.correction_lot_solvent
+            return doc.lot_solvent
+
+        thermo_grouped = groupby(
+            sorted(thermo_docs, key=_lot_solv), key=_lot_solv
+        )
+        ie_grouped = groupby(
+            sorted(ie_docs, key=_lot_solv), key=_lot_solv
+        )
+        ea_grouped = groupby(
+            sorted(ea_docs, key=_lot_solv), key=_lot_solv
+        )
+
+        groups = dict()
+
+        for k, g in thermo_grouped:
+            g_list = list(g)
+
+            # Should never be more than one ThermoDoc per MoleculeDoc
+            # Just for safety...
+            if len(g_list) > 1:
+                g_list_sorted = sorted(g_list, key=lambda x: x.electronic_energy)
+                this_thermo_doc = g_list_sorted[0]
+            else:
+                this_thermo_doc = g_list[0]
+
+            groups[k] = {"thermo_doc": this_thermo_doc}
+
+        for k, g in ie_grouped:
+            # Must be a ThermoDoc to make a RedoxDoc
+            if k not in groups:
+                continue
+
+            this_ie_doc = sorted(list(g), key=lambda x: x.output.final_energy)[0]
+            groups[k]["ie_doc"] = this_ie_doc
+
+        for k, g in ea_grouped:
+            # Must be a ThermoDoc to make a RedoxDoc
+            if k not in groups:
+                continue
+
+            this_ea_doc = sorted(list(g), key=lambda x: x.output.final_energy)[0]
+            groups[k]["ea_doc"] = this_ea_doc
+
+        return groups

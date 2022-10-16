@@ -57,6 +57,14 @@ class ThermoDoc(PropertyDoc):
         "environment used to correct the electronic energy.",
     )
 
+    combined_lot_solvent: str = Field(
+        None,
+        description="String representation of the level of theory and solvent "
+                    "environment used to generate this ThermoDoc, combining "
+                    "both the frequency calculation and (potentially) the "
+                    "single-point energy correction."
+    )
+
     zero_point_energy: float = Field(
         None, description="Zero-point energy of the molecule (units: eV)"
     )
@@ -130,12 +138,14 @@ class ThermoDoc(PropertyDoc):
             correction_lot = None
             correction_solvent = None
             correction_lot_solvent = None
+            combined_lot_solvent = task.lot_solvent
         else:
             energy = correction_task.output.final_energy
             correction = True
             correction_lot = correction_task.level_of_theory
             correction_solvent = correction_task.solvent
             correction_lot_solvent = correction_task.lot_solvent
+            combined_lot_solvent = f"{task.lot_solvent}/{correction_lot_solvent}"
 
         total_enthalpy = task.output.enthalpy
         total_entropy = task.output.entropy
@@ -184,6 +194,7 @@ class ThermoDoc(PropertyDoc):
                         correction_level_of_theory=correction_lot,
                         correction_solvent=correction_solvent,
                         correction_lot_solvent=correction_lot_solvent,
+                        combined_lot_solvent=combined_lot_solvent,
                         electronic_energy=energy * 27.2114,
                         zero_point_energy=calc["ZPE"] * 0.043363,
                         rt=calc["gas_constant"] * 0.043363,
@@ -213,6 +224,7 @@ class ThermoDoc(PropertyDoc):
             correction_level_of_theory=correction_lot,
             correction_solvent=correction_solvent,
             correction_lot_solvent=correction_lot_solvent,
+            combined_lot_solvent=combined_lot_solvent,
             electronic_energy=energy * 27.2114,
             deprecated=deprecated,
             origins=origins,
