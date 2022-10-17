@@ -42,24 +42,30 @@ if db_uri:
     )
 
     task_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="task_id",
-        collection_name="tasks",
+        uri=db_uri, database="mp_core", key="task_id", collection_name="tasks",
     )
 
     thermo_store = MongoURIStore(
         uri=db_uri,
         database=f"mp_core_{db_suffix}",
-        key="material_id",
+        key="thermo_id",
         collection_name="thermo",
     )
 
-    phase_diagram_store = MongoURIStore(
+    s3_phase_diagram_index = MongoURIStore(
         uri=db_uri,
-        database=f"mp_core_{db_suffix}",
-        key="chemsys",
-        collection_name="phase_diagram",
+        database="mp_core",
+        key="phase_diagram_id",
+        collection_name="s3_phase_diagram_index",
+    )
+
+    phase_diagram_store = S3Store(
+        index=s3_phase_diagram_index,
+        bucket="mp-phase-diagrams",
+        s3_workers=24,
+        key="phase_diagram_id",
+        searchable_fields=["chemsys", "thermo_type", "phase_diagram_id"],
+        compress=True,
     )
 
     dielectric_store = MongoURIStore(
@@ -84,31 +90,19 @@ if db_uri:
     )
 
     phonon_bs_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="material_id",
-        collection_name="pmg_ph_bs",
+        uri=db_uri, database="mp_core", key="material_id", collection_name="pmg_ph_bs",
     )
 
     eos_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="task_id",
-        collection_name="eos",
+        uri=db_uri, database="mp_core", key="task_id", collection_name="eos",
     )
 
     similarity_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="material_id",
-        collection_name="similarity",
+        uri=db_uri, database="mp_core", key="material_id", collection_name="similarity",
     )
 
     xas_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="spectrum_id",
-        collection_name="xas",
+        uri=db_uri, database="mp_core", key="spectrum_id", collection_name="xas",
     )
 
     gb_store = MongoURIStore(
@@ -119,31 +113,19 @@ if db_uri:
     )
 
     fermi_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="task_id",
-        collection_name="fermi_surface",
+        uri=db_uri, database="mp_core", key="task_id", collection_name="fermi_surface",
     )
 
     elasticity_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="task_id",
-        collection_name="elasticity",
+        uri=db_uri, database="mp_core", key="task_id", collection_name="elasticity",
     )
 
     doi_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="task_id",
-        collection_name="dois",
+        uri=db_uri, database="mp_core", key="task_id", collection_name="dois",
     )
 
     substrates_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="film_id",
-        collection_name="substrates",
+        uri=db_uri, database="mp_core", key="film_id", collection_name="substrates",
     )
 
     surface_props_store = MongoURIStore(
@@ -161,10 +143,7 @@ if db_uri:
     )
 
     synth_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="_id",
-        collection_name="synth_descriptions",
+        uri=db_uri, database="mp_core", key="_id", collection_name="synth_descriptions",
     )
 
     insertion_electrodes_store = MongoURIStore(
@@ -175,10 +154,7 @@ if db_uri:
     )
 
     molecules_store = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="task_id",
-        collection_name="molecules",
+        uri=db_uri, database="mp_core", key="task_id", collection_name="molecules",
     )
 
     oxi_states_store = MongoURIStore(
@@ -224,10 +200,7 @@ if db_uri:
     )
 
     s3_dos_index = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="fs_id",
-        collection_name="s3_dos_index",
+        uri=db_uri, database="mp_core", key="fs_id", collection_name="s3_dos_index",
     )
 
     s3_bs = S3Store(
@@ -266,10 +239,7 @@ if db_uri:
     )
 
     chgcar_url = MongoURIStore(
-        uri=db_uri,
-        database="mp_core",
-        key="fs_id",
-        collection_name="chgcar_s3_urls",
+        uri=db_uri, database="mp_core", key="fs_id", collection_name="chgcar_s3_urls",
     )
 
     mpcomplete_store = MongoURIStore(
