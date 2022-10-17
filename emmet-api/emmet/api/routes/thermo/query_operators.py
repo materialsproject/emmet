@@ -80,4 +80,3 @@ class MultiThermoTypeQuery(QueryOperator):
                 crit.update({"thermo_type": {"$in": thermo_type_list}})
 
         return {"criteria": crit}
-
