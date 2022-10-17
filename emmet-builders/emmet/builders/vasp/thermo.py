@@ -217,10 +217,10 @@ class ThermoBuilder(Builder):
                                     if str(e.data["run_type"]) == "R2SCAN"
                                 ]
                             )
-                            combined_doc_list = self._produce_thermo_pd_docs_list(
+                            combined_doc_list = self._produce_docs_list(
                                 combined_pd_entries, thermo_type, elements, chemsys
                             )
-                            only_scan_doc_list = self._produce_thermo_pd_docs_list(
+                            only_scan_doc_list = self._produce_docs_list(
                                 only_scan_pd_entries,
                                 ThermoType.R2SCAN,
                                 elements,
@@ -231,12 +231,11 @@ class ThermoBuilder(Builder):
 
                         else:
                             pd_entries = compatability.process_entries(entries)
-                            docs_pd_pair_list = self._produce_thermo_pd_docs_list(
+                            docs_pd_pair_list = self._produce_docs_list(
                                 pd_entries, thermo_type, elements, chemsys
                             )
 
             else:
-
                 if len(all_entry_types) > 1:
                     raise ValueError(
                         "More than one functional type has been provided without a mixing scheme!"
@@ -244,7 +243,7 @@ class ThermoBuilder(Builder):
                 else:
                     thermo_type = all_entry_types.pop()
 
-                docs_pd_pair_list = self._produce_thermo_pd_docs_list(
+                docs_pd_pair_list = self._produce_docs_list(
                     entries, thermo_type, elements, chemsys
                 )
 
