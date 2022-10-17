@@ -212,13 +212,12 @@ class ThermoBuilder(Builder):
                     with HiddenPrints():
                         if "R2SCAN" in all_entry_types:
                             combined_pd_entries = compatability.process_entries(entries)
-                            only_scan_pd_entries = compatability.process_entries(
-                                [
-                                    e
-                                    for e in entries
-                                    if str(e.data["run_type"]) == "R2SCAN"
-                                ]
-                            )
+                            only_scan_pd_entries = [
+                                e
+                                for e in entries
+                                if str(e.data["run_type"]) == "R2SCAN"
+                            ]
+
                             combined_pair = self._produce_pair(
                                 combined_pd_entries, thermo_type, elements, chemsys
                             )
