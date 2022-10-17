@@ -94,7 +94,9 @@ class ThermoBuilder(Builder):
 
             targets.append(phase_diagram)  # type: ignore
 
-        super().__init__(sources=sources, targets=targets, chunk_size=chunk_size, **kwargs)
+        super().__init__(
+            sources=sources, targets=targets, chunk_size=chunk_size, **kwargs
+        )
 
     def ensure_indexes(self):
         """
@@ -189,7 +191,7 @@ class ThermoBuilder(Builder):
 
         self.logger.debug(f"Processing {len(entries)} entries for {chemsys}")
 
-        docs_pd_pair_list = []
+        all_entry_types = {str(e.data["run_type"]) for e in entries}
 
         for compatability in self.compatibility:
 
@@ -206,63 +208,90 @@ class ThermoBuilder(Builder):
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     with HiddenPrints():
-                        pd_entries = compatability.process_entries(entries)
+                        if "R2SCAN" in all_entry_types:
+                            combined_pd_entries = compatability.process_entries(entries)
+                            only_scan_pd_entries = compatability.process_entries(
+                                [
+                                    e
+                                    for e in entries
+                                    if str(e.data["run_type"]) == "R2SCAN"
+                                ]
+                            )
+                            combined_doc_list = self._produce_thermo_pd_docs_list(
+                                combined_pd_entries, thermo_type, elements, chemsys
+                            )
+                            only_scan_doc_list = self._produce_thermo_pd_docs_list(
+                                only_scan_pd_entries,
+                                ThermoType.R2SCAN,
+                                elements,
+                                chemsys,
+                            )
+
+                            docs_pd_pair_list = combined_doc_list + only_scan_doc_list
+
+                        else:
+                            pd_entries = compatability.process_entries(entries)
+                            docs_pd_pair_list = self._produce_thermo_pd_docs_list(
+                                pd_entries, thermo_type, elements, chemsys
+                            )
+
             else:
-                all_entry_types = {e.data["run_type"] for e in entries}
+
                 if len(all_entry_types) > 1:
                     raise ValueError(
                         "More than one functional type has been provided without a mixing scheme!"
                     )
                 else:
                     thermo_type = all_entry_types.pop()
-                pd_entries = entries
+
+                docs_pd_pair_list = self._produce_thermo_pd_docs_list(
+                    entries, thermo_type, elements, chemsys
+                )
+
             self.logger.debug(f"{len(pd_entries)} remain in {chemsys} after filtering")
 
-            try:
-                docs, pd = ThermoDoc.from_entries(
-                    pd_entries, thermo_type, deprecated=False
-                )
-
-                pd_data = None
-
-                if self.phase_diagram:
-                    if (
-                        self.num_phase_diagram_eles is None
-                        or len(elements) <= self.num_phase_diagram_eles
-                    ):
-                        pd_id = "{}_{}".format(chemsys, str(thermo_type))
-                        pd_doc = PhaseDiagramDoc(
-                            phase_diagram_id=pd_id,
-                            chemsys=chemsys,
-                            phase_diagram=pd,
-                            thermo_type=thermo_type,
-                        )
-
-                        pd_data = jsanitize(pd_doc.dict(), allow_bson=True)
-
-                docs_pd_pair = (
-                    jsanitize([d.dict() for d in docs], allow_bson=True),
-                    [pd_data],
-                )
-
-                docs_pd_pair_list.append(docs_pd_pair)
-
-            except PhaseDiagramError as p:
-                elsyms = []
-                for e in entries:
-                    elsyms.extend([el.symbol for el in e.composition.elements])
-
-                self.logger.warning(
-                    f"Phase diagram error in chemsys {'-'.join(sorted(set(elsyms)))}: {p}"
-                )
-                return []
-            except Exception as e:
-                self.logger.error(
-                    f"Got unexpected error while processing {[ent_.entry_id for ent_ in entries]}: {e}"
-                )
-                return []
-
         return docs_pd_pair_list
+
+    def _produce_docs_list(self, pd_entries, thermo_type, elements, chemsys):
+        # Produce thermo and phase diagram documents
+        docs_pd_pair_list = []
+
+        try:
+            docs, pd = ThermoDoc.from_entries(pd_entries, thermo_type, deprecated=False)
+
+            pd_data = None
+
+            if self.phase_diagram:
+                if (
+                    self.num_phase_diagram_eles is None
+                    or len(elements) <= self.num_phase_diagram_eles
+                ):
+                    pd_id = "{}_{}".format(chemsys, str(thermo_type))
+                    pd_doc = PhaseDiagramDoc(
+                        phase_diagram_id=pd_id,
+                        chemsys=chemsys,
+                        phase_diagram=pd,
+                        thermo_type=thermo_type,
+                    )
+
+                    pd_data = jsanitize(pd_doc.dict(), allow_bson=True)
+
+            docs_pd_pair = (
+                jsanitize([d.dict() for d in docs], allow_bson=True),
+                [pd_data],
+            )
+
+            docs_pd_pair_list.append(docs_pd_pair)
+
+        except PhaseDiagramError as p:
+            elsyms = []
+            for e in entries:
+                elsyms.extend([el.symbol for el in e.composition.elements])
+
+            self.logger.error(
+                f"Phase diagram error in chemsys {'-'.join(sorted(set(elsyms)))}: {p}"
+            )
+            return []
 
     def update_targets(self, items):
         """
