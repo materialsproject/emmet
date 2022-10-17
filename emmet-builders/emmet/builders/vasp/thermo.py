@@ -252,8 +252,6 @@ class ThermoBuilder(Builder):
 
                 docs_pd_pair_list.append(pd_pair)
 
-            self.logger.debug(f"{len(pd_entries)} remain in {chemsys} after filtering")
-
         return docs_pd_pair_list
 
     def _produce_pair(self, pd_entries, thermo_type, elements, chemsys):
