@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.37.0](https://github.com/materialsproject/emmet/tree/v0.37.0) (2022-10-17)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.36.9...v0.37.0)
+
+**Merged pull requests:**
+
+- Update thermo builder and API [\#561](https://github.com/materialsproject/emmet/pull/561) ([munrojm](https://github.com/munrojm))
+
 ## [v0.36.9](https://github.com/materialsproject/emmet/tree/v0.36.9) (2022-10-05)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.36.8...v0.36.9)
