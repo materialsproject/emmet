@@ -283,6 +283,8 @@ class ThermoBuilder(Builder):
 
             docs_pd_pair_list.append(docs_pd_pair)
 
+            return docs_pd_pair_list
+
         except PhaseDiagramError as p:
             elsyms = []
             for e in pd_entries:
