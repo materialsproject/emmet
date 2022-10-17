@@ -193,6 +193,8 @@ class ThermoBuilder(Builder):
 
         all_entry_types = {str(e.data["run_type"]) for e in entries}
 
+        docs_pd_pair_list = []
+
         for compatability in self.compatibility:
 
             pd_entries = []
@@ -217,23 +219,26 @@ class ThermoBuilder(Builder):
                                     if str(e.data["run_type"]) == "R2SCAN"
                                 ]
                             )
-                            combined_doc_list = self._produce_docs_list(
+                            combined_pair = self._produce_pair(
                                 combined_pd_entries, thermo_type, elements, chemsys
                             )
-                            only_scan_doc_list = self._produce_docs_list(
+                            scan_only_pair = self._produce_pair(
                                 only_scan_pd_entries,
                                 ThermoType.R2SCAN,
                                 elements,
                                 chemsys,
                             )
 
-                            docs_pd_pair_list = combined_doc_list + only_scan_doc_list
+                            docs_pd_pair_list.append(combined_pair)
+                            docs_pd_pair_list.append(scan_only_pair)
 
                         else:
                             pd_entries = compatability.process_entries(entries)
-                            docs_pd_pair_list = self._produce_docs_list(
+                            pd_pair = self._produce_pair(
                                 pd_entries, thermo_type, elements, chemsys
                             )
+
+                            docs_pd_pair_list.append(pd_pair)
 
             else:
                 if len(all_entry_types) > 1:
@@ -243,17 +248,16 @@ class ThermoBuilder(Builder):
                 else:
                     thermo_type = all_entry_types.pop()
 
-                docs_pd_pair_list = self._produce_docs_list(
-                    entries, thermo_type, elements, chemsys
-                )
+                pd_pair = self._produce_pair(entries, thermo_type, elements, chemsys)
+
+                docs_pd_pair_list.append(pd_pair)
 
             self.logger.debug(f"{len(pd_entries)} remain in {chemsys} after filtering")
 
         return docs_pd_pair_list
 
-    def _produce_docs_list(self, pd_entries, thermo_type, elements, chemsys):
-        # Produce thermo and phase diagram documents
-        docs_pd_pair_list = []
+    def _produce_pair(self, pd_entries, thermo_type, elements, chemsys):
+        # Produce thermo and phase diagram pair
 
         try:
             docs, pd = ThermoDoc.from_entries(pd_entries, thermo_type, deprecated=False)
@@ -280,9 +284,7 @@ class ThermoBuilder(Builder):
                 [pd_data],
             )
 
-            docs_pd_pair_list.append(docs_pd_pair)
-
-            return docs_pd_pair_list
+            return docs_pd_pair
 
         except PhaseDiagramError as p:
             elsyms = []
@@ -292,7 +294,7 @@ class ThermoBuilder(Builder):
             self.logger.error(
                 f"Phase diagram error in chemsys {'-'.join(sorted(set(elsyms)))}: {p}"
             )
-            return []
+            return (None, None)
 
     def update_targets(self, items):
         """
