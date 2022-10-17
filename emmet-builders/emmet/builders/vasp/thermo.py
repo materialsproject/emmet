@@ -285,7 +285,7 @@ class ThermoBuilder(Builder):
 
         except PhaseDiagramError as p:
             elsyms = []
-            for e in entries:
+            for e in pd_entries:
                 elsyms.extend([el.symbol for el in e.composition.elements])
 
             self.logger.error(
