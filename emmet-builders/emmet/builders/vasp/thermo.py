@@ -219,13 +219,10 @@ class ThermoBuilder(Builder):
                             ]
 
                             combined_pair = self._produce_pair(
-                                combined_pd_entries, thermo_type, elements, chemsys
+                                combined_pd_entries, thermo_type, elements
                             )
                             scan_only_pair = self._produce_pair(
-                                only_scan_pd_entries,
-                                ThermoType.R2SCAN,
-                                elements,
-                                chemsys,
+                                only_scan_pd_entries, ThermoType.R2SCAN, elements
                             )
 
                             docs_pd_pair_list.append(combined_pair)
@@ -234,7 +231,7 @@ class ThermoBuilder(Builder):
                         else:
                             pd_entries = compatability.process_entries(entries)
                             pd_pair = self._produce_pair(
-                                pd_entries, thermo_type, elements, chemsys
+                                pd_entries, thermo_type, elements
                             )
 
                             docs_pd_pair_list.append(pd_pair)
@@ -247,17 +244,19 @@ class ThermoBuilder(Builder):
                 else:
                     thermo_type = all_entry_types.pop()
 
-                pd_pair = self._produce_pair(entries, thermo_type, elements, chemsys)
+                pd_pair = self._produce_pair(entries, thermo_type, elements)
 
                 docs_pd_pair_list.append(pd_pair)
 
         return docs_pd_pair_list
 
-    def _produce_pair(self, pd_entries, thermo_type, elements, chemsys):
+    def _produce_pair(self, pd_entries, thermo_type, elements):
         # Produce thermo and phase diagram pair
 
         try:
-            docs, pd = ThermoDoc.from_entries(pd_entries, thermo_type, deprecated=False)
+            docs, pds = ThermoDoc.from_entries(
+                pd_entries, thermo_type, deprecated=False
+            )
 
             pd_data = None
 
@@ -266,19 +265,25 @@ class ThermoBuilder(Builder):
                     self.num_phase_diagram_eles is None
                     or len(elements) <= self.num_phase_diagram_eles
                 ):
-                    pd_id = "{}_{}".format(chemsys, str(thermo_type))
-                    pd_doc = PhaseDiagramDoc(
-                        phase_diagram_id=pd_id,
-                        chemsys=chemsys,
-                        phase_diagram=pd,
-                        thermo_type=thermo_type,
-                    )
+                    pd_docs = []
 
-                    pd_data = jsanitize(pd_doc.dict(), allow_bson=True)
+                    for pd in pds:
+                        chemsys = sorted(set([e.symbol for e in pd.elements]))
+                        pd_id = "{}_{}".format(chemsys, str(thermo_type))
+                        pd_doc = PhaseDiagramDoc(
+                            phase_diagram_id=pd_id,
+                            chemsys=chemsys,
+                            phase_diagram=pd,
+                            thermo_type=thermo_type,
+                        )
+
+                        pd_data = jsanitize(pd_doc.dict(), allow_bson=True)
+
+                        pd_docs.append(pd_data)
 
             docs_pd_pair = (
                 jsanitize([d.dict() for d in docs], allow_bson=True),
-                [pd_data],
+                pd_docs,
             )
 
             return docs_pd_pair
