@@ -6,6 +6,7 @@ from maggma.utils import grouper
 from emmet.core.mpid import MPID
 from emmet.core.summary import SummaryDoc, HasProps
 from emmet.core.utils import jsanitize
+from emmet.core.thermo import ThermoType
 
 
 class SummaryBuilder(Builder):
@@ -29,6 +30,7 @@ class SummaryBuilder(Builder):
         provenance,
         charge_density_index,
         summary,
+        thermo_type=ThermoType.GGA_GGA_U,
         chunk_size=100,
         query=None,
         **kwargs,
@@ -51,6 +53,8 @@ class SummaryBuilder(Builder):
         self.eos = eos
         self.provenance = provenance
         self.charge_density_index = charge_density_index
+
+        self.thermo_type = thermo_type
 
         self.summary = summary
         self.chunk_size = chunk_size
@@ -118,7 +122,9 @@ class SummaryBuilder(Builder):
 
             data = {
                 HasProps.materials.value: materials_doc,
-                HasProps.thermo.value: self.thermo.query_one({self.thermo.key: entry}),
+                HasProps.thermo.value: self.thermo.query_one(
+                    {self.materials.key: entry, "thermo_type": str(self.thermo_type)}
+                ),
                 HasProps.xas.value: list(
                     self.xas.query({self.xas.key: {"$in": all_tasks}})
                 ),
