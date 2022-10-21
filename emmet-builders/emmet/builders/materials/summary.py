@@ -30,7 +30,7 @@ class SummaryBuilder(Builder):
         provenance,
         charge_density_index,
         summary,
-        thermo_type=ThermoType.GGA_GGA_U,
+        thermo_type=ThermoType.GGA_GGA_U.value,
         chunk_size=100,
         query=None,
         **kwargs,
