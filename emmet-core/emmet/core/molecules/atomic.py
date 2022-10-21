@@ -1,14 +1,4 @@
-import logging
-from collections import defaultdict
-from typing import Dict, List, Optional, Tuple
-
-from typing_extensions import Literal
-
-import numpy as np
 from pydantic import Field
-
-from pymatgen.core.structure import Molecule
-from pymatgen.core.periodic_table import Specie, Element
 
 from emmet.core.mpid import MPID
 from emmet.core.qchem.task import TaskDocument

@@ -2,13 +2,10 @@ from typing import Any, Dict, List, Type, TypeVar, Union
 import copy
 from collections import defaultdict
 
-from typing_extensions import Literal
-
 from pydantic import Field
 
-from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
+from pymatgen.analysis.local_env import OpenBabelNN
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
 from emmet.core.utils import confirm_molecule
@@ -48,15 +45,11 @@ class RedoxDoc(PropertyDoc):
 
     ie_id: MPID = Field(description="Molecule ID for ionization energy")
 
-    reduction_free_energy: float = Field(
-        None, description="Adiabatic free energy of reduction"
-    )
+    reduction_free_energy: float = Field(None, description="Adiabatic free energy of reduction")
 
     red_id: MPID = Field(None, description="Molecule ID for adiabatic reduction")
 
-    oxidation_free_energy: float = Field(
-        None, description="Adiabatic free energy of oxidation"
-    )
+    oxidation_free_energy: float = Field(None, description="Adiabatic free energy of oxidation")
 
     ox_id: MPID = Field(None, description="Molecule ID for adiabatic oxidation")
 
@@ -69,9 +62,7 @@ class RedoxDoc(PropertyDoc):
     )
 
     @classmethod
-    def _group_by_formula(cls: Type[T],
-                          entries: List[Dict[str, Any]]
-                          ) -> Dict[str, List[Dict[str, Any]]]:
+    def _group_by_formula(cls: Type[T], entries: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
         """
         Group task entries by formula
 
@@ -89,9 +80,7 @@ class RedoxDoc(PropertyDoc):
         return tasks_by_formula
 
     @classmethod
-    def _group_by_graph(
-        cls: Type[T], entries: List[Dict[str, Any]]
-    ) -> Dict[int, List[Dict[str, Any]]]:
+    def _group_by_graph(cls: Type[T], entries: List[Dict[str, Any]]) -> Dict[int, List[Dict[str, Any]]]:
         """
         Group task entries by molecular graph connectivity
 
@@ -112,9 +101,7 @@ class RedoxDoc(PropertyDoc):
                 mol_nometal.remove_species(metals)
 
             mol_nometal.set_charge_and_spin(0)
-            mg_nometal = MoleculeGraph.with_local_env_strategy(
-                mol_nometal, OpenBabelNN()
-            )
+            mg_nometal = MoleculeGraph.with_local_env_strategy(mol_nometal, OpenBabelNN())
 
             match = None
             for i, mg in enumerate(mol_graphs_nometal):
@@ -142,9 +129,7 @@ class RedoxDoc(PropertyDoc):
         """
         try:
             result = get_free_energy(
-                entry["output"]["final_energy"],
-                entry["output"]["enthalpy"],
-                entry["output"]["entropy"],
+                entry["output"]["final_energy"], entry["output"]["enthalpy"], entry["output"]["entropy"],
             )
         # Single atoms won't have enthalpy and entropy
         except TypeError:
@@ -189,21 +174,15 @@ class RedoxDoc(PropertyDoc):
                 docs_by_charge: Dict[Union[int, float], T] = dict()
                 # Now try to form documents
                 # Start with highest lot; keep going down until you can make complete documents
-                for lot, group in sorted(
-                    lot_groups.items(), key=lambda x: evaluate_lot(x[0])
-                ):
+                for lot, group in sorted(lot_groups.items(), key=lambda x: evaluate_lot(x[0])):
                     # Sorting important because we want to make docs only from lowest-energy instances
                     relevant_calcs = filter_task_type(
-                        group,
-                        TaskType.Frequency_Flattening_Geometry_Optimization,
-                        sort_by=lambda x: x["energy"],
+                        group, TaskType.Frequency_Flattening_Geometry_Optimization, sort_by=lambda x: x["energy"],
                     )
 
                     # For single atoms, which have no FFOpt calcs
                     # (Can't geometry optimize a single atom)
-                    relevant_calcs = relevant_calcs or sorted(
-                        group, key=lambda x: x["energy"]
-                    )
+                    relevant_calcs = relevant_calcs or sorted(group, key=lambda x: x["energy"])
 
                     single_points = filter_task_type(group, TaskType.Single_Point)
 
@@ -229,8 +208,7 @@ class RedoxDoc(PropertyDoc):
                             continue
 
                         ff_mol = confirm_molecule(
-                            ff["output"]["optimized_molecule"]
-                            or ff["output"]["initial_molecule"]
+                            ff["output"]["optimized_molecule"] or ff["output"]["initial_molecule"]
                         )
 
                         ff_g = cls._g_or_e(ff)
@@ -240,25 +218,13 @@ class RedoxDoc(PropertyDoc):
                             sp_mol = confirm_molecule(sp["output"]["initial_molecule"])
 
                             # EA
-                            if (
-                                sp["charge"] == charge - 1
-                                and mm.fit(ff_mol, sp_mol)
-                                and d["ea_id"] is None
-                            ):
-                                d["electron_affinity"] = (
-                                    sp["energy"] - ff["energy"]
-                                ) * 27.2114
+                            if sp["charge"] == charge - 1 and mm.fit(ff_mol, sp_mol) and d["ea_id"] is None:
+                                d["electron_affinity"] = (sp["energy"] - ff["energy"]) * 27.2114
                                 d["ea_id"] = sp["task_id"]
 
                             # IE
-                            elif (
-                                sp["charge"] == charge + 1
-                                and mm.fit(ff_mol, sp_mol)
-                                and d["ie_id"] is None
-                            ):
-                                d["ionization_energy"] = (
-                                    sp["energy"] - ff["energy"]
-                                ) * 27.2114
+                            elif sp["charge"] == charge + 1 and mm.fit(ff_mol, sp_mol) and d["ie_id"] is None:
+                                d["ionization_energy"] = (sp["energy"] - ff["energy"]) * 27.2114
                                 d["ie_id"] = sp["task_id"]
 
                         # If no vertical IE or EA, can't make complete doc; give up
@@ -275,9 +241,7 @@ class RedoxDoc(PropertyDoc):
                                 d["reduction_potentials"] = dict()
 
                                 for ref, pot in reference_potentials.items():
-                                    d["reduction_potentials"][ref] = (
-                                        -1 * d["reduction_free_energy"] - pot
-                                    )
+                                    d["reduction_potentials"][ref] = -1 * d["reduction_free_energy"] - pot
 
                                 d["red_id"] = other["task_id"]
 
@@ -289,23 +253,13 @@ class RedoxDoc(PropertyDoc):
                                 d["oxidation_potentials"] = dict()
 
                                 for ref, pot in reference_potentials.items():
-                                    d["oxidation_potentials"][ref] = (
-                                        d["oxidation_free_energy"] - pot
-                                    )
+                                    d["oxidation_potentials"][ref] = d["oxidation_free_energy"] - pot
 
                                 d["ox_id"] = other["task_id"]
 
                         origins = list()
                         for x in [
-                            a
-                            for a in [
-                                ff["task_id"],
-                                d["ea_id"],
-                                d["ie_id"],
-                                d["red_id"],
-                                d["ox_id"],
-                            ]
-                            if a is not None
+                            a for a in [ff["task_id"], d["ea_id"], d["ie_id"], d["red_id"], d["ox_id"]] if a is not None
                         ]:
                             origins.append(PropertyOrigin(name="redox", task_id=x))
 

@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import List, Iterable, Union, Dict, Tuple, Sequence, Any
+from typing import List, Union, Dict, Tuple, Sequence
 
-from pydantic import Field, validator
+from pydantic import Field
 import numpy as np
 from emmet.core.base import EmmetBaseModel
 from pymatgen.core import Structure
@@ -18,31 +18,28 @@ except ImportError:
 class MigrationGraphDoc(EmmetBaseModel):
     """
     MigrationGraph Doc.
-    Stores MigrationGraph and info such as ComputedStructureEntries (ComputedEntry can be used for working ion) and cutoff distance that are used to generated the object.
-    Note: this doc is not self-contained within pymatgen, as it has dependence on pymatgen.analysis.diffusion, a namespace package aka pymatgen-diffusion.
+    Stores MigrationGraph and info such as ComputedStructureEntries (ComputedEntry can be used for working ion)
+    and cutoff distance that are used to generated the object.
+
+    Note: this doc is not self-contained within pymatgen, as it has dependence on pymatgen.analysis.diffusion,
+    a namespace package aka pymatgen-diffusion.
     """
 
-    battery_id: str = Field(
-        ..., description="The battery id for this MigrationGraphDoc"
-    )
+    battery_id: str = Field(..., description="The battery id for this MigrationGraphDoc")
 
     last_updated: datetime = Field(
-        None,
-        description="Timestamp for the most recent calculation for this MigrationGraph document.",
+        None, description="Timestamp for the most recent calculation for this MigrationGraph document.",
     )
 
-    warnings: Sequence[str] = Field(
-        [], description="Any warnings related to this property."
-    )
+    warnings: Sequence[str] = Field([], description="Any warnings related to this property.")
 
     deprecated: bool = Field(
         False,
-        description="Indicates whether a migration graph fails to be constructed from the provided entries. Defaults to False, indicating mg can be constructed from entries.",
+        description="Indicates whether a migration graph fails to be constructed from the provided entries. Defaults to False, indicating mg can be constructed from entries.",  # noqa: E501
     )
 
     hop_cutoff: float = Field(
-        None,
-        description="The numerical value in angstroms used to cap the maximum length of a hop.",
+        None, description="The numerical value in angstroms used to cap the maximum length of a hop.",
     )
 
     entries_for_generation: List[ComputedStructureEntry] = Field(
@@ -55,43 +52,37 @@ class MigrationGraphDoc(EmmetBaseModel):
     )
 
     migration_graph: MigrationGraph = Field(
-        None,
-        description="The MigrationGraph object as defined in pymatgen.analysis.diffusion.",
+        None, description="The MigrationGraph object as defined in pymatgen.analysis.diffusion.",
     )
 
     populate_sc_fields: bool = Field(
-        True,
-        description="Flag indicating whether this document has populated the supercell fields",
+        True, description="Flag indicating whether this document has populated the supercell fields",
     )
 
     min_length_sc: float = Field(
-        None,
-        description="The minimum length used to generate supercell using pymatgen.",
+        None, description="The minimum length used to generate supercell using pymatgen.",
     )
 
     minmax_num_atoms: Tuple[int, int] = Field(
-        None,
-        description="The min/max number of atoms used to genreate supercell using pymatgen.",
+        None, description="The min/max number of atoms used to genreate supercell using pymatgen.",
     )
 
     matrix_supercell_structure: Structure = Field(
         None,
-        description="The matrix suprcell structure that does not contain the mobile ions for the purpose of migration analysis.",
+        description="The matrix suprcell structure that does not contain the mobile ions for the purpose of migration analysis.",  # noqa: E501
     )
 
     conversion_matrix: List[List[Union[int, float]]] = Field(
-        None,
-        description="The conversion matrix used to convert unit cell to supercell.",
+        None, description="The conversion matrix used to convert unit cell to supercell.",
     )
 
     inserted_ion_coords: List[Dict[str, Union[List[float], str, int]]] = Field(
-        None,
-        description="A dictionary containing all mobile ion fractional coordinates in terms of supercell.",
+        None, description="A dictionary containing all mobile ion fractional coordinates in terms of supercell.",
     )
 
     insert_coords_combo: List[str] = Field(
         None,
-        description="A list of combinations 'a+b' to designate hops in the supercell. Each combo should correspond to one unique hop in MigrationGraph.",
+        description="A list of combinations 'a+b' to designate hops in the supercell. Each combo should correspond to one unique hop in MigrationGraph.",  # noqa: E501
     )
 
     @classmethod
@@ -108,9 +99,11 @@ class MigrationGraphDoc(EmmetBaseModel):
         **kwargs,
     ) -> Union["MigrationGraphDoc", None]:
         """
-        This classmethod takes a group of ComputedStructureEntries (can also use ComputedEntry for wi) and generates a full sites structure.
+        This classmethod takes a group of ComputedStructureEntries (can also use ComputedEntry for wi) and generates
+        a full sites structure.
         Then a MigrationGraph object is generated with with_distance() method with a designated cutoff.
-        If populate_sc_fields set to True, this method will populate the supercell related fields. Required kwargs are min_length_sc and minmax_num_atoms.
+        If populate_sc_fields set to True, this method will populate the supercell related fields. Required kwargs are
+        min_length_sc and minmax_num_atoms.
         """
 
         ranked_structures = MigrationGraph.get_structure_from_entries(
@@ -167,15 +160,12 @@ class MigrationGraphDoc(EmmetBaseModel):
 
             else:
                 raise TypeError(
-                    "Please make sure to have kwargs min_length_sc and minmax_num_atoms if populate_sc_fields is set to True."
+                    "Please make sure to have kwargs min_length_sc and minmax_num_atoms if populate_sc_fields is set to True."  # noqa: E501
                 )
 
     @staticmethod
     def generate_sc_fields(
-        mg: MigrationGraph,
-        min_length_sc: float,
-        minmax_num_atoms: Tuple[int, int],
-        sm: StructureMatcher,
+        mg: MigrationGraph, min_length_sc: float, minmax_num_atoms: Tuple[int, int], sm: StructureMatcher,
     ):
         min_length_sc = min_length_sc
         minmax_num_atoms = minmax_num_atoms
@@ -199,9 +189,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         return host_sc, sc_mat, min_length_sc, minmax_num_atoms, coords_list, combo
 
     @staticmethod
-    def ordered_sc_site_list(
-        uc_sites_only: Structure, sc_mat: List[List[Union[int, float]]]
-    ):
+    def ordered_sc_site_list(uc_sites_only: Structure, sc_mat: List[List[Union[int, float]]]):
         uc_no_site = uc_sites_only.copy()
         uc_no_site.remove_sites(range(len(uc_sites_only)))
         working_ion = uc_sites_only[0].species_string
@@ -221,10 +209,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         ordered_site_list = [
             e
             for i, e in enumerate(
-                sorted(
-                    sc_site_dict.values(),
-                    key=lambda v: float(np.linalg.norm(v["site_frac_coords"])),
-                )
+                sorted(sc_site_dict.values(), key=lambda v: float(np.linalg.norm(v["site_frac_coords"])),)
             )
         ]
         return ordered_site_list
@@ -243,16 +228,8 @@ class MigrationGraphDoc(EmmetBaseModel):
         unique_hops = {k: v for k, v in sorted(unique_hops.items())}
         for one_hop in unique_hops.values():
             added = False
-            sc_isite_set = {
-                k: v
-                for k, v in enumerate(ordered_sc_site_list)
-                if v["uc_site_type"] == one_hop["iindex"]
-            }
-            sc_esite_set = {
-                k: v
-                for k, v in enumerate(ordered_sc_site_list)
-                if v["uc_site_type"] == one_hop["eindex"]
-            }
+            sc_isite_set = {k: v for k, v in enumerate(ordered_sc_site_list) if v["uc_site_type"] == one_hop["iindex"]}
+            sc_esite_set = {k: v for k, v in enumerate(ordered_sc_site_list) if v["uc_site_type"] == one_hop["eindex"]}
             for sc_iindex, sc_isite in sc_isite_set.items():
                 for sc_eindex, sc_esite in sc_esite_set.items():
                     sc_check = host_sc.copy()
@@ -302,10 +279,7 @@ class MigrationGraphDoc(EmmetBaseModel):
             one_hop_dis = one_hop["hop"].length
             sc_check_hop_dis = np.linalg.norm(sc_check[0].coords - sc_check[1].coords)
             if np.isclose(one_hop_dis, sc_check_hop_dis, rtol=0.1, atol=0.1):
-                if (
-                    one_hop["iindex"] == uc_site_types[0]
-                    and one_hop["eindex"] == uc_site_types[1]
-                ):
+                if one_hop["iindex"] == uc_site_types[0] and one_hop["eindex"] == uc_site_types[1]:
                     return True
 
         return False
@@ -316,7 +290,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         ordered_sc_site_list: list,
         one_hop: Dict,
         sc_mat: List[List[Union[int, float]]],
-        working_ion: str
+        working_ion: str,
     ):
         sc_mat_inv = np.linalg.inv(sc_mat)
         sc_ipos = np.dot(one_hop["ipos"], sc_mat_inv)
@@ -331,35 +305,35 @@ class MigrationGraphDoc(EmmetBaseModel):
                 sc_eindex = k
 
         if sc_iindex is None:
-            host_sc_insert.insert(
-                0, working_ion, sc_ipos
+            host_sc_insert.insert(0, working_ion, sc_ipos)
+            ordered_sc_site_list.append(
+                {
+                    "uc_site_type": one_hop["iindex"],
+                    "site_frac_coords": list(host_sc_insert[0].frac_coords),
+                    "extra_site": True,
+                }
             )
-            ordered_sc_site_list.append({
-                "uc_site_type": one_hop["iindex"],
-                "site_frac_coords": list(host_sc_insert[0].frac_coords),
-                "extra_site": True,
-            })
             sc_iindex = len(ordered_sc_site_list) - 1
         if sc_eindex is None:
-            host_sc_insert.insert(
-                0, working_ion, sc_epos
+            host_sc_insert.insert(0, working_ion, sc_epos)
+            ordered_sc_site_list.append(
+                {
+                    "uc_site_type": one_hop["eindex"],
+                    "site_frac_coords": list(host_sc_insert[0].frac_coords),
+                    "extra_site": True,
+                }
             )
-            ordered_sc_site_list.append({
-                "uc_site_type": one_hop["eindex"],
-                "site_frac_coords": list(host_sc_insert[0].frac_coords),
-                "extra_site": True,
-            })
             sc_eindex = len(ordered_sc_site_list) - 1
 
         return f"{sc_iindex}+{sc_eindex}", ordered_sc_site_list
 
     def get_distinct_hop_sites(self) -> Tuple[List, List[str], Dict]:
         """
-        This is a utils function that converts the site dict and combo into a site list and combo that contain only distince endpoints used the combos.
+        This is a utils function that converts the site dict and combo into a site list and combo that contain only distince endpoints used the combos. # noqa: E501
         """
         if self.inserted_ion_coords is None or self.insert_coords_combo is None:
             raise TypeError(
-                "Please make sure that the MGDoc passed in has inserted_ion_coords and inserted_coords_combo fields filled."
+                "Please make sure that the MGDoc passed in has inserted_ion_coords and inserted_coords_combo fields filled."  # noqa: E501
             )
 
         else:

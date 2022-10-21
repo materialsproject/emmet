@@ -4,8 +4,6 @@ from typing import Any, Dict, List, Mapping, Union
 from pydantic import Field
 
 from pymatgen.core.structure import Molecule
-from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
 from emmet.core.mpid import MPID
@@ -183,11 +181,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             all_lots = set(levels_of_theory.values())
             for lot in all_lots:
                 relevant_calcs = sorted(
-                    [
-                        doc
-                        for doc in task_group
-                        if doc.level_of_theory == lot and doc.is_valid
-                    ],
+                    [doc for doc in task_group if doc.level_of_theory == lot and doc.is_valid],
                     key=evaluate_task,
                 )
 
@@ -200,7 +194,10 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
         else:
             geometry_optimizations = [
-                task for task in task_group if task.task_type in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization]  # type: ignore
+                task
+                for task in task_group
+                if task.task_type
+                in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization]  # noqa: E501
             ]
 
             # Molecule ID
@@ -220,14 +217,10 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
                     initial_molecules.append(Molecule.from_dict(task.orig["molecule"]))
 
             mm = MoleculeMatcher()
-            initial_molecules = [
-                group[0] for group in mm.group_molecules(initial_molecules)
-            ]
+            initial_molecules = [group[0] for group in mm.group_molecules(initial_molecules)]
 
             # Deprecated
-            deprecated = all(
-                task.task_id in deprecated_tasks for task in geometry_optimizations
-            )
+            deprecated = all(task.task_id in deprecated_tasks for task in geometry_optimizations)
             deprecated = deprecated or best_molecule_calc.task_id in deprecated_tasks
 
             # Origins
@@ -244,11 +237,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             all_lots = set(levels_of_theory.values())
             for lot in all_lots:
                 relevant_calcs = sorted(
-                    [
-                        doc
-                        for doc in geometry_optimizations
-                        if doc.level_of_theory == lot and doc.is_valid
-                    ],
+                    [doc for doc in geometry_optimizations if doc.level_of_theory == lot and doc.is_valid],
                     key=evaluate_task,
                 )
 

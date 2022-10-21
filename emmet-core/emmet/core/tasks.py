@@ -12,7 +12,6 @@ from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.io.vasp import Incar, Poscar, Kpoints
 from pymatgen.io.vasp import Potcar as VaspPotcar
-from pymatgen.io.vasp import PotcarSingle as VaspPotcarSingle
 from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
@@ -38,26 +37,28 @@ class TaskType(str, Enum):
 class Potcar(BaseModel):
     functional: str = Field(None, description="Functional type use in the calculation.")
 
-    symbols: List[str] = Field(
-        None, description="List of VASP potcar symbols used in the calculation."
-    )
+    symbols: List[str] = Field(None, description="List of VASP potcar symbols used in the calculation.")
 
 
 class OrigInputs(BaseModel):
     incar: Union[Incar, Dict] = Field(
-        None, description="Pymatgen object representing the INCAR file.",
+        None,
+        description="Pymatgen object representing the INCAR file.",
     )
 
     poscar: Poscar = Field(
-        None, description="Pymatgen object representing the POSCAR file.",
+        None,
+        description="Pymatgen object representing the POSCAR file.",
     )
 
     kpoints: Kpoints = Field(
-        None, description="Pymatgen object representing the KPOINTS file.",
+        None,
+        description="Pymatgen object representing the KPOINTS file.",
     )
 
     potcar: Union[Potcar, VaspPotcar, List[Any]] = Field(
-        None, description="Pymatgen object representing the POTCAR file.",
+        None,
+        description="Pymatgen object representing the POTCAR file.",
     )
 
     # Make sure that the datetime field is properly formatted
@@ -81,12 +82,8 @@ class OutputDoc(BaseModel):
 
     density: float = Field(..., description="Density of in units of g/cc.")
     energy: float = Field(..., description="Total Energy in units of eV.")
-    forces: List[List[float]] = Field(
-        None, description="The force on each atom in units of eV/A^2."
-    )
-    stress: List[List[float]] = Field(
-        None, description="The stress on the cell in units of kB."
-    )
+    forces: List[List[float]] = Field(None, description="The force on each atom in units of eV/A^2.")
+    stress: List[List[float]] = Field(None, description="The stress on the cell in units of kB.")
 
 
 class InputDoc(BaseModel):
@@ -122,13 +119,17 @@ class CustodianDoc(BaseModel):
         description="List of custodian correction data for calculation.",
     )
     job: dict = Field(
-        None, title="Cusotodian Job Data", description="Job data logged by custodian.",
+        None,
+        title="Cusotodian Job Data",
+        description="Job data logged by custodian.",
     )
 
 
 class AnalysisDoc(BaseModel):
     delta_volume: float = Field(
-        None, title="Volume Change", description="Volume change for the calculation.",
+        None,
+        title="Volume Change",
+        description="Volume change for the calculation.",
     )
     delta_volume_percent: float = Field(
         None,
@@ -148,7 +149,9 @@ class AnalysisDoc(BaseModel):
     )
 
     errors: List[str] = Field(
-        None, title="Calculation Errors", description="Errors issued after analysis.",
+        None,
+        title="Calculation Errors",
+        description="Errors issued after analysis.",
     )
 
 
@@ -157,9 +160,7 @@ class TaskDoc(BaseModel):
     Calculation-level details about VASP calculations that power Materials Project.
     """
 
-    tags: Union[List[str], None] = Field(
-        [], title="tag", description="Metadata tagged to a given task."
-    )
+    tags: Union[List[str], None] = Field([], title="tag", description="Metadata tagged to a given task.")
 
     state: TaskState = Field(None, description="State of this calculation")
 
@@ -179,13 +180,9 @@ class TaskDoc(BaseModel):
 
     # Structure metadata
     nsites: int = Field(None, description="Total number of sites in the structure.")
-    elements: List[Element] = Field(
-        None, description="List of elements in the material."
-    )
+    elements: List[Element] = Field(None, description="List of elements in the material.")
     nelements: int = Field(None, description="Number of elements.")
-    composition: Composition = Field(
-        None, description="Full composition for the material."
-    )
+    composition: Composition = Field(None, description="Full composition for the material.")
     composition_reduced: Dict[Element, float] = Field(
         None,
         title="Reduced Composition",
@@ -291,9 +288,11 @@ class DeprecationDoc(BaseModel):
     )
 
     deprecated: bool = Field(
-        None, description="Whether the ID corresponds to a deprecated calculation.",
+        None,
+        description="Whether the ID corresponds to a deprecated calculation.",
     )
 
     deprecation_reason: str = Field(
-        None, description="Reason for deprecation.",
+        None,
+        description="Reason for deprecation.",
     )

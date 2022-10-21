@@ -5,7 +5,6 @@ from emmet.core.qchem.calc_types import LevelOfTheory, CalcType, TaskType
 from emmet.core.qchem.calc_types.calc_types import (
     FUNCTIONALS,
     BASIS_SETS,
-    SOLVENTS,
     PCM_DIELECTRICS,
     SMD_PARAMETERS,
 )

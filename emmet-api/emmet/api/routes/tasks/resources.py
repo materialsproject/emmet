@@ -1,4 +1,3 @@
-from this import d
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 from maggma.api.resource import ReadOnlyResource
 
@@ -33,7 +32,8 @@ def task_resource(task_store):
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
-                TaskDoc, default_fields=["task_id", "formula_pretty", "last_updated"],
+                TaskDoc,
+                default_fields=["task_id", "formula_pretty", "last_updated"],
             ),
         ],
         header_processor=GlobalHeaderProcessor(),

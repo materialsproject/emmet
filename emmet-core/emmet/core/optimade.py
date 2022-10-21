@@ -1,13 +1,12 @@
 import string
 from datetime import datetime
-from typing import Dict
 
 from monty.fractions import gcd
 from optimade.models import Species, StructureResourceAttributes
 from pymatgen.core.composition import Composition, formula_double_format
 from pymatgen.core.structure import Structure
 
-from emmet.core.base import BaseModel, EmmetBaseModel
+from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 
 letters = "ABCDEFGHIJKLMNOPQRSTUVXYZ"
@@ -71,10 +70,7 @@ def hill_formula(comp: Composition) -> str:
     else:
         form_elements = elements
 
-    formula = [
-        "%s%s" % (el, formula_double_format(c[el]) if c[el] != 1 else "")
-        for el in form_elements
-    ]
+    formula = ["%s%s" % (el, formula_double_format(c[el]) if c[el] != 1 else "") for el in form_elements]
     return "".join(formula)
 
 
@@ -97,9 +93,7 @@ class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
             nelements=len(structure.composition.elements),
             elements_ratios=list(structure.composition.fractional_composition.values()),
             chemical_formula_descriptive=optimade_form(structure.composition),
-            chemical_formula_reduced=optimade_form(
-                structure.composition.get_reduced_composition_and_factor()[0]
-            ),
+            chemical_formula_reduced=optimade_form(structure.composition.get_reduced_composition_and_factor()[0]),
             chemical_formula_anonymous=optimade_anonymous_form(structure.composition),
             chemical_formula_hill=hill_formula(structure.composition),
             dimension_types=[1, 1, 1],

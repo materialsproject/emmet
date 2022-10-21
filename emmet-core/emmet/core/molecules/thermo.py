@@ -1,19 +1,4 @@
-import logging
-from collections import defaultdict
-from typing import Dict, List, Any, Tuple, Union
-import copy
-
-from typing_extensions import Literal
-
-import numpy as np
 from pydantic import Field
-import networkx as nx
-
-from pymatgen.core.structure import Molecule
-from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
-
-from pymatgen.core.periodic_table import Specie, Element
 
 from emmet.core.mpid import MPID
 from emmet.core.qchem.task import TaskDocument
@@ -43,55 +28,31 @@ class ThermoDoc(PropertyDoc):
 
     property_name = "thermo"
 
-    task_id: MPID = Field(
-        ..., description="ID of TaskDocument from which these properties were derived"
-    )
+    task_id: MPID = Field(..., description="ID of TaskDocument from which these properties were derived")
 
-    electronic_energy: float = Field(
-        ..., description="Electronic energy of the molecule (units: eV)"
-    )
+    electronic_energy: float = Field(..., description="Electronic energy of the molecule (units: eV)")
 
-    zero_point_energy: float = Field(
-        None, description="Zero-point energy of the molecule (units: eV)"
-    )
+    zero_point_energy: float = Field(None, description="Zero-point energy of the molecule (units: eV)")
 
     rt: float = Field(
-        None,
-        description="R*T, where R is the gas constant and T is temperature, taken "
-        "to be 298.15K (units: eV)",
+        None, description="R*T, where R is the gas constant and T is temperature, taken " "to be 298.15K (units: eV)",
     )
 
-    total_enthalpy: float = Field(
-        None, description="Total enthalpy of the molecule at 298.15K (units: eV)"
-    )
-    total_entropy: float = Field(
-        None, description="Total entropy of the molecule at 298.15K (units: eV/K)"
-    )
+    total_enthalpy: float = Field(None, description="Total enthalpy of the molecule at 298.15K (units: eV)")
+    total_entropy: float = Field(None, description="Total entropy of the molecule at 298.15K (units: eV/K)")
 
     translational_enthalpy: float = Field(
-        None,
-        description="Translational enthalpy of the molecule at 298.15K (units: eV)",
+        None, description="Translational enthalpy of the molecule at 298.15K (units: eV)",
     )
     translational_entropy: float = Field(
-        None,
-        description="Translational entropy of the molecule at 298.15K (units: eV/K)",
+        None, description="Translational entropy of the molecule at 298.15K (units: eV/K)",
     )
-    rotational_enthalpy: float = Field(
-        None, description="Rotational enthalpy of the molecule at 298.15K (units: eV)"
-    )
-    rotational_entropy: float = Field(
-        None, description="Rotational entropy of the molecule at 298.15K (units: eV/K)"
-    )
-    vibrational_enthalpy: float = Field(
-        None, description="Vibrational enthalpy of the molecule at 298.15K (units: eV)"
-    )
-    vibrational_entropy: float = Field(
-        None, description="Vibrational entropy of the molecule at 298.15K (units: eV/K)"
-    )
+    rotational_enthalpy: float = Field(None, description="Rotational enthalpy of the molecule at 298.15K (units: eV)")
+    rotational_entropy: float = Field(None, description="Rotational entropy of the molecule at 298.15K (units: eV/K)")
+    vibrational_enthalpy: float = Field(None, description="Vibrational enthalpy of the molecule at 298.15K (units: eV)")
+    vibrational_entropy: float = Field(None, description="Vibrational entropy of the molecule at 298.15K (units: eV/K)")
 
-    free_energy: float = Field(
-        None, description="Gibbs free energy of the molecule at 298.15K (units: eV)"
-    )
+    free_energy: float = Field(None, description="Gibbs free energy of the molecule at 298.15K (units: eV)")
 
     @classmethod
     def from_task(

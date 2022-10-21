@@ -1,7 +1,6 @@
-from typing import Dict, List, Any, Union
+from typing import List
 from pydantic import Field
 from emmet.core.material_property import PropertyDoc
-from emmet.core.spectrum import SpectrumDoc
 import numpy as np
 from emmet.core.mpid import MPID
 from pymatgen.core import Structure
@@ -14,20 +13,15 @@ class AbsorptionDoc(PropertyDoc):
 
     task_id: str = Field(..., description="Calculation id")
 
-    energies: List[float] = Field(
-        ..., description="Absorption energy in eV starting from 0"
-    )
+    energies: List[float] = Field(..., description="Absorption energy in eV starting from 0")
 
     energy_max: float = Field(..., description="Maximum energy")
 
-    absorption_coefficient: List[float] = Field(
-        ..., description="Absorption coefficient in cm^-1"
-    )
+    absorption_coefficient: List[float] = Field(..., description="Absorption coefficient in cm^-1")
 
     average_imaginary_dielectric: List[float] = Field(
         ...,
-        description="Imaginary part of the dielectric function corresponding to the "
-        "energies",
+        description="Imaginary part of the dielectric function corresponding to the " "energies",
     )
 
     average_real_dielectric: List[float] = Field(
@@ -35,13 +29,9 @@ class AbsorptionDoc(PropertyDoc):
         description="Real part of the dielectric function corresponding to the energies",
     )
 
-    bandgap: float = Field(
-        None, description="The electronic band gap"
-    )
+    bandgap: float = Field(None, description="The electronic band gap")
 
-    nkpoints: float = Field(
-        None, description="The number of kpoints used in the calculation"
-    )
+    nkpoints: float = Field(None, description="The number of kpoints used in the calculation")
 
     @classmethod
     def _convert_list_to_tensor(cls, l):
@@ -64,12 +54,8 @@ class AbsorptionDoc(PropertyDoc):
         **kwargs,
     ):
 
-        real_d_average = [
-            np.average(np.diagonal(cls._convert_list_to_tensor(t))) for t in real_d
-        ]
-        imag_d_average = [
-            np.average(np.diagonal(cls._convert_list_to_tensor(t))) for t in imag_d
-        ]
+        real_d_average = [np.average(np.diagonal(cls._convert_list_to_tensor(t))) for t in real_d]
+        imag_d_average = [np.average(np.diagonal(cls._convert_list_to_tensor(t))) for t in imag_d]
         absorption_co = list(np.array(absorption_co))
         energy_max = np.array(energies).max()
 
@@ -84,7 +70,7 @@ class AbsorptionDoc(PropertyDoc):
                 "average_real_dielectric": real_d_average,
                 "bandgap": bandgap,
                 "nkpoints": nkpoints,
-                "task_id": task_id
+                "task_id": task_id,
             },
-            **kwargs
+            **kwargs,
         )

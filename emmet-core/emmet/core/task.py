@@ -1,6 +1,5 @@
 """ Core definition of a Task Document which represents a calculation from some program"""
 from datetime import datetime
-from typing import List
 
 from pydantic import Field
 
@@ -19,9 +18,7 @@ class TaskDocument(EmmetBaseModel):
     task_id: MPID = Field(None, description="the Task ID For this document")
 
     completed: bool = Field(False, description="Whether this calculation completed")
-    completed_at: datetime = Field(
-        None, description="Timestamp for when this task was completed"
-    )
+    completed_at: datetime = Field(None, description="Timestamp for when this task was completed")
     last_updated: datetime = Field(
         default_factory=datetime.utcnow,
         description="Timestamp for this task document was last updated",
