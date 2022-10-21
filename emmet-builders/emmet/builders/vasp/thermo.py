@@ -243,7 +243,7 @@ class ThermoBuilder(Builder):
                     pd_docs = []
 
                     for pd in pds:
-                        chemsys = sorted(set([e.symbol for e in pd.elements]))
+                        chemsys = '-'.join(sorted(set([e.symbol for e in pd.elements])))
                         pd_id = "{}_{}".format(chemsys, str(thermo_type))
                         pd_doc = PhaseDiagramDoc(
                             phase_diagram_id=pd_id,
