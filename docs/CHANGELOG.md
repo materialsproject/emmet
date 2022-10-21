@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.38.0](https://github.com/materialsproject/emmet/tree/v0.38.0) (2022-10-21)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.37.0...v0.38.0)
+
+**Merged pull requests:**
+
+- Fix thermo builder and phase diagram generation [\#562](https://github.com/materialsproject/emmet/pull/562) ([munrojm](https://github.com/munrojm))
+
 ## [v0.37.0](https://github.com/materialsproject/emmet/tree/v0.37.0) (2022-10-17)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.36.9...v0.37.0)
@@ -836,20 +844,20 @@
 
 ## [v0.21.16](https://github.com/materialsproject/emmet/tree/v0.21.16) (2022-01-20)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.14...v0.21.16)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.15...v0.21.16)
 
 **Merged pull requests:**
 
 - Remove version req in setup [\#354](https://github.com/materialsproject/emmet/pull/354) ([munrojm](https://github.com/munrojm))
 - Fix setup for workflow [\#353](https://github.com/materialsproject/emmet/pull/353) ([munrojm](https://github.com/munrojm))
 
-## [v0.21.14](https://github.com/materialsproject/emmet/tree/v0.21.14) (2022-01-19)
-
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.15...v0.21.14)
-
 ## [v0.21.15](https://github.com/materialsproject/emmet/tree/v0.21.15) (2022-01-19)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.13...v0.21.15)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.14...v0.21.15)
+
+## [v0.21.14](https://github.com/materialsproject/emmet/tree/v0.21.14) (2022-01-19)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.21.13...v0.21.14)
 
 **Merged pull requests:**
 
