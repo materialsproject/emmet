@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.38.1](https://github.com/materialsproject/emmet/tree/v0.38.1) (2022-10-21)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.38.0...v0.38.1)
+
+**Merged pull requests:**
+
+- Ensure chemsys is a string in the phase diagram doc [\#563](https://github.com/materialsproject/emmet/pull/563) ([munrojm](https://github.com/munrojm))
+
 ## [v0.38.0](https://github.com/materialsproject/emmet/tree/v0.38.0) (2022-10-21)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.37.0...v0.38.0)
