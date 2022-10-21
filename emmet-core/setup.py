@@ -39,6 +39,7 @@ setup(
             "robocrys>=0.2.7",
             "pymatgen-analysis-diffusion>=2022.1.15",
             "pymatgen-analysis-alloys>=0.0.3",
+            "pymatgen>=2022.9.21",
         ],
     },
     python_requires=">=3.8",
