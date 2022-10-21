@@ -1,5 +1,5 @@
 from math import ceil
-from typing import Dict, Iterable, Iterator, List, Optional, Set
+from typing import Dict, Iterator, List, Optional
 
 import numpy as np
 from maggma.builders import Builder
@@ -59,15 +59,13 @@ class AbsorptionBuilder(Builder):
         mat_ids = self.materials.distinct(self.materials.key, criteria=q)
         ab_ids = self.absorption.distinct(self.absorption.key)
 
-        mats_set = set(
-            self.absorption.newer_in(target=self.materials, criteria=q, exhaustive=True)
-        ) | (set(mat_ids) - set(ab_ids))
+        mats_set = set(self.absorption.newer_in(target=self.materials, criteria=q, exhaustive=True)) | (
+            set(mat_ids) - set(ab_ids)
+        )
 
         mats = [mat for mat in mats_set]
 
-        self.logger.info(
-            "Processing {} materials for absorption data".format(len(mats))
-        )
+        self.logger.info("Processing {} materials for absorption data".format(len(mats)))
 
         self.total = len(mats)
 
@@ -82,15 +80,12 @@ class AbsorptionBuilder(Builder):
     def process_item(self, item):
         structure = Structure.from_dict(item["structure"])
         mpid = item[self.materials.key]
-        origin_entry = {
-            "name": "absorption",
-            "task_id": item["task_id"]
-        }
+        origin_entry = {"name": "absorption", "task_id": item["task_id"]}
 
         doc = AbsorptionDoc.from_structure(
             structure=structure,
             material_id=mpid,
-            task_id=item['task_id'],
+            task_id=item["task_id"],
             deprecated=False,
             energies=item["energies"],
             real_d=item["real_dielectric"],
@@ -99,7 +94,7 @@ class AbsorptionBuilder(Builder):
             bandgap=item["bandgap"],
             nkpoints=item["nkpoints"],
             last_updated=item["updated_on"],
-            origins=[origin_entry]
+            origins=[origin_entry],
         )
 
         return jsanitize(doc.dict(), allow_bson=True)
@@ -120,13 +115,7 @@ class AbsorptionBuilder(Builder):
 
         mat_doc = self.materials.query_one(
             {self.materials.key: mat},
-            [
-                self.materials.key,
-                "structure",
-                "task_types",
-                "run_types",
-                "last_updated"
-            ],
+            [self.materials.key, "structure", "task_types", "run_types", "last_updated"],
         )
 
         task_types = mat_doc["task_types"].items()
@@ -163,14 +152,10 @@ class AbsorptionBuilder(Builder):
                     structure = task_query["input"]["structure"]
 
                 if (
-                    task_query["orig_inputs"]["kpoints"]["generation_style"]
-                    == "Monkhorst"
-                    or task_query["orig_inputs"]["kpoints"]["generation_style"]
-                    == "Gamma"
+                    task_query["orig_inputs"]["kpoints"]["generation_style"] == "Monkhorst"
+                    or task_query["orig_inputs"]["kpoints"]["generation_style"] == "Gamma"
                 ):
-                    nkpoints = np.prod(
-                        task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
-                    )
+                    nkpoints = np.prod(task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0)
 
                 else:
                     nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
@@ -184,9 +169,7 @@ class AbsorptionBuilder(Builder):
                         "energies": task_query["output"]["dielectric"]["energy"],
                         "real_dielectric": task_query["output"]["dielectric"]["real"],
                         "imag_dielectric": task_query["output"]["dielectric"]["imag"],
-                        "optical_absorption_coeff": task_query["output"][
-                            "optical_absorption_coeff"
-                        ],
+                        "optical_absorption_coeff": task_query["output"]["optical_absorption_coeff"],
                         "bandgap": task_query["output"]["bandgap"],
                         "structure": structure,
                         "updated_on": lu_dt,

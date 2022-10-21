@@ -1,14 +1,5 @@
-import logging
-from collections import defaultdict
-from typing import Dict, List, Optional, Tuple
-
-from typing_extensions import Literal
-
-import numpy as np
 from pydantic import Field
-
-from pymatgen.core.structure import Molecule
-from pymatgen.core.periodic_table import Specie, Element
+from typing import List
 
 from emmet.core.mpid import MPID
 from emmet.core.qchem.task import TaskDocument
@@ -27,22 +18,13 @@ class PartialChargesDoc(PropertyDoc):
 
     property_name = "partial_charges"
 
-    method: str = Field(
-        ..., description="Method used to compute atomic partial charges"
-    )
+    method: str = Field(..., description="Method used to compute atomic partial charges")
 
-    partial_charges: List[float] = Field(
-        ..., description="Atomic partial charges for the molecule"
-    )
+    partial_charges: List[float] = Field(..., description="Atomic partial charges for the molecule")
 
     @classmethod
     def from_task(
-        cls,
-        task: TaskDocument,
-        molecule_id: MPID,
-        preferred_methods: List,
-        deprecated: bool = False,
-        **kwargs
+        cls, task: TaskDocument, molecule_id: MPID, preferred_methods: List, deprecated: bool = False, **kwargs
     ):  # type: ignore[override]
         """
         Determine partial charges from a task document
@@ -65,10 +47,7 @@ class PartialChargesDoc(PropertyDoc):
         for m in preferred_methods:
             if m == "nbo" and task.output.nbo is not None:
                 method = m
-                charges = [
-                    float(task.output.nbo["natural_populations"][0]["Charge"][str(i)])
-                    for i in range(len(mol))
-                ]
+                charges = [float(task.output.nbo["natural_populations"][0]["Charge"][str(i)]) for i in range(len(mol))]
                 break
             elif m == "resp" and task.output.resp is not None:
                 method = m
@@ -111,12 +90,7 @@ class PartialSpinsDoc(PropertyDoc):
 
     @classmethod
     def from_task(
-        cls,
-        task: TaskDocument,
-        molecule_id: MPID,
-        preferred_methods: List,
-        deprecated: bool = False,
-        **kwargs
+        cls, task: TaskDocument, molecule_id: MPID, preferred_methods: List, deprecated: bool = False, **kwargs
     ):  # type: ignore[override]
         """
         Determine partial spins from a task document
@@ -142,10 +116,7 @@ class PartialSpinsDoc(PropertyDoc):
         for m in preferred_methods:
             if m == "nbo" and task.output.nbo is not None:
                 method = m
-                spins = [
-                    float(task.output.nbo["natural_populations"][0]["Density"][str(i)])
-                    for i in range(len(mol))
-                ]
+                spins = [float(task.output.nbo["natural_populations"][0]["Density"][str(i)]) for i in range(len(mol))]
                 break
             elif m == "mulliken" and task.output.mulliken is not None:
                 method = m

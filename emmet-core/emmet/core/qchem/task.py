@@ -1,10 +1,9 @@
 """ Core definition of a Q-Chem Task Document """
-from typing import Any, Dict, List, Union, Optional, Callable
+from typing import Any, Dict, List, Optional, Callable
 
 from pydantic import BaseModel, Field
 from pymatgen.core.structure import Molecule
 
-from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.structure import MoleculeMetadata
 from emmet.core.vasp.task_valid import BaseTaskDocument
 from emmet.core.utils import ValueEnum

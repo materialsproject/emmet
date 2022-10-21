@@ -1,6 +1,6 @@
 """ Base emmet model to add default metadata """
 from datetime import datetime
-from typing import TypeVar, Dict
+from typing import TypeVar
 
 from pydantic import BaseModel, Field, validator
 from pymatgen.core import __version__ as pmg_version
@@ -18,20 +18,12 @@ class EmmetMeta(BaseModel):
     Default emmet metadata
     """
 
-    emmet_version: str = Field(
-        __version__, description="The version of emmet this document was built with."
-    )
-    pymatgen_version: str = Field(
-        pmg_version, description="The version of pymatgen this document was built with."
-    )
+    emmet_version: str = Field(__version__, description="The version of emmet this document was built with.")
+    pymatgen_version: str = Field(pmg_version, description="The version of pymatgen this document was built with.")
 
-    pull_request: int = Field(
-        None, description="The pull request number associated with this data build."
-    )
+    pull_request: int = Field(None, description="The pull request number associated with this data build.")
 
-    database_version: str = Field(
-        None, description="The database version for the built data."
-    )
+    database_version: str = Field(None, description="The database version for the built data.")
 
     build_date: datetime = Field(
         default_factory=datetime.utcnow,
@@ -49,6 +41,4 @@ class EmmetBaseModel(BaseModel):
     Base Model for default emmet data
     """
 
-    builder_meta: EmmetMeta = Field(
-        default_factory=EmmetMeta, description="Builder metadata."
-    )
+    builder_meta: EmmetMeta = Field(default_factory=EmmetMeta, description="Builder metadata.")

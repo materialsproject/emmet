@@ -12,7 +12,6 @@ from pymatgen.analysis.chemenv.coordination_environments.coordination_geometry_f
 )
 from pymatgen.analysis.chemenv.coordination_environments.structure_environments import (
     LightStructureEnvironments,
-    StructureEnvironments,
 )
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.core.structure import Molecule
@@ -23,14 +22,12 @@ from emmet.core.mpid import MPID
 
 AVAILABLE_METHODS = {
     "DefaultSimplestChemenvStrategy": SimplestChemenvStrategy(),
-    "DefaultSimplestChemenvStrategy_all_bonds": SimplestChemenvStrategy(
-        additional_condition=0
-    ),
+    "DefaultSimplestChemenvStrategy_all_bonds": SimplestChemenvStrategy(additional_condition=0),
 }
 
 
-DEFAULTSIMPLESTCHEMENVSTRATEGY = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4 angle_cutoff=0.3 additional_condition=1 continuous_symmetry_measure_cutoff=10.0"
-SIMPLESTCHEMENVSTRATEGY_ALL_BONDS = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4 angle_cutoff=0.3 additional_condition=0 continuous_symmetry_measure_cutoff=10.0"
+DEFAULTSIMPLESTCHEMENVSTRATEGY = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4 angle_cutoff=0.3 additional_condition=1 continuous_symmetry_measure_cutoff=10.0"  # noqa: E501
+SIMPLESTCHEMENVSTRATEGY_ALL_BONDS = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4 angle_cutoff=0.3 additional_condition=0 continuous_symmetry_measure_cutoff=10.0"  # noqa: E501
 
 
 METHODS_DESCRIPTION = {
@@ -265,7 +262,7 @@ COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES = Literal[
     "Triangular cupola",
     "Bicapped square prism (adjacent faces) (also known as Bicapped cube)",
     "Cuboctahedron",
-    "Tricapped triangular prism (two square-face caps and one triangular-face cap) (also known as Triaugmented trigonal prism)",
+    "Tricapped triangular prism (two square-face caps and one triangular-face cap) (also known as Triaugmented trigonal prism)",  # noqa: E501
     "Square-face capped trigonal prism (also known as Augmented triangular prism)",
     "Tetrahedron (also known as Triangular pyramid, Trigonal pyramid)",
     "Cube (also known as Square prism, Tetragonal prism)",
@@ -281,7 +278,7 @@ COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES = Literal[
     "Angular",
     "Hendecahedron (also known as Bisymmetric hendecahedron)",
     "Trigonal-face bicapped square antiprism",
-    "Pentagonal-face capped pentagonal antiprism (also known as Gyroelongated pentagonal pyramid, Diminished icosahedron, Truncated icosahedron)",
+    "Pentagonal-face capped pentagonal antiprism (also known as Gyroelongated pentagonal pyramid, Diminished icosahedron, Truncated icosahedron)",  # noqa: E501
     "Linear",
     "Pentagonal plane (also known as Pentagon)",
     "Tricapped triangular prism (three square-face caps) (also known as Triaugmented trigonal prism)",
@@ -290,8 +287,8 @@ COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES = Literal[
     "T-shaped",
     "Single neighbor",
     "Trigonal plane (also known as Triangular planar)",
-    "Dodecahedron with triangular faces - p2345 plane normalized (also known as Snub disphenoid - p2345 plane normalized, Siamese dodecahedron - p2345 plane normalized)",
-    "Tricapped triangular prism (one square-face cap and two triangular-face caps) (also known as Triaugmented trigonal prism)",
+    "Dodecahedron with triangular faces - p2345 plane normalized (also known as Snub disphenoid - p2345 plane normalized, Siamese dodecahedron - p2345 plane normalized)",  # noqa: E501
+    "Tricapped triangular prism (one square-face cap and two triangular-face caps) (also known as Triaugmented trigonal prism)",  # noqa: E501
     "Truncated tetrahedron",
     "Hexagonal prism",
     "Tridiminished icosahedron",
@@ -305,12 +302,15 @@ COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES = Literal[
     "End-trigonal-face capped trigonal prism (also known as Augmented triangular prism)",
     "Pentagonal bipyramid (also known as Pentagonal dipyramid)",
     "Square-face monocapped antiprism (also known as Gyroelongated square pyramid)",
-    "Square-face bicapped square antiprism (also known as Square-face bicapped square anticube, Bicapped anticube, Gyroelongated square dipyramid)",
+    "Square-face bicapped square antiprism (also known as Square-face bicapped square anticube, Bicapped anticube, Gyroelongated square dipyramid)",  # noqa: E501
 ]
 
 
 class ChemEnvDoc(PropertyDoc):
-    """Coordination environments based on cation-anion bonds computed for all unique cations in this structure. If no oxidation states are available, all bonds will be considered as a fall-back."""
+    """
+    Coordination environments based on cation-anion bonds computed for all unique cations in this structure.
+    If no oxidation states are available, all bonds will be considered as a fall-back.
+    """
 
     property_name = "coord_environment"
 
@@ -319,13 +319,9 @@ class ChemEnvDoc(PropertyDoc):
         description="The structure used in the generation of the chemical environment data",
     )
 
-    valences: List[int] = Field(
-        description="List of valences for each site in this material to determine cations"
-    )
+    valences: List[int] = Field(description="List of valences for each site in this material to determine cations")
 
-    species: List[str] = Field(
-        description="List of unique (cationic) species in structure."
-    )
+    species: List[str] = Field(description="List of unique (cationic) species in structure.")
 
     chemenv_symbol: List[COORDINATION_GEOMETRIES] = Field(
         description="List of ChemEnv symbols for unique (cationic) species in structure"
@@ -342,19 +338,15 @@ class ChemEnvDoc(PropertyDoc):
     chemenv_name: List[COORDINATION_GEOMETRIES_NAMES] = Field(
         description="List of text description of coordination environment for unique (cationic) species in structure."
     )
-    chemenv_name_with_alternatives: List[
-        COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES
-    ] = Field(
-        description="List of text description of coordination environment including alternative descriptions for unique (cationic) species in structure."
+    chemenv_name_with_alternatives: List[COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES] = Field(
+        description="List of text description of coordination environment including alternative descriptions for unique (cationic) species in structure."  # noqa: E501
     )
 
     csm: List[Union[float, None]] = Field(
         description="Saves the continous symmetry measures for unique (cationic) species in structure"
     )
 
-    method: Union[str, None] = Field(
-        description="Method used to compute chemical environments"
-    )
+    method: Union[str, None] = Field(description="Method used to compute chemical environments")
 
     mol_from_site_environments: List[Union[Molecule, None]] = Field(
         description="List of Molecule Objects describing the detected environment."
@@ -419,9 +411,7 @@ class ChemEnvDoc(PropertyDoc):
             sga = SpacegroupAnalyzer(structure)
             symm_struct = sga.get_symmetrized_structure()
             # We still need the whole list of indices
-            inequivalent_indices = [
-                indices[0] for indices in symm_struct.equivalent_indices
-            ]
+            inequivalent_indices = [indices[0] for indices in symm_struct.equivalent_indices]
             # wyckoff symbols for all inequivalent indices
             wyckoffs_unique = symm_struct.wyckoff_symbols
             # use the local geometry finder to get the important information
@@ -434,18 +424,14 @@ class ChemEnvDoc(PropertyDoc):
                 method = AVAILABLE_METHODS[method_description]
                 # We will only focus on cations!
                 inequivalent_indices_cations = [
-                    indices[0]
-                    for indices in symm_struct.equivalent_indices
-                    if valences[indices[0]] > 0.0
+                    indices[0] for indices in symm_struct.equivalent_indices if valences[indices[0]] > 0.0
                 ]
 
                 se = lgf.compute_structure_environments(
                     only_indices=inequivalent_indices_cations,
                     valences=valences,
                 )
-                lse = LightStructureEnvironments.from_structure_environments(
-                    strategy=method, structure_environments=se
-                )
+                lse = LightStructureEnvironments.from_structure_environments(strategy=method, structure_environments=se)
                 warnings = None
             else:
                 method_description = "DefaultSimplestChemenvStrategy_all_bonds"
@@ -454,9 +440,7 @@ class ChemEnvDoc(PropertyDoc):
                 se = lgf.compute_structure_environments(
                     only_indices=inequivalent_indices,
                 )
-                lse = LightStructureEnvironments.from_structure_environments(
-                    strategy=method, structure_environments=se
-                )
+                lse = LightStructureEnvironments.from_structure_environments(strategy=method, structure_environments=se)
                 # Trick to get rid of duplicate code
                 inequivalent_indices_cations = inequivalent_indices
                 warnings = "No oxidation states. Analysis will now include all bonds"
@@ -465,9 +449,7 @@ class ChemEnvDoc(PropertyDoc):
                 # ONLY CATIONS
                 if index in inequivalent_indices_cations:
                     # Coordinaton environment will be saved as a molecule!
-                    mol = Molecule.from_sites(
-                        [structure[index]] + lse.neighbors_sets[index][0].neighb_sites
-                    )
+                    mol = Molecule.from_sites([structure[index]] + lse.neighbors_sets[index][0].neighb_sites)
                     mol = mol.get_centered_molecule()
                     env = lse.coordination_environments[index]
                     co = all_ce.get_geometry_from_mp_symbol(env[0]["ce_symbol"])

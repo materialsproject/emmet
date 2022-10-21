@@ -1,5 +1,4 @@
 from sys import version_info
-from enum import Enum
 from typing import Optional
 from fastapi import Query
 
@@ -36,9 +35,7 @@ class HasPropsQuery(QueryOperator):
         crit = {}
 
         if has_props:
-            crit = {
-                "has_props": {"$all": [prop.strip() for prop in has_props.split(",")]}
-            }
+            crit = {"has_props": {"$all": [prop.strip() for prop in has_props.split(",")]}}
 
         return {"criteria": crit}
 
@@ -50,33 +47,20 @@ class MaterialIDsSearchQuery(QueryOperator):
 
     def query(
         self,
-        material_ids: Optional[str] = Query(
-            None, description="Comma-separated list of material_ids to query on"
-        ),
+        material_ids: Optional[str] = Query(None, description="Comma-separated list of material_ids to query on"),
     ) -> STORE_PARAMS:
 
         crit = {}
 
         if material_ids:
-            crit.update(
-                {
-                    "material_id": {
-                        "$in": [
-                            material_id.strip()
-                            for material_id in material_ids.split(",")
-                        ]
-                    }
-                }
-            )
+            crit.update({"material_id": {"$in": [material_id.strip() for material_id in material_ids.split(",")]}})
 
         return {"criteria": crit}
 
     def post_process(self, docs, query):
 
         if not query.get("sort", None):
-            mpid_list = (
-                query.get("criteria", {}).get("material_id", {}).get("$in", None)
-            )
+            mpid_list = query.get("criteria", {}).get("material_id", {}).get("$in", None)
 
             if mpid_list is not None and "material_id" in query.get("properties", []):
                 mpid_mapping = {mpid: ind for ind, mpid in enumerate(mpid_list)}
@@ -93,9 +77,7 @@ class SearchIsStableQuery(QueryOperator):
 
     def query(
         self,
-        is_stable: Optional[bool] = Query(
-            None, description="Whether the material is stable."
-        ),
+        is_stable: Optional[bool] = Query(None, description="Whether the material is stable."),
     ):
 
         crit = {}
@@ -116,9 +98,7 @@ class SearchHasReconstructedQuery(QueryOperator):
 
     def query(
         self,
-        has_reconstructed: Optional[bool] = Query(
-            None, description="Whether the material has reconstructed surfaces."
-        ),
+        has_reconstructed: Optional[bool] = Query(None, description="Whether the material has reconstructed surfaces."),
     ):
 
         crit = {}
@@ -139,9 +119,7 @@ class SearchMagneticQuery(QueryOperator):
 
     def query(
         self,
-        ordering: Optional[Ordering] = Query(
-            None, description="Magnetic ordering of the material."
-        ),
+        ordering: Optional[Ordering] = Query(None, description="Magnetic ordering of the material."),
     ) -> STORE_PARAMS:
 
         crit = defaultdict(dict)  # type: dict
@@ -162,9 +140,7 @@ class SearchIsTheoreticalQuery(QueryOperator):
 
     def query(
         self,
-        theoretical: Optional[bool] = Query(
-            None, description="Whether the material is theoretical."
-        ),
+        theoretical: Optional[bool] = Query(None, description="Whether the material is theoretical."),
     ):
 
         crit = {}
@@ -185,12 +161,8 @@ class SearchESQuery(QueryOperator):
 
     def query(
         self,
-        is_gap_direct: Optional[bool] = Query(
-            None, description="Whether a band gap is direct or not."
-        ),
-        is_metal: Optional[bool] = Query(
-            None, description="Whether the material is considered a metal."
-        ),
+        is_gap_direct: Optional[bool] = Query(None, description="Whether a band gap is direct or not."),
+        is_metal: Optional[bool] = Query(None, description="Whether the material is considered a metal."),
     ) -> STORE_PARAMS:
 
         crit = defaultdict(dict)  # type: dict
@@ -216,9 +188,7 @@ class SearchStatsQuery(QueryOperator):
     """
 
     def __init__(self, search_doc):
-        valid_numeric_fields = tuple(
-            sorted(k for k, v in search_doc.__fields__.items() if v.type_ == float)
-        )
+        valid_numeric_fields = tuple(sorted(k for k, v in search_doc.__fields__.items() if v.type_ == float))
 
         def query(
             field: Literal[valid_numeric_fields] = Query(  # type: ignore
@@ -227,7 +197,8 @@ class SearchStatsQuery(QueryOperator):
                 f"choose from: {', '.join(valid_numeric_fields)}",
             ),
             num_samples: Optional[int] = Query(
-                None, title="If specified, will only sample this number of documents.",
+                None,
+                title="If specified, will only sample this number of documents.",
             ),
             min_val: Optional[float] = Query(
                 None,
@@ -239,9 +210,7 @@ class SearchStatsQuery(QueryOperator):
                 title="If specified, will only consider documents with field values "
                 "less than or equal to this minimum value.",
             ),
-            num_points: int = Query(
-                100, title="The number of values in the returned distribution."
-            ),
+            num_points: int = Query(100, title="The number of values in the returned distribution."),
         ) -> STORE_PARAMS:
 
             self.num_points = num_points
@@ -267,7 +236,7 @@ class SearchStatsQuery(QueryOperator):
         self.query = query
 
     def query(self):
-        " Stub query function for abstract class "
+        "Stub query function for abstract class"
         pass
 
     def post_process(self, docs, query):
@@ -297,7 +266,11 @@ class SearchStatsQuery(QueryOperator):
 
             distribution = list(
                 kernel(
-                    np.arange(min_val, max_val, step=(max_val - min_val) / num_points,)  # type: ignore
+                    np.arange(
+                        min_val,
+                        max_val,
+                        step=(max_val - min_val) / num_points,
+                    )  # type: ignore
                 )
             )
 

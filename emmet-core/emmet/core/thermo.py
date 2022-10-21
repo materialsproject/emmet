@@ -5,7 +5,7 @@ from datetime import datetime
 from emmet.core.utils import ValueEnum
 
 from pydantic import BaseModel, Field
-from pymatgen.analysis.phase_diagram import PhaseDiagram
+from pymatgen.analysis.phase_diagram import PhaseDiagram, PatchedPhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.material_property import PropertyDoc
@@ -68,13 +68,9 @@ class ThermoDoc(PropertyDoc):
 
     energy_uncertainy_per_atom: float = Field(None, description="")
 
-    formation_energy_per_atom: float = Field(
-        None, description="The formation energy per atom in eV/atom."
-    )
+    formation_energy_per_atom: float = Field(None, description="The formation energy per atom in eV/atom.")
 
-    energy_above_hull: float = Field(
-        ..., description="The energy above the hull in eV/Atom."
-    )
+    energy_above_hull: float = Field(..., description="The energy above the hull in eV/Atom.")
 
     is_stable: bool = Field(
         False,
@@ -103,12 +99,11 @@ class ThermoDoc(PropertyDoc):
     )
 
     energy_type: str = Field(
-        ..., description="The type of calculation this energy evaluation comes from.",
+        ...,
+        description="The type of calculation this energy evaluation comes from.",
     )
 
-    entry_types: List[str] = Field(
-        description="List of available energy types computed for this material."
-    )
+    entry_types: List[str] = Field(description="List of available energy types computed for this material.")
 
     entries: Dict[str, Union[ComputedEntry, ComputedStructureEntry]] = Field(
         ...,
@@ -123,18 +118,11 @@ class ThermoDoc(PropertyDoc):
         thermo_type: Union[ThermoType, RunType],
         **kwargs
     ):
+        # Note that PatchedPhaseDiagram construct the hull using only the
+        # lowest energy entries.
+        patched_pd = PatchedPhaseDiagram(entries, keep_all_spaces=True)
 
-        entries_by_comp = defaultdict(list)
-        for e in entries:
-            entries_by_comp[e.composition.reduced_formula].append(e)
-
-        # Only use lowest entry per composition to speed up QHull in Phase Diagram
-        reduced_entries = [
-            sorted(comp_entries, key=lambda e: e.energy_per_atom)[0]
-            for comp_entries in entries_by_comp.values()
-        ]
-
-        pd = PhaseDiagram(reduced_entries)
+        pd = patched_pd.pds[frozenset(patched_pd.elements)]  # Main PD of parent chemsys
 
         docs = []
 
@@ -170,10 +158,8 @@ class ThermoDoc(PropertyDoc):
                 "thermo_id": "{}_{}".format(material_id, str(thermo_type)),
                 "material_id": material_id,
                 "thermo_type": thermo_type,
-                "uncorrected_energy_per_atom": blessed_entry.uncorrected_energy
-                / blessed_entry.composition.num_atoms,
-                "energy_per_atom": blessed_entry.energy
-                / blessed_entry.composition.num_atoms,
+                "uncorrected_energy_per_atom": blessed_entry.uncorrected_energy / blessed_entry.composition.num_atoms,
+                "energy_per_atom": blessed_entry.energy / blessed_entry.composition.num_atoms,
                 "formation_energy_per_atom": pd.get_form_energy_per_atom(blessed_entry),
                 "energy_above_hull": ehull,
                 "is_stable": blessed_entry in pd.stable_entries,
@@ -184,9 +170,7 @@ class ThermoDoc(PropertyDoc):
 
             # Store different info if stable vs decomposes
             if d["is_stable"]:
-                d[
-                    "equilibrium_reaction_energy_per_atom"
-                ] = pd.get_equilibrium_reaction_energy(blessed_entry)
+                d["equilibrium_reaction_energy_per_atom"] = pd.get_equilibrium_reaction_energy(blessed_entry)
             else:
                 d["decomposes_to"] = [
                     {
@@ -198,9 +182,7 @@ class ThermoDoc(PropertyDoc):
                 ]
 
             try:
-                decomp, energy = pd.get_decomp_and_phase_separation_energy(
-                    blessed_entry
-                )
+                decomp, energy = pd.get_decomp_and_phase_separation_energy(blessed_entry)
                 d["decomposition_enthalpy"] = energy
                 d["decomposition_enthalpy_decomposes_to"] = [
                     {
@@ -214,9 +196,7 @@ class ThermoDoc(PropertyDoc):
                 # try/except so this quantity does not take down the builder if it fails:
                 # it includes an optimization step that can be fragile in some instances,
                 # most likely failure is ValueError, "invalid value encountered in true_divide"
-                d["warnings"] = [
-                    "Could not calculate decomposition enthalpy for this entry."
-                ]
+                d["warnings"] = ["Could not calculate decomposition enthalpy for this entry."]
 
             d["energy_type"] = blessed_entry.parameters.get("run_type", "Unknown")
             d["entry_types"] = []
@@ -236,20 +216,22 @@ class ThermoDoc(PropertyDoc):
                 )
             ]
 
-            docs.append(
-                ThermoDoc.from_structure(
-                    meta_structure=blessed_entry.structure, **d, **kwargs
-                )
-            )
+            docs.append(ThermoDoc.from_structure(meta_structure=blessed_entry.structure, **d, **kwargs))
 
-        # Construct new phase diagram with all of the entries, not just those on the hull
-        pd_computed_data = pd._compute()
-        pd_computed_data["all_entries"] = entries
-        new_pd = PhaseDiagram(
-            entries, elements=pd.elements, computed_data=pd_computed_data
-        )
+        # Construct new phase diagrams with all of the entries, not just those on the hull
+        new_pds = []
+        for ele_set, pd in patched_pd.pds.items():
+            new_entries = []
+            for entry in entries:
+                if frozenset(entry.composition.elements).issubset(ele_set):
+                    new_entries.append(entry)
 
-        return docs, new_pd
+            pd_computed_data = pd.computed_data
+            pd_computed_data["all_entries"] = new_entries
+            new_pd = PhaseDiagram(new_entries, elements=pd.elements, computed_data=pd_computed_data)
+            new_pds.append(new_pd)
+
+        return docs, new_pds
 
 
 class PhaseDiagramDoc(BaseModel):
@@ -265,7 +247,8 @@ class PhaseDiagramDoc(BaseModel):
     )
 
     chemsys: str = Field(
-        ..., description="Dash-delimited string of elements in the material",
+        ...,
+        description="Dash-delimited string of elements in the material",
     )
 
     thermo_type: Union[ThermoType, RunType] = Field(
@@ -274,7 +257,8 @@ class PhaseDiagramDoc(BaseModel):
     )
 
     phase_diagram: PhaseDiagram = Field(
-        ..., description="Phase diagram for the chemical system.",
+        ...,
+        description="Phase diagram for the chemical system.",
     )
 
     last_updated: datetime = Field(

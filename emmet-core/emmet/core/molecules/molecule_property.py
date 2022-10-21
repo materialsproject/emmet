@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Sequence, Type, TypeVar, Union, List
+from typing import Sequence, Type, TypeVar, List
 
 from pydantic import Field
 from pymatgen.core.structure import Molecule

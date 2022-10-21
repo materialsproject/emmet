@@ -2,7 +2,6 @@
 from itertools import product
 from pathlib import Path
 
-from monty.serialization import loadfn
 from emmet.core.utils import get_enum_source
 from emmet.core.qchem.calc_types.calc_types import (
     TASK_TYPES,
@@ -54,7 +53,7 @@ calc_type_enum = get_enum_source(
     "CalcType",
     "Calculation types (LOT + task type) for Q-Chem",
     {
-        f"{'_'.join(lot.split()).replace('+','_').replace('-','_').replace('(', '_').replace(')', '_').replace('/', '_').replace('*', '_d')}_{'_'.join(tt.split()).replace('-', '_')}": f"{lot} {tt}"
+        f"{'_'.join(lot.split()).replace('+','_').replace('-','_').replace('(', '_').replace(')', '_').replace('/', '_').replace('*', '_d')}_{'_'.join(tt.split()).replace('-', '_')}": f"{lot} {tt}"  # noqa: E501
         for lot, tt in product(_LOTS, TASK_TYPES)
     },
 )
