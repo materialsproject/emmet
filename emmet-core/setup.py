@@ -9,9 +9,9 @@ if "+" in fallback_version:
 setup(
     name="emmet-core",
     use_scm_version={
-        "root": "..",
+        "root": ".",
         "relative_to": __file__,
-        "write_to": "emmet-core/_version.py",
+        "write_to": "emmet/core/_version.py",
         "write_to_template": '__version__ = "{version}"',
         "fallback_version": fallback_version,
     },
