@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List
+from typing import Dict, Optional
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
 
@@ -8,13 +8,7 @@ from emmet.core.utils import jsanitize
 
 
 class ChemEnvBuilder(MapBuilder):
-    def __init__(
-        self,
-        oxidation_states: Store,
-        chemenv: Store,
-        query: Optional[Dict] = None,
-        **kwargs
-    ):
+    def __init__(self, oxidation_states: Store, chemenv: Store, query: Optional[Dict] = None, **kwargs):
         self.oxidation_states = oxidation_states
         self.chemenv = chemenv
         self.kwargs = kwargs

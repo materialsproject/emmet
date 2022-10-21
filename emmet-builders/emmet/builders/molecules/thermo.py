@@ -1,11 +1,7 @@
-import os
-
 from datetime import datetime
 from itertools import chain
 from math import ceil
 from typing import Optional, Iterable, Iterator, List, Dict
-
-from monty.serialization import loadfn
 
 from maggma.builders import Builder
 from maggma.core import Store
@@ -97,19 +93,11 @@ class ThermoBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "formula_alphabetical"]
-            )
-        )
+        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
 
         processed_docs = set([e for e in self.thermo.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {
-            d["formula_alphabetical"]
-            for d in all_mols
-            if d[self.molecules.key] in to_process_docs
-        }
+        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
 
         N = ceil(len(to_process_forms) / number_splits)
 
@@ -138,19 +126,11 @@ class ThermoBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "formula_alphabetical"]
-            )
-        )
+        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
 
         processed_docs = set([e for e in self.thermo.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {
-            d["formula_alphabetical"]
-            for d in all_mols
-            if d[self.molecules.key] in to_process_docs
-        }
+        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
         self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
@@ -185,10 +165,7 @@ class ThermoBuilder(Builder):
 
         for mol in mols:
             thermo_entries = [
-                e
-                for e in mol.entries
-                if e["output"]["enthalpy"] is not None
-                and e["output"]["entropy"] is not None
+                e for e in mol.entries if e["output"]["enthalpy"] is not None and e["output"]["entropy"] is not None
             ]
 
             # No documents with enthalpy and entropy
@@ -207,17 +184,12 @@ class ThermoBuilder(Builder):
 
             task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
 
-            thermo_doc = ThermoDoc.from_task(
-                task_doc, molecule_id=mol.molecule_id, deprecated=False
-            )
+            thermo_doc = ThermoDoc.from_task(task_doc, molecule_id=mol.molecule_id, deprecated=False)
 
             initial_mol = task_doc.output.initial_molecule
             # If single atom, try to add enthalpy and entropy
             if len(initial_mol) == 1:
-                if (
-                    thermo_doc.total_enthalpy is None
-                    or thermo_doc.total_entropy is None
-                ):
+                if thermo_doc.total_enthalpy is None or thermo_doc.total_entropy is None:
                     formula = initial_mol.composition.alphabetical_formula
                     if formula in single_mol_thermo:
                         vals = single_mol_thermo[formula]

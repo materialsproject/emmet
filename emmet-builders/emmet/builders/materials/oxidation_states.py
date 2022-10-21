@@ -1,7 +1,6 @@
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
 from pymatgen.core import Structure
-from pymatgen.core import __version__ as pymatgen_version
 
 from emmet.core.oxidation_states import OxidationStateDoc
 from emmet.core.utils import jsanitize
@@ -44,9 +43,7 @@ class OxidationStatesBuilder(MapBuilder):
         mpid = item["material_id"]
         deprecated = item["deprecated"]
 
-        oxi_doc = OxidationStateDoc.from_structure(
-            structure=structure, material_id=mpid, deprecated=deprecated
-        )
+        oxi_doc = OxidationStateDoc.from_structure(structure=structure, material_id=mpid, deprecated=deprecated)
         doc = jsanitize(oxi_doc.dict(), allow_bson=True)
 
         return doc
