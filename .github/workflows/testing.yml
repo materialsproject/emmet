@@ -72,6 +72,7 @@ jobs:
           pip install -e emmet-core
           pip install -e emmet-builders
           pip install -e emmet-api
+          pip install pymatgen --upgrade
 
       - name: Lint with mypy
         shell: bash -l {0}
