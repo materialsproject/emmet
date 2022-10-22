@@ -9,9 +9,9 @@ if "+" in fallback_version:
 setup(
     name="emmet-core",
     use_scm_version={
-        "root": ".",
+        "root": "..",
         "relative_to": __file__,
-        "write_to": "emmet/core/_version.py",
+        "write_to": "emmet-core/emmet/core/_version.py",
         "write_to_template": '__version__ = "{version}"',
         "fallback_version": fallback_version,
     },
@@ -21,10 +21,7 @@ setup(
     author_email="feedback@materialsproject.org",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
-    package_data={
-        "emmet.core.vasp.calc_types": ["*.yaml"],
-        "emmet.core.subtrates": ["*.json"],
-    },
+    package_data={"emmet.core.vasp.calc_types": ["*.yaml"], "emmet.core.subtrates": ["*.json"]},
     include_package_data=True,
     install_requires=[
         "pymatgen>=2021.3,<2023.0",
@@ -35,11 +32,7 @@ setup(
         "spglib<2.0.0",
     ],
     extras_require={
-        "all": [
-            "robocrys>=0.2.7",
-            "pymatgen-analysis-diffusion>=2022.1.15",
-            "pymatgen-analysis-alloys>=0.0.3",
-        ],
+        "all": ["robocrys>=0.2.7", "pymatgen-analysis-diffusion>=2022.1.15", "pymatgen-analysis-alloys>=0.0.3"],
     },
     python_requires=">=3.8",
     license="modified BSD",
