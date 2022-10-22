@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from setuptools import find_namespace_packages, setup
-from _version import __version__ as fallback_version
+from emmet.api._version import __version__ as fallback_version
 
 if "+" in fallback_version:
     fallback_version = fallback_version.split("+")[0]
@@ -8,9 +8,9 @@ if "+" in fallback_version:
 setup(
     name="emmet-api",
     use_scm_version={
-        "root": "..",
+        "root": ".",
         "relative_to": __file__,
-        "write_to": "emmet-api/_version.py",
+        "write_to": "emmet/api/_version.py",
         "write_to_template": '__version__ = "{version}"',
         "fallback_version": fallback_version,
     },

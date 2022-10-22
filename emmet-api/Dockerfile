@@ -9,7 +9,7 @@ COPY requirements.txt ./
 RUN pip install $PIP_FLAGS -r requirements.txt && pip install $PIP_FLAGS setuptools-scm
 
 COPY emmet emmet
-COPY _version.py .
+COPY emmet/api/_version.py emmet/api/_version.py
 COPY setup.py .
 RUN pip install $PIP_FLAGS -e .[server]
 RUN wget -q https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \
