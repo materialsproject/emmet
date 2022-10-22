@@ -176,7 +176,7 @@ class ThermoDoc(PropertyDoc):
                 d["equilibrium_reaction_energy_per_atom"] = pd.get_equilibrium_reaction_energy(blessed_entry)
             else:
                 d["decomposes_to"] = [
-                    {"material_id": de.data["material_id"], "formula": de.composition.formula, "amount": amt,}
+                    {"material_id": de.data["material_id"], "formula": de.composition.formula, "amount": amt}
                     for de, amt in decomp.items()
                 ]
 
@@ -184,7 +184,7 @@ class ThermoDoc(PropertyDoc):
                 decomp, energy = pd.get_decomp_and_phase_separation_energy(blessed_entry)
                 d["decomposition_enthalpy"] = energy
                 d["decomposition_enthalpy_decomposes_to"] = [
-                    {"material_id": de.data["material_id"], "formula": de.composition.formula, "amount": amt,}
+                    {"material_id": de.data["material_id"], "formula": de.composition.formula, "amount": amt}
                     for de, amt in decomp.items()
                 ]
             except ValueError:

@@ -20,7 +20,7 @@ setup(
     author_email="feedback@materialsproject.org",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
-    install_requires=["emmet-core[all]", "fastapi", "uvicorn", "gunicorn", "boto3", "maggma",],
+    install_requires=["emmet-core[all]", "fastapi", "uvicorn", "gunicorn", "boto3", "maggma"],
     python_requires=">=3.8",
     license="modified BSD",
     zip_safe=False,
