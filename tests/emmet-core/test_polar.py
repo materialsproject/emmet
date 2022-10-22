@@ -265,13 +265,13 @@ def test_piezoelectric(piezoelectric_structure):
     assert doc.property_name == "piezoelectric"
     assert doc.material_id == "mp-149"
     assert doc.e_ij_max == pytest.approx(0.464365904540805)
-    assert doc.strain_for_max == pytest.approx(
+    assert [abs(n) for n in doc.strain_for_max] == pytest.approx(
         [
-            -0.0675760207481869,
-            -0.97358569089405,
+            0.0675760207481869,
+            0.97358569089405,
             0.110731643941102,
             0.0,
-            -0.187890624929232,
+            0.187890624929232,
             0.0,
         ]
     )
