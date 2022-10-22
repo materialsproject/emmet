@@ -153,11 +153,7 @@ class ThermoBuilder(Builder):
         # Remove overlapping chemical systems
         processed = set()
         to_process_chemsys = []
-        for chemsys in sorted(
-            updated_chemsys | new_chemsys | affected_chemsys,
-            key=lambda x: len(x),
-            reverse=True,
-        ):
+        for chemsys in sorted(updated_chemsys | new_chemsys | affected_chemsys, key=lambda x: len(x), reverse=True,):
             if chemsys not in processed:
                 processed |= chemsys_permutations(chemsys)
                 to_process_chemsys.append(chemsys)
@@ -236,20 +232,17 @@ class ThermoBuilder(Builder):
         try:
             docs, pds = ThermoDoc.from_entries(pd_entries, thermo_type, deprecated=False)
 
-            pd_data = None
+            pd_docs = [None]
 
             if self.phase_diagram:
                 if self.num_phase_diagram_eles is None or len(elements) <= self.num_phase_diagram_eles:
                     pd_docs = []
 
                     for pd in pds:
-                        chemsys = '-'.join(sorted(set([e.symbol for e in pd.elements])))
+                        chemsys = "-".join(sorted(set([e.symbol for e in pd.elements])))
                         pd_id = "{}_{}".format(chemsys, str(thermo_type))
                         pd_doc = PhaseDiagramDoc(
-                            phase_diagram_id=pd_id,
-                            chemsys=chemsys,
-                            phase_diagram=pd,
-                            thermo_type=thermo_type,
+                            phase_diagram_id=pd_id, chemsys=chemsys, phase_diagram=pd, thermo_type=thermo_type,
                         )
 
                         pd_data = jsanitize(pd_doc.dict(), allow_bson=True)
@@ -337,10 +330,7 @@ class ThermoBuilder(Builder):
                 d["material_id"]: d.get("average_oxidation_states", {})
                 for d in self.oxidation_states.query(
                     properties=["material_id", "average_oxidation_states"],
-                    criteria={
-                        "material_id": {"$in": material_ids},
-                        "state": "successful",
-                    },
+                    criteria={"material_id": {"$in": material_ids}, "state": "successful",},
                 )
             }
 
@@ -361,9 +351,7 @@ class ThermoBuilder(Builder):
 
         return all_entries
 
-    def get_updated_chemsys(
-        self,
-    ) -> Set:
+    def get_updated_chemsys(self,) -> Set:
         """Gets updated chemical system as defined by the updating of an existing material"""
 
         updated_mats = self.thermo.newer_in(self.materials, criteria=self.query)
