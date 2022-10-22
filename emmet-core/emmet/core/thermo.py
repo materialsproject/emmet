@@ -20,16 +20,13 @@ class DecompositionProduct(BaseModel):
     """
 
     material_id: MPID = Field(
-        None,
-        description="The Materials Project ID for the material this decomposition points to.",
+        None, description="The Materials Project ID for the material this decomposition points to.",
     )
     formula: str = Field(
-        None,
-        description="The formula of the decomposed material this material decomposes to.",
+        None, description="The formula of the decomposed material this material decomposes to.",
     )
     amount: float = Field(
-        None,
-        description="The amount of the decomposed material by formula units this this material decomposes to.",
+        None, description="The amount of the decomposed material by formula units this this material decomposes to.",
     )
 
 
@@ -48,13 +45,11 @@ class ThermoDoc(PropertyDoc):
     property_name = "thermo"
 
     thermo_type: Union[ThermoType, RunType] = Field(
-        ...,
-        description="Functional types of calculations involved in the energy mixing scheme.",
+        ..., description="Functional types of calculations involved in the energy mixing scheme.",
     )
 
     thermo_id: str = Field(
-        ...,
-        description="Unique document ID which is composed of the Material ID and thermo data type.",
+        ..., description="Unique document ID which is composed of the Material ID and thermo data type.",
     )
 
     uncorrected_energy_per_atom: float = Field(
@@ -62,8 +57,7 @@ class ThermoDoc(PropertyDoc):
     )
 
     energy_per_atom: float = Field(
-        ...,
-        description="The total corrected DFT energy of this material per atom in eV/atom.",
+        ..., description="The total corrected DFT energy of this material per atom in eV/atom.",
     )
 
     energy_uncertainy_per_atom: float = Field(None, description="")
@@ -73,8 +67,7 @@ class ThermoDoc(PropertyDoc):
     energy_above_hull: float = Field(..., description="The energy above the hull in eV/Atom.")
 
     is_stable: bool = Field(
-        False,
-        description="Flag for whether this material is on the hull and therefore stable.",
+        False, description="Flag for whether this material is on the hull and therefore stable.",
     )
 
     equilibrium_reaction_energy_per_atom: float = Field(
@@ -89,18 +82,15 @@ class ThermoDoc(PropertyDoc):
     )
 
     decomposition_enthalpy: float = Field(
-        None,
-        description="Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.",
+        None, description="Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.",
     )
 
     decomposition_enthalpy_decomposes_to: List[DecompositionProduct] = Field(
-        None,
-        description="List of decomposition data associated with the decomposition_enthalpy quantity.",
+        None, description="List of decomposition data associated with the decomposition_enthalpy quantity.",
     )
 
     energy_type: str = Field(
-        ...,
-        description="The type of calculation this energy evaluation comes from.",
+        ..., description="The type of calculation this energy evaluation comes from.",
     )
 
     entry_types: List[str] = Field(description="List of available energy types computed for this material.")
@@ -122,7 +112,20 @@ class ThermoDoc(PropertyDoc):
         # lowest energy entries.
         patched_pd = PatchedPhaseDiagram(entries, keep_all_spaces=True)
 
-        pd = patched_pd.pds[frozenset(patched_pd.elements)]  # Main PD of parent chemsys
+        # Main PD of parent chemsys
+        try:
+            pd = patched_pd.pds[frozenset(patched_pd.elements)]
+        except KeyError:
+            entries_by_comp = defaultdict(list)
+            for e in entries:
+                entries_by_comp[e.composition.reduced_formula].append(e)
+
+            # Only use lowest entry per composition to speed up QHull in Phase Diagram
+            reduced_entries = [
+                sorted(comp_entries, key=lambda e: e.energy_per_atom)[0] for comp_entries in entries_by_comp.values()
+            ]
+            pd = PhaseDiagram(reduced_entries)
+            patched_pd.pds = {frozenset(patched_pd.elements): pd}
 
         docs = []
 
@@ -173,11 +176,7 @@ class ThermoDoc(PropertyDoc):
                 d["equilibrium_reaction_energy_per_atom"] = pd.get_equilibrium_reaction_energy(blessed_entry)
             else:
                 d["decomposes_to"] = [
-                    {
-                        "material_id": de.data["material_id"],
-                        "formula": de.composition.formula,
-                        "amount": amt,
-                    }
+                    {"material_id": de.data["material_id"], "formula": de.composition.formula, "amount": amt,}
                     for de, amt in decomp.items()
                 ]
 
@@ -185,11 +184,7 @@ class ThermoDoc(PropertyDoc):
                 decomp, energy = pd.get_decomp_and_phase_separation_energy(blessed_entry)
                 d["decomposition_enthalpy"] = energy
                 d["decomposition_enthalpy_decomposes_to"] = [
-                    {
-                        "material_id": de.data["material_id"],
-                        "formula": de.composition.formula,
-                        "amount": amt,
-                    }
+                    {"material_id": de.data["material_id"], "formula": de.composition.formula, "amount": amt,}
                     for de, amt in decomp.items()
                 ]
             except ValueError:
@@ -242,23 +237,19 @@ class PhaseDiagramDoc(BaseModel):
     property_name = "phase_diagram"
 
     phase_diagram_id: str = Field(
-        ...,
-        description="Phase diagram ID consisting of the chemical system and thermo type",
+        ..., description="Phase diagram ID consisting of the chemical system and thermo type",
     )
 
     chemsys: str = Field(
-        ...,
-        description="Dash-delimited string of elements in the material",
+        ..., description="Dash-delimited string of elements in the material",
     )
 
     thermo_type: Union[ThermoType, RunType] = Field(
-        ...,
-        description="Functional types of calculations involved in the energy mixing scheme.",
+        ..., description="Functional types of calculations involved in the energy mixing scheme.",
     )
 
     phase_diagram: PhaseDiagram = Field(
-        ...,
-        description="Phase diagram for the chemical system.",
+        ..., description="Phase diagram for the chemical system.",
     )
 
     last_updated: datetime = Field(
