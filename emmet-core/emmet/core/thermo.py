@@ -125,7 +125,7 @@ class ThermoDoc(PropertyDoc):
                 sorted(comp_entries, key=lambda e: e.energy_per_atom)[0] for comp_entries in entries_by_comp.values()
             ]
             pd = PhaseDiagram(reduced_entries)
-            patched_pd.pds = {frozenset(patched_pd.elements): pd}
+            patched_pd.pds.update({frozenset(patched_pd.elements): pd}) 
 
         docs = []
 
