@@ -1,12 +1,20 @@
 # Changelog
 
-## [v0.38.4](https://github.com/materialsproject/emmet/tree/v0.38.4) (2022-10-22)
+## [v0.38.5](https://github.com/materialsproject/emmet/tree/v0.38.5) (2022-10-22)
 
-[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.38.3...v0.38.4)
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.38.4...v0.38.5)
 
 **Closed issues:**
 
 - Inconsisten version - Github Tags vs. \_version.py  [\#564](https://github.com/materialsproject/emmet/issues/564)
+
+**Merged pull requests:**
+
+- Fix pip install with `--no-binary` [\#568](https://github.com/materialsproject/emmet/pull/568) ([munrojm](https://github.com/munrojm))
+
+## [v0.38.4](https://github.com/materialsproject/emmet/tree/v0.38.4) (2022-10-22)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.38.3...v0.38.4)
 
 **Merged pull requests:**
 
