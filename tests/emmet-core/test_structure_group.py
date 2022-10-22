@@ -38,6 +38,7 @@ def test_StructureGroupDoc_from_grouped_entries(entries_lto):
     assert sgroup_doc.has_distinct_compositions is True
 
 
+@pytest.mark.skip(reason="Temp skip for spglib seg fault")
 def test_StructureGroupDoc_from_ungrouped_entries(entries_lfeo):
     entry_dict = {ient.entry_id: ient for ient in entries_lfeo}
     sgroup_docs = StructureGroupDoc.from_ungrouped_structure_entries(
