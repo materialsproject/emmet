@@ -74,6 +74,7 @@ class OrbitalBuilder(Builder):
         # Search index for orbitals
         self.orbitals.ensure_index("molecule_id")
         self.orbitals.ensure_index("task_id")
+        self.orbitals.ensure_index("solvent")
         self.orbitals.ensure_index("lot_solvent")
         self.orbitals.ensure_index("property_id")
         self.orbitals.ensure_index("last_updated")

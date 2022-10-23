@@ -78,6 +78,7 @@ class VibrationBuilder(Builder):
         # Search index for vibrational properties
         self.vibes.ensure_index("molecule_id")
         self.vibes.ensure_index("task_id")
+        self.vibes.ensure_index("solvent")
         self.vibes.ensure_index("lot_solvent")
         self.vibes.ensure_index("property_id")
         self.vibes.ensure_index("last_updated")

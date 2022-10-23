@@ -153,6 +153,7 @@ class ThermoBuilder(Builder):
         # Search index for thermo
         self.thermo.ensure_index("molecule_id")
         self.thermo.ensure_index("task_id")
+        self.thermo.ensure_index("solvent")
         self.thermo.ensure_index("lot_solvent")
         self.thermo.ensure_index("property_id")
         self.thermo.ensure_index("last_updated")

@@ -59,69 +59,69 @@ class SummaryDoc(PropertyDoc):
     )
 
     # thermo
-    electronic_energy: float = Field(
+    electronic_energy: Dict[str, float] = Field(
         None, description="Electronic energy of the molecule (units: eV)"
     )
 
-    zero_point_energy: float = Field(
+    zero_point_energy: Dict[str, float] = Field(
         None, description="Zero-point energy of the molecule (units: eV)"
     )
 
-    rt: float = Field(
+    rt: Dict[str, float] = Field(
         None,
         description="R*T, where R is the gas constant and T is temperature, taken "
         "to be 298.15K (units: eV)",
     )
 
-    total_enthalpy: float = Field(
+    total_enthalpy: Dict[str, float] = Field(
         None, description="Total enthalpy of the molecule at 298.15K (units: eV)"
     )
-    total_entropy: float = Field(
+    total_entropy: Dict[str, float] = Field(
         None, description="Total entropy of the molecule at 298.15K (units: eV/K)"
     )
 
-    translational_enthalpy: float = Field(
+    translational_enthalpy: Dict[str, float] = Field(
         None,
         description="Translational enthalpy of the molecule at 298.15K (units: eV)",
     )
-    translational_entropy: float = Field(
+    translational_entropy: Dict[str, float] = Field(
         None,
         description="Translational entropy of the molecule at 298.15K (units: eV/K)",
     )
-    rotational_enthalpy: float = Field(
+    rotational_enthalpy: Dict[str, float] = Field(
         None, description="Rotational enthalpy of the molecule at 298.15K (units: eV)"
     )
-    rotational_entropy: float = Field(
+    rotational_entropy: Dict[str, float] = Field(
         None, description="Rotational entropy of the molecule at 298.15K (units: eV/K)"
     )
-    vibrational_enthalpy: float = Field(
+    vibrational_enthalpy: Dict[str, float] = Field(
         None, description="Vibrational enthalpy of the molecule at 298.15K (units: eV)"
     )
-    vibrational_entropy: float = Field(
+    vibrational_entropy: Dict[str, float] = Field(
         None, description="Vibrational entropy of the molecule at 298.15K (units: eV/K)"
     )
 
-    free_energy: float = Field(
+    free_energy: Dict[str, float] = Field(
         None, description="Gibbs free energy of the molecule at 298.15K (units: eV)"
     )
 
     # vibrational properties
-    frequencies: List[float] = Field(
+    frequencies: Dict[str, List[float]] = Field(
         None, description="List of molecular vibrational frequencies"
     )
 
-    frequency_modes: List[List[List[float]]] = Field(
+    frequency_modes: Dict[str, List[List[List[float]]]] = Field(
         None,
         description="Vibrational frequency modes of the molecule (units: Angstrom)",
     )
 
-    ir_intensities: List[float] = Field(
+    ir_intensities: Dict[str, List[float]] = Field(
         None,
         title="IR intensities",
         description="Intensities for infrared vibrational spectrum peaks",
     )
 
-    ir_activities: List = Field(
+    ir_activities: Dict[str, List] = Field(
         None,
         title="IR activities",
         description="List indicating if frequency-modes are IR-active",
@@ -132,85 +132,85 @@ class SummaryDoc(PropertyDoc):
         None, description="Is this molecule open-shell (spin multiplicity != 1)?"
     )
 
-    nbo_population: List[NaturalPopulation] = Field(
+    nbo_population: Dict[str, List[NaturalPopulation]] = Field(
         None, description="Natural electron populations of the molecule"
     )
-    nbo_lone_pairs: List[LonePair] = Field(
+    nbo_lone_pairs: Dict[str, List[LonePair]] = Field(
         None, description="Lone pair orbitals of a closed-shell molecule"
     )
-    nbo_bonds: List[Bond] = Field(
+    nbo_bonds: Dict[str, List[Bond]] = Field(
         None, description="Bond-like orbitals of a closed-shell molecule"
     )
-    nbo_interactions: List[Interaction] = Field(
+    nbo_interactions: Dict[str, List[Interaction]] = Field(
         None, description="Orbital-orbital interactions of a closed-shell molecule"
     )
 
-    alpha_population: List[NaturalPopulation] = Field(
+    alpha_population: Dict[str, List[NaturalPopulation]] = Field(
         None,
         description="Natural electron populations of the alpha electrons of an "
         "open-shell molecule",
     )
-    beta_population: List[NaturalPopulation] = Field(
+    beta_population: Dict[str, List[NaturalPopulation]] = Field(
         None,
         description="Natural electron populations of the beta electrons of an "
         "open-shell molecule",
     )
-    alpha_lone_pairs: List[LonePair] = Field(
+    alpha_lone_pairs: Dict[str, List[LonePair]] = Field(
         None, description="Alpha electron lone pair orbitals of an open-shell molecule"
     )
-    beta_lone_pairs: List[LonePair] = Field(
+    beta_lone_pairs: Dict[str, List[LonePair]] = Field(
         None, description="Beta electron lone pair orbitals of an open-shell molecule"
     )
-    alpha_bonds: List[Bond] = Field(
+    alpha_bonds: Dict[str, List[Bond]] = Field(
         None, description="Alpha electron bond-like orbitals of an open-shell molecule"
     )
-    beta_bonds: List[Bond] = Field(
+    beta_bonds: Dict[str, List[Bond]] = Field(
         None, description="Beta electron bond-like orbitals of an open-shell molecule"
     )
-    alpha_interactions: List[Interaction] = Field(
+    alpha_interactions: Dict[str, List[Interaction]] = Field(
         None,
         description="Alpha electron orbital-orbital interactions of an open-shell molecule",
     )
-    beta_interactions: List[Interaction] = Field(
+    beta_interactions: Dict[str, List[Interaction]] = Field(
         None,
         description="Beta electron orbital-orbital interactions of an open-shell molecule",
     )
 
     # partial charges
-    partial_charges: Dict[str, List[float]] = Field(
+    partial_charges: Dict[str, Dict[str, List[float]]] = Field(
         None,
         description="Atomic partial charges for the molecule using different partitioning schemes "
         "(Mulliken, Restrained Electrostatic Potential, Natural Bonding Orbitals, etc.)",
     )
 
     # partial spins
-    partial_spins: Dict[str, List[float]] = Field(
+    partial_spins: Dict[str, Dict[str, List[float]]] = Field(
         None,
         description="Atomic partial spins for the molecule using different partitioning schemes "
         "(Mulliken, Natural Bonding Orbitals, etc.)",
     )
 
     # bonding
-    molecule_graph: Dict[str, MoleculeGraph] = Field(
+    molecule_graph: Dict[str, Dict[str, MoleculeGraph]] = Field(
         None,
         description="Molecular graph representations of the molecule using different "
         "definitions of bonding.",
     )
 
-    bond_types: Dict[str, Dict[str, List[float]]] = Field(
+    bond_types: Dict[str, Dict[str, Dict[str, List[float]]]] = Field(
         None,
         description="Dictionaries of bond types to their length under different "
         "definitions of bonding, e.g. C-O to a list of the lengths of "
         "C-O bonds in Angstrom.",
     )
 
-    bonds: Dict[str, List[Tuple[int, int]]] = Field(
+    bonds: Dict[str, Dict[str, List[Tuple[int, int]]]] = Field(
         None,
         description="List of bonds under different definitions of bonding. Each bond takes "
         "the form (a, b), where a and b are 0-indexed atom indices",
     )
 
-    bonds_nometal: Dict[str, List[Tuple[int, int]]] = Field(
+    bonds_nometal: Dict[str, Dict[str, List[Tuple[int, int]]]] = Field(
         None,
         description="List of bonds under different definitions of bonding with all metal ions "
         "removed. Each bond takes the form in the form (a, b), where a and b are "
@@ -218,35 +218,35 @@ class SummaryDoc(PropertyDoc):
     )
 
     # redox properties
-    electron_affinity: float = Field(
+    electron_affinity: Dict[str, float] = Field(
         None, description="Vertical electron affinity in eV"
     )
 
-    ea_id: MPculeID = Field(None, description="Molecule ID for electron affinity")
+    ea_id: Dict[str, MPID] = Field(None, description="Molecule ID for electron affinity")
 
-    ionization_energy: float = Field(
+    ionization_energy: Dict[str, float] = Field(
         None, description="Vertical ionization energy in eV"
     )
 
-    ie_id: MPculeID = Field(None, description="Molecule ID for ionization energy")
+    ie_id: Dict[str, MPID] = Field(None, description="Molecule ID for ionization energy")
 
-    reduction_free_energy: float = Field(
+    reduction_free_energy: Dict[str, float] = Field(
         None, description="Adiabatic free energy of reduction"
     )
 
-    red_id: MPculeID = Field(None, description="Molecule ID for adiabatic reduction")
+    red_id: Dict[str, MPculeID] = Field(None, description="Molecule ID for adiabatic reduction")
 
-    oxidation_free_energy: float = Field(
+    oxidation_free_energy: Dict[str, float] = Field(
         None, description="Adiabatic free energy of oxidation"
     )
 
-    ox_id: MPculeID = Field(None, description="Molecule ID for adiabatic oxidation")
+    ox_id: Dict[str, MPculeID] = Field(None, description="Molecule ID for adiabatic oxidation")
 
-    reduction_potentials: Dict[str, float] = Field(
+    reduction_potentials: Dict[str, Dict[str, float]] = Field(
         None, description="Reduction potentials with various " "reference electrodes"
     )
 
-    oxidation_potentials: Dict[str, float] = Field(
+    oxidation_potentials: Dict[str, Dict[str, float]] = Field(
         None, description="Oxidation potentials with various " "reference electrodes"
     )
 

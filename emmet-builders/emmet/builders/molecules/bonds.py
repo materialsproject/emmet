@@ -91,6 +91,7 @@ class BondingBuilder(Builder):
         self.bonds.ensure_index("molecule_id")
         self.bonds.ensure_index("method")
         self.bonds.ensure_index("task_id")
+        self.bonds.ensure_index("solvent")
         self.bonds.ensure_index("lot_solvent")
         self.bonds.ensure_index("property_id")
         self.bonds.ensure_index("last_updated")

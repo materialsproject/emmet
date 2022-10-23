@@ -89,6 +89,7 @@ class RedoxBuilder(Builder):
         # Search index for thermo
         self.thermo.ensure_index("molecule_id")
         self.thermo.ensure_index("task_id")
+        self.thermo.ensure_index("solvent")
         self.thermo.ensure_index("lot_solvent")
         self.thermo.ensure_index("property_id")
         self.thermo.ensure_index("last_updated")
@@ -97,6 +98,7 @@ class RedoxBuilder(Builder):
         # Search index for orbitals
         self.redox.ensure_index("molecule_id")
         self.redox.ensure_index("task_id")
+        self.redox.ensure_index("solvent")
         self.redox.ensure_index("lot_solvent")
         self.redox.ensure_index("property_id")
         self.redox.ensure_index("last_updated")
