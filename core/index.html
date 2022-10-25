@@ -3080,17 +3080,11 @@ MoleculeMetadata            (<span title="emmet.core.base.EmmetBaseModel">EmmetB
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">charge</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Charge of the molecule&quot;</span><span class="p">)</span>
-    <span class="n">spin_multiplicity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Spin multiplicity of the molecule&quot;</span>
-    <span class="p">)</span>
+    <span class="n">spin_multiplicity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Spin multiplicity of the molecule&quot;</span><span class="p">)</span>
     <span class="n">natoms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Total number of atoms in the molecule&quot;</span><span class="p">)</span>
-    <span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Element</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of elements in the molecule&quot;</span>
-    <span class="p">)</span>
+    <span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Element</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of elements in the molecule&quot;</span><span class="p">)</span>
     <span class="n">nelements</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Number of Elements&quot;</span><span class="p">)</span>
-    <span class="n">composition</span><span class="p">:</span> <span class="n">Composition</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Full composition for the molecule&quot;</span>
-    <span class="p">)</span>
+    <span class="n">composition</span><span class="p">:</span> <span class="n">Composition</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Full composition for the molecule&quot;</span><span class="p">)</span>
     <span class="n">formula_alphabetical</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Alphabetical Formula&quot;</span><span class="p">,</span>
@@ -3102,17 +3096,12 @@ MoleculeMetadata            (<span title="emmet.core.base.EmmetBaseModel">EmmetB
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;dash-delimited string of elements in the molecule&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">symmetry</span><span class="p">:</span> <span class="n">PointGroupData</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Symmetry data for this molecule&quot;</span>
-    <span class="p">)</span>
+    <span class="n">symmetry</span><span class="p">:</span> <span class="n">PointGroupData</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Symmetry data for this molecule&quot;</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_molecule</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">S</span><span class="p">],</span>
-        <span class="n">meta_molecule</span><span class="p">:</span> <span class="n">Molecule</span><span class="p">,</span>
-        <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+        <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">S</span><span class="p">],</span> <span class="n">meta_molecule</span><span class="p">:</span> <span class="n">Molecule</span><span class="p">,</span> <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MoleculeMetadata</span><span class="p">:</span>
 
         <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span>
             <span class="p">[</span>
@@ -3380,13 +3369,9 @@ StructureMetadata            (<span title="emmet.core.base.EmmetBaseModel">Emmet
 
     <span class="c1"># Structure metadata</span>
     <span class="n">nsites</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Total number of sites in the structure.&quot;</span><span class="p">)</span>
-    <span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Element</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of elements in the material.&quot;</span>
-    <span class="p">)</span>
+    <span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Element</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of elements in the material.&quot;</span><span class="p">)</span>
     <span class="n">nelements</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Number of elements.&quot;</span><span class="p">)</span>
-    <span class="n">composition</span><span class="p">:</span> <span class="n">Composition</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Full composition for the material.&quot;</span>
-    <span class="p">)</span>
+    <span class="n">composition</span><span class="p">:</span> <span class="n">Composition</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Full composition for the material.&quot;</span><span class="p">)</span>
     <span class="n">composition_reduced</span><span class="p">:</span> <span class="n">Composition</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Reduced Composition&quot;</span><span class="p">,</span>
@@ -3413,9 +3398,7 @@ StructureMetadata            (<span title="emmet.core.base.EmmetBaseModel">Emmet
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Total volume for this structure in Angstroms^3.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">density</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Density&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Density in grams per cm^3.&quot;</span>
-    <span class="p">)</span>
+    <span class="n">density</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Density&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Density in grams per cm^3.&quot;</span><span class="p">)</span>
 
     <span class="n">density_atomic</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
@@ -4827,16 +4810,13 @@ DecompositionProduct            (<span title="pydantic.main.BaseModel">BaseModel
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">material_id</span><span class="p">:</span> <span class="n">MPID</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The Materials Project ID for the material this decomposition points to.&quot;</span><span class="p">,</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The Materials Project ID for the material this decomposition points to.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">formula</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The formula of the decomposed material this material decomposes to.&quot;</span><span class="p">,</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The formula of the decomposed material this material decomposes to.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">amount</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The amount of the decomposed material by formula units this this material decomposes to.&quot;</span><span class="p">,</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The amount of the decomposed material by formula units this this material decomposes to.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 </code></pre></div>
         </details>
@@ -4961,8 +4941,7 @@ PhaseDiagramDoc            (<span title="pydantic.main.BaseModel">BaseModel</spa
     <span class="n">property_name</span> <span class="o">=</span> <span class="s2">&quot;phase_diagram&quot;</span>
 
     <span class="n">phase_diagram_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Phase diagram ID consisting of the chemical system and thermo type&quot;</span><span class="p">,</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Phase diagram ID consisting of the chemical system and thermo type&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">chemsys</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -4970,8 +4949,7 @@ PhaseDiagramDoc            (<span title="pydantic.main.BaseModel">BaseModel</spa
     <span class="p">)</span>
 
     <span class="n">thermo_type</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ThermoType</span><span class="p">,</span> <span class="n">RunType</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Functional types of calculations involved in the energy mixing scheme.&quot;</span><span class="p">,</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Functional types of calculations involved in the energy mixing scheme.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">phase_diagram</span><span class="p">:</span> <span class="n">PhaseDiagram</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -5154,13 +5132,11 @@ ThermoDoc            (<span title="emmet.core.material_property.PropertyDoc">Pro
     <span class="n">property_name</span> <span class="o">=</span> <span class="s2">&quot;thermo&quot;</span>
 
     <span class="n">thermo_type</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ThermoType</span><span class="p">,</span> <span class="n">RunType</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Functional types of calculations involved in the energy mixing scheme.&quot;</span><span class="p">,</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Functional types of calculations involved in the energy mixing scheme.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">thermo_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Unique document ID which is composed of the Material ID and thermo data type.&quot;</span><span class="p">,</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Unique document ID which is composed of the Material ID and thermo data type.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">uncorrected_energy_per_atom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -5168,23 +5144,17 @@ ThermoDoc            (<span title="emmet.core.material_property.PropertyDoc">Pro
     <span class="p">)</span>
 
     <span class="n">energy_per_atom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The total corrected DFT energy of this material per atom in eV/atom.&quot;</span><span class="p">,</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The total corrected DFT energy of this material per atom in eV/atom.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">energy_uncertainy_per_atom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-    <span class="n">formation_energy_per_atom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The formation energy per atom in eV/atom.&quot;</span>
-    <span class="p">)</span>
+    <span class="n">formation_energy_per_atom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The formation energy per atom in eV/atom.&quot;</span><span class="p">)</span>
 
-    <span class="n">energy_above_hull</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The energy above the hull in eV/Atom.&quot;</span>
-    <span class="p">)</span>
+    <span class="n">energy_above_hull</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The energy above the hull in eV/Atom.&quot;</span><span class="p">)</span>
 
     <span class="n">is_stable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">False</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Flag for whether this material is on the hull and therefore stable.&quot;</span><span class="p">,</span>
+        <span class="kc">False</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Flag for whether this material is on the hull and therefore stable.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">equilibrium_reaction_energy_per_atom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -5199,22 +5169,18 @@ ThermoDoc            (<span title="emmet.core.material_property.PropertyDoc">Pro
     <span class="p">)</span>
 
     <span class="n">decomposition_enthalpy</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.&quot;</span><span class="p">,</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">decomposition_enthalpy_decomposes_to</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DecompositionProduct</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of decomposition data associated with the decomposition_enthalpy quantity.&quot;</span><span class="p">,</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of decomposition data associated with the decomposition_enthalpy quantity.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">energy_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The type of calculation this energy evaluation comes from.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">entry_types</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of available energy types computed for this material.&quot;</span>
-    <span class="p">)</span>
+    <span class="n">entry_types</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of available energy types computed for this material.&quot;</span><span class="p">)</span>
 
     <span class="n">entries</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">ComputedEntry</span><span class="p">,</span> <span class="n">ComputedStructureEntry</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="o">...</span><span class="p">,</span>
@@ -5229,18 +5195,24 @@ ThermoDoc            (<span title="emmet.core.material_property.PropertyDoc">Pro
         <span class="n">thermo_type</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ThermoType</span><span class="p">,</span> <span class="n">RunType</span><span class="p">],</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+        <span class="c1"># Note that PatchedPhaseDiagram construct the hull using only the</span>
+        <span class="c1"># lowest energy entries.</span>
+        <span class="n">patched_pd</span> <span class="o">=</span> <span class="n">PatchedPhaseDiagram</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="n">keep_all_spaces</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="n">entries_by_comp</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
-            <span class="n">entries_by_comp</span><span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">reduced_formula</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="c1"># Main PD of parent chemsys</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pd</span> <span class="o">=</span> <span class="n">patched_pd</span><span class="o">.</span><span class="n">pds</span><span class="p">[</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">patched_pd</span><span class="o">.</span><span class="n">elements</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">entries_by_comp</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+                <span class="n">entries_by_comp</span><span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">reduced_formula</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
 
-        <span class="c1"># Only use lowest entry per composition to speed up QHull in Phase Diagram</span>
-        <span class="n">reduced_entries</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="nb">sorted</span><span class="p">(</span><span class="n">comp_entries</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">energy_per_atom</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">comp_entries</span> <span class="ow">in</span> <span class="n">entries_by_comp</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
-        <span class="p">]</span>
-
-        <span class="n">pd</span> <span class="o">=</span> <span class="n">PhaseDiagram</span><span class="p">(</span><span class="n">reduced_entries</span><span class="p">)</span>
+            <span class="c1"># Only use lowest entry per composition to speed up QHull in Phase Diagram</span>
+            <span class="n">reduced_entries</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">sorted</span><span class="p">(</span><span class="n">comp_entries</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">energy_per_atom</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">comp_entries</span> <span class="ow">in</span> <span class="n">entries_by_comp</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+            <span class="p">]</span>
+            <span class="n">pd</span> <span class="o">=</span> <span class="n">PhaseDiagram</span><span class="p">(</span><span class="n">reduced_entries</span><span class="p">)</span>
+            <span class="n">patched_pd</span><span class="o">.</span><span class="n">pds</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">patched_pd</span><span class="o">.</span><span class="n">elements</span><span class="p">):</span> <span class="n">pd</span><span class="p">})</span>
 
         <span class="n">docs</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -5276,10 +5248,8 @@ ThermoDoc            (<span title="emmet.core.material_property.PropertyDoc">Pro
                 <span class="s2">&quot;thermo_id&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">material_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">thermo_type</span><span class="p">)),</span>
                 <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">material_id</span><span class="p">,</span>
                 <span class="s2">&quot;thermo_type&quot;</span><span class="p">:</span> <span class="n">thermo_type</span><span class="p">,</span>
-                <span class="s2">&quot;uncorrected_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">uncorrected_energy</span>
-                <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
-                <span class="s2">&quot;energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">energy</span>
-                <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
+                <span class="s2">&quot;uncorrected_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">uncorrected_energy</span> <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
+                <span class="s2">&quot;energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">energy</span> <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
                 <span class="s2">&quot;formation_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_form_energy_per_atom</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">),</span>
                 <span class="s2">&quot;energy_above_hull&quot;</span><span class="p">:</span> <span class="n">ehull</span><span class="p">,</span>
                 <span class="s2">&quot;is_stable&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">stable_entries</span><span class="p">,</span>
@@ -5290,39 +5260,25 @@ ThermoDoc            (<span title="emmet.core.material_property.PropertyDoc">Pro
 
             <span class="c1"># Store different info if stable vs decomposes</span>
             <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;is_stable&quot;</span><span class="p">]:</span>
-                <span class="n">d</span><span class="p">[</span>
-                    <span class="s2">&quot;equilibrium_reaction_energy_per_atom&quot;</span>
-                <span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_equilibrium_reaction_energy</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>
+                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;equilibrium_reaction_energy_per_atom&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_equilibrium_reaction_energy</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposes_to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="p">{</span>
-                        <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>
-                        <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span>
-                        <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">,</span>
-                    <span class="p">}</span>
+                    <span class="p">{</span><span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span> <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span> <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">}</span>
                     <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                 <span class="p">]</span>
 
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">decomp</span><span class="p">,</span> <span class="n">energy</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_phase_separation_energy</span><span class="p">(</span>
-                    <span class="n">blessed_entry</span>
-                <span class="p">)</span>
+                <span class="n">decomp</span><span class="p">,</span> <span class="n">energy</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_phase_separation_energy</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>
                 <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposition_enthalpy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span>
                 <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposition_enthalpy_decomposes_to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="p">{</span>
-                        <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>
-                        <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span>
-                        <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">,</span>
-                    <span class="p">}</span>
+                    <span class="p">{</span><span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span> <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span> <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">}</span>
                     <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                 <span class="p">]</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="c1"># try/except so this quantity does not take down the builder if it fails:</span>
                 <span class="c1"># it includes an optimization step that can be fragile in some instances,</span>
                 <span class="c1"># most likely failure is ValueError, &quot;invalid value encountered in true_divide&quot;</span>
-                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="s2">&quot;Could not calculate decomposition enthalpy for this entry.&quot;</span>
-                <span class="p">]</span>
+                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Could not calculate decomposition enthalpy for this entry.&quot;</span><span class="p">]</span>
 
             <span class="n">d</span><span class="p">[</span><span class="s2">&quot;energy_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">)</span>
             <span class="n">d</span><span class="p">[</span><span class="s2">&quot;entry_types&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -5342,20 +5298,22 @@ ThermoDoc            (<span title="emmet.core.material_property.PropertyDoc">Pro
                 <span class="p">)</span>
             <span class="p">]</span>
 
-            <span class="n">docs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">ThermoDoc</span><span class="o">.</span><span class="n">from_structure</span><span class="p">(</span>
-                    <span class="n">meta_structure</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
+            <span class="n">docs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ThermoDoc</span><span class="o">.</span><span class="n">from_structure</span><span class="p">(</span><span class="n">meta_structure</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
 
-        <span class="c1"># Construct new phase diagram with all of the entries, not just those on the hull</span>
-        <span class="n">pd_computed_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">_compute</span><span class="p">()</span>
-        <span class="n">pd_computed_data</span><span class="p">[</span><span class="s2">&quot;all_entries&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entries</span>
-        <span class="n">new_pd</span> <span class="o">=</span> <span class="n">PhaseDiagram</span><span class="p">(</span>
-            <span class="n">entries</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span> <span class="n">computed_data</span><span class="o">=</span><span class="n">pd_computed_data</span>
-        <span class="p">)</span>
+        <span class="c1"># Construct new phase diagrams with all of the entries, not just those on the hull</span>
+        <span class="n">new_pds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ele_set</span><span class="p">,</span> <span class="n">pd</span> <span class="ow">in</span> <span class="n">patched_pd</span><span class="o">.</span><span class="n">pds</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">new_entries</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">ele_set</span><span class="p">):</span>
+                    <span class="n">new_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">docs</span><span class="p">,</span> <span class="n">new_pd</span>
+            <span class="n">pd_computed_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">computed_data</span>
+            <span class="n">pd_computed_data</span><span class="p">[</span><span class="s2">&quot;all_entries&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_entries</span>
+            <span class="n">new_pd</span> <span class="o">=</span> <span class="n">PhaseDiagram</span><span class="p">(</span><span class="n">new_entries</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span> <span class="n">computed_data</span><span class="o">=</span><span class="n">pd_computed_data</span><span class="p">)</span>
+            <span class="n">new_pds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_pd</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">docs</span><span class="p">,</span> <span class="n">new_pds</span>
 </code></pre></div>
         </details>
 
@@ -6775,17 +6733,11 @@ DielectricDoc            (<span title="emmet.core.material_property.PropertyDoc"
 
     <span class="n">total</span><span class="p">:</span> <span class="n">Matrix3D</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Total dielectric tensor.&quot;</span><span class="p">)</span>
     <span class="n">ionic</span><span class="p">:</span> <span class="n">Matrix3D</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Ionic contribution to dielectric tensor.&quot;</span><span class="p">)</span>
-    <span class="n">electronic</span><span class="p">:</span> <span class="n">Matrix3D</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electronic contribution to dielectric tensor.&quot;</span>
-    <span class="p">)</span>
+    <span class="n">electronic</span><span class="p">:</span> <span class="n">Matrix3D</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electronic contribution to dielectric tensor.&quot;</span><span class="p">)</span>
 
     <span class="n">e_total</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Total electric permittivity.&quot;</span><span class="p">)</span>
-    <span class="n">e_ionic</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electric permittivity from atomic rearrangement.&quot;</span>
-    <span class="p">)</span>
-    <span class="n">e_electronic</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electric permittivity due to electrons rearrangement.&quot;</span>
-    <span class="p">)</span>
+    <span class="n">e_ionic</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electric permittivity from atomic rearrangement.&quot;</span><span class="p">)</span>
+    <span class="n">e_electronic</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electric permittivity due to electrons rearrangement.&quot;</span><span class="p">)</span>
 
     <span class="n">n</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Refractive index.&quot;</span><span class="p">)</span>
 
@@ -7037,20 +6989,12 @@ PiezoelectricDoc            (<span title="emmet.core.material_property.PropertyD
     <span class="n">property_name</span> <span class="o">=</span> <span class="s2">&quot;piezoelectric&quot;</span>
 
     <span class="n">total</span><span class="p">:</span> <span class="n">PiezoTensor</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Total piezoelectric tensor in C/m²&quot;</span><span class="p">)</span>
-    <span class="n">ionic</span><span class="p">:</span> <span class="n">PiezoTensor</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Ionic contribution to piezoelectric tensor in C/m²&quot;</span>
-    <span class="p">)</span>
-    <span class="n">electronic</span><span class="p">:</span> <span class="n">PiezoTensor</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electronic contribution to piezoelectric tensor in C/m²&quot;</span>
-    <span class="p">)</span>
+    <span class="n">ionic</span><span class="p">:</span> <span class="n">PiezoTensor</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Ionic contribution to piezoelectric tensor in C/m²&quot;</span><span class="p">)</span>
+    <span class="n">electronic</span><span class="p">:</span> <span class="n">PiezoTensor</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electronic contribution to piezoelectric tensor in C/m²&quot;</span><span class="p">)</span>
 
     <span class="n">e_ij_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Piezoelectric modulus&quot;</span><span class="p">)</span>
-    <span class="n">max_direction</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Miller direction for maximum piezo response&quot;</span>
-    <span class="p">)</span>
-    <span class="n">strain_for_max</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Normalized strain direction for maximum piezo repsonse&quot;</span>
-    <span class="p">)</span>
+    <span class="n">max_direction</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Miller direction for maximum piezo response&quot;</span><span class="p">)</span>
+    <span class="n">strain_for_max</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Normalized strain direction for maximum piezo repsonse&quot;</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_ionic_and_electronic</span><span class="p">(</span>
