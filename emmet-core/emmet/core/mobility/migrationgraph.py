@@ -278,8 +278,16 @@ class MigrationGraphDoc(EmmetBaseModel):
         if sm.fit(convert_sc, sc_check):
             one_hop_dis = one_hop["hop"].length
             sc_check_hop_dis = np.linalg.norm(sc_check[0].coords - sc_check[1].coords)
+<<<<<<< Updated upstream
             if np.isclose(one_hop_dis, sc_check_hop_dis, rtol=0.1, atol=0.1):
                 if one_hop["iindex"] == uc_site_types[0] and one_hop["eindex"] == uc_site_types[1]:
+=======
+            if np.isclose(one_hop_dis, sc_check_hop_dis, rtol=0.01, atol=0.05):
+                if (
+                    one_hop["iindex"] == uc_site_types[0]
+                    and one_hop["eindex"] == uc_site_types[1]
+                ):
+>>>>>>> Stashed changes
                     return True
 
         return False
