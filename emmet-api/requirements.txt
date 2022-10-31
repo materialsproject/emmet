@@ -170,7 +170,7 @@ paramiko==2.11.0
     # via sshtunnel
 pillow==9.2.0
     # via matplotlib
-plotly==5.10.0
+plotly==5.11.0
     # via pymatgen
 protobuf==4.21.9
     # via
