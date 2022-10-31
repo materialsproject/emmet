@@ -48,7 +48,7 @@ cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.5.2
+ddtrace==1.5.3
     # via emmet-api (setup.py)
 dnspython==2.2.1
     # via
