@@ -1,21 +1,10 @@
 # -*- coding: utf-8 -*-
 from setuptools import find_namespace_packages, setup
-from emmet.core._version import __version__ as fallback_version
-
-if "+" in fallback_version:
-    fallback_version = fallback_version.split("+")[0]
 
 
 setup(
     name="emmet-core",
-    use_scm_version={
-        "root": ".",
-        "relative_to": __file__,
-        "write_to": "emmet/core/_version.py",
-        "write_to_template": '__version__ = "{version}"',
-        "fallback_version": fallback_version,
-        "search_parent_directories": True,
-    },
+    use_scm_version={"root": "..", "relative_to": __file__,},
     setup_requires=["setuptools_scm>=6,<8"],
     description="Core Emmet Library",
     author="The Materials Project",
