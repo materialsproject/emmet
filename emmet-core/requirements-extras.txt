@@ -182,6 +182,8 @@ uncertainties==3.1.7
     # via pymatgen
 urllib3==1.26.12
     # via requests
+seekpath==2.0.1
+    # via emmet-core (setup.py)
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
