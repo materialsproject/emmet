@@ -33,7 +33,6 @@ def dos(test_dir):
     dos = loadfn(test_dir / "electronic_structure/Fe_dos.json")
     return dos
 
-@pytest.mark.skip(reason="FIX DATETIME MAGGMA RELATED ISSUES")
 def test_from_bsdos_1(bandstructure, dos, structure):
 
     es_doc = ElectronicStructureDoc.from_bsdos(
@@ -75,7 +74,6 @@ def dos_fs(test_dir):
     )
 
 
-@pytest.mark.skip(reason="FIX DATETIME MAGGMA RELATED ISSUES")
 def test_from_bsdos_2(bandstructure_fs, dos_fs):
 
     dos_fs.connect()
