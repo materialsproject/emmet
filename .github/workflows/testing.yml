@@ -69,10 +69,10 @@ jobs:
       - name: Install Packages
         shell: bash -l {0}
         run: |
-          pip install -e emmet-core
-          pip install -e emmet-builders
-          pip install -e emmet-api
-          pip install pymatgen --upgrade
+          pip uninstall -y emmet-core
+          pip install --no-deps -e emmet-core
+          pip install --no-deps -e emmet-builders
+          pip install --no-deps -e emmet-api
 
       - name: Lint with mypy
         shell: bash -l {0}
