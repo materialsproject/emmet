@@ -33,7 +33,6 @@ def dos(test_dir):
     dos = loadfn(test_dir / "electronic_structure/Fe_dos.json")
     return dos
 
-
 def test_from_bsdos_1(bandstructure, dos, structure):
 
     es_doc = ElectronicStructureDoc.from_bsdos(

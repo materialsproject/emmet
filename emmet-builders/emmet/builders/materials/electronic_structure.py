@@ -381,53 +381,58 @@ class ElectronicStructureBuilder(Builder):
                     criteria={"task_id": str(task_id)},
                 )
 
-                fs_id = str(task_query["calcs_reversed"][0]["bandstructure_fs_id"])
+                fs_id = str(
+                    task_query["calcs_reversed"][0].get("bandstructure_fs_id", None)
+                )
 
-                structure = Structure.from_dict(task_query["output"]["structure"])
+                if fs_id is not None:
+                    structure = Structure.from_dict(task_query["output"]["structure"])
 
-                kpoints = task_query["orig_inputs"]["kpoints"]
-                labels_dict = {
-                    label: point
-                    for label, point in zip(kpoints["labels"], kpoints["kpoints"])
-                    if label is not None
-                }
+                    kpoints = task_query["orig_inputs"]["kpoints"]
+                    labels_dict = {
+                        label: point
+                        for label, point in zip(kpoints["labels"], kpoints["kpoints"])
+                        if label is not None
+                    }
 
-                try:
-                    bs_type = self._obtain_path_type(labels_dict, structure)
-                except Exception:
-                    bs_type = None
+                    try:
+                        bs_type = self._obtain_path_type(labels_dict, structure)
+                    except Exception:
+                        bs_type = None
 
-                if bs_type is None:
+                    if bs_type is None:
 
-                    bs_dict = self.bandstructure_fs.query_one(
-                        {self.bandstructure_fs.key: str(task_id)}
-                    )
+                        bs_dict = self.bandstructure_fs.query_one(
+                            {self.bandstructure_fs.key: str(task_id)}
+                        )
 
-                    if bs_dict is not None:
+                        if bs_dict is not None:
 
-                        bs = BandStructureSymmLine.from_dict(bs_dict["data"])
+                            bs = BandStructureSymmLine.from_dict(bs_dict["data"])
 
-                        bs_type = self._obtain_path_type(bs.labels_dict, bs.structure)
+                            bs_type = self._obtain_path_type(
+                                bs.labels_dict, bs.structure
+                            )
 
-                is_hubbard = task_query["input"]["is_hubbard"]
-                lmaxmix = task_query["input"]["incar"].get(
-                    "LMAXMIX", 2
-                )  # VASP default is 2, alternatively could project `parameters`
-                nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
-                lu_dt = task_query["last_updated"]
+                    is_hubbard = task_query["input"]["is_hubbard"]
+                    lmaxmix = task_query["input"]["incar"].get(
+                        "LMAXMIX", 2
+                    )  # VASP default is 2, alternatively could project `parameters`
+                    nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
+                    lu_dt = task_query["last_updated"]
 
-                if bs_type is not None:
-                    bs_calcs[bs_type].append(
-                        {
-                            "fs_id": fs_id,
-                            "task_id": task_id,
-                            "is_hubbard": int(is_hubbard),
-                            "lmaxmix": lmaxmix,
-                            "nkpoints": int(nkpoints),
-                            "updated_on": lu_dt,
-                            "output_structure": structure,
-                        }
-                    )
+                    if bs_type is not None:
+                        bs_calcs[bs_type].append(
+                            {
+                                "fs_id": fs_id,
+                                "task_id": task_id,
+                                "is_hubbard": int(is_hubbard),
+                                "lmaxmix": lmaxmix,
+                                "nkpoints": int(nkpoints),
+                                "updated_on": lu_dt,
+                                "output_structure": structure,
+                            }
+                        )
 
             # Handle uniform tasks
             if "NSCF Uniform" in mat["task_types"][task_id]:
@@ -444,44 +449,45 @@ class ElectronicStructureBuilder(Builder):
                     criteria={"task_id": str(task_id)},
                 )
 
-                fs_id = str(task_query["calcs_reversed"][0]["dos_fs_id"])
+                fs_id = str(task_query["calcs_reversed"][0].get("dos_fs_id", None))
 
-                lmaxmix = task_query["input"]["incar"].get(
-                    "LMAXMIX", 2
-                )  # VASP default is 2, alternatively could project `parameters`
+                if fs_id is not None:
+                    lmaxmix = task_query["input"]["incar"].get(
+                        "LMAXMIX", 2
+                    )  # VASP default is 2, alternatively could project `parameters`
 
-                is_hubbard = task_query["input"]["is_hubbard"]
+                    is_hubbard = task_query["input"]["is_hubbard"]
 
-                structure = Structure.from_dict(task_query["output"]["structure"])
+                    structure = Structure.from_dict(task_query["output"]["structure"])
 
-                if (
-                    task_query["orig_inputs"]["kpoints"]["generation_style"]
-                    == "Monkhorst"
-                    or task_query["orig_inputs"]["kpoints"]["generation_style"]
-                    == "Gamma"
-                ):
-                    nkpoints = np.prod(
-                        task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
+                    if (
+                        task_query["orig_inputs"]["kpoints"]["generation_style"]
+                        == "Monkhorst"
+                        or task_query["orig_inputs"]["kpoints"]["generation_style"]
+                        == "Gamma"
+                    ):
+                        nkpoints = np.prod(
+                            task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
+                        )
+
+                    else:
+                        nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
+
+                    nedos = task_query["input"]["parameters"]["NEDOS"]
+                    lu_dt = task_query["last_updated"]
+
+                    dos_calcs.append(
+                        {
+                            "fs_id": fs_id,
+                            "task_id": task_id,
+                            "is_hubbard": int(is_hubbard),
+                            "lmaxmix": lmaxmix,
+                            "nkpoints": int(nkpoints),
+                            "nedos": int(nedos),
+                            "updated_on": lu_dt,
+                            "output_structure": structure,
+                        }
                     )
-
-                else:
-                    nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
-
-                nedos = task_query["input"]["parameters"]["NEDOS"]
-                lu_dt = task_query["last_updated"]
-
-                dos_calcs.append(
-                    {
-                        "fs_id": fs_id,
-                        "task_id": task_id,
-                        "is_hubbard": int(is_hubbard),
-                        "lmaxmix": lmaxmix,
-                        "nkpoints": int(nkpoints),
-                        "nedos": int(nedos),
-                        "updated_on": lu_dt,
-                        "output_structure": structure,
-                    }
-                )
 
             # Handle static and structure opt tasks
             if "Static" or "Structure Optimization" in mat["task_types"][task_id]:

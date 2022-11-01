@@ -352,7 +352,7 @@ def filter_deform_tasks_by_time(
         filtered deformation tasks
     """
 
-    mapping = TensorMapping(tol=deform_comp_tol)
+    mapping = TensorMapping(tol=deform_comp_tol, tensors=[], values=[])
 
     for doc in tasks:
 
@@ -390,7 +390,7 @@ def select_final_opt_deform_tasks(
     """
 
     # group opt and deform tasks by lattice
-    mapping = TensorMapping(tol=lattice_comp_tol)
+    mapping = TensorMapping(tol=lattice_comp_tol, tensors=[], values=[])
     for lat, ot in opt_tasks:
         mapping[lat] = {"opt_task": ot}
 
