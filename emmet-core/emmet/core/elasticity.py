@@ -20,12 +20,10 @@ SETTINGS = EmmetSettings()
 
 class ElasticTensorDoc(BaseModel):
     raw: MatrixVoigt = Field(
-        None,
-        description="Elastic tensor corresponding to structure orientation (GPa)",
+        None, description="Elastic tensor corresponding to structure orientation (GPa)",
     )
     ieee_format: MatrixVoigt = Field(
-        None,
-        description="Elastic tensor corresponding to IEEE orientation (GPa)",
+        None, description="Elastic tensor corresponding to IEEE orientation (GPa)",
     )
 
 
@@ -195,8 +193,7 @@ class ElasticityDoc(PropertyDoc):
     )
 
     state: Status = Field(
-        None,
-        description="State of the fitting/analysis: `successful` or `failed`",
+        None, description="State of the fitting/analysis: `successful` or `failed`",
     )
 
     @classmethod
@@ -356,10 +353,7 @@ def generate_primary_fitting_data(
     task_ids: List[MPID] = None,
     dir_names: List[str] = None,
 ) -> Tuple[
-    List[Strain],
-    List[Stress],
-    Union[List[MPID], None],
-    Union[List[str], None],
+    List[Strain], List[Stress], Union[List[MPID], None], Union[List[str], None],
 ]:
     """
     Get the primary fitting data, i.e. data obtained from a calculation.
@@ -438,7 +432,7 @@ def generate_derived_fitting_data(
     # asymmetry of the deformation gradient.
 
     # generated derived deforms
-    mapping = TensorMapping(tol=tol)
+    mapping = TensorMapping(tol=tol, tensors=[], values=[])
     for i, p_strain in enumerate(strains):
         for op in symmops:
             d_strain = p_strain.transform(op)
