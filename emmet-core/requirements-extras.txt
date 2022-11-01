@@ -56,7 +56,7 @@ mpmath==1.2.1
     # via sympy
 msgpack==1.0.4
     # via mp-api
-networkx==2.8.7
+networkx==2.8.8
     # via
     #   pymatgen
     #   robocrys
@@ -70,6 +70,7 @@ numpy==1.23.4
     #   robocrys
     #   scikit-learn
     #   scipy
+    #   seekpath
     #   spglib
 packaging==21.3
     # via matplotlib
@@ -96,7 +97,7 @@ pydantic==1.10.2
     #   emmet-core
     #   emmet-core (setup.py)
     #   inflect
-pymatgen==2022.10.22
+pymatgen==2022.11.1
     # via
     #   emmet-core
     #   emmet-core (setup.py)
@@ -121,7 +122,7 @@ python-dateutil==2.8.2
     # via
     #   matplotlib
     #   pandas
-pytz==2022.5
+pytz==2022.6
     # via pandas
 pyyaml==6.0
     # via pybtex
@@ -145,6 +146,8 @@ scipy==1.9.3
     #   pymatgen
     #   robocrys
     #   scikit-learn
+seekpath==2.0.1
+    # via emmet-core (setup.py)
 shapely==1.8.5.post1
     # via pymatgen-analysis-alloys
 six==1.16.0
@@ -158,6 +161,7 @@ spglib==2.0.1
     #   emmet-core (setup.py)
     #   pymatgen
     #   robocrys
+    #   seekpath
 sympy==1.11.1
     # via
     #   matminer
