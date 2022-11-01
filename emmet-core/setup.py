@@ -33,7 +33,7 @@ setup(
         "spglib==2.0.1",
     ],
     extras_require={
-        "all": ["robocrys>=0.2.7", "pymatgen-analysis-diffusion>=2022.1.15", "pymatgen-analysis-alloys>=0.0.3"],
+        "all": ["seekpath>=2.0.1", "robocrys>=0.2.7", "pymatgen-analysis-diffusion>=2022.1.15", "pymatgen-analysis-alloys>=0.0.3"],
     },
     python_requires=">=3.8",
     license="modified BSD",

@@ -193,7 +193,7 @@ pydantic==1.10.2
     #   maggma
 pydash==5.1.1
     # via maggma
-pymatgen==2022.10.22
+pymatgen==2022.11.1
     # via
     #   emmet-core
     #   matminer
