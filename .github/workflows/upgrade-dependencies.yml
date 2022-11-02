@@ -27,14 +27,17 @@ jobs:
           cd ${{ matrix.package }}
           pip-compile --upgrade -o requirements/${{ matrix.os }}_py${{ matrix.python-version }}.txt
           pip-compile --upgrade --all-extras -o requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
-      - name: Detect changes
+      - name: Detect changes on windows
+        id: changes_windows
+        if: ${{ matrix.os == "windows-latest" }}
+        run: echo "count=$(git status --porcelain=v1 2>nul | wc -l)" >> $GITHUB_OUTPUT
+      - name: Detect changes on other OSs
         id: changes
-        run:
-          # This output boolean tells us if the dependencies have actually changed
-          echo "count=$(git status --porcelain=v1 2>/dev/null | wc -l)" >> $GITHUB_OUTPUT
+        if: ${{ matrix.os != "windows-latest" }}
+        run: echo "count=$(git status --porcelain=v1 2>/dev/null | wc -l)" >> $GITHUB_OUTPUT
       - name: commit & push changes
         uses: github-actions-x/commit@v2.9
-        if: steps.changes.outputs.count > 0
+        if: steps.changes.outputs.count > 0 || steps.changes_windows.outputs.count > 0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           push-branch: auto-dependency-upgrades-${{ matrix.package }}-${{ matrix.os }}-py${{ matrix.python-version }}
