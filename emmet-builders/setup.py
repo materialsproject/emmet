@@ -2,7 +2,7 @@ from setuptools import find_namespace_packages, setup
 
 setup(
     name="emmet-builders",
-    use_scm_version={"root": "..", "relative_to": __file__,},
+    use_scm_version={"root": "..", "relative_to": __file__},
     setup_requires=["setuptools_scm"],
     description="Builders for the Emmet Library",
     author="The Materials Project",

@@ -4,7 +4,7 @@ from setuptools import find_namespace_packages, setup
 
 setup(
     name="emmet-core",
-    use_scm_version={"root": "..", "relative_to": __file__,},
+    use_scm_version={"root": "..", "relative_to": __file__},
     setup_requires=["setuptools_scm>=6,<8"],
     description="Core Emmet Library",
     author="The Materials Project",
