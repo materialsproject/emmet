@@ -36,15 +36,13 @@ jobs:
         if: ${{ matrix.os }} != "windows-latest"
         run: echo "count=$(git status --porcelain=v1 2>/dev/null | wc -l)" >> $GITHUB_OUTPUT
       - name: commit & push changes
-        uses: github-actions-x/commit@v2.9
         if: steps.changes.outputs.count > 0 || steps.changes_windows.outputs.count > 0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          push-branch: auto-dependency-upgrades-${{ matrix.package }}-${{ matrix.os }}-py${{ matrix.python-version }}
-          commit-message: "update dependencies for ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})"
-          files: ${{ matrix.package }}/requirements
-          name: github-actions
-          email: github-actions@github.com
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add ${{ matrix.package }}/requirements
+          git commit -m "update dependencies for ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})"
+          git push -f origin ${{ github.ref_name }}:auto-dependency-upgrades-${{ matrix.package }}-${{ matrix.os }}-py${{ matrix.python-version }}
 
     #pull_request:
     #  name: Merge all branches and open PR
@@ -54,11 +52,9 @@ jobs:
     #    - name: merge all auto-dependency-upgrades branches
     #      id: changes
     #      run:
-    #        git branch -a --list 'origin/auto-dependency-upgrades-*'
-    #        # This output boolean tells us if the dependencies have actually changed
-    #        echo "count=$(git status --porcelain=v1 2>/dev/null | wc -l)" >> $GITHUB_OUTPUT
-
-    #        git merge $list_of_branches
+    #        git checkout -b auto-dependency-upgrades
+    #        git branch -r | grep auto-dependency-upgrades- | git merge 
+    #        git branch -r | grep auto-dependency-upgrades | cut -d/ -f2 | xargs -I {} git push origin :{}
 
     #    - name: Open pull request if needed
     #      if: steps.changes.outputs.count > 0
