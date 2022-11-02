@@ -275,7 +275,7 @@ spglib==2.0.1
     #   robocrys
 sshtunnel==0.4.0
     # via maggma
-starlette==0.20.4
+starlette==0.21.0
     # via fastapi
 sympy==1.11.1
     # via
