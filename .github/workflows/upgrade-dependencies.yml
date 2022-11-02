@@ -29,9 +29,14 @@ jobs:
           pip-compile -q --upgrade --all-extras -o requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
       - name: Detect changes
         id: changes
-        run: echo "count=$(git diff-index --quiet HEAD)" >> $GITHUB_OUTPUT
+        run: |
+          git diff-index --quiet HEAD
+          echo "count=$?" >> $GITHUB_OUTPUT
+          test -z "$(git ls-files --exclude-standard --others)"
+          echo "files=$?" >> $GITHUB_OUTPUT
+          cat $GITHUB_OUTPUT
       - name: commit & push changes
-        if: steps.changes.outputs.count > 0
+        if: steps.changes.outputs.count > 0 || steps.changes.outputs.files > 0
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
