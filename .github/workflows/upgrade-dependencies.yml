@@ -55,6 +55,7 @@ jobs:
           run:
             git checkout -b auto-dependency-upgrades
             git branch -r | grep auto-dependency-upgrades- | xargs -I {} git merge {}
+            git rebase main
             git push -f origin auto-dependency-upgrades
             git branch -r | grep auto-dependency-upgrades- | cut -d/ -f2 | xargs -I {} git push origin :{}
         - name: Open pull request if needed
