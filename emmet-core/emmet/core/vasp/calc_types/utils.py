@@ -66,7 +66,10 @@ def task_type(
 
     incar = inputs.get("incar", {})
 
-    if incar.get("ICHARG", 0) > 10:
+    if incar.get("LOPTICS", True) or incar.get("ALGO" == "CHI"):
+        calc_type.append("Optic")
+
+    elif incar.get("ICHARG", 0) > 10:
         try:
             kpts = inputs.get("kpoints") or {}
             kpt_labels = kpts.get("labels") or []
@@ -103,9 +106,6 @@ def task_type(
 
     elif incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
         calc_type.append("Deformation")
-
-    elif incar.get("LOPTICS", True) or incar.get("ALGO" == "CHI"):
-        calc_type.append("Optic")
 
     if len(calc_type) == 0:
         return TaskType("Unrecognized")
