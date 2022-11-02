@@ -1,5 +1,5 @@
 # https://www.oddbird.net/2022/06/01/dependabot-single-pull-request/
-name: Upgrade dependencies
+name: upgrade dependencies
 
 on:
   workflow_dispatch: # Allow running on-demand
@@ -9,37 +9,44 @@ on:
 
 jobs:
   upgrade:
-    name: Upgrade & Open Pull Request
-    runs-on: ubuntu-latest
+    name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ['windows-latest', 'ubuntu-latest', 'macos-latest']
+        package: ["emmet-core", "emmet-builders", "emmet-api"]
+        python-version: [3.8, 3.9, 3.10]
     env:
       # This branch will receive updates each time the workflow runs
       # It doesn't matter if it's deleted when merged, it'll be re-created
       BRANCH_NAME: auto-dependency-upgrades
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
-          cache: pip
+          python-version: ${{ matrix.python-version }}
       - name: Upgrade Python dependencies
         run: |
           pip install -U pip pip-tools
-          cd emmet-core && pip-compile --upgrade && pip-compile --upgrade --all-extras -o requirements-extras.txt && cd -
-          cd emmet-api && pip-compile --upgrade && cd -
+          cd ${{ matrix.package }}
+          pip-compile --upgrade -o requirements/${{ matrix.os }}_py${{ matrix.python-version }}.txt
+          pip-compile --upgrade --all-extras -o requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
       - name: Detect changes
         id: changes
         run:
           # This output boolean tells us if the dependencies have actually changed
           echo "count=$(git status --porcelain=v1 2>/dev/null | wc -l)" >> $GITHUB_OUTPUT
-      - name: Commit & push changes
-        # Only push if changes exist
+      - name: commit & push changes
+        uses: github-actions-x/commit@v2.9
         if: steps.changes.outputs.count > 0
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add .
-          git commit -m "Automated dependency upgrades"
-          git push -f origin ${{ github.ref_name }}:$BRANCH_NAME
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          push-branch: $BRANCH_NAME
+          commit-message: "update dependencies for ${{ matrix.os }}_py${{ matrix.python-version }}"
+          rebase: 'true'
+          files: requirements/*.txt
+          name: github-actions
+          email: github-actions@github.com
       - name: Open pull request if needed
         if: steps.changes.outputs.count > 0
         env:
