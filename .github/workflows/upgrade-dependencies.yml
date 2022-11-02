@@ -44,35 +44,35 @@ jobs:
           git commit -m "update dependencies for ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})"
           git push -f origin ${{ github.ref_name }}:auto-dependency-upgrades-${{ matrix.package }}-${{ matrix.os }}-py${{ matrix.python-version }}
 
-    pull_request:
-      name: Merge all branches and open PR
-      runs-on: ubuntu-latest
-      needs: upgrade
-      steps:
-        - uses: actions/checkout@v3
-        - name: detect auto-upgrade-dependency branches
-          id: changes
-          run: echo "count=$(git branch -r | grep auto-dependency-upgrades- | wc -l | xargs)" >> $GITHUB_OUTPUT
-        - name: merge all auto-dependency-upgrades branches
-          if: steps.changes.outputs.count > 0
-          run:
-            git checkout -b auto-dependency-upgrades
-            git branch -r | grep auto-dependency-upgrades- | xargs -I {} git merge {}
-            git rebase main
-            git push -f origin auto-dependency-upgrades
-            git branch -r | grep auto-dependency-upgrades- | cut -d/ -f2 | xargs -I {} git push origin :{}
-        - name: Open pull request if needed
-          if: steps.changes.outputs.count > 0
-          env:
-            GITHUB_TOKEN: ${{ secrets.PAT }}
-          # Only open a PR if the branch is not attached to an existing one
-          run: |
-            PR=$(gh pr list --head auto-dependency-upgrades --json number -q '.[0].number')
-            if [ -z $PR ]; then
-              gh pr create \
-              --head auto-dependency-upgrades \
-              --title "Automated dependency upgrades" \
-              --body "Full log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            else
-              echo "Pull request already exists, won't create a new one."
-            fi
+  pull_request:
+    name: Merge all branches and open PR
+    runs-on: ubuntu-latest
+    needs: upgrade
+    steps:
+      - uses: actions/checkout@v3
+      - name: detect auto-upgrade-dependency branches
+        id: changes
+        run: echo "count=$(git branch -r | grep auto-dependency-upgrades- | wc -l | xargs)" >> $GITHUB_OUTPUT
+      - name: merge all auto-dependency-upgrades branches
+        if: steps.changes.outputs.count > 0
+        run:
+          git checkout -b auto-dependency-upgrades
+          git branch -r | grep auto-dependency-upgrades- | xargs -I {} git merge {}
+          git rebase main
+          git push -f origin auto-dependency-upgrades
+          git branch -r | grep auto-dependency-upgrades- | cut -d/ -f2 | xargs -I {} git push origin :{}
+      - name: Open pull request if needed
+        if: steps.changes.outputs.count > 0
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+        # Only open a PR if the branch is not attached to an existing one
+        run: |
+          PR=$(gh pr list --head auto-dependency-upgrades --json number -q '.[0].number')
+          if [ -z $PR ]; then
+            gh pr create \
+            --head auto-dependency-upgrades \
+            --title "Automated dependency upgrades" \
+            --body "Full log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          else
+            echo "Pull request already exists, won't create a new one."
+          fi
