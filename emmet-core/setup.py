@@ -31,6 +31,18 @@ setup(
             "pymatgen-analysis-diffusion>=2022.1.15",
             "pymatgen-analysis-alloys>=0.0.3",
         ],
+        "test": [
+            "pre-commit",
+            "pytest",
+            "pytest-cov",
+            "pycodestyle",
+            "pydocstyle",
+            "flake8",
+            "mypy",
+            "mypy-extensions",
+            "types-setuptools",
+            "types-requests"
+        ]
     },
     python_requires=">=3.8",
     license="modified BSD",

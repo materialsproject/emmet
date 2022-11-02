@@ -24,6 +24,20 @@ setup(
         "setproctitle",
         "shapely"
     ],
+    extras_require={
+        "test": [
+            "pre-commit",
+            "pytest",
+            "pytest-cov",
+            "pycodestyle",
+            "pydocstyle",
+            "flake8",
+            "mypy",
+            "mypy-extensions",
+            "types-setuptools",
+            "types-requests"
+        ]
+    },
     python_requires=">=3.8",
     license="modified BSD",
     zip_safe=False,
