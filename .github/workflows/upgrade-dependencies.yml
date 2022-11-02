@@ -13,9 +13,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ['windows-latest', 'ubuntu-latest', 'macos-latest']
-        package: ["emmet-core", "emmet-builders", "emmet-api"]
-        python-version: ["3.8", "3.9", "3.10"]
+        os: ['windows-latest'] #, 'ubuntu-latest', 'macos-latest']
+        package: ["emmet-core"] #, "emmet-builders", "emmet-api"]
+        python-version: ["3.8"] #, "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -50,12 +50,14 @@ jobs:
     needs: upgrade
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: detect auto-upgrade-dependency branches
         id: changes
         run: echo "count=$(git branch -r | grep auto-dependency-upgrades- | wc -l | xargs)" >> $GITHUB_OUTPUT
       - name: merge all auto-dependency-upgrades branches
         if: steps.changes.outputs.count > 0
-        run:
+        run: |
           git checkout -b auto-dependency-upgrades
           git branch -r | grep auto-dependency-upgrades- | xargs -I {} git merge {}
           git rebase main
