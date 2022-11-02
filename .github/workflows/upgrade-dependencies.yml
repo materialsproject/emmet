@@ -29,11 +29,11 @@ jobs:
           pip-compile --upgrade --all-extras -o requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
       - name: Detect changes on windows
         id: changes_windows
-        if: ${{ matrix.os == "windows-latest" }}
+        if: ${{ matrix.os }} == "windows-latest"
         run: echo "count=$(git status --porcelain=v1 2>nul | wc -l)" >> $GITHUB_OUTPUT
       - name: Detect changes on other OSs
         id: changes
-        if: ${{ matrix.os != "windows-latest" }}
+        if: ${{ matrix.os }} != "windows-latest"
         run: echo "count=$(git status --porcelain=v1 2>/dev/null | wc -l)" >> $GITHUB_OUTPUT
       - name: commit & push changes
         uses: github-actions-x/commit@v2.9
