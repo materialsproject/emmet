@@ -15,7 +15,7 @@ attrs==22.1.0
     #   jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.25.5
+boto3==1.26.0
     # via
     #   emmet-api (setup.py)
     #   maggma
