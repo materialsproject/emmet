@@ -41,7 +41,7 @@ jobs:
         if: steps.changes.outputs.count > 0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          push-branch: $BRANCH_NAME
+          push-branch: ${{ BRANCH_NAME }}
           commit-message: "update dependencies for ${{ matrix.os }}_py${{ matrix.python-version }}"
           rebase: 'true'
           files: requirements/*.txt
