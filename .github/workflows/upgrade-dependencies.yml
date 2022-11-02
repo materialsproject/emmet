@@ -15,7 +15,7 @@ jobs:
       matrix:
         os: ['windows-latest', 'ubuntu-latest', 'macos-latest']
         package: ["emmet-core", "emmet-builders", "emmet-api"]
-        python-version: [3.8, 3.9, 3.10]
+        python-version: ["3.8", "3.9", "3.10"]
     env:
       # This branch will receive updates each time the workflow runs
       # It doesn't matter if it's deleted when merged, it'll be re-created
