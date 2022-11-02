@@ -37,24 +37,38 @@ jobs:
         if: steps.changes.outputs.count > 0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          push-branch: auto-dependency-upgrades
-          commit-message: "update dependencies for ${{ matrix.os }}_py${{ matrix.python-version }}"
-          rebase: 'true'
+          push-branch: auto-dependency-upgrades-${{ matrix.package }}-${{ matrix.os }}-py${{ matrix.python-version }}
+          commit-message: "update dependencies for ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})"
           files: ${{ matrix.package }}/requirements
           name: github-actions
           email: github-actions@github.com
-      - name: Open pull request if needed
-        if: steps.changes.outputs.count > 0
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
-        # Only open a PR if the branch is not attached to an existing one
-        run: |
-          PR=$(gh pr list --head auto-dependency-upgrades --json number -q '.[0].number')
-          if [ -z $PR ]; then
-            gh pr create \
-            --head auto-dependency-upgrades \
-            --title "Automated dependency upgrades" \
-            --body "Full log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          else
-            echo "Pull request already exists, won't create a new one."
-          fi
+
+    #pull_request:
+    #  name: Merge all branches and open PR
+    #  runs-on: ubuntu-latest
+    #  steps:
+    #    - uses: actions/checkout@v3
+    #    - name: merge all auto-dependency-upgrades branches
+    #      id: changes
+    #      run:
+    #        git branch -a --list 'origin/auto-dependency-upgrades-*'
+    #        # This output boolean tells us if the dependencies have actually changed
+    #        echo "count=$(git status --porcelain=v1 2>/dev/null | wc -l)" >> $GITHUB_OUTPUT
+
+    #        git merge $list_of_branches
+
+    #    - name: Open pull request if needed
+    #      if: steps.changes.outputs.count > 0
+    #      env:
+    #        GITHUB_TOKEN: ${{ secrets.PAT }}
+    #      # Only open a PR if the branch is not attached to an existing one
+    #      run: |
+    #        PR=$(gh pr list --head auto-dependency-upgrades --json number -q '.[0].number')
+    #        if [ -z $PR ]; then
+    #          gh pr create \
+    #          --head auto-dependency-upgrades \
+    #          --title "Automated dependency upgrades" \
+    #          --body "Full log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+    #        else
+    #          echo "Pull request already exists, won't create a new one."
+    #        fi
