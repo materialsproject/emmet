@@ -30,11 +30,8 @@ jobs:
       - name: Detect changes
         id: changes
         run: |
-          git diff-index --quiet HEAD
-          echo "count=$?" >> $GITHUB_OUTPUT
-          test -z "$(git ls-files --exclude-standard --others)"
-          echo "files=$?" >> $GITHUB_OUTPUT
-          cat $GITHUB_OUTPUT
+          echo "count=$(git diff-index HEAD | wc -l | xargs)" >> $GITHUB_OUTPUT
+          echo "files=$(git ls-files --exclude-standard --others | wc -l | xargs)" >> $GITHUB_OUTPUT
       - name: commit & push changes
         if: steps.changes.outputs.count > 0 || steps.changes.outputs.files > 0
         run: |
