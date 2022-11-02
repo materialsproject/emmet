@@ -58,6 +58,8 @@ jobs:
       - name: merge all auto-dependency-upgrades branches
         if: steps.changes.outputs.count > 0
         run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
           git checkout -b auto-dependency-upgrades
           git branch -r | grep auto-dependency-upgrades- | xargs -I {} git merge {}
           git rebase main
