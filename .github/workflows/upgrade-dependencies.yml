@@ -40,7 +40,7 @@ jobs:
           push-branch: auto-dependency-upgrades
           commit-message: "update dependencies for ${{ matrix.os }}_py${{ matrix.python-version }}"
           rebase: 'true'
-          files: requirements/*.txt
+          files: ${{ matrix.package }}/requirements
           name: github-actions
           email: github-actions@github.com
       - name: Open pull request if needed
