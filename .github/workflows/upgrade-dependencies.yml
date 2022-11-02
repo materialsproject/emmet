@@ -16,10 +16,6 @@ jobs:
         os: ['windows-latest', 'ubuntu-latest', 'macos-latest']
         package: ["emmet-core", "emmet-builders", "emmet-api"]
         python-version: ["3.8", "3.9", "3.10"]
-    env:
-      # This branch will receive updates each time the workflow runs
-      # It doesn't matter if it's deleted when merged, it'll be re-created
-      BRANCH_NAME: auto-dependency-upgrades
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -41,7 +37,7 @@ jobs:
         if: steps.changes.outputs.count > 0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          push-branch: ${{ BRANCH_NAME }}
+          push-branch: auto-dependency-upgrades
           commit-message: "update dependencies for ${{ matrix.os }}_py${{ matrix.python-version }}"
           rebase: 'true'
           files: requirements/*.txt
@@ -53,10 +49,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT }}
         # Only open a PR if the branch is not attached to an existing one
         run: |
-          PR=$(gh pr list --head $BRANCH_NAME --json number -q '.[0].number')
+          PR=$(gh pr list --head auto-dependency-upgrades --json number -q '.[0].number')
           if [ -z $PR ]; then
             gh pr create \
-            --head $BRANCH_NAME \
+            --head auto-dependency-upgrades \
             --title "Automated dependency upgrades" \
             --body "Full log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           else
