@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         package: ["emmet-core", "emmet-builders", "emmet-api"]
-        python-version: [3.8, 3.9, 3.10]
+        python-version: ["3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v3
 
