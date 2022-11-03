@@ -33,12 +33,14 @@ jobs:
           flake8 --count --exit-zero --max-complexity=20 --statistics ${{ matrix.package }}
 
   test:
+    name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
     needs: lint
-    runs-on: ubuntu-latest
     strategy:
       matrix:
+        os: ['windows-latest', 'ubuntu-latest', 'macos-latest']
         package: ["emmet-core", "emmet-builders", "emmet-api"]
-        python-version: [3.8, 3.9, 3.10]
+        python-version: ["3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v3
 
@@ -93,11 +95,8 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip pip-tools
-          pip install -r requirements-docs.txt
-          pip install -r requirements.txt
-          pip install -e emmet-core/
-          pip install -e emmet-builders/
-          pip install -e emmet-api/
+          pip-sync emmet-*/requirements/ubuntu-latest_py3.9_extras.txt docs/requirements.txt
+          pip install --no-deps -e emmet-core emmet-api emmet-builders
 
       - name: Build
         run: mkdocs build
