@@ -22,7 +22,8 @@ setup(
             "mypy-extensions",
             "types-setuptools",
             "types-requests",
-            "wincertstore"
+            "wincertstore",
+            "openbabel"
         ]
     },
     python_requires=">=3.8",

@@ -42,7 +42,9 @@ setup(
             "mypy-extensions",
             "types-setuptools",
             "types-requests",
-            "maggma"
+            "maggma",
+            "wincertstore",
+            "openbabel"
         ]
     },
     python_requires=">=3.8",
