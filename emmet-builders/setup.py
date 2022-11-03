@@ -22,7 +22,7 @@ setup(
             "mypy-extensions",
             "types-setuptools",
             "types-requests",
-            "wincerstore"
+            "wincertstore"
         ]
     },
     python_requires=">=3.8",
