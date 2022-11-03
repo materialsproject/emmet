@@ -21,7 +21,7 @@ setup(
             "mypy",
             "mypy-extensions",
             "types-setuptools",
-            "types-requests"
+            "types-requests",
             "wincerstore"
         ]
     },
