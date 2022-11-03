@@ -16,11 +16,11 @@ attrs==22.1.0
     #   pytest
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.1
+boto3==1.26.2
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.1
+botocore==1.29.2
     # via
     #   boto3
     #   s3transfer
@@ -134,7 +134,7 @@ markupsafe==2.1.1
     #   werkzeug
 matminer==0.7.8
     # via robocrys
-matplotlib==3.6.1
+matplotlib==3.6.2
     # via pymatgen
 mccabe==0.7.0
     # via flake8
@@ -183,6 +183,8 @@ numpy==1.23.4
     #   scipy
     #   seekpath
     #   spglib
+openbabel==3.1.1.1
+    # via emmet-api (setup.py)
 orjson==3.8.1
     # via maggma
 packaging==21.3
@@ -263,7 +265,7 @@ pyparsing==3.0.9
     # via
     #   matplotlib
     #   packaging
-pyrsistent==0.19.1
+pyrsistent==0.19.2
     # via jsonschema
 pytest==7.2.0
     # via
@@ -391,6 +393,8 @@ virtualenv==20.16.6
     # via pre-commit
 werkzeug==2.2.2
     # via flask
+wincertstore==0.2
+    # via emmet-api (setup.py)
 xmltodict==0.13.0
     # via ddtrace
 zipp==3.10.0
