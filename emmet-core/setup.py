@@ -41,7 +41,8 @@ setup(
             "mypy",
             "mypy-extensions",
             "types-setuptools",
-            "types-requests"
+            "types-requests",
+            "maggma"
         ]
     },
     python_requires=">=3.8",
