@@ -57,7 +57,7 @@ jobs:
         shell: bash -l {0}
         run: |
           python -m pip install --upgrade pip pip-tools
-          pip-sync --user ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
+          pip-sync ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
 
       - name: Install editable emmet-core if needed
         shell: bash -l {0}
