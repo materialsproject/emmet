@@ -66,16 +66,16 @@ jobs:
         shell: bash -l {0}
         run: |
           python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
-          python${{ matrix.python-version }} -m piptools sync ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
+          python${{ matrix.python-version }} -m piptools sync --user ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
 
       - name: Install editable emmet-core if needed
         shell: bash -l {0}
         if: matrix.package != 'emmet-core'
-        run: python${{ matrix.python-version }} -m pip install --no-deps -e emmet-core
+        run: python${{ matrix.python-version }} -m pip install --user --no-deps -e emmet-core
 
       - name: Install ${{ matrix.package }}
         shell: bash -l {0}
-        run: python${{ matrix.python-version }} -m pip install --no-deps -e ${{ matrix.package }}
+        run: python${{ matrix.python-version }} -m pip install --user --no-deps -e ${{ matrix.package }}
 
       - name: Lint with mypy
         shell: bash -l {0}
