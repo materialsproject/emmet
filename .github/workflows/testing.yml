@@ -44,6 +44,8 @@ jobs:
         python-version: ["3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
@@ -69,7 +71,7 @@ jobs:
       - name: Install editable emmet-core if needed
         shell: bash -l {0}
         if: matrix.package != 'emmet-core'
-        run: python${{ matrix.python-version }} -m pip install -e emmet-core
+        run: python${{ matrix.python-version }} -m pip install --no-deps -e emmet-core
 
       - name: Install ${{ matrix.package }}
         shell: bash -l {0}
@@ -94,6 +96,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v4
         with:
