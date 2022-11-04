@@ -82,7 +82,7 @@ def vibes(test_dir):
 
     return vibes
 
-
+@pytest.mark.skip(reason="Waiting on molecule update.")
 def test_summary_doc(mols, charges, spins, bonds, orbitals, redox, thermo, vibes):
     desired_id = "libe-120473"
     docs = {

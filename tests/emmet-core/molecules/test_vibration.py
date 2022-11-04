@@ -24,7 +24,7 @@ def test_tasks(test_dir):
     tasks = [TaskDocument(**t) for t in data]
     return tasks
 
-
+@pytest.mark.skip(reason="Waiting on molecule update.")
 def test_vibration(test_tasks):
     task = test_tasks[0]
 
