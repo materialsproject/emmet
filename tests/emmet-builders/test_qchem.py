@@ -21,7 +21,7 @@ def assoc_store():
 def mol_store():
     return MemoryStore()
 
-
+@pytest.mark.xfail(reason="Waiting on molecule updates")
 def test_molecules_builder(tasks_store, assoc_store, mol_store):
     stage_one = MoleculesAssociationBuilder(tasks=tasks_store, assoc=assoc_store)
     stage_one.run()
