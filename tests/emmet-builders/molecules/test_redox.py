@@ -31,6 +31,7 @@ def redox_store():
     return MemoryStore()
 
 
+@pytest.mark.skip(reason="Waiting on molecule update.")
 def test_redox_builder(mol_store, redox_store):
     builder = RedoxBuilder(mol_store, redox_store)
     builder.run()

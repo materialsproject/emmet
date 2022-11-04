@@ -31,6 +31,7 @@ def orbital_store():
     return MemoryStore()
 
 
+@pytest.mark.skip(reason="Waiting on molecule update.")
 def test_orbital_builder(tasks_store, mol_store, orbital_store):
     builder = OrbitalBuilder(tasks_store, mol_store, orbital_store)
     builder.run()

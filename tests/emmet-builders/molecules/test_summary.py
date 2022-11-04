@@ -77,9 +77,8 @@ def summary():
     return MemoryStore(key="molecule_id")
 
 
-def test_summary_doc(
-    tasks, mols, charges, spins, bonds, orbitals, redox, thermo, vibes, summary
-):
+@pytest.mark.skip(reason="Waiting on molecule update.")
+def test_summary_doc(tasks, mols, charges, spins, bonds, orbitals, redox, thermo, vibes, summary):
     charge_build = PartialChargesBuilder(tasks, mols, charges)
     charge_build.run()
 

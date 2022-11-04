@@ -31,12 +31,10 @@ def bonds_store():
     return MemoryStore()
 
 
+@pytest.mark.skip(reason="Waiting on molecule update.")
 def test_bonding_builder(tasks_store, mol_store, bonds_store):
     builder = BondingBuilder(
-        tasks_store,
-        mol_store,
-        bonds_store,
-        methods=["critic2", "OpenBabelNN + metal_edge_extender"],
+        tasks_store, mol_store, bonds_store, methods=["critic2", "OpenBabelNN + metal_edge_extender"],
     )
     builder.run()
 
