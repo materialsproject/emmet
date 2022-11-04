@@ -39,9 +39,9 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        os: ['ubuntu-latest', 'macos-latest'] # TODO openbabel for windows
+        os: ['macos-latest'] # TODO openbabel for windows
         package: ["emmet-core", "emmet-builders", "emmet-api"]
-        python-version: ["3.8", "3.9"]
+        python-version: ["3.8"]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -83,7 +83,7 @@ jobs:
 
       - name: Test with pytest
         shell: bash -l {0}
-        run: python${{ matrix.python-version }} -m pytest --cov=emmet --cov-report=xml tests/${{ matrix.package }}
+        run: python${{ matrix.python-version }} -m pytest --cov=emmet --cov-report=xml ${{ matrix.package }}/tests
 
       - uses: codecov/codecov-action@v3.1.1
         with:
