@@ -20,6 +20,7 @@ def test_mols(test_dir):
     return mols
 
 
+@pytest.mark.xfail
 def test_redox(test_mols):
     entries = list()
     for m in test_mols:

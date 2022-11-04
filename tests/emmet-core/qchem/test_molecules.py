@@ -25,6 +25,7 @@ def test_tasks(test_dir):
     return tasks
 
 
+@pytest.mark.xfail
 def test_make_mol(test_tasks):
 
     molecule = MoleculeDoc.from_tasks(test_tasks)
