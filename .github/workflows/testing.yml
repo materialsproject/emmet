@@ -60,7 +60,9 @@ jobs:
       - name: Install OpenBabel on MacOS
         if: matrix.os == 'macos-latest'
         shell: bash -l {0}
-        run: brew install open-babel
+        run: |
+          brew install open-babel
+          export PATH="/Users/runner/Library/Python/$${{ matrix.python-version }}/bin:$PATH"
 
       - name: Install Python dependencies
         shell: bash -l {0}
@@ -71,7 +73,7 @@ jobs:
       - name: Install editable emmet-core if needed
         shell: bash -l {0}
         if: matrix.package != 'emmet-core'
-        run: python${{ matrix.python-version }} -m pip install --user --no-deps -e emmet-core
+        run: python${{ matrix.python-version }} -m pip install --user --no-deps emmet-core
 
       - name: Install ${{ matrix.package }}
         shell: bash -l {0}
