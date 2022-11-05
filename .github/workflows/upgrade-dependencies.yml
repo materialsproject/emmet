@@ -13,11 +13,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ['windows-latest', 'ubuntu-latest', 'macos-latest']
+        os: ['ubuntu-latest', 'macos-latest']
         package: ["emmet-core", "emmet-builders", "emmet-api"]
         python-version: ["3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
