@@ -95,6 +95,9 @@ jobs:
   docs:
     needs: test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9"]
 
     steps:
       - uses: actions/checkout@v3
@@ -103,14 +106,14 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
       - name: Install dependencies
         run: |
-          pip install --upgrade pip pip-tools
-          pip-sync emmet-*/requirements/ubuntu-latest_py3.9_extras.txt docs/requirements.txt
-          pip install --no-deps -e emmet-core emmet-api emmet-builders
+          python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
+          python${{ matrix.python-version }} -m piptools sync --user emmet-*/requirements/ubuntu-latest_py${{ matrix.python-version }}_extras.txt docs/requirements.txt
+          python${{ matrix.python-version }} -m pip install --user --no-deps -e ./emmet-core ./emmet-api ./emmet-builders
 
       - name: Build
         run: mkdocs build
