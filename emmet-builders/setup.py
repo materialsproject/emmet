@@ -23,8 +23,9 @@ setup(
             "types-setuptools",
             "types-requests",
             "wincertstore",
-            "openbabel"
-        ]
+            "openbabel",
+        ],
+        "docs": ["mkdocs", "mkdocstrings[python]"],
     },
     python_requires=">=3.8",
     license="modified BSD",

@@ -45,7 +45,8 @@ setup(
             "maggma",
             "wincertstore",
             "openbabel"
-        ]
+        ],
+        "docs": ["mkdocs", "mkdocstrings[python]"]
     },
     python_requires=">=3.8",
     license="modified BSD",
