@@ -45,7 +45,7 @@ setup(
             "mkdocs-awesome-pages-plugin",
             "mkdocs-markdownextradata-plugin",
             "livereload",
-            "jinja2<=3.0.0",
+            "jinja2",
         ],
     },
     python_requires=">=3.8",
