@@ -15,11 +15,11 @@ attrs==22.1.0
     #   jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.2
+boto3==1.26.3
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.2
+botocore==1.29.3
     # via
     #   boto3
     #   s3transfer
@@ -48,7 +48,7 @@ cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.5.3
+ddtrace==1.6.0
     # via emmet-api (setup.py)
 dnspython==2.2.1
     # via
@@ -60,9 +60,9 @@ emmet-core[all]==0.38.7
     #   mp-api
 envier==0.4.0
     # via ddtrace
-exceptiongroup==1.0.0
+exceptiongroup==1.0.1
     # via cattrs
-fastapi==0.85.2
+fastapi==0.86.0
     # via
     #   emmet-api (setup.py)
     #   maggma
@@ -70,6 +70,8 @@ flask==2.2.2
     # via mongogrant
 fonttools==4.38.0
     # via matplotlib
+forbiddenfruit==0.1.4
+    # via ddtrace
 future==0.18.2
     # via
     #   matminer
@@ -169,7 +171,7 @@ pandas==1.5.1
     # via
     #   matminer
     #   pymatgen
-paramiko==2.11.0
+paramiko==2.12.0
     # via sshtunnel
 pillow==9.3.0
     # via matplotlib
