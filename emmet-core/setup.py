@@ -45,7 +45,8 @@ setup(
         ],
         "docs": [
             "mkdocs==1.3.0",
-            "mkdocs-material==8.2.11" "mkdocs-material-extensions==1.0.3",
+            "mkdocs-material==8.2.11",
+            "mkdocs-material-extensions==1.0.3",
             "mkdocs-minify-plugin==0.5.0",
             "mkdocstrings==0.18.1",
             "mkdocs-awesome-pages-plugin==2.7.0",
