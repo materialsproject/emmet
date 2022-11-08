@@ -11,10 +11,7 @@ setup(
     author_email="feedback@materialsproject.org",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
-    package_data={
-        "emmet.core.vasp.calc_types": ["*.yaml"],
-        "emmet.core.subtrates": ["*.json"],
-    },
+    package_data={"emmet.core.vasp.calc_types": ["*.yaml"], "emmet.core.subtrates": ["*.json"],},
     include_package_data=True,
     install_requires=[
         "pymatgen>=2021.3,<2023.0",
@@ -42,8 +39,22 @@ setup(
             "mypy-extensions",
             "types-setuptools",
             "types-requests",
-            "maggma"
-        ]
+            "maggma",
+            "wincertstore",
+            "openbabel",
+        ],
+        "docs": [
+            "mkdocs",
+            "mkdocs-material<8.3",
+            "mkdocs-material-extensions",
+            "mkdocs-minify-plugin",
+            "mkdocstrings",
+            "mkdocs-awesome-pages-plugin",
+            "mkdocs-markdownextradata-plugin",
+            "mkdocstrings[python]",
+            "livereload",
+            "jinja2",
+        ],
     },
     python_requires=">=3.8",
     license="modified BSD",

@@ -12,9 +12,9 @@ attrs==22.1.0
     # via jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.0
+boto3==1.26.4
     # via maggma
-botocore==1.29.0
+botocore==1.29.4
     # via
     #   boto3
     #   s3transfer
@@ -44,7 +44,7 @@ emmet-core[all]==0.38.7
     # via
     #   emmet-builders (setup.py)
     #   mp-api
-fastapi==0.85.2
+fastapi==0.86.0
     # via maggma
 flask==2.2.2
     # via mongogrant
@@ -92,7 +92,7 @@ matminer==0.7.8
     # via
     #   emmet-builders (setup.py)
     #   robocrys
-matplotlib==3.6.1
+matplotlib==3.6.2
     # via pymatgen
 mongogrant==0.3.3
     # via maggma
@@ -106,7 +106,7 @@ monty==2022.9.9
     #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.29.3
+mp-api==0.29.4
     # via pymatgen
 mpmath==1.2.1
     # via sympy
@@ -143,7 +143,7 @@ pandas==1.5.1
     # via
     #   matminer
     #   pymatgen
-paramiko==2.11.0
+paramiko==2.12.0
     # via sshtunnel
 pillow==9.3.0
     # via matplotlib
@@ -189,7 +189,7 @@ pyparsing==3.0.9
     # via
     #   matplotlib
     #   packaging
-pyrsistent==0.19.1
+pyrsistent==0.19.2
     # via jsonschema
 python-dateutil==2.8.2
     # via
