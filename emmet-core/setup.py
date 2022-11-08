@@ -51,6 +51,7 @@ setup(
             "mkdocstrings",
             "mkdocs-awesome-pages-plugin",
             "mkdocs-markdownextradata-plugin",
+            "mkdocstrings[python]",
             "livereload",
             "jinja2",
         ],
