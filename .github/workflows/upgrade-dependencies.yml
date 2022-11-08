@@ -58,10 +58,10 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          cache: 'pip'
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+          cache: 'pip'
       - name: detect auto-upgrade-dependency branches
         id: changes
         run: echo "count=$(git branch -r | grep auto-dependency-upgrades- | wc -l | xargs)" >> $GITHUB_OUTPUT
