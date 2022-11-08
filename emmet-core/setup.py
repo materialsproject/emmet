@@ -45,7 +45,19 @@ setup(
             "maggma",
             "wincertstore",
             "openbabel"
-        ]
+        ],
+        "docs": [
+            "mkdocs",
+            "mkdocs-material",
+            "mkdocs-material-extensions",
+            "mkdocs-minify-plugin",
+            "mkdocstrings",
+            "mkdocs-awesome-pages-plugin",
+            "mkdocs-markdownextradata-plugin",
+            "mkdocstrings[python]",
+            "livereload",
+            "jinja2",
+        ],
     },
     python_requires=">=3.8",
     license="modified BSD",
