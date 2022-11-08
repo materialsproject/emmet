@@ -15,11 +15,11 @@ attrs==22.1.0
     #   jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.3
+boto3==1.26.4
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.3
+botocore==1.29.4
     # via
     #   boto3
     #   s3transfer
@@ -131,7 +131,7 @@ monty==2022.9.9
     #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.29.3
+mp-api==0.29.4
     # via pymatgen
 mpmath==1.2.1
     # via sympy

@@ -38,7 +38,7 @@ setup(
         ],
         "docs": [
             "mkdocs",
-            "mkdocs-material",
+            "mkdocs-material<8.3",
             "mkdocs-material-extensions",
             "mkdocs-minify-plugin",
             "mkdocstrings",
