@@ -72,12 +72,7 @@ jobs:
           git config user.email github-actions@github.com
           git checkout -b auto-dependency-upgrades
           git branch -r | grep auto-dependency-upgrades- | xargs -I {} git merge {}
-          git rebase origin/main
-          python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
-          cd docs
-          python${{ matrix.python-version }} -m piptools compile -q --upgrade
-          git add requirements.txt
-          git commit -m "update dependencies for docs"
+          git rebase ${GITHUB_REF##*/}
           git push -f origin auto-dependency-upgrades
           git branch -r | grep auto-dependency-upgrades- | cut -d/ -f2 | xargs -I {} git push origin :{}
       - name: Open pull request if needed
