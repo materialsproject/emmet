@@ -110,6 +110,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
+      - name: Install OpenBabel
+        run: |
+          sudo apt-get update && sudo apt-get install openbabel libopenbabel-dev
+          sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
+
       - name: Install dependencies
         run: |
           python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
