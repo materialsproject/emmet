@@ -180,7 +180,7 @@ class StructureGroupBuilder(Builder):
         for chemsys_l in all_chemsys:
             chemsys = "-".join(sorted(chemsys_l))
             chemsys_wo = "-".join(sorted(set(chemsys_l) - {self.working_ion}))
-            chemsys_query = {"$and": [{"chemsys": {"$in": [chemsys_wo, chemsys]}}, self.query.copy(),]}
+            chemsys_query = {"$and": [{"chemsys": {"$in": [chemsys_wo, chemsys]}}, self.query.copy()]}
             self.logger.debug(f"QUERY: {chemsys_query}")
             all_mats_in_chemsys = list(
                 self.materials.query(
@@ -192,7 +192,7 @@ class StructureGroupBuilder(Builder):
                 all_target_docs = list(
                     self.sgroups.query(
                         criteria={"chemsys": chemsys},
-                        properties=["group_id", self.sgroups.last_updated_field, "material_ids",],
+                        properties=["group_id", self.sgroups.last_updated_field, "material_ids"],
                     )
                 )
                 self.logger.debug(f"Found {len(all_target_docs)} Grouped documents in {chemsys_wo}")
@@ -323,7 +323,7 @@ class InsertionElectrodeBuilder(Builder):
             thermo_docs = list(
                 self.thermo.query(
                     {"$and": [{"material_id": {"$in": mat_ids}}]},
-                    properties=["material_id", "_sbxn", "thermo", "entries", "energy_type", "energy_above_hull",],
+                    properties=["material_id", "_sbxn", "thermo", "entries", "energy_type", "energy_above_hull"],
                 )
             )
 
