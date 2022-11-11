@@ -257,7 +257,7 @@ class SummaryDoc(PropertyDoc):
 
     @classmethod
     def from_docs(
-        cls, molecule_id: MPculeID, **docs: Dict[str, Union[Dict, List[Dict]]]
+        cls, molecule_id: MPculeID, **docs: Dict[str, Union[Dict[str, Any], List[Dict[str, Any]]]]
     ):
         """Converts a bunch of property docs into a SummaryDoc"""
 
@@ -347,29 +347,30 @@ summary_fields: Dict[str, list] = {
 def _copy_from_doc(doc):
     """Helper function to copy the list of keys over from amalgamated document"""
 
+    # Doc format:
+    # {property1: {solvent1: {...}, solvent2: {...}},
+    #  property2: {solvent1: [{...}, {...}], solvent2: [{...}, {...}]}
+    # }
+
     d = {"has_props": []}
 
     # Function to grab the keys and put them in the root doc
     for doc_key in summary_fields:
-        sub_doc = doc.get(doc_key, None)
-        if isinstance(sub_doc, list) and len(sub_doc) > 0:
+        sub_doc = doc.get(doc_key, dict())
+        if len(sub_doc) > 0:
             d["has_props"].append(doc_key)
             for copy_key in summary_fields[doc_key]:
                 d[copy_key] = dict()
-                for sub_item in sub_doc:
-                    # In cases where multiple docs have the same properties,
-                    # they must differ by method
-                    if copy_key in sub_item and "method" in sub_item:
-                        d[copy_key][sub_item["method"]] = sub_item[copy_key]
-
-        elif isinstance(sub_doc, dict):
-            d["has_props"].append(doc_key)
-            d.update(
-                {
-                    copy_key: sub_doc[copy_key]
-                    for copy_key in summary_fields[doc_key]
-                    if copy_key in sub_doc
-                }
-            )
+                for solvent, entries in sub_doc.items():
+                    if isinstance(entries, list):
+                        d[copy_key][solvent] = dict()
+                        # In cases where multiple docs have the same properties,
+                        # they must differ by by method
+                        for entry in entries:
+                            if copy_key in entry and "method" in entry:
+                                d[copy_key][solvent][entry["method"]] = entry[copy_key]
+                    else:
+                        if copy_key in entries:
+                            d[copy_key][solvent] = entries[copy_key]
 
     return d
