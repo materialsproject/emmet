@@ -77,6 +77,9 @@ class SummaryBuilder(Builder):
         self.charges.ensure_index("molecule_id")
         self.charges.ensure_index("method")
         self.charges.ensure_index("task_id")
+        self.charges.ensure_index("solvent")
+        self.charges.ensure_index("lot_solvent")
+        self.charges.ensure_index("property_id")
         self.charges.ensure_index("last_updated")
         self.charges.ensure_index("formula_alphabetical")
 
@@ -84,6 +87,9 @@ class SummaryBuilder(Builder):
         self.spins.ensure_index("molecule_id")
         self.spins.ensure_index("method")
         self.spins.ensure_index("task_id")
+        self.spins.ensure_index("solvent")
+        self.spins.ensure_index("lot_solvent")
+        self.spins.ensure_index("property_id")
         self.spins.ensure_index("last_updated")
         self.spins.ensure_index("formula_alphabetical")
 
@@ -91,30 +97,45 @@ class SummaryBuilder(Builder):
         self.bonds.ensure_index("molecule_id")
         self.bonds.ensure_index("method")
         self.bonds.ensure_index("task_id")
+        self.bonds.ensure_index("solvent")
+        self.bonds.ensure_index("lot_solvent")
+        self.bonds.ensure_index("property_id")
         self.bonds.ensure_index("last_updated")
         self.bonds.ensure_index("formula_alphabetical")
 
         # Search index for orbitals
         self.orbitals.ensure_index("molecule_id")
         self.orbitals.ensure_index("task_id")
+        self.orbitals.ensure_index("solvent")
+        self.orbitals.ensure_index("lot_solvent")
+        self.orbitals.ensure_index("property_id")
         self.orbitals.ensure_index("last_updated")
         self.orbitals.ensure_index("formula_alphabetical")
 
         # Search index for orbitals
         self.redox.ensure_index("molecule_id")
         self.redox.ensure_index("task_id")
+        self.redox.ensure_index("solvent")
+        self.redox.ensure_index("lot_solvent")
+        self.redox.ensure_index("property_id")
         self.redox.ensure_index("last_updated")
         self.redox.ensure_index("formula_alphabetical")
 
         # Search index for thermo
         self.thermo.ensure_index("molecule_id")
         self.thermo.ensure_index("task_id")
+        self.thermo.ensure_index("solvent")
+        self.thermo.ensure_index("lot_solvent")
+        self.thermo.ensure_index("property_id")
         self.thermo.ensure_index("last_updated")
         self.thermo.ensure_index("formula_alphabetical")
 
         # Search index for vibrational properties
         self.vibes.ensure_index("molecule_id")
         self.vibes.ensure_index("task_id")
+        self.vibes.ensure_index("solvent")
+        self.vibes.ensure_index("lot_solvent")
+        self.vibes.ensure_index("property_id")
         self.vibes.ensure_index("last_updated")
         self.vibes.ensure_index("formula_alphabetical")
 
@@ -209,6 +230,23 @@ class SummaryBuilder(Builder):
             [dict] : a list of new orbital docs
         """
 
+        def _group_docs(docs: List[Dict[str, Any]], allow_multiple=False):
+            """Helper function to group docs by solvent"""
+            grouped = dict()
+
+            for doc in docs:
+                solvent = doc.get("solvent")
+                if not solvent:
+                    continue
+                
+                if allow_multiple:
+                    if solvent not in grouped:
+                        grouped[solvent] = [doc]
+                else:
+                    grouped[solvent] = doc
+
+            return grouped
+
         mols = items
         formula = mols[0]["formula_alphabetical"]
         mol_ids = [m["molecule_id"] for m in mols]
@@ -218,27 +256,29 @@ class SummaryBuilder(Builder):
 
         for mol in mols:
             mol_id = mol["molecule_id"]
+
+
             d = {
                 "molecules": mol,
-                "partial_charges": list(self.charges.query({"molecule_id": mol_id})),
-                "partial_spins": list(self.spins.query({"molecule_id": mol_id})),
-                "bonding": list(self.bonds.query({"molecule_id": mol_id})),
-                "orbitals": self.orbitals.query_one({"molecule_id": mol_id}),
-                "redox": self.redox.query_one({"molecule_id": mol_id}),
-                "thermo": self.thermo.query_one({"molecule_id": mol_id}),
-                "vibration": self.vibes.query_one({"molecule_id": mol_id}),
+                "partial_charges": _group_docs(list(self.charges.query({"molecule_id": mol_id})), allow_multiple=True),
+                "partial_spins": _group_docs(list(self.spins.query({"molecule_id": mol_id})), allow_multiple=True),
+                "bonding": _group_docs(list(self.bonds.query({"molecule_id": mol_id})), allow_multiple=True),
+                "orbitals": _group_docs(list(self.orbitals.query({"molecule_id": mol_id}))),
+                "redox": _group_docs(list(self.charges.query({"molecule_id": mol_id}))),
+                "thermo": _group_docs(list(self.thermo.query({"molecule_id": mol_id}))),
+                "vibration": _group_docs(list(self.vibes.query({"molecule_id": mol_id}))),
             }
 
             to_delete = list()
 
             for k, v in d.items():
-                if isinstance(v, list) and len(v) == 0:
+                if isinstance(v, dict) and len(v) == 0:
                     to_delete.append(k)
 
             for td in to_delete:
                 del d[td]
 
-            summary_doc = SummaryDoc.from_docs(molecule_id=mol_id, **d)
+            summary_doc = SummaryDoc.from_docs(molecule_id=mol_id, d)
             summary_docs.append(summary_doc)
 
         self.logger.debug(f"Produced {len(summary_docs)} summary docs for {formula}")

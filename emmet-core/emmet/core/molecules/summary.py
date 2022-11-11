@@ -257,11 +257,14 @@ class SummaryDoc(PropertyDoc):
 
     @classmethod
     def from_docs(
-        cls, molecule_id: MPculeID, **docs: Dict[str, Union[Dict[str, Any], List[Dict[str, Any]]]]
+        cls, molecule_id: MPculeID, docs: Dict[str, Union[Dict[str, Any], Dict[str, Dict[str, Any]], Dict[str, List[Dict[str, Any]]]]]
     ):
         """Converts a bunch of property docs into a SummaryDoc"""
 
         doc = _copy_from_doc(docs)
+
+        if len(doc["has_props"]) == 0:
+            raise ValueError("Missing minimal properties!")
 
         id_string = f"summary-{molecule_id}"
         h = blake2b()
@@ -344,11 +347,12 @@ summary_fields: Dict[str, list] = {
 }
 
 
-def _copy_from_doc(doc):
+def _copy_from_doc(doc: Dict[str, Union[Dict[str, Any], Dict[str, Dict[str, Any]], Dict[str, List[Dict[str, Any]]]]]):
     """Helper function to copy the list of keys over from amalgamated document"""
 
     # Doc format:
-    # {property1: {solvent1: {...}, solvent2: {...}},
+    # {property0: {...},
+    #  property1: {solvent1: {...}, solvent2: {...}},
     #  property2: {solvent1: [{...}, {...}], solvent2: [{...}, {...}]}
     # }
 
@@ -356,21 +360,31 @@ def _copy_from_doc(doc):
 
     # Function to grab the keys and put them in the root doc
     for doc_key in summary_fields:
-        sub_doc = doc.get(doc_key, dict())
-        if len(sub_doc) > 0:
-            d["has_props"].append(doc_key)
+        sub_doc = doc.get(doc_key, None)
+
+        if doc_key == "molecules":
+            # Molecules is special because there should only ever be one
+            # MoleculeDoc for a given molecule
+            # There are not multiple MoleculeDocs for different solvents
+            if sub_doc is None:
+                break
             for copy_key in summary_fields[doc_key]:
-                d[copy_key] = dict()
-                for solvent, entries in sub_doc.items():
-                    if isinstance(entries, list):
-                        d[copy_key][solvent] = dict()
-                        # In cases where multiple docs have the same properties,
-                        # they must differ by by method
-                        for entry in entries:
-                            if copy_key in entry and "method" in entry:
-                                d[copy_key][solvent][entry["method"]] = entry[copy_key]
-                    else:
-                        if copy_key in entries:
-                            d[copy_key][solvent] = entries[copy_key]
+                d[copy_key] = sub_doc[copy_key]
+        else:
+            if isinstance(sub_doc, dict) and len(sub_doc) > 0:
+                d["has_props"].append(doc_key)
+                for copy_key in summary_fields[doc_key]:
+                    d[copy_key] = dict()
+                    for solvent, entries in sub_doc.items():
+                        if isinstance(entries, list):
+                            d[copy_key][solvent] = dict()
+                            # In cases where multiple docs in the same solvent
+                            # have the same properties, they must differ by by method
+                            for entry in entries:
+                                if copy_key in entry and "method" in entry:
+                                    d[copy_key][solvent][entry["method"]] = entry[copy_key]
+                        else:
+                            if copy_key in entries:
+                                d[copy_key][solvent] = entries[copy_key]
 
     return d
