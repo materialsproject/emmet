@@ -307,8 +307,15 @@ class ThermoBuilder(Builder):
             for entry in sp_entries:
                 by_solvent_spec[entry["solvent"]].append(entry)
 
+            if len(thermo_entries) == 0:
+                use_sp = True
+                without_corrections = by_solvent_spec
+            else:
+                use_sp = False
+                without_corrections = by_solvent_dict
+
             # Construct without corrections
-            for solvent, entries in by_solvent_dict.items():
+            for solvent, entries in without_corrections.items():
                 best = sorted(
                     entries,
                     key=lambda x: (
@@ -328,40 +335,47 @@ class ThermoBuilder(Builder):
 
             # Construct with corrections
             for solvent, entries in by_solvent_spec.items():
-                best_spec = sorted(
+                spec_sorted = sorted(
                     entries,
                     key=lambda x: (
                         sum(evaluate_lot(x["level_of_theory"])),
                         x["energy"],
                     ),
-                )[0]
-                task_spec = best_spec["task_id"]
-
-                matching_structures = list()
-                for entry in thermo_entries:
-                    if mm.fit(Molecule.from_dict(entry["molecule"]),
-                              Molecule.from_dict(best_spec["molecule"])):
-                         matching_structures.append(entry)
-
-                best_dict = sorted(
-                    matching_structures,
-                    key=lambda x: (
-                        sum(evaluate_lot(x["level_of_theory"])),
-                        x["energy"],
-                    ),
-                )[0]
-                task_dict = best_dict["task_id"]
-
-                task_doc_dict = TaskDocument(**self.tasks.query_one({"task_id": int(task_dict)}))
-                task_doc_spec = TaskDocument(**self.tasks.query_one({"task_id": int(task_spec)}))
-                thermo_doc = ThermoDoc.from_task(
-                    task_doc_dict,
-                    correction_task=task_doc_spec,
-                    molecule_id=mol.molecule_id,
-                    deprecated=False
                 )
-                thermo_doc = _add_single_atom_enthalpy_entropy(task_doc_dict, thermo_doc)
-                this_thermo_docs.append(thermo_doc)
+
+                for best_spec in spec_sorted:
+                    task_spec = best_spec["task_id"]
+
+                    matching_structures = list()
+                    for entry in thermo_entries:
+                        if (mm.fit(Molecule.from_dict(entry["molecule"]),
+                                  Molecule.from_dict(best_spec["molecule"])) 
+                                  and sum(evaluate_lot(entry["level_of_theory"])) < sum(evaluate_lot(best_spec["level_of_theory"]))):
+                             matching_structures.append(entry)
+
+                    if len(matching_structures) == 0:
+                        continue
+
+                    best_dict = sorted(
+                        matching_structures,
+                        key=lambda x: (
+                            sum(evaluate_lot(x["level_of_theory"])),
+                            x["energy"],
+                        ),
+                    )[0]
+                    task_dict = best_dict["task_id"]
+
+                    task_doc_dict = TaskDocument(**self.tasks.query_one({"task_id": int(task_dict)}))
+                    task_doc_spec = TaskDocument(**self.tasks.query_one({"task_id": int(task_spec)}))
+                    thermo_doc = ThermoDoc.from_task(
+                        task_doc_dict,
+                        correction_task=task_doc_spec,
+                        molecule_id=mol.molecule_id,
+                        deprecated=False
+                    )
+                    thermo_doc = _add_single_atom_enthalpy_entropy(task_doc_dict, thermo_doc)
+                    this_thermo_docs.append(thermo_doc)
+                    break
 
             docs_by_solvent = defaultdict(list)
             for doc in this_thermo_docs:
