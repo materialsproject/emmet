@@ -154,9 +154,9 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
             mol = self.output.initial_molecule
 
         if self.charge is None:
-            charge = mol.charge
+            charge = int(mol.charge)
         else:
-            charge = self.charge
+            charge = int(self.charge)
 
         if self.spin_multiplicity is None:
             spin = mol.spin_multiplicity

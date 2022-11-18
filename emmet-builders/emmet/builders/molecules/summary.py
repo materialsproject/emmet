@@ -278,7 +278,7 @@ class SummaryBuilder(Builder):
             for td in to_delete:
                 del d[td]
 
-            summary_doc = SummaryDoc.from_docs(molecule_id=mol_id, d)
+            summary_doc = SummaryDoc.from_docs(molecule_id=mol_id, docs=d)
             summary_docs.append(summary_doc)
 
         self.logger.debug(f"Produced {len(summary_docs)} summary docs for {formula}")
