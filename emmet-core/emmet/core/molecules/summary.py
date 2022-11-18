@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, List, Tuple, TypeVar, Union
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 from hashlib import blake2b
 
 from pydantic import Field
@@ -63,45 +63,45 @@ class SummaryDoc(PropertyDoc):
         None, description="Electronic energy of the molecule (units: eV)"
     )
 
-    zero_point_energy: Dict[str, float] = Field(
+    zero_point_energy: Dict[str, Optional[float]] = Field(
         None, description="Zero-point energy of the molecule (units: eV)"
     )
 
-    rt: Dict[str, float] = Field(
+    rt: Dict[str, Optional[float]] = Field(
         None,
         description="R*T, where R is the gas constant and T is temperature, taken "
         "to be 298.15K (units: eV)",
     )
 
-    total_enthalpy: Dict[str, float] = Field(
+    total_enthalpy: Dict[str, Optional[float]] = Field(
         None, description="Total enthalpy of the molecule at 298.15K (units: eV)"
     )
-    total_entropy: Dict[str, float] = Field(
+    total_entropy: Dict[str, Optional[float]] = Field(
         None, description="Total entropy of the molecule at 298.15K (units: eV/K)"
     )
 
-    translational_enthalpy: Dict[str, float] = Field(
+    translational_enthalpy: Dict[str, Optional[float]] = Field(
         None,
         description="Translational enthalpy of the molecule at 298.15K (units: eV)",
     )
-    translational_entropy: Dict[str, float] = Field(
+    translational_entropy: Dict[str, Optional[float]] = Field(
         None,
         description="Translational entropy of the molecule at 298.15K (units: eV/K)",
     )
-    rotational_enthalpy: Dict[str, float] = Field(
+    rotational_enthalpy: Dict[str, Optional[float]] = Field(
         None, description="Rotational enthalpy of the molecule at 298.15K (units: eV)"
     )
-    rotational_entropy: Dict[str, float] = Field(
+    rotational_entropy: Dict[str, Optional[float]] = Field(
         None, description="Rotational entropy of the molecule at 298.15K (units: eV/K)"
     )
-    vibrational_enthalpy: Dict[str, float] = Field(
+    vibrational_enthalpy: Dict[str, Optional[float]] = Field(
         None, description="Vibrational enthalpy of the molecule at 298.15K (units: eV)"
     )
-    vibrational_entropy: Dict[str, float] = Field(
+    vibrational_entropy: Dict[str, Optional[float]] = Field(
         None, description="Vibrational entropy of the molecule at 298.15K (units: eV/K)"
     )
 
-    free_energy: Dict[str, float] = Field(
+    free_energy: Dict[str, Optional[float]] = Field(
         None, description="Gibbs free energy of the molecule at 298.15K (units: eV)"
     )
 
@@ -128,50 +128,50 @@ class SummaryDoc(PropertyDoc):
     )
 
     # natural bonding orbitals
-    open_shell: bool = Field(
+    open_shell: Dict[str, bool] = Field(
         None, description="Is this molecule open-shell (spin multiplicity != 1)?"
     )
 
-    nbo_population: Dict[str, List[NaturalPopulation]] = Field(
+    nbo_population: Dict[str, Optional[List[NaturalPopulation]]] = Field(
         None, description="Natural electron populations of the molecule"
     )
-    nbo_lone_pairs: Dict[str, List[LonePair]] = Field(
+    nbo_lone_pairs: Dict[str, Optional[List[LonePair]]] = Field(
         None, description="Lone pair orbitals of a closed-shell molecule"
     )
-    nbo_bonds: Dict[str, List[Bond]] = Field(
+    nbo_bonds: Dict[str, Optional[List[Bond]]] = Field(
         None, description="Bond-like orbitals of a closed-shell molecule"
     )
-    nbo_interactions: Dict[str, List[Interaction]] = Field(
+    nbo_interactions: Dict[str, Optional[List[Interaction]]] = Field(
         None, description="Orbital-orbital interactions of a closed-shell molecule"
     )
 
-    alpha_population: Dict[str, List[NaturalPopulation]] = Field(
+    alpha_population: Dict[str, Optional[List[NaturalPopulation]]] = Field(
         None,
         description="Natural electron populations of the alpha electrons of an "
         "open-shell molecule",
     )
-    beta_population: Dict[str, List[NaturalPopulation]] = Field(
+    beta_population: Dict[str, Optional[List[NaturalPopulation]]] = Field(
         None,
         description="Natural electron populations of the beta electrons of an "
         "open-shell molecule",
     )
-    alpha_lone_pairs: Dict[str, List[LonePair]] = Field(
+    alpha_lone_pairs: Dict[str, Optional[List[LonePair]]] = Field(
         None, description="Alpha electron lone pair orbitals of an open-shell molecule"
     )
-    beta_lone_pairs: Dict[str, List[LonePair]] = Field(
+    beta_lone_pairs: Dict[str, Optional[List[LonePair]]] = Field(
         None, description="Beta electron lone pair orbitals of an open-shell molecule"
     )
-    alpha_bonds: Dict[str, List[Bond]] = Field(
+    alpha_bonds: Dict[str, Optional[List[Bond]]] = Field(
         None, description="Alpha electron bond-like orbitals of an open-shell molecule"
     )
-    beta_bonds: Dict[str, List[Bond]] = Field(
+    beta_bonds: Dict[str, Optional[List[Bond]]] = Field(
         None, description="Beta electron bond-like orbitals of an open-shell molecule"
     )
-    alpha_interactions: Dict[str, List[Interaction]] = Field(
+    alpha_interactions: Dict[str, Optional[List[Interaction]]] = Field(
         None,
         description="Alpha electron orbital-orbital interactions of an open-shell molecule",
     )
-    beta_interactions: Dict[str, List[Interaction]] = Field(
+    beta_interactions: Dict[str, Optional[List[Interaction]]] = Field(
         None,
         description="Beta electron orbital-orbital interactions of an open-shell molecule",
     )
