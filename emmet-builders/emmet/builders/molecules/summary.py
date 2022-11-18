@@ -1,7 +1,7 @@
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Optional, Iterable, Iterator, List, Dict
+from typing import Any, Optional, Iterable, Iterator, List, Dict
 
 from maggma.builders import Builder
 from maggma.core import Store
@@ -180,7 +180,7 @@ class SummaryBuilder(Builder):
             generator or list relevant tasks and molecules to process into documents
         """
 
-        self.logger.info("Orbital builder started")
+        self.logger.info("Summary builder started")
         self.logger.info("Setting indexes")
         self.ensure_indexes()
 

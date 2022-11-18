@@ -140,6 +140,7 @@ class RedoxDoc(PropertyDoc):
 
         base_has_g = base_thermo_doc.free_energy is not None
 
+        base_property_id = base_thermo_doc.property_id
         red_mpcule_id = None
         red_property_id = None
         reduction_energy = None
@@ -227,6 +228,7 @@ class RedoxDoc(PropertyDoc):
             meta_molecule=base_molecule_doc.molecule,
             property_id=property_id,
             molecule_id=base_molecule_doc.molecule_id,
+            base_property_id=base_property_id,
             level_of_theory=base_thermo_doc.level_of_theory,
             solvent=base_thermo_doc.solvent,
             lot_solvent=base_thermo_doc.lot_solvent,

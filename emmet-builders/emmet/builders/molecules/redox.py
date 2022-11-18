@@ -202,7 +202,7 @@ class RedoxBuilder(Builder):
 
         for graph_group in group_by_graph.values():
             # Molecule docs will be grouped by charge
-            charges = defaultdict(list)
+            charges = dict()
 
             for gg in graph_group:
                 # First, grab relevant ThermoDocs and identify possible IE/EA single-points
@@ -229,13 +229,16 @@ class RedoxBuilder(Builder):
                 ea_tasks = [TaskDocument(**e) for e in self.tasks.query({"task_id": {"$in": ea_sp_task_ids}})]
 
                 grouped_docs = self._collect_by_lot_solvent(thermo_docs, ie_tasks, ea_tasks)
-                charges[gg.charge].append((gg, grouped_docs))
+                if gg.charge in charges:
+                    charges[gg.charge].append((gg, grouped_docs))
+                else:
+                    charges[gg.charge] = [(gg, grouped_docs)]
 
             for charge, collection in charges.items():
                 for mol, docs in collection:
                     # Get all possible molecules for adiabatic oxidation and reduction
-                    red_coll = charges[charge - 1]
-                    ox_coll = charges[charge + 1]
+                    red_coll = charges.get(charge - 1, list())
+                    ox_coll = charges.get(charge + 1, list())
 
                     for lot_solv, docset in docs.items():
                         # Collect other molecules that have ThermoDocs at the
@@ -249,12 +252,12 @@ class RedoxBuilder(Builder):
                         for rmol, rdocs in red_coll:
                             if lot_solv in rdocs:
                                 if rdocs[lot_solv]["thermo_doc"].combined_lot_solvent == combined:
-                                    relevant_red.append(rdocs)
+                                    relevant_red.append(rdocs[lot_solv])
 
                         for omol, odocs in ox_coll:
                             if lot_solv in odocs:
                                 if odocs[lot_solv]["thermo_doc"].combined_lot_solvent == combined:
-                                    relevant_ox.append(odocs)
+                                    relevant_ox.append(odocs[lot_solv])
 
                         # Take best options (based on electronic energy), where available
                         if len(relevant_red) == 0:
@@ -286,7 +289,7 @@ class RedoxBuilder(Builder):
 
         self.logger.debug(f"Produced {len(redox_docs)} redox docs for {formula}")
 
-        return jsanitize([doc.dict() for doc in redox_docs], allow_bson=True)
+        return jsanitize([doc.dict() for doc in redox_docs if doc is not None], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """
