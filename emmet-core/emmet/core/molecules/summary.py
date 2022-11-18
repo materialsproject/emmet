@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, List, Tuple, TypeVar, Union
+from typing import Any, Dict, List, Tuple, TypeVar, Union
 from hashlib import blake2b
 
 from pydantic import Field
