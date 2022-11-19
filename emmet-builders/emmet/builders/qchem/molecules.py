@@ -347,7 +347,6 @@ class MoleculesBuilder(Builder):
             molecules: Store of processed molecules documents
             query: dictionary to limit tasks to be analyzed
             settings: EmmetSettings to use in the build process
-            prefix: String prefix for MPIDs of processed MoleculeDocs.
         """
 
         self.assoc = assoc
