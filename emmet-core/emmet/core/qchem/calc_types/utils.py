@@ -98,7 +98,8 @@ def solvent(parameters: Dict[str, Any], custom_smd: Optional[str] = None) -> str
 
     if solvation == "PCM":
         dielectric = float(parameters.get("solvent", {}).get("dielectric", 78.39))
-        return f"DIELECTRIC={dielectric:.2f}"
+        dielectric_string = f"{dielectric:.2f}".replace(".", ",")
+        return f"DIELECTRIC={dielectric_string}"
     # TODO: Add this once added into pymatgen and atomate
     # elif solvation == "ISOSVP":
     #     dielectric = float(parameters.get("svp", {}).get("dielst", 78.39))
@@ -136,8 +137,8 @@ def solvent(parameters: Dict[str, Any], custom_smd: Optional[str] = None) -> str
 
             string = ""
             for name, number in zip(names, numbers):
-                string += f"{name}={number:.3f},"
-            return string.rstrip(",")
+                string += f"{name}={number:.3f};"
+            return string.rstrip(",").rstrip(";").replace(".", ",")
         else:
             return f"SOLVENT={solvent.upper()}"
     else:

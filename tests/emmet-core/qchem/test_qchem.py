@@ -86,13 +86,13 @@ def test_solvent():
             "rem": {"method": "wb97xd", "basis": "def2-svpd", "solvent_method": "pcm"},
             "pcm": {"theory": "cpcm"},
             "solvent": {"dielectric": 20},
-        }) == "DIELECTRIC=20.00"
+        }) == "DIELECTRIC=20,00"
 
     # PCM - default
     assert solvent({
             "rem": {"method": "wb97xd", "basis": "def2-svpd", "solvent_method": "pcm"},
             "pcm": {"theory": "cpcm"},
-        }) == "DIELECTRIC=78.39"
+        }) == "DIELECTRIC=78,39"
 
     # SMD - custom solvent
     assert solvent({
@@ -103,7 +103,7 @@ def test_solvent():
             },
             "smx": {"solvent": "other"},
         },
-        custom_smd="4.9,1.558,0.0,0.576,49.94,0.667,0.0") == 'DIELECTRIC=4.900,N=1.558,ALPHA=0.000,BETA=0.576,GAMMA=49.940,PHI=0.667,PSI=0.000'
+        custom_smd="4.9,1.558,0.0,0.576,49.94,0.667,0.0") == 'DIELECTRIC=4,900;N=1,558;ALPHA=0,000;BETA=0,576;GAMMA=49,940;PHI=0,667;PSI=0,000'
 
     # SMD - missing custom_solvent
     with pytest.raises(ValueError):
@@ -139,7 +139,7 @@ def test_solvent():
 
 
 def test_lot_solv():
-    answer = "wB97X-D/def2-SVPD/PCM(DIELECTRIC=78.39)"
+    answer = "wB97X-D/def2-SVPD/PCM(DIELECTRIC=78,39)"
     params = {
             "rem": {"method": "wb97xd", "basis": "def2-svpd", "solvent_method": "pcm"},
             "pcm": {"theory": "cpcm"},
