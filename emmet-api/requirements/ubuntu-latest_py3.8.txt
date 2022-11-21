@@ -15,11 +15,11 @@ attrs==22.1.0
     #   jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.8
+boto3==1.26.13
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.8
+botocore==1.29.13
     # via
     #   boto3
     #   s3transfer
@@ -48,7 +48,7 @@ cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.6.0
+ddtrace==1.6.1
     # via emmet-api (setup.py)
 dnspython==2.2.1
     # via
@@ -60,7 +60,7 @@ emmet-core[all]==0.38.9
     #   mp-api
 envier==0.4.0
     # via ddtrace
-exceptiongroup==1.0.2
+exceptiongroup==1.0.4
     # via cattrs
 fastapi==0.87.0
     # via
@@ -70,8 +70,6 @@ flask==2.2.2
     # via mongogrant
 fonttools==4.38.0
     # via matplotlib
-forbiddenfruit==0.1.4
-    # via ddtrace
 future==0.18.2
     # via
     #   matminer
@@ -132,7 +130,7 @@ monty==2022.9.9
     #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.29.4
+mp-api==0.29.7
     # via pymatgen
 mpmath==1.2.1
     # via sympy
@@ -144,7 +142,7 @@ networkx==2.8.8
     # via
     #   pymatgen
     #   robocrys
-numpy==1.23.4
+numpy==1.23.5
     # via
     #   contourpy
     #   maggma
@@ -157,7 +155,7 @@ numpy==1.23.4
     #   scipy
     #   seekpath
     #   spglib
-orjson==3.8.1
+orjson==3.8.2
     # via maggma
 packaging==21.3
     # via
@@ -211,7 +209,7 @@ pymatgen-analysis-alloys==0.0.5
     # via emmet-core
 pymatgen-analysis-diffusion==2022.7.21
     # via emmet-core
-pymongo==4.3.2
+pymongo==4.3.3
     # via
     #   maggma
     #   matminer
