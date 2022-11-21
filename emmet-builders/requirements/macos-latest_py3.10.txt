@@ -12,9 +12,9 @@ attrs==22.1.0
     # via jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.8
+boto3==1.26.13
     # via maggma
-botocore==1.29.8
+botocore==1.29.13
     # via
     #   boto3
     #   s3transfer
@@ -102,7 +102,7 @@ monty==2022.9.9
     #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.29.4
+mp-api==0.29.7
     # via pymatgen
 mpmath==1.2.1
     # via sympy
@@ -114,7 +114,7 @@ networkx==2.8.8
     # via
     #   pymatgen
     #   robocrys
-numpy==1.23.4
+numpy==1.23.5
     # via
     #   contourpy
     #   maggma
@@ -127,7 +127,7 @@ numpy==1.23.4
     #   scipy
     #   seekpath
     #   spglib
-orjson==3.8.1
+orjson==3.8.2
     # via maggma
 packaging==21.3
     # via
@@ -174,7 +174,7 @@ pymatgen-analysis-alloys==0.0.5
     # via emmet-core
 pymatgen-analysis-diffusion==2022.7.21
     # via emmet-core
-pymongo==4.3.2
+pymongo==4.3.3
     # via
     #   maggma
     #   matminer
