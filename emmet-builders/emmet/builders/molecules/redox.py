@@ -213,7 +213,7 @@ class RedoxBuilder(Builder):
                     continue
 
                 ie_sp_task_ids = [
-                    e["task_id"] for e in gg.entries
+                    int(e["task_id"]) for e in gg.entries
                     if e["charge"] == gg.charge + 1
                        and e["task_type"] == "Single Point"
                        and e["output"].get("final_energy")
@@ -221,7 +221,7 @@ class RedoxBuilder(Builder):
                 ie_tasks = [TaskDocument(**e) for e in self.tasks.query({"task_id": {"$in": ie_sp_task_ids}})]
 
                 ea_sp_task_ids = [
-                    e["task_id"] for e in gg.entries
+                    int(e["task_id"]) for e in gg.entries
                     if e["charge"] == gg.charge - 1
                        and e["task_type"] == "Single Point"
                        and e["output"].get("final_energy")
@@ -276,14 +276,17 @@ class RedoxBuilder(Builder):
                                 key=lambda x: x["thermo_doc"].electronic_energy
                             )[0]["thermo_doc"]
 
+                        ea_doc = docset.get("ea_doc")
+                        ie_doc = docset.get("ie_doc")
+
                         redox_docs.append(
                             RedoxDoc.from_docs(
                                 base_molecule_doc=mol,
                                 base_thermo_doc=docset["thermo_doc"],
                                 red_doc=red_doc,
                                 ox_doc=ox_doc,
-                                ea_doc=docset.get("ea_doc"),
-                                ie_doc=docset.get("ie_doc")
+                                ea_doc=ea_doc,
+                                ie_doc=ie_doc
                             )
                         )
 
