@@ -124,3 +124,36 @@ class PiezoelectricDoc(PropertyDoc):
             },
             **kwargs,
         )
+
+
+class BornEffectiveCharges(StructureMetadata):
+    """
+    A block for the Born effective charges
+    """
+
+    value: List[Matrix3D] = Field(
+        None,
+        description="Value of the Born effective charges."
+    )
+
+    symmetrized_value: List[Matrix3D] = Field(
+        None,
+        description="Value of the Born effective charges after symmetrization to obey the"
+                    "charge neutrality sum rule."
+    )
+
+    cnsr_break: float = Field(
+        None, description="The maximum breaking of the charge neutrality sum "
+                          "rule (CNSR) in the Born effective charges."
+    )
+
+
+class IRDielectric(StructureMetadata):
+    """
+    A block for the pymatgen IRDielectricTensor object
+    """
+
+    ir_dielectric_tensor: dict = Field(
+        None,
+        description="Serialized version of a pymatgen IRDielectricTensor object."
+    )
