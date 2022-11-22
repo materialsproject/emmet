@@ -32,7 +32,7 @@ monty==2022.9.9
     #   emmet-core (setup.py)
     #   mp-api
     #   pymatgen
-mp-api==0.29.4
+mp-api==0.29.7
     # via pymatgen
 mpmath==1.2.1
     # via sympy
@@ -40,7 +40,7 @@ msgpack==1.0.4
     # via mp-api
 networkx==2.8.8
     # via pymatgen
-numpy==1.23.4
+numpy==1.23.5
     # via
     #   contourpy
     #   matplotlib
