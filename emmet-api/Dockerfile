@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends gcc git g++ cma
 ENV PATH /root/.local/bin:$PATH
 WORKDIR /emmet-api
 ENV PIP_FLAGS "--user --no-cache-dir --compile"
-COPY requirements/ubuntu-latest_py3.9.txt ./requirements.txt
+COPY requirements/deployment.txt ./requirements.txt
 RUN pip install $PIP_FLAGS --upgrade pip pip-tools setuptools-scm && \
     pip-sync requirements.txt --pip-args "$PIP_FLAGS"
 
