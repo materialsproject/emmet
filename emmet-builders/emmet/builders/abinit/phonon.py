@@ -22,7 +22,7 @@ from maggma.core import Store
 
 from emmet.core.phonon import PhononWarnings, ThermodynamicProperties, AbinitPhonon, VibrationalEnergy
 from emmet.core.phonon import PhononDos, PhononBandStructure, PhononWebsiteBS, Ddb, ThermalDisplacement
-from emmet.core.polar import Dielectric, BornEffectiveCharges, IRDielectric
+from emmet.core.polar import DielectricDoc, BornEffectiveCharges, IRDielectric
 from emmet.core.utils import jsanitize
 
 
@@ -129,7 +129,7 @@ class PhononBuilder(Builder):
 
             try:
                 item["ddb_str"] = ddb_data["data"].decode("utf-8")
-            except:
+            except Exception:
                 self.logger.warning(f"could not extract DDB for file id {item['abinit_output']['ddb_id']}")
                 continue
 
@@ -275,8 +275,8 @@ class PhononBuilder(Builder):
                 e_total = ananc_file.eps0.tolist() if ananc_file.eps0 is not None else None
                 if e_electronic and e_total:
                     e_ionic = (ananc_file.eps0 - ananc_file.epsinf).tolist()
-                    dielectric = Dielectric.from_ionic_and_electronic(ionic=e_ionic, electronic=e_electronic,
-                                                                      material_id=item["mp_id"])
+                    dielectric = DielectricDoc.from_ionic_and_electronic(ionic=e_ionic, electronic=e_electronic,
+                                                                         material_id=item["mp_id"])
                 else:
                     dielectric = None
 
