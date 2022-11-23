@@ -16,11 +16,11 @@ attrs==22.1.0
     #   pytest
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.8
+boto3==1.26.13
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.8
+botocore==1.29.13
     # via
     #   boto3
     #   s3transfer
@@ -60,7 +60,7 @@ cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.6.0
+ddtrace==1.6.1
     # via emmet-api (setup.py)
 distlib==0.3.6
     # via virtualenv
@@ -74,7 +74,7 @@ emmet-core[all]==0.38.9
     #   mp-api
 envier==0.4.0
     # via ddtrace
-exceptiongroup==1.0.2
+exceptiongroup==1.0.4
     # via
     #   cattrs
     #   pytest
@@ -90,15 +90,13 @@ flask==2.2.2
     # via mongogrant
 fonttools==4.38.0
     # via matplotlib
-forbiddenfruit==0.1.4
-    # via ddtrace
 future==0.18.2
     # via
     #   matminer
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.24.0
+griffe==0.24.1
     # via mkdocstrings-python
 gunicorn==20.1.0
     # via emmet-api (setup.py)
@@ -106,7 +104,7 @@ h11==0.14.0
     # via uvicorn-tschaume
 htmlmin==0.1.12
     # via mkdocs-minify-plugin
-identify==2.5.8
+identify==2.5.9
     # via pre-commit
 idna==3.4
     # via
@@ -201,7 +199,7 @@ mkdocstrings[python]==0.19.0
     # via
     #   emmet-api (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==0.8.0
+mkdocstrings-python==0.8.2
     # via mkdocstrings
 mongogrant==0.3.3
     # via maggma
@@ -215,7 +213,7 @@ monty==2022.9.9
     #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.29.4
+mp-api==0.29.7
     # via pymatgen
 mpmath==1.2.1
     # via sympy
@@ -223,7 +221,7 @@ msgpack==1.0.4
     # via
     #   maggma
     #   mp-api
-mypy==0.990
+mypy==0.991
     # via emmet-api (setup.py)
 mypy-extensions==0.4.3
     # via
@@ -237,7 +235,7 @@ networkx==2.8.8
     #   robocrys
 nodeenv==1.7.0
     # via pre-commit
-numpy==1.23.4
+numpy==1.23.5
     # via
     #   contourpy
     #   maggma
@@ -252,7 +250,7 @@ numpy==1.23.4
     #   spglib
 openbabel==3.1.1.1
     # via emmet-api (setup.py)
-orjson==3.8.1
+orjson==3.8.2
     # via maggma
 packaging==21.3
     # via
@@ -328,7 +326,7 @@ pymdown-extensions==9.8
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.3.2
+pymongo==4.3.3
     # via
     #   maggma
     #   matminer
@@ -449,11 +447,11 @@ tqdm==4.64.1
     #   maggma
     #   matminer
     #   pymatgen
-types-requests==2.28.11.4
+types-requests==2.28.11.5
     # via emmet-api (setup.py)
-types-setuptools==65.5.0.3
+types-setuptools==65.6.0.0
     # via emmet-api (setup.py)
-types-urllib3==1.26.25.3
+types-urllib3==1.26.25.4
     # via types-requests
 typing-extensions==4.4.0
     # via
