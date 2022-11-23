@@ -4,6 +4,7 @@ from monty.serialization import loadfn
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
 from pymatgen.core import Composition, Element
+from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.entries.computed_entries import ComputedEntry
 
 from emmet.core.electrode import (
@@ -32,13 +33,13 @@ def insertion_elec(test_dir):
 
 @pytest.fixture(scope="session")
 def conversion_elec(test_dir):
-    conversion_eletrodes = {}
+    conversion_electrodes = {}
 
     entries_LCO = loadfn(test_dir / "LiCoO2_batt.json")
     c = ConversionElectrode.from_composition_and_entries(
         Composition("LiCoO2"), entries_LCO, working_ion_symbol="Li"
     )
-    conversion_eletrodes["LiCoO2"] = {
+    conversion_electrodes["LiCoO2"] = {
         "working_ion": "Li",
         "CE": c,
         "entries": entries_LCO,
@@ -55,8 +56,8 @@ def conversion_elec(test_dir):
     }
 
     return {
-        k: (conversion_eletrodes[k], expected_properties[k])
-        for k in conversion_eletrodes.keys()
+        k: (conversion_electrodes[k], expected_properties[k])
+        for k in conversion_electrodes.keys()
     }
 
 
@@ -84,7 +85,22 @@ def test_ConversionDocs_from_entries(conversion_elec):
             Composition(k),
             entries=elec["entries"],
             working_ion_symbol=elec["working_ion"],
-            task_id="mp-1234",
+            battery_id="mp-1234",
+        )
+        res_d = vp.dict()
+        for k, v in expected.items():
+            assert res_d[k] == pytest.approx(v, 0.01)
+
+
+def test_ConversionDocs_from_composition_and_pd(conversion_elec, test_dir):
+    entries_LCO = loadfn(test_dir / "LiCoO2_batt.json")
+    pd = PhaseDiagram(entries_LCO)
+    for k, (elec, expected) in conversion_elec.items():
+        vp = ConversionElectrodeDoc.from_composition_and_pd(
+            comp=Composition(k),
+            pd=pd,
+            working_ion_symbol=elec["working_ion"],
+            battery_id="mp-1234",
         )
         res_d = vp.dict()
         for k, v in expected.items():
@@ -99,7 +115,6 @@ def test_ConversionDocs_from_sub_electrodes(conversion_elec):
 
 
 def test_get_battery_formula():
-
     test_cases = [
         (Composition("Li2CoO3"), Composition("Li7(CoO3)2"), Element("Li")),
         (Composition("Al4(CoO4)3"), Composition("Al2CoO4"), Element("Al")),

@@ -81,17 +81,17 @@ default_build_settings = EmmetBuildSettings()
 
 class StructureGroupBuilder(Builder):
     def __init__(
-        self,
-        materials: MongoStore,
-        sgroups: MongoStore,
-        working_ion: str,
-        query: Optional[dict] = None,
-        ltol: float = default_build_settings.LTOL,
-        stol: float = default_build_settings.STOL,
-        angle_tol: float = default_build_settings.ANGLE_TOL,
-        check_newer: bool = True,
-        chunk_size: int = 1000,
-        **kwargs,
+            self,
+            materials: MongoStore,
+            sgroups: MongoStore,
+            working_ion: str,
+            query: Optional[dict] = None,
+            ltol: float = default_build_settings.LTOL,
+            stol: float = default_build_settings.STOL,
+            angle_tol: float = default_build_settings.ANGLE_TOL,
+            check_newer: bool = True,
+            chunk_size: int = 1000,
+            **kwargs,
     ):
         """
         Aggregate materials entries into sgroups that are topotactically similar to each other.
@@ -171,7 +171,7 @@ class StructureGroupBuilder(Builder):
         all_chemsys = self.materials.distinct("chemsys", criteria=base_query)
         # Contains the working ion but not ONLY the working ion
         all_chemsys = [
-            *filter(lambda x: self.working_ion in x and len(x) > 1, [chemsys_.split("-") for chemsys_ in all_chemsys],)
+            *filter(lambda x: self.working_ion in x and len(x) > 1, [chemsys_.split("-") for chemsys_ in all_chemsys], )
         ]
 
         self.logger.debug(
@@ -277,13 +277,13 @@ class StructureGroupBuilder(Builder):
 
 class InsertionElectrodeBuilder(Builder):
     def __init__(
-        self,
-        grouped_materials: MongoStore,
-        thermo: MongoStore,
-        insertion_electrode: MongoStore,
-        query: Optional[dict] = None,
-        strip_structures: bool = False,
-        **kwargs,
+            self,
+            grouped_materials: MongoStore,
+            thermo: MongoStore,
+            insertion_electrode: MongoStore,
+            query: Optional[dict] = None,
+            strip_structures: bool = False,
+            **kwargs,
     ):
         self.grouped_materials = grouped_materials
         self.insertion_electrode = insertion_electrode
@@ -414,12 +414,12 @@ class InsertionElectrodeBuilder(Builder):
 
 class ConversionElectrodeBuilder(Builder):
     def __init__(
-        self,
-        phase_diagram_store: MongoStore,
-        conversion_electrode_store: MongoStore,
-        working_ion: str,
-        query: Optional[dict] = None,
-        **kwargs,
+            self,
+            phase_diagram_store: MongoStore,
+            conversion_electrode_store: MongoStore,
+            working_ion: str,
+            query: Optional[dict] = None,
+            **kwargs,
     ):
         self.phase_diagram_store = phase_diagram_store
         self.conversion_electrode_store = conversion_electrode_store
@@ -461,7 +461,7 @@ class ConversionElectrodeBuilder(Builder):
         _entries = _pd.all_entries
         pd = PhaseDiagram(entries=_entries)
 
-        most_wi = defaultdict(lambda:(-1, None)) # key: reduced formula, value: composition
+        most_wi = defaultdict(lambda: (-1, None))  # type: dict
         n_elements = pd.dim
         # Only using entries on convex hull for now
         for entry in pd.stable_entries:
@@ -472,18 +472,20 @@ class ConversionElectrodeBuilder(Builder):
             composition_without_wi = Composition.from_dict(composition_dict)
             red_form, num_form = composition_without_wi.get_reduced_formula_and_factor()
             n_wi = entry.composition.get_el_amt_dict()[self.working_ion]
-            most_wi[red_form] = max(most_wi[red_form], (n_wi/num_form, entry.composition))
+            most_wi[red_form] = max(most_wi[red_form], (n_wi / num_form, entry.composition))
 
-        for k,v in most_wi.items():
-            conversion_electrode_doc = ConversionElectrodeDoc.from_composition_and_pd(
-                comp=v[1],
-                pd=pd,
-                working_ion_symbol=self.working_ion
-            )
-            if conversion_electrode_doc is None:
-                return None # type: ignore
-
-            return jsanitize(conversion_electrode_doc.dict())
+        for k, v in most_wi.items():
+            if v[1] is not None:
+                conversion_electrode_doc = ConversionElectrodeDoc.from_composition_and_pd(
+                    comp=v[1],
+                    pd=pd,
+                    working_ion_symbol=self.working_ion,
+                    battery_id=f'{item["phase_diagram_id"]}_{v[1].reduced_formula}',
+                )
+                # return jsanitize(conversion_electrode_doc.dict())
+            else:
+                conversion_electrode_doc = None  # type: ignore
+        return jsanitize(conversion_electrode_doc.dict())
 
     def update_targets(self, items: List):
         items = list(filter(None, items))
