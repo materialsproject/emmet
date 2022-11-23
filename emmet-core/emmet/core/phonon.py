@@ -44,7 +44,7 @@ from typing import List, Tuple, Optional
 from emmet.core.utils import DocEnum
 from pymatgen.core import Structure
 from emmet.core.math import Vector3D, Tensor4R
-from emmet.core.polar import Dielectric, BornEffectiveCharges, IRDielectric
+from emmet.core.polar import DielectricDoc, BornEffectiveCharges, IRDielectric
 from emmet.core.structure import StructureMetadata
 from typing_extensions import Literal
 
@@ -265,7 +265,7 @@ class Phonon(StructureMetadata):
         description="List of warnings associated to the phonon calculation."
     )
 
-    dielectric: Dielectric = Field(
+    dielectric: DielectricDoc = Field(
         None,
         description="Dielectric properties obtained during a phonon calculations."
     )

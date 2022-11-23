@@ -1,5 +1,6 @@
 import tempfile
 import os
+from emmet.builders.settings import EmmetBuildSettings
 import numpy as np
 import traceback
 from typing import Optional, Dict, List, Iterator, Tuple
@@ -25,16 +26,20 @@ from emmet.core.phonon import PhononDos, PhononBandStructure, PhononWebsiteBS, D
 from emmet.core.polar import DielectricDoc, BornEffectiveCharges, IRDielectric
 from emmet.core.utils import jsanitize
 
+SETTINGS = EmmetBuildSettings()
+
 
 class PhononBuilder(Builder):
-    def __init__(self, materials: Store, ddb_source: Store, phonon: Store,
+    def __init__(self, phonon_materials: Store, ddb_source: Store, phonon: Store,
                  phonon_bs: Store, phonon_dos: Store,
                  ddb_files: Store, th_disp: Store,
                  phonon_website: Store,
                  query: Optional[Dict] = None,
                  manager: Optional[TaskManager] = None,
-                 symprec: float = 1e-2,
-                 angle_tolerance: float = 5, **kwargs):
+                 symprec: float = SETTINGS.SYMPREC,
+                 angle_tolerance: float = SETTINGS.ANGLE_TOL,
+                 chunk_size=100, 
+                 **kwargs):
         """
         Creates a set of collections for materials generating different kind of data
         from the phonon calculations.
@@ -68,7 +73,7 @@ class PhononBuilder(Builder):
                 determining the band structure path.
         """
 
-        self.materials = materials
+        self.phonon_materials = phonon_materials
         self.phonon = phonon
         self.ddb_source = ddb_source
         self.phonon_bs = phonon_bs
@@ -79,15 +84,18 @@ class PhononBuilder(Builder):
         self.query = query or {}
         self.symprec = symprec
         self.angle_tolerance = angle_tolerance
+        self.chunk_size = chunk_size
 
         if manager is None:
             self.manager = TaskManager.from_user_config()
         else:
             self.manager = manager
 
-        super().__init__(sources=[materials],
-                         targets=[phonon, ddb_source, phonon_bs, phonon_dos, ddb_files,
-                                  th_disp, phonon_website], **kwargs)
+        super().__init__(sources=[phonon_materials, ddb_source],
+                         targets=[phonon, phonon_bs, phonon_dos, ddb_files,
+                                  th_disp, phonon_website], 
+                        chunk_size = chunk_size,
+                        **kwargs)
 
     def get_items(self) -> Iterator[Dict]:
         """
@@ -105,7 +113,7 @@ class PhononBuilder(Builder):
         # All relevant materials that have been updated since phonon props were last calculated
         q = dict(self.query)
 
-        mats = self.phonon.newer_in(self.materials, exhaustive=True, criteria=q)
+        mats = self.phonon.newer_in(self.phonon_materials, exhaustive=True, criteria=q)
         self.logger.info("Found {} new materials for phonon data".format(len(mats)))
 
         # list of properties queried from the results DB
@@ -118,7 +126,7 @@ class PhononBuilder(Builder):
         }
 
         for m in mats:
-            item = self.materials.query_one(properties=projection, criteria={self.materials.key: m})
+            item = self.phonon_materials.query_one(properties=projection, criteria={self.phonon_materials.key: m})
 
             # Read the DDB file and pass as an object. Do not write here since in case of parallel
             # execution each worker will write its own file.
@@ -240,6 +248,8 @@ class PhononBuilder(Builder):
         # the temp dir should still exist when using the objects as some readings are done lazily
         with tempfile.TemporaryDirectory() as workdir:
 
+            structure = Structure.from_dict(item["abinit_input"]["structure"])
+
             self.logger.debug("Running anaddb in {}".format(workdir))
 
             ddb_path = os.path.join(workdir, "{}_DDB".format(item["mp_id"]))
@@ -276,7 +286,7 @@ class PhononBuilder(Builder):
                 if e_electronic and e_total:
                     e_ionic = (ananc_file.eps0 - ananc_file.epsinf).tolist()
                     dielectric = DielectricDoc.from_ionic_and_electronic(ionic=e_ionic, electronic=e_electronic,
-                                                                         material_id=item["mp_id"])
+                                                                         material_id=item["mp_id"], structure=structure)
                 else:
                     dielectric = None
 
@@ -624,7 +634,7 @@ class PhononBuilder(Builder):
         """
         Ensures indexes on the tasks and materials collections
         """
-        self.materials.ensure_index(self.materials.key, unique=True)
+        self.phonon_materials.ensure_index(self.phonon_materials.key, unique=True)
 
         self.phonon.ensure_index(self.phonon.key, unique=True)
         self.phonon_bs.ensure_index(self.phonon.key, unique=True)
