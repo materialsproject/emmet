@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, validator
 from pymatgen.apps.battery.battery_abc import AbstractElectrode
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode
 from pymatgen.apps.battery.insertion_battery import InsertionElectrode
+from pymatgen.analysis.phase_diagram import PhaseDiagram
 from pymatgen.core import Composition, Structure
 from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
@@ -25,7 +26,7 @@ class VoltagePairDoc(BaseModel):
     max_delta_volume: float = Field(
         None,
         description="Volume changes in % for a particular voltage step using: "
-        "max(charge, discharge) / min(charge, discharge) - 1.",
+                    "max(charge, discharge) / min(charge, discharge) - 1.",
     )
 
     average_voltage: float = Field(
@@ -177,7 +178,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     num_steps: int = Field(
         None,
         description="The number of distinct voltage steps in from fully charge to "
-        "discharge based on the stable intermediate states.",
+                    "discharge based on the stable intermediate states.",
     )
 
     max_voltage_step: float = Field(
@@ -211,7 +212,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     material_ids: List[MPID] = Field(
         None,
         description="The ids of all structures that matched to the present host lattice, regardless of stability. "
-        "The stable entries can be found in the adjacent pairs.",
+                    "The stable entries can be found in the adjacent pairs.",
     )
 
     formula_anonymous: str = Field(
@@ -240,11 +241,11 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
 
     @classmethod
     def from_entries(
-        cls,
-        grouped_entries: List[ComputedStructureEntry],
-        working_ion_entry: ComputedEntry,
-        battery_id: str,
-        strip_structures: bool = False,
+            cls,
+            grouped_entries: List[ComputedStructureEntry],
+            working_ion_entry: ComputedEntry,
+            battery_id: str,
+            strip_structures: bool = False,
     ) -> Union["InsertionElectrodeDoc", None]:
         try:
             ie = InsertionElectrode.from_entries(
@@ -290,9 +291,9 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
                 ]
             )
             if (
-                dchg_comp.get_atomic_fraction(ie.working_ion)
-                / transition_metal_fraction
-                > 1.0
+                    dchg_comp.get_atomic_fraction(ie.working_ion)
+                    / transition_metal_fraction
+                    > 1.0
             ):
                 warnings.append("More than one working ion per transition metal")
         else:
@@ -315,7 +316,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
 
     @staticmethod
     def get_battery_formula(
-        charge_comp: Composition, discharge_comp: Composition, working_ion: Element
+            charge_comp: Composition, discharge_comp: Composition, working_ion: Element
     ):
 
         working_ion_subscripts = []
@@ -340,9 +341,9 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
             working_ion_subscripts.append(new_subscript)
 
         return (
-            working_ion.value
-            + "-".join(working_ion_subscripts)
-            + temp_reduced.reduced_formula
+                working_ion.value
+                + "-".join(working_ion_subscripts)
+                + temp_reduced.reduced_formula
         )
 
     @staticmethod
@@ -432,29 +433,36 @@ class ConversionVoltagePairDoc(VoltagePairDoc):
 
 
 class ConversionElectrodeDoc(ConversionVoltagePairDoc):
-    battery_id: str = Field(None, description="The id for this battery document.")
-
-    adj_pairs: List[ConversionVoltagePairDoc] = Field(
-        None, description="Returns all the adjacent Voltage Steps"
+    """
+    Conversion electrode
+    """
+    battery_id: str = Field(
+        None, description="The id for this battery document."
     )
 
     working_ion: Element = Field(
-        None, description="The working ion as an Element object"
+        None, description="The working ion as an Element object."
+    )
+
+    framework: Composition = Field(
+        None, description="The chemical composition of the host framework."
+    )
+
+    electrode_object: ConversionElectrode = Field(
+        None, description="The Pymatgen conversion electrode object."
     )
 
     num_steps: int = Field(
-        None,
-        description="The number of distinct voltage steps in from fully charge to "
-        "discharge based on the stable intermediate states",
+        None, description="The number of distinct voltage steps in from fully charge to discharge based on the stable "
+                          "intermediate states."
     )
 
     max_voltage_step: float = Field(
-        None, description="Maximum absolute difference in adjacent voltage steps"
+        None, description="Maximum absolute difference in adjacent voltage steps."
     )
 
     last_updated: datetime = Field(
-        None,
-        description="Timestamp for the most recent calculation for this Material document",
+        None, description="Timestamp for the most recent calculation for this Material document."
     )
 
     # Make sure that the datetime field is properly formatted
@@ -464,11 +472,11 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
 
     @classmethod
     def from_composition_and_entries(
-        cls,
-        composition: Composition,
-        entries: List[ComputedEntry],
-        working_ion_symbol: str,
-        task_id: MPID,
+            cls,
+            composition: Composition,
+            entries: List[ComputedEntry],
+            working_ion_symbol: str,
+            battery_id: str,
     ):
         ce = ConversionElectrode.from_composition_and_entries(
             comp=composition,
@@ -477,5 +485,25 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
         )
         d = ce.get_summary_dict()
         d["num_steps"] = d.pop("nsteps", None)
+        d["electrode_object"] = ce.as_dict()
         d["last_updated"] = datetime.utcnow()
-        return cls(task_id=task_id, framework=Composition(d["framework_formula"]), **d)
+        return cls(battery_id=battery_id, framework=Composition(d["framework_formula"]), **d)
+
+    @classmethod
+    def from_composition_and_pd(
+            cls,
+            comp: Composition,
+            pd: PhaseDiagram,
+            working_ion_symbol: str,
+            battery_id: str,
+    ):
+        ce = ConversionElectrode.from_composition_and_pd(
+            comp=comp,
+            pd=pd,
+            working_ion_symbol=working_ion_symbol
+        )
+        d = ce.get_summary_dict()
+        d["num_steps"] = d.pop("nsteps", None)
+        d["electrode_object"] = ce.as_dict()
+        d["last_updated"] = datetime.utcnow()
+        return cls(battery_id=battery_id, framework=Composition(d["framework_formula"]), **d)
