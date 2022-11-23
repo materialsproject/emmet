@@ -232,12 +232,12 @@ class PhononBuilder(Builder):
             self.logger.debug("Item generated for {}".format(item["mp_id"]))
 
             d = dict(
-                abiph=jsanitize(ap.dict()),
-                phbs=jsanitize(phbs.dict()),
-                phws=jsanitize(phws.dict()),
-                phdos=jsanitize(phdos.dict()),
-                ddb=jsanitize(ddb.dict()),
-                th_disp=jsanitize(th_disp.dict()),
+                abiph=jsanitize(ap.dict(), allow_bson=True),
+                phbs=jsanitize(phbs.dict(), allow_bson=True),
+                phws=jsanitize(phws.dict(), allow_bson=True),
+                phdos=jsanitize(phdos.dict(), allow_bson=True),
+                ddb=jsanitize(ddb.dict(), allow_bson=True),
+                th_disp=jsanitize(th_disp.dict(), allow_bson=True),
             )
 
             return d
