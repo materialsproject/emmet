@@ -42,9 +42,9 @@ def test_chemenv(structure: Structure):
     elif structure.composition.almost_equals(Composition("CsCl")):
         # We do not have reference polyhedra above a certain number of neighbors.
         # ChemEnv cannot deliver an answer without oxidation states.
-        assert doc.dict()["warnings"] == "ChemEnv algorithm failed"
+        assert doc.dict()["warnings"] == "ChemEnv algorithm failed."
     else:
         assert (
             doc.dict()["warnings"]
-            == "No oxidation states. Analysis will now include all bonds"
+            == "No oxidation states available. Cation-anion bonds cannot be identified."
         )
