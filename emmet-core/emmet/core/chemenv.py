@@ -474,8 +474,9 @@ class ChemEnvDoc(PropertyDoc):
                 # se = lgf.compute_structure_environments(
                 #     only_indices=inequivalent_indices,
                 # )
-                # lse = LightStructureEnvironments.from_structure_environments(strategy=method, structure_environments=se)
-                ## Trick to get rid of duplicate code
+                # lse = LightStructureEnvironments.from_structure_environments(strategy=method,
+                #     structure_environments=se)
+                # Trick to get rid of duplicate code
                 # inequivalent_indices_cations = inequivalent_indices
                 # warnings = "No oxidation states. Analysis will now include all bonds"
 
