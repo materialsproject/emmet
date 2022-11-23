@@ -487,7 +487,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
         d["num_steps"] = d.pop("nsteps", None)
         d["electrode_object"] = ce.as_dict()
         d["last_updated"] = datetime.utcnow()
-        return cls(task_id=battery_id, framework=Composition(d["framework_formula"]), **d)
+        return cls(battery_id=battery_id, framework=Composition(d["framework_formula"]), **d)
 
     @classmethod
     def from_composition_and_pd(
