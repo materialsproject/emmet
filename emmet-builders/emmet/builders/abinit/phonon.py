@@ -187,6 +187,7 @@ class PhononBuilder(Builder):
 
             ap = AbinitPhonon.from_structure(
                 structure=structure,
+                meta_structure=structure,
                 include_structure=True,
                 material_id=item["mp_id"],
                 cnsr_break=sr_break["cnsr"],
