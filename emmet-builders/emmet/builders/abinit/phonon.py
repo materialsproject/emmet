@@ -673,7 +673,7 @@ def get_warnings(asr_break: float, cnsr_break: float, ph_bs: PhononBandStructure
 
     warnings = []
 
-    if asr_break > 30:
+    if asr_break and asr_break > 30:
         warnings.append(PhononWarnings.ASR)
     if cnsr_break and cnsr_break > 0.2:
         warnings.append(PhononWarnings.CNSR)
