@@ -4,7 +4,7 @@ from emmet.core.mpid import MPID
 from emmet.core.structure import StructureMetadata
 
 import numpy as np
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
 
 from emmet.core.settings import EmmetSettings
@@ -39,12 +39,7 @@ class DielectricDoc(PropertyDoc):
 
     @classmethod
     def from_ionic_and_electronic(
-        cls,
-        material_id: MPID,
-        ionic: Matrix3D,
-        electronic: Matrix3D,
-        structure: Structure,
-        **kwargs,
+        cls, material_id: MPID, ionic: Matrix3D, electronic: Matrix3D, structure: Structure, **kwargs,
     ):
 
         ionic_tensor = Tensor(ionic).convert_to_ieee(structure)
@@ -85,12 +80,7 @@ class PiezoelectricDoc(PropertyDoc):
 
     @classmethod
     def from_ionic_and_electronic(
-        cls,
-        material_id: MPID,
-        ionic: PiezoTensor,
-        electronic: PiezoTensor,
-        structure: Structure,
-        **kwargs,
+        cls, material_id: MPID, ionic: PiezoTensor, electronic: PiezoTensor, structure: Structure, **kwargs,
     ):
 
         ionic_tensor = BasePiezoTensor.from_vasp_voigt(ionic)
@@ -127,34 +117,28 @@ class PiezoelectricDoc(PropertyDoc):
         )
 
 
-class BornEffectiveCharges(StructureMetadata):
+class BornEffectiveCharges(BaseModel):
     """
     A block for the Born effective charges
     """
 
-    value: List[Matrix3D] = Field(
-        None,
-        description="Value of the Born effective charges."
-    )
+    value: List[Matrix3D] = Field(None, description="Value of the Born effective charges.")
 
     symmetrized_value: List[Matrix3D] = Field(
         None,
         description="Value of the Born effective charges after symmetrization to obey the"
-                    "charge neutrality sum rule."
+        "charge neutrality sum rule.",
     )
 
     cnsr_break: float = Field(
-        None, description="The maximum breaking of the charge neutrality sum "
-                          "rule (CNSR) in the Born effective charges."
+        None,
+        description="The maximum breaking of the charge neutrality sum " "rule (CNSR) in the Born effective charges.",
     )
 
 
-class IRDielectric(StructureMetadata):
+class IRDielectric(BaseModel):
     """
     A block for the pymatgen IRDielectricTensor object
     """
 
-    ir_dielectric_tensor: dict = Field(
-        None,
-        description="Serialized version of a pymatgen IRDielectricTensor object."
-    )
+    ir_dielectric_tensor: dict = Field(None, description="Serialized version of a pymatgen IRDielectricTensor object.")
