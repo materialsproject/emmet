@@ -3,6 +3,7 @@ from maggma.stores import JSONStore, MemoryStore
 
 from emmet.builders.qchem.molecules import MoleculesAssociationBuilder, MoleculesBuilder
 from emmet.builders.molecules.redox import RedoxBuilder
+from emmet.builders.molecules.thermo import ThermoBuilder
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -31,9 +32,17 @@ def redox_store():
     return MemoryStore()
 
 
-def test_redox_builder(mol_store, redox_store):
-    builder = RedoxBuilder(mol_store, redox_store)
+@pytest.fixture(scope="session")
+def thermo_store():
+    return MemoryStore()
+
+
+def test_redox_builder(tasks_store, mol_store, thermo_store, redox_store):
+    thermo_builder = ThermoBuilder(tasks_store, mol_store, thermo_store)
+    thermo_builder.run()
+
+    builder = RedoxBuilder(tasks_store, mol_store, thermo_store, redox_store)
     builder.run()
 
-    assert redox_store.count() == 15
+    assert redox_store.count() == 42
     assert redox_store.count({"deprecated": True}) == 0
