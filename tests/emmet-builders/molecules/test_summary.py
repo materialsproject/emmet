@@ -14,7 +14,7 @@ from emmet.builders.molecules.summary import SummaryBuilder
 
 @pytest.fixture(scope="session")
 def tasks(test_dir):
-    return JSONStore(test_dir / "builder_task_set.json.gz")
+    return JSONStore(test_dir / "C3H4Li1O3.json.gz")
 
 
 @pytest.fixture(scope="session")
@@ -85,11 +85,11 @@ def test_summary_doc(
     orb_build = OrbitalBuilder(tasks, mols, orbitals)
     orb_build.run()
 
-    redox_build = RedoxBuilder(mols, redox)
-    redox_build.run()
-
     thermo_build = ThermoBuilder(tasks, mols, thermo)
     thermo_build.run()
+
+    redox_build = RedoxBuilder(tasks, mols, thermo, redox)
+    redox_build.run()
 
     vibe_build = VibrationBuilder(tasks, mols, vibes)
     vibe_build.run()
@@ -107,4 +107,4 @@ def test_summary_doc(
     )
     builder.run()
 
-    assert summary.count() == 53
+    assert summary.count() == 48
