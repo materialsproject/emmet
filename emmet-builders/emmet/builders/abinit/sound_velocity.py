@@ -1,13 +1,12 @@
 import tempfile
 import gridfs
 import traceback
-from typing import Optional, Dict, List, Iterator, Tuple
+from typing import Optional, Dict, List, Iterator
 
 from abipy.dfpt.vsound import SoundVelocity as AbiSoundVelocity
 from abipy.dfpt.ddb import DdbFile
 from maggma.builders import Builder
 from maggma.core import Store
-from monty.json import jsanitize
 from abipy.flowtk.tasks import TaskManager
 
 from emmet.core.phonon import SoundVelocity
@@ -15,9 +14,7 @@ from emmet.core.utils import jsanitize
 
 
 class SoundVelocityBuilder(Builder):
-    def __init__(self, materials: Store, sound_vel: Store,
-                 query: dict = None, manager: TaskManager = None,
-                 **kwargs):
+    def __init__(self, materials: Store, sound_vel: Store, query: dict = None, manager: TaskManager = None, **kwargs):
         """
         Creates a collection with the data of the sound velocities extracted from
         the phonon calculations.
@@ -39,9 +36,7 @@ class SoundVelocityBuilder(Builder):
         else:
             self.manager = manager
 
-        super().__init__(sources=[materials],
-                         targets=[sound_vel],
-                         **kwargs)
+        super().__init__(sources=[materials], targets=[sound_vel], **kwargs)
 
     def get_items(self) -> Iterator[Dict]:
         """
@@ -73,12 +68,11 @@ class SoundVelocityBuilder(Builder):
         ddbfs = gridfs.GridFS(self.materials.collection.database, "ddb_fs")
 
         for m in mats:
-            item = self.materials.query_one(properties=projection,
-                                            criteria={self.materials.key: m})
+            item = self.materials.query_one(properties=projection, criteria={self.materials.key: m})
 
             # Read the DDB file and pass as an object. Do not write here since in case of parallel
             # execution each worker will write its own file.
-            item["ddb_str"] = ddbfs.get(item["abinit_output"]["ddb_id"]).read().decode('utf-8')
+            item["ddb_str"] = ddbfs.get(item["abinit_output"]["ddb_id"]).read().decode("utf-8")
 
             yield item
 
@@ -92,7 +86,7 @@ class SoundVelocityBuilder(Builder):
         Returns:
             dict: a dict with phonon data
         """
-        self.logger.debug("Processing sound velocity item for {}".format(item['mp_id']))
+        self.logger.debug("Processing sound velocity item for {}".format(item["mp_id"]))
 
         try:
             sound_vel_data = self.get_sound_vel(item)
@@ -103,7 +97,7 @@ class SoundVelocityBuilder(Builder):
                 directions=sound_vel_data["directions"],
                 labels=sound_vel_data["labels"],
                 sound_velocities=sound_vel_data["sound_velocities"],
-                mode_types=sound_vel_data["mode_types"]
+                mode_types=sound_vel_data["mode_types"],
             )
 
             self.logger.debug("Item generated for {}".format(item["mp_id"]))
@@ -111,7 +105,8 @@ class SoundVelocityBuilder(Builder):
             return jsanitize(sv.dict())
         except Exception:
             self.logger.warning(
-                "Error generating the sound velocity for {}: {}".format(item["mp_id"], traceback.format_exc()))
+                "Error generating the sound velocity for {}: {}".format(item["mp_id"], traceback.format_exc())
+            )
             return None
 
     @staticmethod
@@ -127,8 +122,9 @@ class SoundVelocityBuilder(Builder):
         with tempfile.NamedTemporaryFile(mode="wt", suffix="_DDB", delete=True) as ddb_file:
             ddb_file.write(item["ddb_str"])
             ngqpt = item["abinit_input"]["ngqpt"]
-            sv = AbiSoundVelocity.from_ddb(ddb_file.name, ngqpt=ngqpt, num_points=20,
-                                           qpt_norm=0.1, ignore_neg_freqs=True, directions=None)
+            sv = AbiSoundVelocity.from_ddb(
+                ddb_file.name, ngqpt=ngqpt, num_points=20, qpt_norm=0.1, ignore_neg_freqs=True, directions=None
+            )
 
             ddb = DdbFile.from_string(item["ddb_str"])
             sv_data = dict(
@@ -136,7 +132,7 @@ class SoundVelocityBuilder(Builder):
                 sound_velocities=sv.sound_velocities.tolist(),
                 mode_types=sv.mode_types,
                 labels=sv.labels,
-                structure=ddb.structure
+                structure=ddb.structure,
             )
 
             return sv_data
