@@ -241,10 +241,8 @@ class PhononBuilder(Builder):
             )
 
             return d
-        except Exception:
-            self.logger.warning(
-                "Error generating the phonon properties for {}: {}".format(item["mp_id"], traceback.print_exc())
-            )
+        except Exception as error:
+            self.logger.warning("Error generating the phonon properties for {}: {}".format(item["mp_id"], error))
             return None
 
     def get_phonon_properties(self, item: Dict) -> Dict:
@@ -277,7 +275,7 @@ class PhononBuilder(Builder):
                 phbands = phbst_file.phbands
                 if has_bec:
                     phbands.read_non_anal_from_file(phbst_file.filepath)
-                symm_line_bands = self.get_pmg_bs(phbands, labels_list)
+                symm_line_bands = self.get_pmg_bs(phbands, labels_list)  # type: ignore
 
                 # ananc
                 if has_bec and ananc_file.becs is not None:
@@ -500,7 +498,7 @@ class PhononBuilder(Builder):
 
             if lo_to_splitting:
                 kpath = hs.kpath
-                directions = []
+                directions = []  # type: list
                 for qptbounds in kpath["path"]:
                     for i, qpt in enumerate(qptbounds):
                         if np.array_equal(kpath["kpoints"][qpt], (0, 0, 0)):
@@ -522,7 +520,7 @@ class PhononBuilder(Builder):
                                 directions.append(0)
 
                 if directions:
-                    directions = np.reshape(directions, (-1, 4))
+                    directions = np.reshape(directions, (-1, 4))  # type: ignore
                     inp.set_vars(nph2l=len(directions), qph2l=directions)
 
         # Parameters for dielectric constant

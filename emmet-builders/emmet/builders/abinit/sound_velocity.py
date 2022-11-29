@@ -14,7 +14,14 @@ from emmet.core.utils import jsanitize
 
 
 class SoundVelocityBuilder(Builder):
-    def __init__(self, materials: Store, sound_vel: Store, query: dict = None, manager: TaskManager = None, **kwargs):
+    def __init__(
+        self,
+        materials: Store,
+        sound_vel: Store,
+        query: Optional[dict] = None,
+        manager: Optional[TaskManager] = None,
+        **kwargs
+    ):
         """
         Creates a collection with the data of the sound velocities extracted from
         the phonon calculations.
