@@ -6,40 +6,6 @@ from emmet.core.mpid import MPID
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
 from pymatgen.phonon.dos import PhononDos
 
-
-class PhononBSDOSDoc(BaseModel):
-    """
-    Phonon band structures and density of states data.
-    """
-
-    material_id: MPID = Field(
-        None,
-        description="The Materials Project ID of the material. This comes in the form: mp-******.",
-    )
-
-    ph_bs: PhononBandStructureSymmLine = Field(
-        None,
-        description="Phonon band structure object.",
-    )
-
-    ph_dos: PhononDos = Field(
-        None,
-        description="Phonon density of states object.",
-    )
-
-    last_updated: datetime = Field(
-        None,
-        description="Timestamp for the most recent calculation for this Material document.",
-    )
-
-# Make sure that the datetime field is properly formatted
-@validator("last_updated", pre=True)
-def last_updated_dict_ok(cls, v):
-    return MontyDecoder().process_decoded(v)
-
-
-from datetime import datetime
-from pydantic import BaseModel, Field
 from typing import List, Tuple, Optional
 from emmet.core.utils import DocEnum
 from pymatgen.core import Structure
@@ -47,6 +13,33 @@ from emmet.core.math import Vector3D, Tensor4R
 from emmet.core.polar import DielectricDoc, BornEffectiveCharges, IRDielectric
 from emmet.core.structure import StructureMetadata
 from typing_extensions import Literal
+
+
+class PhononBSDOSDoc(BaseModel):
+    """
+    Phonon band structures and density of states data.
+    """
+
+    material_id: MPID = Field(
+        None, description="The Materials Project ID of the material. This comes in the form: mp-******.",
+    )
+
+    ph_bs: PhononBandStructureSymmLine = Field(
+        None, description="Phonon band structure object.",
+    )
+
+    ph_dos: PhononDos = Field(
+        None, description="Phonon density of states object.",
+    )
+
+    last_updated: datetime = Field(
+        None, description="Timestamp for the most recent calculation for this Material document.",
+    )
+
+    # Make sure that the datetime field is properly formatted
+    @validator("last_updated", pre=True)
+    def last_updated_dict_ok(cls, v):
+        return MontyDecoder().process_decoded(v)
 
 
 class PhononWarnings(DocEnum):
