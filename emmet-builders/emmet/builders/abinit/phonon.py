@@ -2,7 +2,6 @@ import tempfile
 import os
 from emmet.builders.settings import EmmetBuildSettings
 import numpy as np
-import traceback
 from typing import Optional, Dict, List, Iterator, Tuple
 
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
