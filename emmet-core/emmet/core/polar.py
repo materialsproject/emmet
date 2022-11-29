@@ -1,7 +1,6 @@
 """ Core definition for Polar property Document """
 from typing import List
 from emmet.core.mpid import MPID
-from emmet.core.structure import StructureMetadata
 
 import numpy as np
 from pydantic import BaseModel, Field

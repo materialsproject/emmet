@@ -351,4 +351,3 @@ class ThermalDisplacement(BaseModel):
     ucif_string_t300k: str = Field(
         ..., description="Mean squared displacement U tensors at T=300K in CIF string format."
     )
-
