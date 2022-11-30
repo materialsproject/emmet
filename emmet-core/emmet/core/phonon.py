@@ -4,7 +4,7 @@ from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
 from emmet.core.mpid import MPID
 from pymatgen.phonon.bandstructure import PhononBandStructureSymmLine
-from pymatgen.phonon.dos import PhononDos
+from pymatgen.phonon.dos import PhononDos as PhononDosObject
 
 from typing import List, Tuple, Optional
 from emmet.core.utils import DocEnum
@@ -28,7 +28,7 @@ class PhononBSDOSDoc(BaseModel):
         None, description="Phonon band structure object.",
     )
 
-    ph_dos: PhononDos = Field(
+    ph_dos: PhononDosObject = Field(
         None, description="Phonon density of states object.",
     )
 
