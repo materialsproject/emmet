@@ -15,11 +15,11 @@ attrs==22.1.0
     #   jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.21
+boto3==1.26.22
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.29.21
+botocore==1.29.22
     # via
     #   boto3
     #   s3transfer
@@ -156,7 +156,7 @@ numpy==1.21.6
     #   scipy
     #   seekpath
     #   spglib
-orjson==3.8.2
+orjson==3.8.3
     # via maggma
 packaging==21.3
     # via
