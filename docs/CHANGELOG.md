@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.38.7](https://github.com/materialsproject/emmet/tree/v0.38.7) (2022-11-01)
+
+[Full Changelog](https://github.com/materialsproject/emmet/compare/v0.38.6...v0.38.7)
+
+**Merged pull requests:**
+
+- Automated dependency upgrades [\#583](https://github.com/materialsproject/emmet/pull/583) ([tschaume](https://github.com/tschaume))
+- Fix BS and DOS processing with missing fs\_id [\#575](https://github.com/materialsproject/emmet/pull/575) ([munrojm](https://github.com/munrojm))
+
 ## [v0.38.6](https://github.com/materialsproject/emmet/tree/v0.38.6) (2022-10-25)
 
 [Full Changelog](https://github.com/materialsproject/emmet/compare/v0.38.5...v0.38.6)

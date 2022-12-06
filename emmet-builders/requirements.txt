@@ -1,3 +1,0 @@
-maggma>=0.47.3
-emmet-core>=0.37.0
-matminer==0.7.8

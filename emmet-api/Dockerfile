@@ -1,17 +1,18 @@
-FROM materialsproject/devops:python-3.913.13 as base
+FROM materialsproject/devops:python-3.915.1 as base
 
 FROM base as builder
 RUN apt-get update && apt-get install -y --no-install-recommends gcc git g++ cmake make libsnappy-dev wget && apt-get clean
 ENV PATH /root/.local/bin:$PATH
 WORKDIR /emmet-api
 ENV PIP_FLAGS "--user --no-cache-dir --compile"
-COPY requirements.txt ./
-RUN pip install $PIP_FLAGS -r requirements.txt && pip install $PIP_FLAGS setuptools-scm
+COPY requirements/deployment.txt ./requirements.txt
+RUN pip install $PIP_FLAGS --upgrade pip pip-tools setuptools-scm && \
+    pip-sync requirements.txt --pip-args "$PIP_FLAGS"
 
 COPY emmet emmet
-COPY emmet/api/_version.py emmet/api/_version.py
 COPY setup.py .
-RUN pip install $PIP_FLAGS -e .[server]
+ARG API_VERSION
+RUN SETUPTOOLS_SCM_PRETEND_VERSION=${API_VERSION} pip install $PIP_FLAGS --no-deps .
 RUN wget -q https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \
     chmod +x wait-for-it.sh && mv wait-for-it.sh /root/.local/bin/
 

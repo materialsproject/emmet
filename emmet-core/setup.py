@@ -1,21 +1,10 @@
 # -*- coding: utf-8 -*-
 from setuptools import find_namespace_packages, setup
-from emmet.core._version import __version__ as fallback_version
-
-if "+" in fallback_version:
-    fallback_version = fallback_version.split("+")[0]
 
 
 setup(
     name="emmet-core",
-    use_scm_version={
-        "root": ".",
-        "relative_to": __file__,
-        "write_to": "emmet/core/_version.py",
-        "write_to_template": '__version__ = "{version}"',
-        "fallback_version": fallback_version,
-        "search_parent_directories": True,
-    },
+    use_scm_version={"root": "..", "relative_to": __file__},
     setup_requires=["setuptools_scm>=6,<8"],
     description="Core Emmet Library",
     author="The Materials Project",
@@ -27,13 +16,45 @@ setup(
     install_requires=[
         "pymatgen>=2021.3,<2023.0",
         "monty>=2021.3,<2023.0",
-        "pydantic==1.10.2",
+        "pydantic>=1.10.2",
         "pybtex~=0.24",
         "typing-extensions>=3.7,<5.0",
-        "spglib==2.0.1",
+        "spglib>=2.0.1",
     ],
     extras_require={
-        "all": ["robocrys>=0.2.7", "pymatgen-analysis-diffusion>=2022.1.15", "pymatgen-analysis-alloys>=0.0.3"],
+        "all": [
+            "seekpath>=2.0.1",
+            "robocrys>=0.2.7",
+            "pymatgen-analysis-diffusion>=2022.1.15",
+            "pymatgen-analysis-alloys>=0.0.3",
+        ],
+        "test": [
+            "pre-commit",
+            "pytest",
+            "pytest-cov",
+            "pycodestyle",
+            "pydocstyle",
+            "flake8",
+            "mypy",
+            "mypy-extensions",
+            "types-setuptools",
+            "types-requests",
+            "maggma",
+            "wincertstore",
+            "openbabel"
+        ],
+        "docs": [
+            "mkdocs",
+            "mkdocs-material<8.3",
+            "mkdocs-material-extensions",
+            "mkdocs-minify-plugin",
+            "mkdocstrings",
+            "mkdocs-awesome-pages-plugin",
+            "mkdocs-markdownextradata-plugin",
+            "mkdocstrings[python]",
+            "livereload",
+            "jinja2",
+        ],
     },
     python_requires=">=3.8",
     license="modified BSD",
