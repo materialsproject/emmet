@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=emmet/emmet-core/requirements/deployment.txt emmet/emmet-core/setup.py python/requirements.txt
 #
-certifi==2022.9.24
+certifi==2022.12.7
     # via requests
 charset-normalizer==2.1.1
     # via requests
