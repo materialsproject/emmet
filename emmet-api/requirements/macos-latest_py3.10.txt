@@ -15,11 +15,11 @@ attrs==22.1.0
     #   jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.25
+boto3==1.26.26
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.25
+botocore==1.29.26
     # via
     #   boto3
     #   s3transfer
@@ -126,7 +126,7 @@ monty==2022.9.9
     #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.30.1
+mp-api==0.30.2
     # via pymatgen
 mpmath==1.2.1
     # via sympy
@@ -170,7 +170,7 @@ pillow==9.3.0
     # via matplotlib
 plotly==5.11.0
     # via pymatgen
-protobuf==4.21.10
+protobuf==4.21.11
     # via
     #   ddsketch
     #   ddtrace
@@ -242,7 +242,7 @@ ruamel-yaml-clib==0.2.7
     # via ruamel-yaml
 s3transfer==0.6.0
     # via boto3
-scikit-learn==1.1.3
+scikit-learn==1.2.0
     # via matminer
 scipy==1.9.3
     # via
