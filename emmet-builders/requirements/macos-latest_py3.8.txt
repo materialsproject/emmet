@@ -12,9 +12,9 @@ attrs==22.1.0
     # via jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.27
+boto3==1.26.28
     # via maggma
-botocore==1.29.27
+botocore==1.29.28
     # via
     #   boto3
     #   s3transfer
@@ -106,7 +106,7 @@ monty==2022.9.9
     #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.30.3
+mp-api==0.30.4
     # via pymatgen
 mpmath==1.2.1
     # via sympy
@@ -130,6 +130,7 @@ numpy==1.23.5
     #   scikit-learn
     #   scipy
     #   seekpath
+    #   shapely
     #   spglib
 orjson==3.8.3
     # via maggma
@@ -230,7 +231,7 @@ seekpath==2.0.1
     # via emmet-core
 sentinels==1.0.0
     # via mongomock
-shapely==1.8.5.post1
+shapely==2.0.0
     # via pymatgen-analysis-alloys
 six==1.16.0
     # via
