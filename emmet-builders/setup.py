@@ -9,7 +9,7 @@ setup(
     author_email="feedback@materialsproject.org",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
-    install_requires=["emmet-core[all]", "maggma>=0.49.9", "matminer>=0.7.3"],
+    install_requires=["emmet-core[all]", "maggma>=0.49.10", "matminer>=0.7.3"],
     extras_require={
         "test": [
             "pre-commit",
@@ -23,7 +23,7 @@ setup(
             "types-setuptools",
             "types-requests",
             "wincertstore",
-            "openbabel"
+            "openbabel",
         ],
         "docs": [
             "mkdocs",
@@ -36,7 +36,7 @@ setup(
             "mkdocstrings[python]",
             "livereload",
             "jinja2",
-        ]
+        ],
     },
     python_requires=">=3.8",
     license="modified BSD",
