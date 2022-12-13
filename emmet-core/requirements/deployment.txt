@@ -34,7 +34,7 @@ monty==2022.9.9
     #   emmet-core (emmet/emmet-core/setup.py)
     #   mp-api
     #   pymatgen
-mp-api==0.30.3
+mp-api==0.30.4
     # via pymatgen
 mpmath==1.2.1
     # via sympy
