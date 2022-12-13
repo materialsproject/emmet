@@ -96,10 +96,10 @@ def task_type(
         calc_type.append("NMR Electric Field Gradient")
 
     elif incar.get("NSW", 1) == 0:
-        if incar.get("LOPTICS", False) == True and incar.get("ALGO", None) == "Exact":
-            calc_type.append('Optic')
+        if incar.get("LOPTICS", False) is True and incar.get("ALGO", None) == "Exact":
+            calc_type.append("Optic")
         elif incar.get("ALGO", None) == "CHI":
-            calc_type.append('Optic')
+            calc_type.append("Optic")
         else:
             calc_type.append("Static")
 
@@ -109,7 +109,7 @@ def task_type(
     elif incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
         calc_type.append("Deformation")
 
-    elif incar.get("LOPTICS", False) == True or incar.get("ALGO", None) == "CHI":
+    elif incar.get("LOPTICS", False) is True or incar.get("ALGO", None) == "CHI":
         calc_type.append("Optic")
 
     if len(calc_type) == 0:
