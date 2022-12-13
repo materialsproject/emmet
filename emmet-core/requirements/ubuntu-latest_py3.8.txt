@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements/ubuntu-latest_py3.8.txt
 #
-certifi==2022.9.24
+certifi==2022.12.7
     # via requests
 charset-normalizer==2.1.1
     # via requests
@@ -12,7 +12,7 @@ contourpy==1.0.6
     # via matplotlib
 cycler==0.11.0
     # via matplotlib
-emmet-core==0.39.0
+emmet-core==0.39.1
     # via mp-api
 fonttools==4.38.0
     # via matplotlib
@@ -32,7 +32,7 @@ monty==2022.9.9
     #   emmet-core (setup.py)
     #   mp-api
     #   pymatgen
-mp-api==0.29.8
+mp-api==0.30.4
     # via pymatgen
 mpmath==1.2.1
     # via sympy
@@ -48,7 +48,7 @@ numpy==1.23.5
     #   pymatgen
     #   scipy
     #   spglib
-packaging==21.3
+packaging==22.0
     # via matplotlib
 palettable==3.3.0
     # via pymatgen
@@ -73,9 +73,7 @@ pymatgen==2022.11.7
     #   emmet-core (setup.py)
     #   mp-api
 pyparsing==3.0.9
-    # via
-    #   matplotlib
-    #   packaging
+    # via matplotlib
 python-dateutil==2.8.2
     # via
     #   matplotlib
