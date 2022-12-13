@@ -42,10 +42,10 @@ def run_type(parameters: Dict) -> RunType:
     for functional_class in ["HF", "VDW", "METAGGA", "GGA"]:
         for special_type, params in _RUN_TYPE_DATA[functional_class].items():
             if all(
-                    [
-                        _variant_equal(parameters.get(param, None), value)
-                        for param, value in params.items()
-                    ]
+                [
+                    _variant_equal(parameters.get(param, None), value)
+                    for param, value in params.items()
+                ]
             ):
                 return RunType(f"{special_type}{is_hubbard}")
 
@@ -53,7 +53,7 @@ def run_type(parameters: Dict) -> RunType:
 
 
 def task_type(
-        inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict]
+    inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict]
 ) -> TaskType:
     """
     Determines the task type
@@ -119,8 +119,8 @@ def task_type(
 
 
 def calc_type(
-        inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict],
-        parameters: Dict,
+    inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict],
+    parameters: Dict,
 ) -> CalcType:
     """
     Determines the calc type
