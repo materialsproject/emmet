@@ -42,10 +42,10 @@ def run_type(parameters: Dict) -> RunType:
     for functional_class in ["HF", "VDW", "METAGGA", "GGA"]:
         for special_type, params in _RUN_TYPE_DATA[functional_class].items():
             if all(
-                [
-                    _variant_equal(parameters.get(param, None), value)
-                    for param, value in params.items()
-                ]
+                    [
+                        _variant_equal(parameters.get(param, None), value)
+                        for param, value in params.items()
+                    ]
             ):
                 return RunType(f"{special_type}{is_hubbard}")
 
@@ -53,7 +53,7 @@ def run_type(parameters: Dict) -> RunType:
 
 
 def task_type(
-    inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict]
+        inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict]
 ) -> TaskType:
     """
     Determines the task type
@@ -96,7 +96,12 @@ def task_type(
         calc_type.append("NMR Electric Field Gradient")
 
     elif incar.get("NSW", 1) == 0:
-        calc_type.append("Static")
+        if incar.get("LOPTICS", False) == True and incar.get("ALGO", None) == "Exact":
+            calc_type.append('Optic')
+        elif incar.get("ALGO", None) == "CHI":
+            calc_type.append('Optic')
+        else:
+            calc_type.append("Static")
 
     elif incar.get("ISIF", 2) == 3 and incar.get("IBRION", 0) > 0:
         calc_type.append("Structure Optimization")
@@ -104,7 +109,7 @@ def task_type(
     elif incar.get("ISIF", 3) == 2 and incar.get("IBRION", 0) > 0:
         calc_type.append("Deformation")
 
-    elif incar.get("LOPTICS", False) or incar.get("ALGO", None) == "CHI":
+    elif incar.get("LOPTICS", False) == True or incar.get("ALGO", None) == "CHI":
         calc_type.append("Optic")
 
     if len(calc_type) == 0:
@@ -114,8 +119,8 @@ def task_type(
 
 
 def calc_type(
-    inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict],
-    parameters: Dict,
+        inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict],
+        parameters: Dict,
 ) -> CalcType:
     """
     Determines the calc type

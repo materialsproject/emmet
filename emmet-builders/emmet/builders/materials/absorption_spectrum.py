@@ -101,7 +101,7 @@ class AbsorptionBuilder(Builder):
 
     def update_targets(self, items):
         """
-        Inserts the new dielectric docs into the dielectric collection
+        Inserts the new absorption docs into the absorption collection
         """
         docs = list(filter(None, items))
 
@@ -119,6 +119,7 @@ class AbsorptionBuilder(Builder):
         )
 
         task_types = mat_doc["task_types"].items()
+        print(task_types)
 
         potential_task_ids = []
 
