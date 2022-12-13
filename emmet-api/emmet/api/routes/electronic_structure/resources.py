@@ -89,6 +89,7 @@ def bs_obj_resource(s3_store):
         enable_get_by_key=False,
         enable_default_search=True,
         sub_path="/bandstructure/object/",
+        query_disk_use=False,
         disable_validation=True,
     )
     return resource
@@ -132,6 +133,7 @@ def dos_obj_resource(s3_store):
         enable_get_by_key=False,
         enable_default_search=True,
         sub_path="/dos/object/",
+        query_disk_use=False,
         disable_validation=True,
     )
     return resource
