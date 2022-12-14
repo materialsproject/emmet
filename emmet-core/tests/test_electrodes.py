@@ -1,4 +1,3 @@
-from pymatgen.core.periodic_table import Element
 import pytest
 from monty.serialization import loadfn
 from pymatgen.apps.battery.conversion_battery import ConversionElectrode

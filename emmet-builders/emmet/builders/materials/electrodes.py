@@ -14,7 +14,7 @@ from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 from pymatgen.analysis.phase_diagram import PhaseDiagram, Composition
 
 from emmet.core.electrode import InsertionElectrodeDoc, ConversionElectrodeDoc
-from emmet.core.structure_group import StructureGroupDoc
+from emmet.core.structure_group import StructureGroupDoc, _get_id_num
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
@@ -456,7 +456,7 @@ class ConversionElectrodeBuilder(Builder):
         """
         - For each phase diagram doc, find all the possible conversion electrodes and create conversion electrode docs
         """
-        # To work around "el_refs" serialization issue
+        # To work around "el_refs" serialization issue (#576)
         _pd = PhaseDiagram.from_dict(item["phase_diagram"])
         _entries = _pd.all_entries
         pd = PhaseDiagram(entries=_entries)
@@ -474,23 +474,31 @@ class ConversionElectrodeBuilder(Builder):
             n_wi = entry.composition.get_el_amt_dict()[self.working_ion]
             most_wi[red_form] = max(most_wi[red_form], (n_wi / num_form, entry.composition))
 
+        new_docs = []
         for k, v in most_wi.items():
             if v[1] is not None:
+                # Get lowest material_id with matching composition
+                material_ids = [(lambda x: x.data["material_id"] if x.composition.reduced_formula == v[
+                    1].reduced_formula else None)(e) for e in pd.entries]
+                material_ids = list(filter(None, material_ids))
+                lowest_id = min(material_ids, key=_get_id_num)
                 conversion_electrode_doc = ConversionElectrodeDoc.from_composition_and_pd(
                     comp=v[1],
                     pd=pd,
                     working_ion_symbol=self.working_ion,
-                    battery_id=f'{item["phase_diagram_id"]}_{v[1].reduced_formula}',
+                    battery_id=f"{lowest_id}_{self.working_ion}",
                 )
-                # return jsanitize(conversion_electrode_doc.dict())
-            else:
-                conversion_electrode_doc = None  # type: ignore
-        return jsanitize(conversion_electrode_doc.dict())
+                new_docs.append(jsanitize(conversion_electrode_doc.dict()))
+        return new_docs  # type: ignore
 
     def update_targets(self, items: List):
-        items = list(filter(None, items))
-        if len(items) > 0:
-            self.logger.info("Updating {} conversion battery documents".format(len(items)))
-            self.conversion_electrode_store.update(docs=items, key=["battery_id"])
+        combined_items = []
+        for _items in items:
+            _items = list(filter(None, _items))
+            combined_items.extend(_items)
+
+        if len(combined_items) > 0:
+            self.logger.info("Updating {} conversion battery documents".format(len(combined_items)))
+            self.conversion_electrode_store.update(docs=combined_items, key=["battery_id"])
         else:
             self.logger.info("No items to update")

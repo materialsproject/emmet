@@ -437,7 +437,8 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
     Conversion electrode
     """
     battery_id: str = Field(
-        None, description="The id for this battery document."
+        None, description="The id for this battery document is the numerically smallest material_id followed by "
+                          "the working ion."
     )
 
     working_ion: Element = Field(
