@@ -15,11 +15,11 @@ attrs==22.1.0
     #   jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.28
+boto3==1.26.30
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.28
+botocore==1.29.30
     # via
     #   boto3
     #   s3transfer
@@ -54,7 +54,7 @@ dnspython==2.2.1
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.39.1
+emmet-core[all]==0.39.6
     # via
     #   emmet-api (setup.py)
     #   mp-api
@@ -171,7 +171,7 @@ pillow==9.3.0
     # via matplotlib
 plotly==5.11.0
     # via pymatgen
-protobuf==4.21.11
+protobuf==4.21.12
     # via
     #   ddsketch
     #   ddtrace
