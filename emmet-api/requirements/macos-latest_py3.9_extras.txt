@@ -211,7 +211,7 @@ monty==2022.9.9
     #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.30.4
+mp-api==0.30.5
     # via pymatgen
 mpmath==1.2.1
     # via sympy
