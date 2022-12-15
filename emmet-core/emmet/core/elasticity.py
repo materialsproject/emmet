@@ -261,11 +261,18 @@ class ElasticityDoc(PropertyDoc):
             d_pk_stresses,
         ) = generate_derived_fitting_data(structure, p_strains, p_stresses)
 
+        fitting_strains = p_strains + d_strains
+        fitting_stresses = p_stresses + d_stresses
+
+        fitting_stresses = symmetrize_stresses(
+            fitting_stresses, fitting_strains, structure
+        )
+
         # fitting elastic tensor
         try:
             elastic_tensor = fit_elastic_tensor(
-                p_strains + d_strains,
-                p_pk_stresses + d_pk_stresses,
+                fitting_strains,
+                fitting_stresses,
                 eq_stress=equilibrium_stress,
                 fitting_method=fitting_method,
             )
@@ -485,6 +492,46 @@ def generate_derived_fitting_data(
         derived_pk_stresses.append(d_stress.piola_kirchoff_2(deform))
 
     return derived_deforms, derived_strains, derived_stresses, derived_pk_stresses
+
+
+def symmetrize_stresses(
+    stresses: List[Stress],
+    strains: List[Strain],
+    structure: Structure,
+    symprec=SETTINGS.SYMPREC,
+    tol: float = 0.002,
+) -> List[Stress]:
+    """
+    Symmetrize stresses by averaging over all symmetry operations.
+
+    Args:
+        stresses: stresses to be symmetrized
+        strains: strains corresponding to the stresses
+        structure: materials structure
+        symprec: symmetry operation precision
+        tol: tolerance for comparing strains and also for determining whether the
+            deformation corresponds to the train is independent. The elastic workflow
+            use a minimum strain of 0.005, so the default tolerance of 0.002 should be
+            able to distinguish different strain states.
+
+    Returns: symmetrized stresses
+    """
+    sga = SpacegroupAnalyzer(structure, symprec=symprec)
+    symmops = sga.get_symmetry_operations(cartesian=True)
+
+    # for each strain, get the stresses from other strain states related by symmetry
+    symmmetrized_stresses = []  # type: List[Stress]
+    for strain, stress in zip(strains, stresses):
+        mapping = TensorMapping([strain], [[]], tol=tol)
+        for strain2, stress2 in zip(strains, stresses):
+
+            for op in symmops:
+                if strain2.transform(op) in mapping:
+                    mapping[strain].append(stress2.transform(op))
+        sym_stress = np.average(mapping[strain], axis=0)
+        symmmetrized_stresses.append(Stress(sym_stress))
+
+    return symmmetrized_stresses
 
 
 def fit_elastic_tensor(
