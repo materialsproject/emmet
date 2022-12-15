@@ -80,7 +80,7 @@ kiwisolver==1.4.4
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-maggma==0.49.10
+maggma==0.49.11
     # via emmet-builders (setup.py)
 markupsafe==2.1.1
     # via
