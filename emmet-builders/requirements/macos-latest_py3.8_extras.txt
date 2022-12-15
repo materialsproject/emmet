@@ -14,9 +14,9 @@ attrs==22.1.0
     #   pytest
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.30
+boto3==1.26.31
     # via maggma
-botocore==1.29.30
+botocore==1.29.31
     # via
     #   boto3
     #   s3transfer
@@ -81,7 +81,7 @@ griffe==0.25.0
     # via mkdocstrings-python
 htmlmin==0.1.12
     # via mkdocs-minify-plugin
-identify==2.5.9
+identify==2.5.10
     # via pre-commit
 idna==3.4
     # via

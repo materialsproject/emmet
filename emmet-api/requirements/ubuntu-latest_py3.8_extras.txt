@@ -16,11 +16,11 @@ attrs==22.1.0
     #   pytest
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.30
+boto3==1.26.31
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.30
+botocore==1.29.31
     # via
     #   boto3
     #   s3transfer
@@ -104,7 +104,7 @@ h11==0.14.0
     # via uvicorn-tschaume
 htmlmin==0.1.12
     # via mkdocs-minify-plugin
-identify==2.5.9
+identify==2.5.10
     # via pre-commit
 idna==3.4
     # via
