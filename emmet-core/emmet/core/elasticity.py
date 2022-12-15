@@ -246,7 +246,7 @@ class ElasticityDoc(PropertyDoc):
         p_stresses = stresses
         (
             p_strains,
-            p_pk_stresses,
+            p_2nd_pk_stresses,
             p_task_ids,
             p_dir_names,
         ) = generate_primary_fitting_data(
@@ -258,12 +258,13 @@ class ElasticityDoc(PropertyDoc):
             d_deforms,
             d_strains,
             d_stresses,
-            d_pk_stresses,
+            d_2nd_pk_stresses,
         ) = generate_derived_fitting_data(structure, p_strains, p_stresses)
 
         fitting_strains = p_strains + d_strains
-        fitting_stresses = p_stresses + d_stresses
+        fitting_stresses = p_2nd_pk_stresses + d_2nd_pk_stresses
 
+        # avoid symmop-related strains having non-symmop-related stresses
         fitting_stresses = symmetrize_stresses(
             fitting_stresses, fitting_strains, structure
         )
@@ -331,7 +332,7 @@ class ElasticityDoc(PropertyDoc):
             deformations=[x.tolist() for x in p_deforms],  # type: ignore
             strains=[x.tolist() for x in p_strains],  # type: ignore
             cauchy_stresses=[x.tolist() for x in p_stresses],  # type: ignore
-            second_pk_stresses=[x.tolist() for x in p_pk_stresses],  # type: ignore
+            second_pk_stresses=[x.tolist() for x in p_2nd_pk_stresses],  # type: ignore
             deformation_tasks=p_task_ids,
             deformation_dir_names=p_dir_names,
             equilibrium_cauchy_stress=eq_stress,
@@ -428,7 +429,7 @@ def generate_derived_fitting_data(
         derived_deforms: derived deformations
         derived_strains: derived strains
         derived_stresses: derived Cauchy stresses
-        derived_pk_stresses: derived second Piola-Kirchhoff stresses
+        derived_2nd_pk_stresses: derived second Piola-Kirchhoff stresses
     """
 
     sga = SpacegroupAnalyzer(structure, symprec=symprec)
@@ -475,7 +476,7 @@ def generate_derived_fitting_data(
     derived_strains = []
     derived_stresses = []
     derived_deforms = []
-    derived_pk_stresses = []
+    derived_2nd_pk_stresses = []
 
     for d_strain, op_set in mapping.items():
         symmops, p_indices = zip(*op_set)
@@ -489,9 +490,9 @@ def generate_derived_fitting_data(
 
         deform = d_strain.get_deformation_matrix()
         derived_deforms.append(deform)
-        derived_pk_stresses.append(d_stress.piola_kirchoff_2(deform))
+        derived_2nd_pk_stresses.append(d_stress.piola_kirchoff_2(deform))
 
-    return derived_deforms, derived_strains, derived_stresses, derived_pk_stresses
+    return derived_deforms, derived_strains, derived_stresses, derived_2nd_pk_stresses
 
 
 def symmetrize_stresses(
