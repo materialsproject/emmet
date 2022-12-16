@@ -2,16 +2,19 @@
 Builder to generate elasticity docs.
 
 The build proceeds in the below steps:
-1. Use materials builder to group tasks according the formula, space group,
+1. Use materials builder to group tasks according the formula, space group, and
    structure matching
-2. Filter opt and deform tasks using calc type
+2. Filter opt and deform tasks by calc type
 3. Filter opt and deform tasks to match prescribed INCAR params
-4. Group opt and deform tasks by parent lattice, i.e. lattice before deformation
-5. For each group, select the one with the latest completed time (all tasks in a
-   group are regarded as the same after going through all the filters)
-6. For all opt-deform tasks groups with the same parent lattice, select the group with
-   the most number of deformation tasks as the final data fot fitting the elastic tensor
-7. Fit the elastic tensor
+4. Group opt tasks by optimized lattice, and, for each group, select the latest task
+   (the one with the newest completing time). This result in a {lat, opt_task} dict.
+5. Group deform tasks by parent lattice (i.e. lattice before a deformation gradient is
+   applied). For each lattice group, then group the tasks by deformation gradient,
+   and select the latest task for each deformation gradient. This result in a {lat,
+   [deform_task]} dict, where [deform_task] are tasks with unique deformation gradients.
+6. Associate opt and deform tasks by matching parent lattice. Then select the one with
+   the most deformation tasks as the final data fot fitting the elastic tensor.
+7. Fit the elastic tensor.
 """
 
 from datetime import datetime
@@ -170,7 +173,7 @@ class ElasticityBuilder(Builder):
         # tasks with the same deformation
         deform_grouped = group_by_parent_lattice(deform_tasks, mode="deform")
         deform_grouped = [
-            (lattice, filter_deform_tasks_by_time(tasks))
+            (lattice, filter_deform_tasks_by_time(tasks, logger=self.logger))
             for lattice, tasks in deform_grouped
         ]
 
@@ -313,33 +316,17 @@ def filter_opt_tasks_by_time(tasks: List[Dict], logger) -> Dict:
     Filter a set of tasks to select the latest completed one.
 
     Args:
-        tasks: the set of tasks to filer
+        tasks: the set of tasks to filter
         logger:
 
     Returns:
         selected latest task
     """
-    if len(tasks) == 0:
-        raise RuntimeError("Cannot select latest from 0 tasks")
-    elif len(tasks) == 1:
-        return tasks[0]
-    else:
-        completed = [(datetime.fromisoformat(t["completed_at"]), t) for t in tasks]
-        sorted_by_completed = sorted(completed, key=lambda pair: pair[0])
-        latest_pair = sorted_by_completed[-1]
-        selected = latest_pair[1]
-
-        task_ids = [t["task_id"] for t in tasks]
-        logger.warning(
-            f"Select the latest optimization task {selected['task_id']} completed at "
-            f"{selected['completed_at']} from a set of tasks: {task_ids}."
-        )
-
-        return selected
+    return _filter_tasks_by_time(tasks, "optimization", logger)
 
 
 def filter_deform_tasks_by_time(
-    tasks: List[Dict], deform_comp_tol: float = 1e-5
+    tasks: List[Dict], deform_comp_tol: float = 1e-5, logger=None
 ) -> List[Dict]:
     """
     For deformation tasks with the same deformation, select the latest completed one.
@@ -354,20 +341,45 @@ def filter_deform_tasks_by_time(
 
     mapping = TensorMapping(tol=deform_comp_tol)
 
+    # group tasks by deformation
     for doc in tasks:
 
         # assume only one deformation, should be checked in `filter_deform_tasks()`
         deform = doc["transmuter"]["transformation_params"][0]["deformation"]
 
         if deform in mapping:
-            current = datetime.fromisoformat(doc["completed_at"])
-            exist = datetime.fromisoformat(mapping[deform]["completed_at"])
-            if current > exist:
-                mapping[deform] = doc
+            mapping[deform].append(doc)
         else:
-            mapping[deform] = doc
+            mapping[deform] = [doc]
 
-    selected = list(mapping.values())
+    # select the latest task for each deformation
+    selected = []
+    for docs in mapping.values():
+        t = _filter_tasks_by_time(docs, "deformation", logger)
+        selected.append(t)
+
+    return selected
+
+
+def _filter_tasks_by_time(tasks: List[Dict], mode: str, logger) -> Dict:
+    """
+    Helper function to filter a set of tasks to select the latest completed one.
+    """
+    if len(tasks) == 0:
+        raise RuntimeError(f"Cannot filter {mode} task from 0 input tasks")
+    elif len(tasks) == 1:
+        return tasks[0]
+
+    completed = [(datetime.fromisoformat(t["completed_at"]), t) for t in tasks]
+    sorted_by_completed = sorted(completed, key=lambda pair: pair[0])
+    latest_pair = sorted_by_completed[-1]
+    selected = latest_pair[1]
+
+    task_ids = [t["task_id"] for t in tasks]
+    logger.info(
+        f"Found multiple {mode} tasks {task_ids}; selected the latest task "
+        f"{selected['task_id']} that is completed at {selected['completed_at']}."
+    )
 
     return selected
 
