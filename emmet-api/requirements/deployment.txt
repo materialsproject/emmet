@@ -15,11 +15,11 @@ attrs==22.1.0
     #   jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.31
+boto3==1.26.32
     # via
     #   emmet-api (emmet/emmet-api/setup.py)
     #   maggma
-botocore==1.29.31
+botocore==1.29.32
     # via
     #   boto3
     #   s3transfer
@@ -82,7 +82,7 @@ idna==3.4
     # via
     #   anyio
     #   requests
-importlib-metadata==5.1.0
+importlib-metadata==5.2.0
     # via flask
 inflect==6.0.2
     # via robocrys
@@ -227,7 +227,7 @@ python-dateutil==2.8.2
     #   maggma
     #   matplotlib
     #   pandas
-pytz==2022.6
+pytz==2022.7
     # via pandas
 pyyaml==6.0
     # via pybtex
