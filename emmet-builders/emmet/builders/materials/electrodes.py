@@ -418,12 +418,14 @@ class ConversionElectrodeBuilder(Builder):
             phase_diagram_store: MongoStore,
             conversion_electrode_store: MongoStore,
             working_ion: str,
+            thermo_type: str,
             query: Optional[dict] = None,
             **kwargs,
     ):
         self.phase_diagram_store = phase_diagram_store
         self.conversion_electrode_store = conversion_electrode_store
         self.working_ion = working_ion
+        self.thermo_type = thermo_type
         self.query = query if query else {}
         self.kwargs = kwargs
 
@@ -446,15 +448,16 @@ class ConversionElectrodeBuilder(Builder):
 
     def get_items(self):
         """
-        Get items
+        Get items. The phase diagrams are prefiltered by "thermo_type" or the functional.
         """
         q = dict(self.query)
+        q.update({"thermo_type": self.thermo_type})
         for phase_diagram_doc in self.phase_diagram_store.query(q):
             yield phase_diagram_doc
 
     def process_item(self, item) -> Dict:
         """
-        - For each phase diagram doc, find all the possible conversion electrodes and create conversion electrode docs
+        - For each phase diagram doc, find all possible conversion electrodes and create conversion electrode docs
         """
         # To work around "el_refs" serialization issue (#576)
         _pd = PhaseDiagram.from_dict(item["phase_diagram"])
@@ -487,6 +490,7 @@ class ConversionElectrodeBuilder(Builder):
                     pd=pd,
                     working_ion_symbol=self.working_ion,
                     battery_id=f"{lowest_id}_{self.working_ion}",
+                    thermo_type=self.thermo_type
                 )
                 new_docs.append(jsanitize(conversion_electrode_doc.dict()))
         return new_docs  # type: ignore

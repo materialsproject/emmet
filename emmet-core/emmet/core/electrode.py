@@ -441,6 +441,10 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
                           "the working ion."
     )
 
+    thermo_type: str = Field(
+        None, description="The functional type used to create the phase diagram relevant to this conversion electrode."
+    )
+
     working_ion: Element = Field(
         None, description="The working ion as an Element object."
     )
@@ -478,6 +482,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
             entries: List[ComputedEntry],
             working_ion_symbol: str,
             battery_id: str,
+            thermo_type: str,
     ):
         ce = ConversionElectrode.from_composition_and_entries(
             comp=composition,
@@ -488,7 +493,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
         d["num_steps"] = d.pop("nsteps", None)
         d["electrode_object"] = ce.as_dict()
         d["last_updated"] = datetime.utcnow()
-        return cls(battery_id=battery_id, framework=Composition(d["framework_formula"]), **d)
+        return cls(battery_id=battery_id, thermo_type=thermo_type, framework=Composition(d["framework_formula"]), **d)
 
     @classmethod
     def from_composition_and_pd(
@@ -497,6 +502,7 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
             pd: PhaseDiagram,
             working_ion_symbol: str,
             battery_id: str,
+            thermo_type: str
     ):
         ce = ConversionElectrode.from_composition_and_pd(
             comp=comp,
@@ -507,4 +513,4 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
         d["num_steps"] = d.pop("nsteps", None)
         d["electrode_object"] = ce.as_dict()
         d["last_updated"] = datetime.utcnow()
-        return cls(battery_id=battery_id, framework=Composition(d["framework_formula"]), **d)
+        return cls(battery_id=battery_id, thermo_type=thermo_type, framework=Composition(d["framework_formula"]), **d)
