@@ -31,6 +31,7 @@ def phase_diagram_resource(phase_diagram_store):
         disable_validation=True,
         enable_default_search=False,
         header_processor=GlobalHeaderProcessor(),
+        query_disk_use=False,
     )
 
     return resource
