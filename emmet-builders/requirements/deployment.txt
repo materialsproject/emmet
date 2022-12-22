@@ -8,13 +8,13 @@ aioitertools==0.11.0
     # via maggma
 anyio==3.6.2
     # via starlette
-attrs==22.1.0
+attrs==22.2.0
     # via jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.32
+boto3==1.26.35
     # via maggma
-botocore==1.29.32
+botocore==1.29.35
     # via
     #   boto3
     #   s3transfer
