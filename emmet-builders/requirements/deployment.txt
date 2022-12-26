@@ -12,9 +12,9 @@ attrs==22.2.0
     # via jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.35
+boto3==1.26.37
     # via maggma
-botocore==1.29.35
+botocore==1.29.37
     # via
     #   boto3
     #   s3transfer
