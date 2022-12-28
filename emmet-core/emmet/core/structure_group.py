@@ -2,7 +2,7 @@ import logging
 import operator
 from datetime import datetime
 from itertools import groupby
-from typing import Iterable, List, Union
+from typing import Iterable, List, Optional, Union
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
@@ -175,9 +175,7 @@ class StructureGroupDoc(BaseModel):
 
         # Add a framework field to each entry's data attribute
         for ient in entries:
-            ient.data["framework"] = _get_framework(
-                ient.composition.reduced_formula, ignored_specie
-            )
+            ient.data["framework"] = _get_framework(ient.composition.reduced_formula, ignored_specie)
 
         # split into groups for each framework, must sort before grouping
         entries.sort(key=lambda x: x.data["framework"])
@@ -188,19 +186,13 @@ class StructureGroupDoc(BaseModel):
             # if you only have ignored atoms put them into one "ignored" group
             f_group_l = list(f_group)
             if framework == "ignored":
-                struct_group = cls.from_grouped_entries(
-                    f_group_l, ignored_specie=ignored_specie
-                )
+                struct_group = cls.from_grouped_entries(f_group_l, ignored_specie=ignored_specie)
                 cnt_ += len(struct_group.material_ids)
                 continue
 
-            logger.debug(
-                f"Performing structure matching for {framework} with {len(f_group_l)} documents."
-            )
+            logger.debug(f"Performing structure matching for {framework} with {len(f_group_l)} documents.")
             for g in group_entries_with_structure_matcher(f_group_l, sm):
-                struct_group = cls.from_grouped_entries(
-                    g, ignored_specie=ignored_specie
-                )
+                struct_group = cls.from_grouped_entries(g, ignored_specie=ignored_specie)
                 cnt_ += len(struct_group.material_ids)
                 results.append(struct_group)
         if cnt_ != len(entries):
@@ -234,8 +226,9 @@ class StructureGroupDoc(BaseModel):
                 host_and_insertion_ids["host_ids"].append(e.data["material_id"])
             else:
                 host_and_insertion_ids["insertion_ids"].append(e.data["material_id"])
-        host_and_insertion_ids["host_id"] = min(host_and_insertion_ids["host_entries"],
-                                                key=lambda x: x.energy_per_atom).data["material_id"]
+        host_and_insertion_ids["host_id"] = min(
+            host_and_insertion_ids["host_entries"], key=lambda x: x.energy_per_atom
+        ).data["material_id"]
 
         return host_and_insertion_ids
 
@@ -266,10 +259,7 @@ def group_entries_with_structure_matcher(
     g.sort(key=get_num_sym_ops, reverse=True)
     g.sort(key=lambda x: x.composition.get_atomic_fraction(wion))
 
-    labs = generic_groupby(
-        g,
-        comp=lambda x, y: struct_matcher.fit(x.structure, y.structure, symmetric=True),
-    )
+    labs = generic_groupby(g, comp=lambda x, y: struct_matcher.fit(x.structure, y.structure, symmetric=True),)
     for ilab in set(labs):
         sub_g = [g[itr] for itr, jlab in enumerate(labs) if jlab == ilab]
         yield [el for el in sub_g]

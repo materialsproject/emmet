@@ -252,8 +252,8 @@ class MoleculesAssociationBuilder(Builder):
                 doc = MoleculeDoc.construct_deprecated_molecule(tasks)
                 doc.warnings.append(str(e))
                 molecules.append(doc)
-                self.logger.warn(
-                    f"Failed making molecule for {failed_ids}."
+                self.logger.warning(
+                    f"Failed making material for {failed_ids}."
                     f" Inserted as deprecated molecule: {doc.molecule_id}"
                 )
 

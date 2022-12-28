@@ -86,9 +86,7 @@ class RedoxDoc(PropertyDoc):
         """
         try:
             result = get_free_energy(
-                entry["output"]["final_energy"],
-                entry["output"]["enthalpy"],
-                entry["output"]["entropy"],
+                entry["output"]["final_energy"], entry["output"]["enthalpy"], entry["output"]["entropy"],
             )
         # Single atoms won't have enthalpy and entropy
         except TypeError:

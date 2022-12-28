@@ -1,12 +1,9 @@
 from emmet.core.base import EmmetBaseModel
 from typing import Dict
 
-import pydantic
-
 try:
     from pymatgen.analysis.alloys.core import (
         AlloyPair,
-        SupportedProperties,
         AlloySystem,
     )
 except ImportError:

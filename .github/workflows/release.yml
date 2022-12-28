@@ -27,19 +27,7 @@ jobs:
       - name: Build packages
         run: python setup.py sdist bdist_wheel
         working-directory: ./${{ matrix.package }}/
-
-      - name: Commit files
-        run: |
-          git config --local user.email "feedback@materialsproject.org"
-          git config --local user.name "materialsproject"
-          git pull origin main
-          git add ${{ matrix.package }}/_version.py && git commit -m 'Updated version file'
-
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
+        
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@master
         with:
@@ -90,7 +78,7 @@ jobs:
         run: mkdocs build
 
       - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3.8.0
+        uses: peaceiris/actions-gh-pages@v3.9.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site

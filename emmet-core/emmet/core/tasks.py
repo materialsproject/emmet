@@ -12,7 +12,6 @@ from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.io.vasp import Incar, Poscar, Kpoints
 from pymatgen.io.vasp import Potcar as VaspPotcar
-from pymatgen.io.vasp import PotcarSingle as VaspPotcarSingle
 from pymatgen.core.trajectory import Trajectory
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
@@ -38,14 +37,13 @@ class TaskType(str, Enum):
 class Potcar(BaseModel):
     functional: str = Field(None, description="Functional type use in the calculation.")
 
-    symbols: List[str] = Field(
-        None, description="List of VASP potcar symbols used in the calculation."
-    )
+    symbols: List[str] = Field(None, description="List of VASP potcar symbols used in the calculation.")
 
 
 class OrigInputs(BaseModel):
     incar: Union[Incar, Dict] = Field(
-        None, description="Pymatgen object representing the INCAR file.",
+        None,
+        description="Pymatgen object representing the INCAR file.",
     )
 
     poscar: Poscar = Field(
@@ -59,7 +57,8 @@ class OrigInputs(BaseModel):
     )
 
     potcar: Union[Potcar, VaspPotcar, List[Any]] = Field(
-        None, description="Pymatgen object representing the POTCAR file.",
+        None,
+        description="Pymatgen object representing the POTCAR file.",
     )
 
     # Make sure that the datetime field is properly formatted
@@ -83,12 +82,8 @@ class OutputDoc(BaseModel):
 
     density: float = Field(..., description="Density of in units of g/cc.")
     energy: float = Field(..., description="Total Energy in units of eV.")
-    forces: List[List[float]] = Field(
-        None, description="The force on each atom in units of eV/A^2."
-    )
-    stress: List[List[float]] = Field(
-        None, description="The stress on the cell in units of kB."
-    )
+    forces: List[List[float]] = Field(None, description="The force on each atom in units of eV/A^2.")
+    stress: List[List[float]] = Field(None, description="The stress on the cell in units of kB.")
 
 
 class InputDoc(BaseModel):
@@ -165,9 +160,7 @@ class TaskDoc(BaseModel):
     Calculation-level details about VASP calculations that power Materials Project.
     """
 
-    tags: Union[List[str], None] = Field(
-        [], title="tag", description="Metadata tagged to a given task."
-    )
+    tags: Union[List[str], None] = Field([], title="tag", description="Metadata tagged to a given task.")
 
     state: TaskState = Field(None, description="State of this calculation")
 
@@ -187,13 +180,9 @@ class TaskDoc(BaseModel):
 
     # Structure metadata
     nsites: int = Field(None, description="Total number of sites in the structure.")
-    elements: List[Element] = Field(
-        None, description="List of elements in the material."
-    )
+    elements: List[Element] = Field(None, description="List of elements in the material.")
     nelements: int = Field(None, description="Number of elements.")
-    composition: Composition = Field(
-        None, description="Full composition for the material."
-    )
+    composition: Composition = Field(None, description="Full composition for the material.")
     composition_reduced: Dict[Element, float] = Field(
         None,
         title="Reduced Composition",

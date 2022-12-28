@@ -2,7 +2,6 @@
 Settings for defaults in the core definitions of Materials Project Documents
 """
 import json
-import os
 from pathlib import Path
 from typing import Dict, List, Type, TypeVar, Union
 
@@ -26,32 +25,22 @@ class EmmetSettings(BaseSettings):
     EMMET_CONFIG_FILE to point to the json with emmet settings
     """
 
-    config_file: str = Field(
-        DEFAULT_CONFIG_FILE_PATH, description="File to load alternative defaults from"
-    )
+    config_file: str = Field(DEFAULT_CONFIG_FILE_PATH, description="File to load alternative defaults from")
 
-    LTOL: float = Field(
-        0.2, description="Fractional length tolerance for structure matching"
-    )
+    LTOL: float = Field(0.2, description="Fractional length tolerance for structure matching")
     STOL: float = Field(
         0.3,
         description="Site tolerance for structure matching. Defined as the fraction of the"
         " average free length per atom = ( V / Nsites ) ** (1/3)",
     )
-    SYMPREC: float = Field(
-        0.1, description="Symmetry precision for spglib symmetry finding"
-    )
-    ANGLE_TOL: float = Field(
-        5, description="Angle tolerance for structure matching in degrees."
-    )
+    SYMPREC: float = Field(0.1, description="Symmetry precision for spglib symmetry finding")
+    ANGLE_TOL: float = Field(5, description="Angle tolerance for structure matching in degrees.")
 
     PGATOL: float = Field(
         0.3,
         description="Distance tolerance to consider sites as symmetrically equivalent.",
     )
-    PGAEIGENTOL: float = Field(
-        0.01, description="Tolerance to compare eigen values of the inertia tensor."
-    )
+    PGAEIGENTOL: float = Field(0.01, description="Tolerance to compare eigen values of the inertia tensor.")
     PGAMATRIXTOL: float = Field(
         0.1,
         description="Tolerance used to generate the full set of symmetry operations of the point group.",
@@ -106,7 +95,7 @@ class EmmetSettings(BaseSettings):
 
     VASP_STRUCTURE_QUALITY_SCORES: Dict[str, int] = Field(
         {"R2SCAN": 5, "SCAN": 4, "GGA+U": 3, "GGA": 2, "PBESol": 1},
-        description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builder structure data",
+        description="Dictionary Mapping VASP calculation run types to rung level for VASP materials builder structure data",  # noqa: E501
     )
 
     VASP_KPTS_TOLERANCE: float = Field(
@@ -148,9 +137,7 @@ class EmmetSettings(BaseSettings):
         description="Default input sets for task validation",
     )
 
-    VASP_VALIDATE_POTCAR_HASHES: bool = Field(
-        True, description="Whether to validate POTCAR hash values."
-    )
+    VASP_VALIDATE_POTCAR_HASHES: bool = Field(True, description="Whether to validate POTCAR hash values.")
 
     VASP_CHECKED_LDAU_FIELDS: List[str] = Field(
         ["LDAUU", "LDAUJ", "LDAUL"], description="LDAU fields to validate for tasks"

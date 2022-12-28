@@ -22,13 +22,9 @@ class StructureMetadata(EmmetBaseModel):
 
     # Structure metadata
     nsites: int = Field(None, description="Total number of sites in the structure.")
-    elements: List[Element] = Field(
-        None, description="List of elements in the material."
-    )
+    elements: List[Element] = Field(None, description="List of elements in the material.")
     nelements: int = Field(None, description="Number of elements.")
-    composition: Composition = Field(
-        None, description="Full composition for the material."
-    )
+    composition: Composition = Field(None, description="Full composition for the material.")
     composition_reduced: Composition = Field(
         None,
         title="Reduced Composition",
@@ -55,9 +51,7 @@ class StructureMetadata(EmmetBaseModel):
         description="Total volume for this structure in Angstroms^3.",
     )
 
-    density: float = Field(
-        None, title="Density", description="Density in grams per cm^3."
-    )
+    density: float = Field(None, title="Density", description="Density in grams per cm^3.")
 
     density_atomic: float = Field(
         None,
@@ -161,13 +155,9 @@ class MoleculeMetadata(EmmetBaseModel):
         None, description="Spin multiplicity of the molecule"
     )
     natoms: int = Field(None, description="Total number of atoms in the molecule")
-    elements: List[Element] = Field(
-        None, description="List of elements in the molecule"
-    )
+    elements: List[Element] = Field(None, description="List of elements in the molecule")
     nelements: int = Field(None, title="Number of Elements")
-    composition: Composition = Field(
-        None, description="Full composition for the molecule"
-    )
+    composition: Composition = Field(None, description="Full composition for the molecule")
     formula_alphabetical: str = Field(
         None,
         title="Alphabetical Formula",
@@ -179,9 +169,7 @@ class MoleculeMetadata(EmmetBaseModel):
         description="dash-delimited string of elements in the molecule",
     )
 
-    symmetry: PointGroupData = Field(
-        None, description="Symmetry data for this molecule"
-    )
+    symmetry: PointGroupData = Field(None, description="Symmetry data for this molecule")
 
     @classmethod
     def from_molecule(

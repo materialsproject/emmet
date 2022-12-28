@@ -223,7 +223,10 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
         else:
             geometry_optimizations = [
-                task for task in task_group if task.task_type in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization]  # type: ignore
+                task
+                for task in task_group
+                if task.task_type
+                in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization]  # noqa: E501
             ]
 
             best_molecule_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
@@ -240,14 +243,10 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
                     initial_molecules.append(Molecule.from_dict(task.orig["molecule"]))
 
             mm = MoleculeMatcher()
-            initial_molecules = [
-                group[0] for group in mm.group_molecules(initial_molecules)
-            ]
+            initial_molecules = [group[0] for group in mm.group_molecules(initial_molecules)]
 
             # Deprecated
-            deprecated = all(
-                task.task_id in deprecated_tasks for task in geometry_optimizations
-            )
+            deprecated = all(task.task_id in deprecated_tasks for task in geometry_optimizations)
             deprecated = deprecated or best_molecule_calc.task_id in deprecated_tasks
 
             # Origins
