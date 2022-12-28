@@ -2,7 +2,7 @@ import logging
 import operator
 from datetime import datetime
 from itertools import groupby
-from typing import Iterable, List, Optional, Union
+from typing import Iterable, List, Union
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
@@ -29,7 +29,7 @@ def generic_groupby(list_in, comp=operator.eq) -> List[int]:
         if ls1 is not None:
             continue
         list_out[i1] = label_num
-        for i2, ls2 in list(enumerate(list_out))[i1 + 1 :]:
+        for i2, ls2 in list(enumerate(list_out))[i1 + 1:]:
             if comp(list_in[i1], list_in[i2]):
                 if list_out[i2] is None:
                     list_out[i2] = list_out[i1]

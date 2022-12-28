@@ -257,7 +257,9 @@ class SummaryDoc(PropertyDoc):
 
     @classmethod
     def from_docs(
-        cls, molecule_id: MPculeID, docs: Dict[str, Union[Dict[str, Any], Dict[str, Dict[str, Any]], Dict[str, List[Dict[str, Any]]]]]
+        cls,
+        molecule_id: MPculeID,
+        docs: Dict[str, Union[Dict[str, Any], Dict[str, Dict[str, Any]], Dict[str, List[Dict[str, Any]]]]]
     ):
         """Converts a bunch of property docs into a SummaryDoc"""
 

@@ -1,5 +1,4 @@
 """ Core definition of a VASP Task Document """
-from datetime import datetime
 from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel, Field

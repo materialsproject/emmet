@@ -362,7 +362,6 @@ class BondingDoc(PropertyDoc):
                 mg = make_mol_graph(mol)
                 mg_made = True
 
-
         bonds = list()
         for bond in mg.graph.edges():
             bonds.append(sorted([bond[0], bond[1]]))

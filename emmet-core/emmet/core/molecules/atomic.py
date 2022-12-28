@@ -2,7 +2,6 @@ from typing import List
 from hashlib import blake2b
 
 from pydantic import Field
-from typing import List
 
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.task import TaskDocument

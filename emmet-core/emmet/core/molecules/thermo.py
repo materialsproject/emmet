@@ -2,7 +2,7 @@ from pydantic import Field
 from hashlib import blake2b
 from typing import Optional
 
-from emmet.core.mpid import MPID, MPculeID
+from emmet.core.mpid import MPculeID
 from emmet.core.qchem.calc_types import LevelOfTheory
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.material import PropertyOrigin
@@ -132,7 +132,7 @@ class ThermoDoc(PropertyDoc):
         total_enthalpy = task.output.enthalpy
         total_entropy = task.output.entropy
 
-        origins=[PropertyOrigin(name="thermo", task_id=task.task_id)]
+        origins = [PropertyOrigin(name="thermo", task_id=task.task_id)]
         if correction:
             origins.append(
                 PropertyOrigin(name="thermo_energy_correction",

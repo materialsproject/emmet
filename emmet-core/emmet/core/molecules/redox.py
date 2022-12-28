@@ -64,7 +64,7 @@ class RedoxDoc(PropertyDoc):
     ox_mpcule_id: MPculeID = Field(None, description="Molecule ID for adiabatic oxidation")
 
     ox_property_id: str = Field(None, description="Property ID for the thermodynamic data of the "
-                                                   "oxidized molecule")
+                                                  "oxidized molecule")
 
     reduction_potentials: Dict[str, float] = Field(
         None, description="Reduction potentials with various reference electrodes (units: V)"
@@ -248,4 +248,3 @@ class RedoxDoc(PropertyDoc):
             origins=origins,
             **kwargs
         )
-
