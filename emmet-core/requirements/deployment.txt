@@ -59,7 +59,7 @@ pandas==1.5.2
     # via
     #   -r python/requirements.txt
     #   pymatgen
-pillow==9.3.0
+pillow==9.4.0
     # via matplotlib
 plotly==5.11.0
     # via pymatgen
@@ -68,7 +68,7 @@ pybtex==0.24.0
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
-pydantic==1.10.2
+pydantic==1.10.4
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
