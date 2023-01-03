@@ -15,11 +15,11 @@ attrs==22.2.0
     #   jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.35
+boto3==1.26.41
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.35
+botocore==1.29.41
     # via
     #   boto3
     #   s3transfer
@@ -42,13 +42,13 @@ click==8.1.3
     #   uvicorn-tschaume
 contourpy==1.0.6
     # via matplotlib
-cryptography==38.0.4
+cryptography==39.0.0
     # via paramiko
 cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.6.3
+ddtrace==1.6.4
     # via emmet-api (setup.py)
 dnspython==2.2.1
     # via
@@ -60,7 +60,7 @@ emmet-core[all]==0.39.6
     #   mp-api
 envier==0.4.0
     # via ddtrace
-exceptiongroup==1.0.4
+exceptiongroup==1.1.0
     # via cattrs
 fastapi==0.88.0
     # via
@@ -82,7 +82,7 @@ idna==3.4
     # via
     #   anyio
     #   requests
-importlib-metadata==5.2.0
+importlib-metadata==6.0.0
     # via flask
 inflect==6.0.2
     # via robocrys
@@ -140,7 +140,7 @@ networkx==2.8.8
     # via
     #   pymatgen
     #   robocrys
-numpy==1.24.0
+numpy==1.24.1
     # via
     #   contourpy
     #   maggma
@@ -169,7 +169,7 @@ pandas==1.5.2
     #   pymatgen
 paramiko==2.12.0
     # via sshtunnel
-pillow==9.3.0
+pillow==9.4.0
     # via matplotlib
 plotly==5.11.0
     # via pymatgen
@@ -186,7 +186,7 @@ pybtex==0.24.0
     #   robocrys
 pycparser==2.21
     # via cffi
-pydantic==1.10.2
+pydantic==1.10.4
     # via
     #   emmet-core
     #   fastapi
@@ -215,7 +215,7 @@ pynacl==1.5.0
     # via paramiko
 pyparsing==3.0.9
     # via matplotlib
-pyrsistent==0.19.2
+pyrsistent==0.19.3
     # via jsonschema
 python-dateutil==2.8.2
     # via
