@@ -131,7 +131,7 @@ def group_molecules(molecules: List[Molecule]):
     # First, group by formula
     # Hopefully this step is unnecessary - builders should already be doing this
     for mol_key, pregroup in groupby(sorted(molecules, key=_mol_form), key=_mol_form):
-        groups = list()
+        groups: List[Dict[str, Any]] = list()
         for mol in pregroup:
             mol_copy = copy.deepcopy(mol)
 

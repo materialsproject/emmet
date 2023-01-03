@@ -133,15 +133,15 @@ class ThermoDoc(PropertyDoc):
         total_entropy = task.output.entropy
 
         origins = [PropertyOrigin(name="thermo", task_id=task.task_id)]
-        if correction:
+        id_string = f"thermo-{molecule_id}-{task.task_id}-{task.lot_solvent}"
+        if correction and correction_task is not None:
             origins.append(
                 PropertyOrigin(name="thermo_energy_correction",
                                task_id=correction_task.task_id)
             )
 
-        id_string = f"thermo-{molecule_id}-{task.task_id}-{task.lot_solvent}"
-        if correction:
             id_string += f"-{correction_task.task_id}-{correction_task.lot_solvent}"
+
         h = blake2b()
         h.update(id_string.encode("utf-8"))
         property_id = h.hexdigest()

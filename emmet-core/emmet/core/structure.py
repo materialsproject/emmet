@@ -177,7 +177,7 @@ class MoleculeMetadata(EmmetBaseModel):
         meta_molecule: Molecule,
         fields: Optional[List[str]] = None,
         **kwargs,
-    ) -> T:
+    ) -> S:
 
         fields = (
             [

@@ -259,7 +259,7 @@ class SummaryDoc(PropertyDoc):
     def from_docs(
         cls,
         molecule_id: MPculeID,
-        docs: Dict[str, Union[Dict[str, Any], Dict[str, Dict[str, Any]], Dict[str, List[Dict[str, Any]]]]]
+        docs: Dict[str, Any]
     ):
         """Converts a bunch of property docs into a SummaryDoc"""
 
@@ -349,7 +349,7 @@ summary_fields: Dict[str, list] = {
 }
 
 
-def _copy_from_doc(doc: Dict[str, Union[Dict[str, Any], Dict[str, Dict[str, Any]], Dict[str, List[Dict[str, Any]]]]]):
+def _copy_from_doc(doc: Dict[str, Any]):
     """Helper function to copy the list of keys over from amalgamated document"""
 
     # Doc format:
@@ -358,7 +358,7 @@ def _copy_from_doc(doc: Dict[str, Union[Dict[str, Any], Dict[str, Dict[str, Any]
     #  property2: {solvent1: [{...}, {...}], solvent2: [{...}, {...}]}
     # }
 
-    d = {"has_props": []}
+    d: Dict[str, Any] = {"has_props": []}
 
     # Function to grab the keys and put them in the root doc
     for doc_key in summary_fields:

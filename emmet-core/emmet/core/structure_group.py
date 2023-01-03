@@ -2,7 +2,7 @@ import logging
 import operator
 from datetime import datetime
 from itertools import groupby
-from typing import Iterable, List, Union
+from typing import Iterable, List, Optional, Union
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
@@ -236,7 +236,7 @@ class StructureGroupDoc(BaseModel):
 def group_entries_with_structure_matcher(
     g,
     struct_matcher: StructureMatcher,
-    working_ion: str = None,
+    working_ion: Optional[str] = None,
 ) -> Iterable[List[Union[ComputedStructureEntry]]]:
     """
     Group the entries together based on similarity of the  primitive cells
@@ -249,7 +249,7 @@ def group_entries_with_structure_matcher(
         subgroups: subgroups that are grouped together based on structure similarity
     """
     if working_ion is None:
-        wion = struct_matcher.as_dict()["ignored_species"][0]
+        wion: str = struct_matcher.as_dict()["ignored_species"][0]
 
     # Sort the entries by symmetry and by working ion fraction
     def get_num_sym_ops(ent):
