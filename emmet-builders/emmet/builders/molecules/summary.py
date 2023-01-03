@@ -262,7 +262,7 @@ class SummaryBuilder(Builder):
                 "partial_spins": _group_docs(list(self.spins.query({"molecule_id": mol_id}))),
                 "bonding": _group_docs(list(self.bonds.query({"molecule_id": mol_id}))),
                 "orbitals": _group_docs(list(self.orbitals.query({"molecule_id": mol_id}))),
-                "redox": _group_docs(list(self.charges.query({"molecule_id": mol_id}))),
+                "redox": _group_docs(list(self.redox.query({"molecule_id": mol_id}))),
                 "thermo": _group_docs(list(self.thermo.query({"molecule_id": mol_id}))),
                 "vibration": _group_docs(list(self.vibes.query({"molecule_id": mol_id}))),
             }

@@ -378,7 +378,7 @@ def _copy_from_doc(doc: Dict[str, Any]):
                 for copy_key in summary_fields[doc_key]:
                     d[copy_key] = dict()
                     for solvent, entries in sub_doc.items():
-                        if isinstance(entries, list):
+                        if isinstance(entries, list) and len(entries) > 1:
                             d[copy_key][solvent] = dict()
                             # In cases where multiple docs in the same solvent
                             # have the same properties, they must differ by by method
