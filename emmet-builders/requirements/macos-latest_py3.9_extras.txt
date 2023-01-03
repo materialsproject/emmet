@@ -14,9 +14,9 @@ attrs==22.2.0
     #   pytest
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.35
+boto3==1.26.41
     # via maggma
-botocore==1.29.35
+botocore==1.29.41
     # via
     #   boto3
     #   s3transfer
@@ -41,9 +41,9 @@ colorama==0.4.6
     # via griffe
 contourpy==1.0.6
     # via matplotlib
-coverage[toml]==7.0.0
+coverage[toml]==7.0.2
     # via pytest-cov
-cryptography==38.0.4
+cryptography==39.0.0
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -59,11 +59,11 @@ emmet-core[all]==0.39.6
     # via
     #   emmet-builders (setup.py)
     #   mp-api
-exceptiongroup==1.0.4
+exceptiongroup==1.1.0
     # via pytest
 fastapi==0.88.0
     # via maggma
-filelock==3.8.2
+filelock==3.9.0
     # via virtualenv
 flake8==6.0.0
     # via emmet-builders (setup.py)
@@ -77,17 +77,17 @@ future==0.18.2
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.25.1
+griffe==0.25.2
     # via mkdocstrings-python
 htmlmin==0.1.12
     # via mkdocs-minify-plugin
-identify==2.5.11
+identify==2.5.12
     # via pre-commit
 idna==3.4
     # via
     #   anyio
     #   requests
-importlib-metadata==5.2.0
+importlib-metadata==6.0.0
     # via
     #   flask
     #   markdown
@@ -210,7 +210,7 @@ networkx==2.8.8
     #   robocrys
 nodeenv==1.7.0
     # via pre-commit
-numpy==1.24.0
+numpy==1.24.1
     # via
     #   contourpy
     #   maggma
@@ -242,15 +242,15 @@ pandas==1.5.2
     #   pymatgen
 paramiko==2.12.0
     # via sshtunnel
-pillow==9.3.0
+pillow==9.4.0
     # via matplotlib
-platformdirs==2.6.0
+platformdirs==2.6.2
     # via virtualenv
 plotly==5.11.0
     # via pymatgen
 pluggy==1.0.0
     # via pytest
-pre-commit==2.20.0
+pre-commit==2.21.0
     # via emmet-builders (setup.py)
 pubchempy==1.0.4
     # via robocrys
@@ -265,7 +265,7 @@ pycodestyle==2.10.0
     #   flake8
 pycparser==2.21
     # via cffi
-pydantic==1.10.2
+pydantic==1.10.4
     # via
     #   emmet-core
     #   fastapi
@@ -273,11 +273,11 @@ pydantic==1.10.2
     #   maggma
 pydash==5.1.2
     # via maggma
-pydocstyle==6.1.1
+pydocstyle==6.2.1
     # via emmet-builders (setup.py)
 pyflakes==3.0.1
     # via flake8
-pygments==2.13.0
+pygments==2.14.0
     # via mkdocs-material
 pymatgen==2022.11.7
     # via
@@ -304,7 +304,7 @@ pynacl==1.5.0
     # via paramiko
 pyparsing==3.0.9
     # via matplotlib
-pyrsistent==0.19.2
+pyrsistent==0.19.3
     # via jsonschema
 pytest==7.2.0
     # via
@@ -392,8 +392,6 @@ tenacity==8.1.0
     # via plotly
 threadpoolctl==3.1.0
     # via scikit-learn
-toml==0.10.2
-    # via pre-commit
 tomli==2.0.1
     # via
     #   coverage
@@ -428,7 +426,7 @@ urllib3==1.26.13
     #   requests
 virtualenv==20.17.1
     # via pre-commit
-watchdog==2.2.0
+watchdog==2.2.1
     # via mkdocs
 wcmatch==8.4.1
     # via mkdocs-awesome-pages-plugin
