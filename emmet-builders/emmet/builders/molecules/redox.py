@@ -6,7 +6,7 @@ from math import ceil
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Union
 
 from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
+from pymatgen.analysis.local_env import OpenBabelNN
 
 from maggma.builders import Builder
 from maggma.core import Store
@@ -215,16 +215,16 @@ class RedoxBuilder(Builder):
                 ie_sp_task_ids = [
                     int(e["task_id"]) for e in gg.entries
                     if e["charge"] == gg.charge + 1
-                       and e["task_type"] == "Single Point"
-                       and e["output"].get("final_energy")
+                    and e["task_type"] == "Single Point"
+                    and e["output"].get("final_energy")
                 ]
                 ie_tasks = [TaskDocument(**e) for e in self.tasks.query({"task_id": {"$in": ie_sp_task_ids}})]
 
                 ea_sp_task_ids = [
                     int(e["task_id"]) for e in gg.entries
                     if e["charge"] == gg.charge - 1
-                       and e["task_type"] == "Single Point"
-                       and e["output"].get("final_energy")
+                    and e["task_type"] == "Single Point"
+                    and e["output"].get("final_energy")
                 ]
                 ea_tasks = [TaskDocument(**e) for e in self.tasks.query({"task_id": {"$in": ea_sp_task_ids}})]
 

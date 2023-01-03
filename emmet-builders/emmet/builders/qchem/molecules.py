@@ -10,7 +10,7 @@ from maggma.stores import Store
 from maggma.utils import grouper
 
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.utils import form_env, group_molecules, jsanitize, make_mol_graph
+from emmet.core.utils import group_molecules, jsanitize, make_mol_graph
 from emmet.core.qchem.molecule import best_lot, evaluate_lot, MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.calc_types import LevelOfTheory

@@ -238,7 +238,7 @@ class SummaryBuilder(Builder):
                 solvent = doc.get("solvent")
                 if not solvent:
                     continue
-                
+
                 if allow_multiple:
                     if solvent not in grouped:
                         grouped[solvent] = [doc]
@@ -256,7 +256,6 @@ class SummaryBuilder(Builder):
 
         for mol in mols:
             mol_id = mol["molecule_id"]
-
 
             d = {
                 "molecules": mol,

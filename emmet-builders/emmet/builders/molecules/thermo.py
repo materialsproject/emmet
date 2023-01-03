@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
-from itertools import chain, groupby
+from itertools import chain
 from math import ceil
 from typing import Optional, Iterable, Iterator, List, Dict
 
@@ -292,10 +292,8 @@ class ThermoBuilder(Builder):
                 by_solvent_spec[entry["solvent"]].append(entry)
 
             if len(thermo_entries) == 0:
-                use_sp = True
                 without_corrections = by_solvent_spec
             else:
-                use_sp = False
                 without_corrections = by_solvent_dict
 
             # Construct without corrections
@@ -332,10 +330,10 @@ class ThermoBuilder(Builder):
 
                     matching_structures = list()
                     for entry in thermo_entries:
-                        if (mm.fit(Molecule.from_dict(entry["molecule"]),
-                                  Molecule.from_dict(best_spec["molecule"])) 
-                                  and sum(evaluate_lot(entry["level_of_theory"])) < sum(evaluate_lot(best_spec["level_of_theory"]))):
-                             matching_structures.append(entry)
+                        if (mm.fit(Molecule.from_dict(entry["molecule"]), Molecule.from_dict(best_spec["molecule"]))
+                            and (sum(evaluate_lot(entry["level_of_theory"])) <
+                                 sum(evaluate_lot(best_spec["level_of_theory"])))):
+                            matching_structures.append(entry)
 
                     if len(matching_structures) == 0:
                         continue
@@ -373,7 +371,8 @@ class ThermoBuilder(Builder):
                 with_eval_e = list()
                 for member in collection:
                     if member.correction_level_of_theory is None:
-                        with_eval_e.append((member, sum(evaluate_lot(member.level_of_theory)), member.electronic_energy))
+                        with_eval_e.append((member, sum(evaluate_lot(member.level_of_theory)),
+                                            member.electronic_energy))
                     else:
                         dict_lot = sum(evaluate_lot(member.level_of_theory))
                         spec_lot = sum(evaluate_lot(member.correction_level_of_theory))
