@@ -202,7 +202,7 @@ class RedoxBuilder(Builder):
 
         for graph_group in group_by_graph.values():
             # Molecule docs will be grouped by charge
-            charges = dict()
+            charges: Dict[int, Any] = dict()
 
             for gg in graph_group:
                 # First, grab relevant ThermoDocs and identify possible IE/EA single-points

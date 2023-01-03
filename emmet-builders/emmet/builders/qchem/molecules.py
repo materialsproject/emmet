@@ -48,7 +48,7 @@ def evaluate_molecule(
                 opt_lot = opt_lot.value
 
     if opt_lot is None:
-        opt_eval = 0
+        opt_eval = [0]
     else:
         opt_eval = evaluate_lot(opt_lot, funct_scores, basis_scores, solvent_scores)
 

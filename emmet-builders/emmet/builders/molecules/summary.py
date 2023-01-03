@@ -230,7 +230,7 @@ class SummaryBuilder(Builder):
             [dict] : a list of new orbital docs
         """
 
-        def _group_docs(docs: List[Dict[str, Any]], allow_multiple=False):
+        def _group_docs(docs: List[Dict[str, Any]]):
             """Helper function to group docs by solvent"""
             grouped = dict()
 
@@ -239,11 +239,10 @@ class SummaryBuilder(Builder):
                 if not solvent:
                     continue
 
-                if allow_multiple:
-                    if solvent not in grouped:
-                        grouped[solvent] = [doc]
+                if solvent not in grouped:
+                    grouped[solvent] = [doc]
                 else:
-                    grouped[solvent] = doc
+                    grouped[solvent].append(doc)
 
             return grouped
 
@@ -259,9 +258,9 @@ class SummaryBuilder(Builder):
 
             d = {
                 "molecules": mol,
-                "partial_charges": _group_docs(list(self.charges.query({"molecule_id": mol_id})), allow_multiple=True),
-                "partial_spins": _group_docs(list(self.spins.query({"molecule_id": mol_id})), allow_multiple=True),
-                "bonding": _group_docs(list(self.bonds.query({"molecule_id": mol_id})), allow_multiple=True),
+                "partial_charges": _group_docs(list(self.charges.query({"molecule_id": mol_id}))),
+                "partial_spins": _group_docs(list(self.spins.query({"molecule_id": mol_id}))),
+                "bonding": _group_docs(list(self.bonds.query({"molecule_id": mol_id}))),
                 "orbitals": _group_docs(list(self.orbitals.query({"molecule_id": mol_id}))),
                 "redox": _group_docs(list(self.charges.query({"molecule_id": mol_id}))),
                 "thermo": _group_docs(list(self.thermo.query({"molecule_id": mol_id}))),

@@ -283,7 +283,7 @@ class InsertionElectrodeBuilder(Builder):
         grouped_materials: MongoStore,
         thermo: MongoStore,
         insertion_electrode: MongoStore,
-        query: dict = None,
+        query: Optional[Dict] = None,
         strip_structures: bool = False,
         **kwargs,
     ):
