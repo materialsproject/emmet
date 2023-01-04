@@ -14,11 +14,13 @@ def base_mol(test_dir):
     mol_doc = MoleculeDoc(**mol)
     return mol_doc
 
+
 @pytest.fixture(scope="session")
 def base_thermo(test_dir):
     thermo = loadfn((test_dir / "redox_doc" / "thermo.json").as_posix())
     thermo_doc = ThermoDoc(**thermo)
     return thermo_doc
+
 
 @pytest.fixture(scope="session")
 def red_thermo(test_dir):
@@ -32,17 +34,20 @@ def ox_thermo(test_dir):
     thermo_doc = ThermoDoc(**thermo)
     return thermo_doc
 
+
 @pytest.fixture(scope="session")
 def ie_task(test_dir):
     task = loadfn((test_dir / "redox_doc" / "ie_task.json").as_posix())
     task_doc = TaskDocument(**task)
     return task_doc
 
+
 @pytest.fixture(scope="session")
 def ea_task(test_dir):
     task = loadfn((test_dir / "redox_doc" / "ea_task.json").as_posix())
     task_doc = TaskDocument(**task)
     return task_doc
+
 
 def test_redox(base_mol, base_thermo, red_thermo, ox_thermo, ie_task, ea_task):
     redox_doc = RedoxDoc.from_docs(base_molecule_doc=base_mol,
