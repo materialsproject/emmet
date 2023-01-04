@@ -31,7 +31,6 @@ def vibe_store():
     return MemoryStore()
 
 
-@pytest.mark.skip(reason="Waiting on molecule update.")
 def test_vibe_builder(tasks_store, mol_store, vibe_store):
     builder = VibrationBuilder(tasks_store, mol_store, vibe_store)
     builder.run()

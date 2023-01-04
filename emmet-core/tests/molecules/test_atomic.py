@@ -29,7 +29,7 @@ def open_shell(test_dir):
     task = TaskDocument(**loadfn((test_dir / "open_shell_nbo_task.json.gz")))
     return task
 
-@pytest.mark.skip(reason="Waiting on molecule update.")
+
 def test_partial_charges(test_tasks):
     # Test RESP
     pcd = PartialChargesDoc.from_task(
@@ -76,7 +76,7 @@ def test_partial_charges(test_tasks):
     ]
     assert pcd.partial_charges == nbo_charges
 
-@pytest.mark.skip(reason="Waiting on molecule update.")
+
 def test_partial_spins(open_shell):
     # Test Mulliken
     psd = PartialSpinsDoc.from_task(

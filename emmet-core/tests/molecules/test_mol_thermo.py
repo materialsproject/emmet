@@ -32,7 +32,7 @@ def sp(test_dir):
 
     return task
 
-@pytest.mark.skip(reason="Waiting on molecule update.")
+
 def test_thermo(test_tasks, sp):
     # Just energy; no free energy information
     doc = ThermoDoc.from_task(

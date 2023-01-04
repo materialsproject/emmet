@@ -31,7 +31,6 @@ def thermo_store():
     return MemoryStore()
 
 
-@pytest.mark.skip(reason="Waiting on molecule update.")
 def test_thermo_builder(tasks_store, mol_store, thermo_store):
     builder = ThermoBuilder(tasks_store, mol_store, thermo_store)
     builder.run()

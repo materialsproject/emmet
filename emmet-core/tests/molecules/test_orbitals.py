@@ -22,7 +22,7 @@ def open_shell(test_dir):
     task = TaskDocument(**loadfn((test_dir / "open_shell_nbo_task.json.gz")))
     return task
 
-@pytest.mark.skip(reason="Waiting on molecule update.")
+
 def test_orbital(closed_shell, open_shell):
     # Test closed-shell NBO parsing
     doc = OrbitalDoc.from_task(
