@@ -222,25 +222,25 @@ class SummaryDoc(PropertyDoc):
         None, description="Vertical electron affinity in eV"
     )
 
-    ea_id: Dict[str, MPID] = Field(None, description="Molecule ID for electron affinity")
+    ea_task_id: Dict[str, MPID] = Field(None, description="Molecule ID for electron affinity")
 
     ionization_energy: Dict[str, float] = Field(
         None, description="Vertical ionization energy in eV"
     )
 
-    ie_id: Dict[str, MPID] = Field(None, description="Molecule ID for ionization energy")
+    ie_task_id: Dict[str, MPID] = Field(None, description="Molecule ID for ionization energy")
 
     reduction_free_energy: Dict[str, float] = Field(
         None, description="Adiabatic free energy of reduction"
     )
 
-    red_id: Dict[str, MPculeID] = Field(None, description="Molecule ID for adiabatic reduction")
+    red_mpcule_id: Dict[str, MPculeID] = Field(None, description="Molecule ID for adiabatic reduction")
 
     oxidation_free_energy: Dict[str, float] = Field(
         None, description="Adiabatic free energy of oxidation"
     )
 
-    ox_id: Dict[str, MPculeID] = Field(None, description="Molecule ID for adiabatic oxidation")
+    ox_mpcule_id: Dict[str, MPculeID] = Field(None, description="Molecule ID for adiabatic oxidation")
 
     reduction_potentials: Dict[str, Dict[str, float]] = Field(
         None, description="Reduction potentials with various " "reference electrodes"
@@ -336,13 +336,13 @@ summary_fields: Dict[str, list] = {
     HasProps.bonding.value: ["molecule_graph", "bond_types", "bonds", "bonds_nometal"],
     HasProps.redox.value: [
         "electron_affinity",
-        "ea_id",
+        "ea_task_id",
         "ionization_energy",
-        "ie_id",
+        "ie_task_id",
         "reduction_free_energy",
-        "red_id",
+        "red_mpcule_id",
         "oxidation_free_energy",
-        "ox_id",
+        "ox_mpcule_id",
         "reduction_potentials",
         "oxidation_potentials",
     ],
@@ -363,6 +363,9 @@ def _copy_from_doc(doc: Dict[str, Any]):
     # Function to grab the keys and put them in the root doc
     for doc_key in summary_fields:
         sub_doc = doc.get(doc_key, None)
+            
+        if doc_key == "redox":
+            print(sub_doc)
 
         if doc_key == "molecules":
             # Molecules is special because there should only ever be one
@@ -373,20 +376,29 @@ def _copy_from_doc(doc: Dict[str, Any]):
             for copy_key in summary_fields[doc_key]:
                 d[copy_key] = sub_doc[copy_key]
         else:
-            if isinstance(sub_doc, dict) and len(sub_doc) > 0:
+            sd, by_method = sub_doc
+
+            if isinstance(sd, dict) and len(sd) > 0:
                 d["has_props"].append(doc_key)
                 for copy_key in summary_fields[doc_key]:
                     d[copy_key] = dict()
-                    for solvent, entries in sub_doc.items():
-                        if isinstance(entries, list) and len(entries) > 1:
+
+                    if by_method:
+                        for solvent, solv_entries in sd.items():
                             d[copy_key][solvent] = dict()
-                            # In cases where multiple docs in the same solvent
-                            # have the same properties, they must differ by by method
-                            for entry in entries:
-                                if copy_key in entry and "method" in entry:
-                                    d[copy_key][solvent][entry["method"]] = entry[copy_key]
-                        else:
-                            if copy_key in entries:
-                                d[copy_key][solvent] = entries[copy_key]
+                            for method, entry in solv_entries.items():
+                                if entry.get(copy_key):
+                                    d[copy_key][solvent][method] = entry[copy_key]
+                            if len(d[copy_key][solvent]) == 0:
+                                # If this key was not populated at all for this solvent, get rid of it
+                                del d[copy_key][solvent]
+                    else:
+                        for solvent, entry in sd.items():
+                            if entry.get(copy_key):
+                                d[copy_key][solvent] = entry[copy_key]
+
+                    if len(d[copy_key]) == 0:
+                        # If this key was not populated at all, set it to None
+                        d[copy_key] = None
 
     return d

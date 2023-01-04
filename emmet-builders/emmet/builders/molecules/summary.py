@@ -230,21 +230,29 @@ class SummaryBuilder(Builder):
             [dict] : a list of new orbital docs
         """
 
-        def _group_docs(docs: List[Dict[str, Any]]):
+        def _group_docs(docs: List[Dict[str, Any]], by_method: bool = False):
             """Helper function to group docs by solvent"""
             grouped = dict()
 
             for doc in docs:
                 solvent = doc.get("solvent")
+                method = doc.get("method")
                 if not solvent:
+                    # Need to group by solvent
+                    continue
+                if by_method and method is None:
+                    # Trying to group by method, but no method present
                     continue
 
-                if solvent not in grouped:
-                    grouped[solvent] = [doc]
+                if not by_method:
+                    grouped[solvent] = doc
                 else:
-                    grouped[solvent].append(doc)
+                    if solvent not in grouped:
+                        grouped[solvent] = {method: doc}
+                    else:
+                        grouped[solvent][method] = doc
 
-            return grouped
+            return (grouped, by_method)
 
         mols = items
         formula = mols[0]["formula_alphabetical"]
@@ -258,13 +266,13 @@ class SummaryBuilder(Builder):
 
             d = {
                 "molecules": mol,
-                "partial_charges": _group_docs(list(self.charges.query({"molecule_id": mol_id}))),
-                "partial_spins": _group_docs(list(self.spins.query({"molecule_id": mol_id}))),
-                "bonding": _group_docs(list(self.bonds.query({"molecule_id": mol_id}))),
-                "orbitals": _group_docs(list(self.orbitals.query({"molecule_id": mol_id}))),
-                "redox": _group_docs(list(self.redox.query({"molecule_id": mol_id}))),
-                "thermo": _group_docs(list(self.thermo.query({"molecule_id": mol_id}))),
-                "vibration": _group_docs(list(self.vibes.query({"molecule_id": mol_id}))),
+                "partial_charges": _group_docs(list(self.charges.query({"molecule_id": mol_id})), True),
+                "partial_spins": _group_docs(list(self.spins.query({"molecule_id": mol_id})), True),
+                "bonding": _group_docs(list(self.bonds.query({"molecule_id": mol_id})), True),
+                "orbitals": _group_docs(list(self.orbitals.query({"molecule_id": mol_id})), False),
+                "redox": _group_docs(list(self.redox.query({"molecule_id": mol_id})), False),
+                "thermo": _group_docs(list(self.thermo.query({"molecule_id": mol_id})), False),
+                "vibration": _group_docs(list(self.vibes.query({"molecule_id": mol_id})), False),
             }
 
             to_delete = list()
