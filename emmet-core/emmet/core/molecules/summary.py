@@ -363,7 +363,7 @@ def _copy_from_doc(doc: Dict[str, Any]):
     # Function to grab the keys and put them in the root doc
     for doc_key in summary_fields:
         sub_doc = doc.get(doc_key, None)
-            
+
         if doc_key == "redox":
             print(sub_doc)
 
