@@ -232,7 +232,7 @@ class SummaryBuilder(Builder):
 
         def _group_docs(docs: List[Dict[str, Any]], by_method: bool = False):
             """Helper function to group docs by solvent"""
-            grouped = dict()
+            grouped: Dict[str, Any] = dict()
 
             for doc in docs:
                 solvent = doc.get("solvent")
