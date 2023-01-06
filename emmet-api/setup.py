@@ -34,7 +34,8 @@ setup(
             "types-setuptools",
             "types-requests",
             "wincertstore",
-            "openbabel"
+            "openbabel",
+            "numpy<1.24"
         ],
         "docs": [
             "mkdocs",
