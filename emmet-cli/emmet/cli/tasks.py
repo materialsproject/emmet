@@ -432,6 +432,9 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data):  # noqa: C901
             f"nmax = {nmax} but chunk size = {chunk_size} -> sequential parsing."
         )
 
+    from multiprocessing_logging import install_mp_handler
+    install_mp_handler(logger=logger)
+
     pool = multiprocessing.Pool(processes=nproc)
     gen = VaspDirsGenerator()
     iterator = iterator_slice(gen, chunk_size)  # process in chunks
