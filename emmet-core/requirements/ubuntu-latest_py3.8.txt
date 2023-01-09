@@ -38,17 +38,18 @@ mpmath==1.2.1
     # via sympy
 msgpack==1.0.4
     # via mp-api
-networkx==2.8.8
+networkx==3.0
     # via pymatgen
-numpy==1.24.1
+numpy==1.23.5
     # via
     #   contourpy
+    #   emmet-core (setup.py)
     #   matplotlib
     #   pandas
     #   pymatgen
     #   scipy
     #   spglib
-packaging==22.0
+packaging==23.0
     # via matplotlib
 palettable==3.3.0
     # via pymatgen
@@ -90,7 +91,7 @@ ruamel-yaml==0.17.21
     # via pymatgen
 ruamel-yaml-clib==0.2.7
     # via ruamel-yaml
-scipy==1.9.3
+scipy==1.10.0
     # via pymatgen
 six==1.16.0
     # via
