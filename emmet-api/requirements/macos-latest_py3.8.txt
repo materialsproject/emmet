@@ -15,11 +15,11 @@ attrs==22.2.0
     #   jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.41
+boto3==1.26.45
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.41
+botocore==1.29.45
     # via
     #   boto3
     #   s3transfer
@@ -62,7 +62,7 @@ envier==0.4.0
     # via ddtrace
 exceptiongroup==1.1.0
     # via cattrs
-fastapi==0.88.0
+fastapi==0.89.0
     # via
     #   emmet-api (setup.py)
     #   maggma
@@ -138,7 +138,7 @@ msgpack==1.0.4
     # via
     #   maggma
     #   mp-api
-networkx==2.8.8
+networkx==3.0
     # via
     #   pymatgen
     #   robocrys
@@ -156,9 +156,9 @@ numpy==1.24.1
     #   seekpath
     #   shapely
     #   spglib
-orjson==3.8.3
+orjson==3.8.4
     # via maggma
-packaging==22.0
+packaging==23.0
     # via
     #   ddtrace
     #   matplotlib
@@ -251,7 +251,7 @@ s3transfer==0.6.0
     # via boto3
 scikit-learn==1.2.0
     # via matminer
-scipy==1.9.3
+scipy==1.10.0
     # via
     #   pymatgen
     #   robocrys
