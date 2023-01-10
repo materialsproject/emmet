@@ -21,7 +21,7 @@ from mongogrant.client import Client
 from pymatgen.core import Structure
 from pymatgen.util.provenance import StructureNL
 from pymongo.errors import DocumentTooLarge
-from emmet.core.vasp.task import TaskDocument
+from emmet.core.vasp.task_valid import TaskDocument
 from emmet.core.vasp.validation import ValidationDoc
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 
