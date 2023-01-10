@@ -9,7 +9,7 @@ setup(
     author_email="feedback@materialsproject.org",
     url="https://github.com/materialsproject/emmet",
     packages=find_namespace_packages(include=["emmet.*"]),
-    install_requires=["emmet-core[all]", "maggma>=0.49.12", "matminer>=0.7.3"],
+    install_requires=["emmet-core[all]", "maggma>=0.49.13", "matminer>=0.7.3"],
     extras_require={
         "test": [
             "pre-commit",
