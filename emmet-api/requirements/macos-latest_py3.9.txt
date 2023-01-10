@@ -15,11 +15,11 @@ attrs==22.2.0
     #   jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.41
+boto3==1.26.46
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.41
+botocore==1.29.46
     # via
     #   boto3
     #   s3transfer
@@ -54,7 +54,7 @@ dnspython==2.2.1
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.39.6
+emmet-core[all]==0.39.7
     # via
     #   emmet-api (setup.py)
     #   mp-api
@@ -62,7 +62,7 @@ envier==0.4.0
     # via ddtrace
 exceptiongroup==1.1.0
     # via cattrs
-fastapi==0.88.0
+fastapi==0.89.1
     # via
     #   emmet-api (setup.py)
     #   maggma
@@ -106,7 +106,7 @@ kiwisolver==1.4.4
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-maggma==0.49.11
+maggma==0.49.12
     # via emmet-api (setup.py)
 markupsafe==2.1.1
     # via
@@ -136,13 +136,14 @@ msgpack==1.0.4
     # via
     #   maggma
     #   mp-api
-networkx==2.8.8
+networkx==3.0
     # via
     #   pymatgen
     #   robocrys
-numpy==1.24.1
+numpy==1.23.5
     # via
     #   contourpy
+    #   emmet-core
     #   maggma
     #   matminer
     #   matplotlib
@@ -154,9 +155,9 @@ numpy==1.24.1
     #   seekpath
     #   shapely
     #   spglib
-orjson==3.8.3
+orjson==3.8.5
     # via maggma
-packaging==22.0
+packaging==23.0
     # via
     #   ddtrace
     #   matplotlib
@@ -194,7 +195,7 @@ pydantic==1.10.4
     #   maggma
 pydash==5.1.2
     # via maggma
-pymatgen==2022.11.7
+pymatgen==2023.1.9
     # via
     #   emmet-core
     #   matminer
@@ -247,7 +248,7 @@ s3transfer==0.6.0
     # via boto3
 scikit-learn==1.2.0
     # via matminer
-scipy==1.9.3
+scipy==1.10.0
     # via
     #   pymatgen
     #   robocrys
