@@ -16,11 +16,11 @@ attrs==22.2.0
     #   pytest
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.46
+boto3==1.26.47
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.46
+botocore==1.29.47
     # via
     #   boto3
     #   s3transfer
@@ -150,7 +150,7 @@ latexcodec==2.0.1
     # via pybtex
 livereload==2.6.3
     # via emmet-api (setup.py)
-maggma==0.49.12
+maggma==0.49.13
     # via emmet-api (setup.py)
 markdown==3.3.7
     # via
