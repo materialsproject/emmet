@@ -14,9 +14,9 @@ attrs==22.2.0
     #   pytest
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.41
+boto3==1.26.46
     # via maggma
-botocore==1.29.41
+botocore==1.29.46
     # via
     #   boto3
     #   s3transfer
@@ -41,7 +41,7 @@ colorama==0.4.6
     # via griffe
 contourpy==1.0.6
     # via matplotlib
-coverage[toml]==7.0.2
+coverage[toml]==7.0.4
     # via pytest-cov
 cryptography==39.0.0
     # via paramiko
@@ -55,11 +55,11 @@ dnspython==2.2.1
     # via
     #   maggma
     #   pymongo
-emmet-core==0.39.6
+emmet-core==0.39.7
     # via mp-api
 exceptiongroup==1.1.0
     # via pytest
-fastapi==0.88.0
+fastapi==0.89.1
     # via maggma
 filelock==3.9.0
     # via virtualenv
@@ -75,7 +75,7 @@ future==0.18.2
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.25.2
+griffe==0.25.3
     # via mkdocstrings-python
 htmlmin==0.1.12
     # via mkdocs-minify-plugin
@@ -92,7 +92,7 @@ importlib-metadata==6.0.0
     #   mkdocs
 inflect==6.0.2
     # via robocrys
-iniconfig==1.1.1
+iniconfig==2.0.0
     # via pytest
 itsdangerous==2.1.2
     # via flask
@@ -121,7 +121,7 @@ latexcodec==2.0.1
     # via pybtex
 livereload==2.6.3
     # via emmet-core (setup.py)
-maggma==0.49.11
+maggma==0.49.12
     # via emmet-core (setup.py)
 markdown==3.3.7
     # via
@@ -170,7 +170,7 @@ mkdocstrings[python]==0.19.1
     # via
     #   emmet-core (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==0.8.2
+mkdocstrings-python==0.8.3
     # via mkdocstrings
 mongogrant==0.3.3
     # via maggma
@@ -201,15 +201,17 @@ mypy-extensions==0.4.3
     #   mypy
 natsort==8.2.0
     # via mkdocs-awesome-pages-plugin
-networkx==2.8.8
+networkx==3.0
     # via
     #   pymatgen
     #   robocrys
 nodeenv==1.7.0
     # via pre-commit
-numpy==1.24.1
+numpy==1.23.5
     # via
     #   contourpy
+    #   emmet-core
+    #   emmet-core (setup.py)
     #   maggma
     #   matminer
     #   matplotlib
@@ -223,9 +225,9 @@ numpy==1.24.1
     #   spglib
 openbabel==3.1.1.1
     # via emmet-core (setup.py)
-orjson==3.8.3
+orjson==3.8.5
     # via maggma
-packaging==22.0
+packaging==23.0
     # via
     #   matplotlib
     #   mkdocs
@@ -272,13 +274,13 @@ pydantic==1.10.4
     #   maggma
 pydash==5.1.2
     # via maggma
-pydocstyle==6.2.1
+pydocstyle==6.2.3
     # via emmet-core (setup.py)
 pyflakes==3.0.1
     # via flake8
 pygments==2.14.0
     # via mkdocs-material
-pymatgen==2022.11.7
+pymatgen==2023.1.9
     # via
     #   emmet-core
     #   emmet-core (setup.py)
@@ -350,7 +352,7 @@ s3transfer==0.6.0
     # via boto3
 scikit-learn==1.2.0
     # via matminer
-scipy==1.9.3
+scipy==1.10.0
     # via
     #   pymatgen
     #   robocrys
@@ -405,9 +407,11 @@ tqdm==4.64.1
     #   maggma
     #   matminer
     #   pymatgen
+types-docutils==0.19.1.1
+    # via types-setuptools
 types-requests==2.28.11.7
     # via emmet-core (setup.py)
-types-setuptools==65.6.0.2
+types-setuptools==65.6.0.3
     # via emmet-core (setup.py)
 types-urllib3==1.26.25.4
     # via types-requests
