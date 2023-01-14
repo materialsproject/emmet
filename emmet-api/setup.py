@@ -34,7 +34,7 @@ setup(
             "types-setuptools",
             "types-requests",
             "wincertstore",
-            "openbabel"
+            "openbabel",
         ],
         "docs": [
             "mkdocs",

@@ -180,6 +180,7 @@ def backup(clean, check, force_new):  # noqa: C901
     os.chdir(directory)
     for block, launchers in block_launchers.items():
         logger.info(f"{block} with {len(launchers)} launcher(s)")
+        already_in_hpss = False
         try:
             isfile(f"{GARDEN}/{block}.tar")
             if force_new and run:
@@ -202,10 +203,11 @@ def backup(clean, check, force_new):  # noqa: C901
                     return ReturnCodes.ERROR
                 counter += 1
         else:
+            already_in_hpss = True
             logger.warning(f"Skip {block} - already in HPSS")
 
         # Check backup here to allow running it separately
-        if check:
+        if check and not already_in_hpss:
             logger.info(f"Verify {block}.tar ...")
             args = shlex.split(
                 f"htar -Kv -Hrelpaths -Hverify=all -f {GARDEN}/{block}.tar"
@@ -431,6 +433,9 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data):  # noqa: C901
         logger.warning(
             f"nmax = {nmax} but chunk size = {chunk_size} -> sequential parsing."
         )
+
+    from multiprocessing_logging import install_mp_handler
+    install_mp_handler(logger=logger)
 
     pool = multiprocessing.Pool(processes=nproc)
     gen = VaspDirsGenerator()

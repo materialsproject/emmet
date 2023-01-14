@@ -52,7 +52,7 @@ def track(func):
                 with open(ETAG, "r") as fd:
                     etag = fd.readline().strip()
 
-            gists_iterator = gh.gists(etag=etag)
+            gists_iterator = gh.gists(number=20, etag=etag)
             if gists_iterator.etag != etag:
                 with open(ETAG, "w") as fd:
                     fd.write(gists_iterator.etag)
