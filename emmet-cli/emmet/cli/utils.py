@@ -21,6 +21,9 @@ from mongogrant.client import Client
 from pymatgen.core import Structure
 from pymatgen.util.provenance import StructureNL
 from pymongo.errors import DocumentTooLarge
+from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.vasp.validation import ValidationDoc
+from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 
 from emmet.cli import SETTINGS
 from emmet.core.utils import group_structures
@@ -411,6 +414,31 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                 existing_tags = list(set(docs[0]["tags"]))
                 task_doc["tags"] += existing_tags
                 logger.info(f"Adding existing tags {existing_tags} to {tags}.")
+
+        try:
+            task_document = TaskDocument(**task_doc)
+        except Exception as exc:
+            logger.error(f"Unable to construct a valid TaskDocument: {exc}")
+            continue
+
+        try:
+            validation_doc = ValidationDoc.from_task_doc(task_document)
+        except Exception as exc:
+            logger.error(f"Unable to construct a valid ValidationDoc: {exc}")
+            continue
+
+        if not validation_doc.valid:
+            logger.error(f"Not valid: {validation_doc.reasons}")
+            continue
+
+        if validation_doc.warnings:
+            logger.warn(validation_doc.warnings)
+
+        try:
+            entry = MaterialsProject2020Compatibility().process_entry(task_document.structure_entry)
+        except Exception as exc:
+            logger.error(f"Unable to apply corrections: {exc}")
+            continue
 
         snl_dct = None
         if snl_metas_avail:
