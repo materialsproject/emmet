@@ -453,6 +453,31 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
         None, description="The chemical composition of the host framework."
     )
 
+    framework_formula: str = Field(
+        None, description="The formula of the host framework."
+    )
+
+    formula_anonymous: str = Field(
+        None,
+        title="Anonymous Formula",
+        description="Anonymized representation of the formula (not including the working ion).",
+    )
+
+    elements: List[Element] = Field(
+        None,
+        description="The atomic species contained in this electrode (not including the working ion).",
+    )
+
+    nelements: int = Field(
+        None,
+        description="The number of elements in the material (not including the working ion).",
+    )
+
+    chemsys: str = Field(
+        None,
+        description="The chemical system this electrode belongs to (not including the working ion).",
+    )
+
     electrode_object: ConversionElectrode = Field(
         None, description="The Pymatgen conversion electrode object."
     )
@@ -493,7 +518,16 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
         d["num_steps"] = d.pop("nsteps", None)
         d["electrode_object"] = ce.as_dict()
         d["last_updated"] = datetime.utcnow()
-        return cls(battery_id=battery_id, thermo_type=thermo_type, framework=Composition(d["framework_formula"]), **d)
+        return cls(
+            battery_id=battery_id,
+            thermo_type=thermo_type,
+            framework=ce.framework,
+            formula_anonymous=ce.framework.anonymized_formula,
+            elements=ce.framework.elements,
+            nelements=len(ce.framework.elements),
+            chemsys=ce.framework.chemical_system,
+            **d
+        )
 
     @classmethod
     def from_composition_and_pd(
@@ -513,4 +547,13 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc):
         d["num_steps"] = d.pop("nsteps", None)
         d["electrode_object"] = ce.as_dict()
         d["last_updated"] = datetime.utcnow()
-        return cls(battery_id=battery_id, thermo_type=thermo_type, framework=Composition(d["framework_formula"]), **d)
+        return cls(
+            battery_id=battery_id,
+            thermo_type=thermo_type,
+            framework=ce.framework,
+            formula_anonymous=ce.framework.anonymized_formula,
+            elements=ce.framework.elements,
+            nelements=len(ce.framework.elements),
+            chemsys=ce.framework.chemical_system,
+            **d
+        )

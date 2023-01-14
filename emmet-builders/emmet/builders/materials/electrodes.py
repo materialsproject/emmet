@@ -503,6 +503,6 @@ class ConversionElectrodeBuilder(Builder):
 
         if len(combined_items) > 0:
             self.logger.info("Updating {} conversion battery documents".format(len(combined_items)))
-            self.conversion_electrode_store.update(docs=combined_items, key=["battery_id"])
+            self.conversion_electrode_store.update(docs=combined_items, key=["battery_id", "thermo_type"])
         else:
             self.logger.info("No items to update")
