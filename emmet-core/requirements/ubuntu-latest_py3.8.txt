@@ -16,7 +16,7 @@ emmet-core==0.39.7
     # via mp-api
 fonttools==4.38.0
     # via matplotlib
-future==0.18.2
+future==0.18.3
     # via uncertainties
 idna==3.4
     # via requests

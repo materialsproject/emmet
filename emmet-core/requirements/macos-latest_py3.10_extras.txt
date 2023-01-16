@@ -69,7 +69,7 @@ flask==2.2.2
     # via mongogrant
 fonttools==4.38.0
     # via matplotlib
-future==0.18.2
+future==0.18.3
     # via
     #   matminer
     #   uncertainties
