@@ -1,7 +1,10 @@
+from enum import Enum
 import re
 from datetime import datetime
 from typing import List, Union, Dict
 from collections import defaultdict
+
+from emmet.core.utils import ValueEnum
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
@@ -14,6 +17,15 @@ from pymatgen.core.periodic_table import Element
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
 from emmet.core.mpid import MPID
+
+
+# Enum for 
+class BatteryType(str, ValueEnum):
+    """
+    Enum for battery type
+    """
+    insertion = "insertion"
+    conversion = "conversion"
 
 
 class VoltagePairDoc(BaseModel):
@@ -146,31 +158,26 @@ class EntriesCompositionSummary(BaseModel):
             all_composition_reduced=all_composition_reduced,
         )
 
-
-class InsertionElectrodeDoc(InsertionVoltagePairDoc):
-    """
-    Insertion electrode
-    """
-
-    battery_id: str = Field(None, description="The id for this battery document.")
+class BaseElectrode(BaseModel):
+    
+    battery_type: BatteryType = Field(
+        None, description="The type of battery (insertion or conversion)."
+    )
+    
+    battery_id: str = Field(
+        None, description="The id for this battery document is the numerically smallest material_id followed by "
+                          "the working ion."
+    )
+    
+    thermo_type: str = Field(
+        None, description="The functional type used to compute the thermodynamics of this electrode document."
+    )
 
     battery_formula: str = Field(
         None,
         description="Reduced formula with working ion range produced by combining the charge and discharge formulas.",
     )
-
-    framework_formula: str = Field(
-        None, description="The id for this battery document."
-    )
-
-    host_structure: Structure = Field(
-        None, description="Host structure (structure without the working ion)."
-    )
-
-    adj_pairs: List[InsertionVoltagePairDoc] = Field(
-        None, description="Returns all of the voltage steps material pairs."
-    )
-
+    
     working_ion: Element = Field(
         None, description="The working ion as an Element object."
     )
@@ -193,6 +200,11 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     framework: Composition = Field(
         None, description="The chemical compositions of the host framework."
     )
+    
+    framework_formula: str = Field(
+        None, description="The id for this battery document."
+    )
+
 
     elements: List[Element] = Field(
         None,
@@ -209,25 +221,10 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
         description="The chemical system this electrode belongs to (not including the working ion).",
     )
 
-    material_ids: List[MPID] = Field(
-        None,
-        description="The ids of all structures that matched to the present host lattice, regardless of stability. "
-                    "The stable entries can be found in the adjacent pairs.",
-    )
-
     formula_anonymous: str = Field(
         None,
         title="Anonymous Formula",
         description="Anonymized representation of the formula (not including the working ion).",
-    )
-
-    entries_composition_summary: EntriesCompositionSummary = Field(
-        None,
-        description="Composition summary data for all material in entries across all voltage pairs.",
-    )
-
-    electrode_object: InsertionElectrode = Field(
-        None, description="The Pymatgen electrode object."
     )
 
     warnings: List[str] = Field(
@@ -238,6 +235,34 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc):
     @validator("last_updated", pre=True)
     def last_updated_dict_ok(cls, v):
         return MontyDecoder().process_decoded(v)
+
+class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
+    """
+    Insertion electrode
+    """
+
+    host_structure: Structure = Field(
+        None, description="Host structure (structure without the working ion)."
+    )
+
+    adj_pairs: List[InsertionVoltagePairDoc] = Field(
+        None, description="Returns all of the voltage steps material pairs."
+    )
+    
+    material_ids: List[MPID] = Field(
+        None,
+        description="The ids of all structures that matched to the present host lattice, regardless of stability. "
+                    "The stable entries can be found in the adjacent pairs.",
+    )
+
+    entries_composition_summary: EntriesCompositionSummary = Field(
+        None,
+        description="Composition summary data for all material in entries across all voltage pairs.",
+    )
+
+    electrode_object: InsertionElectrode = Field(
+        None, description="The Pymatgen electrode object."
+    )
 
     @classmethod
     def from_entries(
@@ -432,26 +457,10 @@ class ConversionVoltagePairDoc(VoltagePairDoc):
     )
 
 
-class ConversionElectrodeDoc(ConversionVoltagePairDoc):
+class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
     """
     Conversion electrode
     """
-    battery_id: str = Field(
-        None, description="The id for this battery document is the numerically smallest material_id followed by "
-                          "the working ion."
-    )
-
-    thermo_type: str = Field(
-        None, description="The functional type used to create the phase diagram relevant to this conversion electrode."
-    )
-
-    working_ion: Element = Field(
-        None, description="The working ion as an Element object."
-    )
-
-    framework: Composition = Field(
-        None, description="The chemical composition of the host framework."
-    )
 
     framework_formula: str = Field(
         None, description="The formula of the host framework."
