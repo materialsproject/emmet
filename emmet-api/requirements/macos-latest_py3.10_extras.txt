@@ -256,7 +256,7 @@ packaging==23.0
     #   pytest
 palettable==3.3.0
     # via pymatgen
-pandas==1.5.2
+pandas==1.5.3
     # via
     #   matminer
     #   pymatgen
