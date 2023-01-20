@@ -106,7 +106,7 @@ monty==2022.9.9
     #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.30.7
+mp-api==0.30.8
     # via pymatgen
 mpmath==1.2.1
     # via sympy
@@ -170,7 +170,7 @@ pydantic==1.10.4
     #   maggma
 pydash==5.1.2
     # via maggma
-pymatgen==2023.1.9
+pymatgen==2023.1.20
     # via
     #   emmet-core
     #   matminer
