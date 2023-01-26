@@ -120,9 +120,12 @@ class CorrectedEntriesBuilder(Builder):
             yield entries
 
     def process_item(self, item):
+        """
+        Applies correction schemes to entries and constructs CorrectedEntriesDoc objects
+        """
 
-        if len(item) == 0:
-            return []
+        if not item:
+            return None
 
         entries = [ComputedStructureEntry.from_dict(entry) for entry in item]
         # determine chemsys
@@ -188,9 +191,9 @@ class CorrectedEntriesBuilder(Builder):
         """
         Gets entries from the materials collection for the corresponding chemical systems
         Args:
-            chemsys(str): a chemical system represented by string elements seperated by a dash (-)
+            chemsys (str): a chemical system represented by string elements seperated by a dash (-)
         Returns:
-            set(ComputedEntry): a set of entries for this system
+            set (ComputedEntry): a set of entries for this system
         """
 
         self.logger.info(f"Getting entries for: {chemsys}")
