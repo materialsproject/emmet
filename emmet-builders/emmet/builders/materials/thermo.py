@@ -34,7 +34,7 @@ class ThermoBuilder(Builder):
             thermo (Store): Store of thermodynamic data such as formation
                 energy and decomposition pathway
             corrected_entries (Store): Store of corrected entry data to use in thermo data and phase diagram
-                construction
+                construction. This is required and should be built with the CorrectedEntriesBuilder.
             phase_diagram (Store): Store of phase diagram data for each unique chemical system
             query (dict): dictionary to limit materials to be analyzed
             num_phase_diagram_eles (int): Maximum number of elements to use in phase diagram construction
