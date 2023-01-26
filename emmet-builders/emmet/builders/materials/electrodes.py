@@ -492,7 +492,16 @@ class ConversionElectrodeBuilder(Builder):
                     battery_id=f"{lowest_id}_{self.working_ion}",
                     thermo_type=self.thermo_type
                 )
-                new_docs.append(jsanitize(conversion_electrode_doc.dict()))
+                ced_dict = jsanitize(conversion_electrode_doc.dict())
+                # Temporary work around pymatgen serialization issue
+                for i, vp in enumerate(ced_dict["electrode_object"]["voltage_pairs"]):
+                    ced_dict["electrode_object"]["voltage_pairs"][i]["entries_charge"] = \
+                        [e.as_dict() for e in conversion_electrode_doc.electrode_object.voltage_pairs[i].entries_charge]
+                    ced_dict["electrode_object"]["voltage_pairs"][i]["entries_discharge"] = \
+                        [e.as_dict() for e in
+                         conversion_electrode_doc.electrode_object.voltage_pairs[i].entries_discharge]
+
+                new_docs.append(ced_dict)
         return new_docs  # type: ignore
 
     def update_targets(self, items: List):
