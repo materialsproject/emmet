@@ -1,12 +1,11 @@
 import warnings
 from collections import defaultdict
 from itertools import chain
-from typing import Dict, Iterable, Iterator, List, Optional, Set
+from typing import Dict, Iterable, Iterator, List, Optional
 from math import ceil
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
-from monty.json import MontyDecoder
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 from pymatgen.entries.compatibility import Compatibility
 
