@@ -89,7 +89,6 @@ class CorrectedEntriesBuilder(Builder):
 
         # Search index for corrected_entries
         self.corrected_entries.ensure_index("chemsys")
-        self.corrected_entries.ensure_index("last_updated")
 
     def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
         to_process_chemsys = self.materials.distinct("chemsys", **self.query)
@@ -120,7 +119,7 @@ class CorrectedEntriesBuilder(Builder):
             entries = self.get_entries(chemsys)
             yield entries
 
-    def process_item(self, item: List[Dict]):
+    def process_item(self, item):
 
         if len(item) == 0:
             return []
