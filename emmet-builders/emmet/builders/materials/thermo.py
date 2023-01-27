@@ -109,24 +109,6 @@ class ThermoBuilder(Builder):
             coll.ensure_index("chemsys")
             coll.ensure_index("phase_diagram_id")
 
-    def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
-        updated_chemsys = self.get_updated_chemsys()
-        new_chemsys = self.get_new_chemsys()
-
-        affected_chemsys = self.get_affected_chemsys(updated_chemsys | new_chemsys)
-
-        # Remove overlapping chemical systems
-        to_process_chemsys = set()
-        for chemsys in updated_chemsys | new_chemsys | affected_chemsys:
-            if chemsys not in to_process_chemsys:
-                to_process_chemsys |= chemsys_permutations(chemsys)
-
-        N = ceil(len(to_process_chemsys) / number_splits)
-
-        for chemsys_chunk in grouper(to_process_chemsys, N):
-
-            yield {"query": {"chemsys": {"$in": list(chemsys_chunk)}}}
-
     def get_items(self) -> Iterator[List[Dict]]:
         """
         Gets whole chemical systems of entries to process
