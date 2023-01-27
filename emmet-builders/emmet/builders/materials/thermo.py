@@ -1,16 +1,14 @@
 import warnings
 from itertools import chain
-from typing import Dict, Iterable, Iterator, List, Optional, Set
-from math import ceil
+from typing import Dict, Iterator, List, Optional, Set
 
 from maggma.core import Builder, Store
 from maggma.stores import S3Store
-from maggma.utils import grouper
 from monty.json import MontyDecoder
 from pymatgen.analysis.phase_diagram import PhaseDiagramError
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
-from emmet.builders.utils import chemsys_permutations, HiddenPrints
+from emmet.builders.utils import HiddenPrints
 from emmet.core.thermo import ThermoDoc, PhaseDiagramDoc
 from emmet.core.utils import jsanitize
 
