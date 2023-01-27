@@ -107,7 +107,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         "node attribute.",
     )
 
-    calc_type: Mapping[str, CalcType] = Field(  # type: ignore
+    calc_types: Mapping[str, CalcType] = Field(  # type: ignore
         None,
         description="Calculation types for all the calculations that make up this molecule",
     )
@@ -205,7 +205,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         unique_lots = list(set(levels_of_theory.values()))
         unique_solvents = list(set(solvents.values()))
         unique_lot_solvents = list(set(lot_solvents.values()))
-        unique_task_types = list(set(task_types.value()))
+        unique_task_types = list(set(task_types.values()))
         unique_calc_types = list(set(calc_types.values()))
 
         mols = [task.output.initial_molecule for task in task_group]
@@ -369,7 +369,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         unique_lots = list(set(levels_of_theory.values()))
         unique_solvents = list(set(solvents.values()))
         unique_lot_solvents = list(set(lot_solvents.values()))
-        unique_task_types = list(set(task_types.value()))
+        unique_task_types = list(set(task_types.values()))
         unique_calc_types = list(set(calc_types.values()))
 
         # Arbitrarily choose task with lowest ID
