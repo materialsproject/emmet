@@ -91,7 +91,7 @@ class CorrectedEntriesBuilder(Builder):
         self.corrected_entries.ensure_index("chemsys")
 
     def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
-        to_process_chemsys = self.materials.distinct("chemsys", **self.query)
+        to_process_chemsys = self._get_chemsys_to_process()
 
         N = ceil(len(to_process_chemsys) / number_splits)
 
@@ -109,7 +109,7 @@ class CorrectedEntriesBuilder(Builder):
         self.logger.info("Setting indexes")
         self.ensure_indexes()
 
-        to_process_chemsys = self.materials.distinct("chemsys", **self.query)
+        to_process_chemsys = self._get_chemsys_to_process()
 
         self.logger.info(f"Processing entries in {len(to_process_chemsys)} chemical systems")
         self.total = len(to_process_chemsys)
@@ -241,3 +241,30 @@ class CorrectedEntriesBuilder(Builder):
         self.logger.info(f"Total entries in {chemsys} : {len(all_entries)}")
 
         return all_entries
+
+    def _get_chemsys_to_process(self):
+        # Use last-updated to find new chemsys
+        materials_chemsys_dates = {}
+        for d in self.materials.query(
+            {"deprecated": False}, properties=[self.corrected_entries.key, self.materials.last_updated_field]
+        ):
+
+            entry = materials_chemsys_dates.get(d[self.corrected_entries.key], None)
+            if entry is None or d[self.materials.last_updated_field] > entry:
+                materials_chemsys_dates[d[self.corrected_entries.key]] = d[self.materials.last_updated_field]
+
+        corrected_entries_chemsys_dates = {
+            d[self.corrected_entries.key]: d[self.corrected_entries.last_updated_field]
+            for d in self.corrected_entries.query(
+                {}, properties=[self.corrected_entries.key, self.corrected_entries.last_updated_field]
+            )
+        }
+
+        to_process_chemsys = [
+            chemsys
+            for chemsys in materials_chemsys_dates
+            if (chemsys not in corrected_entries_chemsys_dates)
+            or (materials_chemsys_dates[chemsys] > corrected_entries_chemsys_dates[chemsys])
+        ]
+
+        return to_process_chemsys
