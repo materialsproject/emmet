@@ -15,11 +15,11 @@ attrs==22.2.0
     #   jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.58
+boto3==1.26.59
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.58
+botocore==1.29.59
     # via
     #   boto3
     #   s3transfer
@@ -54,7 +54,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.39.13
+emmet-core[all]==0.42.1
     # via
     #   emmet-api (setup.py)
     #   mp-api
@@ -193,7 +193,7 @@ pydantic==1.10.4
     #   fastapi
     #   inflect
     #   maggma
-pydash==5.1.2
+pydash==6.0.0
     # via maggma
 pymatgen==2023.1.20
     # via
@@ -320,7 +320,7 @@ werkzeug==2.2.2
     # via flask
 xmltodict==0.13.0
     # via ddtrace
-zipp==3.11.0
+zipp==3.12.0
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
