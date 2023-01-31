@@ -246,7 +246,7 @@ class CorrectedEntriesBuilder(Builder):
         # Use last-updated to find new chemsys
         materials_chemsys_dates = {}
         for d in self.materials.query(
-            {"deprecated": False, **self.query}, 
+            {"deprecated": False, **self.query},
             properties=[self.corrected_entries.key, self.materials.last_updated_field]
         ):
 

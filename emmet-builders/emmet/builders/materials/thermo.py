@@ -153,14 +153,14 @@ class ThermoBuilder(Builder):
 
     def _produce_pair(self, pd_entries, thermo_type, elements):
         # Produce thermo and phase diagram pair
-        
+
         try:
             # Obtain phase diagram
             pd = ThermoDoc.construct_phase_diagram(pd_entries)
 
             # Iterate through entry material IDs and construct list of thermo docs to update
             docs = ThermoDoc.from_entries(pd_entries, thermo_type, pd, deprecated=False)
-            
+
             pd_docs = [None]
 
             if self.phase_diagram:
