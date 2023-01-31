@@ -153,8 +153,9 @@ class ThermoDoc(PropertyDoc):
                 "is_stable": blessed_entry in pd.stable_entries,
             }
 
-            if "last_updated" in blessed_entry.data:
-                d["last_updated"] = blessed_entry.data["last_updated"]
+            # Uncomment to make last_updated line up with materials.
+            # if "last_updated" in blessed_entry.data:
+            #     d["last_updated"] = blessed_entry.data["last_updated"]
 
             # Store different info if stable vs decomposes
             if d["is_stable"]:
