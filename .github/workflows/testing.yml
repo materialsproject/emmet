@@ -55,13 +55,14 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         shell: bash -l {0}
         run: |
-          sudo apt-get update && sudo apt-get install openbabel libopenbabel-dev
+          sudo apt-get update && sudo apt-get install openbabel libopenbabel-dev libeigen3-dev
           sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
       - name: Install OpenBabel on MacOS
         if: matrix.os == 'macos-latest'
         shell: bash -l {0}
         run: |
           brew install open-babel
+          brew install eigen
           echo "/Users/runner/Library/Python/${{ matrix.python-version }}/bin" >> $GITHUB_PATH
 
       - name: Install Python dependencies
