@@ -42,8 +42,8 @@ setup(
             "types-requests",
             "maggma",
             "wincertstore",
-            "openbabel>=3.0.0",
-            "custodian>=2022.5.17",
+            "openbabel>=3.1.0",
+            "custodian>=2022.5.26",
         ],
         "docs": [
             "mkdocs",

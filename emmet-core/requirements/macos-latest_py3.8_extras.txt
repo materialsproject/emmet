@@ -47,6 +47,8 @@ cryptography==39.0.0
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
+custodian==2022.5.26
+    # via emmet-core (setup.py)
 cycler==0.11.0
     # via matplotlib
 distlib==0.3.6
