@@ -133,6 +133,8 @@ class ThermoBuilder(Builder):
         if not item:
             return None
 
+        pd_thermo_doc_pair_list = []
+
         for thermo_type, entry_list in item["entries"].items():
 
             entries = [ComputedStructureEntry.from_dict(entry) for entry in entry_list]
@@ -145,9 +147,9 @@ class ThermoBuilder(Builder):
                 warnings.simplefilter("ignore")
                 with HiddenPrints():
 
-                    pd_thermo_doc_pair = self._produce_pair(entries, thermo_type, elements)
+                    pd_thermo_doc_pair_list.append(self._produce_pair(entries, thermo_type, elements))
 
-        return pd_thermo_doc_pair
+        return pd_thermo_doc_pair_list
 
     def _produce_pair(self, pd_entries, thermo_type, elements):
         # Produce thermo and phase diagram pair
@@ -192,11 +194,11 @@ class ThermoBuilder(Builder):
         """
         Inserts the thermo and phase diagram docs into the thermo collection
         Args:
-            items ([tuple(List[dict],List[dict])]): a list of thermo dictionaries to update
+            items ([[tuple(List[dict],List[dict])]]): a list of a list of thermo and phase diagram dict pairs to update
         """
 
-        thermo_docs = [pair[0] for pair in items]
-        phase_diagram_docs = [pair[1] for pair in items]
+        thermo_docs = [pair[0] for pair_list in items for pair in pair_list]
+        phase_diagram_docs = [pair[1] for pair_list in items for pair in pair_list]
 
         # flatten out lists
         thermo_docs = list(filter(None, chain.from_iterable(thermo_docs)))
@@ -225,7 +227,7 @@ class ThermoBuilder(Builder):
         corrected_entries_chemsys_dates = {
             d[self.corrected_entries.key]: d[self.corrected_entries.last_updated_field]
             for d in self.corrected_entries.query(
-                {}, properties=[self.corrected_entries.key, self.corrected_entries.last_updated_field]
+                self.query, properties=[self.corrected_entries.key, self.corrected_entries.last_updated_field]
             )
         }
 
