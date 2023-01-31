@@ -15,7 +15,7 @@ try:
     from openbabel.openbabel import OBAlign
     _ = OBAlign()
     has_eigen = True
-except AttributeError:
+except ImportError:
     has_eigen = False
 
 
