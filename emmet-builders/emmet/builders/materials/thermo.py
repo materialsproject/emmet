@@ -117,7 +117,7 @@ class ThermoBuilder(Builder):
         self.logger.info("Setting indexes")
         self.ensure_indexes()
 
-        to_process_chemsys = self.corrected_entries.distinct("chemsys", **self.query)
+        to_process_chemsys = self._get_chemsys_to_process()
 
         self.logger.info(f"Found {len(to_process_chemsys)} chemical systems with new/updated materials to process")
         self.total = len(to_process_chemsys)
@@ -219,3 +219,30 @@ class ThermoBuilder(Builder):
             self.thermo.update(docs=thermo_docs, key=["thermo_id"])
         else:
             self.logger.info("No thermo items to update")
+
+    def _get_chemsys_to_process(self):
+        # Use last-updated to find new chemsys
+        corrected_entries_chemsys_dates = {
+            d[self.corrected_entries.key]: d[self.corrected_entries.last_updated_field]
+            for d in self.corrected_entries.query(
+                {}, properties=[self.corrected_entries.key, self.corrected_entries.last_updated_field]
+            )
+        }
+
+        thermo_chemsys_dates = {}
+        for d in self.thermo.query(
+            {"deprecated": False}, properties=[self.corrected_entries.key, self.thermo.last_updated_field]
+        ):
+
+            entry = thermo_chemsys_dates.get(d[self.corrected_entries.key], None)
+            if entry is None or d[self.thermo.last_updated_field] < entry:
+                thermo_chemsys_dates[d[self.corrected_entries.key]] = d[self.thermo.last_updated_field]
+
+        to_process_chemsys = [
+            chemsys
+            for chemsys in corrected_entries_chemsys_dates
+            if (chemsys not in thermo_chemsys_dates)
+            or (thermo_chemsys_dates[chemsys] < corrected_entries_chemsys_dates[chemsys])
+        ]
+
+        return to_process_chemsys
