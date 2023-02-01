@@ -501,15 +501,15 @@ class ConversionElectrodeDoc(ConversionVoltagePairDoc, BaseElectrode):
             comp_charge = ce.framework + {ce.working_ion.symbol: x_charge}
             comp_discharge = ce.framework + {ce.working_ion.symbol: x_discharge}
 
-            # battery_formula = get_battery_formula(
-            #     comp_charge,
-            #     comp_discharge,
-            #     ce.working_ion,
-            # )
+            battery_formula = get_battery_formula(
+                comp_charge,
+                comp_discharge,
+                ce.working_ion,
+            )
 
             d = {
                 "battery_type": "conversion",
-                "battery_formula": ce.framework_formula,
+                "battery_formula": battery_formula,
                 "framework": ce.framework,
                 "framework_formula": ce.framework_formula,
                 "initial_comp_formula": ce.initial_comp_formula,
