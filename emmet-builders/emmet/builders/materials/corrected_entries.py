@@ -152,10 +152,10 @@ class CorrectedEntriesBuilder(Builder):
                     warnings.simplefilter("ignore")
                     with HiddenPrints():
                         if "R2SCAN" in all_entry_types:
-                            pd_entries = compatability.process_entries(entries)
-
                             only_scan_pd_entries = [e for e in entries if str(e.data["run_type"]) == "R2SCAN"]
                             corrected_entries["R2SCAN"] = only_scan_pd_entries
+
+                            pd_entries = compatability.process_entries(entries)
 
                         else:
                             pd_entries = compatability.process_entries(entries)
@@ -247,7 +247,7 @@ class CorrectedEntriesBuilder(Builder):
         materials_chemsys_dates = {}
         for d in self.materials.query(
             {"deprecated": False, **self.query},
-            properties=[self.corrected_entries.key, self.materials.last_updated_field]
+            properties=[self.corrected_entries.key, self.materials.last_updated_field],
         ):
 
             entry = materials_chemsys_dates.get(d[self.corrected_entries.key], None)
