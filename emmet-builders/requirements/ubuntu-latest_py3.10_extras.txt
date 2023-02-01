@@ -14,9 +14,9 @@ attrs==22.2.0
     #   pytest
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.60
+boto3==1.26.62
     # via maggma
-botocore==1.29.60
+botocore==1.29.62
     # via
     #   boto3
     #   s3transfer
@@ -55,7 +55,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.42.2
+emmet-core[all]==0.42.7
     # via
     #   emmet-builders (setup.py)
     #   mp-api
