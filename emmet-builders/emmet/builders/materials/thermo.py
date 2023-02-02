@@ -1,9 +1,11 @@
+from math import ceil
 import warnings
 from itertools import chain
 from typing import Dict, Iterator, List, Optional, Set
 
 from maggma.core import Builder, Store
 from maggma.stores import S3Store
+from maggma.utils import grouper
 from monty.json import MontyDecoder
 from pymatgen.analysis.phase_diagram import PhaseDiagramError
 from pymatgen.entries.computed_entries import ComputedStructureEntry
@@ -106,6 +108,15 @@ class ThermoBuilder(Builder):
 
             coll.ensure_index("chemsys")
             coll.ensure_index("phase_diagram_id")
+
+    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
+        to_process_chemsys = self._get_chemsys_to_process()
+
+        N = ceil(len(to_process_chemsys) / number_splits)
+
+        for chemsys_chunk in grouper(to_process_chemsys, N):
+
+            yield {"query": {"chemsys": {"$in": list(chemsys_chunk)}}}
 
     def get_items(self) -> Iterator[List[Dict]]:
         """
