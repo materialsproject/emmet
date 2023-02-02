@@ -170,7 +170,7 @@ class ThermoBuilder(Builder):
             pd = ThermoDoc.construct_phase_diagram(pd_entries)
 
             # Iterate through entry material IDs and construct list of thermo docs to update
-            docs = ThermoDoc.from_entries(pd_entries, thermo_type, pd, deprecated=False)
+            docs = ThermoDoc.from_entries(pd_entries, thermo_type, pd, use_max_chemsys=True, deprecated=False)
 
             pd_docs = [None]
 
