@@ -251,14 +251,16 @@ class BondingBuilder(Builder):
                         **self.tasks.query_one({"task_id": int(task)})
                     )
 
-                    doc = BondingDoc.from_task(
-                        task_doc,
-                        molecule_id=mol.molecule_id,
-                        preferred_methods=[method],
-                        deprecated=False,
-                    )
-
-                    bonding_docs.append(doc)
+                    try:
+                        doc = BondingDoc.from_task(
+                            task_doc,
+                            molecule_id=mol.molecule_id,
+                            preferred_methods=[method],
+                            deprecated=False,
+                        )
+                        bonding_docs.append(doc)
+                    except KeyError:
+                        print(task_doc.task_id)
 
         self.logger.debug(f"Produced {len(bonding_docs)} bonding docs for {formula}")
 
