@@ -256,16 +256,13 @@ class BondingBuilder(Builder):
                     if task_doc is None:
                         continue
 
-                    try:
-                        doc = BondingDoc.from_task(
-                            task_doc,
-                            molecule_id=mol.molecule_id,
-                            preferred_methods=[method],
-                            deprecated=False,
-                        )
-                        bonding_docs.append(doc)
-                    except (KeyError, AttributeError) as _:
-                        self.logger.debug("PROBLEM WITH TASK DOC", task_doc.task_id)
+                    doc = BondingDoc.from_task(
+                        task_doc,
+                        molecule_id=mol.molecule_id,
+                        preferred_methods=[method],
+                        deprecated=False,
+                    )
+                    bonding_docs.append(doc)
 
         self.logger.debug(f"Produced {len(bonding_docs)} bonding docs for {formula}")
 
