@@ -66,10 +66,10 @@ class PartialChargesDoc(PropertyDoc):
                 break
             elif m == "mulliken" and task.output.mulliken is not None:
                 method = m
-                if mol.spin_multiplicity == 1:
-                    charges = [float(i) for i in task.output.mulliken]
-                else:
+                if isinstance(task.output.mulliken[0], list):
                     charges = [float(mull[0]) for mull in task.output.mulliken]
+                else:
+                    charges = [float(i) for i in task.output.mulliken]
                 break
 
         id_string = f"partial_charges-{molecule_id}-{task.task_id}-{task.lot_solvent}-{method}"
