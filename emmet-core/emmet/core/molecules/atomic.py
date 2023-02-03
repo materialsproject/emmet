@@ -58,18 +58,18 @@ class PartialChargesDoc(PropertyDoc):
                 break
             elif m == "resp" and task.output.resp is not None:
                 method = m
-                charges = task.output.resp
+                charges = [float(i) for i in task.output.resp]
                 break
             elif m == "critic2" and task.critic2 is not None:
                 method = m
-                charges = list(task.critic2["processed"]["charges"])
+                charges = list([float(i) for i in task.critic2["processed"]["charges"]])
                 break
             elif m == "mulliken" and task.output.mulliken is not None:
                 method = m
                 if mol.spin_multiplicity == 1:
-                    charges = task.output.mulliken
+                    charges = [float(i) for i in task.output.mulliken]
                 else:
-                    charges = [mull[0] for mull in task.output.mulliken]
+                    charges = [float(mull[0]) for mull in task.output.mulliken]
                 break
 
         id_string = f"partial_charges-{molecule_id}-{task.task_id}-{task.lot_solvent}-{method}"
@@ -143,7 +143,7 @@ class PartialSpinsDoc(PropertyDoc):
                 break
             elif m == "mulliken" and task.output.mulliken is not None:
                 method = m
-                spins = [mull[1] for mull in task.output.mulliken]
+                spins = [float(mull[1]) for mull in task.output.mulliken]
                 break
 
         id_string = f"partial_spins-{molecule_id}-{task.task_id}-{task.lot_solvent}-{method}"
