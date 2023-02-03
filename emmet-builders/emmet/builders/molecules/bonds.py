@@ -260,7 +260,7 @@ class BondingBuilder(Builder):
                         )
                         bonding_docs.append(doc)
                     except KeyError:
-                        print(task_doc.task_id)
+                        self.logger.debug("PROBLEM WITH TASK DOC", task_doc.task_id)
 
         self.logger.debug(f"Produced {len(bonding_docs)} bonding docs for {formula}")
 
