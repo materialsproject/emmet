@@ -230,8 +230,13 @@ class PartialChargesBuilder(Builder):
                     task = best_entry["task_id"]
 
                     task_doc = TaskDocument(
-                        **self.tasks.query_one({"task_id": int(task)})
+                        **self.tasks.query_one({"task_id": int(task),
+                                                "formula_alphabetical": formula,
+                                                "orig": {"$exists": True}})
                     )
+
+                    if task_doc is None:
+                        continue
 
                     doc = PartialChargesDoc.from_task(
                         task_doc,
@@ -484,8 +489,13 @@ class PartialSpinsBuilder(Builder):
                     task = best_entry["task_id"]
 
                     task_doc = TaskDocument(
-                        **self.tasks.query_one({"task_id": int(task)})
+                        **self.tasks.query_one({"task_id": int(task),
+                                                "formula_alphabetical": formula,
+                                                "orig": {"$exists": True}})
                     )
+
+                    if task_doc is None:
+                        continue
 
                     doc = PartialSpinsDoc.from_task(
                         task_doc,
