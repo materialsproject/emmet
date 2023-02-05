@@ -3,8 +3,6 @@ from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
 
-from collections import defaultdict
-
 
 class BondTypeLengthQuery(QueryOperator):
     """
@@ -16,75 +14,40 @@ class BondTypeLengthQuery(QueryOperator):
         bond_type: Optional[str] = Query(
             None,
             description="Bond type of interest; e.g. C-O for carbon-oxygen bonds."
-        )
+        ),
         max_bond_length: Optional[float] = Query(
             None,
-            description="Maximum value for the bond length in the molecule.",
+            description="Maximum value for the bond lengths in the molecule.",
         ),
         min_bond_length: Optional[float] = Query(
             None,
-            description="Maximum value for the maximum bond length in the structure.",
+            description="Minimum value for the bond lengths in the molecule.",
         ),
     ) -> STORE_PARAMS:
 
-        crit = defaultdict(dict)  # type: dict
+        if bond_type is None:
+            return {"criteria": dict()}
 
-        d = {
-            "bond_length_stats.max": [max_bond_length_min, max_bond_length_max],
-            "bond_length_stats.min": [min_bond_length_min, min_bond_length_max],
-            "bond_length_stats.mean": [mean_bond_length_min, mean_bond_length_max],
+        # Clean bond_type
+        elements = bond_type.split("-")
+        if len(elements) != 2:
+            raise ValueError(f"Improper bond_type given {bond_type}! Must be in form 'A-B', where A and B are element symbols!")
+        key = f"bond_types.{'-'.join(sorted(elements))}"
+
+        crit = {
+            key: dict()
         }
 
-        for entry in d:
-            if d[entry][0] is not None:
-                crit[entry]["$gte"] = d[entry][0]
+        if max_bond_length is not None:
+            crit[key]["$lte"] = max_bond_length
+        if min_bond_length is not None:
+            crit[key]["$gte"] = min_bond_length
 
-            if d[entry][1] is not None:
-                crit[entry]["$lte"] = d[entry][1]
-
-        return {"criteria": crit}
-
-    def ensure_indexes(self):  # pragma: no cover
-        keys = [
-            "bond_length_stats.max",
-            "bond_length_stats.min",
-            "bond_length_stats.mean",
-        ]
-        return [(key, False) for key in keys]
-
-
-class CoordinationEnvsQuery(QueryOperator):
-    """
-    Method to generate a query on coordination environment data.
-    """
-
-    def query(
-        self,
-        coordination_envs: Optional[str] = Query(
-            None,
-            description="Query by coordination environments in the material composition as a comma-separated list\
- (e.g. 'Mo-S(6),S-Mo(3)')",
-        ),
-        coordination_envs_anonymous: Optional[str] = Query(
-            None,
-            description="Query by anonymous coordination environments in the material composition as a comma-separated\
- list (e.g. 'A-B(6),A-B(3)')",
-        ),
-    ) -> STORE_PARAMS:
-
-        crit = {}  # type: dict
-
-        if coordination_envs:
-            env_list = [env.strip() for env in coordination_envs.split(",")]
-            crit["coordination_envs"] = {"$all": [str(env) for env in env_list]}
-
-        if coordination_envs_anonymous:
-            env_list = [env.strip() for env in coordination_envs_anonymous.split(",")]
-            crit["coordination_envs_anonymous"] = {
-                "$all": [str(env) for env in env_list]
-            }
+        # If no max or min, just make sure bond type exists
+        if len(crit[key]) == 0:
+            crit[key]["$exists"] = True
 
         return {"criteria": crit}
 
     def ensure_indexes(self):  # pragma: no cover
-        return [("coordination_envs", False), ("coordination_envs_anonymous", False)]
+        return [("bond_types", False)]
