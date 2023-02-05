@@ -11,6 +11,14 @@ from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
 
 
+try:
+    from openbabel.openbabel import OBAlign
+    _ = OBAlign()
+    has_eigen = True
+except ImportError:
+    has_eigen = False
+
+
 @pytest.fixture(scope="session")
 def test_tasks(test_dir):
     with zopen(test_dir / "liec_tasks.json.gz") as f:
@@ -25,6 +33,7 @@ def test_tasks(test_dir):
     return tasks
 
 
+@pytest.mark.skipif(not has_eigen, reason="OBAlign missing, presumably due to lack of Eigen")
 def test_make_mol(test_tasks):
 
     molecule = MoleculeDoc.from_tasks(test_tasks)
@@ -46,6 +55,7 @@ def test_make_mol(test_tasks):
         MoleculeDoc.from_tasks(bad_task_group)
 
 
+@pytest.mark.skipif(not has_eigen, reason="OBAlign missing, presumably due to lack of Eigen")
 def test_make_deprecated_mol(test_tasks):
     bad_task_group = [
         task

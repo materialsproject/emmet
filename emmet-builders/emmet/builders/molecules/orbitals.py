@@ -214,8 +214,13 @@ class OrbitalBuilder(Builder):
                         task = best["task_id"]
 
                         task_doc = TaskDocument(
-                            **self.tasks.query_one({"task_id": int(task)})
+                            **self.tasks.query_one({"task_id": int(task),
+                                                    "formula_alphabetical": formula,
+                                                    "orig": {"$exists": True}})
                         )
+
+                        if task_doc is None:
+                            continue
 
                         orbital_doc = OrbitalDoc.from_task(
                             task_doc, molecule_id=mol.molecule_id, deprecated=False

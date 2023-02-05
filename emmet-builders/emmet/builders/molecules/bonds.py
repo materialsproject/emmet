@@ -248,8 +248,13 @@ class BondingBuilder(Builder):
                     task = best_entry["task_id"]
 
                     task_doc = TaskDocument(
-                        **self.tasks.query_one({"task_id": int(task)})
+                        **self.tasks.query_one({"task_id": int(task),
+                                                "formula_alphabetical": formula,
+                                                "orig": {"$exists": True}})
                     )
+
+                    if task_doc is None:
+                        continue
 
                     doc = BondingDoc.from_task(
                         task_doc,
@@ -257,7 +262,6 @@ class BondingBuilder(Builder):
                         preferred_methods=[method],
                         deprecated=False,
                     )
-
                     bonding_docs.append(doc)
 
         self.logger.debug(f"Produced {len(bonding_docs)} bonding docs for {formula}")
