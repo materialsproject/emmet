@@ -30,15 +30,15 @@ def level_of_theory(parameters: Dict[str, Any]) -> LevelOfTheory:
 
     """
 
-    funct_raw = parameters.get("rem").get("method")
-    basis_raw = parameters.get("rem").get("basis")
+    funct_raw = parameters.get("rem", dict()).get("method")
+    basis_raw = parameters.get("rem", dict()).get("basis")
 
     if funct_raw is None or basis_raw is None:
         raise ValueError(
             'Method and basis must be included in "rem" section ' "of parameters!"
         )
 
-    disp_corr = parameters["rem"].get("dft_d")
+    disp_corr = parameters.get("rem", dict()).get("dft_d")
 
     if disp_corr is None:
         funct_lower = funct_raw.lower()
