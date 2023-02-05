@@ -32,7 +32,7 @@ class BondTypeLengthQuery(QueryOperator):
         elements = bond_type.split("-")
         if len(elements) != 2:
             raise ValueError(f"Improper bond_type given {bond_type}! Must be in form 'A-B', where A and B are element symbols!")
-        key = f"bond_types.{'-'.join(sorted(elements))}"
+        key = f"bond_types.{'-'.join(sorted([e.capitalize() for e in elements]))}"
 
         crit = {
             key: dict()
