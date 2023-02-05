@@ -30,8 +30,8 @@ def level_of_theory(parameters: Dict[str, Any]) -> LevelOfTheory:
 
     """
 
-    funct_raw = parameters["rem"].get("method")
-    basis_raw = parameters["rem"].get("basis")
+    funct_raw = parameters.get("rem").get("method")
+    basis_raw = parameters.get("rem").get("basis")
 
     if funct_raw is None or basis_raw is None:
         raise ValueError(

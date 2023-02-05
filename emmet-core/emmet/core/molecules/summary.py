@@ -364,9 +364,6 @@ def _copy_from_doc(doc: Dict[str, Any]):
     for doc_key in summary_fields:
         sub_doc = doc.get(doc_key, None)
 
-        if doc_key == "redox":
-            print(sub_doc)
-
         if doc_key == "molecules":
             # Molecules is special because there should only ever be one
             # MoleculeDoc for a given molecule

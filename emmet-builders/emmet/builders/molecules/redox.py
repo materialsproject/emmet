@@ -218,7 +218,10 @@ class RedoxBuilder(Builder):
                     and e["task_type"] == "Single Point"
                     and e["output"].get("final_energy")
                 ]
-                ie_tasks = [TaskDocument(**e) for e in self.tasks.query({"task_id": {"$in": ie_sp_task_ids}})]
+                ie_tasks = [TaskDocument(**e) for e in self.tasks.query({"task_id": {"$in": ie_sp_task_ids},
+                                                                         "formula_alphabetical": formula,
+                                                                         "orig": {"$exists": True}
+                                                                         })]
 
                 ea_sp_task_ids = [
                     int(e["task_id"]) for e in gg.entries
@@ -226,7 +229,10 @@ class RedoxBuilder(Builder):
                     and e["task_type"] == "Single Point"
                     and e["output"].get("final_energy")
                 ]
-                ea_tasks = [TaskDocument(**e) for e in self.tasks.query({"task_id": {"$in": ea_sp_task_ids}})]
+                ea_tasks = [TaskDocument(**e) for e in self.tasks.query({"task_id": {"$in": ea_sp_task_ids},
+                                                                         "formula_alphabetical": formula,
+                                                                         "orig": {"$exists": True}
+                                                                         })]
 
                 grouped_docs = self._collect_by_lot_solvent(thermo_docs, ie_tasks, ea_tasks)
                 if gg.charge in charges:
