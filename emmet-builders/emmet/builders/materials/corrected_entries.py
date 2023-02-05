@@ -3,6 +3,7 @@ from collections import defaultdict
 from itertools import chain
 from typing import Dict, Iterable, Iterator, List, Optional
 from math import ceil
+import copy
 
 from maggma.core import Builder, Store
 from maggma.utils import grouper
@@ -140,7 +141,7 @@ class CorrectedEntriesBuilder(Builder):
 
         for compatability in self.compatibility:
 
-            if compatability:
+            if compatability is not None:
                 if compatability.name == "MP DFT mixing scheme":
                     thermo_type = ThermoType.GGA_GGA_U_R2SCAN
                 elif compatability.name == "MP2020":
@@ -151,14 +152,14 @@ class CorrectedEntriesBuilder(Builder):
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     with HiddenPrints():
-                        if "R2SCAN" in all_entry_types:
-                            pd_entries = compatability.process_entries(entries)
-
+                        if thermo_type == ThermoType.GGA_GGA_U_R2SCAN:
                             only_scan_pd_entries = [e for e in entries if str(e.data["run_type"]) == "R2SCAN"]
                             corrected_entries["R2SCAN"] = only_scan_pd_entries
 
+                            pd_entries = compatability.process_entries(copy.deepcopy(entries))
+
                         else:
-                            pd_entries = compatability.process_entries(entries)
+                            pd_entries = compatability.process_entries(copy.deepcopy(entries))
 
                         corrected_entries[str(thermo_type)] = pd_entries
 
@@ -168,7 +169,7 @@ class CorrectedEntriesBuilder(Builder):
                 else:
                     thermo_type = all_entry_types.pop()
 
-                corrected_entries[str(thermo_type)] = entries
+                corrected_entries[str(thermo_type)] = copy.deepcopy(entries)
 
         doc = CorrectedEntriesDoc(chemsys=chemsys, entries=corrected_entries)
 
@@ -247,7 +248,7 @@ class CorrectedEntriesBuilder(Builder):
         materials_chemsys_dates = {}
         for d in self.materials.query(
             {"deprecated": False, **self.query},
-            properties=[self.corrected_entries.key, self.materials.last_updated_field]
+            properties=[self.corrected_entries.key, self.materials.last_updated_field],
         ):
 
             entry = materials_chemsys_dates.get(d[self.corrected_entries.key], None)

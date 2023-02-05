@@ -108,10 +108,25 @@ class ThermoDoc(PropertyDoc):
         entries: List[Union[ComputedEntry, ComputedStructureEntry]],
         thermo_type: Union[ThermoType, RunType],
         phase_diagram: Optional[PhaseDiagram] = None,
+        use_max_chemsys: bool = False,
         **kwargs
     ):
+        """Produce a list of ThermoDocs from a list of Entry objects
+
+        Args:
+            entries (List[Union[ComputedEntry, ComputedStructureEntry]]): List of Entry objects
+            thermo_type (Union[ThermoType, RunType]): Thermo type
+            phase_diagram (Optional[PhaseDiagram], optional): Already built phase diagram. Defaults to None.
+            use_max_chemsys (bool, optional): Whether to only produce thermo docs for materials
+                that match the largest chemsys represented in the list. Defaults to False.
+
+        Returns:
+            List[ThermoDoc]: List of built thermo doc objects.
+        """
 
         pd = phase_diagram or cls.construct_phase_diagram(entries)
+
+        chemsys = "-".join(sorted([str(e) for e in pd.elements]))
 
         docs = []
 
@@ -137,6 +152,9 @@ class ThermoDoc(PropertyDoc):
 
         for material_id, entry_group in entries_by_mpid.items():
 
+            if use_max_chemsys and entry_group[0].composition.chemical_system != chemsys:
+                continue
+
             sorted_entries = sorted(entry_group, key=_energy_eval)
 
             blessed_entry = sorted_entries[0]
@@ -154,8 +172,9 @@ class ThermoDoc(PropertyDoc):
                 "is_stable": blessed_entry in pd.stable_entries,
             }
 
-            if "last_updated" in blessed_entry.data:
-                d["last_updated"] = blessed_entry.data["last_updated"]
+            # Uncomment to make last_updated line up with materials.
+            # if "last_updated" in blessed_entry.data:
+            #     d["last_updated"] = blessed_entry.data["last_updated"]
 
             # Store different info if stable vs decomposes
             if d["is_stable"]:
