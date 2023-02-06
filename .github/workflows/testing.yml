@@ -62,9 +62,20 @@ jobs:
         if: matrix.os == 'macos-latest'
         shell: bash -l {0}
         run: |
-          brew install open-babel
-          echo "/Users/runner/Library/Python/${{ matrix.python-version }}/bin" >> $GITHUB_PATH
+          git clone https://gitlab.com/libeigen/eigen.git
+          cd eigen && mkdir build && cd build
+          cmake ..
+          make
+          make install
           pip install openbabel
+          brew install swig
+          git clone https://github.com/openbabel/openbabel.git
+          cd openbabel && mkdir build && cd build
+          cmake -DRUN_SWIG=ON -DPYTHON_BINDINGS=ON ..
+          make
+          make install
+          echo "PYTHONPATH=$PYTHONPATH:$(pwd)/openbabel" >> $GITHUB_ENV
+
 
       - name: Install Python dependencies
         shell: bash -l {0}
