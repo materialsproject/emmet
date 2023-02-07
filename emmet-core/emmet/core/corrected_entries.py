@@ -1,6 +1,6 @@
 """ Core definition of a CorrectedEntriesDoc Document """
 
-from typing import Dict, Union, List
+from typing import Dict, Union, List, Optional
 from datetime import datetime
 
 from pydantic import Field
@@ -22,7 +22,7 @@ class CorrectedEntriesDoc(EmmetBaseModel):
         ..., title="Chemical System", description="Dash-delimited string of elements in the material.",
     )
 
-    entries: Dict[Union[ThermoType, RunType], List[Union[ComputedEntry, ComputedStructureEntry]]] = Field(
+    entries: Dict[Union[ThermoType, RunType], Optional[List[Union[ComputedEntry, ComputedStructureEntry]]]] = Field(
         ..., description="List of all corrected entries that are valid for the specified thermo type."
     )
 
