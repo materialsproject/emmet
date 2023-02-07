@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
@@ -34,17 +35,19 @@ class PartialChargesBuilder(Builder):
         - Critic2
         - Natural Bonding Orbital (NBO) population analysis
 
-    This builder will attempt to build documents for each molecule with each method.
-    For each molecule-method combination, the highest-quality data available (based
-    on level of theory and electronic energy) will be used.
+    This builder will attempt to build documents for each molecule, in each solvent,
+    with each method. For each molecule-solvent-method combination, the
+    highest-quality data available (based on level of theory and electronic
+    energy) will be used.
 
     The process is as follows:
         1. Gather MoleculeDocs by formula
-        2. For each molecule, sort all associated tasks by level of theory and electronic energy
-        2. For each method:
-            2.1. Find task docs with necessary data to calculate partial charges by that method
-            2.2. Take best (defined by level of theory and electronic energy) task
-            2.3. Convert TaskDoc to PartialChargesDoc
+        2. For each molecule, group all tasks by solvent.
+        3. For each solvent, sort tasks by level of theory and electronic energy
+        4. For each method:
+            4.1. Find task docs with necessary data to calculate partial charges by that method
+            4.2. Take best (defined by level of theory and electronic energy) task
+            4.3. Convert TaskDoc to PartialChargesDoc
     """
 
     def __init__(
@@ -87,8 +90,11 @@ class PartialChargesBuilder(Builder):
 
         # Search index for charges
         self.charges.ensure_index("molecule_id")
-        self.charges.ensure_index("method")
         self.charges.ensure_index("task_id")
+        self.charges.ensure_index("method")
+        self.charges.ensure_index("solvent")
+        self.charges.ensure_index("lot_solvent")
+        self.charges.ensure_index("property_id")
         self.charges.ensure_index("last_updated")
         self.charges.ensure_index("formula_alphabetical")
 
@@ -193,36 +199,53 @@ class PartialChargesBuilder(Builder):
                 and e["spin_multiplicity"] == mol.spin_multiplicity
             ]
 
-            sorted_entries = sorted(
-                correct_charge_spin,
-                key=lambda x: (sum(evaluate_lot(x["level_of_theory"])), x["energy"]),
-            )
+            # Organize by solvent environment
+            by_solvent = defaultdict(list)
+            for entry in correct_charge_spin:
+                by_solvent[entry["solvent"]].append(entry)
 
-            for method in self.methods:
-                # For each method, grab entries that have the relevant data
-                relevant_entries = [
-                    e
-                    for e in sorted_entries
-                    if e.get(method) is not None or e["output"].get(method) is not None
-                ]
-
-                if len(relevant_entries) == 0:
-                    continue
-
-                # Grab task document of best entry
-                best_entry = relevant_entries[0]
-                task = best_entry["task_id"]
-
-                task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
-
-                doc = PartialChargesDoc.from_task(
-                    task_doc,
-                    molecule_id=mol.molecule_id,
-                    preferred_methods=[method],
-                    deprecated=False,
+            for solvent, entries in by_solvent.items():
+                sorted_entries = sorted(
+                    entries,
+                    key=lambda x: (
+                        sum(evaluate_lot(x["level_of_theory"])),
+                        x["energy"],
+                    ),
                 )
 
-                charges_docs.append(doc)
+                for method in self.methods:
+                    # For each method, grab entries that have the relevant data
+                    relevant_entries = [
+                        e
+                        for e in sorted_entries
+                        if e.get(method) is not None
+                        or e["output"].get(method) is not None
+                    ]
+
+                    if len(relevant_entries) == 0:
+                        continue
+
+                    # Grab task document of best entry
+                    best_entry = relevant_entries[0]
+                    task = best_entry["task_id"]
+
+                    task_doc = TaskDocument(
+                        **self.tasks.query_one({"task_id": int(task),
+                                                "formula_alphabetical": formula,
+                                                "orig": {"$exists": True}})
+                    )
+
+                    if task_doc is None:
+                        continue
+
+                    doc = PartialChargesDoc.from_task(
+                        task_doc,
+                        molecule_id=mol.molecule_id,
+                        preferred_methods=[method],
+                        deprecated=False,
+                    )
+
+                    charges_docs.append(doc)
 
         self.logger.debug(f"Produced {len(charges_docs)} charges docs for {formula}")
 
@@ -268,17 +291,18 @@ class PartialSpinsBuilder(Builder):
         - Mulliken
         - Natural Bonding Orbital (NBO) population analysis
 
-    This builder will attempt to build documents for each molecule with each method.
-    For each molecule-method combination, the highest-quality data available (based
-    on level of theory and electronic energy) will be used.
+    This builder will attempt to build documents for each molecule, in each solvent,
+    with each method. For each molecule-method combination, the highest-quality
+    data available (based on level of theory and electronic energy) will be used.
 
     The process is as follows:
         1. Gather MoleculeDocs by formula
-        2. For each molecule, sort all associated tasks by level of theory and electronic energy
-        2. For each method:
-            2.1. Find task docs with necessary data to calculate partial spins by that method
-            2.2. Take best (defined by level of theory and electronic energy) task
-            2.3. Convert TaskDoc to PartialChargesDoc
+        2. For each molecule, group all tasks by solvent.
+        3. For each solvent, sort tasks by level of theory and electronic energy
+        4. For each method:
+            4.1. Find task docs with necessary data to calculate partial charges by that method
+            4.2. Take best (defined by level of theory and electronic energy) task
+            4.3. Convert TaskDoc to PartialSpinsDoc
     """
 
     def __init__(
@@ -321,8 +345,11 @@ class PartialSpinsBuilder(Builder):
 
         # Search index for charges
         self.spins.ensure_index("molecule_id")
-        self.spins.ensure_index("method")
         self.spins.ensure_index("task_id")
+        self.spins.ensure_index("method")
+        self.spins.ensure_index("solvent")
+        self.spins.ensure_index("lot_solvent")
+        self.spins.ensure_index("property_id")
         self.spins.ensure_index("last_updated")
         self.spins.ensure_index("formula_alphabetical")
 
@@ -431,36 +458,53 @@ class PartialSpinsBuilder(Builder):
                 and e["spin_multiplicity"] == mol.spin_multiplicity
             ]
 
-            sorted_entries = sorted(
-                correct_charge_spin,
-                key=lambda x: (sum(evaluate_lot(x["level_of_theory"])), x["energy"]),
-            )
+            # Organize by solvent environment
+            by_solvent = defaultdict(list)
+            for entry in correct_charge_spin:
+                by_solvent[entry["solvent"]].append(entry)
 
-            for method in self.methods:
-                # For each method, grab entries that have the relevant data
-                relevant_entries = [
-                    e
-                    for e in sorted_entries
-                    if e.get(method) is not None or e["output"].get(method) is not None
-                ]
-
-                if len(relevant_entries) == 0:
-                    continue
-
-                # Grab task document of best entry
-                best_entry = relevant_entries[0]
-                task = best_entry["task_id"]
-
-                task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
-
-                doc = PartialSpinsDoc.from_task(
-                    task_doc,
-                    molecule_id=mol.molecule_id,
-                    preferred_methods=[method],
-                    deprecated=False,
+            for solvent, entries in by_solvent.items():
+                sorted_entries = sorted(
+                    entries,
+                    key=lambda x: (
+                        sum(evaluate_lot(x["level_of_theory"])),
+                        x["energy"],
+                    ),
                 )
 
-                spins_docs.append(doc)
+                for method in self.methods:
+                    # For each method, grab entries that have the relevant data
+                    relevant_entries = [
+                        e
+                        for e in sorted_entries
+                        if e.get(method) is not None
+                        or e["output"].get(method) is not None
+                    ]
+
+                    if len(relevant_entries) == 0:
+                        continue
+
+                    # Grab task document of best entry
+                    best_entry = relevant_entries[0]
+                    task = best_entry["task_id"]
+
+                    task_doc = TaskDocument(
+                        **self.tasks.query_one({"task_id": int(task),
+                                                "formula_alphabetical": formula,
+                                                "orig": {"$exists": True}})
+                    )
+
+                    if task_doc is None:
+                        continue
+
+                    doc = PartialSpinsDoc.from_task(
+                        task_doc,
+                        molecule_id=mol.molecule_id,
+                        preferred_methods=[method],
+                        deprecated=False,
+                    )
+
+                    spins_docs.append(doc)
 
         self.logger.debug(
             f"Produced {len(spins_docs)} partial spins docs for {formula}"

@@ -1,15 +1,15 @@
 from typing import Dict, List, Any, Optional, Tuple
 import copy
+from hashlib import blake2b
 
 from pydantic import Field
 import networkx as nx
 
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 
-
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPculeID
+from emmet.core.utils import make_mol_graph
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
@@ -18,7 +18,9 @@ from emmet.core.molecules.molecule_property import PropertyDoc
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
-metals = ["Li", "Mg", "Ca", "Zn", "Al"]
+metals = ['Zn', 'Tl', 'Ti', 'Te', 'Sr', 'Sn', 'Pt', 'Rb', 'Po', 'Pb', 'Na',
+          'Mg', 'Li', 'K', 'In', 'Ga', 'Cu', 'Ca', 'Bi', 'Be', 'Ba', 'Au',
+          'At', 'Al', 'Ag']
 
 BOND_METHODS = ["nbo", "critic2", "OpenBabelNN + metal_edge_extender"]
 
@@ -46,35 +48,6 @@ def fix_C_Li_bonds(critic: Dict) -> Dict:
                     [int(entry) - 1 for entry in critic["bonding"][key]["atom_ids"]]
                 )
     return critic
-
-
-def make_mol_graph(
-    mol: Molecule, critic_bonds: Optional[List[List[int]]] = None
-) -> MoleculeGraph:
-    """
-    Construct a MoleculeGraph using OpenBabelNN with metal_edge_extender and
-    (optionally) Critic2 bonding information.
-
-    This bonding scheme was used to define bonding for the Lithium-Ion Battery
-    Electrolyte (LIBE) dataset (DOI: 10.1038/s41597-021-00986-9)
-
-    :param mol: Molecule to be converted to MoleculeGraph
-    :param critic_bonds: (optional) List of lists [a, b], where a and b are
-        atom indices (0-indexed)
-
-    :return: mol_graph, a MoleculeGraph
-    """
-    mol_graph = MoleculeGraph.with_local_env_strategy(mol, OpenBabelNN())
-    mol_graph = metal_edge_extender(mol_graph)
-    if critic_bonds:
-        mg_edges = mol_graph.graph.edges()
-        for bond in critic_bonds:
-            bond.sort()
-            if bond[0] != bond[1]:
-                bond_tup = (bond[0], bond[1])
-                if bond_tup not in mg_edges:
-                    mol_graph.add_edge(bond_tup[0], bond_tup[1])
-    return mol_graph
 
 
 def _bonds_hybridization(nbo: Dict[str, Any], index: int):
@@ -335,8 +308,8 @@ class BondingDoc(PropertyDoc):
     def from_task(
         cls,
         task: TaskDocument,
-        molecule_id: MPID,
-        preferred_methods: List,
+        molecule_id: MPculeID,
+        preferred_methods: List[str],
         deprecated: bool = False,
         **kwargs,
     ):  # type: ignore[override]
@@ -349,7 +322,7 @@ class BondingDoc(PropertyDoc):
         - Critic2 (really OpenBabelNN + metal_edge_extender + Critic2)
 
         :param task: task document from which bonding properties can be extracted
-        :param molecule_id: mpid
+        :param molecule_id: MPculeID
         :param preferred_methods: list of methods; by default, NBO7, Critic2, and the combination
             of OpenBabelNN and metal_edge_extender in pymatgen, in that order
         :param kwargs: to pass to PropertyDoc
@@ -369,23 +342,25 @@ class BondingDoc(PropertyDoc):
             if mg_made:
                 break
 
-            if m == "nbo" and task.output.nbo is not None:
-                if task.orig["rem"].get("run_nbo6", False):
-                    method = "nbo"
-                    mg, warnings = nbo_molecule_graph(mol, task.output.nbo)
-                else:
-                    # Cannot make NBO molecule graph with NBO5
-                    continue
+            if m == "nbo" and task.output.nbo is not None and (
+                    task.orig["rem"].get("run_nbo6", False)
+                    or task.orig["rem"].get("nbo_external", False)
+            ):
+                method = "nbo"
+                mg, warnings = nbo_molecule_graph(mol, task.output.nbo)
+                mg_made = True
 
             elif m == "critic2" and task.critic2 is not None:
                 method = "critic2"
                 critic = fix_C_Li_bonds(task.critic2)
                 critic_bonds = critic["processed"]["bonds"]
                 mg = make_mol_graph(mol, critic_bonds=critic_bonds)
+                mg_made = True
 
             else:
                 method = "OpenBabelNN + metal_edge_extender"
                 mg = make_mol_graph(mol)
+                mg_made = True
 
         bonds = list()
         for bond in mg.graph.edges():
@@ -413,16 +388,25 @@ class BondingDoc(PropertyDoc):
             if not any([m in bond for m in m_inds]):
                 bonds_nometal.append(bond)
 
+        id_string = f"bonding-{molecule_id}-{task.task_id}-{task.lot_solvent}-{method}"
+        h = blake2b()
+        h.update(id_string.encode("utf-8"))
+        property_id = h.hexdigest()
+
         return super().from_molecule(
             meta_molecule=mol,
+            property_id=property_id,
             molecule_id=molecule_id,
+            level_of_theory=task.level_of_theory,
+            solvent=task.solvent,
+            lot_solvent=task.lot_solvent,
             method=method,
             warnings=warnings,
             molecule_graph=mg,
             bond_types=bond_types,
             bonds=bonds,
             bonds_nometal=bonds_nometal,
-            deprecated=deprecated,
             origins=[PropertyOrigin(name="bonding", task_id=task.task_id)],
+            deprecated=deprecated,
             **kwargs,
         )

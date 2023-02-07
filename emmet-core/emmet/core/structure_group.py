@@ -29,7 +29,7 @@ def generic_groupby(list_in, comp=operator.eq) -> List[int]:
         if ls1 is not None:
             continue
         list_out[i1] = label_num
-        for i2, ls2 in list(enumerate(list_out))[(i1 + 1):]:
+        for i2, ls2 in list(enumerate(list_out))[i1 + 1:]:
             if comp(list_in[i1], list_in[i2]):
                 if list_out[i2] is None:
                     list_out[i2] = list_out[i1]
@@ -55,10 +55,13 @@ class StructureGroupDoc(BaseModel):
                     "material_id, you can also append the followed by the ignored species at the end.",
     )
 
-    has_distinct_compositions: bool = Field(None, description="True if multiple compositions are present in the group.")
+    has_distinct_compositions: bool = Field(
+        None, description="True if multiple compositions are present in the group."
+    )
 
     material_ids: list = Field(
-        None, description="A list of materials ids for all of the materials that were grouped together."
+        None,
+        description="A list of materials ids for all of the materials that were grouped together.",
     )
 
     host_material_ids: list = Field(
@@ -73,11 +76,13 @@ class StructureGroupDoc(BaseModel):
     )
 
     framework_formula: str = Field(
-        None, description="The chemical formula for the framework (the materials system without the ignored species)."
+        None,
+        description="The chemical formula for the framework (the materials system without the ignored species).",
     )
 
     ignored_specie: str = Field(
-        None, description="Ignored atomic specie which is usually the working ion (ex: Li, Mg, or Ca)."
+        None,
+        description="Ignored atomic specie which is usually the working ion (ex: Li, Mg, or Ca).",
     )
 
     chemsys: str = Field(
@@ -86,7 +91,9 @@ class StructureGroupDoc(BaseModel):
                     "present the chemsys will also include the ignored species.",
     )
 
-    last_updated: datetime = Field(None, description="Timestamp when this document was built.")
+    last_updated: datetime = Field(
+        None, description="Timestamp when this document was built."
+    )
 
     # Make sure that the datetime field is properly formatted
     @validator("last_updated", pre=True)
@@ -95,7 +102,9 @@ class StructureGroupDoc(BaseModel):
 
     @classmethod
     def from_grouped_entries(
-            cls, entries: List[Union[ComputedEntry, ComputedStructureEntry]], ignored_specie: str,
+        cls,
+        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+        ignored_specie: str,
     ) -> "StructureGroupDoc":
         """ "
         Assuming a list of entries are already grouped together, create a StructureGroupDoc
@@ -196,13 +205,24 @@ class StructureGroupDoc(BaseModel):
 
     @staticmethod
     def get_host_and_insertion_ids(
-            entries: List[Union[ComputedEntry, ComputedStructureEntry]], ignored_specie: str,
+        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+        ignored_specie: str,
     ) -> dict:
-        host_and_insertion_ids = {"host_id": None, "host_ids": [], "host_entries": [], "insertion_ids": []}  # type:dict
-        ignored_specie_min_fraction = min([e.composition.get_atomic_fraction(ignored_specie) for e in entries])
+        host_and_insertion_ids = {
+            "host_id": None,
+            "host_ids": [],
+            "host_entries": [],
+            "insertion_ids": [],
+        }  # type:dict
+        ignored_specie_min_fraction = min(
+            [e.composition.get_atomic_fraction(ignored_specie) for e in entries]
+        )
 
         for e in entries:
-            if e.composition.get_atomic_fraction(ignored_specie) == ignored_specie_min_fraction:
+            if (
+                e.composition.get_atomic_fraction(ignored_specie)
+                == ignored_specie_min_fraction
+            ):
                 host_and_insertion_ids["host_entries"].append(e)
                 host_and_insertion_ids["host_ids"].append(e.data["material_id"])
             else:
@@ -215,7 +235,9 @@ class StructureGroupDoc(BaseModel):
 
 
 def group_entries_with_structure_matcher(
-        g, struct_matcher: StructureMatcher, working_ion: Optional[str] = None,
+    g,
+    struct_matcher: StructureMatcher,
+    working_ion: Optional[str] = None,
 ) -> Iterable[List[Union[ComputedStructureEntry]]]:
     """
     Group the entries together based on similarity of the  primitive cells
@@ -228,7 +250,7 @@ def group_entries_with_structure_matcher(
         subgroups: subgroups that are grouped together based on structure similarity
     """
     if working_ion is None:
-        wion = struct_matcher.as_dict()["ignored_species"][0]
+        wion: str = struct_matcher.as_dict()["ignored_species"][0]
 
     # Sort the entries by symmetry and by working ion fraction
     def get_num_sym_ops(ent):

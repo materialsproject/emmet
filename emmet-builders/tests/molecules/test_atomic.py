@@ -20,7 +20,7 @@ def mol_store(tasks_store):
     stage_one.run()
 
     mol_store = MemoryStore(key="molecule_id")
-    stage_two = MoleculesBuilder(assoc=assoc_store, molecules=mol_store, prefix="libe")
+    stage_two = MoleculesBuilder(assoc=assoc_store, molecules=mol_store)
     stage_two.run()
 
     return mol_store
@@ -35,7 +35,7 @@ def charges_store():
 def spins_store():
     return MemoryStore()
 
-@pytest.mark.skip(reason="Waiting on molecule update.")
+
 def test_charges_builder(tasks_store, mol_store, charges_store):
     builder = PartialChargesBuilder(
         tasks_store, mol_store, charges_store, methods=["mulliken", "resp", "critic2"]
@@ -45,7 +45,7 @@ def test_charges_builder(tasks_store, mol_store, charges_store):
     assert charges_store.count() == 138
     assert charges_store.count({"deprecated": True}) == 0
 
-@pytest.mark.skip(reason="Waiting on molecule update.")
+
 def test_spins_builder(tasks_store, mol_store, spins_store):
     builder = PartialSpinsBuilder(
         tasks_store, mol_store, spins_store, methods=["mulliken"]

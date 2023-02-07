@@ -1,9 +1,11 @@
+from math import ceil
 import warnings
 from itertools import chain
 from typing import Dict, Iterator, List, Optional, Set
 
 from maggma.core import Builder, Store
 from maggma.stores import S3Store
+from maggma.utils import grouper
 from monty.json import MontyDecoder
 from pymatgen.analysis.phase_diagram import PhaseDiagramError
 from pymatgen.entries.computed_entries import ComputedStructureEntry
@@ -107,6 +109,15 @@ class ThermoBuilder(Builder):
             coll.ensure_index("chemsys")
             coll.ensure_index("phase_diagram_id")
 
+    def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
+        to_process_chemsys = self._get_chemsys_to_process()
+
+        N = ceil(len(to_process_chemsys) / number_splits)
+
+        for chemsys_chunk in grouper(to_process_chemsys, N):
+
+            yield {"query": {"chemsys": {"$in": list(chemsys_chunk)}}}
+
     def get_items(self) -> Iterator[List[Dict]]:
         """
         Gets whole chemical systems of entries to process
@@ -137,17 +148,18 @@ class ThermoBuilder(Builder):
 
         for thermo_type, entry_list in item["entries"].items():
 
-            entries = [ComputedStructureEntry.from_dict(entry) for entry in entry_list]
-            chemsys = item["chemsys"]
-            elements = chemsys.split("-")
+            if entry_list:
+                entries = [ComputedStructureEntry.from_dict(entry) for entry in entry_list]
+                chemsys = item["chemsys"]
+                elements = chemsys.split("-")
 
-            self.logger.debug(f"Processing {len(entries)} entries for {chemsys} and thermo type {thermo_type}")
+                self.logger.debug(f"Processing {len(entries)} entries for {chemsys} and thermo type {thermo_type}")
 
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                with HiddenPrints():
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    with HiddenPrints():
 
-                    pd_thermo_doc_pair_list.append(self._produce_pair(entries, thermo_type, elements))
+                        pd_thermo_doc_pair_list.append(self._produce_pair(entries, thermo_type, elements))
 
         return pd_thermo_doc_pair_list
 
@@ -159,7 +171,7 @@ class ThermoBuilder(Builder):
             pd = ThermoDoc.construct_phase_diagram(pd_entries)
 
             # Iterate through entry material IDs and construct list of thermo docs to update
-            docs = ThermoDoc.from_entries(pd_entries, thermo_type, pd, deprecated=False)
+            docs = ThermoDoc.from_entries(pd_entries, thermo_type, pd, use_max_chemsys=True, deprecated=False)
 
             pd_docs = [None]
 

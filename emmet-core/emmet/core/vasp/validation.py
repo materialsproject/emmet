@@ -187,7 +187,6 @@ class ValidationDoc(EmmetBaseModel):
 def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandgap):
     # Ensure inputsets get proper additional input values
     if "SCAN" in run_type.value:
-
         valid_input_set: VaspInputSet = input_sets[str(calc_type)](structure, bandgap=bandgap)
     elif task_type == TaskType.NSCF_Uniform or task_type == TaskType.NSCF_Line:
         # Constructing the k-path for line-mode calculations is too costly, so

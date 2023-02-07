@@ -14,9 +14,9 @@ attrs==22.2.0
     #   pytest
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.62
+boto3==1.26.64
     # via maggma
-botocore==1.29.62
+botocore==1.29.64
     # via
     #   boto3
     #   s3transfer
@@ -47,6 +47,8 @@ cryptography==39.0.0
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
+custodian==2022.5.26
+    # via emmet-core (setup.py)
 cycler==0.11.0
     # via matplotlib
 distlib==0.3.6
@@ -55,7 +57,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.42.7
+emmet-core==0.42.13
     # via mp-api
 exceptiongroup==1.1.0
     # via pytest
@@ -197,7 +199,7 @@ msgpack==1.0.4
     #   mp-api
 mypy==0.991
     # via emmet-core (setup.py)
-mypy-extensions==0.4.3
+mypy-extensions==1.0.0
     # via
     #   emmet-core (setup.py)
     #   mypy
@@ -253,7 +255,7 @@ plotly==5.13.0
     # via pymatgen
 pluggy==1.0.0
     # via pytest
-pre-commit==3.0.2
+pre-commit==3.0.4
     # via emmet-core (setup.py)
 pubchempy==1.0.4
     # via robocrys
@@ -414,7 +416,7 @@ types-docutils==0.19.1.2
     # via types-setuptools
 types-requests==2.28.11.8
     # via emmet-core (setup.py)
-types-setuptools==65.7.0.3
+types-setuptools==67.1.0.0
     # via emmet-core (setup.py)
 types-urllib3==1.26.25.4
     # via types-requests
@@ -443,7 +445,7 @@ werkzeug==2.2.2
     # via flask
 wincertstore==0.2
     # via emmet-core (setup.py)
-zipp==3.12.0
+zipp==3.12.1
     # via
     #   importlib-metadata
     #   importlib-resources
