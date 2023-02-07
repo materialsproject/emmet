@@ -15,6 +15,10 @@ class NBOPopulationQuery(QueryOperator):
             False,
             description="Should the molecules have unpaired (radical) electrons?"
         ),
+        electron_type: Optional[str] = Query(
+            None,
+            description="Should alpha ('alpha'), beta ('beta'), or all electrons be considered (None; default)?"
+        ),
         min_core_electron: Optional[float] = Query(
             None,
             description="Minimum number of core electrons in an atom in this molecule."
@@ -49,8 +53,17 @@ class NBOPopulationQuery(QueryOperator):
             "rydberg_electrons": [min_rydberg_electron, max_rydberg_electron],
         }
 
+        if electron_type is None or not open_shell:
+            prefix = "nbo_population."
+        elif electron_type.lower() == "alpha":
+            prefix = "alpha_population."
+        elif electron_type.lower() == "beta":
+            prefix = "beta_population."
+        else:
+            raise ValueError("electron_type must be 'alpha', 'beta', or None!")
+
         for entry in d:
-            key = "nbo_population." + entry
+            key = prefix + entry
             if d[entry][0] is not None or d[entry][1] is not None:
                 crit[key] = dict()
 
@@ -66,7 +79,13 @@ class NBOPopulationQuery(QueryOperator):
         return [("open_shell", False),
                 ("nbo_population.core_electrons", False),
                 ("nbo_population.valence_electrons", False),
-                ("nbo_population.rydberg_electrons", False)]
+                ("nbo_population.rydberg_electrons", False),
+                ("alpha_population.core_electrons", False),
+                ("alpha_population.valence_electrons", False),
+                ("alpha_population.rydberg_electrons", False),
+                ("beta_population.core_electrons", False),
+                ("beta_population.valence_electrons", False),
+                ("beta_population.rydberg_electrons", False)]
 
 
 class NBOLonePairQuery(BaseQuery):
@@ -80,9 +99,58 @@ class NBOLonePairQuery(BaseQuery):
             False,
             description="Should the molecules have unpaired (radical) electrons?"
         ),
-        
+        electron_type: Optional[str] = Query(
+            None,
+            description="Should alpha ('alpha'), beta ('beta'), or all electrons be considered (None; default)?"
+        ),
+        lp_type: Optional[str] = Query(
+            None,
+            description="Type of orbital - 'LP' for 'lone pair' or 'LV' for 'lone vacant'"
+        ),
+        min_s_character: Optional[float] = Query(
+            None,
+            description="Minimum percentage of the lone pair constituted by s atomic orbitals."
+        ),
+        max_s_character: Optional[float] = Query(
+            None,
+            description="Maximum percentage of the lone pair constituted by s atomic orbitals."
+        ),
+        min_p_character: Optional[float] = Query(
+            None,
+            description="Minimum percentage of the lone pair constituted by p atomic orbitals."
+        ),
+        max_p_character: Optional[float] = Query(
+            None,
+            description="Maximum percentage of the lone pair constituted by p atomic orbitals."
+        ),
+        min_d_character: Optional[float] = Query(
+            None,
+            description="Minimum percentage of the lone pair constituted by d atomic orbitals."
+        ),
+        max_d_character: Optional[float] = Query(
+            None,
+            description="Maximum percentage of the lone pair constituted by d atomic orbitals."
+        ),
+        min_f_character: Optional[float] = Query(
+            None,
+            description="Minimum percentage of the lone pair constituted by f atomic orbitals."
+        ),
+        max_f_character: Optional[float] = Query(
+            None,
+            description="Maximum percentage of the lone pair constituted by f atomic orbitals."
+        ),
     ):
         pass
+
+    def ensure_indexes(self):
+        prefixes = ["nbo_lone_pairs.", ""]
+        keys = [
+            ".max",
+            "bond_length_stats.min",
+            "bond_length_stats.mean",
+        ]
+        return [(key, False) for key in keys]
+
 
 
 class NBOBondQuery(BaseQuery):
