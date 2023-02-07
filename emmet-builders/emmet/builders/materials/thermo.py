@@ -148,17 +148,20 @@ class ThermoBuilder(Builder):
 
         for thermo_type, entry_list in item["entries"].items():
 
-            entries = [ComputedStructureEntry.from_dict(entry) for entry in entry_list]
-            chemsys = item["chemsys"]
-            elements = chemsys.split("-")
+            if entry_list is None:
+                pd_thermo_doc_pair_list.append((None, None))
+            else:
+                entries = [ComputedStructureEntry.from_dict(entry) for entry in entry_list]
+                chemsys = item["chemsys"]
+                elements = chemsys.split("-")
 
-            self.logger.debug(f"Processing {len(entries)} entries for {chemsys} and thermo type {thermo_type}")
+                self.logger.debug(f"Processing {len(entries)} entries for {chemsys} and thermo type {thermo_type}")
 
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                with HiddenPrints():
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    with HiddenPrints():
 
-                    pd_thermo_doc_pair_list.append(self._produce_pair(entries, thermo_type, elements))
+                        pd_thermo_doc_pair_list.append(self._produce_pair(entries, thermo_type, elements))
 
         return pd_thermo_doc_pair_list
 
