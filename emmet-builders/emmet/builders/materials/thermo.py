@@ -148,9 +148,7 @@ class ThermoBuilder(Builder):
 
         for thermo_type, entry_list in item["entries"].items():
 
-            if entry_list is None:
-                pd_thermo_doc_pair_list.append((None, None))
-            else:
+            if entry_list:
                 entries = [ComputedStructureEntry.from_dict(entry) for entry in entry_list]
                 chemsys = item["chemsys"]
                 elements = chemsys.split("-")
