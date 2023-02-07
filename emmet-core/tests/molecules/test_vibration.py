@@ -24,11 +24,13 @@ def test_tasks(test_dir):
     tasks = [TaskDocument(**t) for t in data]
     return tasks
 
-@pytest.mark.skip(reason="Waiting on molecule update.")
+
 def test_vibration(test_tasks):
     task = test_tasks[0]
 
-    vib_doc = VibrationDoc.from_task(task, molecule_id="libe-115880")
+    vib_doc = VibrationDoc.from_task(
+        task, molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2"
+    )
     assert vib_doc.property_name == "vibrations"
     assert len(vib_doc.frequencies) == 27
     assert len(vib_doc.frequency_modes) == 27

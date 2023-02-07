@@ -1,15 +1,20 @@
+from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
 from typing import Optional, Iterable, Iterator, List, Dict
+
+from pymatgen.core.structure import Molecule
+from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
 
 from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.molecule import MoleculeDoc, best_lot, evaluate_lot
+from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
 from emmet.core.molecules.thermo import get_free_energy, ThermoDoc
+from emmet.core.qchem.calc_types import TaskType
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
@@ -19,29 +24,94 @@ __author__ = "Evan Spotte-Smith"
 SETTINGS = EmmetBuildSettings()
 
 single_mol_thermo = {
-    "C1": {"enthalpy": 1.481, "entropy": 33.398},
-    "F1": {"enthalpy": 1.481, "entropy": 34.767},
-    "H1": {"enthalpy": 1.481, "entropy": 26.014},
-    "Li1": {"enthalpy": 1.481, "entropy": 31.798},
-    "Mg1": {"enthalpy": 1.481, "entropy": 35.462},
-    "N1": {"enthalpy": 1.481, "entropy": 33.858},
-    "O1": {"enthalpy": 1.481, "entropy": 34.254},
-    "P1": {"enthalpy": 1.481, "entropy": 36.224},
-    "S1": {"enthalpy": 1.481, "entropy": 36.319},
+    "Zn": {"enthalpy": 1.481, "entropy": 38.384},
+    "Xe": {"enthalpy": 1.481, "entropy": 40.543},
+    "Tl": {"enthalpy": 1.481, "entropy": 41.857},
+    "Ti": {"enthalpy": 1.481, "entropy": 37.524},
+    "Te": {"enthalpy": 1.481, "entropy": 40.498},
+    "Sr": {"enthalpy": 1.481, "entropy": 39.334},
+    "Sn": {"enthalpy": 1.481, "entropy": 40.229},
+    "Si": {"enthalpy": 1.481, "entropy": 35.921},
+    "Sb": {"enthalpy": 1.481, "entropy": 40.284},
+    "Se": {"enthalpy": 1.481, "entropy": 39.05},
+    "S": {"enthalpy": 1.481, "entropy": 36.319},
+    "Rn": {"enthalpy": 1.481, "entropy": 42.095},
+    "Pt": {"enthalpy": 1.481, "entropy": 41.708},
+    "Rb": {"enthalpy": 1.481, "entropy": 39.23},
+    "Po": {"enthalpy": 1.481, "entropy": 41.915},
+    "Pb": {"enthalpy": 1.481, "entropy": 41.901},
+    "P": {"enthalpy": 1.481, "entropy": 36.224},
+    "O": {"enthalpy": 1.481, "entropy": 34.254},
+    "Ne": {"enthalpy": 1.481, "entropy": 34.919},
+    "N": {"enthalpy": 1.481, "entropy": 33.858},
+    "Na": {"enthalpy": 1.481, "entropy": 35.336},
+    "Mg": {"enthalpy": 1.481, "entropy": 35.462},
+    "Li": {"enthalpy": 1.481, "entropy": 31.798},
+    "Kr": {"enthalpy": 1.481, "entropy": 39.191},
+    "K": {"enthalpy": 1.481, "entropy": 36.908},
+    "In": {"enthalpy": 1.481, "entropy": 40.132},
+    "I": {"enthalpy": 1.481, "entropy": 40.428},
+    "H": {"enthalpy": 1.481, "entropy": 26.014},
+    "He": {"enthalpy": 1.481, "entropy": 30.125},
+    "Ge": {"enthalpy": 1.481, "entropy": 38.817},
+    "Ga": {"enthalpy": 1.481, "entropy": 38.609},
+    "F": {"enthalpy": 1.481, "entropy": 34.767},
+    "Cu": {"enthalpy": 1.481, "entropy": 38.337},
+    "Cl": {"enthalpy": 1.481, "entropy": 36.586},
+    "Ca": {"enthalpy": 1.481, "entropy": 36.984},
+    "C": {"enthalpy": 1.481, "entropy": 33.398},
+    "Br": {"enthalpy": 1.481, "entropy": 39.012},
+    "Bi": {"enthalpy": 1.481, "entropy": 41.915},
+    "Be": {"enthalpy": 1.481, "entropy": 32.544},
+    "Ba": {"enthalpy": 1.481, "entropy": 40.676},
+    "B": {"enthalpy": 1.481, "entropy": 33.141},
+    "Au": {"enthalpy": 1.481, "entropy": 41.738},
+    "At": {"enthalpy": 1.481, "entropy": 41.929},
+    "As": {"enthalpy": 1.481, "entropy": 38.857},
+    "Ar": {"enthalpy": 1.481, "entropy": 36.983},
+    "Al": {"enthalpy": 1.481, "entropy": 35.813},
+    "Ag": {"enthalpy": 1.481, "entropy": 39.917},
 }
 
 
 class ThermoBuilder(Builder):
     """
     The ThermoBuilder extracts the highest-quality thermodynamic data from a
-    MoleculeDoc (lowest electronic energy, highest level of theory).
+    MoleculeDoc (lowest electronic energy, highest level of theory for each
+    solvent available).
 
-    The process is as follows:
+    This builder constructs ThermoDocs in two different ways: with and without
+    single-point energy corrections.
+
+    Before any documents are constructed, the following steps are taken:
         1. Gather MoleculeDocs by formula
-        2. For each doc, grab the best TaskDoc (doc with as much thermodynamic
-            information as possible using the highest level of theory with
-            lowest electronic energy for the molecule)
-        3. Convert TaskDoc to ThermoDoc
+        2. For each doc, identify tasks with thermodynamic information such as
+            zero-point energy, enthalpy, and entropy. Collect these "documents
+             including complete thermodynamics" (DICTs).
+        3. Separately, collect single-point energy calculations (SPECs).
+        4. Sort both sets of collected tasks (DICT and SPEC) by solvent
+
+    The first type of doc - those without corrections - can be constructed in
+    a straightforward fashion:
+        5. For each solvent, grab the best DICT (where "best" is defined as the
+            task generated using the highest level of theory with the lowest
+            electronic energy)
+        6. Convert this TaskDoc to ThermoDoc
+
+    The second type - those involving single-point energy corrections - are
+    generated differently and in a slightly more involved process:
+        7. For each of the "best" DICT docs identified in step 5 above:
+            7.1 For each solvent, grab the best SPEC
+            7.2 Try to match each best SPEC with a matching DICT (meaning that
+                the DICT and the SPEC have identical structure) where the DICT
+                is calculated at a lower or the same level of theory than the
+                SPEC
+            7.3 Convert each DICT-SPEC combination to create a ThermoDoc
+
+    In the case where there are multiple ThermoDocs made for a given solvent,
+    the different ThermoDocs will be ranked, first by level of theory (for
+    a doc made with an energy correction, the scores of the DICT and the SPEC
+    levels of theory will be averaged) and then by electronic energy.
     """
 
     def __init__(
@@ -83,6 +153,9 @@ class ThermoBuilder(Builder):
         # Search index for thermo
         self.thermo.ensure_index("molecule_id")
         self.thermo.ensure_index("task_id")
+        self.thermo.ensure_index("solvent")
+        self.thermo.ensure_index("lot_solvent")
+        self.thermo.ensure_index("property_id")
         self.thermo.ensure_index("last_updated")
         self.thermo.ensure_index("formula_alphabetical")
 
@@ -156,6 +229,25 @@ class ThermoBuilder(Builder):
             [dict] : a list of new thermo docs
         """
 
+        def _add_single_atom_enthalpy_entropy(task: TaskDocument, doc: ThermoDoc):
+            initial_mol = task.output.initial_molecule
+            # If single atom, try to add enthalpy and entropy
+            if len(initial_mol) == 1:
+                if doc.total_enthalpy is None or doc.total_entropy is None:
+                    formula = initial_mol.composition.alphabetical_formula
+                    if formula in single_mol_thermo:
+                        vals = single_mol_thermo[formula]
+                        doc.total_enthalpy = vals["enthalpy"] * 0.043363
+                        doc.total_entropy = vals["entropy"] * 0.000043363
+                        doc.translational_enthalpy = vals["enthalpy"] * 0.043363
+                        doc.translational_entropy = vals["entropy"] * 0.000043363
+                        doc.free_energy = get_free_energy(
+                            doc.electronic_energy,
+                            vals["enthalpy"],
+                            vals["entropy"],
+                        )
+            return doc
+
         mols = [MoleculeDoc(**item) for item in items]
         formula = mols[0].formula_alphabetical
         mol_ids = [m.molecule_id for m in mols]
@@ -163,18 +255,51 @@ class ThermoBuilder(Builder):
 
         thermo_docs = list()
 
+        mm = MoleculeMatcher()
+
         for mol in mols:
+            this_thermo_docs = list()
+            # Collect DICTs and SPECs
             thermo_entries = [
-                e for e in mol.entries if e["output"]["enthalpy"] is not None and e["output"]["entropy"] is not None
+                e
+                for e in mol.entries
+                if e["output"]["enthalpy"] is not None
+                and e["output"]["entropy"] is not None
+                and e["charge"] == mol.charge
+                and e["spin_multiplicity"] == mol.spin_multiplicity
             ]
 
-            # No documents with enthalpy and entropy
+            sp_entries = list()
+            for entry in mol.entries:
+                if isinstance(entry["task_type"], TaskType):
+                    task_type = entry["task_type"].value
+                else:
+                    task_type = entry["task_type"]
+
+                if (
+                    task_type == "Single Point"
+                    and entry["charge"] == mol.charge
+                    and entry["spin_multiplicity"] == mol.spin_multiplicity
+                ):
+                    sp_entries.append(entry)
+
+            # Group both DICTs and SPECs by solvent environment
+            by_solvent_dict = defaultdict(list)
+            by_solvent_spec = defaultdict(list)
+            for entry in thermo_entries:
+                by_solvent_dict[entry["solvent"]].append(entry)
+            for entry in sp_entries:
+                by_solvent_spec[entry["solvent"]].append(entry)
+
             if len(thermo_entries) == 0:
-                best = mol.best_entries[best_lot(mol)]
-                task = best["task_id"]
+                without_corrections = by_solvent_spec
             else:
+                without_corrections = by_solvent_dict
+
+            # Construct without corrections
+            for solvent, entries in without_corrections.items():
                 best = sorted(
-                    thermo_entries,
+                    entries,
                     key=lambda x: (
                         sum(evaluate_lot(x["level_of_theory"])),
                         x["energy"],
@@ -182,28 +307,85 @@ class ThermoBuilder(Builder):
                 )[0]
                 task = best["task_id"]
 
-            task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
+                task_doc = TaskDocument(
+                        **self.tasks.query_one({"task_id": int(task),
+                                                "formula_alphabetical": formula,
+                                                "orig": {"$exists": True}})
+                )
 
-            thermo_doc = ThermoDoc.from_task(task_doc, molecule_id=mol.molecule_id, deprecated=False)
+                if task_doc is None:
+                    continue
 
-            initial_mol = task_doc.output.initial_molecule
-            # If single atom, try to add enthalpy and entropy
-            if len(initial_mol) == 1:
-                if thermo_doc.total_enthalpy is None or thermo_doc.total_entropy is None:
-                    formula = initial_mol.composition.alphabetical_formula
-                    if formula in single_mol_thermo:
-                        vals = single_mol_thermo[formula]
-                        thermo_doc.total_enthalpy = vals["enthalpy"] * 0.043363
-                        thermo_doc.total_entropy = vals["entropy"] * 0.000043363
-                        thermo_doc.translational_enthalpy = vals["enthalpy"] * 0.043363
-                        thermo_doc.translational_entropy = vals["entropy"] * 0.000043363
-                        thermo_doc.free_energy = get_free_energy(
-                            thermo_doc.electronic_energy,
-                            vals["enthalpy"],
-                            vals["entropy"],
-                        )
+                thermo_doc = ThermoDoc.from_task(
+                    task_doc, molecule_id=mol.molecule_id, deprecated=False
+                )
+                thermo_doc = _add_single_atom_enthalpy_entropy(task_doc, thermo_doc)
+                this_thermo_docs.append(thermo_doc)
 
-            thermo_docs.append(thermo_doc)
+            # Construct with corrections
+            for solvent, entries in by_solvent_spec.items():
+                spec_sorted = sorted(
+                    entries,
+                    key=lambda x: (
+                        sum(evaluate_lot(x["level_of_theory"])),
+                        x["energy"],
+                    ),
+                )
+
+                for best_spec in spec_sorted:
+                    task_spec = best_spec["task_id"]
+
+                    matching_structures = list()
+                    for entry in thermo_entries:
+                        if (mm.fit(Molecule.from_dict(entry["molecule"]), Molecule.from_dict(best_spec["molecule"]))
+                            and (sum(evaluate_lot(entry["level_of_theory"])) <
+                                 sum(evaluate_lot(best_spec["level_of_theory"])))):
+                            matching_structures.append(entry)
+
+                    if len(matching_structures) == 0:
+                        continue
+
+                    best_dict = sorted(
+                        matching_structures,
+                        key=lambda x: (
+                            sum(evaluate_lot(x["level_of_theory"])),
+                            x["energy"],
+                        ),
+                    )[0]
+                    task_dict = best_dict["task_id"]
+
+                    task_doc_dict = TaskDocument(**self.tasks.query_one({"task_id": int(task_dict)}))
+                    task_doc_spec = TaskDocument(**self.tasks.query_one({"task_id": int(task_spec)}))
+                    thermo_doc = ThermoDoc.from_task(
+                        task_doc_dict,
+                        correction_task=task_doc_spec,
+                        molecule_id=mol.molecule_id,
+                        deprecated=False
+                    )
+                    thermo_doc = _add_single_atom_enthalpy_entropy(task_doc_dict, thermo_doc)
+                    this_thermo_docs.append(thermo_doc)
+                    break
+
+            docs_by_solvent = defaultdict(list)
+            for doc in this_thermo_docs:
+                if doc.correction_solvent is not None:
+                    docs_by_solvent[doc.correction_solvent].append(doc)
+                else:
+                    docs_by_solvent[doc.solvent].append(doc)
+
+            # If multiple documents exist for the same solvent, grab the best one
+            for _, collection in docs_by_solvent.items():
+                with_eval_e = list()
+                for member in collection:
+                    if member.correction_level_of_theory is None:
+                        with_eval_e.append((member, sum(evaluate_lot(member.level_of_theory)),
+                                            member.electronic_energy))
+                    else:
+                        dict_lot = sum(evaluate_lot(member.level_of_theory))
+                        spec_lot = sum(evaluate_lot(member.correction_level_of_theory))
+                        with_eval_e.append((member, (dict_lot + spec_lot) / 2, member.electronic_energy))
+
+                thermo_docs.append(sorted(with_eval_e, key=lambda x: (x[1], x[2]))[0][0])
 
         self.logger.debug(f"Produced {len(thermo_docs)} thermo docs for {formula}")
 

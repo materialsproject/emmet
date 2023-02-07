@@ -22,10 +22,12 @@ def open_shell(test_dir):
     task = TaskDocument(**loadfn((test_dir / "open_shell_nbo_task.json.gz")))
     return task
 
-@pytest.mark.skip(reason="Waiting on molecule update.")
+
 def test_orbital(closed_shell, open_shell):
     # Test closed-shell NBO parsing
-    doc = OrbitalDoc.from_task(closed_shell, "test-123456", deprecated=False)
+    doc = OrbitalDoc.from_task(
+        closed_shell, "b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False
+    )
 
     assert doc.property_name == "natural bonding orbitals"
     assert doc.open_shell == False
@@ -47,7 +49,9 @@ def test_orbital(closed_shell, open_shell):
     assert doc.beta_population is None
 
     # Test open-shell NBO parsing
-    doc = OrbitalDoc.from_task(open_shell, "test-123456", deprecated=False)
+    doc = OrbitalDoc.from_task(
+        open_shell, "b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False
+    )
 
     assert doc.open_shell == True
 

@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from pymatgen.core.structure import Molecule
 
 from emmet.core.structure import MoleculeMetadata
-from emmet.core.vasp.task_valid import BaseTaskDocument
+from emmet.core.task import BaseTaskDocument
 from emmet.core.utils import ValueEnum
 from emmet.core.qchem.calc_types import (
     LevelOfTheory,
@@ -14,6 +14,8 @@ from emmet.core.qchem.calc_types import (
     calc_type,
     level_of_theory,
     task_type,
+    solvent,
+    lot_solvent_string,
 )
 
 
@@ -125,7 +127,15 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
     @property
     def level_of_theory(self) -> LevelOfTheory:
-        return level_of_theory(self.orig, custom_smd=self.custom_smd)
+        return level_of_theory(self.orig)
+
+    @property
+    def solvent(self) -> str:
+        return solvent(self.orig, custom_smd=self.custom_smd)
+
+    @property
+    def lot_solvent(self) -> str:
+        return lot_solvent_string(self.orig, custom_smd=self.custom_smd)
 
     @property
     def task_type(self) -> TaskType:
@@ -133,7 +143,7 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
     @property
     def calc_type(self) -> CalcType:
-        return calc_type(self.special_run_type, self.orig, custom_smd=self.custom_smd)
+        return calc_type(self.special_run_type, self.orig)
 
     @property
     def entry(self) -> Dict[str, Any]:
@@ -144,9 +154,9 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
             mol = self.output.initial_molecule
 
         if self.charge is None:
-            charge = mol.charge
+            charge = int(mol.charge)
         else:
-            charge = self.charge
+            charge = int(self.charge)
 
         if self.spin_multiplicity is None:
             spin = mol.spin_multiplicity
@@ -159,6 +169,8 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
             "charge": charge,
             "spin_multiplicity": spin,
             "level_of_theory": self.level_of_theory,
+            "solvent": self.solvent,
+            "lot_solvent": self.lot_solvent,
             "custom_smd": self.custom_smd,
             "task_type": self.task_type,
             "calc_type": self.calc_type,
@@ -186,13 +198,13 @@ def filter_task_type(
 
     :param entries: List of TaskDocument entry dicts
     :param TaskType: TaskType to accept
-    :param sorted: Function used to sort (default None)
+    :param sort_by: Function used to sort (default None)
     :return: Filtered (sorted) list of entries
     """
 
     filtered = [f for f in entries if f["task_type"] == task_type]
 
     if sort_by is not None:
-        return sorted(filtered, key=lambda x: x["output"]["final_energy"])
+        return sorted(filtered, key=sort_by)
     else:
         return filtered

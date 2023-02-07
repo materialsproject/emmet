@@ -20,6 +20,7 @@ setup(
         "ddtrace",
         "setproctitle",
         "shapely",
+        "numpy<1.24"
     ],
     extras_require={
         "test": [

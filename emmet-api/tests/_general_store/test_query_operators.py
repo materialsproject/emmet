@@ -30,9 +30,12 @@ def test_user_settings_post_query():
                 "markdown": "test",
             }
         }
-        assert new_op.query(
-            kind="test", meta={"test": "test", "test2": 10}, markdown="test"
-        ) == query
+        assert (
+            new_op.query(
+                kind="test", meta={"test": "test", "test2": 10}, markdown="test"
+            )
+            == query
+        )
 
     docs = [{"kind": "test", "meta": {"test": "test", "test2": 10}, "markdown": "test"}]
     assert op.post_process(docs, query) == docs
