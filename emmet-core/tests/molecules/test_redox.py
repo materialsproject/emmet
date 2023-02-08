@@ -48,6 +48,7 @@ def ea_task(test_dir):
     task_doc = TaskDocument(**task)
     return task_doc
 
+
 @pytest.mark.skip(reason="Openbabel install issues")
 def test_redox(base_mol, base_thermo, red_thermo, ox_thermo, ie_task, ea_task):
     redox_doc = RedoxDoc.from_docs(base_molecule_doc=base_mol,
