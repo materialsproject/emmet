@@ -58,6 +58,31 @@ class SummaryDoc(PropertyDoc):
         [], description="IDs associated with similar molecules"
     )
 
+    unique_calc_types: List[CalcType] = Field(
+        None,
+        description="Collection of all unique calculation types used for this molecule",
+    )
+
+    unique_task_types: List[TaskType] = Field(
+        None,
+        description="Collection of all unique task types used for this molecule",
+    )
+
+    unique_levels_of_theory: List[LevelOfTheory] = Field(
+        None,
+        description="Collection of all unique levels of theory used for this molecule",
+    )
+
+    unique_solvents: List[str] = Field(
+        None,
+        description="Collection of all unique solvents (solvent parameters) used for this molecule",
+    )
+
+    unique_lot_solvents: List[str] = Field(
+        None,
+        description="Collection of all unique combinations of level of theory and solvent used for this molecule",
+    )
+
     # thermo
     electronic_energy: Dict[str, float] = Field(
         None, description="Electronic energy of the molecule (units: eV)"
@@ -277,7 +302,7 @@ class SummaryDoc(PropertyDoc):
         doc["has_props"] = list(set(doc["has_props"]))
 
         return SummaryDoc(molecule_id=molecule_id, **doc)
-
+        
 
 # Key mapping
 summary_fields: Dict[str, list] = {
@@ -295,6 +320,11 @@ summary_fields: Dict[str, list] = {
         "species",
         "deprecated",
         "task_ids",
+        "unique_calc_types",
+        "unique_task_types",
+        "unique_levels_of_theory",
+        "unique_solvents",
+        "unique_lot_solvents"
     ],
     HasProps.thermo.value: [
         "electronic_energy",
