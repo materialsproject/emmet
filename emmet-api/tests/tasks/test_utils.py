@@ -26,4 +26,3 @@ def test_task_to_entry():
 
     entry_dict = task_to_entry(doc)
     assert entry_dict["@class"] == "ComputedStructureEntry"
-

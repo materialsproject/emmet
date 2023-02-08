@@ -39,7 +39,7 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        os: ['ubuntu-latest', 'macos-latest'] # TODO openbabel for windows
+        os: ['ubuntu-latest']#  # TODO openbabel for windows and mac
         package: ["emmet-core", "emmet-builders", "emmet-api"]
         python-version: ["3.8", "3.9", "3.10"] 
     steps:
@@ -69,7 +69,7 @@ jobs:
       #   run: |
       #     brew install open-babel
       #     echo "/Users/runner/Library/Python/${{ matrix.python-version }}/bin" >> $GITHUB_PATH
-
+      
       - name: Install Python dependencies
         shell: bash -l {0}
         run: |

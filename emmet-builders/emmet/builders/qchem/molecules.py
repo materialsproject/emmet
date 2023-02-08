@@ -10,11 +10,10 @@ from maggma.stores import Store
 from maggma.utils import grouper
 
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.utils import form_env, group_molecules, jsanitize
+from emmet.core.utils import group_molecules, jsanitize, make_mol_graph
 from emmet.core.qchem.molecule import best_lot, evaluate_lot, MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.calc_types import LevelOfTheory
-from emmet.core.molecules.bonds import make_mol_graph
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -41,13 +40,26 @@ def evaluate_molecule(
     :return:
     """
 
+    opt_lot = None
+    for origin in mol_doc.origins:
+        if origin.name == "molecule":
+            opt_lot = mol_doc.levels_of_theory[origin.task_id]
+            if isinstance(opt_lot, LevelOfTheory):
+                opt_lot = opt_lot.value
+
+    if opt_lot is None:
+        opt_eval = [0]
+    else:
+        opt_eval = evaluate_lot(opt_lot, funct_scores, basis_scores, solvent_scores)
+
     best = best_lot(mol_doc, funct_scores, basis_scores, solvent_scores)
 
-    lot_eval = evaluate_lot(best, funct_scores, basis_scores, solvent_scores)
+    best_eval = evaluate_lot(best, funct_scores, basis_scores, solvent_scores)
 
     return (
         -1 * int(mol_doc.deprecated),
-        sum(lot_eval),
+        sum(best_eval),
+        sum(opt_eval),
         mol_doc.best_entries[best]["energy"],
     )
 
@@ -202,7 +214,7 @@ class MoleculesAssociationBuilder(Builder):
                 # basic validation here ensures that tasks with invalid levels of
                 # theory don't halt the build pipeline
                 try:
-                    TaskDocument(**t).level_of_theory
+                    _ = TaskDocument(**t).level_of_theory
                     t["is_valid"] = True
                 except Exception as e:
                     self.logger.info(
@@ -224,6 +236,8 @@ class MoleculesAssociationBuilder(Builder):
         """
 
         tasks = [TaskDocument(**task) for task in items if task["is_valid"]]
+        if len(tasks) == 0:
+            return list()
         formula = tasks[0].formula_alphabetical
         task_ids = [task.task_id for task in tasks]
         self.logger.debug(f"Processing {formula} : {task_ids}")
@@ -231,7 +245,8 @@ class MoleculesAssociationBuilder(Builder):
 
         for group in self.filter_and_group_tasks(tasks):
             try:
-                molecules.append(MoleculeDoc.from_tasks(group))
+                doc = MoleculeDoc.from_tasks(group)
+                molecules.append(doc)
             except Exception as e:
                 failed_ids = list({t_.task_id for t_ in group})
                 doc = MoleculeDoc.construct_deprecated_molecule(tasks)
@@ -246,7 +261,7 @@ class MoleculesAssociationBuilder(Builder):
 
         return jsanitize([mol.dict() for mol in molecules], allow_bson=True)
 
-    def update_targets(self, items: List[Dict]):
+    def update_targets(self, items: List[List[Dict]]):
         """
         Inserts the new molecules into the molecules collection
 
@@ -288,27 +303,26 @@ class MoleculesAssociationBuilder(Builder):
         ]
 
         molecules = list()
-        lots = list()
 
         for idx, task in enumerate(filtered_tasks):
             if task.output.optimized_molecule:
                 m = task.output.optimized_molecule
             else:
                 m = task.output.initial_molecule
-            m.index: int = idx  # type: ignore
+            m.ind: int = idx  # type: ignore
             molecules.append(m)
-            lots.append(task.level_of_theory.value)
 
-        grouped_molecules = group_molecules(molecules, lots)
+        grouped_molecules = group_molecules(molecules)
         for group in grouped_molecules:
-            grouped_tasks = [filtered_tasks[mol.index] for mol in group]  # type: ignore
+            grouped_tasks = [filtered_tasks[mol.ind] for mol in group]  # type: ignore
             yield grouped_tasks
 
 
 class MoleculesBuilder(Builder):
     """
     The MoleculesBuilder collects MoleculeDocs from the MoleculesAssociationBuilder
-    and groups them by key properties (charge, spin multiplicity, bonding).
+    and groups them by key properties (charge, spin multiplicity, bonding, and the solvent
+    environment used to optimize the molecular structure).
     Then, the best molecular structure is identified (based on electronic energy),
     and this document becomes the representative MoleculeDoc.
 
@@ -325,7 +339,6 @@ class MoleculesBuilder(Builder):
         molecules: Store,
         query: Optional[Dict] = None,
         settings: Optional[EmmetBuildSettings] = None,
-        prefix: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -334,16 +347,12 @@ class MoleculesBuilder(Builder):
             molecules: Store of processed molecules documents
             query: dictionary to limit tasks to be analyzed
             settings: EmmetSettings to use in the build process
-            prefix: String prefix for MPIDs of processed MoleculeDocs. For instance, for the
-                Lithium-Ion Battery Electrolyte (LIBE) dataset, the prefix would be "libe".
-                Default is None
         """
 
         self.assoc = assoc
         self.molecules = molecules
         self.query = query if query else dict()
         self.settings = EmmetBuildSettings.autoload(settings)
-        self.prefix = prefix
         self.kwargs = kwargs
 
         super().__init__(sources=[assoc], targets=[molecules])
@@ -376,10 +385,7 @@ class MoleculesBuilder(Builder):
             self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical"])
         )
 
-        # int and split manipulation necessary because of MPID prefixing done during building
-        processed_docs = set(
-            [int(e.split("-")[-1]) for e in self.molecules.distinct("molecule_id")]
-        )
+        processed_docs = set(list(self.molecules.distinct("molecule_id")))
         to_process_docs = {d[self.assoc.key] for d in all_assoc} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -418,9 +424,7 @@ class MoleculesBuilder(Builder):
             self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical"])
         )
 
-        processed_docs = set(
-            [int(e.split("-")[-1]) for e in self.molecules.distinct("molecule_id")]
-        )
+        processed_docs = set(list(self.molecules.distinct("molecule_id")))
         to_process_docs = {d[self.assoc.key] for d in all_assoc} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -468,8 +472,11 @@ class MoleculesBuilder(Builder):
 
             best_doc = sorted_docs[0]
             if len(sorted_docs) > 1:
-                best_doc.similar_molecules = [m.molecule_id for m in sorted_docs[1:]]
-
+                best_doc.similar_molecules = [
+                    m.molecule_id
+                    for m in sorted_docs
+                    if m.molecule_id != best_doc.molecule_id
+                ]
             molecules.append(best_doc)
 
         self.logger.debug(f"Produced {len(molecules)} molecules for {formula}")
@@ -488,13 +495,9 @@ class MoleculesBuilder(Builder):
 
         # Add timestamp, add prefix to molecule id
         for item in docs:
-            if self.prefix is not None:
-                molid = "-".join([self.prefix, str(item["molecule_id"])])
-            else:
-                # No change
-                molid = item["molecule_id"]
+            molid = item["molecule_id"]
 
-            item.update({"_bt": self.timestamp, "molecule_id": molid})
+            item.update({"_bt": self.timestamp})
 
             for entry in item["entries"]:
                 entry["entry_id"] = molid
@@ -518,6 +521,7 @@ class MoleculesBuilder(Builder):
             - charge
             - spin multiplicity
             - bonding (molecule graph isomorphism)
+            - solvent environment used for the structure
         """
 
         # Molecules are already grouped by formula
@@ -528,24 +532,17 @@ class MoleculesBuilder(Builder):
         def charge_spin(mol_doc):
             return (mol_doc.charge, mol_doc.spin_multiplicity)
 
-        def environment(mol_doc):
-            mol = mol_doc.molecule
-            lot = best_lot(
-                mol_doc,
-                SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
-                SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
-                SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
-            )
-            if isinstance(lot, LevelOfTheory):
-                lot = lot.value
-            env = form_env((mol, lot))
-            return env
+        def optimizing_solvent(mol_doc):
+            for origin in mol_doc.origins:
+                if origin.name == "molecule":
+                    solvent = mol_doc.solvents[origin.task_id]
+                    return solvent
 
         # Group by charge and spin
         for c_s, pregroup in groupby(sorted(assoc, key=charge_spin), key=charge_spin):
-            # Group by formula (should already be grouped) and environment
+            # Group by the solvent environment used to optimize the molecule
             for f_e, group in groupby(
-                sorted(pregroup, key=environment), key=environment
+                sorted(pregroup, key=optimizing_solvent), key=optimizing_solvent
             ):
                 subgroups: List[Dict[str, Any]] = list()
                 for mol_doc in group:
@@ -556,6 +553,7 @@ class MoleculesBuilder(Builder):
                     # Unconnected molecule graphs are discarded at this step
                     # TODO: What about molecules that would be connected under a different
                     # TODO: bonding scheme? For now, ¯\_(ツ)_/¯
+                    # TODO: MAKE ClusterBuilder FOR THIS PURPOSE
                     if nx.is_connected(mol_graph.graph.to_undirected()):
                         matched = False
 
