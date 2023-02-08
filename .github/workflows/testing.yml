@@ -41,7 +41,7 @@ jobs:
       matrix:
         os: ['ubuntu-latest', 'macos-latest'] # TODO openbabel for windows
         package: ["emmet-core", "emmet-builders", "emmet-api"]
-        python-version: ["3.8", "3.9"] # TODO numpy import error for pymatgen install in 3.10
+        python-version: ["3.8", "3.9", "3.10"] 
     steps:
       - uses: actions/checkout@v3
         with:
@@ -53,16 +53,22 @@ jobs:
 
       - name: Install OpenBabel on Ubuntu
         if: matrix.os == 'ubuntu-latest'
+        env: 
+          cc_compiler: "clang",
+          cxx_compiler: "clang++"
         shell: bash -l {0}
         run: |
-          sudo apt-get update && sudo apt-get install openbabel libopenbabel-dev
-          sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
-      - name: Install OpenBabel on MacOS
-        if: matrix.os == 'macos-latest'
-        shell: bash -l {0}
-        run: |
-          brew install open-babel
-          echo "/Users/runner/Library/Python/${{ matrix.python-version }}/bin" >> $GITHUB_PATH
+          mkdir "${{ runner.workspace }}/build"
+          cd "${{ runner.workspace }}/build"
+          cmake $GITHUB_WORKSPACE -GNinja -DCMAKE_C_COMPILER=$cc_compiler -DCMAKE_CXX_COMPILER=$cxx_compiler
+          CC=$cc_compiler CXX=$cxx_compiler cmake --build .
+      
+      # - name: Install OpenBabel on MacOS
+      #   if: matrix.os == 'macos-latest'
+      #   shell: bash -l {0}
+      #   run: |
+      #     brew install open-babel
+      #     echo "/Users/runner/Library/Python/${{ matrix.python-version }}/bin" >> $GITHUB_PATH
 
       - name: Install Python dependencies
         shell: bash -l {0}
