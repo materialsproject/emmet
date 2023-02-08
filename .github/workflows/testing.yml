@@ -63,12 +63,10 @@ jobs:
           git clone https://github.com/openbabel/openbabel.git ${{ runner.workspace }}/openbabel
           mkdir "${{ runner.workspace }}/openbabel/build"
           cd "${{ runner.workspace }}/openbabel/build"
-          cmake ${{ runner.workspace }}/openbabel -GNinja -DCMAKE_C_COMPILER=$cc_compiler -DCMAKE_CXX_COMPILER=$cxx_compiler $cmake_flags
-          CC=$cc_compiler CXX=$cxx_compiler cmake --build .
+          cmake -DCMAKE_C_COMPILER=$cc_compiler -DCMAKE_CXX_COMPILER=$cxx_compiler $cmake_flags ..
+          make
+          make install
           echo "PYTHONPATH=/usr/local/lib:/usr/local/include/openbabel3:$PYTHONPATH" >> $GITHUB_PATH
-          cd "${{ runner.workspace }}/openbabel/scripts/python"
-          python${{ matrix.python-version }} setup.py build_ext -I/usr/local/include/openbabel3 -L/usr/local/lib
-      
       # - name: Install OpenBabel on MacOS
       #   if: matrix.os == 'macos-latest'
       #   shell: bash -l {0}
