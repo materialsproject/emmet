@@ -72,9 +72,9 @@ jobs:
 
       - name: Install OpenBabel on MacOS
         if: matrix.os == 'macos-latest'
-          env: 
-              cc_compiler: "clang"
-              cxx_compiler: "clang++"
+        env: 
+            cc_compiler: "clang"
+            cxx_compiler: "clang++"
         shell: bash -l {0}
         run: |
           brew install ninja swig eigen boost
