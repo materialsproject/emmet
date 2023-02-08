@@ -39,7 +39,7 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        os: ['ubuntu-latest', 'macos-latest']#  # TODO openbabel for windows and mac
+        os: ['ubuntu-latest']#  # TODO openbabel for windows and mac
         package: ["emmet-core", "emmet-builders", "emmet-api"]
         python-version: ["3.8", "3.9", "3.10"] 
     steps:
@@ -70,24 +70,24 @@ jobs:
           sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
           echo "LD_LIBRARY_PATH=/usr/local/lib:/usr/include/openbabel3:$LD_LIBRARY_PATH" >> $GITHUB_PATH
 
-      - name: Install OpenBabel on MacOS
-        if: matrix.os == 'macos-latest'
-        env: 
-            cc_compiler: "clang"
-            cxx_compiler: "clang++"
-        shell: bash -l {0}
-        run: |
-          brew install ninja swig eigen boost
-          echo "/Users/runner/Library/Python/${{ matrix.python-version }}/bin" >> $GITHUB_PATH
-          git clone https://github.com/openbabel/openbabel.git ${{ runner.workspace }}/openbabel
-          mkdir "${{ runner.workspace }}/openbabel/build"
-          cd "${{ runner.workspace }}/openbabel/build"
-          cmake -DCMAKE_C_COMPILER=$cc_compiler -DCMAKE_CXX_COMPILER=$cxx_compiler $cmake_flags ..
-          sudo make
-          sudo make install
-          echo "PYTHONPATH=/usr/local/lib:/usr/local/include/openbabel3:$PYTHONPATH" >> $GITHUB_PATH
-          sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
-          echo "LD_LIBRARY_PATH=/usr/local/lib:/usr/include/openbabel3:$LD_LIBRARY_PATH" >> $GITHUB_PATH
+      # - name: Install OpenBabel on MacOS
+      #   if: matrix.os == 'macos-latest'
+      #   env: 
+      #       cc_compiler: "clang"
+      #       cxx_compiler: "clang++"
+      #   shell: bash -l {0}
+      #   run: |
+      #     brew install ninja swig eigen boost
+      #     echo "/Users/runner/Library/Python/${{ matrix.python-version }}/bin" >> $GITHUB_PATH
+      #     git clone https://github.com/openbabel/openbabel.git ${{ runner.workspace }}/openbabel
+      #     mkdir "${{ runner.workspace }}/openbabel/build"
+      #     cd "${{ runner.workspace }}/openbabel/build"
+      #     cmake -DCMAKE_C_COMPILER=$cc_compiler -DCMAKE_CXX_COMPILER=$cxx_compiler $cmake_flags ..
+      #     sudo make
+      #     sudo make install
+      #     echo "PYTHONPATH=/usr/local/lib:/usr/local/include/openbabel3:$PYTHONPATH" >> $GITHUB_PATH
+      #     sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
+      #     echo "LD_LIBRARY_PATH=/usr/local/lib:/usr/include/openbabel3:$LD_LIBRARY_PATH" >> $GITHUB_PATH
       
       - name: Install Python dependencies
         shell: bash -l {0}
