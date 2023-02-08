@@ -64,8 +64,8 @@ jobs:
           mkdir "${{ runner.workspace }}/openbabel/build"
           cd "${{ runner.workspace }}/openbabel/build"
           cmake -DCMAKE_C_COMPILER=$cc_compiler -DCMAKE_CXX_COMPILER=$cxx_compiler $cmake_flags ..
-          make
-          make install
+          sudo make
+          sudo make install
           echo "PYTHONPATH=/usr/local/lib:/usr/local/include/openbabel3:$PYTHONPATH" >> $GITHUB_PATH
           sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
       # - name: Install OpenBabel on MacOS
