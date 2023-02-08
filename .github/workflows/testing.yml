@@ -50,11 +50,8 @@ jobs:
       - name: Install Conda environment with Micromamba
         uses: mamba-org/provision-with-micromamba@main
         with:
-          environment-file: false
-          environment-name: false
           extra-specs: |
             python=${{ matrix.python-version }}
-          cache-env: true
 
       - name: Install OpenBabel
         shell: bash -l {0}
