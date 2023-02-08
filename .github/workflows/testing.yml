@@ -53,10 +53,6 @@ jobs:
 
       - name: Install OpenBabel on Ubuntu
         if: matrix.os == 'ubuntu-latest'
-        env: 
-          cc_compiler: "gcc",
-          cxx_compiler: "g++"
-          cmake_flags: "-DPYTHON_BINDINGS=ON -DRUN_SWIG=ON"
         shell: bash -l {0}
         run: |
           sudo apt-get update && sudo apt-get -qq install ninja-build swig libeigen3-dev libboost-all-dev
@@ -64,6 +60,10 @@ jobs:
           cd "${{ runner.workspace }}/build"
           cmake $GITHUB_WORKSPACE -GNinja -DCMAKE_C_COMPILER=$cc_compiler -DCMAKE_CXX_COMPILER=$cxx_compiler $cmake_flags
           CC=$cc_compiler CXX=$cxx_compiler cmake --build .
+        env: 
+          cc_compiler: "gcc",
+          cxx_compiler: "g++"
+          cmake_flags: "-DPYTHON_BINDINGS=ON -DRUN_SWIG=ON"
       
       # - name: Install OpenBabel on MacOS
       #   if: matrix.os == 'macos-latest'
