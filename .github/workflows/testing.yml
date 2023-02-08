@@ -60,7 +60,7 @@ jobs:
         shell: bash -l {0}
         run: |
           sudo apt-get update && sudo apt-get -qq install ninja-build swig libeigen3-dev libboost-all-dev
-          git clone https://github.com/openbabel/openbabel.git
+          git clone https://github.com/openbabel/openbabel.git ${{ runner.workspace }}/openbabel
           mkdir "${{ runner.workspace }}/openbabel/build"
           cd "${{ runner.workspace }}/openbabel/build"
           cmake $GITHUB_WORKSPACE -GNinja -DCMAKE_C_COMPILER=$cc_compiler -DCMAKE_CXX_COMPILER=$cxx_compiler $cmake_flags
