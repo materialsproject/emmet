@@ -68,6 +68,7 @@ jobs:
           sudo make install
           echo "PYTHONPATH=/usr/local/lib:/usr/local/include/openbabel3:$PYTHONPATH" >> $GITHUB_PATH
           sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
+          echo "LD_LIBRARY_PATH=/usr/local/lib:/usr/include/openbabel3:$LD_LIBRARY_PATH" >> $GITHUB_PATH
       # - name: Install OpenBabel on MacOS
       #   if: matrix.os == 'macos-latest'
       #   shell: bash -l {0}
