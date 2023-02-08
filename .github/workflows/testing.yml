@@ -65,7 +65,7 @@ jobs:
           cd "${{ runner.workspace }}/openbabel/build"
           cmake ${{ runner.workspace }}/openbabel -GNinja -DCMAKE_C_COMPILER=$cc_compiler -DCMAKE_CXX_COMPILER=$cxx_compiler $cmake_flags
           CC=$cc_compiler CXX=$cxx_compiler cmake --build .
-          echo "PYTHONPATH=/usr/local/lib:$PYTHONPATH" >> $GITHUB_PATH
+          echo "PYTHONPATH=/usr/local/lib:/usr/local/include/openbabel3:$PYTHONPATH" >> $GITHUB_PATH
       
       # - name: Install OpenBabel on MacOS
       #   if: matrix.os == 'macos-latest'
