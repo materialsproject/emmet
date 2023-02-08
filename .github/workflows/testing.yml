@@ -47,13 +47,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Conda environment with Micromamba
-        uses: mamba-org/provision-with-micromamba@main
+      - name: Setup conda
+        uses: s-weigand/setup-conda@v1
         with:
-          environment-file: false
-          environment-name: "test"
-          extra-specs: |
-            python=${{ matrix.python-version }}
+          update-conda: true
+          python-version: ${{ matrix.python-version }}
+          conda-channels: anaconda, conda-forge
 
       - name: Install OpenBabel
         shell: bash -l {0}
