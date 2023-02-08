@@ -20,7 +20,7 @@ def mol_store(tasks_store):
     stage_one.run()
 
     mol_store = MemoryStore(key="molecule_id")
-    stage_two = MoleculesBuilder(assoc=assoc_store, molecules=mol_store, prefix="libe")
+    stage_two = MoleculesBuilder(assoc=assoc_store, molecules=mol_store)
     stage_two.run()
 
     return mol_store
@@ -31,10 +31,12 @@ def bonds_store():
     return MemoryStore()
 
 
-@pytest.mark.skip(reason="Waiting on molecule update.")
 def test_bonding_builder(tasks_store, mol_store, bonds_store):
     builder = BondingBuilder(
-        tasks_store, mol_store, bonds_store, methods=["critic2", "OpenBabelNN + metal_edge_extender"],
+        tasks_store,
+        mol_store,
+        bonds_store,
+        methods=["critic2", "OpenBabelNN + metal_edge_extender"],
     )
     builder.run()
 

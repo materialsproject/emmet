@@ -140,25 +140,30 @@ class CorrectedEntriesBuilder(Builder):
         corrected_entries = {}
 
         for compatability in self.compatibility:
-
             if compatability is not None:
-                if compatability.name == "MP DFT mixing scheme":
-                    thermo_type = ThermoType.GGA_GGA_U_R2SCAN
-                elif compatability.name == "MP2020":
-                    thermo_type = ThermoType.GGA_GGA_U
-                else:
-                    thermo_type = ThermoType.UNKNOWN
 
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     with HiddenPrints():
-                        if thermo_type == ThermoType.GGA_GGA_U_R2SCAN:
-                            only_scan_pd_entries = [e for e in entries if str(e.data["run_type"]) == "R2SCAN"]
-                            corrected_entries["R2SCAN"] = only_scan_pd_entries
+                        if compatability.name == "MP DFT mixing scheme":
+                            thermo_type = ThermoType.GGA_GGA_U_R2SCAN
 
+                            if "R2SCAN" in all_entry_types:
+
+                                only_scan_pd_entries = [e for e in entries if str(e.data["run_type"]) == "R2SCAN"]
+                                corrected_entries["R2SCAN"] = only_scan_pd_entries
+
+                                pd_entries = compatability.process_entries(copy.deepcopy(entries))
+
+                            else:
+                                corrected_entries["R2SCAN"] = None
+                                pd_entries = None
+
+                        elif compatability.name == "MP2020":
+                            thermo_type = ThermoType.GGA_GGA_U
                             pd_entries = compatability.process_entries(copy.deepcopy(entries))
-
                         else:
+                            thermo_type = ThermoType.UNKNOWN
                             pd_entries = compatability.process_entries(copy.deepcopy(entries))
 
                         corrected_entries[str(thermo_type)] = pd_entries

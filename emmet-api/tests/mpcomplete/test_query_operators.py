@@ -40,11 +40,14 @@ def test_mpcomplete_post_query():
                 "public_email": "test@test.com",
             }
         }
-        assert new_op.query(
-            structure=structure.as_dict(),
-            public_name="Test Test",
-            public_email="test@test.com",
-        ) == query
+        assert (
+            new_op.query(
+                structure=structure.as_dict(),
+                public_name="Test Test",
+                public_email="test@test.com",
+            )
+            == query
+        )
 
     docs = [
         {
@@ -70,15 +73,9 @@ def test_mocomplete_get_query():
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert (
-            new_op.query(
-                public_name="Test Test",
-                public_email="test@test.com",
-            )
-            == {
-                "criteria": {
-                    "public_name": "Test Test",
-                    "public_email": "test@test.com",
-                }
+        assert new_op.query(public_name="Test Test", public_email="test@test.com",) == {
+            "criteria": {
+                "public_name": "Test Test",
+                "public_email": "test@test.com",
             }
-        )
+        }

@@ -1,11 +1,4 @@
-import json
-import datetime
-import copy
-
 import pytest
-
-from monty.io import zopen
-from monty.serialization import loadfn
 
 from maggma.stores import JSONStore, MemoryStore
 
@@ -21,7 +14,7 @@ from emmet.builders.molecules.summary import SummaryBuilder
 
 @pytest.fixture(scope="session")
 def tasks(test_dir):
-    return JSONStore(test_dir / "builder_task_set.json.gz")
+    return JSONStore(test_dir / "C3H4Li1O3.json.gz")
 
 
 @pytest.fixture(scope="session")
@@ -31,7 +24,7 @@ def mols(tasks):
     stage_one.run()
 
     mol_store = MemoryStore(key="molecule_id")
-    stage_two = MoleculesBuilder(assoc=assoc_store, molecules=mol_store, prefix="libe")
+    stage_two = MoleculesBuilder(assoc=assoc_store, molecules=mol_store)
     stage_two.run()
 
     return mol_store
@@ -77,8 +70,9 @@ def summary():
     return MemoryStore(key="molecule_id")
 
 
-@pytest.mark.skip(reason="Waiting on molecule update.")
-def test_summary_doc(tasks, mols, charges, spins, bonds, orbitals, redox, thermo, vibes, summary):
+def test_summary_doc(
+    tasks, mols, charges, spins, bonds, orbitals, redox, thermo, vibes, summary
+):
     charge_build = PartialChargesBuilder(tasks, mols, charges)
     charge_build.run()
 
@@ -91,11 +85,11 @@ def test_summary_doc(tasks, mols, charges, spins, bonds, orbitals, redox, thermo
     orb_build = OrbitalBuilder(tasks, mols, orbitals)
     orb_build.run()
 
-    redox_build = RedoxBuilder(mols, redox)
-    redox_build.run()
-
     thermo_build = ThermoBuilder(tasks, mols, thermo)
     thermo_build.run()
+
+    redox_build = RedoxBuilder(tasks, mols, thermo, redox)
+    redox_build.run()
 
     vibe_build = VibrationBuilder(tasks, mols, vibes)
     vibe_build.run()
@@ -113,6 +107,4 @@ def test_summary_doc(tasks, mols, charges, spins, bonds, orbitals, redox, thermo
     )
     builder.run()
 
-    docs = list(summary.query())
-
-    assert len(docs) == 46
+    assert summary.count() == 48
