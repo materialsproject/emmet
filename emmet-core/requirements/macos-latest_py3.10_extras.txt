@@ -43,7 +43,7 @@ contourpy==1.0.7
     # via matplotlib
 coverage[toml]==7.1.0
     # via pytest-cov
-cryptography==39.0.0
+cryptography==39.0.1
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
