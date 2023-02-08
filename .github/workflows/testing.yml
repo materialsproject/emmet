@@ -46,29 +46,42 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
 
-      - name: Install OpenBabel on Ubuntu
-        if: matrix.os == 'ubuntu-latest'
-        env: 
-          cc_compiler: "gcc"
-          cxx_compiler: "g++"
-          cmake_flags: "-DPYTHON_BINDINGS=ON -DRUN_SWIG=ON"
+      - name: Install Conda environment with Micromamba
+        uses: mamba-org/provision-with-micromamba@main
+        with:
+          extra-specs: |
+            python=${{ matrix.python-version }}
+          cache-env: true
+
+      - name: Install OpenBabel
         shell: bash -l {0}
         run: |
-          sudo apt-get update && sudo apt-get -qq install ninja-build swig libeigen3-dev libboost-all-dev libopenbabel-dev
-          git clone https://github.com/openbabel/openbabel.git ${{ runner.workspace }}/openbabel
-          mkdir "${{ runner.workspace }}/openbabel/build"
-          cd "${{ runner.workspace }}/openbabel/build"
-          cmake -DCMAKE_C_COMPILER=$cc_compiler -DCMAKE_CXX_COMPILER=$cxx_compiler $cmake_flags ..
-          sudo make
-          sudo make install
-          echo "PYTHONPATH=/usr/local/lib:/usr/local/include/openbabel3:$PYTHONPATH" >> $GITHUB_PATH
-          sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
-          echo "LD_LIBRARY_PATH=/usr/local/lib:/usr/include/openbabel3:$LD_LIBRARY_PATH" >> $GITHUB_PATH
+          conda install -c conda-forge openbabel
+
+      # - uses: actions/setup-python@v4
+      #   with:
+      #     python-version: ${{ matrix.python-version }}
+      #     cache: 'pip'
+
+      # - name: Install OpenBabel on Ubuntu
+      #   if: matrix.os == 'ubuntu-latest'
+      #   env: 
+      #     cc_compiler: "gcc"
+      #     cxx_compiler: "g++"
+      #     cmake_flags: "-DPYTHON_BINDINGS=ON -DRUN_SWIG=ON"
+      #   shell: bash -l {0}
+      #   run: |
+      #     sudo apt-get update && sudo apt-get -qq install ninja-build swig libeigen3-dev libboost-all-dev libopenbabel-dev
+      #     git clone https://github.com/openbabel/openbabel.git ${{ runner.workspace }}/openbabel
+      #     mkdir "${{ runner.workspace }}/openbabel/build"
+      #     cd "${{ runner.workspace }}/openbabel/build"
+      #     cmake -DCMAKE_C_COMPILER=$cc_compiler -DCMAKE_CXX_COMPILER=$cxx_compiler $cmake_flags ..
+      #     sudo make
+      #     sudo make install
+      #     echo "PYTHONPATH=/usr/local/lib:/usr/local/include/openbabel3:$PYTHONPATH" >> $GITHUB_PATH
+      #     sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
+      #     echo "LD_LIBRARY_PATH=/usr/local/lib:/usr/include/openbabel3:$LD_LIBRARY_PATH" >> $GITHUB_PATH
 
       # - name: Install OpenBabel on MacOS
       #   if: matrix.os == 'macos-latest'

@@ -30,7 +30,6 @@ def nbo_task(test_dir):
     return TaskDocument(**loadfn(test_dir / "open_shell_nbo_task.json.gz"))
 
 
-@pytest.mark.skip(reason="Openbabel install issues")
 def test_bonding(test_tasks, nbo_task):
     # No Critic2 or NBO
     ob_mee = BondingDoc.from_task(
