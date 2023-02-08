@@ -64,8 +64,12 @@ jobs:
           mkdir "${{ runner.workspace }}/openbabel/build"
           cd "${{ runner.workspace }}/openbabel/build"
           cmake ${{ runner.workspace }}/openbabel -GNinja -DCMAKE_C_COMPILER=$cc_compiler -DCMAKE_CXX_COMPILER=$cxx_compiler $cmake_flags
-          CC=$cc_compiler CXX=$cxx_compiler cmake --build .
+      #CC=$cc_compiler CXX=$cxx_compiler cmake --build .
           echo "PYTHONPATH=/usr/local/lib:/usr/local/include/openbabel3:$PYTHONPATH" >> $GITHUB_PATH
+          CC=$cc_compiler CXX=$cxx_compiler make && make install
+          
+      # cd "${{ runner.workspace }}/openbabel/scripts/python"
+      # python${{ matrix.python-version }} setup.py build_ext -I/usr/local/include/openbabel3 -L/usr/local/lib
       
       # - name: Install OpenBabel on MacOS
       #   if: matrix.os == 'macos-latest'
@@ -79,7 +83,6 @@ jobs:
         run: |
           python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
           python${{ matrix.python-version }} -m pip install --user `grep numpy ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
-          python${{ matrix.python-version }} -m pip install --user --global-option=build_ext --global-option="-I/usr/local/include/openbabel3" --global-option="-L/usr/local/lib" `grep openbabel ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
           python${{ matrix.python-version }} -m piptools sync --user ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
 
       - name: Install editable emmet-core if needed
