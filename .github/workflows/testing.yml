@@ -41,7 +41,7 @@ jobs:
       matrix:
         os: ['ubuntu-latest']#  # TODO openbabel for windows and mac
         package: ["emmet-core", "emmet-builders", "emmet-api"]
-        python-version: ["3.8", "3.9", "3.10"] 
+        python-version: ["3.9"] 
     steps:
       - uses: actions/checkout@v3
         with:
@@ -54,10 +54,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
           conda-channels: anaconda, conda-forge
 
-      # - name: Install OpenBabel
-      #   shell: bash -l {0}
-      #   run: |
-      #     conda install openbabel -y
+      - name: Install OpenBabel
+        shell: bash -l {0}
+        run: |
+          conda install openbabel -y
 
       # - uses: actions/setup-python@v4
       #   with:
@@ -102,10 +102,9 @@ jobs:
       #     sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
       #     echo "LD_LIBRARY_PATH=/usr/local/lib:/usr/include/openbabel3:$LD_LIBRARY_PATH" >> $GITHUB_PATH
       
-      - name: Install Python dependencies and OpenBabel
+      - name: Install Python dependencies
         shell: bash -l {0}
         run: |
-          conda install openbabel -y
           python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
           python${{ matrix.python-version }} -m pip install --user `grep numpy ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
           python${{ matrix.python-version }} -m piptools sync --user ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
