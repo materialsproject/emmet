@@ -20,7 +20,6 @@ setup(
         "ddtrace",
         "setproctitle",
         "shapely",
-        "numpy<1.24"
     ],
     extras_require={
         "test": [
@@ -35,7 +34,6 @@ setup(
             "types-setuptools",
             "types-requests",
             "wincertstore",
-            "openbabel",
         ],
         "docs": [
             "mkdocs",
