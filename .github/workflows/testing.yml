@@ -39,7 +39,7 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        os: ['ubuntu-latest', 'macos-latest']#  # TODO openbabel and mac
+        os: ['ubuntu-latest']#  # TODO openbabel for windows and mac
         package: ["emmet-core", "emmet-builders", "emmet-api"]
         python-version: ["3.8", "3.9", "3.10"] 
     steps:
