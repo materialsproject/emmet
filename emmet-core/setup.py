@@ -20,7 +20,6 @@ setup(
         "pybtex~=0.24",
         "typing-extensions>=3.7,<5.0",
         "spglib>=2.0.1",
-        "numpy<1.24"
     ],
     extras_require={
         "all": [
@@ -42,7 +41,6 @@ setup(
             "types-requests",
             "maggma",
             "wincertstore",
-            "openbabel>=3.1.0",
             "custodian>=2022.5.26",
         ],
         "docs": [
