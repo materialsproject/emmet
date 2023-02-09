@@ -17,7 +17,7 @@ class MPculeIDsSearchQuery(QueryOperator):
 
         crit = {}
 
-        if material_ids:
+        if molecule_ids:
             crit.update({"molecule_id": {"$in": [molecule_id.strip() for molecule_id in molecule_ids.split(",")]}})
 
         return {"criteria": crit}
