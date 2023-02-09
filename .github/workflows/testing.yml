@@ -54,10 +54,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
           conda-channels: anaconda, conda-forge
 
-      - name: Install OpenBabel
-        shell: bash -l {0}
-        run: |
-          conda install -c conda-forge openbabel
+      # - name: Install OpenBabel
+      #   shell: bash -l {0}
+      #   run: |
+      #     conda install openbabel -y
 
       # - uses: actions/setup-python@v4
       #   with:
@@ -102,9 +102,10 @@ jobs:
       #     sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
       #     echo "LD_LIBRARY_PATH=/usr/local/lib:/usr/include/openbabel3:$LD_LIBRARY_PATH" >> $GITHUB_PATH
       
-      - name: Install Python dependencies
+      - name: Install Python dependencies and OpenBabel
         shell: bash -l {0}
         run: |
+          conda install openbabel -y
           python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
           python${{ matrix.python-version }} -m pip install --user `grep numpy ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt`
           python${{ matrix.python-version }} -m piptools sync --user ${{ matrix.package }}/requirements/${{ matrix.os }}_py${{ matrix.python-version }}_extras.txt
