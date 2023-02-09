@@ -225,7 +225,7 @@ numpy==1.23.5
     #   seekpath
     #   shapely
     #   spglib
-openbabel==3.1.1.1
+#openbabel==3.1.1.1
     # via emmet-builders (setup.py)
 orjson==3.8.5
     # via maggma
