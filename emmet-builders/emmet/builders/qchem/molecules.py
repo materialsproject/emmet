@@ -10,7 +10,13 @@ from maggma.stores import Store
 from maggma.utils import grouper
 
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.utils import group_molecules, jsanitize, make_mol_graph
+from emmet.core.utils import (
+    get_graph_hash,
+    get_molecule_id,
+    group_molecules,
+    jsanitize,
+    make_mol_graph
+)
 from emmet.core.qchem.molecule import best_lot, evaluate_lot, MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.calc_types import LevelOfTheory
@@ -424,8 +430,16 @@ class MoleculesBuilder(Builder):
             self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical"])
         )
 
+        # Should be using species hash, rather than coord hash, at this point
         processed_docs = set(list(self.molecules.distinct("molecule_id")))
-        to_process_docs = {d[self.assoc.key] for d in all_assoc} - processed_docs
+        assoc_ids = set()
+        for d in all_assoc:
+            dmol = d["molecule"]
+            if isinstance(dmol, Molecule):
+                assoc_ids.add(get_molecule_id(dmol, node_attr="specie"))
+            else:
+                assoc_ids.add(get_molecule_id(Molecule.from_dict(dmol), node_attr="specie"))
+        to_process_docs = assoc_ids - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
             for d in all_assoc
@@ -539,34 +553,31 @@ class MoleculesBuilder(Builder):
                     return solvent
 
         # Group by charge and spin
-        for c_s, pregroup in groupby(sorted(assoc, key=charge_spin), key=charge_spin):
-            # Group by the solvent environment used to optimize the molecule
-            for f_e, group in groupby(
-                sorted(pregroup, key=optimizing_solvent), key=optimizing_solvent
-            ):
-                subgroups: List[Dict[str, Any]] = list()
-                for mol_doc in group:
-                    mol_graph = make_mol_graph(mol_doc.molecule)
+        for c_s, group in groupby(sorted(assoc, key=charge_spin), key=charge_spin):
+            subgroups: List[Dict[str, Any]] = list()
+            for mol_doc in group:
+                mol_graph = make_mol_graph(mol_doc.molecule)
+                mol_hash = mol_doc.species_hash
 
-                    # Finally, group by graph isomorphism
-                    # When bonding is defined by OpenBabelNN + metal_edge_extender
-                    # Unconnected molecule graphs are discarded at this step
-                    # TODO: What about molecules that would be connected under a different
-                    # TODO: bonding scheme? For now, ¯\_(ツ)_/¯
-                    # TODO: MAKE ClusterBuilder FOR THIS PURPOSE
-                    if nx.is_connected(mol_graph.graph.to_undirected()):
-                        matched = False
+                # Finally, group by graph isomorphism
+                # When bonding is defined by OpenBabelNN + metal_edge_extender
+                # Unconnected molecule graphs are discarded at this step
+                # TODO: What about molecules that would be connected under a different
+                # TODO: bonding scheme? For now, ¯\_(ツ)_/¯
+                # TODO: MAKE ClusterBuilder FOR THIS PURPOSE
+                if nx.is_connected(mol_graph.graph.to_undirected()):
+                    matched = False
 
-                        for subgroup in subgroups:
-                            if mol_graph.isomorphic_to(subgroup["mol_graph"]):
-                                subgroup["mol_docs"].append(mol_doc)
-                                matched = True
-                                break
+                    for subgroup in subgroups:
+                        if mol_hash == subgroup["hash"]:
+                            subgroup["mol_docs"].append(mol_doc)
+                            matched = True
+                            break
 
-                        if not matched:
-                            subgroups.append(
-                                {"mol_graph": mol_graph, "mol_docs": [mol_doc]}
-                            )
+                    if not matched:
+                        subgroups.append(
+                            {"hash": mol_hash, "mol_docs": [mol_doc]}
+                        )
 
                 for subgroup in subgroups:
                     yield subgroup["mol_docs"]
