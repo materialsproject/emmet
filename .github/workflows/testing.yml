@@ -39,34 +39,69 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        os: ['ubuntu-latest']#  # TODO openbabel for windows and mac
+        os: ['ubuntu-latest', 'macos-latest']#  # TODO openbabel and mac
         package: ["emmet-core", "emmet-builders", "emmet-api"]
-        python-version: ["3.8", "3.9", "3.10"] # TODO numpy import error for pymatgen install in 3.10
+        python-version: ["3.8", "3.9", "3.10"] 
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v4
+
+      - name: Setup conda
+        uses: s-weigand/setup-conda@v1
         with:
+          update-conda: true
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
+          conda-channels: anaconda, conda-forge
 
-      - name: Install OpenBabel on Ubuntu
-        if: matrix.os == 'ubuntu-latest'
+      - name: Install OpenBabel
         shell: bash -l {0}
         run: |
-          sudo apt-get update && sudo apt-get install openbabel libopenbabel-dev libeigen3-dev
-          sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
-          sudo ln -s /usr/include/eigen3 /usr/local/include/eigen3
+          conda install openbabel -y
 
-      - name: Install OpenBabel on MacOS
-        if: matrix.os == 'macos-11'
-        shell: bash -l {0}
-        run: |
-          brew install open-babel 
-          echo "/Users/runner/Library/Python/${{ matrix.python-version }}/bin" >> $GITHUB_PATH
+      # - uses: actions/setup-python@v4
+      #   with:
+      #     python-version: ${{ matrix.python-version }}
+      #     cache: 'pip'
 
+      # - name: Install OpenBabel on Ubuntu
+      #   if: matrix.os == 'ubuntu-latest'
+      #   env: 
+      #     cc_compiler: "gcc"
+      #     cxx_compiler: "g++"
+      #     cmake_flags: "-DPYTHON_BINDINGS=ON -DRUN_SWIG=ON"
+      #   shell: bash -l {0}
+      #   run: |
+      #     sudo apt-get update && sudo apt-get -qq install ninja-build swig libeigen3-dev libboost-all-dev libopenbabel-dev
+      #     git clone https://github.com/openbabel/openbabel.git ${{ runner.workspace }}/openbabel
+      #     mkdir "${{ runner.workspace }}/openbabel/build"
+      #     cd "${{ runner.workspace }}/openbabel/build"
+      #     cmake -DCMAKE_C_COMPILER=$cc_compiler -DCMAKE_CXX_COMPILER=$cxx_compiler $cmake_flags ..
+      #     sudo make
+      #     sudo make install
+      #     echo "PYTHONPATH=/usr/local/lib:/usr/local/include/openbabel3:$PYTHONPATH" >> $GITHUB_PATH
+      #     sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
+      #     echo "LD_LIBRARY_PATH=/usr/local/lib:/usr/include/openbabel3:$LD_LIBRARY_PATH" >> $GITHUB_PATH
 
+      # - name: Install OpenBabel on MacOS
+      #   if: matrix.os == 'macos-latest'
+      #   env: 
+      #       cc_compiler: "clang"
+      #       cxx_compiler: "clang++"
+      #   shell: bash -l {0}
+      #   run: |
+      #     brew install ninja swig eigen boost
+      #     echo "/Users/runner/Library/Python/${{ matrix.python-version }}/bin" >> $GITHUB_PATH
+      #     git clone https://github.com/openbabel/openbabel.git ${{ runner.workspace }}/openbabel
+      #     mkdir "${{ runner.workspace }}/openbabel/build"
+      #     cd "${{ runner.workspace }}/openbabel/build"
+      #     cmake -DCMAKE_C_COMPILER=$cc_compiler -DCMAKE_CXX_COMPILER=$cxx_compiler $cmake_flags ..
+      #     sudo make
+      #     sudo make install
+      #     echo "PYTHONPATH=/usr/local/lib:/usr/local/include/openbabel3:$PYTHONPATH" >> $GITHUB_PATH
+      #     sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
+      #     echo "LD_LIBRARY_PATH=/usr/local/lib:/usr/include/openbabel3:$LD_LIBRARY_PATH" >> $GITHUB_PATH
+      
       - name: Install Python dependencies
         shell: bash -l {0}
         run: |
