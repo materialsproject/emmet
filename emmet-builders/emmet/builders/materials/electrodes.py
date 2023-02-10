@@ -4,15 +4,17 @@ from functools import lru_cache
 from itertools import chain
 from math import ceil
 from typing import Any, Iterator, Dict, List, Optional
+from collections import defaultdict
 
 from maggma.builders import Builder
 from maggma.stores import MongoStore
 from maggma.utils import grouper
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
+from pymatgen.analysis.phase_diagram import PhaseDiagram, Composition
 
-from emmet.core.electrode import InsertionElectrodeDoc
-from emmet.core.structure_group import StructureGroupDoc
+from emmet.core.electrode import InsertionElectrodeDoc, ConversionElectrodeDoc
+from emmet.core.structure_group import StructureGroupDoc, _get_id_num
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
@@ -79,17 +81,17 @@ default_build_settings = EmmetBuildSettings()
 
 class StructureGroupBuilder(Builder):
     def __init__(
-        self,
-        materials: MongoStore,
-        sgroups: MongoStore,
-        working_ion: str,
-        query: Optional[dict] = None,
-        ltol: float = default_build_settings.LTOL,
-        stol: float = default_build_settings.STOL,
-        angle_tol: float = default_build_settings.ANGLE_TOL,
-        check_newer: bool = True,
-        chunk_size: int = 1000,
-        **kwargs,
+            self,
+            materials: MongoStore,
+            sgroups: MongoStore,
+            working_ion: str,
+            query: Optional[dict] = None,
+            ltol: float = default_build_settings.LTOL,
+            stol: float = default_build_settings.STOL,
+            angle_tol: float = default_build_settings.ANGLE_TOL,
+            check_newer: bool = True,
+            chunk_size: int = 1000,
+            **kwargs,
     ):
         """
         Aggregate materials entries into sgroups that are topotactically similar to each other.
@@ -171,7 +173,7 @@ class StructureGroupBuilder(Builder):
         all_chemsys = self.materials.distinct("chemsys", criteria=base_query)
         # Contains the working ion but not ONLY the working ion
         all_chemsys = [
-            *filter(lambda x: self.working_ion in x and len(x) > 1, [chemsys_.split("-") for chemsys_ in all_chemsys],)
+            *filter(lambda x: self.working_ion in x and len(x) > 1, [chemsys_.split("-") for chemsys_ in all_chemsys], )
         ]
 
         self.logger.debug(
@@ -410,5 +412,101 @@ class InsertionElectrodeBuilder(Builder):
             for struct_group_dict in items:
                 struct_group_dict[self.grouped_materials.last_updated_field] = datetime.utcnow()
             self.insertion_electrode.update(docs=items, key=["battery_id"])
+        else:
+            self.logger.info("No items to update")
+
+
+class ConversionElectrodeBuilder(Builder):
+    def __init__(
+            self,
+            phase_diagram_store: MongoStore,
+            conversion_electrode_store: MongoStore,
+            working_ion: str,
+            thermo_type: str,
+            query: Optional[dict] = None,
+            **kwargs,
+    ):
+        self.phase_diagram_store = phase_diagram_store
+        self.conversion_electrode_store = conversion_electrode_store
+        self.working_ion = working_ion
+        self.thermo_type = thermo_type
+        self.query = query if query else {}
+        self.kwargs = kwargs
+
+        self.phase_diagram_store.key = "phase_diagram_id"
+        self.conversion_electrode_store.key = "conversion_electrode_id"
+
+        super().__init__(
+            sources=[self.phase_diagram_store], targets=[self.conversion_electrode_store], **kwargs,
+        )
+
+    def prechunk(self, number_splits: int) -> Iterator[Dict]:
+        """
+        Prechunk method to perform chunking by the key field
+        """
+        q = dict(self.query)
+        keys = self.phase_diagram_store.distinct(self.phase_diagram_store.key, criteria=q)
+        N = ceil(len(keys) / number_splits)
+        for split in grouper(keys, N):
+            yield {"query": {self.phase_diagram_store.key: {"$in": list(split)}}}
+
+    def get_items(self):
+        """
+        Get items. The phase diagrams are prefiltered by "thermo_type" or the functional.
+        """
+        q = dict(self.query)
+        q.update({"thermo_type": self.thermo_type})
+        for phase_diagram_doc in self.phase_diagram_store.query(q):
+            yield phase_diagram_doc
+
+    def process_item(self, item) -> Dict:
+        """
+        - For each phase diagram doc, find all possible conversion electrodes and create conversion electrode docs
+        """
+        # To work around "el_refs" serialization issue (#576)
+        _pd = PhaseDiagram.from_dict(item["phase_diagram"])
+        _entries = _pd.all_entries
+        pd = PhaseDiagram(entries=_entries)
+
+        most_wi = defaultdict(lambda: (-1, None))  # type: dict
+        n_elements = pd.dim
+        # Only using entries on convex hull for now
+        for entry in pd.stable_entries:
+            if len(entry.composition.elements) != n_elements:
+                continue
+            composition_dict = entry.composition.as_dict()
+            composition_dict.pop(self.working_ion)
+            composition_without_wi = Composition.from_dict(composition_dict)
+            red_form, num_form = composition_without_wi.get_reduced_formula_and_factor()
+            n_wi = entry.composition.get_el_amt_dict()[self.working_ion]
+            most_wi[red_form] = max(most_wi[red_form], (n_wi / num_form, entry.composition))
+
+        new_docs = []
+        for k, v in most_wi.items():
+            if v[1] is not None:
+                # Get lowest material_id with matching composition
+                material_ids = [(lambda x: x.data["material_id"] if x.composition.reduced_formula == v[
+                    1].reduced_formula else None)(e) for e in pd.entries]
+                material_ids = list(filter(None, material_ids))
+                lowest_id = min(material_ids, key=_get_id_num)
+                conversion_electrode_doc = ConversionElectrodeDoc.from_composition_and_pd(
+                    comp=v[1],
+                    pd=pd,
+                    working_ion_symbol=self.working_ion,
+                    battery_id=f"{lowest_id}_{self.working_ion}",
+                    thermo_type=self.thermo_type
+                )
+                new_docs.append(jsanitize(conversion_electrode_doc.dict()))
+        return new_docs  # type: ignore
+
+    def update_targets(self, items: List):
+        combined_items = []
+        for _items in items:
+            _items = list(filter(None, _items))
+            combined_items.extend(_items)
+
+        if len(combined_items) > 0:
+            self.logger.info("Updating {} conversion battery documents".format(len(combined_items)))
+            self.conversion_electrode_store.update(docs=combined_items, key=["battery_id", "thermo_type"])
         else:
             self.logger.info("No items to update")
