@@ -159,6 +159,8 @@ def get_dir_type(list_of_files):
             return "vasp"
         elif f.startswith("feff.inp"):
             return "feff"
+        elif f.startswith("mol.qin."):
+            return "mol"
     else:
         return None
 
