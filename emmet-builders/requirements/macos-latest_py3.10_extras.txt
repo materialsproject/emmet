@@ -422,7 +422,7 @@ watchdog==2.2.1
     # via mkdocs
 wcmatch==8.4.1
     # via mkdocs-awesome-pages-plugin
-werkzeug==2.2.2
+werkzeug==2.2.3
     # via flask
 wincertstore==0.2
     # via emmet-builders (setup.py)
