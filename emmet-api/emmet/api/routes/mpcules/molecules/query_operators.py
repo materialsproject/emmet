@@ -245,7 +245,7 @@ class FindMoleculeQuery(QueryOperator):
 
         if charge is not None:
             crit.update({"charge": charge})
-        
+
         if spin_multiplicity is not None:
             crit.update({"spin_multiplicity": spin_multiplicity})
 
@@ -375,13 +375,16 @@ class CalcMethodQuery(QueryOperator):
 
     def query(self,
               level_of_theory: Optional[str] = Query(
-                None, description="Level of theory used for calculation. Default is None, meaning that level of theory will not be queried."
+                None, description="Level of theory used for calculation. Default is None, meaning that level of theory"
+                                  "will not be queried."
                 ),
               solvent: Optional[str] = Query(
-                None, description="Solvent data used for calculation. Default is None, meaning that solvent will not be queried."
+                None, description="Solvent data used for calculation. Default is None, meaning that solvent will not be"
+                                  "queried."
                 ),
               lot_solvent: Optional[str] = Query(
-                None, description="String representing the combination of level of theory and solvent. Default is None, meaning lot_solvent will not be queried."
+                None, description="String representing the combination of level of theory and solvent. Default is None,"
+                                  "meaning lot_solvent will not be queried."
               ),
               _limit: int = Query(
                 100, description="Maximum number of matches to show. Defaults to 100."
@@ -410,7 +413,7 @@ class CalcMethodQuery(QueryOperator):
                 ("unique_lot_solvents", False)]
 
     def post_process(self, docs, query):
-        #TODO: should this be somehow sorted?
+        # TODO: should this be somehow sorted?
         response = docs[: self._limit]
 
         return response
@@ -428,7 +431,7 @@ class HashQuery(QueryOperator):
               coord_hash: Optional[str] = Query(
                 None, description="Graph hash augmented with node XYZ coordinates"
               )
-            ):
+              ):
 
         crit = dict()
 

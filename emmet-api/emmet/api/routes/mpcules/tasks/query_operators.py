@@ -4,7 +4,7 @@ from fastapi import Query
 from typing import Optional
 
 
-#TODO: might need these utils once pmg changes are in place (see below)
+# TODO: might need these utils once pmg changes are in place (see below)
 # from emmet.api.routes.tasks.utils import calcs_reversed_to_trajectory, task_to_entry
 
 
@@ -95,8 +95,8 @@ class DeprecationQuery(QueryOperator):
         return d
 
 
-#TODO: class TrajectoryQuery(QueryOperator):
+# TODO: class TrajectoryQuery(QueryOperator):
 # Need to write Trajectory class in pmg for Molecules
 
-#TODO: class EntryQuery(QueryOperator):
+# TODO: class EntryQuery(QueryOperator):
 # Need to write MoleculeEntry class in pmg

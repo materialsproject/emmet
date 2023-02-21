@@ -10,7 +10,7 @@ from emmet.api.routes.mpcules.tasks.hint_scheme import TasksHintScheme
 from emmet.api.routes.mpcules.tasks.query_operators import (
     DeprecationQuery,
     MultipleTaskIDsQuery,
-    #TODO:
+    # TODO:
     # TrajectoryQuery,
     # EntryQuery,
 )
@@ -64,5 +64,5 @@ def task_deprecation_resource(molecules_store):
     return resource
 
 
-#TODO: def trajectory_resource(task_store):
-#TODO: def entries_resource(task_store):
+# TODO: def trajectory_resource(task_store):
+# TODO: def entries_resource(task_store):

@@ -152,7 +152,6 @@
 #         return [(key, False) for key in keys]
 
 
-
 # class NBOBondQuery(BaseQuery):
 #     pass
 
