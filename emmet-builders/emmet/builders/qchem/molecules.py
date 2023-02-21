@@ -470,19 +470,59 @@ class MoleculesBuilder(Builder):
             [dict] : a list of new molecule docs
         """
 
+        def optimizing_solvent(mol_doc):
+            for origin in mol_doc.origins:
+                if origin.name == "molecule":
+                    solvent = mol_doc.solvents[origin.task_id]
+                    return solvent
+
         assoc = [MoleculeDoc(**item) for item in items]
         formula = assoc[0].formula_alphabetical
         mol_ids = [a.molecule_id for a in assoc]
         self.logger.debug(f"Processing {formula} : {mol_ids}")
 
-        molecules = list()
+        complete_mol_docs = list()
 
         for group in self.group_mol_docs(assoc):
             # Maybe all are disconnected and therefore none get grouped?
             if len(group) == 0:
                 continue
 
-            sorted_docs = sorted(group, key=evaluate_molecule)
+            docs_by_solvent = dict()
+            mols_by_solvent = dict()
+
+            task_ids = list()
+            calc_types = dict()
+            task_types = dict()
+            levels_of_theory = dict()
+            solvents = dict()
+            lot_solvents = dict()
+            unique_calc_types = set()
+            unique_task_types = set()
+            unique_levels_of_theory = set()
+            unique_solvents = set()
+            unique_lot_solvents = set()
+            origins = list()
+            entries = list()
+            best_entries = list()
+            constituent_molecules = list()
+            similar_molecules = list()
+
+
+            for solv, subgroup in groupby(
+                sorted(group, key=optimizing_solvent), key=optimizing_solvent
+            ):
+
+                sorted_docs = sorted(group, key=evaluate_molecule)
+                docs_by_solvent[solv] = sorted_docs[0]
+                mols_by_solvent[solv] = sorted_docs[0].molecule
+                constituent_molecules.append(sorted_docs[0].molecule_id)
+
+                if len(sorted_docs) > 1:
+                    for m in sorted_docs[1:]:
+                        if m.molecule_id not in constituent_molecules:
+                            similar_molecules.append(m.molecule_id)
+
 
             best_doc = sorted_docs[0]
             if len(sorted_docs) > 1:
@@ -491,11 +531,11 @@ class MoleculesBuilder(Builder):
                     for m in sorted_docs
                     if m.molecule_id != best_doc.molecule_id
                 ]
-            molecules.append(best_doc)
+            complete_mol_docs.append(best_doc)
 
-        self.logger.debug(f"Produced {len(molecules)} molecules for {formula}")
+        self.logger.debug(f"Produced {len(complete_mol_docs)} molecules for {formula}")
 
-        return jsanitize([mol.dict() for mol in molecules], allow_bson=True)
+        return jsanitize([mol.dict() for mol in complete_mol_docs], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """

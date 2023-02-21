@@ -96,6 +96,10 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         None, description="Ordered list of elements/species in this Molecule."
     )
 
+    molecules: Dict[str, Molecule] = Field(
+        None, description="The lowest energy optimized structures for this molecule for each solvent."
+    )
+
     species_hash: str = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
@@ -168,9 +172,14 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         description="Mapping for tracking the best entries at each level of theory (+ solvent) for Q-Chem calculations",
     )
 
+    constituent_molecules: List[MPculeID] = Field(
+        None,
+        description="For cases where data from multiple MoleculeDocs have been compiled, a list of MPculeIDs of documents used to construct this document"
+    )
+
     similar_molecules: List[MPculeID] = Field(
         None,
-        description="List of MPIDs or MPculeIDs with of molecules similar (by e.g. structure) to this one",
+        description="List of MPculeIDs with of molecules similar (by e.g. structure) to this one",
     )
 
     @classmethod
