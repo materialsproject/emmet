@@ -146,7 +146,7 @@ class ChargeSpinQuery(QueryOperator):
         if charge:
             crit.update({"charge": charge})
         if spin_multiplicity:
-            crit.update({"spin_multiplicity": spin})
+            crit.update({"spin_multiplicity": spin_multiplicity})
 
         return {"criteria": crit}
 
@@ -264,7 +264,7 @@ class FindMoleculeQuery(QueryOperator):
 
         m1 = Molecule.from_dict(self.molecule)
 
-        match = MoleculeMatcher(tolerance=tolerance)
+        match = MoleculeMatcher(tolerance=self.tolerance)
 
         matches = list()
 
@@ -274,7 +274,7 @@ class FindMoleculeQuery(QueryOperator):
             matched = match.fit(m1, m2)
 
             if matched:
-                rmsd = m.get_rmsd(m1, m2)
+                rmsd = match.get_rmsd(m1, m2)
 
                 matches.append(
                     {
@@ -388,15 +388,18 @@ class CalcMethodQuery(QueryOperator):
               )
               ):
 
-        self._limit = limit
+        self._limit = _limit
+        self.level_of_theory = level_of_theory
+        self.solvent = solvent
+        self.lot_solvent = lot_solvent
 
         crit = dict()
 
-        if level_of_theory is not None:
+        if self.level_of_theory:
             crit.update({"unique_levels_of_theory": level_of_theory})
-        if solvent is not None:
-            crit.update({"unique_solvents": solvents})
-        if lot_solvent is not None:
+        if self.solvent:
+            crit.update({"unique_solvents": solvent})
+        if self.lot_solvent:
             crit.update({"unique_lot_solvents": lot_solvent})
 
         return {"criteria": crit}
