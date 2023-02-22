@@ -12,9 +12,9 @@ attrs==22.2.0
     # via jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.67
+boto3==1.26.77
     # via maggma
-botocore==1.29.67
+botocore==1.29.77
     # via
     #   boto3
     #   s3transfer
@@ -40,13 +40,13 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.43.2
+emmet-core[all]==0.44.0
     # via
     #   emmet-builders (setup.py)
     #   mp-api
-fastapi==0.90.0
+fastapi==0.92.0
     # via maggma
-flask==2.2.2
+flask==2.2.3
     # via mongogrant
 fonttools==4.38.0
     # via matplotlib
@@ -78,7 +78,7 @@ kiwisolver==1.4.4
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-maggma==0.49.17
+maggma==0.50.3
     # via emmet-builders (setup.py)
 markupsafe==2.1.2
     # via
@@ -88,7 +88,7 @@ matminer==0.8.0
     # via
     #   emmet-builders (setup.py)
     #   robocrys
-matplotlib==3.6.3
+matplotlib==3.7.0
     # via pymatgen
 mongogrant==0.3.3
     # via maggma
@@ -102,7 +102,7 @@ monty==2022.9.9
     #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.30.8
+mp-api==0.30.10
     # via pymatgen
 mpmath==1.2.1
     # via sympy
@@ -128,7 +128,7 @@ numpy==1.24.2
     #   seekpath
     #   shapely
     #   spglib
-orjson==3.8.5
+orjson==3.8.6
     # via maggma
 packaging==23.0
     # via
@@ -155,13 +155,13 @@ pybtex==0.24.0
     #   robocrys
 pycparser==2.21
     # via cffi
-pydantic==1.10.4
+pydantic==1.10.5
     # via
     #   emmet-core
     #   fastapi
     #   inflect
     #   maggma
-pydash==6.0.0
+pydash==6.0.1
     # via maggma
 pymatgen==2023.1.30
     # via
@@ -216,7 +216,7 @@ s3transfer==0.6.0
     # via boto3
 scikit-learn==1.2.1
     # via matminer
-scipy==1.10.0
+scipy==1.10.1
     # via
     #   pymatgen
     #   robocrys
@@ -242,7 +242,7 @@ spglib==2.0.2
     #   seekpath
 sshtunnel==0.4.0
     # via maggma
-starlette==0.23.0
+starlette==0.25.0
     # via fastapi
 sympy==1.11.1
     # via
@@ -250,7 +250,7 @@ sympy==1.11.1
     #   pymatgen
 tabulate==0.9.0
     # via pymatgen
-tenacity==8.2.0
+tenacity==8.2.1
     # via plotly
 threadpoolctl==3.1.0
     # via scikit-learn
@@ -259,7 +259,7 @@ tqdm==4.64.1
     #   maggma
     #   matminer
     #   pymatgen
-typing-extensions==4.4.0
+typing-extensions==4.5.0
     # via
     #   emmet-core
     #   mp-api
@@ -270,7 +270,7 @@ urllib3==1.26.14
     # via
     #   botocore
     #   requests
-werkzeug==2.2.2
+werkzeug==2.2.3
     # via flask
 
 # The following packages are considered to be unsafe in a requirements file:
