@@ -15,14 +15,12 @@ def test_bond_length_query_operator():
         csm_max=1.5,
     )
 
-    print(q)
-
     assert q == {
         "criteria": {
+            "csm": {"$gte": 0.5, "$lte": 1.5},
             "chemenv_iucr": {"$in": ["[6o]", "[4n]"]},
             "chemenv_iupac": {"$in": ["[6o]", "[4n]"]},
             "chemenv_name": {"$in": ["[6o]", "[4n]"]},
-            "csm": {"$gte": 0.5},
         }
     }
 
@@ -38,10 +36,10 @@ def test_bond_length_query_operator():
         )
         assert dict(q) == {
             "criteria": {
+                "csm": {"$gte": 0.5, "$lte": 1.5},
                 "chemenv_iucr": {"$in": ["[6o]", "[4n]"]},
                 "chemenv_iupac": {"$in": ["[6o]", "[4n]"]},
                 "chemenv_name": {"$in": ["[6o]", "[4n]"]},
-                "csm": {"$gte": 0.5},
             }
         }
 

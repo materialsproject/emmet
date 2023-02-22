@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Optional
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
@@ -29,7 +30,16 @@ class ChemEnvQuery(QueryOperator):
         ),
     ) -> STORE_PARAMS:
 
-        crit = {}  # type: dict
+        crit = defaultdict(dict)  # type: dict
+
+        d = {"csm": [csm_min, csm_max]}
+
+        for entry in d:
+            if d[entry][0] is not None:
+                crit[entry]["$gte"] = d[entry][0]
+
+            if d[entry][1] is not None:
+                crit[entry]["$lte"] = d[entry][1]
 
         if chemenv_iucr:
             crit.update({"chemenv_iucr": {"$in": [specie.strip() for specie in chemenv_iucr.split(",")]}})
@@ -39,11 +49,5 @@ class ChemEnvQuery(QueryOperator):
 
         if chemenv_name:
             crit.update({"chemenv_name": {"$in": [specie.strip() for specie in chemenv_iucr.split(",")]}})
-
-        if csm_max is not None:
-            crit.update({"csm": {"$lte": csm_max}})
-
-        if csm_min is not None:
-            crit.update({"csm": {"$gte": csm_min}})
 
         return {"criteria": crit}
