@@ -19,8 +19,8 @@ def test_bond_length_query_operator():
         "criteria": {
             "csm": {"$gte": 0.5, "$lte": 1.5},
             "chemenv_iucr": {"$in": ["[6o]", "[4n]"]},
-            "chemenv_iupac": {"$in": ["[6o]", "[4n]"]},
-            "chemenv_name": {"$in": ["[6o]", "[4n]"]},
+            "chemenv_iupac": {"$in": ["SP-4", "IC-12"]},
+            "chemenv_name": {"$in": ["Square non-coplanar", "Icosahedron"]},
         }
     }
 
@@ -38,7 +38,7 @@ def test_bond_length_query_operator():
             "criteria": {
                 "csm": {"$gte": 0.5, "$lte": 1.5},
                 "chemenv_iucr": {"$in": ["[6o]", "[4n]"]},
-                "chemenv_iupac": {"$in": ["[6o]", "[4n]"]},
-                "chemenv_name": {"$in": ["[6o]", "[4n]"]},
+                "chemenv_iupac": {"$in": ["SP-4", "IC-12"]},
+                "chemenv_name": {"$in": ["Square non-coplanar", "Icosahedron"]},
             }
         }
