@@ -42,4 +42,3 @@ def test_bond_length_query_operator():
                 "chemenv_name": {"$in": ["[6o]", "[4n]"]},
             }
         }
-

@@ -20,7 +20,8 @@ class ChemEnvQuery(QueryOperator):
         ),
         chemenv_name: Optional[str] = Query(
             None,
-            description="A comma delimited string list of coordination environment descriptions for unique (cationic) species.",
+            description="A comma delimited string list of coordination environment descriptions for "
+            "unique (cationic) species.",
         ),
         csm_min: Optional[float] = Query(
             None, description="Minimum value of the continous symmetry measure for any site."
