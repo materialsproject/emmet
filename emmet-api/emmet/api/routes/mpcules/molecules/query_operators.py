@@ -35,7 +35,7 @@ A comma delimited string list of alphabetical formulas can also be provided.",
         ),
     ) -> STORE_PARAMS:
 
-        crit: Dict[str, Any] = {}
+        crit = {}  # type: ignore
 
         if formula:
             # Do we need to handle wildcards? For now, don't worry about it.
@@ -259,7 +259,7 @@ class FindMoleculeQuery(QueryOperator):
             else:
                 raise Exception("Unexpected type for molecule")
 
-            comp = dict(m.composition)
+            comp = dict(m.composition)  # type: ignore
 
             crit.update({"composition": comp})
             return {"criteria": crit}
@@ -332,9 +332,19 @@ class FindMoleculeConnectivityQuery(QueryOperator):
             crit.update({"spin_multiplicity": spin_multiplicity})
 
         try:
-            m = Molecule.from_dict(molecule)  # type: ignore
-            crit.update({"composition": dict(m.composition)})
+            if isinstance(molecule, dict):
+                m = Molecule.from_dict(molecule)  # type: ignore
+            elif isinstance(molecule, Molecule):
+                m = molecule  # type: ignore
+            elif isinstance(molecule, str):
+                m = Molecule.from_str(molecule)  # type: ignore
+            else:
+                raise Exception("Unexpected type for molecule")
+
+            comp = dict(m.composition)  # type: ignore
+            crit.update({"composition": comp})
             return {"criteria": crit}
+
         except Exception:
             raise HTTPException(
                 status_code=404, detail="Body cannot be converted to a pymatgen Molecule object.",
