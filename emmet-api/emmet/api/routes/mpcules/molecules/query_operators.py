@@ -250,8 +250,18 @@ class FindMoleculeQuery(QueryOperator):
             crit.update({"spin_multiplicity": spin_multiplicity})
 
         try:
-            m = Molecule.from_dict(molecule)
-            crit.update({"composition": dict(m.composition)})
+            if isinstance(molecule, dict):
+                m = Molecule.from_dict(molecule)  # type: ignore
+            elif isinstance(molecule, Molecule):
+                m = molecule  # type: ignore
+            elif isinstance(molecule, str):
+                m = Molecule.from_str(molecule)  # type: ignore
+            else:
+                raise Exception("Unexpected type for molecule")
+
+            comp = dict(m.composition)
+
+            crit.update({"composition": comp})
             return {"criteria": crit}
         except Exception:
             raise HTTPException(
@@ -313,7 +323,7 @@ class FindMoleculeConnectivityQuery(QueryOperator):
         self.molecule = molecule
         self._limit = _limit
 
-        crit = {}
+        crit: Dict[str, Any] = {}
 
         if charge is not None:
             crit.update({"charge": charge})
@@ -322,7 +332,7 @@ class FindMoleculeConnectivityQuery(QueryOperator):
             crit.update({"spin_multiplicity": spin_multiplicity})
 
         try:
-            m = Molecule.from_dict(molecule)
+            m = Molecule.from_dict(molecule)  # type: ignore
             crit.update({"composition": dict(m.composition)})
             return {"criteria": crit}
         except Exception:
