@@ -523,7 +523,6 @@ class MoleculesBuilder(Builder):
                         if m.molecule_id not in constituent_molecules:
                             similar_molecules.append(m.molecule_id)
 
-
             best_doc = sorted_docs[0]
             if len(sorted_docs) > 1:
                 best_doc.similar_molecules = [

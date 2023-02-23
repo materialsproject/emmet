@@ -17,7 +17,7 @@ from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.molecules.bonds import metals
 from emmet.core.molecules.thermo import ThermoDoc
 from emmet.core.molecules.redox import RedoxDoc
-from emmet.core.utils import confirm_molecule, jsanitize
+from emmet.core.utils import confirm_molecule, get_graph_hash, jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
 
@@ -339,7 +339,7 @@ class RedoxBuilder(Builder):
         :return: Grouped molecule entries
         """
 
-        mol_graphs_nometal: List[MoleculeGraph] = list()
+        graph_hashes_nometal: List[String] = list()
         results = defaultdict(list)
 
         # Within each group, group by the covalent molecular graph
@@ -352,19 +352,17 @@ class RedoxBuilder(Builder):
                 mol_nometal.remove_species(metals)
 
             mol_nometal.set_charge_and_spin(0)
-            mg_nometal = MoleculeGraph.with_local_env_strategy(
-                mol_nometal, OpenBabelNN()
-            )
+            gh_nometal = get_graph_hash(mol_nometal, node_attr="specie")
 
             match = None
-            for i, mg in enumerate(mol_graphs_nometal):
-                if mg_nometal.isomorphic_to(mg):
+            for i, gh in enumerate(graph_hashes_nometal):
+                if gh_nometal == gh:
                     match = i
                     break
 
             if match is None:
-                results[len(mol_graphs_nometal)].append(t)
-                mol_graphs_nometal.append(mg_nometal)
+                results[len(graph_hashes_nometal)].append(t)
+                graph_hashes_nometal.append(gh_nometal)
             else:
                 results[match].append(t)
 

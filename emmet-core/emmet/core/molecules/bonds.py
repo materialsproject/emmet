@@ -116,6 +116,11 @@ def _bonds_peturbation(
     """
 
     bonds = set()
+
+    # No metals, so don't need to use perturbation analysis to get bonds
+    if len(metal_indices) == 0:
+        return bonds
+
     if len(nbo["perturbation_energy"]) > index:
         for inter_ind in nbo["perturbation_energy"][index].get("donor type", list()):
             coord = False

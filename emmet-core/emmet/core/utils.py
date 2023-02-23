@@ -21,6 +21,7 @@ from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 
 from emmet.core.settings import EmmetSettings
+from emmet.core.graph_hashing import weisfeiler_lehman_graph_hash
 from emmet.core.mpid import MPculeID
 
 try:
@@ -215,7 +216,7 @@ def get_graph_hash(mol: Molecule, node_attr: Optional[str] = None):
     """
 
     mg = make_mol_graph(mol)
-    return nx.weisfeiler_lehman_graph_hash(mg.graph, node_attr=node_attr)
+    return weisfeiler_lehman_graph_hash(mg.graph, node_attr=node_attr)
 
 
 def get_molecule_id(mol: Molecule, node_attr: Optional[str] = None):

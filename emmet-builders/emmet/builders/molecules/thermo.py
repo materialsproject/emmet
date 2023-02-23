@@ -255,7 +255,7 @@ class ThermoBuilder(Builder):
 
         thermo_docs = list()
 
-        mm = MoleculeMatcher()
+        mm = MoleculeMatcher(tolerance=0.000001)
 
         for mol in mols:
             this_thermo_docs = list()
@@ -277,7 +277,7 @@ class ThermoBuilder(Builder):
                     task_type = entry["task_type"]
 
                 if (
-                    task_type == "Single Point"
+                    task_type in ["Single Point", "Force"]
                     and entry["charge"] == mol.charge
                     and entry["spin_multiplicity"] == mol.spin_multiplicity
                 ):
@@ -338,8 +338,8 @@ class ThermoBuilder(Builder):
                     matching_structures = list()
                     for entry in thermo_entries:
                         if (mm.fit(Molecule.from_dict(entry["molecule"]), Molecule.from_dict(best_spec["molecule"]))
-                            and (sum(evaluate_lot(entry["level_of_theory"])) <
-                                 sum(evaluate_lot(best_spec["level_of_theory"])))):
+                            and (sum(evaluate_lot(best_spec["level_of_theory"])) <
+                                 sum(evaluate_lot(entry["level_of_theory"])))):
                             matching_structures.append(entry)
 
                     if len(matching_structures) == 0:

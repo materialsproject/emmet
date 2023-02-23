@@ -12,6 +12,8 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
 functional_synonyms = {
+    "b97mv": "b97m-v",
+    "b97mrv": "b97m-rv",
     "wb97xd": "wb97x-d",
     "wb97xd3": "wb97x-d3",
     "wb97xv": "wb97x-v",
