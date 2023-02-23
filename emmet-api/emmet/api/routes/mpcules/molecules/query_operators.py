@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from fastapi import Body, HTTPException, Query
 
@@ -35,15 +35,15 @@ A comma delimited string list of alphabetical formulas can also be provided.",
         ),
     ) -> STORE_PARAMS:
 
-        crit = {}
+        crit: Dict[str, Any] = {}  # type: ignore
 
         if formula:
             # Do we need to handle wildcards? For now, don't worry about it.
             # See: emmet.api.routes.materials.utils.formula_to_criteria
             if "," in formula:
-                crit.update({"formula_alphabetical": {"$in": [x.strip() for x in formula.split(",")]}})
+                crit.update({"formula_alphabetical": {"$in": [x.strip() for x in formula.split(",")]}})  # type: ignore
             else:
-                crit.update({"formula_alphabetical": formula})
+                crit.update({"formula_alphabetical": formula})  # type: ignore
 
         return {"criteria": crit}
 
@@ -146,7 +146,7 @@ class ChargeSpinQuery(QueryOperator):
         if charge:
             crit.update({"charge": charge})
         if spin_multiplicity:
-            crit.update({"spin_multiplicity": spin})
+            crit.update({"spin_multiplicity": spin_multiplicity})
 
         return {"criteria": crit}
 
@@ -241,30 +241,38 @@ class FindMoleculeQuery(QueryOperator):
         self._limit = _limit
         self.molecule = molecule
 
-        crit = dict()
+        crit: Dict[str, Any] = dict()
 
         if charge is not None:
             crit.update({"charge": charge})
-        
+
         if spin_multiplicity is not None:
             crit.update({"spin_multiplicity": spin_multiplicity})
 
         try:
-            m = Molecule.from_dict(molecule)
+            if isinstance(molecule, dict):
+                m = Molecule.from_dict(molecule)  # type: ignore
+            elif isinstance(molecule, Molecule):
+                m = molecule  # type: ignore
+            elif isinstance(molecule, str):
+                m = Molecule.from_str(molecule)  # type: ignore
+            else:
+                raise Exception("Unexpected type for molecule")
+
+            comp = dict(m.composition)  # type: ignore
+
+            crit.update({"composition": comp})
+            return {"criteria": crit}
         except Exception:
             raise HTTPException(
                 status_code=404, detail="Body cannot be converted to a pymatgen Molecule object.",
             )
 
-        crit.update({"composition": dict(m.composition)})
-
-        return {"criteria": crit}
-
     def post_process(self, docs, query):
 
         m1 = Molecule.from_dict(self.molecule)
 
-        match = MoleculeMatcher(tolerance=tolerance)
+        match = MoleculeMatcher(tolerance=self.tolerance)
 
         matches = list()
 
@@ -274,7 +282,7 @@ class FindMoleculeQuery(QueryOperator):
             matched = match.fit(m1, m2)
 
             if matched:
-                rmsd = m.get_rmsd(m1, m2)
+                rmsd = match.get_rmsd(m1, m2)
 
                 matches.append(
                     {
@@ -315,7 +323,7 @@ class FindMoleculeConnectivityQuery(QueryOperator):
         self.molecule = molecule
         self._limit = _limit
 
-        crit = {}
+        crit: Dict[str, Any] = {}
 
         if charge is not None:
             crit.update({"charge": charge})
@@ -324,15 +332,23 @@ class FindMoleculeConnectivityQuery(QueryOperator):
             crit.update({"spin_multiplicity": spin_multiplicity})
 
         try:
-            m = Molecule.from_dict(molecule)
+            if isinstance(molecule, dict):
+                m = Molecule.from_dict(molecule)  # type: ignore
+            elif isinstance(molecule, Molecule):
+                m = molecule  # type: ignore
+            elif isinstance(molecule, str):
+                m = Molecule.from_str(molecule)  # type: ignore
+            else:
+                raise Exception("Unexpected type for molecule")
+
+            comp = dict(m.composition)  # type: ignore
+            crit.update({"composition": comp})
+            return {"criteria": crit}
+
         except Exception:
             raise HTTPException(
                 status_code=404, detail="Body cannot be converted to a pymatgen Molecule object.",
             )
-
-        crit.update({"composition": dict(m.composition)})
-
-        return {"criteria": crit}
 
     def post_process(self, docs, query):
 
@@ -375,28 +391,34 @@ class CalcMethodQuery(QueryOperator):
 
     def query(self,
               level_of_theory: Optional[str] = Query(
-                None, description="Level of theory used for calculation. Default is None, meaning that level of theory will not be queried."
+                None, description="Level of theory used for calculation. Default is None, meaning that level of theory"
+                                  "will not be queried."
                 ),
               solvent: Optional[str] = Query(
-                None, description="Solvent data used for calculation. Default is None, meaning that solvent will not be queried."
+                None, description="Solvent data used for calculation. Default is None, meaning that solvent will not be"
+                                  "queried."
                 ),
               lot_solvent: Optional[str] = Query(
-                None, description="String representing the combination of level of theory and solvent. Default is None, meaning lot_solvent will not be queried."
+                None, description="String representing the combination of level of theory and solvent. Default is None,"
+                                  "meaning lot_solvent will not be queried."
               ),
               _limit: int = Query(
                 100, description="Maximum number of matches to show. Defaults to 100."
               )
               ):
 
-        self._limit = limit
+        self._limit = _limit
+        self.level_of_theory = level_of_theory
+        self.solvent = solvent
+        self.lot_solvent = lot_solvent
 
         crit = dict()
 
-        if level_of_theory is not None:
+        if self.level_of_theory:
             crit.update({"unique_levels_of_theory": level_of_theory})
-        if solvent is not None:
-            crit.update({"unique_solvents": solvents})
-        if lot_solvent is not None:
+        if self.solvent:
+            crit.update({"unique_solvents": solvent})
+        if self.lot_solvent:
             crit.update({"unique_lot_solvents": lot_solvent})
 
         return {"criteria": crit}
@@ -407,7 +429,7 @@ class CalcMethodQuery(QueryOperator):
                 ("unique_lot_solvents", False)]
 
     def post_process(self, docs, query):
-        #TODO: should this be somehow sorted?
+        # TODO: should this be somehow sorted?
         response = docs[: self._limit]
 
         return response
@@ -425,7 +447,7 @@ class HashQuery(QueryOperator):
               coord_hash: Optional[str] = Query(
                 None, description="Graph hash augmented with node XYZ coordinates"
               )
-            ):
+              ):
 
         crit = dict()
 

@@ -1,4 +1,4 @@
-from emmet.core.mpid import MPculeID
+from emmet.core.mpid import MPID, MPculeID
 from pydantic import Field, BaseModel
 
 

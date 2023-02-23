@@ -52,7 +52,7 @@ class StructureGroupDoc(BaseModel):
     group_id: str = Field(
         None,
         description="The combined material_id of the grouped document is given by the numerically smallest "
-        "material_id, you can also append the followed by the ignored species at the end.",
+                    "material_id, you can also append the followed by the ignored species at the end.",
     )
 
     has_distinct_compositions: bool = Field(
@@ -67,7 +67,7 @@ class StructureGroupDoc(BaseModel):
     host_material_ids: list = Field(
         None,
         description="Material id(s) that correspond(s) to the host structure(s), which has/have the lowest"
-        "concentration of ignored specie.",
+                    "concentration of ignored specie.",
     )
 
     insertion_material_ids: list = Field(
@@ -88,7 +88,7 @@ class StructureGroupDoc(BaseModel):
     chemsys: str = Field(
         None,
         description="The chemical system this group belongs to, if the atoms for the ignored species is "
-        "present the chemsys will also include the ignored species.",
+                    "present the chemsys will also include the ignored species.",
     )
 
     last_updated: datetime = Field(
@@ -126,12 +126,13 @@ class StructureGroupDoc(BaseModel):
             framework_comp = Composition.from_dict(comp_d)
             framework_str = framework_comp.reduced_formula
         ids = [ient.data["material_id"] for ient in entries]
+        lowest_id = min(ids, key=_get_id_num)
         sub_script = "_".join([ignored_specie])
         host_and_insertion_ids = StructureGroupDoc.get_host_and_insertion_ids(
             entries=entries, ignored_specie=ignored_specie
         )
         fields = {
-            "group_id": f"{host_and_insertion_ids['host_id']}_{sub_script}",
+            "group_id": f"{lowest_id}_{sub_script}",
             "material_ids": ids,
             "host_material_ids": host_and_insertion_ids["host_ids"],
             "insertion_material_ids": host_and_insertion_ids["insertion_ids"],
@@ -145,12 +146,12 @@ class StructureGroupDoc(BaseModel):
 
     @classmethod
     def from_ungrouped_structure_entries(
-        cls,
-        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
-        ignored_specie: str,
-        ltol: float = 0.2,
-        stol: float = 0.3,
-        angle_tol: float = 5.0,
+            cls,
+            entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+            ignored_specie: str,
+            ltol: float = 0.2,
+            stol: float = 0.3,
+            angle_tol: float = 5.0,
     ) -> List["StructureGroupDoc"]:
         """
         Create a list of StructureGroupDocs from a list of ungrouped entries.
@@ -259,7 +260,7 @@ def group_entries_with_structure_matcher(
     g.sort(key=get_num_sym_ops, reverse=True)
     g.sort(key=lambda x: x.composition.get_atomic_fraction(wion))
 
-    labs = generic_groupby(g, comp=lambda x, y: struct_matcher.fit(x.structure, y.structure, symmetric=True),)
+    labs = generic_groupby(g, comp=lambda x, y: struct_matcher.fit(x.structure, y.structure, symmetric=True), )
     for ilab in set(labs):
         sub_g = [g[itr] for itr, jlab in enumerate(labs) if jlab == ilab]
         yield [el for el in sub_g]

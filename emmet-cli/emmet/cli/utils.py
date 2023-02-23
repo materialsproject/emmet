@@ -159,6 +159,8 @@ def get_dir_type(list_of_files):
             return "vasp"
         elif f.startswith("feff.inp"):
             return "feff"
+        elif f.startswith("mol.qin."):
+            return "mol"
     else:
         return None
 
@@ -289,7 +291,7 @@ def get_vasp_dirs():
                         f"Insufficient permissions {st.st_mode} for {fn}."
                     )
 
-                if run and dir_type == "vasp" and not f.endswith(".gz"):
+                if run and not f.endswith(".gz"):
                     fn_gz = fn + ".gz"
                     if os.path.exists(fn_gz):
                         os.remove(fn_gz)  # remove left-over gz (cancelled job)
