@@ -51,7 +51,7 @@ def formula_to_criteria(formulas: str) -> Dict:
 
             for el, n in comp.to_reduced_dict.items():
                 if el in real_elts:
-                    crit[f"composition_reduced.{el}"] = n
+                    crit[f"composition_reduced.{el}"] = n  # type: ignore
 
             return crit
 
@@ -88,7 +88,7 @@ def formula_to_criteria(formulas: str) -> Dict:
 
                 try:
                     for el, n in comp.to_reduced_dict.items():
-                        crit[f"composition_reduced.{el}"] = n
+                        crit[f"composition_reduced.{el}"] = n  # type: ignore
                 except IndexError:
                     raise HTTPException(
                         status_code=400,
