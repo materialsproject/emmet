@@ -4,24 +4,32 @@ from maggma.api.resource import ReadOnlyResource
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.routes.materials.query_operators import MultiMaterialIDQuery
-from emmet.api.routes.chemenv.query_operators import ChemEnvQuery
-from emmet.core.chemenv import ChemEnvDoc
+from emmet.core.absorption import AbsorptionDoc
 
 
-def chemenv_resource(chemenv_store):
+def absorption_resource(absorption_store):
     resource = ReadOnlyResource(
-        chemenv_store,
-        ChemEnvDoc,
+        absorption_store,
+        AbsorptionDoc,
         query_operators=[
             MultiMaterialIDQuery(),
-            ChemEnvQuery(),
-            NumericQuery(model=ChemEnvDoc, excluded_fields=["valences"]),
+            NumericQuery(
+                model=AbsorptionDoc,
+                excluded_fields=[
+                    "energies",
+                    "absorption_coefficient",
+                    "average_imaginary_dielectric",
+                    "average_real_dielectric",
+                    "nkpoints",
+                    "energy_max",
+                ],
+            ),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(ChemEnvDoc, default_fields=["material_id", "formula_pretty", "last_updated"],),
+            SparseFieldsQuery(AbsorptionDoc, default_fields=["material_id", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Chemical Environment"],
+        tags=["Absorption"],
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )
