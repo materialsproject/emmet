@@ -330,8 +330,6 @@ class FindMoleculeConnectivityQuery(QueryOperator):
                 status_code=404, detail="Body cannot be converted to a pymatgen Molecule object.",
             )
 
-
-
     def post_process(self, docs, query):
 
         m1 = Molecule.from_dict(self.molecule)
