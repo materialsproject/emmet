@@ -56,9 +56,12 @@ class AlloyPairBuilder(Builder):
         self.alloy_pairs.ensure_index("_search.id")
         self.alloy_pairs.ensure_index("_search.formula")
         self.alloy_pairs.ensure_index("_search.member_ids")
+        self.alloy_pairs.ensure_index("alloy_pair.chemsys")
 
     def get_items(self):
 
+        self.ensure_indexes()
+        
         for idx, af in enumerate(ANON_FORMULAS):
 
             # if af != "AB":
@@ -181,10 +184,19 @@ class AlloyPairMemberBuilder(Builder):
         self.alloy_pair_members = alloy_pair_members
 
         super().__init__(sources=[alloy_pairs, materials, snls], targets=[alloy_pair_members])
+        
+    def ensure_indexes(self):
+
+        self.alloy_pairs.ensure_index("pair_id")
+        self.alloy_pairs.ensure_index("_search.id")
+        self.alloy_pairs.ensure_index("_search.formula")
+        self.alloy_pairs.ensure_index("_search.member_ids")
+        self.alloy_pairs.ensure_index("alloy_pair.chemsys")
+        self.alloy_pairs.ensure_index("alloy_pair.anonymous_formula")
 
     def get_items(self):
 
-        all_alloy_chemsys = set(alloy_pairs.distinct("alloy_pair.chemsys"))
+        all_alloy_chemsys = set(self.alloy_pairs.distinct("alloy_pair.chemsys"))
         all_known_chemsys = set(self.materials.distinct("chemsys")) | set(self.snls.distinct("chemsys"))
         possible_chemsys = all_known_chemsys.intersection(all_alloy_chemsys)
 
