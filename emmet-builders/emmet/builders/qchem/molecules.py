@@ -17,7 +17,7 @@ from emmet.core.utils import (
     jsanitize,
     make_mol_graph
 )
-from emmet.core.qchem.molecule import best_lot, evaluate_lot, MoleculeDoc
+from emmet.core.qchem.molecule import best_lot, evaluate_lot, evaluate_task_entry, MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.calc_types import LevelOfTheory
 
@@ -327,8 +327,7 @@ class MoleculesAssociationBuilder(Builder):
 class MoleculesBuilder(Builder):
     """
     The MoleculesBuilder collects MoleculeDocs from the MoleculesAssociationBuilder
-    and groups them by key properties (charge, spin multiplicity, bonding, and the solvent
-    environment used to optimize the molecular structure).
+    and groups them by key properties (charge, spin multiplicity, bonding).
     Then, the best molecular structure is identified (based on electronic energy),
     and this document becomes the representative MoleculeDoc.
 
@@ -483,6 +482,9 @@ class MoleculesBuilder(Builder):
 
         complete_mol_docs = list()
 
+        # This is only slightly unholy
+        # Need to combine many variables of the various constituent associated docs
+        # into one MoleculeDoc, where the best associated doc for each solvent is taken
         for group in self.group_mol_docs(assoc):
             # Maybe all are disconnected and therefore none get grouped?
             if len(group) == 0:
@@ -504,11 +506,14 @@ class MoleculesBuilder(Builder):
             unique_lot_solvents = set()
             origins = list()
             entries = list()
-            best_entries = list()
+            best_entries = dict()
             constituent_molecules = list()
             similar_molecules = list()
 
+            base_doc = None
 
+            # Grab best doc for each solvent
+            # A doc is given a solvent based on how the molecule was optimized
             for solv, subgroup in groupby(
                 sorted(group, key=optimizing_solvent), key=optimizing_solvent
             ):
@@ -523,14 +528,64 @@ class MoleculesBuilder(Builder):
                         if m.molecule_id not in constituent_molecules:
                             similar_molecules.append(m.molecule_id)
 
-            best_doc = sorted_docs[0]
-            if len(sorted_docs) > 1:
-                best_doc.similar_molecules = [
-                    m.molecule_id
-                    for m in sorted_docs
-                    if m.molecule_id != best_doc.molecule_id
-                ]
-            complete_mol_docs.append(best_doc)
+                if base_doc is None:
+                    base_doc = docs_by_solvent[solv]
+
+            # Compile data on each constituent doc
+            for solv, doc in docs_by_solvent.items():
+                task_ids.extend(doc.task_ids)
+                calc_types.update(doc.calc_types)
+                task_types.update(doc.task_types)
+                levels_of_theory.update(doc.levels_of_theory)
+                solvents.update(doc.solvents)
+                lot_solvents.update(doc.lot_solvents)
+                unique_calc_types = unique_calc_types.union(set(doc.unique_calc_types))
+                unique_task_types = unique_task_types.union(set(doc.unique_task_types))
+                unique_levels_of_theory = unique_levels_of_theory.union(set(doc.unique_levels_of_theory))
+                unique_solvents = unique_solvents.union(set(doc.unique_solvents))
+                unique_lot_solvents = unique_lot_solvents.union(set(doc.unique_lot_solvents))
+                for origin in doc.origins:
+                    name = origin.name + "_" + solv
+                    task_id = origin.task_id
+                    last_updated = origin.last_updated
+                    origins.append(
+                        PropertyOrigin(
+                            name=name,
+                            task_id=task_id,
+                            last_updated=last_updated
+                        )
+                    )
+                entries.extend(doc.entries)
+
+                for lot_solv, entry in doc.best_entries.items():
+                    if lot_solv in best_entries:
+                        current_eval = evaluate_task_entry(best_entries[lot_solv])
+                        this_eval = evaluate_task_entry(entry)
+                        if this_eval < current_eval:
+                            best_entries[lot_solv] = entry
+                    else:
+                        best_entries[lot_solv] = entry
+
+            # Assign new doc info
+            base_doc.molecule_id = get_molecule_id(base_doc.molecule, node_attr="specie")
+            base_doc.task_ids = task_ids
+            base_doc.calc_types = calc_types
+            base_doc.task_types = task_types
+            base_doc.levels_of_theory = levels_of_theory
+            base_doc.solvents = solvents
+            base_doc.lot_solvents = lot_solvents
+            base_doc.unique_calc_types = unique_calc_types
+            base_doc.unique_task_types = unique_task_types
+            base_doc.unique_levels_of_theory = unique_levels_of_theory
+            base_doc.unique_solvents = unique_solvents
+            base_doc.unique_lot_solvents = unique_lot_solvents
+            base_doc.origins = origins
+            base_doc.entries = entries
+            base_doc.best_entries = best_entries
+            base_doc.constituent_molecules = constituent_molecules
+            base_doc.similar_molecules = similar_molecules
+
+            complete_mol_docs.append(base_doc)
 
         self.logger.debug(f"Produced {len(complete_mol_docs)} molecules for {formula}")
 

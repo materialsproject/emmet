@@ -70,7 +70,11 @@ def evaluate_task(
     :param basis_scores: Scores for various basis sets
     :param solvent_scores: Scores for various implicit solvent models
     :param task_quality_scores: Scores for various task types
-    :return:
+    :return: tuple representing different levels of evaluation:
+        - Task validity
+        - Level of theory score
+        - Task score
+        - Electronic energy
     """
 
     lot = task.level_of_theory
@@ -87,6 +91,47 @@ def evaluate_task(
         sum(lot_eval),
         -1 * task_quality_scores.get(task.task_type.value, 0),
         task.output.final_energy,
+    )
+
+
+def evaluate_task_entry(
+    entry: Dict[str, Any],
+    funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+    basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+    solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
+    task_quality_scores: Dict[str, int] = SETTINGS.QCHEM_TASK_QUALITY_SCORES,
+):
+    """
+    Helper function to order optimization calcs by
+    - Level of theory
+    - Electronic energy
+
+    Note that lower scores indicate a higher quality.
+
+    :param task: Task to be evaluated
+    :param funct_scores: Scores for various density functionals
+    :param basis_scores: Scores for various basis sets
+    :param solvent_scores: Scores for various implicit solvent models
+    :param task_quality_scores: Scores for various task types
+    :return: tuple representing different levels of evaluation:
+        - Level of theory score
+        - Task score
+        - Electronic energy
+    """
+
+    lot = entry["level_of_theory"]
+
+    lot_eval = evaluate_lot(
+        lot,
+        funct_scores=funct_scores,
+        basis_scores=basis_scores,
+        solvent_scores=solvent_scores,
+    )
+
+    return (
+        sum(lot_eval),
+        -1 * task_quality_scores.get(entry["task_type"], 0),
+        entry["energy"],
     )
 
 
