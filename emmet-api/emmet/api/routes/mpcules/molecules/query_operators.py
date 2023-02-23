@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from fastapi import Body, HTTPException, Query
 
@@ -35,7 +35,7 @@ A comma delimited string list of alphabetical formulas can also be provided.",
         ),
     ) -> STORE_PARAMS:
 
-        crit = {}
+        crit: Dict[str, Any] = {}
 
         if formula:
             # Do we need to handle wildcards? For now, don't worry about it.
@@ -241,7 +241,7 @@ class FindMoleculeQuery(QueryOperator):
         self._limit = _limit
         self.molecule = molecule
 
-        crit = dict()
+        crit: Dict[str, Any] = dict()
 
         if charge is not None:
             crit.update({"charge": charge})
@@ -251,14 +251,12 @@ class FindMoleculeQuery(QueryOperator):
 
         try:
             m = Molecule.from_dict(molecule)
+            crit.update({"composition": dict(m.composition)})
+            return {"criteria": crit}
         except Exception:
             raise HTTPException(
                 status_code=404, detail="Body cannot be converted to a pymatgen Molecule object.",
             )
-
-        crit.update({"composition": dict(m.composition)})
-
-        return {"criteria": crit}
 
     def post_process(self, docs, query):
 
@@ -325,14 +323,14 @@ class FindMoleculeConnectivityQuery(QueryOperator):
 
         try:
             m = Molecule.from_dict(molecule)
+            crit.update({"composition": dict(m.composition)})
+            return {"criteria": crit}
         except Exception:
             raise HTTPException(
                 status_code=404, detail="Body cannot be converted to a pymatgen Molecule object.",
             )
 
-        crit.update({"composition": dict(m.composition)})
 
-        return {"criteria": crit}
 
     def post_process(self, docs, query):
 
