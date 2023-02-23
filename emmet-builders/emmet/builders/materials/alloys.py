@@ -26,23 +26,23 @@ class AlloyPairBuilder(Builder):
     It does not look for members of an AlloyPair.
     """
 
-    def __init__(self, materials, thermo, electronic_structure, provenance, oxi_states, alloy_pairs, thermo_type: Union[ThermoType, str] = ThermoType.GGA_GGA_U_R2SCAN):
-        
+    def __init__(self, materials, thermo, electronic_structure,
+                 provenance, oxi_states, alloy_pairs,
+                 thermo_type: Union[ThermoType, str] = ThermoType.GGA_GGA_U_R2SCAN):
+
         self.materials = materials
         self.thermo = thermo
         self.electronic_structure = electronic_structure
         self.provenance = provenance
         self.oxi_states = oxi_states
         self.alloy_pairs = alloy_pairs
-        
+
         t_type = thermo_type if isinstance(thermo_type, str) else thermo_type.value
         valid_types = {*map(str, ThermoType.__members__.values())}
         if invalid_types := {t_type} - valid_types:
             raise ValueError(f"Invalid thermo type(s) passed: {invalid_types}, valid types are: {valid_types}")
-        
+
         self.thermo_type = t_type
-        
-        
 
         super().__init__(
             sources=[materials, thermo, electronic_structure, provenance, oxi_states],
@@ -61,7 +61,7 @@ class AlloyPairBuilder(Builder):
     def get_items(self):
 
         self.ensure_indexes()
-        
+
         for idx, af in enumerate(ANON_FORMULAS):
 
             # if af != "AB":
@@ -184,7 +184,7 @@ class AlloyPairMemberBuilder(Builder):
         self.alloy_pair_members = alloy_pair_members
 
         super().__init__(sources=[alloy_pairs, materials, snls], targets=[alloy_pair_members])
-        
+
     def ensure_indexes(self):
 
         self.alloy_pairs.ensure_index("pair_id")
