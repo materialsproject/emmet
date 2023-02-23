@@ -2,7 +2,24 @@ import os
 
 from emmet.api.core.api import MAPI
 from emmet.api.core.settings import MAPISettings
-from maggma.stores import MongoURIStore, S3Store
+from maggma.stores import MongoURIStore
+
+# from emmet.api.routes.mpcules.tasks.resources import (
+#     task_resource,
+#     task_deprecation_resource
+# )
+# from emmet.api.routes.mpcules.molecules.resources import (
+#     find_molecule_resource,
+#     find_molecule_connectivity_resource,
+#     molecules_resource
+# )
+# from emmet.api.routes.mpcules.partial_charges.resources import charges_resource
+# from emmet.api.routes.mpcules.partial_spins.resources import spins_resource
+# from emmet.api.routes.mpcules.bonds.resources import bonds_resource
+from emmet.api.routes.mpcules.summary.resources import summary_resource
+
+from emmet.api.core.documentation import description, tags_meta
+
 
 resources = {}
 
@@ -72,18 +89,9 @@ mpcules_resources = list()
 
 # TODO: transfer data to mp_dev so that these endpoints work
 # # Tasks
-# from emmet.api.routes.mpcules.tasks.resources import (
-#     task_resource,
-#     task_deprecation_resource
-# )
 # mpcules_resources.extend([task_resource(task_store), task_deprecation_resource(task_store)])
 
 # # Molecules
-# from emmet.api.routes.mpcules.molecules.resources import (
-#     find_molecule_resource,
-#     find_molecule_connectivity_resource,
-#     molecules_resource
-# )
 # mpcules_resources.extend(
 #     [
 #         molecules_resource(mol_store),
@@ -93,25 +101,20 @@ mpcules_resources = list()
 # )
 
 # # Partial charges
-# from emmet.api.routes.mpcules.partial_charges.resources import charges_resource
 # mpcules_resources.extend([charges_resource(charges_store)])
 
 # # Partial spins
-# from emmet.api.routes.mpcules.partial_spins.resources import spins_resource
 # mpcules_resources.extend([spins_resource(spins_store)])
 
 # # Bonds
-# from emmet.api.routes.mpcules.bonds.resources import bonds_resource
 # mpcules_resources.extend([bonds_resource(bonds_store)])
 
 # Summary
-from emmet.api.routes.mpcules.summary.resources import summary_resource
 mpcules_resources.extend([summary_resource(summary_store)])
 
 resources.update({"mpcules": mpcules_resources})
 
 # === MAPI setup
-from emmet.api.core.documentation import description, tags_meta
 
 api = MAPI(resources=resources, debug=debug, description=description, tags_meta=tags_meta)
 app = api.app
