@@ -35,15 +35,15 @@ A comma delimited string list of alphabetical formulas can also be provided.",
         ),
     ) -> STORE_PARAMS:
 
-        crit = {}  # type: ignore
+        crit: Dict[str, Any] = {}  # type: ignore
 
         if formula:
             # Do we need to handle wildcards? For now, don't worry about it.
             # See: emmet.api.routes.materials.utils.formula_to_criteria
             if "," in formula:
-                crit.update({"formula_alphabetical": {"$in": [x.strip() for x in formula.split(",")]}})
+                crit.update({"formula_alphabetical": {"$in": [x.strip() for x in formula.split(",")]}})  # type: ignore
             else:
-                crit.update({"formula_alphabetical": formula})
+                crit.update({"formula_alphabetical": formula})  # type: ignore
 
         return {"criteria": crit}
 
