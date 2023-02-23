@@ -1,18 +1,13 @@
 from itertools import combinations, chain
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Dict, Union
 
 from tqdm import tqdm
 from maggma.builders import Builder
 from pymatgen.core.structure import Structure
 from matminer.datasets import load_dataset
+from emmet.core.thermo import ThermoType
 
-from pymatgen.analysis.alloys.core import (
-    AlloyPair,
-    InvalidAlloy,
-    KNOWN_ANON_FORMULAS,
-    AlloyMember,
-    AlloySystem,
-)
+from pymatgen.analysis.alloys.core import AlloyPair, InvalidAlloy, KNOWN_ANON_FORMULAS, AlloyMember, AlloySystem
 
 # rough sort of ANON_FORMULAS by "complexity"
 ANON_FORMULAS = sorted(KNOWN_ANON_FORMULAS, key=lambda af: len(af))
@@ -31,22 +26,23 @@ class AlloyPairBuilder(Builder):
     It does not look for members of an AlloyPair.
     """
 
-    def __init__(
-        self,
-        materials,
-        thermo,
-        electronic_structure,
-        provenance,
-        oxi_states,
-        alloy_pairs,
-    ):
-
+    def __init__(self, materials, thermo, electronic_structure, provenance, oxi_states, alloy_pairs, thermo_type: Union[ThermoType, str] = ThermoType.GGA_GGA_U_R2SCAN):
+        
         self.materials = materials
         self.thermo = thermo
         self.electronic_structure = electronic_structure
         self.provenance = provenance
         self.oxi_states = oxi_states
         self.alloy_pairs = alloy_pairs
+        
+        t_type = thermo_type if isinstance(thermo_type, str) else thermo_type.value
+        valid_types = {*map(str, ThermoType.__members__.values())}
+        if invalid_types := {t_type} - valid_types:
+            raise ValueError(f"Invalid thermo type(s) passed: {invalid_types}, valid types are: {valid_types}")
+        
+        self.thermo_type = t_type
+        
+        
 
         super().__init__(
             sources=[materials, thermo, electronic_structure, provenance, oxi_states],
@@ -80,30 +76,23 @@ class AlloyPairBuilder(Builder):
             mpids = list(docs.keys())
 
             thermo_docs = self.thermo.query(
-                {"material_id": {"$in": mpids}},
-                properties=[
-                    "material_id",
-                    "energy_above_hull",
-                    "formation_energy_per_atom",
-                ],
+                {"material_id": {"$in": mpids}, "thermo_type": self.thermo_type},
+                properties=["material_id", "energy_above_hull", "formation_energy_per_atom"],
             )
             thermo_docs = {d["material_id"]: d for d in thermo_docs}
 
             electronic_structure_docs = self.electronic_structure.query(
-                {"material_id": {"$in": mpids}},
-                properties=["material_id", "band_gap", "is_gap_direct"],
+                {"material_id": {"$in": mpids}}, properties=["material_id", "band_gap", "is_gap_direct"]
             )
             electronic_structure_docs = {d["material_id"]: d for d in electronic_structure_docs}
 
             provenance_docs = self.provenance.query(
-                {"material_id": {"$in": mpids}},
-                properties=["material_id", "theoretical", "database_IDs"],
+                {"material_id": {"$in": mpids}}, properties=["material_id", "theoretical", "database_IDs"]
             )
             provenance_docs = {d["material_id"]: d for d in provenance_docs}
 
             oxi_states_docs = self.oxi_states.query(
-                {"material_id": {"$in": mpids}, "state": "successful"},
-                properties=["material_id", "structure"],
+                {"material_id": {"$in": mpids}, "state": "successful"}, properties=["material_id", "structure"]
             )
             oxi_states_docs = {d["material_id"]: d for d in oxi_states_docs}
 
@@ -152,27 +141,15 @@ class AlloyPairBuilder(Builder):
                 # if (item[mpids[0]]["band_gap"] > 0) or (item[mpids[1]]["band_gap"] > 0):
                 try:
                     pair = AlloyPair.from_structures(
-                        structures=[
-                            item[mpids[0]]["structure"],
-                            item[mpids[1]]["structure"],
-                        ],
+                        structures=[item[mpids[0]]["structure"], item[mpids[1]]["structure"]],
                         structures_with_oxidation_states=[
                             item[mpids[0]]["structure_oxi"],
                             item[mpids[1]]["structure_oxi"],
                         ],
                         ids=[mpids[0], mpids[1]],
-                        properties=[
-                            item[mpids[0]]["properties"],
-                            item[mpids[1]]["properties"],
-                        ],
+                        properties=[item[mpids[0]]["properties"], item[mpids[1]]["properties"]],
                     )
-                    pairs.append(
-                        {
-                            "alloy_pair": pair.as_dict(),
-                            "_search": pair.search_dict(),
-                            "pair_id": pair.pair_id,
-                        }
-                    )
+                    pairs.append({"alloy_pair": pair.as_dict(), "_search": pair.search_dict(), "pair_id": pair.pair_id})
                 except InvalidAlloy:
                     pass
                 except Exception as exc:
@@ -203,10 +180,7 @@ class AlloyPairMemberBuilder(Builder):
         self.snls = snls
         self.alloy_pair_members = alloy_pair_members
 
-        super().__init__(
-            sources=[alloy_pairs, materials, snls],
-            targets=[alloy_pair_members],
-        )
+        super().__init__(sources=[alloy_pairs, materials, snls], targets=[alloy_pair_members])
 
     def get_items(self):
 
@@ -225,14 +199,11 @@ class AlloyPairMemberBuilder(Builder):
             pairs = [AlloyPair.from_dict(d["alloy_pair"]) for d in pairs]
 
             mp_docs = self.materials.query(
-                criteria={"chemsys": chemsys, "deprecated": False},
-                properties=["structure", "material_id"],
+                criteria={"chemsys": chemsys, "deprecated": False}, properties=["structure", "material_id"]
             )
             mp_structures = {d["material_id"]: Structure.from_dict(d["structure"]) for d in mp_docs}
 
-            snl_docs = self.snls.query(
-                {"chemsys": chemsys},
-            )
+            snl_docs = self.snls.query({"chemsys": chemsys})
             snl_structures = {d["snl_id"]: Structure.from_dict(d) for d in snl_docs}
 
             structures = mp_structures
@@ -290,9 +261,7 @@ class AlloySystemBuilder(Builder):
         self.alloy_systems = alloy_systems
 
         super().__init__(
-            sources=[alloy_pairs, alloy_pair_members],
-            targets=[alloy_pairs_merged, alloy_systems],
-            chunk_size=8,
+            sources=[alloy_pairs, alloy_pair_members], targets=[alloy_pairs_merged, alloy_systems], chunk_size=8
         )
 
     def get_items(self):
