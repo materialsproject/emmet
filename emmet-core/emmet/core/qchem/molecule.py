@@ -128,6 +128,31 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         description="Combinations of level of theory and solvent for all calculations that make up this molecule",
     )
 
+    unique_calc_types: List[CalcType] = Field(
+        None,
+        description="Collection of all unique calculation types used for this molecule",
+    )
+
+    unique_task_types: List[TaskType] = Field(
+        None,
+        description="Collection of all unique task types used for this molecule",
+    )
+
+    unique_levels_of_theory: List[LevelOfTheory] = Field(
+        None,
+        description="Collection of all unique levels of theory used for this molecule",
+    )
+
+    unique_solvents: List[str] = Field(
+        None,
+        description="Collection of all unique solvents (solvent parameters) used for this molecule",
+    )
+
+    unique_lot_solvents: List[str] = Field(
+        None,
+        description="Collection of all unique combinations of level of theory and solvent used for this molecule",
+    )
+
     origins: List[PropertyOrigin] = Field(
         None,
         description="List of property origins for tracking the provenance of properties",
@@ -176,6 +201,12 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         lot_solvents = {task.task_id: task.lot_solvent for task in task_group}
         task_types = {task.task_id: task.task_type for task in task_group}
         calc_types = {task.task_id: task.calc_type for task in task_group}
+
+        unique_lots = list(set(levels_of_theory.values()))
+        unique_solvents = list(set(solvents.values()))
+        unique_lot_solvents = list(set(lot_solvents.values()))
+        unique_task_types = list(set(task_types.values()))
+        unique_calc_types = list(set(calc_types.values()))
 
         mols = [task.output.initial_molecule for task in task_group]
 
@@ -297,6 +328,11 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             solvents=solvents,
             lot_solvents=lot_solvents,
             task_types=task_types,
+            unique_levels_of_theory=unique_lots,
+            unique_solvents=unique_solvents,
+            unique_lot_solvents=unique_lot_solvents,
+            unique_task_types=unique_task_types,
+            unique_calc_types=unique_calc_types,
             deprecated=deprecated,
             deprecated_tasks=deprecated_tasks,
             origins=origins,
@@ -330,6 +366,12 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         task_types = {task.task_id: task.task_type for task in task_group}
         calc_types = {task.task_id: task.calc_type for task in task_group}
 
+        unique_lots = list(set(levels_of_theory.values()))
+        unique_solvents = list(set(solvents.values()))
+        unique_lot_solvents = list(set(lot_solvents.values()))
+        unique_task_types = list(set(task_types.values()))
+        unique_calc_types = list(set(calc_types.values()))
+
         # Arbitrarily choose task with lowest ID
         molecule = sorted(task_group, key=lambda x: x.task_id)[
             0
@@ -351,6 +393,11 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             solvents=solvents,
             lot_solvents=lot_solvents,
             task_types=task_types,
+            unique_levels_of_theory=unique_lots,
+            unique_solvents=unique_solvents,
+            unique_lot_solvents=unique_lot_solvents,
+            unique_task_types=unique_task_types,
+            unique_calc_types=unique_calc_types,
             deprecated=True,
             deprecated_tasks=deprecated_tasks,
         )

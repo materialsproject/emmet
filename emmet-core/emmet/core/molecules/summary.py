@@ -6,6 +6,7 @@ from pydantic import Field
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
 
+from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.molecules.orbitals import NaturalPopulation, LonePair, Bond, Interaction
@@ -56,6 +57,31 @@ class SummaryDoc(PropertyDoc):
 
     similar_molecules: List[MPculeID] = Field(
         [], description="IDs associated with similar molecules"
+    )
+
+    unique_calc_types: List[CalcType] = Field(
+        None,
+        description="Collection of all unique calculation types used for this molecule",
+    )
+
+    unique_task_types: List[TaskType] = Field(
+        None,
+        description="Collection of all unique task types used for this molecule",
+    )
+
+    unique_levels_of_theory: List[LevelOfTheory] = Field(
+        None,
+        description="Collection of all unique levels of theory used for this molecule",
+    )
+
+    unique_solvents: List[str] = Field(
+        None,
+        description="Collection of all unique solvents (solvent parameters) used for this molecule",
+    )
+
+    unique_lot_solvents: List[str] = Field(
+        None,
+        description="Collection of all unique combinations of level of theory and solvent used for this molecule",
     )
 
     # thermo
@@ -295,6 +321,11 @@ summary_fields: Dict[str, list] = {
         "species",
         "deprecated",
         "task_ids",
+        "unique_calc_types",
+        "unique_task_types",
+        "unique_levels_of_theory",
+        "unique_solvents",
+        "unique_lot_solvents"
     ],
     HasProps.thermo.value: [
         "electronic_energy",
