@@ -32,7 +32,6 @@ def bonds_resource(bonds_store):
             ChargeSpinQuery(),
             MethodQuery(),
             BondTypeLengthQuery(),
-            CoordinationEnvsQuery(),
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(BondingDoc, default_fields=["molecule_id", "last_updated"],),

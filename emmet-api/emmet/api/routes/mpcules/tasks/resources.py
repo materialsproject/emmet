@@ -17,7 +17,7 @@ from emmet.api.routes.mpcules.tasks.query_operators import (
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.core.tasks import DeprecationDoc
-from emmet.core.qchem.task import TaskDoc
+from emmet.core.qchem.task import TaskDocument
 
 timeout = MAPISettings().TIMEOUT
 
@@ -25,7 +25,7 @@ timeout = MAPISettings().TIMEOUT
 def task_resource(task_store):
     resource = ReadOnlyResource(
         task_store,
-        TaskDoc,
+        TaskDocument,
         query_operators=[
             FormulaQuery(),
             ChemsysQuery(),
@@ -34,7 +34,7 @@ def task_resource(task_store):
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
-                TaskDoc,
+                TaskDocument,
                 default_fields=["task_id", "formula_alphabetical", "last_updated"],
             ),
         ],
@@ -48,9 +48,9 @@ def task_resource(task_store):
     return resource
 
 
-def task_deprecation_resource(molecules_store):
+def task_deprecation_resource(task_store):
     resource = ReadOnlyResource(
-        molecules,
+        task_store,
         DeprecationDoc,
         query_operators=[DeprecationQuery(), PaginationQuery()],
         tags=["Tasks"],
