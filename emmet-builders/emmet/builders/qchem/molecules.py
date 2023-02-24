@@ -414,7 +414,7 @@ class MoleculesBuilder(Builder):
         processed_docs = set(list(self.molecules.distinct("molecule_id")))
         assoc_ids = set()
 
-        xys_species_id_map = dict()
+        xyz_species_id_map = dict()
         for d in all_assoc:
             dmol = d["molecule"]
             if isinstance(dmol, Molecule):
@@ -422,13 +422,13 @@ class MoleculesBuilder(Builder):
             else:
                 this_id = get_molecule_id(Molecule.from_dict(dmol), node_attr="specie")
             assoc_ids.add(this_id)
-            xys_species_id_map[d[self.assoc.key]] = this_id
+            xyz_species_id_map[d[self.assoc.key]] = this_id
         to_process_docs = assoc_ids - processed_docs
 
         to_process_forms = {
             d["formula_alphabetical"]
             for d in all_assoc
-            if xys_species_id_map[d[self.assoc.key]] in to_process_docs
+            if xyz_species_id_map[d[self.assoc.key]] in to_process_docs
         }
 
         N = ceil(len(to_process_forms) / number_splits)
@@ -466,7 +466,7 @@ class MoleculesBuilder(Builder):
         processed_docs = set(list(self.molecules.distinct("molecule_id")))
         assoc_ids = set()
 
-        xys_species_id_map = dict()
+        xyz_species_id_map = dict()
         for d in all_assoc:
             dmol = d["molecule"]
             if isinstance(dmol, Molecule):
@@ -474,13 +474,13 @@ class MoleculesBuilder(Builder):
             else:
                 this_id = get_molecule_id(Molecule.from_dict(dmol), node_attr="specie")
             assoc_ids.add(this_id)
-            xys_species_id_map[d[self.assoc.key]] = this_id
+            xyz_species_id_map[d[self.assoc.key]] = this_id
         to_process_docs = assoc_ids - processed_docs
 
         to_process_forms = {
             d["formula_alphabetical"]
             for d in all_assoc
-            if xys_species_id_map[d[self.assoc.key]] in to_process_docs
+            if xyz_species_id_map[d[self.assoc.key]] in to_process_docs
         }
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
@@ -550,7 +550,7 @@ class MoleculesBuilder(Builder):
                 sorted(group, key=_optimizing_solvent), key=_optimizing_solvent
             ):
 
-                sorted_docs = sorted(group, key=evaluate_molecule)
+                sorted_docs = sorted(subgroup, key=evaluate_molecule)
                 docs_by_solvent[solv] = sorted_docs[0]
                 mols_by_solvent[solv] = sorted_docs[0].molecule
                 constituent_molecules.append(sorted_docs[0].molecule_id)
@@ -691,5 +691,7 @@ class MoleculesBuilder(Builder):
                             {"hash": mol_hash, "mol_docs": [mol_doc]}
                         )
 
-                for subgroup in subgroups:
-                    yield subgroup["mol_docs"]
+            self.logger.debug(f"Unique hashes: {[x['hash'] for x in subgroups]}")
+
+            for subgroup in subgroups:
+                yield subgroup["mol_docs"]

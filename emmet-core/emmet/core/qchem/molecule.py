@@ -317,7 +317,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             try:
                 best_molecule_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
             except IndexError:
-                raise Exception(f"{calc_types}")
+                raise Exception(f"No geometry optimization calculations available!")
             molecule = best_molecule_calc.output.optimized_molecule
             species = [e.symbol for e in molecule.species]
             molecule_id = get_molecule_id(molecule, node_attr="coords")

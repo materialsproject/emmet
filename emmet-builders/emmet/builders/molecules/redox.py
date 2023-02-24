@@ -213,7 +213,7 @@ class RedoxBuilder(Builder):
                     continue
 
                 ie_sp_task_ids = [
-                    int(e["task_id"]) for e in gg.entries
+                    e["task_id"] for e in gg.entries
                     if e["charge"] == gg.charge + 1
                     and e["task_type"] == "Single Point"
                     and e["output"].get("final_energy")
@@ -224,7 +224,7 @@ class RedoxBuilder(Builder):
                                                                          })]
 
                 ea_sp_task_ids = [
-                    int(e["task_id"]) for e in gg.entries
+                    e["task_id"] for e in gg.entries
                     if e["charge"] == gg.charge - 1
                     and e["task_type"] == "Single Point"
                     and e["output"].get("final_energy")
