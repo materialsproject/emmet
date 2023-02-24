@@ -275,7 +275,7 @@ class MoleculesAssociationBuilder(Builder):
                 molecules.append(doc)
             except Exception as e:
                 failed_ids = list({t_.task_id for t_ in group})
-                doc = MoleculeDoc.construct_deprecated_molecule(tasks)
+                doc = MoleculeDoc.construct_deprecated_molecule(group)
                 doc.warnings.append(str(e))
                 molecules.append(doc)
                 self.logger.warning(
