@@ -324,7 +324,9 @@ summary_fields: Dict[str, list] = {
         "unique_task_types",
         "unique_levels_of_theory",
         "unique_solvents",
-        "unique_lot_solvents"
+        "unique_lot_solvents",
+        "similar_molecules",
+        "constituent_molecules"
     ],
     HasProps.thermo.value: [
         "electronic_energy",

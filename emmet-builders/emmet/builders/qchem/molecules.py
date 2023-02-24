@@ -590,6 +590,7 @@ class MoleculesBuilder(Builder):
 
             # Assign new doc info
             base_doc.molecule_id = get_molecule_id(base_doc.molecule, node_attr="specie")
+            base_doc.molecules = mols_by_solvent
             base_doc.task_ids = task_ids
             base_doc.calc_types = calc_types
             base_doc.task_types = task_types
