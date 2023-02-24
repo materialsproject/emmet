@@ -294,7 +294,7 @@ class BondingBuilder(Builder):
             # Neither molecule_id nor method need to be unique, but the combination must be
             self.bonds.update(
                 docs=docs,
-                key=["molecule_id", "method"],
+                key=["molecule_id", "method", "solvent"],
             )
         else:
             self.logger.info("No items to update")

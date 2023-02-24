@@ -277,7 +277,7 @@ class PartialChargesBuilder(Builder):
             # Neither molecule_id nor method need to be unique, but the combination must be
             self.charges.update(
                 docs=docs,
-                key=["molecule_id", "method"],
+                key=["molecule_id", "method", "solvent"],
             )
         else:
             self.logger.info("No items to update")
@@ -538,7 +538,7 @@ class PartialSpinsBuilder(Builder):
             # Neither molecule_id nor method need to be unique, but the combination must be
             self.spins.update(
                 docs=docs,
-                key=["molecule_id", "method"],
+                key=["molecule_id", "method", "solvent"],
             )
         else:
             self.logger.info("No items to update")

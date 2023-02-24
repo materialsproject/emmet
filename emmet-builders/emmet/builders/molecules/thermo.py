@@ -418,7 +418,7 @@ class ThermoBuilder(Builder):
             self.thermo.remove_docs({self.thermo.key: {"$in": molecule_ids}})
             self.thermo.update(
                 docs=docs,
-                key=["molecule_id"],
+                key=["molecule_id", "solvent"],
             )
         else:
             self.logger.info("No items to update")

@@ -325,7 +325,7 @@ class RedoxBuilder(Builder):
             self.redox.remove_docs({self.redox.key: {"$in": molecule_ids}})
             self.redox.update(
                 docs=docs,
-                key=["molecule_id"],
+                key=["molecule_id", "solvent"],
             )
         else:
             self.logger.info("No items to update")

@@ -258,7 +258,7 @@ class OrbitalBuilder(Builder):
             self.orbitals.remove_docs({self.orbitals.key: {"$in": molecule_ids}})
             self.orbitals.update(
                 docs=docs,
-                key=["molecule_id"],
+                key=["molecule_id", "solvent"],
             )
         else:
             self.logger.info("No items to update")
