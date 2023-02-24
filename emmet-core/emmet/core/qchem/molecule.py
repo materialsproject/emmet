@@ -219,7 +219,8 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
     constituent_molecules: List[MPculeID] = Field(
         None,
-        description="For cases where data from multiple MoleculeDocs have been compiled, a list of MPculeIDs of documents used to construct this document"
+        description="For cases where data from multiple MoleculeDocs have been compiled, a list of "
+                    "MPculeIDs of documents used to construct this document"
     )
 
     similar_molecules: List[MPculeID] = Field(
@@ -317,7 +318,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
             try:
                 best_molecule_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
             except IndexError:
-                raise Exception(f"No geometry optimization calculations available!")
+                raise Exception("No geometry optimization calculations available!")
             molecule = best_molecule_calc.output.optimized_molecule
             species = [e.symbol for e in molecule.species]
             molecule_id = get_molecule_id(molecule, node_attr="coords")
