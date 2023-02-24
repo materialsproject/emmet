@@ -3,7 +3,7 @@ from itertools import chain
 from math import ceil
 from typing import Any, Optional, Iterable, Iterator, List, Dict
 
-from monty.serialization import loadfn, dumpfn
+# from monty.serialization import loadfn, dumpfn
 
 from maggma.builders import Builder
 from maggma.core import Store
@@ -287,8 +287,8 @@ class SummaryBuilder(Builder):
                 del d[td]
 
             # For debugging; keep because it might be needed again
-            dumpfn(d, f"{mol_id}.json.gz")
-            break
+            # dumpfn(d, f"{mol_id}.json.gz")
+            # break
 
             summary_doc = SummaryDoc.from_docs(molecule_id=mol_id, docs=d)
             summary_docs.append(summary_doc)
