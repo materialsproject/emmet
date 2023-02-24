@@ -248,7 +248,7 @@ class BondingBuilder(Builder):
                     task = best_entry["task_id"]
 
                     task_doc = TaskDocument(
-                        **self.tasks.query_one({"task_id": int(task),
+                        **self.tasks.query_one({"task_id": task,
                                                 "formula_alphabetical": formula,
                                                 "orig": {"$exists": True}})
                     )
