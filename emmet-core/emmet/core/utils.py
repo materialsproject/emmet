@@ -146,8 +146,9 @@ def group_molecules(molecules: List[Molecule]):
             # Group by structure
             for group in groups:
                 if (
-                    mm.fit(mol_copy, group["mol"])
+                    (mm.fit(mol_copy, group["mol"]) or mol_copy == group["mol"])
                     and mol_copy.charge == group["mol"].charge
+                    and mol_copy.spin_multiplicity == group["mol"].spin_multiplicity
                 ):
                     group["mol_list"].append(mol)
                     matched = True

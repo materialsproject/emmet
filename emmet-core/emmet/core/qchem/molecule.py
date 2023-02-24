@@ -290,8 +290,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
             # entries
             best_entries = dict()
-            all_lot_solvs = set(lot_solvents.values())
-            for lot_solv in all_lot_solvs:
+            for lot_solv in unique_lot_solvents:
                 relevant_calcs = sorted(
                     [
                         doc
@@ -311,10 +310,14 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
                 task
                 for task in task_group
                 if task.task_type
-                in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization]  # noqa: E501
+                in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization,
+                    "Geometry Optimization", "Frequency Flattening Geometry Optimization"]  # noqa: E501
             ]
 
-            best_molecule_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
+            try:
+                best_molecule_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
+            except IndexError:
+                raise Exception(f"{calc_types}")
             molecule = best_molecule_calc.output.optimized_molecule
             species = [e.symbol for e in molecule.species]
             molecule_id = get_molecule_id(molecule, node_attr="coords")

@@ -9,14 +9,16 @@ from maggma.builders import Builder
 from maggma.stores import Store
 from maggma.utils import grouper
 
+from pymatgen.core.structure import Molecule
+
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import (
-    get_graph_hash,
     get_molecule_id,
     group_molecules,
     jsanitize,
     make_mol_graph
 )
+from emmet.core.material import PropertyOrigin
 from emmet.core.qchem.molecule import best_lot, evaluate_lot, evaluate_task_entry, MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.calc_types import LevelOfTheory
@@ -70,9 +72,27 @@ def evaluate_molecule(
     )
 
 
+def _optimizing_solvent(mol_doc):
+    """
+    Returns which solvent was used to optimize this (associated) MoleculeDoc.
+
+    Args:
+        mol_doc: MoleculeDoc
+
+    Returns:
+        solvent (str)
+
+    """
+
+    for origin in mol_doc.origins:
+        if origin.name.startswith("molecule"):
+            solvent = mol_doc.solvents[origin.task_id]
+            return solvent
+
+
 class MoleculesAssociationBuilder(Builder):
     """
-    The MoleculesBuilder matches Q-Chem task documents by composition
+    The MoleculesAssociationBuilder matches Q-Chem task documents by composition
     and collects tasks associated with identical structures.
     The purpose of this builder is to group calculations in preparation for the
     MoleculesBuilder.
@@ -259,7 +279,7 @@ class MoleculesAssociationBuilder(Builder):
                 doc.warnings.append(str(e))
                 molecules.append(doc)
                 self.logger.warning(
-                    f"Failed making material for {failed_ids}."
+                    f"Failed making molecule for {failed_ids}."
                     f" Inserted as deprecated molecule: {doc.molecule_id}"
                 )
 
@@ -387,15 +407,28 @@ class MoleculesBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_assoc = list(
-            self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical"])
+            self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical", "molecule"])
         )
 
+        # Should be using species hash, rather than coord hash, at this point
         processed_docs = set(list(self.molecules.distinct("molecule_id")))
-        to_process_docs = {d[self.assoc.key] for d in all_assoc} - processed_docs
+        assoc_ids = set()
+
+        xys_species_id_map = dict()
+        for d in all_assoc:
+            dmol = d["molecule"]
+            if isinstance(dmol, Molecule):
+                this_id = get_molecule_id(dmol, node_attr="specie")
+            else:
+                this_id = get_molecule_id(Molecule.from_dict(dmol), node_attr="specie")
+            assoc_ids.add(this_id)
+            xys_species_id_map[d[self.assoc.key]] = this_id
+        to_process_docs = assoc_ids - processed_docs
+
         to_process_forms = {
             d["formula_alphabetical"]
             for d in all_assoc
-            if d[self.assoc.key] in to_process_docs
+            if xys_species_id_map[d[self.assoc.key]] in to_process_docs
         }
 
         N = ceil(len(to_process_forms) / number_splits)
@@ -426,23 +459,28 @@ class MoleculesBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_assoc = list(
-            self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical"])
+            self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical", "molecule"])
         )
 
         # Should be using species hash, rather than coord hash, at this point
         processed_docs = set(list(self.molecules.distinct("molecule_id")))
         assoc_ids = set()
+
+        xys_species_id_map = dict()
         for d in all_assoc:
             dmol = d["molecule"]
             if isinstance(dmol, Molecule):
-                assoc_ids.add(get_molecule_id(dmol, node_attr="specie"))
+                this_id = get_molecule_id(dmol, node_attr="specie")
             else:
-                assoc_ids.add(get_molecule_id(Molecule.from_dict(dmol), node_attr="specie"))
+                this_id = get_molecule_id(Molecule.from_dict(dmol), node_attr="specie")
+            assoc_ids.add(this_id)
+            xys_species_id_map[d[self.assoc.key]] = this_id
         to_process_docs = assoc_ids - processed_docs
+
         to_process_forms = {
             d["formula_alphabetical"]
             for d in all_assoc
-            if d[self.assoc.key] in to_process_docs
+            if xys_species_id_map[d[self.assoc.key]] in to_process_docs
         }
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
@@ -468,12 +506,6 @@ class MoleculesBuilder(Builder):
         Returns:
             [dict] : a list of new molecule docs
         """
-
-        def optimizing_solvent(mol_doc):
-            for origin in mol_doc.origins:
-                if origin.name == "molecule":
-                    solvent = mol_doc.solvents[origin.task_id]
-                    return solvent
 
         assoc = [MoleculeDoc(**item) for item in items]
         formula = assoc[0].formula_alphabetical
@@ -515,7 +547,7 @@ class MoleculesBuilder(Builder):
             # Grab best doc for each solvent
             # A doc is given a solvent based on how the molecule was optimized
             for solv, subgroup in groupby(
-                sorted(group, key=optimizing_solvent), key=optimizing_solvent
+                sorted(group, key=_optimizing_solvent), key=_optimizing_solvent
             ):
 
                 sorted_docs = sorted(group, key=evaluate_molecule)
@@ -544,17 +576,7 @@ class MoleculesBuilder(Builder):
                 unique_levels_of_theory = unique_levels_of_theory.union(set(doc.unique_levels_of_theory))
                 unique_solvents = unique_solvents.union(set(doc.unique_solvents))
                 unique_lot_solvents = unique_lot_solvents.union(set(doc.unique_lot_solvents))
-                for origin in doc.origins:
-                    name = origin.name + "_" + solv
-                    task_id = origin.task_id
-                    last_updated = origin.last_updated
-                    origins.append(
-                        PropertyOrigin(
-                            name=name,
-                            task_id=task_id,
-                            last_updated=last_updated
-                        )
-                    )
+                origins.extend(doc.origins)
                 entries.extend(doc.entries)
 
                 for lot_solv, entry in doc.best_entries.items():
@@ -599,6 +621,8 @@ class MoleculesBuilder(Builder):
             items [[dict]]: A list of molecules to update
         """
 
+        self.logger.debug(f"Updating {len(items)} molecules")
+
         docs = list(chain.from_iterable(items))  # type: ignore
 
         # Add timestamp, add prefix to molecule id
@@ -639,12 +663,6 @@ class MoleculesBuilder(Builder):
 
         def charge_spin(mol_doc):
             return (mol_doc.charge, mol_doc.spin_multiplicity)
-
-        def optimizing_solvent(mol_doc):
-            for origin in mol_doc.origins:
-                if origin.name == "molecule":
-                    solvent = mol_doc.solvents[origin.task_id]
-                    return solvent
 
         # Group by charge and spin
         for c_s, group in groupby(sorted(assoc, key=charge_spin), key=charge_spin):
