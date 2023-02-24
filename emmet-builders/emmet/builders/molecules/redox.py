@@ -5,9 +5,6 @@ from itertools import chain, groupby
 from math import ceil
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Union
 
-from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN
-
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper

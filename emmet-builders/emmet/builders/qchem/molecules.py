@@ -18,7 +18,6 @@ from emmet.core.utils import (
     jsanitize,
     make_mol_graph
 )
-from emmet.core.material import PropertyOrigin
 from emmet.core.qchem.molecule import best_lot, evaluate_lot, evaluate_task_entry, MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.calc_types import LevelOfTheory

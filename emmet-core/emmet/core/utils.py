@@ -5,7 +5,6 @@ from typing import Any, Iterator, List, Tuple, Dict, Optional, Union
 import copy
 
 import numpy as np
-import networkx as nx
 
 from monty.json import MSONable
 from pydantic import BaseModel
