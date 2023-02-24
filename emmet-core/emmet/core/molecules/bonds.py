@@ -115,7 +115,7 @@ def _bonds_peturbation(
     Extract bonds from "perturbation_energy" NBO output
     """
 
-    bonds = set()
+    bonds = set()  # type: ignore
 
     # No metals, so don't need to use perturbation analysis to get bonds
     if len(metal_indices) == 0:
