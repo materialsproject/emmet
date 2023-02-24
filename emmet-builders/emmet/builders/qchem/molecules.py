@@ -1,7 +1,7 @@
 from datetime import datetime
 from itertools import chain, groupby
 from math import ceil
-from typing import Any, Dict, Iterable, Iterator, List, Optional
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Union
 
 import networkx as nx
 
@@ -20,7 +20,7 @@ from emmet.core.utils import (
 )
 from emmet.core.qchem.molecule import best_lot, evaluate_lot, evaluate_task_entry, MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.calc_types import LevelOfTheory
+from emmet.core.qchem.calc_types import LevelOfTheory, CalcType, TaskType
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -530,18 +530,18 @@ class MoleculesBuilder(Builder):
             levels_of_theory = dict()
             solvents = dict()
             lot_solvents = dict()
-            unique_calc_types = set()
-            unique_task_types = set()
-            unique_levels_of_theory = set()
-            unique_solvents = set()
-            unique_lot_solvents = set()
+            unique_calc_types: Set[Union[str, CalcType]] = set()
+            unique_task_types: Set[Union[str, TaskType]] = set()
+            unique_levels_of_theory: Set[Union[str, LevelOfTheory]] = set()
+            unique_solvents: Set[str] = set()
+            unique_lot_solvents: Set[str] = set()
             origins = list()
             entries = list()
-            best_entries = dict()
+            best_entries: Dict[str, Any] = dict()
             constituent_molecules = list()
             similar_molecules = list()
 
-            base_doc = None
+            base_doc: Optional[MoleculeDoc] = None
 
             # Grab best doc for each solvent
             # A doc is given a solvent based on how the molecule was optimized
@@ -562,52 +562,56 @@ class MoleculesBuilder(Builder):
                 if base_doc is None:
                     base_doc = docs_by_solvent[solv]
 
-            # Compile data on each constituent doc
-            for solv, doc in docs_by_solvent.items():
-                task_ids.extend(doc.task_ids)
-                calc_types.update(doc.calc_types)
-                task_types.update(doc.task_types)
-                levels_of_theory.update(doc.levels_of_theory)
-                solvents.update(doc.solvents)
-                lot_solvents.update(doc.lot_solvents)
-                unique_calc_types = unique_calc_types.union(set(doc.unique_calc_types))
-                unique_task_types = unique_task_types.union(set(doc.unique_task_types))
-                unique_levels_of_theory = unique_levels_of_theory.union(set(doc.unique_levels_of_theory))
-                unique_solvents = unique_solvents.union(set(doc.unique_solvents))
-                unique_lot_solvents = unique_lot_solvents.union(set(doc.unique_lot_solvents))
-                origins.extend(doc.origins)
-                entries.extend(doc.entries)
+            if base_doc is None:
+                continue
 
-                for lot_solv, entry in doc.best_entries.items():
-                    if lot_solv in best_entries:
-                        current_eval = evaluate_task_entry(best_entries[lot_solv])
-                        this_eval = evaluate_task_entry(entry)
-                        if this_eval < current_eval:
+            else:
+                # Compile data on each constituent doc
+                for solv, doc in docs_by_solvent.items():
+                    task_ids.extend(doc.task_ids)
+                    calc_types.update(doc.calc_types)
+                    task_types.update(doc.task_types)
+                    levels_of_theory.update(doc.levels_of_theory)
+                    solvents.update(doc.solvents)
+                    lot_solvents.update(doc.lot_solvents)
+                    unique_calc_types = unique_calc_types.union(set(doc.unique_calc_types))
+                    unique_task_types = unique_task_types.union(set(doc.unique_task_types))
+                    unique_levels_of_theory = unique_levels_of_theory.union(set(doc.unique_levels_of_theory))
+                    unique_solvents = unique_solvents.union(set(doc.unique_solvents))
+                    unique_lot_solvents = unique_lot_solvents.union(set(doc.unique_lot_solvents))
+                    origins.extend(doc.origins)
+                    entries.extend(doc.entries)
+
+                    for lot_solv, entry in doc.best_entries.items():
+                        if lot_solv in best_entries:
+                            current_eval = evaluate_task_entry(best_entries[lot_solv])
+                            this_eval = evaluate_task_entry(entry)
+                            if this_eval < current_eval:
+                                best_entries[lot_solv] = entry
+                        else:
                             best_entries[lot_solv] = entry
-                    else:
-                        best_entries[lot_solv] = entry
 
-            # Assign new doc info
-            base_doc.molecule_id = get_molecule_id(base_doc.molecule, node_attr="specie")
-            base_doc.molecules = mols_by_solvent
-            base_doc.task_ids = task_ids
-            base_doc.calc_types = calc_types
-            base_doc.task_types = task_types
-            base_doc.levels_of_theory = levels_of_theory
-            base_doc.solvents = solvents
-            base_doc.lot_solvents = lot_solvents
-            base_doc.unique_calc_types = unique_calc_types
-            base_doc.unique_task_types = unique_task_types
-            base_doc.unique_levels_of_theory = unique_levels_of_theory
-            base_doc.unique_solvents = unique_solvents
-            base_doc.unique_lot_solvents = unique_lot_solvents
-            base_doc.origins = origins
-            base_doc.entries = entries
-            base_doc.best_entries = best_entries
-            base_doc.constituent_molecules = constituent_molecules
-            base_doc.similar_molecules = similar_molecules
+                # Assign new doc info
+                base_doc.molecule_id = get_molecule_id(base_doc.molecule, node_attr="specie")
+                base_doc.molecules = mols_by_solvent
+                base_doc.task_ids = task_ids
+                base_doc.calc_types = calc_types
+                base_doc.task_types = task_types
+                base_doc.levels_of_theory = levels_of_theory
+                base_doc.solvents = solvents
+                base_doc.lot_solvents = lot_solvents
+                base_doc.unique_calc_types = unique_calc_types
+                base_doc.unique_task_types = unique_task_types
+                base_doc.unique_levels_of_theory = unique_levels_of_theory
+                base_doc.unique_solvents = unique_solvents
+                base_doc.unique_lot_solvents = unique_lot_solvents
+                base_doc.origins = origins
+                base_doc.entries = entries
+                base_doc.best_entries = best_entries
+                base_doc.constituent_molecules = constituent_molecules
+                base_doc.similar_molecules = similar_molecules
 
-            complete_mol_docs.append(base_doc)
+                complete_mol_docs.append(base_doc)
 
         self.logger.debug(f"Produced {len(complete_mol_docs)} molecules for {formula}")
 

@@ -336,7 +336,7 @@ class RedoxBuilder(Builder):
         :return: Grouped molecule entries
         """
 
-        graph_hashes_nometal: List[String] = list()
+        graph_hashes_nometal: List[str] = list()
         results = defaultdict(list)
 
         # Within each group, group by the covalent molecular graph
