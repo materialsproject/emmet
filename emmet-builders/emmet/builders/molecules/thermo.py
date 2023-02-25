@@ -367,8 +367,9 @@ class ThermoBuilder(Builder):
                     )[0]
                     task_dict = best_dict["task_id"]
 
-                    task_doc_dict = TaskDocument(**self.tasks.query_one({"task_id": int(task_dict)}))
-                    task_doc_spec = TaskDocument(**self.tasks.query_one({"task_id": int(task_spec)}))
+                    # TODO: fix this for int or string task ids
+                    task_doc_dict = TaskDocument(**self.tasks.query_one({"task_id": task_dict}))
+                    task_doc_spec = TaskDocument(**self.tasks.query_one({"task_id": task_spec}))
                     thermo_doc = ThermoDoc.from_task(
                         task_doc_dict,
                         correction_task=task_doc_spec,
