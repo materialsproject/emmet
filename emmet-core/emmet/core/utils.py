@@ -1,7 +1,7 @@
 import datetime
 from enum import Enum
 from itertools import groupby
-from typing import Any, Iterator, List, Tuple, Dict, Optional, Union
+from typing import Any, Iterator, List, Dict, Optional, Union
 import copy
 
 import numpy as np
