@@ -247,11 +247,22 @@ class BondingBuilder(Builder):
                     best_entry = relevant_entries[0]
                     task = best_entry["task_id"]
 
-                    task_doc = TaskDocument(
-                        **self.tasks.query_one({"task_id": int(task),
-                                                "formula_alphabetical": formula,
-                                                "orig": {"$exists": True}})
-                    )
+                    tdoc = self.tasks.query_one({"task_id": task,
+                                                 "formula_alphabetical": formula,
+                                                 "orig": {"$exists": True}})
+
+                    if tdoc is None:
+                        try:
+                            tdoc = self.tasks.query_one({"task_id": int(task),
+                                                         "formula_alphabetical": formula,
+                                                         "orig": {"$exists": True}})
+                        except ValueError:
+                            tdoc = None
+
+                    if tdoc is None:
+                        continue
+
+                    task_doc = TaskDocument(**tdoc)
 
                     if task_doc is None:
                         continue
@@ -294,7 +305,7 @@ class BondingBuilder(Builder):
             # Neither molecule_id nor method need to be unique, but the combination must be
             self.bonds.update(
                 docs=docs,
-                key=["molecule_id", "method"],
+                key=["molecule_id", "method", "solvent"],
             )
         else:
             self.logger.info("No items to update")

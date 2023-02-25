@@ -5,9 +5,6 @@ from itertools import chain, groupby
 from math import ceil
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Union
 
-from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN
-
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
@@ -17,7 +14,7 @@ from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.molecules.bonds import metals
 from emmet.core.molecules.thermo import ThermoDoc
 from emmet.core.molecules.redox import RedoxDoc
-from emmet.core.utils import confirm_molecule, jsanitize
+from emmet.core.utils import confirm_molecule, get_graph_hash, jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
 
@@ -213,26 +210,54 @@ class RedoxBuilder(Builder):
                     continue
 
                 ie_sp_task_ids = [
-                    int(e["task_id"]) for e in gg.entries
+                    e["task_id"] for e in gg.entries
                     if e["charge"] == gg.charge + 1
                     and e["task_type"] == "Single Point"
                     and e["output"].get("final_energy")
                 ]
-                ie_tasks = [TaskDocument(**e) for e in self.tasks.query({"task_id": {"$in": ie_sp_task_ids},
-                                                                         "formula_alphabetical": formula,
-                                                                         "orig": {"$exists": True}
-                                                                         })]
+                ie_tasks = list()
+                for i in ie_sp_task_ids:
+                    tdoc = self.tasks.query_one({"task_id": i,
+                                                 "formula_alphabetical": formula,
+                                                 "orig": {"$exists": True}})
+
+                    if tdoc is None:
+                        try:
+                            tdoc = self.tasks.query_one({"task_id": int(i),
+                                                         "formula_alphabetical": formula,
+                                                         "orig": {"$exists": True}})
+                        except ValueError:
+                            tdoc = None
+
+                    if tdoc is None:
+                        continue
+
+                    ie_tasks.append(TaskDocument(**tdoc))
 
                 ea_sp_task_ids = [
-                    int(e["task_id"]) for e in gg.entries
+                    e["task_id"] for e in gg.entries
                     if e["charge"] == gg.charge - 1
                     and e["task_type"] == "Single Point"
                     and e["output"].get("final_energy")
                 ]
-                ea_tasks = [TaskDocument(**e) for e in self.tasks.query({"task_id": {"$in": ea_sp_task_ids},
-                                                                         "formula_alphabetical": formula,
-                                                                         "orig": {"$exists": True}
-                                                                         })]
+                ea_tasks = list()
+                for i in ea_sp_task_ids:
+                    tdoc = self.tasks.query_one({"task_id": i,
+                                                 "formula_alphabetical": formula,
+                                                 "orig": {"$exists": True}})
+
+                    if tdoc is None:
+                        try:
+                            tdoc = self.tasks.query_one({"task_id": int(i),
+                                                         "formula_alphabetical": formula,
+                                                         "orig": {"$exists": True}})
+                        except ValueError:
+                            tdoc = None
+
+                    if tdoc is None:
+                        continue
+
+                    ea_tasks.append(TaskDocument(**tdoc))
 
                 grouped_docs = self._collect_by_lot_solvent(thermo_docs, ie_tasks, ea_tasks)
                 if gg.charge in charges:
@@ -325,7 +350,7 @@ class RedoxBuilder(Builder):
             self.redox.remove_docs({self.redox.key: {"$in": molecule_ids}})
             self.redox.update(
                 docs=docs,
-                key=["molecule_id"],
+                key=["molecule_id", "solvent"],
             )
         else:
             self.logger.info("No items to update")
@@ -339,7 +364,7 @@ class RedoxBuilder(Builder):
         :return: Grouped molecule entries
         """
 
-        mol_graphs_nometal: List[MoleculeGraph] = list()
+        graph_hashes_nometal: List[str] = list()
         results = defaultdict(list)
 
         # Within each group, group by the covalent molecular graph
@@ -352,19 +377,17 @@ class RedoxBuilder(Builder):
                 mol_nometal.remove_species(metals)
 
             mol_nometal.set_charge_and_spin(0)
-            mg_nometal = MoleculeGraph.with_local_env_strategy(
-                mol_nometal, OpenBabelNN()
-            )
+            gh_nometal = get_graph_hash(mol_nometal, node_attr="specie")
 
             match = None
-            for i, mg in enumerate(mol_graphs_nometal):
-                if mg_nometal.isomorphic_to(mg):
+            for i, gh in enumerate(graph_hashes_nometal):
+                if gh_nometal == gh:
                     match = i
                     break
 
             if match is None:
-                results[len(mol_graphs_nometal)].append(t)
-                mol_graphs_nometal.append(mg_nometal)
+                results[len(graph_hashes_nometal)].append(t)
+                graph_hashes_nometal.append(gh_nometal)
             else:
                 results[match].append(t)
 

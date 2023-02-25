@@ -229,11 +229,22 @@ class PartialChargesBuilder(Builder):
                     best_entry = relevant_entries[0]
                     task = best_entry["task_id"]
 
-                    task_doc = TaskDocument(
-                        **self.tasks.query_one({"task_id": int(task),
-                                                "formula_alphabetical": formula,
-                                                "orig": {"$exists": True}})
-                    )
+                    tdoc = self.tasks.query_one({"task_id": task,
+                                                 "formula_alphabetical": formula,
+                                                 "orig": {"$exists": True}})
+
+                    if tdoc is None:
+                        try:
+                            tdoc = self.tasks.query_one({"task_id": int(task),
+                                                         "formula_alphabetical": formula,
+                                                         "orig": {"$exists": True}})
+                        except ValueError:
+                            tdoc = None
+
+                    if tdoc is None:
+                        continue
+
+                    task_doc = TaskDocument(**tdoc)
 
                     if task_doc is None:
                         continue
@@ -277,7 +288,7 @@ class PartialChargesBuilder(Builder):
             # Neither molecule_id nor method need to be unique, but the combination must be
             self.charges.update(
                 docs=docs,
-                key=["molecule_id", "method"],
+                key=["molecule_id", "method", "solvent"],
             )
         else:
             self.logger.info("No items to update")
@@ -488,14 +499,22 @@ class PartialSpinsBuilder(Builder):
                     best_entry = relevant_entries[0]
                     task = best_entry["task_id"]
 
-                    task_doc = TaskDocument(
-                        **self.tasks.query_one({"task_id": int(task),
-                                                "formula_alphabetical": formula,
-                                                "orig": {"$exists": True}})
-                    )
+                    tdoc = self.tasks.query_one({"task_id": task,
+                                                 "formula_alphabetical": formula,
+                                                 "orig": {"$exists": True}})
 
-                    if task_doc is None:
+                    if tdoc is None:
+                        try:
+                            tdoc = self.tasks.query_one({"task_id": int(task),
+                                                         "formula_alphabetical": formula,
+                                                         "orig": {"$exists": True}})
+                        except ValueError:
+                            tdoc = None
+
+                    if tdoc is None:
                         continue
+
+                    task_doc = TaskDocument(**tdoc)
 
                     doc = PartialSpinsDoc.from_task(
                         task_doc,
@@ -538,7 +557,7 @@ class PartialSpinsBuilder(Builder):
             # Neither molecule_id nor method need to be unique, but the combination must be
             self.spins.update(
                 docs=docs,
-                key=["molecule_id", "method"],
+                key=["molecule_id", "method", "solvent"],
             )
         else:
             self.logger.info("No items to update")

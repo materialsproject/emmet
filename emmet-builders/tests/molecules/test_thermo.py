@@ -10,7 +10,7 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 @pytest.fixture(scope="session")
 def tasks_store(test_dir):
-    return JSONStore(test_dir / "C3H4Li1O3.json.gz")
+    return JSONStore(test_dir / "C2H4.json.gz")
 
 
 @pytest.fixture(scope="session")
@@ -35,5 +35,5 @@ def test_thermo_builder(tasks_store, mol_store, thermo_store):
     builder = ThermoBuilder(tasks_store, mol_store, thermo_store)
     builder.run()
 
-    assert thermo_store.count() == 48
+    assert thermo_store.count() == 22
     assert thermo_store.count({"vibrational_enthalpy": None}) == 0

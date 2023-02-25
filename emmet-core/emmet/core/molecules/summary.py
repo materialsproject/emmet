@@ -41,12 +41,8 @@ class SummaryDoc(PropertyDoc):
     property_name = "summary"
 
     # molecules
-    molecule: Molecule = Field(
-        ..., description="The lowest energy structure for this molecule"
-    )
-
-    species: List[str] = Field(
-        None, description="Ordered list of elements/species in this Molecule."
+    molecules: Dict[str, Molecule] = Field(
+        ..., description="The lowest energy optimized structures for this molecule for each solvent."
     )
 
     task_ids: List[MPID] = Field(
@@ -57,6 +53,10 @@ class SummaryDoc(PropertyDoc):
 
     similar_molecules: List[MPculeID] = Field(
         [], description="IDs associated with similar molecules"
+    )
+
+    constituent_molecules: List[MPculeID] = Field(
+        [], description="IDs of associated MoleculeDocs used to construct this molecule."
     )
 
     unique_calc_types: List[CalcType] = Field(
@@ -317,15 +317,16 @@ summary_fields: Dict[str, list] = {
         "formula_alphabetical",
         "chemsys",
         "symmetry",
-        "molecule",
-        "species",
+        "molecules",
         "deprecated",
         "task_ids",
         "unique_calc_types",
         "unique_task_types",
         "unique_levels_of_theory",
         "unique_solvents",
-        "unique_lot_solvents"
+        "unique_lot_solvents",
+        "similar_molecules",
+        "constituent_molecules"
     ],
     HasProps.thermo.value: [
         "electronic_energy",

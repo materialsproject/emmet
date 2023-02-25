@@ -70,7 +70,11 @@ def evaluate_task(
     :param basis_scores: Scores for various basis sets
     :param solvent_scores: Scores for various implicit solvent models
     :param task_quality_scores: Scores for various task types
-    :return:
+    :return: tuple representing different levels of evaluation:
+        - Task validity
+        - Level of theory score
+        - Task score
+        - Electronic energy
     """
 
     lot = task.level_of_theory
@@ -90,10 +94,55 @@ def evaluate_task(
     )
 
 
+def evaluate_task_entry(
+    entry: Dict[str, Any],
+    funct_scores: Dict[str, int] = SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
+    basis_scores: Dict[str, int] = SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
+    solvent_scores: Dict[str, int] = SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
+    task_quality_scores: Dict[str, int] = SETTINGS.QCHEM_TASK_QUALITY_SCORES,
+):
+    """
+    Helper function to order optimization calcs by
+    - Level of theory
+    - Electronic energy
+
+    Note that lower scores indicate a higher quality.
+
+    :param task: Task to be evaluated
+    :param funct_scores: Scores for various density functionals
+    :param basis_scores: Scores for various basis sets
+    :param solvent_scores: Scores for various implicit solvent models
+    :param task_quality_scores: Scores for various task types
+    :return: tuple representing different levels of evaluation:
+        - Level of theory score
+        - Task score
+        - Electronic energy
+    """
+
+    lot = entry["level_of_theory"]
+
+    lot_eval = evaluate_lot(
+        lot,
+        funct_scores=funct_scores,
+        basis_scores=basis_scores,
+        solvent_scores=solvent_scores,
+    )
+
+    return (
+        sum(lot_eval),
+        -1 * task_quality_scores.get(entry["task_type"], 0),
+        entry["energy"],
+    )
+
+
 class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
     species: List[str] = Field(
         None, description="Ordered list of elements/species in this Molecule."
+    )
+
+    molecules: Dict[str, Molecule] = Field(
+        None, description="The lowest energy optimized structures for this molecule for each solvent."
     )
 
     species_hash: str = Field(
@@ -168,9 +217,15 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         description="Mapping for tracking the best entries at each level of theory (+ solvent) for Q-Chem calculations",
     )
 
+    constituent_molecules: List[MPculeID] = Field(
+        None,
+        description="For cases where data from multiple MoleculeDocs have been compiled, a list of "
+                    "MPculeIDs of documents used to construct this document"
+    )
+
     similar_molecules: List[MPculeID] = Field(
         None,
-        description="List of MPIDs or MPculeIDs with of molecules similar (by e.g. structure) to this one",
+        description="List of MPculeIDs with of molecules similar (by e.g. structure) to this one",
     )
 
     @classmethod
@@ -236,8 +291,7 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
 
             # entries
             best_entries = dict()
-            all_lot_solvs = set(lot_solvents.values())
-            for lot_solv in all_lot_solvs:
+            for lot_solv in unique_lot_solvents:
                 relevant_calcs = sorted(
                     [
                         doc
@@ -257,10 +311,14 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
                 task
                 for task in task_group
                 if task.task_type
-                in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization]  # noqa: E501
+                in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization,
+                    "Geometry Optimization", "Frequency Flattening Geometry Optimization"]  # noqa: E501
             ]
 
-            best_molecule_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
+            try:
+                best_molecule_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
+            except IndexError:
+                raise Exception("No geometry optimization calculations available!")
             molecule = best_molecule_calc.output.optimized_molecule
             species = [e.symbol for e in molecule.species]
             molecule_id = get_molecule_id(molecule, node_attr="coords")

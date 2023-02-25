@@ -1,11 +1,10 @@
 import datetime
 from enum import Enum
 from itertools import groupby
-from typing import Any, Iterator, List, Tuple, Dict, Optional, Union
+from typing import Any, Iterator, List, Dict, Optional, Union
 import copy
 
 import numpy as np
-import networkx as nx
 
 from monty.json import MSONable
 from pydantic import BaseModel
@@ -21,6 +20,7 @@ from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 
 from emmet.core.settings import EmmetSettings
+from emmet.core.graph_hashing import weisfeiler_lehman_graph_hash
 from emmet.core.mpid import MPculeID
 
 try:
@@ -78,32 +78,6 @@ def group_structures(
             yield group
 
 
-def form_env(mol_lot: Tuple[Molecule, str]) -> str:
-    """
-
-    TODO: Modify this wrt solvent
-
-    Get the alphabetical formula and solvent environment of a calculation
-    as a string
-
-    :param mol_lot: tuple (Molecule, str), where str is the string value of
-        a LevelOfTheory object (for instance, wB97X-V/def2-TZVPPD/VACUUM)
-
-    :returns key: str
-    """
-
-    molecule, lot = mol_lot
-    lot_comp = lot.split("/")
-    if lot_comp[2].upper() == "VACUUM":
-        env = "VACUUM"
-    else:
-        env = lot_comp[2].split("(")[1].replace(")", "")
-
-    key = molecule.composition.alphabetical_formula
-    key += " " + env
-    return key
-
-
 def group_molecules(molecules: List[Molecule]):
     """
     Groups molecules according to composition, charge, and equality
@@ -145,8 +119,9 @@ def group_molecules(molecules: List[Molecule]):
             # Group by structure
             for group in groups:
                 if (
-                    mm.fit(mol_copy, group["mol"])
+                    (mm.fit(mol_copy, group["mol"]) or mol_copy == group["mol"])
                     and mol_copy.charge == group["mol"].charge
+                    and mol_copy.spin_multiplicity == group["mol"].spin_multiplicity
                 ):
                     group["mol_list"].append(mol)
                     matched = True
@@ -215,7 +190,7 @@ def get_graph_hash(mol: Molecule, node_attr: Optional[str] = None):
     """
 
     mg = make_mol_graph(mol)
-    return nx.weisfeiler_lehman_graph_hash(mg.graph, node_attr=node_attr)
+    return weisfeiler_lehman_graph_hash(mg.graph, node_attr=node_attr)
 
 
 def get_molecule_id(mol: Molecule, node_attr: Optional[str] = None):

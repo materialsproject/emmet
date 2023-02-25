@@ -58,6 +58,7 @@ class EmmetSettings(BaseSettings):
             "wB97X-D3": 5,
             "wB97X-D": 5,
             "B3LYP": 4,
+            "B97M-V": 3,
             "B97M-rV": 3,
             "B97-D3": 2,
             "B97-D": 2,

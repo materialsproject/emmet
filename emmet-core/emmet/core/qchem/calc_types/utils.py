@@ -12,6 +12,8 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
 functional_synonyms = {
+    "b97mv": "b97m-v",
+    "b97mrv": "b97m-rv",
     "wb97xd": "wb97x-d",
     "wb97xd3": "wb97x-d3",
     "wb97xv": "wb97x-v",
@@ -170,6 +172,8 @@ def task_type(orig: Dict[str, Any], special_run_type: Optional[str] = None) -> T
 
     if orig["rem"].get("job_type") == "sp":
         return TaskType("Single Point")
+    elif orig["rem"].get("job_type") == "force":
+        return TaskType("Force")
     elif orig["rem"].get("job_type") == "opt":
         return TaskType("Geometry Optimization")
     elif orig["rem"].get("job_type") == "ts":

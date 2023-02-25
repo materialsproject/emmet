@@ -206,11 +206,22 @@ class VibrationBuilder(Builder):
                     )[0]
                     task = best["task_id"]
 
-                task_doc = TaskDocument(
-                        **self.tasks.query_one({"task_id": int(task),
-                                                "formula_alphabetical": formula,
-                                                "orig": {"$exists": True}})
-                )
+                tdoc = self.tasks.query_one({"task_id": task,
+                                             "formula_alphabetical": formula,
+                                             "orig": {"$exists": True}})
+
+                if tdoc is None:
+                    try:
+                        tdoc = self.tasks.query_one({"task_id": int(task),
+                                                     "formula_alphabetical": formula,
+                                                     "orig": {"$exists": True}})
+                    except ValueError:
+                        tdoc = None
+
+                if tdoc is None:
+                    continue
+
+                task_doc = TaskDocument(**tdoc)
 
                 if task_doc is None:
                     continue
@@ -249,7 +260,7 @@ class VibrationBuilder(Builder):
             self.vibes.remove_docs({self.vibes.key: {"$in": molecule_ids}})
             self.vibes.update(
                 docs=docs,
-                key=["molecule_id"],
+                key=["molecule_id", "solvent"],
             )
         else:
             self.logger.info("No items to update")

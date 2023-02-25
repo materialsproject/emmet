@@ -255,7 +255,7 @@ class ThermoBuilder(Builder):
 
         thermo_docs = list()
 
-        mm = MoleculeMatcher()
+        mm = MoleculeMatcher(tolerance=0.000001)
 
         for mol in mols:
             this_thermo_docs = list()
@@ -277,7 +277,7 @@ class ThermoBuilder(Builder):
                     task_type = entry["task_type"]
 
                 if (
-                    task_type == "Single Point"
+                    task_type in ["Single Point", "Force"]
                     and entry["charge"] == mol.charge
                     and entry["spin_multiplicity"] == mol.spin_multiplicity
                 ):
@@ -307,11 +307,22 @@ class ThermoBuilder(Builder):
                 )[0]
                 task = best["task_id"]
 
-                task_doc = TaskDocument(
-                        **self.tasks.query_one({"task_id": int(task),
-                                                "formula_alphabetical": formula,
-                                                "orig": {"$exists": True}})
-                )
+                tdoc = self.tasks.query_one({"task_id": task,
+                                             "formula_alphabetical": formula,
+                                             "orig": {"$exists": True}})
+
+                if tdoc is None:
+                    try:
+                        tdoc = self.tasks.query_one({"task_id": int(task),
+                                                     "formula_alphabetical": formula,
+                                                     "orig": {"$exists": True}})
+                    except ValueError:
+                        tdoc = None
+
+                if tdoc is None:
+                    continue
+
+                task_doc = TaskDocument(**tdoc)
 
                 if task_doc is None:
                     continue
@@ -337,9 +348,11 @@ class ThermoBuilder(Builder):
 
                     matching_structures = list()
                     for entry in thermo_entries:
-                        if (mm.fit(Molecule.from_dict(entry["molecule"]), Molecule.from_dict(best_spec["molecule"]))
-                            and (sum(evaluate_lot(entry["level_of_theory"])) <
-                                 sum(evaluate_lot(best_spec["level_of_theory"])))):
+                        mol1 = Molecule.from_dict(entry["molecule"])
+                        mol2 = Molecule.from_dict(best_spec["molecule"])
+                        if ((mm.fit(mol1, mol2) or mol1 == mol2)
+                            and (sum(evaluate_lot(best_spec["level_of_theory"])) <
+                                 sum(evaluate_lot(entry["level_of_theory"])))):
                             matching_structures.append(entry)
 
                     if len(matching_structures) == 0:
@@ -416,7 +429,7 @@ class ThermoBuilder(Builder):
             self.thermo.remove_docs({self.thermo.key: {"$in": molecule_ids}})
             self.thermo.update(
                 docs=docs,
-                key=["molecule_id"],
+                key=["molecule_id", "solvent"],
             )
         else:
             self.logger.info("No items to update")
