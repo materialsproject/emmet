@@ -172,6 +172,8 @@ def task_type(orig: Dict[str, Any], special_run_type: Optional[str] = None) -> T
 
     if orig["rem"].get("job_type") == "sp":
         return TaskType("Single Point")
+    elif orig["rem"].get("job_type") == "force":
+        return TaskType("Force")
     elif orig["rem"].get("job_type") == "opt":
         return TaskType("Geometry Optimization")
     elif orig["rem"].get("job_type") == "ts":

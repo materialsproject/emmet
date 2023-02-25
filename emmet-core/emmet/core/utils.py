@@ -78,32 +78,6 @@ def group_structures(
             yield group
 
 
-def form_env(mol_lot: Tuple[Molecule, str]) -> str:
-    """
-
-    TODO: Modify this wrt solvent
-
-    Get the alphabetical formula and solvent environment of a calculation
-    as a string
-
-    :param mol_lot: tuple (Molecule, str), where str is the string value of
-        a LevelOfTheory object (for instance, wB97X-V/def2-TZVPPD/VACUUM)
-
-    :returns key: str
-    """
-
-    molecule, lot = mol_lot
-    lot_comp = lot.split("/")
-    if lot_comp[2].upper() == "VACUUM":
-        env = "VACUUM"
-    else:
-        env = lot_comp[2].split("(")[1].replace(")", "")
-
-    key = molecule.composition.alphabetical_formula
-    key += " " + env
-    return key
-
-
 def group_molecules(molecules: List[Molecule]):
     """
     Groups molecules according to composition, charge, and equality

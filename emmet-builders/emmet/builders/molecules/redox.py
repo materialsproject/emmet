@@ -215,10 +215,24 @@ class RedoxBuilder(Builder):
                     and e["task_type"] == "Single Point"
                     and e["output"].get("final_energy")
                 ]
-                ie_tasks = [TaskDocument(**e) for e in self.tasks.query({"task_id": {"$in": ie_sp_task_ids},
-                                                                         "formula_alphabetical": formula,
-                                                                         "orig": {"$exists": True}
-                                                                         })]
+                ie_tasks = list()
+                for i in ie_sp_task_ids:
+                    tdoc = self.tasks.query_one({"task_id": i,
+                                                 "formula_alphabetical": formula,
+                                                 "orig": {"$exists": True}})
+
+                    if tdoc is None:
+                        try:
+                            tdoc = self.tasks.query_one({"task_id": int(i),
+                                                         "formula_alphabetical": formula,
+                                                         "orig": {"$exists": True}})
+                        except ValueError:
+                            tdoc = None
+
+                    if tdoc is None:
+                        continue
+
+                    ie_tasks.append(TaskDocument(**tdoc))
 
                 ea_sp_task_ids = [
                     e["task_id"] for e in gg.entries
@@ -226,10 +240,24 @@ class RedoxBuilder(Builder):
                     and e["task_type"] == "Single Point"
                     and e["output"].get("final_energy")
                 ]
-                ea_tasks = [TaskDocument(**e) for e in self.tasks.query({"task_id": {"$in": ea_sp_task_ids},
-                                                                         "formula_alphabetical": formula,
-                                                                         "orig": {"$exists": True}
-                                                                         })]
+                ea_tasks = list()
+                for i in ea_sp_task_ids:
+                    tdoc = self.tasks.query_one({"task_id": i,
+                                                 "formula_alphabetical": formula,
+                                                 "orig": {"$exists": True}})
+
+                    if tdoc is None:
+                        try:
+                            tdoc = self.tasks.query_one({"task_id": int(i),
+                                                         "formula_alphabetical": formula,
+                                                         "orig": {"$exists": True}})
+                        except ValueError:
+                            tdoc = None
+
+                    if tdoc is None:
+                        continue
+
+                    ea_tasks.append(TaskDocument(**tdoc))
 
                 grouped_docs = self._collect_by_lot_solvent(thermo_docs, ie_tasks, ea_tasks)
                 if gg.charge in charges:
