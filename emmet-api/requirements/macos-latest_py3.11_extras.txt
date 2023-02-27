@@ -16,11 +16,11 @@ attrs==22.2.0
     #   pytest
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.78
+boto3==1.26.79
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.78
+botocore==1.29.79
     # via
     #   boto3
     #   s3transfer
@@ -50,7 +50,7 @@ colorama==0.4.6
     # via griffe
 contourpy==1.0.7
     # via matplotlib
-coverage[toml]==7.2.0
+coverage[toml]==7.2.1
     # via pytest-cov
 cryptography==39.0.1
     # via paramiko
@@ -68,7 +68,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.45.0
+emmet-core[all]==0.48.3
     # via
     #   emmet-api (setup.py)
     #   mp-api
@@ -259,7 +259,7 @@ pillow==9.4.0
     # via matplotlib
 platformdirs==3.0.0
     # via virtualenv
-plotly==5.13.0
+plotly==5.13.1
     # via pymatgen
 pluggy==1.0.0
     # via pytest
@@ -288,7 +288,7 @@ pydantic==1.10.5
     #   fastapi
     #   inflect
     #   maggma
-pydash==6.0.1
+pydash==6.0.2
     # via maggma
 pydocstyle==6.3.0
     # via emmet-api (setup.py)
@@ -421,13 +421,11 @@ tqdm==4.64.1
     #   maggma
     #   matminer
     #   pymatgen
-types-docutils==0.19.1.6
-    # via types-setuptools
-types-requests==2.28.11.14
+types-requests==2.28.11.15
     # via emmet-api (setup.py)
-types-setuptools==67.4.0.1
+types-setuptools==67.4.0.3
     # via emmet-api (setup.py)
-types-urllib3==1.26.25.7
+types-urllib3==1.26.25.8
     # via types-requests
 typing-extensions==4.5.0
     # via
@@ -446,7 +444,7 @@ uvicorn-tschaume==0.19.1
     # via emmet-api (setup.py)
 virtualenv==20.19.0
     # via pre-commit
-watchdog==2.2.1
+watchdog==2.3.0
     # via mkdocs
 wcmatch==8.4.1
     # via mkdocs-awesome-pages-plugin
