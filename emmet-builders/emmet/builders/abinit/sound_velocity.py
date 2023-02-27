@@ -16,7 +16,7 @@ from emmet.core.utils import jsanitize
 class SoundVelocityBuilder(Builder):
     def __init__(
         self,
-        materials: Store,
+        phonon_materials: Store,
         sound_vel: Store,
         query: Optional[dict] = None,
         manager: Optional[TaskManager] = None,
@@ -27,14 +27,14 @@ class SoundVelocityBuilder(Builder):
         the phonon calculations.
 
         Args:
-            materials (Store): source Store of materials documents
+            phonon_materials (Store): source Store of phonon materials documents containing abinit_input and abinit_output.
             sound_vel (Store): target Store of the sound velocity
             query (dict): dictionary to limit materials to be analyzed
             manager (TaskManager): an instance of the abipy TaskManager. If None it will be
                 generated from user configuration.
         """
 
-        self.materials = materials
+        self.phonon_materials = phonon_materials
         self.sound_vel = sound_vel
         self.query = query or {}
 
@@ -43,7 +43,7 @@ class SoundVelocityBuilder(Builder):
         else:
             self.manager = manager
 
-        super().__init__(sources=[materials], targets=[sound_vel], **kwargs)
+        super().__init__(sources=[phonon_materials], targets=[sound_vel], **kwargs)
 
     def get_items(self) -> Iterator[Dict]:
         """
@@ -72,10 +72,10 @@ class SoundVelocityBuilder(Builder):
         projection["abinit_output.ddb_id"] = 1
 
         # initialize the gridfs
-        ddbfs = gridfs.GridFS(self.materials.collection.database, "ddb_fs")
+        ddbfs = gridfs.GridFS(self.phonon_materials.collection.database, "ddb_fs")
 
         for m in mats:
-            item = self.materials.query_one(properties=projection, criteria={self.materials.key: m})
+            item = self.phonon_materials.query_one(properties=projection, criteria={self.phonon_materials.key: m})
 
             # Read the DDB file and pass as an object. Do not write here since in case of parallel
             # execution each worker will write its own file.
