@@ -12,7 +12,7 @@ contourpy==1.0.7
     # via matplotlib
 cycler==0.11.0
     # via matplotlib
-emmet-core==0.45.0
+emmet-core==0.48.3
     # via mp-api
 fonttools==4.38.0
     # via matplotlib
@@ -56,7 +56,7 @@ pandas==1.5.3
     # via pymatgen
 pillow==9.4.0
     # via matplotlib
-plotly==5.13.0
+plotly==5.13.1
     # via pymatgen
 pybtex==0.24.0
     # via
