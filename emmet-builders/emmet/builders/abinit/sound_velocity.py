@@ -27,7 +27,8 @@ class SoundVelocityBuilder(Builder):
         the phonon calculations.
 
         Args:
-            phonon_materials (Store): source Store of phonon materials documents containing abinit_input and abinit_output.
+            phonon_materials (Store): source Store of phonon materials documents
+                containing abinit_input and abinit_output.
             sound_vel (Store): target Store of the sound velocity
             query (dict): dictionary to limit materials to be analyzed
             manager (TaskManager): an instance of the abipy TaskManager. If None it will be

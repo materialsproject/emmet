@@ -56,7 +56,8 @@ class PhononBuilder(Builder):
         standard MongoDB document.
 
         Args:
-            phonon_materials (Store): source Store of phonon materials documents containing abinit_input and abinit_output.
+            phonon_materials (Store): source Store of phonon materials documents
+                containing abinit_input and abinit_output.
             ddb_source (Store): source Store of ddb files. Matching the data in the materials Store.
             phonon (Store): target Store of the phonon properties
             phonon_bs (Store): target Store for the phonon band structure. The document may
