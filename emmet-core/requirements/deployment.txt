@@ -12,7 +12,7 @@ contourpy==1.0.7
     # via matplotlib
 cycler==0.11.0
     # via matplotlib
-emmet-core==0.44.0
+emmet-core==0.48.3
     # via mp-api
 fonttools==4.38.0
     # via matplotlib
@@ -63,7 +63,7 @@ pandas==1.5.3
     #   pymatgen
 pillow==9.4.0
     # via matplotlib
-plotly==5.13.0
+plotly==5.13.1
     # via pymatgen
 pybtex==0.24.0
     # via
@@ -74,7 +74,7 @@ pydantic==1.10.5
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
-pymatgen==2023.1.30
+pymatgen==2023.2.22
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
@@ -129,7 +129,7 @@ uncertainties==3.1.7
     # via pymatgen
 urllib3==1.26.14
     # via requests
-zipp==3.14.0
+zipp==3.15.0
     # via importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
