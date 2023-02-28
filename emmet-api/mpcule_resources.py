@@ -1,6 +1,4 @@
 import os
-
-from emmet.api.core.api import MAPI
 from emmet.api.core.settings import MAPISettings
 from maggma.stores import MongoURIStore
 
@@ -18,8 +16,6 @@ from maggma.stores import MongoURIStore
 # from emmet.api.routes.mpcules.bonds.resources import bonds_resource
 from emmet.api.routes.mpcules.summary.resources import summary_resource
 
-from emmet.api.core.documentation import description, tags_meta
-
 
 resources = {}
 
@@ -28,14 +24,13 @@ default_settings = MAPISettings()
 db_uri = os.environ.get("MPCONTRIBS_MONGO_HOST", None)
 db_version = default_settings.DB_VERSION
 db_suffix = os.environ["MAPI_DB_NAME_SUFFIX"]
-debug = default_settings.DEBUG
-
-# allow db_uri to be set with a different protocol scheme
-# but prepend with mongodb+srv:// if not otherwise specified
-if len(db_uri.split("://", 1)) < 2:
-    db_uri = "mongodb+srv://" + db_uri
 
 if db_uri:
+
+    # allow db_uri to be set with a different protocol scheme
+    # but prepend with mongodb+srv:// if not otherwise specified
+    if len(db_uri.split("://", 1)) < 2:
+        db_uri = "mongodb+srv://" + db_uri
 
     # task_store = MongoURIStore(
     #     uri=db_uri, database="mp_dev", key="task_id", collection_name="mpcules_tasks",
@@ -77,9 +72,7 @@ if db_uri:
     #     uri=db_uri, database="mp_dev", key="property_id", collection_name="mpcules_vibes",
     # )
 
-    summary_store = MongoURIStore(
-        uri=db_uri, database="mp_dev", key="molecule_id", collection_name="mpcules_summary",
-    )
+    summary_store = MongoURIStore(uri=db_uri, database="mp_dev", key="molecule_id", collection_name="mpcules_summary")
 
 else:
     raise RuntimeError("Must specify MongoDB URI containing inputs.")
@@ -113,8 +106,3 @@ mpcules_resources = list()
 mpcules_resources.extend([summary_resource(summary_store)])
 
 resources.update({"mpcules": mpcules_resources})
-
-# === MAPI setup
-
-api = MAPI(resources=resources, debug=debug, description=description, tags_meta=tags_meta)
-app = api.app
