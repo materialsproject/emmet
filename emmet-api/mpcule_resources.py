@@ -33,46 +33,48 @@ if db_uri:
         db_uri = "mongodb+srv://" + db_uri
 
     # task_store = MongoURIStore(
-    #     uri=db_uri, database="mp_dev", key="task_id", collection_name="mpcules_tasks",
+    #     uri=db_uri, database="mp_molecules", key="task_id", collection_name="mpcules_tasks",
     # )
 
     # assoc_store = MongoURIStore(
-    #     uri=db_uri, database="mp_dev", key="molecule_id", collection_name="mpcules_assoc",
+    #     uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="mpcules_assoc",
     # )
 
     # mol_store = MongoURIStore(
-    #     uri=db_uri, database="mp_dev", key="molecule_id", collection_name="mpcules_molecules",
+    #     uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="mpcules_molecules",
     # )
 
     # charges_store = MongoURIStore(
-    #     uri=db_uri, database="mp_dev", key="property_id", collection_name="mpcules_charges",
+    #     uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_charges",
     # )
 
     # spins_store = MongoURIStore(
-    #     uri=db_uri, database="mp_dev", key="property_id", collection_name="mpcules_spins",
+    #     uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_spins",
     # )
 
     # bonds_store = MongoURIStore(
-    #     uri=db_uri, database="mp_dev", key="property_id", collection_name="mpcules_bonds",
+    #     uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_bonds",
     # )
 
     # orbital_store = MongoURIStore(
-    #     uri=db_uri, database="mp_dev", key="property_id", collection_name="mpcules_orbitals",
+    #     uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_orbitals",
     # )
 
     # redox_store = MongoURIStore(
-    #     uri=db_uri, database="mp_dev", key="property_id", collection_name="mpcules_redox",
+    #     uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_redox",
     # )
 
     # thermo_store = MongoURIStore(
-    #     uri=db_uri, database="mp_dev", key="property_id", collection_name="mpcules_thermo",
+    #     uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_thermo",
     # )
 
     # vibes_store = MongoURIStore(
-    #     uri=db_uri, database="mp_dev", key="property_id", collection_name="mpcules_vibes",
+    #     uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_vibes",
     # )
 
-    summary_store = MongoURIStore(uri=db_uri, database="mp_dev", key="molecule_id", collection_name="mpcules_summary")
+    summary_store = MongoURIStore(
+        uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="mpcules_summary"
+    )
 
 else:
     raise RuntimeError("Must specify MongoDB URI containing inputs.")
@@ -80,7 +82,7 @@ else:
 
 mpcules_resources = list()
 
-# TODO: transfer data to mp_dev so that these endpoints work
+# TODO: transfer data to mp_molecules so that these endpoints work
 # # Tasks
 # mpcules_resources.extend([task_resource(task_store), task_deprecation_resource(task_store)])
 
