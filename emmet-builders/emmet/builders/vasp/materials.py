@@ -310,7 +310,7 @@ class MaterialsBuilder(Builder):
                 if (
                     transmuter is None
                 ):  # Do not include deformed tasks without transmuter information
-                    self.logger.warn(
+                    self.logger.debug(
                         "Cannot find transmuter for deformation task {}. Excluding task.".format(
                             task.task_id
                         )
