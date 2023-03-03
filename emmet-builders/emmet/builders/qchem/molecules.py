@@ -468,11 +468,12 @@ class MoleculesBuilder(Builder):
 
         xyz_species_id_map = dict()
         for d in all_assoc:
-            dmol = d["molecule"]
-            if isinstance(dmol, Molecule):
-                this_id = get_molecule_id(dmol, node_attr="specie")
-            else:
-                this_id = get_molecule_id(Molecule.from_dict(dmol), node_attr="specie")
+            this_id = "{}-{}-{}-{}".format(
+                d["species_hash"],
+                d["formula_alphabetical"].replace(" ", ""),
+                str(int(d["charge"])).replace("-", "m"),
+                str(int(d["spin_multiplicity"]))
+            )
             assoc_ids.add(this_id)
             xyz_species_id_map[d[self.assoc.key]] = this_id
         to_process_docs = assoc_ids - processed_docs
