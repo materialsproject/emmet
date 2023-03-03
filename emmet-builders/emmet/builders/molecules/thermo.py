@@ -367,9 +367,25 @@ class ThermoBuilder(Builder):
                     )[0]
                     task_dict = best_dict["task_id"]
 
-                    # TODO: fix this for int or string task ids
-                    task_doc_dict = TaskDocument(**self.tasks.query_one({"task_id": task_dict}))
-                    task_doc_spec = TaskDocument(**self.tasks.query_one({"task_id": task_spec}))
+                    tdict = self.tasks.query_one({"task_id": task_dict})
+                    if tdict is None:
+                        try:
+                            tdict = self.tasks.query_one({"task_id": int(task_dict)})
+                        except ValueError:
+                            tdict = None
+
+                    tspec = self.tasks.query_one({"task_id": task_spec})
+                    if tspec is None:
+                        try:
+                            tspec = self.tasks.query_one({"task_id": int(tspec)})
+                        except ValueError:
+                            tspec = None
+
+                    if tdict is None or tspec is None:
+                        continue
+
+                    task_doc_dict = TaskDocument(**tdict)
+                    task_doc_spec = TaskDocument(**tspec)
                     thermo_doc = ThermoDoc.from_task(
                         task_doc_dict,
                         correction_task=task_doc_spec,
