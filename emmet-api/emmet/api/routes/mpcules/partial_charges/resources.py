@@ -5,7 +5,7 @@ from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQu
 
 from emmet.api.routes.mpcules.molecules.query_operators import (
     MultiMPculeIDQuery,
-    CalcMethodQuery,
+    ExactCalcMethodQuery,
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
@@ -22,7 +22,7 @@ def charges_resource(charges_store):
         PartialChargesDoc,
         query_operators=[
             MultiMPculeIDQuery(),
-            CalcMethodQuery(),
+            ExactCalcMethodQuery(),
             FormulaQuery(),
             ChemsysQuery(),
             ElementsQuery(),

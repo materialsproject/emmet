@@ -386,7 +386,13 @@ class FindMoleculeConnectivityQuery(QueryOperator):
 
 class CalcMethodQuery(QueryOperator):
     """
-    Method to generate a query based on level of theory and solvent
+    Method to generate a query based on level of theory and solvent.
+
+    This query differs from ExactCalcMethodQuery in that CalcMethodQuery will check
+    that the desired level of theory and/or solvent was used for some calculations
+    (they are included in the sets of unique levels of theory, solvents, or lot-solvent
+    combinations), whereas ExactCalcMethodQuery will check that the desired level of theory
+    and/or solvent were used to generate the specific document being queried.
     """
 
     def query(self,
@@ -427,6 +433,63 @@ class CalcMethodQuery(QueryOperator):
         return [("unique_levels_of_theory", False),
                 ("unique_solvents", False),
                 ("unique_lot_solvents", False)]
+
+    def post_process(self, docs, query):
+        # TODO: should this be somehow sorted?
+        response = docs[: self._limit]
+
+        return response
+
+
+class ExactCalcMethodQuery(QueryOperator):
+    """
+    Method to generate a query based on level of theory and solvent
+
+    This query differs from CalcMethodQuery in that CalcMethodQuery will check
+    that the desired level of theory and/or solvent was used for some calculations
+    (they are included in the sets of unique levels of theory, solvents, or lot-solvent
+    combinations), whereas ExactCalcMethodQuery will check that the desired level of theory
+    and/or solvent were used to generate the specific document being queried.
+    """
+
+    def query(self,
+              level_of_theory: Optional[str] = Query(
+                None, description="Level of theory used for calculation. Default is None, meaning that level of theory"
+                                  "will not be queried."
+                ),
+              solvent: Optional[str] = Query(
+                None, description="Solvent data used for calculation. Default is None, meaning that solvent will not be"
+                                  "queried."
+                ),
+              lot_solvent: Optional[str] = Query(
+                None, description="String representing the combination of level of theory and solvent. Default is None,"
+                                  "meaning lot_solvent will not be queried."
+              ),
+              _limit: int = Query(
+                100, description="Maximum number of matches to show. Defaults to 100."
+              )
+              ):
+
+        self._limit = _limit
+        self.level_of_theory = level_of_theory
+        self.solvent = solvent
+        self.lot_solvent = lot_solvent
+
+        crit = dict()
+
+        if self.level_of_theory:
+            crit.update({"level_of_theory": level_of_theory})
+        if self.solvent:
+            crit.update({"solvent": solvent})
+        if self.lot_solvent:
+            crit.update({"lot_solvent": lot_solvent})
+
+        return {"criteria": crit}
+
+    def ensure_indexes(self):  # pragma: no cover
+        return [("level_of_theory", False),
+                ("solvent", False),
+                ("lot_solvent", False)]
 
     def post_process(self, docs, query):
         # TODO: should this be somehow sorted?

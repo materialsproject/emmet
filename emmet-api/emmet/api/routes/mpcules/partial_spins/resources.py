@@ -5,7 +5,7 @@ from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQu
 
 from emmet.api.routes.mpcules.molecules.query_operators import (
     MultiMPculeIDQuery,
-    CalcMethodQuery,
+    ExactCalcMethodQuery,
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
@@ -22,7 +22,7 @@ def spins_resource(spins_store):
         PartialSpinsDoc,
         query_operators=[
             MultiMPculeIDQuery(),
-            CalcMethodQuery(),
+            ExactCalcMethodQuery(),
             FormulaQuery(),
             ChemsysQuery(),
             ElementsQuery(),

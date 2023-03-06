@@ -8,7 +8,7 @@ from emmet.api.routes.mpcules.bonds.query_operators import (
 )
 from emmet.api.routes.mpcules.molecules.query_operators import (
     MultiMPculeIDQuery,
-    CalcMethodQuery,
+    ExactCalcMethodQuery,
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
@@ -25,7 +25,7 @@ def bonds_resource(bonds_store):
         BondingDoc,
         query_operators=[
             MultiMPculeIDQuery(),
-            CalcMethodQuery(),
+            ExactCalcMethodQuery(),
             FormulaQuery(),
             ChemsysQuery(),
             ElementsQuery(),

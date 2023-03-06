@@ -159,8 +159,41 @@ class NBOLonePairQuery(BaseQuery):
             None,
             description="Maximum number of electrons in the lone pair."
         ),
-    ):
-        pass
+    ) -> STORE_PARAMS:
+        crit = {"open_shell": open_shell}
+
+        d = {
+            "s_character": [min_s_character, max_s_character],
+            "p_character": [min_p_character, max_p_character],
+            "d_character": [min_d_character, max_d_character],
+            "f_character": [min_f_character, max_f_character],
+            "occupancy": [min_occupancy, max_occupancy],
+        }
+
+        if electron_type is None or not open_shell:
+            prefix = "nbo_lone_pairs."
+        elif electron_type.lower() == "alpha":
+            prefix = "alpha_lone_pairs."
+        elif electron_type.lower() == "beta":
+            prefix = "beta_lone_pairs."
+        else:
+            raise ValueError("electron_type must be 'alpha', 'beta', or None!")
+
+        for entry in d:
+            key = prefix + entry
+            if d[entry][0] is not None or d[entry][1] is not None:
+                crit[key] = dict()
+
+            if d[entry][0] is not None:
+                crit[key]["$gte"] = d[entry][0]
+
+            if d[entry][1] is not None:
+                crit[key]["$lte"] = d[entry][1]
+
+        if lp_type is not None:
+            crit[prefix + "type_code"] = lp_type
+
+        return {"criteria": crit}
 
     def ensure_indexes(self):
         prefixes = ["nbo_lone_pairs.", "alpha_lone_pairs.", "beta_lone_pairs."]
@@ -194,60 +227,153 @@ class NBOBondQuery(BaseQuery):
             None,
             description="Should alpha ('alpha'), beta ('beta'), or all electrons be considered (None; default)?"
         ),
-        lp_type: Optional[str] = Query(
+        bond_type: Optional[str] = Query(
             None,
-            description="Type of orbital - 'LP' for 'lone pair' or 'LV' for 'lone vacant'"
+            description="Type of orbital, e.g. 'BD' for bonding or 'BD*' for antibonding"
         ),
-        min_s_character: Optional[float] = Query(
+        min_s_character_atom1: Optional[float] = Query(
             None,
-            description="Minimum percentage of the lone pair constituted by s atomic orbitals."
+            description="Minimum percentage of the bond constituted by s atomic orbitals on the first atom."
         ),
-        max_s_character: Optional[float] = Query(
+        max_s_character_atom1: Optional[float] = Query(
             None,
-            description="Maximum percentage of the lone pair constituted by s atomic orbitals."
+            description="Maximum percentage of the bond constituted by s atomic orbitals on the first atom."
         ),
-        min_p_character: Optional[float] = Query(
+        min_s_character_atom2: Optional[float] = Query(
             None,
-            description="Minimum percentage of the lone pair constituted by p atomic orbitals."
+            description="Minimum percentage of the bond constituted by s atomic orbitals on the second atom."
         ),
-        max_p_character: Optional[float] = Query(
+        max_s_character_atom2: Optional[float] = Query(
             None,
-            description="Maximum percentage of the lone pair constituted by p atomic orbitals."
+            description="Maximum percentage of the bond constituted by s atomic orbitals on the second atom."
         ),
-        min_d_character: Optional[float] = Query(
+        min_p_character_atom1: Optional[float] = Query(
             None,
-            description="Minimum percentage of the lone pair constituted by d atomic orbitals."
+            description="Minimum percentage of the bond constituted by p atomic orbitals on the first atom."
         ),
-        max_d_character: Optional[float] = Query(
+        max_p_character_atom1: Optional[float] = Query(
             None,
-            description="Maximum percentage of the lone pair constituted by d atomic orbitals."
+            description="Maximum percentage of the bond constituted by p atomic orbitals on the first atom."
         ),
-        min_f_character: Optional[float] = Query(
+        min_p_character_atom2: Optional[float] = Query(
             None,
-            description="Minimum percentage of the lone pair constituted by f atomic orbitals."
+            description="Minimum percentage of the bond constituted by p atomic orbitals on the second atom."
         ),
-        max_f_character: Optional[float] = Query(
+        max_p_character_atom2: Optional[float] = Query(
             None,
-            description="Maximum percentage of the lone pair constituted by f atomic orbitals."
+            description="Maximum percentage of the bond constituted by p atomic orbitals on the second atom."
+        ),
+        min_d_character_atom1: Optional[float] = Query(
+            None,
+            description="Minimum percentage of the bond constituted by d atomic orbitals on the first atom."
+        ),
+        max_d_character_atom1: Optional[float] = Query(
+            None,
+            description="Maximum percentage of the bond constituted by d atomic orbitals on the first atom."
+        ),
+        min_d_character_atom2: Optional[float] = Query(
+            None,
+            description="Minimum percentage of the bond constituted by d atomic orbitals on the second atom."
+        ),
+        max_d_character_atom2: Optional[float] = Query(
+            None,
+            description="Maximum percentage of the bond constituted by d atomic orbitals on the second atom."
+        ),
+        min_f_character_atom1: Optional[float] = Query(
+            None,
+            description="Minimum percentage of the bond constituted by f atomic orbitals on the first atom."
+        ),
+        max_f_character_atom1: Optional[float] = Query(
+            None,
+            description="Maximum percentage of the bond constituted by f atomic orbitals on the first atom."
+        ),
+        min_f_character_atom2: Optional[float] = Query(
+            None,
+            description="Minimum percentage of the bond constituted by f atomic orbitals on the second atom."
+        ),
+        max_f_character_atom2: Optional[float] = Query(
+            None,
+            description="Maximum percentage of the bond constituted by f atomic orbitals on the second atom."
+        ),
+        min_polarization_atom1: Optional[float] = Query(
+            None,
+            description="Minimum fraction of electrons in the bond donated by the first atom."
+        ),
+        max_polarization_atom1: Optional[float] = Query(
+            None,
+            description="Maximum fraction of electrons in the bond donated by the first atom."
+        ),
+        min_polarization_atom2: Optional[float] = Query(
+            None,
+            description="Minimum fraction of electrons in the bond donated by the second atom."
+        ),
+        max_polarization_atom2: Optional[float] = Query(
+            None,
+            description="Maximum fraction of electrons in the bond donated by the second atom."
         ),
         min_occupancy: Optional[float] = Query(
             None,
-            description="Minimum number of electrons in the lone pair."
+            description="Minimum number of electrons in the bond."
         ),
         max_occupancy: Optional[float] = Query(
             None,
-            description="Maximum number of electrons in the lone pair."
+            description="Maximum number of electrons in the bond."
         ),
-    ):
-        pass
+    ) -> STORE_PARAMS:
+        crit = {"open_shell": open_shell}
+
+        d = {
+            "atom1_s_character": [min_s_character_atom1, max_s_character_atom1],
+            "atom1_p_character": [min_p_character_atom1, max_p_character_atom1],
+            "atom1_d_character": [min_d_character_atom1, max_d_character_atom1],
+            "atom1_f_character": [min_f_character_atom1, max_f_character_atom1],
+            "atom2_s_character": [min_s_character_atom2, max_s_character_atom2],
+            "atom2_p_character": [min_p_character_atom2, max_p_character_atom2],
+            "atom2_d_character": [min_d_character_atom2, max_d_character_atom2],
+            "atom2_f_character": [min_f_character_atom2, max_f_character_atom2],
+            "atom1_polarization": [min_polarization_atom1, max_polarization_atom1],
+            "atom2_polarization": [min_polarization_atom2, max_polarization_atom2],
+            "occupancy": [min_occupancy, max_occupancy],
+        }
+
+        if electron_type is None or not open_shell:
+            prefix = "nbo_lone_pairs."
+        elif electron_type.lower() == "alpha":
+            prefix = "alpha_lone_pairs."
+        elif electron_type.lower() == "beta":
+            prefix = "beta_lone_pairs."
+        else:
+            raise ValueError("electron_type must be 'alpha', 'beta', or None!")
+
+        for entry in d:
+            key = prefix + entry
+            if d[entry][0] is not None or d[entry][1] is not None:
+                crit[key] = dict()
+
+            if d[entry][0] is not None:
+                crit[key]["$gte"] = d[entry][0]
+
+            if d[entry][1] is not None:
+                crit[key]["$lte"] = d[entry][1]
+
+        if lp_type is not None:
+            crit[prefix + "type_code"] = lp_type
+
+        return {"criteria": crit}
 
     def ensure_indexes(self):
-        prefixes = ["nbo_lone_pairs.", "alpha_lone_pairs.", "beta_lone_pairs."]
+        prefixes = ["nbo_bonds.", "alpha_bonds.", "beta_bonds."]
         keys = [
-            "s_character",
-            "p_character",
-            "d_character",
-            "f_character",
+            "atom1_s_character",
+            "atom2_s_character",
+            "atom1_p_character",
+            "atom2_p_character",
+            "atom1_d_character",
+            "atom2_d_character",
+            "atom1_f_character",
+            "atom2_f_character",
+            "atom1_polarization",
+            "atom2_polarization",
             "occupancy",
             "type_code"
         ]
