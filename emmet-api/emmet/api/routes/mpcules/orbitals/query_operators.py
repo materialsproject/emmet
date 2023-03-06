@@ -356,8 +356,8 @@ class NBOBondQuery(BaseQuery):
             if d[entry][1] is not None:
                 crit[key]["$lte"] = d[entry][1]
 
-        if lp_type is not None:
-            crit[prefix + "type_code"] = lp_type
+        if bond_type is not None:
+            crit[prefix + "type_code"] = bond_type
 
         return {"criteria": crit}
 
@@ -385,4 +385,97 @@ class NBOBondQuery(BaseQuery):
 
 
 class NBOInteractionQuery(BaseQuery):
-    pass
+    """Method to generate a query on NBO orbital-orbital interaction data"""
+
+    def query(
+        self,
+        open_shell: Optional[bool] = Query(
+            False,
+            description="Should the molecules have unpaired (radical) electrons?"
+        ),
+        electron_type: Optional[str] = Query(
+            None,
+            description="Should alpha ('alpha'), beta ('beta'), or all electrons be considered (None; default)?"
+        ),
+        donor_type: Optional[str] = Query(
+            None,
+            description="Type of donor orbital, e.g. 'BD' for bonding or 'RY*' for anti-Rydberg"
+        ),
+        acceptor_type: Optional[str] = Query(
+            None,
+            description="Type of acceptor orbital, e.g. 'BD' for bonding or 'RY*' for anti-Rydberg"
+        ),
+        min_perturbation_energy: Optional[float] = Query(
+            None,
+            description="Minimum perturbation energy of the interaction"
+        ),
+        max_perturbation_energy: Optional[float] = Query(
+            None,
+            description="Maximum perturbation energy of the interaction"
+        ),
+        min_energy_difference: Optional[float] = Query(
+            None,
+            description="Minimum energy difference between interacting orbitals"
+        ),
+        max_energy_difference: Optional[float] = Query(
+            None,
+            description="Minimum energy difference between interacting orbitals"
+        ),
+        min_fock_element: Optional[float] = Query(
+            None,
+            description="Minimum interaction Fock matrix element"
+        ),
+        max_fock_element: Optional[float] = Query(
+            None,
+            description="Maximum interaction Fock matrix element"
+        ),
+    ) -> STORE_PARAMS:
+        crit = {"open_shell": open_shell}
+
+        d = {
+            "perturbation_energy": [min_perturbation_energy, max_perturbation_energy],
+            "energy_difference": [min_energy_difference, max_energy_difference],
+            "fock_element": [min_fock_element, max_fock_element],
+        }
+
+        if electron_type is None or not open_shell:
+            prefix = "nbo_lone_pairs."
+        elif electron_type.lower() == "alpha":
+            prefix = "alpha_lone_pairs."
+        elif electron_type.lower() == "beta":
+            prefix = "beta_lone_pairs."
+        else:
+            raise ValueError("electron_type must be 'alpha', 'beta', or None!")
+
+        for entry in d:
+            key = prefix + entry
+            if d[entry][0] is not None or d[entry][1] is not None:
+                crit[key] = dict()
+
+            if d[entry][0] is not None:
+                crit[key]["$gte"] = d[entry][0]
+
+            if d[entry][1] is not None:
+                crit[key]["$lte"] = d[entry][1]
+
+        if donor_type is not None:
+            crit[prefix + "donor_type"] = donor_type
+        if acceptor_type is not None:
+            crit[prefix + "acceptor_type"] = acceptor_type
+
+        return {"criteria": crit}
+
+    def ensure_indexes(self):
+        prefixes = ["nbo_interactions.", "alpha_interactions.", "beta_interactions."]
+        keys = [
+            "donor_type",
+            "acceptor_type",
+            "perturbation_energy",
+            "energy_difference",
+            "fock_element",
+        ]
+        indices = list()
+        for p in prefixes:
+            for k in keys:
+                indices.append((p + k, False))
+        return indices
