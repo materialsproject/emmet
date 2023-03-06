@@ -180,7 +180,82 @@ class NBOLonePairQuery(BaseQuery):
 
 
 class NBOBondQuery(BaseQuery):
-    pass
+    """
+    Method to generate a query on NBO bond data.
+    """
+
+    def query(
+        self,
+        open_shell: Optional[bool] = Query(
+            False,
+            description="Should the molecules have unpaired (radical) electrons?"
+        ),
+        electron_type: Optional[str] = Query(
+            None,
+            description="Should alpha ('alpha'), beta ('beta'), or all electrons be considered (None; default)?"
+        ),
+        lp_type: Optional[str] = Query(
+            None,
+            description="Type of orbital - 'LP' for 'lone pair' or 'LV' for 'lone vacant'"
+        ),
+        min_s_character: Optional[float] = Query(
+            None,
+            description="Minimum percentage of the lone pair constituted by s atomic orbitals."
+        ),
+        max_s_character: Optional[float] = Query(
+            None,
+            description="Maximum percentage of the lone pair constituted by s atomic orbitals."
+        ),
+        min_p_character: Optional[float] = Query(
+            None,
+            description="Minimum percentage of the lone pair constituted by p atomic orbitals."
+        ),
+        max_p_character: Optional[float] = Query(
+            None,
+            description="Maximum percentage of the lone pair constituted by p atomic orbitals."
+        ),
+        min_d_character: Optional[float] = Query(
+            None,
+            description="Minimum percentage of the lone pair constituted by d atomic orbitals."
+        ),
+        max_d_character: Optional[float] = Query(
+            None,
+            description="Maximum percentage of the lone pair constituted by d atomic orbitals."
+        ),
+        min_f_character: Optional[float] = Query(
+            None,
+            description="Minimum percentage of the lone pair constituted by f atomic orbitals."
+        ),
+        max_f_character: Optional[float] = Query(
+            None,
+            description="Maximum percentage of the lone pair constituted by f atomic orbitals."
+        ),
+        min_occupancy: Optional[float] = Query(
+            None,
+            description="Minimum number of electrons in the lone pair."
+        ),
+        max_occupancy: Optional[float] = Query(
+            None,
+            description="Maximum number of electrons in the lone pair."
+        ),
+    ):
+        pass
+
+    def ensure_indexes(self):
+        prefixes = ["nbo_lone_pairs.", "alpha_lone_pairs.", "beta_lone_pairs."]
+        keys = [
+            "s_character",
+            "p_character",
+            "d_character",
+            "f_character",
+            "occupancy",
+            "type_code"
+        ]
+        indices = list()
+        for p in prefixes:
+            for k in keys:
+                indices.append((p + k, False))
+        return indices
 
 
 class NBOInteractionQuery(BaseQuery):

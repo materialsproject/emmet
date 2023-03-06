@@ -9,8 +9,6 @@ from maggma.builders import Builder
 from maggma.stores import Store
 from maggma.utils import grouper
 
-from pymatgen.core.structure import Molecule
-
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import (
     get_molecule_id,
