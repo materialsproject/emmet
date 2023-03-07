@@ -17,7 +17,6 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     ElementsQuery,
     ChargeSpinQuery
 )
-from emmet.api.routes.mpcules.utils import MethodQuery
 from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
@@ -33,14 +32,13 @@ def orbital_resource(orbital_store):
             ChemsysQuery(),
             ElementsQuery(),
             ChargeSpinQuery(),
-            MethodQuery(),
             NBOPopulationQuery(),
             NBOLonePairQuery(),
             NBOBondQuery(),
             NBOInteractionQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(OrbitalDoc, default_fields=["molecule_id", "property_id", "method", "solvent", "last_updated"],),
+            SparseFieldsQuery(OrbitalDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Orbitals"],

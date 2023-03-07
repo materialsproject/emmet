@@ -34,7 +34,7 @@ def bonds_resource(bonds_store):
             BondTypeLengthQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(BondingDoc, default_fields=["molecule_id", "last_updated"],),
+            SparseFieldsQuery(BondingDoc, default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Bonds"],

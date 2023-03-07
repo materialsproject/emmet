@@ -30,7 +30,7 @@ def spins_resource(spins_store):
             MethodQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(PartialSpinsDoc, default_fields=["molecule_id", "last_updated"],),
+            SparseFieldsQuery(PartialSpinsDoc, default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["PartialSpins"],

@@ -30,7 +30,7 @@ def charges_resource(charges_store):
             MethodQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(PartialChargesDoc, default_fields=["molecule_id", "last_updated"],),
+            SparseFieldsQuery(PartialChargesDoc, default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["PartialCharges"],

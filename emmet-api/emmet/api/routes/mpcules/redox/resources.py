@@ -14,7 +14,6 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     ElementsQuery,
     ChargeSpinQuery
 )
-from emmet.api.routes.mpcules.utils import MethodQuery
 from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
@@ -30,7 +29,6 @@ def redox_resource(redox_store):
             ChemsysQuery(),
             ElementsQuery(),
             ChargeSpinQuery(),
-            MethodQuery(),
             RedoxPotentialQuery(),
             SortQuery(),
             PaginationQuery(),
