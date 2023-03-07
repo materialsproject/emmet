@@ -34,7 +34,8 @@ def charges_resource(charges_store):
             SparseFieldsQuery(PartialChargesDoc, default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["PartialCharges"],
+        tags=["MPcules Partial Charges"],
+        sub_path="/partial_charges/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )

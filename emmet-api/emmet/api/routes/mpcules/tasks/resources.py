@@ -40,7 +40,8 @@ def task_resource(task_store):
         ],
         header_processor=GlobalHeaderProcessor(),
         hint_scheme=TasksHintScheme(),
-        tags=["Tasks"],
+        tags=["MPcules Tasks"],
+        sub_path="/tasks/",
         timeout=timeout,
         disable_validation=True,
     )
@@ -53,10 +54,10 @@ def task_deprecation_resource(task_store):
         task_store,
         DeprecationDoc,
         query_operators=[DeprecationQuery(), PaginationQuery()],
-        tags=["Tasks"],
+        tags=["MPcules Tasks"],
         enable_get_by_key=False,
         enable_default_search=True,
-        sub_path="/deprecation/",
+        sub_path="/tasks/deprecation/",
         header_processor=GlobalHeaderProcessor(),
         timeout=timeout,
     )

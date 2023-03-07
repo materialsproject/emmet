@@ -42,7 +42,7 @@ def summary_resource(summary_store):
         ],
         hint_scheme=SummaryHintScheme(),
         header_processor=GlobalHeaderProcessor(),
-        tags=["Summary"],
+        tags=["MPcules Summary"],
         disable_validation=True,
         timeout=timeout
     )

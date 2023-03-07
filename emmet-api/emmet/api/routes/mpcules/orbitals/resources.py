@@ -22,7 +22,7 @@ from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
 
-def orbital_resource(orbital_store):
+def orbitals_resource(orbital_store):
     resource = ReadOnlyResource(
         orbital_store,
         OrbitalDoc,
@@ -43,7 +43,8 @@ def orbital_resource(orbital_store):
             SparseFieldsQuery(OrbitalDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Orbitals"],
+        tags=["MPcules Orbitals"],
+        sub_path="/orbitals/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )

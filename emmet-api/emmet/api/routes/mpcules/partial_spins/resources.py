@@ -34,7 +34,8 @@ def spins_resource(spins_store):
             SparseFieldsQuery(PartialSpinsDoc, default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["PartialSpins"],
+        tags=["MPcules Partial Spins"],
+        sub_path="/partial_spins/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )

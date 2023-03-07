@@ -37,7 +37,8 @@ def thermo_resource(thermo_store):
             SparseFieldsQuery(ThermoDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Thermo"],
+        tags=["MPcules Thermo"],
+        sub_path="/thermo/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )

@@ -39,7 +39,7 @@ def find_molecule_resource(molecules_store):
         FindMolecule,
         key_fields=["molecule", "molecule_id"],
         query_operators=[FindMoleculeQuery()],
-        tags=["Molecules"],
+        tags=["MPcules Molecules"],
         sub_path="/find_molecule/",
         timeout=timeout,
     )
@@ -53,8 +53,8 @@ def find_molecule_connectivity_resource(molecules_store):
         FindMoleculeConnectivity,
         key_fields=["molecule", "molecule_id"],
         query_operators=[FindMoleculeConnectivityQuery()],
-        tags=["Molecules"],
-        sub_path="/find_molecule_connectivity/",
+        tags=["MPcules Molecules"],
+        sub_path="/molecules/find_molecule_connectivity/",
         timeout=timeout,
     )
 
@@ -81,7 +81,8 @@ def molecules_resource(molecules_store):
             SparseFieldsQuery(MoleculeDoc, default_fields=["molecule_id", "formula_alphabetical", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Molecules"],
+        tags=["MPcules Molecules"],
+        sub_path="/molecules/",
         disable_validation=True,
         hint_scheme=MoleculesHintScheme(),
         timeout=MAPISettings().TIMEOUT,

@@ -37,7 +37,8 @@ def redox_resource(redox_store):
             SparseFieldsQuery(RedoxDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Redox"],
+        tags=["MPcules Redox"],
+        sub_path="/redox/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )

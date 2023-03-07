@@ -38,7 +38,8 @@ def bonds_resource(bonds_store):
             SparseFieldsQuery(BondingDoc, default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Bonds"],
+        tags=["MPcules Bonds"],
+        sub_path="/bonds/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )

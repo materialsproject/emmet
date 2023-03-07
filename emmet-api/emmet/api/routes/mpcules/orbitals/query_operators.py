@@ -100,7 +100,7 @@ class NBOPopulationQuery(QueryOperator):
                 ("beta_population.total_electrons", False)]
 
 
-class NBOLonePairQuery(BaseQuery):
+class NBOLonePairQuery(QueryOperator):
     """
     Method to generate a query on NBO lone pair data.
     """
@@ -212,7 +212,7 @@ class NBOLonePairQuery(BaseQuery):
         return indices
 
 
-class NBOBondQuery(BaseQuery):
+class NBOBondQuery(QueryOperator):
     """
     Method to generate a query on NBO bond data.
     """
@@ -384,7 +384,7 @@ class NBOBondQuery(BaseQuery):
         return indices
 
 
-class NBOInteractionQuery(BaseQuery):
+class NBOInteractionQuery(QueryOperator):
     """Method to generate a query on NBO orbital-orbital interaction data"""
 
     def query(

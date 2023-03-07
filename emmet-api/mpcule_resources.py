@@ -60,7 +60,7 @@ if db_uri:
         uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_bonds",
     )
 
-    orbital_store = MongoURIStore(
+    orbitals_store = MongoURIStore(
         uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_orbitals",
     )
 
@@ -110,7 +110,7 @@ mpcules_resources.extend([charges_resource(charges_store)])
 mpcules_resources.extend([spins_resource(spins_store)])
 
 # Bonds
-mpcules_resources.extend([bonds_resource(bonds_store)])
+# mpcules_resources.extend([bonds_resource(bonds_store)])
 
 # Orbitals
 mpcules_resources.extend([orbitals_resource(orbitals_store)])
@@ -119,12 +119,12 @@ mpcules_resources.extend([orbitals_resource(orbitals_store)])
 mpcules_resources.extend([redox_resource(redox_store)])
 
 # Thermo
-mpcules_resources.extend([thermo_resource(thermo_store)])
+# mpcules_resources.extend([thermo_resource(thermo_store)])
 
 # Vibes
 mpcules_resources.extend([vibration_resource(vibes_store)])
 
 # Summary
-mpcules_resources.extend([summary_resource(summary_store)])
+# mpcules_resources.extend([summary_resource(summary_store)])
 
 resources.update({"mpcules": mpcules_resources})
