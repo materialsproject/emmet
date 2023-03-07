@@ -201,7 +201,7 @@ class MoleculeMetadata(EmmetBaseModel):
         data = {
             "charge": int(meta_molecule.charge),
             "spin_multiplicity": meta_molecule.spin_multiplicity,
-            "nsites": len(meta_molecule),
+            "natoms": len(meta_molecule),
             "elements": elsyms,
             "nelements": len(elsyms),
             "composition": comp,

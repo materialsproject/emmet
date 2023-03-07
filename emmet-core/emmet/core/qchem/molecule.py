@@ -9,9 +9,8 @@ from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 from emmet.core.mpid import MPculeID
 from emmet.core.utils import get_graph_hash, get_molecule_id
 from emmet.core.settings import EmmetSettings
-from emmet.core.material import MoleculeDoc as CoreMoleculeDoc
-from emmet.core.material import PropertyOrigin
-from emmet.core.structure import MoleculeMetadata
+from emmet.core.material import CoreMoleculeDoc, PropertyOrigin
+# from emmet.core.structure import MoleculeMetadata
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.task import TaskDocument
 
@@ -135,7 +134,7 @@ def evaluate_task_entry(
     )
 
 
-class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
+class MoleculeDoc(CoreMoleculeDoc):
 
     species: List[str] = Field(
         None, description="Ordered list of elements/species in this Molecule."
@@ -439,10 +438,15 @@ class MoleculeDoc(CoreMoleculeDoc, MoleculeMetadata):
         # Molecule ID
         molecule_id = get_molecule_id(molecule, "coords")
 
+        species_hash = get_graph_hash(molecule, "specie")
+        coord_hash = get_graph_hash(molecule, "coords")
+
         return cls.from_molecule(
             molecule=molecule,
             molecule_id=molecule_id,
             species=species,
+            species_hash=species_hash,
+            coord_hash=coord_hash,
             last_updated=last_updated,
             created_at=created_at,
             task_ids=task_ids,

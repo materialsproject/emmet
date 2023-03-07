@@ -109,7 +109,7 @@ class MaterialsDoc(StructureMetadata):
         )
 
 
-class MoleculeDoc(MoleculeMetadata):
+class CoreMoleculeDoc(MoleculeMetadata):
     """
     Definition for a core Molecule Document
     """
