@@ -64,12 +64,16 @@ class NBOPopulationQuery(QueryOperator):
 
         if electron_type is None or not open_shell:
             prefix = "nbo_population."
-        elif electron_type.lower() == "alpha":
-            prefix = "alpha_population."
-        elif electron_type.lower() == "beta":
-            prefix = "beta_population."
         else:
-            raise ValueError("electron_type must be 'alpha', 'beta', or None!")
+            try:
+                if electron_type.lower() == "alpha":
+                    prefix = "alpha_population."
+                elif electron_type.lower() == "beta":
+                    prefix = "beta_population."
+                else:
+                    raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
+            except AttributeError:
+                raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
 
         for entry in d:
             key = prefix + entry
@@ -172,12 +176,16 @@ class NBOLonePairQuery(QueryOperator):
 
         if electron_type is None or not open_shell:
             prefix = "nbo_lone_pairs."
-        elif electron_type.lower() == "alpha":
-            prefix = "alpha_lone_pairs."
-        elif electron_type.lower() == "beta":
-            prefix = "beta_lone_pairs."
         else:
-            raise ValueError("electron_type must be 'alpha', 'beta', or None!")
+            try:
+                if electron_type.lower() == "alpha":
+                    prefix = "alpha_lone_pairs."
+                elif electron_type.lower() == "beta":
+                    prefix = "beta_lone_pairs."
+                else:
+                    raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
+            except AttributeError:
+                raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
 
         for entry in d:
             key = prefix + entry
@@ -337,13 +345,17 @@ class NBOBondQuery(QueryOperator):
         }
 
         if electron_type is None or not open_shell:
-            prefix = "nbo_lone_pairs."
-        elif electron_type.lower() == "alpha":
-            prefix = "alpha_lone_pairs."
-        elif electron_type.lower() == "beta":
-            prefix = "beta_lone_pairs."
+            prefix = "nbo_bonds."
         else:
-            raise ValueError("electron_type must be 'alpha', 'beta', or None!")
+            try:
+                if electron_type.lower() == "alpha":
+                    prefix = "alpha_bonds."
+                elif electron_type.lower() == "beta":
+                    prefix = "beta_bonds."
+                else:
+                    raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
+            except AttributeError:
+                raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
 
         for entry in d:
             key = prefix + entry
@@ -439,13 +451,17 @@ class NBOInteractionQuery(QueryOperator):
         }
 
         if electron_type is None or not open_shell:
-            prefix = "nbo_lone_pairs."
-        elif electron_type.lower() == "alpha":
-            prefix = "alpha_lone_pairs."
-        elif electron_type.lower() == "beta":
-            prefix = "beta_lone_pairs."
+            prefix = "nbo_interactions."
         else:
-            raise ValueError("electron_type must be 'alpha', 'beta', or None!")
+            try:
+                if electron_type.lower() == "alpha":
+                    prefix = "alpha_interactions."
+                elif electron_type.lower() == "beta":
+                    prefix = "beta_interactions."
+                else:
+                    raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
+            except AttributeError:
+                raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
 
         for entry in d:
             key = prefix + entry

@@ -1,7 +1,12 @@
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.molecules.redox import RedoxDoc
 
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import (
+    NumericQuery,
+    PaginationQuery,
+    SortQuery,
+    SparseFieldsQuery
+)
 
 from emmet.api.routes.mpcules.redox.query_operators import (
     RedoxPotentialQuery
@@ -32,6 +37,7 @@ def redox_resource(redox_store):
             ChargeSpinQuery(),
             MultiPropertyIDQuery(),
             RedoxPotentialQuery(),
+            NumericQuery(model=RedoxDoc),
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(RedoxDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),

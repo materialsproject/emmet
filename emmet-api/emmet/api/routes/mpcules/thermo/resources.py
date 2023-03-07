@@ -1,7 +1,12 @@
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.molecules.thermo import MoleculeThermoDoc
 
-from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
+from maggma.api.query_operator import (
+    NumericQuery,
+    PaginationQuery,
+    SortQuery,
+    SparseFieldsQuery
+)
 
 from emmet.api.routes.mpcules.thermo.query_operators import (
     ThermoCorrectionQuery,
@@ -32,6 +37,7 @@ def thermo_resource(thermo_store):
             ChargeSpinQuery(),
             MultiPropertyIDQuery(),
             ThermoCorrectionQuery(),
+            NumericQuery(model=MoleculeThermoDoc),
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(MoleculeThermoDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),

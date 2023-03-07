@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Optional
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
@@ -38,7 +38,7 @@ class ThermoCorrectionQuery(QueryOperator):
         self.lot_solvent = correction_lot_solvent
         self.combined = combined_lot_solvent
 
-        crit = dict()
+        crit = {"correction": has_correction}
 
         if self.level_of_theory:
             crit.update({"correction_level_of_theory": correction_level_of_theory})
