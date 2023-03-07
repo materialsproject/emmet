@@ -14,6 +14,7 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     ElementsQuery,
     ChargeSpinQuery
 )
+from emmet.api.routes.mpcules.utils import MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
@@ -29,6 +30,7 @@ def thermo_resource(thermo_store):
             ChemsysQuery(),
             ElementsQuery(),
             ChargeSpinQuery(),
+            MultiPropertyIDQuery(),
             ThermoCorrectionQuery(),
             SortQuery(),
             PaginationQuery(),

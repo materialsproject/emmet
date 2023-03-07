@@ -17,6 +17,7 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     ElementsQuery,
     ChargeSpinQuery
 )
+from emmet.api.routes.mpcules.utils import MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
@@ -32,6 +33,7 @@ def orbital_resource(orbital_store):
             ChemsysQuery(),
             ElementsQuery(),
             ChargeSpinQuery(),
+            MultiPropertyIDQuery(),
             NBOPopulationQuery(),
             NBOLonePairQuery(),
             NBOBondQuery(),

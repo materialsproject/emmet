@@ -14,7 +14,7 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     ElementsQuery,
     ChargeSpinQuery
 )
-from emmet.api.routes.mpcules.utils import MethodQuery
+from emmet.api.routes.mpcules.utils import MethodQuery, MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
@@ -31,6 +31,7 @@ def bonds_resource(bonds_store):
             ElementsQuery(),
             ChargeSpinQuery(),
             MethodQuery(),
+            MultiPropertyIDQuery(),
             BondTypeLengthQuery(),
             SortQuery(),
             PaginationQuery(),

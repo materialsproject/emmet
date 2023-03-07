@@ -11,7 +11,7 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     ElementsQuery,
     ChargeSpinQuery
 )
-from emmet.api.routes.mpcules.utils import MethodQuery
+from emmet.api.routes.mpcules.utils import MethodQuery, MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
@@ -28,6 +28,7 @@ def spins_resource(spins_store):
             ElementsQuery(),
             ChargeSpinQuery(),
             MethodQuery(),
+            MultiPropertyIDQuery(),
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(PartialSpinsDoc, default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"],),
