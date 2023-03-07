@@ -119,12 +119,12 @@ mpcules_resources.extend([orbitals_resource(orbitals_store)])
 mpcules_resources.extend([redox_resource(redox_store)])
 
 # Thermo
-# mpcules_resources.extend([thermo_resource(thermo_store)])
+mpcules_resources.extend([thermo_resource(thermo_store)])
 
 # Vibes
 mpcules_resources.extend([vibration_resource(vibes_store)])
 
 # Summary
-# mpcules_resources.extend([summary_resource(summary_store)])
+mpcules_resources.extend([summary_resource(summary_store)])
 
 resources.update({"mpcules": mpcules_resources})
