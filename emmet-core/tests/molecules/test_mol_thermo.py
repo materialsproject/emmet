@@ -8,7 +8,7 @@ from monty.io import zopen
 from monty.serialization import loadfn
 
 from emmet.core.qchem.task import TaskDocument
-from emmet.core.molecules.thermo import ThermochemistryDoc, get_free_energy
+from emmet.core.molecules.thermo import MoleculeThermoDoc, get_free_energy
 
 
 @pytest.fixture(scope="session")
@@ -35,7 +35,7 @@ def sp(test_dir):
 
 def test_thermo(test_tasks, sp):
     # Just energy; no free energy information
-    doc = ThermochemistryDoc.from_task(
+    doc = MoleculeThermoDoc.from_task(
         task=sp, molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False
     )
 
@@ -45,7 +45,7 @@ def test_thermo(test_tasks, sp):
 
     # With all thermodynamic information
     task = test_tasks[0]
-    doc = ThermochemistryDoc.from_task(
+    doc = MoleculeThermoDoc.from_task(
         task, molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False
     )
 

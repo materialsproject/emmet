@@ -7,7 +7,7 @@ from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
-from emmet.core.molecules.thermo import get_free_energy, ThermoDoc
+from emmet.core.molecules.thermo import get_free_energy, MoleculeThermoDoc
 from emmet.core.mpid import MPID, MPculeID
 
 
@@ -98,9 +98,9 @@ class RedoxDoc(PropertyDoc):
     def from_docs(
             cls: Type[T],
             base_molecule_doc: MoleculeDoc,
-            base_thermo_doc: ThermoDoc,
-            red_doc: Optional[ThermoDoc] = None,
-            ox_doc: Optional[ThermoDoc] = None,
+            base_thermo_doc: MoleculeThermoDoc,
+            red_doc: Optional[MoleculeThermoDoc] = None,
+            ox_doc: Optional[MoleculeThermoDoc] = None,
             ea_doc: Optional[TaskDocument] = None,
             ie_doc: Optional[TaskDocument] = None,
             deprecated: bool = False,
@@ -108,17 +108,17 @@ class RedoxDoc(PropertyDoc):
     ):  # type: ignore[override]
         """
         Construct a document describing molecular redox properties from
-            ThermoDocs (for adiabatic redox potentials and thermodynamics)
+            MoleculeThermoDocs (for adiabatic redox potentials and thermodynamics)
             and TaskDocs (for vertical ionization energies and electron
             affinities)
 
         :param base_molecule_doc: MoleculeDoc of interest
-        :param base_thermo_doc: ThermoDoc for the molecule of interest. All properties
+        :param base_thermo_doc: MoleculeThermoDoc for the molecule of interest. All properties
             will be calculated in reference to this document
-        :param red_doc: ThermoDoc for the reduced molecule. This molecule will
+        :param red_doc: MoleculeThermoDoc for the reduced molecule. This molecule will
             have the same (covalent) bonding as base_thermo_doc but will differ in
             charge by -1
-        :param ox_doc: ThermoDoc for the oxidized molecule. This molecule will
+        :param ox_doc: MoleculeThermoDoc for the oxidized molecule. This molecule will
             have the same (covalent) bonding as the base_thermo_doc but will differ
             in charge by +1
         :param ea_doc: A TaskDocument performed at the same structure as

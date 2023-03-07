@@ -283,7 +283,7 @@ def nbo_molecule_graph(mol: Molecule, nbo: Dict[str, Any]):
     return (mg, list(warnings))
 
 
-class BondDoc(PropertyDoc):
+class MoleculeBondingDoc(PropertyDoc):
     """Representation of molecular bonding."""
 
     property_name = "bonding"

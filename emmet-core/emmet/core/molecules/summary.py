@@ -302,7 +302,7 @@ class MPculeSummaryDoc(PropertyDoc):
 
         doc["has_props"] = list(set(doc["has_props"]))
 
-        return SummaryDoc(molecule_id=molecule_id, **doc)
+        return MPculeSummaryDoc(molecule_id=molecule_id, **doc)
 
 
 # Key mapping
