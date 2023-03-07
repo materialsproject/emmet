@@ -38,7 +38,7 @@ def thermo_resource(thermo_store):
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["MPcules Thermo"],
-        sub_path="/thermo/",
+        sub_path="/thermochemistry/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )

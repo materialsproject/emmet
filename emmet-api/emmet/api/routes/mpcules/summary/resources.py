@@ -14,9 +14,9 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     ChargeSpinQuery,
     DeprecationQuery,
 )
-from emmet.api.routes.summary.query_operators import (HasPropsQuery)
+from emmet.api.routes.summary.query_operators import HasPropsQuery
 from emmet.api.routes.mpcules.summary.hint_scheme import SummaryHintScheme
-from emmet.api.routes.mpcules.summary.query_operators import (MPculeIDsSearchQuery)
+from emmet.api.routes.mpcules.summary.query_operators import MPculeIDsSearchQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 

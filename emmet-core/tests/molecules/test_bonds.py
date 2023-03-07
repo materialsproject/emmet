@@ -8,7 +8,7 @@ from monty.io import zopen
 from monty.serialization import loadfn
 
 from emmet.core.qchem.task import TaskDocument
-from emmet.core.molecules.bonds import BondingDoc
+from emmet.core.molecules.bonds import BondDoc
 
 
 @pytest.fixture(scope="session")
@@ -32,7 +32,7 @@ def nbo_task(test_dir):
 
 def test_bonding(test_tasks, nbo_task):
     # No Critic2 or NBO
-    ob_mee = BondingDoc.from_task(
+    ob_mee = BondDoc.from_task(
         test_tasks[0],
         molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2",
         preferred_methods=["OpenBabelNN + metal_edge_extender"],
@@ -43,7 +43,7 @@ def test_bonding(test_tasks, nbo_task):
     assert len(ob_mee.bonds_nometal) == 10
     assert set(ob_mee.bond_types.keys()) == {"C-C", "C-H", "C-O", "Li-O"}
 
-    ob_critic = BondingDoc.from_task(
+    ob_critic = BondDoc.from_task(
         test_tasks[3],
         molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2",
         preferred_methods=["critic2"],
@@ -55,7 +55,7 @@ def test_bonding(test_tasks, nbo_task):
 
     assert ob_mee.molecule_graph.isomorphic_to(ob_critic.molecule_graph)
 
-    nbo = BondingDoc.from_task(
+    nbo = BondDoc.from_task(
         nbo_task,
         molecule_id="b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2",
         preferred_methods=["nbo"],

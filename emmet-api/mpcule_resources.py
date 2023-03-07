@@ -13,7 +13,7 @@ from emmet.api.routes.mpcules.molecules.resources import (
 )
 from emmet.api.routes.mpcules.partial_charges.resources import charges_resource
 from emmet.api.routes.mpcules.partial_spins.resources import spins_resource
-from emmet.api.routes.mpcules.bonds.resources import bonds_resource
+from emmet.api.routes.mpcules.bonds.resources import bonding_resource
 from emmet.api.routes.mpcules.orbitals.resources import orbitals_resource
 from emmet.api.routes.mpcules.redox.resources import redox_resource
 from emmet.api.routes.mpcules.thermo.resources import thermo_resource
@@ -110,7 +110,7 @@ mpcules_resources.extend([charges_resource(charges_store)])
 mpcules_resources.extend([spins_resource(spins_store)])
 
 # Bonds
-# mpcules_resources.extend([bonds_resource(bonds_store)])
+mpcules_resources.extend([bonding_resource(bonds_store)])
 
 # Orbitals
 mpcules_resources.extend([orbitals_resource(orbitals_store)])

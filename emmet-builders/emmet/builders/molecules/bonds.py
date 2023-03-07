@@ -10,7 +10,7 @@ from maggma.utils import grouper
 
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
-from emmet.core.molecules.bonds import BondingDoc, BOND_METHODS
+from emmet.core.molecules.bonds import BondDoc, BOND_METHODS
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
@@ -46,7 +46,7 @@ class BondingBuilder(Builder):
         4. For each method:
             4.1. Find task docs with necessary data to define bonding by that method
             4.2. Take best (defined by level of theory and electronic energy) task
-            4.3. Convert TaskDoc to BondingDoc
+            4.3. Convert TaskDoc to BondDoc
     """
 
     def __init__(
@@ -174,7 +174,7 @@ class BondingBuilder(Builder):
 
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """
-        Process the tasks into BondingDocs
+        Process the tasks into BondDocs
 
         Args:
             tasks List[Dict] : a list of MoleculeDocs in dict form
@@ -267,7 +267,7 @@ class BondingBuilder(Builder):
                     if task_doc is None:
                         continue
 
-                    doc = BondingDoc.from_task(
+                    doc = BondDoc.from_task(
                         task_doc,
                         molecule_id=mol.molecule_id,
                         preferred_methods=[method],

@@ -15,7 +15,7 @@ from emmet.core.molecules.orbitals import NaturalPopulation, LonePair, Bond, Int
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
-T = TypeVar("T", bound="SummaryDoc")
+T = TypeVar("T", bound="MPculeSummaryDoc")
 
 
 class HasProps(Enum):
@@ -33,7 +33,7 @@ class HasProps(Enum):
     vibration = "vibration"
 
 
-class SummaryDoc(PropertyDoc):
+class MPculeSummaryDoc(PropertyDoc):
     """
     Summary information about molecules and their properties, useful for searching.
     """

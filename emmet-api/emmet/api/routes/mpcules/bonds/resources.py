@@ -1,5 +1,5 @@
 from maggma.api.resource import ReadOnlyResource
-from emmet.core.molecules.bonds import BondingDoc
+from emmet.core.molecules.bonds import MolBondingDoc
 
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 
@@ -19,10 +19,10 @@ from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
 
-def bonds_resource(bonds_store):
+def bonding_resource(bonds_store):
     resource = ReadOnlyResource(
         bonds_store,
-        BondingDoc,
+        MolBondingDoc,
         query_operators=[
             MultiMPculeIDQuery(),
             ExactCalcMethodQuery(),
@@ -35,11 +35,11 @@ def bonds_resource(bonds_store):
             BondTypeLengthQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(BondingDoc, default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"],),
+            SparseFieldsQuery(MolBondingDoc, default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["MPcules Bonds"],
-        sub_path="/bonds/",
+        sub_path="/bonding/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )

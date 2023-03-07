@@ -27,7 +27,7 @@ def get_free_energy(energy, enthalpy, entropy, temperature=298.15):
     return energy * 27.2114 + enthalpy * 0.043363 - temperature * entropy * 0.000043363
 
 
-class ThermoDoc(PropertyDoc):
+class ThermochemistryDoc(PropertyDoc):
 
     property_name = "thermo"
 
