@@ -127,7 +127,7 @@ class MoleculeThermoDoc(PropertyDoc):
             correction_lot = correction_task.level_of_theory
             correction_solvent = correction_task.solvent
             correction_lot_solvent = correction_task.lot_solvent
-            combined_lot_solvent = f"{task.lot_solvent}/{correction_lot_solvent}"
+            combined_lot_solvent = f"{task.lot_solvent}//{correction_lot_solvent}"
 
         total_enthalpy = task.output.enthalpy
         total_entropy = task.output.entropy
