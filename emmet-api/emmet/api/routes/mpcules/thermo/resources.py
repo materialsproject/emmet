@@ -1,5 +1,5 @@
 from maggma.api.resource import ReadOnlyResource
-from emmet.core.molecules.thermo import ThermoDoc
+from emmet.core.molecules.thermo import MoleculeThermoDoc
 
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 
@@ -22,7 +22,7 @@ from emmet.api.core.global_header import GlobalHeaderProcessor
 def thermo_resource(thermo_store):
     resource = ReadOnlyResource(
         thermo_store,
-        ThermoDoc,
+        MoleculeThermoDoc,
         query_operators=[
             MultiMPculeIDQuery(),
             ExactCalcMethodQuery(),
@@ -34,11 +34,11 @@ def thermo_resource(thermo_store):
             ThermoCorrectionQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(ThermoDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),
+            SparseFieldsQuery(MoleculeThermoDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["MPcules Thermo"],
-        sub_path="/thermochemistry/",
+        sub_path="/thermo/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )
