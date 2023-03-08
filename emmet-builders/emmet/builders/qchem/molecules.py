@@ -523,6 +523,7 @@ class MoleculesBuilder(Builder):
 
             docs_by_solvent = dict()
             mols_by_solvent = dict()
+            mol_lots = dict()
 
             task_ids = list()
             calc_types = dict()
@@ -552,6 +553,7 @@ class MoleculesBuilder(Builder):
                 sorted_docs = sorted(subgroup, key=evaluate_molecule)
                 docs_by_solvent[solv] = sorted_docs[0]
                 mols_by_solvent[solv] = sorted_docs[0].molecule
+                mol_lots[solv] = sorted_docs[0].level_of_theory
                 constituent_molecules.append(sorted_docs[0].molecule_id)
 
                 if len(sorted_docs) > 1:
@@ -594,6 +596,7 @@ class MoleculesBuilder(Builder):
                 # Assign new doc info
                 base_doc.molecule_id = get_molecule_id(base_doc.molecule, node_attr="specie")
                 base_doc.molecules = mols_by_solvent
+                base_doc.molecule_levels_of_theory = mol_lots
                 base_doc.task_ids = task_ids
                 base_doc.calc_types = calc_types
                 base_doc.task_types = task_types

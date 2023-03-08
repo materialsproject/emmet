@@ -9,7 +9,7 @@ from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
 
-from emmet.core.molecules.summary import MPculeSummaryDoc
+from emmet.core.molecules.summary import MoleculeSummaryDoc
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
@@ -22,12 +22,12 @@ SETTINGS = EmmetBuildSettings()
 class SummaryBuilder(Builder):
     """
     The SummaryBuilder collects all property documents and gathers their properties
-    into a single MPculeSummaryDoc
+    into a single MoleculeSummaryDoc
 
     The process is as follows:
         1. Gather MoleculeDocs by formula
         2. For each doc, grab the relevant property docs
-        3. Convert property docs to MPculeSummaryDoc
+        3. Convert property docs to MoleculeSummaryDoc
     """
 
     def __init__(
@@ -223,7 +223,7 @@ class SummaryBuilder(Builder):
 
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """
-        Process the tasks into a MPculeSummaryDoc
+        Process the tasks into a MoleculeSummaryDoc
 
         Args:
             tasks List[Dict] : a list of MoleculeDocs in dict form
@@ -290,7 +290,7 @@ class SummaryBuilder(Builder):
             # dumpfn(d, f"{mol_id}.json.gz")
             # break
 
-            summary_doc = MPculeSummaryDoc.from_docs(molecule_id=mol_id, docs=d)
+            summary_doc = MoleculeSummaryDoc.from_docs(molecule_id=mol_id, docs=d)
             summary_docs.append(summary_doc)
 
         self.logger.debug(f"Produced {len(summary_docs)} summary docs for {formula}")

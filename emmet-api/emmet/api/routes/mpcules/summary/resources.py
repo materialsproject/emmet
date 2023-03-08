@@ -1,4 +1,4 @@
-from emmet.core.molecules.summary import MPculeSummaryDoc
+from emmet.core.molecules.summary import MoleculeSummaryDoc
 
 from maggma.api.query_operator import (
     PaginationQuery,
@@ -26,19 +26,19 @@ timeout = MAPISettings().TIMEOUT
 def summary_resource(summary_store):
     resource = ReadOnlyResource(
         summary_store,
-        MPculeSummaryDoc,
+        MoleculeSummaryDoc,
         query_operators=[
             MPculeIDsSearchQuery(),
             FormulaQuery(),
             ChemsysQuery(),
             ElementsQuery(),
-            NumericQuery(model=MPculeSummaryDoc, excluded_fields=["composition"]),
+            NumericQuery(model=MoleculeSummaryDoc, excluded_fields=["composition"]),
             HasPropsQuery(),
             ChargeSpinQuery(),
             DeprecationQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(MPculeSummaryDoc, default_fields=["molecule_id"]),
+            SparseFieldsQuery(MoleculeSummaryDoc, default_fields=["molecule_id"]),
         ],
         hint_scheme=SummaryHintScheme(),
         header_processor=GlobalHeaderProcessor(),

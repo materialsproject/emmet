@@ -144,6 +144,10 @@ class MoleculeDoc(CoreMoleculeDoc):
         None, description="The lowest energy optimized structures for this molecule for each solvent."
     )
 
+    molecule_levels_of_theory: Dict[str, str] = Field(
+        None, description="Level of theory used to optimize the best molecular structure for each solvent."
+    )
+
     species_hash: str = Field(
         None,
         description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
