@@ -330,43 +330,40 @@ class MigrationGraphDoc(EmmetBaseModel):
 
         return f"{sc_iindex}+{sc_eindex}", ordered_sc_site_list
 
-    def get_distinct_hop_sites(self) -> Tuple[List, List[str], Dict]:
+    def get_distinct_hop_sites(
+        inserted_ion_coords: List[str],
+        insert_coords_combo: List
+    ) -> Tuple[List, List[str], Dict]:
         """
         This is a utils function that converts the site dict and combo into a site list and combo that contain only distince endpoints used the combos. # noqa: E501
         """
-        if self.inserted_ion_coords is None or self.insert_coords_combo is None:
-            raise TypeError(
-                "Please make sure that the MGDoc passed in has inserted_ion_coords and inserted_coords_combo fields filled."  # noqa: E501
-            )
+        dis_sites_list = []
+        dis_combo_list = []
+        mgdoc_sites_mapping = {}  # type: dict
+        combo_mapping = {}
 
-        else:
-            dis_sites_list = []
-            dis_combo_list = []
-            mgdoc_sites_mapping = {}  # type: dict
-            combo_mapping = {}
+        for one_combo in insert_coords_combo:
+            ini, end = list(map(int, one_combo.split("+")))
 
-            for one_combo in self.insert_coords_combo:
-                ini, end = list(map(int, one_combo.split("+")))
+            if ini in mgdoc_sites_mapping.keys():
+                dis_ini = mgdoc_sites_mapping[ini]
+            else:
+                dis_sites_list.append(
+                    list(inserted_ion_coords[ini]["site_frac_coords"])  # type: ignore
+                )
+                dis_ini = len(dis_sites_list) - 1
+                mgdoc_sites_mapping[ini] = dis_ini
+            if end in mgdoc_sites_mapping.keys():
+                dis_end = mgdoc_sites_mapping[end]
+            else:
+                dis_sites_list.append(
+                    list(inserted_ion_coords[end]["site_frac_coords"])  # type: ignore
+                )
+                dis_end = len(dis_sites_list) - 1
+                mgdoc_sites_mapping[end] = dis_end
 
-                if ini in mgdoc_sites_mapping.keys():
-                    dis_ini = mgdoc_sites_mapping[ini]
-                else:
-                    dis_sites_list.append(
-                        list(self.inserted_ion_coords[ini]["site_frac_coords"])  # type: ignore
-                    )
-                    dis_ini = len(dis_sites_list) - 1
-                    mgdoc_sites_mapping[ini] = dis_ini
-                if end in mgdoc_sites_mapping.keys():
-                    dis_end = mgdoc_sites_mapping[end]
-                else:
-                    dis_sites_list.append(
-                        list(self.inserted_ion_coords[end]["site_frac_coords"])  # type: ignore
-                    )
-                    dis_end = len(dis_sites_list) - 1
-                    mgdoc_sites_mapping[end] = dis_end
+            dis_combo = f"{dis_ini}+{dis_end}"
+            dis_combo_list.append(dis_combo)
+            combo_mapping[dis_combo] = one_combo
 
-                dis_combo = f"{dis_ini}+{dis_end}"
-                dis_combo_list.append(dis_combo)
-                combo_mapping[dis_combo] = one_combo
-
-            return dis_sites_list, dis_combo_list, combo_mapping
+        return dis_sites_list, dis_combo_list, combo_mapping
