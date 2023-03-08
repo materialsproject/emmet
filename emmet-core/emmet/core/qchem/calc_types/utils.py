@@ -20,6 +20,13 @@ functional_synonyms = {
     "wb97mv": "wb97m-v",
 }
 
+smd_parameters = {
+    "SOLVENT=WATER": "water",
+    "SOLVENT=THF": "thf",
+    "DIELECTRIC=7,230;N=1,410;ALPHA=0,000;BETA=0,859;GAMMA=36,830;PHI=0,000;PSI=0,000": "diglyme",
+    "DIELECTRIC=18,500;N=1,415;ALPHA=0,000;BETA=0,735;GAMMA=20,200;PHI=0,000;PSI=0,143": "3:7 EC:EMC"
+}
+
 
 def level_of_theory(parameters: Dict[str, Any]) -> LevelOfTheory:
     """
