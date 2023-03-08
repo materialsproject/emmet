@@ -404,7 +404,10 @@ class MoleculesBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_assoc = list(
-            self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical", "molecule"])
+            self.assoc.query(
+                temp_query,
+                [self.assoc.key, "formula_alphabetical", "species_hash", "charge", "spin_multiplicity"]
+            )
         )
 
         # Should be using species hash, rather than coord hash, at this point
@@ -457,7 +460,10 @@ class MoleculesBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_assoc = list(
-            self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical", "molecule"])
+            self.assoc.query(
+                temp_query,
+                [self.assoc.key, "formula_alphabetical", "species_hash", "charge", "spin_multiplicity"]
+            )
         )
 
         # Should be using species hash, rather than coord hash, at this point
@@ -553,7 +559,7 @@ class MoleculesBuilder(Builder):
                 sorted_docs = sorted(subgroup, key=evaluate_molecule)
                 docs_by_solvent[solv] = sorted_docs[0]
                 mols_by_solvent[solv] = sorted_docs[0].molecule
-                mol_lots[solv] = sorted_docs[0].level_of_theory
+                mol_lots[solv] = sorted_docs[0].levels_of_theory[sorted_docs[0].origins[0].task_id]
                 constituent_molecules.append(sorted_docs[0].molecule_id)
 
                 if len(sorted_docs) > 1:

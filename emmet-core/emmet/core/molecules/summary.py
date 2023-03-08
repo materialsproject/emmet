@@ -362,7 +362,7 @@ class MoleculeSummaryDoc(PropertyDoc):
 
         doc["has_props"] = list(set(doc["has_props"]))
 
-        return MPculeSummaryDoc(molecule_id=molecule_id, **doc)
+        return MoleculeSummaryDoc(molecule_id=molecule_id, **doc)
 
 
 # Key mapping
@@ -477,14 +477,14 @@ def _copy_from_doc(doc: Dict[str, Any]):
                         for solvent, solv_entries in sd.items():
                             d[copy_key][solvent] = dict()
                             for method, entry in solv_entries.items():
-                                if entry.get(copy_key):
+                                if entry.get(copy_key) is not None:
                                     d[copy_key][solvent][method] = entry[copy_key]
                             if len(d[copy_key][solvent]) == 0:
                                 # If this key was not populated at all for this solvent, get rid of it
                                 del d[copy_key][solvent]
                     else:
                         for solvent, entry in sd.items():
-                            if entry.get(copy_key):
+                            if entry.get(copy_key) is not None:
                                 d[copy_key][solvent] = entry[copy_key]
 
                     if len(d[copy_key]) == 0:

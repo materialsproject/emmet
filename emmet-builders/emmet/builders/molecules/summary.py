@@ -286,7 +286,7 @@ class SummaryBuilder(Builder):
             for td in to_delete:
                 del d[td]
 
-            # For debugging; keep because it might be needed again
+            # # For debugging; keep because it might be needed again
             # dumpfn(d, f"{mol_id}.json.gz")
             # break
 
