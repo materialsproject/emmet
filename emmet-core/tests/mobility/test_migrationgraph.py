@@ -99,8 +99,7 @@ def test_get_distinct_hop_sites(get_entries):
         min_length_sc=7,
         minmax_num_atoms=(80, 160)
     )
-    dis_sites_list, dis_combo_list, combo_mapping = mgdoc.get_distinct_hop_sites()
-    print(combo_mapping)
+    dis_sites_list, dis_combo_list, combo_mapping = MigrationGraphDoc.get_distinct_hop_sites(mgdoc.inserted_ion_coords, mgdoc.insert_coords_combo)
     for one_test_combo in ['0+1', '0+2', '0+3', '0+4', '0+5', '0+6', '1+7', '1+2']:
         assert one_test_combo in dis_combo_list
     assert combo_mapping == {
