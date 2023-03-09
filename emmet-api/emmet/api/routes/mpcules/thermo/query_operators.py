@@ -25,11 +25,13 @@ class ThermoCorrectionQuery(QueryOperator):
         ),
         correction_lot_solvent: Optional[str] = Query(
             None, description="String representing the combination of level of theory and solvent for the "
-                              "single-point energy correction. Default is None, meaning lot_solvent will not be queried."
+                              "single-point energy correction. Default is None, meaning lot_solvent will not be "
+                              "queried."
         ),
         combined_lot_solvent: Optional[str] = Query(
             None, description="String representing the combination of level of theory and solvent for the complete "
-                              "thermodynamic calculation, including the frequency analysis and single-point energy correction."
+                              "thermodynamic calculation, including the frequency analysis and single-point energy "
+                              "correction."
         )
     ) -> STORE_PARAMS:
 

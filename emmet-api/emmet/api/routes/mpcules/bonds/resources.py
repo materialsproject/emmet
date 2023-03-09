@@ -35,7 +35,16 @@ def bonding_resource(bonds_store):
             BondTypeLengthQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(MoleculeBondingDoc, default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"],),
+            SparseFieldsQuery(
+                MoleculeBondingDoc,
+                default_fields=[
+                    "molecule_id",
+                    "property_id",
+                    "solvent",
+                    "method",
+                    "last_updated"
+                ],
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["MPcules Bonds"],

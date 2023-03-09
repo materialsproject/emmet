@@ -31,7 +31,16 @@ def spins_resource(spins_store):
             MultiPropertyIDQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(PartialSpinsDoc, default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"],),
+            SparseFieldsQuery(
+                MoleculeBondingDoc,
+                default_fields=[
+                    "molecule_id",
+                    "property_id",
+                    "solvent",
+                    "method",
+                    "last_updated"
+                ],
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["MPcules Partial Spins"],

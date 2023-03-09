@@ -40,7 +40,16 @@ def thermo_resource(thermo_store):
             NumericQuery(model=MoleculeThermoDoc),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(MoleculeThermoDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),
+            SparseFieldsQuery(
+                MoleculeBondingDoc,
+                default_fields=[
+                    "molecule_id",
+                    "property_id",
+                    "solvent",
+                    "method",
+                    "last_updated"
+                ],
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["MPcules Thermo"],
