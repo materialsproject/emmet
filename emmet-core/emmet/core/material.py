@@ -30,7 +30,7 @@ class PropertyOrigin(BaseModel):
 
 
 T = TypeVar("T", bound="MaterialsDoc")
-S = TypeVar("S", bound="MoleculeDoc")
+S = TypeVar("S", bound="CoreMoleculeDoc")
 
 
 class MaterialsDoc(StructureMetadata):
