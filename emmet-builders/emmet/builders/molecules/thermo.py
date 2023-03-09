@@ -377,7 +377,7 @@ class ThermoBuilder(Builder):
                     tspec = self.tasks.query_one({"task_id": task_spec})
                     if tspec is None:
                         try:
-                            tspec = self.tasks.query_one({"task_id": int(tspec)})
+                            tspec = self.tasks.query_one({"task_id": int(task_spec)})
                         except ValueError:
                             tspec = None
 
