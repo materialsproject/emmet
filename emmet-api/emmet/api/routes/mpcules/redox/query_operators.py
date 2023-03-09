@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
@@ -33,7 +33,7 @@ class RedoxPotentialQuery(QueryOperator):
         ),
     ) -> STORE_PARAMS:
 
-        crit = dict()  # type: ignore
+        crit: Dict[str, Any] = dict()  # type: ignore
 
         d = {
             "oxidation_potentials": [min_oxidation_potential, max_oxidation_potential],
