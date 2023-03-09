@@ -53,7 +53,7 @@ class NBOPopulationQuery(QueryOperator):
         ),
     ) -> STORE_PARAMS:
 
-        crit = {"open_shell": open_shell}
+        crit = {"open_shell": open_shell}  # type: ignore
 
         d = {
             "core_electrons": [min_core_electron, max_core_electron],
@@ -164,7 +164,7 @@ class NBOLonePairQuery(QueryOperator):
             description="Maximum number of electrons in the lone pair."
         ),
     ) -> STORE_PARAMS:
-        crit = {"open_shell": open_shell}
+        crit = {"open_shell": open_shell}  # type: ignore
 
         d = {
             "s_character": [min_s_character, max_s_character],
@@ -328,7 +328,7 @@ class NBOBondQuery(QueryOperator):
             description="Maximum number of electrons in the bond."
         ),
     ) -> STORE_PARAMS:
-        crit = {"open_shell": open_shell}
+        crit = {"open_shell": open_shell}  # type: ignore
 
         d = {
             "atom1_s_character": [min_s_character_atom1, max_s_character_atom1],
@@ -442,7 +442,7 @@ class NBOInteractionQuery(QueryOperator):
             description="Maximum interaction Fock matrix element"
         ),
     ) -> STORE_PARAMS:
-        crit = {"open_shell": open_shell}
+        crit = {"open_shell": open_shell}  # type: ignore
 
         d = {
             "perturbation_energy": [min_perturbation_energy, max_perturbation_energy],

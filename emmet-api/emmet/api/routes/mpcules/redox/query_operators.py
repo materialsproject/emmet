@@ -11,7 +11,7 @@ class RedoxPotentialQuery(QueryOperator):
 
     def query(
         self,
-        electrode: Optional[str] = Query(
+        electrode: str = Query(
             "H",
             description="Reference electrode to be queried (e.g. 'H', 'Li', 'Mg')."
         ),
@@ -33,7 +33,7 @@ class RedoxPotentialQuery(QueryOperator):
         ),
     ) -> STORE_PARAMS:
 
-        crit = dict()
+        crit = dict()  # type: ignore
 
         d = {
             "oxidation_potentials": [min_oxidation_potential, max_oxidation_potential],
