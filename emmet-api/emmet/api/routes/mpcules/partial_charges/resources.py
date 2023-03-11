@@ -32,7 +32,7 @@ def charges_resource(charges_store):
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
-                MoleculeBondingDoc,
+                PartialChargesDoc,
                 default_fields=[
                     "molecule_id",
                     "property_id",

@@ -41,7 +41,7 @@ def thermo_resource(thermo_store):
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
-                MoleculeBondingDoc,
+                MoleculeThermoDoc,
                 default_fields=[
                     "molecule_id",
                     "property_id",

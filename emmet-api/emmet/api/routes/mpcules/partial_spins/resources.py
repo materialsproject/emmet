@@ -32,7 +32,7 @@ def spins_resource(spins_store):
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
-                MoleculeBondingDoc,
+                PartialSpinsDoc,
                 default_fields=[
                     "molecule_id",
                     "property_id",
