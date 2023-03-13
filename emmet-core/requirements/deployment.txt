@@ -12,7 +12,7 @@ contourpy==1.0.7
     # via matplotlib
 cycler==0.11.0
     # via matplotlib
-emmet-core==0.49.0
+emmet-core==0.49.1
     # via mp-api
 fonttools==4.39.0
     # via matplotlib
@@ -38,9 +38,9 @@ monty==2022.9.9
     #   pymatgen
 mp-api==0.30.10
     # via pymatgen
-mpmath==1.2.1
+mpmath==1.3.0
     # via sympy
-msgpack==1.0.4
+msgpack==1.0.5
     # via mp-api
 networkx==3.0
     # via pymatgen
@@ -70,11 +70,11 @@ pybtex==0.24.0
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
     #   pymatgen
-pydantic==1.10.5
+pydantic==1.10.6
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
-pymatgen==2023.2.28
+pymatgen==2023.3.10
     # via
     #   emmet-core
     #   emmet-core (emmet/emmet-core/setup.py)
@@ -127,7 +127,7 @@ typing-extensions==4.5.0
     #   pydantic
 uncertainties==3.1.7
     # via pymatgen
-urllib3==1.26.14
+urllib3==1.26.15
     # via requests
 zipp==3.15.0
     # via importlib-resources
