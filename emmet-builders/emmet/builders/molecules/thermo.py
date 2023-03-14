@@ -13,7 +13,7 @@ from maggma.utils import grouper
 
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
-from emmet.core.molecules.thermo import get_free_energy, ThermoDoc
+from emmet.core.molecules.thermo import get_free_energy, MoleculeThermoDoc
 from emmet.core.qchem.calc_types import TaskType
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
@@ -80,7 +80,7 @@ class ThermoBuilder(Builder):
     MoleculeDoc (lowest electronic energy, highest level of theory for each
     solvent available).
 
-    This builder constructs ThermoDocs in two different ways: with and without
+    This builder constructs MoleculeThermoDocs in two different ways: with and without
     single-point energy corrections.
 
     Before any documents are constructed, the following steps are taken:
@@ -96,7 +96,7 @@ class ThermoBuilder(Builder):
         5. For each solvent, grab the best DICT (where "best" is defined as the
             task generated using the highest level of theory with the lowest
             electronic energy)
-        6. Convert this TaskDoc to ThermoDoc
+        6. Convert this TaskDoc to MoleculeThermoDoc
 
     The second type - those involving single-point energy corrections - are
     generated differently and in a slightly more involved process:
@@ -106,10 +106,10 @@ class ThermoBuilder(Builder):
                 the DICT and the SPEC have identical structure) where the DICT
                 is calculated at a lower or the same level of theory than the
                 SPEC
-            7.3 Convert each DICT-SPEC combination to create a ThermoDoc
+            7.3 Convert each DICT-SPEC combination to create a MoleculeThermoDoc
 
-    In the case where there are multiple ThermoDocs made for a given solvent,
-    the different ThermoDocs will be ranked, first by level of theory (for
+    In the case where there are multiple MoleculeThermoDocs made for a given solvent,
+    the different MoleculeThermoDocs will be ranked, first by level of theory (for
     a doc made with an energy correction, the scores of the DICT and the SPEC
     levels of theory will be averaged) and then by electronic energy.
     """
@@ -220,7 +220,7 @@ class ThermoBuilder(Builder):
 
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """
-        Process the tasks into a ThermoDoc
+        Process the tasks into a MoleculeThermoDoc
 
         Args:
             items List[dict] : a list of MoleculeDocs in dict form
@@ -229,7 +229,7 @@ class ThermoBuilder(Builder):
             [dict] : a list of new thermo docs
         """
 
-        def _add_single_atom_enthalpy_entropy(task: TaskDocument, doc: ThermoDoc):
+        def _add_single_atom_enthalpy_entropy(task: TaskDocument, doc: MoleculeThermoDoc):
             initial_mol = task.output.initial_molecule
             # If single atom, try to add enthalpy and entropy
             if len(initial_mol) == 1:
@@ -327,7 +327,7 @@ class ThermoBuilder(Builder):
                 if task_doc is None:
                     continue
 
-                thermo_doc = ThermoDoc.from_task(
+                thermo_doc = MoleculeThermoDoc.from_task(
                     task_doc, molecule_id=mol.molecule_id, deprecated=False
                 )
                 thermo_doc = _add_single_atom_enthalpy_entropy(task_doc, thermo_doc)
@@ -367,9 +367,26 @@ class ThermoBuilder(Builder):
                     )[0]
                     task_dict = best_dict["task_id"]
 
-                    task_doc_dict = TaskDocument(**self.tasks.query_one({"task_id": int(task_dict)}))
-                    task_doc_spec = TaskDocument(**self.tasks.query_one({"task_id": int(task_spec)}))
-                    thermo_doc = ThermoDoc.from_task(
+                    tdict = self.tasks.query_one({"task_id": task_dict})
+                    if tdict is None:
+                        try:
+                            tdict = self.tasks.query_one({"task_id": int(task_dict)})
+                        except ValueError:
+                            tdict = None
+
+                    tspec = self.tasks.query_one({"task_id": task_spec})
+                    if tspec is None:
+                        try:
+                            tspec = self.tasks.query_one({"task_id": int(task_spec)})
+                        except ValueError:
+                            tspec = None
+
+                    if tdict is None or tspec is None:
+                        continue
+
+                    task_doc_dict = TaskDocument(**tdict)
+                    task_doc_spec = TaskDocument(**tspec)
+                    thermo_doc = MoleculeThermoDoc.from_task(
                         task_doc_dict,
                         correction_task=task_doc_spec,
                         molecule_id=mol.molecule_id,

@@ -5,13 +5,13 @@ from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQu
 
 from emmet.api.routes.mpcules.molecules.query_operators import (
     MultiMPculeIDQuery,
-    CalcMethodQuery,
+    ExactCalcMethodQuery,
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
     ChargeSpinQuery
 )
-from emmet.api.routes.mpcules.utils import MethodQuery
+from emmet.api.routes.mpcules.utils import MethodQuery, MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
@@ -22,18 +22,29 @@ def spins_resource(spins_store):
         PartialSpinsDoc,
         query_operators=[
             MultiMPculeIDQuery(),
-            CalcMethodQuery(),
+            ExactCalcMethodQuery(),
             FormulaQuery(),
             ChemsysQuery(),
             ElementsQuery(),
             ChargeSpinQuery(),
             MethodQuery(),
+            MultiPropertyIDQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(PartialSpinsDoc, default_fields=["molecule_id", "last_updated"],),
+            SparseFieldsQuery(
+                PartialSpinsDoc,
+                default_fields=[
+                    "molecule_id",
+                    "property_id",
+                    "solvent",
+                    "method",
+                    "last_updated"
+                ],
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["PartialSpins"],
+        tags=["MPcules Partial Spins"],
+        sub_path="/partial_spins/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )

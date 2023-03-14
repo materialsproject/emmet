@@ -1,9 +1,7 @@
 from maggma.api.resource.read_resource import ReadOnlyResource
-from maggma.api.resource.post_resource import PostOnlyResource
 
 
 from emmet.core.qchem.molecule import MoleculeDoc
-from emmet.core.find_structure import FindMolecule, FindMoleculeConnectivity
 
 from maggma.api.query_operator import (
     PaginationQuery,
@@ -21,8 +19,6 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     DeprecationQuery,
     MultiTaskIDQuery,
     MultiMPculeIDQuery,
-    FindMoleculeQuery,
-    FindMoleculeConnectivityQuery,
     CalcMethodQuery,
     HashQuery
 )
@@ -33,37 +29,9 @@ from emmet.api.core.settings import MAPISettings
 timeout = MAPISettings().TIMEOUT
 
 
-def find_molecule_resource(molecules_store):
-    resource = PostOnlyResource(
-        molecules_store,
-        FindMolecule,
-        key_fields=["molecule", "molecule_id"],
-        query_operators=[FindMoleculeQuery()],
-        tags=["MPcules Molecules"],
-        sub_path="/find_molecule/",
-        timeout=timeout,
-    )
-
-    return resource
-
-
-def find_molecule_connectivity_resource(molecules_store):
-    resource = PostOnlyResource(
-        molecules_store,
-        FindMoleculeConnectivity,
-        key_fields=["molecule", "molecule_id"],
-        query_operators=[FindMoleculeConnectivityQuery()],
-        tags=["MPcules Molecules"],
-        sub_path="/molecules/find_molecule_connectivity/",
-        timeout=timeout,
-    )
-
-    return resource
-
-
-def molecules_resource(molecules_store):
+def mol_assoc_resource(assoc_store):
     resource = ReadOnlyResource(
-        molecules_store,
+        assoc_store,
         MoleculeDoc,
         query_operators=[
             MultiMPculeIDQuery(),
@@ -81,8 +49,8 @@ def molecules_resource(molecules_store):
             SparseFieldsQuery(MoleculeDoc, default_fields=["molecule_id", "formula_alphabetical", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["MPcules Molecules"],
-        sub_path="/molecules/",
+        tags=["MPcules Associated Molecules"],
+        sub_path="/assoc/",
         disable_validation=True,
         hint_scheme=MoleculesHintScheme(),
         timeout=MAPISettings().TIMEOUT,

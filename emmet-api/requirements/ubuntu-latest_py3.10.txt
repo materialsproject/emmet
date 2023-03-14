@@ -15,11 +15,11 @@ attrs==22.2.0
     #   jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.79
+boto3==1.26.90
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.79
+botocore==1.29.90
     # via
     #   boto3
     #   s3transfer
@@ -33,7 +33,7 @@ cffi==1.15.1
     # via
     #   cryptography
     #   pynacl
-charset-normalizer==3.0.1
+charset-normalizer==3.1.0
     # via requests
 click==8.1.3
     # via
@@ -42,33 +42,33 @@ click==8.1.3
     #   uvicorn-tschaume
 contourpy==1.0.7
     # via matplotlib
-cryptography==39.0.1
+cryptography==39.0.2
     # via paramiko
 cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.8.0
+ddtrace==1.9.3
     # via emmet-api (setup.py)
 dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.48.3
+emmet-core[all]==0.49.1
     # via
     #   emmet-api (setup.py)
     #   mp-api
 envier==0.4.0
     # via ddtrace
-exceptiongroup==1.1.0
+exceptiongroup==1.1.1
     # via cattrs
-fastapi==0.92.0
+fastapi==0.94.0
     # via
     #   emmet-api (setup.py)
     #   maggma
 flask==2.2.3
     # via mongogrant
-fonttools==4.38.0
+fonttools==4.39.0
     # via matplotlib
 future==0.18.3
     # via
@@ -112,7 +112,7 @@ markupsafe==2.1.2
     #   werkzeug
 matminer==0.8.0
     # via robocrys
-matplotlib==3.7.0
+matplotlib==3.7.1
     # via pymatgen
 mongogrant==0.3.3
     # via maggma
@@ -128,9 +128,9 @@ monty==2022.9.9
     #   robocrys
 mp-api==0.30.10
     # via pymatgen
-mpmath==1.2.1
+mpmath==1.3.0
     # via sympy
-msgpack==1.0.4
+msgpack==1.0.5
     # via
     #   maggma
     #   mp-api
@@ -152,7 +152,7 @@ numpy==1.24.2
     #   seekpath
     #   shapely
     #   spglib
-orjson==3.8.6
+orjson==3.8.7
     # via maggma
 packaging==23.0
     # via
@@ -165,13 +165,13 @@ pandas==1.5.3
     # via
     #   matminer
     #   pymatgen
-paramiko==3.0.0
+paramiko==3.1.0
     # via sshtunnel
 pillow==9.4.0
     # via matplotlib
 plotly==5.13.1
     # via pymatgen
-protobuf==4.22.0
+protobuf==4.22.1
     # via
     #   ddsketch
     #   ddtrace
@@ -184,7 +184,7 @@ pybtex==0.24.0
     #   robocrys
 pycparser==2.21
     # via cffi
-pydantic==1.10.5
+pydantic==1.10.6
     # via
     #   emmet-core
     #   fastapi
@@ -192,7 +192,7 @@ pydantic==1.10.5
     #   maggma
 pydash==6.0.2
     # via maggma
-pymatgen==2023.2.22
+pymatgen==2023.3.10
     # via
     #   emmet-core
     #   matminer
@@ -243,7 +243,7 @@ ruamel-yaml-clib==0.2.7
     # via ruamel-yaml
 s3transfer==0.6.0
     # via boto3
-scikit-learn==1.2.1
+scikit-learn==1.2.2
     # via matminer
 scipy==1.10.1
     # via
@@ -277,7 +277,7 @@ spglib==2.0.2
     #   seekpath
 sshtunnel==0.4.0
     # via maggma
-starlette==0.25.0
+starlette==0.26.1
     # via fastapi
 sympy==1.11.1
     # via
@@ -285,13 +285,13 @@ sympy==1.11.1
     #   pymatgen
 tabulate==0.9.0
     # via pymatgen
-tenacity==8.2.1
+tenacity==8.2.2
     # via
     #   ddtrace
     #   plotly
 threadpoolctl==3.1.0
     # via scikit-learn
-tqdm==4.64.1
+tqdm==4.65.0
     # via
     #   maggma
     #   matminer
@@ -304,7 +304,7 @@ typing-extensions==4.5.0
     #   pydantic
 uncertainties==3.1.7
     # via pymatgen
-urllib3==1.26.14
+urllib3==1.26.15
     # via
     #   botocore
     #   requests

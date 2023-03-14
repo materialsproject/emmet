@@ -29,3 +29,27 @@ class MethodQuery(QueryOperator):
 
     def ensure_indexes(self):  # pragma: no cover
         return [("method", False)]
+
+
+class MultiPropertyIDQuery(QueryOperator):
+    """
+    Method to generate a query for different property ID values
+    """
+
+    def query(
+        self,
+        property_ids: Optional[str] = Query(None, description="Comma-separated list of property_id values to query on"),
+    ) -> STORE_PARAMS:
+
+        crit = {}  # type: dict
+
+        if property_ids:
+
+            property_id_list = [pid.strip() for pid in property_ids.split(",")]
+
+            if len(property_id_list) == 1:
+                crit.update({"property_id": property_id_list[0]})
+            else:
+                crit.update({"property_id": {"$in": property_id_list}})
+
+        return {"criteria": crit}

@@ -18,7 +18,7 @@ def get_free_energy(energy, enthalpy, entropy, temperature=298.15):
 
     :param energy: Electronic energy in Ha
     :param enthalpy: Enthalpy in kcal/mol
-    :param entropy: Entropy in cal/mol-K
+    :param entropy: Entropy in csal/mol-K
     :param temperature: Temperature in K. Default is 298.15, 25C
 
     returns: Free energy in eV
@@ -27,7 +27,7 @@ def get_free_energy(energy, enthalpy, entropy, temperature=298.15):
     return energy * 27.2114 + enthalpy * 0.043363 - temperature * entropy * 0.000043363
 
 
-class ThermoDoc(PropertyDoc):
+class MoleculeThermoDoc(PropertyDoc):
 
     property_name = "thermo"
 
@@ -127,7 +127,7 @@ class ThermoDoc(PropertyDoc):
             correction_lot = correction_task.level_of_theory
             correction_solvent = correction_task.solvent
             correction_lot_solvent = correction_task.lot_solvent
-            combined_lot_solvent = f"{task.lot_solvent}/{correction_lot_solvent}"
+            combined_lot_solvent = f"{task.lot_solvent}//{correction_lot_solvent}"
 
         total_enthalpy = task.output.enthalpy
         total_entropy = task.output.entropy
