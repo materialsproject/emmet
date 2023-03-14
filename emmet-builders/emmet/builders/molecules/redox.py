@@ -12,7 +12,7 @@ from maggma.utils import grouper
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.molecules.bonds import metals
-from emmet.core.molecules.thermo import ThermoDoc
+from emmet.core.molecules.thermo import MoleculeThermoDoc
 from emmet.core.molecules.redox import RedoxDoc
 from emmet.core.utils import confirm_molecule, get_graph_hash, jsanitize
 from emmet.builders.settings import EmmetBuildSettings
@@ -33,11 +33,11 @@ class RedoxBuilder(Builder):
         1. Gather MoleculeDocs by formula
         2. Further group based on (covalent) isomorphism and charge
         3. For each MoleculeDoc:
-            3a. Identify relevant ThermoDocs
+            3a. Identify relevant MoleculeThermoDocs
             3b. Look for single-point energy calculations conducted at the
             molecule's charge +- 1. These will be used to calculation
             vertical electron affinities and ionization energies
-            3c. Group ThermoDocs and single-point calculations based on solvent
+            3c. Group MoleculeThermoDocs and single-point calculations based on solvent
             and level of theory
         4. Construct RedoxDocs by looking for molecules (with associated
             calculations) that:
@@ -202,11 +202,11 @@ class RedoxBuilder(Builder):
             charges: Dict[int, Any] = dict()
 
             for gg in graph_group:
-                # First, grab relevant ThermoDocs and identify possible IE/EA single-points
-                thermo_docs = [ThermoDoc(**e) for e in self.thermo.query({"molecule_id": gg.molecule_id})]
+                # First, grab relevant MoleculeThermoDocs and identify possible IE/EA single-points
+                thermo_docs = [MoleculeThermoDoc(**e) for e in self.thermo.query({"molecule_id": gg.molecule_id})]
 
                 if len(thermo_docs) == 0:
-                    # Current building scheme requires a ThermoDoc
+                    # Current building scheme requires a MoleculeThermoDoc
                     continue
 
                 ie_sp_task_ids = [
@@ -272,7 +272,7 @@ class RedoxBuilder(Builder):
                     ox_coll = charges.get(charge + 1, list())
 
                     for lot_solv, docset in docs.items():
-                        # Collect other molecules that have ThermoDocs at the
+                        # Collect other molecules that have MoleculeThermoDocs at the
                         # exact same level of theory
 
                         combined = docset["thermo_doc"].combined_lot_solvent
@@ -394,15 +394,15 @@ class RedoxBuilder(Builder):
         return results
 
     @staticmethod
-    def _collect_by_lot_solvent(thermo_docs: List[ThermoDoc],
+    def _collect_by_lot_solvent(thermo_docs: List[MoleculeThermoDoc],
                                 ie_docs: List[TaskDocument],
                                 ea_docs: List[TaskDocument]) -> Dict[str, Any]:
         """
-        For a given MoleculeDoc, group potential ThermoDocs and TaskDocs for
+        For a given MoleculeDoc, group potential MoleculeThermoDocs and TaskDocs for
         IE/EA calculations based on level of theory and solvent.
 
         Args:
-            thermo_docs (list of ThermoDocs): List of ThermoDocs for this MoleculeDoc
+            thermo_docs (list of MoleculeThermoDocs): List of MoleculeThermoDocs for this MoleculeDoc
             ie_docs (list of TaskDocuments): List of TaskDocs which could be used
                 to calculate vertical ionization energies for this MoleculeDoc
             ea_docs (list of TaskDocuments): List of TaskDocs which could be used
@@ -410,13 +410,13 @@ class RedoxBuilder(Builder):
 
         Returns:
             dict {<lot_solvent>: {
-                        "thermo_doc": ThermoDoc, "ie_doc": TaskDocument, "ea_doc": TaskDocument
+                        "thermo_doc": MoleculeThermoDoc, "ie_doc": TaskDocument, "ea_doc": TaskDocument
                     }
                  }
         """
 
-        def _lot_solv(doc: Union[ThermoDoc, TaskDocument]):
-            if isinstance(doc, ThermoDoc):
+        def _lot_solv(doc: Union[MoleculeThermoDoc, TaskDocument]):
+            if isinstance(doc, MoleculeThermoDoc):
                 if doc.correction:
                     return doc.correction_lot_solvent
             return doc.lot_solvent
@@ -436,7 +436,7 @@ class RedoxBuilder(Builder):
         for k, g in thermo_grouped:
             g_list = list(g)
 
-            # Should never be more than one ThermoDoc per MoleculeDoc
+            # Should never be more than one MoleculeThermoDoc per MoleculeDoc
             # Just for safety...
             if len(g_list) > 1:
                 g_list_sorted = sorted(g_list, key=lambda x: x.electronic_energy)
@@ -447,7 +447,7 @@ class RedoxBuilder(Builder):
             groups[k] = {"thermo_doc": this_thermo_doc}
 
         for k, g in ie_grouped:
-            # Must be a ThermoDoc to make a RedoxDoc
+            # Must be a MoleculeThermoDoc to make a RedoxDoc
             if k not in groups:
                 continue
 
@@ -455,7 +455,7 @@ class RedoxBuilder(Builder):
             groups[k]["ie_doc"] = this_ie_doc
 
         for k, g in ea_grouped:
-            # Must be a ThermoDoc to make a RedoxDoc
+            # Must be a MoleculeThermoDoc to make a RedoxDoc
             if k not in groups:
                 continue
 

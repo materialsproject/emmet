@@ -1,4 +1,4 @@
-from emmet.core.molecules.summary import SummaryDoc
+from emmet.core.molecules.summary import MoleculeSummaryDoc
 
 from maggma.api.query_operator import (
     PaginationQuery,
@@ -14,9 +14,9 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     ChargeSpinQuery,
     DeprecationQuery,
 )
-from emmet.api.routes.summary.query_operators import (HasPropsQuery)
+from emmet.api.routes.summary.query_operators import HasPropsQuery
 from emmet.api.routes.mpcules.summary.hint_scheme import SummaryHintScheme
-from emmet.api.routes.mpcules.summary.query_operators import (MPculeIDsSearchQuery)
+from emmet.api.routes.mpcules.summary.query_operators import MPculeIDsSearchQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 
@@ -26,23 +26,23 @@ timeout = MAPISettings().TIMEOUT
 def summary_resource(summary_store):
     resource = ReadOnlyResource(
         summary_store,
-        SummaryDoc,
+        MoleculeSummaryDoc,
         query_operators=[
             MPculeIDsSearchQuery(),
             FormulaQuery(),
             ChemsysQuery(),
             ElementsQuery(),
-            NumericQuery(model=SummaryDoc, excluded_fields=["composition"]),
+            NumericQuery(model=MoleculeSummaryDoc, excluded_fields=["composition"]),
             HasPropsQuery(),
             ChargeSpinQuery(),
             DeprecationQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(SummaryDoc, default_fields=["molecule_id"]),
+            SparseFieldsQuery(MoleculeSummaryDoc, default_fields=["molecule_id"]),
         ],
         hint_scheme=SummaryHintScheme(),
         header_processor=GlobalHeaderProcessor(),
-        tags=["Summary"],
+        tags=["MPcules Summary"],
         disable_validation=True,
         timeout=timeout
     )

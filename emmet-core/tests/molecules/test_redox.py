@@ -4,7 +4,7 @@ from monty.serialization import loadfn
 
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.molecule import MoleculeDoc
-from emmet.core.molecules.thermo import ThermoDoc
+from emmet.core.molecules.thermo import MoleculeThermoDoc
 from emmet.core.molecules.redox import RedoxDoc
 
 
@@ -18,20 +18,20 @@ def base_mol(test_dir):
 @pytest.fixture(scope="session")
 def base_thermo(test_dir):
     thermo = loadfn((test_dir / "redox_doc" / "thermo.json").as_posix())
-    thermo_doc = ThermoDoc(**thermo)
+    thermo_doc = MoleculeThermoDoc(**thermo)
     return thermo_doc
 
 
 @pytest.fixture(scope="session")
 def red_thermo(test_dir):
     thermo = loadfn((test_dir / "redox_doc" / "red_thermo.json").as_posix())
-    thermo_doc = ThermoDoc(**thermo)
+    thermo_doc = MoleculeThermoDoc(**thermo)
     return thermo_doc
 
 @pytest.fixture(scope="session")
 def ox_thermo(test_dir):
     thermo = loadfn((test_dir / "redox_doc" / "ox_thermo.json").as_posix())
-    thermo_doc = ThermoDoc(**thermo)
+    thermo_doc = MoleculeThermoDoc(**thermo)
     return thermo_doc
 
 

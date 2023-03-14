@@ -9,8 +9,6 @@ from maggma.builders import Builder
 from maggma.stores import Store
 from maggma.utils import grouper
 
-from pymatgen.core.structure import Molecule
-
 from emmet.builders.settings import EmmetBuildSettings
 from emmet.core.utils import (
     get_molecule_id,
@@ -406,7 +404,10 @@ class MoleculesBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_assoc = list(
-            self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical", "molecule"])
+            self.assoc.query(
+                temp_query,
+                [self.assoc.key, "formula_alphabetical", "species_hash", "charge", "spin_multiplicity"]
+            )
         )
 
         # Should be using species hash, rather than coord hash, at this point
@@ -415,11 +416,12 @@ class MoleculesBuilder(Builder):
 
         xyz_species_id_map = dict()
         for d in all_assoc:
-            dmol = d["molecule"]
-            if isinstance(dmol, Molecule):
-                this_id = get_molecule_id(dmol, node_attr="specie")
-            else:
-                this_id = get_molecule_id(Molecule.from_dict(dmol), node_attr="specie")
+            this_id = "{}-{}-{}-{}".format(
+                d["species_hash"],
+                d["formula_alphabetical"].replace(" ", ""),
+                str(int(d["charge"])).replace("-", "m"),
+                str(int(d["spin_multiplicity"]))
+            )
             assoc_ids.add(this_id)
             xyz_species_id_map[d[self.assoc.key]] = this_id
         to_process_docs = assoc_ids - processed_docs
@@ -458,7 +460,10 @@ class MoleculesBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_assoc = list(
-            self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical", "molecule"])
+            self.assoc.query(
+                temp_query,
+                [self.assoc.key, "formula_alphabetical", "species_hash", "charge", "spin_multiplicity"]
+            )
         )
 
         # Should be using species hash, rather than coord hash, at this point
@@ -467,11 +472,12 @@ class MoleculesBuilder(Builder):
 
         xyz_species_id_map = dict()
         for d in all_assoc:
-            dmol = d["molecule"]
-            if isinstance(dmol, Molecule):
-                this_id = get_molecule_id(dmol, node_attr="specie")
-            else:
-                this_id = get_molecule_id(Molecule.from_dict(dmol), node_attr="specie")
+            this_id = "{}-{}-{}-{}".format(
+                d["species_hash"],
+                d["formula_alphabetical"].replace(" ", ""),
+                str(int(d["charge"])).replace("-", "m"),
+                str(int(d["spin_multiplicity"]))
+            )
             assoc_ids.add(this_id)
             xyz_species_id_map[d[self.assoc.key]] = this_id
         to_process_docs = assoc_ids - processed_docs
@@ -523,6 +529,7 @@ class MoleculesBuilder(Builder):
 
             docs_by_solvent = dict()
             mols_by_solvent = dict()
+            mol_lots = dict()
 
             task_ids = list()
             calc_types = dict()
@@ -552,6 +559,7 @@ class MoleculesBuilder(Builder):
                 sorted_docs = sorted(subgroup, key=evaluate_molecule)
                 docs_by_solvent[solv] = sorted_docs[0]
                 mols_by_solvent[solv] = sorted_docs[0].molecule
+                mol_lots[solv] = sorted_docs[0].levels_of_theory[sorted_docs[0].origins[0].task_id]
                 constituent_molecules.append(sorted_docs[0].molecule_id)
 
                 if len(sorted_docs) > 1:
@@ -594,6 +602,7 @@ class MoleculesBuilder(Builder):
                 # Assign new doc info
                 base_doc.molecule_id = get_molecule_id(base_doc.molecule, node_attr="specie")
                 base_doc.molecules = mols_by_solvent
+                base_doc.molecule_levels_of_theory = mol_lots
                 base_doc.task_ids = task_ids
                 base_doc.calc_types = calc_types
                 base_doc.task_types = task_types

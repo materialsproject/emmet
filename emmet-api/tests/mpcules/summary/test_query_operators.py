@@ -5,8 +5,6 @@ from emmet.api.routes.mpcules.summary.query_operators import (
     MPculeIDsSearchQuery
 )
 
-from emmet.core.molecules.summary import SummaryDoc
-
 
 def test_mpcules_ids_query():
     op = MPculeIDsSearchQuery()
