@@ -32,7 +32,7 @@ def test_analysis_summary(test_dir, object_name):
     assert_schemas_equal(test_doc, valid_doc)
 
     # test document can be jsanitized
-    d = jsanitize(test_doc, strict=True, enum_values=True)
+    d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
     # and decoded
     MontyDecoder().process_decoded(d)
@@ -63,7 +63,7 @@ def test_input_summary(test_dir, object_name, task_name):
     assert_schemas_equal(test_doc, valid_doc)
 
     # test document can be jsanitized
-    d = jsanitize(test_doc, strict=True, enum_values=True)
+    d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
     # and decoded
     MontyDecoder().process_decoded(d)
@@ -94,7 +94,7 @@ def test_output_summary(test_dir, object_name, task_name):
     assert_schemas_equal(test_doc, valid_doc)
 
     # test document can be jsanitized
-    d = jsanitize(test_doc, strict=True, enum_values=True)
+    d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
     # and decoded
     MontyDecoder().process_decoded(d)
@@ -119,7 +119,7 @@ def test_task_doc(test_dir, object_name):
     assert_schemas_equal(test_doc, test_object.task_doc)
 
     # test document can be jsanitized
-    d = jsanitize(test_doc, strict=True, enum_values=True)
+    d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
     # and decoded
     MontyDecoder().process_decoded(d)

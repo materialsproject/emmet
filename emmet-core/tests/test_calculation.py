@@ -45,7 +45,7 @@ def test_calculation_input(test_dir, object_name, task_name):
     assert_schemas_equal(test_doc, valid_doc)
 
     # test document can be jsanitized
-    d = jsanitize(test_doc, strict=True, enum_values=True)
+    d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
     # and decoded
     MontyDecoder().process_decoded(d)
@@ -79,7 +79,7 @@ def test_calculation_output(test_dir, object_name, task_name):
     assert test_doc.efermi == vasprun.get_band_structure(efermi="smart").efermi
 
     # test document can be jsanitized
-    d = jsanitize(test_doc, strict=True, enum_values=True)
+    d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
     # and decoded
     MontyDecoder().process_decoded(d)
@@ -123,7 +123,7 @@ def test_run_statistics(test_dir, object_name, task_name):
     assert_schemas_equal(test_doc, valid_doc)
 
     # test document can be jsanitized
-    d = jsanitize(test_doc, strict=True, enum_values=True)
+    d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
     # and decoded
     MontyDecoder().process_decoded(d)
@@ -152,7 +152,7 @@ def test_calculation(test_dir, object_name, task_name):
     assert set(objects.keys()) == set(test_object.objects[task_name])
 
     # test document can be jsanitized
-    d = jsanitize(test_doc, strict=True, enum_values=True)
+    d = jsanitize(test_doc, strict=True, enum_values=True, allow_bson=True)
 
     # and decoded
     MontyDecoder().process_decoded(d)
