@@ -196,7 +196,7 @@ class InputDoc(BaseModel):
             is_hubbard=calc_doc.input.is_hubbard,
             hubbards=calc_doc.input.hubbards,
             xc_override=xc,
-            is_lasph=calc_doc.intput.parameters.get("LASPH", False),
+            is_lasph=calc_doc.input.parameters.get("LASPH", False),
         )
 
 
@@ -691,7 +691,7 @@ def _parse_orig_inputs(
     input_mapping = {
         "INCAR": Incar,
         "KPOINTS": Kpoints,
-        "POTCAR": Potcar,
+        "POTCAR": VaspPotcar,
         "POSCAR": Poscar,
     }
     for filename in dir_name.glob("*.orig*"):
