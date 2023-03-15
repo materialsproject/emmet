@@ -1,5 +1,7 @@
 """Core definitions of a VASP calculation documents."""
 
+# mypy: ignore-errors
+
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union

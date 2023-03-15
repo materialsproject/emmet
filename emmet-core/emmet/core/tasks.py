@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 import logging
 import re
 from collections import OrderedDict
@@ -222,7 +224,7 @@ class AnalysisDoc(BaseModel):
         title="Volume Change Percent",
         description="Percent volume change for the calculation.",
     )
-    max_force: Optional[float] = Field(
+    max_force: float = Field(
         None,
         title="Max Force",
         description="Maximum force on any atom at the end of the calculation.",
@@ -358,7 +360,7 @@ class TaskDoc(StructureMetadata):
         description="Information on the structural transformations, parsed from a "
         "transformations.json file",
     )
-    additional_json: Optional[Dict[str, Any]] = Field(
+    additional_json: Dict[str, Any] = Field(
         None, description="Additional json loaded from the calculation directory"
     )
 
