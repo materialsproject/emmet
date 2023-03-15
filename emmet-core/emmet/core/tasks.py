@@ -29,7 +29,7 @@ from emmet.core.vasp.task_valid import TaskState
 monty_decoder = MontyDecoder()
 logger = logging.getLogger(__name__)
 
-_T = TypeVar("_T", bound="TaskDocument")
+_T = TypeVar("_T", bound="TaskDoc")
 _VOLUMETRIC_FILES = ("CHGCAR", "LOCPOT", "AECCAR0", "AECCAR1", "AECCAR2")
 
 
@@ -97,7 +97,7 @@ class OutputDoc(BaseModel):
     @classmethod
     def from_vasp_calc_doc(
         cls, calc_doc: Calculation, trajectory: Optional[Trajectory] = None
-    ) -> "OutputSummary":
+    ) -> "OutputDoc":
         """
         Create a summary of VASP calculation outputs from a VASP calculation document.
 
@@ -114,7 +114,7 @@ class OutputDoc(BaseModel):
 
         Returns
         -------
-        OutputSummary
+        OutputDoc
             The calculation output summary.
         """
         if calc_doc.output.ionic_steps is not None:
@@ -165,7 +165,7 @@ class InputDoc(BaseModel):
     hubbards: Dict = Field(None, description="The hubbard parameters used")
 
     @classmethod
-    def from_vasp_calc_doc(cls, calc_doc: Calculation) -> "InputSummary":
+    def from_vasp_calc_doc(cls, calc_doc: Calculation) -> "InputDoc":
         """
         Create calculation input summary from a calculation document.
 
@@ -176,7 +176,7 @@ class InputDoc(BaseModel):
 
         Returns
         -------
-        InputSummary
+        InputDoc
             A summary of the input structure and parameters.
         """
         xc = calc_doc.input.incar.get("GGA")
@@ -185,7 +185,7 @@ class InputDoc(BaseModel):
 
         pot_type, func = calc_doc.input.potcar_type[0].split("_")
         func = "lda" if len(pot_type) == 1 else "_".join(func)
-        pps = Potcar(pot_type=pot_type, functional=func, labels=calc_doc.input.potcar)
+        pps = Potcar(pot_type=pot_type, functional=func, symbols=calc_doc.input.potcar)
         return cls(
             structure=calc_doc.input.structure,
             parameters=calc_doc.input.parameters,
@@ -194,6 +194,7 @@ class InputDoc(BaseModel):
             is_hubbard=calc_doc.input.is_hubbard,
             hubbards=calc_doc.input.hubbards,
             xc_override=xc,
+            is_lasph=calc_doc.intput.parameters.get("LASPH", False),
         )
 
 
@@ -221,7 +222,7 @@ class AnalysisDoc(BaseModel):
         title="Volume Change Percent",
         description="Percent volume change for the calculation.",
     )
-    max_force: float = Field(
+    max_force: Optional[float] = Field(
         None,
         title="Max Force",
         description="Maximum force on any atom at the end of the calculation.",
@@ -285,7 +286,7 @@ class AnalysisDoc(BaseModel):
 
         return cls(
             delta_volume=delta_vol,
-            delta_volume_as_percent=percent_delta_vol,
+            delta_volume_percent=percent_delta_vol,
             max_force=max_force,
             warnings=warnings,
             errors=errors,
@@ -357,7 +358,7 @@ class TaskDoc(StructureMetadata):
         description="Information on the structural transformations, parsed from a "
         "transformations.json file",
     )
-    additional_json: Dict[str, Any] = Field(
+    additional_json: Optional[Dict[str, Any]] = Field(
         None, description="Additional json loaded from the calculation directory"
     )
 
