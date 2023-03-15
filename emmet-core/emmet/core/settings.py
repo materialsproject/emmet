@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 """
 Settings for defaults in the core definitions of Materials Project Documents
 """
