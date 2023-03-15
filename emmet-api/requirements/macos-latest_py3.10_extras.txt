@@ -16,11 +16,11 @@ attrs==22.2.0
     #   pytest
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.90
+boto3==1.26.92
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.90
+botocore==1.29.92
     # via
     #   boto3
     #   s3transfer
@@ -78,11 +78,11 @@ exceptiongroup==1.1.1
     # via
     #   cattrs
     #   pytest
-fastapi==0.94.0
+fastapi==0.94.1
     # via
     #   emmet-api (setup.py)
     #   maggma
-filelock==3.9.0
+filelock==3.10.0
     # via virtualenv
 flake8==6.0.0
     # via emmet-api (setup.py)
@@ -102,7 +102,7 @@ gunicorn==20.1.0
     # via emmet-api (setup.py)
 h11==0.14.0
     # via uvicorn-tschaume
-htmlmin==0.1.12
+htmlmin2==0.1.13
     # via mkdocs-minify-plugin
 identify==2.5.20
     # via pre-commit
@@ -186,7 +186,7 @@ mkdocs-material-extensions==1.1.1
     # via
     #   emmet-api (setup.py)
     #   mkdocs-material
-mkdocs-minify-plugin==0.6.2
+mkdocs-minify-plugin==0.6.4
     # via emmet-api (setup.py)
 mkdocstrings[python]==0.20.0
     # via
