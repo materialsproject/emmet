@@ -32,7 +32,6 @@ def summary_resource(summary_store):
             FormulaQuery(),
             ChemsysQuery(),
             ElementsQuery(),
-            NumericQuery(model=MoleculeSummaryDoc, excluded_fields=["composition"]),
             HasPropsQuery(),
             ChargeSpinQuery(),
             DeprecationQuery(),
