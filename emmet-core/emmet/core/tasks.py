@@ -2,7 +2,6 @@ import logging
 import re
 from collections import OrderedDict
 from datetime import datetime
-from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
@@ -17,9 +16,7 @@ from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEn
 from pymatgen.io.vasp import Incar, Kpoints, Poscar
 from pymatgen.io.vasp import Potcar as VaspPotcar
 
-from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.structure import StructureMetadata
-from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types import TaskType
 from emmet.core.vasp.calculation import (
     Calculation,
