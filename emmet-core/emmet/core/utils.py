@@ -1,27 +1,25 @@
+import copy
 import datetime
 from enum import Enum
 from itertools import groupby
-from typing import Any, Iterator, List, Dict, Optional, Union
-import copy
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 import numpy as np
-
 from monty.json import MSONable
 from pydantic import BaseModel
-
-from pymatgen.core.structure import Structure, Molecule
+from pymatgen.analysis.graphs import MoleculeGraph
+from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
+from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 from pymatgen.analysis.structure_matcher import (
     AbstractComparator,
     ElementComparator,
     StructureMatcher,
 )
-from pymatgen.analysis.molecule_matcher import MoleculeMatcher
-from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
+from pymatgen.core.structure import Molecule, Structure
 
-from emmet.core.settings import EmmetSettings
 from emmet.core.graph_hashing import weisfeiler_lehman_graph_hash
 from emmet.core.mpid import MPculeID
+from emmet.core.settings import EmmetSettings
 
 try:
     import bson
@@ -299,8 +297,13 @@ class ValueEnum(Enum):
             return super().__eq__(o)
         return False
 
-    def __hash__(self) -> Any:
-        return super().__hash__()
+    def __hash__(self):
+        """Get a hash of the enum."""
+        return hash(str(self))
+
+    def as_dict(self):
+        """Create a serializable representation of the enum."""
+        return str(self.value)
 
 
 class DocEnum(ValueEnum):

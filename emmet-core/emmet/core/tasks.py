@@ -19,7 +19,14 @@ from pymatgen.io.vasp import Potcar as VaspPotcar
 
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.structure import StructureMetadata
-from emmet.core.vasp.calculation import Calculation, PotcarSpec
+from emmet.core.utils import ValueEnum
+from emmet.core.vasp.calc_types import TaskType
+from emmet.core.vasp.calculation import (
+    Calculation,
+    PotcarSpec,
+    RunStatistics,
+    VaspObject,
+)
 from emmet.core.vasp.task_valid import TaskState
 
 monty_decoder = MontyDecoder()
@@ -240,7 +247,7 @@ class AnalysisDoc(BaseModel):
         cls,
         calcs_reversed: List[Calculation],
         volume_change_warning_tol: float = 0.2,
-    ) -> "AnalysisSummary":
+    ) -> "AnalysisDoc":
         """
         Create analysis summary from VASP calculation documents.
 
@@ -254,7 +261,7 @@ class AnalysisDoc(BaseModel):
 
         Returns
         -------
-        AnalysisSummary
+        AnalysisDoc
             The relaxation analysis.
         """
         initial_vol = calcs_reversed[-1].input.structure.lattice.volume
@@ -296,6 +303,7 @@ class TaskDoc(StructureMetadata):
     tags: Union[List[str], None] = Field(
         [], title="tag", description="Metadata tagged to a given task."
     )
+    dir_name: str = Field(None, description="The directory for this VASP task")
 
     state: TaskState = Field(None, description="State of this calculation")
 
@@ -342,6 +350,7 @@ class TaskDoc(StructureMetadata):
         None, description="The ComputedEntry from the task doc"
     )
 
+    task_label: str = Field(None, description="A description of the task")
     author: str = Field(None, description="Author extracted from transformations")
     icsd_id: str = Field(
         None, description="International crystal structure database id of the structure"
@@ -457,6 +466,7 @@ class TaskDoc(StructureMetadata):
 
         doc = cls.from_structure(
             structure=calcs_reversed[0].output.structure,
+            meta_structure=calcs_reversed[0].output.structure,
             include_structure=True,
             dir_name=dir_name,
             calcs_reversed=calcs_reversed,
@@ -469,8 +479,8 @@ class TaskDoc(StructureMetadata):
             tags=tags,
             author=author,
             completed_at=calcs_reversed[0].completed_at,
-            input=InputSummary.from_vasp_calc_doc(calcs_reversed[-1]),
-            output=OutputSummary.from_vasp_calc_doc(
+            input=InputDoc.from_vasp_calc_doc(calcs_reversed[-1]),
+            output=OutputDoc.from_vasp_calc_doc(
                 calcs_reversed[0],
                 vasp_objects.get(VaspObject.TRAJECTORY),  # type: ignore
             ),
@@ -516,7 +526,7 @@ class TaskDoc(StructureMetadata):
             "data": {
                 "oxide_type": oxide_type(calcs_reversed[0].output.structure),
                 "aspherical": calcs_reversed[0].input.parameters.get("LASPH", False),
-                "last_updated": str(datetime.utcnow())(),
+                "last_updated": str(datetime.utcnow()),
             },
         }
         return ComputedEntry.from_dict(entry_dict)
@@ -578,7 +588,7 @@ class DeprecationDoc(BaseModel):
     )
 
 
-def get_uri(dir_name: str | Path) -> str:
+def get_uri(dir_name: Union[str, Path]) -> str:
     """
     Return the URI path for a directory.
 
@@ -594,6 +604,8 @@ def get_uri(dir_name: str | Path) -> str:
     str
         Full URI path, e.g., "fileserver.host.com:/full/path/of/dir_name".
     """
+    import socket
+
     fullpath = Path(dir_name).absolute()
     hostname = socket.gethostname()
     try:
@@ -735,9 +747,7 @@ def _get_drift_warnings(calc_doc: Calculation) -> List[str]:
     return warnings
 
 
-def _get_state(
-    calcs_reversed: List[Calculation], analysis: AnalysisSummary
-) -> TaskState:
+def _get_state(calcs_reversed: List[Calculation], analysis: AnalysisDoc) -> TaskState:
     """Get state from calculation documents and relaxation analysis."""
     all_calcs_completed = all(
         [c.has_vasp_completed == TaskState.SUCCESS for c in calcs_reversed]
