@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 """ Core definition of a Q-Chem Task Document """
 from typing import Any, Dict, List, Optional, Callable
 

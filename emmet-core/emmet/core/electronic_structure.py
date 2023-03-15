@@ -370,7 +370,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     magnetic_ordering=bs_mag_ordering,
                 )
 
-        bs_entry = BandstructureData(**bs_data)
+        bs_entry = BandstructureData(**bs_data)  # type: ignore
         dos_entry = DosData(**dos_data)
 
         # Obtain summary data
