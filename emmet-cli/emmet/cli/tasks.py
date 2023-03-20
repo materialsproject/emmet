@@ -42,12 +42,10 @@ FILE_FILTERS = [
     "transformation*",
 ]
 
-STORE_VOLUMETRIC_DATA = []
-#STORE_VOLUMETRIC_DATA = ["CHGCAR", "LOCPOT", "AECCAR0", "AECCAR1", "AECCAR2", "ELFCAR"]
+STORE_VOLUMETRIC_DATA = ["CHGCAR", "LOCPOT", "AECCAR0", "AECCAR1", "AECCAR2", "ELFCAR"]
 
 for v in STORE_VOLUMETRIC_DATA:
     FILE_FILTERS.append(f"{v}*")
-
 
 FILE_FILTERS_DEFAULT = [
     f"{d}{os.sep}{f}" if d else f
