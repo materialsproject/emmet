@@ -405,7 +405,14 @@ def restore(inputfile, file_filter):  # noqa: C901
     default=STORE_VOLUMETRIC_DATA,
     help="Store any of CHGCAR, LOCPOT, AECCAR0, AECCAR1, AECCAR2, ELFCAR.",
 )
-def parse(task_ids, snl_metas, nproc, store_volumetric_data):  # noqa: C901
+@click.option(
+    "-r",
+    "--runs",
+    multiple=True,
+    default=None,
+    help="Naming scheme for multiple calculations in one folder - subfolder or extension.",
+)
+def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C901
     """Parse VASP launchers into tasks"""
     ctx = click.get_current_context()
     if "CLIENT" not in ctx.obj:

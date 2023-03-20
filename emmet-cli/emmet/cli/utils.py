@@ -371,6 +371,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
     drone = VaspDrone(
         additional_fields={"tags": tags},
         store_volumetric_data=ctx.params["store_volumetric_data"],
+        runs=ctx.params["runs"],
     )
     # fs_keys = ["bandstructure", "dos", "chgcar", "locpot", "elfcar"]
     # for i in range(3):
