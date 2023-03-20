@@ -195,7 +195,8 @@ class ElasticityBuilder(Builder):
                     doc["transmuter"]["transformation_params"][0]["deformation"]
                 )
             )
-            # -0.1 to convert to GPa from kBar and s
+            # 0.1 to convert to GPa from kBar, and the minus sign to flip the stress
+            # direction from compressive as positive (in vasp) to tensile as positive
             stresses.append(-0.1 * Stress(doc["output"]["stress"]))
             deform_task_ids.append(doc["task_id"])
             deform_dir_names.append(doc["dir_name"])
