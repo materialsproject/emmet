@@ -13,6 +13,7 @@ from pathlib import Path
 
 import click
 import mgzip
+from botocore.exceptions import EndpointConnectionError
 from atomate.vasp.database import VaspCalcDb
 from atomate.vasp.drones import VaspDrone
 from dotty_dict import dotty
@@ -491,6 +492,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
 
                 try:
                     target.insert_task(task_doc, use_gridfs=True)
+                except EndpointConnectionError as exc:
+                    logger.error(f"Connection failed for {task_id}: {exc}")
+                    continue
                 except DocumentTooLarge:
                     output = dotty(task_doc["calcs_reversed"][0]["output"])
                     pop_keys = [
