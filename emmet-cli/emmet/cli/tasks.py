@@ -191,10 +191,21 @@ def backup(clean, check, force_new):  # noqa: C901
                 raise HpssOSError
         except HpssOSError:  # block not in HPSS
             if run:
+                directory = ctx.parent.params.get("directory")
+                track_dir = os.path.join(directory, ".emmet")
+                ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+                filename = os.path.join(track_dir, f"{block}_launchers_{ts}.txt")
                 filelist = [os.path.join(block, l) for l in launchers]
-                args = shlex.split(f"htar -M 5000000 -Phcvf {GARDEN}/{block}.tar")
+
+                with open(filename, "w") as f:
+                    for line in filelist:
+                        f.write(f"{line}\n")
+
+                args = shlex.split(
+                    f"htar -M 5000000 -Phcvf {GARDEN}/{block}.tar -L {filename}"
+                )
                 try:
-                    for line in run_command(args, filelist):
+                    for line in run_command(args, []):
                         logger.info(line.strip())
                 except subprocess.CalledProcessError as e:
                     logger.error(str(e))
