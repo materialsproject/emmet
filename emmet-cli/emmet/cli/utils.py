@@ -523,6 +523,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                     else:
                         logger.warning(f"{name} failed to reduce document size")
                         continue
+                except Exception as ex:
+                    logger.error(f"{name} failed to insert: {ex}")
+                    continue
 
                 if target.collection.count_documents(query):
                     if snl_dct:
