@@ -375,4 +375,3 @@ def _get_unsorted_symbol_set(structure: Structure):
             str(sp): 1 for site in structure for sp, v in site.species.items() if v != 0
         }.keys()
     )
-
