@@ -286,9 +286,9 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
                         for fn in bar:
                             if os.path.exists(fn):
                                 shutil.rmtree(fn)
-                    logger.info(f"Removed {nlauncher} launchers from disk for {block}.")
+                    logger.info(f"Removed {nlaunchers} launchers from disk for {block}.")
                 else:
-                    logger.info(f"Would remove {nlauncher} launchers from disk for {block}.")
+                    logger.info(f"Would remove {nlaunchers} launchers from disk for {block}.")
 
     logger.info(f"{counter}/{len(block_launchers)} blocks newly backed up to HPSS.")
     if clean:
