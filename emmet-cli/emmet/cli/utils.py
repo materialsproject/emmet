@@ -279,10 +279,23 @@ def get_vasp_dirs():
                 fn = os.path.join(root, f)
                 if os.path.islink(fn):
                     if run:
-                        os.unlink(fn)
-                        logger.warning(f"Unlinked {fn}.")
+                        fn_real = os.path.realpath(fn)
+                        if os.path.exists(fn_real):
+                            dst_name = f"{f}_copy"
+                            dst = os.path.join(root, dst_name)
+                            if os.path.isdir(fn_real):
+                                shutil.copytree(fn_real, dst)
+                            else:
+                                shutil.copy(fn_real, dst)
+
+                            os.unlink(fn)
+                            shutil.move(dst, fn)
+                            logger.debug(f"Resolved {fn}.")
+                        else:
+                            os.unlink(fn)
+                            logger.debug(f"Unlinked {fn}.")
                     else:
-                        logger.warning(f"Would unlink {fn}.")
+                        logger.debug(f"Would resolve or unlink {fn}.")
                     continue
 
                 st = os.stat(fn)
