@@ -95,7 +95,7 @@ def backups(ctx, clean):
 
     if not gen.value:
         logger.warning("No launchers found.")
-        return ReturnCodes.WARNING
+        return ReturnCodes.SUCCESS
 
     logger.info(f"Found {gen.value} launchers.")
     rootdir = ctx.parent.params["directory"]
