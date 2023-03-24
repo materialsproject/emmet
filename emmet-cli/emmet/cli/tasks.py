@@ -476,7 +476,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
     tag = os.path.basename(directory)
     target = ctx.obj["CLIENT"]
     snl_collection = target.db.snls_user
-    collection_count = target.collection.count_documents({})
+    collection_count = target.collection.estimated_document_count()
     logger.info(
         f"Connected to {target.collection.full_name} with {collection_count} tasks."
     )
@@ -507,15 +507,15 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
     else:
         # reserve list of task_ids to avoid collisions during multiprocessing
         # insert empty doc with max ID + 1 into target collection for parallel SLURM jobs
-        # NOTE use regex first to reduce size of distinct below 16MB
-        q = {"task_id": {"$regex": r"^mp-\d{7,}$"}}
-        all_task_ids = [
-            t["task_id"] for t in target.collection.find(q, {"_id": 0, "task_id": 1})
+        pipeline = [
+            {"$match": {"task_id": {"$regex": r"^mp-\d{7,}$"}}},
+            {"$project": {"task_id": 1, "prefix_num": {"$split": ["$task_id", "-"]}}},
+            {"$project": {"num": {"$arrayElemAt": ["$prefix_num", -1]}}},
+            {"$addFields": {"num_int": {"$toInt": "$num"}}},
+            {"$group": {"_id": None, "num_max": {"$max": "$num_int"}}}
         ]
-        if not all_task_ids:
-            all_task_ids = target.collection.distinct("task_id")
-
-        next_tid = max(int(tid.split("-")[-1]) for tid in all_task_ids) + 1
+        result = list(client.collection.aggregate(pipeline))
+        next_tid = result[0]["num_max"] + 1
         lst = [f"mp-{next_tid + n}" for n in range(nmax)]
         task_ids = chunks(lst, chunk_size)
 
