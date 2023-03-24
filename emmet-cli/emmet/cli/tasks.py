@@ -98,12 +98,13 @@ def backups(ctx, clean):
         return ReturnCodes.WARNING
 
     logger.info(f"Found {gen.value} launchers.")
-    prefix = ctx.parent.params["pattern"] = "block_*"
+    rootdir = ctx.parent.params["directory"]
+    rootdir_pattern = os.path.join(rootdir, ctx.parent.params["pattern"])
+    comment_txt = [f"Backup {gen.value} launchers in `{rootdir_pattern}`:\n"]
     ctx.parent.parent.params["sbatch"] = True
     ctx.parent.parent.params["yes"] = True
     run = ctx.parent.parent.params["run"]
-    rootdir = ctx.parent.params["directory"]
-    comment_txt = [f"backups in `{rootdir}`:\n"]
+    prefix = ctx.parent.params["pattern"] = "block_*"
 
     for subdir, block_launchers in subdir_block_launchers.items():
         nblocks = len(block_launchers)
