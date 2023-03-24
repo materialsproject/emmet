@@ -293,9 +293,9 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
     logger.info(f"{counter}/{len(block_launchers)} blocks newly backed up to HPSS.")
     if clean:
         if run:
-            logger.info(f"Verified and removed a total of {nremove_total} files.")
+            logger.info(f"Verified and removed a total of {nremove_total} launchers.")
         else:
-            logger.info(f"Would verify and remove a total of {nremove_total} files.")
+            logger.info(f"Would verify and remove a total of {nremove_total} launchers.")
     return ReturnCodes.SUCCESS
 
 
