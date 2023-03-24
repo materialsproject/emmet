@@ -4,9 +4,11 @@ import logging
 import os
 from datetime import datetime
 from functools import update_wrapper
+from enum import Enum
 
 import click
 from slurmpy import Slurm
+from github3.gists import ShortGist
 
 from emmet.cli import SETTINGS
 from emmet.cli.utils import EmmetCliError, ReturnCodes, reconstruct_command
@@ -23,7 +25,7 @@ COMMENT_TEMPLATE = """
 
 </p></details>
 """
-GIST_COMMENT_TEMPLATE = "**[Gist]({}) created** to collect command logs for this issue. Download latest set of log files [here]({})."
+GIST_COMMENT_TEMPLATE = "**[Gist]({}) created** to collect command logs for this issue."
 GIST_RAW_URL = "https://gist.githubusercontent.com"
 
 
@@ -33,8 +35,8 @@ def track(func):
     def wrapper(*args, **kwargs):
         ret = func(*args, **kwargs)
         ctx = click.get_current_context()
-        if not isinstance(ret, ReturnCodes):
-            raise EmmetCliError(f"Tracking `{ctx.command_path}` requires ReturnCode!")
+        if not isinstance(ret, Enum):
+            raise EmmetCliError(f"Tracking `{ctx.command_path}` requires Enum!")
 
         if ctx.grand_parent.params["run"]:
             logger.info(ret.value)
@@ -45,36 +47,38 @@ def track(func):
                 SETTINGS.tracker["org"], SETTINGS.tracker["repo"], issue_number
             )
 
-            # gists iterator/resource based on latest etag
-            ETAG = os.path.join(os.path.expanduser("~"), ".emmet_etag")
-            etag = None
-            if os.path.exists(ETAG):
-                with open(ETAG, "r") as fd:
-                    etag = fd.readline().strip()
-
-            gists_iterator = gh.gists(number=20, etag=etag)
-            if gists_iterator.etag != etag:
-                with open(ETAG, "w") as fd:
-                    fd.write(gists_iterator.etag)
-
             # create or retrieve gist for log files
-            gist_name = f"#{issue_number}-{SETTINGS.tracker['repo']}.md"
-            for gist in gists_iterator:
-                if gist.files and gist_name in gist.files:
-                    break
+            gist_name = f"{SETTINGS.tracker['repo']}-issue{issue_number}.md"
+            directory = ctx.parent.params["directory"]
+            emmet_dir = os.path.join(os.path.expanduser("~"), ".emmet")
+            if not os.path.exists(emmet_dir):
+                os.mkdir(emmet_dir)
+                logger.debug(f"{emmet_dir} created")
+
+            gist_id_fn = os.path.join(emmet_dir, gist_name)
+            gist = None
+
+            if os.path.exists(gist_id_fn):
+                with open(gist_id_fn, "r") as fd:
+                    gist_id = fd.readline().strip()
+                    # NOTE failed with KeyError 'total': gist = gh.gist(gist_id)
+                    url = gh._build_url("gists", str(gist_id))
+                    resp = gh._get(url)
+                    json = gh._json(resp, 200)
+                    gist = gh._instance_or_null(ShortGist, json)
             else:
                 description = f"Logs for {SETTINGS.tracker['repo']}#{issue_number}"
                 files = {gist_name: {"content": issue.html_url}}
                 gist = gh.create_gist(description, files, public=False)
-                zip_base = gist.html_url.replace(gist.id, user + "/" + gist.id)
-                txt = GIST_COMMENT_TEMPLATE.format(
-                    gist.html_url, zip_base + "/archive/master.zip"
-                )
+                with open(gist_id_fn, "w") as fd:
+                    fd.write(gist.id)
+
+                txt = GIST_COMMENT_TEMPLATE.format(gist.html_url)
                 comment = issue.create_comment(txt)
                 logger.info(f"Gist Comment: {comment.html_url}")
 
             # update gist with logs for new command
-            logger.info(f"Log Gist: {gist.html_url}")
+            logger.debug(f"Log Gist: {gist.html_url}")
             now = str(datetime.now()).replace(" ", "-")
             filename = ctx.command_path.replace(" ", "-") + f"_{now}"
             logs = ctx.grand_parent.obj["LOG_STREAM"]
@@ -89,6 +93,8 @@ def track(func):
                 )
                 comment = issue.create_comment(txt)
                 logger.info(comment.html_url)
+
+        return ret
 
     return update_wrapper(wrapper, func)
 
@@ -111,7 +117,7 @@ def sbatch(func):
                 fg="green",
             )
 
-        directory = ctx.parent.params.get("directory")
+        directory = ctx.parent.params["directory"]
         if not directory:
             raise EmmetCliError(f"{ctx.parent.command_path} needs --directory option!")
 
@@ -167,9 +173,17 @@ def sbatch(func):
         slurmpy_stderr = io.StringIO()
         with contextlib.redirect_stderr(slurmpy_stderr):
             s.run(command, _cmd="sbatch" if run else "cat", tries=ntries)
-        ret = slurmpy_stderr.getvalue()[2:-1]
-        logger.info("\n" + ret.encode("utf-8").decode("unicode_escape"))
-        # TODO add jobid to SUBMITTED.value
-        return ReturnCodes.SUBMITTED if run else ReturnCodes.SUCCESS
+
+        ret = slurmpy_stderr.getvalue()[2:-2].encode("utf-8").decode("unicode_escape")
+
+        if run:
+            slurm_id = ret.split()[-1]
+            ReturnCodesDynamic = Enum(
+                "ReturnCodesDynamic", {"SUBMITTED": f"SLURM {slurm_id}"}
+            )
+            return ReturnCodesDynamic.SUBMITTED
+
+        logger.info(ret)
+        return ReturnCodes.SUCCESS
 
     return update_wrapper(wrapper, func)

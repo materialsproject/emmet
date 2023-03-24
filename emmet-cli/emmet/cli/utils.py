@@ -43,7 +43,6 @@ class ReturnCodes(Enum):
     SUCCESS = "COMPLETED"
     ERROR = "encountered ERROR"
     WARNING = "exited with WARNING"
-    SUBMITTED = "submitted to SLURM"
 
 
 def structures_match(s1, s2):
@@ -245,10 +244,10 @@ class VaspDirsGenerator:
 
 def get_vasp_dirs():
     ctx = click.get_current_context()
-    run = ctx.parent.parent.params["run"]
     nmax = ctx.parent.params["nmax"]
     pattern = ctx.parent.params["pattern"]
-    reorg = ctx.parent.params["reorg"]
+    run = ctx.parent.parent.params["run"] and pattern.startswith("block_")
+    reorg = ctx.params.get("reorg")
 
     base_path = ctx.parent.params["directory"].rstrip(os.sep)
     base_path_index = len(base_path.split(os.sep))
