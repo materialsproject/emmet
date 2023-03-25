@@ -135,7 +135,7 @@ class PhononBuilder(Builder):
 
         for mpid_chunk in grouper(mats, N):
 
-            yield {"query": {self.phonon.key: {"$in": list(mpid_chunk)}}}
+            yield {"query": {self.phonon_materials.key: {"$in": list(mpid_chunk)}}}
 
     def get_items(self) -> Iterator[Dict]:
         """
