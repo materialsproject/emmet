@@ -257,6 +257,8 @@ def get_vasp_dirs():
 
     counter = 0
     for root, dirs, files in os.walk(base_path, topdown=True):
+        if counter and not counter % 2000:
+            logger.info(f"{counter} launchers found ...")
         if counter == nmax:
             break
 

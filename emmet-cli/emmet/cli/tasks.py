@@ -7,6 +7,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import time
 
 from collections import defaultdict, deque
 from fnmatch import fnmatch
@@ -76,6 +77,17 @@ def tasks(directory, nmax, pattern):
     pass
 
 
+def make_comment(ctx, txt):
+    gh = ctx.grand_parent.obj["GH"]
+    user = gh.me().login
+    issue_number = ctx.grand_parent.params["issue"]
+    issue = gh.issue(
+        SETTINGS.tracker["org"], SETTINGS.tracker["repo"], issue_number
+    )
+    comment = issue.create_comment("\n".join(txt))
+    logger.info(comment.html_url)
+
+
 @tasks.command()
 @sbatch
 @click.option("--clean", is_flag=True, help="Remove original launchers.")
@@ -87,9 +99,7 @@ def backups(ctx, clean):
     subdir_block_launchers = defaultdict(lambda: defaultdict(list))
     gen = VaspDirsGenerator()
 
-    for idx, vasp_dir in enumerate(gen):
-        if idx and not idx % 2000:
-            logger.info(f"{idx} launchers found ...")
+    for vasp_dir in gen:
         subdir, block, launcher = split_vasp_dir_path(vasp_dir)
         subdir_block_launchers[subdir][block].append(launcher)
 
@@ -122,14 +132,7 @@ def backups(ctx, clean):
             logger.info(msg)
 
     if run:
-        gh = ctx.grand_parent.obj["GH"]
-        user = gh.me().login
-        issue_number = ctx.grand_parent.params["issue"]
-        issue = gh.issue(
-            SETTINGS.tracker["org"], SETTINGS.tracker["repo"], issue_number
-        )
-        comment = issue.create_comment("\n".join(comment_txt))
-        logger.info(comment.html_url)
+        make_comment(ctx, comment_txt)
 
     return ReturnCodes.SUCCESS
 
@@ -188,9 +191,7 @@ def load_block_launchers():
     # NOTE this runs within subdir (i.e. block_* directories at root of subdir)
     block_launchers = defaultdict(list)
     gen = VaspDirsGenerator()
-    for idx, vasp_dir in enumerate(gen):
-        if idx and not idx % 500:
-            logger.info(f"{idx} launchers found ...")
+    for vasp_dir in gen:
         _, block, launcher = split_vasp_dir_path(vasp_dir)
         block_launchers[block].append(launcher)
     logger.info(f"Loaded {len(block_launchers)} block(s) with {gen.value} launchers.")
@@ -431,6 +432,74 @@ def restore(inputfile, file_filter):  # noqa: C901
     return ReturnCodes.SUCCESS
 
 
+def group_strings_by_prefix(strings, prefix_length):
+    """group a list of strings by prefix based on a given prefix length"""
+    groups = defaultdict(list)
+    for s in strings:
+        prefix = s[:prefix_length]
+        groups[prefix].append(s)
+
+    return groups
+
+
+@tasks.command()
+@sbatch
+@click.option(  # NOTE this could be retrieved from S3 in the future
+    "--task-ids",
+    type=click.Path(exists=True),
+    help="JSON file mapping launcher name to task ID.",
+)
+@click.pass_context
+def parsers(ctx, task_ids):
+    """Scan root directory and submit separate parser jobs"""
+    ctx.parent.params["nmax"] = sys.maxsize  # disable maximum launchers to determine parser jobs
+    run = ctx.parent.parent.params["run"]
+    directory = ctx.parent.params["directory"]
+    check_pattern()
+    gen = VaspDirsGenerator()
+    launchers = []
+
+    for vaspdir in gen:
+        _, block, launcher = split_vasp_dir_path(vaspdir)
+        launchers.append(os.path.join(block, launcher))
+
+    nparse_max, len_prefix = 5000, len("block_")
+    remaining = group_strings_by_prefix(launchers, len_prefix)
+    logger.info(f"Loaded {gen.value} launchers.")
+    patterns = {}
+
+    while remaining:
+        for prefix in list(remaining.keys()):
+            nlaunchers = len(remaining[prefix])
+            if nlaunchers <= nparse_max:
+                patterns[f"{prefix}*"] = nlaunchers
+                remaining.pop(prefix)
+
+        len_prefix += 1
+        remaining_vaspdirs = [x for v in remaining.values() for x in v]
+        remaining = group_strings_by_prefix(remaining_vaspdirs, len_prefix)
+
+    ctx.parent.parent.params["sbatch"] = True
+    ctx.parent.parent.params["yes"] = True
+    comment_txt = [f"Parse {gen.value} launchers in `{directory}`:\n"]
+
+    for pattern, nlaunchers in patterns.items():
+        msg = f"- `{pattern}` ({nlaunchers})"
+        if run:
+            ctx.parent.params["pattern"] = pattern
+            ret = ctx.parent.invoke(parse, nproc=20, task_ids=task_ids)
+            msg += f" -> {ret.value}"
+            comment_txt.append(msg)
+            time.sleep(90)  # give jobs time to start (cf insertion of separator task)
+        else:
+            logger.info(msg)
+
+    if run:
+        make_comment(ctx, comment_txt)
+
+    return ReturnCodes.SUCCESS
+
+
 @tasks.command()
 @sbatch
 @click.option(
@@ -461,7 +530,7 @@ def restore(inputfile, file_filter):  # noqa: C901
     "-r",
     "--runs",
     multiple=True,
-    default=None,
+    default=["precondition", "relax1", "relax2", "static"],
     help="Naming scheme for multiple calculations in one folder - subfolder or extension.",
 )
 def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C901
