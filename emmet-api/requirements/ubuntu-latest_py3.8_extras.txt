@@ -16,11 +16,11 @@ attrs==22.2.0
     #   pytest
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.92
+boto3==1.26.99
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.92
+botocore==1.29.99
     # via
     #   boto3
     #   s3transfer
@@ -50,9 +50,9 @@ colorama==0.4.6
     # via griffe
 contourpy==1.0.7
     # via matplotlib
-coverage[toml]==7.2.1
+coverage[toml]==7.2.2
     # via pytest-cov
-cryptography==39.0.2
+cryptography==40.0.1
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
@@ -60,7 +60,7 @@ cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.9.3
+ddtrace==1.10.1
     # via emmet-api (setup.py)
 distlib==0.3.6
     # via virtualenv
@@ -68,7 +68,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.49.1
+emmet-core[all]==0.50.0
     # via
     #   emmet-api (setup.py)
     #   mp-api
@@ -78,17 +78,17 @@ exceptiongroup==1.1.1
     # via
     #   cattrs
     #   pytest
-fastapi==0.94.1
+fastapi==0.95.0
     # via
     #   emmet-api (setup.py)
     #   maggma
-filelock==3.10.0
+filelock==3.10.6
     # via virtualenv
 flake8==6.0.0
     # via emmet-api (setup.py)
 flask==2.2.3
     # via mongogrant
-fonttools==4.39.0
+fonttools==4.39.2
     # via matplotlib
 future==0.18.3
     # via
@@ -104,13 +104,13 @@ h11==0.14.0
     # via uvicorn-tschaume
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.5.20
+identify==2.5.22
     # via pre-commit
 idna==3.4
     # via
     #   anyio
     #   requests
-importlib-metadata==6.0.0
+importlib-metadata==6.1.0
     # via
     #   flask
     #   markdown
@@ -215,7 +215,7 @@ monty==2022.9.9
     #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.30.10
+mp-api==0.30.11
     # via pymatgen
 mpmath==1.3.0
     # via sympy
@@ -251,7 +251,7 @@ numpy==1.24.2
     #   seekpath
     #   shapely
     #   spglib
-orjson==3.8.7
+orjson==3.8.8
     # via maggma
 packaging==23.0
     # via
@@ -272,13 +272,13 @@ pillow==9.4.0
     # via matplotlib
 pkgutil-resolve-name==1.3.10
     # via jsonschema
-platformdirs==3.1.1
+platformdirs==3.2.0
     # via virtualenv
 plotly==5.13.1
     # via pymatgen
 pluggy==1.0.0
     # via pytest
-pre-commit==3.1.1
+pre-commit==3.2.1
     # via emmet-api (setup.py)
 protobuf==4.22.1
     # via
@@ -297,7 +297,7 @@ pycodestyle==2.10.0
     #   flake8
 pycparser==2.21
     # via cffi
-pydantic==1.10.6
+pydantic==1.10.7
     # via
     #   emmet-core
     #   fastapi
@@ -311,7 +311,7 @@ pyflakes==3.0.1
     # via flake8
 pygments==2.14.0
     # via mkdocs-material
-pymatgen==2023.3.10
+pymatgen==2023.3.23
     # via
     #   emmet-core
     #   matminer
@@ -351,7 +351,7 @@ python-dateutil==2.8.2
     #   maggma
     #   matplotlib
     #   pandas
-pytz==2022.7.1
+pytz==2023.2
     # via pandas
 pyyaml==6.0
     # via
@@ -444,11 +444,11 @@ tqdm==4.65.0
     #   maggma
     #   matminer
     #   pymatgen
-types-requests==2.28.11.15
+types-requests==2.28.11.16
     # via emmet-api (setup.py)
-types-setuptools==67.6.0.0
+types-setuptools==67.6.0.5
     # via emmet-api (setup.py)
-types-urllib3==1.26.25.8
+types-urllib3==1.26.25.9
     # via types-requests
 typing-extensions==4.5.0
     # via
@@ -470,7 +470,7 @@ uvicorn-tschaume==0.19.1
     # via emmet-api (setup.py)
 virtualenv==20.21.0
     # via pre-commit
-watchdog==2.3.1
+watchdog==3.0.0
     # via mkdocs
 wcmatch==8.4.1
     # via mkdocs-awesome-pages-plugin
