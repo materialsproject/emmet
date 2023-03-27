@@ -474,7 +474,8 @@ def parsers(ctx, task_ids):
         _, block, launcher = split_vasp_dir_path(vaspdir)
         launchers.append(os.path.join(block, launcher))
 
-    nparse_max, len_prefix = 5000, len("block_")
+    pattern = ctx.parent.params["pattern"]
+    nparse_max, len_prefix = 5000, len(pattern[:-1])  # NOTE assuming endswith *
     remaining = group_strings_by_prefix(launchers, len_prefix)
     logger.info(f"Loaded {gen.value} launchers.")
     patterns = {}
@@ -492,12 +493,14 @@ def parsers(ctx, task_ids):
 
     ctx.parent.parent.params["sbatch"] = True
     ctx.parent.parent.params["yes"] = True
-    comment_txt = [f"Parse {gen.value} launchers in `{directory}`:\n"]
+    rootdir_pattern = os.path.join(directory, ctx.parent.params["pattern"])
+    comment_txt = [f"Parse {gen.value} launchers in `{rootdir_pattern}`:\n"]
 
     for pattern, nlaunchers in patterns.items():
         msg = f"- `{pattern}` ({nlaunchers})"
         if run:
             ctx.parent.params["pattern"] = pattern
+            ctx.parent.params["nmax"] = nlaunchers
             ret = ctx.parent.invoke(parse, nproc=20, task_ids=task_ids)
             msg += f" -> {ret.value}"
             comment_txt.append(msg)
