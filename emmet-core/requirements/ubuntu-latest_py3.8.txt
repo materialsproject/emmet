@@ -12,9 +12,9 @@ contourpy==1.0.7
     # via matplotlib
 cycler==0.11.0
     # via matplotlib
-emmet-core==0.49.1
+emmet-core==0.50.0
     # via mp-api
-fonttools==4.39.0
+fonttools==4.39.2
     # via matplotlib
 future==0.18.3
     # via uncertainties
@@ -34,7 +34,7 @@ monty==2022.9.9
     #   emmet-core (setup.py)
     #   mp-api
     #   pymatgen
-mp-api==0.30.10
+mp-api==0.30.11
     # via pymatgen
 mpmath==1.3.0
     # via sympy
@@ -65,11 +65,11 @@ pybtex==0.24.0
     #   emmet-core
     #   emmet-core (setup.py)
     #   pymatgen
-pydantic==1.10.6
+pydantic==1.10.7
     # via
     #   emmet-core
     #   emmet-core (setup.py)
-pymatgen==2023.3.10
+pymatgen==2023.3.23
     # via
     #   emmet-core
     #   emmet-core (setup.py)
@@ -80,7 +80,7 @@ python-dateutil==2.8.2
     # via
     #   matplotlib
     #   pandas
-pytz==2022.7.1
+pytz==2023.2
     # via pandas
 pyyaml==6.0
     # via pybtex
