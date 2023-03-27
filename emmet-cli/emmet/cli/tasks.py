@@ -28,6 +28,7 @@ from emmet.cli.utils import (
     ensure_indexes,
     iterator_slice,
     parse_vasp_dirs,
+    get_symlinked_path,
 )
 
 logger = logging.getLogger("emmet")
@@ -94,7 +95,6 @@ def make_comment(ctx, txt):
 @click.pass_context
 def backups(ctx, clean):
     """Scan root directory and submit separate backup jobs for subdirectories containing blocks"""
-    # TODO deal with --reorg scenario
     ctx.parent.params["nmax"] = sys.maxsize  # disable maximum launchers for backup
     subdir_block_launchers = defaultdict(lambda: defaultdict(list))
     gen = VaspDirsGenerator()
@@ -182,10 +182,21 @@ def check_pattern(nested_allowed=False):
 
 def split_vasp_dir_path(vasp_dir):
     prefix = "block_" # TODO should use PREFIXES?
+    if prefix not in vasp_dir:
+        ctx = click.get_current_context()
+        offset = len(ctx.parent.params["pattern"].split(os.sep))
+        base_path = ctx.parent.params["directory"].rstrip(os.sep)
+        base_path_index = len(base_path.split(os.sep)) + offset
+        vasp_dir = get_symlinked_path(vasp_dir, base_path_index)
+
     vasp_dir_split = vasp_dir.split(prefix, 1)
-    launch_dir = prefix + vasp_dir_split[-1]
-    block, launcher = launch_dir.split(os.sep, 1)
-    return vasp_dir_split[0], block, launcher
+    vasp_dir_split_len = len(vasp_dir_split)
+    if vasp_dir_split_len == 2:
+        launch_dir = prefix + vasp_dir_split[-1]
+        block, launcher = launch_dir.split(os.sep, 1)
+        return vasp_dir_split[0], block, launcher
+    else:
+        raise EmmetCliError(f"Failed to split vasp dir {vasp_dir}!")
 
 def load_block_launchers():
     # NOTE this runs within subdir (i.e. block_* directories at root of subdir)

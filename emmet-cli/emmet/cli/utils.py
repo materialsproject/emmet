@@ -176,7 +176,7 @@ def make_block(base_path):
 
 
 def get_symlinked_path(root, base_path_index):
-    """organize directory in block_*/launcher_* via symbolic links"""
+    """organize directory in block_*/launcher_*"""
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
     root_split = root.split(os.sep)
@@ -188,10 +188,10 @@ def get_symlinked_path(root, base_path_index):
         all_blocks = glob(os.path.join(base_path, "block_*/"))
         for block_dir in all_blocks:
             p = os.path.join(block_dir, "launcher_*/")
-            if len(glob(p)) < 300:
+            if len(glob(p)) < 500:
                 break
         else:
-            # didn't find a block with < 300 launchers
+            # didn't find a block with < 500 launchers
             block_dir = make_block(base_path)
 
     if root_split[-1].startswith("launcher_"):
