@@ -25,6 +25,7 @@ def test_robocrys_search_query():
                         "$project": {
                             "_id": 0,
                             "task_id": 1,
+                            "material_id": 1,
                             "description": 1,
                             "condensed_structure": 1,
                             "last_updates": 1,
