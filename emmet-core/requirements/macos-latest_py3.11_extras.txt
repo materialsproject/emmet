@@ -14,9 +14,9 @@ attrs==22.2.0
     #   pytest
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.99
+boto3==1.26.102
     # via maggma
-botocore==1.29.99
+botocore==1.29.102
     # via
     #   boto3
     #   s3transfer
@@ -63,13 +63,13 @@ emmet-core==0.50.0
     # via mp-api
 fastapi==0.95.0
     # via maggma
-filelock==3.10.6
+filelock==3.10.7
     # via virtualenv
 flake8==6.0.0
     # via emmet-core (setup.py)
 flask==2.2.3
     # via mongogrant
-fonttools==4.39.2
+fonttools==4.39.3
     # via matplotlib
 future==0.18.3
     # via
@@ -219,13 +219,14 @@ numpy==1.24.2
     #   seekpath
     #   shapely
     #   spglib
-orjson==3.8.8
+orjson==3.8.9
     # via maggma
 packaging==23.0
     # via
     #   matplotlib
     #   mkdocs
     #   mongomock
+    #   plotly
     #   pytest
 palettable==3.3.0
     # via pymatgen
@@ -239,7 +240,7 @@ pillow==9.4.0
     # via matplotlib
 platformdirs==3.2.0
     # via virtualenv
-plotly==5.13.1
+plotly==5.14.0
     # via pymatgen
 pluggy==1.0.0
     # via pytest
@@ -283,7 +284,7 @@ pymatgen==2023.3.23
     #   pymatgen-analysis-alloys
     #   pymatgen-analysis-diffusion
     #   robocrys
-pymatgen-analysis-alloys==0.0.5
+pymatgen-analysis-alloys==0.0.6
     # via emmet-core (setup.py)
 pymatgen-analysis-diffusion==2022.7.21
     # via emmet-core (setup.py)
@@ -315,7 +316,7 @@ python-dateutil==2.8.2
     #   maggma
     #   matplotlib
     #   pandas
-pytz==2023.2
+pytz==2023.3
     # via pandas
 pyyaml==6.0
     # via
@@ -355,7 +356,7 @@ seekpath==2.0.1
     # via emmet-core (setup.py)
 sentinels==1.0.0
     # via mongomock
-sentry-sdk==1.17.0
+sentry-sdk==1.18.0
     # via custodian
 shapely==2.0.1
     # via pymatgen-analysis-alloys
@@ -397,11 +398,11 @@ tqdm==4.65.0
     #   maggma
     #   matminer
     #   pymatgen
-types-requests==2.28.11.16
+types-requests==2.28.11.17
     # via emmet-core (setup.py)
-types-setuptools==67.6.0.5
+types-setuptools==67.6.0.6
     # via emmet-core (setup.py)
-types-urllib3==1.26.25.9
+types-urllib3==1.26.25.10
     # via types-requests
 typing-extensions==4.5.0
     # via

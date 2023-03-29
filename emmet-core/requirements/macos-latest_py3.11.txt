@@ -14,7 +14,7 @@ cycler==0.11.0
     # via matplotlib
 emmet-core==0.50.0
     # via mp-api
-fonttools==4.39.2
+fonttools==4.39.3
     # via matplotlib
 future==0.18.3
     # via uncertainties
@@ -49,14 +49,16 @@ numpy==1.24.2
     #   scipy
     #   spglib
 packaging==23.0
-    # via matplotlib
+    # via
+    #   matplotlib
+    #   plotly
 palettable==3.3.0
     # via pymatgen
 pandas==1.5.3
     # via pymatgen
 pillow==9.4.0
     # via matplotlib
-plotly==5.13.1
+plotly==5.14.0
     # via pymatgen
 pybtex==0.24.0
     # via
@@ -78,7 +80,7 @@ python-dateutil==2.8.2
     # via
     #   matplotlib
     #   pandas
-pytz==2023.2
+pytz==2023.3
     # via pandas
 pyyaml==6.0
     # via pybtex
