@@ -1,4 +1,4 @@
-FROM materialsproject/devops:python-3.916.5 as base
+FROM materialsproject/devops:python-3.1010.0 as base
 
 FROM base as builder
 RUN apt-get update && apt-get install -y --no-install-recommends gcc git g++ cmake make libsnappy-dev wget && apt-get clean
@@ -17,7 +17,7 @@ RUN wget -q https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-
     chmod +x wait-for-it.sh && mv wait-for-it.sh /root/.local/bin/
 
 FROM base
-COPY --from=builder /root/.local/lib/python3.9/site-packages /root/.local/lib/python3.9/site-packages
+COPY --from=builder /root/.local/lib/python3.10/site-packages /root/.local/lib/python3.10/site-packages
 COPY --from=builder /root/.local/bin /root/.local/bin
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libsnappy* /usr/lib/x86_64-linux-gnu/
 COPY --from=builder /emmet-api /emmet-api
