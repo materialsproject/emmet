@@ -36,7 +36,7 @@ def test_entries_query():
 
         assert new_op.query(task_ids=" mp-149, mp-13") == query
 
-    with open(os.path.join(MAPISettings().TEST_FILES, "tasks_Li_Fe_V.json")) as file:
+    with open(os.path.join(MAPISettings(DB_VERSION="").TEST_FILES, "tasks_Li_Fe_V.json")) as file:
         tasks = load(file)
     docs = op.post_process(tasks, query)
     assert docs[0]["entry"]["@class"] == "ComputedStructureEntry"
@@ -54,7 +54,7 @@ def test_trajectory_query():
 
         assert new_op.query(task_ids=" mp-149, mp-13") == query
 
-    with open(os.path.join(MAPISettings().TEST_FILES, "tasks_Li_Fe_V.json")) as file:
+    with open(os.path.join(MAPISettings(DB_VERSION="").TEST_FILES, "tasks_Li_Fe_V.json")) as file:
         tasks = load(file)
     docs = op.post_process(tasks, query)
     assert docs[0]["trajectories"][0]["@class"] == "Trajectory"

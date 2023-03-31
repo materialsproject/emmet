@@ -113,7 +113,7 @@ def test_multi_material_id_query():
 def test_find_structure_query():
     op = FindStructureQuery()
 
-    structure = Structure.from_file(os.path.join(MAPISettings().TEST_FILES, "Si_mp_149.cif"))
+    structure = Structure.from_file(os.path.join(MAPISettings(DB_VERSION="").TEST_FILES, "Si_mp_149.cif"))
     query = {"criteria": {"composition_reduced": dict(structure.composition.to_reduced_dict)}}
     assert op.query(structure=structure.as_dict(), ltol=0.2, stol=0.3, angle_tol=5, _limit=1) == query
 

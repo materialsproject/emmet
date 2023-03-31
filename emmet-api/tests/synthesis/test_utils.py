@@ -1,10 +1,6 @@
 import os
 from json import load
-from emmet.api.routes.synthesis.utils import (
-    make_ellipsis,
-    mask_paragraphs,
-    mask_highlights,
-)
+from emmet.api.routes.synthesis.utils import make_ellipsis, mask_paragraphs, mask_highlights
 from emmet.api.core.settings import MAPISettings
 from emmet.core.synthesis import SynthesisSearchResultModel
 
@@ -19,7 +15,7 @@ def test_make_ellipsis():
 
 
 def test_mask_paragraphs():
-    with open(os.path.join(MAPISettings().TEST_FILES, "synth_doc.json")) as file:
+    with open(os.path.join(MAPISettings(DB_VERSION="").TEST_FILES, "synth_doc.json")) as file:
         synth_doc = load(file)
 
     doc = SynthesisSearchResultModel(**synth_doc)
@@ -29,7 +25,7 @@ def test_mask_paragraphs():
 
 
 def test_mask_highlights():
-    with open(os.path.join(MAPISettings().TEST_FILES, "synth_doc.json")) as file:
+    with open(os.path.join(MAPISettings(DB_VERSION="").TEST_FILES, "synth_doc.json")) as file:
         synth_doc = load(file)
 
     doc = SynthesisSearchResultModel(**synth_doc)
