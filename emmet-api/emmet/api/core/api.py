@@ -1,7 +1,6 @@
 from typing import Dict, List
 from maggma.api.resource.core import Resource
 from pymatgen.core import __version__ as pmg_version  # type: ignore
-from emmet.api.core.settings import MAPISettings
 from emmet.api import __version__ as api_version
 from fastapi.openapi.utils import get_openapi
 from maggma.api.API import API
@@ -18,11 +17,7 @@ class MAPI(API):
         title="Materials Project API",
         version=api_version,
         debug=False,
-        heartbeat_meta={
-            "pymatgen": pmg_version,
-            "db_version": MAPISettings().DB_VERSION,
-            "suffix": MAPISettings().DB_NAME_SUFFIX,
-        },
+        heartbeat_meta={"pymatgen": pmg_version, "db_version": None, "suffix": None},
         description=None,
         tags_meta=None,
     ):

@@ -13,13 +13,11 @@ class MAPISettings(BaseSettings):
     DEBUG: bool = Field(False, description="Turns on debug mode for MAPI")
 
     TEST_FILES: str = Field(
-        os.path.join(
-            os.path.dirname(os.path.abspath(root_dir)), "../../../test_files"
-        ),
+        os.path.join(os.path.dirname(os.path.abspath(root_dir)), "../../../test_files"),
         description="Directory with test files",
     )
 
-    DB_VERSION: str = Field("2021.11.10", description="Database version")
+    DB_VERSION: str = Field(..., description="Database version")
 
     DB_NAME_SUFFIX: Literal["blue", "green"] = Field(None, description="Database name suffix. Either blue or green.")
 

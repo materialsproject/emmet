@@ -9,7 +9,7 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
-    ChargeSpinQuery
+    ChargeSpinQuery,
 )
 from emmet.api.routes.mpcules.utils import MethodQuery, MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
@@ -32,21 +32,14 @@ def charges_resource(charges_store):
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
-                PartialChargesDoc,
-                default_fields=[
-                    "molecule_id",
-                    "property_id",
-                    "solvent",
-                    "method",
-                    "last_updated"
-                ],
+                PartialChargesDoc, default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"]
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["MPcules Partial Charges"],
         sub_path="/partial_charges/",
         disable_validation=True,
-        timeout=MAPISettings().TIMEOUT,
+        timeout=MAPISettings(DB_VERSION="").TIMEOUT,
     )
 
     return resource

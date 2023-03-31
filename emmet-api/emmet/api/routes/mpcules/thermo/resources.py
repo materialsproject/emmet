@@ -1,23 +1,16 @@
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.molecules.thermo import MoleculeThermoDoc
 
-from maggma.api.query_operator import (
-    NumericQuery,
-    PaginationQuery,
-    SortQuery,
-    SparseFieldsQuery
-)
+from maggma.api.query_operator import NumericQuery, PaginationQuery, SortQuery, SparseFieldsQuery
 
-from emmet.api.routes.mpcules.thermo.query_operators import (
-    ThermoCorrectionQuery,
-)
+from emmet.api.routes.mpcules.thermo.query_operators import ThermoCorrectionQuery
 from emmet.api.routes.mpcules.molecules.query_operators import (
     MultiMPculeIDQuery,
     ExactCalcMethodQuery,
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
-    ChargeSpinQuery
+    ChargeSpinQuery,
 )
 from emmet.api.routes.mpcules.utils import MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
@@ -41,21 +34,14 @@ def thermo_resource(thermo_store):
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
-                MoleculeThermoDoc,
-                default_fields=[
-                    "molecule_id",
-                    "property_id",
-                    "solvent",
-                    "method",
-                    "last_updated"
-                ],
+                MoleculeThermoDoc, default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"]
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["MPcules Thermo"],
         sub_path="/thermo/",
         disable_validation=True,
-        timeout=MAPISettings().TIMEOUT,
+        timeout=MAPISettings(DB_VERSION="").TIMEOUT,
     )
 
     return resource

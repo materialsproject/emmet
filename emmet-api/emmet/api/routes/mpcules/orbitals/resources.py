@@ -15,7 +15,7 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
-    ChargeSpinQuery
+    ChargeSpinQuery,
 )
 from emmet.api.routes.mpcules.utils import MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
@@ -40,13 +40,13 @@ def orbitals_resource(orbital_store):
             NBOInteractionQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(OrbitalDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),
+            SparseFieldsQuery(OrbitalDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["MPcules Orbitals"],
         sub_path="/orbitals/",
         disable_validation=True,
-        timeout=MAPISettings().TIMEOUT,
+        timeout=MAPISettings(DB_VERSION="").TIMEOUT,
     )
 
     return resource

@@ -19,7 +19,7 @@ from emmet.api.core.settings import MAPISettings
 from emmet.core.tasks import DeprecationDoc
 from emmet.core.qchem.task import TaskDocument
 
-timeout = MAPISettings().TIMEOUT
+timeout = MAPISettings(DB_VERSION="").TIMEOUT
 
 
 def task_resource(task_store):

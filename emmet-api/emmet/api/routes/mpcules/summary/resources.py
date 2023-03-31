@@ -1,11 +1,6 @@
 from emmet.core.molecules.summary import MoleculeSummaryDoc
 
-from maggma.api.query_operator import (
-    PaginationQuery,
-    SortQuery,
-    SparseFieldsQuery,
-    NumericQuery,
-)
+from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery, NumericQuery
 from maggma.api.resource import ReadOnlyResource
 from emmet.api.routes.mpcules.molecules.query_operators import (
     FormulaQuery,
@@ -14,13 +9,13 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     ChargeSpinQuery,
     DeprecationQuery,
 )
-from emmet.api.routes.summary.query_operators import HasPropsQuery
+from emmet.api.routes.materials.summary.query_operators import HasPropsQuery
 from emmet.api.routes.mpcules.summary.hint_scheme import SummaryHintScheme
 from emmet.api.routes.mpcules.summary.query_operators import MPculeIDsSearchQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 
-timeout = MAPISettings().TIMEOUT
+timeout = MAPISettings(DB_VERSION="").TIMEOUT
 
 
 def summary_resource(summary_store):
@@ -44,7 +39,7 @@ def summary_resource(summary_store):
         header_processor=GlobalHeaderProcessor(),
         tags=["MPcules Summary"],
         disable_validation=True,
-        timeout=timeout
+        timeout=timeout,
     )
 
     return resource

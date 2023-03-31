@@ -1,16 +1,12 @@
 import os
-from emmet.api.core.settings import MAPISettings
 from maggma.stores import MongoURIStore
 
-from emmet.api.routes.mpcules.tasks.resources import (
-    task_resource,
-    task_deprecation_resource
-)
+from emmet.api.routes.mpcules.tasks.resources import task_resource, task_deprecation_resource
 from emmet.api.routes.mpcules.association.resources import mol_assoc_resource
 from emmet.api.routes.mpcules.molecules.resources import (
     find_molecule_resource,
     find_molecule_connectivity_resource,
-    molecules_resource
+    molecules_resource,
 )
 from emmet.api.routes.mpcules.partial_charges.resources import charges_resource
 from emmet.api.routes.mpcules.partial_spins.resources import spins_resource
@@ -24,10 +20,7 @@ from emmet.api.routes.mpcules.summary.resources import summary_resource
 
 resources = {}
 
-default_settings = MAPISettings()
-
 db_uri = os.environ.get("MPCONTRIBS_MONGO_HOST", None)
-db_version = default_settings.DB_VERSION
 db_suffix = os.environ["MAPI_DB_NAME_SUFFIX"]
 
 if db_uri:
@@ -37,45 +30,35 @@ if db_uri:
     if len(db_uri.split("://", 1)) < 2:
         db_uri = "mongodb+srv://" + db_uri
 
-    task_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="task_id", collection_name="mpcules_tasks",
-    )
+    task_store = MongoURIStore(uri=db_uri, database="mp_molecules", key="task_id", collection_name="mpcules_tasks")
 
-    assoc_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="mpcules_assoc",
-    )
+    assoc_store = MongoURIStore(uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="mpcules_assoc")
 
     mol_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="mpcules_molecules",
+        uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="mpcules_molecules"
     )
 
     charges_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_charges",
+        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_charges"
     )
 
-    spins_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_spins",
-    )
+    spins_store = MongoURIStore(uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_spins")
 
-    bonds_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_bonds",
-    )
+    legacy_store = MongoURIStore(uri=db_uri, database="mp_core", key="task_id", collection_name="molecules")
+
+    bonds_store = MongoURIStore(uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_bonds")
 
     orbitals_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_orbitals",
+        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_orbitals"
     )
 
-    redox_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_redox",
-    )
+    redox_store = MongoURIStore(uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_redox")
 
     thermo_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_thermo",
+        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_thermo"
     )
 
-    vibes_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_vibes",
-    )
+    vibes_store = MongoURIStore(uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_vibes")
 
     summary_store = MongoURIStore(
         uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="mpcules_summary"
@@ -84,27 +67,23 @@ if db_uri:
 else:
     raise RuntimeError("Must specify MongoDB URI containing inputs.")
 
+# Legacy molecules
+from emmet.api.routes.molecules.resources import molecules_resource
+
+resources.update({"molecules": [molecules_resource(legacy_store)]})
+
 
 mpcules_resources = list()
 
 # Tasks
-mpcules_resources.extend(
-    [
-        task_resource(task_store),
-        task_deprecation_resource(task_store)
-    ]
-)
+mpcules_resources.extend([task_resource(task_store), task_deprecation_resource(task_store)])
 
 # Assoc
 mpcules_resources.extend([mol_assoc_resource(assoc_store)])
 
 # Molecules
 mpcules_resources.extend(
-    [
-        molecules_resource(mol_store),
-        find_molecule_resource(mol_store),
-        find_molecule_connectivity_resource(mol_store),
-    ]
+    [molecules_resource(mol_store), find_molecule_resource(mol_store), find_molecule_connectivity_resource(mol_store)]
 )
 
 # Partial charges

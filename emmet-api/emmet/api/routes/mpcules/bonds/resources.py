@@ -3,16 +3,14 @@ from emmet.core.molecules.bonds import MoleculeBondingDoc
 
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 
-from emmet.api.routes.mpcules.bonds.query_operators import (
-    BondTypeLengthQuery,
-)
+from emmet.api.routes.mpcules.bonds.query_operators import BondTypeLengthQuery
 from emmet.api.routes.mpcules.molecules.query_operators import (
     MultiMPculeIDQuery,
     ExactCalcMethodQuery,
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
-    ChargeSpinQuery
+    ChargeSpinQuery,
 )
 from emmet.api.routes.mpcules.utils import MethodQuery, MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
@@ -36,21 +34,14 @@ def bonding_resource(bonds_store):
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
-                MoleculeBondingDoc,
-                default_fields=[
-                    "molecule_id",
-                    "property_id",
-                    "solvent",
-                    "method",
-                    "last_updated"
-                ],
+                MoleculeBondingDoc, default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"]
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["MPcules Bonds"],
         sub_path="/bonding/",
         disable_validation=True,
-        timeout=MAPISettings().TIMEOUT,
+        timeout=MAPISettings(DB_VERSION="").TIMEOUT,
     )
 
     return resource

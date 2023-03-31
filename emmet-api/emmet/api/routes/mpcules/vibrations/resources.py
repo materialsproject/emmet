@@ -9,7 +9,7 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
-    ChargeSpinQuery
+    ChargeSpinQuery,
 )
 from emmet.api.routes.mpcules.utils import MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
@@ -30,13 +30,13 @@ def vibration_resource(vibes_store):
             MultiPropertyIDQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(VibrationDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),
+            SparseFieldsQuery(VibrationDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["MPcules Vibrations"],
         sub_path="/vibrations/",
         disable_validation=True,
-        timeout=MAPISettings().TIMEOUT,
+        timeout=MAPISettings(DB_VERSION="").TIMEOUT,
     )
 
     return resource

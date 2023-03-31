@@ -36,7 +36,7 @@ To use the API, you have three options:
 
 tags_meta = [
     {
-        "name": "Summary",
+        "name": "Materials Summary",
         "description": "Route providing a large amount of amalgamated data for a material. This is constructed by \
             combining subsets of data from many of the other API endpoints. The summary endpoint is very useful for \
             performing queries for materials over a large property space. Note that every unique material within \
@@ -54,7 +54,7 @@ tags_meta = [
             a full list of fields returned by this route.',
     },
     {
-        "name": "Tasks",
+        "name": "Materials Tasks",
         "description": 'Route for "core" information associated with a given calculation in the Materials Project \
             database. Multiple calculations can ultimately be associated with a unique material, and are the source \
             of its reported properties. The unique identifier for a calculation is its `task_id`. Note \
@@ -64,7 +64,7 @@ tags_meta = [
             `TaskDoc` schema for a full list of fields returned by this route.',
     },
     {
-        "name": "Thermo",
+        "name": "Materials Thermo",
         "description": "Route providing computed thermodynamic data for a material such as \
             formation energy and energy above hull. Corrected energy values are also available that employ \
             the schemes discussed by \
@@ -77,7 +77,7 @@ tags_meta = [
         },
     },
     {
-        "name": "Dielectric",
+        "name": "Materials Dielectric",
         "description": "Route providing computed dielectric data for a material following the \
             methodology discussed by [Petousis *et al.*](https://doi.org/10.1038/sdata.2016.134) \
             Note that dielectric data has not been calculated for all materials in the Materials \
@@ -88,14 +88,14 @@ tags_meta = [
         },
     },
     {
-        "name": "Magnetism",
+        "name": "Materials Magnetism",
         "description": "Route providing computed magnetic ordering related data for a material following the \
             methodology discussed by [Horton *et al.*](https://doi.org/10.1038/s41524-019-0199-7) \
             Note that magnetic data has not been calculated for all materials in the Materials \
             Project database. See the `MagnetismDoc` schema for a full list of fields returned by this route.",
     },
     {
-        "name": "Piezoelectric",
+        "name": "Materials Piezoelectric",
         "description": "Route providing computed piezoelectric data for a material following the \
             methodology discussed by [de Jong *et al.*](https://doi.org/10.1038/sdata.2015.53) \
             Note that piezoelectric data has not been calculated for all materials in the Materials \
@@ -106,7 +106,7 @@ tags_meta = [
         },
     },
     {
-        "name": "Phonon",
+        "name": "Materials Phonon",
         "description": "Route providing computed phonon data for a material following the \
             methodology discussed by [Petretto *et al.*](https://doi.org/10.1038/sdata.2018.65) \
             Note that phonon data has not been calculated for all materials in the Materials \
@@ -117,7 +117,7 @@ tags_meta = [
         },
     },
     {
-        "name": "EOS",
+        "name": "Materials EOS",
         "description": "Route providing computed equations of state data for a material following the \
             methodology discussed by [Latimer *et al.*](https://doi.org/10.1038/s41524-018-0091-x) \
             Note that equations of state data has not been calculated for all materials in the Materials \
@@ -128,7 +128,7 @@ tags_meta = [
         },
     },
     {
-        "name": "Similarity",
+        "name": "Materials Similarity",
         "description": "Route providing a computed similarity metric between materials following the \
             methodology discussed by Zimmerman *et al.* in [10.3389/fmats.2017.00034](https://doi.org/10.3389/fmats.2017.00034) \
             and [10.1039/C9RA07755C](https://doi.org/10.1039/C9RA07755C). \
@@ -136,7 +136,7 @@ tags_meta = [
             Project database. See the `imilarityDoc` schema for a full list of fields returned by this route.",
     },
     {
-        "name": "XAS",
+        "name": "Materials XAS",
         "description": "Route providing computed x-ray absorption spectroscopy data for a material following the \
             methodology discussed by [Mathew *et al.*](https://doi.org/10.1038/sdata.2018.151) \
             and [Chen *et al.*](https://doi.org/10.1038/s41597-021-00936-5) \
@@ -144,14 +144,14 @@ tags_meta = [
             Project database. See the `XASDoc` schema for a full list of fields returned by this route.",
     },
     {
-        "name": "Grain Boundaries",
+        "name": "Materials Grain Boundaries",
         "description": "Route providing computed grain boundary data for a material following the \
             methodology discussed by [Hui *et al.*](https://doi.org/10.1016/j.actamat.2019.12.030) \
             Note that grain boundary data has not been calculated for all materials in the Materials \
             Project database. See the `GrainBoundaryDoc` schema for a full list of fields returned by this route.",
     },
     {
-        "name": "Electronic Structure",
+        "name": "Materials Electronic Structure",
         "description": "Routes providing computed electronic structure related data for a material such as \
             band gap and fermi level. Python objects for line-mode band structures, density of states, and \
             fermi surfaces are also available. This data was obtained following the methodology discussed by \
@@ -165,7 +165,7 @@ tags_meta = [
         },
     },
     {
-        "name": "Elasticity",
+        "name": "Materials Elasticity",
         "description": "Route providing computed elasticity data for a material following the \
             methodology discussed by [de Jong *et al.*](https://doi.org/10.1038/sdata.2015.9) \
             Note that elasticity data has not been calculated for all materials in the Materials \
@@ -176,41 +176,34 @@ tags_meta = [
         },
     },
     {
-        "name": "DOIs",
+        "name": "Materials DOIs",
         "description": "Route providing DOI and bibtex reference information for a material. \
             Note that this data may not be available for all materials in the Materials \
             Project database. See the `DOIDoc` schema for a full list of fields returned by this route.",
     },
     {
-        "name": "Substrates",
+        "name": "Materials Substrates",
         "description": "Route providing computed suggested substrate data for a material following the \
             methodology discussed by [Ding *et al.*](https://doi.org/10.1021/acsami.6b01630) \
             Note that substrate data has not been calculated for all materials in the Materials \
             Project database. See the `SubstratesDoc` schema for a full list of fields returned by this route.",
     },
     {
-        "name": "Surface Properties",
+        "name": "Materials Surface Properties",
         "description": "Route providing computed surface property data for a material following the \
             methodology discussed by [Tran *et al.*](https://doi.org/10.1038/sdata.2016.80) \
             Note that surface data has not been calculated for all materials in the Materials \
             Project database. See the `SurfacePropDoc` schema for a full list of fields returned by this route.",
     },
     {
-        "name": "Robocrystallographer",
+        "name": "Materials Robocrystallographer",
         "description": "Route providing a computed text description for a material following the \
             methodology discussed by [Ganose *et al.*](https://doi.org/10.1557/mrc.2019.94) \
             Note that descriptions may not been calculated for all materials in the Materials \
             Project database. See the `RobocrysDoc` schema for a full list of fields returned by this route.",
     },
     {
-        "name": "Synthesis",
-        "description": "Route providing a synthesis recipes for materials extracted from literature \
-            following the methodology discussed by [Kononova *et al.*](https://doi.org/10.1038/s41597-019-0224-1) \
-            Note that synthesis recipes may not be available for all materials in the Materials \
-            Project database. See the `SynthesisSearchResultModel` schema for a full list of fields returned by this route.",
-    },
-    {
-        "name": "Electrodes",
+        "name": "Materials Electrodes",
         "description": "Route providing computed electrode data for a material following the \
             methodology discussed by [Shen *et al.*](https://doi.org/10.1038/s41524-020-00422-3) \
             Note that electrode data has not been calculated for all materials in the Materials \
@@ -224,21 +217,21 @@ tags_meta = [
             fields returned by this route.",
     },
     {
-        "name": "Oxidation States",
+        "name": "Materials Oxidation States",
         "description": "Route providing computed oxidation state data for a material following the \
             methodology employed by the [BVAnalyzer](https://pymatgen.org/pymatgen.analysis.bond_valence.html) \
             in Pymatgen. Note that oxidation state data has not been calculated for all materials in the Materials \
             Project database. See the `OxidationStateDoc` schema for a full list of fields returned by this route.",
     },
     {
-        "name": "Provenance",
+        "name": "Materials Provenance",
         "description": "Route providing provenance data for a material such as whether it is theoretical, \
             its associated ICSD entries, and relevant references in literature. Note that provenance data \
             may not be available for all materials in the Materials Project database. See the `ProvenanceDoc` \
             schema for a full list of fields returned by this route.",
     },
     {
-        "name": "Charge Density",
+        "name": "Materials Charge Density",
         "description": "Route providing computed charge density data for a material following the \
             methodology discussed by [Shen *et al.*](https://arxiv.org/abs/2107.03540). Please email \
             <heavy.api.use@materialsproject.org> if you would like to retrieve a large amount of this data. \
@@ -246,14 +239,29 @@ tags_meta = [
             Project database. See the `ChgcarDataDoc` schema for a full list of fields returned by this route.",
     },
     {
+        "name": "Materials Alloys",
+        "description": "Route for retrevial of information about which hypothetical alloy(s) a given material might "
+        "belong to, following the methodolgy discussed by "
+        "[Woods-Robinson, Horton and Persson](https://arxiv.org/pdf/2206.10715).",
+    },
+    {
+        "name": "Materials Absorption",
+        "description": "Route for retrieving optical absorption data obtained "
+        "following the methodolgy discussed by "
+        "[Yang *et al.*](https://arxiv.org/abs/2209.02918).",
+    },
+    {"name": "Materials Bonds", "description": ""},
+    {"name": "Materials Chemical Environment", "description": ""},
+    {
         "name": "MPComplete",
         "description": "Route for submitting structures to the Materials Project. If calculations are run with the \
             submitted structure, the submitter will be credited with the submitted public name and email.",
     },
     {
-        "name": "Alloys",
-        "description": "Route for retrevial of information about which hypothetical alloy(s) a given material might "
-                       "belong to, following the methodolgy discussed by "
-                       "[Woods-Robinson, Horton and Persson](https://arxiv.org/pdf/2206.10715)."
-    }
+        "name": "Synthesis",
+        "description": "Route providing a synthesis recipes for materials extracted from literature \
+            following the methodology discussed by [Kononova *et al.*](https://doi.org/10.1038/s41597-019-0224-1) \
+            Note that synthesis recipes may not be available for all materials in the Materials \
+            Project database. See the `SynthesisSearchResultModel` schema for a full list of fields returned by this route.",
+    },
 ]

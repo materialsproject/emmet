@@ -5,12 +5,7 @@ from maggma.api.resource.post_resource import PostOnlyResource
 from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.find_structure import FindMolecule, FindMoleculeConnectivity
 
-from maggma.api.query_operator import (
-    PaginationQuery,
-    SparseFieldsQuery,
-    SortQuery,
-    NumericQuery,
-)
+from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery, SortQuery, NumericQuery
 
 from emmet.api.routes.mpcules.molecules.hint_scheme import MoleculesHintScheme
 from emmet.api.routes.mpcules.molecules.query_operators import (
@@ -24,13 +19,13 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     FindMoleculeQuery,
     FindMoleculeConnectivityQuery,
     CalcMethodQuery,
-    HashQuery
+    HashQuery,
 )
 
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 
-timeout = MAPISettings().TIMEOUT
+timeout = MAPISettings(DB_VERSION="").TIMEOUT
 
 
 def find_molecule_resource(molecules_store):
@@ -78,14 +73,14 @@ def molecules_resource(molecules_store):
             NumericQuery(model=MoleculeDoc),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(MoleculeDoc, default_fields=["molecule_id", "formula_alphabetical", "last_updated"],),
+            SparseFieldsQuery(MoleculeDoc, default_fields=["molecule_id", "formula_alphabetical", "last_updated"]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["MPcules Molecules"],
         sub_path="/molecules/",
         disable_validation=True,
         hint_scheme=MoleculesHintScheme(),
-        timeout=MAPISettings().TIMEOUT,
+        timeout=MAPISettings(DB_VERSION="").TIMEOUT,
     )
 
     return resource
