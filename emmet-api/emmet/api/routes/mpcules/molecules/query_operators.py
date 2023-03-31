@@ -482,4 +482,3 @@ class HashQuery(QueryOperator):
 
     def ensure_indexes(self):  # pragma: no cover
         return [("species_hash", False), ("coord_hash", False)]
-

@@ -1,5 +1,5 @@
 import os
-from maggma.stores import MongoURIStore, S3Store
+from maggma.stores import MongoURIStore
 
 resources = {}
 
