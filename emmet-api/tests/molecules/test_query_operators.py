@@ -1,7 +1,7 @@
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 
-from emmet.api.routes.molecules.query_operators import (
+from emmet.api.routes.materials.molecules.query_operators import (
     MoleculeBaseQuery,
     MoleculeElementsQuery,
     MoleculeFormulaQuery,
@@ -11,16 +11,12 @@ from emmet.api.routes.molecules.query_operators import (
 def test_molecule_elements_query():
     op = MoleculeElementsQuery()
 
-    assert op.query(elements="Si, O, P") == {
-        "criteria": {"elements": {"$all": ["Si", "O", "P"]}}
-    }
+    assert op.query(elements="Si, O, P") == {"criteria": {"elements": {"$all": ["Si", "O", "P"]}}}
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(elements="Si, O, P") == {
-            "criteria": {"elements": {"$all": ["Si", "O", "P"]}}
-        }
+        assert new_op.query(elements="Si, O, P") == {"criteria": {"elements": {"$all": ["Si", "O", "P"]}}}
 
 
 def test_molecule_base_query():
@@ -39,12 +35,7 @@ def test_molecule_base_query():
         smiles="CN=C=O",
     )
 
-    fields = [
-        "nelements",
-        "EA",
-        "IE",
-        "charge",
-    ]
+    fields = ["nelements", "EA", "IE", "charge"]
 
     c = {field: {"$gte": 0, "$lte": 5} for field in fields}
 
@@ -78,6 +69,4 @@ def test_molecule_formula_query():
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(formula="C6H12O6") == {
-            "criteria": {"formula_pretty": "H2CO"}
-        }
+        assert new_op.query(formula="C6H12O6") == {"criteria": {"formula_pretty": "H2CO"}}

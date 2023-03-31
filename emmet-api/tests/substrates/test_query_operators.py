@@ -1,7 +1,4 @@
-from emmet.api.routes.substrates.query_operators import (
-    SubstrateStructureQuery,
-    EnergyAreaQuery,
-)
+from emmet.api.routes.materials.substrates.query_operators import SubstrateStructureQuery, EnergyAreaQuery
 
 
 from monty.tempfile import ScratchDir
@@ -19,9 +16,9 @@ def test_substrate_structure_operator():
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
 
-        assert new_op.query(
-            film_orientation="0,1, 1", substrate_orientation="1, 0,1"
-        ) == {"criteria": {"film_orient": "0 1 1", "orient": "1 0 1"}}
+        assert new_op.query(film_orientation="0,1, 1", substrate_orientation="1, 0,1") == {
+            "criteria": {"film_orient": "0 1 1", "orient": "1 0 1"}
+        }
 
 
 def test_energy_area_operator():

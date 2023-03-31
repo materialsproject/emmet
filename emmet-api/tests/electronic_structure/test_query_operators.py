@@ -2,16 +2,13 @@ from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 from pymatgen.electronic_structure.core import OrbitalType
 
-from emmet.api.routes.electronic_structure.query_operators import (
+from emmet.api.routes.materials.electronic_structure.query_operators import (
     ESSummaryDataQuery,
     BSDataQuery,
     DOSDataQuery,
     ObjectQuery,
 )
-from emmet.core.electronic_structure import (
-    BSPathType,
-    DOSProjectionType,
-)
+from emmet.core.electronic_structure import BSPathType, DOSProjectionType
 
 from pymatgen.analysis.magnetism.analyzer import Ordering
 from pymatgen.core.periodic_table import Element
@@ -20,27 +17,15 @@ from pymatgen.core.periodic_table import Element
 def test_es_summary_query():
     op = ESSummaryDataQuery()
 
-    assert op.query(
-        magnetic_ordering=Ordering.FiM, is_gap_direct=True, is_metal=False
-    ) == {
-        "criteria": {
-            "magnetic_ordering": "FiM",
-            "is_gap_direct": True,
-            "is_metal": False,
-        }
+    assert op.query(magnetic_ordering=Ordering.FiM, is_gap_direct=True, is_metal=False) == {
+        "criteria": {"magnetic_ordering": "FiM", "is_gap_direct": True, "is_metal": False}
     }
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(
-            magnetic_ordering=Ordering.FiM, is_gap_direct=True, is_metal=False
-        ) == {
-            "criteria": {
-                "magnetic_ordering": "FiM",
-                "is_gap_direct": True,
-                "is_metal": False,
-            }
+        assert new_op.query(magnetic_ordering=Ordering.FiM, is_gap_direct=True, is_metal=False) == {
+            "criteria": {"magnetic_ordering": "FiM", "is_gap_direct": True, "is_metal": False}
         }
 
 
@@ -58,10 +43,7 @@ def test_bs_data_query():
         is_metal=False,
     )
 
-    fields = [
-        "bandstructure.setyawan_curtarolo.band_gap",
-        "bandstructure.setyawan_curtarolo.efermi",
-    ]
+    fields = ["bandstructure.setyawan_curtarolo.band_gap", "bandstructure.setyawan_curtarolo.efermi"]
 
     c = {field: {"$gte": 0, "$lte": 5} for field in fields}
 
@@ -102,11 +84,7 @@ def test_bs_data_query():
 def test_dos_data_query():
     op = DOSDataQuery()
 
-    proj_types = [
-        DOSProjectionType.total,
-        DOSProjectionType.elemental,
-        DOSProjectionType.orbital,
-    ]
+    proj_types = [DOSProjectionType.total, DOSProjectionType.elemental, DOSProjectionType.orbital]
 
     for proj_type in proj_types:
         q = op.query(
@@ -122,21 +100,12 @@ def test_dos_data_query():
         )
 
         if proj_type == DOSProjectionType.total:
-            fields = [
-                "dos.total.1.band_gap",
-                "dos.total.1.efermi",
-            ]
+            fields = ["dos.total.1.band_gap", "dos.total.1.efermi"]
         elif proj_type == DOSProjectionType.elemental:
-            fields = [
-                "dos.elemental.Si.s.1.band_gap",
-                "dos.elemental.Si.s.1.efermi",
-            ]
+            fields = ["dos.elemental.Si.s.1.band_gap", "dos.elemental.Si.s.1.efermi"]
 
         elif proj_type == DOSProjectionType.orbital:
-            fields = [
-                "dos.orbital.s.1.band_gap",
-                "dos.orbital.s.1.efermi",
-            ]
+            fields = ["dos.orbital.s.1.band_gap", "dos.orbital.s.1.efermi"]
 
         c = {field: {"$gte": 0, "$lte": 5} for field in fields}
 

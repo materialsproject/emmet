@@ -1,4 +1,4 @@
-from emmet.api.routes.surface_properties.query_operators import ReconstructedQuery
+from emmet.api.routes.materials.surface_properties.query_operators import ReconstructedQuery
 
 
 from monty.tempfile import ScratchDir
@@ -14,6 +14,4 @@ def test_reconstructed_operator():
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
 
-        assert new_op.query(has_reconstructed=True) == {
-            "criteria": {"has_reconstructed": True}
-        }
+        assert new_op.query(has_reconstructed=True) == {"criteria": {"has_reconstructed": True}}

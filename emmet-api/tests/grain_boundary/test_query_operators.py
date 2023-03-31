@@ -1,10 +1,7 @@
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 
-from emmet.api.routes.grain_boundary.query_operators import (
-    GBStructureQuery,
-    GBTaskIDQuery,
-)
+from emmet.api.routes.materials.grain_boundary.query_operators import GBStructureQuery, GBTaskIDQuery
 from emmet.core.grain_boundary import GBTypeEnum
 
 
@@ -54,13 +51,9 @@ def test_grain_boundary_structure_query():
 def test_grain_boundary_task_id_query():
     op = GBTaskIDQuery()
 
-    assert op.query(task_ids="mp-149, mp-13") == {
-        "criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}
-    }
+    assert op.query(task_ids="mp-149, mp-13") == {"criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}}
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(task_ids="mp-149, mp-13") == {
-            "criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}
-        }
+        assert new_op.query(task_ids="mp-149, mp-13") == {"criteria": {"task_id": {"$in": ["mp-149", "mp-13"]}}}

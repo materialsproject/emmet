@@ -1,5 +1,5 @@
 from maggma.api import query_operator
-from emmet.api.routes.dielectric.query_operators import DielectricQuery
+from emmet.api.routes.materials.dielectric.query_operators import DielectricQuery
 
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
@@ -19,12 +19,7 @@ def test_dielectric_query_operator():
         n_max=5,
     )
 
-    fields = [
-        "e_total",
-        "e_ionic",
-        "e_electronic",
-        "n",
-    ]
+    fields = ["e_total", "e_ionic", "e_electronic", "n"]
 
     assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
@@ -41,6 +36,4 @@ def test_dielectric_query_operator():
             n_min=0,
             n_max=5,
         )
-        assert dict(q) == {
-            "criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}
-        }
+        assert dict(q) == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}

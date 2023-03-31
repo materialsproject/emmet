@@ -1,4 +1,4 @@
-from emmet.api.routes.electrodes.query_operators import (
+from emmet.api.routes.materials.electrodes.query_operators import (
     ElectrodeFormulaQuery,
     ElectrodesChemsysQuery,
     ElectrodeElementsQuery,
@@ -141,12 +141,9 @@ def test_voltage_step_query():
 def test_insertion_voltage_step_query():
     op = InsertionVoltageStepQuery()
 
-    q = op.query(stability_charge_min=0, stability_charge_max=5, stability_discharge_min=0, stability_discharge_max=5,)
+    q = op.query(stability_charge_min=0, stability_charge_max=5, stability_discharge_min=0, stability_discharge_max=5)
 
-    fields = [
-        "stability_charge",
-        "stability_discharge",
-    ]
+    fields = ["stability_charge", "stability_discharge"]
 
     assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
@@ -154,7 +151,7 @@ def test_insertion_voltage_step_query():
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
         q = new_op.query(
-            stability_charge_min=0, stability_charge_max=5, stability_discharge_min=0, stability_discharge_max=5,
+            stability_charge_min=0, stability_charge_max=5, stability_discharge_min=0, stability_discharge_max=5
         )
         assert q == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
 
@@ -162,14 +159,14 @@ def test_insertion_voltage_step_query():
 def test_insertion_electrode_query():
     op = WorkingIonQuery()
 
-    q = op.query(working_ion="Li",)
+    q = op.query(working_ion="Li")
 
     assert q == {"criteria": {"working_ion": "Li"}}
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        q = new_op.query(working_ion="Li",)
+        q = new_op.query(working_ion="Li")
 
         assert q == {"criteria": {"working_ion": "Li"}}
 

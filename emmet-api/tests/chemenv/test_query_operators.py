@@ -1,4 +1,4 @@
-from emmet.api.routes.chemenv.query_operators import ChemEnvQuery
+from emmet.api.routes.materials.chemenv.query_operators import ChemEnvQuery
 
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
