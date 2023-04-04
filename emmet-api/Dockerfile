@@ -39,6 +39,8 @@ ENV PATH=/root/.local/bin:$PATH \
     DD_VERSION=$VERSION
 
 COPY app.py .
+COPY material_resources.py .
+COPY mpcule_resources.py .
 COPY start.sh .
 RUN chmod +x start.sh
 
