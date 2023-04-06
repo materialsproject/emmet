@@ -1,5 +1,7 @@
 import tempfile
 import traceback
+from math import ceil
+from maggma.utils import grouper
 from typing import Optional, Dict, List, Iterator
 
 from abipy.dfpt.vsound import SoundVelocity as AbiSoundVelocity
@@ -48,6 +50,25 @@ class SoundVelocityBuilder(Builder):
 
         super().__init__(sources=[phonon_materials], targets=[sound_vel], **kwargs)
 
+    def prechunk(self, number_splits: int):  # pragma: no cover
+        """
+        Gets all materials that need sound velocity
+
+        Returns:
+            generator of materials to extract phonon sound velocity
+        """
+
+        # All relevant materials that have been updated since phonon props were last calculated
+        q = dict(self.query)
+
+        mats = self.phonon.newer_in(self.phonon_materials, exhaustive=True, criteria=q)
+
+        N = ceil(len(mats) / number_splits)
+
+        for mpid_chunk in grouper(mats, N):
+
+            yield {"query": {self.phonon_materials.key: {"$in": list(mpid_chunk)}}}
+
     def get_items(self) -> Iterator[Dict]:
         """
         Gets all materials that need sound velocity.
@@ -63,7 +84,7 @@ class SoundVelocityBuilder(Builder):
 
         # All relevant materials that have been updated since sound velocities were last calculated
         q = dict(self.query)
-        mats = self.sound_vel.newer_in(self.materials, exhaustive=True, criteria=q)
+        mats = self.sound_vel.newer_in(self.phonon_materials, exhaustive=True, criteria=q)
         self.logger.info("Found {} new materials for sound velocity data".format(len(mats)))
 
         # list of properties queried from the results DB
