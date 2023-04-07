@@ -48,7 +48,7 @@ class SoundVelocityBuilder(Builder):
         else:
             self.manager = manager
 
-        super().__init__(sources=[phonon_materials], targets=[sound_vel], **kwargs)
+        super().__init__(sources=[phonon_materials, ddb_source], targets=[sound_vel], **kwargs)
 
     def prechunk(self, number_splits: int):  # pragma: no cover
         """
