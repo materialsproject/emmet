@@ -100,7 +100,9 @@ class SoundVelocityBuilder(Builder):
 
             # Read the DDB file and pass as an object. Do not write here since in case of parallel
             # execution each worker will write its own file.
-            item["ddb_str"] = self.ddb_source.get(item["abinit_output"]["ddb_id"]).read().decode("utf-8")
+            ddb_data = self.ddb_source.query_one(criteria={"_id": item["abinit_output"]["ddb_id"]})
+
+            item["ddb_str"] = ddb_data["data"].decode("utf-8")
 
             yield item
 
