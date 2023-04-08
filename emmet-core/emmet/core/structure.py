@@ -197,7 +197,7 @@ class MoleculeMetadata(EmmetBaseModel):
 
     @classmethod
     def from_composition(
-        cls: Type[T],
+        cls: Type[S],
         comp: Composition,
         fields: Optional[List[str]] = None,
         **kwargs,
