@@ -1,4 +1,4 @@
-""" Core definition of Structure metadata """
+""" Core definition of Structure and Molecule metadata """
 from __future__ import annotations
 
 from typing import List, Optional, Type, TypeVar
@@ -22,9 +22,13 @@ class StructureMetadata(EmmetBaseModel):
 
     # Structure metadata
     nsites: int = Field(None, description="Total number of sites in the structure.")
-    elements: List[Element] = Field(None, description="List of elements in the material.")
+    elements: List[Element] = Field(
+        None, description="List of elements in the material."
+    )
     nelements: int = Field(None, description="Number of elements.")
-    composition: Composition = Field(None, description="Full composition for the material.")
+    composition: Composition = Field(
+        None, description="Full composition for the material."
+    )
     composition_reduced: Composition = Field(
         None,
         title="Reduced Composition",
@@ -51,7 +55,9 @@ class StructureMetadata(EmmetBaseModel):
         description="Total volume for this structure in Angstroms^3.",
     )
 
-    density: float = Field(None, title="Density", description="Density in grams per cm^3.")
+    density: float = Field(
+        None, title="Density", description="Density in grams per cm^3."
+    )
 
     density_atomic: float = Field(
         None,
@@ -68,7 +74,6 @@ class StructureMetadata(EmmetBaseModel):
         fields: Optional[List[str]] = None,
         **kwargs,
     ) -> T:
-
         fields = (
             [
                 "elements",
@@ -105,7 +110,6 @@ class StructureMetadata(EmmetBaseModel):
         fields: Optional[List[str]] = None,
         **kwargs,
     ) -> T:
-
         fields = (
             [
                 "nsites",
@@ -155,21 +159,99 @@ class MoleculeMetadata(EmmetBaseModel):
         None, description="Spin multiplicity of the molecule"
     )
     natoms: int = Field(None, description="Total number of atoms in the molecule")
-    elements: List[Element] = Field(None, description="List of elements in the molecule")
+    elements: List[Element] = Field(
+        None, description="List of elements in the molecule"
+    )
     nelements: int = Field(None, title="Number of Elements")
-    composition: Composition = Field(None, description="Full composition for the molecule")
+    nelectrons: int = Field(
+        None,
+        title="Number of electrons",
+        description="The total number of electrons for the molecule",
+    )
+    composition: Composition = Field(
+        None, description="Full composition for the molecule"
+    )
+    composition_reduced: Composition = Field(
+        None,
+        title="Reduced Composition",
+        description="Simplified representation of the composition",
+    )
     formula_alphabetical: str = Field(
         None,
         title="Alphabetical Formula",
         description="Alphabetical molecular formula",
+    )
+    formula_pretty: str = Field(
+        None,
+        title="Pretty Formula",
+        description="Cleaned representation of the formula.",
+    )
+    formula_anonymous: str = Field(
+        None,
+        title="Anonymous Formula",
+        description="Anonymized representation of the formula",
     )
     chemsys: str = Field(
         None,
         title="Chemical System",
         description="dash-delimited string of elements in the molecule",
     )
+    symmetry: PointGroupData = Field(
+        None, description="Symmetry data for this molecule"
+    )
 
-    symmetry: PointGroupData = Field(None, description="Symmetry data for this molecule")
+    @classmethod
+    def from_composition(
+        cls: Type[S],
+        comp: Composition,
+        fields: Optional[List[str]] = None,
+        **kwargs,
+    ) -> S:
+        """
+        Create a MoleculeMetadata model from a composition.
+
+        Parameters
+        ----------
+        comp : .Composition
+            A pymatgen composition.
+        fields : list of str or None
+            Composition fields to include.
+        **kwargs
+            Keyword arguments that are passed to the model constructor.
+
+        Returns
+        -------
+        T
+            A molecule metadata model.
+        """
+        fields = (
+            [
+                "elements",
+                "nelements",
+                "composition",
+                "composition_reduced",
+                "formula_alphabetical",
+                "formula_pretty",
+                "formula_anonymous",
+                "chemsys",
+            ]
+            if fields is None
+            else fields
+        )
+        elsyms = sorted({e.symbol for e in comp.elements})
+
+        data = {
+            "elements": elsyms,
+            "nelements": len(elsyms),
+            "composition": comp,
+            "composition_reduced": comp.reduced_composition,
+            "formula_alphabetical": comp.alphabetical_formula,
+            "formula_pretty": comp.reduced_formula,
+            "formula_anonymous": comp.anonymized_formula,
+            "chemsys": "-".join(elsyms),
+        }
+
+        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
 
     @classmethod
     def from_molecule(
@@ -178,7 +260,6 @@ class MoleculeMetadata(EmmetBaseModel):
         fields: Optional[List[str]] = None,
         **kwargs,
     ) -> S:
-
         fields = (
             [
                 "charge",
@@ -186,8 +267,12 @@ class MoleculeMetadata(EmmetBaseModel):
                 "natoms",
                 "elements",
                 "nelements",
+                "nelectrons",
                 "composition",
+                "composition_reduced",
                 "formula_alphabetical",
+                "formula_pretty",
+                "formula_anonymous",
                 "chemsys",
                 "symmetry",
             ]
@@ -204,8 +289,12 @@ class MoleculeMetadata(EmmetBaseModel):
             "natoms": len(meta_molecule),
             "elements": elsyms,
             "nelements": len(elsyms),
+            "nelectrons": int(meta_molecule.nelectrons),
             "composition": comp,
+            "composition_reduced": comp.reduced_composition,
             "formula_alphabetical": comp.alphabetical_formula,
+            "formula_pretty": comp.reduced_formula,
+            "formula_anonymous": comp.anonymized_formula,
             "chemsys": "-".join(elsyms),
             "symmetry": symmetry,
         }
