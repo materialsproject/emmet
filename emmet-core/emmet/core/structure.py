@@ -181,6 +181,11 @@ class MoleculeMetadata(EmmetBaseModel):
         title="Alphabetical Formula",
         description="Alphabetical molecular formula",
     )
+    formula_pretty: str = Field(
+        None,
+        title="Pretty Formula",
+        description="Cleaned representation of the formula.",
+    )
     formula_anonymous: str = Field(
         None,
         title="Anonymous Formula",
@@ -226,6 +231,7 @@ class MoleculeMetadata(EmmetBaseModel):
                 "composition",
                 "composition_reduced",
                 "formula_alphabetical",
+                "formula_pretty",
                 "formula_anonymous",
                 "chemsys",
             ]
@@ -240,6 +246,7 @@ class MoleculeMetadata(EmmetBaseModel):
             "composition": comp,
             "composition_reduced": comp.reduced_composition,
             "formula_alphabetical": comp.alphabetical_formula,
+            "formula_pretty": comp.reduced_formula,
             "formula_anonymous": comp.anonymized_formula,
             "chemsys": "-".join(elsyms),
         }
@@ -264,6 +271,7 @@ class MoleculeMetadata(EmmetBaseModel):
                 "composition",
                 "composition_reduced",
                 "formula_alphabetical",
+                "formula_pretty",
                 "formula_anonymous",
                 "chemsys",
                 "symmetry",
@@ -285,6 +293,7 @@ class MoleculeMetadata(EmmetBaseModel):
             "composition": comp,
             "composition_reduced": comp.reduced_composition,
             "formula_alphabetical": comp.alphabetical_formula,
+            "formula_pretty": comp.reduced_formula,
             "formula_anonymous": comp.anonymized_formula,
             "chemsys": "-".join(elsyms),
             "symmetry": symmetry,
