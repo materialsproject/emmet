@@ -10,7 +10,7 @@ molecule = Molecule(
 )
 
 
-def test_from_molecule(test_dir):
+def test_from_molecule():
     metadata = MoleculeMetadata.from_molecule(molecule).dict()
     assert metadata["natoms"] == 2
     assert metadata["elements"] == [Element("Mg"), Element("O")]
@@ -26,7 +26,7 @@ def test_from_molecule(test_dir):
     assert metadata["nelectrons"] == 20
 
 
-def test_from_comp(test_dir):
+def test_from_comp():
     metadata = MoleculeMetadata.from_composition(molecule.composition).dict()
     assert metadata["elements"] == [Element("Mg"), Element("O")]
     assert metadata["nelements"] == 2
