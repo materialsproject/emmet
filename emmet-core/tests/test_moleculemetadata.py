@@ -2,7 +2,7 @@ from pymatgen.core import Molecule
 from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 
-from atomate2.common.schemas.molecule import MoleculeMetadata
+from emmet.core.structure import MoleculeMetadata
 
 molecule = Molecule(
     species=["Mg", "O"],
@@ -17,7 +17,7 @@ def test_from_molecule(test_dir):
     assert metadata["nelements"] == 2
     assert metadata["composition"] == Composition("MgO")
     assert metadata["composition_reduced"] == Composition("MgO").reduced_composition
-    assert metadata["formula_pretty"] == "MgO"
+    assert metadata["formula_alphabetical"] == "MgO"
     assert metadata["formula_anonymous"] == "AB"
     assert metadata["chemsys"] == "Mg-O"
     assert metadata["point_group"] == "C*v"
