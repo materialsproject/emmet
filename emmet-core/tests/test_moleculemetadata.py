@@ -17,9 +17,9 @@ def test_from_molecule():
     assert metadata["nelements"] == 2
     assert metadata["composition"] == Composition("MgO")
     assert metadata["composition_reduced"] == Composition("MgO").reduced_composition
-    assert metadata["formula_alphabetical"] == Composition("MgO").alphabetical_formula
-    assert metadata["formula_anonymous"] == Composition("MgO").anonymized_formula
-    assert metadata["chemsys"] == Composition("MgO").chemsys
+    assert metadata["formula_alphabetical"] == "MgO"
+    assert metadata["formula_anonymous"] == "AB"
+    assert metadata["chemsys"] == "Mg-O"
     assert metadata["point_group"] == "C*v"
     assert metadata["charge"] == 0
     assert metadata["spin_multiplicity"] == 1
@@ -32,6 +32,6 @@ def test_from_comp():
     assert metadata["nelements"] == 2
     assert metadata["composition"] == Composition("MgO")
     assert metadata["composition_reduced"] == Composition("MgO").reduced_composition
-    assert metadata["formula_alphabetical"] == Composition("MgO").alphabetical_formula
-    assert metadata["formula_anonymous"] == Composition("MgO").anonymized_formula
-    assert metadata["chemsys"] == Composition("MgO").chemsys
+    assert metadata["formula_alphabetical"] == "MgO"
+    assert metadata["formula_anonymous"] == "AB"
+    assert metadata["chemsys"] == "Mg-O"
