@@ -196,6 +196,57 @@ class MoleculeMetadata(EmmetBaseModel):
     )
 
     @classmethod
+    def from_composition(
+        cls: Type[T],
+        comp: Composition,
+        fields: Optional[List[str]] = None,
+        **kwargs,
+    ) -> S:
+        """
+        Create a MoleculeMetadata model from a composition.
+
+        Parameters
+        ----------
+        comp : .Composition
+            A pymatgen composition.
+        fields : list of str or None
+            Composition fields to include.
+        **kwargs
+            Keyword arguments that are passed to the model constructor.
+
+        Returns
+        -------
+        T
+            A molecule metadata model.
+        """
+        fields = (
+            [
+                "elements",
+                "nelements",
+                "composition",
+                "composition_reduced",
+                "formula_alphabetical",
+                "formula_anonymous",
+                "chemsys",
+            ]
+            if fields is None
+            else fields
+        )
+        elsyms = sorted({e.symbol for e in comp.elements})
+
+        data = {
+            "elements": elsyms,
+            "nelements": len(elsyms),
+            "composition": comp,
+            "composition_reduced": comp.reduced_composition,
+            "formula_alphabetical": comp.alphabetical_formula,
+            "formula_anonymous": comp.anonymized_formula,
+            "chemsys": "-".join(elsyms),
+        }
+
+        return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
+
+    @classmethod
     def from_molecule(
         cls: Type[S],
         meta_molecule: Molecule,
