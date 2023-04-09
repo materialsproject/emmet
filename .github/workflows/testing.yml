@@ -58,11 +58,6 @@ jobs:
         shell: bash -l {0}
         run: |
           conda install openbabel -y
-      
-      - name: Install cclib
-        shell: bash -l {0}
-        run: |
-          pip install .[cclib]
 
       # - uses: actions/setup-python@v4
       #   with:
