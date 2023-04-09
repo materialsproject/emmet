@@ -195,20 +195,22 @@ class TaskDocument(MoleculeMetadata):
             attributes["trajectory"] = molecules
 
         # Store the HOMO/LUMO energies for convenience
-        if cclib_obj.moenergies is not None and cclib_obj.homos is not None and cclib_obj.lumos is not None:
+        if cclib_obj.moenergies is not None and cclib_obj.homos is not None:
             homo_energies, lumo_energies, homo_lumo_gaps = _get_homos_lumos(
                 cclib_obj.moenergies, cclib_obj.homos
             )
             attributes["homo_energies"] = homo_energies
-            attributes["lumo_energies"] = lumo_energies
-            attributes["homo_lumo_gaps"] = homo_lumo_gaps
+            if lumo_energies:
+                attributes["lumo_energies"] = lumo_energies
+            if homo_lumo_gaps:
+                attributes["homo_lumo_gaps"] = homo_lumo_gaps
 
-            # The HOMO-LUMO gap for a spin-polarized system is ill-defined.
-            # This is why we report both the alpha and beta channel gaps
-            # above. Here, we report min(LUMO_alpha-HOMO_alpha,LUMO_beta-HOMO_beta)
-            # in case the user wants to easily query by this too. For restricted
-            # systems, this will always be the same as above.
-            attributes["min_homo_lumo_gap"] = min(homo_lumo_gaps)
+                # The HOMO-LUMO gap for a spin-polarized system is ill-defined.
+                # This is why we report both the alpha and beta channel gaps
+                # above. Here, we report min(LUMO_alpha-HOMO_alpha,LUMO_beta-HOMO_beta)
+                # in case the user wants to easily query by this too. For restricted
+                # systems, this will always be the same as above.
+                attributes["min_homo_lumo_gap"] = min(homo_lumo_gaps)
 
         # Calculate any properties
         if analysis:
