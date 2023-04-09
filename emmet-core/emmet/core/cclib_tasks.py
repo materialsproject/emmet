@@ -59,9 +59,9 @@ class TaskDocument(MoleculeMetadata):
         dir_name: Union[str, Path],
         logfile_extensions: Union[str, List[str]],
         store_trajectory: bool = False,
-        additional_fields: Dict[str, Any] = None,
-        analysis: Union[str, List[str]] = None,
-        proatom_dir: Union[Path, str] = None,
+        additional_fields: Optional[Dict[str, Any]] = None,
+        analysis: Optional[Union[str, List[str]]] = None,
+        proatom_dir: Optional[Union[Path, str]] = None,
     ) -> _T:
         """
         Create a TaskDocument from a log file.
@@ -155,7 +155,7 @@ class TaskDocument(MoleculeMetadata):
         ):
             coords_obj = np.array(cclib_obj.metadata["coords"])
             input_species = [Element(e) for e in coords_obj[:, 0]]
-            input_coords = coords_obj[:, 1:]
+            input_coords = coords_obj[:, 1:].tolist()
             input_molecule = Molecule(
                 input_species,
                 input_coords,
@@ -195,7 +195,7 @@ class TaskDocument(MoleculeMetadata):
             attributes["trajectory"] = molecules
 
         # Store the HOMO/LUMO energies for convenience
-        if cclib_obj.moenergies is not None and cclib_obj.homos is not None:
+        if cclib_obj.moenergies is not None and cclib_obj.homos is not None and cclib_obj.lumos is not None:
             homo_energies, lumo_energies, homo_lumo_gaps = _get_homos_lumos(
                 cclib_obj.moenergies, cclib_obj.homos
             )
