@@ -42,6 +42,7 @@ setup(
             "maggma",
             "wincertstore",
             "custodian>=2022.5.26",
+            "cclib>=1.7.2",
         ],
         "docs": [
             "mkdocs",
@@ -55,7 +56,6 @@ setup(
             "livereload",
             "jinja2",
         ],
-        "cclib": ["cclib>=1.7.2"],
     },
     python_requires=">=3.8",
     license="modified BSD",
