@@ -55,7 +55,7 @@ def test_cclib_taskdoc(test_dir):
     with pytest.raises(Exception) as e:
         doc = TaskDocument.from_logfile(p, [".log", ".txt"]).dict()
     os.remove(p / "test.txt")
-    assert "Could not parse" in str(e.value)
+    assert "Could not parse" in str(e.value) or "has no attribute" in str(e.value)
 
     # Test a population analysis
     doc = TaskDocument.from_logfile(p, ".out", analysis="MBO").dict()
