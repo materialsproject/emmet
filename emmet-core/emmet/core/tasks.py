@@ -64,7 +64,7 @@ class OrigInputs(BaseModel):
         description="Pymatgen object representing the POTCAR file.",
     )
 
-    # Make sure that the datetime field is properly formatted
+    # Make sure that the potcar field is properly formatted
     @validator("potcar", pre=True)
     def potcar_ok(cls, v):
         if isinstance(v, list):
