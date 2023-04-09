@@ -55,6 +55,7 @@ setup(
             "livereload",
             "jinja2",
         ],
+        "cclib": ["cclib>=1.7.2"],
     },
     python_requires=">=3.8",
     license="modified BSD",
