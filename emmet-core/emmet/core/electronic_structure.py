@@ -185,11 +185,11 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         dos: Dict[MPID, CompleteDos],
         is_gap_direct: bool,
         is_metal: bool,
+        origins: List[dict] = [],
         structures: Optional[Dict[MPID, Structure]] = None,
         setyawan_curtarolo: Optional[Dict[MPID, BandStructureSymmLine]] = None,
         hinuma: Optional[Dict[MPID, BandStructureSymmLine]] = None,
         latimer_munro: Optional[Dict[MPID, BandStructureSymmLine]] = None,
-        origins: Optional[List[dict]] = None,
         **kwargs,
     ) -> T:
         """
