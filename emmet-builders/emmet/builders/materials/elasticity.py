@@ -107,6 +107,7 @@ class ElasticityBuilder(Builder):
                 "output",
                 "orig_inputs",
                 "completed_at",
+                "last_updated",
                 "transmuter",
                 "task_id",
                 "dir_name",
@@ -173,14 +174,14 @@ class ElasticityBuilder(Builder):
         stresses = []
         deform_task_ids = []
         deform_dir_names = []
-        deform_completed_at = []
+        deform_last_updated = []
         for doc in final_deform:
             deforms.append(Deformation(doc["transmuter"]["transformation_params"][0]["deformation"]))
             # -0.1 to convert to GPa from kBar and s
             stresses.append(-0.1 * Stress(doc["output"]["stress"]))
             deform_task_ids.append(doc["task_id"])
             deform_dir_names.append(doc["dir_name"])
-            deform_completed_at.append(doc["completed_at"])
+            deform_last_updated.append(doc["last_updated"])
 
         elasticity_doc = ElasticityDoc.from_deformations_and_stresses(
             structure=Structure.from_dict(final_opt["output"]["structure"]),
@@ -189,7 +190,7 @@ class ElasticityBuilder(Builder):
             stresses=stresses,
             deformation_task_ids=deform_task_ids,
             deformation_dir_names=deform_dir_names,
-            deform_completed_at=deform_completed_at,
+            deform_last_updated=deform_last_updated,
             equilibrium_stress=-0.1 * Stress(final_opt["output"]["stress"]),
             optimization_task_id=final_opt["task_id"],
             optimization_dir_name=final_opt["dir_name"],
