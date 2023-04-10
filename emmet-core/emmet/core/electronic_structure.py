@@ -414,7 +414,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             is_metal = bs_entry.setyawan_curtarolo.is_metal
             summary_magnetic_ordering = bs_entry.setyawan_curtarolo.magnetic_ordering
 
-            for origin in kwargs["origins"]:
+            for origin in origins:
                 if origin["name"] == "setyawan_curtarolo":
                     new_origin_last_updated = origin["last_updated"]
                     new_origin_task_id = origin["task_id"]
@@ -428,13 +428,13 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             summary_magnetic_ordering = dos_mag_ordering
             is_metal = True if np.isclose(dos_gap, 0.0, atol=0.01, rtol=0) else False
 
-            for origin in kwargs["origins"]:
+            for origin in origins:
                 if origin["name"] == "dos":
                     new_origin_last_updated = origin["last_updated"]
                     new_origin_task_id = origin["task_id"]
 
         if new_origin_task_id is not None:
-            for origin in kwargs["origins"]:
+            for origin in origins:
                 if origin["name"] == "electronic_structure":
                     origin["last_updated"] = new_origin_last_updated
                     origin["task_id"] = new_origin_task_id
