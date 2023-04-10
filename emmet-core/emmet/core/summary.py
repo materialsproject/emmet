@@ -470,7 +470,7 @@ summary_fields: Dict[str, list] = {
 
 def _copy_from_doc(doc):
     """Helper function to copy the list of keys over from amalgamated document"""
-    d = {"has_props": []}
+    d = {"has_props": [], "origins": []}
     # Complex function to grab the keys and put them in the root doc
     # if the item is a list, it makes one doc per item with those corresponding keys
     for doc_key in summary_fields:
