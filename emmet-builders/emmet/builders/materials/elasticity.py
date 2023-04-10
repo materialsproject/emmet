@@ -73,7 +73,9 @@ class ElasticityBuilder(Builder):
         self.elasticity.ensure_index("material_id")
         self.elasticity.ensure_index("last_updated")
 
-    def get_items(self,) -> Generator[Tuple[str, Dict[str, str], List[Dict]], None, None]:
+    def get_items(
+        self,
+    ) -> Generator[Tuple[str, Dict[str, str], List[Dict]], None, None]:
         """
         Gets all items to process into elasticity docs.
 
@@ -93,7 +95,6 @@ class ElasticityBuilder(Builder):
         query = self.query.copy()
 
         for i, doc in enumerate(cursor):
-
             material_id = doc["material_id"]
             calc_types = {str(k): v for k, v in doc["calc_types"].items()}
 
@@ -172,12 +173,14 @@ class ElasticityBuilder(Builder):
         stresses = []
         deform_task_ids = []
         deform_dir_names = []
+        deform_completed_at = []
         for doc in final_deform:
             deforms.append(Deformation(doc["transmuter"]["transformation_params"][0]["deformation"]))
             # -0.1 to convert to GPa from kBar and s
             stresses.append(-0.1 * Stress(doc["output"]["stress"]))
             deform_task_ids.append(doc["task_id"])
             deform_dir_names.append(doc["dir_name"])
+            deform_completed_at.append(doc["completed_at"])
 
         elasticity_doc = ElasticityDoc.from_deformations_and_stresses(
             structure=Structure.from_dict(final_opt["output"]["structure"]),
@@ -186,6 +189,7 @@ class ElasticityBuilder(Builder):
             stresses=stresses,
             deformation_task_ids=deform_task_ids,
             deformation_dir_names=deform_dir_names,
+            deform_completed_at=deform_completed_at,
             equilibrium_stress=-0.1 * Stress(final_opt["output"]["stress"]),
             optimization_task_id=final_opt["task_id"],
             optimization_dir_name=final_opt["dir_name"],
@@ -208,7 +212,9 @@ class ElasticityBuilder(Builder):
 
 
 def filter_opt_tasks(
-    tasks: List[Dict], calc_types: Dict[str, str], target_calc_type: str = CalcType.GGA_Structure_Optimization,
+    tasks: List[Dict],
+    calc_types: Dict[str, str],
+    target_calc_type: str = CalcType.GGA_Structure_Optimization,
 ) -> List[Dict]:
     """
     Filter optimization tasks, by
@@ -220,7 +226,9 @@ def filter_opt_tasks(
 
 
 def filter_deform_tasks(
-    tasks: List[Dict], calc_types: Dict[str, str], target_calc_type: str = CalcType.GGA_Deformation,
+    tasks: List[Dict],
+    calc_types: Dict[str, str],
+    target_calc_type: str = CalcType.GGA_Deformation,
 ) -> List[Dict]:
     """
     Filter deformation tasks, by
@@ -326,7 +334,6 @@ def filter_deform_tasks_by_time(tasks: List[Dict], deform_comp_tol: float = 1e-5
     mapping = TensorMapping(tol=deform_comp_tol, tensors=[], values=[])
 
     for doc in tasks:
-
         # assume only one deformation, should be checked in `filter_deform_tasks()`
         deform = doc["transmuter"]["transformation_params"][0]["deformation"]
 
