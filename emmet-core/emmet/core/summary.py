@@ -373,7 +373,6 @@ class SummaryDoc(PropertyDoc):
             else:
                 del doc["dos"]
         if "task_id" in doc:
-            doc["es_source_calc_id"] = doc["task_id"]
             del doc["task_id"]
 
         doc["has_props"] = list(set(doc["has_props"]))
@@ -471,7 +470,7 @@ summary_fields: Dict[str, list] = {
 
 def _copy_from_doc(doc):
     """Helper function to copy the list of keys over from amalgamated document"""
-    d = {"has_props": []}
+    d = {"has_props": [], "origins": []}
     # Complex function to grab the keys and put them in the root doc
     # if the item is a list, it makes one doc per item with those corresponding keys
     for doc_key in summary_fields:
@@ -486,5 +485,7 @@ def _copy_from_doc(doc):
                 d[doc_key].append(temp_doc)
         elif isinstance(sub_doc, dict):
             d["has_props"].append(doc_key)
+            if sub_doc["origins"]:
+                d["origins"].extend(sub_doc["origins"])
             d.update({copy_key: sub_doc[copy_key] for copy_key in summary_fields[doc_key] if copy_key in sub_doc})
     return d

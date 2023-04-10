@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import datetime
 from math import isnan
-from typing import Dict, Optional, Type, TypeVar, Union
+from typing import Dict, Optional, Type, TypeVar, Union, List
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -53,7 +53,8 @@ class BSObjectDoc(BaseModel):
     )
 
     last_updated: datetime = Field(
-        description="The timestamp when this calculation was last updated", default_factory=datetime.utcnow,
+        description="The timestamp when this calculation was last updated",
+        default_factory=datetime.utcnow,
     )
 
     data: Union[Dict, BandStructureSymmLine] = Field(
@@ -73,7 +74,8 @@ class DOSObjectDoc(BaseModel):
     )
 
     last_updated: datetime = Field(
-        description="The timestamp when this calculation was last updated.", default_factory=datetime.utcnow,
+        description="The timestamp when this calculation was last updated.",
+        default_factory=datetime.utcnow,
     )
 
     data: CompleteDos = Field(None, description="The density of states object for the given calculation ID.")
@@ -117,15 +119,18 @@ class DosSummaryData(ElectronicStructureBaseData):
 
 class BandstructureData(BaseModel):
     setyawan_curtarolo: BandStructureSummaryData = Field(
-        None, description="Band structure summary data using the Setyawan-Curtarolo path convention.",
+        None,
+        description="Band structure summary data using the Setyawan-Curtarolo path convention.",
     )
 
     hinuma: BandStructureSummaryData = Field(
-        None, description="Band structure summary data using the Hinuma et al. path convention.",
+        None,
+        description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
     latimer_munro: BandStructureSummaryData = Field(
-        None, description="Band structure summary data using the Latimer-Munro path convention.",
+        None,
+        description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
 
@@ -139,13 +144,16 @@ class DosData(BaseModel):
             Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
         ],
     ] = Field(
-        None, description="Band structure summary data using the Hinuma et al. path convention.",
+        None,
+        description="Band structure summary data using the Hinuma et al. path convention.",
     )
 
     orbital: Dict[
-        Union[Literal["total", "s", "p", "d", "f"], OrbitalType], Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
+        Union[Literal["total", "s", "p", "d", "f"], OrbitalType],
+        Dict[Union[Literal["1", "-1"], Spin], DosSummaryData],
     ] = Field(
-        None, description="Band structure summary data using the Latimer-Munro path convention.",
+        None,
+        description="Band structure summary data using the Latimer-Munro path convention.",
     )
 
     magnetic_ordering: Union[str, Ordering] = Field(None, description="Magnetic ordering of the calculation.")
@@ -166,7 +174,8 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
     dos: DosData = Field(None, description="Density of states data for the material.")
 
     last_updated: datetime = Field(
-        description="Timestamp for when this document was last updated.", default_factory=datetime.utcnow,
+        description="Timestamp for when this document was last updated.",
+        default_factory=datetime.utcnow,
     )
 
     @classmethod
@@ -176,6 +185,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         dos: Dict[MPID, CompleteDos],
         is_gap_direct: bool,
         is_metal: bool,
+        origins: List[dict] = [],
         structures: Optional[Dict[MPID, Structure]] = None,
         setyawan_curtarolo: Optional[Dict[MPID, BandStructureSymmLine]] = None,
         hinuma: Optional[Dict[MPID, BandStructureSymmLine]] = None,
@@ -198,6 +208,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 BandStructureSymmLine object from a calculation run using the Hinuma et al. k-path convention.
             latimer_munro (Dict[MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
                 BandStructureSymmLine object from a calculation run using the Latimer-Munro k-path convention.
+            origins (List[dict]): Optional origins information for final doc
 
         """
 
@@ -233,7 +244,6 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         }
 
         for spin in spins:
-
             # - Process total DOS data
             band_gap = dos_obj.get_gap(spin=spin)
             (cbm, vbm) = dos_obj.get_cbm_vbm(spin=spin)
@@ -256,7 +266,6 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
 
             # - Process total orbital projection data
             for orbital in orbitals:
-
                 band_gap = tot_orb_dos[orbital].get_gap(spin=spin)
 
                 (cbm, vbm) = tot_orb_dos[orbital].get_cbm_vbm(spin=spin)
@@ -300,14 +309,13 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     )
 
         #  -- Process band structure data
-        bs_data = {
+        bs_data = {  # type: ignore
             "setyawan_curtarolo": setyawan_curtarolo,
             "hinuma": hinuma,
             "latimer_munro": latimer_munro,
         }
 
         for bs_type, bs_input in bs_data.items():
-
             if bs_input is not None:
                 bs_task, bs = list(bs_input.items())[0]
 
@@ -335,7 +343,13 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 nbands = bs.nb_bands
 
                 # - Get equivalent labels between different conventions
-                hskp = HighSymmKpath(bs.structure, path_type="all", symprec=0.1, angle_tolerance=5, atol=1e-5,)
+                hskp = HighSymmKpath(
+                    bs.structure,
+                    path_type="all",
+                    symprec=0.1,
+                    angle_tolerance=5,
+                    atol=1e-5,
+                )
                 equivalent_labels = hskp.equiv_labels
 
                 if bs_type == "latimer_munro":
@@ -379,6 +393,9 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         dos_cbm, dos_vbm = dos_obj.get_cbm_vbm()
         dos_gap = max(dos_cbm - dos_vbm, 0.0)
 
+        new_origin_last_updated = None
+        new_origin_task_id = None
+
         if bs_gap is not None and bs_gap <= dos_gap + 0.2:
             summary_task = bs_entry.setyawan_curtarolo.task_id
             summary_band_gap = bs_gap
@@ -396,6 +413,12 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             is_gap_direct = bs_entry.setyawan_curtarolo.is_gap_direct
             is_metal = bs_entry.setyawan_curtarolo.is_metal
             summary_magnetic_ordering = bs_entry.setyawan_curtarolo.magnetic_ordering
+
+            for origin in origins:
+                if origin["name"] == "setyawan_curtarolo":
+                    new_origin_last_updated = origin["last_updated"]
+                    new_origin_task_id = origin["task_id"]
+
         else:
             summary_task = dos_entry.dict()["total"][Spin.up]["task_id"]
             summary_band_gap = dos_gap
@@ -404,6 +427,17 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
             summary_efermi = dos_efermi
             summary_magnetic_ordering = dos_mag_ordering
             is_metal = True if np.isclose(dos_gap, 0.0, atol=0.01, rtol=0) else False
+
+            for origin in origins:
+                if origin["name"] == "dos":
+                    new_origin_last_updated = origin["last_updated"]
+                    new_origin_task_id = origin["task_id"]
+
+        if new_origin_task_id is not None:
+            for origin in origins:
+                if origin["name"] == "electronic_structure":
+                    origin["last_updated"] = new_origin_last_updated
+                    origin["task_id"] = new_origin_task_id
 
         return cls.from_structure(
             material_id=MPID(material_id),
