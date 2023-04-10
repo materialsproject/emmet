@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import datetime
 from math import isnan
-from typing import Dict, Optional, Type, TypeVar, Union
+from typing import Dict, Optional, Type, TypeVar, Union, List
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -189,6 +189,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
         setyawan_curtarolo: Optional[Dict[MPID, BandStructureSymmLine]] = None,
         hinuma: Optional[Dict[MPID, BandStructureSymmLine]] = None,
         latimer_munro: Optional[Dict[MPID, BandStructureSymmLine]] = None,
+        origins: Optional[List[dict]] = None,
         **kwargs,
     ) -> T:
         """
@@ -207,6 +208,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                 BandStructureSymmLine object from a calculation run using the Hinuma et al. k-path convention.
             latimer_munro (Dict[MPID, BandStructureSymmLine]): Dictionary mapping a calculation (task) ID to a
                 BandStructureSymmLine object from a calculation run using the Latimer-Munro k-path convention.
+            origins (List[dict]): Optional origins information for final doc
 
         """
 
