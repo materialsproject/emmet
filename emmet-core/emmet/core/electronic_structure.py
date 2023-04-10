@@ -307,7 +307,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     )
 
         #  -- Process band structure data
-        bs_data = {
+        bs_data = {  # type: ignore
             "setyawan_curtarolo": setyawan_curtarolo,
             "hinuma": hinuma,
             "latimer_munro": latimer_munro,
@@ -382,7 +382,7 @@ class ElectronicStructureDoc(PropertyDoc, ElectronicStructureSummary):
                     magnetic_ordering=bs_mag_ordering,
                 )
 
-        bs_entry = BandstructureData(**bs_data)
+        bs_entry = BandstructureData(**bs_data)  # type: ignore
         dos_entry = DosData(**dos_data)
 
         # Obtain summary data
