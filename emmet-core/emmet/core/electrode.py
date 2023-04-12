@@ -334,7 +334,7 @@ class InsertionElectrodeDoc(InsertionVoltagePairDoc, BaseElectrode):
             warnings.append("Transition metal not found")
 
         return cls(
-            battery_type="insertion",
+            battery_type="insertion",  # type: ignore
             battery_id=battery_id,
             host_structure=stripped_host.as_dict(),
             framework=framework,

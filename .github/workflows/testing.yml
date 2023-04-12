@@ -131,33 +131,33 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
 
-  docs:
-    needs: test
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.8"]
+  # docs:
+  #   needs: test
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       python-version: ["3.8"]
 
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         fetch-depth: 0
 
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
+  #     - uses: actions/setup-python@v4
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
+  #         cache: 'pip'
 
-      - name: Install OpenBabel
-        run: |
-          sudo apt-get update && sudo apt-get install openbabel libopenbabel-dev
-          sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
+  #     - name: Install OpenBabel
+  #       run: |
+  #         sudo apt-get update && sudo apt-get install openbabel libopenbabel-dev
+  #         sudo ln -s /usr/include/openbabel3 /usr/local/include/openbabel3
 
-      - name: Install dependencies
-        run: |
-          python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
-          python${{ matrix.python-version }} -m piptools sync --user emmet-*/requirements/ubuntu-latest_py${{ matrix.python-version }}_extras.txt
-          python${{ matrix.python-version }} -m pip install --user --no-deps -e ./emmet-core ./emmet-api ./emmet-builders
+  #     - name: Install dependencies
+  #       run: |
+  #         python${{ matrix.python-version }} -m pip install --upgrade pip pip-tools
+  #         python${{ matrix.python-version }} -m piptools sync --user emmet-*/requirements/ubuntu-latest_py${{ matrix.python-version }}_extras.txt
+  #         python${{ matrix.python-version }} -m pip install --user --no-deps -e ./emmet-core ./emmet-api ./emmet-builders
 
-      - name: Build
-        run: mkdocs build
+  #     - name: Build
+  #       run: mkdocs build

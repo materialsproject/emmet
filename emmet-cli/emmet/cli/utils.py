@@ -13,6 +13,7 @@ from pathlib import Path
 
 import click
 import mgzip
+from botocore.exceptions import EndpointConnectionError
 from atomate.vasp.database import VaspCalcDb
 from atomate.vasp.drones import VaspDrone
 from dotty_dict import dotty
@@ -42,7 +43,6 @@ class ReturnCodes(Enum):
     SUCCESS = "COMPLETED"
     ERROR = "encountered ERROR"
     WARNING = "exited with WARNING"
-    SUBMITTED = "submitted to SLURM"
 
 
 def structures_match(s1, s2):
@@ -176,7 +176,7 @@ def make_block(base_path):
 
 
 def get_symlinked_path(root, base_path_index):
-    """organize directory in block_*/launcher_* via symbolic links"""
+    """organize directory in block_*/launcher_*"""
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
     root_split = root.split(os.sep)
@@ -188,10 +188,10 @@ def get_symlinked_path(root, base_path_index):
         all_blocks = glob(os.path.join(base_path, "block_*/"))
         for block_dir in all_blocks:
             p = os.path.join(block_dir, "launcher_*/")
-            if len(glob(p)) < 300:
+            if len(glob(p)) < 500:
                 break
         else:
-            # didn't find a block with < 300 launchers
+            # didn't find a block with < 500 launchers
             block_dir = make_block(base_path)
 
     if root_split[-1].startswith("launcher_"):
@@ -244,10 +244,10 @@ class VaspDirsGenerator:
 
 def get_vasp_dirs():
     ctx = click.get_current_context()
-    run = ctx.parent.parent.params["run"]
     nmax = ctx.parent.params["nmax"]
     pattern = ctx.parent.params["pattern"]
-    reorg = ctx.parent.params["reorg"]
+    run = ctx.parent.parent.params["run"] and pattern.startswith("block_")
+    reorg = ctx.params.get("reorg")
 
     base_path = ctx.parent.params["directory"].rstrip(os.sep)
     base_path_index = len(base_path.split(os.sep))
@@ -257,6 +257,8 @@ def get_vasp_dirs():
 
     counter = 0
     for root, dirs, files in os.walk(base_path, topdown=True):
+        if counter and not counter % 2000:
+            logger.info(f"{counter} launchers found ...")
         if counter == nmax:
             break
 
@@ -279,10 +281,23 @@ def get_vasp_dirs():
                 fn = os.path.join(root, f)
                 if os.path.islink(fn):
                     if run:
-                        os.unlink(fn)
-                        logger.warning(f"Unlinked {fn}.")
+                        fn_real = os.path.realpath(fn)
+                        if os.path.exists(fn_real):
+                            dst_name = f"{f}_copy"
+                            dst = os.path.join(root, dst_name)
+                            if os.path.isdir(fn_real):
+                                shutil.copytree(fn_real, dst)
+                            else:
+                                shutil.copy(fn_real, dst)
+
+                            os.unlink(fn)
+                            shutil.move(dst, fn)
+                            logger.debug(f"Resolved {fn}.")
+                        else:
+                            os.unlink(fn)
+                            logger.debug(f"Unlinked {fn}.")
                     else:
-                        logger.warning(f"Would unlink {fn}.")
+                        logger.debug(f"Would resolve or unlink {fn}.")
                     continue
 
                 st = os.stat(fn)
@@ -370,6 +385,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
     drone = VaspDrone(
         additional_fields={"tags": tags},
         store_volumetric_data=ctx.params["store_volumetric_data"],
+        runs=ctx.params["runs"],
     )
     # fs_keys = ["bandstructure", "dos", "chgcar", "locpot", "elfcar"]
     # for i in range(3):
@@ -405,7 +421,12 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
 
         task_doc["sbxn"] = sbxn
         snl_metas_avail = isinstance(snl_metas, dict)
-        task_id = task_ids[launcher] if manual_taskid else task_ids[chunk_idx][count]
+        task_id = task_ids.get(launcher) if manual_taskid else task_ids[chunk_idx][count]
+
+        if not task_id:
+            logger.error(f"Unable to determine task_id for {launcher}")
+            continue
+
         task_doc["task_id"] = task_id
         logger.info(f"Using {task_id} for {launcher}.")
 
@@ -491,6 +512,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
 
                 try:
                     target.insert_task(task_doc, use_gridfs=True)
+                except EndpointConnectionError as exc:
+                    logger.error(f"Connection failed for {task_id}: {exc}")
+                    continue
                 except DocumentTooLarge:
                     output = dotty(task_doc["calcs_reversed"][0]["output"])
                     pop_keys = [
@@ -513,6 +537,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                     else:
                         logger.warning(f"{name} failed to reduce document size")
                         continue
+                except Exception as ex:
+                    logger.error(f"{name} failed to insert: {ex}")
+                    continue
 
                 if target.collection.count_documents(query):
                     if snl_dct:

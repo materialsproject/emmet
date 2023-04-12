@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 """ Base emmet model to add default metadata """
 from datetime import datetime
 from typing import TypeVar

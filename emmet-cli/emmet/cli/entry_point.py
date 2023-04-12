@@ -42,6 +42,7 @@ def opt_prompt():
 def emmet(spec_or_dbfile, run, issue, sbatch, ntries, bb, yes, no_dupe_check, verbose):
     """Command line interface for emmet"""
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    logging.getLogger('github3').setLevel(logging.WARNING)
     ctx = click.get_current_context()
     ctx.ensure_object(dict)
 

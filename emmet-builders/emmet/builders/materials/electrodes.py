@@ -281,13 +281,13 @@ class StructureGroupBuilder(Builder):
 
 class InsertionElectrodeBuilder(Builder):
     def __init__(
-        self,
-        grouped_materials: MongoStore,
-        thermo: MongoStore,
-        insertion_electrode: MongoStore,
-        query: Optional[Dict] = None,
-        strip_structures: bool = False,
-        **kwargs,
+            self,
+            grouped_materials: MongoStore,
+            thermo: MongoStore,
+            insertion_electrode: MongoStore,
+            query: Optional[Dict] = None,
+            strip_structures: bool = False,
+            **kwargs,
     ):
         self.grouped_materials = grouped_materials
         self.insertion_electrode = insertion_electrode
@@ -482,6 +482,8 @@ class ConversionElectrodeBuilder(Builder):
             most_wi[red_form] = max(most_wi[red_form], (n_wi / num_form, entry.composition))
 
         new_docs = []
+        unique_reaction_compositions = set()
+        reaction_compositions = []
         for k, v in most_wi.items():
             if v[1] is not None:
                 # Get lowest material_id with matching composition
@@ -496,7 +498,32 @@ class ConversionElectrodeBuilder(Builder):
                     battery_id=f"{lowest_id}_{self.working_ion}",
                     thermo_type=self.thermo_type
                 )
+                # Get reaction entry_ids
+                comps = set()
+                for c in conversion_electrode_doc.reaction["reactants"].keys():
+                    comps.add(c)
+                    unique_reaction_compositions.add(c)
+                for c in conversion_electrode_doc.reaction["products"].keys():
+                    comps.add(c)
+                    unique_reaction_compositions.add(c)
+                reaction_compositions.append(comps)
                 new_docs.append(jsanitize(conversion_electrode_doc.dict()))
+
+        entry_id_mapping = {}
+        for c in unique_reaction_compositions:
+            relevant_entry_data = []
+            for e in pd.entries:
+                if e.composition == Composition(c):
+                    relevant_entry_data.append((e.energy_per_atom, e.entry_id))
+            relevant_entry_data.sort(key=lambda x: x[0])
+            entry_id_mapping[c] = relevant_entry_data[0][1]
+
+        for i, comps in enumerate(reaction_compositions):
+            mapping = {}
+            for c in comps:
+                mapping[c] = entry_id_mapping[c]
+            new_docs[i]["formula_id_mapping"] = mapping
+
         return new_docs  # type: ignore
 
     def update_targets(self, items: List):
