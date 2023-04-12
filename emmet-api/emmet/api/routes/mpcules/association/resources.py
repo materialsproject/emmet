@@ -19,6 +19,7 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     DeprecationQuery,
     MultiTaskIDQuery,
     MultiMPculeIDQuery,
+    FindMoleculeQuery,
     CalcMethodQuery,
     HashQuery
 )
@@ -27,6 +28,20 @@ from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 
 timeout = MAPISettings().TIMEOUT
+
+
+def find_molecule_assoc_resource(assoc_store):
+    resource = PostOnlyResource(
+        assoc_store,
+        FindMolecule,
+        key_fields=["molecule", "molecule_id"],
+        query_operators=[FindMoleculeQuery()],
+        tags=["MPcules Associated Molecules"],
+        sub_path="/assoc/find_molecule/",
+        timeout=timeout,
+    )
+
+    return resource
 
 
 def mol_assoc_resource(assoc_store):

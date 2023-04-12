@@ -37,6 +37,16 @@ def summary_resource(summary_store):
             DeprecationQuery(),
             SortQuery(),
             PaginationQuery(),
+            NumericQuery(
+                model=MoleculeSummaryDoc,
+                fields=[
+                    "nelements",
+                    "ionization_energy",
+                    "electron_affinity",
+                    "reduction_free_energy",
+                    "oxidation_free_energy"
+                ]
+            ),
             SparseFieldsQuery(MoleculeSummaryDoc, default_fields=["molecule_id"]),
         ],
         hint_scheme=SummaryHintScheme(),

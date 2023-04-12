@@ -22,7 +22,6 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     MultiTaskIDQuery,
     MultiMPculeIDQuery,
     FindMoleculeQuery,
-    FindMoleculeConnectivityQuery,
     CalcMethodQuery,
     HashQuery
 )
@@ -40,21 +39,7 @@ def find_molecule_resource(molecules_store):
         key_fields=["molecule", "molecule_id"],
         query_operators=[FindMoleculeQuery()],
         tags=["MPcules Molecules"],
-        sub_path="/find_molecule/",
-        timeout=timeout,
-    )
-
-    return resource
-
-
-def find_molecule_connectivity_resource(molecules_store):
-    resource = PostOnlyResource(
-        molecules_store,
-        FindMoleculeConnectivity,
-        key_fields=["molecule", "molecule_id"],
-        query_operators=[FindMoleculeConnectivityQuery()],
-        tags=["MPcules Molecules"],
-        sub_path="/molecules/find_molecule_connectivity/",
+        sub_path="/molecules/find_molecule/",
         timeout=timeout,
     )
 

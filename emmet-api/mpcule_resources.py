@@ -6,10 +6,12 @@ from emmet.api.routes.mpcules.tasks.resources import (
     task_resource,
     task_deprecation_resource
 )
-from emmet.api.routes.mpcules.association.resources import mol_assoc_resource
+from emmet.api.routes.mpcules.association.resources import (
+    find_molecule_assoc_resource,
+    mol_assoc_resource
+)
 from emmet.api.routes.mpcules.molecules.resources import (
     find_molecule_resource,
-    find_molecule_connectivity_resource,
     molecules_resource
 )
 from emmet.api.routes.mpcules.partial_charges.resources import charges_resource
@@ -96,14 +98,18 @@ mpcules_resources.extend(
 )
 
 # Assoc
-mpcules_resources.extend([mol_assoc_resource(assoc_store)])
+mpcules_resources.extend(
+    [
+        mol_assoc_resource(assoc_store),
+        find_molecule_assoc_resource(assoc_store)
+    ]
+)
 
 # Molecules
 mpcules_resources.extend(
     [
         molecules_resource(mol_store),
         find_molecule_resource(mol_store),
-        find_molecule_connectivity_resource(mol_store),
     ]
 )
 
