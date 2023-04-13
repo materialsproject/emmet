@@ -104,22 +104,22 @@ def test_multi_task_id_query():
 
 def test_multi_mpculeid_query():
     op = MultiMPculeIDQuery()
-    assert op.query(mpcule_ids="21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2, 542d9adc3163002fe8dfe6d226875dde-C3H5Li2O3-0-2") == {
+    assert op.query(molecule_ids="21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2, 542d9adc3163002fe8dfe6d226875dde-C3H5Li2O3-0-2") == {
         "criteria": {"molecule_id": {"$in": ["21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2", "542d9adc3163002fe8dfe6d226875dde-C3H5Li2O3-0-2"]}}
     }
 
-    assert op.query(mpcule_ids="21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2") == {
+    assert op.query(molecule_ids="21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2") == {
         "criteria": {"molecule_id": "21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2"}
     }
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(mpcule_ids="21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2, 542d9adc3163002fe8dfe6d226875dde-C3H5Li2O3-0-2") == {
+        assert new_op.query(molecule_ids="21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2, 542d9adc3163002fe8dfe6d226875dde-C3H5Li2O3-0-2") == {
            "criteria": {"molecule_id": {"$in": ["21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2", "542d9adc3163002fe8dfe6d226875dde-C3H5Li2O3-0-2"]}}
         }
 
-        assert op.query(mpcule_ids="21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2") == {
+        assert op.query(molecule_ids="21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2") == {
             "criteria": {"molecule_id": "21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2"}
         }
 
