@@ -73,7 +73,7 @@ def summary_stats_resource(summary_store):
         summary_store,
         SummaryStats,
         pipeline_query_operator=SearchStatsQuery(SummaryDoc),
-        tags=["Summary"],
+        tags=["Materials Summary"],
         sub_path="/summary/stats/",
         header_processor=GlobalHeaderProcessor(),
         timeout=timeout
