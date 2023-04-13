@@ -48,13 +48,8 @@ class ValidationDoc(EmmetBaseModel):
     reasons: List[Union[DeprecationMessage, str]] = Field(
         None, description="List of deprecation tags detailing why this task isn't valid"
     )
-    warnings: List[str] = Field(
-        [], description="List of potential warnings about this calculation"
-    )
-    data: Dict = Field(
-        description="Dictioary of data used to perform validation."
-        " Useful for post-mortem analysis"
-    )
+    warnings: List[str] = Field([], description="List of potential warnings about this calculation")
+    data: Dict = Field(description="Dictioary of data used to perform validation." " Useful for post-mortem analysis")
 
     class Config:
         extra = "allow"
@@ -85,7 +80,6 @@ class ValidationDoc(EmmetBaseModel):
             potcar_hashes: Dictionary of potcar hash data. Mapping is calculation type -> potcar symbol -> hash value.
         """
 
-        structure = task_doc.input.structure or task_doc.output.structure
         bandgap = task_doc.output.bandgap
         calc_type = task_doc.calc_type
         task_type = task_doc.task_type
@@ -94,16 +88,18 @@ class ValidationDoc(EmmetBaseModel):
         chemsys = task_doc.chemsys
         calcs_reversed = task_doc.calcs_reversed
 
+        if calcs_reversed[0].get("input", {}).get("structure", None):
+            structure = Structure.from_dict(calcs_reversed[0]["input"]["structure"])
+        else:
+            structure = task_doc.input.structure or task_doc.output.structure
+
         reasons = []
         data = {}  # type: ignore
         warnings: List[str] = []
 
         if str(calc_type) in input_sets:
-
             try:
-                valid_input_set = _get_input_set(
-                    run_type, task_type, calc_type, structure, input_sets, bandgap
-                )
+                valid_input_set = _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandgap)
 
             except (TypeError, KeyError, ValueError):
                 reasons.append(DeprecationMessage.SET)
@@ -119,9 +115,7 @@ class ValidationDoc(EmmetBaseModel):
                             TaskType.DFPT_Dielectric,
                             TaskType.Dielectric,
                         ]:
-                            warnings.append(
-                                DeprecationMessage.POTCAR.__doc__  # type: ignore
-                            )
+                            warnings.append(DeprecationMessage.POTCAR.__doc__)  # type: ignore
                         else:
                             reasons.append(DeprecationMessage.POTCAR)
 
@@ -132,7 +126,6 @@ class ValidationDoc(EmmetBaseModel):
                     # Not validating k-point data for line-mode calculations as constructing
                     # the k-path is too costly for the builder and the uniform input set is used.
                     if valid_input_set.kpoints is not None:
-
                         if _kpoint_check(
                             valid_input_set,
                             inputs,
@@ -144,17 +137,14 @@ class ValidationDoc(EmmetBaseModel):
 
                     else:
                         # warnings
-                        _kspacing_warnings(
-                            valid_input_set, inputs, data, warnings, kspacing_tolerance
-                        )
+                        _kspacing_warnings(valid_input_set, inputs, data, warnings, kspacing_tolerance)
 
                 # warn, but don't invalidate if wrong ISMEAR
                 valid_ismear = valid_input_set.incar.get("ISMEAR", 1)
                 curr_ismear = inputs.get("incar", {}).get("ISMEAR", 1)
                 if curr_ismear != valid_ismear:
                     warnings.append(
-                        f"Inappropriate smearing settings. Set to {curr_ismear},"
-                        f" but should be {valid_ismear}"
+                        f"Inappropriate smearing settings. Set to {curr_ismear}," f" but should be {valid_ismear}"
                     )
 
                 # Checking ENCUT
@@ -169,9 +159,7 @@ class ValidationDoc(EmmetBaseModel):
                     reasons.append(DeprecationMessage.LDAU)
 
                 # Check the max upwards SCF step
-                if _scf_upward_check(
-                    calcs_reversed, inputs, data, max_allowed_scf_gradient, warnings
-                ):
+                if _scf_upward_check(calcs_reversed, inputs, data, max_allowed_scf_gradient, warnings):
                     reasons.append(DeprecationMessage.MAX_SCF)
 
                 # Check for Am and Po elements. These currently do not have proper elemental entries
@@ -204,9 +192,7 @@ class ValidationDoc(EmmetBaseModel):
 def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandgap):
     # Ensure inputsets get proper additional input values
     if "SCAN" in run_type.value:
-        valid_input_set: VaspInputSet = input_sets[str(calc_type)](  # type: ignore
-            structure, bandgap=bandgap
-        )
+        valid_input_set: VaspInputSet = input_sets[str(calc_type)](structure, bandgap=bandgap)  # type: ignore
     elif task_type == TaskType.NSCF_Uniform or task_type == TaskType.NSCF_Line:
         # Constructing the k-path for line-mode calculations is too costly, so
         # the uniform input set is used instead and k-points are not checked.
@@ -223,10 +209,7 @@ def _get_input_set(run_type, task_type, calc_type, structure, input_sets, bandga
 
 def _scf_upward_check(calcs_reversed, inputs, data, max_allowed_scf_gradient, warnings):
     skip = abs(inputs.get("incar", {}).get("NLEMDL", -5)) - 1
-    energies = [
-        d["e_fr_energy"]
-        for d in calcs_reversed[0]["output"]["ionic_steps"][-1]["electronic_steps"]
-    ]
+    energies = [d["e_fr_energy"] for d in calcs_reversed[0]["output"]["ionic_steps"][-1]["electronic_steps"]]
     if len(energies) > skip:
         max_gradient = np.max(np.gradient(energies)[skip:])
         data["max_gradient"] = max_gradient
@@ -234,8 +217,7 @@ def _scf_upward_check(calcs_reversed, inputs, data, max_allowed_scf_gradient, wa
             return True
     else:
         warnings.append(
-            "Not enough electronic steps to compute valid gradient"
-            " and compare with max SCF gradient tolerance"
+            "Not enough electronic steps to compute valid gradient" " and compare with max SCF gradient tolerance"
         )
         return False
 
@@ -262,10 +244,7 @@ def _u_value_checks(task_doc, valid_input_set, warnings):
 
         if len(diff_ldau_params) > 0:
             warnings.extend(
-                [
-                    f"U-value for {el} should be {good} but was {bad}"
-                    for el, (good, bad) in diff_ldau_params.items()
-                ]
+                [f"U-value for {el} should be {good} but was {bad}" for el, (good, bad) in diff_ldau_params.items()]
             )
             return True
 
@@ -305,13 +284,11 @@ def _kspacing_warnings(input_set, inputs, data, warnings, kspacing_tolerance):
         # larger KSPACING means fewer k-points
         if data["kspacing_delta"] > kspacing_tolerance:
             warnings.append(
-                f"KSPACING is greater than input set: {data['kspacing_delta']}"
-                f" lower than {kspacing_tolerance} "
+                f"KSPACING is greater than input set: {data['kspacing_delta']}" f" lower than {kspacing_tolerance} "
             )
         elif data["kspacing_delta"] < kspacing_tolerance:
             warnings.append(
-                f"KSPACING is lower than input set: {data['kspacing_delta']}"
-                f" lower than {kspacing_tolerance} "
+                f"KSPACING is lower than input set: {data['kspacing_delta']}" f" lower than {kspacing_tolerance} "
             )
 
 
@@ -350,9 +327,7 @@ def _magmom_check(task_doc, chemsys):
 
     for ele, max_val in eles_max_vals.items():
         if ele in chemsys:
-            for site_num, mag in enumerate(
-                task_doc.calcs_reversed[0]["output"]["outcar"]["magnetization"]
-            ):
+            for site_num, mag in enumerate(task_doc.calcs_reversed[0]["output"]["outcar"]["magnetization"]):
                 if "structure" in task_doc.calcs_reversed[0]["output"]:
                     output_structure = task_doc.calcs_reversed[0]["output"]["structure"]
                 else:
@@ -370,8 +345,4 @@ def _get_unsorted_symbol_set(structure: Structure):
     Have to build structure_symbol set manually to ensure
     we get the right order since pymatgen sorts its symbol_set list.
     """
-    return list(
-        {
-            str(sp): 1 for site in structure for sp, v in site.species.items() if v != 0
-        }.keys()
-    )
+    return list({str(sp): 1 for site in structure for sp, v in site.species.items() if v != 0}.keys())
