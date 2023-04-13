@@ -198,19 +198,19 @@ class MultiMPculeIDQuery(QueryOperator):
 
     def query(
         self,
-        mpcule_ids: Optional[str] = Query(None, description="Comma-separated list of mpcule_id values to query on"),
+        molecule_ids: Optional[str] = Query(None, description="Comma-separated list of MPculeIDs to query on"),
     ) -> STORE_PARAMS:
 
         crit = {}  # type: dict
 
-        if mpcule_ids:
+        if molecule_ids:
 
-            mpcule_ids_list = [mpcule_id.strip() for mpcule_id in mpcule_ids.split(",")]
+            molecule_ids_list = [mpcule_id.strip() for mpcule_id in molecule_ids.split(",")]
 
-            if len(mpcule_ids_list) == 1:
-                crit.update({"molecule_id": mpcule_ids_list[0]})
+            if len(molecule_ids_list) == 1:
+                crit.update({"molecule_id": molecule_ids_list[0]})
             else:
-                crit.update({"molecule_id": {"$in": mpcule_ids_list}})
+                crit.update({"molecule_id": {"$in": molecule_ids_list}})
 
         return {"criteria": crit}
 

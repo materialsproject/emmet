@@ -48,7 +48,7 @@ class RedoxDoc(PropertyDoc):
         None, description="Adiabatic free energy of reduction (units: eV)"
     )
 
-    red_mpcule_id: MPculeID = Field(None, description="Molecule ID for adiabatic reduction")
+    red_molecule_id: MPculeID = Field(None, description="Molecule ID for adiabatic reduction")
 
     red_property_id: str = Field(None, description="Property ID for the thermodynamic data of the "
                                                    "reduced molecule")
@@ -61,7 +61,7 @@ class RedoxDoc(PropertyDoc):
         None, description="Adiabatic free energy of oxidation (units: eV)"
     )
 
-    ox_mpcule_id: MPculeID = Field(None, description="Molecule ID for adiabatic oxidation")
+    ox_molecule_id: MPculeID = Field(None, description="Molecule ID for adiabatic oxidation")
 
     ox_property_id: str = Field(None, description="Property ID for the thermodynamic data of the "
                                                   "oxidized molecule")
@@ -139,12 +139,12 @@ class RedoxDoc(PropertyDoc):
         base_has_g = base_thermo_doc.free_energy is not None
 
         base_property_id = base_thermo_doc.property_id
-        red_mpcule_id = None
+        red_molecule_id = None
         red_property_id = None
         reduction_energy = None
         reduction_free_energy = None
         reduction_potentials = None
-        ox_mpcule_id = None
+        ox_molecule_id = None
         ox_property_id = None
         oxidation_energy = None
         oxidation_free_energy = None
@@ -160,7 +160,7 @@ class RedoxDoc(PropertyDoc):
 
         # Adiabatic reduction properties
         if red_doc is not None:
-            red_mpcule_id = red_doc.molecule_id
+            red_molecule_id = red_doc.molecule_id
             red_property_id = red_doc.property_id
 
             id_string += f"-{red_doc.property_id}"
@@ -183,7 +183,7 @@ class RedoxDoc(PropertyDoc):
 
         # Adiabatic oxidation properties
         if ox_doc is not None:
-            ox_mpcule_id = ox_doc.molecule_id
+            ox_molecule_id = ox_doc.molecule_id
             ox_property_id = ox_doc.property_id
 
             id_string += f"-{ox_doc.property_id}"
@@ -230,12 +230,12 @@ class RedoxDoc(PropertyDoc):
             level_of_theory=base_thermo_doc.level_of_theory,
             solvent=base_thermo_doc.solvent,
             lot_solvent=base_thermo_doc.lot_solvent,
-            red_mpcule_id=red_mpcule_id,
+            red_molecule_id=red_molecule_id,
             red_property_id=red_property_id,
             reduction_energy=reduction_energy,
             reduction_free_energy=reduction_free_energy,
             reduction_potentials=reduction_potentials,
-            ox_mpcule_id=ox_mpcule_id,
+            ox_molecule_id=ox_molecule_id,
             ox_property_id=ox_property_id,
             oxidation_energy=oxidation_energy,
             oxidation_free_energy=oxidation_free_energy,

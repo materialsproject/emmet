@@ -3,7 +3,7 @@ from maggma.api.resource import HintScheme
 
 class TasksHintScheme(HintScheme):
     """
-    Hint scheme for the mpcules/tasks endpoint.
+    Hint scheme for the molecules/tasks endpoint.
     """
 
     def generate_hints(self, query):

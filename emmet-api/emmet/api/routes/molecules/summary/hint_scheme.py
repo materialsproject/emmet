@@ -3,7 +3,7 @@ from maggma.api.resource import HintScheme
 
 class SummaryHintScheme(HintScheme):
     """
-    Hint scheme for the mpcules summary endpoint.
+    Hint scheme for the molecules/summary endpoint.
     """
 
     def generate_hints(self, query):
