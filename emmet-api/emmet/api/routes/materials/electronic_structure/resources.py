@@ -44,7 +44,7 @@ def es_resource(es_store):
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Electronic Structure"],
-        sub_path="/electronic_structure/"
+        sub_path="/electronic_structure/",
         disable_validation=True,
         timeout=timeout,
     )

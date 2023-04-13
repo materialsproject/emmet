@@ -343,10 +343,11 @@ materials_resources.extend(
         dos_obj_resource(s3_dos),
     ]
 )
+
 # MPComplete
 from emmet.api.routes.materials.mpcomplete.resources import mpcomplete_resource
 
-materials_resources.extend([mpcomplete_resource(mpcomplete_store)])
+resources.update({"mpcomplete": [mpcomplete_resource(mpcomplete_store)]})
 
 # DOIs
 from emmet.api.routes.dois.resources import dois_resource

@@ -1,6 +1,6 @@
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
-from emmet.api.routes.tasks.utils import calcs_reversed_to_trajectory, task_to_entry
+from emmet.api.routes.materials.tasks.utils import calcs_reversed_to_trajectory, task_to_entry
 from fastapi import Query
 from typing import Optional
 from monty.json import jsanitize

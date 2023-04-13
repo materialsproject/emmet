@@ -3,7 +3,7 @@ from fastapi import Query
 from pymatgen.core import Composition
 from maggma.api.query_operator import QueryOperator
 from emmet.core.synthesis import SynthesisTypeEnum, OperationTypeEnum
-from emmet.api.routes.synthesis.utils import mask_highlights, mask_paragraphs
+from emmet.api.routes.materials.synthesis.utils import mask_highlights, mask_paragraphs
 
 
 class SynthesisSearchQuery(QueryOperator):

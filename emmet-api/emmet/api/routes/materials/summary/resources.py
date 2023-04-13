@@ -7,17 +7,17 @@ from maggma.api.query_operator import (
     NumericQuery,
 )
 from maggma.api.resource import ReadOnlyResource, AggregationResource
-from emmet.api.routes.materials.query_operators import (
+from emmet.api.routes.materials.materials.query_operators import (
     DeprecationQuery,
     ElementsQuery,
     FormulaQuery,
     ChemsysQuery,
     SymmetryQuery,
 )
-from emmet.api.routes.oxidation_states.query_operators import PossibleOxiStateQuery
+from emmet.api.routes.materials.oxidation_states.query_operators import PossibleOxiStateQuery
 from emmet.core.summary import SummaryStats
-from emmet.api.routes.summary.hint_scheme import SummaryHintScheme
-from emmet.api.routes.summary.query_operators import (
+from emmet.api.routes.materials.summary.hint_scheme import SummaryHintScheme
+from emmet.api.routes.materials.summary.query_operators import (
     HasPropsQuery,
     MaterialIDsSearchQuery,
     SearchIsStableQuery,
@@ -59,7 +59,8 @@ def summary_resource(summary_store):
         ],
         hint_scheme=SummaryHintScheme(),
         header_processor=GlobalHeaderProcessor(),
-        tags=["Summary"],
+        tags=["Materials Summary"],
+        sub_path="/summary/",
         disable_validation=True,
         timeout=timeout
     )

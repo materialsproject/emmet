@@ -2,8 +2,8 @@ from maggma.api.resource import ReadOnlyResource
 from maggma.api.resource.aggregation import AggregationResource
 from maggma.api.query_operator import PaginationQuery, SparseFieldsQuery
 
-from emmet.api.routes.robocrys.query_operators import RoboTextSearchQuery
-from emmet.api.routes.materials.query_operators import MultiMaterialIDQuery
+from emmet.api.routes.materials.robocrys.query_operators import RoboTextSearchQuery
+from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
 from emmet.core.robocrys import RobocrystallogapherDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
@@ -24,6 +24,7 @@ def robo_resource(robo_store):
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Robocrystallographer"],
+        sub_path="/robocrys/",
         disable_validation=True,
         timeout=timeout,
     )
@@ -37,7 +38,7 @@ def robo_search_resource(robo_store):
         RobocrystallogapherDoc,
         pipeline_query_operator=RoboTextSearchQuery(),
         tags=["Robocrystallographer"],
-        sub_path="/text_search/",
+        sub_path="/robocrys/text_search/",
         header_processor=GlobalHeaderProcessor(),
         timeout=timeout,
     )

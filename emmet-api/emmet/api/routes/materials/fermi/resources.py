@@ -13,7 +13,8 @@ def fermi_resource(fermi_store):
             SparseFieldsQuery(FermiDoc, default_fields=["task_id", "last_updated"]),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Electronic Structure"],
+        tags=["Materials Electronic Structure"],
+        sub_path="/fermi/",
         disable_validation=True,
     )
 

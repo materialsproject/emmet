@@ -14,8 +14,8 @@ from maggma.api.query_operator import (
     NumericQuery,
 )
 
-from emmet.api.routes.materials.hint_scheme import MaterialsHintScheme
-from emmet.api.routes.materials.query_operators import (
+from emmet.api.routes.materials.materials.hint_scheme import MaterialsHintScheme
+from emmet.api.routes.materials.materials.query_operators import (
     ElementsQuery,
     FormulaQuery,
     ChemsysQuery,
@@ -39,7 +39,7 @@ def find_structure_resource(materials_store):
         key_fields=["structure", "task_id"],
         query_operators=[FindStructureQuery()],
         tags=["Materials"],
-        sub_path="/find_structure/",
+        sub_path="/materials/find_structure/",
         timeout=timeout,
     )
 
@@ -52,7 +52,7 @@ def formula_autocomplete_resource(formula_autocomplete_store):
         FormulaAutocomplete,
         pipeline_query_operator=FormulaAutoCompleteQuery(),
         tags=["Materials"],
-        sub_path="/formula_autocomplete/",
+        sub_path="/materials/formula_autocomplete/",
         header_processor=GlobalHeaderProcessor(),
         timeout=timeout,
     )
@@ -81,6 +81,7 @@ def materials_resource(materials_store):
         header_processor=GlobalHeaderProcessor(),
         hint_scheme=MaterialsHintScheme(),
         tags=["Materials"],
+        sub_path="/materials/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )

@@ -15,7 +15,8 @@ def similarity_resource(similarity_store):
             SparseFieldsQuery(SimilarityDoc, default_fields=["material_id"]),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Similarity"],
+        tags=["Materials Similarity"],
+        sub_path="/similarity/",
         enable_default_search=False,
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT

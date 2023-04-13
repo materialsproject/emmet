@@ -1,13 +1,13 @@
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 from maggma.api.resource import ReadOnlyResource
 
-from emmet.api.routes.materials.query_operators import (
+from emmet.api.routes.materials.materials.query_operators import (
     ChemsysQuery,
     ElementsQuery,
     FormulaQuery,
 )
-from emmet.api.routes.tasks.hint_scheme import TasksHintScheme
-from emmet.api.routes.tasks.query_operators import (
+from emmet.api.routes.materials.tasks.hint_scheme import TasksHintScheme
+from emmet.api.routes.materials.tasks.query_operators import (
     DeprecationQuery,
     MultipleTaskIDsQuery,
     TrajectoryQuery,
@@ -38,7 +38,8 @@ def task_resource(task_store):
         ],
         header_processor=GlobalHeaderProcessor(),
         hint_scheme=TasksHintScheme(),
-        tags=["Tasks"],
+        tags=["Materials Tasks"],
+        sub_path="/tasks/",
         timeout=timeout,
         disable_validation=True,
     )
@@ -54,7 +55,7 @@ def task_deprecation_resource(materials_store):
         tags=["Tasks"],
         enable_get_by_key=False,
         enable_default_search=True,
-        sub_path="/deprecation/",
+        sub_path="/tasks/deprecation/",
         header_processor=GlobalHeaderProcessor(),
         timeout=timeout,
     )
@@ -69,7 +70,7 @@ def trajectory_resource(task_store):
         query_operators=[TrajectoryQuery(), PaginationQuery()],
         key_fields=["task_id", "calcs_reversed"],
         tags=["Tasks"],
-        sub_path="/trajectory/",
+        sub_path="/tasks/trajectory/",
         header_processor=GlobalHeaderProcessor(),
         timeout=timeout,
         disable_validation=True,
@@ -93,7 +94,7 @@ def entries_resource(task_store):
             "last_updated",
         ],
         tags=["Tasks"],
-        sub_path="/entries/",
+        sub_path="/tasks/entries/",
         header_processor=GlobalHeaderProcessor(),
         timeout=timeout,
         disable_validation=True,

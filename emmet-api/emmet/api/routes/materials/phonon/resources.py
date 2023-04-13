@@ -17,7 +17,8 @@ def phonon_bsdos_resource(phonon_bs_store):
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Phonon"],
+        tags=["Materials Phonon"],
+        sub_path="/phonon/",
         enable_default_search=False,
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT

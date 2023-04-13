@@ -7,7 +7,7 @@ from maggma.api.query_operator import (
 )
 from maggma.api.resource import ReadOnlyResource
 
-from emmet.api.routes.substrates.query_operators import SubstrateStructureQuery
+from emmet.api.routes.materials.substrates.query_operators import SubstrateStructureQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.core.substrates import SubstratesDoc
 from emmet.api.core.settings import MAPISettings
@@ -28,7 +28,8 @@ def substrates_resource(substrates_store):
             SparseFieldsQuery(SubstratesDoc, default_fields=["film_id", "sub_id"]),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Substrates"],
+        tags=["Materials Substrates"],
+        sub_path="/substrates/",
         enable_get_by_key=False,
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT

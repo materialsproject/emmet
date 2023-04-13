@@ -1,7 +1,7 @@
 from maggma.api.resource import ReadOnlyResource
 from emmet.core.grain_boundary import GrainBoundaryDoc
 
-from emmet.api.routes.grain_boundary.query_operators import (
+from emmet.api.routes.materials.grain_boundary.query_operators import (
     GBStructureQuery,
     GBTaskIDQuery,
 )
@@ -32,7 +32,8 @@ def gb_resource(gb_store):
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Grain Boundaries"],
+        tags=["Materials Grain Boundaries"],
+        sub_path="/grain_boundary/",
         enable_get_by_key=False,
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT
