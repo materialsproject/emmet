@@ -37,7 +37,7 @@ def find_molecule_resource(molecules_store):
         FindMolecule,
         key_fields=["molecule", "molecule_id"],
         query_operators=[FindMoleculeQuery()],
-        tags=["MPcules Molecules"],
+        tags=["Molecules"],
         sub_path="/molecules/find_molecule/",
         timeout=timeout,
     )
