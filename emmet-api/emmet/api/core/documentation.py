@@ -217,13 +217,6 @@ tags_meta = [
             Project database. See the `InsertionElectrodeDoc` schema for a full list of fields returned by this route.",
     },
     {
-        "name": "Molecules",
-        "description": "Route providing computed data for a molecule such as charge, \
-            electron affinity, and ionization energy. The unique identifier for a molecule \
-            is its `task_id` (e.g. `mol-45807`). See the `MoleculesDoc` schema for a full list of \
-            fields returned by this route.",
-    },
-    {
         "name": "Oxidation States",
         "description": "Route providing computed oxidation state data for a material following the \
             methodology employed by the [BVAnalyzer](https://pymatgen.org/pymatgen.analysis.bond_valence.html) \
@@ -255,5 +248,81 @@ tags_meta = [
         "description": "Route for retrevial of information about which hypothetical alloy(s) a given material might "
                        "belong to, following the methodolgy discussed by "
                        "[Woods-Robinson, Horton and Persson](https://arxiv.org/pdf/2206.10715)."
-    }
+    },
+    {
+        "name": "Molecules Tasks",
+        "description": "Route for basic task information for DFT calculations in the Materials Project \
+            molecules database. Multiple calculations can ultimately be associated with a unique molecule, \
+            and are the source of its reported properties. The unique identifier for a calculation is its \
+            `task_id`. See the `TaskDocument` schema for a full list of fields returned by this route."
+    },
+    {
+        "name": "Associated Molecules",
+        "description": "Route for 'associated' molecule data. Construction of the Materials Project molecules \
+            database occurs in two stages. In the first stage, calculations using the exact same formula, charge, \
+            spin multiplicity, and molecular geometry (defined by bond lengths, angles, etc.) are associated. \
+            In the second stage, multiple 'associated molecules' with the same basic properties (formula, charge, spin) \
+            and connectivity (based on molecular graph isomorphism) are collected, forming the 'core' molecules \
+            collection. This route provides access to data for individual 'associated molecules'. The 'Core Molecules' \
+            route (/molecules/molecules/) contains data for core molecules. See the `MoleculeDoc` schema for a full list \
+            of fields returned by this route."
+    },
+    {
+        "name": "Core Molecules",
+        "description": "Route for 'core' molecule data. Construction of the Materials Project molecules \
+            database occurs in two stages. In the first stage, calculations using the exact same formula, charge, \
+            spin multiplicity, and molecular geometry (defined by bond lengths, angles, etc.) are associated. \
+            In the second stage, multiple 'associated molecules' with the same basic properties (formula, charge, spin) \
+            and connectivity (based on molecular graph isomorphism) are collected, forming the 'core' molecules \
+            collection. This route provides access to data for individual 'associated molecules'. The 'Associated Molecules' \
+            route (/molecules/assoc/) contains data for 'associated' molecules. See the `MoleculeDoc` schema for a full list \
+            of fields returned by this route."
+    },
+    {
+        "name": "Molecules Partial Charges",
+        "description": "Route for molecular partial charge data. See the `PartialChargesDoc` schema for a full list \
+            of fields returned by this route."
+    },
+    {
+        "name": "Molecules Partial Spins",
+        "description": "Route for molecular partial spin data. See the `PartialSpinsDoc` schema for a full list \
+            of fields returned by this route."
+    },
+    {
+        "name": "Molecules Bonds",
+        "description": "Route for molecular bonding data. See the `MoleculeBondingDoc` schema for a full list \
+            of fields returned by this route."
+    },
+    {
+        "name": "Molecules Orbitals",
+        "description": "Route for molecular orbital information obtained via Natural Bonding Orbital analysis. \
+            See the `OrbitalDoc` schema for a full list of fields returned by this route."
+    },
+    {
+        "name": "Molecules Redox",
+        "description": "Route for molecular redox information (e.g. ionization energy, reduction free energy, \
+            redox potentials). See the `RedoxDoc` schema for a full list of fields returned by this route."
+    },
+    {
+        "name": "Molecules Thermo",
+        "description": "Route for molecular thermochemistry information. See the `MoleculeThermoDoc` schema for \
+            a full list of fields returned by this route."
+    },
+    {
+        "name": "Molecules Vibrations",
+        "description": "Route for molecular normal mode and IR spectroscopy data. See the `VibrationDoc` schema for \
+            a full list of fields returned by this route."
+    },
+    {
+        "name": "Molecules Summary",
+        "description": "Route for a summary of all data calculated on 'core' molecules in the Materials Project \
+            molecules database. See the `MoleculeSummaryDoc` schema for a full list of fields returned by this route."
+    },
+    {
+        "name": "JCESR Electrolyte Genome",
+        "description": "Route providing computed data for a legacy molecule such as charge, \
+            electron affinity, and ionization energy. The unique identifier for a molecule \
+            is its `task_id` (e.g. `mol-45807`). See the `MoleculesDoc` schema for a full list of \
+            fields returned by this route.",
+    },
 ]

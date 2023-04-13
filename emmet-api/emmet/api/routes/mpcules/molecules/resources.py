@@ -37,7 +37,7 @@ def find_molecule_resource(molecules_store):
         FindMolecule,
         key_fields=["molecule", "molecule_id"],
         query_operators=[FindMoleculeQuery()],
-        tags=["Molecules"],
+        tags=["Core Molecules"],
         sub_path="/molecules/find_molecule/",
         timeout=timeout,
     )
@@ -65,7 +65,7 @@ def molecules_resource(molecules_store):
             SparseFieldsQuery(MoleculeDoc, default_fields=["molecule_id", "formula_alphabetical", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Molecules"],
+        tags=["Core Molecules"],
         sub_path="/molecules/",
         disable_validation=True,
         hint_scheme=MoleculesHintScheme(),
