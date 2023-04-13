@@ -43,7 +43,7 @@ def charges_resource(charges_store):
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["MPcules Partial Charges"],
+        tags=["Molecules Partial Charges"],
         sub_path="/partial_charges/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,

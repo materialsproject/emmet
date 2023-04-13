@@ -43,7 +43,7 @@ def spins_resource(spins_store):
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["MPcules Partial Spins"],
+        tags=["Molecules Partial Spins"],
         sub_path="/partial_spins/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,

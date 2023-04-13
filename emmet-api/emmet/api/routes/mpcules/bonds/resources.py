@@ -47,7 +47,7 @@ def bonding_resource(bonds_store):
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["MPcules Bonds"],
+        tags=["Molecules Bonds"],
         sub_path="/bonding/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,

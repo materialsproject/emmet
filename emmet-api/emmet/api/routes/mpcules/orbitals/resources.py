@@ -43,7 +43,7 @@ def orbitals_resource(orbital_store):
             SparseFieldsQuery(OrbitalDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["MPcules Orbitals"],
+        tags=["Molecules Orbitals"],
         sub_path="/orbitals/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,

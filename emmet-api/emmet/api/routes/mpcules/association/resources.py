@@ -37,7 +37,7 @@ def find_molecule_assoc_resource(assoc_store):
         FindMolecule,
         key_fields=["molecule", "molecule_id"],
         query_operators=[FindMoleculeQuery()],
-        tags=["MPcules Associated Molecules"],
+        tags=["Associated Molecules"],
         sub_path="/assoc/find_molecule/",
         timeout=timeout,
     )
@@ -65,7 +65,7 @@ def mol_assoc_resource(assoc_store):
             SparseFieldsQuery(MoleculeDoc, default_fields=["molecule_id", "formula_alphabetical", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["MPcules Associated Molecules"],
+        tags=["Associated Molecules"],
         sub_path="/assoc/",
         disable_validation=True,
         hint_scheme=MoleculesHintScheme(),

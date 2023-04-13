@@ -1,6 +1,6 @@
 import os
 
-from maggma.stores import MongoURIStore, S3Store
+from maggma.stores import MongoURIStore
 
 from emmet.api.core.settings import MAPISettings
 
@@ -24,8 +24,8 @@ if db_uri:
 legacy_resources = list()
 
 # Molecules
-from emmet.api.routes.molecules.resources import molecules_resource
+from emmet.api.routes.legacy.jcesr.resources import jcesr_resource
 
-legacy_resources.extend([molecules_resource(molecules_store)])
+legacy_resources.extend([jcesr_resource(molecules_store)])
 
 resources.update({"legacy": legacy_resources})

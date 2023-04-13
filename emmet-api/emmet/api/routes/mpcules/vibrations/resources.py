@@ -33,7 +33,7 @@ def vibration_resource(vibes_store):
             SparseFieldsQuery(VibrationDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["MPcules Vibrations"],
+        tags=["Molecules Vibrations"],
         sub_path="/vibrations/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,

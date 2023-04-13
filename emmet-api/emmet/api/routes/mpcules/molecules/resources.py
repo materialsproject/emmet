@@ -65,7 +65,7 @@ def molecules_resource(molecules_store):
             SparseFieldsQuery(MoleculeDoc, default_fields=["molecule_id", "formula_alphabetical", "last_updated"],),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["MPcules Molecules"],
+        tags=["Molecules"],
         sub_path="/molecules/",
         disable_validation=True,
         hint_scheme=MoleculesHintScheme(),
