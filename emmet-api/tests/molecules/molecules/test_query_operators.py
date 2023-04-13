@@ -10,7 +10,6 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     MultiTaskIDQuery,
     MultiMPculeIDQuery,
     FindMoleculeQuery,
-    FindMoleculeConnectivityQuery,
     CalcMethodQuery,
     HashQuery,
 )
@@ -149,31 +148,6 @@ def test_find_molecule_query():
     pp = op.post_process(docs, query)[0]
     assert pp["molecule_id"] == "f9eff23899e37989eb800214ea1d54d4-C1F4Li1O3P1-0-1"
     assert pp["rmsd"] < 1e-15
-
-
-def test_find_molecule_connectivity_query():
-    op = FindMoleculeConnectivityQuery()
-
-    mol = Molecule.from_file(
-        os.path.join(MAPISettings().TEST_FILES, "test_molecule.xyz")
-    )
-
-    query = {
-        "criteria": {"composition": dict(mol.composition),
-                     "charge": int(mol.charge),
-                     "spin_multiplicity": int(mol.spin_multiplicity)
-                     }
-    }
-    assert (
-        op.query(
-            molecule=mol.as_dict(), charge=0, spin_multiplicity=1, _limit=1
-        )
-        == query
-    )
-
-    docs = [{"molecule": mol.as_dict(), "molecule_id": "f9eff23899e37989eb800214ea1d54d4-C1F4Li1O3P1-0-1"}]
-    pp = op.post_process(docs, query)[0]
-    assert pp["molecule_id"] == "f9eff23899e37989eb800214ea1d54d4-C1F4Li1O3P1-0-1"
 
 
 def test_calc_method_query():
