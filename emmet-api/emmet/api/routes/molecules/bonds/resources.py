@@ -3,10 +3,10 @@ from emmet.core.molecules.bonds import MoleculeBondingDoc
 
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 
-from emmet.api.routes.mpcules.bonds.query_operators import (
+from emmet.api.routes.molecules.bonds.query_operators import (
     BondTypeLengthQuery,
 )
-from emmet.api.routes.mpcules.molecules.query_operators import (
+from emmet.api.routes.molecules.molecules.query_operators import (
     MultiMPculeIDQuery,
     ExactCalcMethodQuery,
     FormulaQuery,
@@ -14,7 +14,7 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     ElementsQuery,
     ChargeSpinQuery
 )
-from emmet.api.routes.mpcules.utils import MethodQuery, MultiPropertyIDQuery
+from emmet.api.routes.molecules.utils import MethodQuery, MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 

@@ -1,7 +1,7 @@
 import os
 
 from emmet.api.core.settings import MAPISettings
-from emmet.api.routes.mpcules.molecules.query_operators import (
+from emmet.api.routes.molecules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,

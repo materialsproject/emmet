@@ -1,4 +1,4 @@
-from emmet.api.routes.mpcules.bonds.query_operators import (
+from emmet.api.routes.molecules.bonds.query_operators import (
     BondTypeLengthQuery
 )
 from monty.tempfile import ScratchDir

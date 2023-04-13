@@ -1,4 +1,4 @@
-from emmet.api.routes.mpcules.redox.query_operators import (
+from emmet.api.routes.molecules.redox.query_operators import (
     RedoxPotentialQuery
 )
 from monty.tempfile import ScratchDir

@@ -1,4 +1,4 @@
-from emmet.api.routes.mpcules.summary.hint_scheme import SummaryHintScheme
+from emmet.api.routes.molecules.summary.hint_scheme import SummaryHintScheme
 
 
 def test_summary_hint_scheme():

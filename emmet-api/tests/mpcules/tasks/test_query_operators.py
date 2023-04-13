@@ -1,5 +1,5 @@
 import os
-from emmet.api.routes.mpcules.tasks.query_operators import (
+from emmet.api.routes.molecules.tasks.query_operators import (
     MultipleTaskIDsQuery,
     # TrajectoryQuery,
     DeprecationQuery,

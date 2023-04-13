@@ -1,4 +1,4 @@
-from emmet.api.routes.mpcules.orbitals.query_operators import (
+from emmet.api.routes.molecules.orbitals.query_operators import (
     NBOPopulationQuery,
     NBOLonePairQuery,
     NBOBondQuery,

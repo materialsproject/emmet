@@ -1,4 +1,4 @@
-from emmet.api.routes.mpcules.tasks.hint_scheme import TasksHintScheme
+from emmet.api.routes.molecules.tasks.hint_scheme import TasksHintScheme
 
 
 def test_task_hint_scheme():

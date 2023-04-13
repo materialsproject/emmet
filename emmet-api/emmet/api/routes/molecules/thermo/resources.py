@@ -8,10 +8,10 @@ from maggma.api.query_operator import (
     SparseFieldsQuery
 )
 
-from emmet.api.routes.mpcules.thermo.query_operators import (
+from emmet.api.routes.molecules.thermo.query_operators import (
     ThermoCorrectionQuery,
 )
-from emmet.api.routes.mpcules.molecules.query_operators import (
+from emmet.api.routes.molecules.molecules.query_operators import (
     MultiMPculeIDQuery,
     ExactCalcMethodQuery,
     FormulaQuery,
@@ -19,7 +19,7 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     ElementsQuery,
     ChargeSpinQuery
 )
-from emmet.api.routes.mpcules.utils import MultiPropertyIDQuery
+from emmet.api.routes.molecules.utils import MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 

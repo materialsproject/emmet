@@ -3,13 +3,13 @@ from emmet.core.molecules.orbitals import OrbitalDoc
 
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 
-from emmet.api.routes.mpcules.orbitals.query_operators import (
+from emmet.api.routes.molecules.orbitals.query_operators import (
     NBOPopulationQuery,
     NBOLonePairQuery,
     NBOBondQuery,
     NBOInteractionQuery,
 )
-from emmet.api.routes.mpcules.molecules.query_operators import (
+from emmet.api.routes.molecules.molecules.query_operators import (
     MultiMPculeIDQuery,
     ExactCalcMethodQuery,
     FormulaQuery,
@@ -17,7 +17,7 @@ from emmet.api.routes.mpcules.molecules.query_operators import (
     ElementsQuery,
     ChargeSpinQuery
 )
-from emmet.api.routes.mpcules.utils import MultiPropertyIDQuery
+from emmet.api.routes.molecules.utils import MultiPropertyIDQuery
 from emmet.api.core.settings import MAPISettings
 from emmet.api.core.global_header import GlobalHeaderProcessor
 

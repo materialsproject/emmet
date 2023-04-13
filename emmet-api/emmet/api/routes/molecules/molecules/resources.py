@@ -11,8 +11,8 @@ from maggma.api.query_operator import (
     NumericQuery,
 )
 
-from emmet.api.routes.mpcules.molecules.hint_scheme import MoleculesHintScheme
-from emmet.api.routes.mpcules.molecules.query_operators import (
+from emmet.api.routes.molecules.molecules.hint_scheme import MoleculesHintScheme
+from emmet.api.routes.molecules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,

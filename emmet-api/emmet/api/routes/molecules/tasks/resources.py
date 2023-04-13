@@ -1,13 +1,13 @@
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 from maggma.api.resource import ReadOnlyResource
 
-from emmet.api.routes.mpcules.molecules.query_operators import (
+from emmet.api.routes.molecules.molecules.query_operators import (
     ChemsysQuery,
     ElementsQuery,
     FormulaQuery,
 )
-from emmet.api.routes.mpcules.tasks.hint_scheme import TasksHintScheme
-from emmet.api.routes.mpcules.tasks.query_operators import (
+from emmet.api.routes.molecules.tasks.hint_scheme import TasksHintScheme
+from emmet.api.routes.molecules.tasks.query_operators import (
     DeprecationQuery,
     MultipleTaskIDsQuery,
     # TODO:

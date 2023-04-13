@@ -1,4 +1,4 @@
-from emmet.api.routes.mpcules.thermo.query_operators import (
+from emmet.api.routes.molecules.thermo.query_operators import (
     ThermoCorrectionQuery
 )
 from monty.tempfile import ScratchDir
