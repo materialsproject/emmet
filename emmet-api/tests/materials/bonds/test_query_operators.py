@@ -1,4 +1,4 @@
-from emmet.api.routes.bonds.query_operators import (
+from emmet.api.routes.materials.bonds.query_operators import (
     BondLengthQuery,
     CoordinationEnvsQuery,
 )

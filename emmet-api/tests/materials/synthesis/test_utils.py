@@ -1,6 +1,6 @@
 import os
 from json import load
-from emmet.api.routes.synthesis.utils import (
+from emmet.api.routes.materials.synthesis.utils import (
     make_ellipsis,
     mask_paragraphs,
     mask_highlights,

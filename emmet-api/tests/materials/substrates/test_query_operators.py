@@ -1,4 +1,4 @@
-from emmet.api.routes.substrates.query_operators import (
+from emmet.api.routes.materials.substrates.query_operators import (
     SubstrateStructureQuery,
     EnergyAreaQuery,
 )

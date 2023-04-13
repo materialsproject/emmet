@@ -2,7 +2,7 @@ from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 from pymatgen.electronic_structure.core import OrbitalType
 
-from emmet.api.routes.electronic_structure.query_operators import (
+from emmet.api.routes.materials.electronic_structure.query_operators import (
     ESSummaryDataQuery,
     BSDataQuery,
     DOSDataQuery,

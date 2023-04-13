@@ -1,4 +1,4 @@
-from emmet.api.routes.synthesis.query_operators import SynthesisSearchQuery
+from emmet.api.routes.materials.synthesis.query_operators import SynthesisSearchQuery
 from emmet.core.synthesis import SynthesisTypeEnum, OperationTypeEnum
 
 from monty.tempfile import ScratchDir

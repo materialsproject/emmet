@@ -1,4 +1,4 @@
-from emmet.api.routes.oxidation_states.query_operators import PossibleOxiStateQuery
+from emmet.api.routes.materials.oxidation_states.query_operators import PossibleOxiStateQuery
 
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn

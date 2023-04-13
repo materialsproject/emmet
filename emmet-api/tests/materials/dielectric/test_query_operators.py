@@ -1,5 +1,4 @@
-from maggma.api import query_operator
-from emmet.api.routes.dielectric.query_operators import DielectricQuery
+from emmet.api.routes.materials.dielectric.query_operators import DielectricQuery
 
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn

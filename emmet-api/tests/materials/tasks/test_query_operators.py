@@ -1,5 +1,5 @@
 import os
-from emmet.api.routes.tasks.query_operators import (
+from emmet.api.routes.materials.tasks.query_operators import (
     MultipleTaskIDsQuery,
     TrajectoryQuery,
     DeprecationQuery,

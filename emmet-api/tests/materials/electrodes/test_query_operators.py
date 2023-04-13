@@ -1,4 +1,4 @@
-from emmet.api.routes.electrodes.query_operators import (
+from emmet.api.routes.materials.electrodes.query_operators import (
     ElectrodeFormulaQuery,
     ElectrodesChemsysQuery,
     ElectrodeElementsQuery,

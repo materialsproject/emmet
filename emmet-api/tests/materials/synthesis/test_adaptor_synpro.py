@@ -4,7 +4,7 @@ from json import load
 from pymatgen.core import Composition
 
 from emmet.api.core.settings import MAPISettings
-from emmet.api.routes.synthesis.data_adaptor_synpro import (
+from emmet.api.routes.materials.synthesis.data_adaptor_synpro import (
     convert_value,
     convert_conditions,
     convert_one,

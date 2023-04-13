@@ -2,7 +2,7 @@ import os
 from json import load
 
 from emmet.api.core.settings import MAPISettings
-from emmet.api.routes.tasks.utils import calcs_reversed_to_trajectory, task_to_entry
+from emmet.api.routes.materials.tasks.utils import calcs_reversed_to_trajectory, task_to_entry
 
 
 def test_calcs_reversed_to_trajectory():

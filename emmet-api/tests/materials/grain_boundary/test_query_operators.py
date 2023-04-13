@@ -1,7 +1,7 @@
 from monty.tempfile import ScratchDir
 from monty.serialization import loadfn, dumpfn
 
-from emmet.api.routes.grain_boundary.query_operators import (
+from emmet.api.routes.materials.grain_boundary.query_operators import (
     GBStructureQuery,
     GBTaskIDQuery,
 )

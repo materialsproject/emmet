@@ -1,4 +1,4 @@
-from emmet.api.routes.magnetism.query_operators import MagneticQuery
+from emmet.api.routes.materials.magnetism.query_operators import MagneticQuery
 
 from pymatgen.analysis.magnetism import Ordering
 
