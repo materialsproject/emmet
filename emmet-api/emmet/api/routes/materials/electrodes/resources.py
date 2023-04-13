@@ -4,7 +4,7 @@ from emmet.core.electrode import InsertionElectrodeDoc
 from emmet.api.core.global_header import GlobalHeaderProcessor
 
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
-from emmet.api.routes.electrodes.query_operators import (
+from emmet.api.routes.materials.electrodes.query_operators import (
     ElectrodeFormulaQuery,
     ElectrodeElementsQuery,
     ElectrodesChemsysQuery,
@@ -35,7 +35,8 @@ def insertion_electrodes_resource(insertion_electrodes_store):
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Electrodes"],
+        tags=["Materials Electrodes"],
+        sub_path="/insertion_electrodes/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT
     )

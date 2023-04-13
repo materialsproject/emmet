@@ -3,7 +3,7 @@ from maggma.api.resource import ReadOnlyResource
 from emmet.core.electronic_structure import ElectronicStructureDoc
 from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQuery
 
-from emmet.api.routes.materials.query_operators import (
+from emmet.api.routes.materials.materials.query_operators import (
     ElementsQuery,
     FormulaQuery,
     ChemsysQuery,
@@ -11,7 +11,7 @@ from emmet.api.routes.materials.query_operators import (
     MultiMaterialIDQuery
 )
 
-from emmet.api.routes.electronic_structure.query_operators import (
+from emmet.api.routes.materials.electronic_structure.query_operators import (
     ESSummaryDataQuery,
     BSDataQuery,
     DOSDataQuery,
@@ -43,7 +43,8 @@ def es_resource(es_store):
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Electronic Structure"],
+        tags=["Materials Electronic Structure"],
+        sub_path="/electronic_structure/"
         disable_validation=True,
         timeout=timeout,
     )
@@ -66,9 +67,9 @@ def bs_resource(es_store):
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Electronic Structure"],
+        tags=["Materials Electronic Structure"],
         enable_get_by_key=False,
-        sub_path="/bandstructure/",
+        sub_path="/electronic_structure/bandstructure/",
         disable_validation=True,
         timeout=timeout,
     )
@@ -85,10 +86,10 @@ def bs_obj_resource(s3_store):
             SparseFieldsQuery(BSObjectDoc, default_fields=["task_id", "last_updated"]),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Electronic Structure"],
+        tags=["Materials Electronic Structure"],
         enable_get_by_key=False,
         enable_default_search=True,
-        sub_path="/bandstructure/object/",
+        sub_path="/electronic_structure/bandstructure/object/",
         query_disk_use=False,
         disable_validation=True,
     )
@@ -110,9 +111,9 @@ def dos_resource(es_store):
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Electronic Structure"],
+        tags=["Materials Electronic Structure"],
         enable_get_by_key=False,
-        sub_path="/dos/",
+        sub_path="/electronic_structure/dos/",
         disable_validation=True,
         timeout=timeout
     )
@@ -129,10 +130,10 @@ def dos_obj_resource(s3_store):
             SparseFieldsQuery(DOSObjectDoc, default_fields=["task_id", "last_updated"]),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Electronic Structure"],
+        tags=["Materials Electronic Structure"],
         enable_get_by_key=False,
         enable_default_search=True,
-        sub_path="/dos/object/",
+        sub_path="/electronic_structure/dos/object/",
         query_disk_use=False,
         disable_validation=True,
     )

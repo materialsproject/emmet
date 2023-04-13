@@ -18,7 +18,8 @@ def eos_resource(eos_store):
             SparseFieldsQuery(EOSDoc, default_fields=["task_id"]),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["EOS"],
+        tags=["Materials EOS"],
+        sub_path="/eos/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT
     )

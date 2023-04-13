@@ -5,7 +5,7 @@ from maggma.api.query_operator import PaginationQuery, SortQuery, SparseFieldsQu
 from emmet.core.alloys import AlloyPairDoc
 
 from emmet.api.core.settings import MAPISettings
-from emmet.api.routes.alloys.query_operators import (
+from emmet.api.routes.materials.alloys.query_operators import (
     MaterialIDsSearchQuery,
     FormulaSearchQuery,
 )
@@ -22,7 +22,8 @@ def alloy_pairs_resource(alloy_pairs_store):
             PaginationQuery(),
             SparseFieldsQuery(AlloyPairDoc, default_fields=["pair_id"],),
         ],
-        tags=["Alloys"],
+        tags=["Materials Alloys"],
+        sub_path="/alloys/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )
