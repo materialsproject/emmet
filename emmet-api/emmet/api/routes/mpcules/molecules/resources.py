@@ -1,9 +1,8 @@
 from maggma.api.resource.read_resource import ReadOnlyResource
 from maggma.api.resource.post_resource import PostOnlyResource
 
-
 from emmet.core.qchem.molecule import MoleculeDoc
-from emmet.core.find_structure import FindMolecule, FindMoleculeConnectivity
+from emmet.core.find_structure import FindMolecule
 
 from maggma.api.query_operator import (
     PaginationQuery,
