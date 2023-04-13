@@ -3,6 +3,7 @@ import os
 from maggma.stores import MongoURIStore
 
 from emmet.api.core.settings import MAPISettings
+from emmet.api.routes.legacy.jcesr.resources import jcesr_resource
 
 resources = {}
 
@@ -22,9 +23,6 @@ if db_uri:
     molecules_store = MongoURIStore(uri=db_uri, database="mp_core", key="task_id", collection_name="molecules")
 
 legacy_resources = list()
-
-# Molecules
-from emmet.api.routes.legacy.jcesr.resources import jcesr_resource
 
 legacy_resources.extend([jcesr_resource(molecules_store)])
 
