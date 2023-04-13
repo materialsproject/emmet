@@ -7,7 +7,7 @@ from emmet.api.routes.legacy.jcesr.query_operators import (
     MoleculeElementsQuery,
     MoleculeFormulaQuery,
 )
-from emmet.api.routes.tasks.query_operators import MultipleTaskIDsQuery
+from emmet.api.routes.materials.tasks.query_operators import MultipleTaskIDsQuery
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 

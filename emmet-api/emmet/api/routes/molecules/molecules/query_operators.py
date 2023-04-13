@@ -5,11 +5,9 @@ from fastapi import Body, HTTPException, Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
 
-from emmet.api.routes.materials.utils import chemsys_to_criteria
+from emmet.api.routes.materials.materials.utils import chemsys_to_criteria
 
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
-from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Molecule
 
