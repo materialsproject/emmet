@@ -2,26 +2,26 @@ import os
 from emmet.api.core.settings import MAPISettings
 from maggma.stores import MongoURIStore
 
-from emmet.api.routes.mpcules.tasks.resources import (
+from emmet.api.routes.molecules.tasks.resources import (
     task_resource,
     task_deprecation_resource
 )
-from emmet.api.routes.mpcules.association.resources import (
+from emmet.api.routes.molecules.association.resources import (
     find_molecule_assoc_resource,
     mol_assoc_resource
 )
-from emmet.api.routes.mpcules.molecules.resources import (
+from emmet.api.routes.molecules.molecules.resources import (
     find_molecule_resource,
     molecules_resource
 )
-from emmet.api.routes.mpcules.partial_charges.resources import charges_resource
-from emmet.api.routes.mpcules.partial_spins.resources import spins_resource
-from emmet.api.routes.mpcules.bonds.resources import bonding_resource
-from emmet.api.routes.mpcules.orbitals.resources import orbitals_resource
-from emmet.api.routes.mpcules.redox.resources import redox_resource
-from emmet.api.routes.mpcules.thermo.resources import thermo_resource
-from emmet.api.routes.mpcules.vibrations.resources import vibration_resource
-from emmet.api.routes.mpcules.summary.resources import summary_resource
+from emmet.api.routes.molecules.partial_charges.resources import charges_resource
+from emmet.api.routes.molecules.partial_spins.resources import spins_resource
+from emmet.api.routes.molecules.bonds.resources import bonding_resource
+from emmet.api.routes.molecules.orbitals.resources import orbitals_resource
+from emmet.api.routes.molecules.redox.resources import redox_resource
+from emmet.api.routes.molecules.thermo.resources import thermo_resource
+from emmet.api.routes.molecules.vibrations.resources import vibration_resource
+from emmet.api.routes.molecules.summary.resources import summary_resource
 
 
 resources = {}

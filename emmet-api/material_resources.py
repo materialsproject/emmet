@@ -171,7 +171,7 @@ else:
     raise RuntimeError("Must specify MongoDB URI containing inputs.")
 
 # Materials
-from emmet.api.routes.materials.resources import (
+from emmet.api.routes.materials.materials.resources import (
     find_structure_resource,
     formula_autocomplete_resource,
     materials_resource,
@@ -188,22 +188,22 @@ materials_resources.extend(
 )
 
 # Absorption
-from emmet.api.routes.absorption.resources import absorption_resource
+from emmet.api.routes.materials.absorption.resources import absorption_resource
 
 materials_resources.extend([absorption_resource(absorption_store)])
 
 # Bonds
-from emmet.api.routes.bonds.resources import bonds_resource
+from emmet.api.routes.materials.bonds.resources import bonds_resource
 
 materials_resources.extend([bonds_resource(bonds_store)])
 
 # Chemenv
-from emmet.api.routes.chemenv.resources import chemenv_resource
+from emmet.api.routes.materials.chemenv.resources import chemenv_resource
 
 materials_resources.extend([chemenv_resource(chemenv_store)])
 
 # Tasks
-from emmet.api.routes.tasks.resources import (
+from emmet.api.routes.materials.tasks.resources import (
     entries_resource,
     task_deprecation_resource,
     task_resource,
@@ -220,118 +220,113 @@ materials_resources.extend(
 )
 
 # Thermo
-from emmet.api.routes.thermo.resources import phase_diagram_resource, thermo_resource
+from emmet.api.routes.materials.thermo.resources import phase_diagram_resource, thermo_resource
 
 materials_resources.extend([phase_diagram_resource(phase_diagram_store), thermo_resource(thermo_store)])
 
 # Dielectric
-from emmet.api.routes.dielectric.resources import dielectric_resource
+from emmet.api.routes.materials.dielectric.resources import dielectric_resource
 
 materials_resources.extend([dielectric_resource(dielectric_store)])
 
 # Piezoelectric
-from emmet.api.routes.piezo.resources import piezo_resource
+from emmet.api.routes.materials.piezo.resources import piezo_resource
 
 materials_resources.extend([piezo_resource(piezoelectric_store)])
 
 # Magnetism
-from emmet.api.routes.magnetism.resources import magnetism_resource
+from emmet.api.routes.materials.magnetism.resources import magnetism_resource
 
 materials_resources.extend([magnetism_resource(magnetism_store)])
 
 # Phonon
-from emmet.api.routes.phonon.resources import phonon_bsdos_resource
+from emmet.api.routes.materials.phonon.resources import phonon_bsdos_resource
 
 materials_resources.extend([phonon_bsdos_resource(phonon_bs_store)])
 
 # EOS
-from emmet.api.routes.eos.resources import eos_resource
+from emmet.api.routes.materials.eos.resources import eos_resource
 
 materials_resources.extend([eos_resource(eos_store)])
 
 # Similarity
-from emmet.api.routes.similarity.resources import similarity_resource
+from emmet.api.routes.materials.similarity.resources import similarity_resource
 
 materials_resources.extend([similarity_resource(similarity_store)])
 
 # XAS
-from emmet.api.routes.xas.resources import xas_resource
+from emmet.api.routes.materials.xas.resources import xas_resource
 
 materials_resources.extend([xas_resource(xas_store)])
 
 # Grain Boundaries
-from emmet.api.routes.grain_boundary.resources import gb_resource
+from emmet.api.routes.materials.grain_boundary.resources import gb_resource
 
 materials_resources.extend([gb_resource(gb_store)])
 
 # Fermi Surface
-from emmet.api.routes.fermi.resources import fermi_resource
+from emmet.api.routes.materials.fermi.resources import fermi_resource
 
 materials_resources.extend([fermi_resource(fermi_store)])
 
 # Elasticity
-from emmet.api.routes.elasticity.resources import elasticity_resource
+from emmet.api.routes.materials.elasticity.resources import elasticity_resource
 
 materials_resources.extend([elasticity_resource(elasticity_store)])
 
-# DOIs
-from emmet.api.routes.dois.resources import dois_resource
-
-materials_resources.extend([dois_resource(doi_store)])
-
 # Substrates
-from emmet.api.routes.substrates.resources import substrates_resource
+from emmet.api.routes.materials.substrates.resources import substrates_resource
 
 materials_resources.extend([substrates_resource(substrates_store)])
 
 # Surface Properties
-from emmet.api.routes.surface_properties.resources import surface_props_resource
+from emmet.api.routes.materials.surface_properties.resources import surface_props_resource
 
 materials_resources.extend([surface_props_resource(surface_props_store)])
 
 
 # Robocrystallographer
-from emmet.api.routes.robocrys.resources import robo_resource, robo_search_resource
+from emmet.api.routes.materials.robocrys.resources import robo_resource, robo_search_resource
 
 materials_resources.extend([robo_search_resource(robo_store), robo_resource(robo_store)])
 
 # Synthesis
-from emmet.api.routes.synthesis.resources import synth_resource
+from emmet.api.routes.materials.synthesis.resources import synth_resource
 
 materials_resources.extend([synth_resource(synth_store)])
 
 # Electrodes
-from emmet.api.routes.electrodes.resources import insertion_electrodes_resource
+from emmet.api.routes.materials.electrodes.resources import insertion_electrodes_resource
 
 materials_resources.extend([insertion_electrodes_resource(insertion_electrodes_store)])
 
 # Oxidation States
-from emmet.api.routes.oxidation_states.resources import oxi_states_resource
+from emmet.api.routes.materials.oxidation_states.resources import oxi_states_resource
 
 materials_resources.extend([oxi_states_resource(oxi_states_store)])
 
 # Alloys
-from emmet.api.routes.alloys.resources import alloy_pairs_resource
+from emmet.api.routes.materials.alloys.resources import alloy_pairs_resource
 
 materials_resources.extend([alloy_pairs_resource(alloy_pairs_store)])
 
 # Provenance
-from emmet.api.routes.provenance.resources import provenance_resource
+from emmet.api.routes.materials.provenance.resources import provenance_resource
 
 materials_resources.extend([provenance_resource(provenance_store)])
 
 # Charge Density
-from emmet.api.routes.charge_density.resources import charge_density_resource, charge_density_url_resource
+from emmet.api.routes.materials.charge_density.resources import charge_density_resource, charge_density_url_resource
 
 materials_resources.extend([charge_density_resource(s3_chgcar), charge_density_url_resource(chgcar_url)])
 
 # Summary
-from emmet.api.routes.summary.resources import summary_resource, summary_stats_resource
+from emmet.api.routes.materials.summary.resources import summary_resource, summary_stats_resource
 
 materials_resources.extend([summary_stats_resource(summary_store), summary_resource(summary_store)])
 
 # Electronic Structure
-from emmet.api.routes.electronic_structure.resources import (
+from emmet.api.routes.materials.electronic_structure.resources import (
     bs_obj_resource,
     bs_resource,
     dos_obj_resource,
@@ -349,9 +344,14 @@ materials_resources.extend(
     ]
 )
 # MPComplete
-from emmet.api.routes.mpcomplete.resources import mpcomplete_resource
+from emmet.api.routes.materials.mpcomplete.resources import mpcomplete_resource
 
 materials_resources.extend([mpcomplete_resource(mpcomplete_store)])
+
+# DOIs
+from emmet.api.routes.dois.resources import dois_resource
+
+resources.update({"dois": [dois_resource(doi_store)]})
 
 # Consumers
 from emmet.api.routes._consumer.resources import settings_resource
