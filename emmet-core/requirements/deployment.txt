@@ -51,7 +51,7 @@ numpy==1.21.6
     #   pymatgen
     #   scipy
     #   spglib
-packaging==23.0
+packaging==23.1
     # via
     #   matplotlib
     #   plotly
