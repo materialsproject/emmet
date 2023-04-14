@@ -12,9 +12,9 @@ attrs==22.2.0
     # via jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.106
+boto3==1.26.114
     # via maggma
-botocore==1.29.106
+botocore==1.29.114
     # via
     #   boto3
     #   s3transfer
@@ -32,7 +32,7 @@ click==8.1.3
     #   mongogrant
 contourpy==1.0.7
     # via matplotlib
-cryptography==40.0.1
+cryptography==40.0.2
     # via paramiko
 cycler==0.11.0
     # via matplotlib
@@ -40,11 +40,11 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.51.6
+emmet-core[all]==0.51.13
     # via
     #   emmet-builders (setup.py)
     #   mp-api
-fastapi==0.95.0
+fastapi==0.95.1
     # via maggma
 flask==2.2.3
     # via mongogrant
@@ -58,7 +58,7 @@ idna==3.4
     # via
     #   anyio
     #   requests
-inflect==6.0.2
+inflect==6.0.4
     # via robocrys
 itsdangerous==2.1.2
     # via flask
@@ -94,7 +94,7 @@ mongogrant==0.3.3
     # via maggma
 mongomock==4.1.2
     # via maggma
-monty==2022.9.9
+monty==2023.4.10
     # via
     #   emmet-core
     #   maggma
@@ -128,14 +128,14 @@ numpy==1.24.2
     #   seekpath
     #   shapely
     #   spglib
-orjson==3.8.9
+orjson==3.8.10
     # via maggma
-packaging==23.0
+packaging==23.1
     # via
     #   matplotlib
     #   mongomock
     #   plotly
-palettable==3.3.0
+palettable==3.3.1
     # via pymatgen
 pandas==2.0.0
     # via
@@ -145,7 +145,7 @@ paramiko==3.1.0
     # via sshtunnel
 pillow==9.5.0
     # via matplotlib
-plotly==5.14.0
+plotly==5.14.1
     # via pymatgen
 pubchempy==1.0.4
     # via robocrys
@@ -162,7 +162,7 @@ pydantic==1.10.7
     #   fastapi
     #   inflect
     #   maggma
-pydash==6.0.2
+pydash==7.0.1
     # via maggma
 pymatgen==2023.3.23
     # via
@@ -265,6 +265,7 @@ typing-extensions==4.5.0
     #   emmet-core
     #   mp-api
     #   pydantic
+    #   pydash
 tzdata==2023.3
     # via pandas
 uncertainties==3.1.7
