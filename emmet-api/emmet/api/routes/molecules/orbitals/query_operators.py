@@ -155,11 +155,11 @@ class NBOLonePairQuery(QueryOperator):
             None,
             description="Maximum percentage of the lone pair constituted by f atomic orbitals."
         ),
-        min_occupancy: Optional[float] = Query(
+        min_lp_occupancy: Optional[float] = Query(
             None,
             description="Minimum number of electrons in the lone pair."
         ),
-        max_occupancy: Optional[float] = Query(
+        max_lp_occupancy: Optional[float] = Query(
             None,
             description="Maximum number of electrons in the lone pair."
         ),
@@ -171,7 +171,7 @@ class NBOLonePairQuery(QueryOperator):
             "p_character": [min_p_character, max_p_character],
             "d_character": [min_d_character, max_d_character],
             "f_character": [min_f_character, max_f_character],
-            "occupancy": [min_occupancy, max_occupancy],
+            "occupancy": [min_lp_occupancy, max_lp_occupancy],
         }
 
         if electron_type is None or not open_shell:
@@ -319,11 +319,11 @@ class NBOBondQuery(QueryOperator):
             None,
             description="Maximum fraction of electrons in the bond donated by the second atom."
         ),
-        min_occupancy: Optional[float] = Query(
+        min_bond_occupancy: Optional[float] = Query(
             None,
             description="Minimum number of electrons in the bond."
         ),
-        max_occupancy: Optional[float] = Query(
+        max_bond_occupancy: Optional[float] = Query(
             None,
             description="Maximum number of electrons in the bond."
         ),
@@ -341,7 +341,7 @@ class NBOBondQuery(QueryOperator):
             "atom2_f_character": [min_f_character_atom2, max_f_character_atom2],
             "atom1_polarization": [min_polarization_atom1, max_polarization_atom1],
             "atom2_polarization": [min_polarization_atom2, max_polarization_atom2],
-            "occupancy": [min_occupancy, max_occupancy],
+            "occupancy": [min_bond_occupancy, max_bond_occupancy],
         }
 
         if electron_type is None or not open_shell:

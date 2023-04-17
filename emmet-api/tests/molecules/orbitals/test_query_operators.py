@@ -70,8 +70,8 @@ def test_nbo_lone_pair_query():
         max_d_character=5.0,
         min_f_character=0.0,
         max_f_character=5.0,
-        min_occupancy=1.5,
-        max_occupancy=2.0
+        min_lp_occupancy=1.5,
+        max_lp_occupancy=2.0
     ) == {
         'criteria': {
             'open_shell': True,
@@ -99,8 +99,8 @@ def test_nbo_lone_pair_query():
             max_d_character=5.0,
             min_f_character=0.0,
             max_f_character=5.0,
-            min_occupancy=1.5,
-            max_occupancy=2.0
+            min_lp_occupancy=1.5,
+            max_lp_occupancy=2.0
         ) == {
             'criteria': {
                 'open_shell': True,
@@ -139,8 +139,8 @@ def test_nbo_bond_query():
         max_polarization_atom1=70.0,
         min_polarization_atom2=30.0,
         max_polarization_atom2=70.0,
-        min_occupancy=0.0,
-        max_occupancy=1.0
+        min_bond_occupancy=0.0,
+        max_bond_occupancy=1.0
     ) == {
         'criteria': {
             'open_shell': False,
@@ -185,8 +185,8 @@ def test_nbo_bond_query():
             max_polarization_atom1=70.0,
             min_polarization_atom2=30.0,
             max_polarization_atom2=70.0,
-            min_occupancy=0.0,
-            max_occupancy=1.0
+            min_bond_occupancy=0.0,
+            max_bond_occupancy=1.0
         ) == {
             'criteria': {
                 'open_shell': False,
