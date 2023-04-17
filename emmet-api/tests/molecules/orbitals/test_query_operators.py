@@ -35,7 +35,7 @@ def test_nbo_population_query():
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
         assert new_op.query(
-            open_shell=True, 
+            open_shell=True,
             electron_type="beta",
             min_core_electrons=10.0,
             max_core_electrons=11.0,
