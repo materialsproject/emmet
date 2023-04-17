@@ -11,8 +11,7 @@ from monty.serialization import loadfn, dumpfn
 def test_nbo_population_query():
     op = NBOPopulationQuery()
     assert op.query(
-        open_shell=True,
-        electron_type="beta",
+        electron_type_population="beta",
         min_core_electrons=10.0,
         max_core_electrons=11.0,
         min_valence_electrons=0.0,
@@ -23,7 +22,6 @@ def test_nbo_population_query():
         max_total_electrons=12.0
     ) == {
         'criteria': {
-            'open_shell': True,
             'beta_population.core_electrons': {'$gte': 10.0, '$lte': 11.0},
             'beta_population.valence_electrons': {'$gte': 0.0, '$lte': 2.0},
             'beta_population.rydberg_electrons': {'$gte': 0.0, '$lte': 1.0},
@@ -35,8 +33,7 @@ def test_nbo_population_query():
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
         assert new_op.query(
-            open_shell=True,
-            electron_type="beta",
+            electron_type_population="beta",
             min_core_electrons=10.0,
             max_core_electrons=11.0,
             min_valence_electrons=0.0,
@@ -47,7 +44,6 @@ def test_nbo_population_query():
             max_total_electrons=12.0
         ) == {
             'criteria': {
-                'open_shell': True,
                 'beta_population.core_electrons': {'$gte': 10.0, '$lte': 11.0},
                 'beta_population.valence_electrons': {'$gte': 0.0, '$lte': 2.0},
                 'beta_population.rydberg_electrons': {'$gte': 0.0, '$lte': 1.0},
@@ -59,8 +55,7 @@ def test_nbo_population_query():
 def test_nbo_lone_pair_query():
     op = NBOLonePairQuery()
     assert op.query(
-        open_shell=True,
-        electron_type="alpha",
+        electron_type_lp="alpha",
         lp_type="LP",
         min_s_character=10.0,
         max_s_character=25.0,
@@ -74,7 +69,6 @@ def test_nbo_lone_pair_query():
         max_lp_occupancy=2.0
     ) == {
         'criteria': {
-            'open_shell': True,
             'alpha_lone_pairs.s_character': {'$gte': 10.0, '$lte': 25.0},
             'alpha_lone_pairs.p_character': {'$gte': 70.0, '$lte': 90.0},
             'alpha_lone_pairs.d_character': {'$gte': 0.0, '$lte': 5.0},
@@ -88,8 +82,7 @@ def test_nbo_lone_pair_query():
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
         assert new_op.query(
-            open_shell=True,
-            electron_type="alpha",
+            electron_type_lp="alpha",
             lp_type="LP",
             min_s_character=10.0,
             max_s_character=25.0,
@@ -103,7 +96,6 @@ def test_nbo_lone_pair_query():
             max_lp_occupancy=2.0
         ) == {
             'criteria': {
-                'open_shell': True,
                 'alpha_lone_pairs.s_character': {'$gte': 10.0, '$lte': 25.0},
                 'alpha_lone_pairs.p_character': {'$gte': 70.0, '$lte': 90.0},
                 'alpha_lone_pairs.d_character': {'$gte': 0.0, '$lte': 5.0},
@@ -117,7 +109,7 @@ def test_nbo_lone_pair_query():
 def test_nbo_bond_query():
     op = NBOBondQuery()
     assert op.query(
-        open_shell=False,
+        electron_type_bond=None,
         bond_type="BD*",
         min_s_character_atom1=10.0,
         max_s_character_atom1=25.0,
@@ -143,7 +135,6 @@ def test_nbo_bond_query():
         max_bond_occupancy=1.0
     ) == {
         'criteria': {
-            'open_shell': False,
             'nbo_bonds.atom1_s_character': {'$gte': 10.0, '$lte': 25.0},
             'nbo_bonds.atom1_p_character': {'$gte': 70.0, '$lte': 90.0},
             'nbo_bonds.atom1_d_character': {'$gte': 0.0, '$lte': 5.0},
@@ -163,7 +154,7 @@ def test_nbo_bond_query():
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
         assert new_op.query(
-            open_shell=False,
+            electron_type_bond=None,
             bond_type="BD*",
             min_s_character_atom1=10.0,
             max_s_character_atom1=25.0,
@@ -189,7 +180,6 @@ def test_nbo_bond_query():
             max_bond_occupancy=1.0
         ) == {
             'criteria': {
-                'open_shell': False,
                 'nbo_bonds.atom1_s_character': {'$gte': 10.0, '$lte': 25.0},
                 'nbo_bonds.atom1_p_character': {'$gte': 70.0, '$lte': 90.0},
                 'nbo_bonds.atom1_d_character': {'$gte': 0.0, '$lte': 5.0},
@@ -209,8 +199,7 @@ def test_nbo_bond_query():
 def test_nbo_interaction_query():
     op = NBOInteractionQuery()
     assert op.query(
-        open_shell=True,
-        electron_type="alpha",
+        electron_type_interaction="alpha",
         donor_type="LP",
         acceptor_type="RY",
         min_perturbation_energy=0.1,
@@ -221,7 +210,6 @@ def test_nbo_interaction_query():
         max_fock_element=10.0
     ) == {
         'criteria': {
-            'open_shell': True,
             'alpha_interactions.perturbation_energy': {'$gte': 0.1, '$lte': 3.0},
             'alpha_interactions.energy_difference': {'$gte': 2.0, '$lte': 15.0},
             'alpha_interactions.fock_element': {'$gte': 0.0, '$lte': 10.0},
@@ -234,8 +222,7 @@ def test_nbo_interaction_query():
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
         assert new_op.query(
-            open_shell=True,
-            electron_type="alpha",
+            electron_type_interaction="alpha",
             donor_type="LP",
             acceptor_type="RY",
             min_perturbation_energy=0.1,
@@ -246,7 +233,6 @@ def test_nbo_interaction_query():
             max_fock_element=10.0
         ) == {
             'criteria': {
-                'open_shell': True,
                 'alpha_interactions.perturbation_energy': {'$gte': 0.1, '$lte': 3.0},
                 'alpha_interactions.energy_difference': {'$gte': 2.0, '$lte': 15.0},
                 'alpha_interactions.fock_element': {'$gte': 0.0, '$lte': 10.0},

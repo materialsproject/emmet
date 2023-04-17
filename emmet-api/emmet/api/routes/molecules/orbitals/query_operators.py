@@ -11,11 +11,7 @@ class NBOPopulationQuery(QueryOperator):
 
     def query(
         self,
-        open_shell: Optional[bool] = Query(
-            False,
-            description="Should the molecules have unpaired (radical) electrons?"
-        ),
-        electron_type: Optional[str] = Query(
+        electron_type_population: Optional[str] = Query(
             None,
             description="Should alpha ('alpha'), beta ('beta'), or all electrons be considered (None; default)?"
         ),
@@ -53,7 +49,7 @@ class NBOPopulationQuery(QueryOperator):
         ),
     ) -> STORE_PARAMS:
 
-        crit: Dict[str, Any] = {"open_shell": open_shell}  # type: ignore
+        crit: Dict[str, Any] = dict()  # type: ignore
 
         d = {
             "core_electrons": [min_core_electrons, max_core_electrons],
@@ -62,13 +58,13 @@ class NBOPopulationQuery(QueryOperator):
             "total_electrons": [min_total_electrons, max_total_electrons]
         }
 
-        if electron_type is None or not open_shell:
+        if electron_type_population is None:
             prefix = "nbo_population."
         else:
             try:
-                if electron_type.lower() == "alpha":
+                if electron_type_population.lower() == "alpha":
                     prefix = "alpha_population."
-                elif electron_type.lower() == "beta":
+                elif electron_type_population.lower() == "beta":
                     prefix = "beta_population."
                 else:
                     raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
@@ -111,11 +107,7 @@ class NBOLonePairQuery(QueryOperator):
 
     def query(
         self,
-        open_shell: Optional[bool] = Query(
-            False,
-            description="Should the molecules have unpaired (radical) electrons?"
-        ),
-        electron_type: Optional[str] = Query(
+        electron_type_lp: Optional[str] = Query(
             None,
             description="Should alpha ('alpha'), beta ('beta'), or all electrons be considered (None; default)?"
         ),
@@ -164,7 +156,7 @@ class NBOLonePairQuery(QueryOperator):
             description="Maximum number of electrons in the lone pair."
         ),
     ) -> STORE_PARAMS:
-        crit: Dict[str, Any] = {"open_shell": open_shell}  # type: ignore
+        crit: Dict[str, Any] = dict()  # type: ignore
 
         d = {
             "s_character": [min_s_character, max_s_character],
@@ -174,13 +166,13 @@ class NBOLonePairQuery(QueryOperator):
             "occupancy": [min_lp_occupancy, max_lp_occupancy],
         }
 
-        if electron_type is None or not open_shell:
+        if electron_type_lp is None:
             prefix = "nbo_lone_pairs."
         else:
             try:
-                if electron_type.lower() == "alpha":
+                if electron_type_lp.lower() == "alpha":
                     prefix = "alpha_lone_pairs."
-                elif electron_type.lower() == "beta":
+                elif electron_type_lp.lower() == "beta":
                     prefix = "beta_lone_pairs."
                 else:
                     raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
@@ -227,11 +219,7 @@ class NBOBondQuery(QueryOperator):
 
     def query(
         self,
-        open_shell: Optional[bool] = Query(
-            False,
-            description="Should the molecules have unpaired (radical) electrons?"
-        ),
-        electron_type: Optional[str] = Query(
+        electron_type_bond: Optional[str] = Query(
             None,
             description="Should alpha ('alpha'), beta ('beta'), or all electrons be considered (None; default)?"
         ),
@@ -328,7 +316,7 @@ class NBOBondQuery(QueryOperator):
             description="Maximum number of electrons in the bond."
         ),
     ) -> STORE_PARAMS:
-        crit: Dict[str, Any] = {"open_shell": open_shell}  # type: ignore
+        crit: Dict[str, Any] = dict()  # type: ignore
 
         d = {
             "atom1_s_character": [min_s_character_atom1, max_s_character_atom1],
@@ -344,13 +332,13 @@ class NBOBondQuery(QueryOperator):
             "occupancy": [min_bond_occupancy, max_bond_occupancy],
         }
 
-        if electron_type is None or not open_shell:
+        if electron_type_bond is None:
             prefix = "nbo_bonds."
         else:
             try:
-                if electron_type.lower() == "alpha":
+                if electron_type_bond.lower() == "alpha":
                     prefix = "alpha_bonds."
-                elif electron_type.lower() == "beta":
+                elif electron_type_bond.lower() == "beta":
                     prefix = "beta_bonds."
                 else:
                     raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
@@ -401,11 +389,7 @@ class NBOInteractionQuery(QueryOperator):
 
     def query(
         self,
-        open_shell: Optional[bool] = Query(
-            False,
-            description="Should the molecules have unpaired (radical) electrons?"
-        ),
-        electron_type: Optional[str] = Query(
+        electron_type_interaction: Optional[str] = Query(
             None,
             description="Should alpha ('alpha'), beta ('beta'), or all electrons be considered (None; default)?"
         ),
@@ -442,7 +426,7 @@ class NBOInteractionQuery(QueryOperator):
             description="Maximum interaction Fock matrix element"
         ),
     ) -> STORE_PARAMS:
-        crit: Dict[str, Any] = {"open_shell": open_shell}  # type: ignore
+        crit: Dict[str, Any] = dict()  # type: ignore
 
         d = {
             "perturbation_energy": [min_perturbation_energy, max_perturbation_energy],
@@ -450,13 +434,13 @@ class NBOInteractionQuery(QueryOperator):
             "fock_element": [min_fock_element, max_fock_element],
         }
 
-        if electron_type is None or not open_shell:
+        if electron_type_interaction is None:
             prefix = "nbo_interactions."
         else:
             try:
-                if electron_type.lower() == "alpha":
+                if electron_type_interaction.lower() == "alpha":
                     prefix = "alpha_interactions."
-                elif electron_type.lower() == "beta":
+                elif electron_type_interaction.lower() == "beta":
                     prefix = "beta_interactions."
                 else:
                     raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
