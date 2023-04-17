@@ -19,35 +19,35 @@ class NBOPopulationQuery(QueryOperator):
             None,
             description="Should alpha ('alpha'), beta ('beta'), or all electrons be considered (None; default)?"
         ),
-        min_core_electron: Optional[float] = Query(
+        min_core_electrons: Optional[float] = Query(
             None,
             description="Minimum number of core electrons in an atom in this molecule."
         ),
-        max_core_electron: Optional[float] = Query(
+        max_core_electrons: Optional[float] = Query(
             None,
             description="Maximum number of core electrons in an atom in this molecule."
         ),
-        min_valence_electron: Optional[float] = Query(
+        min_valence_electrons: Optional[float] = Query(
             None,
             description="Minimum number of valence electrons in an atom in this molecule."
         ),
-        max_valence_electron: Optional[float] = Query(
+        max_valence_electrons: Optional[float] = Query(
             None,
             description="Maximum number of valence electrons in an atom in this molecule."
         ),
-        min_rydberg_electron: Optional[float] = Query(
+        min_rydberg_electrons: Optional[float] = Query(
             None,
             description="Minimum number of Rydberg electrons in an atom in this molecule."
         ),
-        max_rydberg_electron: Optional[float] = Query(
+        max_rydberg_electrons: Optional[float] = Query(
             None,
             description="Maximum number of Rydberg electrons in an atom in this molecule."
         ),
-        min_total_electron: Optional[float] = Query(
+        min_total_electrons: Optional[float] = Query(
             None,
             description="Minimum number of electrons in an atom in this molecule."
         ),
-        max_total_electron: Optional[float] = Query(
+        max_total_electrons: Optional[float] = Query(
             None,
             description="Maximum number of electrons in an atom in this molecule."
         ),

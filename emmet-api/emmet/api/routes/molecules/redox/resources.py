@@ -37,7 +37,18 @@ def redox_resource(redox_store):
             ChargeSpinQuery(),
             MultiPropertyIDQuery(),
             RedoxPotentialQuery(),
-            NumericQuery(model=RedoxDoc),
+            NumericQuery(
+                model=RedoxDoc,
+                excluded_fields=[
+                    "charge",
+                    "spin_multiplicity",
+                    "natoms",
+                    "nelements",
+                    "nelectrons",
+                    "reduction_potentials",
+                    "oxidation_potentials"
+                ]
+            ),
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(RedoxDoc, default_fields=["molecule_id", "property_id", "solvent", "last_updated"],),

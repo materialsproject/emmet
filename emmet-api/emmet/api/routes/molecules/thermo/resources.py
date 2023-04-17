@@ -37,7 +37,17 @@ def thermo_resource(thermo_store):
             ChargeSpinQuery(),
             MultiPropertyIDQuery(),
             ThermoCorrectionQuery(),
-            NumericQuery(model=MoleculeThermoDoc),
+            NumericQuery(
+                model=MoleculeThermoDoc,
+                excluded_fields=[
+                    "charge",
+                    "spin_multiplicity",
+                    "natoms",
+                    "nelements",
+                    "nelectrons",
+                    "rt"
+                ]
+            ),
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
