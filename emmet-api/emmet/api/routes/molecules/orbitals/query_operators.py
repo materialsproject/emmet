@@ -56,10 +56,10 @@ class NBOPopulationQuery(QueryOperator):
         crit: Dict[str, Any] = {"open_shell": open_shell}  # type: ignore
 
         d = {
-            "core_electrons": [min_core_electron, max_core_electron],
-            "valence_electrons": [min_valence_electron, max_valence_electron],
-            "rydberg_electrons": [min_rydberg_electron, max_rydberg_electron],
-            "total_electrons": [min_total_electron, max_total_electron]
+            "core_electrons": [min_core_electrons, max_core_electrons],
+            "valence_electrons": [min_valence_electrons, max_valence_electrons],
+            "rydberg_electrons": [min_rydberg_electrons, max_rydberg_electrons],
+            "total_electrons": [min_total_electrons, max_total_electrons]
         }
 
         if electron_type is None or not open_shell:

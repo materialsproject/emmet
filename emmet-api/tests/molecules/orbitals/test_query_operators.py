@@ -13,14 +13,14 @@ def test_nbo_population_query():
     assert op.query(
         open_shell=True,
         electron_type="beta",
-        min_core_electron=10.0,
-        max_core_electron=11.0,
-        min_valence_electron=0.0,
-        max_valence_electron=2.0,
-        min_rydberg_electron=0.0,
-        max_rydberg_electron=1.0,
-        min_total_electron=11.0,
-        max_total_electron=12.0
+        min_core_electrons=10.0,
+        max_core_electrons=11.0,
+        min_valence_electrons=0.0,
+        max_valence_electrons=2.0,
+        min_rydberg_electrons=0.0,
+        max_rydberg_electrons=1.0,
+        min_total_electrons=11.0,
+        max_total_electrons=12.0
     ) == {
         'criteria': {
             'open_shell': True,
@@ -37,14 +37,14 @@ def test_nbo_population_query():
         assert new_op.query(
             open_shell=True, 
             electron_type="beta",
-            min_core_electron=10.0,
-            max_core_electron=11.0,
-            min_valence_electron=0.0,
-            max_valence_electron=2.0,
-            min_rydberg_electron=0.0,
-            max_rydberg_electron=1.0,
-            min_total_electron=11.0,
-            max_total_electron=12.0
+            min_core_electrons=10.0,
+            max_core_electrons=11.0,
+            min_valence_electrons=0.0,
+            max_valence_electrons=2.0,
+            min_rydberg_electrons=0.0,
+            max_rydberg_electrons=1.0,
+            min_total_electrons=11.0,
+            max_total_electrons=12.0
         ) == {
             'criteria': {
                 'open_shell': True,
