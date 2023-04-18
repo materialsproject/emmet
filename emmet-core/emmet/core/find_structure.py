@@ -35,14 +35,3 @@ class FindMolecule(BaseModel):
         None,
         description="Root-mean-squared displacement of the molecule compared to a reference",
     )
-
-
-class FindMoleculeConnectivity(BaseModel):
-    """
-    Class defining find molecule connectivity return data
-    """
-
-    molecule_id: MPculeID = Field(
-        None,
-        description="The ID of this molecule, used as a universal reference across property documents."
-    )

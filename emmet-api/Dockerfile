@@ -40,7 +40,8 @@ ENV PATH=/root/.local/bin:$PATH \
 
 COPY app.py .
 COPY material_resources.py .
-COPY mpcule_resources.py .
+COPY molecule_resources.py .
+COPY legacy_resources.py .
 COPY start.sh .
 RUN chmod +x start.sh
 

@@ -320,13 +320,13 @@ class MoleculeSummaryDoc(PropertyDoc):
         None, description="Adiabatic free energy of reduction"
     )
 
-    red_mpcule_id: Dict[str, MPculeID] = Field(None, description="Molecule ID for adiabatic reduction")
+    red_molecule_id: Dict[str, MPculeID] = Field(None, description="Molecule ID for adiabatic reduction")
 
     oxidation_free_energy: Dict[str, float] = Field(
         None, description="Adiabatic free energy of oxidation"
     )
 
-    ox_mpcule_id: Dict[str, MPculeID] = Field(None, description="Molecule ID for adiabatic oxidation")
+    ox_molecule_id: Dict[str, MPculeID] = Field(None, description="Molecule ID for adiabatic oxidation")
 
     reduction_potentials: Dict[str, Dict[str, float]] = Field(
         None, description="Reduction potentials with various " "reference electrodes"
@@ -433,9 +433,9 @@ summary_fields: Dict[str, list] = {
         "ionization_energy",
         "ie_task_id",
         "reduction_free_energy",
-        "red_mpcule_id",
+        "red_molecule_id",
         "oxidation_free_energy",
-        "ox_mpcule_id",
+        "ox_molecule_id",
         "reduction_potentials",
         "oxidation_potentials",
     ],
