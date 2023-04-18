@@ -354,6 +354,39 @@
     MoleculeMetadata
   </a>
   
+    <nav class="md-nav" aria-label="MoleculeMetadata">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#emmet.core.structure.MoleculeMetadata.from_composition" class="md-nav__link">
+    from_composition()
+  </a>
+  
+    <nav class="md-nav" aria-label="from_composition()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#emmet.core.structure.MoleculeMetadata.from_composition--parameters" class="md-nav__link">
+    Parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#emmet.core.structure.MoleculeMetadata.from_composition--returns" class="md-nav__link">
+    Returns
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -642,6 +675,39 @@
   <a href="#emmet.core.structure.MoleculeMetadata" class="md-nav__link">
     MoleculeMetadata
   </a>
+  
+    <nav class="md-nav" aria-label="MoleculeMetadata">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#emmet.core.structure.MoleculeMetadata.from_composition" class="md-nav__link">
+    from_composition()
+  </a>
+  
+    <nav class="md-nav" aria-label="from_composition()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#emmet.core.structure.MoleculeMetadata.from_composition--parameters" class="md-nav__link">
+    Parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#emmet.core.structure.MoleculeMetadata.from_composition--returns" class="md-nav__link">
+    Returns
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1336,7 +1402,7 @@
 <a id="emmet.core.structure"></a>
   <div class="doc doc-contents first">
   
-      <p>Core definition of Structure metadata</p>
+      <p>Core definition of Structure and Molecule metadata</p>
 
   
 
@@ -1370,11 +1436,7 @@
 
         <details class="quote">
           <summary>Source code in <code>/home/runner/.local/lib/python3.8/site-packages/emmet/core/structure.py</code></summary>
-          <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
+          <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">152</span>
 <span class="normal">153</span>
 <span class="normal">154</span>
 <span class="normal">155</span>
@@ -1435,7 +1497,96 @@
 <span class="normal">210</span>
 <span class="normal">211</span>
 <span class="normal">212</span>
-<span class="normal">213</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">MoleculeMetadata</span><span class="p">(</span><span class="n">EmmetBaseModel</span><span class="p">):</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">MoleculeMetadata</span><span class="p">(</span><span class="n">EmmetBaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Mix-in class for molecule metadata</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1445,21 +1596,99 @@
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Spin multiplicity of the molecule&quot;</span>
     <span class="p">)</span>
     <span class="n">natoms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Total number of atoms in the molecule&quot;</span><span class="p">)</span>
-    <span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Element</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of elements in the molecule&quot;</span><span class="p">)</span>
+    <span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Element</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of elements in the molecule&quot;</span>
+    <span class="p">)</span>
     <span class="n">nelements</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Number of Elements&quot;</span><span class="p">)</span>
-    <span class="n">composition</span><span class="p">:</span> <span class="n">Composition</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Full composition for the molecule&quot;</span><span class="p">)</span>
+    <span class="n">nelectrons</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Number of electrons&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The total number of electrons for the molecule&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">composition</span><span class="p">:</span> <span class="n">Composition</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Full composition for the molecule&quot;</span>
+    <span class="p">)</span>
+    <span class="n">composition_reduced</span><span class="p">:</span> <span class="n">Composition</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Reduced Composition&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Simplified representation of the composition&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">formula_alphabetical</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Alphabetical Formula&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Alphabetical molecular formula&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">formula_pretty</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Pretty Formula&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Cleaned representation of the formula.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">formula_anonymous</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Anonymous Formula&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Anonymized representation of the formula&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">chemsys</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Chemical System&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;dash-delimited string of elements in the molecule&quot;</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">symmetry</span><span class="p">:</span> <span class="n">PointGroupData</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Symmetry data for this molecule&quot;</span>
+    <span class="p">)</span>
 
-    <span class="n">symmetry</span><span class="p">:</span> <span class="n">PointGroupData</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Symmetry data for this molecule&quot;</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_composition</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">S</span><span class="p">],</span>
+        <span class="n">comp</span><span class="p">:</span> <span class="n">Composition</span><span class="p">,</span>
+        <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">S</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a MoleculeMetadata model from a composition.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        comp : .Composition</span>
+<span class="sd">            A pymatgen composition.</span>
+<span class="sd">        fields : list of str or None</span>
+<span class="sd">            Composition fields to include.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Keyword arguments that are passed to the model constructor.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        T</span>
+<span class="sd">            A molecule metadata model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[</span>
+                <span class="s2">&quot;elements&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;nelements&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;composition&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;composition_reduced&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;formula_alphabetical&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;formula_pretty&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;formula_anonymous&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;chemsys&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="n">fields</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">fields</span>
+        <span class="p">)</span>
+        <span class="n">elsyms</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">e</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">comp</span><span class="o">.</span><span class="n">elements</span><span class="p">})</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="n">elsyms</span><span class="p">,</span>
+            <span class="s2">&quot;nelements&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">elsyms</span><span class="p">),</span>
+            <span class="s2">&quot;composition&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="p">,</span>
+            <span class="s2">&quot;composition_reduced&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="o">.</span><span class="n">reduced_composition</span><span class="p">,</span>
+            <span class="s2">&quot;formula_alphabetical&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="o">.</span><span class="n">alphabetical_formula</span><span class="p">,</span>
+            <span class="s2">&quot;formula_pretty&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="o">.</span><span class="n">reduced_formula</span><span class="p">,</span>
+            <span class="s2">&quot;formula_anonymous&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="o">.</span><span class="n">anonymized_formula</span><span class="p">,</span>
+            <span class="s2">&quot;chemsys&quot;</span><span class="p">:</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elsyms</span><span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_molecule</span><span class="p">(</span>
@@ -1468,7 +1697,6 @@
         <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">S</span><span class="p">:</span>
-
         <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span>
             <span class="p">[</span>
                 <span class="s2">&quot;charge&quot;</span><span class="p">,</span>
@@ -1476,8 +1704,12 @@
                 <span class="s2">&quot;natoms&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;elements&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;nelements&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;nelectrons&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;composition&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;composition_reduced&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;formula_alphabetical&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;formula_pretty&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;formula_anonymous&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;chemsys&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;symmetry&quot;</span><span class="p">,</span>
             <span class="p">]</span>
@@ -1494,8 +1726,12 @@
             <span class="s2">&quot;natoms&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">meta_molecule</span><span class="p">),</span>
             <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="n">elsyms</span><span class="p">,</span>
             <span class="s2">&quot;nelements&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">elsyms</span><span class="p">),</span>
+            <span class="s2">&quot;nelectrons&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">meta_molecule</span><span class="o">.</span><span class="n">nelectrons</span><span class="p">),</span>
             <span class="s2">&quot;composition&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="p">,</span>
+            <span class="s2">&quot;composition_reduced&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="o">.</span><span class="n">reduced_composition</span><span class="p">,</span>
             <span class="s2">&quot;formula_alphabetical&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="o">.</span><span class="n">alphabetical_formula</span><span class="p">,</span>
+            <span class="s2">&quot;formula_pretty&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="o">.</span><span class="n">reduced_formula</span><span class="p">,</span>
+            <span class="s2">&quot;formula_anonymous&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="o">.</span><span class="n">anonymized_formula</span><span class="p">,</span>
             <span class="s2">&quot;chemsys&quot;</span><span class="p">:</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elsyms</span><span class="p">),</span>
             <span class="s2">&quot;symmetry&quot;</span><span class="p">:</span> <span class="n">symmetry</span><span class="p">,</span>
         <span class="p">}</span>
@@ -1515,6 +1751,149 @@
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="emmet.core.structure.MoleculeMetadata.from_composition" class="doc doc-heading">
+<code class="codehilite language-python"><span class="n">from_composition</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#emmet.core.structure.MoleculeMetadata.from_composition" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Create a MoleculeMetadata model from a composition.</p>
+<h5 id="emmet.core.structure.MoleculeMetadata.from_composition--parameters">Parameters<a class="headerlink" href="#emmet.core.structure.MoleculeMetadata.from_composition--parameters" title="Permanent link">&para;</a></h5>
+
+<details class="comp-">
+  <summary>.Composition</summary>
+  <p>A pymatgen composition.</p>
+</details>
+<details class="fields-">
+  <summary>list of str or None</summary>
+  <p>Composition fields to include.</p>
+</details>      <p>**kwargs
+    Keyword arguments that are passed to the model constructor.</p>
+<h5 id="emmet.core.structure.MoleculeMetadata.from_composition--returns">Returns<a class="headerlink" href="#emmet.core.structure.MoleculeMetadata.from_composition--returns" title="Permanent link">&para;</a></h5>
+<p>T
+    A molecule metadata model.</p>
+
+      <details class="quote">
+        <summary>Source code in <code>/home/runner/.local/lib/python3.8/site-packages/emmet/core/structure.py</code></summary>
+        <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">from_composition</span><span class="p">(</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">S</span><span class="p">],</span>
+    <span class="n">comp</span><span class="p">:</span> <span class="n">Composition</span><span class="p">,</span>
+    <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">S</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a MoleculeMetadata model from a composition.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    comp : .Composition</span>
+<span class="sd">        A pymatgen composition.</span>
+<span class="sd">    fields : list of str or None</span>
+<span class="sd">        Composition fields to include.</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        Keyword arguments that are passed to the model constructor.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    T</span>
+<span class="sd">        A molecule metadata model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">[</span>
+            <span class="s2">&quot;elements&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;nelements&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;composition&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;composition_reduced&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;formula_alphabetical&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;formula_pretty&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;formula_anonymous&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;chemsys&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">fields</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="n">fields</span>
+    <span class="p">)</span>
+    <span class="n">elsyms</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">e</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">comp</span><span class="o">.</span><span class="n">elements</span><span class="p">})</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;elements&quot;</span><span class="p">:</span> <span class="n">elsyms</span><span class="p">,</span>
+        <span class="s2">&quot;nelements&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">elsyms</span><span class="p">),</span>
+        <span class="s2">&quot;composition&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="p">,</span>
+        <span class="s2">&quot;composition_reduced&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="o">.</span><span class="n">reduced_composition</span><span class="p">,</span>
+        <span class="s2">&quot;formula_alphabetical&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="o">.</span><span class="n">alphabetical_formula</span><span class="p">,</span>
+        <span class="s2">&quot;formula_pretty&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="o">.</span><span class="n">reduced_formula</span><span class="p">,</span>
+        <span class="s2">&quot;formula_anonymous&quot;</span><span class="p">:</span> <span class="n">comp</span><span class="o">.</span><span class="n">anonymized_formula</span><span class="p">,</span>
+        <span class="s2">&quot;chemsys&quot;</span><span class="p">:</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elsyms</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
 
 
 
@@ -1672,16 +2051,24 @@
 <span class="normal">142</span>
 <span class="normal">143</span>
 <span class="normal">144</span>
-<span class="normal">145</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">StructureMetadata</span><span class="p">(</span><span class="n">EmmetBaseModel</span><span class="p">):</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">StructureMetadata</span><span class="p">(</span><span class="n">EmmetBaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Mix-in class for structure metadata</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Structure metadata</span>
     <span class="n">nsites</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Total number of sites in the structure.&quot;</span><span class="p">)</span>
-    <span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Element</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of elements in the material.&quot;</span><span class="p">)</span>
+    <span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Element</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of elements in the material.&quot;</span>
+    <span class="p">)</span>
     <span class="n">nelements</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Number of elements.&quot;</span><span class="p">)</span>
-    <span class="n">composition</span><span class="p">:</span> <span class="n">Composition</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Full composition for the material.&quot;</span><span class="p">)</span>
+    <span class="n">composition</span><span class="p">:</span> <span class="n">Composition</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Full composition for the material.&quot;</span>
+    <span class="p">)</span>
     <span class="n">composition_reduced</span><span class="p">:</span> <span class="n">Composition</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Reduced Composition&quot;</span><span class="p">,</span>
@@ -1708,7 +2095,9 @@
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Total volume for this structure in Angstroms^3.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">density</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Density&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Density in grams per cm^3.&quot;</span><span class="p">)</span>
+    <span class="n">density</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Density&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Density in grams per cm^3.&quot;</span>
+    <span class="p">)</span>
 
     <span class="n">density_atomic</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
@@ -1725,7 +2114,6 @@
         <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-
         <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span>
             <span class="p">[</span>
                 <span class="s2">&quot;elements&quot;</span><span class="p">,</span>
@@ -1762,7 +2150,6 @@
         <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-
         <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span>
             <span class="p">[</span>
                 <span class="s2">&quot;nsites&quot;</span><span class="p">,</span>
