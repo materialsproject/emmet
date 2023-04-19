@@ -3,10 +3,14 @@ from __future__ import annotations
 
 from typing import List, Optional, Type, TypeVar
 
+from openbabel import openbabel as ob
+
 from pydantic import Field
+
 from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.core.structure import Structure, Molecule
+from pymatgen.io.babel import BabelMolAdaptor
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.symmetry import SymmetryData, PointGroupData
@@ -199,6 +203,12 @@ class MoleculeMetadata(EmmetBaseModel):
     symmetry: PointGroupData = Field(
         None, description="Symmetry data for this molecule"
     )
+    inchi: str = Field(
+        None, description="International Chemical Identifier (InChI) for this molecule"
+    )
+    inchi_key: str = Field(
+        None, description="Standardized hash of the InChI for this molecule"
+    )
 
     @classmethod
     def from_composition(
@@ -275,6 +285,8 @@ class MoleculeMetadata(EmmetBaseModel):
                 "formula_anonymous",
                 "chemsys",
                 "symmetry",
+                "inchi",
+                "inchi_key"
             ]
             if fields is None
             else fields
@@ -282,6 +294,12 @@ class MoleculeMetadata(EmmetBaseModel):
         comp = meta_molecule.composition
         elsyms = sorted(set([e.symbol for e in comp.elements]))
         symmetry = PointGroupData.from_molecule(meta_molecule)
+
+        ad = BabelMolAdaptor(meta_molecule)
+        ob.StereoFrom3D(ad.openbabel_mol)
+
+        inchi = ad.pybel_mol.write("inchi").strip()
+        inchikey = ad.pybel_mol.write("inchikey").strip()
 
         data = {
             "charge": int(meta_molecule.charge),
@@ -297,6 +315,8 @@ class MoleculeMetadata(EmmetBaseModel):
             "formula_anonymous": comp.anonymized_formula,
             "chemsys": "-".join(elsyms),
             "symmetry": symmetry,
+            "inchi": inchi,
+            "inchi_key": inchikey
         }
 
         return cls(**{k: v for k, v in data.items() if k in fields}, **kwargs)
