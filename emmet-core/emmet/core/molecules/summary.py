@@ -328,12 +328,12 @@ class MoleculeSummaryDoc(PropertyDoc):
 
     ox_molecule_id: Dict[str, MPculeID] = Field(None, description="Molecule ID for adiabatic oxidation")
 
-    reduction_potentials: Dict[str, Dict[str, float]] = Field(
-        None, description="Reduction potentials with various " "reference electrodes"
+    reduction_potential: Dict[str, float] = Field(
+        None, description="Reduction potential referenced to the standard hydrogen electrode (SHE) (units: V)"
     )
 
-    oxidation_potentials: Dict[str, Dict[str, float]] = Field(
-        None, description="Oxidation potentials with various " "reference electrodes"
+    oxidation_potential: Dict[str, float] = Field(
+        None, description="Oxidation potential referenced to the standard hydrogen electrode (SHE) (units: V)"
     )
 
     # has props
@@ -436,8 +436,8 @@ summary_fields: Dict[str, list] = {
         "red_molecule_id",
         "oxidation_free_energy",
         "ox_molecule_id",
-        "reduction_potentials",
-        "oxidation_potentials",
+        "reduction_potential",
+        "oxidation_potential",
     ],
 }
 

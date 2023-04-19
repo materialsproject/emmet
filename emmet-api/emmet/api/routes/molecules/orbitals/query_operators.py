@@ -415,7 +415,7 @@ class NBOInteractionQuery(QueryOperator):
         ),
         max_energy_difference: Optional[float] = Query(
             None,
-            description="Minimum energy difference between interacting orbitals"
+            description="Maximum energy difference between interacting orbitals"
         ),
         min_fock_element: Optional[float] = Query(
             None,
