@@ -66,11 +66,11 @@ class RedoxDoc(PropertyDoc):
     ox_property_id: str = Field(None, description="Property ID for the thermodynamic data of the "
                                                   "oxidized molecule")
 
-    reduction_potential: Dict[str, float] = Field(
+    reduction_potential: float = Field(
         None, description="Reduction potential referenced to the standard hydrogen electrode (SHE) (units: V)"
     )
 
-    oxidation_potential: Dict[str, float] = Field(
+    oxidation_potential: float = Field(
         None, description="Oxidation potential referenced to the standard hydrogen electrode (SHE) (units: V)"
     )
 
