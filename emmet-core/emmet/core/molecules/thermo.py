@@ -41,6 +41,22 @@ class MoleculeThermoDoc(PropertyDoc):
                     "theory used to correct the electronic energy?"
     )
 
+    base_level_of_theory: LevelOfTheory = Field(
+        None, description="Level of theory used for uncorrected thermochemistry."
+    )
+
+    base_solvent: str = Field(
+        None,
+        description="String representation of the solvent "
+        "environment used for uncorrected thermochemistry.",
+    )
+
+    base_lot_solvent: str = Field(
+        None,
+        description="String representation of the level of theory and solvent "
+        "environment used for uncorrected thermochemistry.",
+    )
+
     correction_level_of_theory: LevelOfTheory = Field(
         None, description="Level of theory used to correct the electronic energy."
     )
@@ -120,6 +136,9 @@ class MoleculeThermoDoc(PropertyDoc):
             correction_lot = None
             correction_solvent = None
             correction_lot_solvent = None
+            level_of_theory = task.level_of_theory
+            solvent = task.solvent
+            lot_solvent = task.lot_solvent
             combined_lot_solvent = task.lot_solvent
         else:
             energy = correction_task.output.final_energy
@@ -128,6 +147,9 @@ class MoleculeThermoDoc(PropertyDoc):
             correction_solvent = correction_task.solvent
             correction_lot_solvent = correction_task.lot_solvent
             combined_lot_solvent = f"{task.lot_solvent}//{correction_lot_solvent}"
+            level_of_theory = f"{task.level_of_theory}//{correction_lot}"
+            solvent = correction_solvent
+            lot_solvent = combined_lot_solvent
 
         total_enthalpy = task.output.enthalpy
         total_entropy = task.output.entropy
@@ -169,10 +191,13 @@ class MoleculeThermoDoc(PropertyDoc):
                         meta_molecule=mol,
                         property_id=property_id,
                         molecule_id=molecule_id,
-                        level_of_theory=task.level_of_theory,
-                        solvent=task.solvent,
-                        lot_solvent=task.lot_solvent,
+                        level_of_theory=level_of_theory,
+                        solvent=solvent,
+                        lot_solvent=lot_solvent,
                         correction=correction,
+                        base_level_of_theory=task.level_of_theory,
+                        base_solvent=task.solvent,
+                        base_lot_solvent=task.lot_solvent,
                         correction_level_of_theory=correction_lot,
                         correction_solvent=correction_solvent,
                         correction_lot_solvent=correction_lot_solvent,
