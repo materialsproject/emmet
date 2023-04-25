@@ -13,15 +13,18 @@ class ChemEnvQuery(QueryOperator):
     def query(
         self,
         chemenv_iucr: Optional[str] = Query(
-            None, description="A comma delimited string list of unique (cationic) species in IUCR format.",
+            None, description="A comma delimited string list of unique (cationic) species in IUCR format."
         ),
         chemenv_iupac: Optional[str] = Query(
-            None, description="A comma delimited string list of unique (cationic) species in IUPAC format.",
+            None, description="A comma delimited string list of unique (cationic) species in IUPAC format."
         ),
         chemenv_name: Optional[str] = Query(
             None,
             description="A comma delimited string list of coordination environment descriptions for "
             "unique (cationic) species.",
+        ),
+        species: Optional[str] = Query(
+            None, description="A comma delimited string list of unique (cationic) species in the structure."
         ),
         csm_min: Optional[float] = Query(
             None, description="Minimum value of the continous symmetry measure for any site."
@@ -50,5 +53,8 @@ class ChemEnvQuery(QueryOperator):
 
         if chemenv_name:
             crit.update({"chemenv_name": {"$in": [entry.strip() for entry in chemenv_name.split(",")]}})
+
+        if species:
+            crit.update({"species": {"$in": [entry.strip() for entry in species.split(",")]}})
 
         return {"criteria": crit}
