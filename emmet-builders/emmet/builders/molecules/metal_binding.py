@@ -10,7 +10,7 @@ from maggma.utils import grouper
 
 from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
 from emmet.core.molecules.atomic import PartialChargesDoc, PartialSpinsDoc
-from emmet.core.molecules.bonds import MoleculeBondingDoc
+from emmet.core.molecules.bonds import (MoleculeBondingDoc, metals)
 from emmet.core.molecules.thermo import MoleculeThermoDoc
 from emmet.core.molecules.metal_binding import (
     MetalBindingDoc
@@ -239,6 +239,12 @@ class MetalBindingBuilder(Builder):
         binding_docs = list()
 
         for mol in mols:
+
+            # First: do we need to do this? Are there actually metals in this molecule?
+            species = mol.species
+            if not any([x in metals for x in species]):
+                continue
+
             # Grab the basic documents needed to create a metal binding document
             molecule_id = mol.molecule_id
             solvents = mol.unique_solvents
@@ -264,7 +270,7 @@ class MetalBindingBuilder(Builder):
                     charge_bysolv_meth[c.solvent] = {c.method: c}
                 else:
                     charge_bysolv_meth[c.solvent][c.method] = c
-            
+
             spins_bysolv_meth = dict()
             for s in spins:
                 if s.solvent not in spins_bysolv_meth:
@@ -282,8 +288,59 @@ class MetalBindingBuilder(Builder):
             thermo_bysolv = {t.solvent: t for t in thermo}
 
             for solvent in solvents:
-                pass
-                # TODO: you are here
+                this_charge = charge_bysolv_meth.get(solvent)
+                this_spin = spins_bysolv_meth.get(solvent)
+                this_bond = bonds_bysolv_meth.get(solvent)
+                base_thermo_doc = thermo_bysolv.get(solvent)
+
+                # Do we have the requisite docs for this solvent?
+                if mol.spin_multiplicity == 1:
+                    needed = [this_charge, this_bond, base_thermo_doc]
+                else:
+                    needed = [this_charge, this_spin, this_bond, base_thermo_doc]
+
+                if any([x is None for x in needed]):
+                    continue
+
+                # What method will we use?
+                plan = None
+                if mol.spin_multiplicity == 1:
+                    if all([x.get("nbo") is not None for x in [this_charge, this_bond]]):
+                        plan = "nbo"
+                        charge_doc = this_charge.get("nbo")
+                        spin_doc = None
+                        bond_doc = this_bond.get("nbo")
+                    elif (
+                            this_charge.get("mulliken") is not None
+                            and this_bond.get("OpenBabelNN + metal_edge_extender") is not None
+                            ):
+                        plan = "mulliken-OB-mee"
+                        charge_doc = this_charge.get("mulliken")
+                        spin_doc = None
+                        bond_doc = this_bond.get("OpenBabelNN + metal_edge_extender")
+                else:
+                    if all([x.get("nbo") is not None for x in [this_charge, this_spin, this_bond]]):
+                        if this_charge.get("nbo").level_of_theory == this_spin.get("nbo").level_of_theory:
+                            plan = "nbo"
+                            charge_doc = this_charge.get("nbo")
+                            spin_doc = this_spin.get("nbo")
+                            bond_doc = this_bond.get("nbo")
+                    elif (
+                            this_charge.get("mulliken") is not None
+                            and this_spin.get("mulliken") is not None
+                            and this_bond.get("OpenBabelNN + metal_edge_extender") is not None
+                            ):
+                        if this_charge.get("mulliken").level_of_theory == this_spin.get("mulliken").level_of_theory:
+                            plan = "mulliken-OB-mee"
+                            charge_doc = this_charge.get("mulliken")
+                            spin_doc = this_spin.get("mulliken")
+                            bond_doc = this_bond.get("OpenBabelNN + metal_edge_extender")
+
+                # Don't have the right combinations of level of theory and method
+                if plan is None:
+                    continue
+
+                # 
 
         self.logger.debug(f"Produced {len(binding_docs)} metal binding docs for {formula}")
 
