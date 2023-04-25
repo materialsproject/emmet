@@ -23,6 +23,11 @@ class ChemEnvQuery(QueryOperator):
             description="A comma delimited string list of coordination environment descriptions for "
             "unique (cationic) species.",
         ),
+        chemenv_symbol: Optional[str] = Query(
+            None,
+            description="A comma delimited string list of ChemEnv symbols for unique (cationic) species "
+            "in the structure.",
+        ),
         species: Optional[str] = Query(
             None, description="A comma delimited string list of unique (cationic) species in the structure."
         ),
@@ -53,6 +58,9 @@ class ChemEnvQuery(QueryOperator):
 
         if chemenv_name:
             crit.update({"chemenv_name": {"$in": [entry.strip() for entry in chemenv_name.split(",")]}})
+
+        if chemenv_symbol:
+            crit.update({"chemenv_symbol": {"$in": [entry.strip() for entry in chemenv_symbol.split(",")]}})
 
         if species:
             crit.update({"species": {"$in": [entry.strip() for entry in species.split(",")]}})
