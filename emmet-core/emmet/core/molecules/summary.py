@@ -25,6 +25,7 @@ class HasProps(Enum):
 
     molecules = "molecules"
     bonding = "bonding"
+    metal_binding = "metal_binding"
     orbitals = "orbitals"
     partial_charges = "partial_charges"
     partial_spins = "partial_spins"
@@ -335,6 +336,9 @@ class MoleculeSummaryDoc(PropertyDoc):
     oxidation_potential: Dict[str, float] = Field(
         None, description="Oxidation potential referenced to the standard hydrogen electrode (SHE) (units: V)"
     )
+
+    # metal binding properties
+    # TODO
 
     # has props
     has_props: List[HasProps] = Field(
