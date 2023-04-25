@@ -13,10 +13,7 @@ from emmet.core.molecules.atomic import (
     PartialChargesDoc,
     PartialSpinsDoc
 )
-from emmet.core.molecules.bonds import (
-    MoleculeBondingDoc,
-    metals
-)
+from emmet.core.molecules.bonds import MoleculeBondingDoc
 from emmet.core.molecules.thermo import MoleculeThermoDoc
 
 
@@ -105,52 +102,52 @@ class MetalBindingDoc(PropertyDoc):
 
     property_name = "metal_binding"
 
-    partial_charges_property_id: str = Field(
+    binding_partial_charges_property_id: str = Field(
         None, description="ID of PartialChargesDoc used to estimate metal charge",
     )
 
-    partial_spins_property_id: str = Field(
+    binding_partial_spins_property_id: str = Field(
         None, description="ID of PartialSpinsDoc used to estimate metal spin",
     )
 
-    partial_charges_lot_solvent: str = Field(
+    binding_partial_charges_lot_solvent: str = Field(
         None, description="Combination of level of theory and solvent used to calculate atomic partial charges"
     )
 
-    partial_spins_lot_solvent: str = Field(
+    binding_partial_spins_lot_solvent: str = Field(
         None, description="Combination of level of theory and solvent used to calculate atomic partial spins"
     )
 
-    charge_spin_method: str = Field(
+    binding_charge_spin_method: str = Field(
         None, description="The method used for partial charges and spins (must be the same)."
     )
 
-    bonding_property_id: str = Field(
+    binding_bonding_property_id: str = Field(
         None, description="ID of MoleculeBondingDoc used to detect bonding in this molecule"
     )
 
-    bonding_lot_solvent: str = Field(
+    binding_bonding_lot_solvent: str = Field(
         None, description="Combination of level of theory and solvent used to determine the coordination environment "
                           "of the metal atom or ion"
     )
 
-    bonding_method: str = Field(
+    binding_bonding_method: str = Field(
         None, description="The method used for to define bonding."
     )
 
-    thermo_property_id: str = Field(
+    binding_thermo_property_id: str = Field(
         None, description="ID of MoleculeThermoDoc used to obtain this molecule's thermochemistry"
     )
 
-    thermo_lot_solvent: str = Field(
+    binding_thermo_lot_solvent: str = Field(
         None, description="Combination of level of theory and solvent used for uncorrected thermochemistry"
     )
 
-    thermo_correction_lot_solvent: str = Field(
+    binding_thermo_correction_lot_solvent: str = Field(
         None, description="Combination of level of theory and solvent used to correct the electronic energy"
     )
 
-    thermo_combined_lot_solvent: str = Field(
+    binding_thermo_combined_lot_solvent: str = Field(
         None, descrption="Combination of level of theory and solvent used for molecular thermochemistry, combining "
                          "both the frequency calculation and (potentially) the single-point energy correction."
     )
@@ -353,18 +350,18 @@ class MetalBindingDoc(PropertyDoc):
             level_of_theory=level_of_theory,
             solvent=solvent,
             lot_solvent=lot_solvent,
-            partial_charges_property_id=partial_charges_property_id,
-            partial_spins_property_id=partial_spins_property_id,
-            partial_charges_lot_solvent=partial_charges_lot_solvent,
-            partial_spins_lot_solvent=partial_spins_lot_solvent,
-            charge_spin_method=partial_charges.method,
-            bonding_property_id=bonding_property_id,
-            bonding_lot_solvent=bonding_lot_solvent,
-            bonding_method=bonding.method,
-            thermo_property_id=thermo_property_id,
-            thermo_lot_solvent=thermo_lot_solvent,
-            thermo_correction_lot_solvent=thermo_correction_lot_solvent,
-            thermo_combined_lot_solvent=thermo_combined_lot_solvent,
+            binding_partial_charges_property_id=partial_charges_property_id,
+            binding_partial_spins_property_id=partial_spins_property_id,
+            binding_partial_charges_lot_solvent=partial_charges_lot_solvent,
+            binding_partial_spins_lot_solvent=partial_spins_lot_solvent,
+            binding_charge_spin_method=partial_charges.method,
+            binding_bonding_property_id=bonding_property_id,
+            binding_bonding_lot_solvent=bonding_lot_solvent,
+            binding_bonding_method=bonding.method,
+            binding_thermo_property_id=thermo_property_id,
+            binding_thermo_lot_solvent=thermo_lot_solvent,
+            binding_thermo_correction_lot_solvent=thermo_correction_lot_solvent,
+            binding_thermo_combined_lot_solvent=thermo_combined_lot_solvent,
             binding_data=binding_data,
             deprecated=deprecated,
             origins=[],

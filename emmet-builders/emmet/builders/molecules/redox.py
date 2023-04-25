@@ -92,9 +92,8 @@ class RedoxBuilder(Builder):
         self.thermo.ensure_index("last_updated")
         self.thermo.ensure_index("formula_alphabetical")
 
-        # Search index for orbitals
+        # Search index for redox
         self.redox.ensure_index("molecule_id")
-        self.redox.ensure_index("task_id")
         self.redox.ensure_index("solvent")
         self.redox.ensure_index("lot_solvent")
         self.redox.ensure_index("property_id")

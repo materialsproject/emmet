@@ -87,7 +87,7 @@ class BondingBuilder(Builder):
         self.molecules.ensure_index("task_ids")
         self.molecules.ensure_index("formula_alphabetical")
 
-        # Search index for charges
+        # Search index for bonds
         self.bonds.ensure_index("molecule_id")
         self.bonds.ensure_index("method")
         self.bonds.ensure_index("task_id")

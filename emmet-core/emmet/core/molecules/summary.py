@@ -338,7 +338,59 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
 
     # metal binding properties
-    # TODO
+    binding_partial_charges_property_id: Dict[str, str] = Field(
+        None, description="ID of PartialChargesDoc used to estimate metal charge",
+    )
+
+    binding_partial_spins_property_id: Dict[str, str] = Field(
+        None, description="ID of PartialSpinsDoc used to estimate metal spin",
+    )
+
+    binding_partial_charges_lot_solvent: Dict[str, str] = Field(
+        None, description="Combination of level of theory and solvent used to calculate atomic partial charges"
+    )
+
+    binding_partial_spins_lot_solvent: Dict[str, str] = Field(
+        None, description="Combination of level of theory and solvent used to calculate atomic partial spins"
+    )
+
+    binding_charge_spin_method: Dict[str, str] = Field(
+        None, description="The method used for partial charges and spins (must be the same)."
+    )
+
+    binding_bonding_property_id: Dict[str, str] = Field(
+        None, description="ID of MoleculeBondingDoc used to detect bonding in this molecule"
+    )
+
+    binding_bonding_lot_solvent: Dict[str, str] = Field(
+        None, description="Combination of level of theory and solvent used to determine the coordination environment "
+                          "of the metal atom or ion"
+    )
+
+    binding_bonding_method: Dict[str, str] = Field(
+        None, description="The method used for to define bonding."
+    )
+
+    binding_thermo_property_id: Dict[str, str] = Field(
+        None, description="ID of MoleculeThermoDoc used to obtain this molecule's thermochemistry"
+    )
+
+    binding_thermo_lot_solvent: Dict[str, str] = Field(
+        None, description="Combination of level of theory and solvent used for uncorrected thermochemistry"
+    )
+
+    binding_thermo_correction_lot_solvent: Dict[str, str] = Field(
+        None, description="Combination of level of theory and solvent used to correct the electronic energy"
+    )
+
+    binding_thermo_combined_lot_solvent: Dict[str, str] = Field(
+        None, descrption="Combination of level of theory and solvent used for molecular thermochemistry, combining "
+                         "both the frequency calculation and (potentially) the single-point energy correction."
+    )
+
+    binding_data: Dict[str, List[MetalBindingData]] = Field(
+        None, description="Binding data for each metal atom or ion in the molecule"
+    )
 
     # has props
     has_props: List[HasProps] = Field(
@@ -442,6 +494,21 @@ summary_fields: Dict[str, list] = {
         "ox_molecule_id",
         "reduction_potential",
         "oxidation_potential",
+    ],
+    HasProps.metal_binding.value: [
+            "binding_partial_charges_property_id",
+            "binding_partial_spins_property_id",
+            "binding_partial_charges_lot_solvent",
+            "binding_partial_spins_lot_solvent",
+            "binding_charge_spin_method",
+            "binding_bonding_property_id",
+            "binding_bonding_lot_solvent",
+            "binding_bonding_method",
+            "binding_thermo_property_id",
+            "binding_thermo_lot_solvent",
+            "binding_thermo_correction_lot_solvent",
+            "binding_thermo_combined_lot_solvent",
+            "binding_data",
     ],
 }
 

@@ -354,7 +354,7 @@ class PartialSpinsBuilder(Builder):
         self.molecules.ensure_index("task_ids")
         self.molecules.ensure_index("formula_alphabetical")
 
-        # Search index for charges
+        # Search index for spins
         self.spins.ensure_index("molecule_id")
         self.spins.ensure_index("task_id")
         self.spins.ensure_index("method")
