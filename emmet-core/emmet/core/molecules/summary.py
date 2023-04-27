@@ -10,6 +10,7 @@ from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.molecules.molecule_property import PropertyDoc
 from emmet.core.mpid import MPID, MPculeID
 from emmet.core.molecules.orbitals import NaturalPopulation, LonePair, Bond, Interaction
+from emmet.core.molecules.metal_binding import MetalBindingData
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -537,6 +538,11 @@ def _copy_from_doc(doc: Dict[str, Any]):
             for copy_key in summary_fields[doc_key]:
                 d[copy_key] = sub_doc[copy_key]
         else:
+            # No information for this particular set of properties
+            # Shouldn't happen, but can
+            if sub_doc is None:
+                continue
+
             sd, by_method = sub_doc
 
             if isinstance(sd, dict) and len(sd) > 0:
