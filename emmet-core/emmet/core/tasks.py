@@ -334,7 +334,7 @@ class TaskDoc(StructureMetadata):
     )
     additional_json: Dict[str, Any] = Field(None, description="Additional json loaded from the calculation directory")
 
-    custodian: List[CustodianDoc] = Field(
+    custodian: List[Dict[str, Any]] = Field(
         None,
         title="Calcs reversed data",
         description="Detailed custodian data for each VASP calculation contributing to the task document.",
