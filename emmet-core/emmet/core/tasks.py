@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 import numpy as np
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
-from custodian.vasp.jobs import VaspJob
 from pydantic import BaseModel, Field, validator
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.structure import Structure
