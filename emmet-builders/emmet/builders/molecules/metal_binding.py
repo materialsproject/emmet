@@ -1,4 +1,3 @@
-from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
@@ -9,7 +8,7 @@ from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
 
-from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
+from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.molecules.atomic import PartialChargesDoc, PartialSpinsDoc
 from emmet.core.molecules.bonds import (MoleculeBondingDoc, metals)
 from emmet.core.molecules.thermo import MoleculeThermoDoc
@@ -468,7 +467,7 @@ class MetalBindingBuilder(Builder):
         if len(items) > 0:
             self.logger.info(f"Updating {len(docs)} metal binding documents")
             self.metal_binding.remove_docs({self.metal_binding.key: {"$in": molecule_ids}})
-            # Neither molecule_id nor method need to be unique, but the combination must be
+            # Neither molecule_id nor solvent need to be unique, but the combination must be
             self.metal_binding.update(
                 docs=docs,
                 key=["molecule_id", "solvent"],
