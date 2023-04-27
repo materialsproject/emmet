@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 import numpy as np
 from monty.json import MontyDecoder
 from monty.serialization import loadfn
+from custodian.vasp.jobs import VaspJob
 from pydantic import BaseModel, Field, validator
 from pymatgen.analysis.structure_analyzer import oxide_type
 from pymatgen.core.structure import Structure
@@ -182,6 +183,19 @@ class InputDoc(BaseModel):
         )
 
 
+class CustodianDoc(BaseModel):
+    corrections: List[Any] = Field(
+        None,
+        title="Custodian Corrections",
+        description="List of custodian correction data for calculation.",
+    )
+    job: Union[VaspJob, dict] = Field(
+        None,
+        title="Cusotodian Job Data",
+        description="Job data logged by custodian.",
+    )
+
+
 class AnalysisDoc(BaseModel):
     delta_volume: float = Field(
         None,
@@ -320,7 +334,7 @@ class TaskDoc(StructureMetadata):
     )
     additional_json: Dict[str, Any] = Field(None, description="Additional json loaded from the calculation directory")
 
-    custodian: List[Dict[str, Any]] = Field(
+    custodian: List[CustodianDoc] = Field(
         None,
         title="Calcs reversed data",
         description="Detailed custodian data for each VASP calculation contributing to the task document.",
