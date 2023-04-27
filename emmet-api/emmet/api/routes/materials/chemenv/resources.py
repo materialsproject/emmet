@@ -3,7 +3,7 @@ from maggma.api.resource import ReadOnlyResource
 
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
-from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery
+from emmet.api.routes.materials.materials.query_operators import MultiMaterialIDQuery, ElementsQuery
 from emmet.api.routes.materials.chemenv.query_operators import ChemEnvQuery
 from emmet.core.chemenv import ChemEnvDoc
 
@@ -15,10 +15,11 @@ def chemenv_resource(chemenv_store):
         query_operators=[
             MultiMaterialIDQuery(),
             ChemEnvQuery(),
+            ElementsQuery(),
             NumericQuery(model=ChemEnvDoc, excluded_fields=["valences"]),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(ChemEnvDoc, default_fields=["material_id", "formula_pretty", "last_updated"],),
+            SparseFieldsQuery(ChemEnvDoc, default_fields=["material_id", "formula_pretty", "last_updated"]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Chemical Environment"],
