@@ -206,7 +206,7 @@ class CustodianDoc(BaseModel):
         title="Custodian Corrections",
         description="List of custodian correction data for calculation.",
     )
-    job: Union[dict] = Field(
+    job: dict = Field(
         None,
         title="Cusotodian Job Data",
         description="Job data logged by custodian.",
