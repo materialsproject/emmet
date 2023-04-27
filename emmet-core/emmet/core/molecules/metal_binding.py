@@ -19,6 +19,8 @@ from emmet.core.molecules.thermo import MoleculeThermoDoc
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
+METAL_BINDING_METHODS = ["nbo", "mulliken-OB-mee"]
+
 T = TypeVar("T", bound="MetalBindingDoc")
 
 
@@ -102,6 +104,10 @@ class MetalBindingDoc(PropertyDoc):
 
     property_name = "metal_binding"
 
+    method: str = Field(
+        ..., description="Method used to determine the charge, spin, and coordination environment of a metal"
+    )
+
     binding_partial_charges_property_id: str = Field(
         None, description="ID of PartialChargesDoc used to estimate metal charge",
     )
@@ -159,6 +165,7 @@ class MetalBindingDoc(PropertyDoc):
     @classmethod
     def from_docs(
         cls: Type[T],
+        method: str,
         metal_indices: List[int],
         base_molecule_doc: MoleculeDoc,
         partial_charges: PartialChargesDoc,
@@ -174,6 +181,7 @@ class MetalBindingDoc(PropertyDoc):
             and PartialSpinsDocs (to assess the oxidation state and spin state of the metal),
             and MoleculeBondingDocs (to assess the coordination environment of the metal).
 
+        :param method: What method was used to construct this document?
         :param metal_indices: List of indices in the Molecule corresponding to metals
         :param base_molecule_doc: MoleculeDoc used for basic ID, species, structure information
         :param partial_charges: PartialChargesDoc used to determine the oxidation state of the
@@ -350,6 +358,7 @@ class MetalBindingDoc(PropertyDoc):
             level_of_theory=level_of_theory,
             solvent=solvent,
             lot_solvent=lot_solvent,
+            method=method,
             binding_partial_charges_property_id=partial_charges_property_id,
             binding_partial_spins_property_id=partial_spins_property_id,
             binding_partial_charges_lot_solvent=partial_charges_lot_solvent,
