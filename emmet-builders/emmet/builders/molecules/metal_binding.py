@@ -3,6 +3,7 @@ from datetime import datetime
 from itertools import chain
 from math import ceil
 from typing import Optional, Iterable, Iterator, List, Dict
+import copy
 
 from maggma.builders import Builder
 from maggma.core import Store
@@ -16,6 +17,7 @@ from emmet.core.molecules.metal_binding import (
     MetalBindingDoc
 )
 from emmet.core.utils import jsanitize
+from emmet.core.graph_hashing import weisfeiler_lehman_graph_hash
 from emmet.builders.settings import EmmetBuildSettings
 
 
@@ -52,7 +54,7 @@ class MetalBindingBuilder(Builder):
             - PartialSpinsDocs (for open-shell molecules)
             - MoleculeThermoDocs
         4. Group these additional documents by level of theory and (where applicable) method, and choose the best
-            possible level of theory and method for which all required data is available
+            possible methods for which all required data is available
         5. For each metal in the molecule:
             5.1 Use partial charge and spin information to determine the oxidation and spin state of the metal
             5.2 Search for MoleculeThermoDocs for the metal atom/ion with appropriate charge and spin with the
@@ -242,7 +244,8 @@ class MetalBindingBuilder(Builder):
 
             # First: do we need to do this? Are there actually metals in this molecule?
             species = mol.species
-            if not any([x in metals for x in species]):
+            metal_indices = [i for i, e in enumerate(species) if e in metals]
+            if len(metal_indices) == 0:
                 continue
 
             # Grab the basic documents needed to create a metal binding document
@@ -303,6 +306,10 @@ class MetalBindingBuilder(Builder):
                     continue
 
                 # What method will we use?
+                # Currently allows two options:
+                # 1. Using NBO for everything ("nbo")
+                # 2. Using Mulliken for charges/spins and OpenBabel + metal_edge_extender for bonding
+                #   ("mulliken-OB-mee")
                 plan = None
                 if mol.spin_multiplicity == 1:
                     if all([x.get("nbo") is not None for x in [this_charge, this_bond]]):
@@ -340,7 +347,99 @@ class MetalBindingBuilder(Builder):
                 if plan is None:
                     continue
 
-                # 
+                # Obtain relevant thermo documents for each metal atom/ion in the molecule
+                metal_thermo = dict()
+                nometal_thermo = dict()
+                for metal_index in metal_indices:
+                    # First, determine the appropriate charge and spin of the metal
+                    # TODO: figure out better charge assignment
+                    partial_charge = charge_doc.partial_charges[metal_index]
+
+                    if mol.spin_multiplicity == 1:
+                        # For now, just round to nearest whole number
+                        charge = round(partial_charge)
+                        spin = 1
+                    else:
+                        partial_spin = spin_doc.partial_spins[metal_index]
+                        charge = round(partial_charge)
+                        spin = round(partial_spin) + 1
+
+                    # Sanity check that charge and spin are compatible
+                    metal_species = species[metal_index]
+                    try:
+                        _ = Molecule([metal_species], [[0.0, 0.0, 0.0]], charge=charge, spin_multiplicity=spin)
+                    except ValueError:
+                        # Assume spin assignment is correct, and change charge accordingly
+                        diff_up = abs(partial_charge - (charge + 1))
+                        diff_down = abs(partial_charge - (charge - 1))
+                        if diff_up < diff_down:
+                            charge += 1
+                        else:
+                            charge -= 1
+
+                    # Grab thermo doc for the relevant metal ion/atom (if available)
+                    this_metal_thermo = [
+                        MoleculeThermoDoc(**e) for e in self.thermo.query(
+                            {
+                                "formula_alphabetical": f"{metal_species}1",
+                                "charge": charge,
+                                "spin_multiplicity": spin,
+                                "lot_solvent": base_thermo_doc.lot_solvent,
+                            }
+                        )
+                    ]
+                    if len(this_metal_thermo) == 0:
+                        continue
+
+                    this_metal_thermo = this_metal_thermo[0]
+                    metal_thermo[metal_index] = this_metal_thermo
+
+                    # Now the (somewhat) harder part - finding the document for this molecule without the metal
+                    # Make sure charges and spins add up
+                    nometal_charge = mol.charge - charge
+                    nometal_spin = mol.spin_multiplicity - spin + 1
+                    mg_copy = copy.deepcopy(bond_doc.molecule_graph)
+                    mg_copy.remove_nodes([metal_index])
+                    new_hash = weisfeiler_lehman_graph_hash(mg_copy.graph, node_attr="specie")
+                    nometal_mol_doc = [
+                        MoleculeDoc(**e) for e in self.molecules.query(
+                            {
+                                "species_hash": new_hash,
+                                "charge": nometal_charge,
+                                "spin_multiplicity": nometal_spin
+                            }
+                        )
+                    ]
+                    if len(nometal_mol_doc) == 0:
+                        continue
+
+                    nometal_mol_id = nometal_mol_doc[0].molecule_id
+                    this_nometal_thermo = [
+                        MoleculeThermoDoc(**e) for e in self.thermo.query(
+                            {
+                                "molecule_id": nometal_mol_id,
+                                "lot_solvent": base_thermo_doc.lot_solvent
+                            }
+                        )
+                    ]
+                    if len(this_nometal_thermo) == 0:
+                        continue
+
+                    this_nometal_thermo = this_nometal_thermo[0]
+                    nometal_thermo[metal_index] = this_nometal_thermo
+
+                doc = MetalBindingDoc.from_docs(
+                    metal_indices=metal_indices,
+                    base_molecule_doc=mol,
+                    partial_charges=charge_doc,
+                    partial_spins=spin_doc,
+                    bonding=bond_doc,
+                    base_thermo=base_thermo_doc,
+                    metal_thermo=metal_thermo,
+                    nometal_thermo=nometal_thermo
+                )
+
+                binding_docs.append(doc)
 
         self.logger.debug(f"Produced {len(binding_docs)} metal binding docs for {formula}")
 
