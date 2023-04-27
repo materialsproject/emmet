@@ -189,7 +189,7 @@ class CustodianDoc(BaseModel):
         title="Custodian Corrections",
         description="List of custodian correction data for calculation.",
     )
-    job: Union[VaspJob, dict] = Field(
+    job: Union[dict] = Field(
         None,
         title="Cusotodian Job Data",
         description="Job data logged by custodian.",
@@ -334,7 +334,7 @@ class TaskDoc(StructureMetadata):
     )
     additional_json: Dict[str, Any] = Field(None, description="Additional json loaded from the calculation directory")
 
-    custodian: List[Dict[str, Any]] = Field(
+    custodian: List[CustodianDoc] = Field(
         None,
         title="Calcs reversed data",
         description="Detailed custodian data for each VASP calculation contributing to the task document.",
