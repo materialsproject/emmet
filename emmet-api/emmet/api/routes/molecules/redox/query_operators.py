@@ -37,14 +37,14 @@ class RedoxPotentialQuery(QueryOperator):
         }
 
         for key in d:
-            if d[entry][0] is not None or d[entry][1] is not None:
+            if d[key][0] is not None or d[key][1] is not None:
                 crit[key] = dict()
 
-            if d[entry][0] is not None:
-                crit[key]["$gte"] = d[entry][0]
+            if d[key][0] is not None:
+                crit[key]["$gte"] = d[key][0]
 
-            if d[entry][1] is not None:
-                crit[key]["$lte"] = d[entry][1]
+            if d[key][1] is not None:
+                crit[key]["$lte"] = d[key][1]
 
         return {"criteria": crit}
 
