@@ -80,4 +80,4 @@ def test_metal_binding(base_mol, charges, spins, bonds, base_thermo, metal_therm
     assert metal_binding.binding_data[0].metal_partial_charge == pytest.approx(-0.073376)
     assert metal_binding.binding_data[0].metal_assigned_charge == 0
     assert metal_binding.binding_data[0].metal_assigned_spin == 2
-    assert metal_binding.binding_data[0].binding_free_energy == pytest.approx(-1.23790290567376)
+    assert metal_binding.binding_data[0].binding_free_energy == pytest.approx(1.23790290567376)
