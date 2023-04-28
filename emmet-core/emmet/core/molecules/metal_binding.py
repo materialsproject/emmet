@@ -322,16 +322,16 @@ class MetalBindingDoc(PropertyDoc):
             if this_metal_thermo is not None and this_nometal_thermo is not None:
                 thermos = [base_thermo, this_metal_thermo, this_nometal_thermo]
 
-                binding_e = thermos[0].electronic_energy - (thermos[1].electronic_energy + thermos[2].electronic_energy)
+                binding_e = (thermos[1].electronic_energy + thermos[2].electronic_energy) - thermos[0].electronic_energy
 
                 if all([x.total_enthalpy is not None for x in thermos]):
-                    binding_h = thermos[0].total_enthalpy - (thermos[1].total_enthalpy + thermos[2].total_enthalpy)
+                    binding_h = (thermos[1].total_enthalpy + thermos[2].total_enthalpy) - thermos[0].total_enthalpy
 
                 if all([x.total_entropy is not None for x in thermos]):
-                    binding_s = thermos[0].total_entropy - (thermos[1].total_entropy + thermos[2].total_entropy)
+                    binding_s = (thermos[1].total_entropy + thermos[2].total_entropy) - thermos[0].total_entropy
 
                 if all([x.free_energy is not None for x in thermos]):
-                    binding_g = thermos[0].free_energy - (thermos[1].free_energy + thermos[2].free_energy)
+                    binding_g = (thermos[1].free_energy + thermos[2].free_energy) - thermos[0].free_energy
 
             binding_data.append(
                 MetalBindingData(
