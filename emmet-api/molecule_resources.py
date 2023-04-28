@@ -4,7 +4,8 @@ from maggma.stores import MongoURIStore
 
 from emmet.api.routes.molecules.tasks.resources import (
     task_resource,
-    task_deprecation_resource
+    task_deprecation_resource,
+    trajectory_resource
 )
 from emmet.api.routes.molecules.association.resources import (
     find_molecule_assoc_resource,
@@ -17,6 +18,7 @@ from emmet.api.routes.molecules.molecules.resources import (
 from emmet.api.routes.molecules.partial_charges.resources import charges_resource
 from emmet.api.routes.molecules.partial_spins.resources import spins_resource
 from emmet.api.routes.molecules.bonds.resources import bonding_resource
+from emmet.api.routes.molecules.metal_binding.resources import metal_binding_resource
 from emmet.api.routes.molecules.orbitals.resources import orbitals_resource
 from emmet.api.routes.molecules.redox.resources import redox_resource
 from emmet.api.routes.molecules.thermo.resources import thermo_resource
@@ -40,47 +42,51 @@ if db_uri:
         db_uri = "mongodb+srv://" + db_uri
 
     task_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="task_id", collection_name="mpcules_tasks",
+        uri=db_uri, database="mp_molecules", key="task_id", collection_name="molecules_tasks",
     )
 
     assoc_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="mpcules_assoc",
+        uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="molecules_assoc",
     )
 
     mol_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="mpcules_molecules",
+        uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="molecules_molecules",
     )
 
     charges_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_charges",
+        uri=db_uri, database="mp_molecules", key="property_id", collection_name="molecules_charges",
     )
 
     spins_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_spins",
+        uri=db_uri, database="mp_molecules", key="property_id", collection_name="molecules_spins",
     )
 
     bonds_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_bonds",
+        uri=db_uri, database="mp_molecules", key="property_id", collection_name="molecules_bonds",
+    )
+
+    metal_binding_store = MongoURIStore(
+        uri=db_uri, database="mp_molecules", key="property_id", collection_name="molecules_metal_binding",
     )
 
     orbitals_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_orbitals",
+        uri=db_uri, database="mp_molecules", key="property_id", collection_name="molecules_orbitals",
     )
 
     redox_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_redox",
+        uri=db_uri, database="mp_molecules", key="property_id", collection_name="molecules_redox",
     )
 
     thermo_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_thermo",
+        uri=db_uri, database="mp_molecules", key="property_id", collection_name="molecules_thermo",
     )
 
     vibes_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_vibes",
+        uri=db_uri, database="mp_molecules", key="property_id", collection_name="molecules_vibes",
     )
 
     summary_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="mpcules_summary"
+        uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="molecules_summary"
     )
 
 else:
@@ -93,7 +99,8 @@ mp_molecules_resources = list()
 mp_molecules_resources.extend(
     [
         task_resource(task_store),
-        task_deprecation_resource(task_store)
+        task_deprecation_resource(task_store),
+        trajectory_resource(task_store)
     ]
 )
 
@@ -121,6 +128,9 @@ mp_molecules_resources.extend([spins_resource(spins_store)])
 
 # Bonds
 mp_molecules_resources.extend([bonding_resource(bonds_store)])
+
+# Metal binding
+mp_molecules_resources.extend([metal_binding_resource(metal_binding_store)])
 
 # Orbitals
 mp_molecules_resources.extend([orbitals_resource(orbitals_store)])

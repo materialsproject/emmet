@@ -3,7 +3,7 @@ from maggma.api.utils import STORE_PARAMS
 from fastapi import Query
 from typing import Optional
 
-from emmet.api.routes.molecules.tasks.utils import calcs_reversed_to_trajectory,
+from emmet.api.routes.molecules.tasks.utils import calcs_reversed_to_trajectory
 
 
 class MultipleTaskIDsQuery(QueryOperator):

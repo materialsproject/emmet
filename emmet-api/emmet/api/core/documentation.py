@@ -294,6 +294,11 @@ tags_meta = [
             of fields returned by this route."
     },
     {
+        "name": "Molecules Metal Binding",
+        "description": "Route for data regarding metal binding to molecules. See the `MetalBindingDoc` schema \
+            for a full list of fields returned by this route."
+    },
+    {
         "name": "Molecules Orbitals",
         "description": "Route for molecular orbital information obtained via Natural Bonding Orbital analysis. \
             See the `OrbitalDoc` schema for a full list of fields returned by this route."
