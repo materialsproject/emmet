@@ -54,6 +54,14 @@ class MetalBindingData(BaseModel):
         None, description="The exact calculated partial spin on the metal"
     )
 
+    metal_assigned_charge: float = Field(
+        None, description="The integral charge assigned to this metal based on partial charge/spin data"
+    )
+
+    metal_assigned_spin: float = Field(
+        None, description="The integral spin multiplicity assigned to this metal based on partial spin data"
+    )
+
     number_coordinate_bonds: int = Field(
         None, description="The number of atoms neighboring the metal atom or ion of interest"
     )
@@ -333,6 +341,8 @@ class MetalBindingDoc(PropertyDoc):
                     metal_element=metal_element,
                     metal_partial_charge=charge,
                     metal_partial_spin=spin,
+                    metal_assigned_charge=this_metal_thermo.charge,
+                    metal_assigned_spin=this_metal_thermo.spin_multiplicity,
                     number_coordinate_bonds=number_coordinate_bonds,
                     coordinating_atoms=coordinating_atoms,
                     coordinate_bond_lengths=coordinate_bond_lengths,
