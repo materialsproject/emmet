@@ -238,7 +238,7 @@ class MoleculesAssociationBuilder(Builder):
                 # basic validation here ensures that tasks with invalid levels of
                 # theory don't halt the build pipeline
                 try:
-                    task = TaskDocument(**t).level_of_theory
+                    task = TaskDocument(**t)
                     to_yield.append(task)
                 except Exception as e:
                     self.logger.info(
@@ -248,18 +248,17 @@ class MoleculesAssociationBuilder(Builder):
 
             yield to_yield
 
-    def process_item(self, items: List[TaskDocument]) -> List[Dict]:
+    def process_item(self, tasks: List[TaskDocument]) -> List[Dict]:
         """
         Process the tasks into a MoleculeDoc
 
         Args:
-            tasks [dict] : a list of task docs
+            tasks [TaskDocument] : a list of task docs
 
         Returns:
             [dict] : a list of new molecule docs
         """
 
-        tasks = items
         if len(tasks) == 0:
             return list()
         formula = tasks[0].formula_alphabetical
