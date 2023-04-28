@@ -91,13 +91,23 @@ class BindingDataQuery(QueryOperator):
 
         crit: Dict[str, Any] = dict()  # type: ignore
 
+        if metal_element:
+            crit["binding_data.metal_element"] = metal_element
+
         d = {
-            "oxidation_potentials": [min_oxidation_potential, max_oxidation_potential],
-            "reduction_potentials": [min_reduction_potential, max_reduction_potential]
+            "metal_partial_charge": [min_metal_partial_charge, max_metal_partial_charge],
+            "metal_partial_spin": [min_metal_partial_spin, max_metal_partial_spin],
+            "metal_assigned_charge": [min_metal_assigned_charge, max_metal_assigned_charge],
+            "metal_assigned_spin": [min_metal_assigned_spin, max_metal_assigned_spin],
+            "number_coordinate_bonds": [min_number_coordinate_bonds, max_number_coordinate_bonds],
+            "binding_energy": [min_binding_energy, max_binding_energy],
+            "binding_enthalpy": [min_binding_enthalpy, max_binding_enthalpy],
+            "binding_entropy": [min_binding_entropy, max_binding_entropy],
+            "binding_free_energy": [min_binding_free_energy, max_binding_free_energy]
         }
 
         for entry in d:
-            key = entry + "." + electrode
+            key = "binding_data." + entry
             if d[entry][0] is not None or d[entry][1] is not None:
                 crit[key] = dict()
 
@@ -111,6 +121,14 @@ class BindingDataQuery(QueryOperator):
 
     def ensure_indexes(self):  # pragma: no cover
         return [
-            ("oxidation_potentials", False),
-            ("reduction_potentials", False),
+            ("binding_data.metal_element", False),
+            ("binding_data.metal_partial_charge", False),
+            ("binding_data.metal_partial_spin", False),
+            ("binding_data.metal_assigned_charge", False),
+            ("binding_data.metal_assigned_spin", False),
+            ("binding_data.number_coordinate_bonds", False),
+            ("binding_data.binding_energy", False),
+            ("binding_data.binding_enthalpy", False),
+            ("binding_data.binding_entropy", False),
+            ("binding_data.binding_free_energy", False),
         ]
