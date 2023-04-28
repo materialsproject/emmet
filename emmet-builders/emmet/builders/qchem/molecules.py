@@ -167,7 +167,7 @@ class MoleculesAssociationBuilder(Builder):
         for formula_chunk in grouper(to_process_forms, N):
             yield {"query": {"formula_alphabetical": {"$in": list(formula_chunk)}}}
 
-    def get_items(self) -> Iterator[List[Dict]]:
+    def get_items(self) -> Iterator[List[TaskDocument]]:
         """
         Gets all items to process into molecules (and other) documents.
         This does no datetime checking; relying on on whether
@@ -232,22 +232,23 @@ class MoleculesAssociationBuilder(Builder):
             tasks = list(
                 self.tasks.query(criteria=tasks_query, properties=projected_fields)
             )
+            to_yield = list()
             for t in tasks:
                 # TODO: Validation
                 # basic validation here ensures that tasks with invalid levels of
                 # theory don't halt the build pipeline
                 try:
-                    _ = TaskDocument(**t).level_of_theory
-                    t["is_valid"] = True
+                    task = TaskDocument(**t).level_of_theory
+                    to_yield.append(task)
                 except Exception as e:
                     self.logger.info(
                         f"Processing task {t['task_id']} failed with Exception - {e}"
                     )
-                    t["is_valid"] = False
+                    continue
 
-            yield tasks
+            yield to_yield
 
-    def process_item(self, items: List[Dict]) -> List[Dict]:
+    def process_item(self, items: List[TaskDocument]) -> List[Dict]:
         """
         Process the tasks into a MoleculeDoc
 
@@ -258,7 +259,7 @@ class MoleculesAssociationBuilder(Builder):
             [dict] : a list of new molecule docs
         """
 
-        tasks = [TaskDocument(**task) for task in items if task["is_valid"]]
+        tasks = items
         if len(tasks) == 0:
             return list()
         formula = tasks[0].formula_alphabetical
