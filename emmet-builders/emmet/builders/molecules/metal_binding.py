@@ -4,6 +4,8 @@ from math import ceil
 from typing import Optional, Iterable, Iterator, List, Dict
 import copy
 
+from pymatgen.core.structure import Molecule
+
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
@@ -71,7 +73,7 @@ class MetalBindingBuilder(Builder):
         molecules: Store,
         charges: Store,
         spins: Store,
-        bonding: Store,
+        bonds: Store,
         thermo: Store,
         metal_binding: Store,
         query: Optional[Dict] = None,
@@ -83,7 +85,7 @@ class MetalBindingBuilder(Builder):
         self.molecules = molecules
         self.charges = charges
         self.spins = spins
-        self.bonding = bonding
+        self.bonds = bonds
         self.thermo = thermo
         self.metal_binding = metal_binding
         self.query = query if query else dict()
@@ -91,7 +93,7 @@ class MetalBindingBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[molecules, charges, spins, bonding, thermo], targets=[metal_binding])
+        super().__init__(sources=[molecules, charges, spins, bonds, thermo], targets=[metal_binding])
 
     def ensure_indexes(self):
         """
@@ -203,7 +205,7 @@ class MetalBindingBuilder(Builder):
             )
         )
 
-        processed_docs = set([e for e in self.charges.distinct("molecule_id")])
+        processed_docs = set([e for e in self.metal_binding.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
         to_process_forms = {
             d["formula_alphabetical"]
@@ -244,10 +246,11 @@ class MetalBindingBuilder(Builder):
 
         for mol in mols:
 
-            # First: do we need to do this? Are there actually metals in this molecule?
+            # First: do we need to do this? Are there actually metals in this molecule? And species other than metals?
             species = mol.species
             metal_indices = [i for i, e in enumerate(species) if e in metals]
-            if len(metal_indices) == 0:
+            if len(metal_indices) == 0 or len(species) == 1:
+                # print(mol.molecule_id, mol.formula_alphabetical)
                 continue
 
             # Grab the basic documents needed to create a metal binding document
@@ -369,7 +372,7 @@ class MetalBindingBuilder(Builder):
                         else:
                             partial_spin = spin_doc.partial_spins[metal_index]
                             charge = round(partial_charge)
-                            spin = round(partial_spin) + 1
+                            spin = round(abs(partial_spin)) + 1
 
                         # Sanity check that charge and spin are compatible
                         metal_species = species[metal_index]
@@ -447,7 +450,8 @@ class MetalBindingBuilder(Builder):
                         nometal_thermo=nometal_thermo
                     )
 
-                    binding_docs.append(doc)
+                    if doc is not None and len(doc.binding_data) != 0:
+                        binding_docs.append(doc)
 
         self.logger.debug(f"Produced {len(binding_docs)} metal binding docs for {formula}")
 

@@ -62,7 +62,7 @@ class MetalBindingData(BaseModel):
         None, description="The elements/species coordinating the metal."
     )
 
-    coordinate_bond_lengths: Dict[str, Dict[str, float]] = Field(
+    coordinate_bond_lengths: Dict[str, Dict[str, float | List[float]]] = Field(
         None, description="Bond lengths and statistics broken down by the coordinating atoms"
     )
 
@@ -95,7 +95,8 @@ class MetalBindingData(BaseModel):
         """
         Return a string representation of the binding data for this atom in the molecule
         """
-        id_str = f"{metal_element}-{metal_index}-{metal_thermo_property_id}-{nometal_thermo_property_id}"
+        id_str = f"{self.metal_element}-{self.metal_index}-"
+        id_str += f"{self.metal_thermo_property_id}-{self.nometal_thermo_property_id}"
         return id_str
 
 
@@ -173,7 +174,8 @@ class MetalBindingDoc(PropertyDoc):
         bonding: MoleculeBondingDoc,
         base_thermo: MoleculeThermoDoc,
         metal_thermo: Dict[int, MoleculeThermoDoc],
-        nometal_thermo: Dict[int, MoleculeThermoDoc]
+        nometal_thermo: Dict[int, MoleculeThermoDoc],
+        **kwargs
     ):  # type: ignore[override]
         """
         Construct a document describing the binding energy of a metal atom or ion to
@@ -210,15 +212,15 @@ class MetalBindingDoc(PropertyDoc):
             if not doc.lot_solvent == base_thermo.lot_solvent:
                 raise ValueError("All MoleculeThermoDocs must use the same lot_solvent!")
 
-        if partial_charges is not None:
+        if partial_spins is not None:
             if not (
-                partial_charge.method == partial_spins.method
-                and partial_charge.lot_solvent == partial_spins.lot_solvent
+                partial_charges.method == partial_spins.method
+                and partial_charges.lot_solvent == partial_spins.lot_solvent
             ):
                 raise ValueError("Partial charges and partial spins must use the same method and lot_solvent!")
 
         if not (
-            base_thermo.solvent == partial_charge.solvent
+            base_thermo.solvent == partial_charges.solvent
             and base_thermo.solvent == bonding.solvent
         ):
             raise ValueError("All documents must use the same solvent!")
@@ -248,15 +250,18 @@ class MetalBindingDoc(PropertyDoc):
 
         molecule = base_molecule_doc.molecule
         dist_mat = molecule.distance_matrix
-        species = str(molecule.species)
+        species = base_molecule_doc.species
 
         binding_data = list()
 
         for metal_index in metal_indices:
             metal_element = species[metal_index]
 
-            this_metal_thermo = metal_thermo[metal_index]
-            this_nometal_thermo = nometal_thermo[metal_index]
+            this_metal_thermo = metal_thermo.get(metal_index)
+            this_nometal_thermo = nometal_thermo.get(metal_index)
+
+            if this_metal_thermo is None or this_nometal_thermo is None:
+                continue
 
             # Partial charges and spins
             charge = partial_charges.partial_charges[metal_index]
@@ -268,13 +273,13 @@ class MetalBindingDoc(PropertyDoc):
 
             # Coordinate bonding
             relevant_bonds = [b for b in bonding.bonds if metal_index in b]
-            number_coordinating_bonds = len(relevant_bonds)
+            number_coordinate_bonds = len(relevant_bonds)
             # Binding is not meaningful if there are no coordinate bonds
-            if len(number_coordinating_bonds) == 0:
+            if number_coordinate_bonds == 0:
                 return None
 
             coordinating_atoms = list()
-            coordinating_bond_lengths = dict()
+            coordinate_bond_lengths = dict()
             for bond in relevant_bonds:
                 other_ids = [i for i in bond if i != metal_index]
                 # Edge case - possible if we (later) account for 3-center bonds or hyperbonds
@@ -284,41 +289,41 @@ class MetalBindingDoc(PropertyDoc):
 
                 other_species = str(species[other_index])
                 coordinating_atoms.append(other_species)
-                if other_species not in coordinating_bond_lengths:
-                    coordinating_bond_lengths[other_species] = {
+                if other_species not in coordinate_bond_lengths:
+                    coordinate_bond_lengths[other_species] = {
                         "lengths": list(),
                     }
                 this_length = dist_mat[metal_index][other_index]
                 coordinate_bond_lengths[other_species]["lengths"].append(this_length)
 
-            for species, data in coordinate_bond_lengths.items():
+            for s, data in coordinate_bond_lengths.items():
                 stats = describe(data["lengths"], nan_policy="omit")
-                coordinate_bond_lengths[species]["min"] = stats.minmax[0]
-                coordinate_bond_lengths[species]["max"] = stats.minmax[1]
-                coordinate_bond_lengths[species]["mean"] = stats.mean
-                coordinate_bond_lengths[species]["variance"] = stats.variance
+                coordinate_bond_lengths[s]["min"] = stats.minmax[0]
+                coordinate_bond_lengths[s]["max"] = stats.minmax[1]
+                coordinate_bond_lengths[s]["mean"] = stats.mean
+                coordinate_bond_lengths[s]["variance"] = stats.variance
 
             coordinating_atoms = sorted(coordinating_atoms)
 
             # Thermo
-            thermos = [base_thermo, this_metal_thermo, this_nometal_thermo]
+            binding_e = None
+            binding_h = None
+            binding_s = None
+            binding_g = None
 
-            binding_e = thermos[0].electronic_energy - (thermos[1].electronic_energy + thermos[2].electronic_energy)
+            if this_metal_thermo is not None and this_nometal_thermo is not None:
+                thermos = [base_thermo, this_metal_thermo, this_nometal_thermo]
 
-            if all([x.total_enthalpy is not None for x in thermos]):
-                binding_h = thermos[0].total_enthalpy - (thermos[1].total_enthalpy + thermos[2].total_enthalpy)
-            else:
-                binding_h = None
+                binding_e = thermos[0].electronic_energy - (thermos[1].electronic_energy + thermos[2].electronic_energy)
 
-            if all([x.total_entropy is not None for x in thermos]):
-                binding_s = thermos[0].total_entropy - (thermos[1].total_entropy + thermos[2].total_entropy)
-            else:
-                binding_s = None
+                if all([x.total_enthalpy is not None for x in thermos]):
+                    binding_h = thermos[0].total_enthalpy - (thermos[1].total_enthalpy + thermos[2].total_enthalpy)
 
-            if all([x.free_energy is not None for x in thermos]):
-                binding_g = thermos[0].free_energy - (thermos[1].free_energy + thermos[2].free_energy)
-            else:
-                binding_g = None
+                if all([x.total_entropy is not None for x in thermos]):
+                    binding_s = thermos[0].total_entropy - (thermos[1].total_entropy + thermos[2].total_entropy)
+
+                if all([x.free_energy is not None for x in thermos]):
+                    binding_g = thermos[0].free_energy - (thermos[1].free_energy + thermos[2].free_energy)
 
             binding_data.append(
                 MetalBindingData(
@@ -372,7 +377,7 @@ class MetalBindingDoc(PropertyDoc):
             binding_thermo_correction_lot_solvent=thermo_correction_lot_solvent,
             binding_thermo_combined_lot_solvent=thermo_combined_lot_solvent,
             binding_data=binding_data,
-            deprecated=deprecated,
+            deprecated=False,
             origins=[],
             **kwargs
         )
