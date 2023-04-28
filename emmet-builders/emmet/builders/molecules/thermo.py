@@ -245,6 +245,7 @@ class ThermoBuilder(Builder):
                             doc.electronic_energy,
                             vals["enthalpy"],
                             vals["entropy"],
+                            convert_energy=False
                         )
             return doc
 

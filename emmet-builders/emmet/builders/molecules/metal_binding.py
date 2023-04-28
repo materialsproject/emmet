@@ -152,6 +152,7 @@ class MetalBindingBuilder(Builder):
         self.metal_binding.ensure_index("property_id")
         self.metal_binding.ensure_index("last_updated")
         self.metal_binding.ensure_index("formula_alphabetical")
+        self.metal_binding.ensure_index("method")
 
     def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
         """Prechunk the builder for distributed computation"""
@@ -483,7 +484,7 @@ class MetalBindingBuilder(Builder):
             # Neither molecule_id nor solvent need to be unique, but the combination must be
             self.metal_binding.update(
                 docs=docs,
-                key=["molecule_id", "solvent"],
+                key=["molecule_id", "solvent", "method"],
             )
         else:
             self.logger.info("No items to update")

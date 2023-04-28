@@ -12,7 +12,7 @@ from emmet.core.molecules.molecule_property import PropertyDoc
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
-def get_free_energy(energy, enthalpy, entropy, temperature=298.15):
+def get_free_energy(energy, enthalpy, entropy, temperature=298.15, convert_energy=True):
     """
     Helper function to calculate Gibbs free energy from electronic energy, enthalpy, and entropy
 
@@ -24,7 +24,13 @@ def get_free_energy(energy, enthalpy, entropy, temperature=298.15):
     returns: Free energy in eV
 
     """
-    return energy * 27.2114 + enthalpy * 0.043363 - temperature * entropy * 0.000043363
+
+    if convert_energy:
+        e = energy * 27.2114
+    else:
+        e = energy
+
+    return e + enthalpy * 0.043363 - temperature * entropy * 0.000043363
 
 
 class MoleculeThermoDoc(PropertyDoc):
