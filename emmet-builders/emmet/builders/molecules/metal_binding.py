@@ -345,8 +345,8 @@ class MetalBindingBuilder(Builder):
                                 ]
                             )  # type: ignore
                         ):
-                            charge_lot = this_charge.get("nbo").level_of_theory
-                            spin_lot = this_spin.get("nbo").level_of_theory
+                            charge_lot = this_charge.get("nbo").level_of_theory  # type: ignore
+                            spin_lot = this_spin.get("nbo").level_of_theory  # type: ignore
                             if charge_lot == spin_lot:  # type: ignore
                                 plan = True
                                 charge_doc = this_charge.get("nbo")  # type: ignore
@@ -358,8 +358,8 @@ class MetalBindingBuilder(Builder):
                                 and this_spin.get("mulliken") is not None  # type: ignore
                                 and this_bond.get("OpenBabelNN + metal_edge_extender") is not None  # type: ignore
                                 ):
-                            charge_lot = this_charge.get("mulliken").level_of_theory
-                            spin_lot = this_spin.get("mulliken").level_of_theory
+                            charge_lot = this_charge.get("mulliken").level_of_theory  # type: ignore
+                            spin_lot = this_spin.get("mulliken").level_of_theory  # type: ignore
                             if charge_lot == spin_lot:  # type: ignore
                                 plan = True
                                 charge_doc = this_charge.get("mulliken")  # type: ignore
