@@ -297,10 +297,10 @@ class MetalBindingBuilder(Builder):
             thermo_bysolv = {t.solvent: t for t in thermo}
 
             for solvent in solvents:
-                this_charge = charge_bysolv_meth.get(solvent)
-                this_spin = spins_bysolv_meth.get(solvent)
-                this_bond = bonds_bysolv_meth.get(solvent)
-                base_thermo_doc = thermo_bysolv.get(solvent)
+                this_charge = charge_bysolv_meth.get(solvent)  # type: ignore
+                this_spin = spins_bysolv_meth.get(solvent)  # type: ignore
+                this_bond = bonds_bysolv_meth.get(solvent)  # type: ignore
+                base_thermo_doc = thermo_bysolv.get(solvent)  # type: ignore
 
                 # Do we have the requisite docs for this solvent?
                 if mol.spin_multiplicity == 1:
