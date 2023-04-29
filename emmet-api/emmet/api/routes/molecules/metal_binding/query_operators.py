@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
@@ -39,11 +39,11 @@ class BindingDataQuery(QueryOperator):
             None,
             description="Maximum charge of the metal, determined by analyzing partial charges/spins."
         ),
-        min_metal_assigned_spin: Optional[int | float] = Query(
+        min_metal_assigned_spin: Optional[Union[int, float]] = Query(
             None,
             description="Minimum spin multiplicity of the metal, determined by analyzing partial spins."
         ),
-        max_metal_assigned_spin: Optional[int | float] = Query(
+        max_metal_assigned_spin: Optional[Union[int, float]] = Query(
             None,
             description="Maximum spin multiplicity of the metal, determined by analyzing partial spins."
         ),
