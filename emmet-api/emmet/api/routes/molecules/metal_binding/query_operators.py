@@ -112,10 +112,10 @@ class BindingDataQuery(QueryOperator):
                 crit[key] = dict()
 
             if d[entry][0] is not None:  # type: ignore
-                crit[key]["$gte"] = d[entry][0]
+                crit[key]["$gte"] = d[entry][0]  # type: ignore
 
             if d[entry][1] is not None:  # type: ignore
-                crit[key]["$lte"] = d[entry][1]
+                crit[key]["$lte"] = d[entry][1]  # type: ignore
 
         return {"criteria": crit}
 
