@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, List
 
 import numpy as np
 
@@ -20,8 +20,6 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
     trajectories = list()
 
     for calculation in calcs_reversed:
-        frame_props = list()
-
         species = calculation.get("species")
         charge = calculation.get("charge")
         multiplicity = calculation.get("multiplicity")
@@ -44,10 +42,12 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
         if not valid_trajectory:
             continue
 
+        init_mol = Molecule.from_dict(calculation["initial_molecule"])
+
         if charge is None:
-            charge = Molecule.from_dict(calculation["initial_molecule"]).charge
+            charge = init_mol.charge
         if species is None:
-            species = Molecule.from_dict(calculation["initial_molecule"]).species
+            species = init_mol.species
 
         mols = [Molecule(species, g, charge=charge, spin_multiplicity=multiplicity) for g in geometries]
 

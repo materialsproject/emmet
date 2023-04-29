@@ -108,13 +108,13 @@ class BindingDataQuery(QueryOperator):
 
         for entry in d:
             key = "binding_data." + entry
-            if d[entry][0] is not None or d[entry][1] is not None:
+            if d[entry][0] is not None or d[entry][1] is not None:  # type: ignore
                 crit[key] = dict()
 
-            if d[entry][0] is not None:
+            if d[entry][0] is not None:  # type: ignore
                 crit[key]["$gte"] = d[entry][0]
 
-            if d[entry][1] is not None:
+            if d[entry][1] is not None:  # type: ignore
                 crit[key]["$lte"] = d[entry][1]
 
         return {"criteria": crit}
