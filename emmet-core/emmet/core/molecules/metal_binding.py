@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Type, TypeVar
+from typing import Dict, List, Optional, Type, TypeVar, Union
 from hashlib import blake2b
 from scipy.stats import describe
 
