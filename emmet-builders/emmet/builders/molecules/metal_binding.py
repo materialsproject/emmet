@@ -320,7 +320,7 @@ class MetalBindingBuilder(Builder):
                     plan = False
                     if mol.spin_multiplicity == 1:
                         if (
-                                method == "nbo" 
+                                method == "nbo"
                                 and all([x.get("nbo") is not None for x in [this_charge, this_bond]])  # type: ignore
                         ):
                             plan = True
