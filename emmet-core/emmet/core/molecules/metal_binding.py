@@ -42,7 +42,7 @@ class MetalBindingData(BaseModel):
                           "metal atoms/ions)"
     )
 
-    metal_element: str | Species | Element = Field(
+    metal_element: Union[str, Species, Element] = Field(
         None, description="The metal bound to the molecule"
     )
 
@@ -66,27 +66,27 @@ class MetalBindingData(BaseModel):
         None, description="The number of atoms neighboring the metal atom or ion of interest"
     )
 
-    coordinating_atoms: List[str | Species] = Field(
+    coordinating_atoms: List[Union[str, Species]] = Field(
         None, description="The elements/species coordinating the metal."
     )
 
-    coordinate_bond_lengths: Dict[str, Dict[str, float | List[float]]] = Field(
+    coordinate_bond_lengths: Dict[str, Dict[str, Union[float, List[float]]]] = Field(
         None, description="Bond lengths and statistics broken down by the coordinating atoms"
     )
 
-    binding_energy: float = Field(
+    binding_energy: Optional[float] = Field(
         None, description="The electronic energy change (∆E) of binding (units: eV)"
     )
 
-    binding_enthalpy: float = Field(
+    binding_enthalpy: Optional[float] = Field(
         None, description="The enthalpy change (∆H) of binding (units: eV)"
     )
 
-    binding_entropy: float = Field(
+    binding_entropy: Optional[float] = Field(
         None, description="The entropy change (∆S) of binding (units: eV/K)"
     )
 
-    binding_free_energy: float = Field(
+    binding_free_energy: Optional[float] = Field(
         None, description="The free energy change (∆G) of binding (units: eV)"
     )
 
@@ -287,7 +287,7 @@ class MetalBindingDoc(PropertyDoc):
                 return None
 
             coordinating_atoms = list()
-            coordinate_bond_lengths = dict()
+            coordinate_bond_lengths = dict()  # type: ignore
             for bond in relevant_bonds:
                 other_ids = [i for i in bond if i != metal_index]
                 # Edge case - possible if we (later) account for 3-center bonds or hyperbonds
