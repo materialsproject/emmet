@@ -42,14 +42,17 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
         if not valid_trajectory:
             continue
 
-        init_mol = Molecule.from_dict(calculation["initial_molecule"])
+        if isinstance(calculation["initial_molecule"], Molecule):
+            init_mol = calculation["initial_molecule"]
+        else:
+            init_mol = Molecule.from_dict(calculation["initial_molecule"])
 
         if charge is None:
-            charge = init_mol.charge
+            charge = init_mol.charge  # type: ignore
         if species is None:
-            species = init_mol.species
+            species = init_mol.species  # type: ignore
 
-        mols = [Molecule(species, g, charge=charge, spin_multiplicity=multiplicity) for g in geometries]
+        mols = [Molecule(species, g, charge=charge, spin_multiplicity=multiplicity) for g in geometries]  # type: ignore
 
         frame_props = {
             "electronic_energy": energies
@@ -89,7 +92,7 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
             step_dict = dict()
 
             for k, v in frame_props.items():
-                step_dict[k] = v[i]
+                step_dict[k] = v[i]  # type: ignore
 
             step_mol = mols[i]
             for k, v in site_props.items():
