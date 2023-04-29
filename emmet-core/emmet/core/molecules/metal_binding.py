@@ -292,7 +292,7 @@ class MetalBindingDoc(PropertyDoc):
                 other_ids = [i for i in bond if i != metal_index]
                 # Edge case - possible if we (later) account for 3-center bonds or hyperbonds
                 if len(other_ids) != 1:
-                    continue 
+                    continue
                 other_index = other_ids[0]
 
                 other_species = str(species[other_index])
