@@ -321,38 +321,38 @@ class MetalBindingBuilder(Builder):
                     if mol.spin_multiplicity == 1:
                         if method == "nbo" and all([x.get("nbo") is not None for x in [this_charge, this_bond]]):
                             plan = True
-                            charge_doc = this_charge.get("nbo")
+                            charge_doc = this_charge.get("nbo")  # type: ignore
                             spin_doc = None
-                            bond_doc = this_bond.get("nbo")
+                            bond_doc = this_bond.get("nbo")  # type: ignore
                         elif method == "mulliken-OB-mee" and (
-                                this_charge.get("mulliken") is not None
-                                and this_bond.get("OpenBabelNN + metal_edge_extender") is not None
+                                this_charge.get("mulliken") is not None  # type: ignore
+                                and this_bond.get("OpenBabelNN + metal_edge_extender") is not None  # type: ignore
                                 ):
                             plan = True
-                            charge_doc = this_charge.get("mulliken")
+                            charge_doc = this_charge.get("mulliken")  # type: ignore
                             spin_doc = None
-                            bond_doc = this_bond.get("OpenBabelNN + metal_edge_extender")
+                            bond_doc = this_bond.get("OpenBabelNN + metal_edge_extender")  # type: ignore
                     else:
                         if (
                             method == "nbo"
-                            and all([x.get("nbo") is not None for x in [this_charge, this_spin, this_bond]])
+                            and all([x.get("nbo") is not None for x in [this_charge, this_spin, this_bond]])  # type: ignore
                         ):
-                            if this_charge.get("nbo").level_of_theory == this_spin.get("nbo").level_of_theory:
+                            if this_charge.get("nbo").level_of_theory == this_spin.get("nbo").level_of_theory:  # type: ignore
                                 plan = True
-                                charge_doc = this_charge.get("nbo")
-                                spin_doc = this_spin.get("nbo")
-                                bond_doc = this_bond.get("nbo")
+                                charge_doc = this_charge.get("nbo")  # type: ignore
+                                spin_doc = this_spin.get("nbo")  # type: ignore
+                                bond_doc = this_bond.get("nbo")  # type: ignore
                         elif (
                                 method == "mulliken-OB-mee"
-                                and this_charge.get("mulliken") is not None
-                                and this_spin.get("mulliken") is not None
-                                and this_bond.get("OpenBabelNN + metal_edge_extender") is not None
+                                and this_charge.get("mulliken") is not None  # type: ignore
+                                and this_spin.get("mulliken") is not None  # type: ignore
+                                and this_bond.get("OpenBabelNN + metal_edge_extender") is not None  # type: ignore
                                 ):
-                            if this_charge.get("mulliken").level_of_theory == this_spin.get("mulliken").level_of_theory:
+                            if this_charge.get("mulliken").level_of_theory == this_spin.get("mulliken").level_of_theory:  # type: ignore
                                 plan = True
-                                charge_doc = this_charge.get("mulliken")
-                                spin_doc = this_spin.get("mulliken")
-                                bond_doc = this_bond.get("OpenBabelNN + metal_edge_extender")
+                                charge_doc = this_charge.get("mulliken")  # type: ignore
+                                spin_doc = this_spin.get("mulliken")  # type: ignore
+                                bond_doc = this_bond.get("OpenBabelNN + metal_edge_extender")  # type: ignore
 
                     # Don't have the right combinations of level of theory and method
                     if plan is False:
@@ -364,14 +364,14 @@ class MetalBindingBuilder(Builder):
                     for metal_index in metal_indices:
                         # First, determine the appropriate charge and spin of the metal
                         # TODO: figure out better charge assignment
-                        partial_charge = charge_doc.partial_charges[metal_index]
+                        partial_charge = charge_doc.partial_charges[metal_index]  # type: ignore
 
                         if mol.spin_multiplicity == 1:
                             # For now, just round to nearest whole number
                             charge = round(partial_charge)
                             spin = 1
                         else:
-                            partial_spin = spin_doc.partial_spins[metal_index]
+                            partial_spin = spin_doc.partial_spins[metal_index]  # type: ignore
                             charge = round(partial_charge)
                             spin = round(abs(partial_spin)) + 1
 
@@ -395,7 +395,7 @@ class MetalBindingBuilder(Builder):
                                     "formula_alphabetical": f"{metal_species}1",
                                     "charge": charge,
                                     "spin_multiplicity": spin,
-                                    "lot_solvent": base_thermo_doc.lot_solvent,
+                                    "lot_solvent": base_thermo_doc.lot_solvent,  # type: ignore
                                 }
                             )
                         ]
@@ -409,7 +409,7 @@ class MetalBindingBuilder(Builder):
                         # Make sure charges and spins add up
                         nometal_charge = mol.charge - charge
                         nometal_spin = mol.spin_multiplicity - spin + 1
-                        mg_copy = copy.deepcopy(bond_doc.molecule_graph)
+                        mg_copy = copy.deepcopy(bond_doc.molecule_graph)  # type: ignore
                         mg_copy.remove_nodes([metal_index])
                         new_hash = weisfeiler_lehman_graph_hash(mg_copy.graph, node_attr="specie")
                         nometal_mol_doc = [
@@ -429,7 +429,7 @@ class MetalBindingBuilder(Builder):
                             MoleculeThermoDoc(**e) for e in self.thermo.query(
                                 {
                                     "molecule_id": nometal_mol_id,
-                                    "lot_solvent": base_thermo_doc.lot_solvent
+                                    "lot_solvent": base_thermo_doc.lot_solvent  # type: ignore
                                 }
                             )
                         ]
