@@ -335,9 +335,19 @@ class MetalBindingBuilder(Builder):
                     else:
                         if (
                             method == "nbo"
-                            and all([x.get("nbo") is not None for x in [this_charge, this_spin, this_bond]])  # type: ignore
+                            and all(
+                                [
+                                    x.get("nbo") is not None for x in [
+                                        this_charge,
+                                        this_spin,
+                                        this_bond
+                                    ]
+                                ]
+                            )  # type: ignore
                         ):
-                            if this_charge.get("nbo").level_of_theory == this_spin.get("nbo").level_of_theory:  # type: ignore
+                            charge_lot = this_charge.get("nbo").level_of_theory
+                            spin_lot = this_spin.get("nbo").level_of_theory
+                            if charge_lot == spin_lot:  # type: ignore
                                 plan = True
                                 charge_doc = this_charge.get("nbo")  # type: ignore
                                 spin_doc = this_spin.get("nbo")  # type: ignore
@@ -348,7 +358,9 @@ class MetalBindingBuilder(Builder):
                                 and this_spin.get("mulliken") is not None  # type: ignore
                                 and this_bond.get("OpenBabelNN + metal_edge_extender") is not None  # type: ignore
                                 ):
-                            if this_charge.get("mulliken").level_of_theory == this_spin.get("mulliken").level_of_theory:  # type: ignore
+                            charge_lot = this_charge.get("mulliken").level_of_theory
+                            spin_lot = this_spin.get("mulliken").level_of_theory
+                            if charge_lot == spin_lot:  # type: ignore
                                 plan = True
                                 charge_doc = this_charge.get("mulliken")  # type: ignore
                                 spin_doc = this_spin.get("mulliken")  # type: ignore
