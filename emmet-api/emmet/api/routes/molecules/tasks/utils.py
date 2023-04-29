@@ -43,9 +43,9 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
             continue
 
         if isinstance(calculation["initial_molecule"], Molecule):
-            init_mol = calculation["initial_molecule"]
+            init_mol = calculation["initial_molecule"]  # type: ignore
         else:
-            init_mol = Molecule.from_dict(calculation["initial_molecule"])
+            init_mol = Molecule.from_dict(calculation["initial_molecule"])  # type: ignore
 
         if charge is None:
             charge = init_mol.charge  # type: ignore
