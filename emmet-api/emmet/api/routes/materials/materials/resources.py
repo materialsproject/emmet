@@ -39,7 +39,7 @@ def find_structure_resource(materials_store):
         key_fields=["structure", "task_id"],
         query_operators=[FindStructureQuery()],
         tags=["Materials"],
-        sub_path="/find_structure/",
+        sub_path="/core/find_structure/",
         timeout=timeout,
     )
 
@@ -52,7 +52,7 @@ def formula_autocomplete_resource(formula_autocomplete_store):
         FormulaAutocomplete,
         pipeline_query_operator=FormulaAutoCompleteQuery(),
         tags=["Materials"],
-        sub_path="/formula_autocomplete/",
+        sub_path="/core/formula_autocomplete/",
         header_processor=GlobalHeaderProcessor(),
         timeout=timeout,
     )
@@ -83,6 +83,7 @@ def materials_resource(materials_store):
         header_processor=GlobalHeaderProcessor(),
         hint_scheme=MaterialsHintScheme(),
         tags=["Materials"],
+        sub_path="/core/",
         disable_validation=True,
         timeout=MAPISettings().TIMEOUT,
     )

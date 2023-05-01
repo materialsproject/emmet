@@ -38,7 +38,7 @@ def find_molecule_resource(molecules_store):
         key_fields=["molecule", "molecule_id"],
         query_operators=[FindMoleculeQuery()],
         tags=["Core Molecules"],
-        sub_path="/molecules/find_molecule/",
+        sub_path="/core/find_molecule/",
         timeout=timeout,
     )
 
@@ -69,7 +69,7 @@ def molecules_resource(molecules_store):
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Core Molecules"],
-        sub_path="/molecules/",
+        sub_path="/core/",
         disable_validation=True,
         hint_scheme=MoleculesHintScheme(),
         timeout=MAPISettings().TIMEOUT,
