@@ -23,7 +23,7 @@ def robo_resource(robo_store):
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Robocrystallographer"],
+        tags=["Materials Robocrystallographer"],
         sub_path="/robocrys/",
         disable_validation=True,
         timeout=timeout,
