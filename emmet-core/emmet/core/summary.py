@@ -8,7 +8,6 @@ from pymatgen.core.structure import Structure
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
-from emmet.core.provenance import Database
 from emmet.core.thermo import DecompositionProduct
 from emmet.core.xas import Edge, Type
 
