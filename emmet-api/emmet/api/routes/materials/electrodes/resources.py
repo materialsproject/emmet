@@ -10,7 +10,7 @@ from emmet.api.routes.materials.electrodes.query_operators import (
     ElectrodesChemsysQuery,
     WorkingIonQuery,
     ElectrodeMultiMaterialIDQuery,
-    MultiBatteryIDQuery
+    MultiBatteryIDQuery,
 )
 
 from emmet.api.core.settings import MAPISettings
@@ -31,14 +31,15 @@ def insertion_electrodes_resource(insertion_electrodes_store):
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(
-                InsertionElectrodeDoc, default_fields=["battery_id", "last_updated"],
+                InsertionElectrodeDoc,
+                default_fields=["battery_id", "last_updated"],
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
-        tags=["Electrodes"],
+        tags=["Materials Electrodes"],
         sub_path="/insertion_electrodes/",
         disable_validation=True,
-        timeout=MAPISettings().TIMEOUT
+        timeout=MAPISettings().TIMEOUT,
     )
 
     return resource
