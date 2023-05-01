@@ -8,13 +8,15 @@ aioitertools==0.11.0
     # via maggma
 anyio==3.6.2
     # via starlette
-attrs==22.2.0
+attrs==23.1.0
     # via jsonschema
 bcrypt==4.0.1
     # via paramiko
-boto3==1.26.114
+blinker==1.6.2
+    # via flask
+boto3==1.26.124
     # via maggma
-botocore==1.29.114
+botocore==1.29.124
     # via
     #   boto3
     #   s3transfer
@@ -40,13 +42,13 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.51.13
+emmet-core[all]==0.53.0
     # via
     #   emmet-builders (setup.py)
     #   mp-api
 fastapi==0.95.1
     # via maggma
-flask==2.2.3
+flask==2.3.2
     # via mongogrant
 fonttools==4.39.3
     # via matplotlib
@@ -58,7 +60,7 @@ idna==3.4
     # via
     #   anyio
     #   requests
-importlib-metadata==6.3.0
+importlib-metadata==6.6.0
     # via flask
 importlib-resources==5.12.0
     # via
@@ -84,7 +86,7 @@ kiwisolver==1.4.4
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
-maggma==0.50.3
+maggma==0.50.4
     # via emmet-builders (setup.py)
 markupsafe==2.1.2
     # via
@@ -120,7 +122,7 @@ networkx==3.1
     # via
     #   pymatgen
     #   robocrys
-numpy==1.24.2
+numpy==1.24.3
     # via
     #   contourpy
     #   maggma
@@ -134,16 +136,16 @@ numpy==1.24.2
     #   seekpath
     #   shapely
     #   spglib
-orjson==3.8.10
+orjson==3.8.11
     # via maggma
 packaging==23.1
     # via
     #   matplotlib
     #   mongomock
     #   plotly
-palettable==3.3.1
+palettable==3.3.3
     # via pymatgen
-pandas==2.0.0
+pandas==2.0.1
     # via
     #   matminer
     #   pymatgen
@@ -170,7 +172,7 @@ pydantic==1.10.7
     #   fastapi
     #   inflect
     #   maggma
-pydash==7.0.1
+pydash==7.0.2
     # via maggma
 pymatgen==2023.3.23
     # via
@@ -207,7 +209,7 @@ pyyaml==6.0
     # via pybtex
 pyzmq==24.0.1
     # via maggma
-requests==2.28.2
+requests==2.29.0
     # via
     #   matminer
     #   mongogrant
@@ -284,7 +286,7 @@ urllib3==1.26.15
     # via
     #   botocore
     #   requests
-werkzeug==2.2.3
+werkzeug==2.3.3
     # via flask
 zipp==3.15.0
     # via
