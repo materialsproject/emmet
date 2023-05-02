@@ -88,7 +88,7 @@ requests==2.29.0
     # via
     #   mp-api
     #   pymatgen
-ruamel-yaml==0.17.21
+ruamel-yaml==0.17.22
     # via pymatgen
 scipy==1.10.1
     # via pymatgen
