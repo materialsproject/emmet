@@ -257,7 +257,7 @@ plotly==5.14.1
     # via pymatgen
 pluggy==1.0.0
     # via pytest
-pre-commit==3.2.2
+pre-commit==3.3.1
     # via emmet-core (setup.py)
 pubchempy==1.0.4
     # via robocrys
@@ -351,7 +351,7 @@ requests==2.29.0
     #   pymatgen
 robocrys==0.2.7
     # via emmet-core (setup.py)
-ruamel-yaml==0.17.21
+ruamel-yaml==0.17.22
     # via
     #   custodian
     #   pymatgen
