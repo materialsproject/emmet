@@ -55,7 +55,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.53.0
+emmet-core[all]==0.54.0
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -255,7 +255,7 @@ plotly==5.14.1
     # via pymatgen
 pluggy==1.0.0
     # via pytest
-pre-commit==3.2.2
+pre-commit==3.3.1
     # via emmet-builders (setup.py)
 pubchempy==1.0.4
     # via robocrys
@@ -346,7 +346,7 @@ requests==2.29.0
     #   pymatgen
 robocrys==0.2.7
     # via emmet-core
-ruamel-yaml==0.17.21
+ruamel-yaml==0.17.22
     # via
     #   pymatgen
     #   robocrys
