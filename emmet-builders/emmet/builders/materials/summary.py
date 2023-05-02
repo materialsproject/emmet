@@ -68,6 +68,8 @@ class SummaryBuilder(Builder):
                 materials,
                 thermo,
                 xas,
+                chemenv,
+                absorption,
                 grain_boundaries,
                 electronic_structure,
                 magnetism,
