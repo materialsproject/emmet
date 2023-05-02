@@ -141,7 +141,7 @@ class MoleculesAssociationBuilder(Builder):
         self.assoc.ensure_index("molecule_id")
         self.assoc.ensure_index("last_updated")
         self.assoc.ensure_index("task_ids")
-        self.tasks.ensure_index("formula_alphabetical")
+        self.assoc.ensure_index("formula_alphabetical")
 
     def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
         """Prechunk the molecule builder for distributed computation"""
