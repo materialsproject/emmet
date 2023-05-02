@@ -547,7 +547,7 @@ def _copy_from_doc(doc):
                 d[doc_key].append(temp_doc)
         elif isinstance(sub_doc, dict):
             d["has_props"].append(doc_key)
-            if sub_doc["origins"]:
+            if sub_doc.get("origins", None):
                 d["origins"].extend(sub_doc["origins"])
             d.update(
                 {
