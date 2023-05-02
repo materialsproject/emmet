@@ -37,6 +37,16 @@ def grain_boundaries():
 
 
 @pytest.fixture
+def chemenv():
+    return MemoryStore()
+
+
+@pytest.fixture
+def absorption():
+    return MemoryStore()
+
+
+@pytest.fixture
 def magnetism():
     return MemoryStore()
 
@@ -97,11 +107,6 @@ def provenance():
 
 
 @pytest.fixture
-def chemenv():
-    return MemoryStore()
-
-
-@pytest.fixture
 def charge_density_index():
     return MemoryStore()
 
@@ -116,6 +121,7 @@ def test_summary_builder(
     thermo,
     xas,
     chemenv,
+    absorption,
     grain_boundaries,
     electronic_structure,
     magnetism,
@@ -132,12 +138,13 @@ def test_summary_builder(
     charge_density_index,
     summary,
 ):
-
     builder = SummaryBuilder(
         materials=materials,
         electronic_structure=electronic_structure,
         thermo=thermo,
         magnetism=magnetism,
+        chemenv=chemenv,
+        absorption=absorption,
         dielectric=dielectric,
         piezoelectric=piezoelectric,
         phonon=phonon,
@@ -160,6 +167,8 @@ def test_summary_builder(
 
 def test_serialization(tmpdir):
     builder = SummaryBuilder(
+        MemoryStore(),
+        MemoryStore(),
         MemoryStore(),
         MemoryStore(),
         MemoryStore(),
