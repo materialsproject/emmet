@@ -57,6 +57,12 @@ class VibrationBuilder(Builder):
         self.kwargs = kwargs
 
         super().__init__(sources=[tasks, molecules], targets=[vibes], **kwargs)
+        # Uncomment in case of issue with mrun not connecting automatically to collections
+        # for i in [self.tasks, self.molecules, self.vibes]:
+        #     try:
+        #         i.connect()
+        #     except Exception as e:
+        #         print("Could not connect,", e)
 
     def ensure_indexes(self):
         """

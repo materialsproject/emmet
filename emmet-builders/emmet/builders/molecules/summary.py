@@ -66,6 +66,23 @@ class SummaryBuilder(Builder):
             targets=[summary],
             **kwargs
         )
+        # Uncomment in case of issue with mrun not connecting automatically to collections
+        # for i in [
+        #     self.tasks,
+        #     self.molecules,
+        #     self.charges,
+        #     self.spins,
+        #     self.bonds,
+        #     self.metal_binding,
+        #     self.orbitals,
+        #     self.redox,
+        #     self.thermo,
+        #     self.vibes
+        # ]:
+        #     try:
+        #         i.connect()
+        #     except Exception as e:
+        #         print("Could not connect,", e)
 
     def ensure_indexes(self):
         """

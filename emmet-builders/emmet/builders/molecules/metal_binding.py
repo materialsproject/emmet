@@ -94,6 +94,12 @@ class MetalBindingBuilder(Builder):
         self.kwargs = kwargs
 
         super().__init__(sources=[molecules, charges, spins, bonds, thermo], targets=[metal_binding], **kwargs)
+        # Uncomment in case of issue with mrun not connecting automatically to collections
+        # for i in [self.molecules, self.charges, self.spins, self.bonds, self.thermo, self.metal_binding]:
+        #     try:
+        #         i.connect()
+        #     except Exception as e:
+        #         print("Could not connect,", e)
 
     def ensure_indexes(self):
         """
