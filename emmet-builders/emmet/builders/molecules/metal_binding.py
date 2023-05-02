@@ -93,7 +93,7 @@ class MetalBindingBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[molecules, charges, spins, bonds, thermo], targets=[metal_binding])
+        super().__init__(sources=[molecules, charges, spins, bonds, thermo], targets=[metal_binding], **kwargs)
 
     def ensure_indexes(self):
         """

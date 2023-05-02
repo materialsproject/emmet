@@ -124,7 +124,7 @@ class MoleculesAssociationBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks], targets=[assoc])
+        super().__init__(sources=[tasks], targets=[assoc], **kwargs)
 
     def ensure_indexes(self):
         """
@@ -377,7 +377,7 @@ class MoleculesBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[assoc], targets=[molecules])
+        super().__init__(sources=[assoc], targets=[molecules], **kwargs)
 
     def ensure_indexes(self):
         """

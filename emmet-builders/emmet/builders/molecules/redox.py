@@ -64,7 +64,7 @@ class RedoxBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks, molecules, thermo], targets=[redox])
+        super().__init__(sources=[tasks, molecules, thermo], targets=[redox], **kwargs)
 
     def ensure_indexes(self):
         """

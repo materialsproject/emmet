@@ -69,7 +69,7 @@ class PartialChargesBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks, molecules], targets=[charges])
+        super().__init__(sources=[tasks, molecules], targets=[charges], **kwargs)
 
     def ensure_indexes(self):
         """
@@ -335,7 +335,7 @@ class PartialSpinsBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks, molecules], targets=[spins])
+        super().__init__(sources=[tasks, molecules], targets=[spins], **kwargs)
 
     def ensure_indexes(self):
         """

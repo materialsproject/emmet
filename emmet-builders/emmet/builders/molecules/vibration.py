@@ -56,7 +56,7 @@ class VibrationBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks, molecules], targets=[vibes])
+        super().__init__(sources=[tasks, molecules], targets=[vibes], **kwargs)
 
     def ensure_indexes(self):
         """

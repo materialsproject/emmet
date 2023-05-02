@@ -131,7 +131,7 @@ class ThermoBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks, molecules], targets=[thermo])
+        super().__init__(sources=[tasks, molecules], targets=[thermo], **kwargs)
 
     def ensure_indexes(self):
         """

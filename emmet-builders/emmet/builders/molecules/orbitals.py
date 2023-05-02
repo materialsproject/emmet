@@ -52,7 +52,7 @@ class OrbitalBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks, molecules], targets=[orbitals])
+        super().__init__(sources=[tasks, molecules], targets=[orbitals], **kwargs)
 
     def ensure_indexes(self):
         """

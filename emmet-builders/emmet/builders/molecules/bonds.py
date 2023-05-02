@@ -68,7 +68,7 @@ class BondingBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[tasks, molecules], targets=[bonds])
+        super().__init__(sources=[tasks, molecules], targets=[bonds], **kwargs)
 
     def ensure_indexes(self):
         """

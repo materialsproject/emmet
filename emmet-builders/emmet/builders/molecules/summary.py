@@ -64,6 +64,7 @@ class SummaryBuilder(Builder):
         super().__init__(
             sources=[molecules, charges, spins, bonds, metal_binding, orbitals, redox, thermo, vibes],
             targets=[summary],
+            **kwargs
         )
 
     def ensure_indexes(self):
