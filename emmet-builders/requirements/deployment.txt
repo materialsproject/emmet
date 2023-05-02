@@ -14,9 +14,9 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.124
+boto3==1.26.125
     # via maggma
-botocore==1.29.124
+botocore==1.29.125
     # via
     #   boto3
     #   s3transfer
@@ -42,7 +42,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.53.0
+emmet-core[all]==0.54.0
     # via
     #   emmet-builders (emmet/emmet-builders/setup.py)
     #   mp-api
@@ -213,7 +213,7 @@ requests==2.29.0
     #   pymatgen
 robocrys==0.2.7
     # via emmet-core
-ruamel-yaml==0.17.21
+ruamel-yaml==0.17.22
     # via
     #   pymatgen
     #   robocrys
