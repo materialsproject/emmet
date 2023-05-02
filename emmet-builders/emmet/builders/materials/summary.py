@@ -15,6 +15,8 @@ class SummaryBuilder(Builder):
         materials,
         thermo,
         xas,
+        chemenv,
+        absorption,
         grain_boundaries,
         electronic_structure,
         magnetism,
@@ -38,6 +40,8 @@ class SummaryBuilder(Builder):
         self.materials = materials
         self.thermo = thermo
         self.xas = xas
+        self.chemenv = chemenv
+        self.absorption = absorption
         self.grain_boundaries = grain_boundaries
         self.electronic_structure = electronic_structure
         self.magnetism = magnetism
@@ -167,6 +171,12 @@ class SummaryBuilder(Builder):
                 ),
                 HasProps.eos.value: self.eos.query_one(
                     {self.eos.key: {"$in": all_tasks}}, [self.eos.key]
+                ),
+                HasProps.chemenv.value: self.chemenv.query_one(
+                    {self.chemenv.key: entry}
+                ),
+                HasProps.absorption.value: self.absorption.query_one(
+                    {self.absorption.key: entry}
                 ),
                 HasProps.provenance.value: self.provenance.query_one(
                     {self.provenance.key: entry}
