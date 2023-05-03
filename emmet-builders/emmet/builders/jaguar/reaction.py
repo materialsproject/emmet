@@ -171,7 +171,7 @@ class ReactionAssociationBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[transition_states, minima], targets=[assoc])
+        super().__init__(sources=[transition_states, minima], targets=[assoc], **kwargs)
 
     def ensure_indexes(self):
         """
@@ -475,7 +475,7 @@ class ReactionBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[assoc], targets=[reactions])
+        super().__init__(sources=[assoc], targets=[reactions], **kwargs)
 
     def ensure_indexes(self):
         """
