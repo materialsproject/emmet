@@ -68,7 +68,6 @@ class SummaryBuilder(Builder):
         )
         # Uncomment in case of issue with mrun not connecting automatically to collections
         # for i in [
-        #     self.tasks,
         #     self.molecules,
         #     self.charges,
         #     self.spins,
@@ -77,7 +76,8 @@ class SummaryBuilder(Builder):
         #     self.orbitals,
         #     self.redox,
         #     self.thermo,
-        #     self.vibes
+        #     self.vibes,
+        #     self.summary
         # ]:
         #     try:
         #         i.connect()

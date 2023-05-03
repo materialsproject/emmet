@@ -74,7 +74,7 @@ class BondingBuilder(Builder):
         #     try:
         #         i.connect()
         #     except Exception as e:
-        #         print("Could not connect,", e))
+        #         print("Could not connect,", e)
 
     def ensure_indexes(self):
         """
