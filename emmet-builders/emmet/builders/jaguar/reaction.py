@@ -471,7 +471,7 @@ class ReactionBuilder(Builder):
         self.assoc = assoc
         self.reactions = reactions
         self.query = query if query else dict()
-        self.consider_metal_bonding = consider_metal_bonds
+        self.consider_metal_bonds = consider_metal_bonds
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
@@ -588,7 +588,7 @@ class ReactionBuilder(Builder):
         self.logger.debug(f"Processing {formula} : {ids}")
         new_reactions = list()
 
-        for group in group_reactions(rxns, self.consider_metal_bonding):
+        for group in group_reactions(rxns, self.consider_metal_bonds):
             # Maybe somehow none get grouped?
             if len(group) == 0:
                 continue
