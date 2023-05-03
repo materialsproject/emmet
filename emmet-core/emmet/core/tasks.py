@@ -19,7 +19,7 @@ from pymatgen.io.vasp import Incar, Kpoints, Poscar
 from pymatgen.io.vasp import Potcar as VaspPotcar
 
 from emmet.core.structure import StructureMetadata
-from emmet.core.vasp.calc_types import TaskType
+from emmet.core.vasp.calc_types import CalcType, TaskType
 from emmet.core.vasp.calculation import (
     Calculation,
     PotcarSpec,
@@ -201,7 +201,7 @@ class InputDoc(BaseModel):
 
 
 class CustodianDoc(BaseModel):
-    corrections: List[dict] = Field(
+    corrections: List[Any] = Field(
         None,
         title="Custodian Corrections",
         description="List of custodian correction data for calculation.",
@@ -317,7 +317,9 @@ class TaskDoc(StructureMetadata):
         None, description="Final output structure from the task"
     )
 
-    task_type: TaskType = Field(None, description="The type of calculation.")
+    task_type: Union[CalcType, TaskType] = Field(
+        None, description="The type of calculation."
+    )
 
     task_id: str = Field(
         None,

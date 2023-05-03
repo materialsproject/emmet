@@ -22,7 +22,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     MultiMPculeIDQuery,
     FindMoleculeQuery,
     CalcMethodQuery,
-    HashQuery
+    HashQuery,
 )
 
 from emmet.api.core.global_header import GlobalHeaderProcessor
@@ -38,7 +38,7 @@ def find_molecule_resource(molecules_store):
         key_fields=["molecule", "molecule_id"],
         query_operators=[FindMoleculeQuery()],
         tags=["Core Molecules"],
-        sub_path="/molecules/find_molecule/",
+        sub_path="/core/find_molecule/",
         timeout=timeout,
     )
 
@@ -62,11 +62,14 @@ def molecules_resource(molecules_store):
             NumericQuery(model=MoleculeDoc),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(MoleculeDoc, default_fields=["molecule_id", "formula_alphabetical", "last_updated"],),
+            SparseFieldsQuery(
+                MoleculeDoc,
+                default_fields=["molecule_id", "formula_alphabetical", "last_updated"],
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Core Molecules"],
-        sub_path="/molecules/",
+        sub_path="/core/",
         disable_validation=True,
         hint_scheme=MoleculesHintScheme(),
         timeout=MAPISettings().TIMEOUT,
