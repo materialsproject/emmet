@@ -200,8 +200,16 @@ class ReactionAssociationBuilder(Builder):
     def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
         """Prechunk the ReactionAssociationBuilder for distributed computation"""
 
+        self.logger.info("Reaction Association Builder started")
+
+        self.logger.info("Setting indexes")
+        self.ensure_indexes()
+
+        # Save timestamp to mark buildtime
+        self.timestamp = datetime.utcnow()
+
         temp_query = dict(self.query)
-        temp_query["success"] = True
+        temp_query["deprecated"] = False
 
         self.logger.info("Finding transition-states to process")
         all_ts = list(
