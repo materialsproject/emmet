@@ -172,6 +172,12 @@ class ReactionAssociationBuilder(Builder):
         self.kwargs = kwargs
 
         super().__init__(sources=[transition_states, minima], targets=[assoc], **kwargs)
+        # Uncomment in case of issue with mrun not connecting automatically to collections
+        # for i in [self.transition_states, self.minima, self.assoc]:
+        #     try:
+        #         i.connect()
+        #     except Exception as e:
+        #         print("Could not connect,", e)
 
     def ensure_indexes(self):
         """
@@ -484,6 +490,12 @@ class ReactionBuilder(Builder):
         self.kwargs = kwargs
 
         super().__init__(sources=[assoc], targets=[reactions], **kwargs)
+        # Uncomment in case of issue with mrun not connecting automatically to collections
+        # for i in [self.assoc, self.reactions]:
+        #     try:
+        #         i.connect()
+        #     except Exception as e:
+        #         print("Could not connect,", e)
 
     def ensure_indexes(self):
         """
