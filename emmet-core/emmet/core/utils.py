@@ -1,22 +1,31 @@
+import copy
 import datetime
 from enum import Enum
 from itertools import groupby
-from typing import Any, Iterator, List, Tuple, Dict, Union
-import copy
+from typing import Any, Dict, Iterator, List, Optional, Union
 
-import bson
 import numpy as np
 from monty.json import MSONable
 from pydantic import BaseModel
+from pymatgen.analysis.graphs import MoleculeGraph
+from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
+from pymatgen.analysis.molecule_matcher import MoleculeMatcher
 from pymatgen.analysis.structure_matcher import (
     AbstractComparator,
     ElementComparator,
     StructureMatcher,
 )
-from pymatgen.core.structure import Structure, Molecule
+from pymatgen.core.structure import Molecule, Structure
 
+from emmet.core.graph_hashing import weisfeiler_lehman_graph_hash
+from emmet.core.mpid import MPculeID
 from emmet.core.settings import EmmetSettings
 from emmet.core.math import Matrix3D
+
+try:
+    import bson
+except ImportError:
+    bson = None  # type: ignore
 
 SETTINGS = EmmetSettings()
 
@@ -68,60 +77,59 @@ def group_structures(
             yield group
 
 
-def form_env(mol_lot: Tuple[Molecule, str]) -> str:
+def group_molecules(molecules: List[Molecule]):
     """
-    Get the alphabetical formula and solvent environment of a calculation
-    as a string
+    Groups molecules according to composition, charge, and equality
 
-    :param mol_lot: tuple (Molecule, str), where str is the string value of
-        a LevelOfTheory object (for instance, wB97X-V/def2-TZVPPD/VACUUM)
-
-    :returns key: str
-    """
-
-    molecule, lot = mol_lot
-    lot_comp = lot.split("/")
-    if lot_comp[2].upper() == "VACUUM":
-        env = "VACUUM"
-    else:
-        env = lot_comp[2].split("(")[1].replace(")", "")
-
-    key = molecule.composition.alphabetical_formula
-    key += " " + env
-    return key
-
-
-def group_molecules(molecules: List[Molecule], lots: List[str]):
-    """
-    Groups molecules according to composition, charge, environment, and equality
+    Note: this function is (currently) only used in the MoleculesAssociationBuilder.
+        At that stage, we want to link calculations that are performed on
+        identical structures. Collapsing similar structures on the basis of e.g.
+        graph isomorphism happens at a later stage.
 
     Args:
         molecules (List[Molecule])
-        lots (List[str]): string representations of Q-Chem levels of theory
-            (for instance, wB97X-V/def2-TZVPPD/VACUUM)
     """
 
-    for mol_key, pregroup in groupby(
-        sorted(zip(molecules, lots), key=form_env), key=form_env
-    ):
-        subgroups: List[Dict[str, Any]] = list()
-        for mol, _ in pregroup:
+    def _mol_form(mol_solv):
+        return mol_solv.composition.alphabetical_formula
+
+    # Extremely tight tolerance is desirable
+    # We want to match only calculations that are EXACTLY the same
+    # Molecules with slight differences in bonding (which might be caused by, for instance,
+    # different solvent environments)
+    # This tolerance was chosen based on trying to distinguish CO optimized in
+    # two different solvents
+    mm = MoleculeMatcher(tolerance=0.000001)
+
+    # First, group by formula
+    # Hopefully this step is unnecessary - builders should already be doing this
+    for mol_key, pregroup in groupby(sorted(molecules, key=_mol_form), key=_mol_form):
+        groups: List[Dict[str, Any]] = list()
+        for mol in pregroup:
             mol_copy = copy.deepcopy(mol)
 
-            # Single atoms will always have identical structure
+            # Single atoms could always have identical structure
             # So grouping by geometry isn't enough
             # Need to also group by charge
             if len(mol_copy) > 1:
                 mol_copy.set_charge_and_spin(0)
             matched = False
-            for subgroup in subgroups:
-                if mol_copy == subgroup["mol"]:
-                    subgroup["mol_list"].append(mol)
+
+            # Group by structure
+            for group in groups:
+                if (
+                    (mm.fit(mol_copy, group["mol"]) or mol_copy == group["mol"])
+                    and mol_copy.charge == group["mol"].charge
+                    and mol_copy.spin_multiplicity == group["mol"].spin_multiplicity
+                ):
+                    group["mol_list"].append(mol)
                     matched = True
                     break
+
             if not matched:
-                subgroups.append({"mol": mol_copy, "mol_list": [mol]})
-        for group in subgroups:
+                groups.append({"mol": mol_copy, "mol_list": [mol]})
+
+        for group in groups:
             yield group["mol_list"]
 
 
@@ -140,20 +148,70 @@ def confirm_molecule(mol: Union[Molecule, Dict]):
         return mol
 
 
-def perturb(mol: Molecule, mode: Matrix3D, scale: float = 0.6):
+def make_mol_graph(
+    mol: Molecule, critic_bonds: Optional[List[List[int]]] = None
+) -> MoleculeGraph:
     """
-    Perturb a molecular structure along a particular direction
+    Construct a MoleculeGraph using OpenBabelNN with metal_edge_extender and
+    (optionally) Critic2 bonding information.
 
-    :param mol: Molecule to be perturbed
-    :param mode: Translational mode along which to perturb the molecule
-    :param scale: Scaling factor for the perturbation; default is 0.6
-    :return:
+    This bonding scheme was used to define bonding for the Lithium-Ion Battery
+    Electrolyte (LIBE) dataset (DOI: 10.1038/s41597-021-00986-9)
+
+    :param mol: Molecule to be converted to MoleculeGraph
+    :param critic_bonds: (optional) List of lists [a, b], where a and b are
+        atom indices (0-indexed)
+
+    :return: mol_graph, a MoleculeGraph
     """
-    mol_copy = copy.deepcopy(mol)
-    for ii in range(len(mol)):
-        vec = np.array(mode[ii])
-        mol_copy.translate_sites(indices=[ii], vector=vec * scale)
-    return mol_copy
+    mol_graph = MoleculeGraph.with_local_env_strategy(mol, OpenBabelNN())
+    mol_graph = metal_edge_extender(mol_graph)
+    if critic_bonds:
+        mg_edges = mol_graph.graph.edges()
+        for bond in critic_bonds:
+            bond.sort()
+            if bond[0] != bond[1]:
+                bond_tup = (bond[0], bond[1])
+                if bond_tup not in mg_edges:
+                    mol_graph.add_edge(bond_tup[0], bond_tup[1])
+    return mol_graph
+
+
+def get_graph_hash(mol: Molecule, node_attr: Optional[str] = None):
+    """
+    Return the Weisfeiler Lehman (WL) graph hash of the MoleculeGraph described
+    by this molecule, using the OpenBabelNN strategy with extension for
+    metal coordinate bonds
+
+    :param mol: Molecule
+    :param node_attr: Node attribute to be used to compute the WL hash
+    :return: string of the WL graph hash
+    """
+
+    mg = make_mol_graph(mol)
+    return weisfeiler_lehman_graph_hash(mg.graph, node_attr=node_attr)
+
+
+def get_molecule_id(mol: Molecule, node_attr: Optional[str] = None):
+    """
+    Return an MPculeID for a molecule, with the hash component
+    based on a particular attribute of the molecule graph representation.
+
+    :param mol: Molecule
+    :param node_attr:Node attribute to be used to compute the WL hash
+
+    :return: MPculeID
+    """
+
+    graph_hash = get_graph_hash(mol, node_attr=node_attr)
+    return MPculeID(
+        "{}-{}-{}-{}".format(
+            graph_hash,
+            mol.composition.alphabetical_formula.replace(" ", ""),
+            str(int(mol.charge)).replace("-", "m"),
+            str(mol.spin_multiplicity),
+        )
+    )
 
 
 def jsanitize(obj, strict=False, allow_bson=False):
@@ -182,6 +240,7 @@ def jsanitize(obj, strict=False, allow_bson=False):
         or (bson is not None and isinstance(obj, bson.objectid.ObjectId))
     ):
         return obj
+
     if isinstance(obj, (list, tuple, set)):
         return [jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj]
     if np is not None and isinstance(obj, np.ndarray):
@@ -239,8 +298,13 @@ class ValueEnum(Enum):
             return super().__eq__(o)
         return False
 
-    def __hash__(self) -> Any:
-        return super().__hash__()
+    def __hash__(self):
+        """Get a hash of the enum."""
+        return hash(str(self))
+
+    def as_dict(self):
+        """Create a serializable representation of the enum."""
+        return str(self.value)
 
 
 class DocEnum(ValueEnum):

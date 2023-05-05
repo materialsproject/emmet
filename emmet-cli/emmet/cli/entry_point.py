@@ -1,10 +1,10 @@
 import logging
 import os
-from io import StringIO
-
 import click
-from github3 import authorize, login
-from multiprocessing_logging import install_mp_handler
+
+from io import StringIO
+from github3 import GitHub
+from github3.session import GitHubSession
 
 from emmet.cli.admin import admin
 from emmet.cli.calc import calc
@@ -42,6 +42,7 @@ def opt_prompt():
 def emmet(spec_or_dbfile, run, issue, sbatch, ntries, bb, yes, no_dupe_check, verbose):
     """Command line interface for emmet"""
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    logging.getLogger('github3').setLevel(logging.WARNING)
     ctx = click.get_current_context()
     ctx.ensure_object(dict)
 
@@ -80,6 +81,7 @@ def emmet(spec_or_dbfile, run, issue, sbatch, ntries, bb, yes, no_dupe_check, ve
 
         CREDENTIALS = os.path.join(os.path.expanduser("~"), ".emmet_credentials")
         if not os.path.exists(CREDENTIALS):
+            from github3 import authorize # TODO not supported anymore
             user = click.prompt("GitHub Username")
             password = click.prompt("GitHub Password", hide_input=True)
             auth = authorize(
@@ -94,11 +96,10 @@ def emmet(spec_or_dbfile, run, issue, sbatch, ntries, bb, yes, no_dupe_check, ve
 
         with open(CREDENTIALS, "r") as fd:
             token = fd.readline().strip()
-            ctx.obj["GH"] = login(token=token)
+            ctx.obj["GH"] = gh = GitHub(session=GitHubSession(default_read_timeout=30))
+            gh.login(token=token)
     else:
         click.secho("DRY RUN! Add --run flag to execute changes.", fg="green")
-
-    install_mp_handler(logger=logger)
 
 
 def safe_entry_point():

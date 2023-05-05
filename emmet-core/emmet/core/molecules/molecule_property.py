@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Sequence, Type, TypeVar, Union, List
+from typing import Sequence, Type, TypeVar, List
 
 from pydantic import Field
 from pymatgen.core.structure import Molecule
 
+from emmet.core.qchem.calc_types import LevelOfTheory
 from emmet.core.material import PropertyOrigin
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPculeID
 from emmet.core.structure import MoleculeMetadata
 
 
@@ -26,10 +27,15 @@ class PropertyDoc(MoleculeMetadata):
     """
 
     property_name: str
-    molecule_id: MPID = Field(
+
+    property_id: str = Field(
+        ..., description="The unique identifier of this property document."
+    )
+
+    molecule_id: MPculeID = Field(
         ...,
-        description="The ID of the molecule, used as a universal reference across property documents."
-        "This comes in the form of an MPID or int",
+        description="The ID of the molecule, used as a reference across property documents."
+        "This comes in the form of an MPculeID (or appropriately formatted string)",
     )
 
     deprecated: bool = Field(
@@ -40,6 +46,22 @@ class PropertyDoc(MoleculeMetadata):
     deprecation_reasons: List[str] = Field(
         None,
         description="List of deprecation tags detailing why this document isn't valid",
+    )
+
+    level_of_theory: LevelOfTheory = Field(
+        None, description="Level of theory used to generate this property document."
+    )
+
+    solvent: str = Field(
+        None,
+        description="String representation of the solvent "
+        "environment used to generate this property document.",
+    )
+
+    lot_solvent: str = Field(
+        None,
+        description="String representation of the level of theory and solvent "
+        "environment used to generate this property document.",
     )
 
     last_updated: datetime = Field(
@@ -57,10 +79,19 @@ class PropertyDoc(MoleculeMetadata):
 
     @classmethod
     def from_molecule(  # type: ignore[override]
-        cls: Type[S], meta_molecule: Molecule, molecule_id: MPID, **kwargs
+        cls: Type[S],
+        meta_molecule: Molecule,
+        property_id: str,
+        molecule_id: MPculeID,
+        **kwargs
     ) -> S:
         """
         Builds a molecule document using the minimal amount of information
         """
 
-        return super().from_molecule(meta_molecule=meta_molecule, molecule_id=molecule_id, **kwargs)  # type: ignore
+        return super().from_molecule(
+            meta_molecule=meta_molecule,
+            property_id=property_id,
+            molecule_id=molecule_id,
+            **kwargs
+        )  # type: ignore

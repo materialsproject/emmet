@@ -7,14 +7,9 @@ from pymatgen.core.structure import Structure
 
 from emmet.core.electronic_structure import BandstructureData, DosData
 from emmet.core.material_property import PropertyDoc
-from emmet.core.chemenv import (
-    COORDINATION_GEOMETRIES_IUPAC,
-    COORDINATION_GEOMETRIES_IUCR,
-)
 from emmet.core.mpid import MPID
 from emmet.core.thermo import DecompositionProduct
 from emmet.core.xas import Edge, Type
-from emmet.core.elasticity import BulkModulus, ShearModulus
 
 T = TypeVar("T", bound="SummaryDoc")
 
@@ -410,6 +405,12 @@ class SummaryDoc(PropertyDoc):
         True, description="Whether the material is theoretical.", source="provenance"
     )
 
+    # External Database IDs
+
+    database_IDs: Dict[str, List[str]] = Field(
+        {}, description="External database IDs corresponding to this material."
+    )
+
     @classmethod
     def from_docs(cls, material_id: MPID, **docs: Dict[str, Dict]):
         """Converts a bunch of summary docs into a SummaryDoc"""
@@ -432,7 +433,6 @@ class SummaryDoc(PropertyDoc):
             else:
                 del doc["dos"]
         if "task_id" in doc:
-            doc["es_source_calc_id"] = doc["task_id"]
             del doc["task_id"]
 
         doc["has_props"] = list(set(doc["has_props"]))
@@ -519,7 +519,7 @@ summary_fields: Dict[str, list] = {
         "has_reconstructed",
     ],
     HasProps.oxi_states.value: ["possible_species"],
-    HasProps.provenance.value: ["theoretical"],
+    HasProps.provenance.value: ["theoretical", "database_IDs"],
     HasProps.charge_density.value: [],
     HasProps.eos.value: [],
     HasProps.phonon.value: [],
@@ -530,7 +530,7 @@ summary_fields: Dict[str, list] = {
 
 def _copy_from_doc(doc):
     """Helper function to copy the list of keys over from amalgamated document"""
-    d = {"has_props": []}
+    d = {"has_props": [], "origins": []}
     # Complex function to grab the keys and put them in the root doc
     # if the item is a list, it makes one doc per item with those corresponding keys
     for doc_key in summary_fields:
@@ -547,6 +547,8 @@ def _copy_from_doc(doc):
                 d[doc_key].append(temp_doc)
         elif isinstance(sub_doc, dict):
             d["has_props"].append(doc_key)
+            if sub_doc.get("origins", None):
+                d["origins"].extend(sub_doc["origins"])
             d.update(
                 {
                     copy_key: sub_doc[copy_key]

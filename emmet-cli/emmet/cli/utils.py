@@ -9,9 +9,11 @@ from datetime import datetime
 from enum import Enum
 from fnmatch import fnmatch
 from glob import glob
+from pathlib import Path
 
 import click
 import mgzip
+from botocore.exceptions import EndpointConnectionError
 from atomate.vasp.database import VaspCalcDb
 from atomate.vasp.drones import VaspDrone
 from dotty_dict import dotty
@@ -20,6 +22,9 @@ from mongogrant.client import Client
 from pymatgen.core import Structure
 from pymatgen.util.provenance import StructureNL
 from pymongo.errors import DocumentTooLarge
+from emmet.core.vasp.task_valid import TaskDocument
+from emmet.core.vasp.validation import ValidationDoc
+from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
 
 from emmet.cli import SETTINGS
 from emmet.core.utils import group_structures
@@ -38,7 +43,6 @@ class ReturnCodes(Enum):
     SUCCESS = "COMPLETED"
     ERROR = "encountered ERROR"
     WARNING = "exited with WARNING"
-    SUBMITTED = "submitted to SLURM"
 
 
 def structures_match(s1, s2):
@@ -149,10 +153,16 @@ def get_timestamp_dir(prefix="launcher"):
     return "_".join([prefix, time_now])
 
 
-def is_vasp_dir(list_of_files):
+def get_dir_type(list_of_files):
     for f in list_of_files:
         if f.startswith("INCAR"):
-            return True
+            return "vasp"
+        elif f.startswith("feff.inp"):
+            return "feff"
+        elif f.startswith("mol.qin."):
+            return "mol"
+    else:
+        return None
 
 
 def make_block(base_path):
@@ -166,7 +176,7 @@ def make_block(base_path):
 
 
 def get_symlinked_path(root, base_path_index):
-    """organize directory in block_*/launcher_* via symbolic links"""
+    """organize directory in block_*/launcher_*"""
     ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
     root_split = root.split(os.sep)
@@ -178,27 +188,34 @@ def get_symlinked_path(root, base_path_index):
         all_blocks = glob(os.path.join(base_path, "block_*/"))
         for block_dir in all_blocks:
             p = os.path.join(block_dir, "launcher_*/")
-            if len(glob(p)) < 300:
+            if len(glob(p)) < 500:
                 break
         else:
-            # didn't find a block with < 300 launchers
+            # didn't find a block with < 500 launchers
             block_dir = make_block(base_path)
 
     if root_split[-1].startswith("launcher_"):
         launch_dir = os.path.join(block_dir, root_split[-1])
         if not os.path.exists(launch_dir):
             if run:
-                os.rename(root, launch_dir)
+                rename_dir(root, launch_dir)
             logger.debug(f"{root} -> {launch_dir}")
     else:
         launch = get_timestamp_dir(prefix="launcher")
         launch_dir = os.path.join(block_dir, launch)
         if run:
-            os.rename(root, launch_dir)
-            os.symlink(launch_dir, root)
+            rename_dir(root, launch_dir)
         logger.debug(f"{root} -> {launch_dir}")
 
     return launch_dir
+
+
+def rename_dir(root, launch_dir):
+    fn = "ORIG_PATH"
+    with Path(os.sep.join([root, fn])).open("w") as f:
+        f.write(root)
+
+    os.rename(root, launch_dir)
 
 
 def create_orig_inputs(vaspdir):
@@ -227,10 +244,10 @@ class VaspDirsGenerator:
 
 def get_vasp_dirs():
     ctx = click.get_current_context()
-    run = ctx.parent.parent.params["run"]
     nmax = ctx.parent.params["nmax"]
     pattern = ctx.parent.params["pattern"]
-    reorg = ctx.parent.params["reorg"]
+    run = ctx.parent.parent.params["run"] and pattern.startswith("block_")
+    reorg = ctx.params.get("reorg")
 
     base_path = ctx.parent.params["directory"].rstrip(os.sep)
     base_path_index = len(base_path.split(os.sep))
@@ -240,6 +257,8 @@ def get_vasp_dirs():
 
     counter = 0
     for root, dirs, files in os.walk(base_path, topdown=True):
+        if counter and not counter % 2000:
+            logger.info(f"{counter} launchers found ...")
         if counter == nmax:
             break
 
@@ -254,16 +273,31 @@ def get_vasp_dirs():
             if not bool(st.st_mode & perms):
                 raise EmmetCliError(f"Insufficient permissions {st.st_mode} for {dn}.")
 
-        if is_vasp_dir(files):
+        dir_type = get_dir_type(files)
+
+        if dir_type:
             gzipped = False
             for f in files:
                 fn = os.path.join(root, f)
                 if os.path.islink(fn):
                     if run:
-                        os.unlink(fn)
-                        logger.warning(f"Unlinked {fn}.")
+                        fn_real = os.path.realpath(fn)
+                        if os.path.exists(fn_real):
+                            dst_name = f"{f}_copy"
+                            dst = os.path.join(root, dst_name)
+                            if os.path.isdir(fn_real):
+                                shutil.copytree(fn_real, dst)
+                            else:
+                                shutil.copy(fn_real, dst)
+
+                            os.unlink(fn)
+                            shutil.move(dst, fn)
+                            logger.debug(f"Resolved {fn}.")
+                        else:
+                            os.unlink(fn)
+                            logger.debug(f"Unlinked {fn}.")
                     else:
-                        logger.warning(f"Would unlink {fn}.")
+                        logger.debug(f"Would resolve or unlink {fn}.")
                     continue
 
                 st = os.stat(fn)
@@ -288,7 +322,9 @@ def get_vasp_dirs():
 
             # NOTE skip symlink'ing on MP calculations from the early days
             vasp_dir = get_symlinked_path(root, base_path_index) if reorg else root
-            create_orig_inputs(vasp_dir)
+            if dir_type == "vasp":
+                create_orig_inputs(vasp_dir)
+
             dirs[:] = []  # don't descend further (i.e. ignore relax1/2)
             logger.log(logging.INFO if gzipped else logging.DEBUG, vasp_dir)
             yield vasp_dir
@@ -349,6 +385,7 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
     drone = VaspDrone(
         additional_fields={"tags": tags},
         store_volumetric_data=ctx.params["store_volumetric_data"],
+        runs=ctx.params["runs"],
     )
     # fs_keys = ["bandstructure", "dos", "chgcar", "locpot", "elfcar"]
     # for i in range(3):
@@ -384,7 +421,12 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
 
         task_doc["sbxn"] = sbxn
         snl_metas_avail = isinstance(snl_metas, dict)
-        task_id = task_ids[launcher] if manual_taskid else task_ids[chunk_idx][count]
+        task_id = task_ids.get(launcher) if manual_taskid else task_ids[chunk_idx][count]
+
+        if not task_id:
+            logger.error(f"Unable to determine task_id for {launcher}")
+            continue
+
         task_doc["task_id"] = task_id
         logger.info(f"Using {task_id} for {launcher}.")
 
@@ -395,6 +437,31 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                 existing_tags = list(set(docs[0]["tags"]))
                 task_doc["tags"] += existing_tags
                 logger.info(f"Adding existing tags {existing_tags} to {tags}.")
+
+        try:
+            task_document = TaskDocument(**task_doc)
+        except Exception as exc:
+            logger.error(f"Unable to construct a valid TaskDocument: {exc}")
+            continue
+
+        try:
+            validation_doc = ValidationDoc.from_task_doc(task_document)
+        except Exception as exc:
+            logger.error(f"Unable to construct a valid ValidationDoc: {exc}")
+            continue
+
+        if not validation_doc.valid:
+            logger.error(f"Not valid: {validation_doc.reasons}")
+            continue
+
+        if validation_doc.warnings:
+            logger.warn(validation_doc.warnings)
+
+        try:
+            entry = MaterialsProject2020Compatibility().process_entry(task_document.structure_entry)
+        except Exception as exc:
+            logger.error(f"Unable to apply corrections: {exc}")
+            continue
 
         snl_dct = None
         if snl_metas_avail:
@@ -445,6 +512,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
 
                 try:
                     target.insert_task(task_doc, use_gridfs=True)
+                except EndpointConnectionError as exc:
+                    logger.error(f"Connection failed for {task_id}: {exc}")
+                    continue
                 except DocumentTooLarge:
                     output = dotty(task_doc["calcs_reversed"][0]["output"])
                     pop_keys = [
@@ -467,6 +537,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                     else:
                         logger.warning(f"{name} failed to reduce document size")
                         continue
+                except Exception as ex:
+                    logger.error(f"{name} failed to insert: {ex}")
+                    continue
 
                 if target.collection.count_documents(query):
                     if snl_dct:

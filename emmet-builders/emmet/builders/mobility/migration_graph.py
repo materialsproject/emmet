@@ -24,7 +24,7 @@ class MigrationGraphBuilder(MapBuilder):
         angle_tol: float = 5,
         **kwargs,
     ):
-        self.insertion_electode = insertion_electrode
+        self.insertion_electrode = insertion_electrode
         self.migration_graph = migration_graph
         self.algorithm = algorithm
         self.min_hop_distance = min_hop_distance
@@ -44,7 +44,6 @@ class MigrationGraphBuilder(MapBuilder):
         # get entries and info from insertion electrode
         ie = InsertionElectrode.from_dict(item["electrode_object"])
         entries = ie.get_all_entries()
-        print(len(entries))
         wi_entry = ie.working_ion_entry
 
         # get migration graph structure

@@ -14,7 +14,7 @@ class MAPISettings(BaseSettings):
 
     TEST_FILES: str = Field(
         os.path.join(
-            os.path.dirname(os.path.abspath(root_dir)), "../../../tests/test_files"
+            os.path.dirname(os.path.abspath(root_dir)), "../../../test_files"
         ),
         description="Directory with test files",
     )

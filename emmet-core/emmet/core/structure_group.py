@@ -2,7 +2,7 @@ import logging
 import operator
 from datetime import datetime
 from itertools import groupby
-from typing import Iterable, List, Union
+from typing import Iterable, List, Optional, Union
 
 from monty.json import MontyDecoder
 from pydantic import BaseModel, Field, validator
@@ -56,44 +56,43 @@ class StructureGroupDoc(BaseModel):
     )
 
     has_distinct_compositions: bool = Field(
-        None,
-        description="True if multiple compositions are present in the group."
+        None, description="True if multiple compositions are present in the group."
     )
 
     material_ids: list = Field(
         None,
-        description="A list of materials ids for all of the materials that were grouped together."
+        description="A list of materials ids for all of the materials that were grouped together.",
     )
 
     host_material_ids: list = Field(
         None,
         description="Material id(s) that correspond(s) to the host structure(s), which has/have the lowest"
-                    "concentration of ignored specie."
+                    "concentration of ignored specie.",
     )
 
     insertion_material_ids: list = Field(
         None,
-        description="Material ids that correspond to the non-host structures identified in a given structure group."
+        description="Material ids that correspond to the non-host structures identified in a given structure group.",
     )
 
     framework_formula: str = Field(
         None,
-        description="The chemical formula for the framework (the materials system without the ignored species)."
+        description="The chemical formula for the framework (the materials system without the ignored species).",
     )
 
     ignored_specie: str = Field(
         None,
-        description="Ignored atomic specie which is usually the working ion (ex: Li, Mg, or Ca).")
+        description="Ignored atomic specie which is usually the working ion (ex: Li, Mg, or Ca).",
+    )
 
     chemsys: str = Field(
         None,
         description="The chemical system this group belongs to, if the atoms for the ignored species is "
-                    "present the chemsys will also include the ignored species."
+                    "present the chemsys will also include the ignored species.",
     )
 
     last_updated: datetime = Field(
-        None,
-        description="Timestamp when this document was built."
+        None, description="Timestamp when this document was built."
     )
 
     # Make sure that the datetime field is properly formatted
@@ -103,9 +102,9 @@ class StructureGroupDoc(BaseModel):
 
     @classmethod
     def from_grouped_entries(
-            cls,
-            entries: List[Union[ComputedEntry, ComputedStructureEntry]],
-            ignored_specie: str,
+        cls,
+        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+        ignored_specie: str,
     ) -> "StructureGroupDoc":
         """ "
         Assuming a list of entries are already grouped together, create a StructureGroupDoc
@@ -127,13 +126,13 @@ class StructureGroupDoc(BaseModel):
             framework_comp = Composition.from_dict(comp_d)
             framework_str = framework_comp.reduced_formula
         ids = [ient.data["material_id"] for ient in entries]
+        lowest_id = min(ids, key=_get_id_num)
         sub_script = "_".join([ignored_specie])
         host_and_insertion_ids = StructureGroupDoc.get_host_and_insertion_ids(
-            entries=entries,
-            ignored_specie=ignored_specie
+            entries=entries, ignored_specie=ignored_specie
         )
         fields = {
-            "group_id": f"{host_and_insertion_ids['host_id']}_{sub_script}",
+            "group_id": f"{lowest_id}_{sub_script}",
             "material_ids": ids,
             "host_material_ids": host_and_insertion_ids["host_ids"],
             "insertion_material_ids": host_and_insertion_ids["insertion_ids"],
@@ -177,9 +176,7 @@ class StructureGroupDoc(BaseModel):
 
         # Add a framework field to each entry's data attribute
         for ient in entries:
-            ient.data["framework"] = _get_framework(
-                ient.composition.reduced_formula, ignored_specie
-            )
+            ient.data["framework"] = _get_framework(ient.composition.reduced_formula, ignored_specie)
 
         # split into groups for each framework, must sort before grouping
         entries.sort(key=lambda x: x.data["framework"])
@@ -190,19 +187,13 @@ class StructureGroupDoc(BaseModel):
             # if you only have ignored atoms put them into one "ignored" group
             f_group_l = list(f_group)
             if framework == "ignored":
-                struct_group = cls.from_grouped_entries(
-                    f_group_l, ignored_specie=ignored_specie
-                )
+                struct_group = cls.from_grouped_entries(f_group_l, ignored_specie=ignored_specie)
                 cnt_ += len(struct_group.material_ids)
                 continue
 
-            logger.debug(
-                f"Performing structure matching for {framework} with {len(f_group_l)} documents."
-            )
+            logger.debug(f"Performing structure matching for {framework} with {len(f_group_l)} documents.")
             for g in group_entries_with_structure_matcher(f_group_l, sm):
-                struct_group = cls.from_grouped_entries(
-                    g, ignored_specie=ignored_specie
-                )
+                struct_group = cls.from_grouped_entries(g, ignored_specie=ignored_specie)
                 cnt_ += len(struct_group.material_ids)
                 results.append(struct_group)
         if cnt_ != len(entries):
@@ -214,28 +205,39 @@ class StructureGroupDoc(BaseModel):
 
     @staticmethod
     def get_host_and_insertion_ids(
-            entries: List[Union[ComputedEntry, ComputedStructureEntry]],
-            ignored_specie: str,
+        entries: List[Union[ComputedEntry, ComputedStructureEntry]],
+        ignored_specie: str,
     ) -> dict:
-        host_and_insertion_ids = {"host_id": None, "host_ids": [], "host_entries": [], "insertion_ids": []}  # type:dict
-        ignored_specie_min_fraction = min([e.composition.get_atomic_fraction(ignored_specie) for e in entries])
+        host_and_insertion_ids = {
+            "host_id": None,
+            "host_ids": [],
+            "host_entries": [],
+            "insertion_ids": [],
+        }  # type:dict
+        ignored_specie_min_fraction = min(
+            [e.composition.get_atomic_fraction(ignored_specie) for e in entries]
+        )
 
         for e in entries:
-            if e.composition.get_atomic_fraction(ignored_specie) == ignored_specie_min_fraction:
+            if (
+                e.composition.get_atomic_fraction(ignored_specie)
+                == ignored_specie_min_fraction
+            ):
                 host_and_insertion_ids["host_entries"].append(e)
                 host_and_insertion_ids["host_ids"].append(e.data["material_id"])
             else:
                 host_and_insertion_ids["insertion_ids"].append(e.data["material_id"])
-        host_and_insertion_ids["host_id"] = min(host_and_insertion_ids["host_entries"],
-                                                key=lambda x: x.energy_per_atom).data["material_id"]
+        host_and_insertion_ids["host_id"] = min(
+            host_and_insertion_ids["host_entries"], key=lambda x: x.energy_per_atom
+        ).data["material_id"]
 
         return host_and_insertion_ids
 
 
 def group_entries_with_structure_matcher(
-        g,
-        struct_matcher: StructureMatcher,
-        working_ion: str = None,
+    g,
+    struct_matcher: StructureMatcher,
+    working_ion: Optional[str] = None,
 ) -> Iterable[List[Union[ComputedStructureEntry]]]:
     """
     Group the entries together based on similarity of the  primitive cells
@@ -248,7 +250,7 @@ def group_entries_with_structure_matcher(
         subgroups: subgroups that are grouped together based on structure similarity
     """
     if working_ion is None:
-        wion = struct_matcher.as_dict()["ignored_species"][0]
+        wion: str = struct_matcher.as_dict()["ignored_species"][0]
 
     # Sort the entries by symmetry and by working ion fraction
     def get_num_sym_ops(ent):
@@ -258,10 +260,7 @@ def group_entries_with_structure_matcher(
     g.sort(key=get_num_sym_ops, reverse=True)
     g.sort(key=lambda x: x.composition.get_atomic_fraction(wion))
 
-    labs = generic_groupby(
-        g,
-        comp=lambda x, y: struct_matcher.fit(x.structure, y.structure, symmetric=True),
-    )
+    labs = generic_groupby(g, comp=lambda x, y: struct_matcher.fit(x.structure, y.structure, symmetric=True), )
     for ilab in set(labs):
         sub_g = [g[itr] for itr, jlab in enumerate(labs) if jlab == ilab]
         yield [el for el in sub_g]

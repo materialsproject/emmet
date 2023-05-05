@@ -1,7 +1,5 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
-from pymatgen.io.vasp import Chgcar
-from maggma.api.models import S3URLDoc
 
 
 class ChgcarDataDoc(BaseModel):
