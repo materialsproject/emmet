@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 pmgrc=$HOME/.pmgrc.yaml
 [[ ! -e $pmgrc ]] && echo "PMG_DUMMY_VAR: dummy" > $pmgrc
