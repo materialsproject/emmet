@@ -17,11 +17,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.126
+boto3==1.26.129
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.126
+botocore==1.29.129
     # via
     #   boto3
     #   s3transfer
@@ -71,7 +71,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.54.1
+emmet-core[all]==0.54.2
     # via
     #   emmet-api (setup.py)
     #   mp-api
@@ -99,7 +99,7 @@ future==0.18.3
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.27.2
+griffe==0.27.3
     # via mkdocstrings-python
 gunicorn==20.1.0
     # via emmet-api (setup.py)
@@ -287,7 +287,7 @@ pluggy==1.0.0
     # via pytest
 pre-commit==3.3.1
     # via emmet-api (setup.py)
-protobuf==4.22.3
+protobuf==4.22.4
     # via
     #   ddsketch
     #   ddtrace
@@ -310,7 +310,7 @@ pydantic==1.10.7
     #   fastapi
     #   inflect
     #   maggma
-pydash==7.0.2
+pydash==7.0.3
     # via maggma
 pydocstyle==6.3.0
     # via emmet-api (setup.py)
@@ -372,7 +372,7 @@ pyyaml-env-tag==0.1
     # via mkdocs
 pyzmq==24.0.1
     # via maggma
-requests==2.29.0
+requests==2.30.0
     # via
     #   matminer
     #   mongogrant
@@ -380,13 +380,13 @@ requests==2.29.0
     #   pymatgen
 robocrys==0.2.7
     # via emmet-core
-ruamel-yaml==0.17.22
+ruamel-yaml==0.17.23
     # via
     #   pymatgen
     #   robocrys
 ruamel-yaml-clib==0.2.7
     # via ruamel-yaml
-s3transfer==0.6.0
+s3transfer==0.6.1
     # via boto3
 scikit-learn==1.2.2
     # via matminer
@@ -451,7 +451,7 @@ tqdm==4.65.0
     #   maggma
     #   matminer
     #   pymatgen
-types-requests==2.29.0.0
+types-requests==2.30.0.0
     # via emmet-api (setup.py)
 types-setuptools==67.7.0.1
     # via emmet-api (setup.py)
