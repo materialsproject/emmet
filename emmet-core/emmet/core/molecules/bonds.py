@@ -281,8 +281,12 @@ def nbo_molecule_graph(mol: Molecule, nbo: Dict[str, Any]):
     mg_copy = copy.deepcopy(mg)
     mg_copy.remove_nodes(metal_indices)
 
-    if not nx.is_connected(mg_copy.graph.to_undirected()):
-        warnings.add("Metal-centered complex")
+    try:
+        if not nx.is_connected(mg_copy.graph.to_undirected()):
+            warnings.add("Metal-centered complex")
+    except nx.exception.NetworkXPointlessConcept:
+        if len(mg.molecule) == 1:
+            warnings.add("Single-atom; no bonds")
 
     return (mg, list(warnings))
 
