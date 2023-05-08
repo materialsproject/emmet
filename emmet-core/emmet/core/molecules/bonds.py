@@ -240,7 +240,7 @@ def nbo_molecule_graph(mol: Molecule, nbo: Dict[str, Any]):
 
     distance_cutoff = 3.0
     energy_cutoff = 3.0
-    metal_indices = [i for i, e in enumerate(mol.species) if e in metals]
+    metal_indices = [i for i, e in enumerate(mol.species) if str(e) in metals]
 
     poss_coord: Dict[Optional[int], List[Optional[int]]] = dict()
     dist_mat = mol.distance_matrix
