@@ -95,10 +95,11 @@ def _bonds_hybridization(nbo: Dict[str, Any], index: int):
             else:
                 m_contrib = None
 
-            if m_contrib is None or m_contrib >= 30.0:
+            if m_contrib is None:
                 bond_type = "covalent"
-                if m_contrib >= 30.0:
-                    warnings.add("Contains covalent bond with metal atom")
+            elif m_contrib >= 30.0:
+                bond_type = "covalent"
+                warnings.add("Contains covalent bond with metal atom")
             else:
                 bond_type = "electrostatic"
 
