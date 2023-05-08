@@ -31,4 +31,4 @@ repos:
       - id: codespell
         stages: [commit, commit-msg]
         exclude_types: [json, bib, svg]
-        args: [--ignore-words-list, "mater,fwe,te"]
+        args: [--ignore-words-list, "mater,fwe,te,titel"]
