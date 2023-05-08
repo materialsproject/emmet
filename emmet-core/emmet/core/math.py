@@ -18,8 +18,8 @@ Tensor3R.__doc__ = "Generic tensor of rank 3"  # type: ignore
 Tensor4R = List[List[List[List[float]]]]
 Tensor4R.__doc__ = "Generic tensor of rank 4"  # type: ignore
 
-ListVector3D = List[float, float, float]
+ListVector3D = List[float]
 ListVector3D.__doc__ = "Real space vector as list"  # type: ignore
 
-ListMatrix3D = List[ListVector3D, ListVector3D, ListVector3D]
+ListMatrix3D = List[ListVector3D]
 ListMatrix3D.__doc__ = "Real space Matrix as list"  # type: ignore
