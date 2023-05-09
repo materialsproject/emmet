@@ -14,7 +14,7 @@ setup(
     package_data={"emmet.core.vasp.calc_types": ["*.yaml"], "emmet.core.subtrates": ["*.json"]},
     include_package_data=True,
     install_requires=[
-        "pymatgen>=2021.3",
+        "pymatgen>=2021.5",
         "monty>=2021.3",
         "pydantic>=1.10.2",
         "pybtex~=0.24",

@@ -5,8 +5,11 @@ from itertools import groupby
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 import numpy as np
+
 from monty.json import MSONable
+
 from pydantic import BaseModel
+
 from pymatgen.analysis.graphs import MoleculeGraph
 from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
 from pymatgen.analysis.molecule_matcher import MoleculeMatcher
@@ -16,8 +19,8 @@ from pymatgen.analysis.structure_matcher import (
     StructureMatcher,
 )
 from pymatgen.core.structure import Molecule, Structure
+from pymatgen.util.graph_hashing import weisfeiler_lehman_graph_hash
 
-from emmet.core.graph_hashing import weisfeiler_lehman_graph_hash
 from emmet.core.mpid import MPculeID
 from emmet.core.settings import EmmetSettings
 
@@ -188,7 +191,10 @@ def get_graph_hash(mol: Molecule, node_attr: Optional[str] = None):
     """
 
     mg = make_mol_graph(mol)
-    return weisfeiler_lehman_graph_hash(mg.graph, node_attr=node_attr)
+    return weisfeiler_lehman_graph_hash(
+        mg.graph.to_undirected(),
+        node_attr=node_attr,
+    )
 
 
 def get_molecule_id(mol: Molecule, node_attr: Optional[str] = None):

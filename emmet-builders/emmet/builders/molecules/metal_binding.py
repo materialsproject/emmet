@@ -5,6 +5,7 @@ from typing import Optional, Iterable, Iterator, List, Dict
 import copy
 
 from pymatgen.core.structure import Molecule
+from pymatgen.util.graph_hashing import weisfeiler_lehman_graph_hash
 
 from maggma.builders import Builder
 from maggma.core import Store
@@ -19,7 +20,6 @@ from emmet.core.molecules.metal_binding import (
     METAL_BINDING_METHODS
 )
 from emmet.core.utils import jsanitize
-from emmet.core.graph_hashing import weisfeiler_lehman_graph_hash
 from emmet.builders.settings import EmmetBuildSettings
 
 
@@ -432,7 +432,7 @@ class MetalBindingBuilder(Builder):
                         nometal_spin = mol.spin_multiplicity - spin + 1
                         mg_copy = copy.deepcopy(bond_doc.molecule_graph)  # type: ignore
                         mg_copy.remove_nodes([metal_index])
-                        new_hash = weisfeiler_lehman_graph_hash(mg_copy.graph, node_attr="specie")
+                        new_hash = weisfeiler_lehman_graph_hash(mg_copy.graph.to_undirected(), node_attr="specie")
                         nometal_mol_doc = [
                             MoleculeDoc(**e) for e in self.molecules.query(
                                 {
