@@ -60,6 +60,6 @@ def test_bonding(test_tasks, nbo_task):
         preferred_methods=["nbo"],
     )
     assert nbo.method == "nbo"
-    assert len(nbo.bonds) == 9
+    assert len(nbo.bonds) == 11
     assert len(nbo.bonds_nometal) == 9
-    assert set(nbo.bond_types.keys()) == {"C-H", "C-O"}
+    assert set(nbo.bond_types.keys()) == {"C-H", "C-O", "C-Li", "Li-O"}
