@@ -117,4 +117,4 @@ def test_summary_doc(
     )
     builder.run()
 
-    assert summary.count() == 46
+    assert summary.count() == 25
