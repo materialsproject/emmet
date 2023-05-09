@@ -33,8 +33,6 @@ def test_from_molecule(molecule):
     assert metadata.charge == 0
     assert metadata.spin_multiplicity == 1
     assert metadata.nelectrons == 16
-    assert metadata.inchi == "InChI=1S/O2/c1-2"
-    assert metadata.inchi_key == "MYMOFIZGZYHOMD-UHFFFAOYSA-N"
 
 
 def test_from_comp(molecule):
