@@ -14,15 +14,15 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.129
+boto3==1.26.131
     # via maggma
-botocore==1.29.129
+botocore==1.29.131
     # via
     #   boto3
     #   s3transfer
 bracex==2.3.post1
     # via wcmatch
-certifi==2022.12.7
+certifi==2023.5.7
     # via
     #   requests
     #   sentry-sdk
@@ -49,7 +49,7 @@ cryptography==40.0.2
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
-custodian==2023.3.10
+custodian==2023.5.7
     # via emmet-core (setup.py)
 cycler==0.11.0
     # via matplotlib
@@ -59,7 +59,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.50.0
+emmet-core==0.54.3
     # via mp-api
 fastapi==0.95.1
     # via maggma
@@ -151,7 +151,7 @@ mkdocs==1.4.3
     #   mkdocstrings
 mkdocs-autorefs==0.4.1
     # via mkdocstrings
-mkdocs-awesome-pages-plugin==2.9.0
+mkdocs-awesome-pages-plugin==2.9.1
     # via emmet-core (setup.py)
 mkdocs-markdownextradata-plugin==0.2.5
     # via emmet-core (setup.py)
@@ -167,13 +167,13 @@ mkdocstrings[python]==0.21.2
     # via
     #   emmet-core (setup.py)
     #   mkdocstrings-python
-mkdocstrings-python==0.9.0
+mkdocstrings-python==0.10.1
     # via mkdocstrings
 mongogrant==0.3.3
     # via maggma
 mongomock==4.1.2
     # via maggma
-monty==2023.4.10
+monty==2023.5.8
     # via
     #   custodian
     #   emmet-core
@@ -183,7 +183,7 @@ monty==2023.4.10
     #   mp-api
     #   pymatgen
     #   robocrys
-mp-api==0.32.1
+mp-api==0.33.1
     # via pymatgen
 mpmath==1.3.0
     # via sympy
@@ -219,7 +219,7 @@ numpy==1.24.3
     #   seekpath
     #   shapely
     #   spglib
-orjson==3.8.11
+orjson==3.8.12
     # via maggma
 packaging==23.1
     # via
@@ -275,7 +275,7 @@ pyflakes==3.0.1
     # via flake8
 pygments==2.15.1
     # via mkdocs-material
-pymatgen==2023.3.23
+pymatgen==2023.5.8
     # via
     #   emmet-core
     #   emmet-core (setup.py)
@@ -338,7 +338,7 @@ requests==2.30.0
     #   pymatgen
 robocrys==0.2.7
     # via emmet-core (setup.py)
-ruamel-yaml==0.17.23
+ruamel-yaml==0.17.26
     # via
     #   custodian
     #   pymatgen
@@ -358,7 +358,7 @@ seekpath==2.0.1
     # via emmet-core (setup.py)
 sentinels==1.0.0
     # via mongomock
-sentry-sdk==1.22.1
+sentry-sdk==1.22.2
     # via custodian
 shapely==2.0.1
     # via pymatgen-analysis-alloys
@@ -429,7 +429,7 @@ watchdog==3.0.0
     # via mkdocs
 wcmatch==8.4.1
     # via mkdocs-awesome-pages-plugin
-werkzeug==2.3.3
+werkzeug==2.3.4
     # via flask
 wincertstore==0.2
     # via emmet-core (setup.py)
