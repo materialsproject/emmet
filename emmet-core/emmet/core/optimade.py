@@ -84,8 +84,8 @@ class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
     """
 
     material_id: MPID
-    _mp_chemical_system: str
-    _mp_thermo_calculations: dict or None
+    chemical_system: str
+    stability: dict
 
     @classmethod
     def from_structure(
@@ -93,14 +93,14 @@ class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
         material_id: MPID,
         structure: Structure,
         last_updated_structure: datetime,
-        thermo_calcs: dict or None,
+        thermo_calcs: dict,
         **kwargs
     ) -> StructureResourceAttributes:
         structure.remove_oxidation_states()
         return OptimadeMaterialsDoc(
             material_id=material_id,
-            _mp_chemical_system=structure.composition.chemical_system,
-            _mp_thermo_calculations=thermo_calcs,
+            chemical_system=structure.composition.chemical_system,
+            stability=thermo_calcs,
             elements=sorted(set([e.symbol for e in structure.composition.elements])),
             nelements=len(structure.composition.elements),
             elements_ratios=list(structure.composition.fractional_composition.values()),

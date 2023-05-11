@@ -77,9 +77,9 @@ class OptimadeMaterialsBuilder(Builder):
 
         mats = [mat for mat in mats_set]
 
-        self.logger.info(f"Processing {len(mats)} items")
-
         self.total = len(mats)
+
+        self.logger.info(f"Processing {self.total} items")
 
         for mat in mats:
             doc = self._get_processed_doc(mat)
@@ -94,17 +94,16 @@ class OptimadeMaterialsBuilder(Builder):
         structure = Structure.from_dict(item["mat_doc"]["structure"])
         last_updated_structure = item["mat_doc"]["last_updated"]
 
+        # Functional names must be lowercase to adhere to optimade spec for querying attributes
+        thermo_calcs = {}
         if item["thermo_doc"]:
-            thermo_calcs = {}
             for doc in item["thermo_doc"]:
-                thermo_calcs[doc["thermo_type"]] = {
-                    "_mp_thermo_id": doc["thermo_id"],
-                    "_mp_energy_above_hull": doc["energy_above_hull"],
-                    "_mp_formation_energy_per_atom": doc["formation_energy_per_atom"],
-                    "_mp_last_updated_thermo": doc["last_updated"],
+                thermo_calcs[doc["thermo_type"].lower()] = {
+                    "thermo_id": doc["thermo_id"],
+                    "energy_above_hull": doc["energy_above_hull"],
+                    "formation_energy_per_atom": doc["formation_energy_per_atom"],
+                    "last_updated_thermo": doc["last_updated"],
                 }
-        else:
-            thermo_calcs = None
 
         optimade_doc = OptimadeMaterialsDoc.from_structure(
             material_id=mpid,
