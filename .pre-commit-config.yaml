@@ -25,10 +25,3 @@ repos:
       - id: mixed-line-ending
       - id: trailing-whitespace
 
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.4
-    hooks:
-      - id: codespell
-        stages: [commit, commit-msg]
-        exclude_types: [json, bib, svg]
-        args: [--ignore-words-list, "mater,fwe,te,titel"]
