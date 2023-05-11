@@ -9,7 +9,6 @@ from emmet.core.vasp.validation import ValidationDoc
 
 
 def test_task_type():
-
     # TODO: Switch this to actual inputs?
     input_types = [
         ("NSCF Line", {"incar": {"ICHARG": 11}, "kpoints": {"labels": ["A"]}}),
@@ -27,7 +26,6 @@ def test_task_type():
 
 
 def test_run_type():
-
     params_sets = [
         ("GGA", {"GGA": "--"}),
         ("GGA+U", {"GGA": "--", "LDAU": True}),

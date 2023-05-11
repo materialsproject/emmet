@@ -41,7 +41,6 @@ class XASTaskIDQuery(QueryOperator):
             None, description="Comma-separated list of material_id to query on"
         ),
     ) -> STORE_PARAMS:
-
         crit = {}
 
         if material_ids:

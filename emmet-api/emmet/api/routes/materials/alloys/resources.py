@@ -20,7 +20,10 @@ def alloy_pairs_resource(alloy_pairs_store):
             FormulaSearchQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(AlloyPairDoc, default_fields=["pair_id"],),
+            SparseFieldsQuery(
+                AlloyPairDoc,
+                default_fields=["pair_id"],
+            ),
         ],
         tags=["Materials Alloys"],
         sub_path="/alloys/",

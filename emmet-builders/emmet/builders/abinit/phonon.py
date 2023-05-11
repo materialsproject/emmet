@@ -134,7 +134,6 @@ class PhononBuilder(Builder):
         N = ceil(len(mats) / number_splits)
 
         for mpid_chunk in grouper(mats, N):
-
             yield {"query": {self.phonon_materials.key: {"$in": list(mpid_chunk)}}}
 
     def get_items(self) -> Iterator[Dict]:
@@ -204,7 +203,6 @@ class PhononBuilder(Builder):
         self.logger.debug("Processing phonon item for {}".format(item["mp_id"]))
 
         try:
-
             structure = Structure.from_dict(item["abinit_input"]["structure"])
 
             abinit_input_vars = self.abinit_input_vars(item)
@@ -304,7 +302,6 @@ class PhononBuilder(Builder):
 
         # the temp dir should still exist when using the objects as some readings are done lazily
         with tempfile.TemporaryDirectory() as workdir:
-
             structure = Structure.from_dict(item["abinit_input"]["structure"])
 
             self.logger.debug("Running anaddb in {}".format(workdir))
@@ -438,7 +435,6 @@ class PhononBuilder(Builder):
         )
 
         with tempfile.TemporaryDirectory() as workdir:
-
             ddb_path = os.path.join(workdir, "{}_DDB".format(item["mp_id"]))
             with open(ddb_path, "wt") as ddb_file:
                 ddb_file.write(item["ddb_str"])
@@ -815,7 +811,7 @@ def get_warnings(
 
 
 def get_thermodynamic_properties(
-    ph_dos: CompletePhononDos
+    ph_dos: CompletePhononDos,
 ) -> Tuple[ThermodynamicProperties, VibrationalEnergy]:
     """
     Calculates the thermodynamic properties from a phonon DOS

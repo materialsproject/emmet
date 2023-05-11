@@ -28,7 +28,6 @@ class XASBuilder(GroupBuilder):
         self._target_keys_field = "xas_ids"
 
     def process_item(self, spectra: List[Dict]) -> Dict:
-
         # TODO: Change this to do structure matching against materials collection
         mpid = spectra[0]["mp_id"]
 

@@ -117,7 +117,6 @@ class MaterialsBuilder(Builder):
         N = ceil(len(to_process_forms) / number_splits)
 
         for formula_chunk in grouper(to_process_forms, N):
-
             yield {"query": {"formula_pretty": {"$in": list(formula_chunk)}}}
 
     def get_items(self) -> Iterator[List[Dict]]:
@@ -350,7 +349,6 @@ def undeform_structure(structure: Structure, transmuter: Dict) -> Structure:
     for trans, params in reversed(
         list(zip(transmuter["transformations"], transmuter["transformation_params"]))
     ):
-
         # The transmuter only stores the transformation class and parameter, without
         # module info and such. Therefore, there is no general way to reconstruct it,
         # and has to do if else check.

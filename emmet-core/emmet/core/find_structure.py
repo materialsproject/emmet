@@ -29,7 +29,7 @@ class FindMolecule(BaseModel):
 
     molecule_id: MPculeID = Field(
         None,
-        description="The ID of this molecule, used as a universal reference across property documents."
+        description="The ID of this molecule, used as a universal reference across property documents.",
     )
     rmsd: float = Field(
         None,

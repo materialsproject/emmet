@@ -19,7 +19,7 @@ def similarity_resource(similarity_store):
         sub_path="/similarity/",
         enable_default_search=False,
         disable_validation=True,
-        timeout=MAPISettings().TIMEOUT
+        timeout=MAPISettings().TIMEOUT,
     )
 
     return resource

@@ -20,7 +20,6 @@ class MoleculeElementsQuery(QueryOperator):
             description="Query by elements in the material composition as a comma-separated list",
         ),
     ) -> STORE_PARAMS:
-
         crit = {}
 
         if elements:
@@ -88,7 +87,6 @@ class MoleculeBaseQuery(QueryOperator):
             representation of the molecule.",
         ),
     ) -> STORE_PARAMS:
-
         crit = defaultdict(dict)  # type: dict
 
         d = {
@@ -135,20 +133,23 @@ class MoleculeFormulaQuery(QueryOperator):
             description="Chemical formula of the molecule. A comma-separated list of formulas is also accepted.",
         ),
     ) -> STORE_PARAMS:
-
         crit = defaultdict(dict)  # type: dict
 
         if formula:
             formula_list = [f.strip() for f in formula.split(",")]
 
             try:
-
                 if len(formula_list) == 1:
-                    reduced_formula = Composition(formula).get_reduced_formula_and_factor()[0]
+                    reduced_formula = Composition(
+                        formula
+                    ).get_reduced_formula_and_factor()[0]
                     crit["formula_pretty"] = reduced_formula
                 else:
                     crit["formula_pretty"] = {
-                        "$in": [Composition(f).get_reduced_formula_and_factor()[0] for f in formula_list]
+                        "$in": [
+                            Composition(f).get_reduced_formula_and_factor()[0]
+                            for f in formula_list
+                        ]
                     }
             except ValueError:
                 raise HTTPException(

@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Dict
 from fastapi import Query
 from maggma.api.query_operator import QueryOperator
 from maggma.api.utils import STORE_PARAMS
@@ -12,32 +12,30 @@ class RedoxPotentialQuery(QueryOperator):
     def query(
         self,
         electrode: str = Query(
-            "H",
-            description="Reference electrode to be queried (e.g. 'H', 'Li', 'Mg')."
+            "H", description="Reference electrode to be queried (e.g. 'H', 'Li', 'Mg')."
         ),
         min_reduction_potential: Optional[float] = Query(
             None,
-            description="Minimum reduction potential using the selected reference electrode."
+            description="Minimum reduction potential using the selected reference electrode.",
         ),
         max_reduction_potential: Optional[float] = Query(
             None,
-            description="Maximum reduction potential using the selected reference electrode."
+            description="Maximum reduction potential using the selected reference electrode.",
         ),
         min_oxidation_potential: Optional[float] = Query(
             None,
-            description="Minimum oxidation potential using the selected reference electrode."
+            description="Minimum oxidation potential using the selected reference electrode.",
         ),
         max_oxidation_potential: Optional[float] = Query(
             None,
-            description="Maximum oxidation potential using the selected reference electrode."
+            description="Maximum oxidation potential using the selected reference electrode.",
         ),
     ) -> STORE_PARAMS:
-
         crit: Dict[str, Any] = dict()  # type: ignore
 
         d = {
             "oxidation_potentials": [min_oxidation_potential, max_oxidation_potential],
-            "reduction_potentials": [min_reduction_potential, max_reduction_potential]
+            "reduction_potentials": [min_reduction_potential, max_reduction_potential],
         }
 
         for entry in d:

@@ -23,7 +23,6 @@ class NaturalPopulation(MSONable):
         rydberg_electrons: float,
         total_electrons: float,
     ):
-
         """
         Basic description of an atomic electron population.
 
@@ -162,7 +161,6 @@ class Interaction(MSONable):
         donor_atom2_index: Optional[int] = None,
         acceptor_atom2_index: Optional[int] = None,
     ):
-
         self.donor_index = int(donor_index)
         self.acceptor_index = int(acceptor_index)
 
@@ -219,7 +217,6 @@ class Interaction(MSONable):
 
 
 class OrbitalDoc(PropertyDoc):
-
     property_name = "natural bonding orbitals"
 
     # Always populated - closed-shell and open-shell
@@ -399,7 +396,6 @@ class OrbitalDoc(PropertyDoc):
             perts = nbo["perturbation_energy"][pert_ind]
             interactions = list()
             for ind in perts.get("donor bond index", list()):
-
                 if perts["donor atom 2 number"].get(ind) is None:
                     donor_atom2_number = None
                 else:
@@ -437,7 +433,7 @@ class OrbitalDoc(PropertyDoc):
         task: TaskDocument,
         molecule_id: MPculeID,
         deprecated: bool = False,
-        **kwargs
+        **kwargs,
     ):  # type: ignore[override]
         """
         Construct an orbital document from a task
@@ -451,7 +447,10 @@ class OrbitalDoc(PropertyDoc):
 
         if task.output.nbo is None:
             raise ValueError("No NBO output in task {}!".format(task.task_id))
-        elif not (task.orig["rem"].get("run_nbo6", False) or task.orig["rem"].get("nbo_external", False)):
+        elif not (
+            task.orig["rem"].get("run_nbo6", False)
+            or task.orig["rem"].get("nbo_external", False)
+        ):
             raise ValueError("Only NBO7 is allowed!")
 
         nbo = task.output.nbo
@@ -490,12 +489,17 @@ class OrbitalDoc(PropertyDoc):
         bond_sets = cls.get_bonds(nbo, bds_inds)
         interaction_sets = cls.get_interactions(nbo, perts_inds)
 
-        if not (task.orig["rem"].get("run_nbo6") or task.orig["rem"].get("nbo_external", False)):
+        if not (
+            task.orig["rem"].get("run_nbo6")
+            or task.orig["rem"].get("nbo_external", False)
+        ):
             warnings = ["Using NBO5"]
         else:
             warnings = list()
 
-        id_string = f"natural_bonding_orbitals-{molecule_id}-{task.task_id}-{task.lot_solvent}"
+        id_string = (
+            f"natural_bonding_orbitals-{molecule_id}-{task.task_id}-{task.lot_solvent}"
+        )
         h = blake2b()
         h.update(id_string.encode("utf-8"))
         property_id = h.hexdigest()
@@ -520,7 +524,7 @@ class OrbitalDoc(PropertyDoc):
                 ],
                 warnings=warnings,
                 deprecated=deprecated,
-                **kwargs
+                **kwargs,
             )
 
         else:
@@ -548,5 +552,5 @@ class OrbitalDoc(PropertyDoc):
                 ],
                 warnings=warnings,
                 deprecated=deprecated,
-                **kwargs
+                **kwargs,
             )

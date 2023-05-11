@@ -45,7 +45,6 @@ def dos_fs(test_dir):
 def test_electronic_structure_builder(
     tasks_store, materials_store, electronic_structure_store, bandstructure_fs, dos_fs
 ):
-
     builder = ElectronicStructureBuilder(
         tasks=tasks_store,
         materials=materials_store,

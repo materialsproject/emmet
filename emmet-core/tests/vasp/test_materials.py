@@ -18,7 +18,6 @@ def test_tasks(test_dir):
 
 
 def test_make_mat(test_tasks):
-
     material = MaterialsDoc.from_tasks(test_tasks)
     assert material.formula_pretty == "Si"
     assert len(material.task_ids) == 4

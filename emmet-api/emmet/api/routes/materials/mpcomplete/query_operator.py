@@ -13,7 +13,6 @@ class MPCompletePostQuery(QueryOperator):
         public_name: str = Query(..., title="Public name"),
         public_email: str = Query(..., title="Public email"),
     ) -> STORE_PARAMS:
-
         self.structure = structure
         self.public_name = public_name
         self.public_email = public_email
@@ -27,7 +26,6 @@ class MPCompletePostQuery(QueryOperator):
         return {"criteria": crit}
 
     def post_process(self, docs, query):
-
         d = [
             {
                 "structure": query["criteria"]["structure"],
@@ -47,7 +45,6 @@ class MPCompleteGetQuery(QueryOperator):
         public_name: str = Query(None, title="Public name"),
         public_email: str = Query(None, title="Public email"),
     ) -> STORE_PARAMS:
-
         self.public_name = public_name
         self.public_email = public_email
 

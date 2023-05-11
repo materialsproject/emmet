@@ -1,4 +1,3 @@
-from monty.dev import deprecated
 import pytest
 from pymatgen.core import Structure
 from pymatgen.util.testing import PymatgenTest

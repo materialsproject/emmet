@@ -22,7 +22,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     MultiMPculeIDQuery,
     FindMoleculeQuery,
     CalcMethodQuery,
-    HashQuery
+    HashQuery,
 )
 
 from emmet.api.core.global_header import GlobalHeaderProcessor
@@ -62,7 +62,10 @@ def mol_assoc_resource(assoc_store):
             NumericQuery(model=MoleculeDoc),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(MoleculeDoc, default_fields=["molecule_id", "formula_alphabetical", "last_updated"],),
+            SparseFieldsQuery(
+                MoleculeDoc,
+                default_fields=["molecule_id", "formula_alphabetical", "last_updated"],
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Associated Molecules"],

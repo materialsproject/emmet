@@ -16,13 +16,21 @@ class GBStructureQuery(QueryOperator):
 
     def query(
         self,
-        sigma: Optional[int] = Query(None, description="Value of sigma.",),
-        type: Optional[GBTypeEnum] = Query(None, description="Grain boundary type.",),
+        sigma: Optional[int] = Query(
+            None,
+            description="Value of sigma.",
+        ),
+        type: Optional[GBTypeEnum] = Query(
+            None,
+            description="Grain boundary type.",
+        ),
         chemsys: Optional[str] = Query(
-            None, description="Dash-delimited string of elements in the material.",
+            None,
+            description="Dash-delimited string of elements in the material.",
         ),
         pretty_formula: Optional[str] = Query(
-            None, description="Formula of the material.",
+            None,
+            description="Formula of the material.",
         ),
         gb_plane: Optional[str] = Query(
             None,
@@ -33,7 +41,6 @@ class GBStructureQuery(QueryOperator):
             description="Miller index of the rotation axis as comma delimitd integers.",
         ),
     ) -> STORE_PARAMS:
-
         crit = defaultdict(dict)  # type: dict
 
         if sigma:
@@ -75,7 +82,6 @@ class GBTaskIDQuery(QueryOperator):
             description="Comma-separated list of Materials Project IDs to query on.",
         ),
     ) -> STORE_PARAMS:
-
         crit = {}
 
         if task_ids:

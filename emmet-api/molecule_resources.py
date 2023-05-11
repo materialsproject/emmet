@@ -4,15 +4,15 @@ from maggma.stores import MongoURIStore
 
 from emmet.api.routes.molecules.tasks.resources import (
     task_resource,
-    task_deprecation_resource
+    task_deprecation_resource,
 )
 from emmet.api.routes.molecules.association.resources import (
     find_molecule_assoc_resource,
-    mol_assoc_resource
+    mol_assoc_resource,
 )
 from emmet.api.routes.molecules.molecules.resources import (
     find_molecule_resource,
-    molecules_resource
+    molecules_resource,
 )
 from emmet.api.routes.molecules.partial_charges.resources import charges_resource
 from emmet.api.routes.molecules.partial_spins.resources import spins_resource
@@ -33,54 +33,86 @@ db_version = default_settings.DB_VERSION
 db_suffix = os.environ["MAPI_DB_NAME_SUFFIX"]
 
 if db_uri:
-
     # allow db_uri to be set with a different protocol scheme
     # but prepend with mongodb+srv:// if not otherwise specified
     if len(db_uri.split("://", 1)) < 2:
         db_uri = "mongodb+srv://" + db_uri
 
     task_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="task_id", collection_name="mpcules_tasks",
+        uri=db_uri,
+        database="mp_molecules",
+        key="task_id",
+        collection_name="mpcules_tasks",
     )
 
     assoc_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="mpcules_assoc",
+        uri=db_uri,
+        database="mp_molecules",
+        key="molecule_id",
+        collection_name="mpcules_assoc",
     )
 
     mol_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="mpcules_molecules",
+        uri=db_uri,
+        database="mp_molecules",
+        key="molecule_id",
+        collection_name="mpcules_molecules",
     )
 
     charges_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_charges",
+        uri=db_uri,
+        database="mp_molecules",
+        key="property_id",
+        collection_name="mpcules_charges",
     )
 
     spins_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_spins",
+        uri=db_uri,
+        database="mp_molecules",
+        key="property_id",
+        collection_name="mpcules_spins",
     )
 
     bonds_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_bonds",
+        uri=db_uri,
+        database="mp_molecules",
+        key="property_id",
+        collection_name="mpcules_bonds",
     )
 
     orbitals_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_orbitals",
+        uri=db_uri,
+        database="mp_molecules",
+        key="property_id",
+        collection_name="mpcules_orbitals",
     )
 
     redox_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_redox",
+        uri=db_uri,
+        database="mp_molecules",
+        key="property_id",
+        collection_name="mpcules_redox",
     )
 
     thermo_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_thermo",
+        uri=db_uri,
+        database="mp_molecules",
+        key="property_id",
+        collection_name="mpcules_thermo",
     )
 
     vibes_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="property_id", collection_name="mpcules_vibes",
+        uri=db_uri,
+        database="mp_molecules",
+        key="property_id",
+        collection_name="mpcules_vibes",
     )
 
     summary_store = MongoURIStore(
-        uri=db_uri, database="mp_molecules", key="molecule_id", collection_name="mpcules_summary"
+        uri=db_uri,
+        database="mp_molecules",
+        key="molecule_id",
+        collection_name="mpcules_summary",
     )
 
 else:
@@ -91,18 +123,12 @@ mp_molecules_resources = list()
 
 # Tasks
 mp_molecules_resources.extend(
-    [
-        task_resource(task_store),
-        task_deprecation_resource(task_store)
-    ]
+    [task_resource(task_store), task_deprecation_resource(task_store)]
 )
 
 # Assoc
 mp_molecules_resources.extend(
-    [
-        mol_assoc_resource(assoc_store),
-        find_molecule_assoc_resource(assoc_store)
-    ]
+    [mol_assoc_resource(assoc_store), find_molecule_assoc_resource(assoc_store)]
 )
 
 # Molecules

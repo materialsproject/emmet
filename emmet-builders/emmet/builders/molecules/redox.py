@@ -55,7 +55,6 @@ class RedoxBuilder(Builder):
         settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
-
         self.tasks = tasks
         self.molecules = molecules
         self.thermo = thermo
@@ -203,29 +202,41 @@ class RedoxBuilder(Builder):
 
             for gg in graph_group:
                 # First, grab relevant MoleculeThermoDocs and identify possible IE/EA single-points
-                thermo_docs = [MoleculeThermoDoc(**e) for e in self.thermo.query({"molecule_id": gg.molecule_id})]
+                thermo_docs = [
+                    MoleculeThermoDoc(**e)
+                    for e in self.thermo.query({"molecule_id": gg.molecule_id})
+                ]
 
                 if len(thermo_docs) == 0:
                     # Current building scheme requires a MoleculeThermoDoc
                     continue
 
                 ie_sp_task_ids = [
-                    e["task_id"] for e in gg.entries
+                    e["task_id"]
+                    for e in gg.entries
                     if e["charge"] == gg.charge + 1
                     and e["task_type"] == "Single Point"
                     and e["output"].get("final_energy")
                 ]
                 ie_tasks = list()
                 for i in ie_sp_task_ids:
-                    tdoc = self.tasks.query_one({"task_id": i,
-                                                 "formula_alphabetical": formula,
-                                                 "orig": {"$exists": True}})
+                    tdoc = self.tasks.query_one(
+                        {
+                            "task_id": i,
+                            "formula_alphabetical": formula,
+                            "orig": {"$exists": True},
+                        }
+                    )
 
                     if tdoc is None:
                         try:
-                            tdoc = self.tasks.query_one({"task_id": int(i),
-                                                         "formula_alphabetical": formula,
-                                                         "orig": {"$exists": True}})
+                            tdoc = self.tasks.query_one(
+                                {
+                                    "task_id": int(i),
+                                    "formula_alphabetical": formula,
+                                    "orig": {"$exists": True},
+                                }
+                            )
                         except ValueError:
                             tdoc = None
 
@@ -235,22 +246,31 @@ class RedoxBuilder(Builder):
                     ie_tasks.append(TaskDocument(**tdoc))
 
                 ea_sp_task_ids = [
-                    e["task_id"] for e in gg.entries
+                    e["task_id"]
+                    for e in gg.entries
                     if e["charge"] == gg.charge - 1
                     and e["task_type"] == "Single Point"
                     and e["output"].get("final_energy")
                 ]
                 ea_tasks = list()
                 for i in ea_sp_task_ids:
-                    tdoc = self.tasks.query_one({"task_id": i,
-                                                 "formula_alphabetical": formula,
-                                                 "orig": {"$exists": True}})
+                    tdoc = self.tasks.query_one(
+                        {
+                            "task_id": i,
+                            "formula_alphabetical": formula,
+                            "orig": {"$exists": True},
+                        }
+                    )
 
                     if tdoc is None:
                         try:
-                            tdoc = self.tasks.query_one({"task_id": int(i),
-                                                         "formula_alphabetical": formula,
-                                                         "orig": {"$exists": True}})
+                            tdoc = self.tasks.query_one(
+                                {
+                                    "task_id": int(i),
+                                    "formula_alphabetical": formula,
+                                    "orig": {"$exists": True},
+                                }
+                            )
                         except ValueError:
                             tdoc = None
 
@@ -259,7 +279,9 @@ class RedoxBuilder(Builder):
 
                     ea_tasks.append(TaskDocument(**tdoc))
 
-                grouped_docs = self._collect_by_lot_solvent(thermo_docs, ie_tasks, ea_tasks)
+                grouped_docs = self._collect_by_lot_solvent(
+                    thermo_docs, ie_tasks, ea_tasks
+                )
                 if gg.charge in charges:
                     charges[gg.charge].append((gg, grouped_docs))
                 else:
@@ -282,12 +304,18 @@ class RedoxBuilder(Builder):
 
                         for rmol, rdocs in red_coll:
                             if lot_solv in rdocs:
-                                if rdocs[lot_solv]["thermo_doc"].combined_lot_solvent == combined:
+                                if (
+                                    rdocs[lot_solv]["thermo_doc"].combined_lot_solvent
+                                    == combined
+                                ):
                                     relevant_red.append(rdocs[lot_solv])
 
                         for omol, odocs in ox_coll:
                             if lot_solv in odocs:
-                                if odocs[lot_solv]["thermo_doc"].combined_lot_solvent == combined:
+                                if (
+                                    odocs[lot_solv]["thermo_doc"].combined_lot_solvent
+                                    == combined
+                                ):
                                     relevant_ox.append(odocs[lot_solv])
 
                         # Take best options (based on electronic energy), where available
@@ -296,7 +324,7 @@ class RedoxBuilder(Builder):
                         else:
                             red_doc = sorted(
                                 relevant_red,
-                                key=lambda x: x["thermo_doc"].electronic_energy
+                                key=lambda x: x["thermo_doc"].electronic_energy,
                             )[0]["thermo_doc"]
 
                         if len(relevant_ox) == 0:
@@ -304,7 +332,7 @@ class RedoxBuilder(Builder):
                         else:
                             ox_doc = sorted(
                                 relevant_ox,
-                                key=lambda x: x["thermo_doc"].electronic_energy
+                                key=lambda x: x["thermo_doc"].electronic_energy,
                             )[0]["thermo_doc"]
 
                         ea_doc = docset.get("ea_doc")
@@ -317,13 +345,15 @@ class RedoxBuilder(Builder):
                                 red_doc=red_doc,
                                 ox_doc=ox_doc,
                                 ea_doc=ea_doc,
-                                ie_doc=ie_doc
+                                ie_doc=ie_doc,
                             )
                         )
 
         self.logger.debug(f"Produced {len(redox_docs)} redox docs for {formula}")
 
-        return jsanitize([doc.dict() for doc in redox_docs if doc is not None], allow_bson=True)
+        return jsanitize(
+            [doc.dict() for doc in redox_docs if doc is not None], allow_bson=True
+        )
 
     def update_targets(self, items: List[List[Dict]]):
         """
@@ -394,9 +424,11 @@ class RedoxBuilder(Builder):
         return results
 
     @staticmethod
-    def _collect_by_lot_solvent(thermo_docs: List[MoleculeThermoDoc],
-                                ie_docs: List[TaskDocument],
-                                ea_docs: List[TaskDocument]) -> Dict[str, Any]:
+    def _collect_by_lot_solvent(
+        thermo_docs: List[MoleculeThermoDoc],
+        ie_docs: List[TaskDocument],
+        ea_docs: List[TaskDocument],
+    ) -> Dict[str, Any]:
         """
         For a given MoleculeDoc, group potential MoleculeThermoDocs and TaskDocs for
         IE/EA calculations based on level of theory and solvent.
@@ -421,15 +453,9 @@ class RedoxBuilder(Builder):
                     return doc.correction_lot_solvent
             return doc.lot_solvent
 
-        thermo_grouped = groupby(
-            sorted(thermo_docs, key=_lot_solv), key=_lot_solv
-        )
-        ie_grouped = groupby(
-            sorted(ie_docs, key=_lot_solv), key=_lot_solv
-        )
-        ea_grouped = groupby(
-            sorted(ea_docs, key=_lot_solv), key=_lot_solv
-        )
+        thermo_grouped = groupby(sorted(thermo_docs, key=_lot_solv), key=_lot_solv)
+        ie_grouped = groupby(sorted(ie_docs, key=_lot_solv), key=_lot_solv)
+        ea_grouped = groupby(sorted(ea_docs, key=_lot_solv), key=_lot_solv)
 
         groups = dict()
 

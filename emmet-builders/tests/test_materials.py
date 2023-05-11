@@ -31,7 +31,6 @@ def materials_store():
 
 
 def test_materials_builder(tasks_store, validation_store, materials_store):
-
     builder = MaterialsBuilder(
         tasks=tasks_store, task_validation=validation_store, materials=materials_store
     )

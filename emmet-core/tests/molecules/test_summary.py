@@ -10,7 +10,9 @@ def docs_data(test_dir):
 
 
 def test_summary_doc(docs_data):
-    summary_doc = MoleculeSummaryDoc.from_docs(molecule_id="e793adf5298c07bc8a4f0f2c4db8da01-C2H4-m2-1", docs=docs_data)
+    summary_doc = MoleculeSummaryDoc.from_docs(
+        molecule_id="e793adf5298c07bc8a4f0f2c4db8da01-C2H4-m2-1", docs=docs_data
+    )
 
     assert summary_doc.property_name == "summary"
     assert summary_doc.electronic_energy is not None

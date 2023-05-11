@@ -65,7 +65,7 @@ def generic_groupby(list_in, comp=operator.eq):
         if ls1 is not None:
             continue
         list_out[i1] = label_num
-        for i2, ls2 in list(enumerate(list_out))[i1 + 1:]:
+        for i2, ls2 in list(enumerate(list_out))[i1 + 1 :]:
             if comp(list_in[i1], list_in[i2]):
                 if list_out[i2] is None:
                     list_out[i2] = list_out[i1]
@@ -81,17 +81,17 @@ default_build_settings = EmmetBuildSettings()
 
 class StructureGroupBuilder(Builder):
     def __init__(
-            self,
-            materials: MongoStore,
-            sgroups: MongoStore,
-            working_ion: str,
-            query: Optional[dict] = None,
-            ltol: float = default_build_settings.LTOL,
-            stol: float = default_build_settings.STOL,
-            angle_tol: float = default_build_settings.ANGLE_TOL,
-            check_newer: bool = True,
-            chunk_size: int = 1000,
-            **kwargs,
+        self,
+        materials: MongoStore,
+        sgroups: MongoStore,
+        working_ion: str,
+        query: Optional[dict] = None,
+        ltol: float = default_build_settings.LTOL,
+        stol: float = default_build_settings.STOL,
+        angle_tol: float = default_build_settings.ANGLE_TOL,
+        check_newer: bool = True,
+        chunk_size: int = 1000,
+        **kwargs,
     ):
         """
         Aggregate materials entries into sgroups that are topotactically similar to each other.
@@ -119,7 +119,9 @@ class StructureGroupBuilder(Builder):
             "deprecated"
         ] = False  # Ensure only non-deprecated materials are chosen
 
-        super().__init__(sources=[materials], targets=[sgroups], chunk_size=chunk_size, **kwargs)
+        super().__init__(
+            sources=[materials], targets=[sgroups], chunk_size=chunk_size, **kwargs
+        )
 
     def prechunk(self, number_splits: int) -> Iterator[Dict]:  # pragma: no cover
         """
@@ -132,7 +134,9 @@ class StructureGroupBuilder(Builder):
         new_chemsys_list = []
 
         for chemsys in all_chemsys:
-            elements = [element for element in chemsys.split("-") if element != self.working_ion]
+            elements = [
+                element for element in chemsys.split("-") if element != self.working_ion
+            ]
             new_chemsys = "-".join(sorted(elements))
             new_chemsys_list.append(new_chemsys)
 
@@ -141,7 +145,9 @@ class StructureGroupBuilder(Builder):
         for split in grouper(new_chemsys_list, N):
             new_split_add = []
             for chemsys in split:
-                elements = [element for element in chemsys.split("-")] + [self.working_ion]
+                elements = [element for element in chemsys.split("-")] + [
+                    self.working_ion
+                ]
                 new_chemsys = "-".join(sorted(elements))
                 new_split_add.append(new_chemsys)
 
@@ -173,7 +179,10 @@ class StructureGroupBuilder(Builder):
         all_chemsys = self.materials.distinct("chemsys", criteria=base_query)
         # Contains the working ion but not ONLY the working ion
         all_chemsys = [
-            *filter(lambda x: self.working_ion in x and len(x) > 1, [chemsys_.split("-") for chemsys_ in all_chemsys], )
+            *filter(
+                lambda x: self.working_ion in x and len(x) > 1,
+                [chemsys_.split("-") for chemsys_ in all_chemsys],
+            )
         ]
 
         self.logger.debug(
@@ -184,32 +193,55 @@ class StructureGroupBuilder(Builder):
         for chemsys_l in all_chemsys:
             chemsys = "-".join(sorted(chemsys_l))
             chemsys_wo = "-".join(sorted(set(chemsys_l) - {self.working_ion}))
-            chemsys_query = {"$and": [{"chemsys": {"$in": [chemsys_wo, chemsys]}}, self.query.copy()]}
+            chemsys_query = {
+                "$and": [{"chemsys": {"$in": [chemsys_wo, chemsys]}}, self.query.copy()]
+            }
             self.logger.debug(f"QUERY: {chemsys_query}")
             all_mats_in_chemsys = list(
                 self.materials.query(
-                    criteria=chemsys_query, properties=MAT_PROPS + [self.materials.last_updated_field],
+                    criteria=chemsys_query,
+                    properties=MAT_PROPS + [self.materials.last_updated_field],
                 )
             )
-            self.logger.debug(f"Found {len(all_mats_in_chemsys)} materials in {chemsys_wo}")
+            self.logger.debug(
+                f"Found {len(all_mats_in_chemsys)} materials in {chemsys_wo}"
+            )
             if self.check_newer:
                 all_target_docs = list(
                     self.sgroups.query(
                         criteria={"chemsys": chemsys},
-                        properties=["group_id", self.sgroups.last_updated_field, "material_ids"],
+                        properties=[
+                            "group_id",
+                            self.sgroups.last_updated_field,
+                            "material_ids",
+                        ],
                     )
                 )
-                self.logger.debug(f"Found {len(all_target_docs)} Grouped documents in {chemsys_wo}")
+                self.logger.debug(
+                    f"Found {len(all_target_docs)} Grouped documents in {chemsys_wo}"
+                )
 
-                mat_times = [mat_doc[self.materials.last_updated_field] for mat_doc in all_mats_in_chemsys]
+                mat_times = [
+                    mat_doc[self.materials.last_updated_field]
+                    for mat_doc in all_mats_in_chemsys
+                ]
                 max_mat_time = max(mat_times, default=datetime.min)
-                self.logger.debug(f"The newest material doc was generated at {max_mat_time}.")
+                self.logger.debug(
+                    f"The newest material doc was generated at {max_mat_time}."
+                )
 
-                target_times = [g_doc[self.materials.last_updated_field] for g_doc in all_target_docs]
+                target_times = [
+                    g_doc[self.materials.last_updated_field]
+                    for g_doc in all_target_docs
+                ]
                 min_target_time = min(target_times, default=datetime.max)
-                self.logger.debug(f"The newest GROUP doc was generated at {min_target_time}.")
+                self.logger.debug(
+                    f"The newest GROUP doc was generated at {min_target_time}."
+                )
 
-                mat_ids = set([mat_doc["material_id"] for mat_doc in all_mats_in_chemsys])
+                mat_ids = set(
+                    [mat_doc["material_id"] for mat_doc in all_mats_in_chemsys]
+                )
 
                 # If any material id is missing or if any material id has been updated
                 target_ids = set()
@@ -223,7 +255,9 @@ class StructureGroupBuilder(Builder):
                     self.logger.info(f"Skipping chemsys {chemsys}.")
                     yield None
                 elif len(target_ids) == 0:
-                    self.logger.info(f"No documents in chemsys {chemsys} in the target database.")
+                    self.logger.info(
+                        f"No documents in chemsys {chemsys} in the target database."
+                    )
                     yield {"chemsys": chemsys, "materials": all_mats_in_chemsys}
                 else:
                     self.logger.info(
@@ -281,13 +315,13 @@ class StructureGroupBuilder(Builder):
 
 class InsertionElectrodeBuilder(Builder):
     def __init__(
-            self,
-            grouped_materials: MongoStore,
-            thermo: MongoStore,
-            insertion_electrode: MongoStore,
-            query: Optional[Dict] = None,
-            strip_structures: bool = False,
-            **kwargs,
+        self,
+        grouped_materials: MongoStore,
+        thermo: MongoStore,
+        insertion_electrode: MongoStore,
+        query: Optional[Dict] = None,
+        strip_structures: bool = False,
+        **kwargs,
     ):
         self.grouped_materials = grouped_materials
         self.insertion_electrode = insertion_electrode
@@ -296,7 +330,9 @@ class InsertionElectrodeBuilder(Builder):
         self.strip_structures = strip_structures
 
         super().__init__(
-            sources=[self.grouped_materials, self.thermo], targets=[self.insertion_electrode], **kwargs,
+            sources=[self.grouped_materials, self.thermo],
+            targets=[self.insertion_electrode],
+            **kwargs,
         )
 
     def prechunk(self, number_splits: int) -> Iterator[Dict]:
@@ -324,18 +360,29 @@ class InsertionElectrodeBuilder(Builder):
             return best_wion
 
         def get_thermo_docs(mat_ids):
-            self.logger.debug(f"Looking for {len(mat_ids)} material_id in the Thermo DB.")
+            self.logger.debug(
+                f"Looking for {len(mat_ids)} material_id in the Thermo DB."
+            )
             self.thermo.connect()
             thermo_docs = list(
                 self.thermo.query(
                     {"$and": [{"material_id": {"$in": mat_ids}}]},
-                    properties=["material_id", "_sbxn", "thermo", "entries", "energy_type", "energy_above_hull"],
+                    properties=[
+                        "material_id",
+                        "_sbxn",
+                        "thermo",
+                        "entries",
+                        "energy_type",
+                        "energy_above_hull",
+                    ],
                 )
             )
 
             self.logger.debug(f"Found for {len(thermo_docs)} Thermo Documents.")
             if len(thermo_docs) != len(mat_ids):
-                missing_ids = set(mat_ids) - set([t_["material_id"] for t_ in thermo_docs])
+                missing_ids = set(mat_ids) - set(
+                    [t_["material_id"] for t_ in thermo_docs]
+                )
                 self.logger.warn(
                     f"The following ids are missing from the entries in thermo {missing_ids}.\n"
                     "The is likely due to the fact that a calculation other than GGA or GGA+U was "
@@ -378,9 +425,13 @@ class InsertionElectrodeBuilder(Builder):
         """
         if item is None:
             return None  # type: ignore
-        self.logger.debug(f"Working on {item['group_id']} with {len(item['thermo_docs'])}")
+        self.logger.debug(
+            f"Working on {item['group_id']} with {len(item['thermo_docs'])}"
+        )
 
-        entries = [tdoc_["entries"][tdoc_["energy_type"]] for tdoc_ in item["thermo_docs"]]
+        entries = [
+            tdoc_["entries"][tdoc_["energy_type"]] for tdoc_ in item["thermo_docs"]
+        ]
 
         entries = list(map(ComputedStructureEntry.from_dict, entries))
 
@@ -388,11 +439,15 @@ class InsertionElectrodeBuilder(Builder):
             item["working_ion_doc"]["entries"][item["working_ion_doc"]["energy_type"]]
         )
 
-        decomp_energies = {d_["material_id"]: d_["energy_above_hull"] for d_ in item["thermo_docs"]}
+        decomp_energies = {
+            d_["material_id"]: d_["energy_above_hull"] for d_ in item["thermo_docs"]
+        }
 
         for ient in entries:
             ient.data["volume"] = ient.structure.volume
-            ient.data["decomposition_energy"] = decomp_energies[ient.data["material_id"]]
+            ient.data["decomposition_energy"] = decomp_energies[
+                ient.data["material_id"]
+            ]
 
         ie = InsertionElectrodeDoc.from_entries(
             grouped_entries=entries,
@@ -410,7 +465,9 @@ class InsertionElectrodeBuilder(Builder):
         if len(items) > 0:
             self.logger.info("Updating {} battery documents".format(len(items)))
             for struct_group_dict in items:
-                struct_group_dict[self.grouped_materials.last_updated_field] = datetime.utcnow()
+                struct_group_dict[
+                    self.grouped_materials.last_updated_field
+                ] = datetime.utcnow()
             self.insertion_electrode.update(docs=items, key=["battery_id"])
         else:
             self.logger.info("No items to update")
@@ -418,13 +475,13 @@ class InsertionElectrodeBuilder(Builder):
 
 class ConversionElectrodeBuilder(Builder):
     def __init__(
-            self,
-            phase_diagram_store: MongoStore,
-            conversion_electrode_store: MongoStore,
-            working_ion: str,
-            thermo_type: str,
-            query: Optional[dict] = None,
-            **kwargs,
+        self,
+        phase_diagram_store: MongoStore,
+        conversion_electrode_store: MongoStore,
+        working_ion: str,
+        thermo_type: str,
+        query: Optional[dict] = None,
+        **kwargs,
     ):
         self.phase_diagram_store = phase_diagram_store
         self.conversion_electrode_store = conversion_electrode_store
@@ -437,7 +494,9 @@ class ConversionElectrodeBuilder(Builder):
         self.conversion_electrode_store.key = "conversion_electrode_id"
 
         super().__init__(
-            sources=[self.phase_diagram_store], targets=[self.conversion_electrode_store], **kwargs,
+            sources=[self.phase_diagram_store],
+            targets=[self.conversion_electrode_store],
+            **kwargs,
         )
 
     def prechunk(self, number_splits: int) -> Iterator[Dict]:
@@ -445,7 +504,9 @@ class ConversionElectrodeBuilder(Builder):
         Prechunk method to perform chunking by the key field
         """
         q = dict(self.query)
-        keys = self.phase_diagram_store.distinct(self.phase_diagram_store.key, criteria=q)
+        keys = self.phase_diagram_store.distinct(
+            self.phase_diagram_store.key, criteria=q
+        )
         N = ceil(len(keys) / number_splits)
         for split in grouper(keys, N):
             yield {"query": {self.phase_diagram_store.key: {"$in": list(split)}}}
@@ -479,7 +540,9 @@ class ConversionElectrodeBuilder(Builder):
             composition_without_wi = Composition.from_dict(composition_dict)
             red_form, num_form = composition_without_wi.get_reduced_formula_and_factor()
             n_wi = entry.composition.get_el_amt_dict()[self.working_ion]
-            most_wi[red_form] = max(most_wi[red_form], (n_wi / num_form, entry.composition))
+            most_wi[red_form] = max(
+                most_wi[red_form], (n_wi / num_form, entry.composition)
+            )
 
         new_docs = []
         unique_reaction_compositions = set()
@@ -487,16 +550,24 @@ class ConversionElectrodeBuilder(Builder):
         for k, v in most_wi.items():
             if v[1] is not None:
                 # Get lowest material_id with matching composition
-                material_ids = [(lambda x: x.data["material_id"] if x.composition.reduced_formula == v[
-                    1].reduced_formula else None)(e) for e in pd.entries]
+                material_ids = [
+                    (
+                        lambda x: x.data["material_id"]
+                        if x.composition.reduced_formula == v[1].reduced_formula
+                        else None
+                    )(e)
+                    for e in pd.entries
+                ]
                 material_ids = list(filter(None, material_ids))
                 lowest_id = min(material_ids, key=_get_id_num)
-                conversion_electrode_doc = ConversionElectrodeDoc.from_composition_and_pd(
-                    comp=v[1],
-                    pd=pd,
-                    working_ion_symbol=self.working_ion,
-                    battery_id=f"{lowest_id}_{self.working_ion}",
-                    thermo_type=self.thermo_type
+                conversion_electrode_doc = (
+                    ConversionElectrodeDoc.from_composition_and_pd(
+                        comp=v[1],
+                        pd=pd,
+                        working_ion_symbol=self.working_ion,
+                        battery_id=f"{lowest_id}_{self.working_ion}",
+                        thermo_type=self.thermo_type,
+                    )
                 )
                 # Get reaction entry_ids
                 comps = set()
@@ -533,7 +604,11 @@ class ConversionElectrodeBuilder(Builder):
             combined_items.extend(_items)
 
         if len(combined_items) > 0:
-            self.logger.info("Updating {} conversion battery documents".format(len(combined_items)))
-            self.conversion_electrode_store.update(docs=combined_items, key=["battery_id", "thermo_type"])
+            self.logger.info(
+                "Updating {} conversion battery documents".format(len(combined_items))
+            )
+            self.conversion_electrode_store.update(
+                docs=combined_items, key=["battery_id", "thermo_type"]
+            )
         else:
             self.logger.info("No items to update")

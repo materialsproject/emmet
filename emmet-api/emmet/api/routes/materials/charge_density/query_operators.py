@@ -15,10 +15,15 @@ class ChgcarTaskIDQuery(QueryOperator):
             description="Comma-separated list of calculation (task) IDs to query on",
         ),
     ) -> STORE_PARAMS:
-
         crit = {}
 
         if task_ids:
-            crit.update({"task_id": {"$in": [task_id.strip() for task_id in task_ids.split(",")]}})
+            crit.update(
+                {
+                    "task_id": {
+                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
+                    }
+                }
+            )
 
         return {"criteria": crit}

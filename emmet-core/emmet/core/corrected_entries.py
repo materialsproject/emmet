@@ -19,11 +19,17 @@ class CorrectedEntriesDoc(EmmetBaseModel):
     property_name = "corrected_entries"
 
     chemsys: str = Field(
-        ..., title="Chemical System", description="Dash-delimited string of elements in the material.",
+        ...,
+        title="Chemical System",
+        description="Dash-delimited string of elements in the material.",
     )
 
-    entries: Dict[Union[ThermoType, RunType], Optional[List[Union[ComputedEntry, ComputedStructureEntry]]]] = Field(
-        ..., description="List of all corrected entries that are valid for the specified thermo type."
+    entries: Dict[
+        Union[ThermoType, RunType],
+        Optional[List[Union[ComputedEntry, ComputedStructureEntry]]],
+    ] = Field(
+        ...,
+        description="List of all corrected entries that are valid for the specified thermo type.",
     )
 
     last_updated: datetime = Field(

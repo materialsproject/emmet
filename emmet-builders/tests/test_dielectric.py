@@ -27,7 +27,6 @@ def dielectric_store():
 
 
 def test_dielectric_builder(tasks_store, dielectric_store, materials_store):
-
     builder = DielectricBuilder(
         tasks=tasks_store, dielectric=dielectric_store, materials=materials_store
     )

@@ -44,10 +44,11 @@ class ProvenanceBuilder(Builder):
         for s in source_snls:
             s.key = "snl_id"
 
-        super().__init__(sources=[materials, *source_snls], targets=[provenance], **kwargs)
+        super().__init__(
+            sources=[materials, *source_snls], targets=[provenance], **kwargs
+        )
 
     def ensure_indicies(self):
-
         self.materials.ensure_index("material_id", unique=True)
         self.materials.ensure_index("formula_pretty")
 
@@ -64,25 +65,38 @@ class ProvenanceBuilder(Builder):
         # Find all formulas for materials that have been updated since this
         # builder was last ran
         q = self.query
-        updated_materials = self.provenance.newer_in(self.materials, criteria=q, exhaustive=True)
-        forms_to_update = set(self.materials.distinct("formula_pretty", {"material_id": {"$in": updated_materials}}))
+        updated_materials = self.provenance.newer_in(
+            self.materials, criteria=q, exhaustive=True
+        )
+        forms_to_update = set(
+            self.materials.distinct(
+                "formula_pretty", {"material_id": {"$in": updated_materials}}
+            )
+        )
 
         # Find all new SNL formulas since the builder was last run
         for source in self.source_snls:
             new_snls = self.provenance.newer_in(source)
-            forms_to_update |= set(source.distinct("formula_pretty", {source.key: {"$in": new_snls}}))
+            forms_to_update |= set(
+                source.distinct("formula_pretty", {source.key: {"$in": new_snls}})
+            )
 
         # Now reduce to the set of formulas we actually have
         forms_avail = set(self.materials.distinct("formula_pretty", self.query))
         forms_to_update = forms_to_update & forms_avail
 
-        mat_ids = set(self.materials.distinct("material_id", {"formula_pretty": {"$in": list(forms_to_update)}})) & set(
-            updated_materials
-        )
+        mat_ids = set(
+            self.materials.distinct(
+                "material_id", {"formula_pretty": {"$in": list(forms_to_update)}}
+            )
+        ) & set(updated_materials)
 
         N = ceil(len(mat_ids) / number_splits)
 
-        self.logger.info(f"Found {len(mat_ids)} new/updated systems to distribute to workers " f"in {N} chunks.")
+        self.logger.info(
+            f"Found {len(mat_ids)} new/updated systems to distribute to workers "
+            f"in {N} chunks."
+        )
 
         for chunk in grouper(mat_ids, N):
             yield {"query": {"material_id": {"$in": chunk}}}
@@ -101,28 +115,37 @@ class ProvenanceBuilder(Builder):
         # Find all formulas for materials that have been updated since this
         # builder was last ran
         q = self.query
-        updated_materials = self.provenance.newer_in(self.materials, criteria=q, exhaustive=True)
-        forms_to_update = set(self.materials.distinct("formula_pretty", {"material_id": {"$in": updated_materials}}))
+        updated_materials = self.provenance.newer_in(
+            self.materials, criteria=q, exhaustive=True
+        )
+        forms_to_update = set(
+            self.materials.distinct(
+                "formula_pretty", {"material_id": {"$in": updated_materials}}
+            )
+        )
 
         # Find all new SNL formulas since the builder was last run
         for source in self.source_snls:
             new_snls = self.provenance.newer_in(source)
-            forms_to_update |= set(source.distinct("formula_pretty", {source.key: {"$in": new_snls}}))
+            forms_to_update |= set(
+                source.distinct("formula_pretty", {source.key: {"$in": new_snls}})
+            )
 
         # Now reduce to the set of formulas we actually have
         forms_avail = set(self.materials.distinct("formula_pretty", self.query))
         forms_to_update = forms_to_update & forms_avail
 
-        mat_ids = set(self.materials.distinct("material_id", {"formula_pretty": {"$in": list(forms_to_update)}})) & set(
-            updated_materials
-        )
+        mat_ids = set(
+            self.materials.distinct(
+                "material_id", {"formula_pretty": {"$in": list(forms_to_update)}}
+            )
+        ) & set(updated_materials)
 
         self.total = len(mat_ids)
 
         self.logger.info(f"Found {self.total} new/updated systems to process")
 
         for mat_id in mat_ids:
-
             mat = self.materials.query_one(
                 properties=[
                     "material_id",
@@ -137,7 +160,9 @@ class ProvenanceBuilder(Builder):
 
             snls = []  # type: list
             for source in self.source_snls:
-                snls.extend(source.query(criteria={"formula_pretty": mat["formula_pretty"]}))
+                snls.extend(
+                    source.query(criteria={"formula_pretty": mat["formula_pretty"]})
+                )
 
             snl_groups = defaultdict(list)
             for snl in snls:

@@ -18,7 +18,6 @@ class PossibleOxiStateQuery(QueryOperator):
                 (e.g. Cr2+,O2-)",
         ),
     ) -> STORE_PARAMS:
-
         crit = defaultdict(dict)  # type: dict
 
         if possible_species:

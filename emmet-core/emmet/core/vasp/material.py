@@ -17,7 +17,6 @@ SETTINGS = EmmetSettings()
 
 
 class MaterialsDoc(CoreMaterialsDoc, StructureMetadata):
-
     calc_types: Mapping[str, CalcType] = Field(  # type: ignore
         None,
         description="Calculation types for all the calculations that make up this material",

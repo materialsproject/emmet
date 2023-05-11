@@ -59,13 +59,15 @@ class AbsorptionBuilder(Builder):
         mat_ids = self.materials.distinct(self.materials.key, criteria=q)
         ab_ids = self.absorption.distinct(self.absorption.key)
 
-        mats_set = set(self.absorption.newer_in(target=self.materials, criteria=q, exhaustive=True)) | (
-            set(mat_ids) - set(ab_ids)
-        )
+        mats_set = set(
+            self.absorption.newer_in(target=self.materials, criteria=q, exhaustive=True)
+        ) | (set(mat_ids) - set(ab_ids))
 
         mats = [mat for mat in mats_set]
 
-        self.logger.info("Processing {} materials for absorption data".format(len(mats)))
+        self.logger.info(
+            "Processing {} materials for absorption data".format(len(mats))
+        )
 
         self.total = len(mats)
 
@@ -112,10 +114,15 @@ class AbsorptionBuilder(Builder):
             self.logger.info("No items to update")
 
     def _get_processed_doc(self, mat):
-
         mat_doc = self.materials.query_one(
             {self.materials.key: mat},
-            [self.materials.key, "structure", "task_types", "run_types", "last_updated"],
+            [
+                self.materials.key,
+                "structure",
+                "task_types",
+                "run_types",
+                "last_updated",
+            ],
         )
 
         task_types = mat_doc["task_types"].items()
@@ -145,17 +152,20 @@ class AbsorptionBuilder(Builder):
             )
 
             if task_query["output"]["optical_absorption_coeff"] is not None:
-
                 try:
                     structure = task_query["orig_inputs"]["poscar"]["structure"]
                 except KeyError:
                     structure = task_query["input"]["structure"]
 
                 if (
-                    task_query["orig_inputs"]["kpoints"]["generation_style"] == "Monkhorst"
-                    or task_query["orig_inputs"]["kpoints"]["generation_style"] == "Gamma"
+                    task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Monkhorst"
+                    or task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Gamma"
                 ):
-                    nkpoints = np.prod(task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0)
+                    nkpoints = np.prod(
+                        task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
+                    )
 
                 else:
                     nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]
@@ -169,7 +179,9 @@ class AbsorptionBuilder(Builder):
                         "energies": task_query["output"]["dielectric"]["energy"],
                         "real_dielectric": task_query["output"]["dielectric"]["real"],
                         "imag_dielectric": task_query["output"]["dielectric"]["imag"],
-                        "optical_absorption_coeff": task_query["output"]["optical_absorption_coeff"],
+                        "optical_absorption_coeff": task_query["output"][
+                            "optical_absorption_coeff"
+                        ],
                         "bandgap": task_query["output"]["bandgap"],
                         "structure": structure,
                         "updated_on": lu_dt,

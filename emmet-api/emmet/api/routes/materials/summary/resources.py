@@ -14,7 +14,9 @@ from emmet.api.routes.materials.materials.query_operators import (
     ChemsysQuery,
     SymmetryQuery,
 )
-from emmet.api.routes.materials.oxidation_states.query_operators import PossibleOxiStateQuery
+from emmet.api.routes.materials.oxidation_states.query_operators import (
+    PossibleOxiStateQuery,
+)
 from emmet.core.summary import SummaryStats
 from emmet.api.routes.materials.summary.hint_scheme import SummaryHintScheme
 from emmet.api.routes.materials.summary.query_operators import (
@@ -62,7 +64,7 @@ def summary_resource(summary_store):
         tags=["Materials Summary"],
         sub_path="/summary/",
         disable_validation=True,
-        timeout=timeout
+        timeout=timeout,
     )
 
     return resource
@@ -76,7 +78,7 @@ def summary_stats_resource(summary_store):
         tags=["Materials Summary"],
         sub_path="/summary/stats/",
         header_processor=GlobalHeaderProcessor(),
-        timeout=timeout
+        timeout=timeout,
     )
 
     return resource

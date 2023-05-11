@@ -10,13 +10,13 @@ from maggma.stores import Store
 from maggma.utils import grouper
 
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.utils import (
-    get_molecule_id,
-    group_molecules,
-    jsanitize,
-    make_mol_graph
+from emmet.core.utils import get_molecule_id, group_molecules, jsanitize, make_mol_graph
+from emmet.core.qchem.molecule import (
+    best_lot,
+    evaluate_lot,
+    evaluate_task_entry,
+    MoleculeDoc,
 )
-from emmet.core.qchem.molecule import best_lot, evaluate_lot, evaluate_task_entry, MoleculeDoc
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.calc_types import LevelOfTheory, CalcType, TaskType
 
@@ -406,7 +406,13 @@ class MoleculesBuilder(Builder):
         all_assoc = list(
             self.assoc.query(
                 temp_query,
-                [self.assoc.key, "formula_alphabetical", "species_hash", "charge", "spin_multiplicity"]
+                [
+                    self.assoc.key,
+                    "formula_alphabetical",
+                    "species_hash",
+                    "charge",
+                    "spin_multiplicity",
+                ],
             )
         )
 
@@ -420,7 +426,7 @@ class MoleculesBuilder(Builder):
                 d["species_hash"],
                 d["formula_alphabetical"].replace(" ", ""),
                 str(int(d["charge"])).replace("-", "m"),
-                str(int(d["spin_multiplicity"]))
+                str(int(d["spin_multiplicity"])),
             )
             assoc_ids.add(this_id)
             xyz_species_id_map[d[self.assoc.key]] = this_id
@@ -462,7 +468,13 @@ class MoleculesBuilder(Builder):
         all_assoc = list(
             self.assoc.query(
                 temp_query,
-                [self.assoc.key, "formula_alphabetical", "species_hash", "charge", "spin_multiplicity"]
+                [
+                    self.assoc.key,
+                    "formula_alphabetical",
+                    "species_hash",
+                    "charge",
+                    "spin_multiplicity",
+                ],
             )
         )
 
@@ -476,7 +488,7 @@ class MoleculesBuilder(Builder):
                 d["species_hash"],
                 d["formula_alphabetical"].replace(" ", ""),
                 str(int(d["charge"])).replace("-", "m"),
-                str(int(d["spin_multiplicity"]))
+                str(int(d["spin_multiplicity"])),
             )
             assoc_ids.add(this_id)
             xyz_species_id_map[d[self.assoc.key]] = this_id
@@ -555,11 +567,12 @@ class MoleculesBuilder(Builder):
             for solv, subgroup in groupby(
                 sorted(group, key=_optimizing_solvent), key=_optimizing_solvent
             ):
-
                 sorted_docs = sorted(subgroup, key=evaluate_molecule)
                 docs_by_solvent[solv] = sorted_docs[0]
                 mols_by_solvent[solv] = sorted_docs[0].molecule
-                mol_lots[solv] = sorted_docs[0].levels_of_theory[sorted_docs[0].origins[0].task_id]
+                mol_lots[solv] = sorted_docs[0].levels_of_theory[
+                    sorted_docs[0].origins[0].task_id
+                ]
                 constituent_molecules.append(sorted_docs[0].molecule_id)
 
                 if len(sorted_docs) > 1:
@@ -582,11 +595,19 @@ class MoleculesBuilder(Builder):
                     levels_of_theory.update(doc.levels_of_theory)
                     solvents.update(doc.solvents)
                     lot_solvents.update(doc.lot_solvents)
-                    unique_calc_types = unique_calc_types.union(set(doc.unique_calc_types))
-                    unique_task_types = unique_task_types.union(set(doc.unique_task_types))
-                    unique_levels_of_theory = unique_levels_of_theory.union(set(doc.unique_levels_of_theory))
+                    unique_calc_types = unique_calc_types.union(
+                        set(doc.unique_calc_types)
+                    )
+                    unique_task_types = unique_task_types.union(
+                        set(doc.unique_task_types)
+                    )
+                    unique_levels_of_theory = unique_levels_of_theory.union(
+                        set(doc.unique_levels_of_theory)
+                    )
                     unique_solvents = unique_solvents.union(set(doc.unique_solvents))
-                    unique_lot_solvents = unique_lot_solvents.union(set(doc.unique_lot_solvents))
+                    unique_lot_solvents = unique_lot_solvents.union(
+                        set(doc.unique_lot_solvents)
+                    )
                     origins.extend(doc.origins)
                     entries.extend(doc.entries)
 
@@ -600,7 +621,9 @@ class MoleculesBuilder(Builder):
                             best_entries[lot_solv] = entry
 
                 # Assign new doc info
-                base_doc.molecule_id = get_molecule_id(base_doc.molecule, node_attr="specie")
+                base_doc.molecule_id = get_molecule_id(
+                    base_doc.molecule, node_attr="specie"
+                )
                 base_doc.molecules = mols_by_solvent
                 base_doc.molecule_levels_of_theory = mol_lots
                 base_doc.task_ids = task_ids
@@ -700,9 +723,7 @@ class MoleculesBuilder(Builder):
                             break
 
                     if not matched:
-                        subgroups.append(
-                            {"hash": mol_hash, "mol_docs": [mol_doc]}
-                        )
+                        subgroups.append({"hash": mol_hash, "mol_docs": [mol_doc]})
 
             self.logger.debug(f"Unique hashes: {[x['hash'] for x in subgroups]}")
 

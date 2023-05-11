@@ -19,7 +19,6 @@ class MultipleTaskIDsQuery(QueryOperator):
             None, description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
-
         crit = {}
 
         if task_ids:
@@ -58,7 +57,6 @@ class DeprecationQuery(QueryOperator):
             ..., description="Comma-separated list of task_ids to query on"
         ),
     ) -> STORE_PARAMS:
-
         self.task_ids = [task_id.strip() for task_id in task_ids.split(",")]
 
         crit = {}

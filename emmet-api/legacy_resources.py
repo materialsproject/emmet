@@ -14,13 +14,14 @@ db_version = default_settings.DB_VERSION
 db_suffix = os.environ["MAPI_DB_NAME_SUFFIX"]
 
 if db_uri:
-
     # allow db_uri to be set with a different protocol scheme
     # but prepend with mongodb+srv:// if not otherwise specified
     if len(db_uri.split("://", 1)) < 2:
         db_uri = "mongodb+srv://" + db_uri
 
-    molecules_store = MongoURIStore(uri=db_uri, database="mp_core", key="task_id", collection_name="molecules")
+    molecules_store = MongoURIStore(
+        uri=db_uri, database="mp_core", key="task_id", collection_name="molecules"
+    )
 
 legacy_resources = list()
 

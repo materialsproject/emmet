@@ -1,5 +1,4 @@
 from datetime import datetime
-from monty.dev import deprecated
 
 import pytest
 from pymatgen.core import Lattice, Structure
@@ -17,7 +16,6 @@ def structure():
 
 @pytest.fixture
 def snls(structure):
-
     docs = [
         StructureNL(
             structure,
@@ -36,7 +34,6 @@ def snls(structure):
 
 
 def test_from_snls(snls, structure):
-
     doc = ProvenanceDoc.from_SNLs(
         material_id="mp-3", structure=structure, snls=snls, deprecated=False
     )

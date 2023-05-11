@@ -27,7 +27,6 @@ def absorption_store():
 
 
 def test_absorption_builder(tasks_store, absorption_store, materials_store):
-
     builder = AbsorptionBuilder(
         tasks=tasks_store, absorption=absorption_store, materials=materials_store
     )

@@ -32,7 +32,6 @@ class FormulaQuery(QueryOperator):
 A comma delimited string list of alphabetical formulas can also be provided.",
         ),
     ) -> STORE_PARAMS:
-
         crit: Dict[str, Any] = {}  # type: ignore
 
         if formula:
@@ -63,7 +62,6 @@ class ChemsysQuery(QueryOperator):
 Wildcards for unknown elements only supported for single chemsys queries",
         ),
     ) -> STORE_PARAMS:
-
         crit = {}
 
         if chemsys:
@@ -84,13 +82,14 @@ class ElementsQuery(QueryOperator):
     def query(
         self,
         elements: Optional[str] = Query(
-            None, description="Query by elements in the material composition as a comma-separated list",
+            None,
+            description="Query by elements in the material composition as a comma-separated list",
         ),
         exclude_elements: Optional[str] = Query(
-            None, description="Query by excluded elements in the material composition as a comma-separated list",
+            None,
+            description="Query by excluded elements in the material composition as a comma-separated list",
         ),
     ) -> STORE_PARAMS:
-
         crit = {}  # type: dict
 
         if elements or exclude_elements:
@@ -101,17 +100,21 @@ class ElementsQuery(QueryOperator):
                 element_list = [Element(e.strip()) for e in elements.strip().split(",")]
             except ValueError:
                 raise HTTPException(
-                    status_code=400, detail="Please provide a comma-seperated list of elements",
+                    status_code=400,
+                    detail="Please provide a comma-seperated list of elements",
                 )
 
             crit["elements"]["$all"] = [str(el) for el in element_list]
 
         if exclude_elements:
             try:
-                element_list = [Element(e.strip()) for e in exclude_elements.strip().split(",")]
+                element_list = [
+                    Element(e.strip()) for e in exclude_elements.strip().split(",")
+                ]
             except ValueError:
                 raise HTTPException(
-                    status_code=400, detail="Please provide a comma-seperated list of elements",
+                    status_code=400,
+                    detail="Please provide a comma-seperated list of elements",
                 )
             crit["elements"]["$nin"] = [str(el) for el in element_list]
 
@@ -134,11 +137,9 @@ class ChargeSpinQuery(QueryOperator):
             description="Query by molecular charge",
         ),
         spin_multiplicity: Optional[int] = Query(
-            None,
-            description="Query by molecular spin multiplicity."
-        )
+            None, description="Query by molecular spin multiplicity."
+        ),
     ) -> STORE_PARAMS:
-
         crit = {}
 
         if charge:
@@ -149,8 +150,7 @@ class ChargeSpinQuery(QueryOperator):
         return {"criteria": crit}
 
     def ensure_indexes(self):  # pragma: no cover
-        return [("charge", False),
-                ("spin_multiplicity", False)]
+        return [("charge", False), ("spin_multiplicity", False)]
 
 
 class DeprecationQuery(QueryOperator):
@@ -159,9 +159,12 @@ class DeprecationQuery(QueryOperator):
     """
 
     def query(
-        self, deprecated: Optional[bool] = Query(False, description="Whether the material is marked as deprecated",),
+        self,
+        deprecated: Optional[bool] = Query(
+            False,
+            description="Whether the material is marked as deprecated",
+        ),
     ) -> STORE_PARAMS:
-
         crit = {}
 
         if deprecated is not None:
@@ -176,14 +179,22 @@ class MultiTaskIDQuery(QueryOperator):
     """
 
     def query(
-        self, task_ids: Optional[str] = Query(None, description="Comma-separated list of task_ids to query on"),
+        self,
+        task_ids: Optional[str] = Query(
+            None, description="Comma-separated list of task_ids to query on"
+        ),
     ) -> STORE_PARAMS:
-
         crit = {}
 
         if task_ids:
             # TODO: do task_ids need to be converted to ints?
-            crit.update({"task_ids": {"$in": [task_id.strip() for task_id in task_ids.split(",")]}})
+            crit.update(
+                {
+                    "task_ids": {
+                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
+                    }
+                }
+            )
 
         return {"criteria": crit}
 
@@ -198,14 +209,16 @@ class MultiMPculeIDQuery(QueryOperator):
 
     def query(
         self,
-        molecule_ids: Optional[str] = Query(None, description="Comma-separated list of MPculeIDs to query on"),
+        molecule_ids: Optional[str] = Query(
+            None, description="Comma-separated list of MPculeIDs to query on"
+        ),
     ) -> STORE_PARAMS:
-
         crit = {}  # type: dict
 
         if molecule_ids:
-
-            molecule_ids_list = [mpcule_id.strip() for mpcule_id in molecule_ids.split(",")]
+            molecule_ids_list = [
+                mpcule_id.strip() for mpcule_id in molecule_ids.split(",")
+            ]
 
             if len(molecule_ids_list) == 1:
                 crit.update({"molecule_id": molecule_ids_list[0]})
@@ -222,19 +235,27 @@ class FindMoleculeQuery(QueryOperator):
 
     def query(
         self,
-        molecule: Molecule = Body(..., description="Pymatgen Molecule object to query with",),
-        tolerance: float = Query(0.01, description="RMSD difference threshold. Default is 0.01.",),
+        molecule: Molecule = Body(
+            ...,
+            description="Pymatgen Molecule object to query with",
+        ),
+        tolerance: float = Query(
+            0.01,
+            description="RMSD difference threshold. Default is 0.01.",
+        ),
         charge: Optional[int] = Query(
-            None, description="Molecule charge. If None (default), don't limit by charge."
+            None,
+            description="Molecule charge. If None (default), don't limit by charge.",
         ),
         spin_multiplicity: Optional[int] = Query(
-            None, description="Molecule spin_multiplicity. If None (default), don't limit by spin multiplicity."
+            None,
+            description="Molecule spin_multiplicity. If None (default), don't limit by spin multiplicity.",
         ),
         _limit: int = Query(
-            1, description="Maximum number of matches to show. Defaults to 1, only showing the best match.",
+            1,
+            description="Maximum number of matches to show. Defaults to 1, only showing the best match.",
         ),
     ) -> STORE_PARAMS:
-
         self.tolerance = tolerance
         self._limit = _limit
         self.molecule = molecule
@@ -263,11 +284,11 @@ class FindMoleculeQuery(QueryOperator):
             return {"criteria": crit}
         except Exception:
             raise HTTPException(
-                status_code=404, detail="Body cannot be converted to a pymatgen Molecule object.",
+                status_code=404,
+                detail="Body cannot be converted to a pymatgen Molecule object.",
             )
 
     def post_process(self, docs, query):
-
         m1 = Molecule.from_dict(self.molecule)
 
         match = MoleculeMatcher(tolerance=self.tolerance)
@@ -275,7 +296,6 @@ class FindMoleculeQuery(QueryOperator):
         matches = list()
 
         for doc in docs:
-
             m2 = Molecule.from_dict(doc["molecule"])
             matched = match.fit(m1, m2)
 
@@ -290,7 +310,8 @@ class FindMoleculeQuery(QueryOperator):
                 )
 
         response = sorted(
-            matches[: self._limit], key=lambda x: x["rmsd"],
+            matches[: self._limit],
+            key=lambda x: x["rmsd"],
         )
 
         return response
@@ -310,24 +331,27 @@ class CalcMethodQuery(QueryOperator):
     and/or solvent were used to generate the specific document being queried.
     """
 
-    def query(self,
-              level_of_theory: Optional[str] = Query(
-                None, description="Level of theory used for calculation. Default is None, meaning that level of theory"
-                                  "will not be queried."
-                ),
-              solvent: Optional[str] = Query(
-                None, description="Solvent data used for calculation. Default is None, meaning that solvent will not be"
-                                  "queried."
-                ),
-              lot_solvent: Optional[str] = Query(
-                None, description="String representing the combination of level of theory and solvent. Default is None,"
-                                  "meaning lot_solvent will not be queried."
-              ),
-              _limit: int = Query(
-                100, description="Maximum number of matches to show. Defaults to 100."
-              )
-              ):
-
+    def query(
+        self,
+        level_of_theory: Optional[str] = Query(
+            None,
+            description="Level of theory used for calculation. Default is None, meaning that level of theory"
+            "will not be queried.",
+        ),
+        solvent: Optional[str] = Query(
+            None,
+            description="Solvent data used for calculation. Default is None, meaning that solvent will not be"
+            "queried.",
+        ),
+        lot_solvent: Optional[str] = Query(
+            None,
+            description="String representing the combination of level of theory and solvent. Default is None,"
+            "meaning lot_solvent will not be queried.",
+        ),
+        _limit: int = Query(
+            100, description="Maximum number of matches to show. Defaults to 100."
+        ),
+    ):
         self._limit = _limit
         self.level_of_theory = level_of_theory
         self.solvent = solvent
@@ -345,9 +369,11 @@ class CalcMethodQuery(QueryOperator):
         return {"criteria": crit}
 
     def ensure_indexes(self):  # pragma: no cover
-        return [("unique_levels_of_theory", False),
-                ("unique_solvents", False),
-                ("unique_lot_solvents", False)]
+        return [
+            ("unique_levels_of_theory", False),
+            ("unique_solvents", False),
+            ("unique_lot_solvents", False),
+        ]
 
     def post_process(self, docs, query):
         # TODO: should this be somehow sorted?
@@ -367,24 +393,27 @@ class ExactCalcMethodQuery(QueryOperator):
     and/or solvent were used to generate the specific document being queried.
     """
 
-    def query(self,
-              level_of_theory: Optional[str] = Query(
-                None, description="Level of theory used for calculation. Default is None, meaning that level of theory"
-                                  "will not be queried."
-                ),
-              solvent: Optional[str] = Query(
-                None, description="Solvent data used for calculation. Default is None, meaning that solvent will not be"
-                                  "queried."
-                ),
-              lot_solvent: Optional[str] = Query(
-                None, description="String representing the combination of level of theory and solvent. Default is None,"
-                                  "meaning lot_solvent will not be queried."
-              ),
-              _limit: int = Query(
-                100, description="Maximum number of matches to show. Defaults to 100."
-              )
-              ):
-
+    def query(
+        self,
+        level_of_theory: Optional[str] = Query(
+            None,
+            description="Level of theory used for calculation. Default is None, meaning that level of theory"
+            "will not be queried.",
+        ),
+        solvent: Optional[str] = Query(
+            None,
+            description="Solvent data used for calculation. Default is None, meaning that solvent will not be"
+            "queried.",
+        ),
+        lot_solvent: Optional[str] = Query(
+            None,
+            description="String representing the combination of level of theory and solvent. Default is None,"
+            "meaning lot_solvent will not be queried.",
+        ),
+        _limit: int = Query(
+            100, description="Maximum number of matches to show. Defaults to 100."
+        ),
+    ):
         self._limit = _limit
         self.level_of_theory = level_of_theory
         self.solvent = solvent
@@ -402,9 +431,7 @@ class ExactCalcMethodQuery(QueryOperator):
         return {"criteria": crit}
 
     def ensure_indexes(self):  # pragma: no cover
-        return [("level_of_theory", False),
-                ("solvent", False),
-                ("lot_solvent", False)]
+        return [("level_of_theory", False), ("solvent", False), ("lot_solvent", False)]
 
     def post_process(self, docs, query):
         # TODO: should this be somehow sorted?
@@ -418,15 +445,15 @@ class HashQuery(QueryOperator):
     Method to generate a query based on the augmented graph hashes of the molecule
     """
 
-    def query(self,
-              species_hash: Optional[str] = Query(
-                None, description="Graph hash augmented with node species"
-              ),
-              coord_hash: Optional[str] = Query(
-                None, description="Graph hash augmented with node XYZ coordinates"
-              )
-              ):
-
+    def query(
+        self,
+        species_hash: Optional[str] = Query(
+            None, description="Graph hash augmented with node species"
+        ),
+        coord_hash: Optional[str] = Query(
+            None, description="Graph hash augmented with node XYZ coordinates"
+        ),
+    ):
         crit = dict()
 
         if species_hash is not None:
@@ -437,5 +464,4 @@ class HashQuery(QueryOperator):
         return {"criteria": crit}
 
     def ensure_indexes(self):  # pragma: no cover
-        return [("species_hash", False),
-                ("coord_hash", False)]
+        return [("species_hash", False), ("coord_hash", False)]

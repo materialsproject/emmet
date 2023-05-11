@@ -11,7 +11,7 @@ from emmet.core.electrode import (
     ConversionVoltagePairDoc,
     InsertionElectrodeDoc,
     InsertionVoltagePairDoc,
-    get_battery_formula
+    get_battery_formula,
 )
 
 
@@ -86,7 +86,7 @@ def test_ConversionDocs_from_entries(conversion_elec):
             entries=elec["entries"],
             working_ion_symbol=elec["working_ion"],
             battery_id="mp-1234",
-            thermo_type="GGA_GGA+U"
+            thermo_type="GGA_GGA+U",
         )
         res_d = vp.dict()
         for k, v in expected.items():
@@ -102,7 +102,7 @@ def test_ConversionDocs_from_composition_and_pd(conversion_elec, test_dir):
             pd=pd,
             working_ion_symbol=elec["working_ion"],
             battery_id="mp-1234",
-            thermo_type="GGA_GGA+U"
+            thermo_type="GGA_GGA+U",
         )
         res_d = vp.dict()
         for k, v in expected.items():

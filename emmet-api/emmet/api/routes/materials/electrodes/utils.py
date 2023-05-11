@@ -50,7 +50,7 @@ def electrodes_formula_to_criteria(formulas: str) -> Dict:
             real_elts = [
                 str(e)
                 for e in comp.elements
-                if not e.as_dict().get("element", "A") in dummies
+                if e.as_dict().get("element", "A") not in dummies
             ]
 
             for el, n in comp.to_reduced_dict.items():

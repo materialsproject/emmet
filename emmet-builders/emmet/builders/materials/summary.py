@@ -35,7 +35,6 @@ class SummaryBuilder(Builder):
         query=None,
         **kwargs,
     ):
-
         self.materials = materials
         self.thermo = thermo
         self.xas = xas
@@ -107,7 +106,6 @@ class SummaryBuilder(Builder):
         self.logger.debug("Processing {} materials.".format(self.total))
 
         for entry in summary_set:
-
             materials_doc = self.materials.query_one({self.materials.key: entry})
 
             valid_static_tasks = set(
@@ -147,7 +145,8 @@ class SummaryBuilder(Builder):
                     {self.piezoelectric.key: entry}
                 ),
                 HasProps.phonon.value: self.phonon.query_one(
-                    {self.phonon.key: {"$in": all_tasks}}, [self.phonon.key],
+                    {self.phonon.key: {"$in": all_tasks}},
+                    [self.phonon.key],
                 ),
                 HasProps.insertion_electrodes.value: list(
                     self.insertion_electrodes.query(
@@ -205,7 +204,6 @@ class SummaryBuilder(Builder):
             yield {"query": {self.materials.key: {"$in": list(split)}}}
 
     def process_item(self, item):
-
         material_id = MPID(item[HasProps.materials.value]["material_id"])
         doc = SummaryDoc.from_docs(material_id=material_id, **item)
         return jsanitize(doc.dict(exclude_none=False), allow_bson=True)

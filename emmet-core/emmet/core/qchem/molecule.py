@@ -10,6 +10,7 @@ from emmet.core.mpid import MPculeID
 from emmet.core.utils import get_graph_hash, get_molecule_id
 from emmet.core.settings import EmmetSettings
 from emmet.core.material import CoreMoleculeDoc, PropertyOrigin
+
 # from emmet.core.structure import MoleculeMetadata
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.task import TaskDocument
@@ -135,17 +136,18 @@ def evaluate_task_entry(
 
 
 class MoleculeDoc(CoreMoleculeDoc):
-
     species: List[str] = Field(
         None, description="Ordered list of elements/species in this Molecule."
     )
 
     molecules: Dict[str, Molecule] = Field(
-        None, description="The lowest energy optimized structures for this molecule for each solvent."
+        None,
+        description="The lowest energy optimized structures for this molecule for each solvent.",
     )
 
     molecule_levels_of_theory: Dict[str, str] = Field(
-        None, description="Level of theory used to optimize the best molecular structure for each solvent."
+        None,
+        description="Level of theory used to optimize the best molecular structure for each solvent.",
     )
 
     species_hash: str = Field(
@@ -223,7 +225,7 @@ class MoleculeDoc(CoreMoleculeDoc):
     constituent_molecules: List[MPculeID] = Field(
         None,
         description="For cases where data from multiple MoleculeDocs have been compiled, a list of "
-                    "MPculeIDs of documents used to construct this document"
+        "MPculeIDs of documents used to construct this document",
     )
 
     similar_molecules: List[MPculeID] = Field(
@@ -236,7 +238,6 @@ class MoleculeDoc(CoreMoleculeDoc):
         cls,
         task_group: List[TaskDocument],
     ) -> "MoleculeDoc":
-
         """
         Converts a group of tasks into one molecule document
 
@@ -314,12 +315,18 @@ class MoleculeDoc(CoreMoleculeDoc):
                 task
                 for task in task_group
                 if task.task_type
-                in [TaskType.Geometry_Optimization, TaskType.Frequency_Flattening_Geometry_Optimization,
-                    "Geometry Optimization", "Frequency Flattening Geometry Optimization"]  # noqa: E501
+                in [
+                    TaskType.Geometry_Optimization,
+                    TaskType.Frequency_Flattening_Geometry_Optimization,
+                    "Geometry Optimization",
+                    "Frequency Flattening Geometry Optimization",
+                ]  # noqa: E501
             ]
 
             try:
-                best_molecule_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
+                best_molecule_calc = sorted(geometry_optimizations, key=evaluate_task)[
+                    0
+                ]
             except IndexError:
                 raise Exception("No geometry optimization calculations available!")
             molecule = best_molecule_calc.output.optimized_molecule
@@ -335,10 +342,14 @@ class MoleculeDoc(CoreMoleculeDoc):
                     initial_molecules.append(Molecule.from_dict(task.orig["molecule"]))
 
             mm = MoleculeMatcher()
-            initial_molecules = [group[0] for group in mm.group_molecules(initial_molecules)]
+            initial_molecules = [
+                group[0] for group in mm.group_molecules(initial_molecules)
+            ]
 
             # Deprecated
-            deprecated = all(task.task_id in deprecated_tasks for task in geometry_optimizations)
+            deprecated = all(
+                task.task_id in deprecated_tasks for task in geometry_optimizations
+            )
             deprecated = deprecated or best_molecule_calc.task_id in deprecated_tasks
 
             # Origins

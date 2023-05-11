@@ -20,7 +20,6 @@ class RoboTextSearchQuery(QueryOperator):
             description="Max number of entries to return in a single query. Limited to 100",
         ),
     ) -> STORE_PARAMS:
-
         if not keywords.strip():
             raise HTTPException(status_code=400, detail="Must provide search keywords.")
 

@@ -149,7 +149,6 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
     @property
     def entry(self) -> Dict[str, Any]:
-
         if self.output.optimized_molecule is not None:
             mol = self.output.optimized_molecule
         else:

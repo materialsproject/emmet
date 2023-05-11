@@ -1,10 +1,5 @@
-import json
-import datetime
-import copy
-
 import pytest
 
-from monty.io import zopen
 from monty.serialization import loadfn
 
 from emmet.core.qchem.task import TaskDocument
@@ -30,7 +25,7 @@ def test_orbital(closed_shell, open_shell):
     )
 
     assert doc.property_name == "natural bonding orbitals"
-    assert doc.open_shell == False
+    assert doc.open_shell is False
 
     assert len(doc.nbo_population) == len(closed_shell.output.initial_molecule)
     assert doc.nbo_population[0].valence_electrons == pytest.approx(2.75426)
@@ -53,7 +48,7 @@ def test_orbital(closed_shell, open_shell):
         open_shell, "b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False
     )
 
-    assert doc.open_shell == True
+    assert doc.open_shell is True
 
     assert len(doc.nbo_population) == len(open_shell.output.initial_molecule)
     assert doc.alpha_population is not None

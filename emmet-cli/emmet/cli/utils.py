@@ -421,7 +421,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
 
         task_doc["sbxn"] = sbxn
         snl_metas_avail = isinstance(snl_metas, dict)
-        task_id = task_ids.get(launcher) if manual_taskid else task_ids[chunk_idx][count]
+        task_id = (
+            task_ids.get(launcher) if manual_taskid else task_ids[chunk_idx][count]
+        )
 
         if not task_id:
             logger.error(f"Unable to determine task_id for {launcher}")
@@ -458,7 +460,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             logger.warn(validation_doc.warnings)
 
         try:
-            entry = MaterialsProject2020Compatibility().process_entry(task_document.structure_entry)
+            entry = MaterialsProject2020Compatibility().process_entry(
+                task_document.structure_entry
+            )
         except Exception as exc:
             logger.error(f"Unable to apply corrections: {exc}")
             continue

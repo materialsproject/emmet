@@ -19,7 +19,6 @@ class MethodQuery(QueryOperator):
             description="Query by calculation method (e.g. mulliken, nbo).",
         ),
     ) -> STORE_PARAMS:
-
         crit = {}
 
         if method:
@@ -38,13 +37,13 @@ class MultiPropertyIDQuery(QueryOperator):
 
     def query(
         self,
-        property_ids: Optional[str] = Query(None, description="Comma-separated list of property_id values to query on"),
+        property_ids: Optional[str] = Query(
+            None, description="Comma-separated list of property_id values to query on"
+        ),
     ) -> STORE_PARAMS:
-
         crit = {}  # type: dict
 
         if property_ids:
-
             property_id_list = [pid.strip() for pid in property_ids.split(",")]
 
             if len(property_id_list) == 1:

@@ -18,9 +18,33 @@ from emmet.core.molecules.molecule_property import PropertyDoc
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
-metals = ['Zn', 'Tl', 'Ti', 'Te', 'Sr', 'Sn', 'Pt', 'Rb', 'Po', 'Pb', 'Na',
-          'Mg', 'Li', 'K', 'In', 'Ga', 'Cu', 'Ca', 'Bi', 'Be', 'Ba', 'Au',
-          'At', 'Al', 'Ag']
+metals = [
+    "Zn",
+    "Tl",
+    "Ti",
+    "Te",
+    "Sr",
+    "Sn",
+    "Pt",
+    "Rb",
+    "Po",
+    "Pb",
+    "Na",
+    "Mg",
+    "Li",
+    "K",
+    "In",
+    "Ga",
+    "Cu",
+    "Ca",
+    "Bi",
+    "Be",
+    "Ba",
+    "Au",
+    "At",
+    "Al",
+    "Ag",
+]
 
 BOND_METHODS = ["nbo", "critic2", "OpenBabelNN + metal_edge_extender"]
 
@@ -347,9 +371,13 @@ class MoleculeBondingDoc(PropertyDoc):
             if mg_made:
                 break
 
-            if m == "nbo" and task.output.nbo is not None and (
+            if (
+                m == "nbo"
+                and task.output.nbo is not None
+                and (
                     task.orig["rem"].get("run_nbo6", False)
                     or task.orig["rem"].get("nbo_external", False)
+                )
             ):
                 method = "nbo"
                 mg, warnings = nbo_molecule_graph(mol, task.output.nbo)

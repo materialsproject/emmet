@@ -30,7 +30,9 @@ def test_molecules_builder(tasks_store, assoc_store, mol_store):
 
     assoc_store.key = "molecule_id"
 
-    stage_two = MoleculesBuilder(assoc=assoc_store, molecules=mol_store, prefix="mpcule")
+    stage_two = MoleculesBuilder(
+        assoc=assoc_store, molecules=mol_store, prefix="mpcule"
+    )
     stage_two.run()
 
     assert mol_store.count() == 11

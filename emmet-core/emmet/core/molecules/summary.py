@@ -42,11 +42,13 @@ class MoleculeSummaryDoc(PropertyDoc):
 
     # molecules
     molecules: Dict[str, Molecule] = Field(
-        ..., description="The lowest energy optimized structures for this molecule for each solvent."
+        ...,
+        description="The lowest energy optimized structures for this molecule for each solvent.",
     )
 
     molecule_levels_of_theory: Dict[str, str] = Field(
-        None, description="Level of theory used to optimize the best molecular structure for each solvent."
+        None,
+        description="Level of theory used to optimize the best molecular structure for each solvent.",
     )
 
     task_ids: List[MPID] = Field(
@@ -60,7 +62,8 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
 
     constituent_molecules: List[MPculeID] = Field(
-        [], description="IDs of associated MoleculeDocs used to construct this molecule."
+        [],
+        description="IDs of associated MoleculeDocs used to construct this molecule.",
     )
 
     unique_calc_types: List[CalcType] = Field(
@@ -90,11 +93,13 @@ class MoleculeSummaryDoc(PropertyDoc):
 
     # thermo
     thermo_property_ids: Dict[str, str] = Field(
-        None, description="Solvent:property ID map for each MoleculeThermoDoc for this molecule."
+        None,
+        description="Solvent:property ID map for each MoleculeThermoDoc for this molecule.",
     )
 
     thermo_levels_of_theory: Dict[str, str] = Field(
-        None, description="Solvent:level of theory map for each MoleculeThermoDoc for this molecule."
+        None,
+        description="Solvent:level of theory map for each MoleculeThermoDoc for this molecule.",
     )
 
     electronic_energy: Dict[str, float] = Field(
@@ -145,11 +150,13 @@ class MoleculeSummaryDoc(PropertyDoc):
 
     # vibrational properties
     vibration_property_ids: Dict[str, str] = Field(
-        None, description="Solvent:property ID map for each VibrationDoc for this molecule."
+        None,
+        description="Solvent:property ID map for each VibrationDoc for this molecule.",
     )
 
     vibration_levels_of_theory: Dict[str, str] = Field(
-        None, description="Solvent:level of theory map for each VibrationDoc for this molecule."
+        None,
+        description="Solvent:level of theory map for each VibrationDoc for this molecule.",
     )
 
     frequencies: Dict[str, List[float]] = Field(
@@ -175,11 +182,13 @@ class MoleculeSummaryDoc(PropertyDoc):
 
     # natural bonding orbitals
     orbitals_property_ids: Dict[str, str] = Field(
-        None, description="Solvent:property ID map for each OrbitalDoc for this molecule."
+        None,
+        description="Solvent:property ID map for each OrbitalDoc for this molecule.",
     )
 
     orbitals_levels_of_theory: Dict[str, str] = Field(
-        None, description="Solvent:level of theory map for each OrbitalDoc for this molecule."
+        None,
+        description="Solvent:level of theory map for each OrbitalDoc for this molecule.",
     )
 
     open_shell: Dict[str, bool] = Field(
@@ -232,11 +241,13 @@ class MoleculeSummaryDoc(PropertyDoc):
 
     # partial charges
     partial_charges_property_ids: Dict[str, Dict[str, str]] = Field(
-        None, description="Solvent:method:property ID map for each PartialChargesDoc for this molecule."
+        None,
+        description="Solvent:method:property ID map for each PartialChargesDoc for this molecule.",
     )
 
     partial_charges_levels_of_theory: Dict[str, Dict[str, str]] = Field(
-        None, description="Solvent:method:level of theory map for each PartialChargesDoc for this molecule."
+        None,
+        description="Solvent:method:level of theory map for each PartialChargesDoc for this molecule.",
     )
 
     partial_charges: Dict[str, Dict[str, List[float]]] = Field(
@@ -247,11 +258,13 @@ class MoleculeSummaryDoc(PropertyDoc):
 
     # partial spins
     partial_spins_property_ids: Dict[str, Dict[str, str]] = Field(
-        None, description="Solvent:method:property ID map for each PartialSpinsDoc for this molecule."
+        None,
+        description="Solvent:method:property ID map for each PartialSpinsDoc for this molecule.",
     )
 
     partial_spins_levels_of_theory: Dict[str, Dict[str, str]] = Field(
-        None, description="Solvent:method:level of theory map for each PartialSpinsDoc for this molecule."
+        None,
+        description="Solvent:method:level of theory map for each PartialSpinsDoc for this molecule.",
     )
 
     partial_spins: Dict[str, Dict[str, List[float]]] = Field(
@@ -262,11 +275,13 @@ class MoleculeSummaryDoc(PropertyDoc):
 
     # bonding
     bonding_property_ids: Dict[str, Dict[str, str]] = Field(
-        None, description="Solvent:method:property ID map for each MoleculeBondingDoc for this molecule."
+        None,
+        description="Solvent:method:property ID map for each MoleculeBondingDoc for this molecule.",
     )
 
     bonding_levels_of_theory: Dict[str, Dict[str, str]] = Field(
-        None, description="Solvent:method:level of theory map for each MoleculeBondingDoc for this molecule."
+        None,
+        description="Solvent:method:level of theory map for each MoleculeBondingDoc for this molecule.",
     )
 
     molecule_graph: Dict[str, Dict[str, MoleculeGraph]] = Field(
@@ -301,32 +316,41 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
 
     redox_levels_of_theory: Dict[str, str] = Field(
-        None, description="Solvent:level of theory map for each RedoxDoc for this molecule."
+        None,
+        description="Solvent:level of theory map for each RedoxDoc for this molecule.",
     )
 
     electron_affinity: Dict[str, float] = Field(
         None, description="Vertical electron affinity in eV"
     )
 
-    ea_task_id: Dict[str, MPID] = Field(None, description="Molecule ID for electron affinity")
+    ea_task_id: Dict[str, MPID] = Field(
+        None, description="Molecule ID for electron affinity"
+    )
 
     ionization_energy: Dict[str, float] = Field(
         None, description="Vertical ionization energy in eV"
     )
 
-    ie_task_id: Dict[str, MPID] = Field(None, description="Molecule ID for ionization energy")
+    ie_task_id: Dict[str, MPID] = Field(
+        None, description="Molecule ID for ionization energy"
+    )
 
     reduction_free_energy: Dict[str, float] = Field(
         None, description="Adiabatic free energy of reduction"
     )
 
-    red_molecule_id: Dict[str, MPculeID] = Field(None, description="Molecule ID for adiabatic reduction")
+    red_molecule_id: Dict[str, MPculeID] = Field(
+        None, description="Molecule ID for adiabatic reduction"
+    )
 
     oxidation_free_energy: Dict[str, float] = Field(
         None, description="Adiabatic free energy of oxidation"
     )
 
-    ox_molecule_id: Dict[str, MPculeID] = Field(None, description="Molecule ID for adiabatic oxidation")
+    ox_molecule_id: Dict[str, MPculeID] = Field(
+        None, description="Molecule ID for adiabatic oxidation"
+    )
 
     reduction_potentials: Dict[str, Dict[str, float]] = Field(
         None, description="Reduction potentials with various " "reference electrodes"
@@ -342,11 +366,7 @@ class MoleculeSummaryDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_docs(
-        cls,
-        molecule_id: MPculeID,
-        docs: Dict[str, Any]
-    ):
+    def from_docs(cls, molecule_id: MPculeID, docs: Dict[str, Any]):
         """Converts a bunch of property docs into a SummaryDoc"""
 
         doc = _copy_from_doc(docs)
@@ -499,8 +519,12 @@ def _copy_from_doc(doc: Dict[str, Any]):
                         d[doc_key + "_property_ids"][solvent] = dict()
                         d[doc_key + "_levels_of_theory"][solvent] = dict()
                         for method, entry in solv_entries.items():
-                            d[doc_key + "_property_ids"][solvent][method] = entry["property_id"]
-                            d[doc_key + "_levels_of_theory"][solvent][method] = entry["level_of_theory"]
+                            d[doc_key + "_property_ids"][solvent][method] = entry[
+                                "property_id"
+                            ]
+                            d[doc_key + "_levels_of_theory"][solvent][method] = entry[
+                                "level_of_theory"
+                            ]
                         if len(d[doc_key + "_property_ids"][solvent]) == 0:
                             del d[doc_key + "_property_ids"][solvent]
                         if len(d[doc_key + "_levels_of_theory"][solvent]) == 0:
@@ -509,7 +533,9 @@ def _copy_from_doc(doc: Dict[str, Any]):
                 else:
                     for solvent, entry in sd.items():
                         d[doc_key + "_property_ids"][solvent] = entry["property_id"]
-                        d[doc_key + "_levels_of_theory"][solvent] = entry["level_of_theory"]
+                        d[doc_key + "_levels_of_theory"][solvent] = entry[
+                            "level_of_theory"
+                        ]
 
                 if len(d[doc_key + "_property_ids"]) == 0:
                     d[doc_key + "_property_ids"] = None
