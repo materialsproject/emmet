@@ -211,7 +211,7 @@ class MoleculesAssociationBuilder(Builder):
         self.logger.info(f"Found {len(to_process_hashes)} unprocessed hashes")
 
         # Set total for builder bars to have a total
-        self.total = len(to_process_forms)
+        self.total = len(to_process_hashes)
 
         projected_fields = [
             "last_updated",
