@@ -1,7 +1,4 @@
-import json
-
 import pytest
-from monty.io import zopen
 from monty.serialization import loadfn
 
 from emmet.core.qchem.calc_types import (
