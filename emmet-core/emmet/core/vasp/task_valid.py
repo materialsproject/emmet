@@ -149,7 +149,6 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
 
         return calc_type(inputs, {**params, **incar})
 
-
     @property
     def entry(self) -> ComputedEntry:
         """Turns a Task Doc into a ComputedEntry"""
