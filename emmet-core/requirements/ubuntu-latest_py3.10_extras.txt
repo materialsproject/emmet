@@ -49,7 +49,7 @@ cryptography==40.0.2
     # via paramiko
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
-custodian==2023.5.7
+custodian==2023.5.12
     # via emmet-core (setup.py)
 cycler==0.11.0
     # via matplotlib
@@ -59,7 +59,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core==0.54.6
+emmet-core==0.55.0
     # via mp-api
 exceptiongroup==1.1.1
     # via pytest
@@ -79,7 +79,7 @@ future==0.18.3
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.27.4
+griffe==0.27.5
     # via mkdocstrings-python
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
@@ -205,7 +205,7 @@ networkx==3.1
     # via
     #   pymatgen
     #   robocrys
-nodeenv==1.7.0
+nodeenv==1.8.0
     # via pre-commit
 numpy==1.24.3
     # via

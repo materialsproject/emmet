@@ -55,7 +55,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.54.6
+emmet-core[all]==0.55.0
     # via
     #   emmet-builders (setup.py)
     #   mp-api
@@ -75,7 +75,7 @@ future==0.18.3
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.27.4
+griffe==0.27.5
     # via mkdocstrings-python
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
@@ -201,7 +201,7 @@ networkx==3.1
     # via
     #   pymatgen
     #   robocrys
-nodeenv==1.7.0
+nodeenv==1.8.0
     # via pre-commit
 numpy==1.24.3
     # via
