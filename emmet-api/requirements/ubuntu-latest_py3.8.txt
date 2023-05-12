@@ -50,7 +50,7 @@ cycler==0.11.0
     # via matplotlib
 ddsketch==2.0.4
     # via ddtrace
-ddtrace==1.13.0
+ddtrace==1.13.1
     # via emmet-api (setup.py)
 deprecated==1.2.13
     # via opentelemetry-api
@@ -58,7 +58,7 @@ dnspython==2.3.0
     # via
     #   maggma
     #   pymongo
-emmet-core[all]==0.54.6
+emmet-core[all]==0.55.0
     # via
     #   emmet-api (setup.py)
     #   mp-api
