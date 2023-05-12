@@ -244,7 +244,7 @@ class ElasticityDoc(PropertyDoc):
         p_stresses = stresses
         (
             p_strains,
-            p_pk_stresses,
+            p_2nd_pk_stresses,
             p_task_ids,
             p_dir_names,
         ) = generate_primary_fitting_data(
@@ -256,14 +256,22 @@ class ElasticityDoc(PropertyDoc):
             d_deforms,
             d_strains,
             d_stresses,
-            d_pk_stresses,
+            d_2nd_pk_stresses,
         ) = generate_derived_fitting_data(structure, p_strains, p_stresses)
+
+        fitting_strains = p_strains + d_strains
+        fitting_stresses = p_2nd_pk_stresses + d_2nd_pk_stresses
+
+        # avoid symmop-related strains having non-symmop-related stresses
+        fitting_stresses = symmetrize_stresses(
+            fitting_stresses, fitting_strains, structure
+        )
 
         # fitting elastic tensor
         try:
             elastic_tensor = fit_elastic_tensor(
-                p_strains + d_strains,
-                p_pk_stresses + d_pk_stresses,
+                fitting_strains,
+                fitting_stresses,
                 eq_stress=equilibrium_stress,
                 fitting_method=fitting_method,
             )
@@ -300,9 +308,8 @@ class ElasticityDoc(PropertyDoc):
                 derived_props = get_derived_properties(structure, elastic_tensor)
 
                 # check all
-                all_strains = p_strains + d_strains
                 state, warnings = sanity_check(
-                    structure, et_doc, all_strains, derived_props  # type: ignore
+                    structure, et_doc, fitting_strains, derived_props  # type: ignore
                 )
 
             except np.linalg.LinAlgError as e:
@@ -322,7 +329,7 @@ class ElasticityDoc(PropertyDoc):
             deformations=[x.tolist() for x in p_deforms],  # type: ignore
             strains=[x.tolist() for x in p_strains],  # type: ignore
             cauchy_stresses=[x.tolist() for x in p_stresses],  # type: ignore
-            second_pk_stresses=[x.tolist() for x in p_pk_stresses],  # type: ignore
+            second_pk_stresses=[x.tolist() for x in p_2nd_pk_stresses],  # type: ignore
             deformation_tasks=p_task_ids,  # type: ignore
             deformation_dir_names=p_dir_names,  # type: ignore
             equilibrium_cauchy_stress=eq_stress,
@@ -419,7 +426,7 @@ def generate_derived_fitting_data(
         derived_deforms: derived deformations
         derived_strains: derived strains
         derived_stresses: derived Cauchy stresses
-        derived_pk_stresses: derived second Piola-Kirchhoff stresses
+        derived_2nd_pk_stresses: derived second Piola-Kirchhoff stresses
     """
 
     sga = SpacegroupAnalyzer(structure, symprec=symprec)
@@ -436,7 +443,7 @@ def generate_derived_fitting_data(
     # asymmetry of the deformation gradient.
 
     # generated derived deforms
-    mapping = TensorMapping(tol=tol, tensors=[], values=[])
+    mapping = TensorMapping(tol=tol)
     for i, p_strain in enumerate(strains):
         for op in symmops:
             d_strain = p_strain.transform(op)
@@ -465,7 +472,7 @@ def generate_derived_fitting_data(
     derived_strains = []
     derived_stresses = []
     derived_deforms = []
-    derived_pk_stresses = []
+    derived_2nd_pk_stresses = []
 
     for d_strain, op_set in mapping.items():
         symmops, p_indices = zip(*op_set)
@@ -479,9 +486,48 @@ def generate_derived_fitting_data(
 
         deform = d_strain.get_deformation_matrix()
         derived_deforms.append(deform)
-        derived_pk_stresses.append(d_stress.piola_kirchoff_2(deform))
+        derived_2nd_pk_stresses.append(d_stress.piola_kirchoff_2(deform))
 
-    return derived_deforms, derived_strains, derived_stresses, derived_pk_stresses
+    return derived_deforms, derived_strains, derived_stresses, derived_2nd_pk_stresses
+
+
+def symmetrize_stresses(
+    stresses: List[Stress],
+    strains: List[Strain],
+    structure: Structure,
+    symprec=SETTINGS.SYMPREC,
+    tol: float = 0.002,
+) -> List[Stress]:
+    """
+    Symmetrize stresses by averaging over all symmetry operations.
+
+    Args:
+        stresses: stresses to be symmetrized
+        strains: strains corresponding to the stresses
+        structure: materials structure
+        symprec: symmetry operation precision
+        tol: tolerance for comparing strains and also for determining whether the
+            deformation corresponds to the train is independent. The elastic workflow
+            use a minimum strain of 0.005, so the default tolerance of 0.002 should be
+            able to distinguish different strain states.
+
+    Returns: symmetrized stresses
+    """
+    sga = SpacegroupAnalyzer(structure, symprec=symprec)
+    symmops = sga.get_symmetry_operations(cartesian=True)
+
+    # for each strain, get the stresses from other strain states related by symmetry
+    symmmetrized_stresses = []  # type: List[Stress]
+    for strain, stress in zip(strains, stresses):
+        mapping = TensorMapping([strain], [[]], tol=tol)
+        for strain2, stress2 in zip(strains, stresses):
+            for op in symmops:
+                if strain2.transform(op) in mapping:
+                    mapping[strain].append(stress2.transform(op))
+        sym_stress = np.average(mapping[strain], axis=0)
+        symmmetrized_stresses.append(Stress(sym_stress))
+
+    return symmmetrized_stresses
 
 
 def fit_elastic_tensor(

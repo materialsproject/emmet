@@ -71,7 +71,7 @@ class MaterialsBuilder(Builder):
 
     def ensure_indexes(self):
         """
-        Ensures indicies on the tasks and materials collections
+        Ensures indices on the tasks and materials collections
         """
 
         # Basic search index for tasks
@@ -224,7 +224,7 @@ class MaterialsBuilder(Builder):
 
         Returns:
             ([dict],list): a list of new materials docs and a list of task_ids that
-                were processsed
+                were processed
         """
 
         tasks = [TaskDocument(**task) for task in items]
@@ -330,7 +330,7 @@ class MaterialsBuilder(Builder):
             symprec=self.settings.SYMPREC,
         )
         for group in grouped_structures:
-            grouped_tasks = [filtered_tasks[struc.index] for struc in group]  # type: ignore
+            grouped_tasks = [filtered_tasks[struct.index] for struct in group]  # type: ignore
             yield grouped_tasks
 
 

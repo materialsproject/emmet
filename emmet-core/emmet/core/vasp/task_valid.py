@@ -98,7 +98,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     calc_code = "VASP"
     run_stats: Dict[str, RunStatistics] = Field(
         {},
-        description="Summary of runtime statisitics for each calcualtion in this task",
+        description="Summary of runtime statistics for each calculation in this task",
     )
 
     is_valid: bool = Field(
