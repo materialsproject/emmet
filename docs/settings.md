@@ -5,7 +5,7 @@
 Example:
 ``` python
 from pydantic import Field
-from emmet.settings import EmmetSettings
+from emmet.core.settings import EmmetSettings
 
 class MySettings(EmmetSettings):
     my_new_setting: int = Field(3,description = "A custom setting")

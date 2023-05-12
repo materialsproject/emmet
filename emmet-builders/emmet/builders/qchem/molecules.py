@@ -1,7 +1,7 @@
 from datetime import datetime
 from itertools import chain, groupby
 from math import ceil
-from typing import Any, Dict, Iterable, Iterator, List, Optional
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Union
 
 import networkx as nx
 
@@ -10,11 +10,15 @@ from maggma.stores import Store
 from maggma.utils import grouper
 
 from emmet.builders.settings import EmmetBuildSettings
-from emmet.core.utils import form_env, group_molecules, jsanitize
-from emmet.core.qchem.molecule import best_lot, evaluate_lot, MoleculeDoc
+from emmet.core.utils import get_molecule_id, group_molecules, jsanitize, make_mol_graph
+from emmet.core.qchem.molecule import (
+    best_lot,
+    evaluate_lot,
+    evaluate_task_entry,
+    MoleculeDoc,
+)
 from emmet.core.qchem.task import TaskDocument
-from emmet.core.qchem.calc_types import LevelOfTheory
-from emmet.core.molecules.bonds import make_mol_graph
+from emmet.core.qchem.calc_types import LevelOfTheory, CalcType, TaskType
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
@@ -41,20 +45,51 @@ def evaluate_molecule(
     :return:
     """
 
+    opt_lot = None
+    for origin in mol_doc.origins:
+        if origin.name == "molecule":
+            opt_lot = mol_doc.levels_of_theory[origin.task_id]
+            if isinstance(opt_lot, LevelOfTheory):
+                opt_lot = opt_lot.value
+
+    if opt_lot is None:
+        opt_eval = [0]
+    else:
+        opt_eval = evaluate_lot(opt_lot, funct_scores, basis_scores, solvent_scores)
+
     best = best_lot(mol_doc, funct_scores, basis_scores, solvent_scores)
 
-    lot_eval = evaluate_lot(best, funct_scores, basis_scores, solvent_scores)
+    best_eval = evaluate_lot(best, funct_scores, basis_scores, solvent_scores)
 
     return (
         -1 * int(mol_doc.deprecated),
-        sum(lot_eval),
+        sum(best_eval),
+        sum(opt_eval),
         mol_doc.best_entries[best]["energy"],
     )
 
 
+def _optimizing_solvent(mol_doc):
+    """
+    Returns which solvent was used to optimize this (associated) MoleculeDoc.
+
+    Args:
+        mol_doc: MoleculeDoc
+
+    Returns:
+        solvent (str)
+
+    """
+
+    for origin in mol_doc.origins:
+        if origin.name.startswith("molecule"):
+            solvent = mol_doc.solvents[origin.task_id]
+            return solvent
+
+
 class MoleculesAssociationBuilder(Builder):
     """
-    The MoleculesBuilder matches Q-Chem task documents by composition
+    The MoleculesAssociationBuilder matches Q-Chem task documents by composition
     and collects tasks associated with identical structures.
     The purpose of this builder is to group calculations in preparation for the
     MoleculesBuilder.
@@ -202,7 +237,7 @@ class MoleculesAssociationBuilder(Builder):
                 # basic validation here ensures that tasks with invalid levels of
                 # theory don't halt the build pipeline
                 try:
-                    TaskDocument(**t).level_of_theory
+                    _ = TaskDocument(**t).level_of_theory
                     t["is_valid"] = True
                 except Exception as e:
                     self.logger.info(
@@ -224,6 +259,8 @@ class MoleculesAssociationBuilder(Builder):
         """
 
         tasks = [TaskDocument(**task) for task in items if task["is_valid"]]
+        if len(tasks) == 0:
+            return list()
         formula = tasks[0].formula_alphabetical
         task_ids = [task.task_id for task in tasks]
         self.logger.debug(f"Processing {formula} : {task_ids}")
@@ -231,14 +268,15 @@ class MoleculesAssociationBuilder(Builder):
 
         for group in self.filter_and_group_tasks(tasks):
             try:
-                molecules.append(MoleculeDoc.from_tasks(group))
+                doc = MoleculeDoc.from_tasks(group)
+                molecules.append(doc)
             except Exception as e:
                 failed_ids = list({t_.task_id for t_ in group})
-                doc = MoleculeDoc.construct_deprecated_molecule(tasks)
+                doc = MoleculeDoc.construct_deprecated_molecule(group)
                 doc.warnings.append(str(e))
                 molecules.append(doc)
-                self.logger.warn(
-                    f"Failed making material for {failed_ids}."
+                self.logger.warning(
+                    f"Failed making molecule for {failed_ids}."
                     f" Inserted as deprecated molecule: {doc.molecule_id}"
                 )
 
@@ -246,7 +284,7 @@ class MoleculesAssociationBuilder(Builder):
 
         return jsanitize([mol.dict() for mol in molecules], allow_bson=True)
 
-    def update_targets(self, items: List[Dict]):
+    def update_targets(self, items: List[List[Dict]]):
         """
         Inserts the new molecules into the molecules collection
 
@@ -288,20 +326,18 @@ class MoleculesAssociationBuilder(Builder):
         ]
 
         molecules = list()
-        lots = list()
 
         for idx, task in enumerate(filtered_tasks):
             if task.output.optimized_molecule:
                 m = task.output.optimized_molecule
             else:
                 m = task.output.initial_molecule
-            m.index: int = idx  # type: ignore
+            m.ind: int = idx  # type: ignore
             molecules.append(m)
-            lots.append(task.level_of_theory.value)
 
-        grouped_molecules = group_molecules(molecules, lots)
+        grouped_molecules = group_molecules(molecules)
         for group in grouped_molecules:
-            grouped_tasks = [filtered_tasks[mol.index] for mol in group]  # type: ignore
+            grouped_tasks = [filtered_tasks[mol.ind] for mol in group]  # type: ignore
             yield grouped_tasks
 
 
@@ -325,7 +361,6 @@ class MoleculesBuilder(Builder):
         molecules: Store,
         query: Optional[Dict] = None,
         settings: Optional[EmmetBuildSettings] = None,
-        prefix: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -334,16 +369,12 @@ class MoleculesBuilder(Builder):
             molecules: Store of processed molecules documents
             query: dictionary to limit tasks to be analyzed
             settings: EmmetSettings to use in the build process
-            prefix: String prefix for MPIDs of processed MoleculeDocs. For instance, for the
-                Lithium-Ion Battery Electrolyte (LIBE) dataset, the prefix would be "libe".
-                Default is None
         """
 
         self.assoc = assoc
         self.molecules = molecules
         self.query = query if query else dict()
         self.settings = EmmetBuildSettings.autoload(settings)
-        self.prefix = prefix
         self.kwargs = kwargs
 
         super().__init__(sources=[assoc], targets=[molecules])
@@ -373,18 +404,38 @@ class MoleculesBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_assoc = list(
-            self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical"])
+            self.assoc.query(
+                temp_query,
+                [
+                    self.assoc.key,
+                    "formula_alphabetical",
+                    "species_hash",
+                    "charge",
+                    "spin_multiplicity",
+                ],
+            )
         )
 
-        # int and split manipulation necessary because of MPID prefixing done during building
-        processed_docs = set(
-            [int(e.split("-")[-1]) for e in self.molecules.distinct("molecule_id")]
-        )
-        to_process_docs = {d[self.assoc.key] for d in all_assoc} - processed_docs
+        # Should be using species hash, rather than coord hash, at this point
+        processed_docs = set(list(self.molecules.distinct("molecule_id")))
+        assoc_ids = set()
+
+        xyz_species_id_map = dict()
+        for d in all_assoc:
+            this_id = "{}-{}-{}-{}".format(
+                d["species_hash"],
+                d["formula_alphabetical"].replace(" ", ""),
+                str(int(d["charge"])).replace("-", "m"),
+                str(int(d["spin_multiplicity"])),
+            )
+            assoc_ids.add(this_id)
+            xyz_species_id_map[d[self.assoc.key]] = this_id
+        to_process_docs = assoc_ids - processed_docs
+
         to_process_forms = {
             d["formula_alphabetical"]
             for d in all_assoc
-            if d[self.assoc.key] in to_process_docs
+            if xyz_species_id_map[d[self.assoc.key]] in to_process_docs
         }
 
         N = ceil(len(to_process_forms) / number_splits)
@@ -415,17 +466,38 @@ class MoleculesBuilder(Builder):
 
         self.logger.info("Finding documents to process")
         all_assoc = list(
-            self.assoc.query(temp_query, [self.assoc.key, "formula_alphabetical"])
+            self.assoc.query(
+                temp_query,
+                [
+                    self.assoc.key,
+                    "formula_alphabetical",
+                    "species_hash",
+                    "charge",
+                    "spin_multiplicity",
+                ],
+            )
         )
 
-        processed_docs = set(
-            [int(e.split("-")[-1]) for e in self.molecules.distinct("molecule_id")]
-        )
-        to_process_docs = {d[self.assoc.key] for d in all_assoc} - processed_docs
+        # Should be using species hash, rather than coord hash, at this point
+        processed_docs = set(list(self.molecules.distinct("molecule_id")))
+        assoc_ids = set()
+
+        xyz_species_id_map = dict()
+        for d in all_assoc:
+            this_id = "{}-{}-{}-{}".format(
+                d["species_hash"],
+                d["formula_alphabetical"].replace(" ", ""),
+                str(int(d["charge"])).replace("-", "m"),
+                str(int(d["spin_multiplicity"])),
+            )
+            assoc_ids.add(this_id)
+            xyz_species_id_map[d[self.assoc.key]] = this_id
+        to_process_docs = assoc_ids - processed_docs
+
         to_process_forms = {
             d["formula_alphabetical"]
             for d in all_assoc
-            if d[self.assoc.key] in to_process_docs
+            if xyz_species_id_map[d[self.assoc.key]] in to_process_docs
         }
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
@@ -457,24 +529,125 @@ class MoleculesBuilder(Builder):
         mol_ids = [a.molecule_id for a in assoc]
         self.logger.debug(f"Processing {formula} : {mol_ids}")
 
-        molecules = list()
+        complete_mol_docs = list()
 
+        # This is only slightly unholy
+        # Need to combine many variables of the various constituent associated docs
+        # into one MoleculeDoc, where the best associated doc for each solvent is taken
         for group in self.group_mol_docs(assoc):
             # Maybe all are disconnected and therefore none get grouped?
             if len(group) == 0:
                 continue
 
-            sorted_docs = sorted(group, key=evaluate_molecule)
+            docs_by_solvent = dict()
+            mols_by_solvent = dict()
+            mol_lots = dict()
 
-            best_doc = sorted_docs[0]
-            if len(sorted_docs) > 1:
-                best_doc.similar_molecules = [m.molecule_id for m in sorted_docs[1:]]
+            task_ids = list()
+            calc_types = dict()
+            task_types = dict()
+            levels_of_theory = dict()
+            solvents = dict()
+            lot_solvents = dict()
+            unique_calc_types: Set[Union[str, CalcType]] = set()
+            unique_task_types: Set[Union[str, TaskType]] = set()
+            unique_levels_of_theory: Set[Union[str, LevelOfTheory]] = set()
+            unique_solvents: Set[str] = set()
+            unique_lot_solvents: Set[str] = set()
+            origins = list()
+            entries = list()
+            best_entries: Dict[str, Any] = dict()
+            constituent_molecules = list()
+            similar_molecules = list()
 
-            molecules.append(best_doc)
+            base_doc: Optional[MoleculeDoc] = None
 
-        self.logger.debug(f"Produced {len(molecules)} molecules for {formula}")
+            # Grab best doc for each solvent
+            # A doc is given a solvent based on how the molecule was optimized
+            for solv, subgroup in groupby(
+                sorted(group, key=_optimizing_solvent), key=_optimizing_solvent
+            ):
+                sorted_docs = sorted(subgroup, key=evaluate_molecule)
+                docs_by_solvent[solv] = sorted_docs[0]
+                mols_by_solvent[solv] = sorted_docs[0].molecule
+                mol_lots[solv] = sorted_docs[0].levels_of_theory[
+                    sorted_docs[0].origins[0].task_id
+                ]
+                constituent_molecules.append(sorted_docs[0].molecule_id)
 
-        return jsanitize([mol.dict() for mol in molecules], allow_bson=True)
+                if len(sorted_docs) > 1:
+                    for m in sorted_docs[1:]:
+                        if m.molecule_id not in constituent_molecules:
+                            similar_molecules.append(m.molecule_id)
+
+                if base_doc is None:
+                    base_doc = docs_by_solvent[solv]
+
+            if base_doc is None:
+                continue
+
+            else:
+                # Compile data on each constituent doc
+                for solv, doc in docs_by_solvent.items():
+                    task_ids.extend(doc.task_ids)
+                    calc_types.update(doc.calc_types)
+                    task_types.update(doc.task_types)
+                    levels_of_theory.update(doc.levels_of_theory)
+                    solvents.update(doc.solvents)
+                    lot_solvents.update(doc.lot_solvents)
+                    unique_calc_types = unique_calc_types.union(
+                        set(doc.unique_calc_types)
+                    )
+                    unique_task_types = unique_task_types.union(
+                        set(doc.unique_task_types)
+                    )
+                    unique_levels_of_theory = unique_levels_of_theory.union(
+                        set(doc.unique_levels_of_theory)
+                    )
+                    unique_solvents = unique_solvents.union(set(doc.unique_solvents))
+                    unique_lot_solvents = unique_lot_solvents.union(
+                        set(doc.unique_lot_solvents)
+                    )
+                    origins.extend(doc.origins)
+                    entries.extend(doc.entries)
+
+                    for lot_solv, entry in doc.best_entries.items():
+                        if lot_solv in best_entries:
+                            current_eval = evaluate_task_entry(best_entries[lot_solv])
+                            this_eval = evaluate_task_entry(entry)
+                            if this_eval < current_eval:
+                                best_entries[lot_solv] = entry
+                        else:
+                            best_entries[lot_solv] = entry
+
+                # Assign new doc info
+                base_doc.molecule_id = get_molecule_id(
+                    base_doc.molecule, node_attr="specie"
+                )
+                base_doc.molecules = mols_by_solvent
+                base_doc.molecule_levels_of_theory = mol_lots
+                base_doc.task_ids = task_ids
+                base_doc.calc_types = calc_types
+                base_doc.task_types = task_types
+                base_doc.levels_of_theory = levels_of_theory
+                base_doc.solvents = solvents
+                base_doc.lot_solvents = lot_solvents
+                base_doc.unique_calc_types = unique_calc_types
+                base_doc.unique_task_types = unique_task_types
+                base_doc.unique_levels_of_theory = unique_levels_of_theory
+                base_doc.unique_solvents = unique_solvents
+                base_doc.unique_lot_solvents = unique_lot_solvents
+                base_doc.origins = origins
+                base_doc.entries = entries
+                base_doc.best_entries = best_entries
+                base_doc.constituent_molecules = constituent_molecules
+                base_doc.similar_molecules = similar_molecules
+
+                complete_mol_docs.append(base_doc)
+
+        self.logger.debug(f"Produced {len(complete_mol_docs)} molecules for {formula}")
+
+        return jsanitize([mol.dict() for mol in complete_mol_docs], allow_bson=True)
 
     def update_targets(self, items: List[List[Dict]]):
         """
@@ -484,17 +657,15 @@ class MoleculesBuilder(Builder):
             items [[dict]]: A list of molecules to update
         """
 
+        self.logger.debug(f"Updating {len(items)} molecules")
+
         docs = list(chain.from_iterable(items))  # type: ignore
 
         # Add timestamp, add prefix to molecule id
         for item in docs:
-            if self.prefix is not None:
-                molid = "-".join([self.prefix, str(item["molecule_id"])])
-            else:
-                # No change
-                molid = item["molecule_id"]
+            molid = item["molecule_id"]
 
-            item.update({"_bt": self.timestamp, "molecule_id": molid})
+            item.update({"_bt": self.timestamp})
 
             for entry in item["entries"]:
                 entry["entry_id"] = molid
@@ -518,6 +689,7 @@ class MoleculesBuilder(Builder):
             - charge
             - spin multiplicity
             - bonding (molecule graph isomorphism)
+            - solvent environment used for the structure
         """
 
         # Molecules are already grouped by formula
@@ -528,47 +700,32 @@ class MoleculesBuilder(Builder):
         def charge_spin(mol_doc):
             return (mol_doc.charge, mol_doc.spin_multiplicity)
 
-        def environment(mol_doc):
-            mol = mol_doc.molecule
-            lot = best_lot(
-                mol_doc,
-                SETTINGS.QCHEM_FUNCTIONAL_QUALITY_SCORES,
-                SETTINGS.QCHEM_BASIS_QUALITY_SCORES,
-                SETTINGS.QCHEM_SOLVENT_MODEL_QUALITY_SCORES,
-            )
-            if isinstance(lot, LevelOfTheory):
-                lot = lot.value
-            env = form_env((mol, lot))
-            return env
-
         # Group by charge and spin
-        for c_s, pregroup in groupby(sorted(assoc, key=charge_spin), key=charge_spin):
-            # Group by formula (should already be grouped) and environment
-            for f_e, group in groupby(
-                sorted(pregroup, key=environment), key=environment
-            ):
-                subgroups: List[Dict[str, Any]] = list()
-                for mol_doc in group:
-                    mol_graph = make_mol_graph(mol_doc.molecule)
+        for c_s, group in groupby(sorted(assoc, key=charge_spin), key=charge_spin):
+            subgroups: List[Dict[str, Any]] = list()
+            for mol_doc in group:
+                mol_graph = make_mol_graph(mol_doc.molecule)
+                mol_hash = mol_doc.species_hash
 
-                    # Finally, group by graph isomorphism
-                    # When bonding is defined by OpenBabelNN + metal_edge_extender
-                    # Unconnected molecule graphs are discarded at this step
-                    # TODO: What about molecules that would be connected under a different
-                    # TODO: bonding scheme? For now, ¯\_(ツ)_/¯
-                    if nx.is_connected(mol_graph.graph.to_undirected()):
-                        matched = False
+                # Finally, group by graph isomorphism
+                # When bonding is defined by OpenBabelNN + metal_edge_extender
+                # Unconnected molecule graphs are discarded at this step
+                # TODO: What about molecules that would be connected under a different
+                # TODO: bonding scheme? For now, ¯\_(ツ)_/¯
+                # TODO: MAKE ClusterBuilder FOR THIS PURPOSE
+                if nx.is_connected(mol_graph.graph.to_undirected()):
+                    matched = False
 
-                        for subgroup in subgroups:
-                            if mol_graph.isomorphic_to(subgroup["mol_graph"]):
-                                subgroup["mol_docs"].append(mol_doc)
-                                matched = True
-                                break
+                    for subgroup in subgroups:
+                        if mol_hash == subgroup["hash"]:
+                            subgroup["mol_docs"].append(mol_doc)
+                            matched = True
+                            break
 
-                        if not matched:
-                            subgroups.append(
-                                {"mol_graph": mol_graph, "mol_docs": [mol_doc]}
-                            )
+                    if not matched:
+                        subgroups.append({"hash": mol_hash, "mol_docs": [mol_doc]})
 
-                for subgroup in subgroups:
-                    yield subgroup["mol_docs"]
+            self.logger.debug(f"Unique hashes: {[x['hash'] for x in subgroups]}")
+
+            for subgroup in subgroups:
+                yield subgroup["mol_docs"]

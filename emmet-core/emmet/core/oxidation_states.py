@@ -7,7 +7,6 @@ from pydantic import Field
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.core import Structure
 from pymatgen.core.periodic_table import Specie
-from typing_extensions import Literal
 
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
@@ -35,7 +34,6 @@ class OxidationStateDoc(PropertyDoc):
 
     @classmethod
     def from_structure(cls, structure: Structure, material_id: MPID, **kwargs):  # type: ignore[override]
-
         # TODO: add check for if it already has oxidation states, if so pass this along unchanged ("method": "manual")
         structure.remove_oxidation_states()
 
@@ -66,8 +64,7 @@ class OxidationStateDoc(PropertyDoc):
                 site_oxidation_list[site.specie.element].append(site.specie.oxi_state)
 
             oxi_state_dict = {
-                str(el): np.mean(oxi_states)  # type: ignore
-                for el, oxi_states in site_oxidation_list.items()
+                str(el): np.mean(oxi_states) for el, oxi_states in site_oxidation_list.items()  # type: ignore
             }
 
             d = {

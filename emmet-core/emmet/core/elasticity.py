@@ -53,7 +53,6 @@ class ShearModulus(BaseModel):
 
 
 class SoundVelocity(BaseModel):
-
     transverse: float = Field(None, description="Transverse sound velocity (SI units)")
     longitudinal: float = Field(
         None, description="Longitudinal sound velocity (SI units)"
@@ -155,7 +154,6 @@ class WarningMessage(BaseModel):
 
 
 class ElasticityDoc(PropertyDoc):
-
     property_name: str = "elasticity"
 
     structure: Structure = Field(
@@ -460,7 +458,6 @@ def generate_derived_fitting_data(
 
             # seen this derived deform before
             if d_strain in mapping:
-
                 # all the existing `i`
                 current = [t[1] for t in mapping[d_strain]]
 
@@ -524,7 +521,6 @@ def symmetrize_stresses(
     for strain, stress in zip(strains, stresses):
         mapping = TensorMapping([strain], [[]], tol=tol)
         for strain2, stress2 in zip(strains, stresses):
-
             for op in symmops:
                 if strain2.transform(op) in mapping:
                     mapping[strain].append(stress2.transform(op))
@@ -557,7 +553,6 @@ def fit_elastic_tensor(
     """
 
     if order > 2 or fitting_method == "finite_difference":
-
         # force finite diff if order > 2
         result = ElasticTensorExpansion.from_diff_fit(
             strains, stresses, eq_stress=eq_stress, order=order

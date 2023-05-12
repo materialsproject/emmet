@@ -1,10 +1,11 @@
 from typing import List
+from hashlib import blake2b
 
 from pydantic import Field
 
 from pymatgen.core.structure import Molecule
 
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPculeID
 from emmet.core.material import PropertyOrigin
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.molecule_property import PropertyDoc
@@ -14,7 +15,6 @@ __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
 class VibrationDoc(PropertyDoc):
-
     property_name = "vibrations"
 
     molecule: Molecule = Field(..., description="Molecular structure")
@@ -41,13 +41,17 @@ class VibrationDoc(PropertyDoc):
 
     @classmethod
     def from_task(
-        cls, task: TaskDocument, molecule_id: MPID, deprecated: bool = False, **kwargs
+        cls,
+        task: TaskDocument,
+        molecule_id: MPculeID,
+        deprecated: bool = False,
+        **kwargs,
     ):  # type: ignore[override]
         """
         Construct a vibration document from a task document
 
         :param task: document from which vibrational properties can be extracted
-        :param molecule_id: mpid
+        :param molecule_id: MPculeID
         :param deprecated: bool. Is this document deprecated?
         :param kwargs: to pass to PropertyDoc
         :return:
@@ -92,16 +96,25 @@ class VibrationDoc(PropertyDoc):
         if frequencies[0] < 0.0:
             warnings.append("Imaginary frequencies")
 
+        id_string = f"vibrations-{molecule_id}-{task.task_id}-{task.lot_solvent}"
+        h = blake2b()
+        h.update(id_string.encode("utf-8"))
+        property_id = h.hexdigest()
+
         return super().from_molecule(
             meta_molecule=mol,
+            property_id=property_id,
             molecule_id=molecule_id,
+            level_of_theory=task.level_of_theory,
+            solvent=task.solvent,
+            lot_solvent=task.lot_solvent,
             molecule=mol,
             frequencies=frequencies,
             frequency_modes=frequency_modes,
             ir_intensities=intensities,
             ir_activities=active,
+            warnings=warnings,
             origins=[PropertyOrigin(name="vibrations", task_id=task.task_id)],
             deprecated=deprecated,
-            warnings=warnings,
-            **kwargs
+            **kwargs,
         )

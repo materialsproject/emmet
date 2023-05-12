@@ -1,46 +1,18 @@
+# mypy: ignore-errors
+
 """ Core definition of a VASP Task Document """
-from datetime import datetime
 from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel, Field
 from pymatgen.analysis.structure_analyzer import oxide_type
-from pymatgen.core import Structure
+from pymatgen.core.structure import Structure
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 
-from emmet.core.base import EmmetBaseModel
 from emmet.core.math import Matrix3D, Vector3D
-from emmet.core.mpid import MPID
+from emmet.core.task import BaseTaskDocument
 from emmet.core.structure import StructureMetadata
 from emmet.core.utils import ValueEnum
 from emmet.core.vasp.calc_types import RunType, calc_type, run_type, task_type
-
-
-class BaseTaskDocument(EmmetBaseModel):
-    """
-    Definition of base Task Document
-    """
-
-    calc_code: str = Field(description="The calculation code used to compute this task")
-    version: str = Field(None, description="The version of the calculation code")
-    dir_name: str = Field(None, description="The directory for this task")
-    task_id: MPID = Field(None, description="the Task ID For this document")
-
-    completed: bool = Field(False, description="Whether this calcuation completed")
-    completed_at: datetime = Field(
-        None, description="Timestamp for when this task was completed"
-    )
-    last_updated: datetime = Field(
-        default_factory=datetime.utcnow,
-        description="Timestamp for this task document was last updateed",
-    )
-
-    tags: Union[List[str], None] = Field(
-        [], description="Metadata tags for this task document"
-    )
-
-    warnings: List[str] = Field(
-        None, description="Any warnings related to this property"
-    )
 
 
 class TaskState(ValueEnum):
@@ -126,7 +98,7 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
     calc_code = "VASP"
     run_stats: Dict[str, RunStatistics] = Field(
         {},
-        description="Summary of runtime statisitics for each calcualtion in this task",
+        description="Summary of runtime statistics for each calculation in this task",
     )
 
     is_valid: bool = Field(
@@ -146,6 +118,14 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
         [], description="The 'raw' calculation docs used to assembled this task"
     )
 
+    tags: Union[List[str], None] = Field(
+        [], description="Metadata tags for this task document"
+    )
+
+    warnings: List[str] = Field(
+        None, description="Any warnings related to this property"
+    )
+
     @property
     def run_type(self) -> RunType:
         params = self.calcs_reversed[0].get("input", {}).get("parameters", {})
@@ -159,10 +139,16 @@ class TaskDocument(BaseTaskDocument, StructureMetadata):
 
     @property
     def calc_type(self):
+        inputs = (
+            self.calcs_reversed[0].get("input", {})
+            if len(self.calcs_reversed) > 0
+            else self.orig_inputs
+        )
         params = self.calcs_reversed[0].get("input", {}).get("parameters", {})
         incar = self.calcs_reversed[0].get("input", {}).get("incar", {})
 
-        return calc_type(self.orig_inputs, {**params, **incar})
+        return calc_type(inputs, {**params, **incar})
+
 
     @property
     def entry(self) -> ComputedEntry:

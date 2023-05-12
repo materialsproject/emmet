@@ -12,7 +12,6 @@ from pymatgen.analysis.chemenv.coordination_environments.coordination_geometry_f
 )
 from pymatgen.analysis.chemenv.coordination_environments.structure_environments import (
     LightStructureEnvironments,
-    StructureEnvironments,
 )
 from pymatgen.analysis.structure_analyzer import SpacegroupAnalyzer
 from pymatgen.core.structure import Molecule
@@ -21,21 +20,22 @@ from pymatgen.core.structure import Structure
 from emmet.core.material_property import PropertyDoc
 from emmet.core.mpid import MPID
 
+DEFAULT_DISTANCE_CUTOFF = 1.4
+DEFAULT_ANGLE_CUTOFF = 0.3
+
 AVAILABLE_METHODS = {
     "DefaultSimplestChemenvStrategy": SimplestChemenvStrategy(),
-    "DefaultSimplestChemenvStrategy_all_bonds": SimplestChemenvStrategy(
-        additional_condition=0
-    ),
+    # "DefaultSimplestChemenvStrategy_all_bonds": SimplestChemenvStrategy(additional_condition=0),
 }
 
 
-DEFAULTSIMPLESTCHEMENVSTRATEGY = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4 angle_cutoff=0.3 additional_condition=1 continuous_symmetry_measure_cutoff=10.0"
-SIMPLESTCHEMENVSTRATEGY_ALL_BONDS = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4 angle_cutoff=0.3 additional_condition=0 continuous_symmetry_measure_cutoff=10.0"
+DEFAULTSIMPLESTCHEMENVSTRATEGY = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4 angle_cutoff=0.3 additional_condition=1 continuous_symmetry_measure_cutoff=10.0"  # noqa: E501
+# SIMPLESTCHEMENVSTRATEGY_ALL_BONDS = "Simplest ChemenvStrategy using fixed angle and distance parameters for the definition of neighbors in the Voronoi approach. The coordination environment is then given as the one with the lowest continuous symmetry measure. Options: distance_cutoff=1.4 angle_cutoff=0.3 additional_condition=0 continuous_symmetry_measure_cutoff=10.0"  # noqa: E501
 
 
 METHODS_DESCRIPTION = {
     "DefaultSimplestChemenvStrategy": DEFAULTSIMPLESTCHEMENVSTRATEGY,
-    "DefaultSimplestChemenvStrategy_all_bonds": SIMPLESTCHEMENVSTRATEGY_ALL_BONDS,
+    # "DefaultSimplestChemenvStrategy_all_bonds": SIMPLESTCHEMENVSTRATEGY_ALL_BONDS,
 }
 
 
@@ -265,7 +265,7 @@ COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES = Literal[
     "Triangular cupola",
     "Bicapped square prism (adjacent faces) (also known as Bicapped cube)",
     "Cuboctahedron",
-    "Tricapped triangular prism (two square-face caps and one triangular-face cap) (also known as Triaugmented trigonal prism)",
+    "Tricapped triangular prism (two square-face caps and one triangular-face cap) (also known as Triaugmented trigonal prism)",  # noqa: E501
     "Square-face capped trigonal prism (also known as Augmented triangular prism)",
     "Tetrahedron (also known as Triangular pyramid, Trigonal pyramid)",
     "Cube (also known as Square prism, Tetragonal prism)",
@@ -281,7 +281,7 @@ COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES = Literal[
     "Angular",
     "Hendecahedron (also known as Bisymmetric hendecahedron)",
     "Trigonal-face bicapped square antiprism",
-    "Pentagonal-face capped pentagonal antiprism (also known as Gyroelongated pentagonal pyramid, Diminished icosahedron, Truncated icosahedron)",
+    "Pentagonal-face capped pentagonal antiprism (also known as Gyroelongated pentagonal pyramid, Diminished icosahedron, Truncated icosahedron)",  # noqa: E501
     "Linear",
     "Pentagonal plane (also known as Pentagon)",
     "Tricapped triangular prism (three square-face caps) (also known as Triaugmented trigonal prism)",
@@ -290,8 +290,8 @@ COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES = Literal[
     "T-shaped",
     "Single neighbor",
     "Trigonal plane (also known as Triangular planar)",
-    "Dodecahedron with triangular faces - p2345 plane normalized (also known as Snub disphenoid - p2345 plane normalized, Siamese dodecahedron - p2345 plane normalized)",
-    "Tricapped triangular prism (one square-face cap and two triangular-face caps) (also known as Triaugmented trigonal prism)",
+    "Dodecahedron with triangular faces - p2345 plane normalized (also known as Snub disphenoid - p2345 plane normalized, Siamese dodecahedron - p2345 plane normalized)",  # noqa: E501
+    "Tricapped triangular prism (one square-face cap and two triangular-face caps) (also known as Triaugmented trigonal prism)",  # noqa: E501
     "Truncated tetrahedron",
     "Hexagonal prism",
     "Tridiminished icosahedron",
@@ -305,12 +305,15 @@ COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES = Literal[
     "End-trigonal-face capped trigonal prism (also known as Augmented triangular prism)",
     "Pentagonal bipyramid (also known as Pentagonal dipyramid)",
     "Square-face monocapped antiprism (also known as Gyroelongated square pyramid)",
-    "Square-face bicapped square antiprism (also known as Square-face bicapped square anticube, Bicapped anticube, Gyroelongated square dipyramid)",
+    "Square-face bicapped square antiprism (also known as Square-face bicapped square anticube, Bicapped anticube, Gyroelongated square dipyramid)",  # noqa: E501
 ]
 
 
 class ChemEnvDoc(PropertyDoc):
-    """Coordination environments based on cation-anion bonds computed for all unique cations in this structure. If no oxidation states are available, all bonds will be considered as a fall-back."""
+    """
+    Coordination environments based on cation-anion bonds computed for all unique cations in this structure.
+    If no oxidation states are available, all bonds will be considered as a fall-back.
+    """
 
     property_name = "coord_environment"
 
@@ -336,7 +339,7 @@ class ChemEnvDoc(PropertyDoc):
     )
 
     chemenv_iucr: List[COORDINATION_GEOMETRIES_IUCR] = Field(
-        description="List of symbols for unique (cationic) species in structure in IUPAC format"
+        description="List of symbols for unique (cationic) species in structure in IUCR format"
     )
 
     chemenv_name: List[COORDINATION_GEOMETRIES_NAMES] = Field(
@@ -345,7 +348,7 @@ class ChemEnvDoc(PropertyDoc):
     chemenv_name_with_alternatives: List[
         COORDINATION_GEOMETRIES_NAMES_WITH_ALTERNATIVES
     ] = Field(
-        description="List of text description of coordination environment including alternative descriptions for unique (cationic) species in structure."
+        description="List of text description of coordination environment including alternative descriptions for unique (cationic) species in structure."  # noqa: E501
     )
 
     csm: List[Union[float, None]] = Field(
@@ -422,6 +425,9 @@ class ChemEnvDoc(PropertyDoc):
             inequivalent_indices = [
                 indices[0] for indices in symm_struct.equivalent_indices
             ]
+            # if len(inequivalent_indices)>5:
+            #    print("Too many sites")
+            #    raise Exception
             # wyckoff symbols for all inequivalent indices
             wyckoffs_unique = symm_struct.wyckoff_symbols
             # use the local geometry finder to get the important information
@@ -442,24 +448,37 @@ class ChemEnvDoc(PropertyDoc):
                 se = lgf.compute_structure_environments(
                     only_indices=inequivalent_indices_cations,
                     valences=valences,
+                    maximum_distance_factor=DEFAULT_DISTANCE_CUTOFF,
+                    minimum_angle_factor=DEFAULT_ANGLE_CUTOFF,
                 )
                 lse = LightStructureEnvironments.from_structure_environments(
                     strategy=method, structure_environments=se
                 )
                 warnings = None
             else:
-                method_description = "DefaultSimplestChemenvStrategy_all_bonds"
-                method = AVAILABLE_METHODS[method_description]
+                d.update(
+                    {
+                        "warnings": "No oxidation states available. Cation-anion bonds cannot be identified."
+                    }
+                )
+                return super().from_structure(
+                    meta_structure=structure,
+                    material_id=material_id,
+                    structure=structure,
+                    **d,
+                    **kwargs,
+                )
+                # method_description = "DefaultSimplestChemenvStrategy_all_bonds"
+                # method = AVAILABLE_METHODS[method_description]
 
-                se = lgf.compute_structure_environments(
-                    only_indices=inequivalent_indices,
-                )
-                lse = LightStructureEnvironments.from_structure_environments(
-                    strategy=method, structure_environments=se
-                )
+                # se = lgf.compute_structure_environments(
+                #     only_indices=inequivalent_indices,
+                # )
+                # lse = LightStructureEnvironments.from_structure_environments(strategy=method,
+                #     structure_environments=se)
                 # Trick to get rid of duplicate code
-                inequivalent_indices_cations = inequivalent_indices
-                warnings = "No oxidation states. Analysis will now include all bonds"
+                # inequivalent_indices_cations = inequivalent_indices
+                # warnings = "No oxidation states. Analysis will now include all bonds"
 
             for index, wyckoff in zip(inequivalent_indices, wyckoffs_unique):
                 # ONLY CATIONS
@@ -504,7 +523,7 @@ class ChemEnvDoc(PropertyDoc):
                 )
 
         except Exception:
-            d.update({"warnings": "ChemEnv algorithm failed"})
+            d.update({"warnings": "ChemEnv algorithm failed."})
 
         return super().from_structure(
             meta_structure=structure,

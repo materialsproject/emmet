@@ -1,7 +1,6 @@
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
 from pymatgen.core import Structure
-from pymatgen.core import __version__ as pymatgen_version
 
 from emmet.core.oxidation_states import OxidationStateDoc
 from emmet.core.utils import jsanitize

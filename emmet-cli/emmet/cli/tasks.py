@@ -7,6 +7,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import time
 
 from collections import defaultdict, deque
 from fnmatch import fnmatch
@@ -17,6 +18,7 @@ import click
 from hpsspy import HpssOSError
 from hpsspy.os.path import isfile
 
+from emmet.cli import SETTINGS
 from emmet.cli.decorators import sbatch
 from emmet.cli.utils import (
     EmmetCliError,
@@ -26,6 +28,7 @@ from emmet.cli.utils import (
     ensure_indexes,
     iterator_slice,
     parse_vasp_dirs,
+    get_symlinked_path,
 )
 
 logger = logging.getLogger("emmet")
@@ -37,18 +40,21 @@ FILE_FILTERS = [
     "KPOINTS*",
     "POSCAR*",
     "POTCAR*",
-    "vasprun.xml*",
     "OUTCAR*",
-    "AECCAR*",
-    "ELFCAR*",
-    "CHGCAR*",
+    "vasprun.xml*",
+    "transformation*",
 ]
+
+STORE_VOLUMETRIC_DATA = ["CHGCAR", "LOCPOT", "AECCAR0", "AECCAR1", "AECCAR2", "ELFCAR"]
+
+for v in STORE_VOLUMETRIC_DATA:
+    FILE_FILTERS.append(f"{v}*")
+
 FILE_FILTERS_DEFAULT = [
     f"{d}{os.sep}{f}" if d else f
     for f in FILE_FILTERS
     for d in ["", "relax1", "relax2"]
 ]
-STORE_VOLUMETRIC_DATA = []
 
 
 @click.group()
@@ -56,7 +62,7 @@ STORE_VOLUMETRIC_DATA = []
     "-d",
     "--directory",
     required=True,
-    help="Directory to use for HPSS or parsing.",
+    help="Working directory to use for HPSS or parsing.",
 )
 @click.option(
     "-m", "--nmax", show_default=True, default=10, help="Maximum number of directories."
@@ -68,22 +74,66 @@ STORE_VOLUMETRIC_DATA = []
     default="block_*",
     help="Pattern for sub-paths to include.",
 )
-@click.option("--reorg", is_flag=True, help="Reorganize directory in block/launchers.")
-def tasks(directory, nmax, pattern, reorg):
+def tasks(directory, nmax, pattern):
     """Backup, restore, and parse VASP calculations."""
     pass
 
 
+def make_comment(ctx, txt):
+    gh = ctx.grand_parent.obj["GH"]
+    user = gh.me().login
+    issue_number = ctx.grand_parent.params["issue"]
+    issue = gh.issue(SETTINGS.tracker["org"], SETTINGS.tracker["repo"], issue_number)
+    comment = issue.create_comment("\n".join(txt))
+    logger.info(comment.html_url)
+
+
 @tasks.command()
 @sbatch
-def prep():
-    """Prepare directory for HPSS backup"""
-    ctx = click.get_current_context()
-    directory = ctx.parent.params["directory"]
+@click.option("--clean", is_flag=True, help="Remove original launchers.")
+@click.pass_context
+def backups(ctx, clean):
+    """Scan root directory and submit separate backup jobs for subdirectories containing blocks"""
+    ctx.parent.params["nmax"] = sys.maxsize  # disable maximum launchers for backup
+    subdir_block_launchers = defaultdict(lambda: defaultdict(list))
     gen = VaspDirsGenerator()
-    list(x for x in gen)
-    logger.info(f"Prepared {gen.value} VASP calculation(s) in {directory}.")
-    return ReturnCodes.SUCCESS if gen.value else ReturnCodes.ERROR
+
+    for vasp_dir in gen:
+        subdir, block, launcher = split_vasp_dir_path(vasp_dir)
+        subdir_block_launchers[subdir][block].append(launcher)
+
+    if not gen.value:
+        logger.warning("No launchers found.")
+        return ReturnCodes.SUCCESS
+
+    logger.info(f"Found {gen.value} launchers.")
+    rootdir = ctx.parent.params["directory"]
+    rootdir_pattern = os.path.join(rootdir, ctx.parent.params["pattern"])
+    comment_txt = [f"Backup {gen.value} launchers in `{rootdir_pattern}`:\n"]
+    ctx.parent.parent.params["sbatch"] = True
+    ctx.parent.parent.params["yes"] = True
+    run = ctx.parent.parent.params["run"]
+    prefix = ctx.parent.params["pattern"] = "block_*"
+
+    for subdir, block_launchers in subdir_block_launchers.items():
+        nblocks = len(block_launchers)
+        nlaunchers = sum(len(v) for v in block_launchers.values())
+        subdir_short = subdir.replace(rootdir, "")
+        # TODO further split up jobs by prefix if `block_*` is too many
+        msg = f"- `{subdir_short}{prefix}` ({nblocks}/{nlaunchers})"
+
+        if run:
+            ctx.parent.params["directory"] = subdir
+            ret = ctx.parent.invoke(backup, clean=clean, check=True)
+            msg += f" -> {ret.value}"
+            comment_txt.append(msg)
+        else:
+            logger.info(msg)
+
+    if run:
+        make_comment(ctx, comment_txt)
+
+    return ReturnCodes.SUCCESS
 
 
 def run_command(args, filelist):
@@ -130,17 +180,31 @@ def check_pattern(nested_allowed=False):
         )
 
 
+def split_vasp_dir_path(vasp_dir):
+    prefix = "block_"  # TODO should use PREFIXES?
+    if prefix not in vasp_dir:
+        ctx = click.get_current_context()
+        offset = len(ctx.parent.params["pattern"].split(os.sep))
+        base_path = ctx.parent.params["directory"].rstrip(os.sep)
+        base_path_index = len(base_path.split(os.sep)) + offset
+        vasp_dir = get_symlinked_path(vasp_dir, base_path_index)
+
+    vasp_dir_split = vasp_dir.split(prefix, 1)
+    vasp_dir_split_len = len(vasp_dir_split)
+    if vasp_dir_split_len == 2:
+        launch_dir = prefix + vasp_dir_split[-1]
+        block, launcher = launch_dir.split(os.sep, 1)
+        return vasp_dir_split[0], block, launcher
+    else:
+        raise EmmetCliError(f"Failed to split vasp dir {vasp_dir}!")
+
+
 def load_block_launchers():
-    prefix = (
-        "block_"  # TODO old prefixes (e.g. res/aflow) might not be needed for backup
-    )
+    # NOTE this runs within subdir (i.e. block_* directories at root of subdir)
     block_launchers = defaultdict(list)
     gen = VaspDirsGenerator()
-    for idx, vasp_dir in enumerate(gen):
-        if idx and not idx % 500:
-            logger.info(f"{idx} launchers found ...")
-        launch_dir = prefix + vasp_dir.split(prefix, 1)[-1]
-        block, launcher = launch_dir.split(os.sep, 1)
+    for vasp_dir in gen:
+        _, block, launcher = split_vasp_dir_path(vasp_dir)
         block_launchers[block].append(launcher)
     logger.info(f"Loaded {len(block_launchers)} block(s) with {gen.value} launchers.")
     return block_launchers
@@ -153,14 +217,15 @@ def extract_filename(line):
 
 @tasks.command()
 @sbatch
+@click.option("--reorg", is_flag=True, help="Reorganize directory in block/launchers.")
 @click.option("--clean", is_flag=True, help="Remove original launchers.")
 @click.option("--check", is_flag=True, help="Check backup consistency.")
 @click.option("--force-new", is_flag=True, help="Generate new backup.")
-def backup(clean, check, force_new):  # noqa: C901
+@click.pass_context
+def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
     """Backup directory to HPSS"""
-    ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
-    ctx.parent.params["nmax"] = sys.maxsize  # disable maximum launchers for backup
+    ctx.params["nmax"] = sys.maxsize  # disable maximum launchers for backup
     logger.warning("--nmax ignored for HPSS backup!")
     directory = ctx.parent.params["directory"]
     if not check and clean:
@@ -175,71 +240,85 @@ def backup(clean, check, force_new):  # noqa: C901
     counter, nremove_total = 0, 0
     os.chdir(directory)
     for block, launchers in block_launchers.items():
-        logger.info(f"{block} with {len(launchers)} launcher(s)")
+        nlaunchers = len(launchers)
+        logger.info(f"{block} with {nlaunchers} launcher(s)")
+        filelist = [os.path.join(block, l) for l in launchers]
+        already_in_hpss = False
         try:
             isfile(f"{GARDEN}/{block}.tar")
             if force_new and run:
                 ts = datetime.now().strftime("%Y%m%d-%H%M%S")
                 tarfile = f"{GARDEN}/{block}.tar"
                 for suf in ["", ".idx"]:
-                    args = shlex.split(f"hsi -q mv -v {tarfile}{suf} {tarfile}{suf}.bkp_{ts}")
+                    args = shlex.split(
+                        f"hsi -q mv -v {tarfile}{suf} {tarfile}{suf}.bkp_{ts}"
+                    )
                     for line in run_command(args, []):
                         logger.info(line.strip())
                 raise HpssOSError
         except HpssOSError:  # block not in HPSS
             if run:
-                filelist = [os.path.join(block, l) for l in launchers]
-                args = shlex.split(f"htar -M 5000000 -Phcvf {GARDEN}/{block}.tar")
+                directory = ctx.parent.params["directory"]
+                track_dir = os.path.join(directory, ".emmet")
+                ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+                filename = os.path.join(track_dir, f"{block}_launchers_{ts}.txt")
+
+                with open(filename, "w") as f:
+                    for line in filelist:
+                        f.write(f"{line}\n")
+
+                args = shlex.split(
+                    f"htar -M 5000000 -Phcf {GARDEN}/{block}.tar -L {filename}"
+                )
                 try:
-                    for line in run_command(args, filelist):
+                    for line in run_command(args, []):
                         logger.info(line.strip())
                 except subprocess.CalledProcessError as e:
                     logger.error(str(e))
                     return ReturnCodes.ERROR
                 counter += 1
         else:
+            already_in_hpss = True
             logger.warning(f"Skip {block} - already in HPSS")
 
         # Check backup here to allow running it separately
-        if check:
+        if check and not already_in_hpss:
             logger.info(f"Verify {block}.tar ...")
             args = shlex.split(
-                f"htar -Kv -Hrelpaths -Hverify=all -f {GARDEN}/{block}.tar"
+                f"htar -K -Hrelpaths -Hverify=all -f {GARDEN}/{block}.tar"
             )
-            files_remove = []
             try:
                 for line in run_command(args, []):
-                    line = line.strip()
-                    if line.startswith("HTAR: V "):
-                        ls = line.split(", ")
-                        if len(ls) == 3:
-                            nfiles = len(files_remove)
-                            if nfiles and not nfiles % 1000:
-                                logger.info(f"{nfiles} files ...")
-                            files_remove.append(ls[0].split()[-1])
-                    else:
-                        logger.info(line)
+                    logger.info(line.strip())
             except subprocess.CalledProcessError as e:
                 logger.error(str(e))
                 return ReturnCodes.ERROR
 
             if clean:
-                nremove = len(files_remove)
-                nremove_total += nremove
+                nremove_total += nlaunchers
                 if run:
-                    with click.progressbar(files_remove, label="Removing files") as bar:
+                    with click.progressbar(
+                        filelist, label="Removing launchers ..."
+                    ) as bar:
                         for fn in bar:
-                            os.remove(fn)
-                    logger.info(f"Removed {nremove} files from disk for {block}.")
+                            if os.path.exists(fn):
+                                shutil.rmtree(fn)
+                    logger.info(
+                        f"Removed {nlaunchers} launchers from disk for {block}."
+                    )
                 else:
-                    logger.info(f"Would remove {nremove} files from disk for {block}.")
+                    logger.info(
+                        f"Would remove {nlaunchers} launchers from disk for {block}."
+                    )
 
     logger.info(f"{counter}/{len(block_launchers)} blocks newly backed up to HPSS.")
     if clean:
         if run:
-            logger.info(f"Verified and removed a total of {nremove_total} files.")
+            logger.info(f"Verified and removed a total of {nremove_total} launchers.")
         else:
-            logger.info(f"Would verify and remove a total of {nremove_total} files.")
+            logger.info(
+                f"Would verify and remove a total of {nremove_total} launchers."
+            )
     return ReturnCodes.SUCCESS
 
 
@@ -345,7 +424,7 @@ def restore(inputfile, file_filter):  # noqa: C901
                 logger.info(
                     f"Restore {nfiles_restore}/{cnt} files for {block} to {directory} ..."
                 )
-                args = shlex.split(f"htar -xvf {GARDEN}/{block}.tar")
+                args = shlex.split(f"htar -xf {GARDEN}/{block}.tar")
                 filelist_restore_chunks = [
                     filelist_restore[i : i + max_args]
                     for i in range(0, len(filelist_restore), max_args)
@@ -375,6 +454,79 @@ def restore(inputfile, file_filter):  # noqa: C901
     return ReturnCodes.SUCCESS
 
 
+def group_strings_by_prefix(strings, prefix_length):
+    """group a list of strings by prefix based on a given prefix length"""
+    groups = defaultdict(list)
+    for s in strings:
+        prefix = s[:prefix_length]
+        groups[prefix].append(s)
+
+    return groups
+
+
+@tasks.command()
+@sbatch
+@click.option(  # NOTE this could be retrieved from S3 in the future
+    "--task-ids",
+    type=click.Path(exists=True),
+    help="JSON file mapping launcher name to task ID.",
+)
+@click.pass_context
+def parsers(ctx, task_ids):
+    """Scan root directory and submit separate parser jobs"""
+    ctx.parent.params[
+        "nmax"
+    ] = sys.maxsize  # disable maximum launchers to determine parser jobs
+    run = ctx.parent.parent.params["run"]
+    directory = ctx.parent.params["directory"]
+    check_pattern()
+    gen = VaspDirsGenerator()
+    launchers = []
+
+    for vaspdir in gen:
+        _, block, launcher = split_vasp_dir_path(vaspdir)
+        launchers.append(os.path.join(block, launcher))
+
+    pattern = ctx.parent.params["pattern"]
+    nparse_max, len_prefix = 5000, len(pattern[:-1])  # NOTE assuming endswith *
+    remaining = group_strings_by_prefix(launchers, len_prefix)
+    logger.info(f"Loaded {gen.value} launchers.")
+    patterns = {}
+
+    while remaining:
+        for prefix in list(remaining.keys()):
+            nlaunchers = len(remaining[prefix])
+            if nlaunchers <= nparse_max:
+                patterns[f"{prefix}*"] = nlaunchers
+                remaining.pop(prefix)
+
+        len_prefix += 1
+        remaining_vaspdirs = [x for v in remaining.values() for x in v]
+        remaining = group_strings_by_prefix(remaining_vaspdirs, len_prefix)
+
+    ctx.parent.parent.params["sbatch"] = True
+    ctx.parent.parent.params["yes"] = True
+    rootdir_pattern = os.path.join(directory, ctx.parent.params["pattern"])
+    comment_txt = [f"Parse {gen.value} launchers in `{rootdir_pattern}`:\n"]
+
+    for pattern, nlaunchers in patterns.items():
+        msg = f"- `{pattern}` ({nlaunchers})"
+        if run:
+            ctx.parent.params["pattern"] = pattern
+            ctx.parent.params["nmax"] = nlaunchers
+            ret = ctx.parent.invoke(parse, nproc=20, task_ids=task_ids)
+            msg += f" -> {ret.value}"
+            comment_txt.append(msg)
+            time.sleep(90)  # give jobs time to start (cf insertion of separator task)
+        else:
+            logger.info(msg)
+
+    if run:
+        make_comment(ctx, comment_txt)
+
+    return ReturnCodes.SUCCESS
+
+
 @tasks.command()
 @sbatch
 @click.option(
@@ -401,7 +553,14 @@ def restore(inputfile, file_filter):  # noqa: C901
     default=STORE_VOLUMETRIC_DATA,
     help="Store any of CHGCAR, LOCPOT, AECCAR0, AECCAR1, AECCAR2, ELFCAR.",
 )
-def parse(task_ids, snl_metas, nproc, store_volumetric_data):  # noqa: C901
+@click.option(
+    "-r",
+    "--runs",
+    multiple=True,
+    default=["precondition", "relax1", "relax2", "static"],
+    help="Naming scheme for multiple calculations in one folder - subfolder or extension.",
+)
+def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C901
     """Parse VASP launchers into tasks"""
     ctx = click.get_current_context()
     if "CLIENT" not in ctx.obj:
@@ -413,7 +572,7 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data):  # noqa: C901
     tag = os.path.basename(directory)
     target = ctx.obj["CLIENT"]
     snl_collection = target.db.snls_user
-    collection_count = target.collection.count_documents({})
+    collection_count = target.collection.estimated_document_count()
     logger.info(
         f"Connected to {target.collection.full_name} with {collection_count} tasks."
     )
@@ -428,6 +587,10 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data):  # noqa: C901
             f"nmax = {nmax} but chunk size = {chunk_size} -> sequential parsing."
         )
 
+    from multiprocessing_logging import install_mp_handler
+
+    install_mp_handler(logger=logger)
+
     pool = multiprocessing.Pool(processes=nproc)
     gen = VaspDirsGenerator()
     iterator = iterator_slice(gen, chunk_size)  # process in chunks
@@ -441,15 +604,15 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data):  # noqa: C901
     else:
         # reserve list of task_ids to avoid collisions during multiprocessing
         # insert empty doc with max ID + 1 into target collection for parallel SLURM jobs
-        # NOTE use regex first to reduce size of distinct below 16MB
-        q = {"task_id": {"$regex": r"^mp-\d{7,}$"}}
-        all_task_ids = [
-            t["task_id"] for t in target.collection.find(q, {"_id": 0, "task_id": 1})
+        pipeline = [
+            {"$match": {"task_id": {"$regex": r"^mp-\d{7,}$"}}},
+            {"$project": {"task_id": 1, "prefix_num": {"$split": ["$task_id", "-"]}}},
+            {"$project": {"num": {"$arrayElemAt": ["$prefix_num", -1]}}},
+            {"$addFields": {"num_int": {"$toInt": "$num"}}},
+            {"$group": {"_id": None, "num_max": {"$max": "$num_int"}}},
         ]
-        if not all_task_ids:
-            all_task_ids = target.collection.distinct("task_id")
-
-        next_tid = max(int(tid.split("-")[-1]) for tid in all_task_ids) + 1
+        result = list(client.collection.aggregate(pipeline))
+        next_tid = result[0]["num_max"] + 1
         lst = [f"mp-{next_tid + n}" for n in range(nmax)]
         task_ids = chunks(lst, chunk_size)
 

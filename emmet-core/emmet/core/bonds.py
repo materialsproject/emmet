@@ -1,17 +1,12 @@
 import logging
-from collections import defaultdict
-from typing import Dict, List, Any, Union
+from typing import Dict, List, Any
 
 import numpy as np
 from pydantic import Field
 from pymatgen.analysis.graphs import StructureGraph
 from pymatgen.analysis.local_env import NearNeighbors
-from pymatgen.core import Structure
-from pymatgen.core.periodic_table import Specie
-from typing_extensions import Literal
 
 from emmet.core.material_property import PropertyDoc
-from emmet.core.mpid import MPID
 
 AVAILABLE_METHODS = {nn.__name__: nn for nn in NearNeighbors.__subclasses__()}
 
@@ -24,7 +19,6 @@ class BondingDoc(PropertyDoc):
 
     structure_graph: StructureGraph = Field(
         description="Structure graph",
-
     )
 
     method: str = Field(description="Method used to compute structure graph.")
@@ -74,9 +68,7 @@ class BondingDoc(PropertyDoc):
         ]
 
         for method in preferred_methods:
-
             try:
-
                 sg = StructureGraph.with_local_env_strategy(structure, method)
 
                 # ensure edge weights are specifically bond lengths
@@ -102,7 +94,6 @@ class BondingDoc(PropertyDoc):
                 break
 
             except Exception as e:
-
                 logging.warning(
                     "Failed to calculate bonding: {} {} {}".format(
                         material_id, method, e
@@ -110,7 +101,6 @@ class BondingDoc(PropertyDoc):
                 )
 
         if bonding_info:
-
             return super().from_structure(
                 meta_structure=structure,
                 material_id=material_id,

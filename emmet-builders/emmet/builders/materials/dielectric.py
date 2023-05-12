@@ -114,7 +114,6 @@ class DielectricBuilder(Builder):
             self.logger.info("No items to update")
 
     def _get_processed_doc(self, mat):
-
         mat_doc = self.materials.query_one(
             {self.materials.key: mat},
             [
@@ -155,7 +154,6 @@ class DielectricBuilder(Builder):
             )
 
             if task_query["output"]["bandgap"] > 0:
-
                 try:
                     structure = task_query["orig_inputs"]["poscar"]["structure"]
                 except KeyError:

@@ -12,6 +12,7 @@ class RunType(ValueEnum):
     GGA = "GGA"
     PBE = "PBE"
     PBESol = "PBESol"
+    PBEsol = "PBEsol"
     RevPBE_PADE = "RevPBE+PADE"
     optB86b = "optB86b"
     optB88 = "optB88"
@@ -43,6 +44,7 @@ class RunType(ValueEnum):
     GGA_U = "GGA+U"
     PBE_U = "PBE+U"
     PBESol_U = "PBESol+U"
+    PBEsol_U = "PBEsol+U"
     RevPBE_PADE_U = "RevPBE+PADE+U"
     optB86b_U = "optB86b+U"
     optB88_U = "optB88+U"
@@ -88,6 +90,7 @@ class TaskType(ValueEnum):
     Structure_Optimization = "Structure Optimization"
     Deformation = "Deformation"
     Unrecognized = "Unrecognized"
+    Optic = "Optic"
 
 
 class CalcType(ValueEnum):
@@ -813,5 +816,7 @@ class CalcType(ValueEnum):
     LDA_U_NMR_Electric_Field_Gradient = "LDA+U NMR Electric Field Gradient"
     LDA_U_Static = "LDA+U Static"
     LDA_U_Structure_Optimization = "LDA+U Structure Optimization"
+    GGA_Optic = "GGA Optic"
+    PBE_Optic = "PBE Optic"
     LDA_U_Deformation = "LDA+U Deformation"
     LDA_U_Unrecognized = "LDA+U Unrecognized"

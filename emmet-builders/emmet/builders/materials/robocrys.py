@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List
+from typing import Dict, Optional
 from maggma.builders.map_builder import MapBuilder
 from maggma.core import Store
 

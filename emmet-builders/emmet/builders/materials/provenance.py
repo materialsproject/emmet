@@ -1,5 +1,4 @@
 from collections import defaultdict
-from itertools import chain
 from typing import Dict, Iterable, List, Optional, Tuple
 from math import ceil
 from datetime import datetime
@@ -50,7 +49,6 @@ class ProvenanceBuilder(Builder):
         )
 
     def ensure_indicies(self):
-
         self.materials.ensure_index("material_id", unique=True)
         self.materials.ensure_index("formula_pretty")
 
@@ -148,7 +146,6 @@ class ProvenanceBuilder(Builder):
         self.logger.info(f"Found {self.total} new/updated systems to process")
 
         for mat_id in mat_ids:
-
             mat = self.materials.query_one(
                 properties=[
                     "material_id",

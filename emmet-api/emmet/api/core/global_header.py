@@ -9,3 +9,7 @@ class GlobalHeaderProcessor(HeaderProcessor):
             group.strip() for group in groups.split(",")
         ]:
             response.headers["X-Bypass-Rate-Limit"] = "ALL"
+
+        # forward Consumer Id header in response
+        consumer_id = request.headers.get("X-Consumer-Id", "-")
+        response.headers["X-Consumer-Id"] = consumer_id

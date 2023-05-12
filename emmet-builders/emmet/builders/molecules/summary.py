@@ -1,13 +1,15 @@
 from datetime import datetime
 from itertools import chain
 from math import ceil
-from typing import Optional, Iterable, Iterator, List, Dict
+from typing import Any, Optional, Iterable, Iterator, List, Dict
+
+# from monty.serialization import loadfn, dumpfn
 
 from maggma.builders import Builder
 from maggma.core import Store
 from maggma.utils import grouper
 
-from emmet.core.molecules.summary import SummaryDoc
+from emmet.core.molecules.summary import MoleculeSummaryDoc
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
@@ -20,12 +22,12 @@ SETTINGS = EmmetBuildSettings()
 class SummaryBuilder(Builder):
     """
     The SummaryBuilder collects all property documents and gathers their properties
-    into a single SummaryDoc
+    into a single MoleculeSummaryDoc
 
     The process is as follows:
         1. Gather MoleculeDocs by formula
         2. For each doc, grab the relevant property docs
-        3. Convert property docs to SummaryDoc
+        3. Convert property docs to MoleculeSummaryDoc
     """
 
     def __init__(
@@ -43,7 +45,6 @@ class SummaryBuilder(Builder):
         settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
-
         self.molecules = molecules
         self.charges = charges
         self.spins = spins
@@ -77,6 +78,9 @@ class SummaryBuilder(Builder):
         self.charges.ensure_index("molecule_id")
         self.charges.ensure_index("method")
         self.charges.ensure_index("task_id")
+        self.charges.ensure_index("solvent")
+        self.charges.ensure_index("lot_solvent")
+        self.charges.ensure_index("property_id")
         self.charges.ensure_index("last_updated")
         self.charges.ensure_index("formula_alphabetical")
 
@@ -84,6 +88,9 @@ class SummaryBuilder(Builder):
         self.spins.ensure_index("molecule_id")
         self.spins.ensure_index("method")
         self.spins.ensure_index("task_id")
+        self.spins.ensure_index("solvent")
+        self.spins.ensure_index("lot_solvent")
+        self.spins.ensure_index("property_id")
         self.spins.ensure_index("last_updated")
         self.spins.ensure_index("formula_alphabetical")
 
@@ -91,30 +98,45 @@ class SummaryBuilder(Builder):
         self.bonds.ensure_index("molecule_id")
         self.bonds.ensure_index("method")
         self.bonds.ensure_index("task_id")
+        self.bonds.ensure_index("solvent")
+        self.bonds.ensure_index("lot_solvent")
+        self.bonds.ensure_index("property_id")
         self.bonds.ensure_index("last_updated")
         self.bonds.ensure_index("formula_alphabetical")
 
         # Search index for orbitals
         self.orbitals.ensure_index("molecule_id")
         self.orbitals.ensure_index("task_id")
+        self.orbitals.ensure_index("solvent")
+        self.orbitals.ensure_index("lot_solvent")
+        self.orbitals.ensure_index("property_id")
         self.orbitals.ensure_index("last_updated")
         self.orbitals.ensure_index("formula_alphabetical")
 
         # Search index for orbitals
         self.redox.ensure_index("molecule_id")
         self.redox.ensure_index("task_id")
+        self.redox.ensure_index("solvent")
+        self.redox.ensure_index("lot_solvent")
+        self.redox.ensure_index("property_id")
         self.redox.ensure_index("last_updated")
         self.redox.ensure_index("formula_alphabetical")
 
         # Search index for thermo
         self.thermo.ensure_index("molecule_id")
         self.thermo.ensure_index("task_id")
+        self.thermo.ensure_index("solvent")
+        self.thermo.ensure_index("lot_solvent")
+        self.thermo.ensure_index("property_id")
         self.thermo.ensure_index("last_updated")
         self.thermo.ensure_index("formula_alphabetical")
 
         # Search index for vibrational properties
         self.vibes.ensure_index("molecule_id")
         self.vibes.ensure_index("task_id")
+        self.vibes.ensure_index("solvent")
+        self.vibes.ensure_index("lot_solvent")
+        self.vibes.ensure_index("property_id")
         self.vibes.ensure_index("last_updated")
         self.vibes.ensure_index("formula_alphabetical")
 
@@ -159,7 +181,7 @@ class SummaryBuilder(Builder):
             generator or list relevant tasks and molecules to process into documents
         """
 
-        self.logger.info("Orbital builder started")
+        self.logger.info("Summary builder started")
         self.logger.info("Setting indexes")
         self.ensure_indexes()
 
@@ -200,7 +222,7 @@ class SummaryBuilder(Builder):
 
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """
-        Process the tasks into a SummaryDoc
+        Process the tasks into a MoleculeSummaryDoc
 
         Args:
             tasks List[Dict] : a list of MoleculeDocs in dict form
@@ -208,6 +230,30 @@ class SummaryBuilder(Builder):
         Returns:
             [dict] : a list of new orbital docs
         """
+
+        def _group_docs(docs: List[Dict[str, Any]], by_method: bool = False):
+            """Helper function to group docs by solvent"""
+            grouped: Dict[str, Any] = dict()
+
+            for doc in docs:
+                solvent = doc.get("solvent")
+                method = doc.get("method")
+                if not solvent:
+                    # Need to group by solvent
+                    continue
+                if by_method and method is None:
+                    # Trying to group by method, but no method present
+                    continue
+
+                if not by_method:
+                    grouped[solvent] = doc
+                else:
+                    if solvent not in grouped:
+                        grouped[solvent] = {method: doc}
+                    else:
+                        grouped[solvent][method] = doc
+
+            return (grouped, by_method)
 
         mols = items
         formula = mols[0]["formula_alphabetical"]
@@ -218,27 +264,46 @@ class SummaryBuilder(Builder):
 
         for mol in mols:
             mol_id = mol["molecule_id"]
+
             d = {
                 "molecules": mol,
-                "partial_charges": list(self.charges.query({"molecule_id": mol_id})),
-                "partial_spins": list(self.spins.query({"molecule_id": mol_id})),
-                "bonding": list(self.bonds.query({"molecule_id": mol_id})),
-                "orbitals": self.orbitals.query_one({"molecule_id": mol_id}),
-                "redox": self.redox.query_one({"molecule_id": mol_id}),
-                "thermo": self.thermo.query_one({"molecule_id": mol_id}),
-                "vibration": self.vibes.query_one({"molecule_id": mol_id}),
+                "partial_charges": _group_docs(
+                    list(self.charges.query({"molecule_id": mol_id})), True
+                ),
+                "partial_spins": _group_docs(
+                    list(self.spins.query({"molecule_id": mol_id})), True
+                ),
+                "bonding": _group_docs(
+                    list(self.bonds.query({"molecule_id": mol_id})), True
+                ),
+                "orbitals": _group_docs(
+                    list(self.orbitals.query({"molecule_id": mol_id})), False
+                ),
+                "redox": _group_docs(
+                    list(self.redox.query({"molecule_id": mol_id})), False
+                ),
+                "thermo": _group_docs(
+                    list(self.thermo.query({"molecule_id": mol_id})), False
+                ),
+                "vibration": _group_docs(
+                    list(self.vibes.query({"molecule_id": mol_id})), False
+                ),
             }
 
             to_delete = list()
 
             for k, v in d.items():
-                if isinstance(v, list) and len(v) == 0:
+                if isinstance(v, dict) and len(v) == 0:
                     to_delete.append(k)
 
             for td in to_delete:
                 del d[td]
 
-            summary_doc = SummaryDoc.from_docs(molecule_id=mol_id, **d)
+            # # For debugging; keep because it might be needed again
+            # dumpfn(d, f"{mol_id}.json.gz")
+            # break
+
+            summary_doc = MoleculeSummaryDoc.from_docs(molecule_id=mol_id, docs=d)
             summary_docs.append(summary_doc)
 
         self.logger.debug(f"Produced {len(summary_docs)} summary docs for {formula}")

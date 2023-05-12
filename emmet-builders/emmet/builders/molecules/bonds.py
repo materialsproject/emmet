@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
@@ -9,7 +10,7 @@ from maggma.utils import grouper
 
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.qchem.molecule import MoleculeDoc, evaluate_lot
-from emmet.core.molecules.bonds import BondingDoc, BOND_METHODS
+from emmet.core.molecules.bonds import MoleculeBondingDoc, BOND_METHODS
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
@@ -34,17 +35,18 @@ class BondingBuilder(Builder):
     NOTE: Only NBO7 can be used to generate bonding. Bonding (especially when metals
         are involved) is unreliable with earlier version of NBO!
 
-    This builder will attempt to build documents for each molecule with each method.
-    For each molecule-method combination, the highest-quality data available (based
-    on level of theory and electronic energy) will be used.
+    This builder will attempt to build documents for each molecule, in each solvent,
+    with each method. For each molecule-solvent-method combination, the highest-quality
+    data available (based on level of theory and electronic energy) will be used.
 
     The process is as follows:
         1. Gather MoleculeDocs by formula
-        2. For each molecule, sort all associated tasks by level of theory and electronic energy
-        2. For each method:
-            2.1. Find task docs with necessary data to define bonding by that method
-            2.2. Take best (defined by level of theory and electronic energy) task
-            2.3. Convert TaskDoc to BondingDoc
+        2. For each molecule, group all tasks by solvent.
+        3. For each solvent, sort tasks by level of theory and electronic energy
+        4. For each method:
+            4.1. Find task docs with necessary data to define bonding by that method
+            4.2. Take best (defined by level of theory and electronic energy) task
+            4.3. Convert TaskDoc to MoleculeBondingDoc
     """
 
     def __init__(
@@ -57,7 +59,6 @@ class BondingBuilder(Builder):
         settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
-
         self.tasks = tasks
         self.molecules = molecules
         self.bonds = bonds
@@ -89,6 +90,9 @@ class BondingBuilder(Builder):
         self.bonds.ensure_index("molecule_id")
         self.bonds.ensure_index("method")
         self.bonds.ensure_index("task_id")
+        self.bonds.ensure_index("solvent")
+        self.bonds.ensure_index("lot_solvent")
+        self.bonds.ensure_index("property_id")
         self.bonds.ensure_index("last_updated")
         self.bonds.ensure_index("formula_alphabetical")
 
@@ -169,7 +173,7 @@ class BondingBuilder(Builder):
 
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """
-        Process the tasks into BondingDocs
+        Process the tasks into MoleculeBondingDocs
 
         Args:
             tasks List[Dict] : a list of MoleculeDocs in dict form
@@ -193,49 +197,90 @@ class BondingBuilder(Builder):
                 and e["spin_multiplicity"] == mol.spin_multiplicity
             ]
 
-            sorted_entries = sorted(
-                correct_charge_spin,
-                key=lambda x: (sum(evaluate_lot(x["level_of_theory"])), x["energy"]),
-            )
+            # Organize by solvent environment
+            by_solvent = defaultdict(list)
+            for entry in correct_charge_spin:
+                by_solvent[entry["solvent"]].append(entry)
 
-            for method in self.methods:
-                # For each method, grab entries that have the relevant data
-                if method == "OpenBabelNN + metal_edge_extender":
-                    relevant_entries = sorted_entries
-                else:
-                    relevant_entries = [
-                        e
-                        for e in sorted_entries
-                        if e.get(method) is not None
-                        or e["output"].get(method) is not None
-                    ]
-
-                if method == "nbo":
-                    # Only allow NBO7 to be used. No earlier versions can be
-                    # relied upon for bonding
-                    relevant_entries = [
-                        e
-                        for e in relevant_entries
-                        if e["orig"]["rem"].get("run_nbo6", False)
-                    ]
-
-                if len(relevant_entries) == 0:
-                    continue
-
-                # Grab task document of best entry
-                best_entry = relevant_entries[0]
-                task = best_entry["task_id"]
-
-                task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
-
-                doc = BondingDoc.from_task(
-                    task_doc,
-                    molecule_id=mol.molecule_id,
-                    preferred_methods=[method],
-                    deprecated=False,
+            for solvent, entries in by_solvent.items():
+                sorted_entries = sorted(
+                    entries,
+                    key=lambda x: (
+                        sum(evaluate_lot(x["level_of_theory"])),
+                        x["energy"],
+                    ),
                 )
 
-                bonding_docs.append(doc)
+                for method in self.methods:
+                    # For each method, grab entries that have the relevant data
+                    if method == "OpenBabelNN + metal_edge_extender":
+                        # This is sort of silly. Since, at the MoleculeDoc level,
+                        # the structures have to be identical, bonding defined
+                        # using heuristic methods like OpenBabel should always
+                        # be identical.
+                        # TODO: Decide if only one OpenBabelNN + m_e_e doc
+                        # TODO: should be allowed.
+                        relevant_entries = sorted_entries
+                    else:
+                        relevant_entries = [
+                            e
+                            for e in sorted_entries
+                            if e.get(method) is not None
+                            or e["output"].get(method) is not None
+                        ]
+
+                    if method == "nbo":
+                        # Only allow NBO7 to be used. No earlier versions can be
+                        # relied upon for bonding
+                        relevant_entries = [
+                            e
+                            for e in relevant_entries
+                            if e["orig"]["rem"].get("run_nbo6", False)
+                            or e["orig"]["rem"].get("nbo_external", False)
+                        ]
+
+                    if len(relevant_entries) == 0:
+                        continue
+
+                    # Grab task document of best entry
+                    best_entry = relevant_entries[0]
+                    task = best_entry["task_id"]
+
+                    tdoc = self.tasks.query_one(
+                        {
+                            "task_id": task,
+                            "formula_alphabetical": formula,
+                            "orig": {"$exists": True},
+                        }
+                    )
+
+                    if tdoc is None:
+                        try:
+                            tdoc = self.tasks.query_one(
+                                {
+                                    "task_id": int(task),
+                                    "formula_alphabetical": formula,
+                                    "orig": {"$exists": True},
+                                }
+                            )
+                        except ValueError:
+                            tdoc = None
+
+                    if tdoc is None:
+                        continue
+
+                    task_doc = TaskDocument(**tdoc)
+
+                    if task_doc is None:
+                        continue
+
+                    doc = MoleculeBondingDoc.from_task(
+                        task_doc,
+                        molecule_id=mol.molecule_id,
+                        preferred_methods=[method],
+                        deprecated=False,
+                    )
+                    bonding_docs.append(doc)
 
         self.logger.debug(f"Produced {len(bonding_docs)} bonding docs for {formula}")
 
@@ -267,7 +312,7 @@ class BondingBuilder(Builder):
             # Neither molecule_id nor method need to be unique, but the combination must be
             self.bonds.update(
                 docs=docs,
-                key=["molecule_id", "method"],
+                key=["molecule_id", "method", "solvent"],
             )
         else:
             self.logger.info("No items to update")

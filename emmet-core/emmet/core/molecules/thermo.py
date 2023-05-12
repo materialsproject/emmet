@@ -1,21 +1,9 @@
-import logging
-from collections import defaultdict
-from typing import Dict, List, Any, Tuple, Union
-import copy
-
-from typing_extensions import Literal
-
-import numpy as np
 from pydantic import Field
-import networkx as nx
+from hashlib import blake2b
+from typing import Optional
 
-from pymatgen.core.structure import Molecule
-from pymatgen.analysis.graphs import MoleculeGraph
-from pymatgen.analysis.local_env import OpenBabelNN, metal_edge_extender
-
-from pymatgen.core.periodic_table import Specie, Element
-
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPculeID
+from emmet.core.qchem.calc_types import LevelOfTheory
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.material import PropertyOrigin
 from emmet.core.molecules.molecule_property import PropertyDoc
@@ -30,7 +18,7 @@ def get_free_energy(energy, enthalpy, entropy, temperature=298.15):
 
     :param energy: Electronic energy in Ha
     :param enthalpy: Enthalpy in kcal/mol
-    :param entropy: Entropy in cal/mol-K
+    :param entropy: Entropy in csal/mol-K
     :param temperature: Temperature in K. Default is 298.15, 25C
 
     returns: Free energy in eV
@@ -39,16 +27,41 @@ def get_free_energy(energy, enthalpy, entropy, temperature=298.15):
     return energy * 27.2114 + enthalpy * 0.043363 - temperature * entropy * 0.000043363
 
 
-class ThermoDoc(PropertyDoc):
-
+class MoleculeThermoDoc(PropertyDoc):
     property_name = "thermo"
-
-    task_id: MPID = Field(
-        ..., description="ID of TaskDocument from which these properties were derived"
-    )
 
     electronic_energy: float = Field(
         ..., description="Electronic energy of the molecule (units: eV)"
+    )
+
+    correction: bool = Field(
+        False,
+        description="Was a single-point calculation at higher level of "
+        "theory used to correct the electronic energy?",
+    )
+
+    correction_level_of_theory: LevelOfTheory = Field(
+        None, description="Level of theory used to correct the electronic energy."
+    )
+
+    correction_solvent: str = Field(
+        None,
+        description="String representation of the solvent "
+        "environment used to correct the electronic energy.",
+    )
+
+    correction_lot_solvent: str = Field(
+        None,
+        description="String representation of the level of theory and solvent "
+        "environment used to correct the electronic energy.",
+    )
+
+    combined_lot_solvent: str = Field(
+        None,
+        description="String representation of the level of theory and solvent "
+        "environment used to generate this ThermoDoc, combining "
+        "both the frequency calculation and (potentially) the "
+        "single-point energy correction.",
     )
 
     zero_point_energy: float = Field(
@@ -95,14 +108,18 @@ class ThermoDoc(PropertyDoc):
 
     @classmethod
     def from_task(
-        cls, task: TaskDocument, molecule_id: MPID, deprecated: bool = False, **kwargs
+        cls,
+        task: TaskDocument,
+        molecule_id: MPculeID,
+        correction_task: Optional[TaskDocument] = None,
+        deprecated: bool = False,
+        **kwargs,
     ):  # type: ignore[override]
-
         """
         Construct a thermodynamics document from a task
 
         :param task: document from which thermodynamic properties can be extracted
-        :param molecule_id: mpid
+        :param molecule_id: MPculeID
         :param deprecated: bool. Is this document deprecated?
         :param kwargs: to pass to PropertyDoc
         :return:
@@ -113,9 +130,38 @@ class ThermoDoc(PropertyDoc):
         else:
             mol = task.output.initial_molecule
 
-        energy = task.output.final_energy
+        if correction_task is None:
+            energy = task.output.final_energy
+            correction = False
+            correction_lot = None
+            correction_solvent = None
+            correction_lot_solvent = None
+            combined_lot_solvent = task.lot_solvent
+        else:
+            energy = correction_task.output.final_energy
+            correction = True
+            correction_lot = correction_task.level_of_theory
+            correction_solvent = correction_task.solvent
+            correction_lot_solvent = correction_task.lot_solvent
+            combined_lot_solvent = f"{task.lot_solvent}//{correction_lot_solvent}"
+
         total_enthalpy = task.output.enthalpy
         total_entropy = task.output.entropy
+
+        origins = [PropertyOrigin(name="thermo", task_id=task.task_id)]
+        id_string = f"thermo-{molecule_id}-{task.task_id}-{task.lot_solvent}"
+        if correction and correction_task is not None:
+            origins.append(
+                PropertyOrigin(
+                    name="thermo_energy_correction", task_id=correction_task.task_id
+                )
+            )
+
+            id_string += f"-{correction_task.task_id}-{correction_task.lot_solvent}"
+
+        h = blake2b()
+        h.update(id_string.encode("utf-8"))
+        property_id = h.hexdigest()
 
         if total_enthalpy is not None and total_entropy is not None:
             free_energy = get_free_energy(energy, total_enthalpy, total_entropy)
@@ -138,8 +184,16 @@ class ThermoDoc(PropertyDoc):
                 ):
                     return super().from_molecule(
                         meta_molecule=mol,
+                        property_id=property_id,
                         molecule_id=molecule_id,
-                        task_id=task.task_id,
+                        level_of_theory=task.level_of_theory,
+                        solvent=task.solvent,
+                        lot_solvent=task.lot_solvent,
+                        correction=correction,
+                        correction_level_of_theory=correction_lot,
+                        correction_solvent=correction_solvent,
+                        correction_lot_solvent=correction_lot_solvent,
+                        combined_lot_solvent=combined_lot_solvent,
                         electronic_energy=energy * 27.2114,
                         zero_point_energy=calc["ZPE"] * 0.043363,
                         rt=calc["gas_constant"] * 0.043363,
@@ -151,18 +205,27 @@ class ThermoDoc(PropertyDoc):
                         translational_entropy=calc["trans_entropy"] * 0.000043363,
                         rotational_entropy=calc["rot_entropy"] * 0.000043363,
                         vibrational_entropy=calc["vib_entropy"] * 0.000043363,
-                        origins=[PropertyOrigin(name="thermo", task_id=task.task_id)],
                         free_energy=free_energy,
                         deprecated=deprecated,
-                        **kwargs
+                        origins=origins,
+                        **kwargs,
                     )
 
         # If all thermodynamic data is not available
         return super().from_molecule(
             meta_molecule=mol,
+            property_id=property_id,
             molecule_id=molecule_id,
-            task_id=task.task_id,
+            level_of_theory=task.level_of_theory,
+            solvent=task.solvent,
+            lot_solvent=task.lot_solvent,
+            correction=correction,
+            correction_level_of_theory=correction_lot,
+            correction_solvent=correction_solvent,
+            correction_lot_solvent=correction_lot_solvent,
+            combined_lot_solvent=combined_lot_solvent,
             electronic_energy=energy * 27.2114,
             deprecated=deprecated,
-            **kwargs
+            origins=origins,
+            **kwargs,
         )

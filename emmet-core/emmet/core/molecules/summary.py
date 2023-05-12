@@ -1,19 +1,21 @@
 from enum import Enum
-from typing import Dict, List, Tuple, TypeVar, Union
+from typing import Any, Dict, List, Optional, Tuple, TypeVar
+from hashlib import blake2b
 
 from pydantic import Field
 from pymatgen.core.structure import Molecule
 from pymatgen.analysis.graphs import MoleculeGraph
 
+from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.molecules.molecule_property import PropertyDoc
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPID, MPculeID
 from emmet.core.molecules.orbitals import NaturalPopulation, LonePair, Bond, Interaction
 
 
 __author__ = "Evan Spotte-Smith <ewcspottesmith@lbl.gov>"
 
 
-T = TypeVar("T", bound="SummaryDoc")
+T = TypeVar("T", bound="MoleculeSummaryDoc")
 
 
 class HasProps(Enum):
@@ -31,7 +33,7 @@ class HasProps(Enum):
     vibration = "vibration"
 
 
-class SummaryDoc(PropertyDoc):
+class MoleculeSummaryDoc(PropertyDoc):
     """
     Summary information about molecules and their properties, useful for searching.
     """
@@ -39,8 +41,14 @@ class SummaryDoc(PropertyDoc):
     property_name = "summary"
 
     # molecules
-    molecule: Molecule = Field(
-        ..., description="The lowest energy structure for this molecule"
+    molecules: Dict[str, Molecule] = Field(
+        ...,
+        description="The lowest energy optimized structures for this molecule for each solvent.",
+    )
+
+    molecule_levels_of_theory: Dict[str, str] = Field(
+        None,
+        description="Level of theory used to optimize the best molecular structure for each solvent.",
     )
 
     task_ids: List[MPID] = Field(
@@ -49,196 +57,306 @@ class SummaryDoc(PropertyDoc):
         description="List of Calculation IDs associated with this molecule.",
     )
 
-    similar_molecules: List[MPID] = Field(
+    similar_molecules: List[MPculeID] = Field(
         [], description="IDs associated with similar molecules"
     )
 
+    constituent_molecules: List[MPculeID] = Field(
+        [],
+        description="IDs of associated MoleculeDocs used to construct this molecule.",
+    )
+
+    unique_calc_types: List[CalcType] = Field(
+        None,
+        description="Collection of all unique calculation types used for this molecule",
+    )
+
+    unique_task_types: List[TaskType] = Field(
+        None,
+        description="Collection of all unique task types used for this molecule",
+    )
+
+    unique_levels_of_theory: List[LevelOfTheory] = Field(
+        None,
+        description="Collection of all unique levels of theory used for this molecule",
+    )
+
+    unique_solvents: List[str] = Field(
+        None,
+        description="Collection of all unique solvents (solvent parameters) used for this molecule",
+    )
+
+    unique_lot_solvents: List[str] = Field(
+        None,
+        description="Collection of all unique combinations of level of theory and solvent used for this molecule",
+    )
+
     # thermo
-    electronic_energy: float = Field(
+    thermo_property_ids: Dict[str, str] = Field(
+        None,
+        description="Solvent:property ID map for each MoleculeThermoDoc for this molecule.",
+    )
+
+    thermo_levels_of_theory: Dict[str, str] = Field(
+        None,
+        description="Solvent:level of theory map for each MoleculeThermoDoc for this molecule.",
+    )
+
+    electronic_energy: Dict[str, float] = Field(
         None, description="Electronic energy of the molecule (units: eV)"
     )
 
-    zero_point_energy: float = Field(
+    zero_point_energy: Dict[str, Optional[float]] = Field(
         None, description="Zero-point energy of the molecule (units: eV)"
     )
 
-    rt: float = Field(
+    rt: Dict[str, Optional[float]] = Field(
         None,
         description="R*T, where R is the gas constant and T is temperature, taken "
         "to be 298.15K (units: eV)",
     )
 
-    total_enthalpy: float = Field(
+    total_enthalpy: Dict[str, Optional[float]] = Field(
         None, description="Total enthalpy of the molecule at 298.15K (units: eV)"
     )
-    total_entropy: float = Field(
+    total_entropy: Dict[str, Optional[float]] = Field(
         None, description="Total entropy of the molecule at 298.15K (units: eV/K)"
     )
 
-    translational_enthalpy: float = Field(
+    translational_enthalpy: Dict[str, Optional[float]] = Field(
         None,
         description="Translational enthalpy of the molecule at 298.15K (units: eV)",
     )
-    translational_entropy: float = Field(
+    translational_entropy: Dict[str, Optional[float]] = Field(
         None,
         description="Translational entropy of the molecule at 298.15K (units: eV/K)",
     )
-    rotational_enthalpy: float = Field(
+    rotational_enthalpy: Dict[str, Optional[float]] = Field(
         None, description="Rotational enthalpy of the molecule at 298.15K (units: eV)"
     )
-    rotational_entropy: float = Field(
+    rotational_entropy: Dict[str, Optional[float]] = Field(
         None, description="Rotational entropy of the molecule at 298.15K (units: eV/K)"
     )
-    vibrational_enthalpy: float = Field(
+    vibrational_enthalpy: Dict[str, Optional[float]] = Field(
         None, description="Vibrational enthalpy of the molecule at 298.15K (units: eV)"
     )
-    vibrational_entropy: float = Field(
+    vibrational_entropy: Dict[str, Optional[float]] = Field(
         None, description="Vibrational entropy of the molecule at 298.15K (units: eV/K)"
     )
 
-    free_energy: float = Field(
+    free_energy: Dict[str, Optional[float]] = Field(
         None, description="Gibbs free energy of the molecule at 298.15K (units: eV)"
     )
 
     # vibrational properties
-    frequencies: List[float] = Field(
+    vibration_property_ids: Dict[str, str] = Field(
+        None,
+        description="Solvent:property ID map for each VibrationDoc for this molecule.",
+    )
+
+    vibration_levels_of_theory: Dict[str, str] = Field(
+        None,
+        description="Solvent:level of theory map for each VibrationDoc for this molecule.",
+    )
+
+    frequencies: Dict[str, List[float]] = Field(
         None, description="List of molecular vibrational frequencies"
     )
 
-    frequency_modes: List[List[List[float]]] = Field(
+    frequency_modes: Dict[str, List[List[List[float]]]] = Field(
         None,
         description="Vibrational frequency modes of the molecule (units: Angstrom)",
     )
 
-    ir_intensities: List[float] = Field(
+    ir_intensities: Dict[str, List[float]] = Field(
         None,
         title="IR intensities",
         description="Intensities for infrared vibrational spectrum peaks",
     )
 
-    ir_activities: List = Field(
+    ir_activities: Dict[str, List] = Field(
         None,
         title="IR activities",
         description="List indicating if frequency-modes are IR-active",
     )
 
     # natural bonding orbitals
-    open_shell: bool = Field(
+    orbitals_property_ids: Dict[str, str] = Field(
+        None,
+        description="Solvent:property ID map for each OrbitalDoc for this molecule.",
+    )
+
+    orbitals_levels_of_theory: Dict[str, str] = Field(
+        None,
+        description="Solvent:level of theory map for each OrbitalDoc for this molecule.",
+    )
+
+    open_shell: Dict[str, bool] = Field(
         None, description="Is this molecule open-shell (spin multiplicity != 1)?"
     )
 
-    nbo_population: List[NaturalPopulation] = Field(
+    nbo_population: Dict[str, Optional[List[NaturalPopulation]]] = Field(
         None, description="Natural electron populations of the molecule"
     )
-    nbo_lone_pairs: List[LonePair] = Field(
+    nbo_lone_pairs: Dict[str, Optional[List[LonePair]]] = Field(
         None, description="Lone pair orbitals of a closed-shell molecule"
     )
-    nbo_bonds: List[Bond] = Field(
+    nbo_bonds: Dict[str, Optional[List[Bond]]] = Field(
         None, description="Bond-like orbitals of a closed-shell molecule"
     )
-    nbo_interactions: List[Interaction] = Field(
+    nbo_interactions: Dict[str, Optional[List[Interaction]]] = Field(
         None, description="Orbital-orbital interactions of a closed-shell molecule"
     )
 
-    alpha_population: List[NaturalPopulation] = Field(
+    alpha_population: Dict[str, Optional[List[NaturalPopulation]]] = Field(
         None,
         description="Natural electron populations of the alpha electrons of an "
         "open-shell molecule",
     )
-    beta_population: List[NaturalPopulation] = Field(
+    beta_population: Dict[str, Optional[List[NaturalPopulation]]] = Field(
         None,
         description="Natural electron populations of the beta electrons of an "
         "open-shell molecule",
     )
-    alpha_lone_pairs: List[LonePair] = Field(
+    alpha_lone_pairs: Dict[str, Optional[List[LonePair]]] = Field(
         None, description="Alpha electron lone pair orbitals of an open-shell molecule"
     )
-    beta_lone_pairs: List[LonePair] = Field(
+    beta_lone_pairs: Dict[str, Optional[List[LonePair]]] = Field(
         None, description="Beta electron lone pair orbitals of an open-shell molecule"
     )
-    alpha_bonds: List[Bond] = Field(
+    alpha_bonds: Dict[str, Optional[List[Bond]]] = Field(
         None, description="Alpha electron bond-like orbitals of an open-shell molecule"
     )
-    beta_bonds: List[Bond] = Field(
+    beta_bonds: Dict[str, Optional[List[Bond]]] = Field(
         None, description="Beta electron bond-like orbitals of an open-shell molecule"
     )
-    alpha_interactions: List[Interaction] = Field(
+    alpha_interactions: Dict[str, Optional[List[Interaction]]] = Field(
         None,
         description="Alpha electron orbital-orbital interactions of an open-shell molecule",
     )
-    beta_interactions: List[Interaction] = Field(
+    beta_interactions: Dict[str, Optional[List[Interaction]]] = Field(
         None,
         description="Beta electron orbital-orbital interactions of an open-shell molecule",
     )
 
     # partial charges
-    partial_charges: Dict[str, List[float]] = Field(
+    partial_charges_property_ids: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="Solvent:method:property ID map for each PartialChargesDoc for this molecule.",
+    )
+
+    partial_charges_levels_of_theory: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="Solvent:method:level of theory map for each PartialChargesDoc for this molecule.",
+    )
+
+    partial_charges: Dict[str, Dict[str, List[float]]] = Field(
         None,
         description="Atomic partial charges for the molecule using different partitioning schemes "
         "(Mulliken, Restrained Electrostatic Potential, Natural Bonding Orbitals, etc.)",
     )
 
     # partial spins
-    partial_spins: Dict[str, List[float]] = Field(
+    partial_spins_property_ids: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="Solvent:method:property ID map for each PartialSpinsDoc for this molecule.",
+    )
+
+    partial_spins_levels_of_theory: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="Solvent:method:level of theory map for each PartialSpinsDoc for this molecule.",
+    )
+
+    partial_spins: Dict[str, Dict[str, List[float]]] = Field(
         None,
         description="Atomic partial spins for the molecule using different partitioning schemes "
         "(Mulliken, Natural Bonding Orbitals, etc.)",
     )
 
     # bonding
-    molecule_graph: Dict[str, MoleculeGraph] = Field(
+    bonding_property_ids: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="Solvent:method:property ID map for each MoleculeBondingDoc for this molecule.",
+    )
+
+    bonding_levels_of_theory: Dict[str, Dict[str, str]] = Field(
+        None,
+        description="Solvent:method:level of theory map for each MoleculeBondingDoc for this molecule.",
+    )
+
+    molecule_graph: Dict[str, Dict[str, MoleculeGraph]] = Field(
         None,
         description="Molecular graph representations of the molecule using different "
         "definitions of bonding.",
     )
 
-    bond_types: Dict[str, Dict[str, List[float]]] = Field(
+    bond_types: Dict[str, Dict[str, Dict[str, List[float]]]] = Field(
+        None,
         description="Dictionaries of bond types to their length under different "
         "definitions of bonding, e.g. C-O to a list of the lengths of "
-        "C-O bonds in Angstrom."
+        "C-O bonds in Angstrom.",
     )
 
-    bonds: Dict[str, List[Tuple[int, int]]] = Field(
+    bonds: Dict[str, Dict[str, List[Tuple[int, int]]]] = Field(
+        None,
         description="List of bonds under different definitions of bonding. Each bond takes "
         "the form (a, b), where a and b are 0-indexed atom indices",
     )
 
-    bonds_nometal: Dict[str, List[Tuple[int, int]]] = Field(
+    bonds_nometal: Dict[str, Dict[str, List[Tuple[int, int]]]] = Field(
+        None,
         description="List of bonds under different definitions of bonding with all metal ions "
         "removed. Each bond takes the form in the form (a, b), where a and b are "
         "0-indexed atom indices.",
     )
 
     # redox properties
-    electron_affinity: float = Field(
+    redox_property_ids: Dict[str, str] = Field(
+        None, description="Solvent:property ID map for each RedoxDoc for this molecule."
+    )
+
+    redox_levels_of_theory: Dict[str, str] = Field(
+        None,
+        description="Solvent:level of theory map for each RedoxDoc for this molecule.",
+    )
+
+    electron_affinity: Dict[str, float] = Field(
         None, description="Vertical electron affinity in eV"
     )
 
-    ea_id: MPID = Field(None, description="Molecule ID for electron affinity")
+    ea_task_id: Dict[str, MPID] = Field(
+        None, description="Molecule ID for electron affinity"
+    )
 
-    ionization_energy: float = Field(
+    ionization_energy: Dict[str, float] = Field(
         None, description="Vertical ionization energy in eV"
     )
 
-    ie_id: MPID = Field(None, description="Molecule ID for ionization energy")
+    ie_task_id: Dict[str, MPID] = Field(
+        None, description="Molecule ID for ionization energy"
+    )
 
-    reduction_free_energy: float = Field(
+    reduction_free_energy: Dict[str, float] = Field(
         None, description="Adiabatic free energy of reduction"
     )
 
-    red_id: MPID = Field(None, description="Molecule ID for adiabatic reduction")
+    red_molecule_id: Dict[str, MPculeID] = Field(
+        None, description="Molecule ID for adiabatic reduction"
+    )
 
-    oxidation_free_energy: float = Field(
+    oxidation_free_energy: Dict[str, float] = Field(
         None, description="Adiabatic free energy of oxidation"
     )
 
-    ox_id: MPID = Field(None, description="Molecule ID for adiabatic oxidation")
+    ox_molecule_id: Dict[str, MPculeID] = Field(
+        None, description="Molecule ID for adiabatic oxidation"
+    )
 
-    reduction_potentials: Dict[str, float] = Field(
+    reduction_potentials: Dict[str, Dict[str, float]] = Field(
         None, description="Reduction potentials with various " "reference electrodes"
     )
 
-    oxidation_potentials: Dict[str, float] = Field(
+    oxidation_potentials: Dict[str, Dict[str, float]] = Field(
         None, description="Oxidation potentials with various " "reference electrodes"
     )
 
@@ -248,13 +366,23 @@ class SummaryDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_docs(cls, molecule_id: MPID, **docs: Dict[str, Union[Dict, List[Dict]]]):
+    def from_docs(cls, molecule_id: MPculeID, docs: Dict[str, Any]):
         """Converts a bunch of property docs into a SummaryDoc"""
 
         doc = _copy_from_doc(docs)
+
+        if len(doc["has_props"]) == 0:
+            raise ValueError("Missing minimal properties!")
+
+        id_string = f"summary-{molecule_id}"
+        h = blake2b()
+        h.update(id_string.encode("utf-8"))
+        property_id = h.hexdigest()
+        doc["property_id"] = property_id
+
         doc["has_props"] = list(set(doc["has_props"]))
 
-        return SummaryDoc(molecule_id=molecule_id, **doc)
+        return MoleculeSummaryDoc(molecule_id=molecule_id, **doc)
 
 
 # Key mapping
@@ -269,9 +397,17 @@ summary_fields: Dict[str, list] = {
         "formula_alphabetical",
         "chemsys",
         "symmetry",
-        "molecule",
+        "molecules",
         "deprecated",
         "task_ids",
+        "unique_calc_types",
+        "unique_task_types",
+        "unique_levels_of_theory",
+        "unique_solvents",
+        "unique_lot_solvents",
+        "similar_molecules",
+        "constituent_molecules",
+        "molecule_levels_of_theory",
     ],
     HasProps.thermo.value: [
         "electronic_energy",
@@ -313,45 +449,97 @@ summary_fields: Dict[str, list] = {
     HasProps.bonding.value: ["molecule_graph", "bond_types", "bonds", "bonds_nometal"],
     HasProps.redox.value: [
         "electron_affinity",
-        "ea_id",
+        "ea_task_id",
         "ionization_energy",
-        "ie_id",
+        "ie_task_id",
         "reduction_free_energy",
-        "red_id",
+        "red_molecule_id",
         "oxidation_free_energy",
-        "ox_id",
+        "ox_molecule_id",
         "reduction_potentials",
         "oxidation_potentials",
     ],
 }
 
 
-def _copy_from_doc(doc):
+def _copy_from_doc(doc: Dict[str, Any]):
     """Helper function to copy the list of keys over from amalgamated document"""
 
-    d = {"has_props": []}
+    # Doc format:
+    # {property0: {...},
+    #  property1: {solvent1: {...}, solvent2: {...}},
+    #  property2: {solvent1: [{...}, {...}], solvent2: [{...}, {...}]}
+    # }
+
+    d: Dict[str, Any] = {"has_props": []}
 
     # Function to grab the keys and put them in the root doc
     for doc_key in summary_fields:
         sub_doc = doc.get(doc_key, None)
-        if isinstance(sub_doc, list) and len(sub_doc) > 0:
-            d["has_props"].append(doc_key)
-            for copy_key in summary_fields[doc_key]:
-                d[copy_key] = dict()
-                for sub_item in sub_doc:
-                    # In cases where multiple docs have the same properties,
-                    # they must differ by method
-                    if copy_key in sub_item and "method" in sub_item:
-                        d[copy_key][sub_item["method"]] = sub_item[copy_key]
 
-        elif isinstance(sub_doc, dict):
-            d["has_props"].append(doc_key)
-            d.update(
-                {
-                    copy_key: sub_doc[copy_key]
-                    for copy_key in summary_fields[doc_key]
-                    if copy_key in sub_doc
-                }
-            )
+        if doc_key == "molecules":
+            # Molecules is special because there should only ever be one
+            # MoleculeDoc for a given molecule
+            # There are not multiple MoleculeDocs for different solvents
+            if sub_doc is None:
+                break
+            for copy_key in summary_fields[doc_key]:
+                d[copy_key] = sub_doc[copy_key]
+        else:
+            sd, by_method = sub_doc
+
+            if isinstance(sd, dict) and len(sd) > 0:
+                d["has_props"].append(doc_key)
+                for copy_key in summary_fields[doc_key]:
+                    d[copy_key] = dict()
+
+                    if by_method:
+                        for solvent, solv_entries in sd.items():
+                            d[copy_key][solvent] = dict()
+                            for method, entry in solv_entries.items():
+                                if entry.get(copy_key) is not None:
+                                    d[copy_key][solvent][method] = entry[copy_key]
+                            if len(d[copy_key][solvent]) == 0:
+                                # If this key was not populated at all for this solvent, get rid of it
+                                del d[copy_key][solvent]
+                    else:
+                        for solvent, entry in sd.items():
+                            if entry.get(copy_key) is not None:
+                                d[copy_key][solvent] = entry[copy_key]
+
+                    if len(d[copy_key]) == 0:
+                        # If this key was not populated at all, set it to None
+                        d[copy_key] = None
+
+                # Populate property id and level of theory values
+                d[doc_key + "_property_ids"] = dict()
+                d[doc_key + "_levels_of_theory"] = dict()
+                if by_method:
+                    for solvent, solv_entries in sd.items():
+                        d[doc_key + "_property_ids"][solvent] = dict()
+                        d[doc_key + "_levels_of_theory"][solvent] = dict()
+                        for method, entry in solv_entries.items():
+                            d[doc_key + "_property_ids"][solvent][method] = entry[
+                                "property_id"
+                            ]
+                            d[doc_key + "_levels_of_theory"][solvent][method] = entry[
+                                "level_of_theory"
+                            ]
+                        if len(d[doc_key + "_property_ids"][solvent]) == 0:
+                            del d[doc_key + "_property_ids"][solvent]
+                        if len(d[doc_key + "_levels_of_theory"][solvent]) == 0:
+                            del d[doc_key + "_levels_of_theory"][solvent]
+
+                else:
+                    for solvent, entry in sd.items():
+                        d[doc_key + "_property_ids"][solvent] = entry["property_id"]
+                        d[doc_key + "_levels_of_theory"][solvent] = entry[
+                            "level_of_theory"
+                        ]
+
+                if len(d[doc_key + "_property_ids"]) == 0:
+                    d[doc_key + "_property_ids"] = None
+                if len(d[doc_key + "_levels_of_theory"]) == 0:
+                    d[doc_key + "_levels_of_theory"] = None
 
     return d

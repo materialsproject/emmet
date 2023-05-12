@@ -1,13 +1,18 @@
+# mypy: ignore-errors
+
 """ Base emmet model to add default metadata """
 from datetime import datetime
-from typing import TypeVar, Dict
+from typing import TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from pymatgen.core import __version__ as pmg_version
+from monty.json import MontyDecoder
 
 from emmet.core import __version__
 
 T = TypeVar("T", bound="EmmetBaseModel")
+
+monty_decoder = MontyDecoder()
 
 
 class EmmetMeta(BaseModel):
@@ -34,6 +39,11 @@ class EmmetMeta(BaseModel):
         default_factory=datetime.utcnow,
         description="The build date for this document.",
     )
+
+    # Make sure that the datetime field is properly formatted
+    @validator("build_date", pre=True)
+    def build_date_dict_ok(cls, v):
+        return monty_decoder.process_decoded(v)
 
 
 class EmmetBaseModel(BaseModel):

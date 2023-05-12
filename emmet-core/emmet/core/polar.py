@@ -1,14 +1,14 @@
 """ Core definition for Polar property Document """
-from typing import Tuple, List
+from typing import List
 from emmet.core.mpid import MPID
 
 import numpy as np
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pymatgen.analysis.piezo import PiezoTensor as BasePiezoTensor
 
 from emmet.core.settings import EmmetSettings
 from emmet.core.material_property import PropertyDoc
-from emmet.core.math import Matrix3D, Vector3D
+from emmet.core.math import Matrix3D
 from pymatgen.core.structure import Structure
 from pymatgen.core.tensors import Tensor
 
@@ -51,7 +51,6 @@ class DielectricDoc(PropertyDoc):
         structure: Structure,
         **kwargs,
     ):
-
         ionic_tensor = Tensor(ionic).convert_to_ieee(structure)
         electronic_tensor = Tensor(electronic).convert_to_ieee(structure)
 
@@ -105,7 +104,6 @@ class PiezoelectricDoc(PropertyDoc):
         structure: Structure,
         **kwargs,
     ):
-
         ionic_tensor = BasePiezoTensor.from_vasp_voigt(ionic)
         electronic_tensor = BasePiezoTensor.from_vasp_voigt(electronic)
         total = ionic_tensor + electronic_tensor
@@ -138,3 +136,35 @@ class PiezoelectricDoc(PropertyDoc):
             },
             **kwargs,
         )
+
+
+class BornEffectiveCharges(BaseModel):
+    """
+    A block for the Born effective charges
+    """
+
+    value: List[Matrix3D] = Field(
+        None, description="Value of the Born effective charges."
+    )
+
+    symmetrized_value: List[Matrix3D] = Field(
+        None,
+        description="Value of the Born effective charges after symmetrization to obey the"
+        "charge neutrality sum rule.",
+    )
+
+    cnsr_break: float = Field(
+        None,
+        description="The maximum breaking of the charge neutrality sum "
+        "rule (CNSR) in the Born effective charges.",
+    )
+
+
+class IRDielectric(BaseModel):
+    """
+    A block for the pymatgen IRDielectricTensor object
+    """
+
+    ir_dielectric_tensor: dict = Field(
+        None, description="Serialized version of a pymatgen IRDielectricTensor object."
+    )

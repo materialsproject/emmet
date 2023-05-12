@@ -1,10 +1,11 @@
 from typing import List, Optional, Dict, Any
+from hashlib import blake2b
 
 from pydantic import Field
 
 from monty.json import MSONable
 
-from emmet.core.mpid import MPID
+from emmet.core.mpid import MPculeID
 from emmet.core.material import PropertyOrigin
 from emmet.core.qchem.task import TaskDocument
 from emmet.core.molecules.molecule_property import PropertyDoc
@@ -22,7 +23,6 @@ class NaturalPopulation(MSONable):
         rydberg_electrons: float,
         total_electrons: float,
     ):
-
         """
         Basic description of an atomic electron population.
 
@@ -161,7 +161,6 @@ class Interaction(MSONable):
         donor_atom2_index: Optional[int] = None,
         acceptor_atom2_index: Optional[int] = None,
     ):
-
         self.donor_index = int(donor_index)
         self.acceptor_index = int(acceptor_index)
 
@@ -218,7 +217,6 @@ class Interaction(MSONable):
 
 
 class OrbitalDoc(PropertyDoc):
-
     property_name = "natural bonding orbitals"
 
     # Always populated - closed-shell and open-shell
@@ -398,7 +396,6 @@ class OrbitalDoc(PropertyDoc):
             perts = nbo["perturbation_energy"][pert_ind]
             interactions = list()
             for ind in perts.get("donor bond index", list()):
-
                 if perts["donor atom 2 number"].get(ind) is None:
                     donor_atom2_number = None
                 else:
@@ -432,13 +429,17 @@ class OrbitalDoc(PropertyDoc):
 
     @classmethod
     def from_task(
-        cls, task: TaskDocument, molecule_id: MPID, deprecated: bool = False, **kwargs
+        cls,
+        task: TaskDocument,
+        molecule_id: MPculeID,
+        deprecated: bool = False,
+        **kwargs,
     ):  # type: ignore[override]
         """
         Construct an orbital document from a task
 
         :param task: document from which vibrational properties can be extracted
-        :param molecule_id: mpid
+        :param molecule_id: MPculeID
         :param deprecated: bool. Is this document deprecated?
         :param kwargs: to pass to PropertyDoc
         :return:
@@ -446,7 +447,10 @@ class OrbitalDoc(PropertyDoc):
 
         if task.output.nbo is None:
             raise ValueError("No NBO output in task {}!".format(task.task_id))
-        elif not task.orig["rem"].get("run_nbo6", False):
+        elif not (
+            task.orig["rem"].get("run_nbo6", False)
+            or task.orig["rem"].get("nbo_external", False)
+        ):
             raise ValueError("Only NBO7 is allowed!")
 
         nbo = task.output.nbo
@@ -472,9 +476,11 @@ class OrbitalDoc(PropertyDoc):
             bds_inds = [1, 3]
             perts_inds = [0, 1]
 
-        for dset, inds in [("natural_populations", pops_inds),
-                           ("hybridization_character", bds_inds),
-                           ("perturbation_energy", perts_inds)]:
+        for dset, inds in [
+            ("natural_populations", pops_inds),
+            ("hybridization_character", bds_inds),
+            ("perturbation_energy", perts_inds),
+        ]:
             if len(nbo[dset]) < inds[-1]:
                 return
 
@@ -483,15 +489,29 @@ class OrbitalDoc(PropertyDoc):
         bond_sets = cls.get_bonds(nbo, bds_inds)
         interaction_sets = cls.get_interactions(nbo, perts_inds)
 
-        if not task.orig["rem"].get("run_nbo6"):
+        if not (
+            task.orig["rem"].get("run_nbo6")
+            or task.orig["rem"].get("nbo_external", False)
+        ):
             warnings = ["Using NBO5"]
         else:
             warnings = list()
 
+        id_string = (
+            f"natural_bonding_orbitals-{molecule_id}-{task.task_id}-{task.lot_solvent}"
+        )
+        h = blake2b()
+        h.update(id_string.encode("utf-8"))
+        property_id = h.hexdigest()
+
         if int(spin) == 1:
             return super().from_molecule(
                 meta_molecule=mol,
+                property_id=property_id,
                 molecule_id=molecule_id,
+                level_of_theory=task.level_of_theory,
+                solvent=task.solvent,
+                lot_solvent=task.lot_solvent,
                 open_shell=False,
                 nbo_population=population_sets[0],
                 nbo_lone_pairs=lone_pair_sets[0],
@@ -499,18 +519,22 @@ class OrbitalDoc(PropertyDoc):
                 nbo_interactions=interaction_sets[0],
                 origins=[
                     PropertyOrigin(
-                        name="natural bonding orbitals", task_id=task.task_id
+                        name="natural_bonding_orbitals", task_id=task.task_id
                     )
                 ],
-                deprecated=deprecated,
                 warnings=warnings,
-                **kwargs
+                deprecated=deprecated,
+                **kwargs,
             )
 
         else:
             return super().from_molecule(
                 meta_molecule=mol,
+                property_id=property_id,
                 molecule_id=molecule_id,
+                level_of_theory=task.level_of_theory,
+                solvent=task.solvent,
+                lot_solvent=task.lot_solvent,
                 open_shell=True,
                 nbo_population=population_sets[0],
                 alpha_population=population_sets[1],
@@ -526,7 +550,7 @@ class OrbitalDoc(PropertyDoc):
                         name="natural bonding orbitals", task_id=task.task_id
                     )
                 ],
-                deprecated=deprecated,
                 warnings=warnings,
-                **kwargs
+                deprecated=deprecated,
+                **kwargs,
             )

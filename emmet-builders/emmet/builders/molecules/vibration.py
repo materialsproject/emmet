@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 from itertools import chain
 from math import ceil
@@ -22,14 +23,16 @@ SETTINGS = EmmetBuildSettings()
 class VibrationBuilder(Builder):
     """
     The VibrationBuilder extracts the highest-quality vibrational data from a
-    MoleculeDoc (lowest electronic energy, highest level of theory).
+    MoleculeDoc (lowest electronic energy, highest level of theory for
+    each solvent available).
 
     The process is as follows:
         1. Gather MoleculeDocs by formula
-        2. For each doc, grab the best TaskDoc (doc with vibrational information
-            that has the highest level of theory with lowest
+        2. For each doc, sort tasks by solvent
+        3. For each solvent, grab the best TaskDoc (doc with vibrational
+            information that has the highest level of theory with lowest
              electronic energy for the molecule)
-        3. Convert TaskDoc to VibrationDoc
+        4. Convert TaskDoc to VibrationDoc
 
     Note that if no tasks associated with a given MoleculeDoc have vibrational
     data associated with them, then no VibrationDoc will be made for
@@ -45,7 +48,6 @@ class VibrationBuilder(Builder):
         settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
-
         self.tasks = tasks
         self.molecules = molecules
         self.vibes = vibes
@@ -75,6 +77,9 @@ class VibrationBuilder(Builder):
         # Search index for vibrational properties
         self.vibes.ensure_index("molecule_id")
         self.vibes.ensure_index("task_id")
+        self.vibes.ensure_index("solvent")
+        self.vibes.ensure_index("lot_solvent")
+        self.vibes.ensure_index("property_id")
         self.vibes.ensure_index("last_updated")
         self.vibes.ensure_index("formula_alphabetical")
 
@@ -155,7 +160,7 @@ class VibrationBuilder(Builder):
 
     def process_item(self, items: List[Dict]) -> List[Dict]:
         """
-        Process the tasks into a VibrationDoc
+        Process the tasks into VibrationDocs
 
         Args:
             items List[Dict] : a list of MoleculeDocs in dict form
@@ -173,28 +178,64 @@ class VibrationBuilder(Builder):
 
         for mol in mols:
             vibe_entries = [
-                e for e in mol.entries if e["output"]["frequencies"] is not None
+                e
+                for e in mol.entries
+                if e["charge"] == mol.charge
+                and e["spin_multiplicity"] == mol.spin_multiplicity
+                and e["output"].get("frequencies") is not None
             ]
 
-            # No documents with enthalpy and entropy
-            if len(vibe_entries) == 0:
-                continue
-            else:
-                best = sorted(
-                    vibe_entries,
-                    key=lambda x: (
-                        sum(evaluate_lot(x["level_of_theory"])),
-                        x["energy"],
-                    ),
-                )[0]
-                task = best["task_id"]
+            # Organize by solvent environment
+            by_solvent = defaultdict(list)
+            for entry in vibe_entries:
+                by_solvent[entry["solvent"]].append(entry)
 
-            task_doc = TaskDocument(**self.tasks.query_one({"task_id": int(task)}))
+            for solvent, entries in by_solvent.items():
+                # No documents with enthalpy and entropy
+                if len(entries) == 0:
+                    continue
+                else:
+                    best = sorted(
+                        entries,
+                        key=lambda x: (
+                            sum(evaluate_lot(x["level_of_theory"])),
+                            x["energy"],
+                        ),
+                    )[0]
+                    task = best["task_id"]
 
-            vibe_doc = VibrationDoc.from_task(
-                task_doc, molecule_id=mol.molecule_id, deprecated=False
-            )
-            vibe_docs.append(vibe_doc)
+                tdoc = self.tasks.query_one(
+                    {
+                        "task_id": task,
+                        "formula_alphabetical": formula,
+                        "orig": {"$exists": True},
+                    }
+                )
+
+                if tdoc is None:
+                    try:
+                        tdoc = self.tasks.query_one(
+                            {
+                                "task_id": int(task),
+                                "formula_alphabetical": formula,
+                                "orig": {"$exists": True},
+                            }
+                        )
+                    except ValueError:
+                        tdoc = None
+
+                if tdoc is None:
+                    continue
+
+                task_doc = TaskDocument(**tdoc)
+
+                if task_doc is None:
+                    continue
+
+                vibe_doc = VibrationDoc.from_task(
+                    task_doc, molecule_id=mol.molecule_id, deprecated=False
+                )
+                vibe_docs.append(vibe_doc)
 
         self.logger.debug(f"Produced {len(vibe_docs)} vibration docs for {formula}")
 
@@ -225,7 +266,7 @@ class VibrationBuilder(Builder):
             self.vibes.remove_docs({self.vibes.key: {"$in": molecule_ids}})
             self.vibes.update(
                 docs=docs,
-                key=["molecule_id"],
+                key=["molecule_id", "solvent"],
             )
         else:
             self.logger.info("No items to update")

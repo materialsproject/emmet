@@ -1,5 +1,5 @@
 from math import ceil
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 import numpy as np
 from maggma.builders import Builder
@@ -161,7 +161,6 @@ class PiezoelectricBuilder(Builder):
             self.logger.info("No items to update")
 
     def _get_processed_doc(self, mat):
-
         mat_doc = self.materials.query_one(
             {self.materials.key: mat},
             [
@@ -201,7 +200,6 @@ class PiezoelectricBuilder(Builder):
                 criteria={self.tasks.key: str(task_id)},
             )
             if task_query["output"]["bandgap"] > 0:
-
                 try:
                     structure = task_query["orig_inputs"]["poscar"]["structure"]
                 except KeyError:

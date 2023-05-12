@@ -1,20 +1,18 @@
 import string
 from datetime import datetime
-from typing import Dict
 
 from monty.fractions import gcd
 from optimade.models import Species, StructureResourceAttributes
 from pymatgen.core.composition import Composition, formula_double_format
 from pymatgen.core.structure import Structure
 
-from emmet.core.base import BaseModel, EmmetBaseModel
+from emmet.core.base import EmmetBaseModel
 from emmet.core.mpid import MPID
 
 letters = "ABCDEFGHIJKLMNOPQRSTUVXYZ"
 
 
 def optimade_form(comp: Composition):
-
     symbols = sorted([str(e) for e in comp.keys()])
     numbers = set([comp[s] for s in symbols if comp[s]])
 
@@ -28,7 +26,6 @@ def optimade_form(comp: Composition):
 
 
 def optimade_anonymous_form(comp: Composition):
-
     reduced = comp.element_composition
     if all(x == int(x) for x in comp.values()):
         reduced /= gcd(*(int(i) for i in comp.values()))
@@ -79,20 +76,31 @@ def hill_formula(comp: Composition) -> str:
 
 
 class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
-    """Optimade Structure resource with a few extra MP specific fields for materials"""
+    """
+    Optimade Structure resource with a few extra MP specific fields for materials
+
+    Thermo calculations are stored as a nested dict, with keys corresponding to the functional
+    used to perform stability calc, i.e., R2SCAN, GGA_GGA+U_R2SCAN, or GGA_GGA+U
+    """
 
     material_id: MPID
-    _mp_chemical_system: str
+    chemical_system: str
+    stability: dict
 
     @classmethod
     def from_structure(
-        cls, structure: Structure, material_id: MPID, last_updated: datetime, **kwargs
+        cls,
+        material_id: MPID,
+        structure: Structure,
+        last_updated_structure: datetime,
+        thermo_calcs: dict,
+        **kwargs
     ) -> StructureResourceAttributes:
-
         structure.remove_oxidation_states()
         return OptimadeMaterialsDoc(
             material_id=material_id,
-            _mp_chemical_system=structure.composition.chemical_system,
+            chemical_system=structure.composition.chemical_system,
+            stability=thermo_calcs,
             elements=sorted(set([e.symbol for e in structure.composition.elements])),
             nelements=len(structure.composition.elements),
             elements_ratios=list(structure.composition.fractional_composition.values()),
@@ -118,7 +126,7 @@ class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
                 }.values()
             ),
             species_at_sites=[site.species_string for site in structure],
-            last_modified=last_updated,
+            last_modified=last_updated_structure,
             structure_features=[],
             **kwargs
         )

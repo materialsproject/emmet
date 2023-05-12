@@ -1,6 +1,5 @@
 from typing import List
 
-import numpy as np
 from pydantic import Field
 from pymatgen.core import Structure
 from pymatgen.analysis.magnetism import CollinearMagneticStructureAnalyzer
@@ -67,8 +66,13 @@ class MagnetismDoc(PropertyDoc):
     )
 
     @classmethod
-    def from_structure(cls, structure: Structure, total_magnetization: float, material_id: MPID, **kwargs):  # type: ignore[override]
-
+    def from_structure(
+        cls,
+        structure: Structure,
+        total_magnetization: float,
+        material_id: MPID,
+        **kwargs
+    ):  # noqa: E501
         struct_has_magmoms = "magmom" in structure.site_properties
         total_magnetization = abs(
             total_magnetization

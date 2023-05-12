@@ -1,20 +1,26 @@
+default_stages: [commit]
+
+default_install_hook_types: [pre-commit, commit-msg]
+
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.261
     hooks:
-    - id: check-yaml
-    - id: end-of-file-fixer
-    - id: trailing-whitespace
-    - id: flake8
+      - id: ruff
+        args: [--fix, --ignore, "D,E501,E741", --exclude, "__init__.py,emmet-cli,*_resources.py"]
 
   - repo: https://github.com/psf/black
-    rev: stable
+    rev: 23.3.0
     hooks:
-    - id: black
-      language_version: python3.8
+      - id: black-jupyter
 
-  - repo: https://github.com/pycqa/isort
-    rev: 5.5.2
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
     hooks:
-    - id: isort
-      files: 'emmet-core/.*'
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: check-yaml
+      - id: destroyed-symlinks
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace

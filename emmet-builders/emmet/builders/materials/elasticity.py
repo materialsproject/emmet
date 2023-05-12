@@ -3,9 +3,9 @@ Builder to generate elasticity docs.
 
 The build proceeds in the below steps:
 1. Use materials builder to group tasks according the formula, space group, and
-   structure matching
-2. Filter opt and deform tasks by calc type
-3. Filter opt and deform tasks to match prescribed INCAR params
+   structure matching.
+2. Filter opt and deform tasks by calc type.
+3. Filter opt and deform tasks to match prescribed INCAR params.
 4. Group opt tasks by optimized lattice, and, for each group, select the latest task
    (the one with the newest completing time). This result in a {lat, opt_task} dict.
 5. Group deform tasks by parent lattice (i.e. lattice before a deformation gradient is
@@ -13,7 +13,7 @@ The build proceeds in the below steps:
    and select the latest task for each deformation gradient. This result in a {lat,
    [deform_task]} dict, where [deform_task] are tasks with unique deformation gradients.
 6. Associate opt and deform tasks by matching parent lattice. Then select the one with
-   the most deformation tasks as the final data fot fitting the elastic tensor.
+   the most deformation tasks as the final data for fitting the elastic tensor.
 7. Fit the elastic tensor.
 """
 
@@ -100,7 +100,6 @@ class ElasticityBuilder(Builder):
         query = self.query.copy()
 
         for i, doc in enumerate(cursor):
-
             material_id = doc["material_id"]
             calc_types = {str(k): v for k, v in doc["calc_types"].items()}
 
@@ -344,7 +343,6 @@ def filter_deform_tasks_by_time(
 
     # group tasks by deformation
     for doc in tasks:
-
         # assume only one deformation, should be checked in `filter_deform_tasks()`
         deform = doc["transmuter"]["transformation_params"][0]["deformation"]
 
@@ -404,8 +402,8 @@ def select_final_opt_deform_tasks(
 
     # group opt and deform tasks by lattice
     mapping = TensorMapping(tol=lattice_comp_tol)
-    for lat, ot in opt_tasks:
-        mapping[lat] = {"opt_task": ot}
+    for lat, opt_t in opt_tasks:
+        mapping[lat] = {"opt_task": opt_t}
 
     for lat, dt in deform_tasks:
         if lat in mapping:

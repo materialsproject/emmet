@@ -1,7 +1,6 @@
 from math import ceil
 from typing import Dict, Iterator, Optional
 
-import numpy as np
 from maggma.builders import Builder
 from maggma.stores import Store
 from maggma.utils import grouper
@@ -125,7 +124,6 @@ class MagneticBuilder(Builder):
             self.logger.info("No items to update")
 
     def _get_processed_doc(self, mat):
-
         mat_doc = self.materials.query_one(
             {self.materials.key: mat},
             [self.materials.key, "origins", "last_updated", "structure", "deprecated"],
