@@ -267,7 +267,7 @@ def filter_deform_tasks(
 
 
 def filter_by_incar_settings(
-    tasks: List[Dict], incar_settings: Dict[str, Any] = None
+    tasks: List[Dict], incar_settings: Optional[Dict[str, Any]] = None
 ) -> List[Dict]:
     """
     Filter tasks by incar parameters.

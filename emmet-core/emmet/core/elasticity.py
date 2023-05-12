@@ -330,11 +330,11 @@ class ElasticityDoc(PropertyDoc):
             strains=[x.tolist() for x in p_strains],  # type: ignore
             cauchy_stresses=[x.tolist() for x in p_stresses],  # type: ignore
             second_pk_stresses=[x.tolist() for x in p_2nd_pk_stresses],  # type: ignore
-            deformation_tasks=p_task_ids,
-            deformation_dir_names=p_dir_names,
+            deformation_tasks=p_task_ids,  # type: ignore
+            deformation_dir_names=p_dir_names,  # type: ignore
             equilibrium_cauchy_stress=eq_stress,
             optimization_task=optimization_task_id,
-            optimization_dir_name=optimization_dir_name,
+            optimization_dir_name=optimization_dir_name,  # type: ignore
             num_total_strain_stress_states=n_states,
         )
 
@@ -358,8 +358,8 @@ class ElasticityDoc(PropertyDoc):
 def generate_primary_fitting_data(
     deforms: List[Deformation],
     stresses: List[Stress],
-    task_ids: List[MPID] = None,
-    dir_names: List[str] = None,
+    task_ids: Optional[List[MPID]] = None,
+    dir_names: Optional[List[str]] = None,
 ) -> Tuple[
     List[Strain],
     List[Stress],
