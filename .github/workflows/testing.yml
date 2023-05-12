@@ -13,7 +13,6 @@ jobs:
   test:
     name: ${{ matrix.package }} (${{ matrix.os }}/py${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
-    needs: lint
     strategy:
       matrix:
         os: ['ubuntu-latest']#  # TODO openbabel for windows and mac
