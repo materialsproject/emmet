@@ -2839,19 +2839,25 @@
 <span class="normal">27</span>
 <span class="normal">28</span>
 <span class="normal">29</span>
-<span class="normal">30</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">DecompositionProduct</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">DecompositionProduct</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Entry metadata for a decomposition process</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">material_id</span><span class="p">:</span> <span class="n">MPID</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The Materials Project ID for the material this decomposition points to.&quot;</span><span class="p">,</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The Materials Project ID for the material this decomposition points to.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">formula</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The formula of the decomposed material this material decomposes to.&quot;</span><span class="p">,</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The formula of the decomposed material this material decomposes to.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">amount</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The amount of the decomposed material by formula units this this material decomposes to.&quot;</span><span class="p">,</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The amount of the decomposed material by formula units this this material decomposes to.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
         </details>
@@ -2897,35 +2903,37 @@
 
         <details class="quote">
           <summary>Source code in <code>/home/runner/.local/lib/python3.8/site-packages/emmet/core/thermo.py</code></summary>
-          <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">252</span>
-<span class="normal">253</span>
-<span class="normal">254</span>
-<span class="normal">255</span>
-<span class="normal">256</span>
-<span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span>
-<span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span>
-<span class="normal">271</span>
-<span class="normal">272</span>
-<span class="normal">273</span>
-<span class="normal">274</span>
-<span class="normal">275</span>
-<span class="normal">276</span>
-<span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span>
-<span class="normal">280</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">PhaseDiagramDoc</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+          <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">PhaseDiagramDoc</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A phase diagram document</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -2933,7 +2941,8 @@
     <span class="n">property_name</span> <span class="o">=</span> <span class="s2">&quot;phase_diagram&quot;</span>
 
     <span class="n">phase_diagram_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Phase diagram ID consisting of the chemical system and thermo type&quot;</span><span class="p">,</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Phase diagram ID consisting of the chemical system and thermo type&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">chemsys</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -2942,7 +2951,8 @@
     <span class="p">)</span>
 
     <span class="n">thermo_type</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ThermoType</span><span class="p">,</span> <span class="n">RunType</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Functional types of calculations involved in the energy mixing scheme.&quot;</span><span class="p">,</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Functional types of calculations involved in the energy mixing scheme.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">phase_diagram</span><span class="p">:</span> <span class="n">PhaseDiagram</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -2998,10 +3008,7 @@
 
         <details class="quote">
           <summary>Source code in <code>/home/runner/.local/lib/python3.8/site-packages/emmet/core/thermo.py</code></summary>
-          <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 40</span>
-<span class="normal"> 41</span>
-<span class="normal"> 42</span>
-<span class="normal"> 43</span>
+          <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 43</span>
 <span class="normal"> 44</span>
 <span class="normal"> 45</span>
 <span class="normal"> 46</span>
@@ -3207,7 +3214,46 @@
 <span class="normal">246</span>
 <span class="normal">247</span>
 <span class="normal">248</span>
-<span class="normal">249</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ThermoDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ThermoDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A thermo entry document</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -3215,11 +3261,13 @@
     <span class="n">property_name</span> <span class="o">=</span> <span class="s2">&quot;thermo&quot;</span>
 
     <span class="n">thermo_type</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ThermoType</span><span class="p">,</span> <span class="n">RunType</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Functional types of calculations involved in the energy mixing scheme.&quot;</span><span class="p">,</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Functional types of calculations involved in the energy mixing scheme.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">thermo_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Unique document ID which is composed of the Material ID and thermo data type.&quot;</span><span class="p">,</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Unique document ID which is composed of the Material ID and thermo data type.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">uncorrected_energy_per_atom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -3227,17 +3275,23 @@
     <span class="p">)</span>
 
     <span class="n">energy_per_atom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The total corrected DFT energy of this material per atom in eV/atom.&quot;</span><span class="p">,</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The total corrected DFT energy of this material per atom in eV/atom.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">energy_uncertainy_per_atom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-    <span class="n">formation_energy_per_atom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The formation energy per atom in eV/atom.&quot;</span><span class="p">)</span>
+    <span class="n">formation_energy_per_atom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The formation energy per atom in eV/atom.&quot;</span>
+    <span class="p">)</span>
 
-    <span class="n">energy_above_hull</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The energy above the hull in eV/Atom.&quot;</span><span class="p">)</span>
+    <span class="n">energy_above_hull</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The energy above the hull in eV/Atom.&quot;</span>
+    <span class="p">)</span>
 
     <span class="n">is_stable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">False</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Flag for whether this material is on the hull and therefore stable.&quot;</span><span class="p">,</span>
+        <span class="kc">False</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Flag for whether this material is on the hull and therefore stable.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">equilibrium_reaction_energy_per_atom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -3252,11 +3306,13 @@
     <span class="p">)</span>
 
     <span class="n">decomposition_enthalpy</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.&quot;</span><span class="p">,</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Decomposition enthalpy as defined by `get_decomp_and_phase_separation_energy` in pymatgen.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">decomposition_enthalpy_decomposes_to</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DecompositionProduct</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of decomposition data associated with the decomposition_enthalpy quantity.&quot;</span><span class="p">,</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of decomposition data associated with the decomposition_enthalpy quantity.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">energy_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -3264,7 +3320,9 @@
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The type of calculation this energy evaluation comes from.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">entry_types</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of available energy types computed for this material.&quot;</span><span class="p">)</span>
+    <span class="n">entry_types</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of available energy types computed for this material.&quot;</span>
+    <span class="p">)</span>
 
     <span class="n">entries</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">ComputedEntry</span><span class="p">,</span> <span class="n">ComputedStructureEntry</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="o">...</span><span class="p">,</span>
@@ -3321,8 +3379,10 @@
             <span class="p">)</span>
 
         <span class="k">for</span> <span class="n">material_id</span><span class="p">,</span> <span class="n">entry_group</span> <span class="ow">in</span> <span class="n">entries_by_mpid</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-
-            <span class="k">if</span> <span class="n">use_max_chemsys</span> <span class="ow">and</span> <span class="n">entry_group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">chemical_system</span> <span class="o">!=</span> <span class="n">chemsys</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">use_max_chemsys</span>
+                <span class="ow">and</span> <span class="n">entry_group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">chemical_system</span> <span class="o">!=</span> <span class="n">chemsys</span>
+            <span class="p">):</span>
                 <span class="k">continue</span>
 
             <span class="n">sorted_entries</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">entry_group</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_energy_eval</span><span class="p">)</span>
@@ -3335,8 +3395,10 @@
                 <span class="s2">&quot;thermo_id&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">material_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">thermo_type</span><span class="p">)),</span>
                 <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">material_id</span><span class="p">,</span>
                 <span class="s2">&quot;thermo_type&quot;</span><span class="p">:</span> <span class="n">thermo_type</span><span class="p">,</span>
-                <span class="s2">&quot;uncorrected_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">uncorrected_energy</span> <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
-                <span class="s2">&quot;energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">energy</span> <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
+                <span class="s2">&quot;uncorrected_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">uncorrected_energy</span>
+                <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
+                <span class="s2">&quot;energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">energy</span>
+                <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
                 <span class="s2">&quot;formation_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_form_energy_per_atom</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">),</span>
                 <span class="s2">&quot;energy_above_hull&quot;</span><span class="p">:</span> <span class="n">ehull</span><span class="p">,</span>
                 <span class="s2">&quot;is_stable&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">stable_entries</span><span class="p">,</span>
@@ -3348,25 +3410,39 @@
 
             <span class="c1"># Store different info if stable vs decomposes</span>
             <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;is_stable&quot;</span><span class="p">]:</span>
-                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;equilibrium_reaction_energy_per_atom&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_equilibrium_reaction_energy</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>
+                <span class="n">d</span><span class="p">[</span>
+                    <span class="s2">&quot;equilibrium_reaction_energy_per_atom&quot;</span>
+                <span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_equilibrium_reaction_energy</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposes_to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="p">{</span><span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span> <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span> <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">}</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span>
+                        <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">,</span>
+                    <span class="p">}</span>
                     <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                 <span class="p">]</span>
 
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">decomp</span><span class="p">,</span> <span class="n">energy</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_phase_separation_energy</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>
+                <span class="n">decomp</span><span class="p">,</span> <span class="n">energy</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_phase_separation_energy</span><span class="p">(</span>
+                    <span class="n">blessed_entry</span>
+                <span class="p">)</span>
                 <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposition_enthalpy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span>
                 <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposition_enthalpy_decomposes_to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="p">{</span><span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span> <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span> <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">}</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span>
+                        <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">,</span>
+                    <span class="p">}</span>
                     <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                 <span class="p">]</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="c1"># try/except so this quantity does not take down the builder if it fails:</span>
                 <span class="c1"># it includes an optimization step that can be fragile in some instances,</span>
                 <span class="c1"># most likely failure is ValueError, &quot;invalid value encountered in true_divide&quot;</span>
-                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Could not calculate decomposition enthalpy for this entry.&quot;</span><span class="p">]</span>
+                <span class="n">d</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s2">&quot;Could not calculate decomposition enthalpy for this entry.&quot;</span>
+                <span class="p">]</span>
 
             <span class="n">d</span><span class="p">[</span><span class="s2">&quot;energy_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">)</span>
             <span class="n">d</span><span class="p">[</span><span class="s2">&quot;entry_types&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -3374,7 +3450,6 @@
 
             <span class="c1"># Currently, each entry group contains a single entry due to how the compatability scheme works</span>
             <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entry_group</span><span class="p">:</span>
-
                 <span class="n">d</span><span class="p">[</span><span class="s2">&quot;entry_types&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">))</span>
                 <span class="n">d</span><span class="p">[</span><span class="s2">&quot;entries&quot;</span><span class="p">][</span><span class="n">entry</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">entry</span>
 
@@ -3386,7 +3461,11 @@
                 <span class="p">)</span>
             <span class="p">]</span>
 
-            <span class="n">docs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ThermoDoc</span><span class="o">.</span><span class="n">from_structure</span><span class="p">(</span><span class="n">meta_structure</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+            <span class="n">docs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">ThermoDoc</span><span class="o">.</span><span class="n">from_structure</span><span class="p">(</span>
+                    <span class="n">meta_structure</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">docs</span>
 
@@ -3408,14 +3487,17 @@
 
         <span class="c1"># Only use lowest entry per composition to speed up QHull in Phase Diagram</span>
         <span class="n">reduced_entries</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="nb">sorted</span><span class="p">(</span><span class="n">comp_entries</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">energy_per_atom</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">comp_entries</span> <span class="ow">in</span> <span class="n">entries_by_comp</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+            <span class="nb">sorted</span><span class="p">(</span><span class="n">comp_entries</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">energy_per_atom</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">comp_entries</span> <span class="ow">in</span> <span class="n">entries_by_comp</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
         <span class="p">]</span>
         <span class="n">pd</span> <span class="o">=</span> <span class="n">PhaseDiagram</span><span class="p">(</span><span class="n">reduced_entries</span><span class="p">)</span>
 
         <span class="c1"># Add back all entries, not just those on the hull</span>
         <span class="n">pd_computed_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">computed_data</span>
         <span class="n">pd_computed_data</span><span class="p">[</span><span class="s2">&quot;all_entries&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entries</span>
-        <span class="n">new_pd</span> <span class="o">=</span> <span class="n">PhaseDiagram</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span> <span class="n">computed_data</span><span class="o">=</span><span class="n">pd_computed_data</span><span class="p">)</span>
+        <span class="n">new_pd</span> <span class="o">=</span> <span class="n">PhaseDiagram</span><span class="p">(</span>
+            <span class="n">entries</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span> <span class="n">computed_data</span><span class="o">=</span><span class="n">pd_computed_data</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">new_pd</span>
 </code></pre></div></td></tr></table></div>
         </details>
@@ -3495,33 +3577,36 @@ represented in the entry data passed.</p>
 
       <details class="quote">
         <summary>Source code in <code>/home/runner/.local/lib/python3.8/site-packages/emmet/core/thermo.py</code></summary>
-        <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
-<span class="normal">243</span>
-<span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span>
-<span class="normal">248</span>
-<span class="normal">249</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+        <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span> <span class="nf">construct_phase_diagram</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PhaseDiagram</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Efficienty construct a phase diagram using only the lowest entries at every composition</span>
@@ -3539,14 +3624,17 @@ represented in the entry data passed.</p>
 
     <span class="c1"># Only use lowest entry per composition to speed up QHull in Phase Diagram</span>
     <span class="n">reduced_entries</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="nb">sorted</span><span class="p">(</span><span class="n">comp_entries</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">energy_per_atom</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">comp_entries</span> <span class="ow">in</span> <span class="n">entries_by_comp</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="nb">sorted</span><span class="p">(</span><span class="n">comp_entries</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">energy_per_atom</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">comp_entries</span> <span class="ow">in</span> <span class="n">entries_by_comp</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
     <span class="p">]</span>
     <span class="n">pd</span> <span class="o">=</span> <span class="n">PhaseDiagram</span><span class="p">(</span><span class="n">reduced_entries</span><span class="p">)</span>
 
     <span class="c1"># Add back all entries, not just those on the hull</span>
     <span class="n">pd_computed_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">computed_data</span>
     <span class="n">pd_computed_data</span><span class="p">[</span><span class="s2">&quot;all_entries&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entries</span>
-    <span class="n">new_pd</span> <span class="o">=</span> <span class="n">PhaseDiagram</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span> <span class="n">computed_data</span><span class="o">=</span><span class="n">pd_computed_data</span><span class="p">)</span>
+    <span class="n">new_pd</span> <span class="o">=</span> <span class="n">PhaseDiagram</span><span class="p">(</span>
+        <span class="n">entries</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span> <span class="n">computed_data</span><span class="o">=</span><span class="n">pd_computed_data</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="n">new_pd</span>
 </code></pre></div></td></tr></table></div>
       </details>
@@ -3646,22 +3734,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p></
 
       <details class="quote">
         <summary>Source code in <code>/home/runner/.local/lib/python3.8/site-packages/emmet/core/thermo.py</code></summary>
-        <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
+        <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">120</span>
 <span class="normal">121</span>
 <span class="normal">122</span>
 <span class="normal">123</span>
@@ -3762,7 +3835,43 @@ that match the largest chemsys represented in the list. Defaults to False.</p></
 <span class="normal">218</span>
 <span class="normal">219</span>
 <span class="normal">220</span>
-<span class="normal">221</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">from_entries</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span>
     <span class="n">entries</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ComputedEntry</span><span class="p">,</span> <span class="n">ComputedStructureEntry</span><span class="p">]],</span>
@@ -3811,8 +3920,10 @@ that match the largest chemsys represented in the list. Defaults to False.</p></
         <span class="p">)</span>
 
     <span class="k">for</span> <span class="n">material_id</span><span class="p">,</span> <span class="n">entry_group</span> <span class="ow">in</span> <span class="n">entries_by_mpid</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-
-        <span class="k">if</span> <span class="n">use_max_chemsys</span> <span class="ow">and</span> <span class="n">entry_group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">chemical_system</span> <span class="o">!=</span> <span class="n">chemsys</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">use_max_chemsys</span>
+            <span class="ow">and</span> <span class="n">entry_group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">chemical_system</span> <span class="o">!=</span> <span class="n">chemsys</span>
+        <span class="p">):</span>
             <span class="k">continue</span>
 
         <span class="n">sorted_entries</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">entry_group</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_energy_eval</span><span class="p">)</span>
@@ -3825,8 +3936,10 @@ that match the largest chemsys represented in the list. Defaults to False.</p></
             <span class="s2">&quot;thermo_id&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">material_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">thermo_type</span><span class="p">)),</span>
             <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">material_id</span><span class="p">,</span>
             <span class="s2">&quot;thermo_type&quot;</span><span class="p">:</span> <span class="n">thermo_type</span><span class="p">,</span>
-            <span class="s2">&quot;uncorrected_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">uncorrected_energy</span> <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
-            <span class="s2">&quot;energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">energy</span> <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
+            <span class="s2">&quot;uncorrected_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">uncorrected_energy</span>
+            <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
+            <span class="s2">&quot;energy_per_atom&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">energy</span>
+            <span class="o">/</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">num_atoms</span><span class="p">,</span>
             <span class="s2">&quot;formation_energy_per_atom&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_form_energy_per_atom</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">),</span>
             <span class="s2">&quot;energy_above_hull&quot;</span><span class="p">:</span> <span class="n">ehull</span><span class="p">,</span>
             <span class="s2">&quot;is_stable&quot;</span><span class="p">:</span> <span class="n">blessed_entry</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">stable_entries</span><span class="p">,</span>
@@ -3838,25 +3951,39 @@ that match the largest chemsys represented in the list. Defaults to False.</p></
 
         <span class="c1"># Store different info if stable vs decomposes</span>
         <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;is_stable&quot;</span><span class="p">]:</span>
-            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;equilibrium_reaction_energy_per_atom&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_equilibrium_reaction_energy</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>
+            <span class="n">d</span><span class="p">[</span>
+                <span class="s2">&quot;equilibrium_reaction_energy_per_atom&quot;</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_equilibrium_reaction_energy</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposes_to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="p">{</span><span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span> <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span> <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">}</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span>
+                    <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">,</span>
+                <span class="p">}</span>
                 <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
             <span class="p">]</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">decomp</span><span class="p">,</span> <span class="n">energy</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_phase_separation_energy</span><span class="p">(</span><span class="n">blessed_entry</span><span class="p">)</span>
+            <span class="n">decomp</span><span class="p">,</span> <span class="n">energy</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_decomp_and_phase_separation_energy</span><span class="p">(</span>
+                <span class="n">blessed_entry</span>
+            <span class="p">)</span>
             <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposition_enthalpy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy</span>
             <span class="n">d</span><span class="p">[</span><span class="s2">&quot;decomposition_enthalpy_decomposes_to&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="p">{</span><span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span> <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span> <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">}</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;material_id&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;material_id&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;formula&quot;</span><span class="p">:</span> <span class="n">de</span><span class="o">.</span><span class="n">composition</span><span class="o">.</span><span class="n">formula</span><span class="p">,</span>
+                    <span class="s2">&quot;amount&quot;</span><span class="p">:</span> <span class="n">amt</span><span class="p">,</span>
+                <span class="p">}</span>
                 <span class="k">for</span> <span class="n">de</span><span class="p">,</span> <span class="n">amt</span> <span class="ow">in</span> <span class="n">decomp</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
             <span class="p">]</span>
         <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
             <span class="c1"># try/except so this quantity does not take down the builder if it fails:</span>
             <span class="c1"># it includes an optimization step that can be fragile in some instances,</span>
             <span class="c1"># most likely failure is ValueError, &quot;invalid value encountered in true_divide&quot;</span>
-            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Could not calculate decomposition enthalpy for this entry.&quot;</span><span class="p">]</span>
+            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s2">&quot;Could not calculate decomposition enthalpy for this entry.&quot;</span>
+            <span class="p">]</span>
 
         <span class="n">d</span><span class="p">[</span><span class="s2">&quot;energy_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">blessed_entry</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">)</span>
         <span class="n">d</span><span class="p">[</span><span class="s2">&quot;entry_types&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -3864,7 +3991,6 @@ that match the largest chemsys represented in the list. Defaults to False.</p></
 
         <span class="c1"># Currently, each entry group contains a single entry due to how the compatability scheme works</span>
         <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entry_group</span><span class="p">:</span>
-
             <span class="n">d</span><span class="p">[</span><span class="s2">&quot;entry_types&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">))</span>
             <span class="n">d</span><span class="p">[</span><span class="s2">&quot;entries&quot;</span><span class="p">][</span><span class="n">entry</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_type&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">entry</span>
 
@@ -3876,7 +4002,11 @@ that match the largest chemsys represented in the list. Defaults to False.</p></
             <span class="p">)</span>
         <span class="p">]</span>
 
-        <span class="n">docs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ThermoDoc</span><span class="o">.</span><span class="n">from_structure</span><span class="p">(</span><span class="n">meta_structure</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="n">docs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">ThermoDoc</span><span class="o">.</span><span class="n">from_structure</span><span class="p">(</span>
+                <span class="n">meta_structure</span><span class="o">=</span><span class="n">blessed_entry</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">docs</span>
 </code></pre></div></td></tr></table></div>
@@ -4789,28 +4919,33 @@ that match the largest chemsys represented in the list. Defaults to False.</p></
 
         <details class="quote">
           <summary>Source code in <code>/home/runner/.local/lib/python3.8/site-packages/emmet/core/polar.py</code></summary>
-          <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">BornEffectiveCharges</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+          <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">BornEffectiveCharges</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A block for the Born effective charges</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">value</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Matrix3D</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Value of the Born effective charges.&quot;</span><span class="p">)</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Matrix3D</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Value of the Born effective charges.&quot;</span>
+    <span class="p">)</span>
 
     <span class="n">symmetrized_value</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Matrix3D</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
@@ -4820,7 +4955,8 @@ that match the largest chemsys represented in the list. Defaults to False.</p></
 
     <span class="n">cnsr_break</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The maximum breaking of the charge neutrality sum &quot;</span> <span class="s2">&quot;rule (CNSR) in the Born effective charges.&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The maximum breaking of the charge neutrality sum &quot;</span>
+        <span class="s2">&quot;rule (CNSR) in the Born effective charges.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
         </details>
@@ -4906,7 +5042,17 @@ that match the largest chemsys represented in the list. Defaults to False.</p></
 <span class="normal">59</span>
 <span class="normal">60</span>
 <span class="normal">61</span>
-<span class="normal">62</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">DielectricDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">DielectricDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A dielectric property block</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -4915,19 +5061,29 @@ that match the largest chemsys represented in the list. Defaults to False.</p></
 
     <span class="n">total</span><span class="p">:</span> <span class="n">Matrix3D</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Total dielectric tensor.&quot;</span><span class="p">)</span>
     <span class="n">ionic</span><span class="p">:</span> <span class="n">Matrix3D</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Ionic contribution to dielectric tensor.&quot;</span><span class="p">)</span>
-    <span class="n">electronic</span><span class="p">:</span> <span class="n">Matrix3D</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electronic contribution to dielectric tensor.&quot;</span><span class="p">)</span>
+    <span class="n">electronic</span><span class="p">:</span> <span class="n">Matrix3D</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electronic contribution to dielectric tensor.&quot;</span>
+    <span class="p">)</span>
 
     <span class="n">e_total</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Total electric permittivity.&quot;</span><span class="p">)</span>
-    <span class="n">e_ionic</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electric permittivity from atomic rearrangement.&quot;</span><span class="p">)</span>
-    <span class="n">e_electronic</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electric permittivity due to electrons rearrangement.&quot;</span><span class="p">)</span>
+    <span class="n">e_ionic</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electric permittivity from atomic rearrangement.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">e_electronic</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electric permittivity due to electrons rearrangement.&quot;</span>
+    <span class="p">)</span>
 
     <span class="n">n</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Refractive index.&quot;</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_ionic_and_electronic</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span> <span class="n">material_id</span><span class="p">:</span> <span class="n">MPID</span><span class="p">,</span> <span class="n">ionic</span><span class="p">:</span> <span class="n">Matrix3D</span><span class="p">,</span> <span class="n">electronic</span><span class="p">:</span> <span class="n">Matrix3D</span><span class="p">,</span> <span class="n">structure</span><span class="p">:</span> <span class="n">Structure</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">material_id</span><span class="p">:</span> <span class="n">MPID</span><span class="p">,</span>
+        <span class="n">ionic</span><span class="p">:</span> <span class="n">Matrix3D</span><span class="p">,</span>
+        <span class="n">electronic</span><span class="p">:</span> <span class="n">Matrix3D</span><span class="p">,</span>
+        <span class="n">structure</span><span class="p">:</span> <span class="n">Structure</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
-
         <span class="n">ionic_tensor</span> <span class="o">=</span> <span class="n">Tensor</span><span class="p">(</span><span class="n">ionic</span><span class="p">)</span><span class="o">.</span><span class="n">convert_to_ieee</span><span class="p">(</span><span class="n">structure</span><span class="p">)</span>
         <span class="n">electronic_tensor</span> <span class="o">=</span> <span class="n">Tensor</span><span class="p">(</span><span class="n">electronic</span><span class="p">)</span><span class="o">.</span><span class="n">convert_to_ieee</span><span class="p">(</span><span class="n">structure</span><span class="p">)</span>
 
@@ -4991,17 +5147,21 @@ that match the largest chemsys represented in the list. Defaults to False.</p></
 
         <details class="quote">
           <summary>Source code in <code>/home/runner/.local/lib/python3.8/site-packages/emmet/core/polar.py</code></summary>
-          <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">IRDielectric</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+          <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">IRDielectric</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A block for the pymatgen IRDielectricTensor object</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">ir_dielectric_tensor</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Serialized version of a pymatgen IRDielectricTensor object.&quot;</span><span class="p">)</span>
+    <span class="n">ir_dielectric_tensor</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Serialized version of a pymatgen IRDielectricTensor object.&quot;</span>
+    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
         </details>
 
@@ -5046,17 +5206,7 @@ that match the largest chemsys represented in the list. Defaults to False.</p></
 
         <details class="quote">
           <summary>Source code in <code>/home/runner/.local/lib/python3.8/site-packages/emmet/core/polar.py</code></summary>
-          <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 65</span>
-<span class="normal"> 66</span>
-<span class="normal"> 67</span>
-<span class="normal"> 68</span>
-<span class="normal"> 69</span>
-<span class="normal"> 70</span>
-<span class="normal"> 71</span>
-<span class="normal"> 72</span>
-<span class="normal"> 73</span>
-<span class="normal"> 74</span>
-<span class="normal"> 75</span>
+          <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 75</span>
 <span class="normal"> 76</span>
 <span class="normal"> 77</span>
 <span class="normal"> 78</span>
@@ -5097,7 +5247,29 @@ that match the largest chemsys represented in the list. Defaults to False.</p></
 <span class="normal">113</span>
 <span class="normal">114</span>
 <span class="normal">115</span>
-<span class="normal">116</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">PiezoelectricDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">PiezoelectricDoc</span><span class="p">(</span><span class="n">PropertyDoc</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A dielectric package block</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -5105,18 +5277,30 @@ that match the largest chemsys represented in the list. Defaults to False.</p></
     <span class="n">property_name</span> <span class="o">=</span> <span class="s2">&quot;piezoelectric&quot;</span>
 
     <span class="n">total</span><span class="p">:</span> <span class="n">PiezoTensor</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Total piezoelectric tensor in C/m²&quot;</span><span class="p">)</span>
-    <span class="n">ionic</span><span class="p">:</span> <span class="n">PiezoTensor</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Ionic contribution to piezoelectric tensor in C/m²&quot;</span><span class="p">)</span>
-    <span class="n">electronic</span><span class="p">:</span> <span class="n">PiezoTensor</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electronic contribution to piezoelectric tensor in C/m²&quot;</span><span class="p">)</span>
+    <span class="n">ionic</span><span class="p">:</span> <span class="n">PiezoTensor</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Ionic contribution to piezoelectric tensor in C/m²&quot;</span>
+    <span class="p">)</span>
+    <span class="n">electronic</span><span class="p">:</span> <span class="n">PiezoTensor</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Electronic contribution to piezoelectric tensor in C/m²&quot;</span>
+    <span class="p">)</span>
 
     <span class="n">e_ij_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Piezoelectric modulus&quot;</span><span class="p">)</span>
-    <span class="n">max_direction</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Miller direction for maximum piezo response&quot;</span><span class="p">)</span>
-    <span class="n">strain_for_max</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Normalized strain direction for maximum piezo repsonse&quot;</span><span class="p">)</span>
+    <span class="n">max_direction</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Miller direction for maximum piezo response&quot;</span>
+    <span class="p">)</span>
+    <span class="n">strain_for_max</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Normalized strain direction for maximum piezo repsonse&quot;</span>
+    <span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_ionic_and_electronic</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span> <span class="n">material_id</span><span class="p">:</span> <span class="n">MPID</span><span class="p">,</span> <span class="n">ionic</span><span class="p">:</span> <span class="n">PiezoTensor</span><span class="p">,</span> <span class="n">electronic</span><span class="p">:</span> <span class="n">PiezoTensor</span><span class="p">,</span> <span class="n">structure</span><span class="p">:</span> <span class="n">Structure</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">material_id</span><span class="p">:</span> <span class="n">MPID</span><span class="p">,</span>
+        <span class="n">ionic</span><span class="p">:</span> <span class="n">PiezoTensor</span><span class="p">,</span>
+        <span class="n">electronic</span><span class="p">:</span> <span class="n">PiezoTensor</span><span class="p">,</span>
+        <span class="n">structure</span><span class="p">:</span> <span class="n">Structure</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
-
         <span class="n">ionic_tensor</span> <span class="o">=</span> <span class="n">BasePiezoTensor</span><span class="o">.</span><span class="n">from_vasp_voigt</span><span class="p">(</span><span class="n">ionic</span><span class="p">)</span>
         <span class="n">electronic_tensor</span> <span class="o">=</span> <span class="n">BasePiezoTensor</span><span class="o">.</span><span class="n">from_vasp_voigt</span><span class="p">(</span><span class="n">electronic</span><span class="p">)</span>
         <span class="n">total</span> <span class="o">=</span> <span class="n">ionic_tensor</span> <span class="o">+</span> <span class="n">electronic_tensor</span>
