@@ -290,7 +290,7 @@ pymatgen-analysis-alloys==0.0.6
     # via emmet-core (setup.py)
 pymatgen-analysis-diffusion==2022.7.21
     # via emmet-core (setup.py)
-pymdown-extensions==9.11
+pymdown-extensions==10.0
     # via
     #   mkdocs-material
     #   mkdocstrings
