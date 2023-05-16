@@ -42,77 +42,77 @@ if db_uri:
         uri=db_uri,
         database="mp_molecules",
         key="task_id",
-        collection_name="mpcules_tasks",
+        collection_name="molecules_tasks",
     )
 
     assoc_store = MongoURIStore(
         uri=db_uri,
         database="mp_molecules",
         key="molecule_id",
-        collection_name="mpcules_assoc",
+        collection_name="molecules_assoc",
     )
 
     mol_store = MongoURIStore(
         uri=db_uri,
         database="mp_molecules",
         key="molecule_id",
-        collection_name="mpcules_molecules",
+        collection_name="molecules_molecules",
     )
 
     charges_store = MongoURIStore(
         uri=db_uri,
         database="mp_molecules",
         key="property_id",
-        collection_name="mpcules_charges",
+        collection_name="molecules_charges",
     )
 
     spins_store = MongoURIStore(
         uri=db_uri,
         database="mp_molecules",
         key="property_id",
-        collection_name="mpcules_spins",
+        collection_name="molecules_spins",
     )
 
     bonds_store = MongoURIStore(
         uri=db_uri,
         database="mp_molecules",
         key="property_id",
-        collection_name="mpcules_bonds",
+        collection_name="molecules_bonds",
     )
 
     orbitals_store = MongoURIStore(
         uri=db_uri,
         database="mp_molecules",
         key="property_id",
-        collection_name="mpcules_orbitals",
+        collection_name="molecules_orbitals",
     )
 
     redox_store = MongoURIStore(
         uri=db_uri,
         database="mp_molecules",
         key="property_id",
-        collection_name="mpcules_redox",
+        collection_name="molecules_redox",
     )
 
     thermo_store = MongoURIStore(
         uri=db_uri,
         database="mp_molecules",
         key="property_id",
-        collection_name="mpcules_thermo",
+        collection_name="molecules_thermo",
     )
 
     vibes_store = MongoURIStore(
         uri=db_uri,
         database="mp_molecules",
         key="property_id",
-        collection_name="mpcules_vibes",
+        collection_name="molecules_vibes",
     )
 
     summary_store = MongoURIStore(
         uri=db_uri,
         database="mp_molecules",
         key="molecule_id",
-        collection_name="mpcules_summary",
+        collection_name="molecules_summary",
     )
 
 else:
