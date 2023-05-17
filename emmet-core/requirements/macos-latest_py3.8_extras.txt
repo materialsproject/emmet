@@ -79,7 +79,7 @@ future==0.18.3
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.27.5
+griffe==0.28.0
     # via mkdocstrings-python
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
@@ -371,7 +371,7 @@ seekpath==2.0.1
     # via emmet-core (setup.py)
 sentinels==1.0.0
     # via mongomock
-sentry-sdk==1.23.0
+sentry-sdk==1.23.1
     # via custodian
 shapely==2.0.1
     # via pymatgen-analysis-alloys
