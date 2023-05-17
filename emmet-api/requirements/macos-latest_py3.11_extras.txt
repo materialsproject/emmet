@@ -95,7 +95,7 @@ future==0.18.3
     #   uncertainties
 ghp-import==2.1.0
     # via mkdocs
-griffe==0.27.5
+griffe==0.28.0
     # via mkdocstrings-python
 gunicorn==20.1.0
     # via emmet-api (setup.py)
