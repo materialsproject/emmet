@@ -180,7 +180,7 @@ pillow==9.5.0
     # via matplotlib
 plotly==5.14.1
     # via pymatgen
-protobuf==4.23.0
+protobuf==4.23.1
     # via
     #   ddsketch
     #   ddtrace
