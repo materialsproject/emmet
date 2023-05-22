@@ -17,11 +17,11 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.135
+boto3==1.26.137
     # via
     #   emmet-api (setup.py)
     #   maggma
-botocore==1.29.135
+botocore==1.29.137
     # via
     #   boto3
     #   s3transfer
@@ -162,7 +162,7 @@ numpy==1.24.3
     #   seekpath
     #   shapely
     #   spglib
-opentelemetry-api==1.17.0
+opentelemetry-api==1.18.0
     # via ddtrace
 orjson==3.8.12
     # via maggma
@@ -184,7 +184,7 @@ pillow==9.5.0
     # via matplotlib
 plotly==5.14.1
     # via pymatgen
-protobuf==4.23.0
+protobuf==4.23.1
     # via
     #   ddsketch
     #   ddtrace
@@ -263,7 +263,7 @@ scipy==1.10.1
     #   pymatgen
     #   robocrys
     #   scikit-learn
-seekpath==2.0.1
+seekpath==2.1.0
     # via emmet-core
 sentinels==1.0.0
     # via mongomock

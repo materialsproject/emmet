@@ -14,9 +14,9 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.135
+boto3==1.26.137
     # via maggma
-botocore==1.29.135
+botocore==1.29.137
     # via
     #   boto3
     #   s3transfer
@@ -232,7 +232,7 @@ scipy==1.10.1
     #   pymatgen
     #   robocrys
     #   scikit-learn
-seekpath==2.0.1
+seekpath==2.1.0
     # via emmet-core
 sentinels==1.0.0
     # via mongomock
