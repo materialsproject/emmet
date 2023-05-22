@@ -14,9 +14,9 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.135
+boto3==1.26.137
     # via maggma
-botocore==1.29.135
+botocore==1.29.137
     # via
     #   boto3
     #   s3transfer
@@ -246,7 +246,7 @@ plotly==5.14.1
     # via pymatgen
 pluggy==1.0.0
     # via pytest
-pre-commit==3.3.1
+pre-commit==3.3.2
     # via emmet-core (setup.py)
 pubchempy==1.0.4
     # via robocrys
@@ -356,7 +356,7 @@ scipy==1.10.1
     #   pymatgen
     #   robocrys
     #   scikit-learn
-seekpath==2.0.1
+seekpath==2.1.0
     # via emmet-core (setup.py)
 sentinels==1.0.0
     # via mongomock
@@ -409,7 +409,7 @@ tqdm==4.65.0
     #   pymatgen
 types-requests==2.30.0.0
     # via emmet-core (setup.py)
-types-setuptools==67.7.0.2
+types-setuptools==67.8.0.0
     # via emmet-core (setup.py)
 types-urllib3==1.26.25.13
     # via types-requests
