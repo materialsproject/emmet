@@ -339,7 +339,7 @@ pyyaml-env-tag==0.1
     # via mkdocs
 pyzmq==24.0.1
     # via maggma
-requests==2.30.0
+requests==2.31.0
     # via
     #   matminer
     #   mongogrant
