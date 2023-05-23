@@ -86,7 +86,7 @@ pytz==2023.3
     # via pandas
 pyyaml==6.0
     # via pybtex
-requests==2.30.0
+requests==2.31.0
     # via
     #   mp-api
     #   pymatgen
@@ -114,7 +114,7 @@ tenacity==8.2.2
     # via plotly
 tqdm==4.65.0
     # via pymatgen
-typing-extensions==4.5.0
+typing-extensions==4.6.0
     # via
     #   emmet-core
     #   emmet-core (setup.py)
