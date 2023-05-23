@@ -14,9 +14,9 @@ bcrypt==4.0.1
     # via paramiko
 blinker==1.6.2
     # via flask
-boto3==1.26.138
+boto3==1.26.139
     # via maggma
-botocore==1.29.138
+botocore==1.29.139
     # via
     #   boto3
     #   s3transfer
@@ -226,7 +226,7 @@ numpy==1.24.3
     #   seekpath
     #   shapely
     #   spglib
-orjson==3.8.12
+orjson==3.8.13
     # via maggma
 packaging==23.1
     # via
@@ -266,7 +266,7 @@ pycodestyle==2.10.0
     #   flake8
 pycparser==2.21
     # via cffi
-pydantic==1.10.7
+pydantic==1.10.8
     # via
     #   emmet-core
     #   fastapi
@@ -405,7 +405,7 @@ tqdm==4.65.0
     #   maggma
     #   matminer
     #   pymatgen
-types-requests==2.30.0.0
+types-requests==2.31.0.0
     # via emmet-builders (setup.py)
 types-setuptools==67.8.0.0
     # via emmet-builders (setup.py)
@@ -425,7 +425,7 @@ tzdata==2023.3
     # via pandas
 uncertainties==3.1.7
     # via pymatgen
-urllib3==1.26.15
+urllib3==1.26.16
     # via
     #   botocore
     #   requests
