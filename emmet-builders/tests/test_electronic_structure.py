@@ -10,7 +10,9 @@ from emmet.builders.vasp.materials import MaterialsBuilder
 
 @pytest.fixture(scope="session")
 def tasks_store(test_dir):
-    return JSONStore(test_dir / "electronic_structure/es_task_docs.json.gz", key="task_id")
+    return JSONStore(
+        test_dir / "electronic_structure/es_task_docs.json.gz", key="task_id"
+    )
 
 
 @pytest.fixture(scope="session")
@@ -28,12 +30,16 @@ def electronic_structure_store():
 
 @pytest.fixture
 def bandstructure_fs(test_dir):
-    return JSONStore(test_dir / "electronic_structure/es_bs_objs.json.gz", key="task_id")
+    return JSONStore(
+        test_dir / "electronic_structure/es_bs_objs.json.gz", key="task_id"
+    )
 
 
 @pytest.fixture
 def dos_fs(test_dir):
-    return JSONStore(test_dir / "electronic_structure/es_dos_objs.json.gz", key="task_id")
+    return JSONStore(
+        test_dir / "electronic_structure/es_dos_objs.json.gz", key="task_id"
+    )
 
 
 def test_electronic_structure_builder(
@@ -52,7 +58,9 @@ def test_electronic_structure_builder(
 
 
 def test_serialization(tmpdir):
-    builder = ElectronicStructureBuilder(MemoryStore(), MemoryStore(), MemoryStore(), MemoryStore(), MemoryStore())
+    builder = ElectronicStructureBuilder(
+        MemoryStore(), MemoryStore(), MemoryStore(), MemoryStore(), MemoryStore()
+    )
 
     dumpfn(builder.as_dict(), Path(tmpdir) / "test.json")
     loadfn(Path(tmpdir) / "test.json")

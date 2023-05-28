@@ -30,7 +30,9 @@ def oxi_states_resource(oxi_states_store):
             PossibleOxiStateQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(OxidationStateDoc, default_fields=["material_id", "last_updated"]),
+            SparseFieldsQuery(
+                OxidationStateDoc, default_fields=["material_id", "last_updated"]
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Oxidation States"],

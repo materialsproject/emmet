@@ -140,11 +140,16 @@ class MoleculeFormulaQuery(QueryOperator):
 
             try:
                 if len(formula_list) == 1:
-                    reduced_formula = Composition(formula).get_reduced_formula_and_factor()[0]
+                    reduced_formula = Composition(
+                        formula
+                    ).get_reduced_formula_and_factor()[0]
                     crit["formula_pretty"] = reduced_formula
                 else:
                     crit["formula_pretty"] = {
-                        "$in": [Composition(f).get_reduced_formula_and_factor()[0] for f in formula_list]
+                        "$in": [
+                            Composition(f).get_reduced_formula_and_factor()[0]
+                            for f in formula_list
+                        ]
                     }
             except ValueError:
                 raise HTTPException(

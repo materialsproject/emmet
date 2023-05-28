@@ -11,12 +11,16 @@ from emmet.api.routes.legacy.jcesr.query_operators import (
 def test_molecule_elements_query():
     op = MoleculeElementsQuery()
 
-    assert op.query(elements="Si, O, P") == {"criteria": {"elements": {"$all": ["Si", "O", "P"]}}}
+    assert op.query(elements="Si, O, P") == {
+        "criteria": {"elements": {"$all": ["Si", "O", "P"]}}
+    }
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(elements="Si, O, P") == {"criteria": {"elements": {"$all": ["Si", "O", "P"]}}}
+        assert new_op.query(elements="Si, O, P") == {
+            "criteria": {"elements": {"$all": ["Si", "O", "P"]}}
+        }
 
 
 def test_molecule_base_query():
@@ -74,4 +78,6 @@ def test_molecule_formula_query():
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(formula="C6H12O6") == {"criteria": {"formula_pretty": "H2CO"}}
+        assert new_op.query(formula="C6H12O6") == {
+            "criteria": {"formula_pretty": "H2CO"}
+        }

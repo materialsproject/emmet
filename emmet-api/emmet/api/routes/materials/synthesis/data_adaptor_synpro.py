@@ -32,10 +32,14 @@ def convert_conditions(cond, op_type):
         "heating_atmosphere": [x.strip() for x in cond["environment"] if x.strip()]
         if op_type == "HeatingOperation"
         else [],
-        "mixing_device": (cond["environment"][1].strip() if cond["environment"][1].strip() else None)
+        "mixing_device": (
+            cond["environment"][1].strip() if cond["environment"][1].strip() else None
+        )
         if op_type == "MixingOperation"
         else None,
-        "mixing_media": (cond["environment"][0].strip() if cond["environment"][0].strip() else None)
+        "mixing_media": (
+            cond["environment"][0].strip() if cond["environment"][0].strip() else None
+        )
         if op_type == "MixingOperation"
         else None,
     }
@@ -79,10 +83,17 @@ def convert_material(mat):
             }
             for x in mat["composition"]
         ],
-        "amounts_vars": {x: convert_mat_value(y) for x, y in mat["amounts_vars"].items()},
-        "elements_vars": {x: [str(z.strip()) for z in y if z.strip()] for x, y in mat["elements_vars"].items()},
+        "amounts_vars": {
+            x: convert_mat_value(y) for x, y in mat["amounts_vars"].items()
+        },
+        "elements_vars": {
+            x: [str(z.strip()) for z in y if z.strip()]
+            for x, y in mat["elements_vars"].items()
+        },
         "additives": [str(x.strip()) for x in mat["additives"] if x.strip()],
-        "oxygen_deficiency": str(mat["oxygen_deficiency"]) if mat["oxygen_deficiency"] else None,
+        "oxygen_deficiency": str(mat["oxygen_deficiency"])
+        if mat["oxygen_deficiency"]
+        else None,
     }
 
 
@@ -96,9 +107,13 @@ def get_material_formula(mat):
         q = None
         for comp in mat["composition"]:
             if q is None:
-                q = Composition({x: float(y) for x, y in comp["elements"].items()}) * float(comp["amount"])
+                q = Composition(
+                    {x: float(y) for x, y in comp["elements"].items()}
+                ) * float(comp["amount"])
             else:
-                q += Composition({x: float(y) for x, y in comp["elements"].items()}) * float(comp["amount"])
+                q += Composition(
+                    {x: float(y) for x, y in comp["elements"].items()}
+                ) * float(comp["amount"])
         return q
 
 
@@ -135,10 +150,12 @@ def convert_one(doc):
         "reaction_string": str(doc["reaction_string"]),
         "reaction": {
             "left_side": [
-                {"amount": str(x["amount"]), "material": str(x["material"])} for x in doc["reaction"]["left"]
+                {"amount": str(x["amount"]), "material": str(x["material"])}
+                for x in doc["reaction"]["left"]
             ],
             "right_side": [
-                {"amount": str(x["amount"]), "material": str(x["material"])} for x in doc["reaction"]["right"]
+                {"amount": str(x["amount"]), "material": str(x["material"])}
+                for x in doc["reaction"]["right"]
             ],
         },
         "targets_formula": [x.formula for x in target_comps(doc)],

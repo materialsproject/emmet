@@ -6,7 +6,9 @@ class UserSettingsDoc(BaseModel):
     Defines data for user settings
     """
 
-    consumer_id: str = Field(None, title="Consumer ID", description="Consumer ID for a specific user.")
+    consumer_id: str = Field(
+        None, title="Consumer ID", description="Consumer ID for a specific user."
+    )
 
     settings: dict = Field(
         None,

@@ -73,7 +73,9 @@ def emmet(spec_or_dbfile, run, issue, sbatch, ntries, bb, yes, no_dupe_check, ve
 
         ctx.obj["LOG_STREAM"] = StringIO()
         memory_handler = logging.StreamHandler(ctx.obj["LOG_STREAM"])
-        formatter = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s")
+        formatter = logging.Formatter(
+            "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
+        )
         memory_handler.setFormatter(formatter)
         logger.addHandler(memory_handler)
 

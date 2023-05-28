@@ -50,7 +50,11 @@ STORE_VOLUMETRIC_DATA = ["CHGCAR", "LOCPOT", "AECCAR0", "AECCAR1", "AECCAR2", "E
 for v in STORE_VOLUMETRIC_DATA:
     FILE_FILTERS.append(f"{v}*")
 
-FILE_FILTERS_DEFAULT = [f"{d}{os.sep}{f}" if d else f for f in FILE_FILTERS for d in ["", "relax1", "relax2"]]
+FILE_FILTERS_DEFAULT = [
+    f"{d}{os.sep}{f}" if d else f
+    for f in FILE_FILTERS
+    for d in ["", "relax1", "relax2"]
+]
 
 
 @click.group()
@@ -60,7 +64,9 @@ FILE_FILTERS_DEFAULT = [f"{d}{os.sep}{f}" if d else f for f in FILE_FILTERS for 
     required=True,
     help="Working directory to use for HPSS or parsing.",
 )
-@click.option("-m", "--nmax", show_default=True, default=10, help="Maximum number of directories.")
+@click.option(
+    "-m", "--nmax", show_default=True, default=10, help="Maximum number of directories."
+)
 @click.option(
     "-p",
     "--pattern",
@@ -133,7 +139,11 @@ def backups(ctx, clean):
 def run_command(args, filelist):
     nargs, nfiles, nshow = len(args), len(filelist), 1
     full_args = args + filelist
-    args_short = full_args[: nargs + nshow] + [f"({nfiles-1} more ...)"] if nfiles > nshow else full_args
+    args_short = (
+        full_args[: nargs + nshow] + [f"({nfiles-1} more ...)"]
+        if nfiles > nshow
+        else full_args
+    )
     logger.info(" ".join(args_short))
     popen = subprocess.Popen(
         full_args,
@@ -165,7 +175,9 @@ def check_pattern(nested_allowed=False):
     if not nested_allowed and os.sep in pattern:
         raise EmmetCliError(f"Nested pattern ({pattern}) not allowed!")
     elif not any(pattern.startswith(p) for p in PREFIXES):
-        raise EmmetCliError(f"Pattern ({pattern}) only allowed to start with one of {PREFIXES}!")
+        raise EmmetCliError(
+            f"Pattern ({pattern}) only allowed to start with one of {PREFIXES}!"
+        )
 
 
 def split_vasp_dir_path(vasp_dir):
@@ -238,7 +250,9 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
                 ts = datetime.now().strftime("%Y%m%d-%H%M%S")
                 tarfile = f"{GARDEN}/{block}.tar"
                 for suf in ["", ".idx"]:
-                    args = shlex.split(f"hsi -q mv -v {tarfile}{suf} {tarfile}{suf}.bkp_{ts}")
+                    args = shlex.split(
+                        f"hsi -q mv -v {tarfile}{suf} {tarfile}{suf}.bkp_{ts}"
+                    )
                     for line in run_command(args, []):
                         logger.info(line.strip())
                 raise HpssOSError
@@ -253,7 +267,9 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
                     for line in filelist:
                         f.write(f"{line}\n")
 
-                args = shlex.split(f"htar -M 5000000 -Phcf {GARDEN}/{block}.tar -L {filename}")
+                args = shlex.split(
+                    f"htar -M 5000000 -Phcf {GARDEN}/{block}.tar -L {filename}"
+                )
                 try:
                     for line in run_command(args, []):
                         logger.info(line.strip())
@@ -268,7 +284,9 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
         # Check backup here to allow running it separately
         if check and not already_in_hpss:
             logger.info(f"Verify {block}.tar ...")
-            args = shlex.split(f"htar -K -Hrelpaths -Hverify=all -f {GARDEN}/{block}.tar")
+            args = shlex.split(
+                f"htar -K -Hrelpaths -Hverify=all -f {GARDEN}/{block}.tar"
+            )
             try:
                 for line in run_command(args, []):
                     logger.info(line.strip())
@@ -279,20 +297,28 @@ def backup(ctx, reorg, clean, check, force_new):  # noqa: C901
             if clean:
                 nremove_total += nlaunchers
                 if run:
-                    with click.progressbar(filelist, label="Removing launchers ...") as bar:
+                    with click.progressbar(
+                        filelist, label="Removing launchers ..."
+                    ) as bar:
                         for fn in bar:
                             if os.path.exists(fn):
                                 shutil.rmtree(fn)
-                    logger.info(f"Removed {nlaunchers} launchers from disk for {block}.")
+                    logger.info(
+                        f"Removed {nlaunchers} launchers from disk for {block}."
+                    )
                 else:
-                    logger.info(f"Would remove {nlaunchers} launchers from disk for {block}.")
+                    logger.info(
+                        f"Would remove {nlaunchers} launchers from disk for {block}."
+                    )
 
     logger.info(f"{counter}/{len(block_launchers)} blocks newly backed up to HPSS.")
     if clean:
         if run:
             logger.info(f"Verified and removed a total of {nremove_total} launchers.")
         else:
-            logger.info(f"Would verify and remove a total of {nremove_total} launchers.")
+            logger.info(
+                f"Would verify and remove a total of {nremove_total} launchers."
+            )
     return ReturnCodes.SUCCESS
 
 
@@ -341,18 +367,23 @@ def restore(inputfile, file_filter):  # noqa: C901
                     else:
                         block, launcher = line.strip(), ""
                     for ff in file_filter:
-                        block_launchers[block].append(os.path.join(launcher.strip(), ff))
+                        block_launchers[block].append(
+                            os.path.join(launcher.strip(), ff)
+                        )
                     # also try restoring unnested block_/launcher_ (result of --reorg flag)
                     if os.sep in launcher:
                         launcher = launcher.strip().split(os.sep)[-1]
                         for ff in file_filter:
-                            block_launchers[block].append(os.path.join(launcher.strip(), ff))
+                            block_launchers[block].append(
+                                os.path.join(launcher.strip(), ff)
+                            )
                     nlaunchers += 1
 
     nblocks = len(block_launchers)
     nfiles = sum(len(v) for v in block_launchers.values())
     logger.info(
-        f"Restore {nblocks} block(s) with {nlaunchers} launchers" f" and {nfiles} file filters to {directory} ..."
+        f"Restore {nblocks} block(s) with {nlaunchers} launchers"
+        f" and {nfiles} file filters to {directory} ..."
     )
 
     nfiles_restore_total, max_args = 0, 14000
@@ -367,7 +398,9 @@ def restore(inputfile, file_filter):  # noqa: C901
         # get full list of matching files in archive and check against existing files
         args = shlex.split(f"htar -tf {GARDEN}/{block}.tar")
         filelist = [os.path.join(block, f) for f in files]
-        filelist_chunks = [filelist[i : i + max_args] for i in range(0, len(filelist), max_args)]
+        filelist_chunks = [
+            filelist[i : i + max_args] for i in range(0, len(filelist), max_args)
+        ]
         filelist_restore, cnt = [], 0
         try:
             for chunk in filelist_chunks:
@@ -388,10 +421,13 @@ def restore(inputfile, file_filter):  # noqa: C901
             nfiles_restore = len(filelist_restore)
             nfiles_restore_total += nfiles_restore
             if run:
-                logger.info(f"Restore {nfiles_restore}/{cnt} files for {block} to {directory} ...")
+                logger.info(
+                    f"Restore {nfiles_restore}/{cnt} files for {block} to {directory} ..."
+                )
                 args = shlex.split(f"htar -xf {GARDEN}/{block}.tar")
                 filelist_restore_chunks = [
-                    filelist_restore[i : i + max_args] for i in range(0, len(filelist_restore), max_args)
+                    filelist_restore[i : i + max_args]
+                    for i in range(0, len(filelist_restore), max_args)
                 ]
                 try:
                     for chunk in filelist_restore_chunks:
@@ -401,7 +437,9 @@ def restore(inputfile, file_filter):  # noqa: C901
                     logger.error(str(e))
                     return ReturnCodes.ERROR
             else:
-                logger.info(f"Would restore {nfiles_restore}/{cnt} files for {block} to {directory}.")
+                logger.info(
+                    f"Would restore {nfiles_restore}/{cnt} files for {block} to {directory}."
+                )
         else:
             logger.warning(f"Nothing to restore for {block}!")
 
@@ -436,7 +474,9 @@ def group_strings_by_prefix(strings, prefix_length):
 @click.pass_context
 def parsers(ctx, task_ids):
     """Scan root directory and submit separate parser jobs"""
-    ctx.parent.params["nmax"] = sys.maxsize  # disable maximum launchers to determine parser jobs
+    ctx.parent.params[
+        "nmax"
+    ] = sys.maxsize  # disable maximum launchers to determine parser jobs
     run = ctx.parent.parent.params["run"]
     directory = ctx.parent.params["directory"]
     check_pattern()
@@ -533,13 +573,19 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
     target = ctx.obj["CLIENT"]
     snl_collection = target.db.snls_user
     collection_count = target.collection.estimated_document_count()
-    logger.info(f"Connected to {target.collection.full_name} with {collection_count} tasks.")
-    ensure_indexes(["task_id", "tags", "dir_name", "retired_task_id"], [target.collection])
+    logger.info(
+        f"Connected to {target.collection.full_name} with {collection_count} tasks."
+    )
+    ensure_indexes(
+        ["task_id", "tags", "dir_name", "retired_task_id"], [target.collection]
+    )
 
     chunk_size = math.ceil(nmax / nproc)
     if nproc > 1 and nmax <= chunk_size:
         nproc = 1
-        logger.warning(f"nmax = {nmax} but chunk size = {chunk_size} -> sequential parsing.")
+        logger.warning(
+            f"nmax = {nmax} but chunk size = {chunk_size} -> sequential parsing."
+        )
 
     from multiprocessing_logging import install_mp_handler
 
@@ -629,7 +675,9 @@ def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C90
 
     pool.close()
     if run:
-        logger.info(f"Successfully parsed and inserted {count}/{gen.value} tasks in {directory}.")
+        logger.info(
+            f"Successfully parsed and inserted {count}/{gen.value} tasks in {directory}."
+        )
         if sep_tid:
             target.collection.delete_one({"task_id": sep_tid})
             logger.info(f"Removed separator task {sep_tid}.")

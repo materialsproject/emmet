@@ -31,9 +31,12 @@ class BondingDoc(PropertyDoc):
         description="Dictionary of statistics of bonds in structure "
         "with keys all_weights, min, max, mean and variance."
     )
-    coordination_envs: List[str] = Field(description="List of co-ordination environments, e.g. ['Mo-S(6)', 'S-Mo(3)'].")
+    coordination_envs: List[str] = Field(
+        description="List of co-ordination environments, e.g. ['Mo-S(6)', 'S-Mo(3)']."
+    )
     coordination_envs_anonymous: List[str] = Field(
-        description="List of co-ordination environments without elements " "present, e.g. ['A-B(6)', 'A-B(3)']."
+        description="List of co-ordination environments without elements "
+        "present, e.g. ['A-B(6)', 'A-B(3)']."
     )
 
     @classmethod
@@ -60,7 +63,8 @@ class BondingDoc(PropertyDoc):
 
         bonding_info = None
         preferred_methods = [  # type: ignore
-            AVAILABLE_METHODS[method]() if isinstance(method, str) else method for method in preferred_methods
+            AVAILABLE_METHODS[method]() if isinstance(method, str) else method
+            for method in preferred_methods
         ]
 
         for method in preferred_methods:
@@ -82,13 +86,24 @@ class BondingDoc(PropertyDoc):
                     "bond_types": sg.types_and_weights_of_connections,
                     "bond_length_stats": sg.weight_statistics,
                     "coordination_envs": sg.types_of_coordination_environments(),
-                    "coordination_envs_anonymous": sg.types_of_coordination_environments(anonymous=True),
+                    "coordination_envs_anonymous": sg.types_of_coordination_environments(
+                        anonymous=True
+                    ),
                 }
 
                 break
 
             except Exception as e:
-                logging.warning("Failed to calculate bonding: {} {} {}".format(material_id, method, e))
+                logging.warning(
+                    "Failed to calculate bonding: {} {} {}".format(
+                        material_id, method, e
+                    )
+                )
 
         if bonding_info:
-            return super().from_structure(meta_structure=structure, material_id=material_id, **bonding_info, **kwargs)
+            return super().from_structure(
+                meta_structure=structure,
+                material_id=material_id,
+                **bonding_info,
+                **kwargs
+            )

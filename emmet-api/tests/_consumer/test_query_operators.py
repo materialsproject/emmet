@@ -23,7 +23,9 @@ def test_user_settings_post_query():
                 "settings": {"test": "test", "test2": 10},
             }
         }
-        assert new_op.query(consumer_id="test", settings={"test": "test", "test2": 10}) == {
+        assert new_op.query(
+            consumer_id="test", settings={"test": "test", "test2": 10}
+        ) == {
             "criteria": {
                 "consumer_id": "test",
                 "settings": {"test": "test", "test2": 10},

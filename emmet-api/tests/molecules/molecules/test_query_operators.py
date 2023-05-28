@@ -26,14 +26,18 @@ def test_formula_query():
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query("C1 Li2 O3") == {"criteria": {"formula_alphabetical": "C1 Li2 O3"}}
+        assert new_op.query("C1 Li2 O3") == {
+            "criteria": {"formula_alphabetical": "C1 Li2 O3"}
+        }
 
 
 def test_chemsys_query():
     op = ChemsysQuery()
     assert op.query("O-C") == {"criteria": {"chemsys": "C-O"}}
 
-    assert op.query("C-*") == {"criteria": {"nelements": 2, "elements": {"$all": ["C"]}}}
+    assert op.query("C-*") == {
+        "criteria": {"nelements": 2, "elements": {"$all": ["C"]}}
+    }
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
@@ -53,19 +57,23 @@ def test_elements_query():
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(elements=",".join(eles), exclude_elements=",".join(neles)) == {
-            "criteria": {"elements": {"$all": ["C", "O"], "$nin": ["N", "P"]}}
-        }
+        assert new_op.query(
+            elements=",".join(eles), exclude_elements=",".join(neles)
+        ) == {"criteria": {"elements": {"$all": ["C", "O"], "$nin": ["N", "P"]}}}
 
 
 def test_charge_spin_query():
     op = ChargeSpinQuery()
-    assert op.query(charge=1, spin_multiplicity=2) == {"criteria": {"charge": 1, "spin_multiplicity": 2}}
+    assert op.query(charge=1, spin_multiplicity=2) == {
+        "criteria": {"charge": 1, "spin_multiplicity": 2}
+    }
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(charge=1, spin_multiplicity=2) == {"criteria": {"charge": 1, "spin_multiplicity": 2}}
+        assert new_op.query(charge=1, spin_multiplicity=2) == {
+            "criteria": {"charge": 1, "spin_multiplicity": 2}
+        }
 
 
 def test_deprecation_query():
@@ -107,8 +115,12 @@ def test_multi_mpculeid_query():
         }
     }
 
-    assert op.query(molecule_ids="21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2") == {
-        "criteria": {"molecule_id": "21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2"}
+    assert op.query(
+        molecule_ids="21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2"
+    ) == {
+        "criteria": {
+            "molecule_id": "21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2"
+        }
     }
 
     with ScratchDir("."):
@@ -127,15 +139,21 @@ def test_multi_mpculeid_query():
             }
         }
 
-        assert op.query(molecule_ids="21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2") == {
-            "criteria": {"molecule_id": "21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2"}
+        assert op.query(
+            molecule_ids="21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2"
+        ) == {
+            "criteria": {
+                "molecule_id": "21d752f3018fd3c4eba7a9ce7a37b8c8-C1F1Mg1N1O1S2-1-2"
+            }
         }
 
 
 def test_find_molecule_query():
     op = FindMoleculeQuery()
 
-    mol = Molecule.from_file(os.path.join(MAPISettings().TEST_FILES, "test_molecule.xyz"))
+    mol = Molecule.from_file(
+        os.path.join(MAPISettings().TEST_FILES, "test_molecule.xyz")
+    )
     query = {
         "criteria": {
             "composition": dict(mol.composition),

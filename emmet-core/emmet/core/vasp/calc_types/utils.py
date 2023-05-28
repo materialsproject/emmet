@@ -41,13 +41,20 @@ def run_type(parameters: Dict) -> RunType:
     # This is to force an order of evaluation
     for functional_class in ["HF", "VDW", "METAGGA", "GGA"]:
         for special_type, params in _RUN_TYPE_DATA[functional_class].items():
-            if all([_variant_equal(parameters.get(param, None), value) for param, value in params.items()]):
+            if all(
+                [
+                    _variant_equal(parameters.get(param, None), value)
+                    for param, value in params.items()
+                ]
+            ):
                 return RunType(f"{special_type}{is_hubbard}")
 
     return RunType(f"LDA{is_hubbard}")
 
 
-def task_type(inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict]) -> TaskType:
+def task_type(
+    inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict]
+) -> TaskType:
     """
     Determines the task type
 
@@ -65,7 +72,9 @@ def task_type(inputs: Dict[Literal["incar", "poscar", "kpoints", "potcar"], Dict
             kpt_labels = kpts.get("labels") or []
             num_kpt_labels = len(list(filter(None.__ne__, kpt_labels)))
         except Exception as e:
-            raise Exception("Couldn't identify total number of kpt labels: {}".format(e))
+            raise Exception(
+                "Couldn't identify total number of kpt labels: {}".format(e)
+            )
 
         if num_kpt_labels > 0:
             calc_type.append("NSCF Line")

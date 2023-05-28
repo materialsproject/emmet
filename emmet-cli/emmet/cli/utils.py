@@ -302,7 +302,9 @@ def get_vasp_dirs():
 
                 st = os.stat(fn)
                 if not bool(st.st_mode & perms):
-                    raise EmmetCliError(f"Insufficient permissions {st.st_mode} for {fn}.")
+                    raise EmmetCliError(
+                        f"Insufficient permissions {st.st_mode} for {fn}."
+                    )
 
                 if run and not f.endswith(".gz"):
                     fn_gz = fn + ".gz"
@@ -394,7 +396,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
         launcher = get_subdir(vaspdir)
         query = {"dir_name": {"$regex": launcher}}
         manual_taskid = isinstance(task_ids, dict)
-        docs = list(target.collection.find(query, projection).sort([("_id", -1)]).limit(1))
+        docs = list(
+            target.collection.find(query, projection).sort([("_id", -1)]).limit(1)
+        )
 
         if docs:
             if no_dupe_check:
@@ -417,7 +421,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
 
         task_doc["sbxn"] = sbxn
         snl_metas_avail = isinstance(snl_metas, dict)
-        task_id = task_ids.get(launcher) if manual_taskid else task_ids[chunk_idx][count]
+        task_id = (
+            task_ids.get(launcher) if manual_taskid else task_ids[chunk_idx][count]
+        )
 
         if not task_id:
             logger.error(f"Unable to determine task_id for {launcher}")
@@ -454,7 +460,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             logger.warn(validation_doc.warnings)
 
         try:
-            entry = MaterialsProject2020Compatibility().process_entry(task_document.structure_entry)
+            entry = MaterialsProject2020Compatibility().process_entry(
+                task_document.structure_entry
+            )
         except Exception as exc:
             logger.error(f"Unable to apply corrections: {exc}")
             continue
@@ -464,7 +472,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
             snl_meta = snl_metas.get(launcher)
             if snl_meta:
                 references = snl_meta.get("references")
-                authors = snl_meta.get("authors", ["Materials Project <feedback@materialsproject.org>"])
+                authors = snl_meta.get(
+                    "authors", ["Materials Project <feedback@materialsproject.org>"]
+                )
                 kwargs = {"projects": [tag]}
                 if references:
                     kwargs["references"] = references
@@ -538,7 +548,9 @@ def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
                 if target.collection.count_documents(query):
                     if snl_dct:
                         result = snl_collection.insert_one(snl_dct)
-                        logger.info(f"SNL {result.inserted_id} inserted into {snl_collection.full_name}.")
+                        logger.info(
+                            f"SNL {result.inserted_id} inserted into {snl_collection.full_name}."
+                        )
 
                     shutil.rmtree(vaspdir)
                     logger.info(f"{name} Successfully parsed and removed {launcher}.")

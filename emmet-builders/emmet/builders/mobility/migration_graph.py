@@ -53,7 +53,9 @@ class MigrationGraphBuilder(MapBuilder):
             d = None
         else:
             if len(structs) > 1:
-                warnings.append(f"migration graph ambiguous: {len(structs)} possible options")
+                warnings.append(
+                    f"migration graph ambiguous: {len(structs)} possible options"
+                )
             # get hop cutoff distance
             d = get_hop_cutoff(
                 migration_graph_struct=structs[0],

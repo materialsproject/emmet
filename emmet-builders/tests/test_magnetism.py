@@ -27,7 +27,9 @@ def magnetism_store():
 
 
 def test_magnetism_builder(tasks_store, magnetism_store, materials_store):
-    builder = MagneticBuilder(tasks=tasks_store, magnetism=magnetism_store, materials=materials_store)
+    builder = MagneticBuilder(
+        tasks=tasks_store, magnetism=magnetism_store, materials=materials_store
+    )
     builder.run()
 
     assert magnetism_store.count() == 4

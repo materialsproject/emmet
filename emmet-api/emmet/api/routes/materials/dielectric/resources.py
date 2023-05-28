@@ -17,7 +17,9 @@ def dielectric_resource(dielectric_store):
             DielectricQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(DielectricDoc, default_fields=["material_id", "last_updated"]),
+            SparseFieldsQuery(
+                DielectricDoc, default_fields=["material_id", "last_updated"]
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Dielectric"],

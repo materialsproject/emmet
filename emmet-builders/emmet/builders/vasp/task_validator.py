@@ -49,7 +49,9 @@ class TaskValidator(MapBuilder):
                 ) in self.settings.VASP_DEFAULT_INPUT_SETS.items():
                     functional = input_set.CONFIG["POTCAR_FUNCTIONAL"]
                     for potcar_symbol in input_set.CONFIG["POTCAR"].values():
-                        potcar = PotcarSingle.from_symbol_and_functional(symbol=potcar_symbol, functional=functional)
+                        potcar = PotcarSingle.from_symbol_and_functional(
+                            symbol=potcar_symbol, functional=functional
+                        )
                         hashes[calc_type][potcar_symbol] = potcar.get_potcar_hash()
 
                 self.potcar_hashes = potcar_hashes

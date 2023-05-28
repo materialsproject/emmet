@@ -81,13 +81,17 @@ def fix_C_Li_bonds(critic: Dict) -> Dict:
 
     """
     for key in critic["bonding"]:
-        if critic["bonding"][key]["atoms"] == ["Li", "C"] or critic["bonding"][key]["atoms"] == ["C", "Li"]:
+        if critic["bonding"][key]["atoms"] == ["Li", "C"] or critic["bonding"][key][
+            "atoms"
+        ] == ["C", "Li"]:
             if (
                 critic["bonding"][key]["field"] <= 0.02
                 and critic["bonding"][key]["field"] > 0.012
                 and critic["bonding"][key]["distance"] < 2.5
             ):
-                critic["processed"]["bonds"].append([int(entry) - 1 for entry in critic["bonding"][key]["atom_ids"]])
+                critic["processed"]["bonds"].append(
+                    [int(entry) - 1 for entry in critic["bonding"][key]["atom_ids"]]
+                )
     return critic
 
 
@@ -104,13 +108,33 @@ def _bonds_hybridization(nbo: Dict[str, Any], index: int):
             if nbo["hybridization_character"][index]["type"][bond_ind] != "BD":
                 continue
 
-            from_ind = int(nbo["hybridization_character"][index]["atom 1 number"][bond_ind]) - 1
-            to_ind = int(nbo["hybridization_character"][index]["atom 2 number"][bond_ind]) - 1
+            from_ind = (
+                int(nbo["hybridization_character"][index]["atom 1 number"][bond_ind])
+                - 1
+            )
+            to_ind = (
+                int(nbo["hybridization_character"][index]["atom 2 number"][bond_ind])
+                - 1
+            )
 
-            if nbo["hybridization_character"][index]["atom 1 symbol"][bond_ind] in metals:
-                m_contrib = float(nbo["hybridization_character"][index]["atom 1 polarization"][bond_ind])
-            elif nbo["hybridization_character"][index]["atom 2 symbol"][bond_ind] in metals:
-                m_contrib = float(nbo["hybridization_character"][index]["atom 2 polarization"][bond_ind])
+            if (
+                nbo["hybridization_character"][index]["atom 1 symbol"][bond_ind]
+                in metals
+            ):
+                m_contrib = float(
+                    nbo["hybridization_character"][index]["atom 1 polarization"][
+                        bond_ind
+                    ]
+                )
+            elif (
+                nbo["hybridization_character"][index]["atom 2 symbol"][bond_ind]
+                in metals
+            ):
+                m_contrib = float(
+                    nbo["hybridization_character"][index]["atom 2 polarization"][
+                        bond_ind
+                    ]
+                )
             else:
                 m_contrib = None
 
@@ -149,36 +173,94 @@ def _bonds_peturbation(
             coord = False
             m_ind: Optional[int] = None
             x_ind: Optional[int] = None
-            if int(nbo["perturbation_energy"][index]["acceptor atom 1 number"][inter_ind]) - 1 in metal_indices:
+            if (
+                int(
+                    nbo["perturbation_energy"][index]["acceptor atom 1 number"][
+                        inter_ind
+                    ]
+                )
+                - 1
+                in metal_indices
+            ):
                 if (
                     nbo["perturbation_energy"][index]["donor type"][inter_ind] == "LP"
-                    and nbo["perturbation_energy"][index]["acceptor type"][inter_ind] == "LV"
+                    and nbo["perturbation_energy"][index]["acceptor type"][inter_ind]
+                    == "LV"
                 ):
                     coord = True
-                    m_ind = int(nbo["perturbation_energy"][index]["acceptor atom 1 number"][inter_ind]) - 1
-                    x_ind = int(nbo["perturbation_energy"][index]["donor atom 1 number"][inter_ind]) - 1
+                    m_ind = (
+                        int(
+                            nbo["perturbation_energy"][index]["acceptor atom 1 number"][
+                                inter_ind
+                            ]
+                        )
+                        - 1
+                    )
+                    x_ind = (
+                        int(
+                            nbo["perturbation_energy"][index]["donor atom 1 number"][
+                                inter_ind
+                            ]
+                        )
+                        - 1
+                    )
                 elif (
                     nbo["perturbation_energy"][index]["donor type"][inter_ind] == "LP"
-                    and nbo["perturbation_energy"][index]["acceptor type"][inter_ind] == "RY*"
+                    and nbo["perturbation_energy"][index]["acceptor type"][inter_ind]
+                    == "RY*"
                 ):
                     coord = True
-                    m_ind = int(nbo["perturbation_energy"][index]["acceptor atom 1 number"][inter_ind]) - 1
-                    x_ind = int(nbo["perturbation_energy"][index]["donor atom 1 number"][inter_ind]) - 1
-            elif nbo["perturbation_energy"][index]["donor atom 1 number"][inter_ind] - 1 in metal_indices:
+                    m_ind = (
+                        int(
+                            nbo["perturbation_energy"][index]["acceptor atom 1 number"][
+                                inter_ind
+                            ]
+                        )
+                        - 1
+                    )
+                    x_ind = (
+                        int(
+                            nbo["perturbation_energy"][index]["donor atom 1 number"][
+                                inter_ind
+                            ]
+                        )
+                        - 1
+                    )
+            elif (
+                nbo["perturbation_energy"][index]["donor atom 1 number"][inter_ind] - 1
+                in metal_indices
+            ):
                 if (
                     nbo["perturbation_energy"][index]["donor type"][inter_ind] == "LP"
-                    and nbo["perturbation_energy"][index]["acceptor type"][inter_ind] == "LV"
+                    and nbo["perturbation_energy"][index]["acceptor type"][inter_ind]
+                    == "LV"
                 ):
                     coord = True
-                    m_ind = int(nbo["perturbation_energy"][index]["donor atom 1 number"][inter_ind]) - 1
-                    x_ind = int(nbo["perturbation_energy"][index]["acceptor atom 1 number"][inter_ind]) - 1
+                    m_ind = (
+                        int(
+                            nbo["perturbation_energy"][index]["donor atom 1 number"][
+                                inter_ind
+                            ]
+                        )
+                        - 1
+                    )
+                    x_ind = (
+                        int(
+                            nbo["perturbation_energy"][index]["acceptor atom 1 number"][
+                                inter_ind
+                            ]
+                        )
+                        - 1
+                    )
 
             if not coord:
                 continue
             elif x_ind not in poss_coord[m_ind]:
                 continue
 
-            energy = float(nbo["perturbation_energy"][index]["perturbation energy"][inter_ind])
+            energy = float(
+                nbo["perturbation_energy"][index]["perturbation energy"][inter_ind]
+            )
             if energy >= energy_cutoff:
                 bonds.add((x_ind, m_ind, "electrostatic"))
     return bonds
@@ -212,11 +294,15 @@ def nbo_molecule_graph(mol: Molecule, nbo: Dict[str, Any]):
             if i != j and val < distance_cutoff:
                 poss_coord[i].append(j)
 
-    new_alpha_bonds = _bonds_peturbation(nbo, 0, poss_coord, energy_cutoff, metal_indices)
+    new_alpha_bonds = _bonds_peturbation(
+        nbo, 0, poss_coord, energy_cutoff, metal_indices
+    )
     alpha_bonds = alpha_bonds.union(new_alpha_bonds)
 
     if mol.spin_multiplicity != 1:
-        new_beta_bonds = _bonds_peturbation(nbo, 1, poss_coord, energy_cutoff, metal_indices)
+        new_beta_bonds = _bonds_peturbation(
+            nbo, 1, poss_coord, energy_cutoff, metal_indices
+        )
         beta_bonds = beta_bonds.union(new_beta_bonds)
 
     sorted_alpha = set([tuple(sorted([a[0], a[1]])) for a in alpha_bonds])
@@ -315,7 +401,10 @@ class MoleculeBondingDoc(PropertyDoc):
             if (
                 m == "nbo"
                 and task.output.nbo is not None
-                and (task.orig["rem"].get("run_nbo6", False) or task.orig["rem"].get("nbo_external", False))
+                and (
+                    task.orig["rem"].get("run_nbo6", False)
+                    or task.orig["rem"].get("nbo_external", False)
+                )
             ):
                 method = "nbo"
                 mg, warnings = nbo_molecule_graph(mol, task.output.nbo)

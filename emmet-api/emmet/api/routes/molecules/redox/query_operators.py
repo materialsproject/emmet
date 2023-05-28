@@ -11,10 +11,18 @@ class RedoxPotentialQuery(QueryOperator):
 
     def query(
         self,
-        min_reduction_potential: Optional[float] = Query(None, description="Minimum reduction potential."),
-        max_reduction_potential: Optional[float] = Query(None, description="Maximum reduction potential."),
-        min_oxidation_potential: Optional[float] = Query(None, description="Minimum oxidation potential."),
-        max_oxidation_potential: Optional[float] = Query(None, description="Maximum oxidation potential."),
+        min_reduction_potential: Optional[float] = Query(
+            None, description="Minimum reduction potential."
+        ),
+        max_reduction_potential: Optional[float] = Query(
+            None, description="Maximum reduction potential."
+        ),
+        min_oxidation_potential: Optional[float] = Query(
+            None, description="Minimum oxidation potential."
+        ),
+        max_oxidation_potential: Optional[float] = Query(
+            None, description="Maximum oxidation potential."
+        ),
     ) -> STORE_PARAMS:
         crit: Dict[str, Any] = dict()  # type: ignore
 

@@ -3,7 +3,9 @@ from typing import Union
 
 
 mpid_regex = re.compile(r"^([A-Za-z]*-)?(\d+)(-[A-Za-z0-9]+)*$")
-mpculeid_regex = re.compile(r"^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$")
+mpculeid_regex = re.compile(
+    r"^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$"
+)
 
 
 class MPID(str):
@@ -38,7 +40,9 @@ class MPID(str):
             self.string = val
 
         else:
-            raise ValueError("Must provide an MPID, int, or string of the format prefix-number")
+            raise ValueError(
+                "Must provide an MPID, int, or string of the format prefix-number"
+            )
 
     def __eq__(self, other: object):
         if isinstance(other, MPID):
@@ -155,7 +159,9 @@ class MPculeID(str):
     def __lt__(self, other: Union["MPculeID", str]):
         other_parts = MPculeID(other).parts
 
-        return "-".join([str(x) for x in self.parts[-4:]]) < "-".join([str(x) for x in other_parts[-4:]])
+        return "-".join([str(x) for x in self.parts[-4:]]) < "-".join(
+            [str(x) for x in other_parts[-4:]]
+        )
 
     def __gt__(self, other: Union["MPculeID", str]):
         return not self.__lt__(other)
@@ -173,7 +179,8 @@ class MPculeID(str):
             pattern=r"^^([A-Za-z]+-)?([A-Fa-f0-9]+)-([A-Za-z0-9]+)-(m?[0-9]+)-([0-9]+)$",
             examples=[
                 "1a525231bdac3f13e2fac0962fe8d053-Mg1-0-1",
-                "22b40b99719ac570fc7e6225e855ec6e-F5Li1P1-m1-2" "mpcule-b9ba54febc77d2a9177accf4605767db-C1H41-2",
+                "22b40b99719ac570fc7e6225e855ec6e-F5Li1P1-m1-2"
+                "mpcule-b9ba54febc77d2a9177accf4605767db-C1H41-2",
             ],
         )
 

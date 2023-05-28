@@ -45,7 +45,9 @@ def test_chemsys_query():
     op = ChemsysQuery()
     assert op.query("Si-O") == {"criteria": {"chemsys": "O-Si"}}
 
-    assert op.query("Si-*") == {"criteria": {"nelements": 2, "elements": {"$all": ["Si"]}}}
+    assert op.query("Si-*") == {
+        "criteria": {"nelements": 2, "elements": {"$all": ["Si"]}}
+    }
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
@@ -65,9 +67,9 @@ def test_elements_query():
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(elements=",".join(eles), exclude_elements=",".join(neles)) == {
-            "criteria": {"elements": {"$all": ["Si", "O"], "$nin": ["N", "P"]}}
-        }
+        assert new_op.query(
+            elements=",".join(eles), exclude_elements=",".join(neles)
+        ) == {"criteria": {"elements": {"$all": ["Si", "O"], "$nin": ["N", "P"]}}}
 
 
 def test_deprecation_query():
@@ -112,34 +114,53 @@ def test_symmetry_query():
 
 def test_multi_task_id_query():
     op = MultiTaskIDQuery()
-    assert op.query(task_ids="mp-149, mp-13") == {"criteria": {"task_ids": {"$in": ["mp-149", "mp-13"]}}}
+    assert op.query(task_ids="mp-149, mp-13") == {
+        "criteria": {"task_ids": {"$in": ["mp-149", "mp-13"]}}
+    }
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(task_ids="mp-149, mp-13") == {"criteria": {"task_ids": {"$in": ["mp-149", "mp-13"]}}}
+        assert new_op.query(task_ids="mp-149, mp-13") == {
+            "criteria": {"task_ids": {"$in": ["mp-149", "mp-13"]}}
+        }
 
 
 def test_multi_material_id_query():
     op = MultiMaterialIDQuery()
-    assert op.query(material_ids="mp-149, mp-13") == {"criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}}
+    assert op.query(material_ids="mp-149, mp-13") == {
+        "criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}
+    }
 
     assert op.query(material_ids="mp-149") == {"criteria": {"material_id": "mp-149"}}
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(material_ids="mp-149, mp-13") == {"criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}}
+        assert new_op.query(material_ids="mp-149, mp-13") == {
+            "criteria": {"material_id": {"$in": ["mp-149", "mp-13"]}}
+        }
 
-        assert op.query(material_ids="mp-149") == {"criteria": {"material_id": "mp-149"}}
+        assert op.query(material_ids="mp-149") == {
+            "criteria": {"material_id": "mp-149"}
+        }
 
 
 def test_find_structure_query():
     op = FindStructureQuery()
 
-    structure = Structure.from_file(os.path.join(MAPISettings().TEST_FILES, "Si_mp_149.cif"))
-    query = {"criteria": {"composition_reduced": dict(structure.composition.to_reduced_dict)}}
-    assert op.query(structure=structure.as_dict(), ltol=0.2, stol=0.3, angle_tol=5, _limit=1) == query
+    structure = Structure.from_file(
+        os.path.join(MAPISettings().TEST_FILES, "Si_mp_149.cif")
+    )
+    query = {
+        "criteria": {"composition_reduced": dict(structure.composition.to_reduced_dict)}
+    }
+    assert (
+        op.query(
+            structure=structure.as_dict(), ltol=0.2, stol=0.3, angle_tol=5, _limit=1
+        )
+        == query
+    )
 
     docs = [{"structure": structure.as_dict(), "material_id": "mp-149"}]
 

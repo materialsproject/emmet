@@ -108,7 +108,9 @@ class ElementsQuery(QueryOperator):
 
         if exclude_elements:
             try:
-                element_list = [Element(e.strip()) for e in exclude_elements.strip().split(",")]
+                element_list = [
+                    Element(e.strip()) for e in exclude_elements.strip().split(",")
+                ]
             except ValueError:
                 raise HTTPException(
                     status_code=400,
@@ -134,7 +136,9 @@ class ChargeSpinQuery(QueryOperator):
             None,
             description="Query by molecular charge",
         ),
-        spin_multiplicity: Optional[int] = Query(None, description="Query by molecular spin multiplicity."),
+        spin_multiplicity: Optional[int] = Query(
+            None, description="Query by molecular spin multiplicity."
+        ),
     ) -> STORE_PARAMS:
         crit = {}
 
@@ -176,13 +180,21 @@ class MultiTaskIDQuery(QueryOperator):
 
     def query(
         self,
-        task_ids: Optional[str] = Query(None, description="Comma-separated list of task_ids to query on"),
+        task_ids: Optional[str] = Query(
+            None, description="Comma-separated list of task_ids to query on"
+        ),
     ) -> STORE_PARAMS:
         crit = {}
 
         if task_ids:
             # TODO: do task_ids need to be converted to ints?
-            crit.update({"task_ids": {"$in": [task_id.strip() for task_id in task_ids.split(",")]}})
+            crit.update(
+                {
+                    "task_ids": {
+                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
+                    }
+                }
+            )
 
         return {"criteria": crit}
 
@@ -197,12 +209,16 @@ class MultiMPculeIDQuery(QueryOperator):
 
     def query(
         self,
-        molecule_ids: Optional[str] = Query(None, description="Comma-separated list of MPculeIDs to query on"),
+        molecule_ids: Optional[str] = Query(
+            None, description="Comma-separated list of MPculeIDs to query on"
+        ),
     ) -> STORE_PARAMS:
         crit = {}  # type: dict
 
         if molecule_ids:
-            molecule_ids_list = [mpcule_id.strip() for mpcule_id in molecule_ids.split(",")]
+            molecule_ids_list = [
+                mpcule_id.strip() for mpcule_id in molecule_ids.split(",")
+            ]
 
             if len(molecule_ids_list) == 1:
                 crit.update({"molecule_id": molecule_ids_list[0]})
@@ -332,7 +348,9 @@ class CalcMethodQuery(QueryOperator):
             description="String representing the combination of level of theory and solvent. Default is None,"
             "meaning lot_solvent will not be queried.",
         ),
-        _limit: int = Query(100, description="Maximum number of matches to show. Defaults to 100."),
+        _limit: int = Query(
+            100, description="Maximum number of matches to show. Defaults to 100."
+        ),
     ):
         self._limit = _limit
         self.level_of_theory = level_of_theory
@@ -392,7 +410,9 @@ class ExactCalcMethodQuery(QueryOperator):
             description="String representing the combination of level of theory and solvent. Default is None,"
             "meaning lot_solvent will not be queried.",
         ),
-        _limit: int = Query(100, description="Maximum number of matches to show. Defaults to 100."),
+        _limit: int = Query(
+            100, description="Maximum number of matches to show. Defaults to 100."
+        ),
     ):
         self._limit = _limit
         self.level_of_theory = level_of_theory
@@ -427,8 +447,12 @@ class HashQuery(QueryOperator):
 
     def query(
         self,
-        species_hash: Optional[str] = Query(None, description="Graph hash augmented with node species"),
-        coord_hash: Optional[str] = Query(None, description="Graph hash augmented with node XYZ coordinates"),
+        species_hash: Optional[str] = Query(
+            None, description="Graph hash augmented with node species"
+        ),
+        coord_hash: Optional[str] = Query(
+            None, description="Graph hash augmented with node XYZ coordinates"
+        ),
     ):
         crit = dict()
 

@@ -20,7 +20,9 @@ def open_shell(test_dir):
 
 def test_orbital(closed_shell, open_shell):
     # Test closed-shell NBO parsing
-    doc = OrbitalDoc.from_task(closed_shell, "b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False)
+    doc = OrbitalDoc.from_task(
+        closed_shell, "b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False
+    )
 
     assert doc.property_name == "natural bonding orbitals"
     assert doc.open_shell is False
@@ -42,7 +44,9 @@ def test_orbital(closed_shell, open_shell):
     assert doc.beta_population is None
 
     # Test open-shell NBO parsing
-    doc = OrbitalDoc.from_task(open_shell, "b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False)
+    doc = OrbitalDoc.from_task(
+        open_shell, "b9ba54febc77d2a9177accf4605767db-C1Li2O3-1-2", deprecated=False
+    )
 
     assert doc.open_shell is True
 

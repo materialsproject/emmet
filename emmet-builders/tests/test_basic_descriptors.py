@@ -20,7 +20,9 @@ def materials_store(tasks_store):
 
 def test_basic_descriptions(materials_store):
     descriptors_store = MemoryStore()
-    builder = BasicDescriptorsBuilder(materials=materials_store, descriptors=descriptors_store)
+    builder = BasicDescriptorsBuilder(
+        materials=materials_store, descriptors=descriptors_store
+    )
     builder.run()
 
     print(descriptors_store.query_one({}))

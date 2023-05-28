@@ -38,7 +38,9 @@ def phase_diagram_store():
 
 
 def test_corrected_entries_builder(corrected_entries_store, materials_store):
-    builder = CorrectedEntriesBuilder(materials=materials_store, corrected_entries=corrected_entries_store)
+    builder = CorrectedEntriesBuilder(
+        materials=materials_store, corrected_entries=corrected_entries_store
+    )
     builder.run()
 
     assert corrected_entries_store.count() == 1

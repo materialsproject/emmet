@@ -92,11 +92,19 @@ class OrbitalBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
+        all_mols = list(
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
+        )
 
         processed_docs = set([e for e in self.orbitals.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
+        to_process_forms = {
+            d["formula_alphabetical"]
+            for d in all_mols
+            if d[self.molecules.key] in to_process_docs
+        }
 
         N = ceil(len(to_process_forms) / number_splits)
 
@@ -125,11 +133,19 @@ class OrbitalBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
+        all_mols = list(
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
+        )
 
         processed_docs = set([e for e in self.orbitals.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
+        to_process_forms = {
+            d["formula_alphabetical"]
+            for d in all_mols
+            if d[self.molecules.key] in to_process_docs
+        }
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
         self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
@@ -164,7 +180,10 @@ class OrbitalBuilder(Builder):
 
         for mol in mols:
             correct_charge_spin = [
-                e for e in mol.entries if e["charge"] == mol.charge and e["spin_multiplicity"] == mol.spin_multiplicity
+                e
+                for e in mol.entries
+                if e["charge"] == mol.charge
+                and e["spin_multiplicity"] == mol.spin_multiplicity
             ]
 
             # Must have NBO, and must specifically use NBO7
@@ -172,7 +191,10 @@ class OrbitalBuilder(Builder):
                 e
                 for e in correct_charge_spin
                 if e["output"]["nbo"] is not None
-                and (e["orig"]["rem"].get("run_nbo6", False) or e["orig"]["rem"].get("nbo_external", False))
+                and (
+                    e["orig"]["rem"].get("run_nbo6", False)
+                    or e["orig"]["rem"].get("nbo_external", False)
+                )
             ]
 
             # Organize by solvent environment
@@ -224,7 +246,9 @@ class OrbitalBuilder(Builder):
                         if task_doc is None:
                             continue
 
-                        orbital_doc = OrbitalDoc.from_task(task_doc, molecule_id=mol.molecule_id, deprecated=False)
+                        orbital_doc = OrbitalDoc.from_task(
+                            task_doc, molecule_id=mol.molecule_id, deprecated=False
+                        )
 
                         if orbital_doc is not None:
                             orbital_docs.append(orbital_doc)

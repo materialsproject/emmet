@@ -92,7 +92,9 @@ class ElasticityBuilder(Builder):
 
         self.ensure_index()
 
-        cursor = self.materials.query(criteria=self.query, properties=["material_id", "calc_types", "task_ids"])
+        cursor = self.materials.query(
+            criteria=self.query, properties=["material_id", "calc_types", "task_ids"]
+        )
 
         # query for tasks
         query = self.query.copy()
@@ -120,7 +122,9 @@ class ElasticityBuilder(Builder):
 
             yield material_id, calc_types, tasks
 
-    def process_item(self, item: Tuple[MPID, Dict[str, str], List[Dict]]) -> Union[Dict, None]:
+    def process_item(
+        self, item: Tuple[MPID, Dict[str, str], List[Dict]]
+    ) -> Union[Dict, None]:
         """
         Process all tasks belong to the same material into an elasticity doc.
 
@@ -159,17 +163,23 @@ class ElasticityBuilder(Builder):
 
         # select one task for each set of optimization tasks with the same lattice
         opt_grouped_tmp = group_by_parent_lattice(opt_tasks, mode="opt")
-        opt_grouped = [(lattice, filter_opt_tasks_by_time(tasks, self.logger)) for lattice, tasks in opt_grouped_tmp]
+        opt_grouped = [
+            (lattice, filter_opt_tasks_by_time(tasks, self.logger))
+            for lattice, tasks in opt_grouped_tmp
+        ]
 
         # for deformed tasks with the same lattice, select one if there are multiple
         # tasks with the same deformation
         deform_grouped = group_by_parent_lattice(deform_tasks, mode="deform")
         deform_grouped = [
-            (lattice, filter_deform_tasks_by_time(tasks, logger=self.logger)) for lattice, tasks in deform_grouped
+            (lattice, filter_deform_tasks_by_time(tasks, logger=self.logger))
+            for lattice, tasks in deform_grouped
         ]
 
         # select opt and deform tasks for fitting
-        final_opt, final_deform = select_final_opt_deform_tasks(opt_grouped, deform_grouped, self.logger)
+        final_opt, final_deform = select_final_opt_deform_tasks(
+            opt_grouped, deform_grouped, self.logger
+        )
         if final_opt is None or final_deform is None:
             return None
 
@@ -179,7 +189,11 @@ class ElasticityBuilder(Builder):
         deform_task_ids = []
         deform_dir_names = []
         for doc in final_deform:
-            deforms.append(Deformation(doc["transmuter"]["transformation_params"][0]["deformation"]))
+            deforms.append(
+                Deformation(
+                    doc["transmuter"]["transformation_params"][0]["deformation"]
+                )
+            )
             # 0.1 to convert to GPa from kBar, and the minus sign to flip the stress
             # direction from compressive as positive (in vasp) to tensile as positive
             stresses.append(-0.1 * Stress(doc["output"]["stress"]))
@@ -243,13 +257,18 @@ def filter_deform_tasks(
     for t in tasks:
         if calc_types[str(t["task_id"])] == target_calc_type:
             transforms = t["transmuter"]["transformations"]
-            if len(transforms) == 1 and transforms[0] == "DeformStructureTransformation":
+            if (
+                len(transforms) == 1
+                and transforms[0] == "DeformStructureTransformation"
+            ):
                 deform_tasks.append(t)
 
     return deform_tasks
 
 
-def filter_by_incar_settings(tasks: List[Dict], incar_settings: Optional[Dict[str, Any]] = None) -> List[Dict]:
+def filter_by_incar_settings(
+    tasks: List[Dict], incar_settings: Optional[Dict[str, Any]] = None
+) -> List[Dict]:
     """
     Filter tasks by incar parameters.
     """
@@ -306,7 +325,9 @@ def filter_opt_tasks_by_time(tasks: List[Dict], logger) -> Dict:
     return _filter_tasks_by_time(tasks, "optimization", logger)
 
 
-def filter_deform_tasks_by_time(tasks: List[Dict], deform_comp_tol: float = 1e-5, logger=None) -> List[Dict]:
+def filter_deform_tasks_by_time(
+    tasks: List[Dict], deform_comp_tol: float = 1e-5, logger=None
+) -> List[Dict]:
     """
     For deformation tasks with the same deformation, select the latest completed one.
 
@@ -406,7 +427,10 @@ def select_final_opt_deform_tasks(
             tasks.extend(pair[1])
 
         ids = [t["task_id"] for t in tasks]
-        logger.warning(f"Cannot find optimization and deformation tasks that match by lattice " f"for tasks {ids}")
+        logger.warning(
+            f"Cannot find optimization and deformation tasks that match by lattice "
+            f"for tasks {ids}"
+        )
 
         final_opt_task = None
         final_deform_tasks = None

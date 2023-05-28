@@ -112,11 +112,19 @@ class RedoxBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
+        all_mols = list(
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
+        )
 
         processed_docs = set([e for e in self.redox.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
+        to_process_forms = {
+            d["formula_alphabetical"]
+            for d in all_mols
+            if d[self.molecules.key] in to_process_docs
+        }
 
         N = ceil(len(to_process_forms) / number_splits)
 
@@ -145,11 +153,19 @@ class RedoxBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
+        all_mols = list(
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
+        )
 
         processed_docs = set([e for e in self.redox.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
+        to_process_forms = {
+            d["formula_alphabetical"]
+            for d in all_mols
+            if d[self.molecules.key] in to_process_docs
+        }
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
         self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
@@ -191,7 +207,10 @@ class RedoxBuilder(Builder):
 
             for gg in graph_group:
                 # First, grab relevant MoleculeThermoDocs and identify possible IE/EA single-points
-                thermo_docs = [MoleculeThermoDoc(**e) for e in self.thermo.query({"molecule_id": gg.molecule_id})]
+                thermo_docs = [
+                    MoleculeThermoDoc(**e)
+                    for e in self.thermo.query({"molecule_id": gg.molecule_id})
+                ]
 
                 if len(thermo_docs) == 0:
                     # Current building scheme requires a MoleculeThermoDoc
@@ -265,7 +284,9 @@ class RedoxBuilder(Builder):
 
                     ea_tasks.append(TaskDocument(**tdoc))
 
-                grouped_docs = self._collect_by_lot_solvent(thermo_docs, ie_tasks, ea_tasks)
+                grouped_docs = self._collect_by_lot_solvent(
+                    thermo_docs, ie_tasks, ea_tasks
+                )
                 if gg.charge in charges:
                     charges[gg.charge].append((gg, grouped_docs))
                 else:
@@ -288,12 +309,18 @@ class RedoxBuilder(Builder):
 
                         for rmol, rdocs in red_coll:
                             if lot_solv in rdocs:
-                                if rdocs[lot_solv]["thermo_doc"].combined_lot_solvent == combined:
+                                if (
+                                    rdocs[lot_solv]["thermo_doc"].combined_lot_solvent
+                                    == combined
+                                ):
                                     relevant_red.append(rdocs[lot_solv])
 
                         for omol, odocs in ox_coll:
                             if lot_solv in odocs:
-                                if odocs[lot_solv]["thermo_doc"].combined_lot_solvent == combined:
+                                if (
+                                    odocs[lot_solv]["thermo_doc"].combined_lot_solvent
+                                    == combined
+                                ):
                                     relevant_ox.append(odocs[lot_solv])
 
                         # Take best options (based on electronic energy), where available
@@ -303,9 +330,7 @@ class RedoxBuilder(Builder):
                             red_doc = sorted(
                                 relevant_red,
                                 key=lambda x: x["thermo_doc"].electronic_energy,
-                            )[
-                                0
-                            ]["thermo_doc"]
+                            )[0]["thermo_doc"]
 
                         if len(relevant_ox) == 0:
                             ox_doc = None
@@ -313,9 +338,7 @@ class RedoxBuilder(Builder):
                             ox_doc = sorted(
                                 relevant_ox,
                                 key=lambda x: x["thermo_doc"].electronic_energy,
-                            )[
-                                0
-                            ]["thermo_doc"]
+                            )[0]["thermo_doc"]
 
                         ea_doc = docset.get("ea_doc")
                         ie_doc = docset.get("ie_doc")
@@ -333,7 +356,9 @@ class RedoxBuilder(Builder):
 
         self.logger.debug(f"Produced {len(redox_docs)} redox docs for {formula}")
 
-        return jsanitize([doc.dict() for doc in redox_docs if doc is not None], allow_bson=True)
+        return jsanitize(
+            [doc.dict() for doc in redox_docs if doc is not None], allow_bson=True
+        )
 
     def update_targets(self, items: List[List[Dict]]):
         """

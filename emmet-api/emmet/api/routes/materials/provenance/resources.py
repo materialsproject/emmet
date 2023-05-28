@@ -17,7 +17,9 @@ def provenance_resource(provenance_store):
             MultiMaterialIDQuery(),
             DeprecationQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(ProvenanceDoc, default_fields=["material_id", "last_updated"]),
+            SparseFieldsQuery(
+                ProvenanceDoc, default_fields=["material_id", "last_updated"]
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Provenance"],

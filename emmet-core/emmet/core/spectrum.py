@@ -33,4 +33,6 @@ class SpectrumDoc(StructureMetadata):
         default_factory=datetime.utcnow,
     )
 
-    warnings: List[str] = Field([], description="Any warnings related to this property.")
+    warnings: List[str] = Field(
+        [], description="Any warnings related to this property."
+    )

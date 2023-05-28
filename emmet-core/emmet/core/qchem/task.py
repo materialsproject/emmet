@@ -41,18 +41,30 @@ class OutputSummary(BaseModel):
     initial_molecule: Molecule = Field(None, description="Input Molecule object")
     optimized_molecule: Molecule = Field(None, description="Optimized Molecule object")
 
-    final_energy: float = Field(None, description="Final electronic energy for the calculation (units: Hartree)")
-    enthalpy: float = Field(None, description="Total enthalpy of the molecule (units: kcal/mol)")
-    entropy: float = Field(None, description="Total entropy of the molecule (units: cal/mol-K")
+    final_energy: float = Field(
+        None, description="Final electronic energy for the calculation (units: Hartree)"
+    )
+    enthalpy: float = Field(
+        None, description="Total enthalpy of the molecule (units: kcal/mol)"
+    )
+    entropy: float = Field(
+        None, description="Total entropy of the molecule (units: cal/mol-K"
+    )
 
-    mulliken: List[Any] = Field(None, description="Mulliken atomic partial charges and partial spins")
+    mulliken: List[Any] = Field(
+        None, description="Mulliken atomic partial charges and partial spins"
+    )
     resp: List[float] = Field(
         None,
         description="Restrained Electrostatic Potential (RESP) atomic partial charges",
     )
-    nbo: Dict[str, Any] = Field(None, description="Natural Bonding Orbital (NBO) output")
+    nbo: Dict[str, Any] = Field(
+        None, description="Natural Bonding Orbital (NBO) output"
+    )
 
-    frequencies: List[float] = Field(None, description="Vibrational frequencies of the molecule (units: cm^-1)")
+    frequencies: List[float] = Field(
+        None, description="Vibrational frequencies of the molecule (units: cm^-1)"
+    )
 
     def as_dict(self) -> Dict[str, Any]:
         return {
@@ -78,21 +90,33 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     calc_code = "Q-Chem"
     completed = True
 
-    is_valid: bool = Field(True, description="Whether this task document passed validation or not")
+    is_valid: bool = Field(
+        True, description="Whether this task document passed validation or not"
+    )
     state: QChemStatus = Field(None, description="State of this calculation")
 
     cputime: float = Field(None, description="The system CPU time in seconds")
     walltime: float = Field(None, description="The real elapsed time in seconds")
 
-    calcs_reversed: List[Dict] = Field([], description="The 'raw' calculation docs used to assembled this task")
+    calcs_reversed: List[Dict] = Field(
+        [], description="The 'raw' calculation docs used to assembled this task"
+    )
 
-    orig: Dict[str, Any] = Field({}, description="Summary of the original Q-Chem inputs")
+    orig: Dict[str, Any] = Field(
+        {}, description="Summary of the original Q-Chem inputs"
+    )
     output = Field(OutputSummary())
 
-    critic2: Dict[str, Any] = Field(None, description="Output from Critic2 critical point analysis code")
-    custom_smd: str = Field(None, description="Parameter string for SMD implicit solvent model")
+    critic2: Dict[str, Any] = Field(
+        None, description="Output from Critic2 critical point analysis code"
+    )
+    custom_smd: str = Field(
+        None, description="Parameter string for SMD implicit solvent model"
+    )
 
-    special_run_type: str = Field(None, description="Special workflow name (if applicable)")
+    special_run_type: str = Field(
+        None, description="Special workflow name (if applicable)"
+    )
 
     smiles: str = Field(
         None,
@@ -102,11 +126,13 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
 
     species_hash: str = Field(
         None,
-        description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph " "node attribute.",
+        description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
+        "node attribute.",
     )
     coord_hash: str = Field(
         None,
-        description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph " "node attribute.",
+        description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph "
+        "node attribute.",
     )
 
     # TODO - type of `tags` field seems to differ among task databases
@@ -114,7 +140,9 @@ class TaskDocument(BaseTaskDocument, MoleculeMetadata):
     # left as Any here to ensure tags don't cause validation to fail.
     tags: Any = Field(None, description="Metadata tags")
 
-    warnings: Dict[str, bool] = Field(None, description="Any warnings related to this task document")
+    warnings: Dict[str, bool] = Field(
+        None, description="Any warnings related to this task document"
+    )
 
     @property
     def level_of_theory(self) -> LevelOfTheory:

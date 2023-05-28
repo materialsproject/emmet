@@ -25,7 +25,9 @@ def base_thermo(test_dir):
 
 @pytest.fixture(scope="session")
 def charges(test_dir):
-    charges = loadfn((test_dir / "metal_binding_doc" / "partial_charges.json").as_posix())
+    charges = loadfn(
+        (test_dir / "metal_binding_doc" / "partial_charges.json").as_posix()
+    )
     charges_doc = PartialChargesDoc(**charges)
     return charges_doc
 
@@ -58,7 +60,9 @@ def nometal_thermo(test_dir):
     return nometal_thermo_doc
 
 
-def test_metal_binding(base_mol, charges, spins, bonds, base_thermo, metal_thermo, nometal_thermo):
+def test_metal_binding(
+    base_mol, charges, spins, bonds, base_thermo, metal_thermo, nometal_thermo
+):
     metal_binding = MetalBindingDoc.from_docs(
         method="mulliken-OB-mee",
         metal_indices=[5],
@@ -74,7 +78,11 @@ def test_metal_binding(base_mol, charges, spins, bonds, base_thermo, metal_therm
     assert metal_binding.binding_data[0].metal_index == 5
     assert metal_binding.binding_data[0].metal_element == "Li"
 
-    assert metal_binding.binding_data[0].metal_partial_charge == pytest.approx(-0.073376)
+    assert metal_binding.binding_data[0].metal_partial_charge == pytest.approx(
+        -0.073376
+    )
     assert metal_binding.binding_data[0].metal_assigned_charge == 0
     assert metal_binding.binding_data[0].metal_assigned_spin == 2
-    assert metal_binding.binding_data[0].binding_free_energy == pytest.approx(1.23790290567376)
+    assert metal_binding.binding_data[0].binding_free_energy == pytest.approx(
+        1.23790290567376
+    )

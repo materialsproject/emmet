@@ -16,7 +16,9 @@ def test_tasks(test_dir):
         data = json.load(f)
 
     for d in data:
-        d["last_updated"] = datetime.datetime.strptime(d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f")
+        d["last_updated"] = datetime.datetime.strptime(
+            d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f"
+        )
 
     tasks = [TaskDocument(**t) for t in data]
     return tasks
@@ -68,7 +70,10 @@ def test_partial_charges(test_tasks):
     )
 
     assert pcd.method == "nbo"
-    nbo_charges = [float(test_tasks[4].output.nbo["natural_populations"][0]["Charge"][str(i)]) for i in range(11)]
+    nbo_charges = [
+        float(test_tasks[4].output.nbo["natural_populations"][0]["Charge"][str(i)])
+        for i in range(11)
+    ]
     assert pcd.partial_charges == nbo_charges
 
 
@@ -92,5 +97,8 @@ def test_partial_spins(open_shell):
     )
 
     assert psd.method == "nbo"
-    spins = [float(open_shell.output.nbo["natural_populations"][0]["Density"][str(i)]) for i in range(11)]
+    spins = [
+        float(open_shell.output.nbo["natural_populations"][0]["Density"][str(i)])
+        for i in range(11)
+    ]
     assert psd.partial_spins == spins

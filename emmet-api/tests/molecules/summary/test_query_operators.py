@@ -19,7 +19,9 @@ def test_mpcules_ids_query():
     }
 
     assert (
-        op.query(molecule_ids="33fb88e526387337e0da25143057bb88-C2F4-1-2, d24850a2bbca341571cf57d3e2025837-C4H2-m2-3")
+        op.query(
+            molecule_ids="33fb88e526387337e0da25143057bb88-C2F4-1-2, d24850a2bbca341571cf57d3e2025837-C4H2-m2-3"
+        )
         == query
     )
 

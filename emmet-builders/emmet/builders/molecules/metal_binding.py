@@ -89,7 +89,11 @@ class MetalBindingBuilder(Builder):
         self.settings = EmmetBuildSettings.autoload(settings)
         self.kwargs = kwargs
 
-        super().__init__(sources=[molecules, charges, spins, bonds, thermo], targets=[metal_binding], **kwargs)
+        super().__init__(
+            sources=[molecules, charges, spins, bonds, thermo],
+            targets=[metal_binding],
+            **kwargs,
+        )
         # Uncomment in case of issue with mrun not connecting automatically to collections
         # for i in [self.molecules, self.charges, self.spins, self.bonds, self.thermo, self.metal_binding]:
         #     try:
@@ -163,11 +167,19 @@ class MetalBindingBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
+        all_mols = list(
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
+        )
 
         processed_docs = set([e for e in self.metal_binding.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
+        to_process_forms = {
+            d["formula_alphabetical"]
+            for d in all_mols
+            if d[self.molecules.key] in to_process_docs
+        }
 
         N = ceil(len(to_process_forms) / number_splits)
 
@@ -194,11 +206,19 @@ class MetalBindingBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
+        all_mols = list(
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
+        )
 
         processed_docs = set([e for e in self.metal_binding.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
+        to_process_forms = {
+            d["formula_alphabetical"]
+            for d in all_mols
+            if d[self.molecules.key] in to_process_docs
+        }
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
         self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
@@ -242,13 +262,25 @@ class MetalBindingBuilder(Builder):
             # Grab the basic documents needed to create a metal binding document
             molecule_id = mol.molecule_id
             solvents = mol.unique_solvents
-            charges = [PartialChargesDoc(**e) for e in self.charges.query({"molecule_id": molecule_id})]
+            charges = [
+                PartialChargesDoc(**e)
+                for e in self.charges.query({"molecule_id": molecule_id})
+            ]
             if mol.spin_multiplicity != 1:
-                spins = [PartialSpinsDoc(**e) for e in self.spins.query({"molecule_id": molecule_id})]
+                spins = [
+                    PartialSpinsDoc(**e)
+                    for e in self.spins.query({"molecule_id": molecule_id})
+                ]
             else:
                 spins = list()
-            bonds = [MoleculeBondingDoc(**e) for e in self.bonds.query({"molecule_id": molecule_id})]
-            thermo = [MoleculeThermoDoc(**e) for e in self.thermo.query({"molecule_id": molecule_id})]
+            bonds = [
+                MoleculeBondingDoc(**e)
+                for e in self.bonds.query({"molecule_id": molecule_id})
+            ]
+            thermo = [
+                MoleculeThermoDoc(**e)
+                for e in self.thermo.query({"molecule_id": molecule_id})
+            ]
 
             if any([len(x) == 0 for x in [charges, bonds, thermo]]):
                 # Not enough information to construct MetalBindingDoc
@@ -368,7 +400,12 @@ class MetalBindingBuilder(Builder):
                         # Sanity check that charge and spin are compatible
                         metal_species = species[metal_index]
                         try:
-                            _ = Molecule([metal_species], [[0.0, 0.0, 0.0]], charge=charge, spin_multiplicity=spin)
+                            _ = Molecule(
+                                [metal_species],
+                                [[0.0, 0.0, 0.0]],
+                                charge=charge,
+                                spin_multiplicity=spin,
+                            )
                         except ValueError:
                             # Assume spin assignment is correct, and change charge accordingly
                             diff_up = abs(partial_charge - (charge + 1))
@@ -402,11 +439,17 @@ class MetalBindingBuilder(Builder):
                         nometal_spin = mol.spin_multiplicity - spin + 1
                         mg_copy = copy.deepcopy(bond_doc.molecule_graph)  # type: ignore
                         mg_copy.remove_nodes([metal_index])
-                        new_hash = weisfeiler_lehman_graph_hash(mg_copy.graph.to_undirected(), node_attr="specie")
+                        new_hash = weisfeiler_lehman_graph_hash(
+                            mg_copy.graph.to_undirected(), node_attr="specie"
+                        )
                         nometal_mol_doc = [
                             MoleculeDoc(**e)
                             for e in self.molecules.query(
-                                {"species_hash": new_hash, "charge": nometal_charge, "spin_multiplicity": nometal_spin}
+                                {
+                                    "species_hash": new_hash,
+                                    "charge": nometal_charge,
+                                    "spin_multiplicity": nometal_spin,
+                                }
                             )
                         ]
                         if len(nometal_mol_doc) == 0:
@@ -443,7 +486,9 @@ class MetalBindingBuilder(Builder):
                     if doc is not None and len(doc.binding_data) != 0:
                         binding_docs.append(doc)
 
-        self.logger.debug(f"Produced {len(binding_docs)} metal binding docs for {formula}")
+        self.logger.debug(
+            f"Produced {len(binding_docs)} metal binding docs for {formula}"
+        )
 
         return jsanitize([doc.dict() for doc in binding_docs], allow_bson=True)
 
@@ -469,7 +514,9 @@ class MetalBindingBuilder(Builder):
 
         if len(items) > 0:
             self.logger.info(f"Updating {len(docs)} metal binding documents")
-            self.metal_binding.remove_docs({self.metal_binding.key: {"$in": molecule_ids}})
+            self.metal_binding.remove_docs(
+                {self.metal_binding.key: {"$in": molecule_ids}}
+            )
             # Neither molecule_id nor solvent need to be unique, but the combination must be
             self.metal_binding.update(
                 docs=docs,

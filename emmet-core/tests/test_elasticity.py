@@ -41,13 +41,20 @@ def test_generate_derived_fitting_data(fitting_data, reference_data):
     ref_d_strains, ref_d_stresses, _ = reference_data
 
     strains, _, _, _ = generate_primary_fitting_data(deformations, stresses)
-    _, d_strains, d_stresses, _ = generate_derived_fitting_data(structure, strains, stresses)
+    _, d_strains, d_stresses, _ = generate_derived_fitting_data(
+        structure, strains, stresses
+    )
 
     def sequence_of_tensors_equal(a: List[Tensor], b: List[Tensor]):
-        mapping = TensorMapping(tensors=a, values=[None for _ in range(len(a))], tol=1e-5)
+        mapping = TensorMapping(
+            tensors=a, values=[None for _ in range(len(a))], tol=1e-5
+        )
         for i, x in enumerate(b):
             if x not in mapping:
-                raise AssertionError(f"Cannot find a corresponding tensor in `a` that matches tensor " f"{i} in `b`")
+                raise AssertionError(
+                    f"Cannot find a corresponding tensor in `a` that matches tensor "
+                    f"{i} in `b`"
+                )
 
     sequence_of_tensors_equal(d_strains, ref_d_strains)
     sequence_of_tensors_equal(d_stresses, ref_d_stresses)

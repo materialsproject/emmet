@@ -20,7 +20,9 @@ from pymatgen.core.periodic_table import Element
 def test_es_summary_query():
     op = ESSummaryDataQuery()
 
-    assert op.query(magnetic_ordering=Ordering.FiM, is_gap_direct=True, is_metal=False) == {
+    assert op.query(
+        magnetic_ordering=Ordering.FiM, is_gap_direct=True, is_metal=False
+    ) == {
         "criteria": {
             "magnetic_ordering": "FiM",
             "is_gap_direct": True,
@@ -31,7 +33,9 @@ def test_es_summary_query():
     with ScratchDir("."):
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
-        assert new_op.query(magnetic_ordering=Ordering.FiM, is_gap_direct=True, is_metal=False) == {
+        assert new_op.query(
+            magnetic_ordering=Ordering.FiM, is_gap_direct=True, is_metal=False
+        ) == {
             "criteria": {
                 "magnetic_ordering": "FiM",
                 "is_gap_direct": True,

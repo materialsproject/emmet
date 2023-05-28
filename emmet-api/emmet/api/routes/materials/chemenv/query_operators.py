@@ -55,18 +55,44 @@ class ChemEnvQuery(QueryOperator):
                 crit[entry]["$lte"] = d[entry][1]
 
         if chemenv_iucr:
-            crit.update({"chemenv_iucr": {"$in": [entry.strip() for entry in chemenv_iucr.split(",")]}})
+            crit.update(
+                {
+                    "chemenv_iucr": {
+                        "$in": [entry.strip() for entry in chemenv_iucr.split(",")]
+                    }
+                }
+            )
 
         if chemenv_iupac:
-            crit.update({"chemenv_iupac": {"$in": [entry.strip() for entry in chemenv_iupac.split(",")]}})
+            crit.update(
+                {
+                    "chemenv_iupac": {
+                        "$in": [entry.strip() for entry in chemenv_iupac.split(",")]
+                    }
+                }
+            )
 
         if chemenv_name:
-            crit.update({"chemenv_name": {"$in": [entry.strip() for entry in chemenv_name.split(",")]}})
+            crit.update(
+                {
+                    "chemenv_name": {
+                        "$in": [entry.strip() for entry in chemenv_name.split(",")]
+                    }
+                }
+            )
 
         if chemenv_symbol:
-            crit.update({"chemenv_symbol": {"$in": [entry.strip() for entry in chemenv_symbol.split(",")]}})
+            crit.update(
+                {
+                    "chemenv_symbol": {
+                        "$in": [entry.strip() for entry in chemenv_symbol.split(",")]
+                    }
+                }
+            )
 
         if species:
-            crit.update({"species": {"$in": [entry.strip() for entry in species.split(",")]}})
+            crit.update(
+                {"species": {"$in": [entry.strip() for entry in species.split(",")]}}
+            )
 
         return {"criteria": crit}

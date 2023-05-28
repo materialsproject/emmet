@@ -48,7 +48,9 @@ class SoundVelocityBuilder(Builder):
         else:
             self.manager = manager
 
-        super().__init__(sources=[phonon_materials, ddb_source], targets=[sound_vel], **kwargs)
+        super().__init__(
+            sources=[phonon_materials, ddb_source], targets=[sound_vel], **kwargs
+        )
 
     def prechunk(self, number_splits: int):  # pragma: no cover
         """
@@ -83,8 +85,12 @@ class SoundVelocityBuilder(Builder):
 
         # All relevant materials that have been updated since sound velocities were last calculated
         q = dict(self.query)
-        mats = self.sound_vel.newer_in(self.phonon_materials, exhaustive=True, criteria=q)
-        self.logger.info("Found {} new materials for sound velocity data".format(len(mats)))
+        mats = self.sound_vel.newer_in(
+            self.phonon_materials, exhaustive=True, criteria=q
+        )
+        self.logger.info(
+            "Found {} new materials for sound velocity data".format(len(mats))
+        )
 
         # list of properties queried from the results DB
         # basic informations
@@ -95,11 +101,15 @@ class SoundVelocityBuilder(Builder):
         projection["abinit_output.ddb_id"] = 1
 
         for m in mats:
-            item = self.phonon_materials.query_one(properties=projection, criteria={self.phonon_materials.key: m})
+            item = self.phonon_materials.query_one(
+                properties=projection, criteria={self.phonon_materials.key: m}
+            )
 
             # Read the DDB file and pass as an object. Do not write here since in case of parallel
             # execution each worker will write its own file.
-            ddb_data = self.ddb_source.query_one(criteria={"_id": item["abinit_output"]["ddb_id"]})
+            ddb_data = self.ddb_source.query_one(
+                criteria={"_id": item["abinit_output"]["ddb_id"]}
+            )
 
             item["ddb_str"] = ddb_data["data"].decode("utf-8")
 
@@ -134,7 +144,9 @@ class SoundVelocityBuilder(Builder):
             return jsanitize(sv.dict())
         except Exception:
             self.logger.warning(
-                "Error generating the sound velocity for {}: {}".format(item["mp_id"], traceback.format_exc())
+                "Error generating the sound velocity for {}: {}".format(
+                    item["mp_id"], traceback.format_exc()
+                )
             )
             return None
 
@@ -148,7 +160,9 @@ class SoundVelocityBuilder(Builder):
         Returns:
             A dictionary with the sound velocity values
         """
-        with tempfile.NamedTemporaryFile(mode="wt", suffix="_DDB", delete=True) as ddb_file:
+        with tempfile.NamedTemporaryFile(
+            mode="wt", suffix="_DDB", delete=True
+        ) as ddb_file:
             ddb_file.write(item["ddb_str"])
             ngqpt = item["abinit_input"]["ngqpt"]
             sv = AbiSoundVelocity.from_ddb(

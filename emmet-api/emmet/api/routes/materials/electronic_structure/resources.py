@@ -38,7 +38,9 @@ def es_resource(es_store):
             DeprecationQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(ElectronicStructureDoc, default_fields=["material_id", "last_updated"]),
+            SparseFieldsQuery(
+                ElectronicStructureDoc, default_fields=["material_id", "last_updated"]
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Electronic Structure"],

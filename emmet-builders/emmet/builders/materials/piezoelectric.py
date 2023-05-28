@@ -105,13 +105,17 @@ class PiezoelectricBuilder(Builder):
         mat_ids = self.materials.distinct(self.materials.key, criteria=q)
         piezo_ids = self.piezoelectric.distinct(self.piezoelectric.key)
 
-        mats_set = set(self.piezoelectric.newer_in(target=self.materials, criteria=q, exhaustive=True)) | (
-            set(mat_ids) - set(piezo_ids)
-        )
+        mats_set = set(
+            self.piezoelectric.newer_in(
+                target=self.materials, criteria=q, exhaustive=True
+            )
+        ) | (set(mat_ids) - set(piezo_ids))
 
         mats = [mat for mat in mats_set]
 
-        self.logger.info("Processing {} materials for piezoelectric data".format(len(mats)))
+        self.logger.info(
+            "Processing {} materials for piezoelectric data".format(len(mats))
+        )
 
         self.total = len(mats)
 
@@ -204,10 +208,14 @@ class PiezoelectricBuilder(Builder):
                 is_hubbard = task_query["input"]["is_hubbard"]
 
                 if (
-                    task_query["orig_inputs"]["kpoints"]["generation_style"] == "Monkhorst"
-                    or task_query["orig_inputs"]["kpoints"]["generation_style"] == "Gamma"
+                    task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Monkhorst"
+                    or task_query["orig_inputs"]["kpoints"]["generation_style"]
+                    == "Gamma"
                 ):
-                    nkpoints = np.prod(task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0)
+                    nkpoints = np.prod(
+                        task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
+                    )
 
                 else:
                     nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]

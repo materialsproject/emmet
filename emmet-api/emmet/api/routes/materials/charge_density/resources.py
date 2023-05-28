@@ -12,7 +12,9 @@ def charge_density_resource(s3_store):
         query_operators=[
             ChgcarTaskIDQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(ChgcarDataDoc, default_fields=["task_id", "last_updated", "fs_id"]),
+            SparseFieldsQuery(
+                ChgcarDataDoc, default_fields=["task_id", "last_updated", "fs_id"]
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Charge Density"],

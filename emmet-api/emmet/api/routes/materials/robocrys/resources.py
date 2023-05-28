@@ -18,7 +18,9 @@ def robo_resource(robo_store):
         query_operators=[
             MultiMaterialIDQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(RobocrystallogapherDoc, default_fields=["material_id", "last_updated"]),
+            SparseFieldsQuery(
+                RobocrystallogapherDoc, default_fields=["material_id", "last_updated"]
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Robocrystallographer"],

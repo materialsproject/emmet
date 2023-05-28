@@ -90,7 +90,9 @@ class CoordinationEnvsQuery(QueryOperator):
 
         if coordination_envs_anonymous:
             env_list = [env.strip() for env in coordination_envs_anonymous.split(",")]
-            crit["coordination_envs_anonymous"] = {"$all": [str(env) for env in env_list]}
+            crit["coordination_envs_anonymous"] = {
+                "$all": [str(env) for env in env_list]
+            }
 
         return {"criteria": crit}
 

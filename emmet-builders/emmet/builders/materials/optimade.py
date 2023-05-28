@@ -71,9 +71,9 @@ class OptimadeMaterialsBuilder(Builder):
         mat_ids = self.materials.distinct(self.materials.key, criteria=q)
         opti_ids = self.optimade.distinct(self.optimade.key)
 
-        mats_set = set(self.optimade.newer_in(target=self.materials, criteria=q, exhaustive=True)) | (
-            set(mat_ids) - set(opti_ids)
-        )
+        mats_set = set(
+            self.optimade.newer_in(target=self.materials, criteria=q, exhaustive=True)
+        ) | (set(mat_ids) - set(opti_ids))
 
         mats = [mat for mat in mats_set]
 
@@ -129,7 +129,9 @@ class OptimadeMaterialsBuilder(Builder):
             self.logger.info("No items to update")
 
     def _get_processed_doc(self, mat):
-        mat_doc = self.materials.query_one({self.materials.key: mat}, [self.materials.key, "last_updated", "structure"])
+        mat_doc = self.materials.query_one(
+            {self.materials.key: mat}, [self.materials.key, "last_updated", "structure"]
+        )
 
         mat_doc.update(
             {

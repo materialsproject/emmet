@@ -76,7 +76,19 @@ def summary():
     return MemoryStore(key="molecule_id")
 
 
-def test_summary_doc(tasks, mols, charges, spins, bonds, metal_binding, orbitals, redox, thermo, vibes, summary):
+def test_summary_doc(
+    tasks,
+    mols,
+    charges,
+    spins,
+    bonds,
+    metal_binding,
+    orbitals,
+    redox,
+    thermo,
+    vibes,
+    summary,
+):
     charge_build = PartialChargesBuilder(tasks, mols, charges)
     charge_build.run()
 
@@ -95,7 +107,9 @@ def test_summary_doc(tasks, mols, charges, spins, bonds, metal_binding, orbitals
     redox_build = RedoxBuilder(tasks, mols, thermo, redox)
     redox_build.run()
 
-    metal_binding_build = MetalBindingBuilder(mols, charges, spins, bonds, thermo, metal_binding)
+    metal_binding_build = MetalBindingBuilder(
+        mols, charges, spins, bonds, thermo, metal_binding
+    )
     metal_binding_build.run()
 
     vibe_build = VibrationBuilder(tasks, mols, vibes)

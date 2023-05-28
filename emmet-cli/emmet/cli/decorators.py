@@ -43,7 +43,9 @@ def track(func):
             gh = ctx.grand_parent.obj["GH"]
             user = gh.me().login
             issue_number = ctx.grand_parent.params["issue"]
-            issue = gh.issue(SETTINGS.tracker["org"], SETTINGS.tracker["repo"], issue_number)
+            issue = gh.issue(
+                SETTINGS.tracker["org"], SETTINGS.tracker["repo"], issue_number
+            )
 
             # create or retrieve gist for log files
             gist_name = f"{SETTINGS.tracker['repo']}-issue{issue_number}.md"
@@ -86,7 +88,9 @@ def track(func):
                 # add comment for new command
                 command = reconstruct_command()
                 raw_url = f"{GIST_RAW_URL}/{user}/{gist.id}/raw/{filename}"
-                txt = COMMENT_TEMPLATE.format(ctx.command_path, ret.value, command, raw_url)
+                txt = COMMENT_TEMPLATE.format(
+                    ctx.command_path, ret.value, command, raw_url
+                )
                 comment = issue.create_comment(txt)
                 logger.info(comment.html_url)
 
@@ -174,7 +178,9 @@ def sbatch(func):
 
         if run:
             slurm_id = ret.split()[-1]
-            ReturnCodesDynamic = Enum("ReturnCodesDynamic", {"SUBMITTED": f"SLURM {slurm_id}"})
+            ReturnCodesDynamic = Enum(
+                "ReturnCodesDynamic", {"SUBMITTED": f"SLURM {slurm_id}"}
+            )
             return ReturnCodesDynamic.SUBMITTED
 
         logger.info(ret)

@@ -67,7 +67,9 @@ def test_charges_builder(tasks, mols, charges, spins, bonds, metal_binding, ther
     thermo_build = ThermoBuilder(tasks, mols, thermo)
     thermo_build.run()
 
-    metal_binding_build = MetalBindingBuilder(mols, charges, spins, bonds, thermo, metal_binding)
+    metal_binding_build = MetalBindingBuilder(
+        mols, charges, spins, bonds, thermo, metal_binding
+    )
     metal_binding_build.run()
 
     assert metal_binding.count() == 6

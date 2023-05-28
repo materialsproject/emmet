@@ -96,11 +96,19 @@ class VibrationBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
+        all_mols = list(
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
+        )
 
         processed_docs = set([e for e in self.vibes.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
+        to_process_forms = {
+            d["formula_alphabetical"]
+            for d in all_mols
+            if d[self.molecules.key] in to_process_docs
+        }
 
         N = ceil(len(to_process_forms) / number_splits)
 
@@ -129,11 +137,19 @@ class VibrationBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
+        all_mols = list(
+            self.molecules.query(
+                temp_query, [self.molecules.key, "formula_alphabetical"]
+            )
+        )
 
         processed_docs = set([e for e in self.vibes.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
+        to_process_forms = {
+            d["formula_alphabetical"]
+            for d in all_mols
+            if d[self.molecules.key] in to_process_docs
+        }
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
         self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
@@ -222,7 +238,9 @@ class VibrationBuilder(Builder):
                 if task_doc is None:
                     continue
 
-                vibe_doc = VibrationDoc.from_task(task_doc, molecule_id=mol.molecule_id, deprecated=False)
+                vibe_doc = VibrationDoc.from_task(
+                    task_doc, molecule_id=mol.molecule_id, deprecated=False
+                )
                 vibe_docs.append(vibe_doc)
 
         self.logger.debug(f"Produced {len(vibe_docs)} vibration docs for {formula}")

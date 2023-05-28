@@ -54,7 +54,13 @@ class RoboTextSearchQuery(QueryOperator):
             },
             {"$unwind": "$results"},
             {"$unwind": "$total_doc"},
-            {"$replaceRoot": {"newRoot": {"$mergeObjects": ["$results", {"total_doc": "$total_doc.count"}]}}},
+            {
+                "$replaceRoot": {
+                    "newRoot": {
+                        "$mergeObjects": ["$results", {"total_doc": "$total_doc.count"}]
+                    }
+                }
+            },
             {"$sort": {"search_score": -1}},
             {"$skip": _skip},
             {"$limit": _limit},

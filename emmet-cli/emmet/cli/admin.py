@@ -22,12 +22,17 @@ def clean_ensure_indexes(run, fields, coll):
         created = ensure_indexes(fields, [coll])
         if created:
             indexes = ", ".join(created[coll.full_name])
-            logger.info(f"Created the following index(es) on {coll.full_name}:\n{indexes}")
+            logger.info(
+                f"Created the following index(es) on {coll.full_name}:\n{indexes}"
+            )
         else:
             logger.info("All indexes already created.")
     else:
         fields_list = ", ".join(fields)
-        logger.info(f"Would create/ensure the following index(es) on " f"{coll.full_name}:\n{fields_list}")
+        logger.info(
+            f"Would create/ensure the following index(es) on "
+            f"{coll.full_name}:\n{fields_list}"
+        )
 
 
 @admin.command()

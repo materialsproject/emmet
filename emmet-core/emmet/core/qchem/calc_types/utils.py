@@ -41,7 +41,9 @@ def level_of_theory(parameters: Dict[str, Any]) -> LevelOfTheory:
     basis_raw = parameters.get("rem", dict()).get("basis")
 
     if funct_raw is None or basis_raw is None:
-        raise ValueError('Method and basis must be included in "rem" section ' "of parameters!")
+        raise ValueError(
+            'Method and basis must be included in "rem" section ' "of parameters!"
+        )
 
     disp_corr = parameters.get("rem", dict()).get("dft_d")
 
@@ -133,7 +135,9 @@ def solvent(parameters: Dict[str, Any], custom_smd: Optional[str] = None) -> str
         solvent = parameters.get("smx", {}).get("solvent", "water")
         if solvent == "other":
             if custom_smd is None:
-                raise ValueError("SMD calculation with solvent=other requires custom_smd!")
+                raise ValueError(
+                    "SMD calculation with solvent=other requires custom_smd!"
+                )
 
             names = ["DIELECTRIC", "N", "ALPHA", "BETA", "GAMMA", "PHI", "PSI"]
             numbers = [float(x) for x in custom_smd.split(",")]
@@ -148,7 +152,9 @@ def solvent(parameters: Dict[str, Any], custom_smd: Optional[str] = None) -> str
         return "NONE"
 
 
-def lot_solvent_string(parameters: Dict[str, Any], custom_smd: Optional[str] = None) -> str:
+def lot_solvent_string(
+    parameters: Dict[str, Any], custom_smd: Optional[str] = None
+) -> str:
     """
     Returns a string representation of the level of theory and solvent used for this calculation.
 

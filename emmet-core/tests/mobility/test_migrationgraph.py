@@ -56,8 +56,12 @@ def test_from_entries_and_distance(migration_graph_prop, get_entries):
         res_d = {
             "max_distance": mgdoc.hop_cutoff,
             "num_uhops": len(mg.unique_hops),
-            "longest_hop": sorted(mg.unique_hops.items(), key=lambda x: x[1]["hop_distance"])[-1][1]["hop_distance"],
-            "shortest_hop": sorted(mg.unique_hops.items(), key=lambda x: x[1]["hop_distance"])[0][1]["hop_distance"],
+            "longest_hop": sorted(
+                mg.unique_hops.items(), key=lambda x: x[1]["hop_distance"]
+            )[-1][1]["hop_distance"],
+            "shortest_hop": sorted(
+                mg.unique_hops.items(), key=lambda x: x[1]["hop_distance"]
+            )[0][1]["hop_distance"],
             "min_length_sc": mgdoc.min_length_sc,
             "minmax_num_atoms": mgdoc.minmax_num_atoms,
         }
@@ -109,7 +113,9 @@ def test_get_distinct_hop_sites(get_entries):
         dis_sites_list,
         dis_combo_list,
         combo_mapping,
-    ) = MigrationGraphDoc.get_distinct_hop_sites(mgdoc.inserted_ion_coords, mgdoc.insert_coords_combo)
+    ) = MigrationGraphDoc.get_distinct_hop_sites(
+        mgdoc.inserted_ion_coords, mgdoc.insert_coords_combo
+    )
     for one_test_combo in ["0+1", "0+2", "0+3", "0+4", "0+5", "0+6", "1+7", "1+2"]:
         assert one_test_combo in dis_combo_list
     assert combo_mapping == {

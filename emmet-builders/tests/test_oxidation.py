@@ -25,7 +25,9 @@ def fake_materials(test_dir):
 
 def test_oxidation_store(fake_materials):
     oxi_store = MemoryStore()
-    builder = OxidationStatesBuilder(materials=fake_materials, oxidation_states=oxi_store)
+    builder = OxidationStatesBuilder(
+        materials=fake_materials, oxidation_states=oxi_store
+    )
     builder.run()
 
     assert oxi_store.count() == 6

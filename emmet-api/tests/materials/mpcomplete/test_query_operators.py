@@ -14,7 +14,9 @@ from monty.serialization import loadfn, dumpfn
 def test_mpcomplete_post_query():
     op = MPCompletePostQuery()
 
-    structure = Structure.from_file(os.path.join(MAPISettings().TEST_FILES, "Si_mp_149.cif"))
+    structure = Structure.from_file(
+        os.path.join(MAPISettings().TEST_FILES, "Si_mp_149.cif")
+    )
 
     assert op.query(
         structure=structure.as_dict(),

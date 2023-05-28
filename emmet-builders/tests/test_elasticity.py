@@ -27,7 +27,9 @@ def elasticity_store():
 
 
 def test_elasticity_builder(tasks_store, materials_store, elasticity_store):
-    builder = ElasticityBuilder(tasks=tasks_store, materials=materials_store, elasticity=elasticity_store)
+    builder = ElasticityBuilder(
+        tasks=tasks_store, materials=materials_store, elasticity=elasticity_store
+    )
     builder.run()
 
     assert elasticity_store.count() == 3

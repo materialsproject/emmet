@@ -15,25 +15,35 @@ class BindingDataQuery(QueryOperator):
             None,
             description="Element symbol for coordinated metal, e.g. 'Li' for lithium or 'Mg' for magnesium",
         ),
-        min_metal_partial_charge: Optional[float] = Query(None, description="Minimum metal partial charge."),
-        max_metal_partial_charge: Optional[float] = Query(None, description="Maximum metal partial charge."),
+        min_metal_partial_charge: Optional[float] = Query(
+            None, description="Minimum metal partial charge."
+        ),
+        max_metal_partial_charge: Optional[float] = Query(
+            None, description="Maximum metal partial charge."
+        ),
         min_metal_partial_spin: Optional[float] = Query(
-            None, description="Minimum metal partial spin (only meaningful for open-shell systems)."
+            None,
+            description="Minimum metal partial spin (only meaningful for open-shell systems).",
         ),
         max_metal_partial_spin: Optional[float] = Query(
-            None, description="Maximum metal partial spin (only meaningful for open-shell systems)."
+            None,
+            description="Maximum metal partial spin (only meaningful for open-shell systems).",
         ),
         min_metal_assigned_charge: Optional[float] = Query(
-            None, description="Minimum charge of the metal, determined by analyzing partial charges/spins."
+            None,
+            description="Minimum charge of the metal, determined by analyzing partial charges/spins.",
         ),
         max_metal_assigned_charge: Optional[float] = Query(
-            None, description="Maximum charge of the metal, determined by analyzing partial charges/spins."
+            None,
+            description="Maximum charge of the metal, determined by analyzing partial charges/spins.",
         ),
         min_metal_assigned_spin: Optional[Union[int, float]] = Query(
-            None, description="Minimum spin multiplicity of the metal, determined by analyzing partial spins."
+            None,
+            description="Minimum spin multiplicity of the metal, determined by analyzing partial spins.",
         ),
         max_metal_assigned_spin: Optional[Union[int, float]] = Query(
-            None, description="Maximum spin multiplicity of the metal, determined by analyzing partial spins."
+            None,
+            description="Maximum spin multiplicity of the metal, determined by analyzing partial spins.",
         ),
         min_number_coordinate_bonds: Optional[int] = Query(
             None, description="Minimum number of atoms coordinated to the metal."
@@ -41,14 +51,30 @@ class BindingDataQuery(QueryOperator):
         max_number_coordinate_bonds: Optional[int] = Query(
             None, description="Maximum number of atoms coordinated to the metal."
         ),
-        min_binding_energy: Optional[float] = Query(None, description="Minimum binding electronic energy (units: eV)"),
-        max_binding_energy: Optional[float] = Query(None, description="Maximum binding electronic energy (units: eV)"),
-        min_binding_enthalpy: Optional[float] = Query(None, description="Minimum binding enthalpy (units: eV)"),
-        max_binding_enthalpy: Optional[float] = Query(None, description="Maximum binding enthalpy (units: eV)"),
-        min_binding_entropy: Optional[float] = Query(None, description="Minimum binding entropy (units: eV/K)"),
-        max_binding_entropy: Optional[float] = Query(None, description="Maximum binding entropy (units: eV/K)"),
-        min_binding_free_energy: Optional[float] = Query(None, description="Minimum binding free energy (units: eV)"),
-        max_binding_free_energy: Optional[float] = Query(None, description="Maximum binding free energy (units: eV)"),
+        min_binding_energy: Optional[float] = Query(
+            None, description="Minimum binding electronic energy (units: eV)"
+        ),
+        max_binding_energy: Optional[float] = Query(
+            None, description="Maximum binding electronic energy (units: eV)"
+        ),
+        min_binding_enthalpy: Optional[float] = Query(
+            None, description="Minimum binding enthalpy (units: eV)"
+        ),
+        max_binding_enthalpy: Optional[float] = Query(
+            None, description="Maximum binding enthalpy (units: eV)"
+        ),
+        min_binding_entropy: Optional[float] = Query(
+            None, description="Minimum binding entropy (units: eV/K)"
+        ),
+        max_binding_entropy: Optional[float] = Query(
+            None, description="Maximum binding entropy (units: eV/K)"
+        ),
+        min_binding_free_energy: Optional[float] = Query(
+            None, description="Minimum binding free energy (units: eV)"
+        ),
+        max_binding_free_energy: Optional[float] = Query(
+            None, description="Maximum binding free energy (units: eV)"
+        ),
     ) -> STORE_PARAMS:
         crit: Dict[str, Any] = dict()  # type: ignore
 
@@ -56,11 +82,20 @@ class BindingDataQuery(QueryOperator):
             crit["binding_data.metal_element"] = metal_element
 
         d = {
-            "metal_partial_charge": [min_metal_partial_charge, max_metal_partial_charge],
+            "metal_partial_charge": [
+                min_metal_partial_charge,
+                max_metal_partial_charge,
+            ],
             "metal_partial_spin": [min_metal_partial_spin, max_metal_partial_spin],
-            "metal_assigned_charge": [min_metal_assigned_charge, max_metal_assigned_charge],
+            "metal_assigned_charge": [
+                min_metal_assigned_charge,
+                max_metal_assigned_charge,
+            ],
             "metal_assigned_spin": [min_metal_assigned_spin, max_metal_assigned_spin],
-            "number_coordinate_bonds": [min_number_coordinate_bonds, max_number_coordinate_bonds],
+            "number_coordinate_bonds": [
+                min_number_coordinate_bonds,
+                max_number_coordinate_bonds,
+            ],
             "binding_energy": [min_binding_energy, max_binding_energy],
             "binding_enthalpy": [min_binding_enthalpy, max_binding_enthalpy],
             "binding_entropy": [min_binding_entropy, max_binding_entropy],

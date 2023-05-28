@@ -14,9 +14,14 @@ def test_mpid():
     assert MPID("1234") == "1234"
     assert MPID("mp-12345") > MPID("mp-1234")
 
-    assert min([MPID("mp-44545"), MPID("mp-33"), MPID("mp-2134234"), MPID(33), MPID("33")]) == MPID("mp-33")
+    assert min(
+        [MPID("mp-44545"), MPID("mp-33"), MPID("mp-2134234"), MPID(33), MPID("33")]
+    ) == MPID("mp-33")
 
-    assert len(set([MPID("mp-33"), MPID("mp-44545"), MPID("mp-33"), MPID("mp-2134234")])) == 3
+    assert (
+        len(set([MPID("mp-33"), MPID("mp-44545"), MPID("mp-33"), MPID("mp-2134234")]))
+        == 3
+    )
 
     MPID(3)
 
@@ -25,7 +30,10 @@ def test_mpculeid():
     assert MPculeID("b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2") == MPculeID(
         "b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2"
     )
-    assert MPculeID("b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2") == "b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2"
+    assert (
+        MPculeID("b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2")
+        == "b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2"
+    )
     assert MPculeID("b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2") < MPculeID(
         "b9ba54febc77d2a9177accf4605767db-F6Li1P1-2-1"
     )
@@ -40,5 +48,6 @@ def test_mpculeid():
 def test_to_str():
     assert str(MPID("mp-149")) == "mp-149"
     assert (
-        str(MPculeID("b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2")) == "b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2"
+        str(MPculeID("b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2"))
+        == "b9ba54febc77d2a9177accf4605767db-F6Li1P1-1-2"
     )

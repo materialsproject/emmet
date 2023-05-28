@@ -38,7 +38,9 @@ def test_bond_length_query_operator():
             mean_bond_length_min=0,
             mean_bond_length_max=5,
         )
-        assert dict(q) == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
+        assert dict(q) == {
+            "criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}
+        }
 
 
 def test_coordination_envs_query():

@@ -60,7 +60,9 @@ class XASDoc(SpectrumDoc):
 
     absorbing_element: Element = Field(..., description="Absoring element.")
     spectrum_type: Type = Field(..., description="XAS spectrum type.")
-    edge: Edge = Field(..., title="Absorption Edge", description="The interaction edge for XAS.")
+    edge: Edge = Field(
+        ..., title="Absorption Edge", description="The interaction edge for XAS."
+    )
 
     @classmethod
     def from_spectrum(
@@ -89,7 +91,9 @@ class XASDoc(SpectrumDoc):
         )
 
     @classmethod
-    def from_task_docs(cls, all_tasks: List[TaskDocument], material_id: MPID, num_samples: int = 200) -> List["XASDoc"]:
+    def from_task_docs(
+        cls, all_tasks: List[TaskDocument], material_id: MPID, num_samples: int = 200
+    ) -> List["XASDoc"]:
         """
         Converts a set of FEFF Task Documents into XASDocs by merging XANES + EXAFS into XAFS spectra first
         and then merging along equivalent elements to get element averaged spectra
@@ -186,12 +190,22 @@ class XASDoc(SpectrumDoc):
             if len(relevant_spectra) > 0 and not _is_missing_sites(relevant_spectra):
                 if len(relevant_spectra) > 1:
                     try:
-                        avg_spectrum = site_weighted_spectrum(relevant_spectra, num_samples=num_samples)
-                        avg_spectrum.task_ids = [id for spectrum in relevant_spectra for id in spectrum.task_ids]
-                        avg_spectrum.last_updated = max([spectrum.last_updated for spectrum in relevant_spectra])
+                        avg_spectrum = site_weighted_spectrum(
+                            relevant_spectra, num_samples=num_samples
+                        )
+                        avg_spectrum.task_ids = [
+                            id
+                            for spectrum in relevant_spectra
+                            for id in spectrum.task_ids
+                        ]
+                        avg_spectrum.last_updated = max(
+                            [spectrum.last_updated for spectrum in relevant_spectra]
+                        )
                         averaged_spectra.append(avg_spectrum)
                     except ValueError as e:
-                        warnings.warn(f"Warning during site-weighted averaging in XASDoC: {e}")
+                        warnings.warn(
+                            f"Warning during site-weighted averaging in XASDoC: {e}"
+                        )
                 else:
                     averaged_spectra.append(relevant_spectra[0])
 
@@ -220,9 +234,13 @@ def _is_missing_sites(spectra: List[XAS]):
     symm_sites = SymmSites(structure)
     absorption_indicies = {spectrum.absorbing_index for spectrum in spectra}
 
-    missing_site_spectra_indicies = set(structure.indices_from_symbol(element)) - absorption_indicies
+    missing_site_spectra_indicies = (
+        set(structure.indices_from_symbol(element)) - absorption_indicies
+    )
     for site_index in absorption_indicies:
-        missing_site_spectra_indicies -= set(symm_sites.get_equivalent_site_indices(site_index))
+        missing_site_spectra_indicies -= set(
+            symm_sites.get_equivalent_site_indices(site_index)
+        )
 
     return len(missing_site_spectra_indicies) != 0
 

@@ -51,7 +51,9 @@ def thermo_resource(thermo_store):
             NumericQuery(model=ThermoDoc),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(ThermoDoc, default_fields=["thermo_id", "material_id", "last_updated"]),
+            SparseFieldsQuery(
+                ThermoDoc, default_fields=["thermo_id", "material_id", "last_updated"]
+            ),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Thermo"],

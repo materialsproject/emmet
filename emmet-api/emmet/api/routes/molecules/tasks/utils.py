@@ -100,10 +100,14 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
 
             traj_frame_props.append(step_dict)
 
-        traj = Trajectory.from_molecules(traj_mols, frame_properties=traj_frame_props, time_step=None).as_dict()
+        traj = Trajectory.from_molecules(
+            traj_mols, frame_properties=traj_frame_props, time_step=None
+        ).as_dict()
         trajectories.append(traj)
 
     if len(trajectories) == 0:
-        raise HTTPException(status_code=404, detail="No geometry optimization data found for this task")
+        raise HTTPException(
+            status_code=404, detail="No geometry optimization data found for this task"
+        )
 
     return trajectories

@@ -25,10 +25,14 @@ class SubstrateStructureQuery(QueryOperator):
         crit = defaultdict(dict)  # type: dict
 
         if film_orientation:
-            crit["film_orient"] = " ".join([entry.strip() for entry in film_orientation.split(",")])
+            crit["film_orient"] = " ".join(
+                [entry.strip() for entry in film_orientation.split(",")]
+            )
 
         if substrate_orientation:
-            crit["orient"] = " ".join([entry.strip() for entry in substrate_orientation.split(",")])
+            crit["orient"] = " ".join(
+                [entry.strip() for entry in substrate_orientation.split(",")]
+            )
 
         return {"criteria": crit}
 

@@ -85,6 +85,12 @@ class GBTaskIDQuery(QueryOperator):
         crit = {}
 
         if task_ids:
-            crit.update({"task_id": {"$in": [task_id.strip() for task_id in task_ids.split(",")]}})
+            crit.update(
+                {
+                    "task_id": {
+                        "$in": [task_id.strip() for task_id in task_ids.split(",")]
+                    }
+                }
+            )
 
         return {"criteria": crit}

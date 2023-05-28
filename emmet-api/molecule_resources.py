@@ -2,7 +2,11 @@ import os
 from emmet.api.core.settings import MAPISettings
 from maggma.stores import MongoURIStore
 
-from emmet.api.routes.molecules.tasks.resources import task_resource, task_deprecation_resource, trajectory_resource
+from emmet.api.routes.molecules.tasks.resources import (
+    task_resource,
+    task_deprecation_resource,
+    trajectory_resource,
+)
 from emmet.api.routes.molecules.association.resources import (
     find_molecule_assoc_resource,
     mol_assoc_resource,
@@ -128,11 +132,17 @@ mp_molecules_resources = list()
 
 # Tasks
 mp_molecules_resources.extend(
-    [task_resource(task_store), task_deprecation_resource(task_store), trajectory_resource(task_store)]
+    [
+        task_resource(task_store),
+        task_deprecation_resource(task_store),
+        trajectory_resource(task_store),
+    ]
 )
 
 # Assoc
-mp_molecules_resources.extend([mol_assoc_resource(assoc_store), find_molecule_assoc_resource(assoc_store)])
+mp_molecules_resources.extend(
+    [mol_assoc_resource(assoc_store), find_molecule_assoc_resource(assoc_store)]
+)
 
 # Molecules
 mp_molecules_resources.extend(

@@ -62,12 +62,16 @@ def test_from_bsdos_1(bandstructure, dos, structure):
 
 @pytest.fixture
 def bandstructure_fs(test_dir):
-    return JSONStore(test_dir / "electronic_structure/es_bs_objs.json.gz", key="task_id")
+    return JSONStore(
+        test_dir / "electronic_structure/es_bs_objs.json.gz", key="task_id"
+    )
 
 
 @pytest.fixture
 def dos_fs(test_dir):
-    return JSONStore(test_dir / "electronic_structure/es_dos_objs.json.gz", key="task_id")
+    return JSONStore(
+        test_dir / "electronic_structure/es_dos_objs.json.gz", key="task_id"
+    )
 
 
 def test_from_bsdos_2(bandstructure_fs, dos_fs):
@@ -75,7 +79,9 @@ def test_from_bsdos_2(bandstructure_fs, dos_fs):
     bandstructure_fs.connect()
 
     dos = CompleteDos.from_dict(dos_fs.query_one({"task_id": "mp-823888"})["data"])
-    bs = BandStructureSymmLine.from_dict(bandstructure_fs.query_one({"task_id": "mp-1612487"})["data"])
+    bs = BandStructureSymmLine.from_dict(
+        bandstructure_fs.query_one({"task_id": "mp-1612487"})["data"]
+    )
 
     es_doc = ElectronicStructureDoc.from_bsdos(
         material_id="mp-25375",

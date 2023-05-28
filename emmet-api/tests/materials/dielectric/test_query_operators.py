@@ -40,4 +40,6 @@ def test_dielectric_query_operator():
             n_min=0,
             n_max=5,
         )
-        assert dict(q) == {"criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}}
+        assert dict(q) == {
+            "criteria": {field: {"$gte": 0, "$lte": 5} for field in fields}
+        }

@@ -44,9 +44,13 @@ class PropertyDoc(StructureMetadata):
         default_factory=datetime.utcnow,
     )
 
-    origins: Sequence[PropertyOrigin] = Field([], description="Dictionary for tracking the provenance of properties.")
+    origins: Sequence[PropertyOrigin] = Field(
+        [], description="Dictionary for tracking the provenance of properties."
+    )
 
-    warnings: Sequence[str] = Field([], description="Any warnings related to this property.")
+    warnings: Sequence[str] = Field(
+        [], description="Any warnings related to this property."
+    )
 
     @classmethod
     def from_structure(  # type: ignore[override]

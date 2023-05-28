@@ -75,7 +75,9 @@ class ThermoBuilder(Builder):
 
             targets.append(phase_diagram)  # type: ignore
 
-        super().__init__(sources=sources, targets=targets, chunk_size=chunk_size, **kwargs)
+        super().__init__(
+            sources=sources, targets=targets, chunk_size=chunk_size, **kwargs
+        )
 
     def ensure_indexes(self):
         """
@@ -128,12 +130,16 @@ class ThermoBuilder(Builder):
 
         to_process_chemsys = self._get_chemsys_to_process()
 
-        self.logger.info(f"Found {len(to_process_chemsys)} chemical systems with new/updated materials to process")
+        self.logger.info(
+            f"Found {len(to_process_chemsys)} chemical systems with new/updated materials to process"
+        )
         self.total = len(to_process_chemsys)
 
         # Yield the chemical systems in order of increasing size
         # Will build them in a similar manner to fast Pourbaix
-        for chemsys in sorted(to_process_chemsys, key=lambda x: len(x.split("-")), reverse=False):
+        for chemsys in sorted(
+            to_process_chemsys, key=lambda x: len(x.split("-")), reverse=False
+        ):
             corrected_entries = self.corrected_entries.query_one({"chemsys": chemsys})
             yield corrected_entries
 
@@ -145,16 +151,22 @@ class ThermoBuilder(Builder):
 
         for thermo_type, entry_list in item["entries"].items():
             if entry_list:
-                entries = [ComputedStructureEntry.from_dict(entry) for entry in entry_list]
+                entries = [
+                    ComputedStructureEntry.from_dict(entry) for entry in entry_list
+                ]
                 chemsys = item["chemsys"]
                 elements = chemsys.split("-")
 
-                self.logger.debug(f"Processing {len(entries)} entries for {chemsys} and thermo type {thermo_type}")
+                self.logger.debug(
+                    f"Processing {len(entries)} entries for {chemsys} and thermo type {thermo_type}"
+                )
 
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     with HiddenPrints():
-                        pd_thermo_doc_pair_list.append(self._produce_pair(entries, thermo_type, elements))
+                        pd_thermo_doc_pair_list.append(
+                            self._produce_pair(entries, thermo_type, elements)
+                        )
 
         return pd_thermo_doc_pair_list
 
@@ -166,12 +178,17 @@ class ThermoBuilder(Builder):
             pd = ThermoDoc.construct_phase_diagram(pd_entries)
 
             # Iterate through entry material IDs and construct list of thermo docs to update
-            docs = ThermoDoc.from_entries(pd_entries, thermo_type, pd, use_max_chemsys=True, deprecated=False)
+            docs = ThermoDoc.from_entries(
+                pd_entries, thermo_type, pd, use_max_chemsys=True, deprecated=False
+            )
 
             pd_docs = [None]
 
             if self.phase_diagram:
-                if self.num_phase_diagram_eles is None or len(elements) <= self.num_phase_diagram_eles:
+                if (
+                    self.num_phase_diagram_eles is None
+                    or len(elements) <= self.num_phase_diagram_eles
+                ):
                     chemsys = "-".join(sorted(set([e.symbol for e in pd.elements])))
                     pd_id = "{}_{}".format(chemsys, str(thermo_type))
                     pd_doc = PhaseDiagramDoc(
@@ -197,7 +214,9 @@ class ThermoBuilder(Builder):
             for e in pd_entries:
                 elsyms.extend([el.symbol for el in e.composition.elements])
 
-            self.logger.error(f"Phase diagram error in chemsys {'-'.join(sorted(set(elsyms)))}: {p}")
+            self.logger.error(
+                f"Phase diagram error in chemsys {'-'.join(sorted(set(elsyms)))}: {p}"
+            )
             return (None, None)
 
     def update_targets(self, items):
@@ -215,13 +234,17 @@ class ThermoBuilder(Builder):
         phase_diagram_docs = list(filter(None, chain.from_iterable(phase_diagram_docs)))
 
         # Check if already updated this run
-        thermo_docs = [i for i in thermo_docs if i["thermo_id"] not in self._completed_tasks]
+        thermo_docs = [
+            i for i in thermo_docs if i["thermo_id"] not in self._completed_tasks
+        ]
 
         self._completed_tasks |= {i["thermo_id"] for i in thermo_docs}
 
         for item in thermo_docs:
             if isinstance(item["last_updated"], dict):
-                item["last_updated"] = MontyDecoder().process_decoded(item["last_updated"])
+                item["last_updated"] = MontyDecoder().process_decoded(
+                    item["last_updated"]
+                )
 
         if self.phase_diagram:
             self.phase_diagram.update(phase_diagram_docs)
@@ -252,13 +275,17 @@ class ThermoBuilder(Builder):
         ):
             entry = thermo_chemsys_dates.get(d[self.corrected_entries.key], None)
             if entry is None or d[self.thermo.last_updated_field] < entry:
-                thermo_chemsys_dates[d[self.corrected_entries.key]] = d[self.thermo.last_updated_field]
+                thermo_chemsys_dates[d[self.corrected_entries.key]] = d[
+                    self.thermo.last_updated_field
+                ]
 
         to_process_chemsys = [
             chemsys
             for chemsys in corrected_entries_chemsys_dates
             if (chemsys not in thermo_chemsys_dates)
-            or (thermo_chemsys_dates[chemsys] < corrected_entries_chemsys_dates[chemsys])
+            or (
+                thermo_chemsys_dates[chemsys] < corrected_entries_chemsys_dates[chemsys]
+            )
         ]
 
         return to_process_chemsys

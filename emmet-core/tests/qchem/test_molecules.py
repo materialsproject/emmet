@@ -25,13 +25,17 @@ def test_tasks(test_dir):
         data = json.load(f)
 
     for d in data:
-        d["last_updated"] = datetime.datetime.strptime(d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f")
+        d["last_updated"] = datetime.datetime.strptime(
+            d["last_updated"]["string"], "%Y-%m-%d %H:%M:%S.%f"
+        )
 
     tasks = [TaskDocument(**t) for t in data]
     return tasks
 
 
-@pytest.mark.skipif(not has_eigen, reason="OBAlign missing, presumably due to lack of Eigen")
+@pytest.mark.skipif(
+    not has_eigen, reason="OBAlign missing, presumably due to lack of Eigen"
+)
 def test_make_mol(test_tasks):
     molecule = MoleculeDoc.from_tasks(test_tasks)
     assert molecule.formula_alphabetical == "C3 H4 Li1 O3"
@@ -52,7 +56,9 @@ def test_make_mol(test_tasks):
         MoleculeDoc.from_tasks(bad_task_group)
 
 
-@pytest.mark.skipif(not has_eigen, reason="OBAlign missing, presumably due to lack of Eigen")
+@pytest.mark.skipif(
+    not has_eigen, reason="OBAlign missing, presumably due to lack of Eigen"
+)
 def test_make_deprecated_mol(test_tasks):
     bad_task_group = [
         task

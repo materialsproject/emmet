@@ -35,7 +35,13 @@ def metal_binding_resource(metal_binding_store):
             PaginationQuery(),
             SparseFieldsQuery(
                 MetalBindingDoc,
-                default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"],
+                default_fields=[
+                    "molecule_id",
+                    "property_id",
+                    "solvent",
+                    "method",
+                    "last_updated",
+                ],
             ),
         ],
         header_processor=GlobalHeaderProcessor(),
