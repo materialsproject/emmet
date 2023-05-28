@@ -31,9 +31,7 @@ def formula_to_criteria(formulas: str) -> Dict:
             formula_dummies = formulas.replace("*", "{}").format(*dummies[:nstars])
 
             try:
-                integer_formula = Composition(
-                    formula_dummies
-                ).get_integer_formula_and_factor()[0]
+                integer_formula = Composition(formula_dummies).get_integer_formula_and_factor()[0]
             except ValueError:
                 raise HTTPException(
                     status_code=400,
@@ -43,11 +41,7 @@ def formula_to_criteria(formulas: str) -> Dict:
             comp = Composition(integer_formula).reduced_composition
             crit = dict()
             crit["formula_anonymous"] = comp.anonymized_formula
-            real_elts = [
-                str(e)
-                for e in comp.elements
-                if e.as_dict().get("element", "A") not in dummies
-            ]
+            real_elts = [str(e) for e in comp.elements if e.as_dict().get("element", "A") not in dummies]
 
             for el, n in comp.to_reduced_dict.items():
                 if el in real_elts:
@@ -64,18 +58,12 @@ def formula_to_criteria(formulas: str) -> Dict:
                 detail="Problem processing one or more provided formulas.",
             )
 
-        if any(
-            isinstance(el, DummySpecies) for comp in composition_list for el in comp
-        ):
+        if any(isinstance(el, DummySpecies) for comp in composition_list for el in comp):
             # Assume fully anonymized formula
             if len(formula_list) == 1:
                 return {"formula_anonymous": composition_list[0].anonymized_formula}
             else:
-                return {
-                    "formula_anonymous": {
-                        "$in": [comp.anonymized_formula for comp in composition_list]
-                    }
-                }
+                return {"formula_anonymous": {"$in": [comp.anonymized_formula for comp in composition_list]}}
 
         else:
             if len(formula_list) == 1:
@@ -95,11 +83,7 @@ def formula_to_criteria(formulas: str) -> Dict:
 
                 return crit
             else:
-                return {
-                    "formula_pretty": {
-                        "$in": [comp.reduced_formula for comp in composition_list]
-                    }
-                }
+                return {"formula_pretty": {"$in": [comp.reduced_formula for comp in composition_list]}}
 
 
 def chemsys_to_criteria(chemsys: str) -> Dict:

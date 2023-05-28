@@ -15,9 +15,7 @@ class MagneticQuery(QueryOperator):
 
     def query(
         self,
-        ordering: Optional[Ordering] = Query(
-            None, description="Magnetic ordering of the material."
-        ),
+        ordering: Optional[Ordering] = Query(None, description="Magnetic ordering of the material."),
         total_magnetization_max: Optional[float] = Query(
             None,
             description="Maximum value for the total magnetization.",

@@ -72,11 +72,7 @@ FUNCTIONAL_CLASSES = {
     ],
 }
 
-FUNCTIONALS = [
-    rt
-    for functional_class in FUNCTIONAL_CLASSES
-    for rt in FUNCTIONAL_CLASSES[functional_class]
-]
+FUNCTIONALS = [rt for functional_class in FUNCTIONAL_CLASSES for rt in FUNCTIONAL_CLASSES[functional_class]]
 
 BASIS_SETS = [
     "6-31g*",

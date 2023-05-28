@@ -47,9 +47,7 @@ class BondingBuilder(MapBuilder):
         # in future do structure setting operations in a separate builder
         structure = SpacegroupAnalyzer(structure).get_conventional_standard_structure()
 
-        bonding_doc = BondingDoc.from_structure(
-            structure=structure, material_id=mpid, deprecated=deprecated
-        )
+        bonding_doc = BondingDoc.from_structure(structure=structure, material_id=mpid, deprecated=deprecated)
         doc = jsanitize(bonding_doc.dict(), allow_bson=True)
 
         return doc

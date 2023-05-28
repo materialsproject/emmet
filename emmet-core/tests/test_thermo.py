@@ -35,9 +35,7 @@ def O_structure(test_dir):
 
 
 @pytest.fixture
-def entries(
-    Fe3O4_structure, Fe2O3a_structure, Fe2O3b_structure, Fe_structure, O_structure
-):
+def entries(Fe3O4_structure, Fe2O3a_structure, Fe2O3b_structure, Fe_structure, O_structure):
     return MontyDecoder().process_decoded(
         [
             {

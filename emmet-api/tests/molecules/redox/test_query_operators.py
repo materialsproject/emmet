@@ -11,9 +11,9 @@ def test_redox_potential_query():
         min_oxidation_potential=4.0,
         max_oxidation_potential=6.0,
     ) == {
-        'criteria': {
-            'oxidation_potential': {'$gte': 4.0, '$lte': 6.0},
-            'reduction_potential': {'$gte': 0.0, '$lte': 0.8}
+        "criteria": {
+            "oxidation_potential": {"$gte": 4.0, "$lte": 6.0},
+            "reduction_potential": {"$gte": 0.0, "$lte": 0.8},
         }
     }
 
@@ -26,8 +26,8 @@ def test_redox_potential_query():
             min_oxidation_potential=4.0,
             max_oxidation_potential=6.0,
         ) == {
-            'criteria': {
-                'oxidation_potential': {'$gte': 4.0, '$lte': 6.0},
-                'reduction_potential': {'$gte': 0.0, '$lte': 0.8}
+            "criteria": {
+                "oxidation_potential": {"$gte": 4.0, "$lte": 6.0},
+                "reduction_potential": {"$gte": 0.0, "$lte": 0.8},
             }
         }

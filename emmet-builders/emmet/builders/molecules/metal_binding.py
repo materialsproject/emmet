@@ -13,12 +13,9 @@ from maggma.utils import grouper
 
 from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.molecules.atomic import PartialChargesDoc, PartialSpinsDoc
-from emmet.core.molecules.bonds import (MoleculeBondingDoc, metals)
+from emmet.core.molecules.bonds import MoleculeBondingDoc, metals
 from emmet.core.molecules.thermo import MoleculeThermoDoc
-from emmet.core.molecules.metal_binding import (
-    MetalBindingDoc,
-    METAL_BINDING_METHODS
-)
+from emmet.core.molecules.metal_binding import MetalBindingDoc, METAL_BINDING_METHODS
 from emmet.core.utils import jsanitize
 from emmet.builders.settings import EmmetBuildSettings
 
@@ -81,7 +78,6 @@ class MetalBindingBuilder(Builder):
         settings: Optional[EmmetBuildSettings] = None,
         **kwargs,
     ):
-
         self.molecules = molecules
         self.charges = charges
         self.spins = spins
@@ -167,19 +163,11 @@ class MetalBindingBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "formula_alphabetical"]
-            )
-        )
+        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
 
         processed_docs = set([e for e in self.metal_binding.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {
-            d["formula_alphabetical"]
-            for d in all_mols
-            if d[self.molecules.key] in to_process_docs
-        }
+        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
 
         N = ceil(len(to_process_forms) / number_splits)
 
@@ -206,19 +194,11 @@ class MetalBindingBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "formula_alphabetical"]
-            )
-        )
+        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
 
         processed_docs = set([e for e in self.metal_binding.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {
-            d["formula_alphabetical"]
-            for d in all_mols
-            if d[self.molecules.key] in to_process_docs
-        }
+        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
         self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
@@ -252,7 +232,6 @@ class MetalBindingBuilder(Builder):
         binding_docs = list()
 
         for mol in mols:
-
             # First: do we need to do this? Are there actually metals in this molecule? And species other than metals?
             species = mol.species
             metal_indices = [i for i, e in enumerate(species) if e in metals]
@@ -325,35 +304,25 @@ class MetalBindingBuilder(Builder):
                 for method in self.methods:
                     plan = False
                     if mol.spin_multiplicity == 1:
-                        if (
-                                method == "nbo"
-                                and all([x.get("nbo") is not None for x in [this_charge, this_bond]])  # type: ignore
-                        ):
+                        if method == "nbo" and all(
+                            [x.get("nbo") is not None for x in [this_charge, this_bond]]
+                        ):  # type: ignore
                             plan = True
                             charge_doc = this_charge.get("nbo")  # type: ignore
                             spin_doc = None
                             bond_doc = this_bond.get("nbo")  # type: ignore
                         elif method == "mulliken-OB-mee" and (
-                                this_charge.get("mulliken") is not None  # type: ignore
-                                and this_bond.get("OpenBabelNN + metal_edge_extender") is not None  # type: ignore
-                                ):
+                            this_charge.get("mulliken") is not None  # type: ignore
+                            and this_bond.get("OpenBabelNN + metal_edge_extender") is not None  # type: ignore
+                        ):
                             plan = True
                             charge_doc = this_charge.get("mulliken")  # type: ignore
                             spin_doc = None
                             bond_doc = this_bond.get("OpenBabelNN + metal_edge_extender")  # type: ignore
                     else:
-                        if (
-                            method == "nbo"
-                            and all(
-                                [
-                                    x.get("nbo") is not None for x in [  # type: ignore
-                                        this_charge,
-                                        this_spin,
-                                        this_bond
-                                    ]
-                                ]
-                            )  # type: ignore
-                        ):
+                        if method == "nbo" and all(
+                            [x.get("nbo") is not None for x in [this_charge, this_spin, this_bond]]  # type: ignore
+                        ):  # type: ignore
                             charge_lot = this_charge.get("nbo").level_of_theory  # type: ignore
                             spin_lot = this_spin.get("nbo").level_of_theory  # type: ignore
                             if charge_lot == spin_lot:  # type: ignore
@@ -362,11 +331,11 @@ class MetalBindingBuilder(Builder):
                                 spin_doc = this_spin.get("nbo")  # type: ignore
                                 bond_doc = this_bond.get("nbo")  # type: ignore
                         elif (
-                                method == "mulliken-OB-mee"
-                                and this_charge.get("mulliken") is not None  # type: ignore
-                                and this_spin.get("mulliken") is not None  # type: ignore
-                                and this_bond.get("OpenBabelNN + metal_edge_extender") is not None  # type: ignore
-                                ):
+                            method == "mulliken-OB-mee"
+                            and this_charge.get("mulliken") is not None  # type: ignore
+                            and this_spin.get("mulliken") is not None  # type: ignore
+                            and this_bond.get("OpenBabelNN + metal_edge_extender") is not None  # type: ignore
+                        ):
                             charge_lot = this_charge.get("mulliken").level_of_theory  # type: ignore
                             spin_lot = this_spin.get("mulliken").level_of_theory  # type: ignore
                             if charge_lot == spin_lot:  # type: ignore
@@ -411,7 +380,8 @@ class MetalBindingBuilder(Builder):
 
                         # Grab thermo doc for the relevant metal ion/atom (if available)
                         this_metal_thermo = [
-                            MoleculeThermoDoc(**e) for e in self.thermo.query(
+                            MoleculeThermoDoc(**e)
+                            for e in self.thermo.query(
                                 {
                                     "formula_alphabetical": f"{metal_species}1",
                                     "charge": charge,
@@ -434,12 +404,9 @@ class MetalBindingBuilder(Builder):
                         mg_copy.remove_nodes([metal_index])
                         new_hash = weisfeiler_lehman_graph_hash(mg_copy.graph.to_undirected(), node_attr="specie")
                         nometal_mol_doc = [
-                            MoleculeDoc(**e) for e in self.molecules.query(
-                                {
-                                    "species_hash": new_hash,
-                                    "charge": nometal_charge,
-                                    "spin_multiplicity": nometal_spin
-                                }
+                            MoleculeDoc(**e)
+                            for e in self.molecules.query(
+                                {"species_hash": new_hash, "charge": nometal_charge, "spin_multiplicity": nometal_spin}
                             )
                         ]
                         if len(nometal_mol_doc) == 0:
@@ -447,10 +414,11 @@ class MetalBindingBuilder(Builder):
 
                         nometal_mol_id = nometal_mol_doc[0].molecule_id
                         this_nometal_thermo = [
-                            MoleculeThermoDoc(**e) for e in self.thermo.query(
+                            MoleculeThermoDoc(**e)
+                            for e in self.thermo.query(
                                 {
                                     "molecule_id": nometal_mol_id,
-                                    "lot_solvent": base_thermo_doc.lot_solvent  # type: ignore
+                                    "lot_solvent": base_thermo_doc.lot_solvent,  # type: ignore
                                 }
                             )
                         ]
@@ -469,7 +437,7 @@ class MetalBindingBuilder(Builder):
                         bonding=bond_doc,
                         base_thermo=base_thermo_doc,
                         metal_thermo=metal_thermo,
-                        nometal_thermo=nometal_thermo
+                        nometal_thermo=nometal_thermo,
                     )
 
                     if doc is not None and len(doc.binding_data) != 0:

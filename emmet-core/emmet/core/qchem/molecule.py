@@ -137,9 +137,7 @@ def evaluate_task_entry(
 
 
 class MoleculeDoc(CoreMoleculeDoc):
-    species: List[str] = Field(
-        None, description="Ordered list of elements/species in this Molecule."
-    )
+    species: List[str] = Field(None, description="Ordered list of elements/species in this Molecule.")
 
     molecules: Dict[str, Molecule] = Field(
         None,
@@ -153,21 +151,15 @@ class MoleculeDoc(CoreMoleculeDoc):
 
     species_hash: str = Field(
         None,
-        description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph "
-        "node attribute.",
+        description="Weisfeiler Lehman (WL) graph hash using the atom species as the graph " "node attribute.",
     )
     coord_hash: str = Field(
         None,
-        description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph "
-        "node attribute.",
+        description="Weisfeiler Lehman (WL) graph hash using the atom coordinates as the graph " "node attribute.",
     )
 
-    inchi: str = Field(
-        None, description="International Chemical Identifier (InChI) for this molecule"
-    )
-    inchi_key: str = Field(
-        None, description="Standardized hash of the InChI for this molecule"
-    )
+    inchi: str = Field(None, description="International Chemical Identifier (InChI) for this molecule")
+    inchi_key: str = Field(None, description="Standardized hash of the InChI for this molecule")
 
     calc_types: Mapping[str, CalcType] = Field(  # type: ignore
         None,
@@ -305,11 +297,7 @@ class MoleculeDoc(CoreMoleculeDoc):
             best_entries = dict()
             for lot_solv in unique_lot_solvents:
                 relevant_calcs = sorted(
-                    [
-                        doc
-                        for doc in task_group
-                        if doc.lot_solvent == lot_solv and doc.is_valid
-                    ],
+                    [doc for doc in task_group if doc.lot_solvent == lot_solv and doc.is_valid],
                     key=evaluate_task,
                 )
 
@@ -332,9 +320,7 @@ class MoleculeDoc(CoreMoleculeDoc):
             ]
 
             try:
-                best_molecule_calc = sorted(geometry_optimizations, key=evaluate_task)[
-                    0
-                ]
+                best_molecule_calc = sorted(geometry_optimizations, key=evaluate_task)[0]
             except IndexError:
                 raise Exception("No geometry optimization calculations available!")
             molecule = best_molecule_calc.output.optimized_molecule
@@ -350,14 +336,10 @@ class MoleculeDoc(CoreMoleculeDoc):
                     initial_molecules.append(Molecule.from_dict(task.orig["molecule"]))
 
             mm = MoleculeMatcher()
-            initial_molecules = [
-                group[0] for group in mm.group_molecules(initial_molecules)
-            ]
+            initial_molecules = [group[0] for group in mm.group_molecules(initial_molecules)]
 
             # Deprecated
-            deprecated = all(
-                task.task_id in deprecated_tasks for task in geometry_optimizations
-            )
+            deprecated = all(task.task_id in deprecated_tasks for task in geometry_optimizations)
             deprecated = deprecated or best_molecule_calc.task_id in deprecated_tasks
 
             # Origins
@@ -374,11 +356,7 @@ class MoleculeDoc(CoreMoleculeDoc):
             all_lot_solvs = set(lot_solvents.values())
             for lot_solv in all_lot_solvs:
                 relevant_calcs = sorted(
-                    [
-                        doc
-                        for doc in geometry_optimizations
-                        if doc.lot_solvent == lot_solv and doc.is_valid
-                    ],
+                    [doc for doc in geometry_optimizations if doc.lot_solvent == lot_solv and doc.is_valid],
                     key=evaluate_task,
                 )
 
@@ -461,9 +439,7 @@ class MoleculeDoc(CoreMoleculeDoc):
         unique_calc_types = list(set(calc_types.values()))
 
         # Arbitrarily choose task with lowest ID
-        molecule = sorted(task_group, key=lambda x: x.task_id)[
-            0
-        ].output.initial_molecule
+        molecule = sorted(task_group, key=lambda x: x.task_id)[0].output.initial_molecule
         species = [e.symbol for e in molecule.species]
 
         # Molecule ID

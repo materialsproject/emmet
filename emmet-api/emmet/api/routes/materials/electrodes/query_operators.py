@@ -98,9 +98,7 @@ class ElectrodeElementsQuery(QueryOperator):
                     status_code=400,
                     detail="Problem processing one or more provided elements.",
                 )
-            crit["entries_composition_summary.all_elements"]["$all"] = [
-                str(el) for el in element_list
-            ]
+            crit["entries_composition_summary.all_elements"]["$all"] = [str(el) for el in element_list]
 
         if exclude_elements:
             try:
@@ -110,9 +108,7 @@ class ElectrodeElementsQuery(QueryOperator):
                     status_code=400,
                     detail="Problem processing one or more provided elements.",
                 )
-            crit["entries_composition_summary.all_elements"]["$nin"] = [
-                str(el) for el in element_list
-            ]
+            crit["entries_composition_summary.all_elements"]["$nin"] = [str(el) for el in element_list]
 
         return {"criteria": crit}
 
@@ -325,23 +321,12 @@ class ElectrodeMultiMaterialIDQuery(QueryOperator):
 
     def query(
         self,
-        material_ids: Optional[str] = Query(
-            None, description="Comma-separated list of material_id values to query on"
-        ),
+        material_ids: Optional[str] = Query(None, description="Comma-separated list of material_id values to query on"),
     ) -> STORE_PARAMS:
         crit = {}  # type: dict
 
         if material_ids:
-            crit.update(
-                {
-                    "material_ids": {
-                        "$in": [
-                            material_id.strip()
-                            for material_id in material_ids.split(",")
-                        ]
-                    }
-                }
-            )
+            crit.update({"material_ids": {"$in": [material_id.strip() for material_id in material_ids.split(",")]}})
 
         return {"criteria": crit}
 
@@ -353,16 +338,12 @@ class MultiBatteryIDQuery(QueryOperator):
 
     def query(
         self,
-        battery_ids: Optional[str] = Query(
-            None, description="Comma-separated list of battery_id values to query on"
-        ),
+        battery_ids: Optional[str] = Query(None, description="Comma-separated list of battery_id values to query on"),
     ) -> STORE_PARAMS:
         crit = {}  # type: dict
 
         if battery_ids:
-            battery_id_list = [
-                material_id.strip() for material_id in battery_ids.split(",")
-            ]
+            battery_id_list = [material_id.strip() for material_id in battery_ids.split(",")]
 
             if len(battery_id_list) == 1:
                 crit.update({"battery_id": battery_id_list[0]})

@@ -60,15 +60,13 @@ class DielectricBuilder(Builder):
         mat_ids = self.materials.distinct(self.materials.key, criteria=q)
         di_ids = self.dielectric.distinct(self.dielectric.key)
 
-        mats_set = set(
-            self.dielectric.newer_in(target=self.materials, criteria=q, exhaustive=True)
-        ) | (set(mat_ids) - set(di_ids))
+        mats_set = set(self.dielectric.newer_in(target=self.materials, criteria=q, exhaustive=True)) | (
+            set(mat_ids) - set(di_ids)
+        )
 
         mats = [mat for mat in mats_set]
 
-        self.logger.info(
-            "Processing {} materials for dielectric data".format(len(mats))
-        )
+        self.logger.info("Processing {} materials for dielectric data".format(len(mats)))
 
         self.total = len(mats)
 
@@ -162,14 +160,10 @@ class DielectricBuilder(Builder):
                 is_hubbard = task_query["input"]["is_hubbard"]
 
                 if (
-                    task_query["orig_inputs"]["kpoints"]["generation_style"]
-                    == "Monkhorst"
-                    or task_query["orig_inputs"]["kpoints"]["generation_style"]
-                    == "Gamma"
+                    task_query["orig_inputs"]["kpoints"]["generation_style"] == "Monkhorst"
+                    or task_query["orig_inputs"]["kpoints"]["generation_style"] == "Gamma"
                 ):
-                    nkpoints = np.prod(
-                        task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0
-                    )
+                    nkpoints = np.prod(task_query["orig_inputs"]["kpoints"]["kpoints"][0], axis=0)
 
                 else:
                     nkpoints = task_query["orig_inputs"]["kpoints"]["nkpoints"]

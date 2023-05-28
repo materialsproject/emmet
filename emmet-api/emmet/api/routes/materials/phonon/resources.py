@@ -12,9 +12,7 @@ def phonon_bsdos_resource(phonon_bs_store):
         PhononBSDOSDoc,
         query_operators=[
             PaginationQuery(),
-            SparseFieldsQuery(
-                PhononBSDOSDoc, default_fields=["task_id", "last_updated"]
-            ),
+            SparseFieldsQuery(PhononBSDOSDoc, default_fields=["task_id", "last_updated"]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Phonon"],

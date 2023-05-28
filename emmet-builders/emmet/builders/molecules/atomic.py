@@ -110,19 +110,11 @@ class PartialChargesBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "formula_alphabetical"]
-            )
-        )
+        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
 
         processed_docs = set([e for e in self.charges.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {
-            d["formula_alphabetical"]
-            for d in all_mols
-            if d[self.molecules.key] in to_process_docs
-        }
+        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
 
         N = ceil(len(to_process_forms) / number_splits)
 
@@ -151,19 +143,11 @@ class PartialChargesBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "formula_alphabetical"]
-            )
-        )
+        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
 
         processed_docs = set([e for e in self.charges.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {
-            d["formula_alphabetical"]
-            for d in all_mols
-            if d[self.molecules.key] in to_process_docs
-        }
+        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
         self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
@@ -198,10 +182,7 @@ class PartialChargesBuilder(Builder):
 
         for mol in mols:
             correct_charge_spin = [
-                e
-                for e in mol.entries
-                if e["charge"] == mol.charge
-                and e["spin_multiplicity"] == mol.spin_multiplicity
+                e for e in mol.entries if e["charge"] == mol.charge and e["spin_multiplicity"] == mol.spin_multiplicity
             ]
 
             # Organize by solvent environment
@@ -221,10 +202,7 @@ class PartialChargesBuilder(Builder):
                 for method in self.methods:
                     # For each method, grab entries that have the relevant data
                     relevant_entries = [
-                        e
-                        for e in sorted_entries
-                        if e.get(method) is not None
-                        or e["output"].get(method) is not None
+                        e for e in sorted_entries if e.get(method) is not None or e["output"].get(method) is not None
                     ]
 
                     if len(relevant_entries) == 0:
@@ -389,19 +367,11 @@ class PartialSpinsBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "formula_alphabetical"]
-            )
-        )
+        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
 
         processed_docs = set([e for e in self.spins.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {
-            d["formula_alphabetical"]
-            for d in all_mols
-            if d[self.molecules.key] in to_process_docs
-        }
+        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
 
         N = ceil(len(to_process_forms) / number_splits)
 
@@ -430,19 +400,11 @@ class PartialSpinsBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "formula_alphabetical"]
-            )
-        )
+        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
 
         processed_docs = set([e for e in self.spins.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {
-            d["formula_alphabetical"]
-            for d in all_mols
-            if d[self.molecules.key] in to_process_docs
-        }
+        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
         self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
@@ -481,10 +443,7 @@ class PartialSpinsBuilder(Builder):
                 continue
 
             correct_charge_spin = [
-                e
-                for e in mol.entries
-                if e["charge"] == mol.charge
-                and e["spin_multiplicity"] == mol.spin_multiplicity
+                e for e in mol.entries if e["charge"] == mol.charge and e["spin_multiplicity"] == mol.spin_multiplicity
             ]
 
             # Organize by solvent environment
@@ -504,10 +463,7 @@ class PartialSpinsBuilder(Builder):
                 for method in self.methods:
                     # For each method, grab entries that have the relevant data
                     relevant_entries = [
-                        e
-                        for e in sorted_entries
-                        if e.get(method) is not None
-                        or e["output"].get(method) is not None
+                        e for e in sorted_entries if e.get(method) is not None or e["output"].get(method) is not None
                     ]
 
                     if len(relevant_entries) == 0:
@@ -551,9 +507,7 @@ class PartialSpinsBuilder(Builder):
 
                     spins_docs.append(doc)
 
-        self.logger.debug(
-            f"Produced {len(spins_docs)} partial spins docs for {formula}"
-        )
+        self.logger.debug(f"Produced {len(spins_docs)} partial spins docs for {formula}")
 
         return jsanitize([doc.dict() for doc in spins_docs], allow_bson=True)
 

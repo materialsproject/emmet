@@ -33,9 +33,7 @@ class StructureSimilarityBuilder(Builder):
         self.structure_similarity = structure_similarity
         self.fp_type = fp_type
 
-        super().__init__(
-            sources=[site_descriptors], targets=[structure_similarity], **kwargs
-        )
+        super().__init__(sources=[site_descriptors], targets=[structure_similarity], **kwargs)
 
     def get_items(self):
         """
@@ -78,17 +76,13 @@ class StructureSimilarityBuilder(Builder):
             dict: similarity measures.
         """
         self.logger.debug(
-            "Similarities for {} and {}".format(
-                item[0][self.site_descriptors.key], item[1][self.site_descriptors.key]
-            )
+            "Similarities for {} and {}".format(item[0][self.site_descriptors.key], item[1][self.site_descriptors.key])
         )
 
         sim_doc = {}
         sim_doc = self.get_similarities(item[0], item[1])
         sim_doc[self.structure_similarity.key] = tuple(
-            sorted(
-                [item[0][self.site_descriptors.key], item[1][self.site_descriptors.key]]
-            )
+            sorted([item[0][self.site_descriptors.key], item[1][self.site_descriptors.key]])
         )
 
         return sim_doc
@@ -114,9 +108,7 @@ class StructureSimilarityBuilder(Builder):
             dout = {}
             l = {}
             v = {}
-            for i, li in enumerate(
-                [d1["statistics"][self.fp_type], d2["statistics"][self.fp_type]]
-            ):
+            for i, li in enumerate([d1["statistics"][self.fp_type], d2["statistics"][self.fp_type]]):
                 v[i] = []
                 l[i] = []
                 # for optype, stats in d.items():
@@ -133,9 +125,7 @@ class StructureSimilarityBuilder(Builder):
             for k in l[0]:
                 if k not in l[1]:
                     raise RuntimeError(
-                        'Label "{}" not found in second site-'
-                        "fingerprint statistics "
-                        "dictionary".format(k)
+                        'Label "{}" not found in second site-' "fingerprint statistics " "dictionary".format(k)
                     )
             v1 = np.array([v[0][k] for k in range(len(l[0]))])
             v2 = np.array([v[1][l[1].index(k)] for k in l[0]])
@@ -144,8 +134,6 @@ class StructureSimilarityBuilder(Builder):
             doc = dout
 
         except Exception as e:
-            self.logger.error(
-                "Failed calculating structure similarity" "metrics: {}".format(e)
-            )
+            self.logger.error("Failed calculating structure similarity" "metrics: {}".format(e))
 
         return doc

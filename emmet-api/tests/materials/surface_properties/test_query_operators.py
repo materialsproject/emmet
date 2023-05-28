@@ -16,6 +16,4 @@ def test_reconstructed_operator():
         dumpfn(op, "temp.json")
         new_op = loadfn("temp.json")
 
-        assert new_op.query(has_reconstructed=True) == {
-            "criteria": {"has_reconstructed": True}
-        }
+        assert new_op.query(has_reconstructed=True) == {"criteria": {"has_reconstructed": True}}

@@ -8,13 +8,7 @@ from emmet.core.utils import jsanitize
 
 
 class RobocrystallographerBuilder(MapBuilder):
-    def __init__(
-        self,
-        oxidation_states: Store,
-        robocrys: Store,
-        query: Optional[Dict] = None,
-        **kwargs
-    ):
+    def __init__(self, oxidation_states: Store, robocrys: Store, query: Optional[Dict] = None, **kwargs):
         self.oxidation_states = oxidation_states
         self.robocrys = robocrys
         self.kwargs = kwargs

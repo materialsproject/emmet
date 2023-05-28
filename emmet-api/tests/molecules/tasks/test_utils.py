@@ -6,9 +6,7 @@ from emmet.api.routes.molecules.tasks.utils import calcs_reversed_to_trajectory
 
 
 def test_calcs_reversed_to_trajectory():
-    with open(
-        os.path.join(MAPISettings().TEST_FILES, "calcs_reversed_mpcule_36097.json")
-    ) as file:
+    with open(os.path.join(MAPISettings().TEST_FILES, "calcs_reversed_mpcule_36097.json")) as file:
         calcs_reversed = load(file)
         trajectories = calcs_reversed_to_trajectory(calcs_reversed)
 
@@ -30,5 +28,5 @@ def test_calcs_reversed_to_trajectory():
         0.134817,
         0.13877,
         0.108679,
-        0.084031
+        0.084031,
     ]

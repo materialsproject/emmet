@@ -56,13 +56,9 @@ class GrainBoundaryDoc(BaseModel):
         description="Grain boundary energy in J/m^2.",
     )
 
-    initial_structure: GrainBoundary = Field(
-        None, description="Initial grain boundary structure."
-    )
+    initial_structure: GrainBoundary = Field(None, description="Initial grain boundary structure.")
 
-    final_structure: GrainBoundary = Field(
-        None, description="Final grain boundary structure."
-    )
+    final_structure: GrainBoundary = Field(None, description="Final grain boundary structure.")
 
     pretty_formula: str = Field(None, description="Reduced formula of the material.")
 
@@ -70,9 +66,7 @@ class GrainBoundaryDoc(BaseModel):
 
     cif: str = Field(None, description="CIF file of the structure.")
 
-    chemsys: str = Field(
-        None, description="Dash-delimited string of elements in the material."
-    )
+    chemsys: str = Field(None, description="Dash-delimited string of elements in the material.")
 
     last_updated: datetime = Field(
         None,

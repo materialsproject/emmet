@@ -11,9 +11,7 @@ class IsStableQuery(QueryOperator):
 
     def query(
         self,
-        is_stable: Optional[bool] = Query(
-            None, description="Whether the material is stable."
-        ),
+        is_stable: Optional[bool] = Query(None, description="Whether the material is stable."),
     ):
         crit = {}
 
@@ -34,9 +32,7 @@ class MultiThermoIDQuery(QueryOperator):
 
     def query(
         self,
-        thermo_ids: Optional[str] = Query(
-            None, description="Comma-separated list of thermo_id values to query on"
-        ),
+        thermo_ids: Optional[str] = Query(None, description="Comma-separated list of thermo_id values to query on"),
     ) -> STORE_PARAMS:
         crit = {}  # type: dict
 
@@ -58,16 +54,12 @@ class MultiThermoTypeQuery(QueryOperator):
 
     def query(
         self,
-        thermo_types: Optional[str] = Query(
-            None, description="Comma-separated list of thermo_type values to query on"
-        ),
+        thermo_types: Optional[str] = Query(None, description="Comma-separated list of thermo_type values to query on"),
     ) -> STORE_PARAMS:
         crit = {}  # type: dict
 
         if thermo_types:
-            thermo_type_list = [
-                thermo_type.strip() for thermo_type in thermo_types.split(",")
-            ]
+            thermo_type_list = [thermo_type.strip() for thermo_type in thermo_types.split(",")]
 
             if len(thermo_type_list) == 1:
                 crit.update({"thermo_type": thermo_type_list[0]})

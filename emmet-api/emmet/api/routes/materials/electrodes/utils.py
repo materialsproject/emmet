@@ -32,9 +32,7 @@ def electrodes_formula_to_criteria(formulas: str) -> Dict:
             formula_dummies = formulas.replace("*", "{}").format(*dummies[:nstars])
 
             try:
-                integer_formula = Composition(
-                    formula_dummies
-                ).get_integer_formula_and_factor()[0]
+                integer_formula = Composition(formula_dummies).get_integer_formula_and_factor()[0]
             except (ValueError, IndexError):
                 raise HTTPException(
                     status_code=400,
@@ -43,31 +41,19 @@ def electrodes_formula_to_criteria(formulas: str) -> Dict:
 
             comp = Composition(integer_formula).reduced_composition
             crit = dict()  # type: dict
-            crit[
-                "entries_composition_summary.all_formula_anonymous"
-            ] = comp.anonymized_formula
+            crit["entries_composition_summary.all_formula_anonymous"] = comp.anonymized_formula
 
-            real_elts = [
-                str(e)
-                for e in comp.elements
-                if e.as_dict().get("element", "A") not in dummies
-            ]
+            real_elts = [str(e) for e in comp.elements if e.as_dict().get("element", "A") not in dummies]
 
             for el, n in comp.to_reduced_dict.items():
                 if el in real_elts:
-                    crit[
-                        f"entries_composition_summary.all_composition_reduced.{el}"
-                    ] = n
+                    crit[f"entries_composition_summary.all_composition_reduced.{el}"] = n
 
             return crit
 
     else:
         try:
-            if any(
-                isinstance(el, DummySpecies)
-                for formula in formula_list
-                for el in Composition(formula)
-            ):
+            if any(isinstance(el, DummySpecies) for formula in formula_list for el in Composition(formula)):
                 # Assume fully anonymized formula
                 if len(formula_list) == 1:
                     return {
@@ -78,10 +64,7 @@ def electrodes_formula_to_criteria(formulas: str) -> Dict:
                 else:
                     return {
                         "entries_composition_summary.all_formula_anonymous": {
-                            "$in": [
-                                Composition(formula).anonymized_formula
-                                for formula in formula_list
-                            ]
+                            "$in": [Composition(formula).anonymized_formula for formula in formula_list]
                         }
                     }
 
@@ -94,18 +77,13 @@ def electrodes_formula_to_criteria(formulas: str) -> Dict:
                     crit["nelements"] = {"$in": [nele, nele - 1]}  # type: ignore
 
                     for el, n in comp.to_reduced_dict.items():
-                        crit[
-                            f"entries_composition_summary.all_composition_reduced.{el}"
-                        ] = n
+                        crit[f"entries_composition_summary.all_composition_reduced.{el}"] = n
 
                     return crit
                 else:
                     return {
                         "entries_composition_summary.all_formulas": {
-                            "$in": [
-                                Composition(formula).reduced_formula
-                                for formula in formula_list
-                            ]
+                            "$in": [Composition(formula).reduced_formula for formula in formula_list]
                         }
                     }
         except (ValueError, IndexError):
@@ -143,9 +121,7 @@ def electrodes_chemsys_to_criteria(chemsys: str) -> Dict:
             neles = len(eles)
 
             crit["nelements"] = {"$in": [neles, neles - 1]}
-            crit["entries_composition_summary.all_elements"] = {
-                "$all": [ele for ele in eles if ele != "*"]
-            }
+            crit["entries_composition_summary.all_elements"] = {"$all": [ele for ele in eles if ele != "*"]}
 
             if crit["entries_composition_summary.all_elements"]["$all"] == []:
                 del crit["entries_composition_summary.all_elements"]

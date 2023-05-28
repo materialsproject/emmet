@@ -19,9 +19,7 @@ class MAPISettings(BaseSettings):
 
     DB_VERSION: str = Field("2021.11.10", description="Database version")
 
-    DB_NAME_SUFFIX: Literal["blue", "green"] = Field(
-        None, description="Database name suffix. Either blue or green."
-    )
+    DB_NAME_SUFFIX: Literal["blue", "green"] = Field(None, description="Database name suffix. Either blue or green.")
 
     TIMEOUT: int = Field(
         20,

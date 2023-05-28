@@ -30,9 +30,7 @@ class PointGroupData(BaseModel):
     Defines symmetry for a molecule document
     """
 
-    point_group: str = Field(
-        None, title="Point Group Symbol", description="The point group for the lattice"
-    )
+    point_group: str = Field(None, title="Point Group Symbol", description="The point group for the lattice")
 
     rotation_number: float = Field(
         None,
@@ -40,9 +38,7 @@ class PointGroupData(BaseModel):
         description="Rotational symmetry number for the molecule",
     )
 
-    linear: bool = Field(
-        None, title="Molecule Linearity", description="Is the molecule linear?"
-    )
+    linear: bool = Field(None, title="Molecule Linearity", description="Is the molecule linear?")
 
     tolerance: float = Field(
         None,
@@ -132,9 +128,7 @@ class SymmetryData(BaseModel):
         description="The spacegroup number for the lattice.",
     )
 
-    point_group: str = Field(
-        None, title="Point Group Symbol", description="The point group for the lattice."
-    )
+    point_group: str = Field(None, title="Point Group Symbol", description="The point group for the lattice.")
 
     symprec: float = Field(
         None,

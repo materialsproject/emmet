@@ -9,7 +9,7 @@ from emmet.api.routes.molecules.molecules.query_operators import (
     FormulaQuery,
     ChemsysQuery,
     ElementsQuery,
-    ChargeSpinQuery
+    ChargeSpinQuery,
 )
 from emmet.api.routes.molecules.metal_binding.query_operators import BindingDataQuery
 from emmet.api.routes.molecules.utils import MethodQuery, MultiPropertyIDQuery
@@ -35,13 +35,7 @@ def metal_binding_resource(metal_binding_store):
             PaginationQuery(),
             SparseFieldsQuery(
                 MetalBindingDoc,
-                default_fields=[
-                    "molecule_id",
-                    "property_id",
-                    "solvent",
-                    "method",
-                    "last_updated"
-                ],
+                default_fields=["molecule_id", "property_id", "solvent", "method", "last_updated"],
             ),
         ],
         header_processor=GlobalHeaderProcessor(),

@@ -31,9 +31,7 @@ test_structures = {
 def test_chemenv(structure: Structure):
     """Very simple test to make sure this actually works"""
     print(f"Should work : {structure.composition}")
-    doc = ChemEnvDoc.from_structure(
-        structure=structure, material_id=33, deprecated=False
-    )
+    doc = ChemEnvDoc.from_structure(structure=structure, material_id=33, deprecated=False)
     valences = [getattr(site.specie, "oxi_state", None) for site in structure]
     valences = [v for v in valences if v is not None]
     if len(valences) == len(structure):
@@ -43,7 +41,4 @@ def test_chemenv(structure: Structure):
     #    # ChemEnv cannot deliver an answer without oxidation states.
     #    assert doc.dict()["warnings"] == "ChemEnv algorithm failed."
     else:
-        assert (
-            doc.dict()["warnings"]
-            == "No oxidation states available. Cation-anion bonds cannot be identified."
-        )
+        assert doc.dict()["warnings"] == "No oxidation states available. Cation-anion bonds cannot be identified."

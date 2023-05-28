@@ -36,9 +36,7 @@ def conversion_elec(test_dir):
     conversion_electrodes = {}
 
     entries_LCO = loadfn(test_dir / "LiCoO2_batt.json")
-    c = ConversionElectrode.from_composition_and_entries(
-        Composition("LiCoO2"), entries_LCO, working_ion_symbol="Li"
-    )
+    c = ConversionElectrode.from_composition_and_entries(Composition("LiCoO2"), entries_LCO, working_ion_symbol="Li")
     conversion_electrodes["LiCoO2"] = {
         "working_ion": "Li",
         "CE": c,
@@ -55,10 +53,7 @@ def conversion_elec(test_dir):
         }
     }
 
-    return {
-        k: (conversion_electrodes[k], expected_properties[k])
-        for k in conversion_electrodes.keys()
-    }
+    return {k: (conversion_electrodes[k], expected_properties[k]) for k in conversion_electrodes.keys()}
 
 
 def test_InsertionDocs(insertion_elec):

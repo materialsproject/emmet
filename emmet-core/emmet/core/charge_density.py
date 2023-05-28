@@ -7,9 +7,7 @@ class ChgcarDataDoc(BaseModel):
     Electron charge density metadata for selected materials.
     """
 
-    fs_id: str = Field(
-        None, description="Unique object ID for the charge density data."
-    )
+    fs_id: str = Field(None, description="Unique object ID for the charge density data.")
 
     last_updated: datetime = Field(
         None,

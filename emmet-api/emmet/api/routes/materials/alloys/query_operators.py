@@ -11,27 +11,15 @@ class MaterialIDsSearchQuery(QueryOperator):
 
     def query(
         self,
-        material_ids: Optional[str] = Query(
-            None, description="Comma-separated list of material_ids to query on"
-        ),
+        material_ids: Optional[str] = Query(None, description="Comma-separated list of material_ids to query on"),
     ) -> STORE_PARAMS:
         crit = {}
 
         if material_ids:
-            terminal_search = {
-                "_search.id": {
-                    "$in": [
-                        material_id.strip() for material_id in material_ids.split(",")
-                    ]
-                }
-            }
+            terminal_search = {"_search.id": {"$in": [material_id.strip() for material_id in material_ids.split(",")]}}
 
             member_search = {
-                "_search.member_ids": {
-                    "$in": [
-                        material_id.strip() for material_id in material_ids.split(",")
-                    ]
-                }
+                "_search.member_ids": {"$in": [material_id.strip() for material_id in material_ids.split(",")]}
             }
 
             crit.update({"$or": [terminal_search, member_search]})
@@ -42,18 +30,12 @@ class MaterialIDsSearchQuery(QueryOperator):
 class FormulaSearchQuery(QueryOperator):
     def query(
         self,
-        formulae: Optional[str] = Query(
-            None, description="Comma-separated list of end-point formulas to query."
-        ),
+        formulae: Optional[str] = Query(None, description="Comma-separated list of end-point formulas to query."),
     ) -> STORE_PARAMS:
         crit = {}
 
         if formulae:
-            formula_search = {
-                "_search.formula": {
-                    "$in": [formula.strip() for formula in formulae.split(",")]
-                }
-            }
+            formula_search = {"_search.formula": {"$in": [formula.strip() for formula in formulae.split(",")]}}
 
             crit.update(formula_search)
 

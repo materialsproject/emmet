@@ -20,9 +20,7 @@ class PropertyOrigin(BaseModel):
     """
 
     name: str = Field(..., description="The property name")
-    task_id: Union[MPID, MPculeID] = Field(
-        ..., description="The calculation ID this property comes from"
-    )
+    task_id: Union[MPID, MPculeID] = Field(..., description="The calculation ID this property comes from")
     last_updated: datetime = Field(
         description="The timestamp when this calculation was last updated",
         default_factory=datetime.utcnow,
@@ -87,13 +85,9 @@ class MaterialsDoc(StructureMetadata):
         default_factory=datetime.utcnow,
     )
 
-    origins: List[PropertyOrigin] = Field(
-        None, description="Dictionary for tracking the provenance of properties."
-    )
+    origins: List[PropertyOrigin] = Field(None, description="Dictionary for tracking the provenance of properties.")
 
-    warnings: List[str] = Field(
-        [], description="Any warnings related to this material."
-    )
+    warnings: List[str] = Field([], description="Any warnings related to this material.")
 
     @classmethod
     def from_structure(cls: Type[T], structure: Structure, material_id: MPID, **kwargs) -> T:  # type: ignore[override]
@@ -166,9 +160,7 @@ class CoreMoleculeDoc(MoleculeMetadata):
         default_factory=datetime.utcnow,
     )
 
-    origins: List[PropertyOrigin] = Field(
-        None, description="Dictionary for tracking the provenance of properties"
-    )
+    origins: List[PropertyOrigin] = Field(None, description="Dictionary for tracking the provenance of properties")
 
     warnings: List[str] = Field([], description="Any warnings related to this molecule")
 

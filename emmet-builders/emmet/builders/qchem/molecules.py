@@ -152,17 +152,11 @@ class MoleculesAssociationBuilder(Builder):
         temp_query["state"] = "successful"
 
         self.logger.info("Finding tasks to process")
-        all_tasks = list(
-            self.tasks.query(temp_query, [self.tasks.key, "species_hash"])
-        )
+        all_tasks = list(self.tasks.query(temp_query, [self.tasks.key, "species_hash"]))
 
         processed_tasks = set(self.assoc.distinct("task_ids"))
         to_process_tasks = {d[self.tasks.key] for d in all_tasks} - processed_tasks
-        to_process_hashes = {
-            d["species_hash"]
-            for d in all_tasks
-            if d[self.tasks.key] in to_process_tasks
-        }
+        to_process_hashes = {d["species_hash"] for d in all_tasks if d[self.tasks.key] in to_process_tasks}
 
         N = ceil(len(to_process_hashes) / number_splits)
 
@@ -195,17 +189,11 @@ class MoleculesAssociationBuilder(Builder):
         temp_query["state"] = "successful"
 
         self.logger.info("Finding tasks to process")
-        all_tasks = list(
-            self.tasks.query(temp_query, [self.tasks.key, "species_hash"])
-        )
+        all_tasks = list(self.tasks.query(temp_query, [self.tasks.key, "species_hash"]))
 
         processed_tasks = set(self.assoc.distinct("task_ids"))
         to_process_tasks = {d[self.tasks.key] for d in all_tasks} - processed_tasks
-        to_process_hashes = {
-            d["species_hash"]
-            for d in all_tasks
-            if d[self.tasks.key] in to_process_tasks
-        }
+        to_process_hashes = {d["species_hash"] for d in all_tasks if d[self.tasks.key] in to_process_tasks}
 
         self.logger.info(f"Found {len(to_process_tasks)} unprocessed tasks")
         self.logger.info(f"Found {len(to_process_hashes)} unprocessed hashes")
@@ -234,9 +222,7 @@ class MoleculesAssociationBuilder(Builder):
         for shash in to_process_hashes:
             tasks_query = dict(temp_query)
             tasks_query["species_hash"] = shash
-            tasks = list(
-                self.tasks.query(criteria=tasks_query, properties=projected_fields)
-            )
+            tasks = list(self.tasks.query(criteria=tasks_query, properties=projected_fields))
             to_yield = list()
             for t in tasks:
                 # TODO: Validation
@@ -246,9 +232,7 @@ class MoleculesAssociationBuilder(Builder):
                     task = TaskDocument(**t)
                     to_yield.append(task)
                 except Exception as e:
-                    self.logger.info(
-                        f"Processing task {t['task_id']} failed with Exception - {e}"
-                    )
+                    self.logger.info(f"Processing task {t['task_id']} failed with Exception - {e}")
                     continue
 
             yield to_yield
@@ -281,8 +265,7 @@ class MoleculesAssociationBuilder(Builder):
                 doc.warnings.append(str(e))
                 molecules.append(doc)
                 self.logger.warning(
-                    f"Failed making molecule for {failed_ids}."
-                    f" Inserted as deprecated molecule: {doc.molecule_id}"
+                    f"Failed making molecule for {failed_ids}." f" Inserted as deprecated molecule: {doc.molecule_id}"
                 )
 
         self.logger.debug(f"Produced {len(molecules)} molecules for {shash}")
@@ -314,9 +297,7 @@ class MoleculesAssociationBuilder(Builder):
         else:
             self.logger.info("No items to update")
 
-    def filter_and_group_tasks(
-        self, tasks: List[TaskDocument]
-    ) -> Iterator[List[TaskDocument]]:
+    def filter_and_group_tasks(self, tasks: List[TaskDocument]) -> Iterator[List[TaskDocument]]:
         """
         Groups tasks by identical structure
         """
@@ -324,10 +305,7 @@ class MoleculesAssociationBuilder(Builder):
         filtered_tasks = [
             task
             for task in tasks
-            if any(
-                allowed_type is task.task_type
-                for allowed_type in self.settings.QCHEM_ALLOWED_TASK_TYPES
-            )
+            if any(allowed_type is task.task_type for allowed_type in self.settings.QCHEM_ALLOWED_TASK_TYPES)
         ]
 
         molecules = list()
@@ -438,9 +416,7 @@ class MoleculesBuilder(Builder):
         to_process_docs = assoc_ids - processed_docs
 
         to_process_forms = {
-            d["formula_alphabetical"]
-            for d in all_assoc
-            if xyz_species_id_map[d[self.assoc.key]] in to_process_docs
+            d["formula_alphabetical"] for d in all_assoc if xyz_species_id_map[d[self.assoc.key]] in to_process_docs
         }
 
         N = ceil(len(to_process_forms) / number_splits)
@@ -500,9 +476,7 @@ class MoleculesBuilder(Builder):
         to_process_docs = assoc_ids - processed_docs
 
         to_process_forms = {
-            d["formula_alphabetical"]
-            for d in all_assoc
-            if xyz_species_id_map[d[self.assoc.key]] in to_process_docs
+            d["formula_alphabetical"] for d in all_assoc if xyz_species_id_map[d[self.assoc.key]] in to_process_docs
         }
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
@@ -569,15 +543,11 @@ class MoleculesBuilder(Builder):
 
             # Grab best doc for each solvent
             # A doc is given a solvent based on how the molecule was optimized
-            for solv, subgroup in groupby(
-                sorted(group, key=_optimizing_solvent), key=_optimizing_solvent
-            ):
+            for solv, subgroup in groupby(sorted(group, key=_optimizing_solvent), key=_optimizing_solvent):
                 sorted_docs = sorted(subgroup, key=evaluate_molecule)
                 docs_by_solvent[solv] = sorted_docs[0]
                 mols_by_solvent[solv] = sorted_docs[0].molecule
-                mol_lots[solv] = sorted_docs[0].levels_of_theory[
-                    sorted_docs[0].origins[0].task_id
-                ]
+                mol_lots[solv] = sorted_docs[0].levels_of_theory[sorted_docs[0].origins[0].task_id]
                 constituent_molecules.append(sorted_docs[0].molecule_id)
 
                 if len(sorted_docs) > 1:
@@ -600,19 +570,11 @@ class MoleculesBuilder(Builder):
                     levels_of_theory.update(doc.levels_of_theory)
                     solvents.update(doc.solvents)
                     lot_solvents.update(doc.lot_solvents)
-                    unique_calc_types = unique_calc_types.union(
-                        set(doc.unique_calc_types)
-                    )
-                    unique_task_types = unique_task_types.union(
-                        set(doc.unique_task_types)
-                    )
-                    unique_levels_of_theory = unique_levels_of_theory.union(
-                        set(doc.unique_levels_of_theory)
-                    )
+                    unique_calc_types = unique_calc_types.union(set(doc.unique_calc_types))
+                    unique_task_types = unique_task_types.union(set(doc.unique_task_types))
+                    unique_levels_of_theory = unique_levels_of_theory.union(set(doc.unique_levels_of_theory))
                     unique_solvents = unique_solvents.union(set(doc.unique_solvents))
-                    unique_lot_solvents = unique_lot_solvents.union(
-                        set(doc.unique_lot_solvents)
-                    )
+                    unique_lot_solvents = unique_lot_solvents.union(set(doc.unique_lot_solvents))
                     origins.extend(doc.origins)
                     entries.extend(doc.entries)
 
@@ -626,9 +588,7 @@ class MoleculesBuilder(Builder):
                             best_entries[lot_solv] = entry
 
                 # Assign new doc info
-                base_doc.molecule_id = get_molecule_id(
-                    base_doc.molecule, node_attr="specie"
-                )
+                base_doc.molecule_id = get_molecule_id(base_doc.molecule, node_attr="specie")
                 base_doc.molecules = mols_by_solvent
                 base_doc.molecule_levels_of_theory = mol_lots
                 base_doc.task_ids = task_ids

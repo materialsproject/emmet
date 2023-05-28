@@ -17,30 +17,16 @@ class SynthesisSearchQuery(QueryOperator):
             None,
             description="Comma delimited string keywords to search synthesis paragraph text with.",
         ),
-        synthesis_type: Optional[List[SynthesisTypeEnum]] = Query(
-            None, description="Type of synthesis to include."
-        ),
-        target_formula: Optional[str] = Query(
-            None, description="Chemical formula of the target material."
-        ),
-        precursor_formula: Optional[str] = Query(
-            None, description="Chemical formula of the precursor material."
-        ),
+        synthesis_type: Optional[List[SynthesisTypeEnum]] = Query(None, description="Type of synthesis to include."),
+        target_formula: Optional[str] = Query(None, description="Chemical formula of the target material."),
+        precursor_formula: Optional[str] = Query(None, description="Chemical formula of the precursor material."),
         operations: Optional[List[OperationTypeEnum]] = Query(
             None, description="List of operations that syntheses must have."
         ),
-        condition_heating_temperature_min: Optional[float] = Query(
-            None, description="Minimal heating temperature."
-        ),
-        condition_heating_temperature_max: Optional[float] = Query(
-            None, description="Maximal heating temperature."
-        ),
-        condition_heating_time_min: Optional[float] = Query(
-            None, description="Minimal heating time."
-        ),
-        condition_heating_time_max: Optional[float] = Query(
-            None, description="Maximal heating time."
-        ),
+        condition_heating_temperature_min: Optional[float] = Query(None, description="Minimal heating temperature."),
+        condition_heating_temperature_max: Optional[float] = Query(None, description="Maximal heating temperature."),
+        condition_heating_time_min: Optional[float] = Query(None, description="Minimal heating time."),
+        condition_heating_time_max: Optional[float] = Query(None, description="Maximal heating time."),
         condition_heating_atmosphere: Optional[List[str]] = Query(
             None, description='Required heating atmosphere, such as "air", "argon".'
         ),
@@ -86,9 +72,7 @@ class SynthesisSearchQuery(QueryOperator):
                         #   }}}
                         "index": "synth_descriptions",
                         "search": {
-                            "query": [
-                                keyword.strip() for keyword in keywords.split(",")
-                            ],
+                            "query": [keyword.strip() for keyword in keywords.split(",")],
                             "path": "paragraph_string",
                         },
                         "highlight": {
@@ -112,14 +96,10 @@ class SynthesisSearchQuery(QueryOperator):
         if synthesis_type:
             crit["synthesis_type"] = {"$in": synthesis_type}
         if target_formula:
-            reduced_formula = Composition(
-                target_formula
-            ).get_reduced_formula_and_factor()[0]
+            reduced_formula = Composition(target_formula).get_reduced_formula_and_factor()[0]
             crit["targets_formula_s"] = reduced_formula
         if precursor_formula:
-            reduced_formula = Composition(
-                precursor_formula
-            ).get_reduced_formula_and_factor()[0]
+            reduced_formula = Composition(precursor_formula).get_reduced_formula_and_factor()[0]
             crit["precursors_formula_s"] = reduced_formula
         if operations:
             crit["operations.type"] = {"$all": operations}
@@ -144,17 +124,11 @@ class SynthesisSearchQuery(QueryOperator):
                 crit[field] = {"$elemMatch": {}}
             crit[field]["$elemMatch"]["$lte"] = condition_heating_time_max
         if condition_heating_atmosphere:
-            crit["operations.conditions.heating_atmosphere"] = {
-                "$all": condition_heating_atmosphere
-            }
+            crit["operations.conditions.heating_atmosphere"] = {"$all": condition_heating_atmosphere}
         if condition_mixing_device:
-            crit["operations.conditions.mixing_device"] = {
-                "$all": condition_mixing_device
-            }
+            crit["operations.conditions.mixing_device"] = {"$all": condition_mixing_device}
         if condition_mixing_media:
-            crit["operations.conditions.mixing_media"] = {
-                "$all": condition_mixing_media
-            }
+            crit["operations.conditions.mixing_media"] = {"$all": condition_mixing_media}
 
         if crit:
             if keywords:

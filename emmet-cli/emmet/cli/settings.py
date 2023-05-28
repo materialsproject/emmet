@@ -14,9 +14,7 @@ class EmmetCLISettings(EmmetSettings):
         },
         description="",
     )
-    skip_labels: List[str] = Field(
-        ["He", "He0+", "Ar", "Ar0+", "Ne", "Ne0+", "D", "D+", "T", "M"], description=""
-    )
+    skip_labels: List[str] = Field(["He", "He0+", "Ar", "Ar0+", "Ne", "Ne0+", "D", "D+", "T", "M"], description="")
     base_query: Dict = Field(
         {
             "is_ordered": True,
@@ -35,9 +33,7 @@ class EmmetCLISettings(EmmetSettings):
         description="",
     )
 
-    aggregation_keys: List[str] = Field(
-        ["formula_pretty", "reduced_cell_formula"], description=""
-    )
+    aggregation_keys: List[str] = Field(["formula_pretty", "reduced_cell_formula"], description="")
 
     meta_keys: List[str] = Field(
         ["formula_pretty", "nelements", "nsites", "is_ordered", "is_valid"],
@@ -116,9 +112,7 @@ class EmmetCLISettings(EmmetSettings):
         description="",
     )
 
-    tracker: Dict[str, str] = Field(
-        {"org": "materialsproject", "repo": "devops"}, description=""
-    )
+    tracker: Dict[str, str] = Field({"org": "materialsproject", "repo": "devops"}, description="")
 
     year_tags: List[str] = Field(
         ["mp_{}".format(y) for y in range(2018, int(datetime.today().year) + 1)],

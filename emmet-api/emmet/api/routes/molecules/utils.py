@@ -37,9 +37,7 @@ class MultiPropertyIDQuery(QueryOperator):
 
     def query(
         self,
-        property_ids: Optional[str] = Query(
-            None, description="Comma-separated list of property_id values to query on"
-        ),
+        property_ids: Optional[str] = Query(None, description="Comma-separated list of property_id values to query on"),
     ) -> STORE_PARAMS:
         crit = {}  # type: dict
 

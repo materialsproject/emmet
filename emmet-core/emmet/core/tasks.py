@@ -38,9 +38,7 @@ _VOLUMETRIC_FILES = ("CHGCAR", "LOCPOT", "AECCAR0", "AECCAR1", "AECCAR2")
 class Potcar(BaseModel):
     pot_type: str = Field(None, description="Pseudo-potential type, e.g. PAW")
     functional: str = Field(None, description="Functional type use in the calculation.")
-    symbols: List[str] = Field(
-        None, description="List of VASP potcar symbols used in the calculation."
-    )
+    symbols: List[str] = Field(None, description="List of VASP potcar symbols used in the calculation.")
 
 
 class OrigInputs(BaseModel):
@@ -85,21 +83,13 @@ class OutputDoc(BaseModel):
 
     density: float = Field(..., description="Density of in units of g/cc.")
     energy: float = Field(..., description="Total Energy in units of eV.")
-    forces: List[List[float]] = Field(
-        None, description="The force on each atom in units of eV/A^2."
-    )
-    stress: List[List[float]] = Field(
-        None, description="The stress on the cell in units of kB."
-    )
-    energy_per_atom: float = Field(
-        None, description="The final DFT energy per atom for the last calculation"
-    )
+    forces: List[List[float]] = Field(None, description="The force on each atom in units of eV/A^2.")
+    stress: List[List[float]] = Field(None, description="The stress on the cell in units of kB.")
+    energy_per_atom: float = Field(None, description="The final DFT energy per atom for the last calculation")
     bandgap: float = Field(None, description="The DFT bandgap for the last calculation")
 
     @classmethod
-    def from_vasp_calc_doc(
-        cls, calc_doc: Calculation, trajectory: Optional[Trajectory] = None
-    ) -> "OutputDoc":
+    def from_vasp_calc_doc(cls, calc_doc: Calculation, trajectory: Optional[Trajectory] = None) -> "OutputDoc":
         """
         Create a summary of VASP calculation outputs from a VASP calculation document.
 
@@ -151,18 +141,10 @@ class InputDoc(BaseModel):
         None,
         description="Parameters from vasprun for the last calculation in the series",
     )
-    pseudo_potentials: Potcar = Field(
-        None, description="Summary of the pseudo-potentials used in this calculation"
-    )
-    potcar_spec: List[PotcarSpec] = Field(
-        None, description="Title and hash of POTCAR files used in the calculation"
-    )
-    xc_override: str = Field(
-        None, description="Exchange-correlation functional used if not the default"
-    )
-    is_lasph: bool = Field(
-        None, description="Whether the calculation was run with aspherical corrections"
-    )
+    pseudo_potentials: Potcar = Field(None, description="Summary of the pseudo-potentials used in this calculation")
+    potcar_spec: List[PotcarSpec] = Field(None, description="Title and hash of POTCAR files used in the calculation")
+    xc_override: str = Field(None, description="Exchange-correlation functional used if not the default")
+    is_lasph: bool = Field(None, description="Whether the calculation was run with aspherical corrections")
     is_hubbard: bool = Field(False, description="Is this a Hubbard +U calculation")
     hubbards: Dict = Field(None, description="The hubbard parameters used")
 
@@ -300,9 +282,7 @@ class TaskDoc(StructureMetadata):
     Calculation-level details about VASP calculations that power Materials Project.
     """
 
-    tags: Union[List[str], None] = Field(
-        [], title="tag", description="Metadata tagged to a given task."
-    )
+    tags: Union[List[str], None] = Field([], title="tag", description="Metadata tagged to a given task.")
     dir_name: str = Field(None, description="The directory for this VASP task")
 
     state: TaskState = Field(None, description="State of this calculation")
@@ -313,13 +293,9 @@ class TaskDoc(StructureMetadata):
         description="Detailed data for each VASP calculation contributing to the task document.",
     )
 
-    structure: Structure = Field(
-        None, description="Final output structure from the task"
-    )
+    structure: Structure = Field(None, description="Final output structure from the task")
 
-    task_type: Union[CalcType, TaskType] = Field(
-        None, description="The type of calculation."
-    )
+    task_type: Union[CalcType, TaskType] = Field(None, description="The type of calculation.")
 
     task_id: str = Field(
         None,
@@ -345,26 +321,17 @@ class TaskDoc(StructureMetadata):
     included_objects: List[VaspObject] = Field(
         None, description="List of VASP objects included with this task document"
     )
-    vasp_objects: Dict[VaspObject, Any] = Field(
-        None, description="Vasp objects associated with this task"
-    )
-    entry: ComputedEntry = Field(
-        None, description="The ComputedEntry from the task doc"
-    )
+    vasp_objects: Dict[VaspObject, Any] = Field(None, description="Vasp objects associated with this task")
+    entry: ComputedEntry = Field(None, description="The ComputedEntry from the task doc")
 
     task_label: str = Field(None, description="A description of the task")
     author: str = Field(None, description="Author extracted from transformations")
-    icsd_id: str = Field(
-        None, description="International crystal structure database id of the structure"
-    )
+    icsd_id: str = Field(None, description="International crystal structure database id of the structure")
     transformations: Dict[str, Any] = Field(
         None,
-        description="Information on the structural transformations, parsed from a "
-        "transformations.json file",
+        description="Information on the structural transformations, parsed from a " "transformations.json file",
     )
-    additional_json: Dict[str, Any] = Field(
-        None, description="Additional json loaded from the calculation directory"
-    )
+    additional_json: Dict[str, Any] = Field(None, description="Additional json loaded from the calculation directory")
 
     custodian: List[CustodianDoc] = Field(
         None,
@@ -446,9 +413,7 @@ class TaskDoc(StructureMetadata):
         calcs_reversed.reverse()
         all_vasp_objects.reverse()
 
-        analysis = AnalysisDoc.from_vasp_calc_docs(
-            calcs_reversed, volume_change_warning_tol=volume_change_warning_tol
-        )
+        analysis = AnalysisDoc.from_vasp_calc_docs(calcs_reversed, volume_change_warning_tol=volume_change_warning_tol)
         transformations, icsd_id, tags, author = _parse_transformations(dir_name)
         custodian = _parse_custodian(dir_name)
         orig_inputs = _parse_orig_inputs(dir_name)
@@ -497,9 +462,7 @@ class TaskDoc(StructureMetadata):
         return doc
 
     @staticmethod
-    def get_entry(
-        calcs_reversed: List[Calculation], job_id: Optional[str] = None
-    ) -> ComputedEntry:
+    def get_entry(calcs_reversed: List[Calculation], job_id: Optional[str] = None) -> ComputedEntry:
         """
         Get a computed entry from a list of VASP calculation documents.
 
@@ -701,9 +664,7 @@ def _parse_orig_inputs(
             if f"{name}.orig" in str(filename):
                 if name == "POTCAR":
                     # can't serialize POTCAR
-                    orig_inputs[name.lower()] = PotcarSpec.from_potcar(
-                        vasp_input.from_file(filename)
-                    )
+                    orig_inputs[name.lower()] = PotcarSpec.from_potcar(vasp_input.from_file(filename))
                 else:
                     orig_inputs[name.lower()] = vasp_input.from_file(filename)
 
@@ -751,9 +712,7 @@ def _get_drift_warnings(calc_doc: Calculation) -> List[str]:
 
 def _get_state(calcs_reversed: List[Calculation], analysis: AnalysisDoc) -> TaskState:
     """Get state from calculation documents and relaxation analysis."""
-    all_calcs_completed = all(
-        [c.has_vasp_completed == TaskState.SUCCESS for c in calcs_reversed]
-    )
+    all_calcs_completed = all([c.has_vasp_completed == TaskState.SUCCESS for c in calcs_reversed])
     if len(analysis.errors) == 0 and all_calcs_completed:
         return TaskState.SUCCESS  # type: ignore
     return TaskState.FAILED  # type: ignore
@@ -860,9 +819,7 @@ def _find_vasp_files(
             task_files[task_name] = _get_task_files(subfolder_match)
         elif len(suffix_match) > 0:
             # try extension schema
-            task_files[task_name] = _get_task_files(
-                suffix_match, suffix=f".{task_name}"
-            )
+            task_files[task_name] = _get_task_files(suffix_match, suffix=f".{task_name}")
 
     if len(task_files) == 0:
         # get any matching file from the root folder

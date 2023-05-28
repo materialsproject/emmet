@@ -68,10 +68,7 @@ def hill_formula(comp: Composition) -> str:
     else:
         form_elements = elements
 
-    formula = [
-        "%s%s" % (el, formula_double_format(c[el]) if c[el] != 1 else "")
-        for el in form_elements
-    ]
+    formula = ["%s%s" % (el, formula_double_format(c[el]) if c[el] != 1 else "") for el in form_elements]
     return "".join(formula)
 
 
@@ -89,12 +86,7 @@ class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
 
     @classmethod
     def from_structure(
-        cls,
-        material_id: MPID,
-        structure: Structure,
-        last_updated_structure: datetime,
-        thermo_calcs: dict,
-        **kwargs
+        cls, material_id: MPID, structure: Structure, last_updated_structure: datetime, thermo_calcs: dict, **kwargs
     ) -> StructureResourceAttributes:
         structure.remove_oxidation_states()
         return OptimadeMaterialsDoc(
@@ -105,9 +97,7 @@ class OptimadeMaterialsDoc(StructureResourceAttributes, EmmetBaseModel):
             nelements=len(structure.composition.elements),
             elements_ratios=list(structure.composition.fractional_composition.values()),
             chemical_formula_descriptive=optimade_form(structure.composition),
-            chemical_formula_reduced=optimade_form(
-                structure.composition.get_reduced_composition_and_factor()[0]
-            ),
+            chemical_formula_reduced=optimade_form(structure.composition.get_reduced_composition_and_factor()[0]),
             chemical_formula_anonymous=optimade_anonymous_form(structure.composition),
             chemical_formula_hill=hill_formula(structure.composition),
             dimension_types=[1, 1, 1],

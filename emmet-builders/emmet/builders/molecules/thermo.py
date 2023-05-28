@@ -171,19 +171,11 @@ class ThermoBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "formula_alphabetical"]
-            )
-        )
+        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
 
         processed_docs = set([e for e in self.thermo.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {
-            d["formula_alphabetical"]
-            for d in all_mols
-            if d[self.molecules.key] in to_process_docs
-        }
+        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
 
         N = ceil(len(to_process_forms) / number_splits)
 
@@ -212,19 +204,11 @@ class ThermoBuilder(Builder):
         temp_query["deprecated"] = False
 
         self.logger.info("Finding documents to process")
-        all_mols = list(
-            self.molecules.query(
-                temp_query, [self.molecules.key, "formula_alphabetical"]
-            )
-        )
+        all_mols = list(self.molecules.query(temp_query, [self.molecules.key, "formula_alphabetical"]))
 
         processed_docs = set([e for e in self.thermo.distinct("molecule_id")])
         to_process_docs = {d[self.molecules.key] for d in all_mols} - processed_docs
-        to_process_forms = {
-            d["formula_alphabetical"]
-            for d in all_mols
-            if d[self.molecules.key] in to_process_docs
-        }
+        to_process_forms = {d["formula_alphabetical"] for d in all_mols if d[self.molecules.key] in to_process_docs}
 
         self.logger.info(f"Found {len(to_process_docs)} unprocessed documents")
         self.logger.info(f"Found {len(to_process_forms)} unprocessed formulas")
@@ -250,9 +234,7 @@ class ThermoBuilder(Builder):
             [dict] : a list of new thermo docs
         """
 
-        def _add_single_atom_enthalpy_entropy(
-            task: TaskDocument, doc: MoleculeThermoDoc
-        ):
+        def _add_single_atom_enthalpy_entropy(task: TaskDocument, doc: MoleculeThermoDoc):
             initial_mol = task.output.initial_molecule
             # If single atom, try to add enthalpy and entropy
             if len(initial_mol) == 1:
@@ -265,10 +247,7 @@ class ThermoBuilder(Builder):
                         doc.translational_enthalpy = vals["enthalpy"] * 0.043363
                         doc.translational_entropy = vals["entropy"] * 0.000043363
                         doc.free_energy = get_free_energy(
-                            doc.electronic_energy,
-                            vals["enthalpy"],
-                            vals["entropy"],
-                            convert_energy=False
+                            doc.electronic_energy, vals["enthalpy"], vals["entropy"], convert_energy=False
                         )
             return doc
 
@@ -359,9 +338,7 @@ class ThermoBuilder(Builder):
                 if task_doc is None:
                     continue
 
-                thermo_doc = MoleculeThermoDoc.from_task(
-                    task_doc, molecule_id=mol.molecule_id, deprecated=False
-                )
+                thermo_doc = MoleculeThermoDoc.from_task(task_doc, molecule_id=mol.molecule_id, deprecated=False)
                 thermo_doc = _add_single_atom_enthalpy_entropy(task_doc, thermo_doc)
                 this_thermo_docs.append(thermo_doc)
 
@@ -425,9 +402,7 @@ class ThermoBuilder(Builder):
                         molecule_id=mol.molecule_id,
                         deprecated=False,
                     )
-                    thermo_doc = _add_single_atom_enthalpy_entropy(
-                        task_doc_dict, thermo_doc
-                    )
+                    thermo_doc = _add_single_atom_enthalpy_entropy(task_doc_dict, thermo_doc)
                     this_thermo_docs.append(thermo_doc)
                     break
 
@@ -461,9 +436,7 @@ class ThermoBuilder(Builder):
                             )
                         )
 
-                thermo_docs.append(
-                    sorted(with_eval_e, key=lambda x: (x[1], x[2]))[0][0]
-                )
+                thermo_docs.append(sorted(with_eval_e, key=lambda x: (x[1], x[2]))[0][0])
 
         self.logger.debug(f"Produced {len(thermo_docs)} thermo docs for {formula}")
 

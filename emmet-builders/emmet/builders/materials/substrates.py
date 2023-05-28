@@ -50,10 +50,7 @@ class SubstratesBuilder(Builder):
     def prechunk(self, number_splits: int) -> Iterable[Dict]:  # pragma: no cover
         to_process_mat_ids = self._find_to_process()
 
-        return [
-            {"material_id": {"$in": list(chunk)}}
-            for chunk in grouper(to_process_mat_ids, number_splits)
-        ]
+        return [{"material_id": {"$in": list(chunk)}} for chunk in grouper(to_process_mat_ids, number_splits)]
 
     def get_items(self):
         """
@@ -65,22 +62,14 @@ class SubstratesBuilder(Builder):
 
         to_process_mat_ids = self._find_to_process()
 
-        self.logger.info(
-            "Updating all substrate calculations for {} materials".format(
-                len(to_process_mat_ids)
-            )
-        )
+        self.logger.info("Updating all substrate calculations for {} materials".format(len(to_process_mat_ids)))
 
         for mpid in to_process_mat_ids:
             e_tensor = self.elasticity.query_one(
                 criteria={self.elasticity.key: mpid},
                 properties=["elasticity", "last_updated"],
             )
-            e_tensor = (
-                e_tensor.get("elasticity", {}).get("elastic_tensor", None)
-                if e_tensor
-                else None
-            )
+            e_tensor = e_tensor.get("elasticity", {}).get("elastic_tensor", None) if e_tensor else None
             mat = self.materials.query_one(
                 criteria={self.materials.key: mpid},
                 properties=["structure", "deprecated", "material_id", "last_updated"],
@@ -91,9 +80,7 @@ class SubstratesBuilder(Builder):
                 "material_id": mat[self.materials.key],
                 "elastic_tensor": e_tensor,
                 "deprecated": mat["deprecated"],
-                "last_updated": max(
-                    mat.get("last_updated"), e_tensor.get("last_updated")
-                ),
+                "last_updated": max(mat.get("last_updated"), e_tensor.get("last_updated")),
             }
 
     def process_item(self, item):
@@ -109,9 +96,7 @@ class SubstratesBuilder(Builder):
 
         mpid = MPID(item["material_id"])
         elastic_tensor = item.get("elastic_tensor", None)
-        elastic_tensor = (
-            ElasticTensor.from_voigt(elastic_tensor) if elastic_tensor else None
-        )
+        elastic_tensor = ElasticTensor.from_voigt(elastic_tensor) if elastic_tensor else None
         deprecated = item["deprecated"]
 
         self.logger.debug("Calculating substrates for {}".format(item["task_id"]))

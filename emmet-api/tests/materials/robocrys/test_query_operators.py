@@ -37,21 +37,13 @@ def test_robocrys_search_query():
         },
         {"$unwind": "$results"},
         {"$unwind": "$total_doc"},
-        {
-            "$replaceRoot": {
-                "newRoot": {
-                    "$mergeObjects": ["$results", {"total_doc": "$total_doc.count"}]
-                }
-            }
-        },
+        {"$replaceRoot": {"newRoot": {"$mergeObjects": ["$results", {"total_doc": "$total_doc.count"}]}}},
         {"$sort": {"search_score": -1}},
         {"$skip": 0},
         {"$limit": 10},
     ]
 
-    assert op.query(keywords="cubic, octahedra", _skip=0, _limit=10) == {
-        "pipeline": pipeline
-    }
+    assert op.query(keywords="cubic, octahedra", _skip=0, _limit=10) == {"pipeline": pipeline}
 
     with ScratchDir("."):
         dumpfn(op, "temp.json")

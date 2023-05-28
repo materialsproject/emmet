@@ -22,9 +22,7 @@ def test_electrodes_formula_to_criteria():
         "entries_composition_summary.all_formula_anonymous": "A2B3",
     }
     # Anonymous element
-    assert electrodes_formula_to_criteria("A2B3") == {
-        "entries_composition_summary.all_formula_anonymous": "A2B3"
-    }
+    assert electrodes_formula_to_criteria("A2B3") == {"entries_composition_summary.all_formula_anonymous": "A2B3"}
 
     assert electrodes_formula_to_criteria("A2B3, ABC3") == {
         "entries_composition_summary.all_formula_anonymous": {"$in": ["A2B3", "ABC3"]}
@@ -33,9 +31,7 @@ def test_electrodes_formula_to_criteria():
 
 def test_electrodes_chemsys_to_criteria():
     # Chemsys
-    assert electrodes_chemsys_to_criteria("Si-O") == {
-        "entries_composition_summary.all_chemsys": "O-Si"
-    }
+    assert electrodes_chemsys_to_criteria("Si-O") == {"entries_composition_summary.all_chemsys": "O-Si"}
     assert electrodes_chemsys_to_criteria("Si-*") == {
         "entries_composition_summary.all_elements": {"$all": ["Si"]},
         "nelements": {"$in": [2, 1]},

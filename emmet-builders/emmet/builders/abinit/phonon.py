@@ -165,27 +165,19 @@ class PhononBuilder(Builder):
         }
 
         for m in mats:
-            item = self.phonon_materials.query_one(
-                properties=projection, criteria={self.phonon_materials.key: m}
-            )
+            item = self.phonon_materials.query_one(properties=projection, criteria={self.phonon_materials.key: m})
 
             # Read the DDB file and pass as an object. Do not write here since in case of parallel
             # execution each worker will write its own file.
-            ddb_data = self.ddb_source.query_one(
-                criteria={"_id": item["abinit_output"]["ddb_id"]}
-            )
+            ddb_data = self.ddb_source.query_one(criteria={"_id": item["abinit_output"]["ddb_id"]})
             if not ddb_data:
-                self.logger.warning(
-                    f"DDB file not found for file id {item['abinit_output']['ddb_id']}"
-                )
+                self.logger.warning(f"DDB file not found for file id {item['abinit_output']['ddb_id']}")
                 continue
 
             try:
                 item["ddb_str"] = ddb_data["data"].decode("utf-8")
             except Exception:
-                self.logger.warning(
-                    f"could not extract DDB for file id {item['abinit_output']['ddb_id']}"
-                )
+                self.logger.warning(f"could not extract DDB for file id {item['abinit_output']['ddb_id']}")
                 continue
 
             yield item
@@ -208,13 +200,9 @@ class PhononBuilder(Builder):
             abinit_input_vars = self.abinit_input_vars(item)
             phonon_properties = self.get_phonon_properties(item)
             sr_break = self.get_sum_rule_breakings(item)
-            ph_warnings = get_warnings(
-                sr_break["asr"], sr_break["cnsr"], phonon_properties["ph_bs"]
-            )
+            ph_warnings = get_warnings(sr_break["asr"], sr_break["cnsr"], phonon_properties["ph_bs"])
             if PhononWarnings.NEG_FREQ not in ph_warnings:
-                thermodynamic, vibrational_energy = get_thermodynamic_properties(
-                    phonon_properties["ph_dos"]
-                )
+                thermodynamic, vibrational_energy = get_thermodynamic_properties(phonon_properties["ph_dos"])
             else:
                 thermodynamic, vibrational_energy = None, None
 
@@ -288,11 +276,7 @@ class PhononBuilder(Builder):
 
             return d
         except Exception as error:
-            self.logger.warning(
-                "Error generating the phonon properties for {}: {}".format(
-                    item["mp_id"], error
-                )
-            )
+            self.logger.warning("Error generating the phonon properties for {}: {}".format(item["mp_id"], error))
             return None
 
     def get_phonon_properties(self, item: Dict) -> Dict:
@@ -321,13 +305,9 @@ class PhononBuilder(Builder):
                 lo_to_splitting=has_bec,
                 use_dieflag=has_epsinf,
             )
-            task = self.run_anaddb(
-                ddb_path=ddb_path, anaddb_input=anaddb_input, workdir=workdir
-            )
+            task = self.run_anaddb(ddb_path=ddb_path, anaddb_input=anaddb_input, workdir=workdir)
 
-            with task.open_phbst() as phbst_file, AnaddbNcFile(
-                task.outpath_from_ext("anaddb.nc")
-            ) as ananc_file:
+            with task.open_phbst() as phbst_file, AnaddbNcFile(task.outpath_from_ext("anaddb.nc")) as ananc_file:
                 # phbst
                 phbands = phbst_file.phbands
                 if has_bec:
@@ -343,9 +323,7 @@ class PhononBuilder(Builder):
                     e_electronic = ananc_file.epsinf.tolist()
                 else:
                     e_electronic = None
-                e_total = (
-                    ananc_file.eps0.tolist() if ananc_file.eps0 is not None else None
-                )
+                e_total = ananc_file.eps0.tolist() if ananc_file.eps0 is not None else None
                 if e_electronic and e_total:
                     e_ionic = (ananc_file.eps0 - ananc_file.epsinf).tolist()
                     dielectric = DielectricDoc.from_ionic_and_electronic(
@@ -359,14 +337,8 @@ class PhononBuilder(Builder):
                     dielectric = None
 
                 # both
-                if (
-                    e_electronic
-                    and e_total
-                    and ananc_file.oscillator_strength is not None
-                ):
-                    die_gen = DielectricTensorGenerator.from_objects(
-                        phbands, ananc_file
-                    )
+                if e_electronic and e_total and ananc_file.oscillator_strength is not None:
+                    die_gen = DielectricTensorGenerator.from_objects(phbands, ananc_file)
 
                     ir_tensor = IRDielectricTensor(
                         die_gen.oscillator_strength,
@@ -430,9 +402,7 @@ class PhononBuilder(Builder):
         Runs anaddb to get the values.
         """
         structure = Structure.from_dict(item["abinit_input"]["structure"])
-        anaddb_input = AnaddbInput.modes_at_qpoint(
-            structure, [0, 0, 0], asr=0, chneut=0
-        )
+        anaddb_input = AnaddbInput.modes_at_qpoint(structure, [0, 0, 0], asr=0, chneut=0)
 
         with tempfile.TemporaryDirectory() as workdir:
             ddb_path = os.path.join(workdir, "{}_DDB".format(item["mp_id"]))
@@ -459,25 +429,17 @@ class PhononBuilder(Builder):
             # If the ASR breaking could not be identified. set it to None to signal the
             # missing information. This may trigger a warning.
             try:
-                asr_breaking = phbands.asr_breaking(
-                    units="cm-1", threshold=0.9, raise_on_no_indices=True
-                )
+                asr_breaking = phbands.asr_breaking(units="cm-1", threshold=0.9, raise_on_no_indices=True)
                 asr = asr_breaking.absmax_break
             except RuntimeError as e:
-                self.logger.warning(
-                    "Could not find the ASR breaking for {}. Error: {}".format(
-                        item["mp_id"], e
-                    )
-                )
+                self.logger.warning("Could not find the ASR breaking for {}. Error: {}".format(item["mp_id"], e))
                 asr = None
 
             breakings = {"cnsr": cnsr, "asr": asr, "becs_nosymm": becs_val}
 
         return breakings
 
-    def run_anaddb(
-        self, ddb_path: str, anaddb_input: AnaddbInput, workdir: str
-    ) -> AnaddbTask:
+    def run_anaddb(self, ddb_path: str, anaddb_input: AnaddbInput, workdir: str) -> AnaddbTask:
         """
         Runs anaddb. Raise AnaddbError if the calculation couldn't complete
 
@@ -489,9 +451,7 @@ class PhononBuilder(Builder):
             An abipy AnaddbTask instance.
         """
 
-        task = AnaddbTask.temp_shell_task(
-            anaddb_input, ddb_node=ddb_path, workdir=workdir, manager=self.manager
-        )
+        task = AnaddbTask.temp_shell_task(anaddb_input, ddb_node=ddb_path, workdir=workdir, manager=self.manager)
 
         # Run the task here.
         self.logger.debug("Start anaddb for {}".format(ddb_path))
@@ -565,35 +525,25 @@ class PhononBuilder(Builder):
             ng2qppa = 500000
             dossmear = 1.82e-5  # Ha = 4 cm^-1
             ng2qpt = KSampling.automatic_density(structure, kppa=ng2qppa).kpts[0]
-            inp.set_vars(
-                prtdos=prtdos, dosdeltae=dosdeltae, dossmear=dossmear, ng2qpt=ng2qpt
-            )
+            inp.set_vars(prtdos=prtdos, dosdeltae=dosdeltae, dossmear=dossmear, ng2qpt=ng2qpt)
         elif dos is not None:
             raise ValueError("Unsupported value of dos.")
 
         # Parameters for the BS
         labels_list = None
         if bs:
-            spga = SpacegroupAnalyzer(
-                structure, symprec=self.symprec, angle_tolerance=self.angle_tolerance
-            )
+            spga = SpacegroupAnalyzer(structure, symprec=self.symprec, angle_tolerance=self.angle_tolerance)
 
             spgn = spga.get_space_group_number()
             if spgn != item["spacegroup"]["number"]:
                 raise RuntimeError(
                     "Parsed specegroup number {} does not match "
-                    "calculation spacegroup {}".format(
-                        spgn, item["spacegroup"]["number"]
-                    )
+                    "calculation spacegroup {}".format(spgn, item["spacegroup"]["number"])
                 )
 
-            hs = HighSymmKpath(
-                structure, symprec=self.symprec, angle_tolerance=self.angle_tolerance
-            )
+            hs = HighSymmKpath(structure, symprec=self.symprec, angle_tolerance=self.angle_tolerance)
 
-            qpts, labels_list = hs.get_kpoints(
-                line_density=18, coords_are_cartesian=False
-            )
+            qpts, labels_list = hs.get_kpoints(line_density=18, coords_are_cartesian=False)
 
             n_qpoints = len(qpts)
             qph1l = np.zeros((n_qpoints, 4))
@@ -638,9 +588,7 @@ class PhononBuilder(Builder):
         return inp, labels_list
 
     @staticmethod
-    def get_pmg_bs(
-        phbands: PhononBands, labels_list: List
-    ) -> PhononBandStructureSymmLine:
+    def get_pmg_bs(phbands: PhononBands, labels_list: List) -> PhononBandStructureSymmLine:
         """
         Generates a PhononBandStructureSymmLine starting from a abipy PhononBands object
 
@@ -674,9 +622,7 @@ class PhononBuilder(Builder):
                         displ[i] = phbands._get_non_anal_phdispl(qpts[i + 1])
 
         ph_freqs = np.transpose(ph_freqs) * eV_to_THz
-        displ = np.transpose(
-            np.reshape(displ, (len(qpts), 3 * n_at, n_at, 3)), (1, 0, 2, 3)
-        )
+        displ = np.transpose(np.reshape(displ, (len(qpts), 3 * n_at, n_at, 3)), (1, 0, 2, 3))
 
         ph_bs_sl = PhononBandStructureSymmLine(
             qpoints=qpts,
@@ -769,9 +715,7 @@ class PhononBuilder(Builder):
         self.phonon_website.ensure_index(self.phonon.key, unique=True)
 
 
-def get_warnings(
-    asr_break: float, cnsr_break: float, ph_bs: PhononBandStructureSymmLine
-) -> List[PhononWarnings]:
+def get_warnings(asr_break: float, cnsr_break: float, ph_bs: PhononBandStructureSymmLine) -> List[PhononWarnings]:
     """
 
     Args:

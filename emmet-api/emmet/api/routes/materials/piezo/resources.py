@@ -17,9 +17,7 @@ def piezo_resource(piezo_store):
             PiezoelectricQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(
-                PiezoelectricDoc, default_fields=["material_id", "last_updated"]
-            ),
+            SparseFieldsQuery(PiezoelectricDoc, default_fields=["material_id", "last_updated"]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Piezoelectric"],

@@ -73,9 +73,7 @@ def load_canonical_structures(ctx, full_name, formula):
 
         if structures:
             for sg, slist in structures.items():
-                canonical_structures[full_name][formula][sg] = [
-                    g[0] for g in group_structures(slist)
-                ]
+                canonical_structures[full_name][formula][sg] = [g[0] for g in group_structures(slist)]
 
         total = sum([len(x) for x in canonical_structures[full_name][formula].values()])
         logger.debug(f"{total} canonical structure(s) for {formula} in {full_name}")
@@ -92,9 +90,7 @@ def insert_snls(ctx, snls):
     if ctx.obj["RUN"] and snls:
         logger.info(f"add {len(snls)} SNLs ...")
         result = ctx.obj["CLIENT"].db.snls.insert_many(snls)
-        logger.info(
-            click.style(f"#SNLs inserted: {len(result.inserted_ids)}", fg="green")
-        )
+        logger.info(click.style(f"#SNLs inserted: {len(result.inserted_ids)}", fg="green"))
 
     snls.clear()
     save_logs(ctx)
@@ -126,9 +122,7 @@ def count_file_documents(file_obj):
     metavar="SPEC",
     help="Add DB(s) with SNL/task collection(s) to dupe-check.",
 )
-@click.option(
-    "-m", "nmax", default=1000, show_default=True, help="Maximum #structures to scan."
-)
+@click.option("-m", "nmax", default=1000, show_default=True, help="Maximum #structures to scan.")
 @click.option(
     "--skip/--no-skip",
     default=True,
@@ -147,9 +141,7 @@ def calc(ctx, specs, nmax, skip):
 
     for spec in specs:
         client = calcdb_from_mgrant(spec)
-        names = client.db.list_collection_names(
-            filter={"name": {"$regex": r"(snl|tasks)"}}
-        )
+        names = client.db.list_collection_names(filter={"name": {"$regex": r"(snl|tasks)"}})
         for name in names:
             collections[client.db[name].full_name] = client.db[name]
 
@@ -206,13 +198,7 @@ def prep(ctx, archive, authors):  # noqa: C901
                 break
             if skip and doc["db_id"] in source_ids_scanned:
                 continue
-            elements = set(
-                [
-                    specie["element"]
-                    for site in doc["structure"]["sites"]
-                    for specie in site["species"]
-                ]
-            )
+            elements = set([specie["element"] for site in doc["structure"]["sites"] for specie in site["species"]])
             for l in SETTINGS.skip_labels:
                 if l in elements:
                     logger.log(
@@ -273,11 +259,7 @@ def prep(ctx, archive, authors):  # noqa: C901
         if run and len(handler.buffer) >= handler.buffer_size:
             insert_snls(ctx, snls)
 
-        struct = (
-            istruct.final_structure
-            if isinstance(istruct, TransformedStructure)
-            else istruct
-        )
+        struct = istruct.final_structure if isinstance(istruct, TransformedStructure) else istruct
         struct.remove_oxidation_states()
         struct = struct.get_primitive_structure()
         formula = struct.composition.reduced_formula
@@ -300,9 +282,7 @@ def prep(ctx, archive, authors):  # noqa: C901
             # load canonical structures in collection for current formula and
             # duplicate-check them against current structure
             load_canonical_structures(ctx, full_name, formula)
-            for canonical_structure in canonical_structures[full_name][formula].get(
-                sg, []
-            ):
+            for canonical_structure in canonical_structures[full_name][formula].get(sg, []):
                 if structures_match(struct, canonical_structure):
                     logger.log(
                         logging.WARNING if run else logging.INFO,

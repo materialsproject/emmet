@@ -23,16 +23,8 @@ _TASK_TYPES = [
 ]
 
 _RUN_TYPES = (
-    [
-        rt
-        for functional_class in _RUN_TYPE_DATA
-        for rt in _RUN_TYPE_DATA[functional_class]
-    ]
-    + [
-        f"{rt}+U"
-        for functional_class in _RUN_TYPE_DATA
-        for rt in _RUN_TYPE_DATA[functional_class]
-    ]
+    [rt for functional_class in _RUN_TYPE_DATA for rt in _RUN_TYPE_DATA[functional_class]]
+    + [f"{rt}+U" for functional_class in _RUN_TYPE_DATA for rt in _RUN_TYPE_DATA[functional_class]]
     + ["LDA", "LDA+U"]
 )
 
@@ -40,12 +32,7 @@ _RUN_TYPES = (
 run_type_enum = get_enum_source(
     "RunType",
     "VASP calculation run types",
-    dict(
-        {
-            "_".join(rt.split()).replace("+", "_").replace("-", "_"): rt
-            for rt in _RUN_TYPES
-        }
-    ),
+    dict({"_".join(rt.split()).replace("+", "_").replace("-", "_"): rt for rt in _RUN_TYPES}),
 )
 task_type_enum = get_enum_source(
     "TaskType",

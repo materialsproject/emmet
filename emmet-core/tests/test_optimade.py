@@ -40,7 +40,5 @@ test_structures = {
 def test_oxidation_state(structure: Structure):
     """Very simple test to make sure this actually works"""
     print(f"Should work : {structure.composition}")
-    doc = OptimadeMaterialsDoc.from_structure(
-        structure, material_id=33, last_updated=datetime.utcnow()
-    )
+    doc = OptimadeMaterialsDoc.from_structure(structure, material_id=33, last_updated=datetime.utcnow())
     assert doc is not None

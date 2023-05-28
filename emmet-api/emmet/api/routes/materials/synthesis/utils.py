@@ -39,9 +39,7 @@ def mask_highlights(doc, limit=100):
             for i, hl in enumerate(hls):
                 if hl["type"] == "hit":
                     if i > 0:
-                        hls[i - 1]["value"] = make_ellipsis(
-                            hls[i - 1]["value"], limit=20, remove_trailing=False
-                        )
+                        hls[i - 1]["value"] = make_ellipsis(hls[i - 1]["value"], limit=20, remove_trailing=False)
                         hls = hls[i - 1 :]
                     break
 

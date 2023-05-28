@@ -55,9 +55,7 @@ class StructureGroupDoc(BaseModel):
         "material_id, you can also append the followed by the ignored species at the end.",
     )
 
-    has_distinct_compositions: bool = Field(
-        None, description="True if multiple compositions are present in the group."
-    )
+    has_distinct_compositions: bool = Field(None, description="True if multiple compositions are present in the group.")
 
     material_ids: list = Field(
         None,
@@ -91,9 +89,7 @@ class StructureGroupDoc(BaseModel):
         "present the chemsys will also include the ignored species.",
     )
 
-    last_updated: datetime = Field(
-        None, description="Timestamp when this document was built."
-    )
+    last_updated: datetime = Field(None, description="Timestamp when this document was built.")
 
     # Make sure that the datetime field is properly formatted
     @validator("last_updated", pre=True)
@@ -176,9 +172,7 @@ class StructureGroupDoc(BaseModel):
 
         # Add a framework field to each entry's data attribute
         for ient in entries:
-            ient.data["framework"] = _get_framework(
-                ient.composition.reduced_formula, ignored_specie
-            )
+            ient.data["framework"] = _get_framework(ient.composition.reduced_formula, ignored_specie)
 
         # split into groups for each framework, must sort before grouping
         entries.sort(key=lambda x: x.data["framework"])
@@ -189,19 +183,13 @@ class StructureGroupDoc(BaseModel):
             # if you only have ignored atoms put them into one "ignored" group
             f_group_l = list(f_group)
             if framework == "ignored":
-                struct_group = cls.from_grouped_entries(
-                    f_group_l, ignored_specie=ignored_specie
-                )
+                struct_group = cls.from_grouped_entries(f_group_l, ignored_specie=ignored_specie)
                 cnt_ += len(struct_group.material_ids)
                 continue
 
-            logger.debug(
-                f"Performing structure matching for {framework} with {len(f_group_l)} documents."
-            )
+            logger.debug(f"Performing structure matching for {framework} with {len(f_group_l)} documents.")
             for g in group_entries_with_structure_matcher(f_group_l, sm):
-                struct_group = cls.from_grouped_entries(
-                    g, ignored_specie=ignored_specie
-                )
+                struct_group = cls.from_grouped_entries(g, ignored_specie=ignored_specie)
                 cnt_ += len(struct_group.material_ids)
                 results.append(struct_group)
         if cnt_ != len(entries):
@@ -222,15 +210,10 @@ class StructureGroupDoc(BaseModel):
             "host_entries": [],
             "insertion_ids": [],
         }  # type:dict
-        ignored_specie_min_fraction = min(
-            [e.composition.get_atomic_fraction(ignored_specie) for e in entries]
-        )
+        ignored_specie_min_fraction = min([e.composition.get_atomic_fraction(ignored_specie) for e in entries])
 
         for e in entries:
-            if (
-                e.composition.get_atomic_fraction(ignored_specie)
-                == ignored_specie_min_fraction
-            ):
+            if e.composition.get_atomic_fraction(ignored_specie) == ignored_specie_min_fraction:
                 host_and_insertion_ids["host_entries"].append(e)
                 host_and_insertion_ids["host_ids"].append(e.data["material_id"])
             else:

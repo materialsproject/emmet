@@ -76,9 +76,7 @@ def summary():
     return MemoryStore(key="molecule_id")
 
 
-def test_summary_doc(
-    tasks, mols, charges, spins, bonds, metal_binding, orbitals, redox, thermo, vibes, summary
-):
+def test_summary_doc(tasks, mols, charges, spins, bonds, metal_binding, orbitals, redox, thermo, vibes, summary):
     charge_build = PartialChargesBuilder(tasks, mols, charges)
     charge_build.run()
 

@@ -64,13 +64,9 @@ class NBOPopulationQuery(QueryOperator):
                 elif electron_type_population.lower() == "beta":
                     prefix = "beta_population."
                 else:
-                    raise ValueError(
-                        "electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!"
-                    )
+                    raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
             except AttributeError:
-                raise ValueError(
-                    "electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!"
-                )
+                raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
 
         for entry in d:
             key = prefix + entry
@@ -150,12 +146,8 @@ class NBOLonePairQuery(QueryOperator):
             None,
             description="Maximum percentage of the lone pair constituted by f atomic orbitals.",
         ),
-        min_lp_occupancy: Optional[float] = Query(
-            None, description="Minimum number of electrons in the lone pair."
-        ),
-        max_lp_occupancy: Optional[float] = Query(
-            None, description="Maximum number of electrons in the lone pair."
-        ),
+        min_lp_occupancy: Optional[float] = Query(None, description="Minimum number of electrons in the lone pair."),
+        max_lp_occupancy: Optional[float] = Query(None, description="Maximum number of electrons in the lone pair."),
     ) -> STORE_PARAMS:
         crit: Dict[str, Any] = dict()  # type: ignore
 
@@ -176,13 +168,9 @@ class NBOLonePairQuery(QueryOperator):
                 elif electron_type_lp.lower() == "beta":
                     prefix = "beta_lone_pairs."
                 else:
-                    raise ValueError(
-                        "electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!"
-                    )
+                    raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
             except AttributeError:
-                raise ValueError(
-                    "electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!"
-                )
+                raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
 
         for entry in d:
             key = prefix + entry
@@ -312,12 +300,8 @@ class NBOBondQuery(QueryOperator):
             None,
             description="Maximum fraction of electrons in the bond donated by the second atom.",
         ),
-        min_bond_occupancy: Optional[float] = Query(
-            None, description="Minimum number of electrons in the bond."
-        ),
-        max_bond_occupancy: Optional[float] = Query(
-            None, description="Maximum number of electrons in the bond."
-        ),
+        min_bond_occupancy: Optional[float] = Query(None, description="Minimum number of electrons in the bond."),
+        max_bond_occupancy: Optional[float] = Query(None, description="Maximum number of electrons in the bond."),
     ) -> STORE_PARAMS:
         crit: Dict[str, Any] = dict()  # type: ignore
 
@@ -344,13 +328,9 @@ class NBOBondQuery(QueryOperator):
                 elif electron_type_bond.lower() == "beta":
                     prefix = "beta_bonds."
                 else:
-                    raise ValueError(
-                        "electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!"
-                    )
+                    raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
             except AttributeError:
-                raise ValueError(
-                    "electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!"
-                )
+                raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
 
         for entry in d:
             key = prefix + entry
@@ -420,12 +400,8 @@ class NBOInteractionQuery(QueryOperator):
         max_energy_difference: Optional[float] = Query(
             None, description="Minimum energy difference between interacting orbitals"
         ),
-        min_fock_element: Optional[float] = Query(
-            None, description="Minimum interaction Fock matrix element"
-        ),
-        max_fock_element: Optional[float] = Query(
-            None, description="Maximum interaction Fock matrix element"
-        ),
+        min_fock_element: Optional[float] = Query(None, description="Minimum interaction Fock matrix element"),
+        max_fock_element: Optional[float] = Query(None, description="Maximum interaction Fock matrix element"),
     ) -> STORE_PARAMS:
         crit: Dict[str, Any] = dict()  # type: ignore
 
@@ -444,13 +420,9 @@ class NBOInteractionQuery(QueryOperator):
                 elif electron_type_interaction.lower() == "beta":
                     prefix = "beta_interactions."
                 else:
-                    raise ValueError(
-                        "electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!"
-                    )
+                    raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
             except AttributeError:
-                raise ValueError(
-                    "electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!"
-                )
+                raise ValueError("electron_type must be 'alpha' or 'beta' (open-shell), or None (closed-shell)!")
 
         for entry in d:
             key = prefix + entry

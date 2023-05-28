@@ -9,10 +9,7 @@ from pymatgen.core.periodic_table import Species, Element
 from emmet.core.mpid import MPculeID
 from emmet.core.qchem.molecule import MoleculeDoc
 from emmet.core.molecules.molecule_property import PropertyDoc
-from emmet.core.molecules.atomic import (
-    PartialChargesDoc,
-    PartialSpinsDoc
-)
+from emmet.core.molecules.atomic import PartialChargesDoc, PartialSpinsDoc
 from emmet.core.molecules.bonds import MoleculeBondingDoc
 from emmet.core.molecules.thermo import MoleculeThermoDoc
 
@@ -29,30 +26,23 @@ class MetalBindingData(BaseModel):
     Metal binding information for one metal or ion in a molecule
     """
 
-    metal_molecule_id: MPculeID = Field(
-        ..., description="The MPculeID of the metal atom or ion being bound"
-    )
+    metal_molecule_id: MPculeID = Field(..., description="The MPculeID of the metal atom or ion being bound")
 
     nometal_molecule_id: MPculeID = Field(
         ..., description="The MPculeID of the molecule with the metal atom/ion removed"
     )
 
     metal_index: int = Field(
-        None, description="Index of the metal in this Molecule (in case of a molecule with multiple identical "
-                          "metal atoms/ions)"
+        None,
+        description="Index of the metal in this Molecule (in case of a molecule with multiple identical "
+        "metal atoms/ions)",
     )
 
-    metal_element: Union[str, Species, Element] = Field(
-        None, description="The metal bound to the molecule"
-    )
+    metal_element: Union[str, Species, Element] = Field(None, description="The metal bound to the molecule")
 
-    metal_partial_charge: float = Field(
-        None, description="The exact calculated partial charge of the metal"
-    )
+    metal_partial_charge: float = Field(None, description="The exact calculated partial charge of the metal")
 
-    metal_partial_spin: float = Field(
-        None, description="The exact calculated partial spin on the metal"
-    )
+    metal_partial_spin: float = Field(None, description="The exact calculated partial spin on the metal")
 
     metal_assigned_charge: float = Field(
         None, description="The integral charge assigned to this metal based on partial charge/spin data"
@@ -78,25 +68,20 @@ class MetalBindingData(BaseModel):
         None, description="The electronic energy change (∆E) of binding (units: eV)"
     )
 
-    binding_enthalpy: Optional[float] = Field(
-        None, description="The enthalpy change (∆H) of binding (units: eV)"
-    )
+    binding_enthalpy: Optional[float] = Field(None, description="The enthalpy change (∆H) of binding (units: eV)")
 
-    binding_entropy: Optional[float] = Field(
-        None, description="The entropy change (∆S) of binding (units: eV/K)"
-    )
+    binding_entropy: Optional[float] = Field(None, description="The entropy change (∆S) of binding (units: eV/K)")
 
-    binding_free_energy: Optional[float] = Field(
-        None, description="The free energy change (∆G) of binding (units: eV)"
-    )
+    binding_free_energy: Optional[float] = Field(None, description="The free energy change (∆G) of binding (units: eV)")
 
     metal_thermo_property_id: str = Field(
         None, description="ID of MoleculeThermoDoc used to obtain the thermochemistry of the metal atom/ion"
     )
 
     nometal_thermo_property_id: str = Field(
-        None, description="ID of MoleculeThermoDoc used to obtain the thermochemistry of of the molecule with the "
-                          "metal atom/ion removed"
+        None,
+        description="ID of MoleculeThermoDoc used to obtain the thermochemistry of of the molecule with the "
+        "metal atom/ion removed",
     )
 
     def get_id_string(self):
@@ -118,11 +103,13 @@ class MetalBindingDoc(PropertyDoc):
     )
 
     binding_partial_charges_property_id: str = Field(
-        None, description="ID of PartialChargesDoc used to estimate metal charge",
+        None,
+        description="ID of PartialChargesDoc used to estimate metal charge",
     )
 
     binding_partial_spins_property_id: str = Field(
-        None, description="ID of PartialSpinsDoc used to estimate metal spin",
+        None,
+        description="ID of PartialSpinsDoc used to estimate metal spin",
     )
 
     binding_partial_charges_lot_solvent: str = Field(
@@ -142,13 +129,12 @@ class MetalBindingDoc(PropertyDoc):
     )
 
     binding_bonding_lot_solvent: str = Field(
-        None, description="Combination of level of theory and solvent used to determine the coordination environment "
-                          "of the metal atom or ion"
+        None,
+        description="Combination of level of theory and solvent used to determine the coordination environment "
+        "of the metal atom or ion",
     )
 
-    binding_bonding_method: str = Field(
-        None, description="The method used for to define bonding."
-    )
+    binding_bonding_method: str = Field(None, description="The method used for to define bonding.")
 
     binding_thermo_property_id: str = Field(
         None, description="ID of MoleculeThermoDoc used to obtain this molecule's thermochemistry"
@@ -163,8 +149,9 @@ class MetalBindingDoc(PropertyDoc):
     )
 
     binding_thermo_combined_lot_solvent: str = Field(
-        None, descrption="Combination of level of theory and solvent used for molecular thermochemistry, combining "
-                         "both the frequency calculation and (potentially) the single-point energy correction."
+        None,
+        descrption="Combination of level of theory and solvent used for molecular thermochemistry, combining "
+        "both the frequency calculation and (potentially) the single-point energy correction.",
     )
 
     binding_data: List[MetalBindingData] = Field(
@@ -183,7 +170,7 @@ class MetalBindingDoc(PropertyDoc):
         base_thermo: MoleculeThermoDoc,
         metal_thermo: Dict[int, MoleculeThermoDoc],
         nometal_thermo: Dict[int, MoleculeThermoDoc],
-        **kwargs
+        **kwargs,
     ):  # type: ignore[override]
         """
         Construct a document describing the binding energy of a metal atom or ion to
@@ -227,10 +214,7 @@ class MetalBindingDoc(PropertyDoc):
             ):
                 raise ValueError("Partial charges and partial spins must use the same method and lot_solvent!")
 
-        if not (
-            base_thermo.solvent == partial_charges.solvent
-            and base_thermo.solvent == bonding.solvent
-        ):
+        if not (base_thermo.solvent == partial_charges.solvent and base_thermo.solvent == bonding.solvent):
             raise ValueError("All documents must use the same solvent!")
 
         partial_charges_property_id = partial_charges.property_id
@@ -351,7 +335,7 @@ class MetalBindingDoc(PropertyDoc):
                     binding_entropy=binding_s,
                     binding_free_energy=binding_g,
                     metal_thermo_property_id=this_metal_thermo.property_id,
-                    nometal_thermo_property_id=this_nometal_thermo.property_id
+                    nometal_thermo_property_id=this_nometal_thermo.property_id,
                 )
             )
 
@@ -389,5 +373,5 @@ class MetalBindingDoc(PropertyDoc):
             binding_data=binding_data,
             deprecated=False,
             origins=[],
-            **kwargs
+            **kwargs,
         )

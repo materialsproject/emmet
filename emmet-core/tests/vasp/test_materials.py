@@ -23,18 +23,14 @@ def test_make_mat(test_tasks):
     assert len(material.task_ids) == 4
     assert len(material.entries) == 1
 
-    bad_task_group = [
-        task for task in test_tasks if task.task_type != TaskType.Structure_Optimization
-    ]
+    bad_task_group = [task for task in test_tasks if task.task_type != TaskType.Structure_Optimization]
 
     with pytest.raises(Exception):
         MaterialsDoc.from_tasks(bad_task_group, use_statics=False)
 
 
 def test_make_deprecated_mat(test_tasks):
-    bad_task_group = [
-        task for task in test_tasks if task.task_type != TaskType.Structure_Optimization
-    ]
+    bad_task_group = [task for task in test_tasks if task.task_type != TaskType.Structure_Optimization]
 
     material = MaterialsDoc.construct_deprecated_material(bad_task_group)
 

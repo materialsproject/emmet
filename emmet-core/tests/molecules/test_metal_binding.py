@@ -3,10 +3,7 @@ import pytest
 from monty.serialization import loadfn
 
 from emmet.core.qchem.molecule import MoleculeDoc
-from emmet.core.molecules.atomic import (
-    PartialChargesDoc,
-    PartialSpinsDoc
-)
+from emmet.core.molecules.atomic import PartialChargesDoc, PartialSpinsDoc
 from emmet.core.molecules.bonds import MoleculeBondingDoc
 from emmet.core.molecules.thermo import MoleculeThermoDoc
 from emmet.core.molecules.metal_binding import MetalBindingDoc
@@ -71,7 +68,7 @@ def test_metal_binding(base_mol, charges, spins, bonds, base_thermo, metal_therm
         bonding=bonds,
         base_thermo=base_thermo,
         metal_thermo={5: metal_thermo},
-        nometal_thermo={5: nometal_thermo}
+        nometal_thermo={5: nometal_thermo},
     )
 
     assert metal_binding.binding_data[0].metal_index == 5

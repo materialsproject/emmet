@@ -21,15 +21,11 @@ def gb_resource(gb_store):
         GrainBoundaryDoc,
         query_operators=[
             GBTaskIDQuery(),
-            NumericQuery(
-                model=GrainBoundaryDoc, excluded_fields=["rotation_axis", "gb_plane"]
-            ),
+            NumericQuery(model=GrainBoundaryDoc, excluded_fields=["rotation_axis", "gb_plane"]),
             GBStructureQuery(),
             SortQuery(),
             PaginationQuery(),
-            SparseFieldsQuery(
-                GrainBoundaryDoc, default_fields=["task_id", "last_updated"]
-            ),
+            SparseFieldsQuery(GrainBoundaryDoc, default_fields=["task_id", "last_updated"]),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Grain Boundaries"],

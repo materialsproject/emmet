@@ -50,9 +50,7 @@ def test_charges_builder(tasks_store, mol_store, charges_store):
 
 
 def test_spins_builder(tasks_store, mol_store, spins_store):
-    builder = PartialSpinsBuilder(
-        tasks_store, mol_store, spins_store, methods=["mulliken", "nbo"]
-    )
+    builder = PartialSpinsBuilder(tasks_store, mol_store, spins_store, methods=["mulliken", "nbo"])
     builder.run()
 
     assert spins_store.count() == 18

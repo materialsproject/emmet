@@ -38,12 +38,7 @@ def chemsys_permutations(chemsys) -> Set:
     # Function to get all relevant chemical subsystems
     # e.g. for Li-Mn-O returns Li, Li-Mn, Li-Mn-O, Li-O, Mn, Mn-O, O
     elements = chemsys.split("-")
-    return {
-        "-".join(sorted(c))
-        for c in chain(
-            *[combinations(elements, i) for i in range(1, len(elements) + 1)]
-        )
-    }
+    return {"-".join(sorted(c)) for c in chain(*[combinations(elements, i) for i in range(1, len(elements) + 1)])}
 
 
 def get_hop_cutoff(
@@ -114,17 +109,14 @@ def get_hop_cutoff(
 
         # once a path is found, get the smallest hop distance and
         # the number of unique hops
-        smallest_hop_distance = min(
-            [v["hop_distance"] for v in mg.unique_hops.values()]
-        )
+        smallest_hop_distance = min([v["hop_distance"] for v in mg.unique_hops.values()])
         num_unique_hops = len(mg.unique_hops)
 
         # continually incrementally increase d until either...
         # 1) the largest hop distance exceeds 2x the smallest hop distance
         # 2) the number of unique hops spikes (increases by more than 1.5x)
         while (
-            max([v["hop_distance"] for v in mg.unique_hops.values()])
-            <= smallest_hop_distance * 2
+            max([v["hop_distance"] for v in mg.unique_hops.values()]) <= smallest_hop_distance * 2
             and d < max_hop_distance
         ):
             d = d * 1.1

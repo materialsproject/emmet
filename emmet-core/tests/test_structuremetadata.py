@@ -39,9 +39,7 @@ def test_structure_metadata(structure):
 
 
 def test_structure_metadata_fewer_fields(structure):
-    meta_doc = StructureMetadata.from_structure(
-        structure, fields=["nsites", "nelements", "volume"]
-    )
+    meta_doc = StructureMetadata.from_structure(structure, fields=["nsites", "nelements", "volume"])
 
     assert meta_doc.nsites == 1
     assert meta_doc.nelements == 1

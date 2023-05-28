@@ -22,9 +22,7 @@ def substrates_resource(substrates_store):
         query_operators=[
             SubstrateStructureQuery(),
             NumericQuery(model=SubstratesDoc),
-            StringQueryOperator(
-                model=SubstratesDoc, excluded_fields=["film_orient", "orient"]
-            ),
+            StringQueryOperator(model=SubstratesDoc, excluded_fields=["film_orient", "orient"]),
             SortQuery(),
             PaginationQuery(),
             SparseFieldsQuery(SubstratesDoc, default_fields=["film_id", "sub_id"]),

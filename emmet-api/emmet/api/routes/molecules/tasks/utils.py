@@ -54,9 +54,7 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
 
         mols = [Molecule(species, g, charge=charge, spin_multiplicity=multiplicity) for g in geometries]  # type: ignore
 
-        frame_props = {
-            "electronic_energy": energies
-        }
+        frame_props = {"electronic_energy": energies}
         num_steps = len(mols)
 
         site_props = dict()
@@ -96,10 +94,7 @@ def calcs_reversed_to_trajectory(calcs_reversed: List[dict]):
 
             step_mol = mols[i]
             for k, v in site_props.items():
-                step_mol.add_site_property(
-                    property_name=k,
-                    values=v[i]
-                )
+                step_mol.add_site_property(property_name=k, values=v[i])
 
             traj_mols.append(step_mol)
 

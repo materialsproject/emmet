@@ -18,9 +18,7 @@ def tasks_store(test_dir):
 def validation_store(tasks_store):
     settings = EmmetBuildSettings(VASP_VALIDATE_POTCAR_HASHES=False)
     validation_store = MemoryStore()
-    builder = TaskValidator(
-        tasks=tasks_store, task_validation=validation_store, settings=settings
-    )
+    builder = TaskValidator(tasks=tasks_store, task_validation=validation_store, settings=settings)
     builder.run()
     return validation_store
 
@@ -31,9 +29,7 @@ def materials_store():
 
 
 def test_materials_builder(tasks_store, validation_store, materials_store):
-    builder = MaterialsBuilder(
-        tasks=tasks_store, task_validation=validation_store, materials=materials_store
-    )
+    builder = MaterialsBuilder(tasks=tasks_store, task_validation=validation_store, materials=materials_store)
     builder.run()
     assert materials_store.count() == 1
     assert materials_store.count({"deprecated": False}) == 1

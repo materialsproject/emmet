@@ -41,9 +41,7 @@ def test_StructureGroupDoc_from_grouped_entries(entries_lto):
 @pytest.mark.skip(reason="Temp skip for spglib seg fault")
 def test_StructureGroupDoc_from_ungrouped_entries(entries_lfeo):
     entry_dict = {ient.entry_id: ient for ient in entries_lfeo}
-    sgroup_docs = StructureGroupDoc.from_ungrouped_structure_entries(
-        entries_lfeo, ignored_specie="Li"
-    )
+    sgroup_docs = StructureGroupDoc.from_ungrouped_structure_entries(entries_lfeo, ignored_specie="Li")
 
     # Make sure that all the structure in each group has the same framework
     for sgroup_doc in sgroup_docs:

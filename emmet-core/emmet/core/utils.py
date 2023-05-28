@@ -150,9 +150,7 @@ def confirm_molecule(mol: Union[Molecule, Dict]):
         return mol
 
 
-def make_mol_graph(
-    mol: Molecule, critic_bonds: Optional[List[List[int]]] = None
-) -> MoleculeGraph:
+def make_mol_graph(mol: Molecule, critic_bonds: Optional[List[List[int]]] = None) -> MoleculeGraph:
     """
     Construct a MoleculeGraph using OpenBabelNN with metal_edge_extender and
     (optionally) Critic2 bonding information.
@@ -241,35 +239,23 @@ def jsanitize(obj, strict=False, allow_bson=False):
         Sanitized dict that can be json serialized.
     """
     if allow_bson and (
-        isinstance(obj, (datetime.datetime, bytes))
-        or (bson is not None and isinstance(obj, bson.objectid.ObjectId))
+        isinstance(obj, (datetime.datetime, bytes)) or (bson is not None and isinstance(obj, bson.objectid.ObjectId))
     ):
         return obj
 
     if isinstance(obj, (list, tuple, set)):
         return [jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj]
     if np is not None and isinstance(obj, np.ndarray):
-        return [
-            jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj.tolist()
-        ]
+        return [jsanitize(i, strict=strict, allow_bson=allow_bson) for i in obj.tolist()]
     if isinstance(obj, Enum):
         return obj.value
     if isinstance(obj, dict):
-        return {
-            k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
-            for k, v in obj.items()
-        }
+        return {k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson) for k, v in obj.items()}
     if isinstance(obj, MSONable):
-        return {
-            k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
-            for k, v in obj.as_dict().items()
-        }
+        return {k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson) for k, v in obj.as_dict().items()}
 
     if isinstance(obj, BaseModel):
-        return {
-            k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson)
-            for k, v in obj.dict().items()
-        }
+        return {k.__str__(): jsanitize(v, strict=strict, allow_bson=allow_bson) for k, v in obj.dict().items()}
     if isinstance(obj, (int, float)):
         if np.isnan(obj):
             return 0

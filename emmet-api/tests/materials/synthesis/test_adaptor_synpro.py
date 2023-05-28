@@ -34,9 +34,7 @@ def test_conditions():
                 "units": "°C",
             }
         ],
-        "time": [
-            {"max": 3.0, "min": 3.0, "values": [3.0], "tok_ids": [23], "units": "h"}
-        ],
+        "time": [{"max": 3.0, "min": 3.0, "values": [3.0], "tok_ids": [23], "units": "h"}],
         "environment": ["air", "O2"],
     }
     product = {
@@ -48,9 +46,7 @@ def test_conditions():
                 "units": "°C",
             }
         ],
-        "heating_time": [
-            {"min_value": 3.0, "max_value": 3.0, "values": [3.0], "units": "h"}
-        ],
+        "heating_time": [{"min_value": 3.0, "max_value": 3.0, "values": [3.0], "units": "h"}],
         "heating_atmosphere": ["air", "O2"],
         "mixing_device": None,
         "mixing_media": None,
@@ -66,9 +62,7 @@ def test_conditions():
                 "units": "°C",
             }
         ],
-        "heating_time": [
-            {"min_value": 3.0, "max_value": 3.0, "values": [3.0], "units": "h"}
-        ],
+        "heating_time": [{"min_value": 3.0, "max_value": 3.0, "values": [3.0], "units": "h"}],
         "heating_atmosphere": [],
         "mixing_device": "O2",
         "mixing_media": "air",
@@ -110,9 +104,7 @@ def test_get_material_formula():
 
 
 def test_convert_one():
-    with open(
-        os.path.join(MAPISettings().TEST_FILES, "synth_doc_adaptor_synpro.json")
-    ) as file:
+    with open(os.path.join(MAPISettings().TEST_FILES, "synth_doc_adaptor_synpro.json")) as file:
         synth_doc = load(file)
 
     assert convert_one(synth_doc["src"]) == synth_doc["product"]

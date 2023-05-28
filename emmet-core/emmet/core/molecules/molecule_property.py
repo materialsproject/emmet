@@ -28,9 +28,7 @@ class PropertyDoc(MoleculeMetadata):
 
     property_name: str
 
-    property_id: str = Field(
-        ..., description="The unique identifier of this property document."
-    )
+    property_id: str = Field(..., description="The unique identifier of this property document.")
 
     molecule_id: MPculeID = Field(
         ...,
@@ -48,14 +46,11 @@ class PropertyDoc(MoleculeMetadata):
         description="List of deprecation tags detailing why this document isn't valid",
     )
 
-    level_of_theory: LevelOfTheory = Field(
-        None, description="Level of theory used to generate this property document."
-    )
+    level_of_theory: LevelOfTheory = Field(None, description="Level of theory used to generate this property document.")
 
     solvent: str = Field(
         None,
-        description="String representation of the solvent "
-        "environment used to generate this property document.",
+        description="String representation of the solvent " "environment used to generate this property document.",
     )
 
     lot_solvent: str = Field(
@@ -69,13 +64,9 @@ class PropertyDoc(MoleculeMetadata):
         default_factory=datetime.utcnow,
     )
 
-    origins: Sequence[PropertyOrigin] = Field(
-        [], description="Dictionary for tracking the provenance of properties"
-    )
+    origins: Sequence[PropertyOrigin] = Field([], description="Dictionary for tracking the provenance of properties")
 
-    warnings: Sequence[str] = Field(
-        [], description="Any warnings related to this property"
-    )
+    warnings: Sequence[str] = Field([], description="Any warnings related to this property")
 
     @classmethod
     def from_molecule(  # type: ignore[override]

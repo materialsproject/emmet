@@ -8,9 +8,7 @@ from emmet.builders.materials.similarity import StructureSimilarityBuilder
 
 @pytest.fixture(scope="session")
 def tasks_store(test_dir):
-    return JSONStore(
-        [test_dir / "test_si_tasks.json.gz", test_dir / "test_As2SO6_tasks.json.gz"]
-    )
+    return JSONStore([test_dir / "test_si_tasks.json.gz", test_dir / "test_As2SO6_tasks.json.gz"])
 
 
 @pytest.fixture(scope="session")
@@ -24,18 +22,14 @@ def materials_store(tasks_store):
 @pytest.fixture(scope="session")
 def descriptors_store(materials_store):
     descriptors_store = MemoryStore(key="task_id")
-    builder = BasicDescriptorsBuilder(
-        materials=materials_store, descriptors=descriptors_store
-    )
+    builder = BasicDescriptorsBuilder(materials=materials_store, descriptors=descriptors_store)
     builder.run()
     return descriptors_store
 
 
 def test_basic_descriptions(descriptors_store):
     similarity_store = MemoryStore()
-    builder = StructureSimilarityBuilder(
-        structure_similarity=similarity_store, site_descriptors=descriptors_store
-    )
+    builder = StructureSimilarityBuilder(structure_similarity=similarity_store, site_descriptors=descriptors_store)
     builder.run()
 
     print(similarity_store.query_one({}))

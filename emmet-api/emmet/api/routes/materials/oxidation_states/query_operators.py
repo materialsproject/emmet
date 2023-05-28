@@ -21,9 +21,7 @@ class PossibleOxiStateQuery(QueryOperator):
         crit = defaultdict(dict)  # type: dict
 
         if possible_species:
-            crit["possible_species"] = {
-                "$all": [specie.strip() for specie in possible_species.split(",")]
-            }
+            crit["possible_species"] = {"$all": [specie.strip() for specie in possible_species.split(",")]}
 
         return {"criteria": crit}
 

@@ -25,18 +25,14 @@ class MigrationGraphDoc(EmmetBaseModel):
     a namespace package aka pymatgen-diffusion.
     """
 
-    battery_id: str = Field(
-        ..., description="The battery id for this MigrationGraphDoc"
-    )
+    battery_id: str = Field(..., description="The battery id for this MigrationGraphDoc")
 
     last_updated: datetime = Field(
         None,
         description="Timestamp for the most recent calculation for this MigrationGraph document.",
     )
 
-    warnings: Sequence[str] = Field(
-        [], description="Any warnings related to this property."
-    )
+    warnings: Sequence[str] = Field([], description="Any warnings related to this property.")
 
     deprecated: bool = Field(
         False,
@@ -203,9 +199,7 @@ class MigrationGraphDoc(EmmetBaseModel):
         return host_sc, sc_mat, min_length_sc, minmax_num_atoms, coords_list, combo
 
     @staticmethod
-    def ordered_sc_site_list(
-        uc_sites_only: Structure, sc_mat: List[List[Union[int, float]]]
-    ):
+    def ordered_sc_site_list(uc_sites_only: Structure, sc_mat: List[List[Union[int, float]]]):
         uc_no_site = uc_sites_only.copy()
         uc_no_site.remove_sites(range(len(uc_sites_only)))
         working_ion = uc_sites_only[0].species_string
@@ -247,16 +241,8 @@ class MigrationGraphDoc(EmmetBaseModel):
         unique_hops = {k: v for k, v in sorted(unique_hops.items())}
         for one_hop in unique_hops.values():
             added = False
-            sc_isite_set = {
-                k: v
-                for k, v in enumerate(ordered_sc_site_list)
-                if v["uc_site_type"] == one_hop["iindex"]
-            }
-            sc_esite_set = {
-                k: v
-                for k, v in enumerate(ordered_sc_site_list)
-                if v["uc_site_type"] == one_hop["eindex"]
-            }
+            sc_isite_set = {k: v for k, v in enumerate(ordered_sc_site_list) if v["uc_site_type"] == one_hop["iindex"]}
+            sc_esite_set = {k: v for k, v in enumerate(ordered_sc_site_list) if v["uc_site_type"] == one_hop["eindex"]}
             for sc_iindex, sc_isite in sc_isite_set.items():
                 for sc_eindex, sc_esite in sc_esite_set.items():
                     sc_check = host_sc.copy()
@@ -306,10 +292,7 @@ class MigrationGraphDoc(EmmetBaseModel):
             one_hop_dis = one_hop["hop"].length
             sc_check_hop_dis = np.linalg.norm(sc_check[0].coords - sc_check[1].coords)
             if np.isclose(one_hop_dis, sc_check_hop_dis, atol=1e-5):
-                if (
-                    one_hop["iindex"] == uc_site_types[0]
-                    and one_hop["eindex"] == uc_site_types[1]
-                ):
+                if one_hop["iindex"] == uc_site_types[0] and one_hop["eindex"] == uc_site_types[1]:
                     return True
 
         return False
@@ -374,17 +357,13 @@ class MigrationGraphDoc(EmmetBaseModel):
             if ini in mgdoc_sites_mapping.keys():
                 dis_ini = mgdoc_sites_mapping[ini]
             else:
-                dis_sites_list.append(
-                    list(inserted_ion_coords[ini]["site_frac_coords"])  # type: ignore
-                )
+                dis_sites_list.append(list(inserted_ion_coords[ini]["site_frac_coords"]))  # type: ignore
                 dis_ini = len(dis_sites_list) - 1
                 mgdoc_sites_mapping[ini] = dis_ini
             if end in mgdoc_sites_mapping.keys():
                 dis_end = mgdoc_sites_mapping[end]
             else:
-                dis_sites_list.append(
-                    list(inserted_ion_coords[end]["site_frac_coords"])  # type: ignore
-                )
+                dis_sites_list.append(list(inserted_ion_coords[end]["site_frac_coords"]))  # type: ignore
                 dis_end = len(dis_sites_list) - 1
                 mgdoc_sites_mapping[end] = dis_end
 

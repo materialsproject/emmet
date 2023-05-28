@@ -19,9 +19,7 @@ if db_uri:
     if len(db_uri.split("://", 1)) < 2:
         db_uri = "mongodb+srv://" + db_uri
 
-    molecules_store = MongoURIStore(
-        uri=db_uri, database="mp_core", key="task_id", collection_name="molecules"
-    )
+    molecules_store = MongoURIStore(uri=db_uri, database="mp_core", key="task_id", collection_name="molecules")
 
 legacy_resources = list()
 

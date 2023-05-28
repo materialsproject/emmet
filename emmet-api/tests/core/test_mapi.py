@@ -28,10 +28,7 @@ class Pet(BaseModel):
     owner_name: str = Field(..., title="Owner's name")
 
 
-owners = [
-    Owner(name=f"Person{i}", age=randint(10, 100), weight=randint(100, 200))
-    for i in list(range(10))
-]
+owners = [Owner(name=f"Person{i}", age=randint(10, 100), weight=randint(100, 200)) for i in list(range(10))]
 
 
 pets = [

@@ -23,40 +23,24 @@ class SynthesisRecipe(BaseModel):
         ...,
         description="DOI of the journal article.",
     )
-    paragraph_string: str = Field(
-        "", description="The paragraph from which this recipe is extracted."
-    )
-    synthesis_type: SynthesisTypeEnum = Field(
-        ..., description="Type of the synthesis recipe."
-    )
+    paragraph_string: str = Field("", description="The paragraph from which this recipe is extracted.")
+    synthesis_type: SynthesisTypeEnum = Field(..., description="Type of the synthesis recipe.")
 
     # Reaction related information:
-    reaction_string: str = Field(
-        ..., description="String representation of this recipe."
-    )
+    reaction_string: str = Field(..., description="String representation of this recipe.")
     reaction: ReactionFormula = Field(..., description="The balanced reaction formula.")
 
     target: ExtractedMaterial = Field(..., description="The target material.")
-    targets_formula: List[str] = Field(
-        ..., description="List of synthesized target material compositions."
-    )
-    precursors_formula: List[str] = Field(
-        ..., description="List of precursor material compositions."
-    )
+    targets_formula: List[str] = Field(..., description="List of synthesized target material compositions.")
+    precursors_formula: List[str] = Field(..., description="List of precursor material compositions.")
     targets_formula_s: List[str] = Field(
         ..., description="List of synthesized target material compositions, as strings."
     )
-    precursors_formula_s: List[str] = Field(
-        ..., description="List of precursor material compositions, as strings."
-    )
+    precursors_formula_s: List[str] = Field(..., description="List of precursor material compositions, as strings.")
 
-    precursors: List[ExtractedMaterial] = Field(
-        ..., description="List of precursor materials."
-    )
+    precursors: List[ExtractedMaterial] = Field(..., description="List of precursor materials.")
 
-    operations: List[Operation] = Field(
-        ..., description="List of operations used to synthesize this recipe."
-    )
+    operations: List[Operation] = Field(..., description="List of operations used to synthesize this recipe.")
 
 
 class SynthesisSearchResultModel(SynthesisRecipe):
