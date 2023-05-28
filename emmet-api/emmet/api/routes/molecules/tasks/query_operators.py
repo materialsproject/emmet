@@ -3,6 +3,8 @@ from maggma.api.utils import STORE_PARAMS
 from fastapi import Query
 from typing import Optional
 
+from monty.json import jsanitize
+
 from emmet.api.routes.molecules.tasks.utils import calcs_reversed_to_trajectory
 
 
